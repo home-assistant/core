@@ -3,8 +3,6 @@ from homeassistant.components import ios
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
-DEPENDENCIES = ['ios']
-
 SENSOR_TYPES = {
     'level': ['Battery Level', '%'],
     'state': ['Battery State', None]

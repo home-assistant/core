@@ -13,6 +13,7 @@
             },
             "user": {
                 "data": {
+                    "authorization_code": "C\u00f3digo de autorizaci\u00f3n (requerido para la autenticaci\u00f3n manual)",
                     "email": "Direcci\u00f3n de correo electr\u00f3nico",
                     "password": "Contrase\u00f1a"
                 },

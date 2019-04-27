@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.components.cover import (
     ATTR_POSITION, ATTR_TILT_POSITION, SUPPORT_CLOSE, SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN, SUPPORT_OPEN_TILT, SUPPORT_SET_POSITION,
+    SUPPORT_OPEN, SUPPORT_OPEN_TILT, SUPPORT_SET_POSITION, SUPPORT_STOP,
     SUPPORT_SET_TILT_POSITION, CoverDevice)
 from homeassistant.const import (
     STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING)
@@ -11,8 +11,6 @@ from homeassistant.const import (
 from . import KNOWN_DEVICES, HomeKitEntity
 
 STATE_STOPPED = 'stopped'
-
-DEPENDENCIES = ['homekit_controller']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,9 +135,10 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
         self._state = None
         self._position = None
         self._tilt_position = None
-        self._hold = None
         self._obstruction_detected = None
         self.lock_state = None
+        self._features = (
+            SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION)
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
@@ -157,14 +156,24 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
             CharacteristicsTypes.OBSTRUCTION_DETECTED,
         ]
 
+    def _setup_position_hold(self, char):
+        self._features |= SUPPORT_STOP
+
+    def _setup_vertical_tilt_current(self, char):
+        self._features |= (
+            SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT |
+            SUPPORT_SET_TILT_POSITION)
+
+    def _setup_horizontal_tilt_current(self, char):
+        self._features |= (
+            SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT |
+            SUPPORT_SET_TILT_POSITION)
+
     def _update_position_state(self, value):
         self._state = CURRENT_WINDOW_STATE_MAP[value]
 
     def _update_position_current(self, value):
         self._position = value
-
-    def _update_position_hold(self, value):
-        self._hold = value
 
     def _update_vertical_tilt_current(self, value):
         self._tilt_position = value
@@ -175,21 +184,10 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
     def _update_obstruction_detected(self, value):
         self._obstruction_detected = value
 
-    def _update_name(self, value):
-        self._hold = value
-
     @property
     def supported_features(self):
         """Flag supported features."""
-        supported_features = (
-            SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION)
-
-        if self._tilt_position is not None:
-            supported_features |= (
-                SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT |
-                SUPPORT_SET_TILT_POSITION)
-
-        return supported_features
+        return self._features
 
     @property
     def current_cover_position(self):
@@ -210,6 +208,13 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
     def is_opening(self):
         """Return if the cover is opening or not."""
         return self._state == STATE_OPENING
+
+    async def async_stop_cover(self, **kwargs):
+        """Send hold command."""
+        characteristics = [{'aid': self._aid,
+                            'iid': self._chars['position.hold'],
+                            'value': 1}]
+        await self._accessory.put_characteristics(characteristics)
 
     async def async_open_cover(self, **kwargs):
         """Send open command."""
@@ -254,9 +259,5 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
         if self._obstruction_detected is not None:
             state_attributes['obstruction-detected'] = \
                 self._obstruction_detected
-
-        if self._hold is not None:
-            state_attributes['hold-position'] = \
-                self._hold
 
         return state_attributes

@@ -6,5 +6,5 @@
     "openwrt-luci-rpc==1.0.5"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@fbradyirl"]
 }

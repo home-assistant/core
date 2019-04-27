@@ -28,6 +28,8 @@ def controller_fixture(players, favorites, input_sources, dispatcher):
         mock_heos.players = players
         mock_heos.get_favorites.return_value = favorites
         mock_heos.get_input_sources.return_value = input_sources
+        mock_heos.is_signed_in = True
+        mock_heos.signed_in_username = "user@user.com"
         yield mock_heos
 
 
@@ -42,7 +44,7 @@ def config_fixture():
 @pytest.fixture(name="players")
 def player_fixture(dispatcher):
     """Create a mock HeosPlayer."""
-    player = Mock(HeosPlayer, autospec=True)
+    player = Mock(HeosPlayer)
     player.heos.dispatcher = dispatcher
     player.player_id = 1
     player.name = "Test Player"
@@ -75,11 +77,11 @@ def player_fixture(dispatcher):
 @pytest.fixture(name="favorites")
 def favorites_fixture() -> Dict[int, HeosSource]:
     """Create favorites fixture."""
-    station = Mock(HeosSource, autospec=True)
+    station = Mock(HeosSource)
     station.type = const.TYPE_STATION
     station.name = "Today's Hits Radio"
     station.media_id = '123456789'
-    radio = Mock(HeosSource, autospec=True)
+    radio = Mock(HeosSource)
     radio.type = const.TYPE_STATION
     radio.name = "Classical MPR (Classical Music)"
     radio.media_id = 's1234'
@@ -92,7 +94,7 @@ def favorites_fixture() -> Dict[int, HeosSource]:
 @pytest.fixture(name="input_sources")
 def input_sources_fixture() -> Sequence[InputSource]:
     """Create a set of input sources for testing."""
-    source = Mock(InputSource, autospec=True)
+    source = Mock(InputSource)
     source.player_id = 1
     source.input_name = const.INPUT_AUX_IN_1
     source.name = "HEOS Drive - Line In 1"
@@ -103,3 +105,21 @@ def input_sources_fixture() -> Sequence[InputSource]:
 def dispatcher_fixture() -> Dispatcher:
     """Create a dispatcher for testing."""
     return Dispatcher()
+
+
+@pytest.fixture(name="discovery_data")
+def discovery_data_fixture() -> dict:
+    """Return mock discovery data for testing."""
+    return {
+        'host': '127.0.0.1',
+        'manufacturer': 'Denon',
+        'model_name': 'HEOS Drive',
+        'model_number': 'DWSA-10 4.0',
+        'name': 'Office',
+        'port': 60006,
+        'serial': None,
+        'ssdp_description':
+            'http://127.0.0.1:60006/upnp/desc/aios_device/aios_device.xml',
+        'udn': 'uuid:e61de70c-2250-1c22-0080-0005cdf512be',
+        'upnp_device_type': 'urn:schemas-denon-com:device:AiosDevice:1'
+    }

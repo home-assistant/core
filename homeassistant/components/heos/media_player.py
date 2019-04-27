@@ -1,14 +1,16 @@
 """Denon HEOS Media Player."""
-from functools import reduce
+import asyncio
+from functools import reduce, wraps
+import logging
 from operator import ior
 from typing import Sequence
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
-    DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
-    SUPPORT_SHUFFLE_SET, SUPPORT_STOP, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP)
+    DOMAIN, MEDIA_TYPE_MUSIC, MEDIA_TYPE_URL, SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET,
+    SUPPORT_STOP, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.helpers.typing import HomeAssistantType
@@ -17,11 +19,12 @@ from homeassistant.util.dt import utcnow
 from .const import (
     DATA_SOURCE_MANAGER, DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_SOURCES_UPDATED)
 
-DEPENDENCIES = ['heos']
-
 BASE_SUPPORTED_FEATURES = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
                           SUPPORT_VOLUME_STEP | SUPPORT_CLEAR_PLAYLIST | \
-                          SUPPORT_SHUFFLE_SET | SUPPORT_SELECT_SOURCE
+                          SUPPORT_SHUFFLE_SET | SUPPORT_SELECT_SOURCE | \
+                          SUPPORT_PLAY_MEDIA
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
@@ -36,6 +39,20 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,
     players = hass.data[HEOS_DOMAIN][DOMAIN]
     devices = [HeosMediaPlayer(player) for player in players.values()]
     async_add_entities(devices, True)
+
+
+def log_command_error(command: str):
+    """Return decorator that logs command failure."""
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            from pyheos import CommandError
+            try:
+                await func(*args, **kwargs)
+            except (CommandError, asyncio.TimeoutError, ConnectionError) as ex:
+                _LOGGER.error("Unable to %s: %s", command, ex)
+        return wrapper
+    return decorator
 
 
 class HeosMediaPlayer(MediaPlayerDevice):
@@ -70,6 +87,13 @@ class HeosMediaPlayer(MediaPlayerDevice):
 
     async def _heos_event(self, event):
         """Handle connection event."""
+        from pyheos import CommandError, const
+        if event == const.EVENT_CONNECTED:
+            try:
+                await self._player.refresh()
+            except (CommandError, asyncio.TimeoutError, ConnectionError) as ex:
+                _LOGGER.error("Unable to refresh player %s: %s",
+                              self._player, ex)
         await self.async_update_ha_state(True)
 
     async def _player_update(self, player_id, event):
@@ -103,45 +127,64 @@ class HeosMediaPlayer(MediaPlayerDevice):
             self.hass.helpers.dispatcher.async_dispatcher_connect(
                 SIGNAL_HEOS_SOURCES_UPDATED, self._sources_updated))
 
+    @log_command_error("clear playlist")
     async def async_clear_playlist(self):
         """Clear players playlist."""
         await self._player.clear_queue()
 
+    @log_command_error("pause")
     async def async_media_pause(self):
         """Send pause command."""
         await self._player.pause()
 
+    @log_command_error("play")
     async def async_media_play(self):
         """Send play command."""
         await self._player.play()
 
+    @log_command_error("move to previous track")
     async def async_media_previous_track(self):
         """Send previous track command."""
         await self._player.play_previous()
 
+    @log_command_error("move to next track")
     async def async_media_next_track(self):
         """Send next track command."""
         await self._player.play_next()
 
+    @log_command_error("stop")
     async def async_media_stop(self):
         """Send stop command."""
         await self._player.stop()
 
+    @log_command_error("set mute")
     async def async_mute_volume(self, mute):
         """Mute the volume."""
         await self._player.set_mute(mute)
 
+    @log_command_error("play media")
+    async def async_play_media(self, media_type, media_id, **kwargs):
+        """Play a piece of media."""
+        if media_type == MEDIA_TYPE_URL:
+            await self._player.play_url(media_id)
+        else:
+            _LOGGER.error("Unable to play media: Unsupported media type '%s'",
+                          media_type)
+
+    @log_command_error("select source")
     async def async_select_source(self, source):
         """Select input source."""
         await self._source_manager.play_source(source, self._player)
 
+    @log_command_error("set shuffle")
     async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
         await self._player.set_play_mode(self._player.repeat, shuffle)
 
+    @log_command_error("set volume level")
     async def async_set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        await self._player.set_volume(volume * 100)
+        await self._player.set_volume(int(volume * 100))
 
     async def async_update(self):
         """Update supported features of the player."""

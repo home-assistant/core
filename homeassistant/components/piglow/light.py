@@ -11,8 +11,6 @@ from homeassistant.components.light import (
 from homeassistant.const import CONF_NAME
 import homeassistant.util.color as color_util
 
-REQUIREMENTS = ['piglow==1.2.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_PIGLOW = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR)

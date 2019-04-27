@@ -5,6 +5,8 @@
   "requirements": [
     "ring_doorbell==0.2.3"
   ],
-  "dependencies": [],
+  "dependencies": [
+    "ffmpeg"
+  ],
   "codeowners": []
 }

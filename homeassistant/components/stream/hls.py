@@ -85,7 +85,7 @@ class M3U8Renderer:
         for sequence in segments:
             segment = track.get_segment(sequence)
             playlist.extend([
-                "#EXTINF:{:.04},".format(float(segment.duration)),
+                "#EXTINF:{:.04f},".format(float(segment.duration)),
                 "./segment/{}.ts".format(segment.sequence),
             ])
 

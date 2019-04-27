@@ -38,29 +38,37 @@ class TestDemoPlatform(unittest.TestCase):
         with patch('homeassistant.util.dt.utcnow', return_value=utcnow):
             with assert_setup_component(1, geo_location.DOMAIN):
                 assert setup_component(self.hass, geo_location.DOMAIN, CONFIG)
+            self.hass.block_till_done()
 
-            # In this test, only entities of the geolocation domain have been
+            # In this test, one zone and geolocation entities have been
             # generated.
-            all_states = self.hass.states.all()
+            all_states = [self.hass.states.get(entity_id) for entity_id
+                          in self.hass.states.entity_ids(geo_location.DOMAIN)]
             assert len(all_states) == NUMBER_OF_DEMO_DEVICES
 
-            # Check a single device's attributes.
-            state_first_entry = all_states[0]
-            assert abs(
-                state_first_entry.attributes['latitude'] -
-                self.hass.config.latitude
-            ) < 1.0
-            assert abs(
-                state_first_entry.attributes['longitude'] -
-                self.hass.config.longitude
-            ) < 1.0
-            assert state_first_entry.attributes['unit_of_measurement'] == \
-                DEFAULT_UNIT_OF_MEASUREMENT
+            for state in all_states:
+                # Check a single device's attributes.
+                if state.domain != geo_location.DOMAIN:
+                    # ignore home zone state
+                    continue
+                assert abs(
+                    state.attributes['latitude'] -
+                    self.hass.config.latitude
+                ) < 1.0
+                assert abs(
+                    state.attributes['longitude'] -
+                    self.hass.config.longitude
+                ) < 1.0
+                assert state.attributes['unit_of_measurement'] == \
+                    DEFAULT_UNIT_OF_MEASUREMENT
+
             # Update (replaces 1 device).
             fire_time_changed(self.hass, utcnow + DEFAULT_UPDATE_INTERVAL)
             self.hass.block_till_done()
             # Get all states again, ensure that the number of states is still
             # the same, but the lists are different.
-            all_states_updated = self.hass.states.all()
+            all_states_updated = [
+                self.hass.states.get(entity_id) for entity_id
+                in self.hass.states.entity_ids(geo_location.DOMAIN)]
             assert len(all_states_updated) == NUMBER_OF_DEMO_DEVICES
             assert all_states != all_states_updated

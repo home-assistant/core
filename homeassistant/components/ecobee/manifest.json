@@ -5,6 +5,6 @@
   "requirements": [
     "python-ecobee-api==0.0.18"
   ],
-  "dependencies": [],
+  "dependencies": ["configurator"],
   "codeowners": []
 }

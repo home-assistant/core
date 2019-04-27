@@ -20,8 +20,6 @@ from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['plexapi==3.0.6']
-
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
@@ -174,12 +172,15 @@ def setup_plexserver(
 
         # add devices with a session and no client (ex. PlexConnect Apple TV's)
         if config.get(CONF_INCLUDE_NON_CLIENTS):
-            for machine_identifier, (session, player) in plex_sessions.items():
+            # To avoid errors when plex sessions created during iteration
+            sessions = list(plex_sessions.items())
+            for machine_identifier, (session, player) in sessions:
                 if machine_identifier in available_client_ids:
                     # Avoid using session if already added as a device.
                     _LOGGER.debug("Skipping session, device exists: %s",
                                   machine_identifier)
                     continue
+
                 if (machine_identifier not in plex_clients
                         and machine_identifier is not None):
                     new_client = PlexClient(
@@ -674,7 +675,7 @@ class PlexClient(MediaPlayerDevice):
     def supported_features(self):
         """Flag media player features that are supported."""
         if not self._is_player_active:
-            return None
+            return 0
 
         # force show all controls
         if self.config.get(CONF_SHOW_ALL_CONTROLS):
@@ -685,7 +686,7 @@ class PlexClient(MediaPlayerDevice):
 
         # only show controls when we know what device is connecting
         if not self._make:
-            return None
+            return 0
         # no mute support
         if self.make.lower() == "shield android tv":
             _LOGGER.debug(
@@ -710,7 +711,7 @@ class PlexClient(MediaPlayerDevice):
                     SUPPORT_VOLUME_SET | SUPPORT_PLAY |
                     SUPPORT_TURN_OFF | SUPPORT_VOLUME_MUTE)
 
-        return None
+        return 0
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""

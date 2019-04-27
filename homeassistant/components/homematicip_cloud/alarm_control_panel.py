@@ -1,16 +1,20 @@
 """Support for HomematicIP Cloud alarm control panel."""
 import logging
 
+from homematicip.aio.group import AsyncSecurityZoneGroup
+from homematicip.aio.home import AsyncHome
+from homematicip.base.enums import WindowState
+
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED)
+from homeassistant.core import HomeAssistant
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['homematicip_cloud']
 
 
 async def async_setup_platform(
@@ -19,10 +23,9 @@ async def async_setup_platform(
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the HomematicIP alarm control panel from a config entry."""
-    from homematicip.aio.group import AsyncSecurityZoneGroup
-
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
+                            async_add_entities) -> None:
+    """Set up the HomematicIP alrm control panel from a config entry."""
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for group in home.groups:
@@ -36,17 +39,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
     """Representation of an HomematicIP Cloud security zone group."""
 
-    def __init__(self, home, device):
+    def __init__(self, home: AsyncHome, device) -> None:
         """Initialize the security zone group."""
         device.modelType = 'Group-SecurityZone'
         device.windowState = None
         super().__init__(home, device)
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the device."""
-        from homematicip.base.enums import WindowState
-
         if self._device.active:
             if (self._device.sabotage or self._device.motionDetected or
                     self._device.windowState == WindowState.OPEN or

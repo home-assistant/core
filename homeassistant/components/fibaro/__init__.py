@@ -13,8 +13,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import convert, slugify
 
-REQUIREMENTS = ['fiblary3==0.1.7']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CURRENT_ENERGY_KWH = 'current_energy_kwh'
@@ -26,20 +24,11 @@ CONF_DIMMING = 'dimming'
 CONF_GATEWAYS = 'gateways'
 CONF_PLUGINS = 'plugins'
 CONF_RESET_COLOR = 'reset_color'
-
 DOMAIN = 'fibaro'
-
 FIBARO_CONTROLLERS = 'fibaro_controllers'
 FIBARO_DEVICES = 'fibaro_devices'
-
-FIBARO_COMPONENTS = [
-    'binary_sensor',
-    'cover',
-    'light',
-    'scene',
-    'sensor',
-    'switch',
-]
+FIBARO_COMPONENTS = ['binary_sensor', 'climate', 'cover', 'light',
+                     'scene', 'sensor', 'switch']
 
 FIBARO_TYPEMAP = {
     'com.fibaro.multilevelSensor': "sensor",
@@ -56,7 +45,11 @@ FIBARO_TYPEMAP = {
     'com.fibaro.remoteSwitch': 'switch',
     'com.fibaro.sensor': 'sensor',
     'com.fibaro.colorController': 'light',
-    'com.fibaro.securitySensor': 'binary_sensor'
+    'com.fibaro.securitySensor': 'binary_sensor',
+    'com.fibaro.hvac': 'climate',
+    'com.fibaro.setpoint': 'climate',
+    'com.fibaro.FGT001': 'climate',
+    'com.fibaro.thermostatDanfoss': 'climate'
 }
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
@@ -174,6 +167,16 @@ class FibaroController():
         """Register device with a callback for updates."""
         self._callbacks[device_id] = callback
 
+    def get_children(self, device_id):
+        """Get a list of child devices."""
+        return [
+            device for device in self._device_map.values()
+            if device.parentId == device_id]
+
+    def get_siblings(self, device_id):
+        """Get the siblings of a device."""
+        return self.get_children(self._device_map[device_id].parentId)
+
     @staticmethod
     def _map_device_to_type(device):
         """Map device to HA device type."""
@@ -217,9 +220,9 @@ class FibaroController():
                 room_name = self._room_map[device.roomID].name
             device.room_name = room_name
             device.friendly_name = '{} {}'.format(room_name, device.name)
-            device.ha_id = '{}_{}_{}'.format(
+            device.ha_id = 'scene_{}_{}_{}'.format(
                 slugify(room_name), slugify(device.name), device.id)
-            device.unique_id_str = "{}.{}".format(
+            device.unique_id_str = "{}.scene.{}".format(
                 self.hub_serial, device.id)
             self._scene_map[device.id] = device
             self.fibaro_devices['scene'].append(device)
@@ -229,6 +232,7 @@ class FibaroController():
         devices = self._client.devices.list()
         self._device_map = {}
         self.fibaro_devices = defaultdict(list)
+        last_climate_parent = None
         for device in devices:
             try:
                 device.fibaro_controller = self
@@ -249,15 +253,26 @@ class FibaroController():
                         self._device_config.get(device.ha_id, {})
                 else:
                     device.mapped_type = None
-                if device.mapped_type:
+                dtype = device.mapped_type
+                if dtype:
                     device.unique_id_str = "{}.{}".format(
                         self.hub_serial, device.id)
                     self._device_map[device.id] = device
-                    self.fibaro_devices[device.mapped_type].append(device)
-                _LOGGER.debug("%s (%s, %s) -> %s. Prop: %s Actions: %s",
+                    if dtype != 'climate':
+                        self.fibaro_devices[dtype].append(device)
+                    else:
+                        # if a sibling of this has been added, skip this one
+                        # otherwise add the first visible device in the group
+                        # which is a hack, but solves a problem with FGT having
+                        # hidden compatibility devices before the real device
+                        if last_climate_parent != device.parentId and \
+                                device.visible:
+                            self.fibaro_devices[dtype].append(device)
+                            last_climate_parent = device.parentId
+                _LOGGER.debug("%s (%s, %s) -> %s %s",
                               device.ha_id, device.type,
-                              device.baseType, device.mapped_type,
-                              str(device.properties), str(device.actions))
+                              device.baseType, dtype,
+                              str(device))
             except (KeyError, ValueError):
                 pass
 

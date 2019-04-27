@@ -3,6 +3,7 @@ import asyncio
 from collections import OrderedDict
 from datetime import datetime
 from pytz import utc
+import voluptuous as vol
 
 import unittest
 from unittest.mock import patch, MagicMock
@@ -81,6 +82,35 @@ async def test_network_options(hass, mock_openzwave):
     network = hass.data[zwave.DATA_NETWORK]
     assert network.options.device == 'mock_usb_path'
     assert network.options.config_path == 'mock_config_path'
+
+
+async def test_network_key_validation(hass, mock_openzwave):
+    """Test network key validation."""
+    test_values = [
+        ('0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, '
+         '0x0C, 0x0D, 0x0E, 0x0F, 0x10'),
+        ('0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0A,0x0B,0x0C,0x0D,'
+         '0x0E,0x0F,0x10'),
+    ]
+    for value in test_values:
+        result = zwave.CONFIG_SCHEMA({'zwave': {'network_key': value}})
+        assert result['zwave']['network_key'] == value
+
+
+async def test_erronous_network_key_fails_validation(hass, mock_openzwave):
+    """Test failing erronous network key validation."""
+    test_values = [
+        ('0x 01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, '
+         '0x0C, 0x0D, 0x0E, 0x0F, 0x10'),
+        ('0X01,0X02,0X03,0X04,0X05,0X06,0X07,0X08,0X09,0X0A,0X0B,0X0C,0X0D,'
+         '0X0E,0X0F,0X10'),
+        'invalid',
+        '1234567',
+        1234567
+    ]
+    for value in test_values:
+        with pytest.raises(vol.Invalid):
+            zwave.CONFIG_SCHEMA({'zwave': {'network_key': value}})
 
 
 async def test_auto_heal_midnight(hass, mock_openzwave):
@@ -528,13 +558,13 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'import_module')
     @patch.object(zwave, 'discovery')
-    def test_entity_discovery(self, discovery, get_platform):
+    def test_entity_discovery(self, discovery, import_module):
         """Test the creation of a new entity."""
         discovery.async_load_platform.return_value = mock_coro()
         mock_platform = MagicMock()
-        get_platform.return_value = mock_platform
+        import_module.return_value = mock_platform
         mock_device = MagicMock()
         mock_device.name = 'test_device'
         mock_platform.get_device.return_value = mock_device
@@ -588,13 +618,13 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         assert values._entity.value_changed.called
         assert len(values._entity.value_changed.mock_calls) == 1
 
-    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'import_module')
     @patch.object(zwave, 'discovery')
-    def test_entity_existing_values(self, discovery, get_platform):
+    def test_entity_existing_values(self, discovery, import_module):
         """Test the loading of already discovered values."""
         discovery.async_load_platform.return_value = mock_coro()
         mock_platform = MagicMock()
-        get_platform.return_value = mock_platform
+        import_module.return_value = mock_platform
         mock_device = MagicMock()
         mock_device.name = 'test_device'
         mock_platform.get_device.return_value = mock_device
@@ -633,9 +663,9 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         assert args[4] == self.zwave_config
         assert not self.primary.enable_poll.called
 
-    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'import_module')
     @patch.object(zwave, 'discovery')
-    def test_node_schema_mismatch(self, discovery, get_platform):
+    def test_node_schema_mismatch(self, discovery, import_module):
         """Test node schema mismatch."""
         self.node.generic = 'no_match'
         self.node.values = {
@@ -656,13 +686,13 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
 
         assert not discovery.async_load_platform.called
 
-    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'import_module')
     @patch.object(zwave, 'discovery')
-    def test_entity_workaround_component(self, discovery, get_platform):
+    def test_entity_workaround_component(self, discovery, import_module):
         """Test component workaround."""
         discovery.async_load_platform.return_value = mock_coro()
         mock_platform = MagicMock()
-        get_platform.return_value = mock_platform
+        import_module.return_value = mock_platform
         mock_device = MagicMock()
         mock_device.name = 'test_device'
         mock_platform.get_device.return_value = mock_device
@@ -699,9 +729,9 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
             args = mock_dispatch_send.mock_calls[0][1]
             assert args[1] == 'zwave_new_binary_sensor'
 
-    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'import_module')
     @patch.object(zwave, 'discovery')
-    def test_entity_workaround_ignore(self, discovery, get_platform):
+    def test_entity_workaround_ignore(self, discovery, import_module):
         """Test ignore workaround."""
         self.node.manufacturer_id = '010f'
         self.node.product_type = '0301'
@@ -728,9 +758,9 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
 
         assert not discovery.async_load_platform.called
 
-    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'import_module')
     @patch.object(zwave, 'discovery')
-    def test_entity_config_ignore(self, discovery, get_platform):
+    def test_entity_config_ignore(self, discovery, import_module):
         """Test ignore config."""
         self.node.values = {
             self.primary.value_id: self.primary,
@@ -752,9 +782,10 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
 
         assert not discovery.async_load_platform.called
 
-    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'import_module')
     @patch.object(zwave, 'discovery')
-    def test_entity_config_ignore_with_registry(self, discovery, get_platform):
+    def test_entity_config_ignore_with_registry(self, discovery,
+                                                import_module):
         """Test ignore config.
 
         The case when the device is in entity registry.
@@ -783,16 +814,16 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
 
         assert not discovery.async_load_platform.called
 
-    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'import_module')
     @patch.object(zwave, 'discovery')
-    def test_entity_platform_ignore(self, discovery, get_platform):
+    def test_entity_platform_ignore(self, discovery, import_module):
         """Test platform ignore device."""
         self.node.values = {
             self.primary.value_id: self.primary,
             self.secondary.value_id: self.secondary,
         }
         platform = MagicMock()
-        get_platform.return_value = platform
+        import_module.return_value = platform
         platform.get_device.return_value = None
         zwave.ZWaveDeviceEntityValues(
             hass=self.hass,
@@ -806,12 +837,12 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
 
         assert not discovery.async_load_platform.called
 
-    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'import_module')
     @patch.object(zwave, 'discovery')
-    def test_config_polling_intensity(self, discovery, get_platform):
+    def test_config_polling_intensity(self, discovery, import_module):
         """Test polling intensity."""
         mock_platform = MagicMock()
-        get_platform.return_value = mock_platform
+        import_module.return_value = mock_platform
         mock_device = MagicMock()
         mock_device.name = 'test_device'
         mock_platform.get_device.return_value = mock_device
@@ -1083,7 +1114,7 @@ class TestZWaveServices(unittest.TestCase):
 
     def test_set_config_parameter(self):
         """Test zwave set_config_parameter service."""
-        value = MockValue(
+        value_byte = MockValue(
             index=12,
             command_class=const.COMMAND_CLASS_CONFIGURATION,
             type=const.TYPE_BYTE,
@@ -1094,23 +1125,43 @@ class TestZWaveServices(unittest.TestCase):
             type=const.TYPE_LIST,
             data_items=['item1', 'item2', 'item3'],
         )
+        value_button = MockValue(
+            index=14,
+            command_class=const.COMMAND_CLASS_CONFIGURATION,
+            type=const.TYPE_BUTTON,
+        )
         value_list_int = MockValue(
             index=15,
             command_class=const.COMMAND_CLASS_CONFIGURATION,
             type=const.TYPE_LIST,
             data_items=['1', '2', '3'],
         )
-        value_button = MockValue(
-            index=14,
+        value_bool = MockValue(
+            index=16,
             command_class=const.COMMAND_CLASS_CONFIGURATION,
-            type=const.TYPE_BUTTON,
+            type=const.TYPE_BOOL,
         )
         node = MockNode(node_id=14)
-        node.get_values.return_value = {12: value, 13: value_list,
-                                        14: value_button,
-                                        15: value_list_int}
+        node.get_values.return_value = {
+            12: value_byte,
+            13: value_list,
+            14: value_button,
+            15: value_list_int,
+            16: value_bool
+        }
         self.zwave_network.nodes = {14: node}
 
+        # Byte
+        self.hass.services.call('zwave', 'set_config_parameter', {
+            const.ATTR_NODE_ID: 14,
+            const.ATTR_CONFIG_PARAMETER: 12,
+            const.ATTR_CONFIG_VALUE: 7,
+        })
+        self.hass.block_till_done()
+
+        assert value_byte.data == 7
+
+        # List
         self.hass.services.call('zwave', 'set_config_parameter', {
             const.ATTR_NODE_ID: 14,
             const.ATTR_CONFIG_PARAMETER: 13,
@@ -1120,24 +1171,7 @@ class TestZWaveServices(unittest.TestCase):
 
         assert value_list.data == 'item3'
 
-        self.hass.services.call('zwave', 'set_config_parameter', {
-            const.ATTR_NODE_ID: 14,
-            const.ATTR_CONFIG_PARAMETER: 15,
-            const.ATTR_CONFIG_VALUE: 3,
-        })
-        self.hass.block_till_done()
-
-        assert value_list_int.data == '3'
-
-        self.hass.services.call('zwave', 'set_config_parameter', {
-            const.ATTR_NODE_ID: 14,
-            const.ATTR_CONFIG_PARAMETER: 12,
-            const.ATTR_CONFIG_VALUE: 7,
-        })
-        self.hass.block_till_done()
-
-        assert value.data == 7
-
+        # Button
         self.hass.services.call('zwave', 'set_config_parameter', {
             const.ATTR_NODE_ID: 14,
             const.ATTR_CONFIG_PARAMETER: 14,
@@ -1148,6 +1182,37 @@ class TestZWaveServices(unittest.TestCase):
         assert self.zwave_network.manager.pressButton.called
         assert self.zwave_network.manager.releaseButton.called
 
+        # List of Ints
+        self.hass.services.call('zwave', 'set_config_parameter', {
+            const.ATTR_NODE_ID: 14,
+            const.ATTR_CONFIG_PARAMETER: 15,
+            const.ATTR_CONFIG_VALUE: 3,
+        })
+        self.hass.block_till_done()
+
+        assert value_list_int.data == '3'
+
+        # Boolean Truthy
+        self.hass.services.call('zwave', 'set_config_parameter', {
+            const.ATTR_NODE_ID: 14,
+            const.ATTR_CONFIG_PARAMETER: 16,
+            const.ATTR_CONFIG_VALUE: 'True',
+        })
+        self.hass.block_till_done()
+
+        assert value_bool.data == 1
+
+        # Boolean Falsy
+        self.hass.services.call('zwave', 'set_config_parameter', {
+            const.ATTR_NODE_ID: 14,
+            const.ATTR_CONFIG_PARAMETER: 16,
+            const.ATTR_CONFIG_VALUE: 'False',
+        })
+        self.hass.block_till_done()
+
+        assert value_bool.data == 0
+
+        # Different Parameter Size
         self.hass.services.call('zwave', 'set_config_parameter', {
             const.ATTR_NODE_ID: 14,
             const.ATTR_CONFIG_PARAMETER: 19,

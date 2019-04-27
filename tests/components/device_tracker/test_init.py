@@ -13,7 +13,6 @@ from homeassistant.components import zone
 from homeassistant.core import callback, State
 from homeassistant.setup import async_setup_component
 from homeassistant.helpers import discovery
-from homeassistant.loader import get_component
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN,
@@ -179,10 +178,9 @@ async def test_gravatar_and_picture(hass):
     autospec=True)
 async def test_discover_platform(mock_demo_setup_scanner, mock_see, hass):
     """Test discovery of device_tracker demo platform."""
-    assert device_tracker.DOMAIN not in hass.config.components
     await discovery.async_load_platform(
         hass, device_tracker.DOMAIN, 'demo', {'test_key': 'test_val'},
-        {'demo': {}})
+        {'bla': {}})
     await hass.async_block_till_done()
     assert device_tracker.DOMAIN in hass.config.components
     assert mock_demo_setup_scanner.called
@@ -192,7 +190,7 @@ async def test_discover_platform(mock_demo_setup_scanner, mock_see, hass):
 
 async def test_update_stale(hass):
     """Test stalled update."""
-    scanner = get_component(hass, 'device_tracker.test').SCANNER
+    scanner = getattr(hass.components, 'test.device_tracker').SCANNER
     scanner.reset()
     scanner.come_home('DEV1')
 
@@ -256,7 +254,7 @@ async def test_device_hidden(hass, yaml_devices):
         hide_if_away=True)
     device_tracker.update_config(yaml_devices, dev_id, device)
 
-    scanner = get_component(hass, 'device_tracker.test').SCANNER
+    scanner = getattr(hass.components, 'test.device_tracker').SCANNER
     scanner.reset()
 
     with assert_setup_component(1, device_tracker.DOMAIN):
@@ -275,7 +273,7 @@ async def test_group_all_devices(hass, yaml_devices):
         hide_if_away=True)
     device_tracker.update_config(yaml_devices, dev_id, device)
 
-    scanner = get_component(hass, 'device_tracker.test').SCANNER
+    scanner = getattr(hass.components, 'test.device_tracker').SCANNER
     scanner.reset()
 
     with assert_setup_component(1, device_tracker.DOMAIN):
@@ -441,7 +439,7 @@ async def test_see_passive_zone_state(hass):
             'zone': zone_info
         })
 
-    scanner = get_component(hass, 'device_tracker.test').SCANNER
+    scanner = getattr(hass.components, 'test.device_tracker').SCANNER
     scanner.reset()
     scanner.come_home('dev1')
 
@@ -557,7 +555,7 @@ def test_bad_platform(hass):
 
 async def test_adding_unknown_device_to_config(mock_device_tracker_conf, hass):
     """Test the adding of unknown devices to configuration file."""
-    scanner = get_component(hass, 'device_tracker.test').SCANNER
+    scanner = getattr(hass.components, 'test.device_tracker').SCANNER
     scanner.reset()
     scanner.come_home('DEV1')
 

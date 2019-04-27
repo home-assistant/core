@@ -6,8 +6,6 @@ from homeassistant.components.device_tracker import DeviceScanner
 
 from . import DATA_FREEBOX
 
-DEPENDENCIES = ['freebox']
-
 _LOGGER = logging.getLogger(__name__)
 
 

@@ -12,8 +12,6 @@ from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA,
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['twilio']
-
 CONF_FROM_NUMBER = 'from_number'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

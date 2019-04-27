@@ -11,8 +11,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DOMAIN as AXIS_DOMAIN
 
-DEPENDENCIES = [AXIS_DOMAIN]
-
 AXIS_IMAGE = 'http://{}:{}/axis-cgi/jpg/image.cgi'
 AXIS_VIDEO = 'http://{}:{}/axis-cgi/mjpg/video.cgi'
 AXIS_STREAM = 'rtsp://{}:{}@{}/axis-media/media.amp?videocodec=h264'
@@ -57,6 +55,11 @@ class AxisCamera(MjpegCamera):
             self.hass, self.device.event_new_address, self._new_address))
         self.unsub_dispatcher.append(async_dispatcher_connect(
             self.hass, self.device.event_reachable, self.update_callback))
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect device object when removed."""
+        for unsub_dispatcher in self.unsub_dispatcher:
+            unsub_dispatcher()
 
     @property
     def supported_features(self):

@@ -11,8 +11,6 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
-REQUIREMENTS = ['mbddns==0.1.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'mythicbeastsdns'

@@ -12,8 +12,6 @@ import homeassistant.helpers.config_validation as cv
 
 from . import ATTRIBUTION, DATA_RING, DEFAULT_ENTITY_NAMESPACE
 
-DEPENDENCIES = ['ring']
-
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=10)

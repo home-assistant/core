@@ -11,8 +11,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START)
 from homeassistant.core import callback
 
-REQUIREMENTS = ['miflora==0.4.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ADAPTER = 'adapter'

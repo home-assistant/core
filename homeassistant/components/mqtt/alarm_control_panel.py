@@ -37,25 +37,23 @@ DEFAULT_ARM_AWAY = 'ARM_AWAY'
 DEFAULT_ARM_HOME = 'ARM_HOME'
 DEFAULT_DISARM = 'DISARM'
 DEFAULT_NAME = 'MQTT Alarm'
-DEPENDENCIES = ['mqtt']
-
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
-    vol.Required(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_CODE): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PAYLOAD_ARM_NIGHT, default=DEFAULT_ARM_NIGHT): cv.string,
-    vol.Optional(CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY): cv.string,
-    vol.Optional(CONF_PAYLOAD_ARM_HOME, default=DEFAULT_ARM_HOME): cv.string,
-    vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
     vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
     vol.Optional(CONF_CODE_DISARM_REQUIRED, default=True): cv.boolean,
     vol.Optional(CONF_COMMAND_TEMPLATE,
                  default=DEFAULT_COMMAND_TEMPLATE): cv.template,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_UNIQUE_ID): cv.string,
+    vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY): cv.string,
+    vol.Optional(CONF_PAYLOAD_ARM_HOME, default=DEFAULT_ARM_HOME): cv.string,
+    vol.Optional(CONF_PAYLOAD_ARM_NIGHT, default=DEFAULT_ARM_NIGHT): cv.string,
+    vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
+    vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
+    vol.Required(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
     mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 
@@ -130,9 +128,8 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         value_template = self._config.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
             value_template.hass = self.hass
-        command_template = self._config.get(CONF_COMMAND_TEMPLATE)
-        if command_template is not None:
-            command_template.hass = self.hass
+        command_template = self._config[CONF_COMMAND_TEMPLATE]
+        command_template.hass = self.hass
 
         @callback
         def message_received(msg):
@@ -154,9 +151,9 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state,
-            {'state_topic': {'topic': self._config.get(CONF_STATE_TOPIC),
+            {'state_topic': {'topic': self._config[CONF_STATE_TOPIC],
                              'msg_callback': message_received,
-                             'qos': self._config.get(CONF_QOS)}})
+                             'qos': self._config[CONF_QOS]}})
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
@@ -173,7 +170,7 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     @property
     def name(self):
         """Return the name of the device."""
-        return self._config.get(CONF_NAME)
+        return self._config[CONF_NAME]
 
     @property
     def unique_id(self):
@@ -200,10 +197,10 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
         This method is a coroutine.
         """
-        code_required = self._config.get(CONF_CODE_DISARM_REQUIRED)
+        code_required = self._config[CONF_CODE_DISARM_REQUIRED]
         if code_required and not self._validate_code(code, 'disarming'):
             return
-        payload = self._config.get(CONF_PAYLOAD_DISARM)
+        payload = self._config[CONF_PAYLOAD_DISARM]
         self._publish(code, payload)
 
     async def async_alarm_arm_home(self, code=None):
@@ -211,10 +208,10 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
         This method is a coroutine.
         """
-        code_required = self._config.get(CONF_CODE_ARM_REQUIRED)
+        code_required = self._config[CONF_CODE_ARM_REQUIRED]
         if code_required and not self._validate_code(code, 'arming home'):
             return
-        action = self._config.get(CONF_PAYLOAD_ARM_HOME)
+        action = self._config[CONF_PAYLOAD_ARM_HOME]
         self._publish(code, action)
 
     async def async_alarm_arm_away(self, code=None):
@@ -222,10 +219,10 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
         This method is a coroutine.
         """
-        code_required = self._config.get(CONF_CODE_ARM_REQUIRED)
+        code_required = self._config[CONF_CODE_ARM_REQUIRED]
         if code_required and not self._validate_code(code, 'arming away'):
             return
-        action = self._config.get(CONF_PAYLOAD_ARM_AWAY)
+        action = self._config[CONF_PAYLOAD_ARM_AWAY]
         self._publish(code, action)
 
     async def async_alarm_arm_night(self, code=None):
@@ -233,22 +230,22 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
         This method is a coroutine.
         """
-        code_required = self._config.get(CONF_CODE_ARM_REQUIRED)
+        code_required = self._config[CONF_CODE_ARM_REQUIRED]
         if code_required and not self._validate_code(code, 'arming night'):
             return
-        action = self._config.get(CONF_PAYLOAD_ARM_NIGHT)
+        action = self._config[CONF_PAYLOAD_ARM_NIGHT]
         self._publish(code, action)
 
     def _publish(self, code, action):
         """Publish via mqtt."""
-        command_template = self._config.get(CONF_COMMAND_TEMPLATE)
+        command_template = self._config[CONF_COMMAND_TEMPLATE]
         values = {'action': action, 'code': code}
         payload = command_template.async_render(**values)
         mqtt.async_publish(
-            self.hass, self._config.get(CONF_COMMAND_TOPIC),
+            self.hass, self._config[CONF_COMMAND_TOPIC],
             payload,
-            self._config.get(CONF_QOS),
-            self._config.get(CONF_RETAIN))
+            self._config[CONF_QOS],
+            self._config[CONF_RETAIN])
 
     def _validate_code(self, code, state):
         """Validate given code."""

@@ -8,8 +8,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyuptimerobot==0.0.5']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_TARGET = 'target'

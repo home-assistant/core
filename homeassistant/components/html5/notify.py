@@ -24,10 +24,6 @@ from homeassistant.components.notify import (
     ATTR_DATA, ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, DOMAIN,
     PLATFORM_SCHEMA, BaseNotificationService)
 
-REQUIREMENTS = ['pywebpush==1.9.2']
-
-DEPENDENCIES = ['frontend']
-
 _LOGGER = logging.getLogger(__name__)
 
 REGISTRATIONS_FILE = 'html5_push_registrations.conf'

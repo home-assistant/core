@@ -369,7 +369,7 @@ async def test_if_action(hass, calls):
 
 async def test_if_fires_on_change_with_bad_template(hass, calls):
     """Test for firing on change with bad template."""
-    with assert_setup_component(0):
+    with assert_setup_component(0, automation.DOMAIN):
         assert await async_setup_component(hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {

@@ -1,14 +1,13 @@
 """Demo implementation of the media player."""
-from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
-import homeassistant.util.dt as dt_util
-
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
     SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOUND_MODE,
-    SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
+    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
+    SUPPORT_SELECT_SOUND_MODE, SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
+from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
+import homeassistant.util.dt as dt_util
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -30,7 +29,8 @@ DEFAULT_SOUND_MODE = 'Dummy Music'
 YOUTUBE_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | \
-    SUPPORT_SHUFFLE_SET | SUPPORT_SELECT_SOUND_MODE | SUPPORT_SELECT_SOURCE
+    SUPPORT_SHUFFLE_SET | SUPPORT_SELECT_SOUND_MODE | SUPPORT_SELECT_SOURCE | \
+    SUPPORT_SEEK
 
 MUSIC_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
@@ -51,7 +51,7 @@ class AbstractDemoPlayer(MediaPlayerDevice):
 
     # We only implement the methods that we support
 
-    def __init__(self, name):
+    def __init__(self, name, device_class=None):
         """Initialize the demo device."""
         self._name = name
         self._player_state = STATE_PLAYING
@@ -60,6 +60,7 @@ class AbstractDemoPlayer(MediaPlayerDevice):
         self._shuffle = False
         self._sound_mode_list = SOUND_MODE_LIST
         self._sound_mode = DEFAULT_SOUND_MODE
+        self._device_class = device_class
 
     @property
     def should_poll(self):
@@ -100,6 +101,11 @@ class AbstractDemoPlayer(MediaPlayerDevice):
     def sound_mode_list(self):
         """Return a list of available sound modes."""
         return self._sound_mode_list
+
+    @property
+    def device_class(self):
+        """Return the device class of the media player."""
+        return self._device_class
 
     def turn_on(self):
         """Turn the media player on."""

@@ -19,8 +19,6 @@ from homeassistant.helpers import config_validation as cv
 from .config_flow import configured_instances
 from .const import DATA_CLIENT, DEFAULT_SCAN_INTERVAL, DOMAIN, TOPIC_UPDATE
 
-REQUIREMENTS = ['simplisafe-python==3.4.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ACCOUNTS = 'accounts'

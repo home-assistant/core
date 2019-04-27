@@ -10,8 +10,6 @@ from . import DOMAIN as VELBUS_DOMAIN, VelbusEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['velbus']
-
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE)
 
 

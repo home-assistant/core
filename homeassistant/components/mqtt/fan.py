@@ -9,7 +9,7 @@ from homeassistant.components.fan import (
     SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity)
 from homeassistant.const import (
     CONF_DEVICE, CONF_NAME, CONF_OPTIMISTIC, CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON,
-    CONF_STATE, STATE_OFF, STATE_ON)
+    CONF_STATE)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -23,8 +23,6 @@ from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['mqtt']
-
 CONF_STATE_VALUE_TEMPLATE = 'state_value_template'
 CONF_SPEED_STATE_TOPIC = 'speed_state_topic'
 CONF_SPEED_COMMAND_TOPIC = 'speed_command_topic'
@@ -34,6 +32,7 @@ CONF_OSCILLATION_COMMAND_TOPIC = 'oscillation_command_topic'
 CONF_OSCILLATION_VALUE_TEMPLATE = 'oscillation_value_template'
 CONF_PAYLOAD_OSCILLATION_ON = 'payload_oscillation_on'
 CONF_PAYLOAD_OSCILLATION_OFF = 'payload_oscillation_off'
+CONF_PAYLOAD_OFF_SPEED = 'payload_off_speed'
 CONF_PAYLOAD_LOW_SPEED = 'payload_low_speed'
 CONF_PAYLOAD_MEDIUM_SPEED = 'payload_medium_speed'
 CONF_PAYLOAD_HIGH_SPEED = 'payload_high_speed'
@@ -50,29 +49,30 @@ OSCILLATE_OFF_PAYLOAD = 'oscillate_off'
 OSCILLATION = 'oscillation'
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_SPEED_STATE_TOPIC): mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_SPEED_COMMAND_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_SPEED_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_OSCILLATION_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_OSCILLATION_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_OSCILLATION_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-    vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-    vol.Optional(CONF_PAYLOAD_OSCILLATION_ON,
-                 default=DEFAULT_PAYLOAD_ON): cv.string,
-    vol.Optional(CONF_PAYLOAD_OSCILLATION_OFF,
-                 default=DEFAULT_PAYLOAD_OFF): cv.string,
+    vol.Optional(CONF_PAYLOAD_HIGH_SPEED, default=SPEED_HIGH): cv.string,
     vol.Optional(CONF_PAYLOAD_LOW_SPEED, default=SPEED_LOW): cv.string,
     vol.Optional(CONF_PAYLOAD_MEDIUM_SPEED, default=SPEED_MEDIUM): cv.string,
-    vol.Optional(CONF_PAYLOAD_HIGH_SPEED, default=SPEED_HIGH): cv.string,
+    vol.Optional(CONF_PAYLOAD_OFF_SPEED, default=SPEED_OFF): cv.string,
+    vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+    vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+    vol.Optional(CONF_PAYLOAD_OSCILLATION_OFF,
+                 default=OSCILLATE_OFF_PAYLOAD): cv.string,
+    vol.Optional(CONF_PAYLOAD_OSCILLATION_ON,
+                 default=OSCILLATE_ON_PAYLOAD): cv.string,
+    vol.Optional(CONF_SPEED_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_SPEED_LIST,
                  default=[SPEED_OFF, SPEED_LOW,
                           SPEED_MEDIUM, SPEED_HIGH]): cv.ensure_list,
-    vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+    vol.Optional(CONF_SPEED_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_SPEED_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_UNIQUE_ID): cv.string,
-    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
     mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 
@@ -174,15 +174,16 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             OSCILLATION: config.get(CONF_OSCILLATION_VALUE_TEMPLATE)
         }
         self._payload = {
-            STATE_ON: config.get(CONF_PAYLOAD_ON),
-            STATE_OFF: config.get(CONF_PAYLOAD_OFF),
-            OSCILLATE_ON_PAYLOAD: config.get(CONF_PAYLOAD_OSCILLATION_ON),
-            OSCILLATE_OFF_PAYLOAD: config.get(CONF_PAYLOAD_OSCILLATION_OFF),
-            SPEED_LOW: config.get(CONF_PAYLOAD_LOW_SPEED),
-            SPEED_MEDIUM: config.get(CONF_PAYLOAD_MEDIUM_SPEED),
-            SPEED_HIGH: config.get(CONF_PAYLOAD_HIGH_SPEED),
+            'STATE_ON': config[CONF_PAYLOAD_ON],
+            'STATE_OFF': config[CONF_PAYLOAD_OFF],
+            'OSCILLATE_ON_PAYLOAD': config[CONF_PAYLOAD_OSCILLATION_ON],
+            'OSCILLATE_OFF_PAYLOAD': config[CONF_PAYLOAD_OSCILLATION_OFF],
+            'SPEED_LOW': config[CONF_PAYLOAD_LOW_SPEED],
+            'SPEED_MEDIUM': config[CONF_PAYLOAD_MEDIUM_SPEED],
+            'SPEED_HIGH': config[CONF_PAYLOAD_HIGH_SPEED],
+            'SPEED_OFF': config[CONF_PAYLOAD_OFF_SPEED],
         }
-        optimistic = config.get(CONF_OPTIMISTIC)
+        optimistic = config[CONF_OPTIMISTIC]
         self._optimistic = optimistic or self._topic[CONF_STATE_TOPIC] is None
         self._optimistic_oscillation = (
             optimistic or self._topic[CONF_OSCILLATION_STATE_TOPIC] is None)
@@ -210,9 +211,9 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         def state_received(msg):
             """Handle new received MQTT message."""
             payload = templates[CONF_STATE](msg.payload)
-            if payload == self._payload[STATE_ON]:
+            if payload == self._payload['STATE_ON']:
                 self._state = True
-            elif payload == self._payload[STATE_OFF]:
+            elif payload == self._payload['STATE_OFF']:
                 self._state = False
             self.async_write_ha_state()
 
@@ -220,34 +221,36 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             topics[CONF_STATE_TOPIC] = {
                 'topic': self._topic[CONF_STATE_TOPIC],
                 'msg_callback': state_received,
-                'qos': self._config.get(CONF_QOS)}
+                'qos': self._config[CONF_QOS]}
 
         @callback
         def speed_received(msg):
             """Handle new received MQTT message for the speed."""
             payload = templates[ATTR_SPEED](msg.payload)
-            if payload == self._payload[SPEED_LOW]:
+            if payload == self._payload['SPEED_LOW']:
                 self._speed = SPEED_LOW
-            elif payload == self._payload[SPEED_MEDIUM]:
+            elif payload == self._payload['SPEED_MEDIUM']:
                 self._speed = SPEED_MEDIUM
-            elif payload == self._payload[SPEED_HIGH]:
+            elif payload == self._payload['SPEED_HIGH']:
                 self._speed = SPEED_HIGH
+            elif payload == self._payload['SPEED_OFF']:
+                self._speed = SPEED_OFF
             self.async_write_ha_state()
 
         if self._topic[CONF_SPEED_STATE_TOPIC] is not None:
             topics[CONF_SPEED_STATE_TOPIC] = {
                 'topic': self._topic[CONF_SPEED_STATE_TOPIC],
                 'msg_callback': speed_received,
-                'qos': self._config.get(CONF_QOS)}
+                'qos': self._config[CONF_QOS]}
             self._speed = SPEED_OFF
 
         @callback
         def oscillation_received(msg):
             """Handle new received MQTT message for the oscillation."""
             payload = templates[OSCILLATION](msg.payload)
-            if payload == self._payload[OSCILLATE_ON_PAYLOAD]:
+            if payload == self._payload['OSCILLATE_ON_PAYLOAD']:
                 self._oscillation = True
-            elif payload == self._payload[OSCILLATE_OFF_PAYLOAD]:
+            elif payload == self._payload['OSCILLATE_OFF_PAYLOAD']:
                 self._oscillation = False
             self.async_write_ha_state()
 
@@ -255,7 +258,7 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             topics[CONF_OSCILLATION_STATE_TOPIC] = {
                 'topic': self._topic[CONF_OSCILLATION_STATE_TOPIC],
                 'msg_callback': oscillation_received,
-                'qos': self._config.get(CONF_QOS)}
+                'qos': self._config[CONF_QOS]}
             self._oscillation = False
 
         self._sub_state = await subscription.async_subscribe_topics(
@@ -287,12 +290,12 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     @property
     def name(self) -> str:
         """Get entity name."""
-        return self._config.get(CONF_NAME)
+        return self._config[CONF_NAME]
 
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        return self._config.get(CONF_SPEED_LIST)
+        return self._config[CONF_SPEED_LIST]
 
     @property
     def supported_features(self) -> int:
@@ -316,10 +319,13 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         """
         mqtt.async_publish(
             self.hass, self._topic[CONF_COMMAND_TOPIC],
-            self._payload[STATE_ON], self._config.get(CONF_QOS),
-            self._config.get(CONF_RETAIN))
+            self._payload['STATE_ON'], self._config[CONF_QOS],
+            self._config[CONF_RETAIN])
         if speed:
             await self.async_set_speed(speed)
+        if self._optimistic:
+            self._state = True
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off the entity.
@@ -328,8 +334,11 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         """
         mqtt.async_publish(
             self.hass, self._topic[CONF_COMMAND_TOPIC],
-            self._payload[STATE_OFF], self._config.get(CONF_QOS),
-            self._config.get(CONF_RETAIN))
+            self._payload['STATE_OFF'], self._config[CONF_QOS],
+            self._config[CONF_RETAIN])
+        if self._optimistic:
+            self._state = False
+            self.async_write_ha_state()
 
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan.
@@ -340,18 +349,20 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             return
 
         if speed == SPEED_LOW:
-            mqtt_payload = self._payload[SPEED_LOW]
+            mqtt_payload = self._payload['SPEED_LOW']
         elif speed == SPEED_MEDIUM:
-            mqtt_payload = self._payload[SPEED_MEDIUM]
+            mqtt_payload = self._payload['SPEED_MEDIUM']
         elif speed == SPEED_HIGH:
-            mqtt_payload = self._payload[SPEED_HIGH]
+            mqtt_payload = self._payload['SPEED_HIGH']
+        elif speed == SPEED_OFF:
+            mqtt_payload = self._payload['SPEED_OFF']
         else:
             mqtt_payload = speed
 
         mqtt.async_publish(
             self.hass, self._topic[CONF_SPEED_COMMAND_TOPIC],
-            mqtt_payload, self._config.get(CONF_QOS),
-            self._config.get(CONF_RETAIN))
+            mqtt_payload, self._config[CONF_QOS],
+            self._config[CONF_RETAIN])
 
         if self._optimistic_speed:
             self._speed = speed
@@ -366,13 +377,13 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             return
 
         if oscillating is False:
-            payload = self._payload[OSCILLATE_OFF_PAYLOAD]
+            payload = self._payload['OSCILLATE_OFF_PAYLOAD']
         else:
-            payload = self._payload[OSCILLATE_ON_PAYLOAD]
+            payload = self._payload['OSCILLATE_ON_PAYLOAD']
 
         mqtt.async_publish(
             self.hass, self._topic[CONF_OSCILLATION_COMMAND_TOPIC],
-            payload, self._config.get(CONF_QOS), self._config.get(CONF_RETAIN))
+            payload, self._config[CONF_QOS], self._config[CONF_RETAIN])
 
         if self._optimistic_oscillation:
             self._oscillation = oscillating

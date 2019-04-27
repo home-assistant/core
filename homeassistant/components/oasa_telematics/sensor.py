@@ -12,7 +12,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
-REQUIREMENTS = ['oasatelematics==0.3']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_STOP_ID = 'stop_id'
@@ -188,5 +187,5 @@ class OASATelematicsData():
             return
 
         # Sort the data by time
-        sort = sorted(self.info, itemgetter(ATTR_NEXT_ARRIVAL))
+        sort = sorted(self.info, key=itemgetter(ATTR_NEXT_ARRIVAL))
         self.info = sort

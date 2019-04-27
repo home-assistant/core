@@ -8,8 +8,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.lock import (LockDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME)
 
-REQUIREMENTS = ['pynello==2.0.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ADDRESS = 'address'

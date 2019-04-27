@@ -16,8 +16,6 @@ ATTR_PROTECTION_WINDOW_ENDING_UV = 'end_uv'
 ATTR_PROTECTION_WINDOW_STARTING_TIME = 'start_time'
 ATTR_PROTECTION_WINDOW_STARTING_UV = 'start_uv'
 
-DEPENDENCIES = ['openuv']
-
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):

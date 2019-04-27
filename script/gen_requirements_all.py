@@ -3,11 +3,12 @@
 import fnmatch
 import importlib
 import os
+import pathlib
 import pkgutil
 import re
 import sys
 
-from script.manifest.requirements import gather_requirements_from_manifests
+from script.hassfest.model import Integration
 
 COMMENT_REQUIREMENTS = (
     'Adafruit-DHT',
@@ -47,6 +48,7 @@ TEST_REQUIREMENTS = (
     'aiohttp_cors',
     'aiohue',
     'aiounifi',
+    'aioswitcher',
     'apns2',
     'av',
     'axis',
@@ -56,12 +58,15 @@ TEST_REQUIREMENTS = (
     'dsmr_parser',
     'eebrightbox',
     'emulated_roku',
+    'enocean',
     'ephem',
     'evohomeclient',
     'feedparser-homeassistant',
     'foobot_async',
     'geojson_client',
     'georss_generic_client',
+    'georss_ign_sismologia_client',
+    'google-api-python-client',
     'gTTS-token',
     'growatt',
     'ha-ffmpeg',
@@ -75,6 +80,7 @@ TEST_REQUIREMENTS = (
     'home-assistant-frontend',
     'homekit[IP]',
     'homematicip',
+    'httplib2',
     'influxdb',
     'jsonpath',
     'libpurecool',
@@ -83,6 +89,7 @@ TEST_REQUIREMENTS = (
     'mbddns',
     'mficlient',
     'numpy',
+    'oauth2client',
     'paho-mqtt',
     'pexpect',
     'pilight',
@@ -216,7 +223,7 @@ def gather_modules():
 
     errors = []
 
-    gather_requirements_from_manifests(process_requirements, errors, reqs)
+    gather_requirements_from_manifests(errors, reqs)
     gather_requirements_from_modules(errors, reqs)
 
     for key in reqs:
@@ -230,6 +237,28 @@ def gather_modules():
         return None
 
     return reqs
+
+
+def gather_requirements_from_manifests(errors, reqs):
+    """Gather all of the requirements from manifests."""
+    integrations = Integration.load_dir(pathlib.Path(
+        'homeassistant/components'
+    ))
+    for domain in sorted(integrations):
+        integration = integrations[domain]
+
+        if not integration.manifest:
+            errors.append(
+                'The manifest for component {} is invalid.'.format(domain)
+            )
+            continue
+
+        process_requirements(
+            errors,
+            integration.manifest['requirements'],
+            'homeassistant.components.{}'.format(domain),
+            reqs
+        )
 
 
 def gather_requirements_from_modules(errors, reqs):

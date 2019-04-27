@@ -9,8 +9,6 @@ from .const import COVER_TYPES, DAMPERS, NEW_LIGHT, WINDOW_COVERS
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
-DEPENDENCIES = ['deconz']
-
 ZIGBEE_SPEC = ['lumi.curtain']
 
 

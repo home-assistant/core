@@ -11,6 +11,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import (
     MockConfigEntry, async_fire_mqtt_message, async_mock_mqtt_component,
     mock_registry)
+from tests.components.lock import common
 
 
 async def test_controlling_state_via_topic(hass, mqtt_mock):
@@ -31,14 +32,11 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, 'state-topic', 'LOCK')
-    await hass.async_block_till_done()
 
     state = hass.states.get('lock.test')
     assert state.state is STATE_LOCKED
 
     async_fire_mqtt_message(hass, 'state-topic', 'UNLOCK')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('lock.test')
     assert state.state is STATE_UNLOCKED
@@ -62,17 +60,86 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
     assert state.state is STATE_UNLOCKED
 
     async_fire_mqtt_message(hass, 'state-topic', '{"val":"LOCK"}')
-    await hass.async_block_till_done()
 
     state = hass.states.get('lock.test')
     assert state.state is STATE_LOCKED
 
     async_fire_mqtt_message(hass, 'state-topic', '{"val":"UNLOCK"}')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('lock.test')
     assert state.state is STATE_UNLOCKED
+
+
+async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
+    """Test optimistic mode without state topic."""
+    assert await async_setup_component(hass, lock.DOMAIN, {
+        lock.DOMAIN: {
+            'platform': 'mqtt',
+            'name': 'test',
+            'command_topic': 'command-topic',
+            'payload_lock': 'LOCK',
+            'payload_unlock': 'UNLOCK'
+        }
+    })
+
+    state = hass.states.get('lock.test')
+    assert state.state is STATE_UNLOCKED
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_lock(hass, 'lock.test')
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        'command-topic', 'LOCK', 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get('lock.test')
+    assert state.state is STATE_LOCKED
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_unlock(hass, 'lock.test')
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        'command-topic', 'UNLOCK', 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get('lock.test')
+    assert state.state is STATE_UNLOCKED
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+
+async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
+    """Test optimistic mode without state topic."""
+    assert await async_setup_component(hass, lock.DOMAIN, {
+        lock.DOMAIN: {
+            'platform': 'mqtt',
+            'name': 'test',
+            'state_topic': 'state-topic',
+            'command_topic': 'command-topic',
+            'payload_lock': 'LOCK',
+            'payload_unlock': 'UNLOCK',
+            'optimistic': True
+        }
+    })
+
+    state = hass.states.get('lock.test')
+    assert state.state is STATE_UNLOCKED
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_lock(hass, 'lock.test')
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        'command-topic', 'LOCK', 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get('lock.test')
+    assert state.state is STATE_LOCKED
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_unlock(hass, 'lock.test')
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        'command-topic', 'UNLOCK', 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get('lock.test')
+    assert state.state is STATE_UNLOCKED
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
 async def test_default_availability_payload(hass, mqtt_mock):
@@ -93,14 +160,11 @@ async def test_default_availability_payload(hass, mqtt_mock):
     assert state.state is STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability-topic', 'online')
-    await hass.async_block_till_done()
 
     state = hass.states.get('lock.test')
     assert state.state is not STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability-topic', 'offline')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('lock.test')
     assert state.state is STATE_UNAVAILABLE
@@ -126,14 +190,11 @@ async def test_custom_availability_payload(hass, mqtt_mock):
     assert state.state is STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability-topic', 'good')
-    await hass.async_block_till_done()
 
     state = hass.states.get('lock.test')
     assert state.state is not STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability-topic', 'nogood')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('lock.test')
     assert state.state is STATE_UNAVAILABLE
@@ -151,10 +212,9 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     })
 
     async_fire_mqtt_message(hass, 'attr-topic', '{ "val": "100" }')
-    await hass.async_block_till_done()
     state = hass.states.get('lock.test')
 
-    assert '100' == state.attributes.get('val')
+    assert state.attributes.get('val') == '100'
 
 
 async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
@@ -169,7 +229,6 @@ async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
     })
 
     async_fire_mqtt_message(hass, 'attr-topic', '[ "list", "of", "things"]')
-    await hass.async_block_till_done()
     state = hass.states.get('lock.test')
 
     assert state.attributes.get('val') is None
@@ -188,7 +247,6 @@ async def test_update_with_json_attrs_bad_JSON(hass, mqtt_mock, caplog):
     })
 
     async_fire_mqtt_message(hass, 'attr-topic', 'This is not JSON')
-    await hass.async_block_till_done()
 
     state = hass.states.get('lock.test')
     assert state.attributes.get('val') is None
@@ -213,30 +271,23 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
                             data1)
     await hass.async_block_till_done()
     async_fire_mqtt_message(hass, 'attr-topic1', '{ "val": "100" }')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('lock.beer')
-    assert '100' == state.attributes.get('val')
+    assert state.attributes.get('val') == '100'
 
     # Change json_attributes_topic
     async_fire_mqtt_message(hass, 'homeassistant/lock/bla/config',
                             data2)
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     # Verify we are no longer subscribing to the old topic
     async_fire_mqtt_message(hass, 'attr-topic1', '{ "val": "50" }')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('lock.beer')
-    assert '100' == state.attributes.get('val')
+    assert state.attributes.get('val') == '100'
 
     # Verify we are subscribing to the new topic
     async_fire_mqtt_message(hass, 'attr-topic2', '{ "val": "75" }')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('lock.beer')
-    assert '75' == state.attributes.get('val')
+    assert state.attributes.get('val') == '75'
 
 
 async def test_unique_id(hass):
@@ -258,7 +309,6 @@ async def test_unique_id(hass):
         }]
     })
     async_fire_mqtt_message(hass, 'test-topic', 'payload')
-    await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(lock.DOMAIN)) == 1
 
 
@@ -278,7 +328,6 @@ async def test_discovery_removal_lock(hass, mqtt_mock, caplog):
     assert state.name == 'Beer'
     async_fire_mqtt_message(hass, 'homeassistant/lock/bla/config',
                             '')
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
     state = hass.states.get('lock.beer')
     assert state is None
@@ -306,7 +355,6 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
 
     async_fire_mqtt_message(hass, 'homeassistant/lock/bla/config',
                             data2)
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get('lock.milk')
@@ -340,7 +388,6 @@ async def test_discovery_update_lock(hass, mqtt_mock, caplog):
     assert state.name == 'Beer'
     async_fire_mqtt_message(hass, 'homeassistant/lock/bla/config',
                             data2)
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
     state = hass.states.get('lock.beer')
     assert state is not None
@@ -376,7 +423,6 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     })
     async_fire_mqtt_message(hass, 'homeassistant/lock/bla/config',
                             data)
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     device = registry.async_get_device({('mqtt', 'helloworld')}, set())
@@ -418,7 +464,6 @@ async def test_entity_device_info_update(hass, mqtt_mock):
     async_fire_mqtt_message(hass, 'homeassistant/lock/bla/config',
                             data)
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     device = registry.async_get_device({('mqtt', 'helloworld')}, set())
     assert device is not None
@@ -428,7 +473,6 @@ async def test_entity_device_info_update(hass, mqtt_mock):
     data = json.dumps(config)
     async_fire_mqtt_message(hass, 'homeassistant/lock/bla/config',
                             data)
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     device = registry.async_get_device({('mqtt', 'helloworld')}, set())
@@ -459,7 +503,6 @@ async def test_entity_id_update(hass, mqtt_mock):
     mock_mqtt.async_subscribe.reset_mock()
 
     registry.async_update_entity('lock.beer', new_entity_id='lock.milk')
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get('lock.beer')

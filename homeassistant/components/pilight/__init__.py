@@ -14,8 +14,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT,
     CONF_WHITELIST, CONF_PROTOCOL)
 
-REQUIREMENTS = ['pilight==0.1.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SEND_DELAY = 'send_delay'
