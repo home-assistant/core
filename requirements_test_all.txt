@@ -123,6 +123,9 @@ georss_ign_sismologia_client==0.2
 # homeassistant.components.google
 google-api-python-client==1.6.4
 
+# homeassistant.components.growatt
+growatt==0.0.2
+
 # homeassistant.components.ffmpeg
 ha-ffmpeg==2.0
 
