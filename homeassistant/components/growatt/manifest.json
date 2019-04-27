@@ -1,0 +1,8 @@
+{
+  "domain": "growatt",
+  "name": "Growatt solar panels",
+  "documentation": "https://www.home-assistant.io/components/growatt",
+  "requirements": ["grwowatt==0.0.2"],
+  "dependencies": [],
+  "codeowners": ["@timvancann"]
+}

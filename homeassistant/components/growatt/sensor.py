@@ -13,8 +13,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ["growatt==0.0.2"]
-
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
