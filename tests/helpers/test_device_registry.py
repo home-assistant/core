@@ -398,8 +398,7 @@ async def test_migrate_device_identifiers(registry):
         ('hue', '654'),
         ('bla', '321')
     }
-    with patch('homeassistant.helpers.device_registry'
-               '.DeviceRegistry.async_schedule_save') as mock_save:
+    with patch.object(registry, 'async_schedule_save') as mock_save:
         updated_entry = registry.async_migrate_device_identifiers(
             entry.id, new_identifiers)
     assert updated_entry != entry
@@ -417,8 +416,7 @@ async def test_migrate_device_identifies_collision(registry):
         config_entry_id='1234',
         identifiers={('hue', '654'), ('bla', '321')},
     )
-    with patch('homeassistant.helpers.device_registry'
-               '.DeviceRegistry.async_schedule_save') as mock_save, \
-         pytest.raises(ValueError):
+    with patch.object(registry, 'async_schedule_save') as mock_save, \
+            pytest.raises(ValueError):
         registry.async_migrate_device_identifiers(entry.id, {('hue', '654')})
     assert mock_save.call_count == 0

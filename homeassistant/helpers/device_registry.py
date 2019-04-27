@@ -148,7 +148,7 @@ class DeviceRegistry:
             and any(iden in device.identifiers for iden in identifiers)), None)
         if conflict:
             raise ValueError(
-                "Identifiers '{}' already in use by device id '{}'".format(
+                "Identifiers '{}' are already in use by device id '{}'".format(
                     identifiers, conflict.id))
         new = self.devices[device_id] = attr.evolve(
             self.devices[device_id], identifiers=identifiers)
