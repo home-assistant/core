@@ -23,6 +23,8 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
 
+import evohomeclient2
+
 from .const import (
     DOMAIN, DATA_EVOHOME, DISPATCHER_EVOHOME, GWS, TCS)
 
@@ -61,11 +63,10 @@ def setup(hass, hass_config):
 
     # use a copy, since scan_interval is rounded up to nearest 60s
     evo_data['params'] = dict(hass_config[DOMAIN])
+    evo_data['params'][CONF_SCAN_INTERVAL] = timedelta(seconds=60)               # TODO: remove me
     scan_interval = evo_data['params'][CONF_SCAN_INTERVAL]
     scan_interval = timedelta(
         minutes=(scan_interval.total_seconds() + 59) // 60)
-
-    import evohomeclient2
 
     try:
         client = evo_data['client'] = evohomeclient2.EvohomeClient(
@@ -156,7 +157,6 @@ class EvoDevice(Entity):
 
     def __init__(self, evo_data, client, obj_ref):
         """Initialize the evohome entity."""
-        _LOGGER.warn("EvoDevice.__init__(): Here.")
         self._client = client
         self._obj = obj_ref
 
@@ -173,7 +173,6 @@ class EvoDevice(Entity):
 
     def _handle_exception(self, err):
         try:
-            import evohomeclient2
             raise err
 
         except evohomeclient2.AuthenticationError:

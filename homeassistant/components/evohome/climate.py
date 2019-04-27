@@ -12,6 +12,8 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL, STATE_OFF,)
 from homeassistant.helpers.dispatcher import dispatcher_send
 
+import evohomeclient2
+
 from . import (
     EvoDevice,
     CONF_LOCATION_IDX, EVO_CHILD, EVO_PARENT)
@@ -107,7 +109,6 @@ class EvoZone(EvoDevice, ClimateDevice):
 
     def __init__(self, evo_data, client, obj_ref):
         """Initialize the evohome Zone."""
-        _LOGGER.warn("EvoZone.__init__(): Here.")
         super().__init__(evo_data, client, obj_ref)
 
         self._id = obj_ref.zoneId
@@ -197,7 +198,6 @@ class EvoZone(EvoDevice, ClimateDevice):
           - None for PermanentOverride (i.e. indefinitely)
         """
         try:
-            import evohomeclient2
             self._obj.set_temperature(temperature, until)
         except (requests.exceptions.RequestException,
                 evohomeclient2.AuthenticationError) as err:
@@ -225,7 +225,6 @@ class EvoZone(EvoDevice, ClimateDevice):
     def _set_operation_mode(self, operation_mode):
         if operation_mode == EVO_FOLLOW:
             try:
-                import evohomeclient2
                 self._obj.cancel_temp_override()
             except (requests.exceptions.RequestException,
                     evohomeclient2.AuthenticationError) as err:
@@ -291,7 +290,6 @@ class EvoController(EvoDevice, ClimateDevice):
 
     def __init__(self, evo_data, client, obj_ref):
         """Initialize the evohome Controller (hub)."""
-        _LOGGER.warn("EvoController.__init__(): Here.")
         super().__init__(evo_data, client, obj_ref)
 
         self._id = obj_ref.systemId
@@ -395,7 +393,6 @@ class EvoController(EvoDevice, ClimateDevice):
 
     def _set_operation_mode(self, operation_mode):
         try:
-            import evohomeclient2
             self._obj._set_status(operation_mode)  # noqa: E501; pylint: disable=protected-access
         except (requests.exceptions.RequestException,
                 evohomeclient2.AuthenticationError) as err:
@@ -444,7 +441,6 @@ class EvoController(EvoDevice, ClimateDevice):
         loc_idx = self._params[CONF_LOCATION_IDX]
 
         try:
-            import evohomeclient2
             self._status.update(
                 self._client.locations[loc_idx].status()[GWS][0][TCS][0])
         except (requests.exceptions.RequestException,
