@@ -6,5 +6,5 @@
     "ha-philipsjs==0.0.7"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@elupus"]
 }
