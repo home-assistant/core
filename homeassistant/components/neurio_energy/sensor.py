@@ -27,6 +27,7 @@ DAILY_NAME = 'Daily Energy Usage'
 GENERATION_NAME = 'Solar Generation'
 GENERATION_DAILY_NAME = 'Generation Total'
 NET_CONSUMPTION = 'Net Consumption'
+JSON_DATASET = 'API Data Retrieval'
 
 ACTIVE_TYPE = 'active'
 DAILY_TYPE = 'daily'
@@ -89,6 +90,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     update_generation_daily()
     update_net_consumption()
 
+    #Update Dataset
+    add_entities([NeurioEnergy(data, JSON_DATASET, DAILY_TYPE, update_dataset)])
     # Active power sensor
     add_entities([NeurioEnergy(data, ACTIVE_NAME, ACTIVE_TYPE, update_active)])
     add_entities([NeurioEnergy(data, GENERATION_NAME, ACTIVE_TYPE, update_generation)])
@@ -172,7 +175,7 @@ class NeurioData:
         try:
             self._dataset = self.neurio_client.get_samples_stats(self.sensor_id, start_time, 'days', end_time)
         except (requests.exceptions.RequestException, ValueError, KeyError):
-            _LOGGER.warning("Could not update daily generation")
+            _LOGGER.warning("Could not update dataset")
             return None
 
     def get_active_power(self):
@@ -211,7 +214,6 @@ class NeurioData:
         for result in history:
             kwh += result['consumptionEnergy'] / 3600000
         self._daily_usage = round(kwh, 2)
-
 
     def get_daily_generation(self):
         """Return current daily power usage."""
@@ -274,7 +276,6 @@ class NeurioEnergy(Entity):
     def update(self):
         """Get the latest data, update state."""
         self.update_sensor()
-        self._state = self._data.dataset
 
         if self._name == ACTIVE_NAME:
             self._state = self._data.active_power
@@ -286,3 +287,5 @@ class NeurioEnergy(Entity):
             self._state = self._data.daily_generation
         elif self.name == NET_CONSUMPTION:
             self._state = self._data.net_consumption
+        elif self.name == JSON_DATASET:
+            self._state = self._data.dataset
