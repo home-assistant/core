@@ -49,7 +49,6 @@ TYPE_OUTLET = 'outlet'
 TYPE_SHOWER = 'shower'
 TYPE_SPRINKLER = 'sprinkler'
 TYPE_SWITCH = 'switch'
-TYPE_TELEVISION = 'television'
 TYPE_VALVE = 'valve'
 
 # #### Services ####

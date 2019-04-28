@@ -143,7 +143,7 @@ def get_accessory(hass, driver, state, aid, config):
 
         if feature_list and \
                 validate_media_player_features(state, feature_list):
-            if device_class == 'television':
+            if device_class == 'tv':
                 a_type = 'TelevisionMediaPlayer'
             else:
                 a_type = 'MediaPlayer'
