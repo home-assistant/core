@@ -1,5 +1,7 @@
 """Constants for Traccar platform."""
 
+CONF_MAX_ACCURACY = 'max_accuracy'
+
 ATTR_ADDRESS = 'address'
 ATTR_CATEGORY = 'category'
 ATTR_GEOFENCE = 'geofence'
