@@ -180,12 +180,16 @@ class RepetierRemainingSensor(RepetierSensor):
             return
         job_name = data['job_name']
         start = data['start']
-        print_time = data['print_time']
+        end = data['print_time']
         from_start = data['from_start']
-        time_end = start + round(print_time, 0)
-        self._state = datetime.utcfromtimestamp(time_end).isoformat()
-        remaining = print_time - from_start
+        time_end = start + round(end, 0)
+        remaining = end - from_start
         remaining_secs = int(round(remaining, 0))
+        state = time.strftime('%H:%M:%S', time.gmtime(remaining_secs))
+        self._state = state
+        end_time = datetime.utcfromtimestamp(time_end).isoformat()
+        self._attributes['finish'] = end_time
+        self._attributes['seconds'] = remaining_secs
         _LOGGER.debug(
             "Job %s remaining %s",
             job_name, time.strftime('%H:%M:%S', time.gmtime(remaining_secs)))
@@ -206,8 +210,12 @@ class RepetierElapsedSensor(RepetierSensor):
         job_name = data['job_name']
         start = data['start']
         from_start = data['from_start']
-        self._state = datetime.utcfromtimestamp(start).isoformat()
+        start_time = datetime.utcfromtimestamp(start).isoformat()
         elapsed_secs = int(round(from_start, 0))
+        state = time.strftime('%H:%M:%S', time.gmtime(elapsed_secs))
+        self._attributes['started'] = start_time
+        self._attributes['seconds'] = elapsed_secs
+        self._state = state
         _LOGGER.debug(
             "Job %s elapsed %s",
             job_name, time.strftime('%H:%M:%S', time.gmtime(elapsed_secs)))

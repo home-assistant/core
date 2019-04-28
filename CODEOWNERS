@@ -190,6 +190,7 @@ homeassistant/components/qwikswitch/* @kellerza
 homeassistant/components/raincloud/* @vanstinator
 homeassistant/components/rainmachine/* @bachya
 homeassistant/components/random/* @fabaff
+homeassistant/components/repetier/* @MTrab
 homeassistant/components/rfxtrx/* @danielhiversen
 homeassistant/components/rmvtransport/* @cgtobi
 homeassistant/components/roomba/* @pschmitt
