@@ -32,37 +32,7 @@ class EssentBase():
 
     def retrieve_meters(self):
         """Retrieve the IDs of the meters used by Essent."""
-        meters = []
-
-        # Get customer details
-        customer_details_request = self._essent.Customer.get_customer_details()
-
-        # Parse our agreement ID
-        agreement_id = ET.fromstring(customer_details_request.text) \
-            .find('response') \
-            .find('Partner') \
-            .find('BusinessAgreements') \
-            .find('BusinessAgreement') \
-            .findtext('AgreementID')
-
-        # Get business partner details
-        business_partner_details_request = self._essent.Customer.get_business_partner_details(agreement_id)
-
-        # Parse out our meters
-        contracts = ET.fromstring(business_partner_details_request.text) \
-            .find('response') \
-            .find('Partner') \
-            .find('BusinessAgreements') \
-            .find('BusinessAgreement') \
-            .find('Connections') \
-            .find('Connection') \
-            .find('Contracts') \
-            .findall('Contract')
-
-        for contract in contracts:
-            meters.append(contract.findtext('ConnectEAN'))
-
-        return meters
+        return self._essent.get_EANs()
 
 
 class EssentMeter(Entity):
