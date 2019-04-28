@@ -33,8 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Setup the IPP platform."""
-
+    """Set up the IPP platform."""
     printers = config.get(CONF_PRINTERS)
 
     dev = []
@@ -46,18 +45,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             _LOGGER.error("Unable to connect to IPP printer: %s", printer)
             continue
 
-        dev.append(PrinterSensor(data, data.attributes['printer-make-and-model']))
+        dev.append(PrinterSensor(data,
+                                 data.attributes['printer-make-and-model']))
 
         if data.attributes["marker-names"] is not None:
             for marker in data.attributes["marker-names"]:
-                index = data.attributes['marker-names'].index(marker)
-                dev.append(MarkerSensor(data, marker, index))
+                dev.append(MarkerSensor(data, marker, data
+                                        .attributes['marker-names']
+                                        .index(marker)))
 
     add_entities(dev, True)
 
 
 class MarkerSensor(Entity):
-    """Implementation of the MarkerSensor, which represents the percentage of ink or toner."""
+    """Implementation of the MarkerSensor.
+
+    This sensor represents the percentage of ink or toner.
+    """
 
     def __init__(self, data, name, index):
         """Initialize the sensor."""
@@ -68,6 +72,7 @@ class MarkerSensor(Entity):
 
     @property
     def name(self):
+        """Return the name of the sensor."""
         return self._name
 
     @property
@@ -110,13 +115,16 @@ class MarkerSensor(Entity):
             }
 
     def update(self):
-        """Update the state of the sensor.
-        Data fetching is done by PrinterSensor"""
+        """Update the state of the sensor."""
+        # Data fetching is done by PrinterSensor
         self._attributes = self.data.attributes
 
 
 class PrinterSensor(Entity):
-    """Implementation of the PrinterSensor, which represents the status of the printer."""
+    """Implementation of the PrinterSensor.
+
+    This sensor represents the status of the printer.
+    """
 
     def __init__(self, data, name):
         """Initialize the sensor."""
@@ -126,6 +134,7 @@ class PrinterSensor(Entity):
 
     @property
     def name(self):
+        """Return the name of the sensor."""
         return self._name
 
     @property
@@ -140,8 +149,7 @@ class PrinterSensor(Entity):
             return self._status
 
     def update(self):
-        """Fetch new state data for the sensor.
-        """
+        """Fetch new state data for the sensor."""
         try:
             self.data.update()
             status = self.data.attributes["printer-state"]
