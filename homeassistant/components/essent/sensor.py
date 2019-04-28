@@ -2,14 +2,12 @@
 
 import xml.etree.ElementTree as ET
 
-import requests
+from pyessent import PyEssent
 
 from homeassistant.const import ENERGY_KILO_WATT_HOUR, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 
 DOMAIN = 'essent'
-
-API_BASE = 'https://api.essent.nl/selfservice/'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -26,38 +24,18 @@ class EssentBase():
 
     def __init__(self, username, password):
         """Initialize the Essent API."""
-        self._session = requests.session()
-
-        # First, auth ourselves
-        authentication_xml = """<AuthenticateUser>
-        <request>
-        <username><![CDATA[{}]]></username>
-        <password><![CDATA[{}]]></password>
-        <ControlParameters>
-        <GetContracts>false</GetContracts>
-        </ControlParameters></request>
-        </AuthenticateUser>"""
-
-        auth_request = self._session.post(
-            API_BASE + 'user/authenticateUser',
-            data=authentication_xml.format(username, password))
-        # Throw exception if auth fails
-        auth_request.raise_for_status()
+        self._essent = PyEssent(username, password)
 
     def get_session(self):
         """Return the active session."""
-        return self._session
+        return self._essent
 
     def retrieve_meters(self):
         """Retrieve the IDs of the meters used by Essent."""
         meters = []
 
         # Get customer details
-        customer_details_request = self._session.get(
-            API_BASE + 'customer/getCustomerDetails',
-            params={'GetContracts': 'false'})
-        # Throw exception if getting customer details fails
-        customer_details_request.raise_for_status()
+        customer_details_request = self._essent.Customer.get_customer_details()
 
         # Parse our agreement ID
         agreement_id = ET.fromstring(customer_details_request.text) \
@@ -67,23 +45,11 @@ class EssentBase():
             .find('BusinessAgreement') \
             .findtext('AgreementID')
 
-        # Prepare retrieving business partner details
-        business_partner_details_xml = """<GetBusinessPartnerDetails>
-        <request>
-        <AgreementID>{}</AgreementID>
-        <OnlyActiveContracts>true</OnlyActiveContracts>
-        </request>
-        </GetBusinessPartnerDetails>"""
-
         # Get business partner details
-        business_details_request = self._session.post(
-            API_BASE + 'customer/getBusinessPartnerDetails',
-            data=business_partner_details_xml.format(agreement_id))
-        # Throw exception if getting business partner details fails
-        business_details_request.raise_for_status()
+        business_partner_details_request = self._essent.Customer.get_business_partner_details(agreement_id)
 
         # Parse out our meters
-        contracts = ET.fromstring(business_details_request.text) \
+        contracts = ET.fromstring(business_partner_details_request.text) \
             .find('response') \
             .find('Partner') \
             .find('BusinessAgreements') \
@@ -133,37 +99,11 @@ class EssentMeter(Entity):
     def update(self):
         """Fetch the energy usage."""
         # Retrieve an authenticated session
-        session = EssentBase(self._username, self._password).get_session()
+        essent = EssentBase(self._username, self._password).get_session()
 
-        # Get current datetime according to server
-        datetime_request = session.get(
-            API_BASE + 'generic/getDateTime')
-        # Throw exception if getting datetime fails
-        datetime_request.raise_for_status()
-        datetime = ET.fromstring(datetime_request.text).findtext('Timestamp')
-
-        # Prepare reading the meter
-        meter_reading_xml = """<GetMeterReadingHistory>
-        <request>
-        <Installations>
-        <Installation>
-        <ConnectEAN>{}</ConnectEAN>
-        </Installation>
-        </Installations>
-        <OnlyLastMeterReading>true</OnlyLastMeterReading>
-        <Period>
-        <StartDate>2000-01-01T00:00:00+02:00</StartDate>
-        <EndDate>{}</EndDate>
-        </Period>
-        </request>
-        </GetMeterReadingHistory>"""
-
-        # Request meter info
-        meter_request = session.post(
-            API_BASE + 'customer/getMeterReadingHistory',
-            data=meter_reading_xml.format(self._meter, datetime))
-        # Throw exception if getting meter history fails
-        meter_request.raise_for_status()
+        # Read the meter
+        meter_request = essent.Customer.get_meter_reading_history(
+            self._meter, only_last_meter_reading=True)
 
         # Parse out into the root of our data
         info_base = ET.fromstring(meter_request.text) \
