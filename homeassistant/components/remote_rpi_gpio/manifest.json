@@ -1,0 +1,12 @@
+{
+    "domain": "remote_rpi_gpio",
+    "name": "remote_rpi_gpio",
+    "documentation": "https://www.home-assistant.io/components/remote_rpi_gpio",
+    "requirements": [
+      "gpiozero==1.4.1",
+      "pigpio==1.42",
+      "RPi.GPIO==0.6.5"
+    ],
+    "dependencies": [],
+    "codeowners": []
+}

@@ -72,6 +72,7 @@ PyTransportNSW==0.1.1
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.12.3
 
+# homeassistant.components.remote_rpi_gpio
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.5
 
@@ -499,6 +500,9 @@ googledevices==1.0.2
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
 
+# homeassistant.components.remote_rpi_gpio
+gpiozero==1.4.1
+
 # homeassistant.components.gpsd
 gps3==0.33.3
 
@@ -832,6 +836,9 @@ pifacedigitalio==3.0.5
 
 # homeassistant.components.piglow
 piglow==1.2.4
+
+# homeassistant.components.remote_rpi_gpio
+pigpio==1.42
 
 # homeassistant.components.pilight
 pilight==0.1.1
