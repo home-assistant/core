@@ -279,6 +279,11 @@ class HeosMediaPlayer(MediaPlayerDevice):
         return self._media_position_updated_at
 
     @property
+    def media_image_remotely_accessible(self) -> bool:
+        """If the image url is remotely accessible."""
+        return True
+
+    @property
     def media_image_url(self) -> str:
         """Image url of current playing media."""
         # May be an empty string, if so, return None

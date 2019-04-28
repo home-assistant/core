@@ -100,10 +100,13 @@ class CloudClient(Interface):
 
                 return google_conf['filter'](entity.entity_id)
 
+            username = self._hass.data[DOMAIN].claims["cognito:username"]
+
             self._google_config = ga_h.Config(
                 should_expose=should_expose,
                 secure_devices_pin=self._prefs.google_secure_devices_pin,
                 entity_config=google_conf.get(CONF_ENTITY_CONFIG),
+                agent_user_id=username,
             )
 
         # Set it to the latest.
@@ -149,18 +152,9 @@ class CloudClient(Interface):
         if not self._prefs.google_enabled:
             return ga.turned_off_response(payload)
 
-        answer = await ga.async_handle_message(
+        return await ga.async_handle_message(
             self._hass, self.google_config, self.prefs.cloud_user, payload
         )
-
-        # Fix AgentUserId
-        try:
-            cloud = self._hass.data[DOMAIN]
-            answer['payload']['agentUserId'] = cloud.claims['cognito:username']
-        except (TypeError, KeyError):
-            return ga.turned_off_response(payload)
-
-        return answer
 
     async def async_webhook_message(
             self, payload: Dict[Any, Any]) -> Dict[Any, Any]:

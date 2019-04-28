@@ -12,6 +12,8 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
+from homeassistant.components.netatmo.const import DATA_NETATMO_AUTH
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_AREAS = 'areas'
@@ -54,12 +56,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the access to Netatmo binary sensor."""
-    netatmo = hass.components.netatmo
+    auth = hass.data[DATA_NETATMO_AUTH]
 
     sensors = []
     areas = config.get(CONF_AREAS)
     for area_conf in areas:
-        data = NetatmoPublicData(netatmo.NETATMO_AUTH,
+        data = NetatmoPublicData(auth,
                                  lat_ne=area_conf.get(CONF_LAT_NE),
                                  lon_ne=area_conf.get(CONF_LON_NE),
                                  lat_sw=area_conf.get(CONF_LAT_SW),

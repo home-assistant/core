@@ -25,7 +25,6 @@ If user exposed functionality or configuration variables are added/changed:
 If the code communicates with devices, web services, or third-party tools:
   - [ ] [_The manifest file_][manifest-docs] has all fields filled out correctly ([example][ex-manifest]).
   - [ ] New dependencies have been added to `requirements` in the manifest ([example][ex-requir]).
-  - [ ] New dependencies are only imported inside functions that use them ([example][ex-import]).
   - [ ] New or updated dependencies have been added to `requirements_all.txt` by running `script/gen_requirements_all.py`.
   - [ ] New files were added to `.coveragerc`.
 
@@ -34,5 +33,4 @@ If the code does not interact with devices:
 
 [ex-manifest]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/mobile_app/manifest.json
 [ex-requir]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/mobile_app/manifest.json#L5
-[ex-import]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/keyboard/__init__.py#L23
 [manifest-docs]: https://developers.home-assistant.io/docs/en/development_checklist.html#_the-manifest-file_
