@@ -99,7 +99,7 @@ async def async_setup(hass, config):
 def get_accessory(hass, driver, state, aid, config):
     """Take state and return an accessory object if supported."""
     if not aid:
-        _LOGGER.warning('The entitiy "%s" is not supported, since it '
+        _LOGGER.warning('The entity "%s" is not supported, since it '
                         'generates an invalid aid, please change it.',
                         state.entity_id)
         return None
