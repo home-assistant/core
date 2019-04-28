@@ -73,7 +73,8 @@ class HomeAccessory(Accessory):
         self._support_battery_charging = True
         self.linked_battery_sensor = \
             self.config.get(CONF_LINKED_BATTERY_SENSOR)
-        self.low_battery_threshold = self.config[CONF_LOW_BATTERY_THRESHOLD]
+        self.low_battery_threshold = \
+            self.config.get(CONF_LOW_BATTERY_THRESHOLD)
 
         """Add battery service if available"""
         battery_found = self.hass.states.get(self.entity_id).attributes \
