@@ -3,7 +3,6 @@ import asyncio
 import json
 import os
 
-from aiohue.discovery import discover_nupnp
 import async_timeout
 import voluptuous as vol
 
@@ -58,6 +57,8 @@ class HueFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
+        from aiohue.discovery import discover_nupnp
+
         if user_input is not None:
             self.host = user_input['host']
             return await self.async_step_link()
