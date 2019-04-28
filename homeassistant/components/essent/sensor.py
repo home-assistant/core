@@ -1,13 +1,19 @@
+"""Support for Essent API."""
+
+import xml.etree.ElementTree as ET
+
+import requests
+
 from homeassistant.const import ENERGY_KILO_WATT_HOUR, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 
-import xml.etree.ElementTree as ET
-import requests
-
 DOMAIN = 'essent'
 
+API_BASE = 'https://api.essent.nl/selfservice/'
+
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Essent platform."""
+    """Set up the Essent platform."""
     username = config['username']
     password = config['password']
     for meter in EssentBase(username, password).retrieve_meters():
@@ -16,7 +22,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class EssentBase():
-    """Essent Base info."""
+    """Essent Base."""
 
     def __init__(self, username, password):
         """Initialize the Essent API."""
@@ -32,21 +38,34 @@ class EssentBase():
         </ControlParameters></request>
         </AuthenticateUser>"""
 
-        auth_request = self._session.post('https://api.essent.nl/selfservice/user/authenticateUser', data=authentication_xml.format(username, password))
-        auth_request.raise_for_status()  # Throw exception if auth fails
+        auth_request = self._session.post(
+            API_BASE + 'user/authenticateUser',
+            data=authentication_xml.format(username, password))
+        # Throw exception if auth fails
+        auth_request.raise_for_status()
 
     def get_session(self):
+        """Return the active session."""
         return self._session
 
     def retrieve_meters(self):
+        """Retrieve the IDs of the meters used by Essent."""
         meters = []
 
         # Get customer details
-        customer_details_request = self._session.get('https://api.essent.nl/selfservice/customer/getCustomerDetails', params={'GetContracts': 'false'})
-        customer_details_request.raise_for_status()  # Throw exception if getting customer details fails
+        customer_details_request = self._session.get(
+            API_BASE + 'customer/getCustomerDetails',
+            params={'GetContracts': 'false'})
+        # Throw exception if getting customer details fails
+        customer_details_request.raise_for_status()
 
         # Parse our agreement ID
-        agreement_id = ET.fromstring(customer_details_request.text).find('response').find('Partner').find('BusinessAgreements').find('BusinessAgreement').findtext('AgreementID')
+        agreement_id = ET.fromstring(customer_details_request.text) \
+            .find('response') \
+            .find('Partner') \
+            .find('BusinessAgreements') \
+            .find('BusinessAgreement') \
+            .findtext('AgreementID')
 
         # Prepare retrieving business partner details
         business_partner_details_xml = """<GetBusinessPartnerDetails>
@@ -57,15 +76,28 @@ class EssentBase():
         </GetBusinessPartnerDetails>"""
 
         # Get business partner details
-        business_details_request = self._session.post('https://api.essent.nl/selfservice/customer/getBusinessPartnerDetails', data=business_partner_details_xml.format(agreement_id))
-        business_details_request.raise_for_status()  # Throw exception if getting business partner details fails
+        business_details_request = self._session.post(
+            API_BASE + 'customer/getBusinessPartnerDetails',
+            data=business_partner_details_xml.format(agreement_id))
+        # Throw exception if getting business partner details fails
+        business_details_request.raise_for_status()
 
         # Parse out our meters
-        contracts = ET.fromstring(business_details_request.text).find('response').find('Partner').find('BusinessAgreements').find('BusinessAgreement').find('Connections').find('Connection').find('Contracts').findall('Contract')
+        contracts = ET.fromstring(business_details_request.text) \
+            .find('response') \
+            .find('Partner') \
+            .find('BusinessAgreements') \
+            .find('BusinessAgreement') \
+            .find('Connections') \
+            .find('Connection') \
+            .find('Contracts') \
+            .findall('Contract')
+
         for contract in contracts:
             meters.append(contract.findtext('ConnectEAN'))
 
         return meters
+
 
 class EssentMeter(Entity):
     """Representation of Essent measurements."""
@@ -93,7 +125,7 @@ class EssentMeter(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        if self._meter_unit and self._meter_unit.lower() == "kwh":
+        if self._meter_unit and self._meter_unit.lower() == 'kwh':
             return ENERGY_KILO_WATT_HOUR
 
         return self._meter_unit
@@ -104,8 +136,10 @@ class EssentMeter(Entity):
         session = EssentBase(self._username, self._password).get_session()
 
         # Get current datetime according to server
-        datetime_request = session.get('https://api.essent.nl/generic/getDateTime')
-        datetime_request.raise_for_status()  # Throw exception if getting datetime fails
+        datetime_request = session.get(
+            API_BASE + 'generic/getDateTime')
+        # Throw exception if getting datetime fails
+        datetime_request.raise_for_status()
         datetime = ET.fromstring(datetime_request.text).findtext('Timestamp')
 
         # Prepare reading the meter
@@ -116,24 +150,42 @@ class EssentMeter(Entity):
         <ConnectEAN>{}</ConnectEAN>
         </Installation>
         </Installations>
-        <OnlyLastMeterReading>true</OnlyLastMeterReading><Period><StartDate>2000-01-01T00:00:00+02:00</StartDate><EndDate>{}</EndDate></Period></request>
+        <OnlyLastMeterReading>true</OnlyLastMeterReading>
+        <Period>
+        <StartDate>2000-01-01T00:00:00+02:00</StartDate>
+        <EndDate>{}</EndDate>
+        </Period>
+        </request>
         </GetMeterReadingHistory>"""
 
         # Request meter info
-        meter_request = session.post('https://api.essent.nl/selfservice/customer/getMeterReadingHistory', data=meter_reading_xml.format(self._meter, datetime))
-        meter_request.raise_for_status()  # Throw exception if getting meter history fails
+        meter_request = session.post(
+            API_BASE + 'customer/getMeterReadingHistory',
+            data=meter_reading_xml.format(self._meter, datetime))
+        # Throw exception if getting meter history fails
+        meter_request.raise_for_status()
 
         # Parse out into the root of our data
-        info_base = ET.fromstring(meter_request.text).find('response').find('Installations').find('Installation')
+        info_base = ET.fromstring(meter_request.text) \
+            .find('response') \
+            .find('Installations') \
+            .find('Installation')
 
         # Set meter type now that it's known
         self._meter_type = info_base.find('EnergyType').get('text')
 
         # Retrieve the current status
-        for register in info_base.find('Meters').find('Meter').find('Registers').findall('Register'):
-            if register.findtext('MeteringDirection') != 'LVR' or register.findtext('TariffType') != self._tariff:
+        registers = info_base.find('Meters') \
+            .find('Meter') \
+            .find('Registers') \
+            .findall('Register')
+        for register in registers:
+            if (register.findtext('MeteringDirection') != 'LVR' or
+                    register.findtext('TariffType') != self._tariff):
                 continue
 
             # Set unit of measurement now that it's known
             self._meter_unit = register.findtext('MeasureUnit')
-            self._state = register.find('MeterReadings').find('MeterReading').findtext('ReadingResultValue')
+            self._state = register.find('MeterReadings') \
+                .find('MeterReading') \
+                .findtext('ReadingResultValue')
