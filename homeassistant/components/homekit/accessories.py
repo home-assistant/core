@@ -10,7 +10,7 @@ from pyhap.const import CATEGORY_OTHER
 
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, ATTR_SERVICE,
-    DEFAULT_LOW_BATTERY_THRESHOLD, __version__)
+    __version__)
 from homeassistant.core import callback as ha_callback, split_entity_id
 from homeassistant.helpers.event import (
     async_track_state_change, track_point_in_utc_time)
