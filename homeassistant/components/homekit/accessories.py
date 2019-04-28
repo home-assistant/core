@@ -82,8 +82,6 @@ class HomeAccessory(Accessory):
         if self.linked_battery_sensor:
             battery_found = self.hass.states.get(
                 self.linked_battery_sensor).state
-        if self.low_battery_threshold is None:
-            self.low_battery_threshold = DEFAULT_LOW_BATTERY_THRESHOLD
 
         if battery_found is None:
             return
