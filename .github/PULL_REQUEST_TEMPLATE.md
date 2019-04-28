@@ -7,7 +7,7 @@
 
 **Related issue (if applicable):** fixes #<home-assistant issue number goes here>
 
-**Pull request in [home-assistant.io](https://github.com/home-assistant/home-assistant.io) with documentation (if applicable):** home-assistant/home-assistant.io#<home-assistant.io PR number goes here>
+**Pull request with documentation for [home-assistant.io](https://github.com/home-assistant/home-assistant.io) (if applicable):** home-assistant/home-assistant.io#<home-assistant.io PR number goes here>
 
 ## Example entry for `configuration.yaml` (if applicable):
 ```yaml
@@ -23,14 +23,14 @@ If user exposed functionality or configuration variables are added/changed:
   - [ ] Documentation added/updated in [home-assistant.io](https://github.com/home-assistant/home-assistant.io)
 
 If the code communicates with devices, web services, or third-party tools:
-  - [ ] [_The manifest file_][manifest-docs] has all fields filled out correctly ([example][ex-manifest]).
-  - [ ] New dependencies have been added to `requirements` in the manifest ([example][ex-requir]).
-  - [ ] New or updated dependencies have been added to `requirements_all.txt` by running `script/gen_requirements_all.py`.
-  - [ ] New files were added to `.coveragerc`.
+  - [ ] [_The manifest file_][manifest-docs] has all fields filled out correctly ([example][ex-manifest]). Update and include derived files by running `python3 -m script.hassfest`.
+  - [ ] New or updated dependencies have been added to `requirements_all.txt` by running `python3 -m script.gen_requirements_all`.
+  - [ ] Python dependencies are only imported inside functions that use them ([example][ex-import]).
+  - [ ] Untested files have been added to `.coveragerc`.
 
 If the code does not interact with devices:
   - [ ] Tests have been added to verify that the new code works.
 
-[ex-manifest]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/mobile_app/manifest.json
-[ex-requir]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/mobile_app/manifest.json#L5
+[ex-manifest]: https://developers.home-assistant.io/docs/en/creating_integration_manifest.html
+[ex-import]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/keyboard/__init__.py#L16
 [manifest-docs]: https://developers.home-assistant.io/docs/en/development_checklist.html#_the-manifest-file_
