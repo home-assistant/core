@@ -8,7 +8,11 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
 from . import const
-from .common import _LOGGER, WithingsDataManager
+from .common import (
+    _LOGGER,
+    NotAuthenticatedError,
+    WithingsDataManager,
+)
 
 
 async def async_setup_entry(
@@ -18,17 +22,16 @@ async def async_setup_entry(
 ):
     """Set up the sensor config entry."""
     profile = entry.data[const.PROFILE]
-    profile_slug = slugify(profile)
     credentials = nokia.NokiaCredentials()
     credentials.__dict__.update(entry.data[const.CREDENTIALS])
 
     def credentials_saver(credentials_param):
-        _LOGGER.debug('Saving updated credentials.')
+        _LOGGER.debug("Saving updated credentials.")
         entry.data[const.CREDENTIALS] = credentials_param
         hass.config_entries.async_update_entry(entry, data={**entry.data})
 
     _LOGGER.debug(
-        'Creating nokia api instance with credentials %s.',
+        "Creating nokia api instance with credentials %s.",
         credentials
     )
     api = nokia.NokiaApi(
@@ -39,28 +42,34 @@ async def async_setup_entry(
     )
 
     _LOGGER.debug(
-        'Creating withings data manager for slug: %s',
-        profile_slug
+        "Creating withings data manager for profile: %s",
+        profile
     )
     data_manager = WithingsDataManager(
-        profile_slug,
+        profile,
         api
     )
 
-    _LOGGER.debug('Attempting to refresh token.')
-    await data_manager.async_refresh_token()
-
+    _LOGGER.debug("Confirming we're authenticated.")
     try:
-        _LOGGER.debug('Confirming we\'re authenticated.')
-        api.request('user', 'getdevice', version='v2')
-    except Exception as ex:  # pylint: disable=broad-except
-        _LOGGER.debug('Not authenticated %s.', ex)
-        return False
+        await data_manager.async_check_authenticated()
+    except NotAuthenticatedError:
+        # Trigger new config flow.
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                const.DOMAIN,
+                context={
+                    'source': const.SOURCE_USER,
+                    const.PROFILE: profile
+                },
+                data={}
+            )
+        )
 
-    _LOGGER.debug('Creating entities.')
+    _LOGGER.debug("Creating entities.")
     entities = create_sensor_entities(hass, data_manager)
 
-    _LOGGER.debug('Adding entities.')
+    _LOGGER.debug("Adding entities.")
     async_add_entities(entities, True)
 
     return True
@@ -401,8 +410,8 @@ class WithingsHealthSensor(Entity):
         self._attribute = attribute
         self._state = None
 
-        self._slug = self._data_manager.get_slug()
-        self._user_id = self._data_manager.get_api().get_credentials().user_id
+        self._slug = self._data_manager.slug
+        self._user_id = self._data_manager.api.get_credentials().user_id
 
     @property
     def name(self) -> str:
@@ -432,7 +441,7 @@ class WithingsHealthSensor(Entity):
         return self._attribute.icon
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Get withings attributes."""
         return self._attribute.__dict__
 
@@ -444,25 +453,25 @@ class WithingsHealthSensor(Entity):
     async def async_update(self) -> None:
         """Update the data."""
         _LOGGER.debug(
-            'async_update slug: %s, measurement: %s, user_id: %s',
+            "async_update slug: %s, measurement: %s, user_id: %s",
             self._slug, self._attribute.measurement, self._user_id
         )
 
         if isinstance(self._attribute, WithingsMeasureAttribute):
-            _LOGGER.debug('Updating measures state.')
+            _LOGGER.debug("Updating measures state.")
             await self._data_manager.async_update_measures()
-            await self.async_update_measure(self._data_manager.get_measures())
+            await self.async_update_measure(self._data_manager.measures)
 
         elif isinstance(self._attribute, WithingsSleepStateAttribute):
-            _LOGGER.debug('Updating sleep state.')
+            _LOGGER.debug("Updating sleep state.")
             await self._data_manager.async_update_sleep()
-            await self.async_update_sleep_state(self._data_manager.get_sleep())
+            await self.async_update_sleep_state(self._data_manager.sleep)
 
         elif isinstance(self._attribute, WithingsSleepSummaryAttribute):
-            _LOGGER.debug('Updating sleep summary state.')
+            _LOGGER.debug("Updating sleep summary state.")
             await self._data_manager.async_update_sleep_summary()
             await self.async_update_sleep_summary(
-                self._data_manager.get_sleep_summary()
+                self._data_manager.sleep_summary
             )
 
     async def async_update_measure(self, data) -> None:
@@ -470,7 +479,7 @@ class WithingsHealthSensor(Entity):
         _LOGGER.debug('async_update_measure')
 
         if data is None:
-            _LOGGER.error('Provided data is None. Not updating state.')
+            _LOGGER.error("Provided data is None. Not updating state.")
             return
 
         measurement = self._attribute.measurement
@@ -478,7 +487,7 @@ class WithingsHealthSensor(Entity):
         unit_of_measurement = self._attribute.unit_of_measurement
 
         _LOGGER.debug(
-            'Finding the unambiguous measure group with measure_type: %s.',
+            "Finding the unambiguous measure group with measure_type: %s.",
             measure_type
         )
         measure_groups = list(filter(
@@ -490,22 +499,22 @@ class WithingsHealthSensor(Entity):
         ))
 
         if not measure_groups:
-            _LOGGER.warning('No measure groups found.')
+            _LOGGER.warning("No measure groups found.")
             return
 
         _LOGGER.debug(
-            'Sorting list of %s measure groups by date created (DESC).',
+            "Sorting list of %s measure groups by date created (DESC).",
             len(measure_groups)
         )
         measure_groups.sort(key=(lambda g: g.created), reverse=True)
 
         _LOGGER.debug(
-            'Getting the first measure from the sorted measure groups.'
+            "Getting the first measure from the sorted measure groups."
         )
         value = measure_groups[0].get_measure(measure_type)
 
         _LOGGER.debug(
-            'Determining state for measurement: %s, measure_type: %s, unit_of_measurement: %s, value: %s',  # pylint: disable=line-too-long  # noqa: E501
+            "Determining state for measurement: %s, measure_type: %s, unit_of_measurement: %s, value: %s",  # pylint: disable=line-too-long  # noqa: E501
             measurement, measure_type, unit_of_measurement, value
         )
 
@@ -556,7 +565,7 @@ class WithingsHealthSensor(Entity):
         else:
             state = round(value, 2)
 
-        _LOGGER.debug('Setting state: %s', state)
+        _LOGGER.debug("Setting state: %s", state)
         self._state = state
 
     async def async_update_sleep_state(self, data) -> None:
@@ -565,7 +574,7 @@ class WithingsHealthSensor(Entity):
 
         if data is None:
             _LOGGER.error(
-                'Provided data is None, setting value to %s.',
+                "Provided data is None, setting value to %s.",
                 const.STATE_UNKNOWN
             )
             self._state = const.STATE_UNKNOWN
@@ -573,7 +582,7 @@ class WithingsHealthSensor(Entity):
 
         if not data.series:
             _LOGGER.warning(
-                'No sleep data, setting value to %s.',
+                "No sleep data, setting value to %s.",
                 const.STATE_UNKNOWN
             )
             self._state = const.STATE_UNKNOWN
@@ -595,7 +604,7 @@ class WithingsHealthSensor(Entity):
         else:
             state = const.STATE_UNKNOWN
 
-        _LOGGER.debug('Setting state: %s', state)
+        _LOGGER.debug("Setting state: %s", state)
         self._state = state
 
     async def async_update_sleep_summary(self, data) -> None:
@@ -603,18 +612,18 @@ class WithingsHealthSensor(Entity):
         _LOGGER.debug('async_update_sleep_summary')
 
         if data is None:
-            _LOGGER.error('Provided data is None. Not updating state.')
+            _LOGGER.error("Provided data is None. Not updating state.")
             return
 
         if not data.series:
-            _LOGGER.warning('Sleep data has no series.')
+            _LOGGER.warning("Sleep data has no series.")
             return
 
         measurement = self._attribute.measurement
         measure_type = self._attribute.measure_type
         unit_of_measurement = self._attribute.unit_of_measurement
 
-        _LOGGER.debug('Determining average value for: %s', measurement)
+        _LOGGER.debug("Determining average value for: %s", measurement)
         count = 0
         total = 0
         for serie in data.series:

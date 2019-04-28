@@ -18,10 +18,11 @@ from homeassistant.components.withings.config_flow import (
     WithingsAuthCallbackView,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.typing import HomeAssistantType
 
 
 @pytest.fixture(name='flow_handler')
-def flow_handler_fixture(hass):
+def flow_handler_fixture(hass: HomeAssistantType):
     """Provide flow handler."""
     flow_handler = WithingsFlowHandler()
     flow_handler.hass = hass
@@ -29,7 +30,7 @@ def flow_handler_fixture(hass):
 
 
 @pytest.fixture(name='setup_hass')
-async def setup_hass_fixture(hass):
+async def setup_hass_fixture(hass: HomeAssistantType):
     """Provide hass instance."""
     config = {
         http.DOMAIN: {},
@@ -54,12 +55,15 @@ async def setup_hass_fixture(hass):
     return hass
 
 
-def test_flow_handler_init(flow_handler):
+def test_flow_handler_init(flow_handler: WithingsFlowHandler):
     """Test the init of the flow handler."""
     assert not flow_handler.flow_profile
 
 
-def test_flow_handler_async_profile_config_entry(hass, flow_handler):
+def test_flow_handler_async_profile_config_entry(
+        hass: HomeAssistantType,
+        flow_handler: WithingsFlowHandler
+):
     """Test profile config entry."""
     config_entries = [
         ConfigEntry(
@@ -89,7 +93,10 @@ def test_flow_handler_async_profile_config_entry(hass, flow_handler):
     hass.config_entries.async_entries.assert_called_with(const.DOMAIN)
 
 
-def test_flow_handler_get_auth_client(hass, flow_handler):
+def test_flow_handler_get_auth_client(
+        hass: HomeAssistantType,
+        flow_handler: WithingsFlowHandler
+):
     """Test creation of an auth client."""
     register_flow_implementation(
         hass,
@@ -124,7 +131,10 @@ def test_flow_handler_get_auth_client(hass, flow_handler):
         assert client.callback_uri == 'https://vghome.duckdns.org/api/withings/callback/person_1'  # pylint: disable=line-too-long  # noqa: E501
 
 
-async def test_flow_handler_async_step_profile(flow_handler, setup_hass):
+async def test_flow_handler_async_step_profile(
+        flow_handler: WithingsFlowHandler,
+        setup_hass: HomeAssistantType
+):
     """Test the profile step."""
     setup_hass.data[DATA_FLOW_IMPL] = {}
 
@@ -166,7 +176,9 @@ async def test_flow_handler_async_step_profile(flow_handler, setup_hass):
     assert result['data_schema'] is not None
 
 
-async def test_flow_handler_async_step_code(flow_handler):
+async def test_flow_handler_async_step_code(
+        flow_handler: WithingsFlowHandler
+):
     """Test the code step."""
     auth_client = MagicMock(spec=nokia.NokiaAuth)
     auth_client.get_credentials = MagicMock(
@@ -235,7 +247,10 @@ async def test_flow_handler_async_step_code(flow_handler):
         }
 
 
-async def test_flow_handler_full_flow(setup_hass, flow_handler):
+async def test_flow_handler_full_flow(
+        setup_hass: HomeAssistantType,
+        flow_handler: WithingsFlowHandler
+):
     """Run a test on the full config flow."""
     result = await flow_handler.async_step_user()
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
@@ -345,7 +360,7 @@ def test_auth_callback_view_init():
     assert view.name == 'api:withings:callback:person_1'
 
 
-def test_auth_callback_view_get(hass):
+def test_auth_callback_view_get(hass: HomeAssistantType):
     """Test get api path."""
     view = WithingsAuthCallbackView('Person 1')
     hass.async_create_task = MagicMock(return_value=None)

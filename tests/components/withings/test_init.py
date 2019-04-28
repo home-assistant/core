@@ -15,6 +15,7 @@ from homeassistant.components.withings.config_flow import DATA_FLOW_IMPL
 from homeassistant.components.withings.sensor import (
     WITHINGS_MEASUREMENTS_MAP,
 )
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
 
@@ -309,7 +310,7 @@ def test_config_schema_measurements():
     ]
 
 
-async def test_async_setup(hass):
+async def test_async_setup(hass: HomeAssistantType):
     """Test method."""
     config = {
         http.DOMAIN: {},

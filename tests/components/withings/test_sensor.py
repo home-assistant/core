@@ -1,5 +1,6 @@
 """Tests for the Withings component."""
 import time
+from typing import Callable
 
 from asynctest import MagicMock, patch
 import nokia
@@ -18,24 +19,24 @@ from homeassistant.components.withings.sensor import (
     WITHINGS_MEASUREMENTS_MAP,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.typing import HomeAssistantType
 
 
-async def test_async_setup_entry(hass):
+async def test_async_setup_entry(hass: HomeAssistantType):
     """Test setup of config entry."""
     nokia_api_patch = patch('nokia.NokiaApi')
     withings_data_manager_patch = patch(
-        'homeassistant.components.withings.common.WithingsDataManager'
+        'homeassistant.components.withings.common.WithingsDataManager',
+        autospec=True
     )
     withings_health_sensor_patch = patch(
-        'homeassistant.components.withings.sensor.WithingsHealthSensor'
+        'homeassistant.components.withings.sensor.WithingsHealthSensor',
+        autospec=True
     )
 
     with nokia_api_patch as nokia_api_mock, \
             withings_data_manager_patch as data_manager_mock, \
             withings_health_sensor_patch as health_sensor_mock:
-
-        async def async_refresh_token():
-            pass
 
         nokia_api_instance = MagicMock(spec=nokia.NokiaApi)
         nokia_api_instance.get_user = MagicMock()
@@ -44,7 +45,8 @@ async def test_async_setup_entry(hass):
         nokia_api_instance.request = MagicMock()
 
         data_manager_instance = MagicMock(spec=WithingsDataManager)
-        data_manager_instance.async_refresh_token = async_refresh_token
+        data_manager_instance.async_refresh_token = MagicMock()
+        data_manager_instance.async_check_authenticated = MagicMock()
 
         nokia_api_mock.return_value = nokia_api_instance
         data_manager_mock.return_value = data_manager_instance
@@ -52,7 +54,7 @@ async def test_async_setup_entry(hass):
 
         async_add_entities = MagicMock()
         config_entry = ConfigEntry(
-            'version',
+            1,
             'domain',
             'title',
             {
@@ -76,17 +78,10 @@ async def test_async_setup_entry(hass):
             config_entry,
             async_add_entities
         )
-
         assert result
 
-        nokia_api_instance.request.assert_called_with(
-            'user',
-            'getdevice',
-            version='v2'
-        )
 
-
-def test_create_sensor_entities_all(hass):
+def test_create_sensor_entities_all(hass: HomeAssistantType):
     """Test entity creation for all."""
     data_manager = MagicMock(spec=WithingsDataManager)
     hass.data[const.DOMAIN] = {
@@ -98,7 +93,7 @@ def test_create_sensor_entities_all(hass):
     assert len(entities) == len(WITHINGS_MEASUREMENTS_MAP)
 
 
-def test_create_sensor_entities_skip(hass):
+def test_create_sensor_entities_skip(hass: HomeAssistantType):
     """Test entity creation skipped."""
     data_manager = MagicMock(spec=WithingsDataManager)
     hass.data[const.DOMAIN] = {
@@ -135,7 +130,7 @@ def noka_credentials_fixture():
 
 
 @pytest.fixture(name='data_manager_factory')
-def data_manager_factory_fixture(nokia_api):
+def data_manager_factory_fixture(nokia_api: nokia.NokiaApi):
     """Provide a data manager factory function."""
     def factory():
         """Provide data manager."""
@@ -147,11 +142,14 @@ def data_manager_factory_fixture(nokia_api):
     return factory
 
 
-def test_health_sensor_properties(data_manager_factory):
+def test_health_sensor_properties(
+        data_manager_factory: Callable[[], WithingsDataManager]
+):
     """Test method."""
+    attribute = WITHINGS_MEASUREMENTS_MAP[const.MEAS_WEIGHT_KG]
     sensor = WithingsHealthSensor(
         data_manager_factory(),
-        WITHINGS_MEASUREMENTS_MAP[const.MEAS_WEIGHT_KG]
+        attribute
     )
 
     assert sensor.name == 'Withings weight_kg person_1'
@@ -159,9 +157,14 @@ def test_health_sensor_properties(data_manager_factory):
     assert sensor.state is None
     assert sensor.unit_of_measurement == 'kg'
     assert sensor.icon == 'mdi:weight-kilogram'
+    assert sensor.device_state_attributes == attribute.__dict__
+    assert not sensor.convert_units
 
 
-async def test_health_sensor_async_update(nokia_api, data_manager_factory):
+async def test_health_sensor_async_update(
+        nokia_api: nokia.NokiaApi,
+        data_manager_factory: Callable[[], WithingsDataManager]
+):
     """Test method."""
     data_manager = data_manager_factory()
     nokia_api.get_measures.return_value = nokia.NokiaMeasures({
@@ -639,7 +642,11 @@ async def test_health_sensor_async_update(nokia_api, data_manager_factory):
     )
 
 
-async def assert_health_sensor_equals(expected, measure, data_manager):
+async def assert_health_sensor_equals(
+        expected,
+        measure: str,
+        data_manager: WithingsDataManager
+):
     """Assert the state of a withings sensor."""
     sensor = WithingsHealthSensor(
         data_manager,
