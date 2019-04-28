@@ -175,13 +175,19 @@ async def test_emulated_color_temp_group(hass):
 
     hass.states.async_set(
         'light.bed_light', 'on', {'supported_features': 2})
+    await hass.async_block_till_done()
     hass.states.async_set(
         'light.ceiling_lights', 'on', {'supported_features': 63})
+    await hass.async_block_till_done()
     hass.states.async_set(
         'light.kitchen_lights', 'on', {'supported_features': 61})
     await hass.async_block_till_done()
-    common.async_turn_on(
-        hass, 'light.light_group', brightness=128, color_temp=200)
+    await hass.services.async_call(
+        'light',
+        'turn_on',
+        {'entity_id': 'light.light_group', 'color_temp': 200},
+        blocking=True
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get('light.bed_light')
