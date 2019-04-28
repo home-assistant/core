@@ -31,8 +31,7 @@ def test_validate_entity_config():
                                        'switch.demo'}},
                {'binary_sensor.demo': {CONF_LOW_BATTERY_THRESHOLD:
                                        'switch.demo'}},
-               {'binary_sensor.demo': {CONF_LOW_BATTERY_THRESHOLD:
-                                       -10}},
+               {'binary_sensor.demo': {CONF_LOW_BATTERY_THRESHOLD: -10}},
                {'demo.test': 'test'}, {'demo.test': [1, 2]},
                {'demo.test': None}, {'demo.test': {CONF_NAME: None}},
                {'media_player.test': {CONF_FEATURE_LIST: [
