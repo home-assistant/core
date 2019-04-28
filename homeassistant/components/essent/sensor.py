@@ -1,13 +1,16 @@
 """Support for Essent API."""
-
+from datetime import timedelta
 import xml.etree.ElementTree as ET
 
 from pyessent import PyEssent
 
 from homeassistant.const import ENERGY_KILO_WATT_HOUR, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 DOMAIN = 'essent'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -66,6 +69,7 @@ class EssentMeter(Entity):
 
         return self._meter_unit
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Fetch the energy usage."""
         # Retrieve an authenticated session
