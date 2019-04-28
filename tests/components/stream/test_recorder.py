@@ -41,7 +41,7 @@ async def test_record_stream(hass, hass_client):
 
         stream.stop()
 
-        assert segments > 1
+        assert segments == 3
 
 
 async def test_recorder_timeout(hass, hass_client):
@@ -72,7 +72,7 @@ async def test_recorder_timeout(hass, hass_client):
 async def test_recorder_save():
     """Test recorder save."""
     # Setup
-    source = generate_h264_video()
+    source = open(generate_h264_video(), 'rb')
     output = BytesIO()
     output.name = 'test.mp4'
 

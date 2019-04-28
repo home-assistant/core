@@ -85,6 +85,9 @@ async def test_stream_timeout(hass, hass_client):
     future = dt_util.utcnow() + timedelta(minutes=5)
     async_fire_time_changed(hass, future)
 
+    # Wait for stream to clean itself up
+    await hass.async_block_till_done()
+
     # Ensure playlist not accessable
     fail_response = await http_client.get(parsed_url.path)
     assert fail_response.status == 404
@@ -110,7 +113,7 @@ async def test_stream_ended(hass):
     while await track.recv() is not None:
         segments += 1
 
-    assert segments > 1
+    assert segments == 3
     assert not track.get_segment()
 
     # Stop stream, if it hasn't quit already

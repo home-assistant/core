@@ -1,5 +1,5 @@
 """Collection of test helpers."""
-import io
+import os
 
 from homeassistant.components.stream import Stream
 from homeassistant.components.stream.const import (
@@ -15,13 +15,17 @@ def generate_h264_video():
     import numpy as np
     import av
 
+    path = os.path.dirname(os.path.abspath(__file__))
+    file_out = '{}/video.ts'.format(path)
+
+    if os.path.isfile(file_out):
+        return file_out
+
     duration = 5
     fps = 24
     total_frames = duration * fps
 
-    output = io.BytesIO()
-    output.name = 'test.ts'
-    container = av.open(output, mode='w')
+    container = av.open(file_out, mode='w')
 
     stream = container.add_stream('libx264', rate=fps)
     stream.width = 480
@@ -51,9 +55,8 @@ def generate_h264_video():
 
     # Close the file
     container.close()
-    output.seek(0)
 
-    return output
+    return file_out
 
 
 def preload_stream(hass, stream_source):
