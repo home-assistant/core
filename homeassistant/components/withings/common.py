@@ -5,7 +5,6 @@ import logging
 import re
 
 import nokia
-import voluptuous as vol
 from requests_oauthlib import TokenUpdated
 
 from homeassistant.exceptions import PlatformNotReady
@@ -14,22 +13,6 @@ from . import const
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
 NOT_AUTHENTICATED_ERROR = re.compile("^Error Code (100|101|102|200|401)$", re.IGNORECASE)  # pylint: disable=line-too-long  # noqa: E501
-
-
-def ensure_unique_list(value):
-    """Ensure a config schema value is a unique list."""
-    if isinstance(value, set):
-        return list(value)
-
-    if not isinstance(value, list):
-        raise vol.Invalid("Value is not a list.")
-
-    if len(set(value)) != len(value):
-        raise vol.Invalid(
-            "Value is not a unique list. Please remove duplicates."
-        )
-
-    return value
 
 
 class NotAuthenticatedError(Exception):
@@ -96,7 +79,7 @@ class WithingsDataManager:
         """Print the service is unavailable (once) to the log."""
         if WithingsDataManager.service_available is not False:
             _LOGGER.error(
-                "Looks like the service is not available at the moment."
+                "Looks like the service is not available at the moment"
             )
             WithingsDataManager.service_available = False
             return True
@@ -105,7 +88,7 @@ class WithingsDataManager:
     def print_service_available():
         """Print the service is available (once) to to the log."""
         if WithingsDataManager.service_available is not True:
-            _LOGGER.info("Looks like the service is available again.")
+            _LOGGER.info("Looks like the service is available again")
             WithingsDataManager.service_available = True
             return True
 
@@ -122,7 +105,7 @@ class WithingsDataManager:
             WithingsDataManager.print_service_available()
             if not is_first_call:
                 raise ServiceError(
-                    "Stuck in a token update loop. This should never happen."
+                    "Stuck in a token update loop. This should never happen"
                 )
 
             _LOGGER.info("Token updated, re-running call.")
@@ -148,8 +131,6 @@ class WithingsDataManager:
     @Throttle(const.SCAN_INTERVAL)
     async def async_update_measures(self):
         """Update the measures data."""
-        _LOGGER.debug('async_update_measures')
-
         async def function():
             return self._api.get_measures()
 
@@ -160,8 +141,6 @@ class WithingsDataManager:
     @Throttle(const.SCAN_INTERVAL)
     async def async_update_sleep(self):
         """Update the sleep data."""
-        _LOGGER.debug('async_update_sleep')
-
         end_date = int(time.time())
         start_date = end_date - (6 * 60 * 60)
 
@@ -178,8 +157,6 @@ class WithingsDataManager:
     @Throttle(const.SCAN_INTERVAL)
     async def async_update_sleep_summary(self):
         """Update the sleep summary data."""
-        _LOGGER.debug('async_update_sleep_summary')
-
         now = datetime.datetime.utcnow()
         yesterday = now - datetime.timedelta(days=1)
         yesterday_noon = datetime.datetime(
@@ -189,7 +166,7 @@ class WithingsDataManager:
         )
 
         _LOGGER.debug(
-            'Getting sleep summary data since: %s.',
+            'Getting sleep summary data since: %s',
             yesterday.strftime('%Y-%m-%d %H:%M:%S UTC')
         )
 

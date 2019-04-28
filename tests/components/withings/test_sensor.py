@@ -73,12 +73,13 @@ async def test_async_setup_entry(hass: HomeAssistantType):
             'connection_class'
         )
 
-        result = await async_setup_entry(
+        await async_setup_entry(
             hass,
             config_entry,
             async_add_entities
         )
-        assert result
+
+        async_add_entities.assert_called()
 
 
 def test_create_sensor_entities_all(hass: HomeAssistantType):
@@ -479,7 +480,7 @@ async def test_health_sensor_async_update(
     data_manager = data_manager_factory()
     nokia_api.get_sleep.return_value = None
     await assert_health_sensor_equals(
-        const.STATE_UNKNOWN,
+        None,
         const.MEAS_SLEEP_STATE,
         data_manager
     )
@@ -489,7 +490,7 @@ async def test_health_sensor_async_update(
         new_sleep_data('aa', [])
     )
     await assert_health_sensor_equals(
-        const.STATE_UNKNOWN,
+        None,
         const.MEAS_SLEEP_STATE,
         data_manager
     )

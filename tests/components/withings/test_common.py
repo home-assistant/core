@@ -6,10 +6,8 @@ import callee
 import nokia
 import pytest
 from requests_oauthlib import TokenUpdated
-import voluptuous as vol
 
 from homeassistant.components.withings.common import (
-    ensure_unique_list,
     NotAuthenticatedError,
     ServiceError,
     WithingsDataManager,
@@ -33,28 +31,6 @@ def data_manager_fixture(nokia_api: nokia.NokiaApi):
         'My Profile',
         nokia_api
     )
-
-
-async def test_ensure_unique_list():
-    """Test method."""
-    my_set = {1, 2, 3}
-    assert ensure_unique_list(my_set) == [1, 2, 3]
-
-    try:
-        ensure_unique_list('AA')
-        assert False, "This should not have run."
-    except vol.Invalid:
-        assert True
-
-    try:
-        my_list = [1, 2, 3, 4, 4, 5]
-        assert ensure_unique_list(my_list) == my_list
-        assert False, "This should not have run."
-    except vol.Invalid:
-        assert True
-
-    my_list = [1, 2, 3, 4, 5]
-    assert ensure_unique_list(my_list) == my_list
 
 
 async def test_data_manager_init(
