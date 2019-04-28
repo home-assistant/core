@@ -43,7 +43,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SENSOR_ID): cv.string,
     vol.Optional(CONF_SENSOR_IP): cv.string,
 })
- 
+
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Neurio sensor."""
     api_key = config.get(CONF_API_KEY)
@@ -90,20 +91,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     update_generation_daily()
     update_net_consumption()
 
-    #Update Dataset
-    add_entities([NeurioEnergy(data, \
+    # Update Dataset
+    add_entities([NeurioEnergy(data, 
         JSON_DATASET, DAILY_TYPE, update_dataset)])
-    #Active power sensor
+    # Active power sensor
     add_entities([NeurioEnergy(data, \
         ACTIVE_NAME, ACTIVE_TYPE, update_active)])
-    add_entities([NeurioEnergy(data, \
+    add_entities([NeurioEnergy(data, 
         GENERATION_NAME, ACTIVE_TYPE, update_generation)])
-    #Daily power sensor
-    add_entities([NeurioEnergy(data, \
+    # Daily power sensor
+    add_entities([NeurioEnergy(data, 
         DAILY_NAME, DAILY_TYPE, update_daily)])
-    add_entities([NeurioEnergy(data, GENERATION_DAILY_NAME, \
+    add_entities([NeurioEnergy(data, GENERATION_DAILY_NAME, 
         DAILY_TYPE, update_generation_daily)])
-    add_entities([NeurioEnergy(data, NET_CONSUMPTION, DAILY_TYPE, update_net_consumption)])
+    add_entities([NeurioEnergy(data, 
+	    NET_CONSUMPTION, DAILY_TYPE, update_net_consumption)])
 
 
 class NeurioData:
@@ -141,6 +143,7 @@ class NeurioData:
     def dataset(self):
         """Return latest data."""
         return self._dataset
+
     @property
     def daily_usage(self):
         """Return latest daily usage value."""
@@ -171,6 +174,7 @@ class NeurioData:
         Get the most recent data from the api once
         so we don't hit the ratelimit each hour.
         """
+
         start_time = dt_util.start_of_local_day() \
             .astimezone(dt_util.UTC).isoformat()
         end_time = dt_util.utcnow().isoformat()
@@ -187,8 +191,8 @@ class NeurioData:
     def get_active_power(self):
         """Return current power value."""
         header = {'Authorization': 'bearer <token>'}
-        resp = requests.get('http://'+self.sensor_ip+'/current-sample',
-        headers = header, 
+        resp=requests.get('http://'+self.sensor_ip+'/current-sample',
+        headers=header,
         verify=False)
         try:
             sample = json.loads(resp.text)
@@ -200,8 +204,8 @@ class NeurioData:
     def get_active_generation(self):
         """Return current solar generation value."""
         header = {'Authorization': 'bearer <token>'}
-        resp = requests.get('http://'+self.sensor_ip+'/current-sample',
-        headers = header, 
+        resp=requests.get('http://'+self.sensor_ip+'/current-sample',
+        headers=header,
         verify=False)
         try:
             sample = json.loads(resp.text)
