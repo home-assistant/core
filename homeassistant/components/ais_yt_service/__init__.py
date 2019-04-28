@@ -163,8 +163,8 @@ class YouTubeData:
         except Exception as e:
             _LOGGER.error("extract_media error: " + str(e))
 
-        if media_url is not None:
-            # play media extracted in cloud
+        if media_url is not None and len(media_url) > 0:
+            # play media extracted in the cloud
             self.hass.services.call(
                 'media_player',
                 'play_media', {
@@ -174,7 +174,7 @@ class YouTubeData:
                 })
 
         else:
-            # use media_extractor
+            # use media_extractor to extract locally
             self.hass.services.call(
                 'media_extractor',
                 'play_media', {

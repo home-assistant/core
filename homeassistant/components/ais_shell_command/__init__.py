@@ -69,8 +69,7 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def flush_logs(service):
-        import os
-        os.system("pm2 flush")
+        yield from _flush_logs(hass, service)
 
     @asyncio.coroutine
     def change_remote_access(service):
@@ -486,3 +485,14 @@ def _scan_network_for_devices(hass, call):
             'sensor.network_devices_info_value', '', {
                 'text': dsm.get_text()
                 })
+
+
+@asyncio.coroutine
+def _flush_logs(hass, call):
+    import os
+    # pm2
+    os.system("pm2 flush")
+    # pip cache
+    os.system("rm -rf /data/data/pl.sviete.dom/files/home/.cache/pip")
+    # recorder.purge
+    yield from hass.services.async_call('recorder', 'purge', {"keep_days": 3, "repack": True})

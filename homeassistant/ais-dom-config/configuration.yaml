@@ -45,7 +45,7 @@ introduction:
 
 # for restore_state on input_select (radio stations etc.)
 recorder:
-  purge_keep_days: 5
+  purge_keep_days: 3
   exclude:
     entities:
       - sensor.time
@@ -69,6 +69,8 @@ recorder:
       - input_select.book_player
       - input_select.ais_bookmark_last_played
       - input_select.ais_bookmark_favorites
+    domains:
+      - mqtt
 history:
   exclude:
     entities:
@@ -95,6 +97,8 @@ history:
       - input_select.book_player
       - input_select.ais_bookmark_last_played
       - input_select.ais_bookmark_favorites
+    domains:
+      - mqtt
 media_extractor:
 
 # Enables the frontend
