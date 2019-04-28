@@ -1,9 +1,4 @@
-"""
-Allows to configure a switch using the PiFace Digital I/O module on a RPi.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.rpi_pfio/
-"""
+"""Support for switches using the PiFace Digital I/O module on a RPi."""
 import logging
 
 import voluptuous as vol
@@ -15,8 +10,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['rpi_pfio']
 
 ATTR_INVERT_LOGIC = 'invert_logic'
 

@@ -1,15 +1,8 @@
-"""
-Register an iFrame front end panel.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/panel_iframe/
-"""
+"""Register an iFrame front end panel."""
 import voluptuous as vol
 
-from homeassistant.const import (CONF_ICON, CONF_URL)
+from homeassistant.const import CONF_ICON, CONF_URL
 import homeassistant.helpers.config_validation as cv
-
-DEPENDENCIES = ['frontend']
 
 DOMAIN = 'panel_iframe'
 
@@ -17,6 +10,7 @@ CONF_TITLE = 'title'
 
 CONF_RELATIVE_URL_ERROR_MSG = "Invalid relative URL. Absolute path required."
 CONF_RELATIVE_URL_REGEX = r'\A/'
+CONF_REQUIRE_ADMIN = 'require_admin'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: cv.schema_with_slug_keys(
@@ -24,6 +18,7 @@ CONFIG_SCHEMA = vol.Schema({
             # pylint: disable=no-value-for-parameter
             vol.Optional(CONF_TITLE): cv.string,
             vol.Optional(CONF_ICON): cv.icon,
+            vol.Optional(CONF_REQUIRE_ADMIN, default=False): cv.boolean,
             vol.Required(CONF_URL): vol.Any(
                 vol.Match(
                     CONF_RELATIVE_URL_REGEX,
@@ -39,6 +34,7 @@ async def async_setup(hass, config):
     for url_path, info in config[DOMAIN].items():
         await hass.components.frontend.async_register_built_in_panel(
             'iframe', info.get(CONF_TITLE), info.get(CONF_ICON),
-            url_path, {'url': info[CONF_URL]})
+            url_path, {'url': info[CONF_URL]},
+            require_admin=info[CONF_REQUIRE_ADMIN])
 
     return True

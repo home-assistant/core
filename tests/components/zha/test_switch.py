@@ -14,12 +14,12 @@ OFF = 0
 
 async def test_switch(hass, config_entry, zha_gateway):
     """Test zha switch platform."""
-    from zigpy.zcl.clusters.general import OnOff
+    from zigpy.zcl.clusters.general import OnOff, Basic
     from zigpy.zcl.foundation import Status
 
     # create zigpy device
     zigpy_device = await async_init_zigpy_device(
-        hass, [OnOff.cluster_id], [], None, zha_gateway)
+        hass, [OnOff.cluster_id, Basic.cluster_id], [], None, zha_gateway)
 
     # load up switch domain
     await hass.config_entries.async_forward_entry_setup(
@@ -28,7 +28,7 @@ async def test_switch(hass, config_entry, zha_gateway):
 
     cluster = zigpy_device.endpoints.get(1).on_off
     entity_id = make_entity_id(DOMAIN, zigpy_device, cluster)
-    zha_device = zha_gateway.get_device(str(zigpy_device.ieee))
+    zha_device = zha_gateway.get_device(zigpy_device.ieee)
 
     # test that the switch was created and that its state is unavailable
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE

@@ -1,27 +1,24 @@
-"""
-Interfaces with Z-Wave sensors.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/binary_sensor.zwave/
-"""
+"""Support for Z-Wave binary sensors."""
 import logging
 import datetime
 import homeassistant.util.dt as dt_util
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import track_point_in_time
-from homeassistant.components import zwave
-from homeassistant.components.zwave import workaround
 from homeassistant.components.binary_sensor import (
     DOMAIN,
     BinarySensorDevice)
+from . import (
+    workaround,
+    ZWaveDeviceEntity
+)
+from .const import COMMAND_CLASS_SENSOR_BINARY
 
 _LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = []
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old method of setting up Z-Wave binary sensors."""
     pass
 
@@ -33,8 +30,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Add Z-Wave  binary sensor."""
         async_add_entities([binary_sensor])
 
-    async_dispatcher_connect(hass, 'zwave_new_binary_sensor',
-                             async_add_binary_sensor)
+    async_dispatcher_connect(
+        hass, 'zwave_new_binary_sensor', async_add_binary_sensor)
 
 
 def get_device(values, **kwargs):
@@ -46,17 +43,17 @@ def get_device(values, **kwargs):
     if workaround.get_device_component_mapping(values.primary) == DOMAIN:
         return ZWaveBinarySensor(values, None)
 
-    if values.primary.command_class == zwave.const.COMMAND_CLASS_SENSOR_BINARY:
+    if values.primary.command_class == COMMAND_CLASS_SENSOR_BINARY:
         return ZWaveBinarySensor(values, None)
     return None
 
 
-class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
+class ZWaveBinarySensor(BinarySensorDevice, ZWaveDeviceEntity):
     """Representation of a binary sensor within Z-Wave."""
 
     def __init__(self, values, device_class):
         """Initialize the sensor."""
-        zwave.ZWaveDeviceEntity.__init__(self, values, DOMAIN)
+        ZWaveDeviceEntity.__init__(self, values, DOMAIN)
         self._sensor_type = device_class
         self._state = self.values.primary.data
 

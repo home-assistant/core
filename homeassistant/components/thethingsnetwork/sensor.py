@@ -1,9 +1,4 @@
-"""
-Support for The Things Network's Data storage integration.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.thethingsnetwork_data/
-"""
+"""Support for The Things Network's Data storage integration."""
 import asyncio
 import logging
 
@@ -13,12 +8,12 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.components.thethingsnetwork import (
-    DATA_TTN, TTN_APP_ID, TTN_ACCESS_KEY, TTN_DATA_STORAGE_URL)
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+
+from . import DATA_TTN, TTN_ACCESS_KEY, TTN_APP_ID, TTN_DATA_STORAGE_URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,8 +22,6 @@ ATTR_RAW = 'raw'
 ATTR_TIME = 'time'
 
 DEFAULT_TIMEOUT = 10
-DEPENDENCIES = ['thethingsnetwork']
-
 CONF_DEVICE_ID = 'device_id'
 CONF_VALUES = 'values'
 
@@ -38,8 +31,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up The Things Network Data storage sensors."""
     ttn = hass.data.get(DATA_TTN)
     device_id = config.get(CONF_DEVICE_ID)
@@ -153,7 +146,7 @@ class TtnDataStorage:
             return False
 
         data = await req.json()
-        self.data = data[0]
+        self.data = data[-1]
 
         for value in self._values.items():
             if value[0] not in self.data.keys():

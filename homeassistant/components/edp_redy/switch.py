@@ -1,19 +1,18 @@
 """Support for EDP re:dy plugs/switches."""
 import logging
 
-from homeassistant.components.edp_redy import EdpRedyDevice, EDP_REDY
 from homeassistant.components.switch import SwitchDevice
 
-_LOGGER = logging.getLogger(__name__)
+from . import EDP_REDY, EdpRedyDevice
 
-DEPENDENCIES = ['edp_redy']
+_LOGGER = logging.getLogger(__name__)
 
 # Load power in watts (W)
 ATTR_ACTIVE_POWER = 'active_power'
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Perform the setup for re:dy devices."""
     session = hass.data[EDP_REDY]
     devices = []

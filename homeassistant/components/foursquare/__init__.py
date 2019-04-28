@@ -1,9 +1,4 @@
-"""
-Support for the Foursquare (Swarm) API.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/foursquare/
-"""
+"""Support for the Foursquare (Swarm) API."""
 import logging
 
 import requests
@@ -17,7 +12,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_PUSH_SECRET = 'push_secret'
 
-DEPENDENCIES = ['http']
 DOMAIN = 'foursquare'
 
 EVENT_CHECKIN = 'foursquare.checkin'

@@ -1,9 +1,4 @@
-"""
-Support for TP-Link LTE modems.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tplink_lte/
-"""
+"""Support for TP-Link LTE modems."""
 import asyncio
 import logging
 
@@ -11,33 +6,31 @@ import aiohttp
 import attr
 import voluptuous as vol
 
-from homeassistant.components.notify import ATTR_TARGET
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP)
+    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_RECIPIENT,
+    EVENT_HOMEASSISTANT_STOP
+)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-
-REQUIREMENTS = ['tp-connected==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'tplink_lte'
 DATA_KEY = 'tplink_lte'
 
-CONF_NOTIFY = "notify"
+CONF_NOTIFY = 'notify'
 
-_NOTIFY_SCHEMA = vol.All(vol.Schema({
+_NOTIFY_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
-    vol.Required(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
-}))
+    vol.Optional(CONF_RECIPIENT): vol.All(cv.ensure_list, [cv.string])
+})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NOTIFY):
-            vol.All(cv.ensure_list, [_NOTIFY_SCHEMA]),
+        vol.Optional(CONF_NOTIFY): vol.All(cv.ensure_list, [_NOTIFY_SCHEMA]),
     })])
 }, extra=vol.ALLOW_EXTRA)
 

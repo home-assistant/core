@@ -1,9 +1,4 @@
-"""
-Provides functionality to interact with climate devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/climate/
-"""
+"""Provides functionality to interact with climate devices."""
 from datetime import timedelta
 import logging
 import functools as ft
@@ -51,6 +46,17 @@ from .const import (
     SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_HIGH,
+    SUPPORT_TARGET_TEMPERATURE_LOW,
+    SUPPORT_TARGET_HUMIDITY,
+    SUPPORT_TARGET_HUMIDITY_HIGH,
+    SUPPORT_TARGET_HUMIDITY_LOW,
+    SUPPORT_FAN_MODE,
+    SUPPORT_OPERATION_MODE,
+    SUPPORT_HOLD_MODE,
+    SUPPORT_SWING_MODE,
+    SUPPORT_AWAY_MODE,
+    SUPPORT_AUX_HEAT,
 )
 from .reproduce_state import async_reproduce_states  # noqa
 
@@ -61,29 +67,6 @@ DEFAULT_MAX_HUMIDITY = 99
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 SCAN_INTERVAL = timedelta(seconds=60)
-
-STATE_HEAT = 'heat'
-STATE_COOL = 'cool'
-STATE_IDLE = 'idle'
-STATE_AUTO = 'auto'
-STATE_MANUAL = 'manual'
-STATE_DRY = 'dry'
-STATE_FAN_ONLY = 'fan_only'
-STATE_ECO = 'eco'
-
-SUPPORT_TARGET_TEMPERATURE = 1
-SUPPORT_TARGET_TEMPERATURE_HIGH = 2
-SUPPORT_TARGET_TEMPERATURE_LOW = 4
-SUPPORT_TARGET_HUMIDITY = 8
-SUPPORT_TARGET_HUMIDITY_HIGH = 16
-SUPPORT_TARGET_HUMIDITY_LOW = 32
-SUPPORT_FAN_MODE = 64
-SUPPORT_OPERATION_MODE = 128
-SUPPORT_HOLD_MODE = 256
-SUPPORT_SWING_MODE = 512
-SUPPORT_AWAY_MODE = 1024
-SUPPORT_AUX_HEAT = 2048
-SUPPORT_ON_OFF = 4096
 
 CONVERTIBLE_ATTRIBUTE = [
     ATTR_TEMPERATURE,

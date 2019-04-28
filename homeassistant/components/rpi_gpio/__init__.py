@@ -1,15 +1,8 @@
-"""
-Support for controlling GPIO pins of a Raspberry Pi.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/rpi_gpio/
-"""
+"""Support for controlling GPIO pins of a Raspberry Pi."""
 import logging
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
-
-REQUIREMENTS = ['RPi.GPIO==0.6.5']
 
 _LOGGER = logging.getLogger(__name__)
 

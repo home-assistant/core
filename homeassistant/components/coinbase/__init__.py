@@ -1,9 +1,4 @@
-"""
-Support for Coinbase.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/coinbase/
-"""
+"""Support for Coinbase."""
 from datetime import timedelta
 import logging
 
@@ -13,8 +8,6 @@ from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['coinbase==2.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 

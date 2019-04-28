@@ -1,9 +1,4 @@
-"""
-Allows to configure a switch using RPi GPIO.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.rpi_gpio/
-"""
+"""Allows to configure a switch using RPi GPIO."""
 import logging
 
 import voluptuous as vol
@@ -15,8 +10,6 @@ from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['rpi_gpio']
 
 CONF_PULL_MODE = 'pull_mode'
 CONF_PORTS = 'ports'

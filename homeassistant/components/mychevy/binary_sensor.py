@@ -1,17 +1,12 @@
-"""Support for MyChevy sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.mychevy/
-"""
+"""Support for MyChevy binary sensors."""
 import logging
 
-from homeassistant.components.mychevy import (
-    EVBinarySensorConfig, DOMAIN as MYCHEVY_DOMAIN, UPDATE_TOPIC
-)
 from homeassistant.components.binary_sensor import (
     ENTITY_ID_FORMAT, BinarySensorDevice)
 from homeassistant.core import callback
 from homeassistant.util import slugify
+
+from . import DOMAIN as MYCHEVY_DOMAIN, UPDATE_TOPIC, EVBinarySensorConfig
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,8 +15,8 @@ SENSORS = [
 ]
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the MyChevy sensors."""
     if discovery_info is None:
         return
@@ -41,7 +36,6 @@ class EVBinarySensor(BinarySensorDevice):
     The only real difference between sensors is which units and what
     attribute from the car object they are returning. All logic can be
     built with just setting subclass attributes.
-
     """
 
     def __init__(self, connection, config, car_vid):
@@ -53,9 +47,8 @@ class EVBinarySensor(BinarySensorDevice):
         self._is_on = None
         self._car_vid = car_vid
         self.entity_id = ENTITY_ID_FORMAT.format(
-            '{}_{}_{}'.format(MYCHEVY_DOMAIN,
-                              slugify(self._car.name),
-                              slugify(self._name)))
+            '{}_{}_{}'.format(
+                MYCHEVY_DOMAIN, slugify(self._car.name), slugify(self._name)))
 
     @property
     def name(self):

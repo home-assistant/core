@@ -1,9 +1,4 @@
-"""
-MyChevy Component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/mychevy/
-"""
+"""Support for MyChevy."""
 from datetime import timedelta
 import logging
 import threading
@@ -15,8 +10,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ["mychevy==1.2.0"]
 
 DOMAIN = 'mychevy'
 UPDATE_TOPIC = DOMAIN
@@ -41,7 +34,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_COUNTRY, default=DEFAULT_COUNTRY):
-            vol.All(cv.string, vol.In(['us', 'ca']))
+            vol.All(cv.string, vol.In(['us', 'ca'])),
     }),
 }, extra=vol.ALLOW_EXTRA)
 

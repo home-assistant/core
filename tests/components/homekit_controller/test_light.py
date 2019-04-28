@@ -126,3 +126,29 @@ async def test_switch_read_light_state_color_temp(hass, utcnow):
     assert state.state == 'on'
     assert state.attributes['brightness'] == 255
     assert state.attributes['color_temp'] == 400
+
+
+async def test_light_becomes_unavailable_but_recovers(hass, utcnow):
+    """Test transition to and from unavailable state."""
+    bulb = create_lightbulb_service_with_color_temp()
+    helper = await setup_test_component(hass, [bulb])
+
+    # Initial state is that the light is off
+    state = await helper.poll_and_get_state()
+    assert state.state == 'off'
+
+    # Test device goes offline
+    helper.pairing.available = False
+    state = await helper.poll_and_get_state()
+    assert state.state == 'unavailable'
+
+    # Simulate that someone switched on the device in the real world not via HA
+    helper.characteristics[LIGHT_ON].set_value(True)
+    helper.characteristics[LIGHT_BRIGHTNESS].value = 100
+    helper.characteristics[LIGHT_COLOR_TEMP].value = 400
+    helper.pairing.available = True
+
+    state = await helper.poll_and_get_state()
+    assert state.state == 'on'
+    assert state.attributes['brightness'] == 255
+    assert state.attributes['color_temp'] == 400

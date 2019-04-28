@@ -12,6 +12,7 @@
                     "radio_type": "Radio-Type",
                     "usb_path": "USB-Ger\u00e4te-Pfad"
                 },
+                "description": "Leer",
                 "title": "ZHA"
             }
         },

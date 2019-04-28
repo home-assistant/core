@@ -1,9 +1,4 @@
-"""
-Support for Vanderbilt (formerly Siemens) SPC alarm systems.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/spc/
-"""
+"""Support for Vanderbilt (formerly Siemens) SPC alarm systems."""
 import logging
 
 import voluptuous as vol
@@ -11,8 +6,6 @@ import voluptuous as vol
 from homeassistant.helpers import discovery, aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pyspcwebgw==0.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 

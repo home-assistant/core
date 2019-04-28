@@ -7,10 +7,11 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST
 from homeassistant.util.json import load_json
 
 from .const import (
-    APPLICATION_NAME, CLOUD_NAME, DOMAIN, KEY_HOST, KEY_SCAN_INTERVAL,
+    APPLICATION_NAME, CLOUD_NAME, DOMAIN, KEY_SCAN_INTERVAL,
     KEY_SESSION, NOT_SO_PRIVATE_KEY, PUBLIC_KEY, SCAN_INTERVAL,
     TELLDUS_CONFIG_FILE)
 
@@ -50,14 +51,14 @@ class FlowHandler(config_entries.ConfigFlow):
             return self.async_abort(reason='already_setup')
 
         if user_input is not None or len(self._hosts) == 1:
-            if user_input is not None and user_input[KEY_HOST] != CLOUD_NAME:
-                self._host = user_input[KEY_HOST]
+            if user_input is not None and user_input[CONF_HOST] != CLOUD_NAME:
+                self._host = user_input[CONF_HOST]
             return await self.async_step_auth()
 
         return self.async_show_form(
             step_id='user',
             data_schema=vol.Schema({
-                vol.Required(KEY_HOST):
+                vol.Required(CONF_HOST):
                 vol.In(list(self._hosts))
             }))
 
@@ -70,7 +71,7 @@ class FlowHandler(config_entries.ConfigFlow):
                 host = self._host or CLOUD_NAME
                 if self._host:
                     session = {
-                        KEY_HOST: host,
+                        CONF_HOST: host,
                         KEY_TOKEN: self._session.access_token
                     }
                 else:
@@ -80,12 +81,11 @@ class FlowHandler(config_entries.ConfigFlow):
                     }
                 return self.async_create_entry(
                     title=host, data={
-                        KEY_HOST: host,
+                        CONF_HOST: host,
                         KEY_SCAN_INTERVAL: self._scan_interval.seconds,
                         KEY_SESSION: session,
                     })
-            else:
-                errors['base'] = 'auth_error'
+            errors['base'] = 'auth_error'
 
         try:
             with async_timeout.timeout(10):
@@ -125,8 +125,8 @@ class FlowHandler(config_entries.ConfigFlow):
             return self.async_abort(reason='already_setup')
 
         self._scan_interval = user_input[KEY_SCAN_INTERVAL]
-        if user_input[KEY_HOST] != DOMAIN:
-            self._hosts.append(user_input[KEY_HOST])
+        if user_input[CONF_HOST] != DOMAIN:
+            self._hosts.append(user_input[CONF_HOST])
 
         if not await self.hass.async_add_executor_job(
                 os.path.isfile, self.hass.config.path(TELLDUS_CONFIG_FILE)):
@@ -136,14 +136,14 @@ class FlowHandler(config_entries.ConfigFlow):
             load_json, self.hass.config.path(TELLDUS_CONFIG_FILE))
         host = next(iter(conf))
 
-        if user_input[KEY_HOST] != host:
+        if user_input[CONF_HOST] != host:
             return await self.async_step_user()
 
         host = CLOUD_NAME if host == 'tellduslive' else host
         return self.async_create_entry(
             title=host,
             data={
-                KEY_HOST: host,
+                CONF_HOST: host,
                 KEY_SCAN_INTERVAL: self._scan_interval.seconds,
                 KEY_SESSION: next(iter(conf.values())),
             })

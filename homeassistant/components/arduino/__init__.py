@@ -1,9 +1,4 @@
-"""
-Support for Arduino boards running with the Firmata firmware.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/arduino/
-"""
+"""Support for Arduino boards running with the Firmata firmware."""
 import logging
 
 import voluptuous as vol
@@ -12,8 +7,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.const import CONF_PORT
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['PyMata==2.14']
 
 _LOGGER = logging.getLogger(__name__)
 

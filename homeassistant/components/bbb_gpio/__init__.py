@@ -1,15 +1,8 @@
-"""
-Support for controlling GPIO pins of a Beaglebone Black.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/bbb_gpio/
-"""
+"""Support for controlling GPIO pins of a Beaglebone Black."""
 import logging
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
-
-REQUIREMENTS = ['Adafruit_BBIO==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 

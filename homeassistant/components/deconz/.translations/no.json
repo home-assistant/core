@@ -9,6 +9,14 @@
             "no_key": "Kunne ikke f\u00e5 en API-n\u00f8kkel"
         },
         "step": {
+            "hassio_confirm": {
+                "data": {
+                    "allow_clip_sensor": "Tillat import av virtuelle sensorer",
+                    "allow_deconz_groups": "Tillat import av deCONZ grupper"
+                },
+                "description": "\u00d8nsker du \u00e5 konfigurere Home Assistent for \u00e5 koble til deCONZ gateway gitt av Hass.io tillegget {addon}?",
+                "title": "deCONZ Zigbee gateway via Hass.io tillegg"
+            },
             "init": {
                 "data": {
                     "host": "Vert",

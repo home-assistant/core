@@ -1,9 +1,4 @@
-"""
-Support the sensor of a BloomSky weather station.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.bloomsky/
-"""
+"""Support the sensor of a BloomSky weather station."""
 import logging
 
 import voluptuous as vol
@@ -13,9 +8,9 @@ from homeassistant.const import (TEMP_FAHRENHEIT, CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
+from . import BLOOMSKY
 
-DEPENDENCIES = ['bloomsky']
+LOGGER = logging.getLogger(__name__)
 
 # These are the available sensors
 SENSOR_TYPES = ['Temperature',
@@ -43,14 +38,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available BloomSky weather sensors."""
-    bloomsky = hass.components.bloomsky
     # Default needed in case of discovery
     sensors = config.get(CONF_MONITORED_CONDITIONS, SENSOR_TYPES)
 
-    for device in bloomsky.BLOOMSKY.devices.values():
+    for device in BLOOMSKY.devices.values():
         for variable in sensors:
             add_entities(
-                [BloomSkySensor(bloomsky.BLOOMSKY, device, variable)], True)
+                [BloomSkySensor(BLOOMSKY, device, variable)], True)
 
 
 class BloomSkySensor(Entity):

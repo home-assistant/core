@@ -1,23 +1,18 @@
-"""
-Support for ISY994 locks.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/lock.isy994/
-"""
+"""Support for ISY994 locks."""
 import logging
 from typing import Callable
 
-from homeassistant.components.lock import LockDevice, DOMAIN
-from homeassistant.components.isy994 import (ISY994_NODES, ISY994_PROGRAMS,
-                                             ISYDevice)
-from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN
+from homeassistant.components.lock import DOMAIN, LockDevice
+from homeassistant.const import STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED
 from homeassistant.helpers.typing import ConfigType
+
+from . import ISY994_NODES, ISY994_PROGRAMS, ISYDevice
 
 _LOGGER = logging.getLogger(__name__)
 
 VALUE_TO_STATE = {
     0: STATE_UNLOCKED,
-    100: STATE_LOCKED
+    100: STATE_LOCKED,
 }
 
 

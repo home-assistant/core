@@ -1,9 +1,4 @@
-"""
-Support for repeating alerts when conditions are met.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/alert/
-"""
+"""Support for repeating alerts when conditions are met."""
 import asyncio
 import logging
 from datetime import datetime, timedelta
@@ -94,7 +89,7 @@ async def async_setup(hass, config):
 
     async def async_handle_alert_service(service_call):
         """Handle calls to alert services."""
-        alert_ids = service.extract_entity_ids(hass, service_call)
+        alert_ids = await service.async_extract_entity_ids(hass, service_call)
 
         for alert_id in alert_ids:
             for alert in entities:

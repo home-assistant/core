@@ -1,31 +1,20 @@
-"""
-Component for monitoring the Transmission BitTorrent client API.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/transmission/
-"""
+"""Support for the Transmission BitTorrent client API."""
 from datetime import timedelta
-
 import logging
+
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    CONF_SCAN_INTERVAL
-)
-from homeassistant.helpers import discovery, config_validation as cv
+    CONF_HOST, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_PASSWORD, CONF_PORT,
+    CONF_SCAN_INTERVAL, CONF_USERNAME)
+from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
 
-
-REQUIREMENTS = ['transmissionrpc==0.11']
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'transmission'
+DATA_UPDATED = 'transmission_data_updated'
 DATA_TRANSMISSION = 'data_transmission'
 
 DEFAULT_NAME = 'Transmission'
@@ -83,6 +72,8 @@ def setup(hass, config):
 
     tm_data = hass.data[DATA_TRANSMISSION] = TransmissionData(
         hass, config, api)
+
+    tm_data.update()
     tm_data.init_torrent_list()
 
     def refresh(event_time):
@@ -94,10 +85,12 @@ def setup(hass, config):
     sensorconfig = {
         'sensors': config[DOMAIN][CONF_MONITORED_CONDITIONS],
         'client_name': config[DOMAIN][CONF_NAME]}
+
     discovery.load_platform(hass, 'sensor', DOMAIN, sensorconfig, config)
 
     if config[DOMAIN][TURTLE_MODE]:
         discovery.load_platform(hass, 'switch', DOMAIN, sensorconfig, config)
+
     return True
 
 
@@ -126,6 +119,8 @@ class TransmissionData:
 
             self.check_completed_torrent()
             self.check_started_torrent()
+
+            dispatcher_send(self.hass, DATA_UPDATED)
 
             _LOGGER.debug("Torrent Data updated")
             self.available = True
@@ -189,4 +184,7 @@ class TransmissionData:
 
     def get_alt_speed_enabled(self):
         """Get the alternative speed flag."""
+        if self.session is None:
+            return None
+
         return self.session.alt_speed_enabled

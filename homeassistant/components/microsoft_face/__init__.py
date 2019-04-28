@@ -1,9 +1,4 @@
-"""
-Support for Microsoft face recognition.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/microsoft_face/
-"""
+"""Support for Microsoft face recognition."""
 import asyncio
 import json
 import logging
@@ -30,7 +25,6 @@ CONF_AZURE_REGION = 'azure_region'
 
 DATA_MICROSOFT_FACE = 'microsoft_face'
 DEFAULT_TIMEOUT = 10
-DEPENDENCIES = ['camera']
 DOMAIN = 'microsoft_face'
 
 FACE_API_URL = "api.cognitive.microsoft.com/face/v1.0/{0}"
@@ -45,7 +39,7 @@ SERVICE_TRAIN_GROUP = 'train_group'
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_AZURE_REGION, default="westus"): cv.string,
+        vol.Optional(CONF_AZURE_REGION, default='westus'): cv.string,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }),
 }, extra=vol.ALLOW_EXTRA)

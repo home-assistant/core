@@ -1,9 +1,4 @@
-"""
-A component which allows you to send data to StatsD.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/statsd/
-"""
+"""Support for sending data to StatsD."""
 import logging
 
 import voluptuous as vol
@@ -12,8 +7,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_PREFIX, EVENT_STATE_CHANGED)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import state as state_helper
-
-REQUIREMENTS = ['statsd==3.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 

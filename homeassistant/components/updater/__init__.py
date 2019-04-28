@@ -1,9 +1,4 @@
-"""
-Support to check for available updates.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/updater/
-"""
+"""Support to check for available updates."""
 import asyncio
 from datetime import timedelta
 # pylint: disable=import-error,no-name-in-module
@@ -22,8 +17,6 @@ from homeassistant.helpers import event
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-
-REQUIREMENTS = ['distro==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 

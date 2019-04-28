@@ -1,26 +1,18 @@
-"""
-iOS push notification platform for notify component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/ecosystem/ios/notifications/
-"""
-import logging
+"""Support for iOS push notifications."""
 from datetime import datetime, timezone
+import logging
+
 import requests
 
 from homeassistant.components import ios
-
-import homeassistant.util.dt as dt_util
-
 from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_MESSAGE,
-    ATTR_DATA, BaseNotificationService)
+    ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT,
+    BaseNotificationService)
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
 PUSH_URL = "https://ios-push.home-assistant.io/push"
-
-DEPENDENCIES = ["ios"]
 
 
 # pylint: disable=invalid-name
@@ -85,7 +77,7 @@ class iOSNotificationService(BaseNotificationService):
 
         for target in targets:
             if target not in ios.enabled_push_ids(self.hass):
-                _LOGGER.error("The target (%s) does not exist in .ios.conf.",
+                _LOGGER.error("The target (%s) does not exist in .ios.conf",
                               targets)
                 return
 

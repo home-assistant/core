@@ -1,9 +1,4 @@
-"""
-Support for Zabbix Sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.zabbix/
-"""
+"""Support for Zabbix sensors."""
 import logging
 
 import voluptuous as vol
@@ -15,8 +10,6 @@ from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['zabbix']
 
 _CONF_TRIGGERS = 'triggers'
 _CONF_HOSTIDS = 'hostids'

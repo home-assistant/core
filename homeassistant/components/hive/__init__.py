@@ -1,20 +1,15 @@
-"""
-Support for the Hive devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/hive/
-"""
+"""Support for the Hive devices."""
 import logging
+
 import voluptuous as vol
 
-from homeassistant.const import (CONF_PASSWORD, CONF_SCAN_INTERVAL,
-                                 CONF_USERNAME)
+from homeassistant.const import (
+    CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
-REQUIREMENTS = ['pyhiveapi==0.2.17']
-
 _LOGGER = logging.getLogger(__name__)
+
 DOMAIN = 'hive'
 DATA_HIVE = 'data_hive'
 DEVICETYPES = {
@@ -23,7 +18,7 @@ DEVICETYPES = {
     'light': 'device_list_light',
     'switch': 'device_list_plug',
     'sensor': 'device_list_sensor',
-    }
+}
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -59,9 +54,8 @@ def setup(hass, config):
     password = config[DOMAIN][CONF_PASSWORD]
     update_interval = config[DOMAIN][CONF_SCAN_INTERVAL]
 
-    devicelist = session.core.initialise_api(username,
-                                             password,
-                                             update_interval)
+    devicelist = session.core.initialise_api(
+        username, password, update_interval)
 
     if devicelist is None:
         _LOGGER.error("Hive API initialization failed")

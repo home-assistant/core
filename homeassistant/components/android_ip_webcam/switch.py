@@ -1,20 +1,13 @@
-"""
-Support for IP Webcam settings.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.android_ip_webcam/
-"""
-
+"""Support for Android IP Webcam settings."""
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.android_ip_webcam import (
-    KEY_MAP, ICON_MAP, DATA_IP_WEBCAM, AndroidIPCamEntity, CONF_HOST,
-    CONF_NAME, CONF_SWITCHES)
 
-DEPENDENCIES = ['android_ip_webcam']
+from . import (
+    CONF_HOST, CONF_NAME, CONF_SWITCHES, DATA_IP_WEBCAM, ICON_MAP, KEY_MAP,
+    AndroidIPCamEntity)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the IP Webcam switch platform."""
     if discovery_info is None:
         return

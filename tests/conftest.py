@@ -153,10 +153,12 @@ def legacy_auth(hass):
     """Load legacy API password provider."""
     prv = legacy_api_password.LegacyApiPasswordAuthProvider(
         hass, hass.auth._store, {
-            'type': 'legacy_api_password'
+            'type': 'legacy_api_password',
+            'api_password': 'test-password',
         }
     )
     hass.auth._providers[(prv.type, prv.id)] = prv
+    return prv
 
 
 @pytest.fixture
@@ -168,6 +170,7 @@ def local_auth(hass):
         }
     )
     hass.auth._providers[(prv.type, prv.id)] = prv
+    return prv
 
 
 @pytest.fixture

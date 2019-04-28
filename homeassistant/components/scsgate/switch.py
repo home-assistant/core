@@ -1,9 +1,4 @@
-"""
-Support for SCSGate switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.scsgate/
-"""
+"""Support for SCSGate switches."""
 import logging
 
 import voluptuous as vol
@@ -15,8 +10,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 ATTR_SCENARIO_ID = 'scenario_id'
-
-DEPENDENCIES = ['scsgate']
 
 CONF_TRADITIONAL = 'traditional'
 CONF_SCENARIO = 'scenario'

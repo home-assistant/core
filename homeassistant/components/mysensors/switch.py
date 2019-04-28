@@ -1,9 +1,4 @@
-"""
-Support for MySensors switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.mysensors/
-"""
+"""Support for MySensors switches."""
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -89,7 +84,7 @@ class MySensorsSwitch(mysensors.device.MySensorsEntity, SwitchDevice):
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, 1)
         if self.gateway.optimistic:
-            # optimistically assume that switch has changed state
+            # Optimistically assume that switch has changed state
             self._values[self.value_type] = STATE_ON
             self.async_schedule_update_ha_state()
 
@@ -98,7 +93,7 @@ class MySensorsSwitch(mysensors.device.MySensorsEntity, SwitchDevice):
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, 0)
         if self.gateway.optimistic:
-            # optimistically assume that switch has changed state
+            # Optimistically assume that switch has changed state
             self._values[self.value_type] = STATE_OFF
             self.async_schedule_update_ha_state()
 
@@ -127,11 +122,11 @@ class MySensorsIRSwitch(MySensorsSwitch):
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_LIGHT, 1)
         if self.gateway.optimistic:
-            # optimistically assume that switch has changed state
+            # Optimistically assume that switch has changed state
             self._values[self.value_type] = self._ir_code
             self._values[set_req.V_LIGHT] = STATE_ON
             self.async_schedule_update_ha_state()
-            # turn off switch after switch was turned on
+            # Turn off switch after switch was turned on
             await self.async_turn_off()
 
     async def async_turn_off(self, **kwargs):
@@ -140,7 +135,7 @@ class MySensorsIRSwitch(MySensorsSwitch):
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_LIGHT, 0)
         if self.gateway.optimistic:
-            # optimistically assume that switch has changed state
+            # Optimistically assume that switch has changed state
             self._values[set_req.V_LIGHT] = STATE_OFF
             self.async_schedule_update_ha_state()
 

@@ -1,9 +1,4 @@
-"""
-Support for Plum Lightpad switches.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/plum_lightpad
-"""
+"""Support for Plum Lightpad devices."""
 import asyncio
 import logging
 
@@ -14,8 +9,6 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['plumlightpad==0.0.11']
 
 _LOGGER = logging.getLogger(__name__)
 

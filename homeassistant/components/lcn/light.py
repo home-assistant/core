@@ -1,28 +1,22 @@
-"""
-Support for LCN lights.
+"""Support for LCN lights."""
+import pypck
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.lcn/
-"""
-
-from homeassistant.components.lcn import (
-    CONF_CONNECTIONS, CONF_DIMMABLE, CONF_OUTPUT, CONF_TRANSITION, DATA_LCN,
-    OUTPUT_PORTS, LcnDevice, get_connection)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_TRANSITION, SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION,
     Light)
 from homeassistant.const import CONF_ADDRESS
 
-DEPENDENCIES = ['lcn']
+from . import LcnDevice, get_connection
+from .const import (
+    CONF_CONNECTIONS, CONF_DIMMABLE, CONF_OUTPUT, CONF_TRANSITION, DATA_LCN,
+    OUTPUT_PORTS)
 
 
-async def async_setup_platform(hass, hass_config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, hass_config, async_add_entities, discovery_info=None):
     """Set up the LCN light platform."""
     if discovery_info is None:
         return
-
-    import pypck
 
     devices = []
     for config in discovery_info:
@@ -62,9 +56,8 @@ class LcnOutputLight(LcnDevice, Light):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        self.hass.async_create_task(
-            self.address_connection.activate_status_request_handler(
-                self.output))
+        await self.address_connection.activate_status_request_handler(
+            self.output)
 
     @property
     def supported_features(self):
@@ -144,9 +137,8 @@ class LcnRelayLight(LcnDevice, Light):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        self.hass.async_create_task(
-            self.address_connection.activate_status_request_handler(
-                self.output))
+        await self.address_connection.activate_status_request_handler(
+            self.output)
 
     @property
     def is_on(self):

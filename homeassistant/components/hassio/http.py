@@ -1,23 +1,19 @@
-"""
-Exposes regular REST commands as services.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/hassio/
-"""
+"""HTTP Support for Hass.io."""
 import asyncio
 import logging
 import os
 import re
+from typing import Dict, Union
 
-import async_timeout
 import aiohttp
 from aiohttp import web
-from aiohttp.hdrs import CONTENT_TYPE
+from aiohttp.hdrs import CONTENT_TYPE, CONTENT_LENGTH
 from aiohttp.web_exceptions import HTTPBadGateway
+import async_timeout
 
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 
-from .const import X_HASSIO, X_HASS_USER_ID, X_HASS_IS_ADMIN
+from .const import X_HASS_IS_ADMIN, X_HASS_USER_ID, X_HASSIO
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 NO_TIMEOUT = re.compile(
     r'^(?:'
     r'|homeassistant/update'
-    r'|host/update'
+    r'|hassos/update'
+    r'|hassos/update/cli'
     r'|supervisor/update'
     r'|addons/[^/]+/(?:update|install|rebuild)'
     r'|snapshots/.+/full'
@@ -49,25 +46,26 @@ class HassIOView(HomeAssistantView):
     url = "/api/hassio/{path:.+}"
     requires_auth = False
 
-    def __init__(self, host, websession):
+    def __init__(self, host: str, websession: aiohttp.ClientSession):
         """Initialize a Hass.io base view."""
         self._host = host
         self._websession = websession
 
-    async def _handle(self, request, path):
+    async def _handle(
+            self, request: web.Request, path: str
+    ) -> Union[web.Response, web.StreamResponse]:
         """Route data to Hass.io."""
         if _need_auth(path) and not request[KEY_AUTHENTICATED]:
             return web.Response(status=401)
 
-        client = await self._command_proxy(path, request)
-
-        data = await client.read()
-        return _create_response(client, data)
+        return await self._command_proxy(path, request)
 
     get = _handle
     post = _handle
 
-    async def _command_proxy(self, path, request):
+    async def _command_proxy(
+            self, path: str, request: web.Request
+    ) -> Union[web.Response, web.StreamResponse]:
         """Return a client request with proxy origin for Hass.io supervisor.
 
         This method is a coroutine.
@@ -76,21 +74,11 @@ class HassIOView(HomeAssistantView):
         hass = request.app['hass']
 
         data = None
-        headers = {
-            X_HASSIO: os.environ.get('HASSIO_TOKEN', ""),
-        }
-        user = request.get('hass_user')
-        if user is not None:
-            headers[X_HASS_USER_ID] = request['hass_user'].id
-            headers[X_HASS_IS_ADMIN] = str(int(request['hass_user'].is_admin))
+        headers = _init_header(request)
 
         try:
             with async_timeout.timeout(10, loop=hass.loop):
                 data = await request.read()
-                if data:
-                    headers[CONTENT_TYPE] = request.content_type
-                else:
-                    data = None
 
             method = getattr(self._websession, request.method.lower())
             client = await method(
@@ -98,7 +86,25 @@ class HassIOView(HomeAssistantView):
                 headers=headers, timeout=read_timeout
             )
 
-            return client
+            # Simple request
+            if int(client.headers.get(CONTENT_LENGTH, 0)) < 4194000:
+                # Return Response
+                body = await client.read()
+                return web.Response(
+                    content_type=client.content_type,
+                    status=client.status,
+                    body=body,
+                )
+
+            # Stream response
+            response = web.StreamResponse(status=client.status)
+            response.content_type = client.content_type
+
+            await response.prepare(request)
+            async for data in client.content.iter_chunked(4096):
+                await response.write(data)
+
+            return response
 
         except aiohttp.ClientError as err:
             _LOGGER.error("Client error on api %s request %s", path, err)
@@ -109,23 +115,30 @@ class HassIOView(HomeAssistantView):
         raise HTTPBadGateway()
 
 
-def _create_response(client, data):
-    """Convert a response from client request."""
-    return web.Response(
-        body=data,
-        status=client.status,
-        content_type=client.content_type,
-    )
+def _init_header(request: web.Request) -> Dict[str, str]:
+    """Create initial header."""
+    headers = {
+        X_HASSIO: os.environ.get('HASSIO_TOKEN', ""),
+        CONTENT_TYPE: request.content_type,
+    }
+
+    # Add user data
+    user = request.get('hass_user')
+    if user is not None:
+        headers[X_HASS_USER_ID] = request['hass_user'].id
+        headers[X_HASS_IS_ADMIN] = str(int(request['hass_user'].is_admin))
+
+    return headers
 
 
-def _get_timeout(path):
+def _get_timeout(path: str) -> int:
     """Return timeout for a URL path."""
     if NO_TIMEOUT.match(path):
         return 0
     return 300
 
 
-def _need_auth(path):
+def _need_auth(path: str) -> bool:
     """Return if a path need authentication."""
     if NO_AUTH.match(path):
         return False

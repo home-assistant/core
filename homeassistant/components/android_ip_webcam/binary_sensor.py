@@ -1,18 +1,11 @@
-"""
-Support for IP Webcam binary sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.android_ip_webcam/
-"""
+"""Support for Android IP Webcam binary sensors."""
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.android_ip_webcam import (
-    KEY_MAP, DATA_IP_WEBCAM, AndroidIPCamEntity, CONF_HOST, CONF_NAME)
 
-DEPENDENCIES = ['android_ip_webcam']
+from . import CONF_HOST, CONF_NAME, DATA_IP_WEBCAM, KEY_MAP, AndroidIPCamEntity
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the IP Webcam binary sensors."""
     if discovery_info is None:
         return

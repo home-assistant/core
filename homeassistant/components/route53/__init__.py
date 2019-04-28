@@ -1,9 +1,4 @@
-"""
-Update the IP addresses of your Route53 DNS records.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/route53/
-"""
+"""Update the IP addresses of your Route53 DNS records."""
 from datetime import timedelta
 import logging
 from typing import List
@@ -13,8 +8,6 @@ import voluptuous as vol
 from homeassistant.const import CONF_DOMAIN, CONF_TTL, CONF_ZONE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
-
-REQUIREMENTS = ['boto3==1.9.16', 'ipify==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 

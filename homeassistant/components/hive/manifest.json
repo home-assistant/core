@@ -1,0 +1,13 @@
+{
+  "domain": "hive",
+  "name": "Hive",
+  "documentation": "https://www.home-assistant.io/components/hive",
+  "requirements": [
+    "pyhiveapi==0.2.17"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@Rendili",
+    "@KJonline"
+  ]
+}

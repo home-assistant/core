@@ -1,5 +1,4 @@
 """Config flow to configure emulated_roku component."""
-
 import voluptuous as vol
 
 from homeassistant import config_entries

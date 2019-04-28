@@ -1,9 +1,4 @@
-"""
-Support for WeMo switches.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.wemo/
-"""
+"""Support for WeMo switches."""
 import asyncio
 import logging
 from datetime import datetime, timedelta
@@ -17,7 +12,8 @@ from homeassistant.util import convert
 from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
 
-DEPENDENCIES = ['wemo']
+from . import SUBSCRIPTION_REGISTRY
+
 SCAN_INTERVAL = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,7 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             device = discovery.device_from_description(location, mac)
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.Timeout) as err:
-            _LOGGER.error('Unable to access %s (%s)', location, err)
+            _LOGGER.error("Unable to access %s (%s)", location, err)
             raise PlatformNotReady
 
         if device:
@@ -203,7 +199,7 @@ class WemoSwitch(SwitchDevice):
         # Define inside async context so we know our event loop
         self._update_lock = asyncio.Lock()
 
-        registry = self.hass.components.wemo.SUBSCRIPTION_REGISTRY
+        registry = SUBSCRIPTION_REGISTRY
         await self.hass.async_add_job(registry.register, self.wemo)
         registry.on(self.wemo, None, self._subscription_callback)
 

@@ -1,16 +1,9 @@
-"""
-Support for Spider switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.spider/
-"""
-
+"""Support for Spider switches."""
 import logging
 
-from homeassistant.components.spider import DOMAIN as SPIDER_DOMAIN
 from homeassistant.components.switch import SwitchDevice
 
-DEPENDENCIES = ['spider']
+from . import DOMAIN as SPIDER_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

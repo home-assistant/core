@@ -1,39 +1,21 @@
-"""
-The HomeMatic sensor platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.homematic/
-"""
+"""Support for HomeMatic sensors."""
 import logging
 
-from homeassistant.components.homematic import ATTR_DISCOVER_DEVICES, HMDevice
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import ENERGY_WATT_HOUR, POWER_WATT, STATE_UNKNOWN
+
+from . import ATTR_DISCOVER_DEVICES, HMDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['homematic']
-
 HM_STATE_HA_CAST = {
-    'RotaryHandleSensor': {0: 'closed',
-                           1: 'tilted',
-                           2: 'open'},
-    'RotaryHandleSensorIP': {0: 'closed',
-                             1: 'tilted',
-                             2: 'open'},
-    'WaterSensor': {0: 'dry',
-                    1: 'wet',
-                    2: 'water'},
-    'CO2Sensor': {0: 'normal',
-                  1: 'added',
-                  2: 'strong'},
-    'IPSmoke': {0: 'off',
-                1: 'primary',
-                2: 'intrusion',
-                3: 'secondary'},
-    'RFSiren': {0: 'disarmed',
-                1: 'extsens_armed',
-                2: 'allsens_armed',
-                3: 'alarm_blocked'},
+    'RotaryHandleSensor': {0: 'closed', 1: 'tilted', 2: 'open'},
+    'RotaryHandleSensorIP': {0: 'closed', 1: 'tilted', 2: 'open'},
+    'WaterSensor': {0: 'dry', 1: 'wet', 2: 'water'},
+    'CO2Sensor': {0: 'normal', 1: 'added', 2: 'strong'},
+    'IPSmoke': {0: 'off', 1: 'primary', 2: 'intrusion', 3: 'secondary'},
+    'RFSiren': {
+        0: 'disarmed', 1: 'extsens_armed', 2: 'allsens_armed',
+        3: 'alarm_blocked'},
 }
 
 HM_UNIT_HA_CAST = {
@@ -41,10 +23,10 @@ HM_UNIT_HA_CAST = {
     'TEMPERATURE': '°C',
     'ACTUAL_TEMPERATURE': '°C',
     'BRIGHTNESS': '#',
-    'POWER': 'W',
+    'POWER': POWER_WATT,
     'CURRENT': 'mA',
     'VOLTAGE': 'V',
-    'ENERGY_COUNTER': 'Wh',
+    'ENERGY_COUNTER': ENERGY_WATT_HOUR,
     'GAS_POWER': 'm3',
     'GAS_ENERGY_COUNTER': 'm3',
     'LUX': 'lx',

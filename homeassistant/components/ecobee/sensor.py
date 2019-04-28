@@ -1,15 +1,8 @@
-"""
-Support for Ecobee sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.ecobee/
-"""
+"""Support for Ecobee sensors."""
 from homeassistant.components import ecobee
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
-
-DEPENDENCIES = ['ecobee']
 
 ECOBEE_CONFIG_FILE = 'ecobee.conf'
 

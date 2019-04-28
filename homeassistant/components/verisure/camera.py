@@ -1,17 +1,12 @@
-"""
-Camera that loads a picture from a local file.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.verisure/
-"""
+"""Support for Verisure cameras."""
 import errno
 import logging
 import os
 
 from homeassistant.components.camera import Camera
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.components.verisure import HUB as hub
-from homeassistant.components.verisure import CONF_SMARTCAM
+
+from . import CONF_SMARTCAM, HUB as hub
 
 _LOGGER = logging.getLogger(__name__)
 

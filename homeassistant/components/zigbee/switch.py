@@ -1,21 +1,14 @@
-"""
-Contains functionality to use a Zigbee device as a switch.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.zigbee/
-"""
+"""Support for Zigbee switches."""
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.zigbee import (
-    ZigBeeDigitalOut, ZigBeeDigitalOutConfig, PLATFORM_SCHEMA)
 
-DEPENDENCIES = ['zigbee']
+from . import PLATFORM_SCHEMA, ZigBeeDigitalOut, ZigBeeDigitalOutConfig
+
 
 CONF_ON_STATE = 'on_state'
 
 DEFAULT_ON_STATE = 'high'
-DEPENDENCIES = ['zigbee']
 
 STATES = ['high', 'low']
 

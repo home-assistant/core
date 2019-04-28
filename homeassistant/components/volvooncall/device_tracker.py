@@ -1,15 +1,11 @@
-"""
-Support for tracking a Volvo.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.volvooncall/
-"""
+"""Support for tracking a Volvo."""
 import logging
 
-from homeassistant.util import slugify
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
-from homeassistant.components.volvooncall import DATA_KEY, SIGNAL_STATE_UPDATED
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util import slugify
+
+from . import DATA_KEY, SIGNAL_STATE_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
 

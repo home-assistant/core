@@ -1,9 +1,4 @@
-"""
-A component which allows you to send data to Datadog.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/datadog/
-"""
+"""Support for sending data to Datadog."""
 import logging
 
 import voluptuous as vol
@@ -13,8 +8,6 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED, STATE_UNKNOWN)
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['datadog==0.15.0']
 
 _LOGGER = logging.getLogger(__name__)
 

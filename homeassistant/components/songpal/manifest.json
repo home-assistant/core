@@ -1,0 +1,10 @@
+{
+  "domain": "songpal",
+  "name": "Songpal",
+  "documentation": "https://www.home-assistant.io/components/songpal",
+  "requirements": [
+    "python-songpal==0.0.9.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

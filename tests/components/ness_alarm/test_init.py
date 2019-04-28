@@ -6,20 +6,20 @@ from asynctest import patch, MagicMock
 
 from homeassistant.components import alarm_control_panel
 from homeassistant.components.ness_alarm import (
-    DOMAIN, CONF_DEVICE_PORT, CONF_DEVICE_HOST, CONF_ZONE_NAME, CONF_ZONES,
+    DOMAIN, CONF_DEVICE_PORT, CONF_ZONE_NAME, CONF_ZONES,
     CONF_ZONE_ID, SERVICE_AUX, SERVICE_PANIC,
     ATTR_CODE, ATTR_OUTPUT_ID)
 from homeassistant.const import (
     STATE_ALARM_ARMING, SERVICE_ALARM_DISARM, ATTR_ENTITY_ID,
     SERVICE_ALARM_ARM_AWAY, SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_TRIGGER,
     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_AWAY, STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED, STATE_UNKNOWN)
+    STATE_ALARM_TRIGGERED, STATE_UNKNOWN, CONF_HOST)
 from homeassistant.setup import async_setup_component
 from tests.common import MockDependency
 
 VALID_CONFIG = {
     DOMAIN: {
-        CONF_DEVICE_HOST: 'alarm.local',
+        CONF_HOST: 'alarm.local',
         CONF_DEVICE_PORT: 1234,
         CONF_ZONES: [
             {

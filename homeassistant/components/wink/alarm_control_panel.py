@@ -1,19 +1,13 @@
-"""
-Interfaces with Wink Cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.wink/
-"""
+"""Support Wink alarm control panels."""
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.wink import DOMAIN, WinkDevice
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
 
-_LOGGER = logging.getLogger(__name__)
+from . import DOMAIN, WinkDevice
 
-DEPENDENCIES = ['wink']
+_LOGGER = logging.getLogger(__name__)
 
 STATE_ALARM_PRIVACY = 'Private'
 

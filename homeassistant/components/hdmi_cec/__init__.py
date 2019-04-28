@@ -1,29 +1,21 @@
-"""
-HDMI CEC component.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/hdmi_cec/
-"""
-import logging
-import multiprocessing
+"""Support for HDMI CEC."""
 from collections import defaultdict
 from functools import reduce
+import logging
+import multiprocessing
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import discovery
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER
 from homeassistant.components.switch import DOMAIN as SWITCH
-from homeassistant.const import (EVENT_HOMEASSISTANT_START,
-                                 EVENT_HOMEASSISTANT_STOP, STATE_ON,
-                                 STATE_OFF, CONF_DEVICES, CONF_PLATFORM,
-                                 STATE_PLAYING, STATE_IDLE,
-                                 STATE_PAUSED, CONF_HOST)
+from homeassistant.const import (
+    CONF_DEVICES, CONF_HOST, CONF_PLATFORM, EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF, STATE_ON, STATE_PAUSED,
+    STATE_PLAYING)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['pyCEC==0.4.13']
 
 DOMAIN = 'hdmi_cec'
 
@@ -43,7 +35,7 @@ ICONS_BY_TYPE = {
     1: ICON_RECORDER,
     3: ICON_TUNER,
     4: ICON_PLAYER,
-    5: ICON_AUDIO
+    5: ICON_AUDIO,
 }
 
 CEC_DEVICES = defaultdict(list)
@@ -87,7 +79,7 @@ SERVICE_SEND_COMMAND_SCHEMA = vol.Schema({
     vol.Optional(ATTR_SRC): _VOL_HEX,
     vol.Optional(ATTR_DST): _VOL_HEX,
     vol.Optional(ATTR_ATT): _VOL_HEX,
-    vol.Optional(ATTR_RAW): vol.Coerce(str)
+    vol.Optional(ATTR_RAW): vol.Coerce(str),
 }, extra=vol.PREVENT_EXTRA)
 
 SERVICE_VOLUME = 'volume'

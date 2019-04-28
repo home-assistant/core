@@ -1,0 +1,10 @@
+{
+  "domain": "dnsip",
+  "name": "Dnsip",
+  "documentation": "https://www.home-assistant.io/components/dnsip",
+  "requirements": [
+    "aiodns==1.1.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

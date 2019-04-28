@@ -1,9 +1,4 @@
-"""
-Support for CM15A/CM19A X10 Controller using mochad daemon.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mochad/
-"""
+"""Support for CM15A/CM19A X10 Controller using mochad daemon."""
 import logging
 import threading
 
@@ -13,8 +8,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.const import (CONF_HOST, CONF_PORT)
-
-REQUIREMENTS = ['pymochad==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 

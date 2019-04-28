@@ -1,9 +1,4 @@
-"""
-Support for The Things network.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/thethingsnetwork/
-"""
+"""Support for The Things network."""
 import logging
 
 import voluptuous as vol

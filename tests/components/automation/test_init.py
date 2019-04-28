@@ -369,38 +369,47 @@ async def test_shared_context(hass, calls):
     })
 
     context = Context()
-    automation_mock = Mock()
+    first_automation_listener = Mock()
     event_mock = Mock()
 
-    hass.bus.async_listen('test_event2', automation_mock)
+    hass.bus.async_listen('test_event2', first_automation_listener)
     hass.bus.async_listen(EVENT_AUTOMATION_TRIGGERED, event_mock)
     hass.bus.async_fire('test_event', context=context)
     await hass.async_block_till_done()
 
     # Ensure events was fired
-    assert automation_mock.call_count == 1
+    assert first_automation_listener.call_count == 1
     assert event_mock.call_count == 2
 
-    # Ensure context carries through the event
-    args, kwargs = automation_mock.call_args
-    assert args[0].context == context
+    # Verify automation triggered evenet for 'hello' automation
+    args, kwargs = event_mock.call_args_list[0]
+    first_trigger_context = args[0].context
+    assert first_trigger_context.parent_id == context.id
+    # Ensure event data has all attributes set
+    assert args[0].data.get(ATTR_NAME) is not None
+    assert args[0].data.get(ATTR_ENTITY_ID) is not None
 
-    for call in event_mock.call_args_list:
-        args, kwargs = call
-        assert args[0].context == context
-        # Ensure event data has all attributes set
-        assert args[0].data.get(ATTR_NAME) is not None
-        assert args[0].data.get(ATTR_ENTITY_ID) is not None
+    # Ensure context set correctly for event fired by 'hello' automation
+    args, kwargs = first_automation_listener.call_args
+    assert args[0].context is first_trigger_context
 
-    # Ensure the automation state shares the same context
+    # Ensure the 'hello' automation state has the right context
     state = hass.states.get('automation.hello')
     assert state is not None
-    assert state.context == context
+    assert state.context is first_trigger_context
+
+    # Verify automation triggered evenet for 'bye' automation
+    args, kwargs = event_mock.call_args_list[1]
+    second_trigger_context = args[0].context
+    assert second_trigger_context.parent_id == first_trigger_context.id
+    # Ensure event data has all attributes set
+    assert args[0].data.get(ATTR_NAME) is not None
+    assert args[0].data.get(ATTR_ENTITY_ID) is not None
 
     # Ensure the service call from the second automation
     # shares the same context
     assert len(calls) == 1
-    assert calls[0].context == context
+    assert calls[0].context is second_trigger_context
 
 
 async def test_services(hass, calls):

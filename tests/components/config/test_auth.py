@@ -112,7 +112,7 @@ async def test_list(hass, hass_ws_client, hass_admin_user):
 
 async def test_delete_requires_admin(hass, hass_ws_client,
                                      hass_read_only_access_token):
-    """Test delete command requires an owner."""
+    """Test delete command requires an admin."""
     client = await hass_ws_client(hass, hass_read_only_access_token)
 
     await client.send_json({
@@ -205,7 +205,7 @@ async def test_create(hass, hass_ws_client, hass_access_token):
 
 async def test_create_requires_admin(hass, hass_ws_client,
                                      hass_read_only_access_token):
-    """Test create command requires an owner."""
+    """Test create command requires an admin."""
     client = await hass_ws_client(hass, hass_read_only_access_token)
 
     await client.send_json({
@@ -217,3 +217,67 @@ async def test_create_requires_admin(hass, hass_ws_client,
     result = await client.receive_json()
     assert not result['success'], result
     assert result['error']['code'] == 'unauthorized'
+
+
+async def test_update(hass, hass_ws_client):
+    """Test update command works."""
+    client = await hass_ws_client(hass)
+
+    user = await hass.auth.async_create_user("Test user")
+
+    await client.send_json({
+        'id': 5,
+        'type': 'config/auth/update',
+        'user_id': user.id,
+        'name': 'Updated name',
+        'group_ids': ['system-read-only'],
+    })
+
+    result = await client.receive_json()
+    assert result['success'], result
+    data_user = result['result']['user']
+
+    assert user.name == "Updated name"
+    assert data_user['name'] == "Updated name"
+    assert len(user.groups) == 1
+    assert user.groups[0].id == "system-read-only"
+    assert data_user['group_ids'] == ["system-read-only"]
+
+
+async def test_update_requires_admin(hass, hass_ws_client,
+                                     hass_read_only_access_token):
+    """Test update command requires an admin."""
+    client = await hass_ws_client(hass, hass_read_only_access_token)
+
+    user = await hass.auth.async_create_user("Test user")
+
+    await client.send_json({
+        'id': 5,
+        'type': 'config/auth/update',
+        'user_id': user.id,
+        'name': 'Updated name',
+    })
+
+    result = await client.receive_json()
+    assert not result['success'], result
+    assert result['error']['code'] == 'unauthorized'
+    assert user.name == "Test user"
+
+
+async def test_update_system_generated(hass, hass_ws_client):
+    """Test update command cannot update a system generated."""
+    client = await hass_ws_client(hass)
+
+    user = await hass.auth.async_create_system_user("Test user")
+
+    await client.send_json({
+        'id': 5,
+        'type': 'config/auth/update',
+        'user_id': user.id,
+        'name': 'Updated name',
+    })
+
+    result = await client.receive_json()
+    assert not result['success'], result
+    assert result['error']['code'] == 'cannot_modify_system_generated'
+    assert user.name == "Test user"

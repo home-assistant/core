@@ -1,25 +1,18 @@
-"""
-Configure a switch using a digital output from a raspihats board.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.raspihats/
-"""
+"""Support for raspihats board switches."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.raspihats import (
-    CONF_ADDRESS, CONF_BOARD, CONF_CHANNELS, CONF_I2C_HATS, CONF_INDEX,
-    CONF_INITIAL_STATE, CONF_INVERT_LOGIC, I2C_HAT_NAMES, I2C_HATS_MANAGER,
-    I2CHatsException)
 from homeassistant.components.switch import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 
-_LOGGER = logging.getLogger(__name__)
+from . import (
+    CONF_BOARD, CONF_CHANNELS, CONF_I2C_HATS, CONF_INDEX, CONF_INITIAL_STATE,
+    CONF_INVERT_LOGIC, I2C_HAT_NAMES, I2C_HATS_MANAGER, I2CHatsException)
 
-DEPENDENCIES = ['raspihats']
+_LOGGER = logging.getLogger(__name__)
 
 _CHANNELS_SCHEMA = vol.Schema([{
     vol.Required(CONF_INDEX): cv.positive_int,

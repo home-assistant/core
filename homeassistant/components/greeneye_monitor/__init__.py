@@ -1,9 +1,4 @@
-"""
-Support for monitoring a GreenEye Monitor energy monitor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/greeneye_monitor/
-"""
+"""Support for monitoring a GreenEye Monitor energy monitor."""
 import logging
 
 import voluptuous as vol
@@ -15,8 +10,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
-
-REQUIREMENTS = ['greeneye_monitor==1.0']
 
 _LOGGER = logging.getLogger(__name__)
 

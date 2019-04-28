@@ -1,1 +1,1 @@
-"""Xiaomi Miio integration."""
+"""Support for Xiaomi Miio."""

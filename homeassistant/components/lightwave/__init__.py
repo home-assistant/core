@@ -1,23 +1,18 @@
-"""
-Support for device connected via Lightwave WiFi-link hub.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/lightwave/
-"""
+"""Support for device connected via Lightwave WiFi-link hub."""
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_HOST, CONF_LIGHTS, CONF_NAME,
                                  CONF_SWITCHES)
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ['lightwave==0.15']
 LIGHTWAVE_LINK = 'lightwave_link'
+
 DOMAIN = 'lightwave'
 
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema(
-        cv.has_at_least_one_key(CONF_LIGHTS, CONF_SWITCHES), {
+        vol.All(cv.has_at_least_one_key(CONF_LIGHTS, CONF_SWITCHES), {
             vol.Required(CONF_HOST): cv.string,
             vol.Optional(CONF_LIGHTS, default={}): {
                 cv.string: vol.Schema({vol.Required(CONF_NAME): cv.string}),
@@ -26,6 +21,7 @@ CONFIG_SCHEMA = vol.Schema({
                 cv.string: vol.Schema({vol.Required(CONF_NAME): cv.string}),
             }
         })
+    )
 }, extra=vol.ALLOW_EXTRA)
 
 

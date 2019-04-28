@@ -1,0 +1,28 @@
+{
+    "config": {
+        "error": {
+            "app_not_installed": "Home Assistant SmartApp \uc744 \uc124\uce58\ud558\uace0 \uc778\uc99d\ud588\ub294\uc9c0 \ud655\uc778\ud558\uace0 \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694.",
+            "app_setup_error": "SmartApp \uc744 \uc124\uc815\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4. \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694.",
+            "base_url_not_https": "`http` \uad6c\uc131\uc694\uc18c\uc758 `base_url` \uc740 \ubc18\ub4dc\uc2dc `https://`\ub85c \uc2dc\uc791\ud558\ub3c4\ub85d \uad6c\uc131\ub418\uc5b4 \uc788\uc5b4\uc57c \ud569\ub2c8\ub2e4.",
+            "token_already_setup": "\ud1a0\ud070\uc774 \uc774\ubbf8 \uc124\uc815\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+            "token_forbidden": "\ud1a0\ud070\uc5d0 \ud544\uc694\ud55c OAuth \ubc94\uc704\ubaa9\ub85d\uc774 \uc5c6\uc2b5\ub2c8\ub2e4.",
+            "token_invalid_format": "\ud1a0\ud070\uc740 UID/GUID \ud615\uc2dd\uc774\uc5b4\uc57c \ud569\ub2c8\ub2e4",
+            "token_unauthorized": "\ud1a0\ud070\uc774 \uc720\ud6a8\ud558\uc9c0 \uc54a\uac70\ub098 \uc2b9\uc778\ub418\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4.",
+            "webhook_error": "SmartThings \ub294 `base_url` \uc5d0 \uc124\uc815\ub41c \uc5d4\ub4dc\ud3ec\uc778\ud2b8\uc758 \uc720\ud6a8\uc131\uc744 \uac80\uc0ac \ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4. \uad6c\uc131\uc694\uc18c\uc758 \uc694\uad6c \uc0ac\ud56d\uc744 \uac80\ud1a0\ud574\uc8fc\uc138\uc694."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "\uc561\uc138\uc2a4 \ud1a0\ud070"
+                },
+                "description": "[\uc548\ub0b4]({component_url}) \uc5d0 \ub530\ub77c \uc0dd\uc131 \ub41c SmartThings [\uac1c\uc778 \uc561\uc138\uc2a4 \ud1a0\ud070]({token_url}) \uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694.",
+                "title": "\uac1c\uc778 \uc561\uc138\uc2a4 \ud1a0\ud070 \uc785\ub825"
+            },
+            "wait_install": {
+                "description": "\ud558\ub098 \uc774\uc0c1\uc758 \uc704\uce58\uc5d0 Home Assistant SmartApp \uc744 \uc124\uce58\ud558\uace0 submit \uc744 \ud074\ub9ad\ud574\uc8fc\uc138\uc694.",
+                "title": "SmartApp \uc124\uce58"
+            }
+        },
+        "title": "SmartThings"
+    }
+}

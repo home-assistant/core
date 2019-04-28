@@ -1,11 +1,4 @@
-"""
-Support for switching Arduino pins on and off.
-
-So far only digital pins are supported.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.arduino/
-"""
+"""Support for switching Arduino pins on and off."""
 import logging
 
 import voluptuous as vol
@@ -14,8 +7,6 @@ from homeassistant.components import arduino
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
-
-DEPENDENCIES = ['arduino']
 
 _LOGGER = logging.getLogger(__name__)
 

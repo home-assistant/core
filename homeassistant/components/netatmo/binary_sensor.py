@@ -1,24 +1,17 @@
-"""
-Support for the Netatmo binary sensors.
-
-The binary sensors based on events seen by the Netatmo cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.netatmo/.
-"""
+"""Support for the Netatmo binary sensors."""
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.components.netatmo import CameraData
+    PLATFORM_SCHEMA, BinarySensorDevice)
 from homeassistant.const import CONF_TIMEOUT
 from homeassistant.helpers import config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DATA_NETATMO_AUTH
+from . import CameraData
 
-DEPENDENCIES = ['netatmo']
+_LOGGER = logging.getLogger(__name__)
 
 # These are the available sensors mapped to binary_sensor class
 WELCOME_SENSOR_TYPES = {
@@ -59,7 +52,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the access to Netatmo binary sensor."""
-    netatmo = hass.components.netatmo
     home = config.get(CONF_HOME)
     timeout = config.get(CONF_TIMEOUT)
     if timeout is None:
@@ -68,8 +60,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     module_name = None
 
     import pyatmo
+
+    auth = hass.data[DATA_NETATMO_AUTH]
+
     try:
-        data = CameraData(netatmo.NETATMO_AUTH, home)
+        data = CameraData(hass, auth, home)
         if not data.get_camera_names():
             return None
     except pyatmo.NoDevice:

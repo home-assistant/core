@@ -1,9 +1,4 @@
-"""
-Support for ThinkingCleaner.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.thinkingcleaner/
-"""
+"""Support for ThinkingCleaner sensors."""
 import logging
 from datetime import timedelta
 
@@ -11,8 +6,6 @@ from homeassistant import util
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['pythinkingcleaner==0.0.3']
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)

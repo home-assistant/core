@@ -1,10 +1,4 @@
-"""
-Support for Juicenet cloud.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/juicenet
-"""
-
+"""Support for Juicenet cloud."""
 import logging
 
 import voluptuous as vol
@@ -14,15 +8,13 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-juicenet==0.0.5']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'juicenet'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_ACCESS_TOKEN): cv.string
+        vol.Required(CONF_ACCESS_TOKEN): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 

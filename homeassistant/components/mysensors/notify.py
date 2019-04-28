@@ -1,9 +1,4 @@
-"""
-MySensors notification service.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/notify.mysensors/
-"""
+"""MySensors notification service."""
 from homeassistant.components import mysensors
 from homeassistant.components.notify import (
     ATTR_TARGET, DOMAIN, BaseNotificationService)

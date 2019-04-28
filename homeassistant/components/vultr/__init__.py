@@ -1,9 +1,4 @@
-"""
-Support for Vultr.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/vultr/
-"""
+"""Support for Vultr."""
 import logging
 from datetime import timedelta
 
@@ -12,8 +7,6 @@ import voluptuous as vol
 from homeassistant.const import CONF_API_KEY
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['vultr==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 

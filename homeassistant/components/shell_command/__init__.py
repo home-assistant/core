@@ -1,9 +1,4 @@
-"""
-Exposes regular shell commands as services.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/shell_command/
-"""
+"""Expose regular shell commands as services."""
 import asyncio
 import logging
 import shlex
@@ -14,7 +9,6 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.core import ServiceCall
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-
 
 DOMAIN = 'shell_command'
 

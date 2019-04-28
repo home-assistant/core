@@ -1,9 +1,4 @@
-"""
-Support for Spider Smart devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/spider/
-"""
+"""Support for Spider Smart devices."""
 from datetime import timedelta
 import logging
 
@@ -13,8 +8,6 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-
-REQUIREMENTS = ['spiderpy==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 

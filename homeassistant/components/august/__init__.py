@@ -1,9 +1,4 @@
-"""
-Support for August devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/august/
-"""
+"""Support for August devices."""
 import logging
 from datetime import timedelta
 
@@ -19,8 +14,6 @@ from homeassistant.util import Throttle
 _LOGGER = logging.getLogger(__name__)
 
 _CONFIGURING = {}
-
-REQUIREMENTS = ['py-august==0.7.0']
 
 DEFAULT_TIMEOUT = 10
 ACTIVITY_FETCH_LIMIT = 10

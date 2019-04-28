@@ -1,20 +1,13 @@
-"""
-Support for the IKEA Tradfri platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.tradfri/
-"""
+"""Support for IKEA Tradfri sensors."""
+from datetime import timedelta
 import logging
 
-from datetime import timedelta
-
 from homeassistant.core import callback
-from homeassistant.components.tradfri import KEY_GATEWAY, KEY_API
 from homeassistant.helpers.entity import Entity
 
-_LOGGER = logging.getLogger(__name__)
+from . import KEY_API, KEY_GATEWAY
 
-DEPENDENCIES = ['tradfri']
+_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=5)
 

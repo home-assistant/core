@@ -1,19 +1,13 @@
-"""
-Support for Homematic lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.homematic/
-"""
+"""Support for Homematic lights."""
 import logging
 
-from homeassistant.components.homematic import ATTR_DISCOVER_DEVICES, HMDevice
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_COLOR,
-    ATTR_EFFECT, SUPPORT_EFFECT, Light)
+    ATTR_BRIGHTNESS, ATTR_EFFECT, ATTR_HS_COLOR, ATTR_TRANSITION,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_EFFECT, Light)
+
+from . import ATTR_DISCOVER_DEVICES, HMDevice
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['homematic']
 
 SUPPORT_HOMEMATIC = SUPPORT_BRIGHTNESS
 
@@ -81,6 +75,9 @@ class HMLight(HMDevice, Light):
 
     def turn_on(self, **kwargs):
         """Turn the light on and/or change color or color effect settings."""
+        if ATTR_TRANSITION in kwargs:
+            self._hmdevice.setValue('RAMP_TIME', kwargs[ATTR_TRANSITION])
+
         if ATTR_BRIGHTNESS in kwargs and self._state == "LEVEL":
             percent_bright = float(kwargs[ATTR_BRIGHTNESS]) / 255
             self._hmdevice.set_level(percent_bright, self._channel)

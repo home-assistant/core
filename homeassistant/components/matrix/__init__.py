@@ -1,9 +1,4 @@
-"""
-The matrix bot component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/matrix/
-"""
+"""The matrix bot component."""
 import logging
 import os
 from functools import partial
@@ -18,8 +13,6 @@ from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
                                  EVENT_HOMEASSISTANT_START)
 from homeassistant.util.json import load_json, save_json
 from homeassistant.exceptions import HomeAssistantError
-
-REQUIREMENTS = ['matrix-client==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,8 +34,8 @@ COMMAND_SCHEMA = vol.All(
         vol.Exclusive(CONF_WORD, 'trigger'): cv.string,
         vol.Exclusive(CONF_EXPRESSION, 'trigger'): cv.is_regex,
         vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_ROOMS, default=[]): vol.All(cv.ensure_list,
-                                                      [cv.string]),
+        vol.Optional(CONF_ROOMS, default=[]):
+            vol.All(cv.ensure_list, [cv.string]),
     }),
     # Make sure it's either a word or an expression command
     cv.has_at_least_one_key(CONF_WORD, CONF_EXPRESSION)
@@ -54,8 +47,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
         vol.Required(CONF_USERNAME): cv.matches_regex("@[^:]*:.*"),
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_ROOMS, default=[]): vol.All(cv.ensure_list,
-                                                      [cv.string]),
+        vol.Optional(CONF_ROOMS, default=[]):
+            vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_COMMANDS, default=[]): [COMMAND_SCHEMA]
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -76,13 +69,9 @@ def setup(hass, config):
 
     try:
         bot = MatrixBot(
-            hass,
-            os.path.join(hass.config.path(), SESSION_FILE),
-            config[CONF_HOMESERVER],
-            config[CONF_VERIFY_SSL],
-            config[CONF_USERNAME],
-            config[CONF_PASSWORD],
-            config[CONF_ROOMS],
+            hass, os.path.join(hass.config.path(), SESSION_FILE),
+            config[CONF_HOMESERVER], config[CONF_VERIFY_SSL],
+            config[CONF_USERNAME], config[CONF_PASSWORD], config[CONF_ROOMS],
             config[CONF_COMMANDS])
         hass.data[DOMAIN] = bot
     except MatrixRequestError as exception:

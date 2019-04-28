@@ -1,1 +1,1 @@
-"""WebOS TV integration."""
+"""Support for WebOS TV."""

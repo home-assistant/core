@@ -1,20 +1,13 @@
-"""
-Support for Lutron shades.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.lutron/
-"""
+"""Support for Lutron shades."""
 import logging
 
 from homeassistant.components.cover import (
-    CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_SET_POSITION,
-    ATTR_POSITION)
-from homeassistant.components.lutron import (
-    LutronDevice, LUTRON_DEVICES, LUTRON_CONTROLLER)
+    ATTR_POSITION, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION,
+    CoverDevice)
+
+from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['lutron']
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

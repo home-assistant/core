@@ -1,9 +1,4 @@
-"""
-Component for the Goalfeed service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/goalfeed/
-"""
+"""Component for the Goalfeed service."""
 import json
 
 import requests
@@ -14,7 +9,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 # Version downgraded due to regression in library
 # For details: https://github.com/nlsdfnbch/Pysher/issues/38
-REQUIREMENTS = ['pysher==1.0.1']
 DOMAIN = 'goalfeed'
 
 CONFIG_SCHEMA = vol.Schema({
@@ -48,8 +42,8 @@ def setup(hass, config):
             'username': username,
             'password': password,
             'connection_info': data}
-        resp = requests.post(GOALFEED_AUTH_ENDPOINT, post_data,
-                             timeout=30).json()
+        resp = requests.post(
+            GOALFEED_AUTH_ENDPOINT, post_data, timeout=30).json()
 
         channel = pusher.subscribe('private-goals', resp['auth'])
         channel.bind('goal', goal_handler)

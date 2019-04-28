@@ -1,19 +1,18 @@
-"""
-Support for the Hive devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.hive/
-"""
+"""Support for the Hive sensors."""
 from homeassistant.const import TEMP_CELSIUS
-from homeassistant.components.hive import DATA_HIVE, DOMAIN
 from homeassistant.helpers.entity import Entity
 
-DEPENDENCIES = ['hive']
+from . import DATA_HIVE, DOMAIN
 
-FRIENDLY_NAMES = {'Hub_OnlineStatus': 'Hive Hub Status',
-                  'Hive_OutsideTemperature': 'Outside Temperature'}
-DEVICETYPE_ICONS = {'Hub_OnlineStatus': 'mdi:switch',
-                    'Hive_OutsideTemperature': 'mdi:thermometer'}
+FRIENDLY_NAMES = {
+    'Hub_OnlineStatus': 'Hive Hub Status',
+    'Hive_OutsideTemperature': 'Outside Temperature',
+}
+
+DEVICETYPE_ICONS = {
+    'Hub_OnlineStatus': 'mdi:switch',
+    'Hive_OutsideTemperature': 'mdi:thermometer',
+}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -36,8 +35,8 @@ class HiveSensorEntity(Entity):
         self.device_type = hivedevice["HA_DeviceType"]
         self.node_device_type = hivedevice["Hive_DeviceType"]
         self.session = hivesession
-        self.data_updatesource = '{}.{}'.format(self.device_type,
-                                                self.node_id)
+        self.data_updatesource = '{}.{}'.format(
+            self.device_type, self.node_id)
         self._unique_id = '{}-{}'.format(self.node_id, self.device_type)
         self.session.entities.append(self)
 

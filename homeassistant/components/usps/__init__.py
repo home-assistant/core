@@ -1,9 +1,4 @@
-"""
-Support for USPS packages and mail.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/usps/
-"""
+"""Support for USPS packages and mail."""
 from datetime import timedelta
 import logging
 
@@ -14,8 +9,6 @@ from homeassistant.const import (
 from homeassistant.helpers import (config_validation as cv, discovery)
 from homeassistant.util import Throttle
 from homeassistant.util.dt import now
-
-REQUIREMENTS = ['myusps==1.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +26,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_NAME, default=DOMAIN): cv.string,
-        vol.Optional(CONF_DRIVER): cv.string
+        vol.Optional(CONF_DRIVER): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
 

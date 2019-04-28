@@ -1,22 +1,16 @@
-"""Component for interfacing to Lutron Homeworks Series 4 and 8 systems.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/homeworks/
-"""
+"""Support for Lutron Homeworks Series 4 and 8 systems."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.const import (
     CONF_HOST, CONF_ID, CONF_NAME, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import (
-    dispatcher_send, async_dispatcher_connect)
+    async_dispatcher_connect, dispatcher_send)
 from homeassistant.util import slugify
-
-REQUIREMENTS = ['pyhomeworks==0.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +33,7 @@ CV_FADE_RATE = vol.All(vol.Coerce(float), vol.Range(min=0, max=20))
 DIMMER_SCHEMA = vol.Schema({
     vol.Required(CONF_ADDR): cv.string,
     vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_RATE, default=FADE_RATE): CV_FADE_RATE
+    vol.Optional(CONF_RATE, default=FADE_RATE): CV_FADE_RATE,
 })
 
 KEYPAD_SCHEMA = vol.Schema({
@@ -52,8 +46,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT): cv.port,
         vol.Required(CONF_DIMMERS): vol.All(cv.ensure_list, [DIMMER_SCHEMA]),
-        vol.Optional(CONF_KEYPADS, default=[]): vol.All(cv.ensure_list,
-                                                        [KEYPAD_SCHEMA]),
+        vol.Optional(CONF_KEYPADS, default=[]):
+            vol.All(cv.ensure_list, [KEYPAD_SCHEMA]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 

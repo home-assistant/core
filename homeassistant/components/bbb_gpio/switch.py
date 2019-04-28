@@ -1,9 +1,4 @@
-"""
-Allows to configure a switch using BeagleBone Black GPIO.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.bbb_gpio/
-"""
+"""Allows to configure a switch using BeagleBone Black GPIO."""
 import logging
 
 import voluptuous as vol
@@ -16,8 +11,6 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['bbb_gpio']
-
 CONF_PINS = 'pins'
 CONF_INITIAL = 'initial'
 CONF_INVERT_LOGIC = 'invert_logic'
@@ -29,8 +22,7 @@ PIN_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PINS, default={}):
-        vol.Schema({cv.string: PIN_SCHEMA}),
+    vol.Required(CONF_PINS, default={}): vol.Schema({cv.string: PIN_SCHEMA}),
 })
 
 

@@ -1,9 +1,4 @@
-"""
-Support for the SpaceAPI.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/spaceapi/
-"""
+"""Support for the SpaceAPI."""
 import logging
 
 import voluptuous as vol
@@ -50,7 +45,6 @@ CONF_TEMPERATURE = 'temperature'
 CONF_TWITTER = 'twitter'
 
 DATA_SPACEAPI = 'data_spaceapi'
-DEPENDENCIES = ['http']
 DOMAIN = 'spaceapi'
 
 ISSUE_REPORT_CHANNELS = [CONF_EMAIL, CONF_IRC, CONF_MAILING_LIST, CONF_TWITTER]

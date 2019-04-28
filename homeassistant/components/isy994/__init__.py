@@ -1,23 +1,16 @@
-"""
-Support the ISY-994 controllers.
-
-For configuration details please visit the documentation for this component at
-https://home-assistant.io/components/isy994/
-"""
+"""Support the ISY-994 controllers."""
 from collections import namedtuple
 import logging
 from urllib.parse import urlparse
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.helpers import discovery, config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, Dict
-
-REQUIREMENTS = ['PyISY==1.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,8 +39,7 @@ CONFIG_SCHEMA = vol.Schema({
                      default=DEFAULT_IGNORE_STRING): cv.string,
         vol.Optional(CONF_SENSOR_STRING,
                      default=DEFAULT_SENSOR_STRING): cv.string,
-        vol.Optional(CONF_ENABLE_CLIMATE,
-                     default=True): cv.boolean
+        vol.Optional(CONF_ENABLE_CLIMATE, default=True): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
 

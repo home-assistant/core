@@ -1,13 +1,6 @@
-"""
-Support for Ecobee sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.ecobee/
-"""
+"""Support for Ecobee binary sensors."""
 from homeassistant.components import ecobee
 from homeassistant.components.binary_sensor import BinarySensorDevice
-
-DEPENDENCIES = ['ecobee']
 
 ECOBEE_CONFIG_FILE = 'ecobee.conf'
 
@@ -33,7 +26,7 @@ class EcobeeBinarySensor(BinarySensorDevice):
     """Representation of an Ecobee sensor."""
 
     def __init__(self, sensor_name, sensor_index):
-        """Initialize the sensor."""
+        """Initialize the Ecobee sensor."""
         self._name = sensor_name + ' Occupancy'
         self.sensor_name = sensor_name
         self.index = sensor_index

@@ -1,9 +1,4 @@
-"""
-Support for controlling Sisyphus Kinetic Art Tables.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sisyphus/
-"""
+"""Support for controlling Sisyphus Kinetic Art Tables."""
 import asyncio
 import logging
 
@@ -17,8 +12,6 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
-
-REQUIREMENTS = ['sisyphus-control==2.1']
 
 _LOGGER = logging.getLogger(__name__)
 

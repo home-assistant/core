@@ -1,9 +1,4 @@
-"""
-Integrate with DuckDNS.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/duckdns/
-"""
+"""Integrate with DuckDNS."""
 from datetime import timedelta
 import logging
 

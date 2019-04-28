@@ -1,17 +1,11 @@
-"""
-Support for Wink sensors.
-
-For more details about this platform, please refer to the documentation at
-at https://home-assistant.io/components/sensor.wink/
-"""
+"""Support for Wink sensors."""
 import logging
 
-from homeassistant.components.wink import DOMAIN, WinkDevice
 from homeassistant.const import TEMP_CELSIUS
 
-_LOGGER = logging.getLogger(__name__)
+from . import DOMAIN, WinkDevice
 
-DEPENDENCIES = ['wink']
+_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = ['temperature', 'humidity', 'balance', 'proximity']
 

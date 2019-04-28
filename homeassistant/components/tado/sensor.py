@@ -1,14 +1,10 @@
-"""
-Tado component to create some sensors for each zone.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.tado/
-"""
+"""Support for Tado sensors for each zone."""
 import logging
 
-from homeassistant.components.tado import DATA_TADO
 from homeassistant.const import ATTR_ID, ATTR_NAME, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
+
+from . import DATA_TADO
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,9 +1,4 @@
-"""
-Component to wake up devices sending Wake-On-LAN magic packets.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/wake_on_lan/
-"""
+"""Support for sending Wake-On-LAN magic packets."""
 from functools import partial
 import logging
 
@@ -11,8 +6,6 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_MAC
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['wakeonlan==1.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 

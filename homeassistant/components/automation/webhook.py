@@ -1,9 +1,4 @@
-"""
-Offer webhook triggered automation rules.
-
-For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/docs/automation/trigger/#webhook-trigger
-"""
+"""Offer webhook triggered automation rules."""
 from functools import partial
 import logging
 
@@ -38,6 +33,7 @@ async def _handle_webhook(action, hass, webhook_id, request):
     else:
         result['data'] = await request.post()
 
+    result['query'] = request.query
     hass.async_run_job(action, {'trigger': result})
 
 

@@ -1,9 +1,4 @@
-"""
-Support for UV data from openuv.io.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/openuv/
-"""
+"""Support for UV data from openuv.io."""
 import logging
 
 import voluptuous as vol
@@ -11,17 +6,16 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_API_KEY, CONF_BINARY_SENSORS, CONF_ELEVATION,
-    CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS,
-    CONF_SENSORS)
+    CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS, CONF_SENSORS)
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.service import verify_domain_control
 
 from .config_flow import configured_instances
 from .const import DOMAIN
 
-REQUIREMENTS = ['pyopenuv==1.0.4']
 _LOGGER = logging.getLogger(__name__)
 
 DATA_OPENUV_CLIENT = 'data_client'
@@ -137,6 +131,8 @@ async def async_setup_entry(hass, config_entry):
     from pyopenuv import Client
     from pyopenuv.errors import OpenUvError
 
+    _verify_domain_control = verify_domain_control(hass, DOMAIN)
+
     try:
         websession = aiohttp_client.async_get_clientsession(hass)
         openuv = OpenUV(
@@ -162,6 +158,7 @@ async def async_setup_entry(hass, config_entry):
             hass.config_entries.async_forward_entry_setup(
                 config_entry, component))
 
+    @_verify_domain_control
     async def update_data(service):
         """Refresh OpenUV data."""
         _LOGGER.debug('Refreshing OpenUV data')

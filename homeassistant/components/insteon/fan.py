@@ -1,34 +1,27 @@
-"""
-Support for INSTEON fans via PowerLinc Modem.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/fan.insteon/
-"""
+"""Support for INSTEON fans via PowerLinc Modem."""
 import logging
 
-from homeassistant.components.fan import (SPEED_OFF,
-                                          SPEED_LOW,
-                                          SPEED_MEDIUM,
-                                          SPEED_HIGH,
-                                          FanEntity,
-                                          SUPPORT_SET_SPEED)
+from homeassistant.components.fan import (
+    SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF, SUPPORT_SET_SPEED,
+    FanEntity)
 from homeassistant.const import STATE_OFF
-from homeassistant.components.insteon import InsteonEntity
 
-DEPENDENCIES = ['insteon']
-
-SPEED_TO_HEX = {SPEED_OFF: 0x00,
-                SPEED_LOW: 0x3f,
-                SPEED_MEDIUM: 0xbe,
-                SPEED_HIGH: 0xff}
-
-FAN_SPEEDS = [STATE_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+from . import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+SPEED_TO_HEX = {
+    SPEED_OFF: 0x00,
+    SPEED_LOW: 0x3f,
+    SPEED_MEDIUM: 0xbe,
+    SPEED_HIGH: 0xff,
+}
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+FAN_SPEEDS = [STATE_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+
+
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the INSTEON device class for the hass platform."""
     insteon_modem = hass.data['insteon'].get('modem')
 

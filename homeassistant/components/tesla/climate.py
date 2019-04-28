@@ -1,22 +1,15 @@
-"""
-Support for Tesla HVAC system.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/climate.tesla/
-"""
+"""Support for Tesla HVAC system."""
 import logging
 
-from homeassistant.components.climate import (
-    ENTITY_ID_FORMAT, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
-    ClimateDevice)
-from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN
-from homeassistant.components.tesla import TeslaDevice
+from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateDevice
+from homeassistant.components.climate.const import (
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, STATE_OFF, STATE_ON, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
-_LOGGER = logging.getLogger(__name__)
+from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 
-DEPENDENCIES = ['tesla']
+_LOGGER = logging.getLogger(__name__)
 
 OPERATION_LIST = [STATE_ON, STATE_OFF]
 

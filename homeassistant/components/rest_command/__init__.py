@@ -1,9 +1,4 @@
-"""
-Exposes regular rest commands as services.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/rest_command/
-"""
+"""Support for exposing regular REST commands as services."""
 import asyncio
 import logging
 

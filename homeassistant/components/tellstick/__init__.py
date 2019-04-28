@@ -1,9 +1,4 @@
-"""
-Tellstick Component.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tellstick/
-"""
+"""Support for Tellstick."""
 import logging
 import threading
 
@@ -15,8 +10,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['tellcore-py==1.1.2', 'tellcore-net==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 

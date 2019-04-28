@@ -1,18 +1,12 @@
-"""
-Support for HomeMatic switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.homematic/
-"""
+"""Support for HomeMatic switches."""
 import logging
 
-from homeassistant.components.homematic import ATTR_DISCOVER_DEVICES, HMDevice
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import STATE_UNKNOWN
 
-_LOGGER = logging.getLogger(__name__)
+from . import ATTR_DISCOVER_DEVICES, HMDevice
 
-DEPENDENCIES = ['homematic']
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

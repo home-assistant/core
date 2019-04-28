@@ -1,15 +1,8 @@
-"""
-Support for controlling the PiFace Digital I/O module on a RPi.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/rpi_pfio/
-"""
+"""Support for controlling the PiFace Digital I/O module on a RPi."""
 import logging
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
-
-REQUIREMENTS = ['pifacecommon==4.2.2', 'pifacedigitalio==3.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 

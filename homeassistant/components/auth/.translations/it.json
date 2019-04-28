@@ -9,7 +9,8 @@
             },
             "step": {
                 "init": {
-                    "description": "Selezionare uno dei servizi di notifica:"
+                    "description": "Selezionare uno dei servizi di notifica:",
+                    "title": "Imposta la password one-time fornita dal componente di notifica"
                 },
                 "setup": {
                     "description": "\u00c8 stata inviata una password monouso tramite **notify.{notify_service}**. Per favore, inseriscila qui sotto:",

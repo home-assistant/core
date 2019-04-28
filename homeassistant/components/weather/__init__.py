@@ -1,18 +1,13 @@
-"""
-Weather component that handles meteorological data for your location.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/weather/
-"""
+"""Weather component that handles meteorological data for your location."""
 from datetime import timedelta
 import logging
 
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.temperature import display_temp as show_temp
-from homeassistant.const import PRECISION_WHOLE, PRECISION_TENTHS, TEMP_CELSIUS
+from homeassistant.const import PRECISION_TENTHS, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.helpers.config_validation import (  # noqa
     PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.temperature import display_temp as show_temp
 
 _LOGGER = logging.getLogger(__name__)
 

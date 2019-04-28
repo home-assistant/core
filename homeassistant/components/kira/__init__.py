@@ -1,9 +1,4 @@
-"""
-KIRA interface to receive UDP packets from an IR-IP bridge.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/kira/
-"""
+"""KIRA interface to receive UDP packets from an IR-IP bridge."""
 import logging
 import os
 
@@ -13,11 +8,9 @@ import yaml
 
 from homeassistant.const import (
     CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT, CONF_SENSORS, CONF_TYPE,
-    EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
+    EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN, CONF_CODE)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pykira==0.1.1']
 
 DOMAIN = 'kira'
 
@@ -26,7 +19,6 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 65432
 
-CONF_CODE = "code"
 CONF_REPEAT = "repeat"
 CONF_REMOTES = "remotes"
 CONF_SENSOR = "sensor"

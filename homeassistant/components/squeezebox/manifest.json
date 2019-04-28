@@ -1,0 +1,8 @@
+{
+  "domain": "squeezebox",
+  "name": "Squeezebox",
+  "documentation": "https://www.home-assistant.io/components/squeezebox",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

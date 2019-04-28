@@ -1,4 +1,7 @@
 """Tests for the Area Registry."""
+import asyncio
+
+import asynctest
 import pytest
 
 from homeassistant.helpers import area_registry
@@ -125,3 +128,17 @@ async def test_loading_area_from_storage(hass, hass_storage):
     registry = await area_registry.async_get_registry(hass)
 
     assert len(registry.areas) == 1
+
+
+async def test_loading_race_condition(hass):
+    """Test only one storage load called when concurrent loading occurred ."""
+    with asynctest.patch(
+        'homeassistant.helpers.area_registry.AreaRegistry.async_load',
+    ) as mock_load:
+        results = await asyncio.gather(
+            area_registry.async_get_registry(hass),
+            area_registry.async_get_registry(hass),
+        )
+
+        mock_load.assert_called_once_with()
+        assert results[0] == results[1]

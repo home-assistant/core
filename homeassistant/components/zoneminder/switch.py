@@ -1,21 +1,15 @@
-"""
-Support for ZoneMinder switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.zoneminder/
-"""
+"""Support for ZoneMinder switches."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.components.zoneminder import DOMAIN as ZONEMINDER_DOMAIN
-from homeassistant.const import (CONF_COMMAND_ON, CONF_COMMAND_OFF)
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
+from . import DOMAIN as ZONEMINDER_DOMAIN
 
-DEPENDENCIES = ['zoneminder']
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COMMAND_ON): cv.string,
@@ -33,7 +27,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
         monitors = zm_client.get_monitors()
         if not monitors:
-            _LOGGER.warning('Could not fetch monitors from ZoneMinder')
+            _LOGGER.warning("Could not fetch monitors from ZoneMinder")
             return
 
         for monitor in monitors:

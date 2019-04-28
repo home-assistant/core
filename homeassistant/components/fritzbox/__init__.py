@@ -1,9 +1,4 @@
-"""
-Support for AVM Fritz!Box smarthome devices.
-
-For more details about this component, please refer to the documentation at
-http://home-assistant.io/components/fritzbox/
-"""
+"""Support for AVM Fritz!Box smarthome devices."""
 import logging
 
 import voluptuous as vol
@@ -15,8 +10,6 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['pyfritzhome==0.4.0']
 
 SUPPORTED_DOMAINS = ['binary_sensor', 'climate', 'switch', 'sensor']
 

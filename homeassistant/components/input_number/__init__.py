@@ -1,9 +1,4 @@
-"""
-Component to offer a way to set a numeric value from a slider or text box.
-
-For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/input_number/
-"""
+"""Support to set a numeric value from a slider or text box."""
 import logging
 
 import voluptuous as vol

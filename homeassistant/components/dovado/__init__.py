@@ -1,9 +1,4 @@
-"""
-Support for Dovado router.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/dovado/
-"""
+"""Support for Dovado router."""
 import logging
 from datetime import timedelta
 
@@ -16,8 +11,6 @@ from homeassistant.const import (
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['dovado==0.4.1']
 
 DOMAIN = 'dovado'
 
@@ -37,17 +30,14 @@ def setup(hass, config):
 
     hass.data[DOMAIN] = DovadoData(
         dovado.Dovado(
-            config[CONF_USERNAME],
-            config[CONF_PASSWORD],
-            config.get(CONF_HOST),
-            config.get(CONF_PORT)
-        )
+            config[CONF_USERNAME], config[CONF_PASSWORD],
+            config.get(CONF_HOST), config.get(CONF_PORT))
     )
     return True
 
 
 class DovadoData:
-    """Maintains a connection to the router."""
+    """Maintain a connection to the router."""
 
     def __init__(self, client):
         """Set up a new Dovado connection."""

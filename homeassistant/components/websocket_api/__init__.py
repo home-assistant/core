@@ -1,9 +1,4 @@
-"""
-Websocket based API for Home Assistant.
-
-For more details about this component, please refer to the documentation at
-https://developers.home-assistant.io/docs/external_api_websocket.html
-"""
+"""WebSocket based API for Home Assistant."""
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
@@ -19,6 +14,7 @@ ActiveConnection = connection.ActiveConnection
 BASE_COMMAND_MESSAGE_SCHEMA = messages.BASE_COMMAND_MESSAGE_SCHEMA
 error_message = messages.error_message
 result_message = messages.result_message
+event_message = messages.event_message
 async_response = decorators.async_response
 require_admin = decorators.require_admin
 ws_require_user = decorators.ws_require_user
@@ -47,5 +43,5 @@ def async_register_command(hass, command_or_handler, handler=None,
 async def async_setup(hass, config):
     """Initialize the websocket API."""
     hass.http.register_view(http.WebsocketAPIView)
-    commands.async_register_commands(hass)
+    commands.async_register_commands(hass, async_register_command)
     return True

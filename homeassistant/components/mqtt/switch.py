@@ -1,20 +1,9 @@
-"""
-Support for MQTT switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.mqtt/
-"""
+"""Support for MQTT switches."""
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components import mqtt, switch
-from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN,
-    CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
-    MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
-from homeassistant.components.mqtt.discovery import (
-    MQTT_DISCOVERY_NEW, clear_discovery_hash)
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
     CONF_DEVICE, CONF_ICON, CONF_NAME, CONF_OPTIMISTIC, CONF_PAYLOAD_OFF,
@@ -25,9 +14,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-_LOGGER = logging.getLogger(__name__)
+from . import (
+    ATTR_DISCOVERY_HASH, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN,
+    CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
+    MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
+from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
-DEPENDENCIES = ['mqtt']
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'MQTT Switch'
 DEFAULT_PAYLOAD_ON = 'ON'
@@ -37,15 +30,15 @@ CONF_STATE_ON = "state_on"
 CONF_STATE_OFF = "state_off"
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_ICON): cv.icon,
-    vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-    vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-    vol.Optional(CONF_STATE_ON): cv.string,
-    vol.Optional(CONF_STATE_OFF): cv.string,
-    vol.Optional(CONF_UNIQUE_ID): cv.string,
-    vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    vol.Optional(CONF_ICON): cv.icon,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+    vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+    vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+    vol.Optional(CONF_STATE_OFF): cv.string,
+    vol.Optional(CONF_STATE_ON): cv.string,
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
     mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 
@@ -121,20 +114,20 @@ class MqttSwitch(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         await self.availability_discovery_update(config)
         await self.device_info_discovery_update(config)
         await self._subscribe_topics()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
         self._config = config
 
         state_on = config.get(CONF_STATE_ON)
-        self._state_on = state_on if state_on else config.get(CONF_PAYLOAD_ON)
+        self._state_on = state_on if state_on else config[CONF_PAYLOAD_ON]
 
         state_off = config.get(CONF_STATE_OFF)
         self._state_off = state_off if state_off else \
-            config.get(CONF_PAYLOAD_OFF)
+            config[CONF_PAYLOAD_OFF]
 
-        self._optimistic = config.get(CONF_OPTIMISTIC)
+        self._optimistic = config[CONF_OPTIMISTIC]
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -143,8 +136,9 @@ class MqttSwitch(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             template.hass = self.hass
 
         @callback
-        def state_message_received(topic, payload, qos):
+        def state_message_received(msg):
             """Handle new MQTT state messages."""
+            payload = msg.payload
             if template is not None:
                 payload = template.async_render_with_possible_json_value(
                     payload)
@@ -153,7 +147,7 @@ class MqttSwitch(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             elif payload == self._state_off:
                 self._state = False
 
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
@@ -164,7 +158,7 @@ class MqttSwitch(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 {CONF_STATE_TOPIC:
                  {'topic': self._config.get(CONF_STATE_TOPIC),
                   'msg_callback': state_message_received,
-                  'qos': self._config.get(CONF_QOS)}})
+                  'qos': self._config[CONF_QOS]}})
 
         if self._optimistic:
             last_state = await self.async_get_last_state()
@@ -186,7 +180,7 @@ class MqttSwitch(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     @property
     def name(self):
         """Return the name of the switch."""
-        return self._config.get(CONF_NAME)
+        return self._config[CONF_NAME]
 
     @property
     def is_on(self):
@@ -215,14 +209,14 @@ class MqttSwitch(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         """
         mqtt.async_publish(
             self.hass,
-            self._config.get(CONF_COMMAND_TOPIC),
-            self._config.get(CONF_PAYLOAD_ON),
-            self._config.get(CONF_QOS),
-            self._config.get(CONF_RETAIN))
+            self._config[CONF_COMMAND_TOPIC],
+            self._config[CONF_PAYLOAD_ON],
+            self._config[CONF_QOS],
+            self._config[CONF_RETAIN])
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = True
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off.
@@ -231,11 +225,11 @@ class MqttSwitch(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         """
         mqtt.async_publish(
             self.hass,
-            self._config.get(CONF_COMMAND_TOPIC),
-            self._config.get(CONF_PAYLOAD_OFF),
-            self._config.get(CONF_QOS),
-            self._config.get(CONF_RETAIN))
+            self._config[CONF_COMMAND_TOPIC],
+            self._config[CONF_PAYLOAD_OFF],
+            self._config[CONF_QOS],
+            self._config[CONF_RETAIN])
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = False
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

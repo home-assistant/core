@@ -1,9 +1,4 @@
-"""
-Support to graphs card in the UI.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/history_graph/
-"""
+"""Support to graphs card in the UI."""
 import logging
 
 import voluptuous as vol
@@ -12,8 +7,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_ENTITIES, CONF_NAME, ATTR_ENTITY_ID
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-
-DEPENDENCIES = ['history']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +27,7 @@ GRAPH_SCHEMA = vol.Schema({
 
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: cv.schema_with_slug_keys(GRAPH_SCHEMA)
+    DOMAIN: cv.schema_with_slug_keys(GRAPH_SCHEMA),
 }, extra=vol.ALLOW_EXTRA)
 
 

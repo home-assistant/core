@@ -1,29 +1,23 @@
-"""Parent component for Dyson Pure Cool Link devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/dyson/
-"""
-
+"""Support for Dyson Pure Cool Link devices."""
 import logging
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.const import (
+    CONF_DEVICES, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME)
 from homeassistant.helpers import discovery
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT, \
-    CONF_DEVICES
-
-REQUIREMENTS = ['libpurecoollink==0.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_LANGUAGE = "language"
-CONF_RETRY = "retry"
+CONF_LANGUAGE = 'language'
+CONF_RETRY = 'retry'
 
 DEFAULT_TIMEOUT = 5
 DEFAULT_RETRY = 10
+DYSON_DEVICES = 'dyson_devices'
 
-DOMAIN = "dyson"
+DOMAIN = 'dyson'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -37,8 +31,6 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-DYSON_DEVICES = "dyson_devices"
-
 
 def setup(hass, config):
     """Set up the Dyson parent component."""
@@ -47,7 +39,7 @@ def setup(hass, config):
     if DYSON_DEVICES not in hass.data:
         hass.data[DYSON_DEVICES] = []
 
-    from libpurecoollink.dyson import DysonAccount
+    from libpurecool.dyson import DysonAccount
     dyson_account = DysonAccount(config[DOMAIN].get(CONF_USERNAME),
                                  config[DOMAIN].get(CONF_PASSWORD),
                                  config[DOMAIN].get(CONF_LANGUAGE))

@@ -1,17 +1,11 @@
-"""
-Support for August camera.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.august/
-"""
+"""Support for August camera."""
 from datetime import timedelta
 
 import requests
 
-from homeassistant.components.august import DATA_AUGUST, DEFAULT_TIMEOUT
 from homeassistant.components.camera import Camera
 
-DEPENDENCIES = ['august']
+from . import DATA_AUGUST, DEFAULT_TIMEOUT
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
@@ -74,3 +68,8 @@ class AugustCamera(Camera):
                                                timeout=self._timeout).content
 
         return self._image_content
+
+    @property
+    def unique_id(self) -> str:
+        """Get the unique id of the camera."""
+        return '{:s}_camera'.format(self._doorbell.device_id)

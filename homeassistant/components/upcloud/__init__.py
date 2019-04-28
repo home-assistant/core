@@ -1,9 +1,4 @@
-"""
-Support for UpCloud.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/upcloud/
-"""
+"""Support for UpCloud."""
 import logging
 from datetime import timedelta
 
@@ -18,8 +13,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, dispatcher_send)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
-
-REQUIREMENTS = ['upcloud-api==0.4.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,12 +36,12 @@ UPCLOUD_PLATFORMS = ['binary_sensor', 'switch']
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-SIGNAL_UPDATE_UPCLOUD = "upcloud_update"
+SIGNAL_UPDATE_UPCLOUD = 'upcloud_update'
 
 STATE_MAP = {
-    "started": STATE_ON,
-    "stopped": STATE_OFF,
-    "error": STATE_PROBLEM,
+    'error': STATE_PROBLEM,
+    'started': STATE_ON,
+    'stopped': STATE_OFF,
 }
 
 CONFIG_SCHEMA = vol.Schema({

@@ -1,25 +1,20 @@
-"""
-Support for Insteon covers via PowerLinc Modem.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/cover.insteon/
-"""
+"""Support for Insteon covers via PowerLinc Modem."""
 import logging
 import math
 
-from homeassistant.components.insteon import InsteonEntity
-from homeassistant.components.cover import (CoverDevice, ATTR_POSITION,
-                                            SUPPORT_OPEN, SUPPORT_CLOSE,
-                                            SUPPORT_SET_POSITION)
+from homeassistant.components.cover import (
+    ATTR_POSITION, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION,
+    CoverDevice)
+
+from . import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['insteon']
 SUPPORTED_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Insteon platform."""
     if not discovery_info:
         return

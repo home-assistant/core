@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "S\u00f3lo se puede configurar una cuenta de Point.",
+            "authorize_url_fail": "Error desconocido generando la url de autorizaci\u00f3n",
+            "external_setup": "Point se ha configurado correctamente a partir de otro flujo.",
+            "no_flows": "Es necesario configurar Point antes de poder autenticarse con \u00e9l. [Echa un vistazo a las instrucciones] (https://www.home-assistant.io/components/point/)."
+        },
+        "create_entry": {
+            "default": "Autenticado correctamente con Minut para tu(s) dispositivo(s) Point"
+        },
+        "error": {
+            "follow_link": "Accede al enlace e identif\u00edcate antes de pulsar Enviar.",
+            "no_token": "No autenticado con Minut"
+        },
+        "step": {
+            "auth": {
+                "description": "Accede al siguiente enlace y <b>Acepta</b> el acceso a tu cuenta Minut, despu\u00e9s vuelve y pulsa en <b>Enviar</b> a continuaci\u00f3n.\n\n[Link]({authorization_url})",
+                "title": "Autenticaci\u00f3n con Point"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Proveedor"
+                },
+                "description": "Elige a trav\u00e9s de qu\u00e9 proveedor de autenticaci\u00f3n quieres autenticarte con Point.",
+                "title": "Proveedor de autenticaci\u00f3n"
+            }
+        }
+    }
+}

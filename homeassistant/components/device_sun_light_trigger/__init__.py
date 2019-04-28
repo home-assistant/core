@@ -1,9 +1,4 @@
-"""
-Provides functionality to turn on lights based on the states.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/device_sun_light_trigger/
-"""
+"""Support to turn on lights based on the states."""
 import logging
 from datetime import timedelta
 
@@ -22,8 +17,6 @@ from homeassistant.helpers.sun import is_up, get_astral_event_next
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'device_sun_light_trigger'
-DEPENDENCIES = ['light', 'device_tracker', 'group']
-
 CONF_DEVICE_GROUP = 'device_group'
 CONF_DISABLE_TURN_OFF = 'disable_turn_off'
 CONF_LIGHT_GROUP = 'light_group'

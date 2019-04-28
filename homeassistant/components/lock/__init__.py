@@ -1,9 +1,4 @@
-"""
-Component to interface with various locks that can be controlled remotely.
-
-For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/lock/
-"""
+"""Component to interface with locks that can be controlled remotely."""
 from datetime import timedelta
 import functools as ft
 import logging
@@ -24,7 +19,6 @@ from homeassistant.components import group
 ATTR_CHANGED_BY = 'changed_by'
 
 DOMAIN = 'lock'
-DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_ALL_LOCKS = group.ENTITY_ID_FORMAT.format('all_locks')
@@ -83,6 +77,11 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Set up a config entry."""
     return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
 class LockDevice(Entity):

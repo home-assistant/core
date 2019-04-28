@@ -1,30 +1,20 @@
-"""
-Support for setting the Transmission BitTorrent client Turtle Mode.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.transmission/
-"""
-from datetime import timedelta
-
+"""Support for setting the Transmission BitTorrent client Turtle Mode."""
 import logging
 
-from homeassistant.components.transmission import (
-    DATA_TRANSMISSION)
-from homeassistant.const import (
-    STATE_OFF, STATE_ON)
+from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.util import Throttle
 
-DEPENDENCIES = ['transmission']
+from . import DATA_TRANSMISSION, DATA_UPDATED
 
 _LOGGING = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Transmission Turtle Mode'
 
-SCAN_INTERVAL = timedelta(seconds=120)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Transmission switch."""
     if discovery_info is None:
         return
@@ -33,7 +23,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     transmission_api = hass.data[component_name]
     name = discovery_info['client_name']
 
-    add_entities([TransmissionSwitch(transmission_api, name)], True)
+    async_add_entities([TransmissionSwitch(transmission_api, name)], True)
 
 
 class TransmissionSwitch(ToggleEntity):
@@ -58,7 +48,7 @@ class TransmissionSwitch(ToggleEntity):
     @property
     def should_poll(self):
         """Poll for status regularly."""
-        return True
+        return False
 
     @property
     def is_on(self):
@@ -75,8 +65,21 @@ class TransmissionSwitch(ToggleEntity):
         _LOGGING.debug("Turning Turtle Mode of Transmission off")
         self.transmission_client.set_alt_speed_enabled(False)
 
-    @Throttle(SCAN_INTERVAL)
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        async_dispatcher_connect(
+            self.hass, DATA_UPDATED, self._schedule_immediate_update
+        )
+
+    @callback
+    def _schedule_immediate_update(self):
+        self.async_schedule_update_ha_state(True)
+
     def update(self):
         """Get the latest data from Transmission and updates the state."""
         active = self.transmission_client.get_alt_speed_enabled()
+
+        if active is None:
+            return
+
         self._state = STATE_ON if active else STATE_OFF

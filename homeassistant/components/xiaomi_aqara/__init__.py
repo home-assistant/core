@@ -1,9 +1,4 @@
-"""
-Support for Xiaomi Gateways.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/xiaomi_aqara/
-"""
+"""Support for Xiaomi Gateways."""
 import logging
 
 from datetime import timedelta
@@ -20,8 +15,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
-
-REQUIREMENTS = ['PyXiaomiGateway==0.11.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,12 +60,19 @@ SERVICE_SCHEMA_REMOVE_DEVICE = vol.Schema({
 
 
 GATEWAY_CONFIG = vol.Schema({
-    vol.Optional(CONF_MAC, default=None): vol.Any(GW_MAC, None),
     vol.Optional(CONF_KEY):
         vol.All(cv.string, vol.Length(min=16, max=16)),
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=9898): cv.port,
     vol.Optional(CONF_DISABLE, default=False): cv.boolean,
+})
+
+GATEWAY_CONFIG_MAC_OPTIONAL = GATEWAY_CONFIG.extend({
+    vol.Optional(CONF_MAC): GW_MAC,
+})
+
+GATEWAY_CONFIG_MAC_REQUIRED = GATEWAY_CONFIG.extend({
+    vol.Required(CONF_MAC): GW_MAC,
 })
 
 
@@ -94,7 +94,10 @@ def _fix_conf_defaults(config):
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_GATEWAYS, default={}):
-            vol.All(cv.ensure_list, [GATEWAY_CONFIG], [_fix_conf_defaults]),
+            vol.All(cv.ensure_list, vol.Any(
+                vol.All([GATEWAY_CONFIG_MAC_OPTIONAL], vol.Length(max=1)),
+                vol.All([GATEWAY_CONFIG_MAC_REQUIRED], vol.Length(min=2))
+            ), [_fix_conf_defaults]),
         vol.Optional(CONF_INTERFACE, default='any'): cv.string,
         vol.Optional(CONF_DISCOVERY_RETRY, default=3): cv.positive_int
     })

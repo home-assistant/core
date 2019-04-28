@@ -1,13 +1,7 @@
-"""
-Support for Wink Covers.
+"""Support for Wink covers."""
+from homeassistant.components.cover import ATTR_POSITION, CoverDevice
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.wink/
-"""
-from homeassistant.components.cover import CoverDevice, ATTR_POSITION
-from homeassistant.components.wink import WinkDevice, DOMAIN
-
-DEPENDENCIES = ['wink']
+from . import DOMAIN, WinkDevice
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

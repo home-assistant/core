@@ -1,9 +1,4 @@
-"""
-Support for Xiaomi Mi WiFi Repeater 2.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/device_tracker.xiaomi_miio/
-"""
+"""Support for Xiaomi Mi WiFi Repeater 2."""
 import logging
 
 import voluptuous as vol
@@ -12,8 +7,6 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['python-miio==0.4.4', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 

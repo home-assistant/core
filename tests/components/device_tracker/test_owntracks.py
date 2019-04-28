@@ -1,14 +1,16 @@
 """The tests for the Owntracks device tracker."""
 import json
+
 from asynctest import patch
 import pytest
 
-from tests.common import (
-    async_fire_mqtt_message, mock_coro, mock_component,
-    async_mock_mqtt_component, MockConfigEntry)
 from homeassistant.components import owntracks
-from homeassistant.setup import async_setup_component
 from homeassistant.const import STATE_NOT_HOME
+from homeassistant.setup import async_setup_component
+
+from tests.common import (
+    MockConfigEntry, async_fire_mqtt_message, async_mock_mqtt_component,
+    mock_coro)
 
 USER = 'greg'
 DEVICE = 'phone'
@@ -45,8 +47,8 @@ FIVE_M = TEST_ZONE_DEG_PER_M * 5.0
 # Home Assistant Zones
 INNER_ZONE = {
     'name': 'zone',
-    'latitude': TEST_ZONE_LAT+0.1,
-    'longitude': TEST_ZONE_LON+0.1,
+    'latitude': TEST_ZONE_LAT + 0.1,
+    'longitude': TEST_ZONE_LON + 0.1,
     'radius': 50
 }
 
@@ -271,12 +273,14 @@ BAD_MESSAGE = {
 BAD_JSON_PREFIX = '--$this is bad json#--'
 BAD_JSON_SUFFIX = '** and it ends here ^^'
 
+# pylint: disable=invalid-name, len-as-condition, redefined-outer-name
+
 
 @pytest.fixture
-def setup_comp(hass):
+def setup_comp(hass, mock_device_tracker_conf):
     """Initialize components."""
-    mock_component(hass, 'group')
-    mock_component(hass, 'zone')
+    assert hass.loop.run_until_complete(async_setup_component(
+        hass, 'persistent_notification', {}))
     hass.loop.run_until_complete(async_setup_component(
         hass, 'device_tracker', {}))
     hass.loop.run_until_complete(async_mock_mqtt_component(hass))
@@ -289,56 +293,48 @@ def setup_comp(hass):
 
     hass.states.async_set(
         'zone.outer', 'zoning', OUTER_ZONE)
+    yield
 
 
 async def setup_owntracks(hass, config,
                           ctx_cls=owntracks.OwnTracksContext):
     """Set up OwnTracks."""
-    await async_mock_mqtt_component(hass)
-
     MockConfigEntry(domain='owntracks', data={
         'webhook_id': 'owntracks_test',
         'secret': 'abcd',
     }).add_to_hass(hass)
 
-    with patch('homeassistant.components.device_tracker.async_load_config',
-               return_value=mock_coro([])), \
-            patch('homeassistant.components.device_tracker.'
-                  'load_yaml_config_file', return_value=mock_coro({})), \
-            patch.object(owntracks, 'OwnTracksContext', ctx_cls):
+    with patch.object(owntracks, 'OwnTracksContext', ctx_cls):
         assert await async_setup_component(
             hass, 'owntracks', {'owntracks': config})
+        await hass.async_block_till_done()
 
 
 @pytest.fixture
 def context(hass, setup_comp):
     """Set up the mocked context."""
-    patcher = patch('homeassistant.components.device_tracker.'
-                    'DeviceTracker.async_update_config')
-    patcher.start()
-
     orig_context = owntracks.OwnTracksContext
-
     context = None
 
+    # pylint: disable=no-value-for-parameter
+
     def store_context(*args):
+        """Store the context."""
         nonlocal context
         context = orig_context(*args)
         return context
 
     hass.loop.run_until_complete(setup_owntracks(hass, {
-            CONF_MAX_GPS_ACCURACY: 200,
-            CONF_WAYPOINT_IMPORT: True,
-            CONF_WAYPOINT_WHITELIST: ['jon', 'greg']
-        }, store_context))
+        CONF_MAX_GPS_ACCURACY: 200,
+        CONF_WAYPOINT_IMPORT: True,
+        CONF_WAYPOINT_WHITELIST: ['jon', 'greg']
+    }, store_context))
 
     def get_context():
         """Get the current context."""
         return context
 
     yield get_context
-
-    patcher.stop()
 
 
 async def send_message(hass, topic, message, corrupt=False):
@@ -851,7 +847,7 @@ async def test_event_beacon_unknown_zone_no_location(hass, context):
     # that will be tracked at my current location. Except
     # in this case my Device hasn't had a location message
     # yet so it's in an odd state where it has state.state
-    # None and no GPS coords so set the beacon to.
+    # None and no GPS coords to set the beacon to.
     hass.states.async_set(DEVICE_TRACKER_STATE, None)
 
     message = build_message(
@@ -993,8 +989,7 @@ async def test_mobile_multiple_async_enter_exit(hass, context):
 
     await hass.async_block_till_done()
     await send_message(hass, EVENT_TOPIC, MOBILE_BEACON_LEAVE_EVENT_MESSAGE)
-    assert len(context().mobile_beacons_active['greg_phone']) == \
-        0
+    assert len(context().mobile_beacons_active['greg_phone']) == 0
 
 
 async def test_mobile_multiple_enter_exit(hass, context):
@@ -1003,8 +998,7 @@ async def test_mobile_multiple_enter_exit(hass, context):
     await send_message(hass, EVENT_TOPIC, MOBILE_BEACON_ENTER_EVENT_MESSAGE)
     await send_message(hass, EVENT_TOPIC, MOBILE_BEACON_LEAVE_EVENT_MESSAGE)
 
-    assert len(context().mobile_beacons_active['greg_phone']) == \
-        0
+    assert len(context().mobile_beacons_active['greg_phone']) == 0
 
 
 async def test_complex_movement(hass, context):
@@ -1153,38 +1147,46 @@ async def test_complex_movement_sticky_keys_beacon(hass, context):
     # leave keys
     await send_message(hass, LOCATION_TOPIC, location_message)
     await send_message(hass, EVENT_TOPIC, MOBILE_BEACON_LEAVE_EVENT_MESSAGE)
+    assert_location_latitude(hass, INNER_ZONE['latitude'])
     assert_location_state(hass, 'inner')
     assert_mobile_tracker_state(hass, 'inner')
+    assert_mobile_tracker_latitude(hass, INNER_ZONE['latitude'])
 
     # leave inner region beacon
     await send_message(hass, EVENT_TOPIC, REGION_BEACON_LEAVE_MESSAGE)
     await send_message(hass, LOCATION_TOPIC, location_message)
     assert_location_state(hass, 'inner')
     assert_mobile_tracker_state(hass, 'inner')
+    assert_mobile_tracker_latitude(hass, INNER_ZONE['latitude'])
 
     # enter inner region beacon
     await send_message(hass, EVENT_TOPIC, REGION_BEACON_ENTER_MESSAGE)
     await send_message(hass, LOCATION_TOPIC, location_message)
     assert_location_latitude(hass, INNER_ZONE['latitude'])
     assert_location_state(hass, 'inner')
+    assert_mobile_tracker_state(hass, 'inner')
+    assert_mobile_tracker_latitude(hass, INNER_ZONE['latitude'])
 
     # enter keys
     await send_message(hass, EVENT_TOPIC, MOBILE_BEACON_ENTER_EVENT_MESSAGE)
     await send_message(hass, LOCATION_TOPIC, location_message)
     assert_location_state(hass, 'inner')
     assert_mobile_tracker_state(hass, 'inner')
+    assert_mobile_tracker_latitude(hass, INNER_ZONE['latitude'])
 
     # leave keys
     await send_message(hass, LOCATION_TOPIC, location_message)
     await send_message(hass, EVENT_TOPIC, MOBILE_BEACON_LEAVE_EVENT_MESSAGE)
     assert_location_state(hass, 'inner')
     assert_mobile_tracker_state(hass, 'inner')
+    assert_mobile_tracker_latitude(hass, INNER_ZONE['latitude'])
 
     # leave inner region beacon
     await send_message(hass, EVENT_TOPIC, REGION_BEACON_LEAVE_MESSAGE)
     await send_message(hass, LOCATION_TOPIC, location_message)
     assert_location_state(hass, 'inner')
     assert_mobile_tracker_state(hass, 'inner')
+    assert_mobile_tracker_latitude(hass, INNER_ZONE['latitude'])
 
     # GPS leave inner region, I'm in the 'outer' region now
     # but on GPS coords
@@ -1222,7 +1224,7 @@ async def test_waypoint_import_blacklist(hass, context):
     assert wayp is None
 
 
-async def test_waypoint_import_no_whitelist(hass, config_context):
+async def test_waypoint_import_no_whitelist(hass, setup_comp):
     """Test import of list of waypoints with no whitelist set."""
     await setup_owntracks(hass, {
         CONF_MAX_GPS_ACCURACY: 200,
@@ -1293,20 +1295,25 @@ async def test_unsupported_message(hass, context):
 
 def generate_ciphers(secret):
     """Generate test ciphers for the DEFAULT_LOCATION_MESSAGE."""
-    # libnacl ciphertext generation will fail if the module
+    # PyNaCl ciphertext generation will fail if the module
     # cannot be imported. However, the test for decryption
     # also relies on this library and won't be run without it.
-    import json
     import pickle
     import base64
 
     try:
-        from libnacl import crypto_secretbox_KEYBYTES as KEYLEN
-        from libnacl.secret import SecretBox
-        key = secret.encode("utf-8")[:KEYLEN].ljust(KEYLEN, b'\0')
-        ctxt = base64.b64encode(SecretBox(key).encrypt(
-                  json.dumps(DEFAULT_LOCATION_MESSAGE).encode("utf-8"))
-                  ).decode("utf-8")
+        from nacl.secret import SecretBox
+        from nacl.encoding import Base64Encoder
+
+        keylen = SecretBox.KEY_SIZE
+        key = secret.encode("utf-8")
+        key = key[:keylen]
+        key = key.ljust(keylen, b'\0')
+
+        msg = json.dumps(DEFAULT_LOCATION_MESSAGE).encode("utf-8")
+
+        ctxt = SecretBox(key).encrypt(msg,
+                                      encoder=Base64Encoder).decode("utf-8")
     except (ImportError, OSError):
         ctxt = ''
 
@@ -1341,7 +1348,8 @@ def mock_cipher():
     def mock_decrypt(ciphertext, key):
         """Decrypt/unpickle."""
         import pickle
-        (mkey, plaintext) = pickle.loads(ciphertext)
+        import base64
+        (mkey, plaintext) = pickle.loads(base64.b64decode(ciphertext))
         if key != mkey:
             raise ValueError()
         return plaintext
@@ -1368,7 +1376,7 @@ def config_context(hass, setup_comp):
 
 @patch('homeassistant.components.owntracks.device_tracker.get_cipher',
        mock_cipher)
-async def test_encrypted_payload(hass, config_context):
+async def test_encrypted_payload(hass, setup_comp):
     """Test encrypted payload."""
     await setup_owntracks(hass, {
         CONF_SECRET: TEST_SECRET_KEY,
@@ -1379,7 +1387,7 @@ async def test_encrypted_payload(hass, config_context):
 
 @patch('homeassistant.components.owntracks.device_tracker.get_cipher',
        mock_cipher)
-async def test_encrypted_payload_topic_key(hass, config_context):
+async def test_encrypted_payload_topic_key(hass, setup_comp):
     """Test encrypted payload with a topic key."""
     await setup_owntracks(hass, {
         CONF_SECRET: {
@@ -1392,7 +1400,7 @@ async def test_encrypted_payload_topic_key(hass, config_context):
 
 @patch('homeassistant.components.owntracks.device_tracker.get_cipher',
        mock_cipher)
-async def test_encrypted_payload_no_key(hass, config_context):
+async def test_encrypted_payload_no_key(hass, setup_comp):
     """Test encrypted payload with no key, ."""
     assert hass.states.get(DEVICE_TRACKER_STATE) is None
     await setup_owntracks(hass, {
@@ -1405,7 +1413,7 @@ async def test_encrypted_payload_no_key(hass, config_context):
 
 @patch('homeassistant.components.owntracks.device_tracker.get_cipher',
        mock_cipher)
-async def test_encrypted_payload_wrong_key(hass, config_context):
+async def test_encrypted_payload_wrong_key(hass, setup_comp):
     """Test encrypted payload with wrong key."""
     await setup_owntracks(hass, {
         CONF_SECRET: 'wrong key',
@@ -1416,7 +1424,7 @@ async def test_encrypted_payload_wrong_key(hass, config_context):
 
 @patch('homeassistant.components.owntracks.device_tracker.get_cipher',
        mock_cipher)
-async def test_encrypted_payload_wrong_topic_key(hass, config_context):
+async def test_encrypted_payload_wrong_topic_key(hass, setup_comp):
     """Test encrypted payload with wrong  topic key."""
     await setup_owntracks(hass, {
         CONF_SECRET: {
@@ -1429,7 +1437,7 @@ async def test_encrypted_payload_wrong_topic_key(hass, config_context):
 
 @patch('homeassistant.components.owntracks.device_tracker.get_cipher',
        mock_cipher)
-async def test_encrypted_payload_no_topic_key(hass, config_context):
+async def test_encrypted_payload_no_topic_key(hass, setup_comp):
     """Test encrypted payload with no topic key."""
     await setup_owntracks(hass, {
         CONF_SECRET: {
@@ -1439,12 +1447,13 @@ async def test_encrypted_payload_no_topic_key(hass, config_context):
     assert hass.states.get(DEVICE_TRACKER_STATE) is None
 
 
-async def test_encrypted_payload_libsodium(hass, config_context):
+async def test_encrypted_payload_libsodium(hass, setup_comp):
     """Test sending encrypted message payload."""
     try:
-        import libnacl  # noqa: F401
+        # pylint: disable=unused-import
+        import nacl  # noqa: F401
     except (ImportError, OSError):
-        pytest.skip("libnacl/libsodium is not installed")
+        pytest.skip("PyNaCl/libsodium is not installed")
         return
 
     await setup_owntracks(hass, {
@@ -1455,7 +1464,7 @@ async def test_encrypted_payload_libsodium(hass, config_context):
     assert_location_latitude(hass, LOCATION_MESSAGE['lat'])
 
 
-async def test_customized_mqtt_topic(hass, config_context):
+async def test_customized_mqtt_topic(hass, setup_comp):
     """Test subscribing to a custom mqtt topic."""
     await setup_owntracks(hass, {
         CONF_MQTT_TOPIC: 'mytracks/#',
@@ -1467,7 +1476,7 @@ async def test_customized_mqtt_topic(hass, config_context):
     assert_location_latitude(hass, LOCATION_MESSAGE['lat'])
 
 
-async def test_region_mapping(hass, config_context):
+async def test_region_mapping(hass, setup_comp):
     """Test region to zone mapping."""
     await setup_owntracks(hass, {
         CONF_REGION_MAPPING: {

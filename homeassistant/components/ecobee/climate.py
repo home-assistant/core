@@ -1,23 +1,19 @@
-"""
-Platform for Ecobee Thermostats.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.ecobee/
-"""
+"""Support for Ecobee Thermostats."""
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components import ecobee
-from homeassistant.components.climate import (
-    DOMAIN, STATE_COOL, STATE_HEAT, STATE_AUTO, STATE_IDLE, ClimateDevice,
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
+    DOMAIN, STATE_COOL, STATE_HEAT, STATE_AUTO, STATE_IDLE,
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE, SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_HUMIDITY_LOW, SUPPORT_TARGET_HUMIDITY_HIGH,
     SUPPORT_AUX_HEAT, SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE_LOW, STATE_OFF)
+    SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
+    ATTR_ENTITY_ID, STATE_ON, STATE_OFF, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 
 _CONFIGURING = {}
@@ -30,8 +26,6 @@ DEFAULT_RESUME_ALL = False
 TEMPERATURE_HOLD = 'temp'
 VACATION_HOLD = 'vacation'
 AWAY_MODE = 'awayMode'
-
-DEPENDENCIES = ['ecobee']
 
 SERVICE_SET_FAN_MIN_ON_TIME = 'ecobee_set_fan_min_on_time'
 SERVICE_RESUME_PROGRAM = 'ecobee_resume_program'
@@ -283,6 +277,7 @@ class Thermostat(ClimateDevice):
             "fan": self.fan,
             "climate_mode": self.mode,
             "operation": operation,
+            "equipment_running": status,
             "climate_list": self.climate_list,
             "fan_min_on_time": self.fan_min_on_time
         }

@@ -78,9 +78,9 @@ def test_frontend_and_static(mock_http_client, mock_onboarded):
 
     # Test we can retrieve frontend.js
     frontendjs = re.search(
-        r'(?P<app>\/frontend_es5\/app-[A-Za-z0-9]{8}.js)', text)
+        r'(?P<app>\/frontend_es5\/app.[A-Za-z0-9]{8}.js)', text)
 
-    assert frontendjs is not None
+    assert frontendjs is not None, text
     resp = yield from mock_http_client.get(frontendjs.groups(0)[0])
     assert resp.status == 200
     assert 'public' in resp.headers.get('cache-control')
@@ -210,7 +210,7 @@ async def test_themes_reload_themes(hass, hass_ws_client):
 
 async def test_missing_themes(hass, hass_ws_client):
     """Test that themes API works when themes are not defined."""
-    await async_setup_component(hass, 'frontend')
+    await async_setup_component(hass, 'frontend', {})
 
     client = await hass_ws_client(hass)
     await client.send_json({
@@ -247,9 +247,9 @@ def test_extra_urls_es5(mock_http_client_with_urls, mock_onboarded):
 
 async def test_get_panels(hass, hass_ws_client):
     """Test get_panels command."""
-    await async_setup_component(hass, 'frontend')
+    await async_setup_component(hass, 'frontend', {})
     await hass.components.frontend.async_register_built_in_panel(
-        'map', 'Map', 'mdi:tooltip-account')
+        'map', 'Map', 'mdi:tooltip-account', require_admin=True)
 
     client = await hass_ws_client(hass)
     await client.send_json({
@@ -266,11 +266,36 @@ async def test_get_panels(hass, hass_ws_client):
     assert msg['result']['map']['url_path'] == 'map'
     assert msg['result']['map']['icon'] == 'mdi:tooltip-account'
     assert msg['result']['map']['title'] == 'Map'
+    assert msg['result']['map']['require_admin'] is True
+
+
+async def test_get_panels_non_admin(hass, hass_ws_client, hass_admin_user):
+    """Test get_panels command."""
+    hass_admin_user.groups = []
+    await async_setup_component(hass, 'frontend', {})
+    await hass.components.frontend.async_register_built_in_panel(
+        'map', 'Map', 'mdi:tooltip-account', require_admin=True)
+    await hass.components.frontend.async_register_built_in_panel(
+        'history', 'History', 'mdi:history')
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        'id': 5,
+        'type': 'get_panels',
+    })
+
+    msg = await client.receive_json()
+
+    assert msg['id'] == 5
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success']
+    assert 'history' in msg['result']
+    assert 'map' not in msg['result']
 
 
 async def test_get_translations(hass, hass_ws_client):
     """Test get_translations command."""
-    await async_setup_component(hass, 'frontend')
+    await async_setup_component(hass, 'frontend', {})
     client = await hass_ws_client(hass)
 
     with patch('homeassistant.components.frontend.async_get_translations',

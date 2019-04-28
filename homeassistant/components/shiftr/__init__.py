@@ -1,9 +1,4 @@
-"""
-Support for Shiftr.io.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/shiftr/
-"""
+"""Support for Shiftr.io."""
 import logging
 
 import voluptuous as vol
@@ -13,8 +8,6 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, EVENT_STATE_CHANGED,
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import state as state_helper
-
-REQUIREMENTS = ['paho-mqtt==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 

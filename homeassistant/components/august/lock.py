@@ -1,19 +1,13 @@
-"""
-Support for August lock.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/lock.august/
-"""
-import logging
+"""Support for August lock."""
 from datetime import timedelta
+import logging
 
-from homeassistant.components.august import DATA_AUGUST
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import ATTR_BATTERY_LEVEL
 
-_LOGGER = logging.getLogger(__name__)
+from . import DATA_AUGUST
 
-DEPENDENCIES = ['august']
+_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
@@ -95,3 +89,8 @@ class AugustLock(LockDevice):
         return {
             ATTR_BATTERY_LEVEL: self._lock_detail.battery_level,
         }
+
+    @property
+    def unique_id(self) -> str:
+        """Get the unique id of the lock."""
+        return '{:s}_lock'.format(self._lock.device_id)

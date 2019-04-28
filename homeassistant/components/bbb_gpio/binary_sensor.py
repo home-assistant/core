@@ -1,9 +1,4 @@
-"""
-Support for binary sensor using Beaglebone Black GPIO.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.bbb_gpio/
-"""
+"""Support for binary sensor using Beaglebone Black GPIO."""
 import logging
 
 import voluptuous as vol
@@ -15,8 +10,6 @@ from homeassistant.const import (DEVICE_DEFAULT_NAME, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['bbb_gpio']
 
 CONF_PINS = 'pins'
 CONF_BOUNCETIME = 'bouncetime'

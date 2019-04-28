@@ -1,18 +1,10 @@
-"""
-Support for the Hive devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.hive/
-"""
-from homeassistant.components.hive import DATA_HIVE, DOMAIN
-from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_COLOR_TEMP,
-                                            ATTR_HS_COLOR,
-                                            SUPPORT_BRIGHTNESS,
-                                            SUPPORT_COLOR_TEMP,
-                                            SUPPORT_COLOR, Light)
+"""Support for the Hive lights."""
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR, SUPPORT_COLOR_TEMP, Light)
 import homeassistant.util.color as color_util
 
-DEPENDENCIES = ['hive']
+from . import DATA_HIVE, DOMAIN
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -35,8 +27,8 @@ class HiveDeviceLight(Light):
         self.light_device_type = hivedevice["Hive_Light_DeviceType"]
         self.session = hivesession
         self.attributes = {}
-        self.data_updatesource = '{}.{}'.format(self.device_type,
-                                                self.node_id)
+        self.data_updatesource = '{}.{}'.format(
+            self.device_type, self.node_id)
         self._unique_id = '{}-{}'.format(self.node_id, self.device_type)
         self.session.entities.append(self)
 

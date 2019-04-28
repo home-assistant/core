@@ -1,21 +1,15 @@
-"""
-Support for INSTEON dimmers via PowerLinc Modem.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.insteon/
-"""
+"""Support for INSTEON dimmers via PowerLinc Modem."""
 import logging
 
-from homeassistant.components.insteon import InsteonEntity
 from homeassistant.components.switch import SwitchDevice
 
-DEPENDENCIES = ['insteon']
+from . import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the INSTEON device class for the hass platform."""
     insteon_modem = hass.data['insteon'].get('modem')
 
@@ -25,7 +19,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     state_name = device.states[state_key].name
 
-    _LOGGER.debug('Adding device %s entity %s to Switch platform',
+    _LOGGER.debug("Adding device %s entity %s to Switch platform",
                   device.address.hex, device.states[state_key].name)
 
     new_entity = None

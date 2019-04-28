@@ -1,4 +1,4 @@
-"""Component to manage a shopping list."""
+"""Support to manage a shopping list."""
 import asyncio
 import logging
 import uuid
@@ -18,7 +18,6 @@ from homeassistant.components import websocket_api
 ATTR_NAME = 'name'
 
 DOMAIN = 'shopping_list'
-DEPENDENCIES = ['http']
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
 EVENT = 'shopping_list_updated'

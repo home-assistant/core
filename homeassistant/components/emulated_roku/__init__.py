@@ -1,9 +1,4 @@
-"""
-Support for Roku API emulation.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/emulated_roku/
-"""
+"""Support for Roku API emulation."""
 import voluptuous as vol
 
 from homeassistant import config_entries, util
@@ -15,8 +10,6 @@ from .config_flow import configured_servers
 from .const import (
     CONF_ADVERTISE_IP, CONF_ADVERTISE_PORT, CONF_HOST_IP, CONF_LISTEN_PORT,
     CONF_SERVERS, CONF_UPNP_BIND_MULTICAST, DOMAIN)
-
-REQUIREMENTS = ['emulated_roku==0.1.8']
 
 SERVER_CONFIG_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,

@@ -1,9 +1,4 @@
-"""
-Update the IP addresses of your Cloudflare DNS records.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/cloudflare/
-"""
+"""Update the IP addresses of your Cloudflare DNS records."""
 from datetime import timedelta
 import logging
 
@@ -12,8 +7,6 @@ import voluptuous as vol
 from homeassistant.const import CONF_API_KEY, CONF_EMAIL, CONF_ZONE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
-
-REQUIREMENTS = ['pycfdns==0.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 

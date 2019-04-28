@@ -80,7 +80,6 @@ set_swing_mode:
       example: 'climate.nest'
     swing_mode:
       description: New value of swing mode.
-      example:
 
 turn_on:
   description: Turn climate device on.

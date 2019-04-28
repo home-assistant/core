@@ -1,10 +1,4 @@
-"""
-Exports sensor values via RSS feed.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/rss_feed_template/
-"""
-
+"""Support to export sensor values via RSS feed."""
 from html import escape
 from aiohttp import web
 
@@ -14,8 +8,6 @@ from homeassistant.components.http import HomeAssistantView
 import homeassistant.helpers.config_validation as cv
 
 CONTENT_TYPE_XML = 'text/xml'
-DEPENDENCIES = ['http']
-
 DOMAIN = 'rss_feed_template'
 
 CONFIG_SCHEMA = vol.Schema({

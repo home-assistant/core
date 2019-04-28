@@ -1,9 +1,4 @@
-"""
-Receive signals from a keyboard and use it as a remote control.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/keyboard_remote/
-"""
+"""Receive signals from a keyboard and use it as a remote control."""
 # pylint: disable=import-error
 import threading
 import logging
@@ -15,8 +10,6 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
-
-REQUIREMENTS = ['evdev==0.6.1']
 
 _LOGGER = logging.getLogger(__name__)
 

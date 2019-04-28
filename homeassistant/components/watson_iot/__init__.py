@@ -1,9 +1,4 @@
-"""
-A component which allows you to send data to the IBM Watson IoT Platform.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/watson_iot/
-"""
+"""Support for the IBM Watson IoT Platform."""
 import logging
 import queue
 import threading
@@ -17,8 +12,6 @@ from homeassistant.const import (
     STATE_UNAVAILABLE, STATE_UNKNOWN)
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['ibmiotf==0.3.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +37,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
             vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
             vol.Optional(CONF_DOMAINS, default=[]):
-                vol.All(cv.ensure_list, [cv.string])
+                vol.All(cv.ensure_list, [cv.string]),
         }),
     })),
 }, extra=vol.ALLOW_EXTRA)

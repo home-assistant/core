@@ -1,20 +1,15 @@
-"""
-This platform provides alarm control functionality for SimpliSafe.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.simplisafe/
-"""
+"""Support for SimpliSafe alarm control panels."""
 import logging
 import re
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.simplisafe.const import (
-    DATA_CLIENT, DOMAIN, TOPIC_UPDATE)
 from homeassistant.const import (
     CONF_CODE, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from .const import DATA_CLIENT, DOMAIN, TOPIC_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 

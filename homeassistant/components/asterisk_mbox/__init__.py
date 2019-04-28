@@ -1,9 +1,4 @@
-"""
-Support for Asterisk Voicemail interface.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/asterisk_mbox/
-"""
+"""Support for Asterisk Voicemail interface."""
 import logging
 
 import voluptuous as vol
@@ -14,8 +9,6 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send, dispatcher_connect)
-
-REQUIREMENTS = ['asterisk_mbox==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,9 +71,8 @@ class AsteriskData:
     @callback
     def handle_data(self, command, msg):
         """Handle changes to the mailbox."""
-        from asterisk_mbox.commands import (CMD_MESSAGE_LIST,
-                                            CMD_MESSAGE_CDR_AVAILABLE,
-                                            CMD_MESSAGE_CDR)
+        from asterisk_mbox.commands import (
+            CMD_MESSAGE_LIST, CMD_MESSAGE_CDR_AVAILABLE, CMD_MESSAGE_CDR)
 
         if command == CMD_MESSAGE_LIST:
             _LOGGER.debug("AsteriskVM sent updated message list: Len %d",
@@ -89,8 +81,8 @@ class AsteriskData:
             self.messages = sorted(
                 msg, key=lambda item: item['info']['origtime'], reverse=True)
             if not isinstance(old_messages, list):
-                async_dispatcher_send(self.hass, SIGNAL_DISCOVER_PLATFORM,
-                                      DOMAIN)
+                async_dispatcher_send(
+                    self.hass, SIGNAL_DISCOVER_PLATFORM, DOMAIN)
             async_dispatcher_send(self.hass, SIGNAL_MESSAGE_UPDATE,
                                   self.messages)
         elif command == CMD_MESSAGE_CDR:

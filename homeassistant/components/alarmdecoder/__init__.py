@@ -1,21 +1,14 @@
-"""
-Support for AlarmDecoder devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/alarmdecoder/
-"""
+"""Support for AlarmDecoder devices."""
 import logging
 
 from datetime import timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_HOST
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import dt as dt_util
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
-
-REQUIREMENTS = ['alarmdecoder==1.13.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +18,6 @@ DATA_AD = 'alarmdecoder'
 
 CONF_DEVICE = 'device'
 CONF_DEVICE_BAUD = 'baudrate'
-CONF_DEVICE_HOST = 'host'
 CONF_DEVICE_PATH = 'path'
 CONF_DEVICE_PORT = 'port'
 CONF_DEVICE_TYPE = 'type'
@@ -60,7 +52,7 @@ SIGNAL_REL_MESSAGE = 'alarmdecoder.rel_message'
 
 DEVICE_SOCKET_SCHEMA = vol.Schema({
     vol.Required(CONF_DEVICE_TYPE): 'socket',
-    vol.Optional(CONF_DEVICE_HOST, default=DEFAULT_DEVICE_HOST): cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_DEVICE_HOST): cv.string,
     vol.Optional(CONF_DEVICE_PORT, default=DEFAULT_DEVICE_PORT): cv.port})
 
 DEVICE_SERIAL_SCHEMA = vol.Schema({
@@ -170,7 +162,7 @@ def setup(hass, config):
 
     controller = False
     if device_type == 'socket':
-        host = device.get(CONF_DEVICE_HOST)
+        host = device.get(CONF_HOST)
         port = device.get(CONF_DEVICE_PORT)
         controller = AlarmDecoder(SocketDevice(interface=(host, port)))
     elif device_type == 'serial':

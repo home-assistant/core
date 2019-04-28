@@ -1,9 +1,4 @@
-"""
-Integrate with NO-IP Dynamic DNS service.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/no_ip/
-"""
+"""Integrate with NO-IP Dynamic DNS service."""
 import asyncio
 import base64
 from datetime import timedelta

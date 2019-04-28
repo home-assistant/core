@@ -1,16 +1,12 @@
-"""
-Support for the Hive devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.hive/
-"""
+"""Support for the Hive binary sensors."""
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.hive import DATA_HIVE, DOMAIN
 
-DEPENDENCIES = ['hive']
+from . import DATA_HIVE, DOMAIN
 
-DEVICETYPE_DEVICE_CLASS = {'motionsensor': 'motion',
-                           'contactsensor': 'opening'}
+DEVICETYPE_DEVICE_CLASS = {
+    'motionsensor': 'motion',
+    'contactsensor': 'opening',
+}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -76,8 +72,8 @@ class HiveBinarySensorEntity(BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self.session.sensor.get_state(self.node_id,
-                                             self.node_device_type)
+        return self.session.sensor.get_state(
+            self.node_id, self.node_device_type)
 
     def update(self):
         """Update all Node data from Hive."""

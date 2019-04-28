@@ -1,9 +1,4 @@
-"""
-Support for Apple TV.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/apple_tv/
-"""
+"""Support for Apple TV."""
 import asyncio
 import logging
 from typing import Sequence, TypeVar, Union
@@ -15,8 +10,6 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pyatv==0.3.12']
 
 _LOGGER = logging.getLogger(__name__)
 

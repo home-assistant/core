@@ -1,9 +1,4 @@
-"""
-Integrate with namecheap DNS services.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/namecheapdns/
-"""
+"""Support for namecheap DNS services."""
 import logging
 from datetime import timedelta
 
@@ -13,8 +8,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_DOMAIN
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-REQUIREMENTS = ['defusedxml==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 

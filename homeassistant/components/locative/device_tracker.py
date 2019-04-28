@@ -1,21 +1,14 @@
-"""
-Support for the Locative platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.locative/
-"""
+"""Support for the Locative platform."""
 import logging
 
-from homeassistant.components.device_tracker import \
-    DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.components.locative import DOMAIN as LOCATIVE_DOMAIN
-from homeassistant.components.locative import TRACKER_UPDATE
+from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import slugify
 
-_LOGGER = logging.getLogger(__name__)
+from . import DOMAIN as LOCATIVE_DOMAIN, TRACKER_UPDATE
 
-DEPENDENCIES = ['locative']
+_LOGGER = logging.getLogger(__name__)
 
 DATA_KEY = '{}.{}'.format(LOCATIVE_DOMAIN, DEVICE_TRACKER_DOMAIN)
 

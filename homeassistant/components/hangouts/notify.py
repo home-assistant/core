@@ -1,24 +1,16 @@
-"""
-Hangouts notification service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.hangouts/
-"""
+"""Support for Hangouts notifications."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA,
-                                             BaseNotificationService,
-                                             ATTR_MESSAGE, ATTR_DATA)
+from homeassistant.components.notify import (
+    ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, PLATFORM_SCHEMA,
+    BaseNotificationService)
 
-from homeassistant.components.hangouts.const \
-    import (DOMAIN, SERVICE_SEND_MESSAGE, TARGETS_SCHEMA,
-            CONF_DEFAULT_CONVERSATIONS)
+from .const import (
+    CONF_DEFAULT_CONVERSATIONS, DOMAIN, SERVICE_SEND_MESSAGE, TARGETS_SCHEMA)
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = [DOMAIN]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEFAULT_CONVERSATIONS): [TARGETS_SCHEMA]

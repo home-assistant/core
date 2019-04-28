@@ -1,9 +1,4 @@
-"""
-Platform for the MAX! Cube LAN Gateway.
-
-For more details about this component, please refer to the documentation
-https://home-assistant.io/components/maxcube/
-"""
+"""Support for the MAX! Cube LAN Gateway."""
 import logging
 import time
 from socket import timeout
@@ -14,8 +9,6 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
-
-REQUIREMENTS = ['maxcube-api==0.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +31,7 @@ CONFIG_GATEWAY = vol.Schema({
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_GATEWAYS, default={}):
-            vol.All(cv.ensure_list, [CONFIG_GATEWAY])
+            vol.All(cv.ensure_list, [CONFIG_GATEWAY]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 

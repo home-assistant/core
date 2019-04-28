@@ -1,17 +1,10 @@
-"""
-Provides functionality to emulate keyboard presses on host machine.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/keyboard/
-"""
+"""Support to emulate keyboard presses on host machine."""
 import voluptuous as vol
 
 from homeassistant.const import (
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PLAY_PAUSE,
     SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP)
-
-REQUIREMENTS = ['pyuserinput==0.1.11']
 
 DOMAIN = 'keyboard'
 

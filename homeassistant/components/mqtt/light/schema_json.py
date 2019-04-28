@@ -35,8 +35,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'mqtt_json'
 
-DEPENDENCIES = ['mqtt']
-
 DEFAULT_BRIGHTNESS = False
 DEFAULT_COLOR_TEMP = False
 DEFAULT_EFFECT = False
@@ -62,25 +60,24 @@ PLATFORM_SCHEMA_JSON = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BRIGHTNESS_SCALE, default=DEFAULT_BRIGHTNESS_SCALE):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Optional(CONF_COLOR_TEMP, default=DEFAULT_COLOR_TEMP): cv.boolean,
+    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     vol.Optional(CONF_EFFECT, default=DEFAULT_EFFECT): cv.boolean,
     vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_FLASH_TIME_SHORT, default=DEFAULT_FLASH_TIME_SHORT):
-        cv.positive_int,
     vol.Optional(CONF_FLASH_TIME_LONG, default=DEFAULT_FLASH_TIME_LONG):
         cv.positive_int,
+    vol.Optional(CONF_FLASH_TIME_SHORT, default=DEFAULT_FLASH_TIME_SHORT):
+        cv.positive_int,
+    vol.Optional(CONF_HS, default=DEFAULT_HS): cv.boolean,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_QOS, default=mqtt.DEFAULT_QOS):
         vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
     vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
     vol.Optional(CONF_RGB, default=DEFAULT_RGB): cv.boolean,
     vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_WHITE_VALUE, default=DEFAULT_WHITE_VALUE): cv.boolean,
     vol.Optional(CONF_XY, default=DEFAULT_XY): cv.boolean,
-    vol.Optional(CONF_HS, default=DEFAULT_HS): cv.boolean,
-    vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
     mqtt.MQTT_JSON_ATTRS_SCHEMA.schema).extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 
@@ -136,7 +133,7 @@ class MqttLightJson(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         await self.availability_discovery_update(config)
         await self.device_info_discovery_update(config)
         await self._subscribe_topics()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
@@ -148,34 +145,34 @@ class MqttLightJson(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 CONF_COMMAND_TOPIC
             )
         }
-        optimistic = config.get(CONF_OPTIMISTIC)
+        optimistic = config[CONF_OPTIMISTIC]
         self._optimistic = optimistic or self._topic[CONF_STATE_TOPIC] is None
 
-        brightness = config.get(CONF_BRIGHTNESS)
+        brightness = config[CONF_BRIGHTNESS]
         if brightness:
             self._brightness = 255
         else:
             self._brightness = None
 
-        color_temp = config.get(CONF_COLOR_TEMP)
+        color_temp = config[CONF_COLOR_TEMP]
         if color_temp:
             self._color_temp = 150
         else:
             self._color_temp = None
 
-        effect = config.get(CONF_EFFECT)
+        effect = config[CONF_EFFECT]
         if effect:
             self._effect = 'none'
         else:
             self._effect = None
 
-        white_value = config.get(CONF_WHITE_VALUE)
+        white_value = config[CONF_WHITE_VALUE]
         if white_value:
             self._white_value = 255
         else:
             self._white_value = None
 
-        if config.get(CONF_HS) or config.get(CONF_RGB) or config.get(CONF_XY):
+        if config[CONF_HS] or config[CONF_RGB] or config[CONF_XY]:
             self._hs = [0, 0]
         else:
             self._hs = None
@@ -188,22 +185,22 @@ class MqttLightJson(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         }
 
         self._supported_features = (SUPPORT_TRANSITION | SUPPORT_FLASH)
-        self._supported_features |= (config.get(CONF_RGB) and SUPPORT_COLOR)
+        self._supported_features |= (config[CONF_RGB] and SUPPORT_COLOR)
         self._supported_features |= (brightness and SUPPORT_BRIGHTNESS)
         self._supported_features |= (color_temp and SUPPORT_COLOR_TEMP)
         self._supported_features |= (effect and SUPPORT_EFFECT)
         self._supported_features |= (white_value and SUPPORT_WHITE_VALUE)
-        self._supported_features |= (config.get(CONF_XY) and SUPPORT_COLOR)
-        self._supported_features |= (config.get(CONF_HS) and SUPPORT_COLOR)
+        self._supported_features |= (config[CONF_XY] and SUPPORT_COLOR)
+        self._supported_features |= (config[CONF_HS] and SUPPORT_COLOR)
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
         last_state = await self.async_get_last_state()
 
         @callback
-        def state_received(topic, payload, qos):
+        def state_received(msg):
             """Handle new MQTT messages."""
-            values = json.loads(payload)
+            values = json.loads(msg.payload)
 
             if values['state'] == 'ON':
                 self._state = True
@@ -246,7 +243,7 @@ class MqttLightJson(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 try:
                     self._brightness = int(
                         values['brightness'] /
-                        float(self._config.get(CONF_BRIGHTNESS_SCALE)) * 255)
+                        float(self._config[CONF_BRIGHTNESS_SCALE]) * 255)
                 except KeyError:
                     pass
                 except ValueError:
@@ -276,14 +273,14 @@ class MqttLightJson(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 except ValueError:
                     _LOGGER.warning("Invalid white value received")
 
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
             self._sub_state = await subscription.async_subscribe_topics(
                 self.hass, self._sub_state,
                 {'state_topic': {'topic': self._topic[CONF_STATE_TOPIC],
                                  'msg_callback': state_received,
-                                 'qos': self._config.get(CONF_QOS)}})
+                                 'qos': self._config[CONF_QOS]}})
 
         if self._optimistic and last_state:
             self._state = last_state.state == STATE_ON
@@ -343,7 +340,7 @@ class MqttLightJson(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     @property
     def name(self):
         """Return the name of the device if any."""
-        return self._config.get(CONF_NAME)
+        return self._config[CONF_NAME]
 
     @property
     def unique_id(self):
@@ -375,11 +372,11 @@ class MqttLightJson(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         message = {'state': 'ON'}
 
         if ATTR_HS_COLOR in kwargs and (
-                self._config.get(CONF_HS) or self._config.get(CONF_RGB)
-                or self._config.get(CONF_XY)):
+                self._config[CONF_HS] or self._config[CONF_RGB]
+                or self._config[CONF_XY]):
             hs_color = kwargs[ATTR_HS_COLOR]
             message['color'] = {}
-            if self._config.get(CONF_RGB):
+            if self._config[CONF_RGB]:
                 # If there's a brightness topic set, we don't want to scale the
                 # RGB values given using the brightness.
                 if self._brightness is not None:
@@ -393,11 +390,11 @@ class MqttLightJson(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 message['color']['r'] = rgb[0]
                 message['color']['g'] = rgb[1]
                 message['color']['b'] = rgb[2]
-            if self._config.get(CONF_XY):
+            if self._config[CONF_XY]:
                 xy_color = color_util.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
                 message['color']['x'] = xy_color[0]
                 message['color']['y'] = xy_color[1]
-            if self._config.get(CONF_HS):
+            if self._config[CONF_HS]:
                 message['color']['h'] = hs_color[0]
                 message['color']['s'] = hs_color[1]
 
@@ -416,10 +413,10 @@ class MqttLightJson(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         if ATTR_TRANSITION in kwargs:
             message['transition'] = int(kwargs[ATTR_TRANSITION])
 
-        if ATTR_BRIGHTNESS in kwargs:
+        if ATTR_BRIGHTNESS in kwargs and self._brightness is not None:
             message['brightness'] = int(
                 kwargs[ATTR_BRIGHTNESS] / float(DEFAULT_BRIGHTNESS_SCALE) *
-                self._config.get(CONF_BRIGHTNESS_SCALE))
+                self._config[CONF_BRIGHTNESS_SCALE])
 
             if self._optimistic:
                 self._brightness = kwargs[ATTR_BRIGHTNESS]
@@ -448,7 +445,7 @@ class MqttLightJson(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
         mqtt.async_publish(
             self.hass, self._topic[CONF_COMMAND_TOPIC], json.dumps(message),
-            self._config.get(CONF_QOS), self._config.get(CONF_RETAIN))
+            self._config[CONF_QOS], self._config[CONF_RETAIN])
 
         if self._optimistic:
             # Optimistically assume that the light has changed state.
@@ -456,7 +453,7 @@ class MqttLightJson(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             should_update = True
 
         if should_update:
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off.
@@ -470,9 +467,9 @@ class MqttLightJson(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
         mqtt.async_publish(
             self.hass, self._topic[CONF_COMMAND_TOPIC], json.dumps(message),
-            self._config.get(CONF_QOS), self._config.get(CONF_RETAIN))
+            self._config[CONF_QOS], self._config[CONF_RETAIN])
 
         if self._optimistic:
             # Optimistically assume that the light has changed state.
             self._state = False
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

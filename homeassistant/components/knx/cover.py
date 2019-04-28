@@ -1,21 +1,16 @@
-"""
-Support for KNX/IP covers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.knx/
-"""
-
+"""Support for KNX/IP covers."""
 import voluptuous as vol
 
 from homeassistant.components.cover import (
     ATTR_POSITION, ATTR_TILT_POSITION, PLATFORM_SCHEMA, SUPPORT_CLOSE,
     SUPPORT_OPEN, SUPPORT_SET_POSITION, SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP, CoverDevice)
-from homeassistant.components.knx import ATTR_DISCOVER_DEVICES, DATA_KNX
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_utc_time_change
+
+from . import ATTR_DISCOVER_DEVICES, DATA_KNX
 
 CONF_MOVE_LONG_ADDRESS = 'move_long_address'
 CONF_MOVE_SHORT_ADDRESS = 'move_short_address'
@@ -30,8 +25,6 @@ CONF_INVERT_ANGLE = 'invert_angle'
 
 DEFAULT_TRAVEL_TIME = 25
 DEFAULT_NAME = 'KNX Cover'
-DEPENDENCIES = ['knx']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_MOVE_LONG_ADDRESS): cv.string,
@@ -49,8 +42,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up cover(s) for KNX platform."""
     if discovery_info is not None:
         async_add_entities_discovery(hass, discovery_info, async_add_entities)

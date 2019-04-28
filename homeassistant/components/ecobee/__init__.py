@@ -1,9 +1,4 @@
-"""
-Support for Ecobee.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/ecobee/
-"""
+"""Support for Ecobee devices."""
 import logging
 import os
 from datetime import timedelta
@@ -15,8 +10,6 @@ from homeassistant.helpers import discovery
 from homeassistant.const import CONF_API_KEY
 from homeassistant.util import Throttle
 from homeassistant.util.json import save_json
-
-REQUIREMENTS = ['python-ecobee-api==0.0.18']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +27,7 @@ NETWORK = None
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_HOLD_TEMP, default=False): cv.boolean
+        vol.Optional(CONF_HOLD_TEMP, default=False): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
 

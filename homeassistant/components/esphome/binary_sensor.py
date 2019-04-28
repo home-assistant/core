@@ -1,17 +1,15 @@
 """Support for ESPHome binary sensors."""
 import logging
-
 from typing import TYPE_CHECKING, Optional
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.esphome import EsphomeEntity, \
-    platform_async_setup_entry
+
+from . import EsphomeEntity, platform_async_setup_entry
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import
     from aioesphomeapi import BinarySensorInfo, BinarySensorState  # noqa
 
-DEPENDENCIES = ['esphome']
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -40,7 +38,7 @@ class EsphomeBinarySensor(EsphomeEntity, BinarySensorDevice):
         return super()._state
 
     @property
-    def is_on(self):
+    def is_on(self) -> Optional[bool]:
         """Return true if the binary sensor is on."""
         if self._static_info.is_status_binary_sensor:
             # Status binary sensors indicated connected state.
@@ -51,12 +49,12 @@ class EsphomeBinarySensor(EsphomeEntity, BinarySensorDevice):
         return self._state.state
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return self._static_info.device_class
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         if self._static_info.is_status_binary_sensor:
             return True

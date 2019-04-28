@@ -1,9 +1,4 @@
-"""
-Support for NuHeat thermostats.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/nuheat/
-"""
+"""Support for NuHeat thermostats."""
 import logging
 
 import voluptuous as vol
@@ -12,11 +7,9 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_DEVICES
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 
-REQUIREMENTS = ["nuheat==0.3.0"]
-
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "nuheat"
+DOMAIN = 'nuheat'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({

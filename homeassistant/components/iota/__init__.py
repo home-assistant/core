@@ -1,9 +1,4 @@
-"""
-Support for IOTA wallets.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/iota/
-"""
+"""Support for IOTA wallets."""
 import logging
 from datetime import timedelta
 
@@ -12,8 +7,6 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['pyota==2.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 

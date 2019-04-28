@@ -1,11 +1,4 @@
-"""
-Support for getting information from Arduino pins.
-
-Only analog pins are supported.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.arduino/
-"""
+"""Support for getting information from Arduino pins."""
 import logging
 
 import voluptuous as vol
@@ -20,8 +13,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_PINS = 'pins'
 CONF_TYPE = 'analog'
-
-DEPENDENCIES = ['arduino']
 
 PIN_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,

@@ -11,8 +11,7 @@ from tests.common import mock_coro
 
 def mock_cloud(hass, config={}):
     """Mock cloud."""
-    with patch('homeassistant.components.cloud.Cloud.async_start',
-               return_value=mock_coro()):
+    with patch('hass_nabucasa.Cloud.start', return_value=mock_coro()):
         assert hass.loop.run_until_complete(async_setup_component(
             hass, cloud.DOMAIN, {
                 'cloud': config
@@ -27,8 +26,8 @@ def mock_cloud_prefs(hass, prefs={}):
     prefs_to_set = {
         const.PREF_ENABLE_ALEXA: True,
         const.PREF_ENABLE_GOOGLE: True,
-        const.PREF_GOOGLE_ALLOW_UNLOCK: True,
+        const.PREF_GOOGLE_SECURE_DEVICES_PIN: None,
     }
     prefs_to_set.update(prefs)
-    hass.data[cloud.DOMAIN].prefs._prefs = prefs_to_set
+    hass.data[cloud.DOMAIN].client._prefs._prefs = prefs_to_set
     return prefs_to_set

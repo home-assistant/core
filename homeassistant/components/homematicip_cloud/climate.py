@@ -1,22 +1,19 @@
-"""
-Support for HomematicIP Cloud climate devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.homematicip_cloud/
-"""
+"""Support for HomematicIP Cloud climate devices."""
 import logging
 
-from homeassistant.components.climate import (
-    ATTR_TEMPERATURE, STATE_AUTO, STATE_MANUAL, SUPPORT_TARGET_TEMPERATURE,
-    ClimateDevice)
-from homeassistant.components.homematicip_cloud import (
-    HMIPC_HAPID, HomematicipGenericDevice)
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
-from homeassistant.const import TEMP_CELSIUS
+from homematicip.aio.group import AsyncHeatingGroup
+from homematicip.aio.home import AsyncHome
+
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
+    STATE_AUTO, STATE_MANUAL, SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+
+from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
 _LOGGER = logging.getLogger(__name__)
-
-STATE_BOOST = 'Boost'
 
 HA_STATE_TO_HMIP = {
     STATE_AUTO: 'AUTOMATIC',
@@ -32,14 +29,13 @@ async def async_setup_platform(
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
+                            async_add_entities) -> None:
     """Set up the HomematicIP climate from a config entry."""
-    from homematicip.group import HeatingGroup
-
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for device in home.groups:
-        if isinstance(device, HeatingGroup):
+        if isinstance(device, AsyncHeatingGroup):
             devices.append(HomematicipHeatingGroup(home, device))
 
     if devices:
@@ -49,48 +45,48 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
     """Representation of a HomematicIP heating group."""
 
-    def __init__(self, home, device):
+    def __init__(self, home: AsyncHome, device) -> None:
         """Initialize heating group."""
         device.modelType = 'Group-Heating'
         super().__init__(home, device)
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return TEMP_CELSIUS
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Return the list of supported features."""
         return SUPPORT_TARGET_TEMPERATURE
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self._device.setPointTemperature
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float:
         """Return the current temperature."""
         return self._device.actualTemperature
 
     @property
-    def current_humidity(self):
+    def current_humidity(self) -> int:
         """Return the current humidity."""
         return self._device.humidity
 
     @property
-    def current_operation(self):
+    def current_operation(self) -> str:
         """Return current operation ie. automatic or manual."""
         return HMIP_STATE_TO_HA.get(self._device.controlMode)
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._device.minTemperature
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._device.maxTemperature
 

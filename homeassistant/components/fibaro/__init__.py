@@ -1,10 +1,4 @@
-"""
-Support for the Fibaro devices.
-
-For more details about this platform, please refer to the documentation.
-https://home-assistant.io/components/fibaro/
-"""
-
+"""Support for the Fibaro devices."""
 import logging
 from collections import defaultdict
 from typing import Optional
@@ -19,22 +13,21 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import convert, slugify
 
-REQUIREMENTS = ['fiblary3==0.1.7']
-
 _LOGGER = logging.getLogger(__name__)
-DOMAIN = 'fibaro'
-FIBARO_DEVICES = 'fibaro_devices'
-FIBARO_CONTROLLERS = 'fibaro_controllers'
-ATTR_CURRENT_POWER_W = "current_power_w"
-ATTR_CURRENT_ENERGY_KWH = "current_energy_kwh"
-CONF_PLUGINS = "plugins"
-CONF_GATEWAYS = 'gateways'
-CONF_DIMMING = "dimming"
-CONF_COLOR = "color"
-CONF_RESET_COLOR = "reset_color"
-CONF_DEVICE_CONFIG = "device_config"
 
-FIBARO_COMPONENTS = ['binary_sensor', 'cover', 'light',
+ATTR_CURRENT_ENERGY_KWH = 'current_energy_kwh'
+ATTR_CURRENT_POWER_W = 'current_power_w'
+
+CONF_COLOR = 'color'
+CONF_DEVICE_CONFIG = 'device_config'
+CONF_DIMMING = 'dimming'
+CONF_GATEWAYS = 'gateways'
+CONF_PLUGINS = 'plugins'
+CONF_RESET_COLOR = 'reset_color'
+DOMAIN = 'fibaro'
+FIBARO_CONTROLLERS = 'fibaro_controllers'
+FIBARO_DEVICES = 'fibaro_devices'
+FIBARO_COMPONENTS = ['binary_sensor', 'climate', 'cover', 'light',
                      'scene', 'sensor', 'switch']
 
 FIBARO_TYPEMAP = {
@@ -52,7 +45,11 @@ FIBARO_TYPEMAP = {
     'com.fibaro.remoteSwitch': 'switch',
     'com.fibaro.sensor': 'sensor',
     'com.fibaro.colorController': 'light',
-    'com.fibaro.securitySensor': 'binary_sensor'
+    'com.fibaro.securitySensor': 'binary_sensor',
+    'com.fibaro.hvac': 'climate',
+    'com.fibaro.setpoint': 'climate',
+    'com.fibaro.FGT001': 'climate',
+    'com.fibaro.thermostatDanfoss': 'climate'
 }
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
@@ -78,8 +75,7 @@ GATEWAY_CONFIG = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_GATEWAYS):
-            vol.All(cv.ensure_list, [GATEWAY_CONFIG])
+        vol.Required(CONF_GATEWAYS): vol.All(cv.ensure_list, [GATEWAY_CONFIG]),
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -91,20 +87,19 @@ class FibaroController():
         """Initialize the Fibaro controller."""
         from fiblary3.client.v4.client import Client as FibaroClient
 
-        self._client = FibaroClient(config[CONF_URL],
-                                    config[CONF_USERNAME],
-                                    config[CONF_PASSWORD])
+        self._client = FibaroClient(
+            config[CONF_URL], config[CONF_USERNAME], config[CONF_PASSWORD])
         self._scene_map = None
         # Whether to import devices from plugins
         self._import_plugins = config[CONF_PLUGINS]
         self._device_config = config[CONF_DEVICE_CONFIG]
-        self._room_map = None         # Mapping roomId to room object
-        self._device_map = None       # Mapping deviceId to device object
-        self.fibaro_devices = None    # List of devices by type
-        self._callbacks = {}          # Update value callbacks by deviceId
-        self._state_handler = None    # Fiblary's StateHandler object
+        self._room_map = None  # Mapping roomId to room object
+        self._device_map = None  # Mapping deviceId to device object
+        self.fibaro_devices = None  # List of devices by type
+        self._callbacks = {}  # Update value callbacks by deviceId
+        self._state_handler = None  # Fiblary's StateHandler object
         self._excluded_devices = config[CONF_EXCLUDE]
-        self.hub_serial = None          # Unique serial number of the hub
+        self.hub_serial = None   # Unique serial number of the hub
 
     def connect(self):
         """Start the communication with the Fibaro controller."""
@@ -118,7 +113,7 @@ class FibaroController():
             return False
         if login is None or login.status is False:
             _LOGGER.error("Invalid login for Fibaro HC. "
-                          "Please check username and password.")
+                          "Please check username and password")
             return False
 
         self._room_map = {room.id: room for room in self._client.rooms.list()}
@@ -172,6 +167,16 @@ class FibaroController():
         """Register device with a callback for updates."""
         self._callbacks[device_id] = callback
 
+    def get_children(self, device_id):
+        """Get a list of child devices."""
+        return [
+            device for device in self._device_map.values()
+            if device.parentId == device_id]
+
+    def get_siblings(self, device_id):
+        """Get the siblings of a device."""
+        return self.get_children(self._device_map[device_id].parentId)
+
     @staticmethod
     def _map_device_to_type(device):
         """Map device to HA device type."""
@@ -215,9 +220,9 @@ class FibaroController():
                 room_name = self._room_map[device.roomID].name
             device.room_name = room_name
             device.friendly_name = '{} {}'.format(room_name, device.name)
-            device.ha_id = '{}_{}_{}'.format(
+            device.ha_id = 'scene_{}_{}_{}'.format(
                 slugify(room_name), slugify(device.name), device.id)
-            device.unique_id_str = "{}.{}".format(
+            device.unique_id_str = "{}.scene.{}".format(
                 self.hub_serial, device.id)
             self._scene_map[device.id] = device
             self.fibaro_devices['scene'].append(device)
@@ -227,6 +232,7 @@ class FibaroController():
         devices = self._client.devices.list()
         self._device_map = {}
         self.fibaro_devices = defaultdict(list)
+        last_climate_parent = None
         for device in devices:
             try:
                 device.fibaro_controller = self
@@ -247,15 +253,26 @@ class FibaroController():
                         self._device_config.get(device.ha_id, {})
                 else:
                     device.mapped_type = None
-                if device.mapped_type:
+                dtype = device.mapped_type
+                if dtype:
                     device.unique_id_str = "{}.{}".format(
                         self.hub_serial, device.id)
                     self._device_map[device.id] = device
-                    self.fibaro_devices[device.mapped_type].append(device)
-                _LOGGER.debug("%s (%s, %s) -> %s. Prop: %s Actions: %s",
+                    if dtype != 'climate':
+                        self.fibaro_devices[dtype].append(device)
+                    else:
+                        # if a sibling of this has been added, skip this one
+                        # otherwise add the first visible device in the group
+                        # which is a hack, but solves a problem with FGT having
+                        # hidden compatibility devices before the real device
+                        if last_climate_parent != device.parentId and \
+                                device.visible:
+                            self.fibaro_devices[dtype].append(device)
+                            last_climate_parent = device.parentId
+                _LOGGER.debug("%s (%s, %s) -> %s %s",
                               device.ha_id, device.type,
-                              device.baseType, device.mapped_type,
-                              str(device.properties), str(device.actions))
+                              device.baseType, dtype,
+                              str(device))
             except (KeyError, ValueError):
                 pass
 

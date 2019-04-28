@@ -1,9 +1,4 @@
-"""
-Support for Roku platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/roku/
-"""
+"""Support for Roku."""
 import logging
 
 import voluptuous as vol
@@ -12,8 +7,6 @@ from homeassistant.components.discovery import SERVICE_ROKU
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['python-roku==3.1.5']
 
 _LOGGER = logging.getLogger(__name__)
 

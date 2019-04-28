@@ -1,19 +1,10 @@
-"""IHC binary sensor platform.
+"""Support for IHC binary sensors."""
+from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.const import CONF_TYPE
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.ihc/
-"""
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice)
-from homeassistant.components.ihc import (
-    IHC_DATA, IHC_CONTROLLER, IHC_INFO)
-from homeassistant.components.ihc.const import (
-    CONF_INVERTING)
-from homeassistant.components.ihc.ihcdevice import IHCDevice
-from homeassistant.const import (
-    CONF_TYPE)
-
-DEPENDENCIES = ['ihc']
+from . import IHC_CONTROLLER, IHC_DATA, IHC_INFO
+from .const import CONF_INVERTING
+from .ihcdevice import IHCDevice
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -31,10 +22,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         info = hass.data[ihc_key][IHC_INFO]
         ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
 
-        sensor = IHCBinarySensor(ihc_controller, name, ihc_id, info,
-                                 product_cfg.get(CONF_TYPE),
-                                 product_cfg[CONF_INVERTING],
-                                 product)
+        sensor = IHCBinarySensor(
+            ihc_controller, name, ihc_id, info, product_cfg.get(CONF_TYPE),
+            product_cfg[CONF_INVERTING], product)
         devices.append(sensor)
     add_entities(devices)
 

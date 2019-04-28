@@ -1,9 +1,4 @@
-"""
-Allow to configure a SCSGate cover.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.scsgate/
-"""
+"""Support for SCSGate covers."""
 import logging
 
 import voluptuous as vol
@@ -14,8 +9,6 @@ from homeassistant.const import (CONF_DEVICES, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['scsgate']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICES):

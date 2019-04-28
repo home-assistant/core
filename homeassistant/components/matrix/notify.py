@@ -1,9 +1,4 @@
-"""
-Matrix notification service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.matrix/
-"""
+"""Support for Matrix notifications."""
 import logging
 
 import voluptuous as vol
@@ -18,8 +13,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_DEFAULT_ROOM = 'default_room'
 
 DOMAIN = 'matrix'
-DEPENDENCIES = [DOMAIN]
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEFAULT_ROOM): cv.string,
 })

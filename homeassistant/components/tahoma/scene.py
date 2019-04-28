@@ -1,16 +1,9 @@
-"""
-Support for Tahoma scenes.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/scene.tahoma/
-"""
+"""Support for Tahoma scenes."""
 import logging
 
 from homeassistant.components.scene import Scene
-from homeassistant.components.tahoma import (
-    DOMAIN as TAHOMA_DOMAIN)
 
-DEPENDENCIES = ['tahoma']
+from . import DOMAIN as TAHOMA_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

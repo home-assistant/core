@@ -1,9 +1,4 @@
-"""Huawei LTE sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.huawei_lte/
-"""
-
+"""Support for Huawei LTE sensors."""
 import logging
 import re
 
@@ -19,10 +14,7 @@ import homeassistant.helpers.config_validation as cv
 
 from ..huawei_lte import DATA_KEY, RouterData
 
-
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['huawei_lte']
 
 DEFAULT_NAME_TEMPLATE = 'Huawei {} {}'
 
@@ -118,8 +110,8 @@ def setup_platform(
     sensors = []
     for path in config.get(CONF_MONITORED_CONDITIONS):
         data.subscribe(path)
-        sensors.append(HuaweiLteSensor(
-            data, path, SENSOR_META.get(path, {})))
+        sensors.append(HuaweiLteSensor(data, path, SENSOR_META.get(path, {})))
+
     add_entities(sensors, True)
 
 

@@ -1,20 +1,26 @@
-"""
-Support for the Hive devices.
+"""Support for the Hive climate devices."""
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
+    STATE_AUTO, STATE_HEAT, SUPPORT_AUX_HEAT, SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.const import (
+    ATTR_TEMPERATURE, STATE_OFF, STATE_ON, TEMP_CELSIUS)
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.hive/
-"""
-from homeassistant.components.climate import (
-    ClimateDevice, STATE_AUTO, STATE_HEAT, STATE_OFF, STATE_ON,
-    SUPPORT_AUX_HEAT, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.components.hive import DATA_HIVE, DOMAIN
+from . import DATA_HIVE, DOMAIN
 
-DEPENDENCIES = ['hive']
-HIVE_TO_HASS_STATE = {'SCHEDULE': STATE_AUTO, 'MANUAL': STATE_HEAT,
-                      'ON': STATE_ON, 'OFF': STATE_OFF}
-HASS_TO_HIVE_STATE = {STATE_AUTO: 'SCHEDULE', STATE_HEAT: 'MANUAL',
-                      STATE_ON: 'ON', STATE_OFF: 'OFF'}
+HIVE_TO_HASS_STATE = {
+    'SCHEDULE': STATE_AUTO,
+    'MANUAL': STATE_HEAT,
+    'ON': STATE_ON,
+    'OFF': STATE_OFF,
+}
+
+HASS_TO_HIVE_STATE = {
+    STATE_AUTO: 'SCHEDULE',
+    STATE_HEAT: 'MANUAL',
+    STATE_ON: 'ON',
+    STATE_OFF: 'OFF',
+}
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
                  SUPPORT_OPERATION_MODE |
@@ -42,8 +48,8 @@ class HiveClimateEntity(ClimateDevice):
             self.thermostat_node_id = hivedevice["Thermostat_NodeID"]
         self.session = hivesession
         self.attributes = {}
-        self.data_updatesource = '{}.{}'.format(self.device_type,
-                                                self.node_id)
+        self.data_updatesource = '{}.{}'.format(
+            self.device_type, self.node_id)
         self._unique_id = '{}-{}'.format(self.node_id, self.device_type)
 
         if self.device_type == "Heating":

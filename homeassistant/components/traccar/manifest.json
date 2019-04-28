@@ -1,0 +1,13 @@
+{
+  "domain": "traccar",
+  "name": "Traccar",
+  "documentation": "https://www.home-assistant.io/components/traccar",
+  "requirements": [
+    "pytraccar==0.8.0",
+    "stringcase==1.2.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@ludeeus"
+  ]
+}

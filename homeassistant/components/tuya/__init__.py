@@ -1,9 +1,4 @@
-"""
-Support for Tuya Smart devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tuya/
-"""
+"""Support for Tuya Smart devices."""
 from datetime import timedelta
 import logging
 import voluptuous as vol
@@ -16,8 +11,6 @@ from homeassistant.helpers.dispatcher import (
     dispatcher_send, async_dispatcher_connect)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
-
-REQUIREMENTS = ['tuyapy==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,9 +1,4 @@
-"""
-Support for Eufy lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.eufy/
-"""
+"""Support for Eufy lights."""
 import logging
 
 from homeassistant.components.light import (
@@ -15,8 +10,6 @@ import homeassistant.util.color as color_util
 from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
     color_temperature_kelvin_to_mired as kelvin_to_mired)
-
-DEPENDENCIES = ['eufy']
 
 _LOGGER = logging.getLogger(__name__)
 

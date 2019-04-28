@@ -1,9 +1,4 @@
-"""
-Support for Vera devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/vera/
-"""
+"""Support for Vera devices."""
 import logging
 from collections import defaultdict
 
@@ -18,8 +13,6 @@ from homeassistant.const import (
     ATTR_ARMED, ATTR_BATTERY_LEVEL, ATTR_LAST_TRIP_TIME, ATTR_TRIPPED,
     EVENT_HOMEASSISTANT_STOP, CONF_LIGHTS, CONF_EXCLUDE)
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['pyvera==0.2.45']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +36,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_CONTROLLER): cv.url,
         vol.Optional(CONF_EXCLUDE, default=[]): VERA_ID_LIST_SCHEMA,
-        vol.Optional(CONF_LIGHTS, default=[]): VERA_ID_LIST_SCHEMA
+        vol.Optional(CONF_LIGHTS, default=[]): VERA_ID_LIST_SCHEMA,
     }),
 }, extra=vol.ALLOW_EXTRA)
 

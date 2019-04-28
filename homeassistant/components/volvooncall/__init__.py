@@ -1,32 +1,25 @@
-"""
-Support for Volvo On Call.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/volvooncall/
-"""
-from datetime import timedelta
+"""Support for Volvo On Call."""
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
-                                 CONF_NAME, CONF_RESOURCES,
-                                 CONF_UPDATE_INTERVAL)
-from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.const import (
+    CONF_NAME, CONF_PASSWORD, CONF_RESOURCES, CONF_SCAN_INTERVAL, CONF_USERNAME
+)
+from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send,
-    async_dispatcher_connect)
+    async_dispatcher_connect, async_dispatcher_send
+)
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
 DOMAIN = 'volvooncall'
 
 DATA_KEY = DOMAIN
-
-REQUIREMENTS = ['volvooncall==0.8.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +38,7 @@ COMPONENTS = {
     'binary_sensor': 'binary_sensor',
     'lock': 'lock',
     'device_tracker': 'device_tracker',
-    'switch': 'switch'
+    'switch': 'switch',
 }
 
 RESOURCES = [
@@ -91,8 +84,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): (
-            vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))),
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_UPDATE_INTERVAL):
+            vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)),
         vol.Optional(CONF_NAME, default={}):
             cv.schema_with_slug_keys(cv.string),
         vol.Optional(CONF_RESOURCES): vol.All(
@@ -101,7 +94,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_SERVICE_URL): cv.string,
         vol.Optional(CONF_MUTABLE, default=True): cv.boolean,
         vol.Optional(CONF_SCANDINAVIAN_MILES, default=False): cv.boolean,
-    }),
+    })
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -117,7 +110,7 @@ async def async_setup(hass, config):
         service_url=config[DOMAIN].get(CONF_SERVICE_URL),
         region=config[DOMAIN].get(CONF_REGION))
 
-    interval = config[DOMAIN].get(CONF_UPDATE_INTERVAL)
+    interval = config[DOMAIN][CONF_SCAN_INTERVAL]
 
     data = hass.data[DATA_KEY] = VolvoData(config)
 

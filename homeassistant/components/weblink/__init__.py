@@ -1,9 +1,4 @@
-"""
-Support for links to external web pages.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/weblink/
-"""
+"""Support for links to external web pages."""
 import logging
 
 import voluptuous as vol
