@@ -160,33 +160,19 @@ class EntityRegistry:
 
     @callback
     def async_update_entity(self, entity_id, *, name=_UNDEF,
-                            new_entity_id=_UNDEF):
+                            new_entity_id=_UNDEF, new_unique_id=_UNDEF):
         """Update properties of an entity."""
         return self._async_update_entity(
             entity_id,
             name=name,
-            new_entity_id=new_entity_id
+            new_entity_id=new_entity_id,
+            new_unique_id=new_unique_id
         )
-
-    @callback
-    def async_migrate_entity_unique_id(self, from_unique_id, to_unique_id):
-        """Migrate unique_id of a device."""
-        conflict = next((entity for entity in self.entities.values()
-                         if entity.unique_id == to_unique_id), None)
-        if conflict:
-            raise ValueError("Unique id '{}' is already in use by '{}'".format(
-                to_unique_id, conflict.entity_id))
-        old = next(entity for entity in self.entities.values()
-                   if entity.unique_id == from_unique_id)
-        new = self.entities[old.entity_id] = attr.evolve(
-            old, unique_id=to_unique_id)
-        self.async_schedule_save()
-        return new
 
     @callback
     def _async_update_entity(self, entity_id, *, name=_UNDEF,
                              config_entry_id=_UNDEF, new_entity_id=_UNDEF,
-                             device_id=_UNDEF):
+                             device_id=_UNDEF, new_unique_id=_UNDEF):
         """Private facing update properties method."""
         old = self.entities[entity_id]
 
@@ -215,6 +201,17 @@ class EntityRegistry:
 
             self.entities.pop(entity_id)
             entity_id = changes['entity_id'] = new_entity_id
+
+        if new_unique_id is not _UNDEF:
+            conflict = next((entity for entity in self.entities.values()
+                             if entity.unique_id == new_unique_id
+                             and entity.domain == old.domain
+                             and entity.platform == old.platform), None)
+            if conflict:
+                raise ValueError(
+                    "Unique id '{}' is already in use by '{}'".format(
+                        new_unique_id, conflict.entity_id))
+            changes['unique_id'] = new_unique_id
 
         if not changes:
             return old

@@ -361,17 +361,25 @@ async def test_update(registry):
         config_entry_id='1234',
         connections={
             (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:AB:CD:EF')
-        })
-
+        },
+        identifiers={('hue', '456'), ('bla', '123')})
+    new_identifiers = {
+        ('hue', '654'),
+        ('bla', '321')
+    }
     assert not entry.area_id
     assert not entry.name_by_user
 
-    updated_entry = registry.async_update_device(
-        entry.id, area_id='12345A', name_by_user='Test Friendly Name')
+    with patch.object(registry, 'async_schedule_save') as mock_save:
+        updated_entry = registry.async_update_device(
+            entry.id, area_id='12345A', name_by_user='Test Friendly Name',
+            new_identifiers=new_identifiers)
 
+    assert mock_save.call_count == 1
     assert updated_entry != entry
     assert updated_entry.area_id == '12345A'
     assert updated_entry.name_by_user == 'Test Friendly Name'
+    assert updated_entry.identifiers == new_identifiers
 
 
 async def test_loading_race_condition(hass):
@@ -386,21 +394,3 @@ async def test_loading_race_condition(hass):
 
         mock_load.assert_called_once_with()
         assert results[0] == results[1]
-
-
-async def test_migrate_device_identifiers(registry):
-    """Test identifies of a device update."""
-    entry = registry.async_get_or_create(
-        config_entry_id='1234',
-        identifiers={('hue', '456'), ('bla', '123')},
-    )
-    new_identifiers = {
-        ('hue', '654'),
-        ('bla', '321')
-    }
-    with patch.object(registry, 'async_schedule_save') as mock_save:
-        updated_entry = registry.async_migrate_device_identifiers(
-            entry.id, new_identifiers)
-    assert updated_entry != entry
-    assert updated_entry.identifiers == new_identifiers
-    assert mock_save.call_count == 1
