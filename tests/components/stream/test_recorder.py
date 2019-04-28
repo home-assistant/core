@@ -72,12 +72,12 @@ async def test_recorder_timeout(hass, hass_client):
 async def test_recorder_save():
     """Test recorder save."""
     # Setup
-    source = open(generate_h264_video(), 'rb')
-    output = BytesIO()
-    output.name = 'test.mp4'
+    with open(generate_h264_video(), 'rb') as source:
+        output = BytesIO()
+        output.name = 'test.mp4'
 
-    # Run
-    recorder_save_worker(output, [Segment(1, source, 4)])
+        # Run
+        recorder_save_worker(output, [Segment(1, source, 4)])
 
-    # Assert
-    assert output.getvalue()
+        # Assert
+        assert output.getvalue()
