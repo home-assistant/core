@@ -2,14 +2,18 @@
 import logging
 
 from homematicip.aio.device import (
-    AsyncBrandSwitchMeasuring, AsyncDimmer, AsyncPluggableDimmer,
-    AsyncBrandDimmer, AsyncFullFlushDimmer,
-    AsyncBrandSwitchNotificationLight)
+    AsyncBrandDimmer, AsyncBrandSwitchMeasuring,
+    AsyncBrandSwitchNotificationLight, AsyncDimmer, AsyncFullFlushDimmer,
+    AsyncPluggableDimmer)
+from homematicip.aio.home import AsyncHome
 from homematicip.base.enums import RGBColorState
+from homematicip.base.functionalChannels import NotificationLightChannel
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_NAME, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR, Light)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
@@ -25,7 +29,8 @@ async def async_setup_platform(
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
+                            async_add_entities) -> None:
     """Set up the HomematicIP Cloud lights from a config entry."""
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
@@ -50,12 +55,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class HomematicipLight(HomematicipGenericDevice, Light):
     """Representation of a HomematicIP Cloud light device."""
 
-    def __init__(self, home, device):
+    def __init__(self, home: AsyncHome, device) -> None:
         """Initialize the light device."""
         super().__init__(home, device)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._device.on
 
@@ -85,25 +90,25 @@ class HomematicipLightMeasuring(HomematicipLight):
 class HomematicipDimmer(HomematicipGenericDevice, Light):
     """Representation of HomematicIP Cloud dimmer light device."""
 
-    def __init__(self, home, device):
+    def __init__(self, home: AsyncHome, device) -> None:
         """Initialize the dimmer light device."""
         super().__init__(home, device)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._device.dimLevel is not None and \
             self._device.dimLevel > 0.0
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         if self._device.dimLevel:
             return int(self._device.dimLevel*255)
         return 0
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORT_BRIGHTNESS
 
@@ -122,7 +127,7 @@ class HomematicipDimmer(HomematicipGenericDevice, Light):
 class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     """Representation of HomematicIP Cloud dimmer light device."""
 
-    def __init__(self, home, device, channel):
+    def __init__(self, home: AsyncHome, device, channel: int) -> None:
         """Initialize the dimmer light device."""
         self.channel = channel
         if self.channel == 2:
@@ -141,24 +146,24 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
         }
 
     @property
-    def _func_channel(self):
+    def _func_channel(self) -> NotificationLightChannel:
         return self._device.functionalChannels[self.channel]
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._func_channel.dimLevel is not None and \
             self._func_channel.dimLevel > 0.0
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         if self._func_channel.dimLevel:
             return int(self._func_channel.dimLevel * 255)
         return 0
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple:
         """Return the hue and saturation color value [float, float]."""
         simple_rgb_color = self._func_channel.simpleRGBColorState
         return self._color_switcher.get(simple_rgb_color, [0.0, 0.0])
@@ -172,12 +177,12 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
         return attr
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the generic device."""
         return "{} {}".format(super().name, 'Notification')
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 

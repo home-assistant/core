@@ -1047,6 +1047,11 @@ class CastDevice(MediaPlayerDevice):
         return images[0].url if images and images[0].url else None
 
     @property
+    def media_image_remotely_accessible(self) -> bool:
+        """If the image url is remotely accessible."""
+        return True
+
+    @property
     def media_title(self):
         """Title of current playing media."""
         media_status, _ = self._media_status()
