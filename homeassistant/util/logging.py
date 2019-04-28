@@ -171,20 +171,18 @@ def catch_log_coro_exception(
         format_err: Callable[..., Any],
         *args: Any) -> Coroutine[Any, Any, Any]:
     """Decorate a coroutine to catch and log exceptions."""
-    def log_exception(*args: Any) -> None:
-        module_name = inspect.getmodule(inspect.trace()[1][0]).__name__
-        # Do not print the wrapper in the traceback
-        frames = len(inspect.trace()) - 1
-        exc_msg = traceback.format_exc(-frames)
-        friendly_msg = format_err(*args)
-        logging.getLogger(module_name).error('%s\n%s', friendly_msg, exc_msg)
-
     async def coro_wrapper(*args: Any) -> Any:
         """Catch and log exception."""
         try:
             return await target
         except Exception:  # pylint: disable=broad-except
-            log_exception(*args)
+            module_name = inspect.getmodule(inspect.trace()[1][0]).__name__
+            # Do not print the wrapper in the traceback
+            frames = len(inspect.trace()) - 1
+            exc_msg = traceback.format_exc(-frames)
+            friendly_msg = format_err(*args)
+            logging.getLogger(module_name).error('%s\n%s',
+                                                 friendly_msg, exc_msg)
             return None
     return coro_wrapper()
 
