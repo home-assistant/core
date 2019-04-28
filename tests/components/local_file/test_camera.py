@@ -124,17 +124,19 @@ async def test_update_file_path(hass):
 
     with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
             mock.patch('os.access', mock.Mock(return_value=True)):
+
+        camera_1 = {
+            'platform': 'local_file',
+            'file_path': 'mock/path.jpg'
+            }
+        camera_2 = {
+            'platform': 'local_file',
+            'name': 'local_file_camera_2',
+            'file_path': 'mock/path_2.jpg'
+            }
         await async_setup_component(hass, 'camera', {
-            'camera': [{
-                'platform': 'local_file',
-                'file_path': 'mock/path.jpg'
-            },
-            {
-                'platform': 'local_file',
-                'name': 'local_file_camera_2',
-                'file_path': 'mock/path_2.jpg'
-            }]
-        })
+            'camera': [camera_1, camera_2]
+            })
 
         # Fetch state and check motion detection attribute
         state = hass.states.get('camera.local_file')
