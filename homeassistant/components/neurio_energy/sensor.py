@@ -1,4 +1,4 @@
-"""Neurio Custom"""
+"""Neurio Energy Sensor for Homeassisant."""
 import logging
 import json
 from datetime import timedelta
@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SENSOR_ID): cv.string,
     vol.Optional(CONF_SENSOR_IP): cv.string,
 })
-
+ 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Neurio sensor."""
     api_key = config.get(CONF_API_KEY)
@@ -91,13 +91,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     update_net_consumption()
 
     #Update Dataset
-    add_entities([NeurioEnergy(data, JSON_DATASET, DAILY_TYPE, update_dataset)])
-    # Active power sensor
-    add_entities([NeurioEnergy(data, ACTIVE_NAME, ACTIVE_TYPE, update_active)])
-    add_entities([NeurioEnergy(data, GENERATION_NAME, ACTIVE_TYPE, update_generation)])
-    # Daily power sensor
-    add_entities([NeurioEnergy(data, DAILY_NAME, DAILY_TYPE, update_daily)])
-    add_entities([NeurioEnergy(data, GENERATION_DAILY_NAME, DAILY_TYPE, update_generation_daily)])
+    add_entities([NeurioEnergy(data, \
+        JSON_DATASET, DAILY_TYPE, update_dataset)])
+    #Active power sensor
+    add_entities([NeurioEnergy(data, \
+        ACTIVE_NAME, ACTIVE_TYPE, update_active)])
+    add_entities([NeurioEnergy(data, \
+        GENERATION_NAME, ACTIVE_TYPE, update_generation)])
+    #Daily power sensor
+    add_entities([NeurioEnergy(data, \
+        DAILY_NAME, DAILY_TYPE, update_daily)])
+    add_entities([NeurioEnergy(data, GENERATION_DAILY_NAME, \
+        DAILY_TYPE, update_generation_daily)])
     add_entities([NeurioEnergy(data, NET_CONSUMPTION, DAILY_TYPE, update_net_consumption)])
 
 
@@ -112,14 +117,14 @@ class NeurioData:
         self.api_secret = api_secret
         self.sensor_id = sensor_id
         self.sensor_ip = sensor_ip
-        
+
         self._dataset = None
         self._daily_usage = None
         self._active_power = None
         self._active_generation = None
         self._generation_daily = None
         self._net_consumption = None
-        
+
         self._state = None
 
         neurio_tp = neurio.TokenProvider(key=api_key, secret=api_secret)
@@ -140,17 +145,17 @@ class NeurioData:
     def daily_usage(self):
         """Return latest daily usage value."""
         return self._daily_usage
-    
+
     @property
     def active_power(self):
         """Return latest active power value."""
         return self._active_power
-    
+
     @property
     def active_generation(self):
         """Return latest active power value."""
         return self._active_generation
-    
+
     @property
     def daily_generation(self):
         """Return latest active power value."""
@@ -160,7 +165,7 @@ class NeurioData:
     def net_consumption(self):
         """Return latest active power value."""
         return self._net_consumption
-    
+
     def get_dataset(self):
         """
         Get the most recent data from the api once
@@ -173,7 +178,8 @@ class NeurioData:
         _LOGGER.debug('Start: %s, End: %s', start_time, end_time)
 
         try:
-            self._dataset = self.neurio_client.get_samples_stats(self.sensor_id, start_time, 'days', end_time)
+            self._dataset = self.neurio_client.get_samples_stats \
+                (self.sensor_id, start_time, 'days', end_time)
         except (requests.exceptions.RequestException, ValueError, KeyError):
             _LOGGER.warning("Could not update dataset")
             return None
@@ -181,7 +187,7 @@ class NeurioData:
     def get_active_power(self):
         """Return current power value."""
         header = {'Authorization': 'bearer <token>'}
-        resp = requests.get('http://'+self.sensor_ip+'/current-sample', 
+        resp = requests.get('http://'+self.sensor_ip+'/current-sample',
         headers = header, 
         verify=False)
         try:
@@ -194,11 +200,9 @@ class NeurioData:
     def get_active_generation(self):
         """Return current solar generation value."""
         header = {'Authorization': 'bearer <token>'}
-        resp = requests.get('http://'+self.sensor_ip+'/current-sample', 
+        resp = requests.get('http://'+self.sensor_ip+'/current-sample',
         headers = header, 
         verify=False)
-        #print(resp.status_code)
-        #print(resp.text)
         try:
             sample = json.loads(resp.text)
             self._active_generation = sample['channels'][3]['p_W']
