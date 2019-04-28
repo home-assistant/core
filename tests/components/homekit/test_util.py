@@ -5,8 +5,7 @@ import voluptuous as vol
 from homeassistant.components.homekit.const import (
     CONF_FEATURE, CONF_FEATURE_LIST, CONF_LINKED_BATTERY_SENSOR,
     FEATURE_ON_OFF, FEATURE_PLAY_PAUSE, HOMEKIT_NOTIFY_ID, TYPE_FAUCET,
-    TYPE_OUTLET, TYPE_SHOWER, TYPE_SPRINKLER, TYPE_SWITCH, TYPE_TELEVISION,
-    TYPE_VALVE)
+    TYPE_OUTLET, TYPE_SHOWER, TYPE_SPRINKLER, TYPE_SWITCH, TYPE_VALVE)
 from homeassistant.components.homekit.util import (
     HomeKitSpeedMapping, SpeedRange, convert_to_float, density_to_air_quality,
     dismiss_setup_message, show_setup_message, temperature_to_homekit,
@@ -70,9 +69,6 @@ def test_validate_entity_config():
                                {FEATURE_ON_OFF: {}, FEATURE_PLAY_PAUSE: {}}}}
     assert vec({'media_player.demo': {}}) == \
         {'media_player.demo': {CONF_TYPE: TYPE_SWITCH, CONF_FEATURE_LIST: {}}}
-    assert vec({'media_player.demo': {CONF_TYPE: TYPE_TELEVISION}}) == \
-        {'media_player.demo': {CONF_TYPE: TYPE_TELEVISION,
-         CONF_FEATURE_LIST: {}}}
 
     assert vec({'switch.demo': {CONF_TYPE: TYPE_FAUCET}}) == \
         {'switch.demo': {CONF_TYPE: TYPE_FAUCET}}

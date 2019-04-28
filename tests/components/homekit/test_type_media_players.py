@@ -3,14 +3,15 @@
 from homeassistant.components.homekit.const import (
     ATTR_VALUE, CONF_FEATURE_LIST, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
     FEATURE_PLAY_STOP, FEATURE_SELECT_SOURCE, FEATURE_TOGGLE_MUTE,
-    FEATURE_VOLUME_STEP, TYPE_TELEVISION)
-from homeassistant.components.homekit.type_media_players import MediaPlayer
+    FEATURE_VOLUME_STEP)
+from homeassistant.components.homekit.type_media_players import (
+    MediaPlayer, TelevisionMediaPlayer)
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE, ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_VOLUME_MUTED, DOMAIN)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, CONF_TYPE, STATE_IDLE, STATE_OFF,
-    STATE_ON, STATE_PAUSED, STATE_PLAYING)
+    ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, CONF_TYPE,
+    STATE_IDLE, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING)
 
 
 from tests.common import async_mock_service
@@ -142,14 +143,16 @@ async def test_media_player_television_set_state(hass, hk_driver, events):
         FEATURE_VOLUME_STEP: None}}
     entity_id = 'media_player.television'
 
-    hass.states.async_set(entity_id, None, {ATTR_SUPPORTED_FEATURES: 20873,
+    hass.states.async_set(entity_id, None, {ATTR_DEVICE_CLASS: 'tv',
+                                            ATTR_SUPPORTED_FEATURES: 20873,
                                             ATTR_MEDIA_VOLUME_MUTED: False,
                                             ATTR_INPUT_SOURCE_LIST:
                                             ['HDMI 1', 'HDMI 2', 'HDMI 3',
                                              'HDMI 4']
                                             })
     await hass.async_block_till_done()
-    acc = MediaPlayer(hass, hk_driver, 'MediaPlayer', entity_id, 2, config)
+    acc = TelevisionMediaPlayer(hass, hk_driver, 'MediaPlayer', entity_id, 2,
+                                config)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
