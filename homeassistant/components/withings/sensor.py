@@ -65,6 +65,7 @@ async def async_setup_entry(
                 data={}
             )
         )
+        return
 
     entities = create_sensor_entities(hass, data_manager)
 

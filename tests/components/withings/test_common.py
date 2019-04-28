@@ -4,6 +4,7 @@ import datetime
 from asynctest import patch, MagicMock
 import callee
 import nokia
+from oauthlib.oauth2.rfc6749.errors import MissingTokenError
 import pytest
 from requests_oauthlib import TokenUpdated
 
@@ -183,7 +184,15 @@ async def test_data_manager_async_call():
         assert True
     assert function.call_count == 2
 
-    # Not authenticated.
+    # Not authenticated 1.
+    test_function = MagicMock(side_effect=MissingTokenError('Error Code 401'))
+    try:
+        result = await WithingsDataManager.async_call(test_function)
+        assert False, "An exception should have been thrown."
+    except NotAuthenticatedError:
+        assert True
+
+    # Not authenticated 2.
     test_function = MagicMock(side_effect=Exception('Error Code 401'))
     try:
         result = await WithingsDataManager.async_call(test_function)

@@ -5,6 +5,7 @@ import logging
 import re
 
 import nokia
+from oauthlib.oauth2.rfc6749.errors import MissingTokenError
 from requests_oauthlib import TokenUpdated
 
 from homeassistant.exceptions import PlatformNotReady
@@ -12,7 +13,7 @@ from homeassistant.util import slugify, Throttle
 from . import const
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
-NOT_AUTHENTICATED_ERROR = re.compile("^Error Code (100|101|102|200|401)$", re.IGNORECASE)  # pylint: disable=line-too-long  # noqa: E501
+NOT_AUTHENTICATED_ERROR = re.compile(".*(Error Code (100|101|102|200|401)|Missing access token parameter).*", re.IGNORECASE)  # pylint: disable=line-too-long  # noqa: E501
 
 
 class NotAuthenticatedError(Exception):
@@ -111,10 +112,13 @@ class WithingsDataManager:
             _LOGGER.info("Token updated, re-running call.")
             return await WithingsDataManager.async_call(function, False)
 
+        except MissingTokenError as ex:
+            raise NotAuthenticatedError(ex)
+
         except Exception as ex:  # pylint: disable=broad-except
             # Service error, probably not authenticated.
             if NOT_AUTHENTICATED_ERROR.match(str(ex)):
-                raise NotAuthenticatedError()
+                raise NotAuthenticatedError(ex)
 
             # Probably a network error.
             WithingsDataManager.print_service_unavailable()
