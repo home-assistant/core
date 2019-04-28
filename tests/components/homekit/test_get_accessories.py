@@ -105,6 +105,7 @@ def test_type_covers(type_name, entity_id, state, attrs):
     ('BinarySensor', 'binary_sensor.opening', 'on',
      {ATTR_DEVICE_CLASS: 'opening'}),
     ('BinarySensor', 'device_tracker.someone', 'not_home', {}),
+    ('BinarySensor', 'person.someone', 'home', {}),
     ('AirQualitySensor', 'sensor.air_quality_pm25', '40', {}),
     ('AirQualitySensor', 'sensor.air_quality', '40',
      {ATTR_DEVICE_CLASS: 'pm25'}),
