@@ -76,7 +76,7 @@ class GoogleCalendarData:
         params = dict(DEFAULT_GOOGLE_SEARCH_PARAMS)
         params['calendarId'] = self.calendar_id
         if self.max_results:
-            params['max_results'] = self.max_results
+            params['maxResults'] = self.max_results
         if self.search:
             params['q'] = self.search
 
