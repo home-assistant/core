@@ -26,9 +26,9 @@ CONF_TIME = "time"
 
 ATTR_CANCELED = "canceled"
 ATTR_DELAY_TIME = "number_of_minutes_delayed"
-ATTR_PLANNED_TIME = "planned_time"  # Planned to arrive if no delays occur
-ATTR_ESTIMATED_TIME = "estimated_time"  # ETA to arrive when delays occur
-ATTR_ACTUAL_TIME = "actual_time"  # When it did arrive
+ATTR_PLANNED_TIME = "planned_time"
+ATTR_ESTIMATED_TIME = "estimated_time"
+ATTR_ACTUAL_TIME = "actual_time"
 ATTR_OTHER_INFORMATION = "other_information"
 ATTR_DEVIATIONS = "deviations"
 
@@ -90,9 +90,13 @@ class TrainSensor(Entity):
             when = datetime.combine(date.today(), self._time)
             _LOGGER.debug("self._from_sig: %s, self._to_sig: %s, when: %s",
                           self._from_sig.name, self._to_sig.name, when)
-            self._state = yield from \
-                self._train_api.async_get_train_stop(
-                    self._from_sig, self._to_sig, when)
+            try:
+                self._state = yield from \
+                    self._train_api.async_get_train_stop(
+                        self._from_sig, self._to_sig, when)
+            except ValueError:
+                _LOGGER.debug("API error or no departure found for time %s",
+                              when)
         else:
             when = datetime.now()
             _LOGGER.debug("self._from_sig: %s, self._to_sig: %s, when: %s",
