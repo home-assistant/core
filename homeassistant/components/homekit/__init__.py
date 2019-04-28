@@ -9,7 +9,7 @@ from homeassistant.components import cover
 from homeassistant.const import (
     ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
     CONF_IP_ADDRESS, CONF_NAME, CONF_PORT, CONF_TYPE, DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_TV,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS,
     TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
@@ -141,11 +141,11 @@ def get_accessory(hass, driver, state, aid, config):
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         feature_list = config.get(CONF_FEATURE_LIST)
 
-        if feature_list and \
-                validate_media_player_features(state, feature_list):
-            if device_class == 'tv':
-                a_type = 'TelevisionMediaPlayer'
-            else:
+        if device_class == DEVICE_CLASS_TV:
+            a_type = 'TelevisionMediaPlayer'
+        else:
+            if feature_list and \
+                    validate_media_player_features(state, feature_list):
                 a_type = 'MediaPlayer'
 
     elif state.domain == 'sensor':

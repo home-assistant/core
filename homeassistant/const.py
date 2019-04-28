@@ -185,6 +185,7 @@ DEVICE_CLASS_TEMPERATURE = 'temperature'
 DEVICE_CLASS_TIMESTAMP = 'timestamp'
 DEVICE_CLASS_PRESSURE = 'pressure'
 DEVICE_CLASS_POWER = 'power'
+DEVICE_CLASS_TV = 'tv'
 
 # #### STATES ####
 STATE_ON = 'on'
@@ -317,6 +318,9 @@ ATTR_DEVICE_CLASS = 'device_class'
 
 # Temperature attribute
 ATTR_TEMPERATURE = 'temperature'
+
+# Device classes
+DEVICE_CLASS_BATTERY
 
 # #### UNITS OF MEASUREMENT ####
 # Power units

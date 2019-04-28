@@ -1,9 +1,9 @@
 """Test different accessory types: Media Players."""
 
 from homeassistant.components.homekit.const import (
-    ATTR_VALUE, CONF_FEATURE_LIST, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
-    FEATURE_PLAY_STOP, FEATURE_SELECT_SOURCE, FEATURE_TOGGLE_MUTE,
-    FEATURE_VOLUME_STEP)
+    ATTR_VALUE, CONF_FEATURE_LIST, DEVICE_CLASS_TV, FEATURE_ON_OFF,
+    FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP, FEATURE_SELECT_SOURCE,
+    FEATURE_TOGGLE_MUTE, FEATURE_VOLUME_STEP)
 from homeassistant.components.homekit.type_media_players import (
     MediaPlayer, TelevisionMediaPlayer)
 from homeassistant.components.media_player.const import (
@@ -143,7 +143,7 @@ async def test_media_player_television_set_state(hass, hk_driver, events):
         FEATURE_VOLUME_STEP: None}}
     entity_id = 'media_player.television'
 
-    hass.states.async_set(entity_id, None, {ATTR_DEVICE_CLASS: 'tv',
+    hass.states.async_set(entity_id, None, {ATTR_DEVICE_CLASS: DEVICE_CLASS_TV,
                                             ATTR_SUPPORTED_FEATURES: 20873,
                                             ATTR_MEDIA_VOLUME_MUTED: False,
                                             ATTR_INPUT_SOURCE_LIST:
