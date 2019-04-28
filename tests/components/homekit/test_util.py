@@ -47,44 +47,56 @@ def test_validate_entity_config():
 
     assert vec({}) == {}
     assert vec({'demo.test': {CONF_NAME: 'Name'}}) == \
-        {'demo.test': {CONF_NAME: 'Name'}}
+        {'demo.test': {CONF_NAME: 'Name', CONF_LOW_BATTERY_THRESHOLD: 20}}
 
     assert vec({'binary_sensor.demo': {CONF_LINKED_BATTERY_SENSOR:
                                        'sensor.demo_battery'}}) == \
         {'binary_sensor.demo': {CONF_LINKED_BATTERY_SENSOR:
-                                'sensor.demo_battery'}}
+                                'sensor.demo_battery',
+                                CONF_LOW_BATTERY_THRESHOLD: 20}}
     assert vec({'binary_sensor.demo': {CONF_LOW_BATTERY_THRESHOLD: 50}}) == \
         {'binary_sensor.demo': {CONF_LOW_BATTERY_THRESHOLD: 50}}
 
     assert vec({'alarm_control_panel.demo': {}}) == \
-        {'alarm_control_panel.demo': {ATTR_CODE: None}}
+        {'alarm_control_panel.demo': {ATTR_CODE: None,
+                                      CONF_LOW_BATTERY_THRESHOLD: 20}}
     assert vec({'alarm_control_panel.demo': {ATTR_CODE: '1234'}}) == \
-        {'alarm_control_panel.demo': {ATTR_CODE: '1234'}}
+        {'alarm_control_panel.demo': {ATTR_CODE: '1234',
+                                      CONF_LOW_BATTERY_THRESHOLD: 20}}
 
-    assert vec({'lock.demo': {}}) == {'lock.demo': {ATTR_CODE: None}}
+    assert vec({'lock.demo': {}}) == \
+        {'lock.demo': {ATTR_CODE: None, CONF_LOW_BATTERY_THRESHOLD: 20}}
     assert vec({'lock.demo': {ATTR_CODE: '1234'}}) == \
-        {'lock.demo': {ATTR_CODE: '1234'}}
+        {'lock.demo': {ATTR_CODE: '1234', CONF_LOW_BATTERY_THRESHOLD: 20}}
 
     assert vec({'media_player.demo': {}}) == \
-        {'media_player.demo': {CONF_FEATURE_LIST: {}}}
+        {'media_player.demo': {CONF_FEATURE_LIST: {},
+                               CONF_LOW_BATTERY_THRESHOLD: 20}}
     config = {CONF_FEATURE_LIST: [{CONF_FEATURE: FEATURE_ON_OFF},
                                   {CONF_FEATURE: FEATURE_PLAY_PAUSE}]}
     assert vec({'media_player.demo': config}) == \
         {'media_player.demo': {CONF_FEATURE_LIST:
-                               {FEATURE_ON_OFF: {}, FEATURE_PLAY_PAUSE: {}}}}
+                               {FEATURE_ON_OFF: {}, FEATURE_PLAY_PAUSE: {}},
+                               CONF_LOW_BATTERY_THRESHOLD: 20}}
 
     assert vec({'switch.demo': {CONF_TYPE: TYPE_FAUCET}}) == \
-        {'switch.demo': {CONF_TYPE: TYPE_FAUCET}}
+        {'switch.demo': {CONF_TYPE: TYPE_FAUCET, CONF_LOW_BATTERY_THRESHOLD:
+                         20}}
     assert vec({'switch.demo': {CONF_TYPE: TYPE_OUTLET}}) == \
-        {'switch.demo': {CONF_TYPE: TYPE_OUTLET}}
+        {'switch.demo': {CONF_TYPE: TYPE_OUTLET, CONF_LOW_BATTERY_THRESHOLD:
+                         20}}
     assert vec({'switch.demo': {CONF_TYPE: TYPE_SHOWER}}) == \
-        {'switch.demo': {CONF_TYPE: TYPE_SHOWER}}
+        {'switch.demo': {CONF_TYPE: TYPE_SHOWER, CONF_LOW_BATTERY_THRESHOLD:
+                         20}}
     assert vec({'switch.demo': {CONF_TYPE: TYPE_SPRINKLER}}) == \
-        {'switch.demo': {CONF_TYPE: TYPE_SPRINKLER}}
+        {'switch.demo': {CONF_TYPE: TYPE_SPRINKLER, CONF_LOW_BATTERY_THRESHOLD:
+                         20}}
     assert vec({'switch.demo': {CONF_TYPE: TYPE_SWITCH}}) == \
-        {'switch.demo': {CONF_TYPE: TYPE_SWITCH}}
+        {'switch.demo': {CONF_TYPE: TYPE_SWITCH, CONF_LOW_BATTERY_THRESHOLD:
+                         20}}
     assert vec({'switch.demo': {CONF_TYPE: TYPE_VALVE}}) == \
-        {'switch.demo': {CONF_TYPE: TYPE_VALVE}}
+        {'switch.demo': {CONF_TYPE: TYPE_VALVE, CONF_LOW_BATTERY_THRESHOLD:
+                         20}}
 
 
 def test_validate_media_player_features():
