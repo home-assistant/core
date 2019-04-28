@@ -10,7 +10,7 @@ from pyhap.const import CATEGORY_OTHER
 
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, ATTR_SERVICE,
-    __version__)
+    DEFAULT_LOW_BATTERY_THRESHOLD, __version__)
 from homeassistant.core import callback as ha_callback, split_entity_id
 from homeassistant.helpers.event import (
     async_track_state_change, track_point_in_utc_time)
@@ -24,8 +24,6 @@ from .const import (
 from .util import convert_to_float, dismiss_setup_message, show_setup_message
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_LOW_BATTERY_THRESHOLD = 20
 
 
 def debounce(func):
