@@ -43,7 +43,19 @@ class Integration:
         assert path.is_dir()
         integrations = {}
         for fil in path.iterdir():
-            if fil.is_file() or fil.name == '__pycache__':
+            if (
+                    # Skip files
+                    fil.is_file() or
+                    # Skip Python cache dir
+                    fil.name == '__pycache__'
+            ):
+                continue
+
+            # Skip folders that are empty or just contain a cache dir
+            # These can be caused when integrations are removed from
+            # repo but locally contain a cache dir from when parsed.
+            if all(fil.name == '__pycache__' for fil in fil.iterdir()):
+                print("Warning: skipping empty dir {}".format(fil))
                 continue
 
             integration = cls(fil)
