@@ -1000,6 +1000,7 @@ pycoolmasternet==0.0.4
 pycsspeechtts==1.0.2
 
 # homeassistant.components.cups
+# homeassistant.components.ipp_printer
 # pycups==1.9.73
 
 # homeassistant.components.daikin

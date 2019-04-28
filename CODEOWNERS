@@ -118,6 +118,7 @@ homeassistant/components/integration/* @dgomes
 homeassistant/components/ios/* @robbiet480
 homeassistant/components/ipma/* @dgomes
 homeassistant/components/iqvia/* @bachya
+homeassistant/components/ipp_printer/* @Matte23
 homeassistant/components/irish_rail_transport/* @ttroy50
 homeassistant/components/jewish_calendar/* @tsvi
 homeassistant/components/knx/* @Julius2342

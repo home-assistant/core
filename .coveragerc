@@ -279,6 +279,7 @@ omit =
     homeassistant/components/iota/*
     homeassistant/components/iperf3/*
     homeassistant/components/iqvia/*
+    homeassistant/components/ipp_printer/sensor.py
     homeassistant/components/irish_rail_transport/sensor.py
     homeassistant/components/iss/binary_sensor.py
     homeassistant/components/isy994/*
