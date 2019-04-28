@@ -1,6 +1,7 @@
 """Tests for the Withings component."""
 import time
 from typing import Callable
+from unittest.mock import ANY
 
 from asynctest import MagicMock, patch
 import nokia
@@ -79,7 +80,7 @@ async def test_async_setup_entry(hass: HomeAssistantType):
             async_add_entities
         )
 
-        async_add_entities.assert_called()
+        async_add_entities.assert_called_with(ANY, True)
 
 
 def test_create_sensor_entities_all(hass: HomeAssistantType):
