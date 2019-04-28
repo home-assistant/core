@@ -124,8 +124,8 @@ class TestHelpersEntity:
         self.hass.config.units.temperature_unit = TEMP_CELSIUS
         with patch('homeassistant.helpers.entity.Entity.unit_of_measurement',
                    new=TEMP_FAHRENHEIT), \
-             patch('homeassistant.helpers.entity.Entity.state', new=32), \
-             patch.object(self.hass.states, 'async_set') as async_set_mock:
+                patch('homeassistant.helpers.entity.Entity.state', new=32), \
+                patch.object(self.hass.states, 'async_set') as async_set_mock:
             self.entity.async_write_ha_state()
             self.hass.block_till_done()
             async_set_mock.assert_called_with(
