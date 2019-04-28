@@ -40,6 +40,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+def entity_type_for_device_id(device_id):
+    """Return entity class for protocol of a given device_id.
+
+    Async friendly.
+    """
+    entity_type_mapping = {
+        # KlikAanKlikUit cover have the controls inverted
+        'newkaku': TYPE_INVERTED,
+    }
+    protocol = device_id.split('_')[0]
+    return entity_type_mapping.get(protocol, None)
+
+
 def entity_class_for_type(entity_type):
     """Translate entity type to entity class.
 
@@ -67,7 +80,7 @@ def devices_from_config(domain_config):
             # to entity instantiation
             entity_type = config.pop(CONF_TYPE)
         else:
-            entity_type = TYPE_STANDARD
+            entity_type = entity_type_for_device_id(device_id)
 
         entity_class = entity_class_for_type(entity_type)
         device_config = dict(domain_config[CONF_DEVICE_DEFAULTS], **config)
@@ -139,11 +152,8 @@ class InvertedRflinkCover(RflinkCover):
         """Will invert only the UP/DOWN commands."""
         _LOGGER.debug(
             "Getting command: %s for Rflink device: %s", cmd, self._device_id)
-        if cmd == 'DOWN':
-            cmmnd = 'UP'
-        elif cmd == 'UP':
-            cmmnd = 'DOWN'
-        else:
-            cmmnd = cmd
-
-        await super()._async_send_command(cmmnd, repetitions)
+        cmd_inv = {
+            'UP': 'DOWN',
+            'DOWN': 'UP',
+        }
+        await super()._async_send_command(cmd_inv.get(cmd, cmd), repetitions)
