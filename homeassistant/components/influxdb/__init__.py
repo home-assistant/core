@@ -321,7 +321,9 @@ class InfluxThread(threading.Thread):
 
                 _LOGGER.debug("Wrote %d events", len(json))
                 break
-            except (exceptions.InfluxDBClientError, IOError):
+            except (exceptions.InfluxDBClientError,
+                    requests.exceptions.RequestException,
+                    IOError):
                 if retry < self.max_tries:
                     time.sleep(RETRY_DELAY)
                 else:
