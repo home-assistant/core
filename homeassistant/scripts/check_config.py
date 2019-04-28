@@ -345,8 +345,8 @@ async def check_ha_config_file(hass):
             continue
 
         if (not hass.config.skip_pip and integration.requirements and
-            not await requirements.async_process_requirements(
-                hass, integration.domain, integration.requirements)):
+                not await requirements.async_process_requirements(
+                    hass, integration.domain, integration.requirements)):
             result.add_error("Unable to install all requirements: {}".format(
                 ', '.join(integration.requirements)))
             continue
