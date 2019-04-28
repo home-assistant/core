@@ -1,9 +1,6 @@
 """Support for HomematicIP Cloud climate devices."""
 import logging
 
-from homematicip.aio.group import AsyncHeatingGroup
-from homematicip.aio.home import AsyncHome
-
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     STATE_AUTO, STATE_MANUAL, SUPPORT_TARGET_TEMPERATURE)
@@ -32,6 +29,8 @@ async def async_setup_platform(
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
                             async_add_entities) -> None:
     """Set up the HomematicIP climate from a config entry."""
+    from homematicip.aio.group import AsyncHeatingGroup
+
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for device in home.groups:
@@ -45,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
 class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
     """Representation of a HomematicIP heating group."""
 
-    def __init__(self, home: AsyncHome, device) -> None:
+    def __init__(self, home, device) -> None:
         """Initialize heating group."""
         device.modelType = 'Group-Heating'
         super().__init__(home, device)

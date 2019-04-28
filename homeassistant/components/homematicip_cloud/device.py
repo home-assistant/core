@@ -2,9 +2,6 @@
 import logging
 from typing import Optional
 
-from homematicip.aio.device import AsyncDevice
-from homematicip.aio.home import AsyncHome
-
 from homeassistant.components import homematicip_cloud
 from homeassistant.helpers.entity import Entity
 
@@ -23,7 +20,7 @@ ATTR_GROUP_MEMBER_UNREACHABLE = 'group_member_unreachable'
 class HomematicipGenericDevice(Entity):
     """Representation of an HomematicIP generic device."""
 
-    def __init__(self, home: AsyncHome, device,
+    def __init__(self, home, device,
                  post: Optional[str] = None) -> None:
         """Initialize the generic device."""
         self._home = home
@@ -34,6 +31,7 @@ class HomematicipGenericDevice(Entity):
     @property
     def device_info(self):
         """Return device specific attributes."""
+        from homematicip.aio.device import AsyncDevice
         # Only physical devices should be HA devices.
         if isinstance(self._device, AsyncDevice):
             return {

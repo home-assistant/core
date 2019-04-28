@@ -2,8 +2,6 @@
 import logging
 from typing import Optional
 
-from homematicip.aio.device import AsyncFullFlushShutter
-
 from homeassistant.components.cover import ATTR_POSITION, CoverDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -25,6 +23,8 @@ async def async_setup_platform(
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
                             async_add_entities) -> None:
     """Set up the HomematicIP cover from a config entry."""
+    from homematicip.aio.device import AsyncFullFlushShutter
+
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for device in home.devices:

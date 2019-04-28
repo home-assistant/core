@@ -2,10 +2,6 @@
 """Support for HomematicIP Cloud weather devices."""
 import logging
 
-from homematicip.aio.device import (
-    AsyncWeatherSensor, AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
-from homematicip.aio.home import AsyncHome
-
 from homeassistant.components.weather import WeatherEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
@@ -25,6 +21,10 @@ async def async_setup_platform(
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
                             async_add_entities) -> None:
     """Set up the HomematicIP weather sensor from a config entry."""
+    from homematicip.aio.device import (
+        AsyncWeatherSensor, AsyncWeatherSensorPlus, AsyncWeatherSensorPro,
+    )
+
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for device in home.devices:
@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
 class HomematicipWeatherSensor(HomematicipGenericDevice, WeatherEntity):
     """representation of a HomematicIP Cloud weather sensor plus & basic."""
 
-    def __init__(self, home: AsyncHome, device) -> None:
+    def __init__(self, home, device) -> None:
         """Initialize the weather sensor."""
         super().__init__(home, device)
 

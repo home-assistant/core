@@ -1,13 +1,6 @@
 """Support for HomematicIP Cloud switches."""
 import logging
 
-from homematicip.aio.device import (
-    AsyncBrandSwitchMeasuring, AsyncFullFlushSwitchMeasuring, AsyncMultiIOBox,
-    AsyncOpenCollector8Module, AsyncPlugableSwitch,
-    AsyncPlugableSwitchMeasuring)
-from homematicip.aio.group import AsyncSwitchingGroup
-from homematicip.aio.home import AsyncHome
-
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -27,6 +20,17 @@ async def async_setup_platform(
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
                             async_add_entities) -> None:
     """Set up the HomematicIP switch from a config entry."""
+    from homematicip.aio.device import (
+        AsyncPlugableSwitch,
+        AsyncPlugableSwitchMeasuring,
+        AsyncBrandSwitchMeasuring,
+        AsyncFullFlushSwitchMeasuring,
+        AsyncOpenCollector8Module,
+        AsyncMultiIOBox,
+    )
+
+    from homematicip.aio.group import AsyncSwitchingGroup
+
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for device in home.devices:
@@ -59,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
 class HomematicipSwitch(HomematicipGenericDevice, SwitchDevice):
     """representation of a HomematicIP Cloud switch device."""
 
-    def __init__(self, home: AsyncHome, device) -> None:
+    def __init__(self, home, device) -> None:
         """Initialize the switch device."""
         super().__init__(home, device)
 
@@ -80,7 +84,7 @@ class HomematicipSwitch(HomematicipGenericDevice, SwitchDevice):
 class HomematicipGroupSwitch(HomematicipGenericDevice, SwitchDevice):
     """representation of a HomematicIP switching group."""
 
-    def __init__(self, home: AsyncHome, device, post: str = 'Group') -> None:
+    def __init__(self, home, device, post: str = 'Group') -> None:
         """Initialize switching group."""
         device.modelType = 'HmIP-{}'.format(post)
         super().__init__(home, device, post)
@@ -135,7 +139,7 @@ class HomematicipSwitchMeasuring(HomematicipSwitch):
 class HomematicipMultiSwitch(HomematicipGenericDevice, SwitchDevice):
     """Representation of a HomematicIP Cloud multi switch device."""
 
-    def __init__(self, home: AsyncHome, device, channel: int):
+    def __init__(self, home, device, channel: int):
         """Initialize the multi switch device."""
         self.channel = channel
         super().__init__(home, device, 'Channel{}'.format(channel))

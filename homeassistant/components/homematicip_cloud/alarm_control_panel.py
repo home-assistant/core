@@ -1,10 +1,6 @@
 """Support for HomematicIP Cloud alarm control panel."""
 import logging
 
-from homematicip.aio.group import AsyncSecurityZoneGroup
-from homematicip.aio.home import AsyncHome
-from homematicip.base.enums import WindowState
-
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -25,7 +21,9 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
                             async_add_entities) -> None:
-    """Set up the HomematicIP alrm control panel from a config entry."""
+    """Set up the HomematicIP alarm control panel from a config entry."""
+    from homematicip.aio.group import AsyncSecurityZoneGroup
+
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for group in home.groups:
@@ -39,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
 class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
     """Representation of an HomematicIP Cloud security zone group."""
 
-    def __init__(self, home: AsyncHome, device) -> None:
+    def __init__(self, home, device) -> None:
         """Initialize the security zone group."""
         device.modelType = 'Group-SecurityZone'
         device.windowState = None
@@ -48,6 +46,8 @@ class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
     @property
     def state(self) -> str:
         """Return the state of the device."""
+        from homematicip.base.enums import WindowState
+
         if self._device.active:
             if (self._device.sabotage or self._device.motionDetected or
                     self._device.windowState == WindowState.OPEN or
