@@ -1,0 +1,8 @@
+{
+  "domain": "essent",
+  "name": "Essent",
+  "documentation": "https://www.home-assistant.io/components/essent",
+  "requirements": ["requests==2.21.0"],
+  "dependencies": [],
+  "codeowners": ["@TheLastProject"]
+}
