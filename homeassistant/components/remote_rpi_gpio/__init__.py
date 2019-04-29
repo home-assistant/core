@@ -78,7 +78,7 @@ def setup(hass: HomeAssistant, config):
 def setup_output(address, port, invert_logic):
     """Set up a GPIO as output."""
     from gpiozero import LED
-    from gpiozero.pins.pigpio import PiGPIOFactory  # noqa: E501 pylint: disable=import-error
+    from gpiozero.pins.pigpio import PiGPIOFactory
 
     try:
         return LED(port, active_high=invert_logic,
