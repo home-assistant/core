@@ -2,23 +2,32 @@
 from datetime import timedelta
 
 from pyessent import PyEssent
+import voluptuous as vol
 
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, STATE_UNKNOWN
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_PASSWORD, CONF_USERNAME, ENERGY_KILO_WATT_HOUR)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
-DOMAIN = 'essent'
+SCAN_INTERVAL = timedelta(hours=1)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
-
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string
+})
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Essent platform."""
-    username = config['username']
-    password = config['password']
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
+
+    devices = []
     for meter in EssentBase(username, password).retrieve_meters():
         for tariff in ['L', 'N', 'H']:
-            add_devices([EssentMeter(username, password, meter, tariff)])
+            devices.append(EssentMeter(username, password, meter, tariff))
+
+    add_devices(devices, True)
 
 
 class EssentBase():
@@ -47,7 +56,7 @@ class EssentMeter(Entity):
         self._password = password
         self._meter = meter
         self._tariff = tariff
-        self._meter_type = STATE_UNKNOWN
+        self._meter_type = None
         self._meter_unit = None
 
     @property
@@ -68,7 +77,6 @@ class EssentMeter(Entity):
 
         return self._meter_unit
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Fetch the energy usage."""
         # Retrieve an authenticated session
