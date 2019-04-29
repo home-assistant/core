@@ -92,12 +92,12 @@ def _transitions_config_parser(transitions):
 
 
 def _parse_custom_effects(effects_config):
-    import yeelight
+    from yeelight import Flow
 
     effects = {}
     for config in effects_config:
         params = config[CONF_FLOW_PARAMS]
-        action = yeelight.Flow.actions[params[ATTR_ACTION]]
+        action = Flow.actions[params[ATTR_ACTION]]
         transitions = _transitions_config_parser(
             params[ATTR_TRANSITIONS])
 
@@ -113,11 +113,11 @@ def _parse_custom_effects(effects_config):
 def _cmd(func):
     """Define a wrapper to catch exceptions from the bulb."""
     def _wrap(self, *args, **kwargs):
-        import yeelight
+        from yeelight import BulbException
         try:
             _LOGGER.debug("Calling %s with %s %s", func, args, kwargs)
             return func(self, *args, **kwargs)
-        except yeelight.BulbException as ex:
+        except BulbException as ex:
             _LOGGER.error("Error when calling %s: %s", func, ex)
 
     return _wrap
@@ -347,15 +347,14 @@ class YeelightLight(Light):
 
     def update(self) -> None:
         """Update properties from the bulb."""
-        import yeelight
+        from yeelight import BulbType, enums
         bulb_type = self._bulb.bulb_type
 
-        if bulb_type == yeelight.BulbType.Color:
+        if bulb_type == BulbType.Color:
             self._supported_features = SUPPORT_YEELIGHT_RGB
-        elif self.light_type == yeelight.enums.LightType.Ambient:
+        elif self.light_type == enums.LightType.Ambient:
             self._supported_features = SUPPORT_YEELIGHT_RGB
-        elif bulb_type in (yeelight.BulbType.WhiteTemp,
-                           yeelight.BulbType.WhiteTempMood):
+        elif bulb_type in (BulbType.WhiteTemp, BulbType.WhiteTempMood):
             if self._is_nightlight_enabled:
                 self._supported_features = SUPPORT_YEELIGHT
             else:
@@ -368,7 +367,7 @@ class YeelightLight(Light):
             self._max_mireds = \
                 kelvin_to_mired(model_specs['color_temp']['min'])
 
-        if bulb_type == yeelight.BulbType.WhiteTempMood:
+        if bulb_type == BulbType.WhiteTempMood:
             self._is_on = self._get_property('main_power') == 'on'
         else:
             self._is_on = self._get_property('power') == 'on'

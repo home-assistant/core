@@ -6,7 +6,7 @@ from typing import Callable
 
 import voluptuous as vol
 
-from homeassistant.auth.permissions.const import POLICY_CONTROL
+from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.const import (
     ATTR_ENTITY_ID, ENTITY_MATCH_ALL, ATTR_AREA_ID)
 import homeassistant.core as ha
@@ -210,9 +210,8 @@ async def async_get_all_descriptions(hass):
                 domain_yaml = loaded[domain]
                 yaml_description = domain_yaml.get(service, {})
 
-                if not yaml_description:
-                    _LOGGER.warning("Missing service description for %s/%s",
-                                    domain, service)
+                # Don't warn for missing services, because it triggers false
+                # positives for things like scripts, that register as a service
 
                 description = descriptions_cache[cache_key] = {
                     'description': yaml_description.get('description', ''),
@@ -328,7 +327,8 @@ async def _handle_service_platform_call(func, data, entities, context,
 
         # Skip entities that don't have the required feature.
         if required_features is not None \
-                and not entity.supported_features & required_features:
+                and not any(entity.supported_features & feature_set
+                            for feature_set in required_features):
             continue
 
         entity.async_set_context(context)
@@ -369,3 +369,47 @@ def async_register_admin_service(
     hass.services.async_register(
         domain, service, admin_handler, schema
     )
+
+
+@bind_hass
+@ha.callback
+def verify_domain_control(hass: HomeAssistantType, domain: str) -> Callable:
+    """Ensure permission to access any entity under domain in service call."""
+    def decorator(service_handler: Callable) -> Callable:
+        """Decorate."""
+        if not asyncio.iscoroutinefunction(service_handler):
+            raise HomeAssistantError(
+                'Can only decorate async functions.')
+
+        async def check_permissions(call):
+            """Check user permission and raise before call if unauthorized."""
+            if not call.context.user_id:
+                return await service_handler(call)
+
+            user = await hass.auth.async_get_user(call.context.user_id)
+            if user is None:
+                raise UnknownUser(
+                    context=call.context,
+                    permission=POLICY_CONTROL,
+                    user_id=call.context.user_id)
+
+            reg = await hass.helpers.entity_registry.async_get_registry()
+            entities = [
+                entity.entity_id for entity in reg.entities.values()
+                if entity.platform == domain
+            ]
+
+            for entity_id in entities:
+                if user.permissions.check_entity(entity_id, POLICY_CONTROL):
+                    return await service_handler(call)
+
+            raise Unauthorized(
+                context=call.context,
+                permission=POLICY_CONTROL,
+                user_id=call.context.user_id,
+                perm_category=CAT_ENTITIES
+            )
+
+        return check_permissions
+
+    return decorator

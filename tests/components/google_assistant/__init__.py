@@ -116,7 +116,7 @@ DEMO_DEVICES = [{
     },
     'traits': ['action.devices.traits.OpenClose'],
     'type':
-    'action.devices.types.BLINDS',
+    'action.devices.types.GARAGE',
     'willReportState': False
 }, {
     'id': 'cover.kitchen_window',
@@ -143,11 +143,11 @@ DEMO_DEVICES = [{
     },
     'traits':
         [
-            'action.devices.traits.OnOff', 'action.devices.traits.Brightness',
+            'action.devices.traits.OnOff', 'action.devices.traits.Volume',
             'action.devices.traits.Modes'
         ],
     'type':
-    'action.devices.types.SWITCH',
+    'action.devices.types.MEDIA',
     'willReportState':
     False
 }, {
@@ -158,11 +158,11 @@ DEMO_DEVICES = [{
     },
     'traits':
         [
-            'action.devices.traits.OnOff', 'action.devices.traits.Brightness',
+            'action.devices.traits.OnOff', 'action.devices.traits.Volume',
             'action.devices.traits.Modes'
         ],
     'type':
-    'action.devices.types.SWITCH',
+    'action.devices.types.MEDIA',
     'willReportState':
     False
 }, {
@@ -171,7 +171,7 @@ DEMO_DEVICES = [{
         'name': 'Lounge room'
     },
     'traits': ['action.devices.traits.OnOff', 'action.devices.traits.Modes'],
-    'type': 'action.devices.types.SWITCH',
+    'type': 'action.devices.types.MEDIA',
     'willReportState': False
 }, {
     'id':
@@ -180,9 +180,9 @@ DEMO_DEVICES = [{
         'name': 'Walkman'
     },
     'traits':
-    ['action.devices.traits.OnOff', 'action.devices.traits.Brightness'],
+    ['action.devices.traits.OnOff', 'action.devices.traits.Volume'],
     'type':
-    'action.devices.types.SWITCH',
+    'action.devices.types.MEDIA',
     'willReportState':
     False
 }, {

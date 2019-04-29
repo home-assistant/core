@@ -52,11 +52,9 @@ async def component_translation_file(hass: HomeAssistantType, component: str,
         filename = "{}.{}.json".format(parts[0], language)
         return str(integration.file_path / '.translations' / filename)
 
-    module = integration.get_component()
-
     # If it's a component that is just one file, we don't support translations
     # Example custom_components/my_component.py
-    if module.__name__ != module.__package__:
+    if integration.file_path.name != domain:
         return None
 
     filename = '{}.json'.format(language)

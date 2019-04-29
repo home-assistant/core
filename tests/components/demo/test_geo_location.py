@@ -42,8 +42,9 @@ class TestDemoPlatform(unittest.TestCase):
 
             # In this test, one zone and geolocation entities have been
             # generated.
-            all_states = self.hass.states.all()
-            assert len(all_states) == NUMBER_OF_DEMO_DEVICES + 1
+            all_states = [self.hass.states.get(entity_id) for entity_id
+                          in self.hass.states.entity_ids(geo_location.DOMAIN)]
+            assert len(all_states) == NUMBER_OF_DEMO_DEVICES
 
             for state in all_states:
                 # Check a single device's attributes.
@@ -66,6 +67,8 @@ class TestDemoPlatform(unittest.TestCase):
             self.hass.block_till_done()
             # Get all states again, ensure that the number of states is still
             # the same, but the lists are different.
-            all_states_updated = self.hass.states.all()
-            assert len(all_states_updated) == NUMBER_OF_DEMO_DEVICES + 1
+            all_states_updated = [
+                self.hass.states.get(entity_id) for entity_id
+                in self.hass.states.entity_ids(geo_location.DOMAIN)]
+            assert len(all_states_updated) == NUMBER_OF_DEMO_DEVICES
             assert all_states != all_states_updated

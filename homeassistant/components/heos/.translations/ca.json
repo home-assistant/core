@@ -9,7 +9,8 @@
         "step": {
             "user": {
                 "data": {
-                    "access_token": "Amfitri\u00f3"
+                    "access_token": "Amfitri\u00f3",
+                    "host": "Amfitri\u00f3"
                 },
                 "description": "Introdueix el nom d'amfitri\u00f3 o l'adre\u00e7a IP d'un dispositiu Heos (preferiblement un connectat a la xarxa per cable).",
                 "title": "Connexi\u00f3 amb Heos"
