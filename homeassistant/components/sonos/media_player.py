@@ -4,6 +4,7 @@ import datetime
 import functools as ft
 import logging
 import socket
+import time
 import urllib
 
 import async_timeout
@@ -34,6 +35,8 @@ DEPENDENCIES = ('sonos',)
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
+
+DISCOVERY_INTERVAL = 60
 
 # Quiet down pysonos logging to just actual problems.
 logging.getLogger('pysonos').setLevel(logging.WARNING)
@@ -109,7 +112,6 @@ class SonosData:
 
     def __init__(self, hass):
         """Initialize the data."""
-        self.uids = set()
         self.entities = []
         self.topology_condition = asyncio.Condition(loop=hass.loop)
 
@@ -134,32 +136,41 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if advertise_addr:
         pysonos.config.EVENT_ADVERTISE_IP = advertise_addr
 
-    def _create_sonos_entities():
-        """Discover players and return a list of SonosEntity objects."""
-        players = []
+    def _discovery(now=None):
+        """Discover players from network or configuration."""
         hosts = config.get(CONF_HOSTS)
+
+        def _discovered_player(soco):
+            """Handle a (re)discovered player."""
+            try:
+                # Make sure that the player is available
+                _ = soco.volume
+
+                entity = _get_entity_from_soco_uid(hass, soco.uid)
+                if not entity:
+                    hass.add_job(async_add_entities, [SonosEntity(soco)])
+                else:
+                    entity.seen()
+            except SoCoException:
+                pass
 
         if hosts:
             for host in hosts:
                 try:
-                    players.append(pysonos.SoCo(socket.gethostbyname(host)))
+                    player = pysonos.SoCo(socket.gethostbyname(host))
+                    if player.is_visible:
+                        _discovered_player(player)
                 except (OSError, SoCoException):
-                    _LOGGER.warning("Failed to initialize '%s'", host)
+                    if now is None:
+                        _LOGGER.warning("Failed to initialize '%s'", host)
         else:
-            players = pysonos.discover(
-                interface_addr=config.get(CONF_INTERFACE_ADDR),
-                all_households=True)
+            pysonos.discover_thread(
+                _discovered_player,
+                interface_addr=config.get(CONF_INTERFACE_ADDR))
 
-        if not players:
-            _LOGGER.warning("No Sonos speakers found")
+        hass.helpers.event.call_later(DISCOVERY_INTERVAL, _discovery)
 
-        return [SonosEntity(p) for p in players]
-
-    entities = await hass.async_add_executor_job(_create_sonos_entities)
-    hass.data[DATA_SONOS].uids.update(e.unique_id for e in entities)
-
-    async_add_entities(entities)
-    _LOGGER.debug("Added %s Sonos speakers", len(entities))
+    hass.async_add_executor_job(_discovery)
 
     def _service_to_entities(service):
         """Extract and return entities from service call."""
@@ -309,6 +320,7 @@ class SonosEntity(MediaPlayerDevice):
 
     def __init__(self, player):
         """Initialize the Sonos entity."""
+        self._seen = None
         self._subscriptions = []
         self._receives_events = False
         self._volume_increment = 2
@@ -338,6 +350,7 @@ class SonosEntity(MediaPlayerDevice):
         self._snapshot_group = None
 
         self._set_basic_information()
+        self.seen()
 
     async def async_added_to_hass(self):
         """Subscribe sonos events."""
@@ -397,20 +410,18 @@ class SonosEntity(MediaPlayerDevice):
         """Return coordinator of this player."""
         return self._coordinator
 
+    def seen(self):
+        """Record that this player was seen right now."""
+        self._seen = time.monotonic()
+
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
 
     def _check_available(self):
-        """Check that we can still connect to the player."""
-        try:
-            sock = socket.create_connection(
-                address=(self.soco.ip_address, 1443), timeout=3)
-            sock.close()
-            return True
-        except socket.error:
-            return False
+        """Check that we saw the player recently."""
+        return self._seen > time.monotonic() - 2*DISCOVERY_INTERVAL
 
     def _set_basic_information(self):
         """Set initial entity information."""

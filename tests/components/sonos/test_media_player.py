@@ -13,10 +13,14 @@ async def setup_platform(hass, config_entry, config):
 async def test_async_setup_entry_hosts(hass, config_entry, config, soco):
     """Test static setup."""
     await setup_platform(hass, config_entry, config)
-    assert hass.data[media_player.DATA_SONOS].entities[0].soco == soco
+
+    entity = hass.data[media_player.DATA_SONOS].entities[0]
+    assert entity.soco == soco
 
 
 async def test_async_setup_entry_discover(hass, config_entry, discover):
     """Test discovery setup."""
     await setup_platform(hass, config_entry, {})
-    assert hass.data[media_player.DATA_SONOS].uids == {'RINCON_test'}
+
+    entity = hass.data[media_player.DATA_SONOS].entities[0]
+    assert entity.unique_id == 'RINCON_test'
