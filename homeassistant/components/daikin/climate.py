@@ -8,8 +8,8 @@ from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE, ATTR_FAN_MODE, ATTR_OPERATION_MODE,
     ATTR_SWING_MODE, STATE_AUTO, STATE_COOL, STATE_DRY, STATE_FAN_ONLY,
-    STATE_HEAT, SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE)
+    STATE_HEAT, SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
+    SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, STATE_OFF, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
@@ -93,8 +93,8 @@ class DaikinClimate(ClimateDevice):
             ),
         }
 
-        self._supported_features = SUPPORT_TARGET_TEMPERATURE \
-            | SUPPORT_OPERATION_MODE
+        self._supported_features = (SUPPORT_ON_OFF | SUPPORT_OPERATION_MODE
+                                    | SUPPORT_TARGET_TEMPERATURE)
 
         if self._api.device.support_fan_mode:
             self._supported_features |= SUPPORT_FAN_MODE
@@ -266,3 +266,18 @@ class DaikinClimate(ClimateDevice):
     def device_info(self):
         """Return a device description for device registry."""
         return self._api.device_info
+
+    @property
+    def is_on(self):
+        """Return true if on."""
+        return self._api.device.represent(
+            HA_ATTR_TO_DAIKIN[ATTR_OPERATION_MODE])[1] != STATE_OFF
+
+    async def async_turn_on(self):
+        """Turn device on."""
+        await self._api.device.set({})
+
+    async def async_turn_off(self):
+        """Turn device off."""
+        await self._api.device.set(
+            {HA_ATTR_TO_DAIKIN[ATTR_OPERATION_MODE]: STATE_OFF})
