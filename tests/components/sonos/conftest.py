@@ -35,8 +35,10 @@ def soco_fixture(music_library, speaker_info, dummy_soco_service):
 @pytest.fixture(name="discover")
 def discover_fixture(soco):
     """Create a mock pysonos discover fixture."""
-    with patch('pysonos.discover') as mock:
-        mock.return_value = {soco}
+    def do_callback(callback, **kwargs):
+        callback(soco)
+
+    with patch('pysonos.discover_thread', side_effect=do_callback) as mock:
         yield mock
 
 
