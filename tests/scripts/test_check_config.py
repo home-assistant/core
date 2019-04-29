@@ -1,4 +1,5 @@
 """Test check_config script."""
+import asyncio
 import logging
 import os  # noqa: F401 pylint: disable=unused-import
 from unittest.mock import patch
@@ -25,6 +26,15 @@ BAD_CORE_CONFIG = (
     '  unit_system: bad\n'
     '\n\n'
 )
+
+
+def setup():
+    """Prepare the test."""
+    # Make sure whe have an event loop.
+    try:
+        asyncio.get_event_loop()
+    except RuntimeError:
+        asyncio.set_event_loop(asyncio.new_event_loop())
 
 
 def normalize_yaml_files(check_dict):

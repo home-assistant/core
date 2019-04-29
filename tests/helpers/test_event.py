@@ -30,6 +30,13 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 
+DEFAULT_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
+
+
+def teardown():
+    """Stop everything that was started."""
+    dt_util.set_default_time_zone(DEFAULT_TIME_ZONE)
+
 
 def _send_time_changed(hass, now):
     """Send a time changed event."""
