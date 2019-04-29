@@ -21,6 +21,7 @@ G_AN_AUDIOBOOK = "AudioBook"
 G_AN_NEWS = "News"
 G_AN_LOCAL = "Local"
 G_AN_SPOTIFY = "Spotify"
+G_AN_YOUTUBE = "YouTube"
 
 # tokens
 G_OFFLINE_MODE = False

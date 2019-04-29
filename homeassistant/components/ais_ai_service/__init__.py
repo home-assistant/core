@@ -1164,6 +1164,7 @@ def go_to_player(hass, say):
                     _say_it(hass, "Sterowanie odtwarzaczem", None)
                 break
 
+
 def go_home(hass):
     if len(GROUP_ENTITIES) == 0:
         get_groups(hass)
@@ -1390,7 +1391,7 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, 'on_new_iot_device_selection', on_new_iot_device_selection)
     hass.services.async_register(DOMAIN, 'set_context', set_context)
     hass.services.async_register(DOMAIN, 'check_local_ip', check_local_ip)
-
+    # register intents
     hass.helpers.intent.async_register(GetTimeIntent())
     hass.helpers.intent.async_register(GetDateIntent())
     hass.helpers.intent.async_register(AisClimateSetTemperature())
@@ -1435,7 +1436,7 @@ async def async_setup(hass, config):
     async_register(hass, INTENT_CLIMATE_SET_TEMPERATURE, [
         "Ustaw temperaturę [ogrzewania] [na] {temp} stopni [w] {item} ",
         "Temperatura ogrzewania {temp} stopni [w] {item}",
-        "Temperatura ogrzewania [w] {item} {temp} stopni",
+        "Ogrzewanie [w] {item} {temp} stopni",
         "Ogrzewanie [w] {item} temperatura {temp} stopni",
         "Ogrzewanie temperatura w {item} {temp} stopni"])
     async_register(hass, INTENT_CLIMATE_SET_AWAY, [
@@ -2112,7 +2113,7 @@ def _process(hass, text, callback):
     """Process a line of text."""
     _LOGGER.info('Process text: ' + text)
     # clear text
-    text = text.replace("&", " and ").lower()
+    text = text.replace("-", " ").lower()
     global CURR_BUTTON_CODE
     s = False
     m = None

@@ -748,88 +748,93 @@ class AisColudData:
 
     def play_audio(self, call):
         audio_type = call.data["audio_type"]
-        if audio_type == ais_global.G_AN_RADIO:
-            self.hass.services.call(
-                'input_select',
-                'select_option', {
-                    "entity_id": "input_select.radio_type",
-                    "option": call.data["type"]})
-            self.hass.block_till_done()
-            self.hass.services.call(
-                'input_select',
-                'select_option', {
-                    "entity_id": "input_select.radio_station_name",
-                    "option": call.data["name"]})
-            # this name will be set after the list refresh
-            self.audio_name = call.data["name"]
-            self.hass.block_till_done()
-            player_name = self.hass.states.get(
-                'input_select.radio_player').state
-            player = get_player_data(player_name)
-            self.hass.services.call(
-                'media_player',
-                'play_media', {
-                    "entity_id": player["entity_id"],
-                    "media_content_type": "audio/mp4",
-                    "media_content_id": check_url(call.data["stream_url"])
-                })
-            # set stream image and title
-            if player["device_ip"] is not None:
-                _audio_info = {"IMAGE_URL": call.data["image_url"], "NAME": call.data["name"],
-                               "MEDIA_SOURCE": ais_global.G_AN_RADIO}
-                _audio_info = json.dumps(_audio_info)
+        if 'id' in call.data:
+            if audio_type == ais_global.G_AN_SPOTIFY:
+                self.hass.services.call('ais_spotify_service', 'select_track_uri', {"id": call.data['id']})
+
+        else:
+            if audio_type == ais_global.G_AN_RADIO:
+                self.hass.services.call(
+                    'input_select',
+                    'select_option', {
+                        "entity_id": "input_select.radio_type",
+                        "option": call.data["type"]})
+                self.hass.block_till_done()
+                self.hass.services.call(
+                    'input_select',
+                    'select_option', {
+                        "entity_id": "input_select.radio_station_name",
+                        "option": call.data["name"]})
+                # this name will be set after the list refresh
+                self.audio_name = call.data["name"]
+                self.hass.block_till_done()
+                player_name = self.hass.states.get(
+                    'input_select.radio_player').state
+                player = get_player_data(player_name)
                 self.hass.services.call(
                     'media_player',
                     'play_media', {
                         "entity_id": player["entity_id"],
-                        "media_content_type": "ais_info",
-                        "media_content_id": _audio_info
+                        "media_content_type": "audio/mp4",
+                        "media_content_id": check_url(call.data["stream_url"])
                     })
-        elif audio_type == ais_global.G_AN_PODCAST:
-            self.hass.services.call(
-                'input_select',
-                'select_option', {
-                    "entity_id": "input_select.podcast_type",
-                    "option": call.data["type"]})
+                # set stream image and title
+                if player["device_ip"] is not None:
+                    _audio_info = {"IMAGE_URL": call.data["image_url"], "NAME": call.data["name"],
+                                   "MEDIA_SOURCE": ais_global.G_AN_RADIO}
+                    _audio_info = json.dumps(_audio_info)
+                    self.hass.services.call(
+                        'media_player',
+                        'play_media', {
+                            "entity_id": player["entity_id"],
+                            "media_content_type": "ais_info",
+                            "media_content_id": _audio_info
+                        })
+            elif audio_type == ais_global.G_AN_PODCAST:
+                self.hass.services.call(
+                    'input_select',
+                    'select_option', {
+                        "entity_id": "input_select.podcast_type",
+                        "option": call.data["type"]})
 
-            self.hass.services.call(
-                'ais_cloud',
-                'get_podcast_tracks', {
-                    "lookup_url": call.data["lookup_url"],
-                    "podcast_name": call.data["name"],
-                    "image_url": call.data["image_url"]
-                }
-            )
-            self.hass.services.call(
-                'input_select',
-                'select_option', {
-                    "entity_id": "input_select.podcast_name",
-                    "option": call.data["name"]})
+                self.hass.services.call(
+                    'ais_cloud',
+                    'get_podcast_tracks', {
+                        "lookup_url": call.data["lookup_url"],
+                        "podcast_name": call.data["name"],
+                        "image_url": call.data["image_url"]
+                    }
+                )
+                self.hass.services.call(
+                    'input_select',
+                    'select_option', {
+                        "entity_id": "input_select.podcast_name",
+                        "option": call.data["name"]})
 
-        elif audio_type == ais_global.G_AN_MUSIC:
-            self.hass.services.call(
-                'input_select',
-                'select_option', {
-                    "entity_id": "input_select.ais_music_service",
-                    "option": "YouTube"})
-            # self.hass.block_till_done()
-            self.hass.services.call(
-                'input_text',
-                'set_value', {
-                    "entity_id": "input_text.ais_music_query",
-                    "value": call.data["text"]})
-        elif audio_type == ais_global.G_AN_SPOTIFY:
-            self.hass.services.call(
-                'input_select',
-                'select_option', {
-                    "entity_id": "input_select.ais_music_service",
-                    "option": ais_global.G_AN_SPOTIFY})
-            # self.hass.block_till_done()
-            self.hass.services.call(
-                'input_text',
-                'set_value', {
-                    "entity_id": "input_text.ais_music_query",
-                    "value": call.data["text"] + " "})
+            elif audio_type == ais_global.G_AN_MUSIC:
+                self.hass.services.call(
+                    'input_select',
+                    'select_option', {
+                        "entity_id": "input_select.ais_music_service",
+                        "option": "YouTube"})
+                # self.hass.block_till_done()
+                self.hass.services.call(
+                    'input_text',
+                    'set_value', {
+                        "entity_id": "input_text.ais_music_query",
+                        "value": call.data["text"]})
+            elif audio_type == ais_global.G_AN_SPOTIFY:
+                self.hass.services.call(
+                    'input_select',
+                    'select_option', {
+                        "entity_id": "input_select.ais_music_service",
+                        "option": ais_global.G_AN_SPOTIFY})
+                # self.hass.block_till_done()
+                self.hass.services.call(
+                    'input_text',
+                    'set_value', {
+                        "entity_id": "input_text.ais_music_query",
+                        "value": call.data["text"] + " "})
 
     def select_media_player(self, call):
         if "media_player_type" not in call.data:

@@ -104,15 +104,26 @@ class YouTubeData:
         data = requests.get(URL_BASE, params=params).json()
         found = []
         titles = [ais_global.G_EMPTY_OPTION]
+        list_info = {}
+        list_idx = 0
         for item in data['items']:
             if item['id']['kind'] == 'youtube#video':
-                i = {}
-                i["id"] = item['id']['videoId']
-                i["title"] = item['snippet']['title']
-                # i["description"] = item['snippet']['description']
-                i["thumbnail"] = item['snippet']['thumbnails']['medium']['url']
+                i = {"id": item['id']['videoId'], "title": item['snippet']['title'],
+                     "thumbnail": item['snippet']['thumbnails']['medium']['url']}
                 titles.append(item['snippet']['title'])
                 found.append(i)
+                # list
+                list_info[list_idx] = {}
+                list_info[list_idx]["title"] = item['snippet']['title']
+                list_info[list_idx]["name"] = item['snippet']['title']
+                # item['snippet']['description']
+                list_info[list_idx]["thumbnail"] = item['snippet']['thumbnails']['medium']['url']
+                list_info[list_idx]["uri"] = item['id']['videoId']
+                list_info[list_idx]["mediasource"] = ais_global.G_AN_YOUTUBE
+                list_info[list_idx]["type"] = ''
+                list_info[list_idx]["icon"] = 'mdi:play'
+                list_idx = list_idx + 1
+
         G_YT_FOUND = found
         _LOGGER.debug('found' + str(found))
         # Update input_select values:
@@ -136,6 +147,9 @@ class YouTubeData:
             'select_option', {
                 "entity_id": "input_select.ais_music_track_name",
                 "option": G_YT_FOUND[0]["title"]})
+
+        # update list
+        self.hass.states.async_set("sensor.youtubelist", 0, list_info)
 
     def process_select_track_name(self, call):
         _LOGGER.info("process_select_track_name")
