@@ -1,6 +1,5 @@
 """Support for Essent API."""
 from datetime import timedelta
-import xml.etree.ElementTree as ET
 
 from pyessent import PyEssent
 
@@ -76,30 +75,9 @@ class EssentMeter(Entity):
         essent = EssentBase(self._username, self._password).get_session()
 
         # Read the meter
-        meter_request = essent.Customer.get_meter_reading_history(
-            self._meter, only_last_meter_reading=True)
+        data = essent.read_meter(self._meter, only_last_meter_reading=True)
 
-        # Parse out into the root of our data
-        info_base = ET.fromstring(meter_request.text) \
-            .find('response') \
-            .find('Installations') \
-            .find('Installation')
+        self._meter_type = data['type']
+        self._meter_unit = data['values']['LVR'][self._tariff]['unit']
 
-        # Set meter type now that it's known
-        self._meter_type = info_base.find('EnergyType').get('text')
-
-        # Retrieve the current status
-        registers = info_base.find('Meters') \
-            .find('Meter') \
-            .find('Registers') \
-            .findall('Register')
-        for register in registers:
-            if (register.findtext('MeteringDirection') != 'LVR' or
-                    register.findtext('TariffType') != self._tariff):
-                continue
-
-            # Set unit of measurement now that it's known
-            self._meter_unit = register.findtext('MeasureUnit')
-            self._state = register.find('MeterReadings') \
-                .find('MeterReading') \
-                .findtext('ReadingResultValue')
+        self._state = data['values']['LVR'][self._tariff]['records'][0]
