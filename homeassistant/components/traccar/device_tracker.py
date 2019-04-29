@@ -160,8 +160,8 @@ class TraccarScanner:
             accuracy = float(0)
             if device_info.get('accuracy') is not None:
                 accuracy = device_info['accuracy']
-            if (not has_custom_attributes and self._max_accuracy > 0 and 
-                accuracy > self._max_accuracy):
+            if (not has_custom_attributes and self._max_accuracy > 0 and
+                    accuracy > self._max_accuracy):
                 _LOGGER.info('Excluded position by accuracy filter: %f (%s)',
                              accuracy, attr[ATTR_TRACCAR_ID])
                 continue
