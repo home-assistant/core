@@ -1,23 +1,44 @@
 """Allows to configure a switch using RPi GPIO."""
 import logging
 
+import voluptuous as vol
+
 from homeassistant.components import remote_rpi_gpio
-from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import DEVICE_DEFAULT_NAME
+from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.const import DEVICE_DEFAULT_NAME, CONF_HOST
+
+import homeassistant.helpers.config_validation as cv
+
+from . import CONF_INVERT_LOGIC, DEFAULT_INVERT_LOGIC
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['remote_rpi_gpio']
 
+CONF_PORTS = 'ports'
+
+_SENSORS_SCHEMA = vol.Schema({
+    cv.positive_int: cv.string,
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_PORTS): _SENSORS_SCHEMA,
+    vol.Optional(CONF_INVERT_LOGIC,
+                 default=DEFAULT_INVERT_LOGIC): cv.boolean
+})
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Remote Raspberry PI GPIO devices."""
     if discovery_info is None:
-        return
-
-    address = discovery_info['address']
-    invert_logic = discovery_info['invert_logic']
-    ports = discovery_info['switches']
+        address = config[CONF_HOST]
+        invert_logic = config[CONF_INVERT_LOGIC]
+        ports = config[CONF_PORTS]
+    else:
+        address = discovery_info['address']
+        invert_logic = discovery_info['invert_logic']
+        ports = discovery_info['switches']
 
     devices = []
     for port, name in ports.items():
