@@ -17,6 +17,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string
 })
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Essent platform."""
     username = config[CONF_USERNAME]
@@ -28,7 +29,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             try:
                 devices.append(EssentMeter(username, password, meter, tariff))
             except KeyError:
-                pass  # Don't add devices for non-existing meter/tariff combinations
+                # Don't add devices for non-existing meter/tariff combinations
+                pass  
 
     add_devices(devices, True)
 
@@ -91,4 +93,5 @@ class EssentMeter(Entity):
         self._meter_type = data['type']
         self._meter_unit = data['values']['LVR'][self._tariff]['unit']
 
-        self._state = next(iter(data['values']['LVR'][self._tariff]['records']))
+        self._state = next(
+            iter(data['values']['LVR'][self._tariff]['records'].values()))
