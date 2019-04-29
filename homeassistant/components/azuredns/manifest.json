@@ -1,0 +1,12 @@
+{
+  "domain": "azuredns",
+  "name": "Azure DNS",
+  "documentation": "https://www.home-assistant.io/components/azuredns",
+  "requirements": [
+    "adal==1.2.1"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@Cloudenius"
+  ]
+}
