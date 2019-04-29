@@ -759,7 +759,7 @@ async def test_entity_picture_template(hass, calls):
 
 
 async def test_device_class(hass, calls):
-    """Test icon template."""
+    """Test device class."""
     with assert_setup_component(1, 'cover'):
         assert await setup.async_setup_component(hass, 'cover', {
             'cover': {
@@ -790,7 +790,7 @@ async def test_device_class(hass, calls):
 
 
 async def test_invalid_device_class(hass, calls):
-    """Test icon template."""
+    """Test device class."""
     with assert_setup_component(0, 'cover'):
         assert await setup.async_setup_component(hass, 'cover', {
             'cover': {

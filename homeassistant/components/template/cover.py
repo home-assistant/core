@@ -255,7 +255,7 @@ class CoverTemplate(CoverDevice):
 
     @property
     def device_class(self):
-        """Return the sensor class of the sensor."""
+        """Return the device class of the cover."""
         return self._device_class
 
     @property
