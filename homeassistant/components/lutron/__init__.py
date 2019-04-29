@@ -69,6 +69,12 @@ def setup(hass, base_config):
                             button.button_type in ('SingleAction', 'Toggle')):
                         hass.data[LUTRON_DEVICES]['scene'].append(
                             (area.name, keypad.name, button, led))
+                # catch for main_repeater scenes
+                if (button.name != 'Unknown Button' and
+                        button.button_type in ('SingleAction', 'Toggle') and
+                        keypad.name == 'Enclosure Device 001'):
+                    hass.data[LUTRON_DEVICES]['scene'].append(
+                        (area.name, keypad.name, button, None))
 
                 hass.data[LUTRON_BUTTONS].append(
                     LutronButton(hass, keypad, button))
