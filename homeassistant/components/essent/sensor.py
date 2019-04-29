@@ -24,13 +24,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     password = config[CONF_PASSWORD]
 
     devices = []
-    for meter in EssentBase(username, password).retrieve_meters():
-        for tariff in ['L', 'N', 'H']:
-            try:
-                devices.append(EssentMeter(username, password, meter, tariff))
-            except KeyError:
-                # Don't add devices for non-existing meter/tariff combinations
-                pass  
+    essent = EssentBase(username, password)
+    for meter in essent.retrieve_meters():
+        for tariff in essent.retrieve_meter_tariffs(meter):
+            devices.append(EssentMeter(username, password, meter, tariff))
 
     add_devices(devices, True)
 
@@ -49,6 +46,12 @@ class EssentBase():
     def retrieve_meters(self):
         """Retrieve the IDs of the meters used by Essent."""
         return self._essent.get_EANs()
+
+    def retrieve_meter_tariffs(self, meter):
+        """Retrieve the tariffs for this meter."""
+        data = self._essent.read_meter(meter, only_last_meter_reading=True)
+
+        return data['values']['LVR'].keys()
 
 
 class EssentMeter(Entity):
