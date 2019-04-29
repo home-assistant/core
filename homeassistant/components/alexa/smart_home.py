@@ -449,9 +449,9 @@ class _AlexaPowerController(_AlexaInterface):
         if name != 'powerState':
             raise _UnsupportedProperty(name)
 
-        if self.entity.state == STATE_ON:
-            return 'ON'
-        return 'OFF'
+        if self.entity.state == STATE_OFF:
+            return 'OFF'
+        return 'ON'
 
 
 class _AlexaLockController(_AlexaInterface):
