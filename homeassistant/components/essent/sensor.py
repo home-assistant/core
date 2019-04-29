@@ -51,7 +51,12 @@ class EssentBase():
             data = self._meter_data[meter]
             self._meter_data[meter] = data
             for tariff in data['values']['LVR'].keys():
-                meters.append(EssentMeter(self, meter, data['type'], tariff, data['values']['LVR'][tariff]['unit']))
+                meters.append(EssentMeter(
+                    self,
+                    meter,
+                    data['type'],
+                    tariff,
+                    data['values']['LVR'][tariff]['unit']))
 
         return meters
 
@@ -61,10 +66,12 @@ class EssentBase():
 
     @Throttle(timedelta(minutes=30))
     def update(self):
+        """Retrieve the latest meter data from Essent."""
         essent = PyEssent(self._username, self._password)
         self._meters = essent.get_EANs()
         for meter in self._meters:
-            self._meter_data[meter] = essent.read_meter(meter, only_last_meter_reading=True)
+            self._meter_data[meter] = essent.read_meter(
+                meter, only_last_meter_reading=True)
 
 
 class EssentMeter(Entity):
