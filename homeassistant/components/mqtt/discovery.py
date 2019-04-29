@@ -271,7 +271,8 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
 
         if payload:
             # Attach MQTT topic to the payload, used for debug prints
-            setattr(payload, '__configuration_topic__', topic)
+            setattr(payload, '__configuration_source__',
+                    "MQTT (topic: '{}')".format(topic))
 
             if CONF_PLATFORM in payload and 'schema' not in payload:
                 platform = payload[CONF_PLATFORM]

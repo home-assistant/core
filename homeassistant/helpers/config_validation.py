@@ -704,10 +704,10 @@ class HASchema(vol.Schema):
                 submsg += " (See {}, line {}). ".format(
                     data.__config_file__, data.__line__)
 
-            # Add MQTT topic information, if available
-            if hasattr(data, '__configuration_topic__'):
-                submsg += " (Received on MQTT topic {}). ".format(
-                    data.__configuration_topic__)
+            # Add configuration source information, if available
+            if hasattr(data, '__configuration_source__'):
+                submsg += "\nConfiguration source: {}. ".format(
+                    data.__configuration_source__)
             redacted_data = {}
 
             # Print configuration causing the error, but filter any potentially
@@ -718,7 +718,7 @@ class HASchema(vol.Schema):
                     redacted_data[k] = v
                 else:
                     redacted_data[k] = '<redacted>'
-            submsg += "\n(Offending data: {}".format(
+            submsg += "\nOffending data: {}".format(
                 json.dumps(redacted_data))
 
             msg += submsg
