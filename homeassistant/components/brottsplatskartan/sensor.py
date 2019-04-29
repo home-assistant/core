@@ -1,69 +1,32 @@
 """Sensor platform for Brottsplatskartan information."""
 from collections import defaultdict
-from datetime import timedelta
-import logging
-import uuid
 
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-_LOGGER = logging.getLogger(__name__)
-
-CONF_AREA = 'area'
-
-DEFAULT_NAME = 'Brottsplatskartan'
-
-SCAN_INTERVAL = timedelta(minutes=30)
-
-AREAS = [
-    "Blekinge län", "Dalarnas län", "Gotlands län", "Gävleborgs län",
-    "Hallands län", "Jämtlands län", "Jönköpings län", "Kalmar län",
-    "Kronobergs län", "Norrbottens län", "Skåne län", "Stockholms län",
-    "Södermanlands län", "Uppsala län", "Värmlands län", "Västerbottens län",
-    "Västernorrlands län", "Västmanlands län", "Västra Götalands län",
-    "Örebro län", "Östergötlands län"
-]
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Inclusive(CONF_LATITUDE, 'coordinates'): cv.latitude,
-    vol.Inclusive(CONF_LONGITUDE, 'coordinates'): cv.longitude,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_AREA, default=[]):
-        vol.All(cv.ensure_list, [vol.In(AREAS)]),
-})
+from .const import ATTR_INCIDENTS, ATTR_TITLE_TYPE, DOMAIN, SIGNAL_UPDATE_BPK
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Brottsplatskartan platform."""
-    import brottsplatskartan
-
-    area = config.get(CONF_AREA)
-    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    name = config.get(CONF_NAME)
-
-    # Every Home Assistant instance should have their own unique
-    # app parameter: https://brottsplatskartan.se/sida/api
-    app = 'ha-{}'.format(uuid.getnode())
-
-    bpk = brottsplatskartan.BrottsplatsKartan(
-        app=app, area=area, latitude=latitude, longitude=longitude)
-
-    add_entities([BrottsplatskartanSensor(bpk, name)], True)
+    attribution = hass.data[DOMAIN][ATTR_ATTRIBUTION]
+    bpk = hass.data[DOMAIN]
+    name = hass.data[DOMAIN][CONF_NAME]
+    incidents = hass.data[DOMAIN][ATTR_INCIDENTS]
+    add_entities([BrottsplatskartanSensor(attribution, bpk, incidents, name)],
+                 True)
 
 
 class BrottsplatskartanSensor(Entity):
     """Representation of a Brottsplatskartan Sensor."""
 
-    def __init__(self, bpk, name):
+    def __init__(self, attribution, bpk, incidents, name):
         """Initialize the Brottsplatskartan sensor."""
+        self._attribution = attribution
         self._attributes = {}
         self._brottsplatskartan = bpk
+        self._incidents = incidents
         self._name = name
         self._state = None
 
@@ -72,10 +35,24 @@ class BrottsplatskartanSensor(Entity):
         """Return the name of the sensor."""
         return self._name
 
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_BPK,
+                                 self._update_callback)
+
+    def _update_callback(self):
+        """Call update method."""
+        self.schedule_update_ha_state(True)
+
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def should_poll(self):
+        """Return that this sensor does not poll."""
+        return False
 
     @property
     def device_state_attributes(self):
@@ -84,18 +61,12 @@ class BrottsplatskartanSensor(Entity):
 
     def update(self):
         """Update device state."""
-        import brottsplatskartan
         incident_counts = defaultdict(int)
-        incidents = self._brottsplatskartan.get_incidents()
 
-        if incidents is False:
-            _LOGGER.debug("Problems fetching incidents")
-            return
-
-        for incident in incidents:
-            incident_type = incident.get('title_type')
+        for incident in self._incidents:
+            incident_type = incident.get(ATTR_TITLE_TYPE)
             incident_counts[incident_type] += 1
 
-        self._attributes = {ATTR_ATTRIBUTION: brottsplatskartan.ATTRIBUTION}
+        self._attributes = {ATTR_ATTRIBUTION: self._attribution}
         self._attributes.update(incident_counts)
-        self._state = len(incidents)
+        self._state = len(self._incidents)
