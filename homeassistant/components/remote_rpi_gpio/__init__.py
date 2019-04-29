@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
-REQUIREMENTS = ['gpiozero==1.4.1', 'pigpio==1.42', 'RPi.GPIO==0.6.5']
+REQUIREMENTS = ['gpiozero==1.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,8 +43,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass: HomeAssistant, config):
     """Set up the Raspberry Pi Remote GPIO component."""
-    success = False
-
     if DOMAIN not in config:
         # Skip setup if no configuration is present
         return True
@@ -74,13 +72,12 @@ def setup(hass: HomeAssistant, config):
                        'switches': switches},
                       config)
 
-    success = True
-    return success
+    return True
 
 
 def setup_output(address, port, invert_logic):
     """Set up a GPIO as output."""
-    from gpiozero import LED  # pylint: disable=import-error
+    from gpiozero import LED
     from gpiozero.pins.pigpio import PiGPIOFactory  # noqa: E501 pylint: disable=import-error
 
     try:
@@ -97,7 +94,7 @@ def setup_input(address, port, pull_mode, bouncetime):
 
     if pull_mode == "UP":
         pull_gpio_up = True
-    if pull_mode == "DOWN":
+    elif pull_mode == "DOWN":
         pull_gpio_up = False
 
     try:
