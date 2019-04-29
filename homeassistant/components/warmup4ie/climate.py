@@ -11,14 +11,14 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.components.climate.const import (SUPPORT_TARGET_TEMPERATURE,
+from homeassistant.components.climate import (SUPPORT_TARGET_TEMPERATURE,
                                                     SUPPORT_AWAY_MODE,
                                                     SUPPORT_OPERATION_MODE,
                                                     SUPPORT_ON_OFF, STATE_AUTO,
                                                     STATE_MANUAL)
 
 
-REQUIREMENTS = ['warmup4ie==0.1.2']
+REQUIREMENTS = ['warmup4ie>=0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -195,6 +195,12 @@ class Warmup4IE(ClimateDevice):
         self._current_operation_mode = mode_map.get(
             self._device.get_run_mode(), STATE_MANUAL)
 
+        # set whether device is in away mode
+        if self._device.get_run_mode() == 'away':
+            self._away = True
+        else:
+            self._away = False
+        
         # set whether device is on/off
         if self._device.get_run_mode() == 'off':
             self._on = False
