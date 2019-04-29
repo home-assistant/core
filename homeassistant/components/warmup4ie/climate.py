@@ -57,6 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class Warmup4IE(ClimateDevice):
     """Representation of a Warmup4IE device."""
+    mode_map = {'prog': STATE_AUTO, 'fixed': STATE_MANUAL}
 
     def __init__(self, hass, name, device, user, password, location,
                  room, target_temp):
@@ -181,8 +182,7 @@ class Warmup4IE(ClimateDevice):
             _LOGGER.error("Updating Warmup4IE component failed")
 
         # set operation mode
-        mode_map = {'prog': STATE_AUTO, 'fixed': STATE_MANUAL}
-        self._current_operation_mode = mode_map.get(
+        self._current_operation_mode = self.mode_map.get(
             self._device.get_run_mode(), STATE_MANUAL)
 
         # set whether device is in away mode
