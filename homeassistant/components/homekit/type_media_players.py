@@ -190,10 +190,7 @@ class TelevisionMediaPlayer(HomeAccessory):
 
         self.category = CATEGORY_TELEVISION
         television = self.add_preload_service(SERV_TELEVISION,
-                                              [
-                                                  CHAR_CONFIGURED_NAME,
-                                                  CHAR_REMOTE_KEY
-                                              ])
+                                              [CHAR_REMOTE_KEY])
         television.configure_char(CHAR_CONFIGURED_NAME,
                                   value=self.display_name)
         television.configure_char(CHAR_SLEEP_DISCOVER_MODE, value=True)
