@@ -179,25 +179,23 @@ class TelevisionMediaPlayer(HomeAccessory):
     def __init__(self, *args):
         """Initialize a Switch accessory object."""
         super().__init__(*args, category=CATEGORY_TELEVISION)
-        self._flag = {FEATURE_ON_OFF: False, FEATURE_PLAY_PAUSE: False,
-                      FEATURE_TOGGLE_MUTE: False, FEATURE_SELECT_SOURCE: False}
-        self.chars = {FEATURE_ON_OFF: None, FEATURE_PLAY_PAUSE: None,
-                      FEATURE_TOGGLE_MUTE: None, FEATURE_SELECT_SOURCE: None,
-                      FEATURE_VOLUME_STEP: None}
+        self._flag = {FEATURE_ON_OFF: False, FEATURE_TOGGLE_MUTE: False,
+                      FEATURE_SELECT_SOURCE: False}
+        self.chars = {FEATURE_ON_OFF: None, FEATURE_TOGGLE_MUTE: None,
+                      FEATURE_SELECT_SOURCE: None, FEATURE_VOLUME_STEP: None}
 
         self.sources = []
 
-        serv_tv = self.add_preload_service(SERV_TELEVISION,
-                                           serv_tv[CHAR_REMOTE_KEY])
+        serv_tv = self.add_preload_service(SERV_TELEVISION, [CHAR_REMOTE_KEY])
         self.set_primary_service(serv_tv)
         serv_tv.configure_char(CHAR_CONFIGURED_NAME,
-                                  value=self.display_name)
+                               value=self.display_name)
         serv_tv.configure_char(CHAR_SLEEP_DISCOVER_MODE, value=True)
         self.chars[FEATURE_ON_OFF] = serv_tv.configure_char(
             CHAR_ACTIVE, setter_callback=self.set_on_off)
 
-        self.chars[FEATURE_PLAY_PAUSE] = serv_tv.configure_char(
-            CHAR_REMOTE_KEY, setter_callback=self.set_remote_key)
+        serv_tv.configure_char(CHAR_REMOTE_KEY,
+                               setter_callback=self.set_remote_key)
 
         serv_tv_speaker = self.add_preload_service(
             SERV_TELEVISION_SPEAKER, [CHAR_NAME, CHAR_ACTIVE,
@@ -220,8 +218,8 @@ class TelevisionMediaPlayer(HomeAccessory):
         self.chars[FEATURE_SELECT_SOURCE] = serv_tv.configure_char(
             CHAR_ACTIVE_IDENTIFIER, setter_callback=self.set_input_source)
 
-        self.sources = self.hass.states.get(
-            self.entity_id).attributes.get('source_list')
+        self.sources = self.hass.states.get(self.entity_id).attributes.get(
+            ATTR_INPUT_SOURCE)
         if self.sources:
             for index, source in enumerate(self.sources):
                 input_service = self.add_preload_service(SERV_INPUT_SOURCE, [
@@ -312,21 +310,11 @@ class TelevisionMediaPlayer(HomeAccessory):
         if self.chars[FEATURE_ON_OFF]:
             hk_state = current_state not in (STATE_OFF, STATE_UNKNOWN, 'None')
             if not self._flag[FEATURE_ON_OFF]:
-                if self.category is CATEGORY_TELEVISION:
-                    hk_state = 1 if hk_state else 0
+                hk_state = 1 if hk_state else 0
                 _LOGGER.debug('%s: Set current state for "on_off" to %s',
                               self.entity_id, hk_state)
                 self.chars[FEATURE_ON_OFF].set_value(hk_state)
             self._flag[FEATURE_ON_OFF] = False
-
-        if self.chars[FEATURE_PLAY_PAUSE]:
-            hk_state = current_state == STATE_PLAYING
-            if not self._flag[FEATURE_PLAY_PAUSE] and \
-                    not self.category == CATEGORY_TELEVISION:
-                _LOGGER.debug('%s: Set current state for "play_pause" to %s',
-                              self.entity_id, hk_state)
-                self.chars[FEATURE_PLAY_PAUSE].set_value(hk_state)
-            self._flag[FEATURE_PLAY_PAUSE] = False
 
         if self.chars[FEATURE_TOGGLE_MUTE]:
             current_state = new_state.attributes.get(ATTR_MEDIA_VOLUME_MUTED)
