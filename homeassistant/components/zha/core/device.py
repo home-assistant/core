@@ -329,9 +329,9 @@ class ZHADevice:
                 IN: endpoint.in_clusters,
                 OUT: endpoint.out_clusters
             } for (ep_id, endpoint) in self._zigpy_device.endpoints.items()
-            if ep_id != 0 and (
-                endpoint.profile_id == zha.PROFILE_ID or
-                endpoint.profile_id == zll.PROFILE_ID
+            if ep_id != 0 and endpoint.profile_id in (
+                zha.PROFILE_ID,
+                zll.PROFILE_ID
             )
         }
 
