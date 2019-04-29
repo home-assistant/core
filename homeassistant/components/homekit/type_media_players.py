@@ -178,7 +178,7 @@ class TelevisionMediaPlayer(HomeAccessory):
 
     def __init__(self, *args):
         """Initialize a Switch accessory object."""
-        super().__init__(*args, category=CATEGORY_SWITCH)
+        super().__init__(*args, category=CATEGORY_TELEVISION)
         self._flag = {FEATURE_ON_OFF: False, FEATURE_PLAY_PAUSE: False,
                       FEATURE_TOGGLE_MUTE: False, FEATURE_SELECT_SOURCE: False}
         self.chars = {FEATURE_ON_OFF: None, FEATURE_PLAY_PAUSE: None,
@@ -187,37 +187,37 @@ class TelevisionMediaPlayer(HomeAccessory):
 
         self.sources = []
 
-        self.category = CATEGORY_TELEVISION
-        television = self.add_preload_service(SERV_TELEVISION,
-                                              [CHAR_REMOTE_KEY])
-        television.configure_char(CHAR_CONFIGURED_NAME,
+        serv_tv = self.add_preload_service(SERV_TELEVISION,
+                                           serv_tv[CHAR_REMOTE_KEY])
+        self.set_primary_service(serv_tv)
+        serv_tv.configure_char(CHAR_CONFIGURED_NAME,
                                   value=self.display_name)
-        television.configure_char(CHAR_SLEEP_DISCOVER_MODE, value=True)
-        self.chars[FEATURE_ON_OFF] = television.configure_char(
+        serv_tv.configure_char(CHAR_SLEEP_DISCOVER_MODE, value=True)
+        self.chars[FEATURE_ON_OFF] = serv_tv.configure_char(
             CHAR_ACTIVE, setter_callback=self.set_on_off)
 
-        self.chars[FEATURE_PLAY_PAUSE] = television.configure_char(
+        self.chars[FEATURE_PLAY_PAUSE] = serv_tv.configure_char(
             CHAR_REMOTE_KEY, setter_callback=self.set_remote_key)
 
-        television_speaker = self.add_preload_service(
+        serv_tv_speaker = self.add_preload_service(
             SERV_TELEVISION_SPEAKER, [CHAR_NAME, CHAR_ACTIVE,
                                       CHAR_VOLUME_CONTROL_TYPE,
                                       CHAR_VOLUME_SELECTOR, CHAR_VOLUME])
-        television.add_linked_service(television_speaker)
+        serv_tv.add_linked_service(serv_tv_speaker)
 
         name = '{} {}'.format(self.display_name, 'Volume')
-        television_speaker.configure_char(CHAR_NAME, value=name)
-        television_speaker.configure_char(CHAR_ACTIVE, value=1)
+        serv_tv_speaker.configure_char(CHAR_NAME, value=name)
+        serv_tv_speaker.configure_char(CHAR_ACTIVE, value=1)
 
-        self.chars[FEATURE_TOGGLE_MUTE] = television_speaker.configure_char(
+        self.chars[FEATURE_TOGGLE_MUTE] = serv_tv_speaker.configure_char(
             CHAR_MUTE, value=False,
             setter_callback=self.set_toggle_mute)
 
-        television_speaker.configure_char(CHAR_VOLUME_CONTROL_TYPE, value=1)
-        self.chars[FEATURE_VOLUME_STEP] = television_speaker.configure_char(
+        serv_tv_speaker.configure_char(CHAR_VOLUME_CONTROL_TYPE, value=1)
+        self.chars[FEATURE_VOLUME_STEP] = serv_tv_speaker.configure_char(
             CHAR_VOLUME_SELECTOR, setter_callback=self.set_volume_step)
 
-        self.chars[FEATURE_SELECT_SOURCE] = television.configure_char(
+        self.chars[FEATURE_SELECT_SOURCE] = serv_tv.configure_char(
             CHAR_ACTIVE_IDENTIFIER, setter_callback=self.set_input_source)
 
         self.sources = self.hass.states.get(
@@ -239,11 +239,9 @@ class TelevisionMediaPlayer(HomeAccessory):
                                              value=input_type)
                 input_service.configure_char(
                     CHAR_CURRENT_VISIBILITY_STATE, value=False)
-                television.add_linked_service(input_service)
+                serv_tv.add_linked_service(input_service)
                 _LOGGER.debug('%s: Added source %s.', self.entity_id,
                               source)
-
-        self.set_primary_service(television)
 
     def set_on_off(self, value):
         """Move switch state to value if call came from HomeKit."""
