@@ -1786,10 +1786,9 @@ wakeonlan==1.1.6
 # homeassistant.components.waqi
 waqiasync==1.0.0
 
-# homeassistant.components.cloud
-warrant==0.6.1
+# homeassistant.components.warmup4ie
+warmup4ie==1.0.3
 
->>>>>>> updated .coveragerc and requirements_all.txt
 # homeassistant.components.folder_watcher
 watchdog==0.8.3
 
