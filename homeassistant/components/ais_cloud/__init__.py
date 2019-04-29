@@ -56,6 +56,11 @@ def async_setup(hass, config):
     yield from hass.components.frontend.async_register_built_in_panel(
             'iframe', "Konsola", "mdi:console",
             "console", {'url': 'http://' + my_ip + ':8888'})
+    #
+    hass.states.async_set("sensor.radiolist", 0, {})
+    hass.states.async_set("sensor.podcastlist", 0, {})
+    hass.states.async_set("sensor.youtubelist", 0, {})
+    hass.states.async_set("sensor.spotifylist", 0, {})
 
     def get_radio_types(call):
         _LOGGER.info("get_radio_types  ")
@@ -341,16 +346,6 @@ class AisCacheData:
         with open(path, 'w') as outfile:
             json.dump(json_data, outfile)
 
-    def audio_name(self, nature, type):
-        # get names from cache file
-        return None
-        # names = [ais_global.G_EMPTY_OPTION]
-        # path = self.get_path(nature)
-        # if not os.path.isfile(path):
-        #     return None
-        # else:
-        #     return names
-
     def audio(self, item, type, text_input):
         return None
 
@@ -456,19 +451,32 @@ class AisColudData:
                 'set_options', {
                     "entity_id": "input_select.radio_station_name",
                     "options": [ais_global.G_EMPTY_OPTION]})
+            # update list
+            self.hass.states.async_set("sensor.radiolist", 0, {})
             return
 
-        ws_resp = self.cache.audio_name(
-            ais_global.G_AN_RADIO, call.data["radio_type"])
-        if ws_resp is None:
-            ws_resp = self.cloud.audio_name(
-                ais_global.G_AN_RADIO, call.data["radio_type"])
+        ws_resp = self.cloud.audio_name(ais_global.G_AN_RADIO, call.data["radio_type"])
         json_ws_resp = ws_resp.json()
         self.radio_names = []
         names = [ais_global.G_EMPTY_OPTION]
+        list_info = {}
+        list_idx = 0
         for item in json_ws_resp["data"]:
             names.append(item["NAME"])
             self.radio_names.append(item)
+            # list
+            list_info[list_idx] = {}
+            list_info[list_idx]["title"] = item["NAME"]
+            list_info[list_idx]["name"] = item["NAME"]
+            list_info[list_idx]["thumbnail"] = item["IMAGE_URL"]
+            list_info[list_idx]["uri"] = item["STREAM_URL"]
+            list_info[list_idx]["mediasource"] = ais_global.G_AN_RADIO
+            list_info[list_idx]["type"] = ''
+            list_info[list_idx]["icon"] = 'mdi:play'
+            list_idx = list_idx + 1
+
+        # create lists
+        self.hass.states.async_set("sensor.radiolist", -1, list_info)
         self.hass.services.call(
             'input_select',
             'set_options', {
@@ -484,6 +492,7 @@ class AisColudData:
                     "option": self.audio_name})
             # this name will be set after the list refresh
             self.audio_name = None
+
         # check if the change was done form remote
         import homeassistant.components.ais_ai_service as ais_ai
         if (ais_ai.CURR_ENTITIE == 'input_select.radio_type'
@@ -605,6 +614,7 @@ class AisColudData:
                     "entity_id": "input_select.podcast_track",
                     "options": [ais_global.G_EMPTY_OPTION]})
             return
+
         podcast_name = call.data["podcast_name"]
         if "lookup_url" in call.data:
             _lookup_url = call.data["lookup_url"]
@@ -631,14 +641,31 @@ class AisColudData:
                 d = feedparser.parse(check_url(_lookup_url))
                 tracks = [ais_global.G_EMPTY_OPTION]
                 self.podcast_tracks = []
+                list_info = {}
+                list_idx = 0
                 for e in d.entries:
                     track = {'title': e.title, 'link': e.enclosures[0]}
+                    # list
+                    list_info[list_idx] = {}
                     try:
                         track['image_url'] = d.feed.image.href
+                        list_info[list_idx]["thumbnail"] = d.feed.image.href
                     except Exception:
                         track['image_url'] = _image_url
+                        list_info[list_idx]["thumbnail"] = _image_url
                     tracks.append(e.title)
                     self.podcast_tracks.append(track)
+                    list_info[list_idx]["title"] = e.title
+                    list_info[list_idx]["name"] = e.title
+                    list_info[list_idx]["uri"] = e.enclosures[0]
+                    list_info[list_idx]["mediasource"] = ais_global.G_AN_PODCAST
+                    list_info[list_idx]["type"] = ''
+                    list_info[list_idx]["icon"] = 'mdi:play'
+                    list_idx = list_idx + 1
+
+                # update list
+                self.hass.states.async_set("sensor.podcastlist", -1, list_info)
+                #
                 self.hass.services.call(
                     'input_select',
                     'set_options', {
@@ -746,11 +773,59 @@ class AisColudData:
                         "media_content_id": _audio_info
                     })
 
+    def play_radio(self, id):
+        _LOGGER.info("play_radio")
+        # """play radio by id on sensor list."""
+        state = self.hass.states.get('sensor.radiolist')
+        attr = state.attributes
+        track = attr.get(int(id))
+        # update list
+        self.hass.states.async_set("sensor.radiolist", id, attr)
+        player_name = self.hass.states.get('input_select.ais_music_player').state
+        player = get_player_data(player_name)
+        self.hass.services.call('media_player', 'play_media', {"entity_id": player["entity_id"],
+                                                               "media_content_type": "audio/mp4",
+                                                               "media_content_id": track["uri"]})
+        # set stream image and title
+        if player["entity_id"] == 'media_player.wbudowany_glosnik':
+            _audio_info = json.dumps(
+                {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": ais_global.G_AN_MUSIC})
+            self.hass.services.call('media_player', 'play_media', {"entity_id": player["entity_id"],
+                                                                   "media_content_type": "ais_info",
+                                                                   "media_content_id": _audio_info})
+
+    def play_podcast(self, id):
+        _LOGGER.info("play_radio")
+        # """play radio by id on sensor list."""
+        state = self.hass.states.get('sensor.podcastlist')
+        attr = state.attributes
+        track = attr.get(int(id))
+        # update list
+        self.hass.states.async_set("sensor.podcastlist", id, attr)
+        player_name = self.hass.states.get('input_select.ais_music_player').state
+        player = get_player_data(player_name)
+        self.hass.services.call('media_player', 'play_media', {"entity_id": player["entity_id"],
+                                                               "media_content_type": "audio/mp4",
+                                                               "media_content_id": track["uri"]})
+        # set stream image and title
+        if player["entity_id"] == 'media_player.wbudowany_glosnik':
+            _audio_info = json.dumps(
+                {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": ais_global.G_AN_MUSIC})
+            self.hass.services.call('media_player', 'play_media', {"entity_id": player["entity_id"],
+                                                                   "media_content_type": "ais_info",
+                                                                   "media_content_id": _audio_info})
+
     def play_audio(self, call):
         audio_type = call.data["audio_type"]
         if 'id' in call.data:
             if audio_type == ais_global.G_AN_SPOTIFY:
                 self.hass.services.call('ais_spotify_service', 'select_track_uri', {"id": call.data['id']})
+            elif audio_type == ais_global.G_AN_MUSIC:
+                self.hass.services.call('ais_yt_service', 'select_track_uri', {"id": call.data['id']})
+            elif audio_type == ais_global.G_AN_RADIO:
+                self.play_radio(call.data["id"])
+            elif audio_type == ais_global.G_AN_PODCAST:
+                self.play_podcast(call.data["id"])
 
         else:
             if audio_type == ais_global.G_AN_RADIO:

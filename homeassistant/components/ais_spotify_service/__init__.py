@@ -366,6 +366,9 @@ class SpotifyData:
         attr = state.attributes
         track = attr.get(int(call_id))
 
+        # update list
+        self.hass.states.async_set("sensor.spotifylist", call_id, attr)
+
         player_name = self.hass.states.get(
             'input_select.ais_music_player').state
         player = ais_cloud.get_player_data(player_name)
@@ -377,15 +380,16 @@ class SpotifyData:
                 "media_content_id": track["uri"]
             })
         # set stream image and title
-        _audio_info = json.dumps(
-            {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": ais_global.G_AN_SPOTIFY})
-        self.hass.services.call(
-            'media_player',
-            'play_media', {
-                "entity_id": player["entity_id"],
-                "media_content_type": "ais_info",
-                "media_content_id": _audio_info
-            })
+        if player["entity_id"] == 'media_player.wbudowany_glosnik':
+            _audio_info = json.dumps(
+                {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": ais_global.G_AN_SPOTIFY})
+            self.hass.services.call(
+                'media_player',
+                'play_media', {
+                    "entity_id": player["entity_id"],
+                    "media_content_type": "ais_info",
+                    "media_content_id": _audio_info
+                })
 
     def change_play_queue(self, call):
         # info from android app

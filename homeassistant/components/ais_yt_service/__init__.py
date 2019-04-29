@@ -47,11 +47,19 @@ def async_setup(hass, config):
         _LOGGER.debug('select_track_name')
         data.process_select_track_name(service)
 
+    # @asyncio.coroutine
+    def select_track_uri(service):
+        """select track uri"""
+        _LOGGER.debug('select_track_uri')
+        data.process_select_track_uri(service)
+
     # register services
     hass.services.async_register(
         DOMAIN, SERVICE_SEARCH, search, schema=SERVICE_SEARCH_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_SELECT_TRACK_NAME, select_track_name)
+    hass.services.async_register(
+        DOMAIN, 'select_track_uri', select_track_uri)
 
     return True
 
@@ -119,7 +127,7 @@ class YouTubeData:
                 # item['snippet']['description']
                 list_info[list_idx]["thumbnail"] = item['snippet']['thumbnails']['medium']['url']
                 list_info[list_idx]["uri"] = item['id']['videoId']
-                list_info[list_idx]["mediasource"] = ais_global.G_AN_YOUTUBE
+                list_info[list_idx]["mediasource"] = ais_global.G_AN_MUSIC
                 list_info[list_idx]["type"] = ''
                 list_info[list_idx]["icon"] = 'mdi:play'
                 list_idx = list_idx + 1
@@ -197,11 +205,63 @@ class YouTubeData:
                     "media_content_type": "video/youtube"})
 
         # set stream image and title
-        # if entity_id == 'media_player.wbudowany_glosnik':
-        self.hass.services.call(
-            'media_player',
-            'play_media', {
-                "entity_id": player["entity_id"],
-                "media_content_type": "ais_info",
-                "media_content_id": _audio_info
-            })
+        if player["entity_id"] == 'media_player.wbudowany_glosnik':
+            self.hass.services.call(
+                'media_player',
+                'play_media', {
+                    "entity_id": player["entity_id"],
+                    "media_content_type": "ais_info",
+                    "media_content_id": _audio_info
+                })
+
+    def process_select_track_uri(self, call):
+        _LOGGER.info("process_select_track_uri")
+        # """play track by id on sensor list."""
+        call_id = call.data["id"]
+        state = self.hass.states.get('sensor.youtubelist')
+        attr = state.attributes
+        track = attr.get(int(call_id))
+
+        player_name = self.hass.states.get('input_select.ais_music_player').state
+        player = ais_cloud.get_player_data(player_name)
+        url = "https://www.youtube.com/watch?v="
+
+        # update list
+        self.hass.states.async_set("sensor.youtubelist", call_id, attr)
+
+        # try to get media url from AIS cloud
+        media_url = None
+        try:
+            ws_resp = aisCloud.extract_media(url + track["uri"])
+            json_ws_resp = ws_resp.json()
+            _LOGGER.info(str(json_ws_resp))
+            media_url = json_ws_resp["url"]
+        except Exception as e:
+            _LOGGER.error("extract_media error: " + str(e))
+
+        if media_url is not None and len(media_url) > 0:
+            # play media extracted in the cloud
+            self.hass.services.call(
+                'media_player',
+                'play_media', {
+                    "entity_id": player["entity_id"],
+                    "media_content_type": "audio/mp4",
+                    "media_content_id": media_url
+                })
+
+        else:
+            # use media_extractor to extract locally
+            self.hass.services.call(
+                'media_extractor',
+                'play_media', {
+                    "entity_id": player["entity_id"],
+                    "media_content_id": url + track["uri"],
+                    "media_content_type": "video/youtube"})
+
+        # set stream image and title
+        if player["entity_id"] == 'media_player.wbudowany_glosnik':
+            _audio_info = json.dumps(
+                {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": ais_global.G_AN_MUSIC})
+            self.hass.services.call('media_player', 'play_media', {"entity_id": player["entity_id"],
+                                                                   "media_content_type": "ais_info",
+                                                                   "media_content_id": _audio_info})

@@ -16,12 +16,12 @@ GLOBAL_TTS_VOICE = 'pl-pl-x-oda-local'
 # audio nature
 G_AN_RADIO = "Radio"
 G_AN_PODCAST = "Podcast"
+# Music == YouTube
 G_AN_MUSIC = "Music"
 G_AN_AUDIOBOOK = "AudioBook"
 G_AN_NEWS = "News"
 G_AN_LOCAL = "Local"
 G_AN_SPOTIFY = "Spotify"
-G_AN_YOUTUBE = "YouTube"
 
 # tokens
 G_OFFLINE_MODE = False
