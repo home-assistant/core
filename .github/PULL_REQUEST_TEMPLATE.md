@@ -18,19 +18,18 @@
   - [ ] The code change is tested and works locally.
   - [ ] Local tests pass with `tox`. **Your PR cannot be merged unless tests pass**
   - [ ] There is no commented out code in this PR.
+  - [ ] I have followed the [development checklist][dev-checklist]
 
 If user exposed functionality or configuration variables are added/changed:
   - [ ] Documentation added/updated in [home-assistant.io](https://github.com/home-assistant/home-assistant.io)
 
 If the code communicates with devices, web services, or third-party tools:
-  - [ ] [_The manifest file_][manifest-docs] has all fields filled out correctly ([example][ex-manifest]). Update and include derived files by running `python3 -m script.hassfest`.
+  - [ ] [_The manifest file_][manifest-docs] has all fields filled out correctly. Update and include derived files by running `python3 -m script.hassfest`.
   - [ ] New or updated dependencies have been added to `requirements_all.txt` by running `python3 -m script.gen_requirements_all`.
-  - [ ] Python dependencies are only imported inside functions that use them ([example][ex-import]).
   - [ ] Untested files have been added to `.coveragerc`.
 
 If the code does not interact with devices:
   - [ ] Tests have been added to verify that the new code works.
 
-[ex-manifest]: https://developers.home-assistant.io/docs/en/creating_integration_manifest.html
-[ex-import]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/keyboard/__init__.py#L16
-[manifest-docs]: https://developers.home-assistant.io/docs/en/development_checklist.html#_the-manifest-file_
+[dev-checklist]: https://developers.home-assistant.io/docs/en/development_checklist.html
+[manifest-docs]: https://developers.home-assistant.io/docs/en/creating_integration_manifest.html
