@@ -6,10 +6,11 @@ from zlib import adler32
 import voluptuous as vol
 
 from homeassistant.components import cover
+from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.const import (
     ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
     CONF_IP_ADDRESS, CONF_NAME, CONF_PORT, CONF_TYPE, DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_TV,
+    DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS,
     TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
