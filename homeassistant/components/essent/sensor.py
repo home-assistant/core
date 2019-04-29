@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     password = config[CONF_PASSWORD]
 
     essent = EssentBase(username, password)
-    add_devices(essent.retrieve_meters(), True)
+    add_devices(essent.create_meters(), True)
 
 
 class EssentBase():
@@ -44,8 +44,8 @@ class EssentBase():
         """Return the active session."""
         return self._essent
 
-    def retrieve_meters(self):
-        """Retrieve the IDs of the meters used by Essent."""
+    def create_meters(self):
+        """Initialize meter components for Home Assistant."""
         meters = []
         for meter in self._meters:
             data = self._meter_data[meter]
