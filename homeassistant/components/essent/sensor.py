@@ -88,4 +88,4 @@ class EssentMeter(Entity):
         self._meter_type = data['type']
         self._meter_unit = data['values']['LVR'][self._tariff]['unit']
 
-        self._state = data['values']['LVR'][self._tariff]['records'][0]
+        self._state = next(iter(data['values']['LVR'][self._tariff]['records']))
