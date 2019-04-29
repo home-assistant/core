@@ -12,10 +12,8 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.climate import (SUPPORT_TARGET_TEMPERATURE,
-                                                    SUPPORT_AWAY_MODE,
-                                                    SUPPORT_OPERATION_MODE,
-                                                    SUPPORT_ON_OFF, STATE_AUTO,
-                                                    STATE_MANUAL)
+        SUPPORT_AWAY_MODE, SUPPORT_OPERATION_MODE,
+        SUPPORT_ON_OFF, STATE_AUTO, STATE_MANUAL)
 
 
 REQUIREMENTS = ['warmup4ie>=0.1.3']
