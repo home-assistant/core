@@ -210,6 +210,12 @@ def clear_discovery_hash(hass, discovery_hash):
     del hass.data[ALREADY_DISCOVERED][discovery_hash]
 
 
+class MQTTConfig(dict):
+    """Dummy class to allow adding attributes."""
+
+    pass
+
+
 async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                       config_entry=None) -> bool:
     """Initialize of MQTT Discovery."""
@@ -236,7 +242,7 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                                 object_id, payload)
                 return
 
-        payload = dict(payload)
+        payload = MQTTConfig(payload)
 
         for key in list(payload.keys()):
             abbreviated_key = key
@@ -264,6 +270,10 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
         discovery_hash = (component, discovery_id)
 
         if payload:
+            # Attach MQTT topic to the payload, used for debug prints
+            setattr(payload, '__configuration_source__',
+                    "MQTT (topic: '{}')".format(topic))
+
             if CONF_PLATFORM in payload and 'schema' not in payload:
                 platform = payload[CONF_PLATFORM]
                 if (component in DEPRECATED_PLATFORM_TO_SCHEMA and
