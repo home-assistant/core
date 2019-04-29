@@ -57,6 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class Warmup4IE(ClimateDevice):
     """Representation of a Warmup4IE device."""
+
     mode_map = {'prog': STATE_AUTO, 'fixed': STATE_MANUAL}
 
     def __init__(self, hass, name, device, user, password, location,
