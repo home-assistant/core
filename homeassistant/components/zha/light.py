@@ -24,6 +24,7 @@ CAPABILITIES_COLOR_TEMP = 0x10
 
 UNSUPPORTED_ATTRIBUTE = 0x86
 SCAN_INTERVAL = timedelta(minutes=60)
+PARALLEL_UPDATES = 5
 
 
 async def async_setup_platform(hass, config, async_add_entities,
