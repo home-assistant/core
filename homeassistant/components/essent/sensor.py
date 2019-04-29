@@ -49,7 +49,6 @@ class EssentBase():
         meters = []
         for meter in self._meters:
             data = self._meter_data[meter]
-            self._meter_data[meter] = data
             for tariff in data['values']['LVR'].keys():
                 meters.append(EssentMeter(
                     self,
