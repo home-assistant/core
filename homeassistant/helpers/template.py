@@ -217,7 +217,7 @@ class Template:
             render_info._exception = ex
         finally:
             del self.hass.data[_RENDER_INFO]
-        render_info._freeze()
+            render_info._freeze()
         return render_info
 
     def render_with_possible_json_value(self, value, error_value=_SENTINEL):
