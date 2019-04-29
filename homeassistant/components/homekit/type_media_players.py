@@ -184,7 +184,6 @@ class TelevisionMediaPlayer(HomeAccessory):
         self.chars = {FEATURE_ON_OFF: None, FEATURE_PLAY_PAUSE: None,
                       FEATURE_TOGGLE_MUTE: None, FEATURE_SELECT_SOURCE: None,
                       FEATURE_VOLUME_STEP: None}
-        feature_list = self.config[CONF_FEATURE_LIST]
 
         self.sources = []
 
@@ -197,76 +196,52 @@ class TelevisionMediaPlayer(HomeAccessory):
         self.chars[FEATURE_ON_OFF] = television.configure_char(
             CHAR_ACTIVE, setter_callback=self.set_on_off)
 
-        if FEATURE_PLAY_PAUSE in feature_list:
-            self.chars[FEATURE_PLAY_PAUSE] \
-                    = television.configure_char(
-                        CHAR_REMOTE_KEY,
-                        setter_callback=self.set_remote_key)
+        self.chars[FEATURE_PLAY_PAUSE] = television.configure_char(
+            CHAR_REMOTE_KEY, setter_callback=self.set_remote_key)
 
-        if FEATURE_TOGGLE_MUTE in feature_list:
+        television_speaker = self.add_preload_service(
+            SERV_TELEVISION_SPEAKER, [CHAR_NAME, CHAR_ACTIVE,
+                                      CHAR_VOLUME_CONTROL_TYPE,
+                                      CHAR_VOLUME_SELECTOR, CHAR_VOLUME])
+        television.add_linked_service(television_speaker)
 
-            television_speaker = self.add_preload_service(
-                SERV_TELEVISION_SPEAKER, [
-                    CHAR_NAME, CHAR_ACTIVE,
-                    CHAR_VOLUME_CONTROL_TYPE,
-                    CHAR_VOLUME_SELECTOR,
-                    CHAR_VOLUME
-                ])
-            television.add_linked_service(television_speaker)
+        name = '{} {}'.format(self.display_name, 'Volume')
+        television_speaker.configure_char(CHAR_NAME, value=name)
+        television_speaker.configure_char(CHAR_ACTIVE, value=1)
 
-            name = '{} {}'.format(self.display_name, 'Volume')
-            television_speaker.configure_char(CHAR_NAME, value=name)
-            television_speaker.configure_char(CHAR_ACTIVE, value=1)
+        self.chars[FEATURE_TOGGLE_MUTE] = television_speaker.configure_char(
+            CHAR_MUTE, value=False,
+            setter_callback=self.set_toggle_mute)
 
-            self.chars[FEATURE_TOGGLE_MUTE] \
-                = television_speaker.configure_char(
-                    CHAR_MUTE, value=False,
-                    setter_callback=self.set_toggle_mute)
+        television_speaker.configure_char(CHAR_VOLUME_CONTROL_TYPE, value=1)
+        self.chars[FEATURE_VOLUME_STEP] = television_speaker.configure_char(
+            CHAR_VOLUME_SELECTOR, setter_callback=self.set_volume_step)
 
-            if FEATURE_VOLUME_STEP in feature_list:
-                television_speaker.configure_char(CHAR_VOLUME_CONTROL_TYPE,
-                                                  value=1)
-                self.chars[FEATURE_VOLUME_STEP] = television_speaker.\
-                    configure_char(
-                        CHAR_VOLUME_SELECTOR,
-                        setter_callback=self.set_volume_step)
+        self.chars[FEATURE_SELECT_SOURCE] = television.configure_char(
+            CHAR_ACTIVE_IDENTIFIER, setter_callback=self.set_input_source)
 
-        if FEATURE_SELECT_SOURCE in feature_list:
+        self.sources = self.hass.states.get(
+            self.entity_id).attributes.get('source_list')
+        if self.sources:
+            for index, source in enumerate(self.sources):
+                input_service = self.add_preload_service(SERV_INPUT_SOURCE, [
+                    CHAR_IDENTIFIER, CHAR_NAME])
 
-            self.chars[FEATURE_SELECT_SOURCE] \
-                    = television.configure_char(
-                        CHAR_ACTIVE_IDENTIFIER,
-                        setter_callback=self.set_input_source)
-
-            self.sources = self.hass.states.get(
-                self.entity_id).attributes.get('source_list')
-            if self.sources:
-                for index, source in enumerate(self.sources):
-                    input_service = self.add_preload_service(
-                        SERV_INPUT_SOURCE, [
-                            CHAR_IDENTIFIER,
-                            CHAR_NAME
-                        ])
-
-                    input_service.configure_char(
-                        CHAR_CONFIGURED_NAME, value=source)
-                    input_service.configure_char(CHAR_NAME, value=source)
-                    input_service.configure_char(
-                        CHAR_IDENTIFIER, value=index)
-                    input_service.configure_char(
-                        CHAR_IS_CONFIGURED, value=True)
-                    input_type = 3 if "hdmi" in source.lower() else 0
-                    input_service.configure_char(CHAR_INPUT_SOURCE_TYPE,
-                                                 value=input_type)
-                    input_service.configure_char(
-                        CHAR_CURRENT_VISIBILITY_STATE, value=False)
-                    television.add_linked_service(input_service)
-                    _LOGGER.debug('%s: Added source %s.', self.entity_id,
-                                  source)
-            else:
-                _LOGGER.warning('%s: Source list empty when setting up sources. Please check \
-                to make sure your media_player is turned on.',
-                                self.entity_id)
+                input_service.configure_char(
+                    CHAR_CONFIGURED_NAME, value=source)
+                input_service.configure_char(CHAR_NAME, value=source)
+                input_service.configure_char(
+                    CHAR_IDENTIFIER, value=index)
+                input_service.configure_char(
+                    CHAR_IS_CONFIGURED, value=True)
+                input_type = 3 if "hdmi" in source.lower() else 0
+                input_service.configure_char(CHAR_INPUT_SOURCE_TYPE,
+                                             value=input_type)
+                input_service.configure_char(
+                    CHAR_CURRENT_VISIBILITY_STATE, value=False)
+                television.add_linked_service(input_service)
+                _LOGGER.debug('%s: Added source %s.', self.entity_id,
+                              source)
 
         self.set_primary_service(television)
 
