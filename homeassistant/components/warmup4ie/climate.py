@@ -198,7 +198,7 @@ class Warmup4IE(ClimateDevice):
             self._away = True
         else:
             self._away = False
-        
+
         # set whether device is on/off
         if self._device.get_run_mode() == 'off':
             self._on = False
