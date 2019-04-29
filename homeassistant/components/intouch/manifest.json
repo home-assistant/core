@@ -1,0 +1,12 @@
+{
+  "domain": "intouch",
+  "name": "Intergas Intouch Lan2RF gateway",
+  "documentation": "https://www.home-assistant.io/components/intouch",
+  "requirements": [
+    "intouch-client==0.1.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@zxdavb"
+  ]
+}
