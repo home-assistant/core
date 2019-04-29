@@ -25,7 +25,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = []
     for meter in EssentBase(username, password).retrieve_meters():
         for tariff in ['L', 'N', 'H']:
-            devices.append(EssentMeter(username, password, meter, tariff))
+            try:
+                devices.append(EssentMeter(username, password, meter, tariff))
+            except KeyError:
+                pass  # Don't add devices for non-existing meter/tariff combinations
 
     add_devices(devices, True)
 
