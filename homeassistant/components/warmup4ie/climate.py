@@ -1,5 +1,4 @@
-"""platform that offers a connection to a warmup4ie device."""
-
+"""Platform that offers a connection to a warmup4ie device."""
 import logging
 
 import voluptuous as vol
@@ -10,13 +9,9 @@ from homeassistant.const import (
     TEMP_CELSIUS)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-
 from homeassistant.components.climate import (
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_AWAY_MODE, SUPPORT_OPERATION_MODE,
     SUPPORT_ON_OFF, STATE_AUTO, STATE_MANUAL)
-
-
-REQUIREMENTS = ['warmup4ie>=0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +20,6 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE |
 
 CONF_LOCATION = 'location'
 CONF_TARGET_TEMP = 'target_temp'
-
 
 DEFAULT_NAME = 'warmup4ie'
 DEFAULT_TARGET_TEMP = 20
@@ -41,7 +35,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=no-member
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo climate devices."""
     name = config.get(CONF_NAME)
@@ -168,7 +161,6 @@ class Warmup4IE(ClimateDevice):
         if operation_mode == STATE_MANUAL:
             self._device.set_temperature_to_manual()
             self._current_operation_mode = operation_mode
-            return
 
     def turn_on(self):
         """Turn on."""
@@ -186,7 +178,7 @@ class Warmup4IE(ClimateDevice):
         This is the only method that should fetch new data for Home Assistant.
         """
         if not self._device.update_room():
-            _LOGGER.error("updating Warmup4IE component failed.")
+            _LOGGER.error("Updating Warmup4IE component failed")
 
         # set operation mode
         mode_map = {'prog': STATE_AUTO, 'fixed': STATE_MANUAL}
