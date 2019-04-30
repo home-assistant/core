@@ -109,26 +109,38 @@ class TraccarScanner:
         self._scan_interval = scan_interval
         self._async_see = async_see
         self._api = api
+        self.connected = False
         self._hass = hass
 
     async def async_init(self):
         """Further initialize connection to Traccar."""
         await self._api.test_connection()
-        if self._api.authenticated:
-            await self._async_update()
-            async_track_time_interval(self._hass,
-                                      self._async_update,
-                                      self._scan_interval)
+        if self._api.connected and not self._api.authenticated:
+            _LOGGER.error("Authentication for Traccar failed")
+            return False
 
-        return self._api.authenticated
+        await self._async_update()
+        async_track_time_interval(self._hass,
+                                  self._async_update,
+                                  self._scan_interval)
+        return True
 
     async def _async_update(self, now=None):
         """Update info from Traccar."""
-        _LOGGER.debug('Updating device data.')
+        if not self.connected:
+            _LOGGER.debug('Testing connection to Traccar')
+            await self._api.test_connection()
+            self.connected = self._api.connected
+            if self.connected:
+                _LOGGER.info("Connection to Traccar restored")
+            else:
+                return
+        _LOGGER.debug('Updating device data')
         await self._api.get_device_info(self._custom_attributes)
         self._hass.async_create_task(self.import_device_data())
         if self._event_types:
             self._hass.async_create_task(self.import_events())
+        self.connected = self._api.connected
 
     async def import_device_data(self):
         """Import device data from Traccar."""
@@ -180,7 +192,7 @@ class TraccarScanner:
         if events is not None:
             for event in events:
                 device_name = next((
-                    dev.get('name') for dev in self._api.devices()
+                    dev.get('name') for dev in self._api.devices
                     if dev.get('id') == event['deviceId']), None)
                 self._hass.bus.async_fire(
                     'traccar_' + self._event_types.get(event["type"]), {

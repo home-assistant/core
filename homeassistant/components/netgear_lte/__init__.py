@@ -35,11 +35,18 @@ DATA_KEY = 'netgear_lte'
 EVENT_SMS = 'netgear_lte_sms'
 
 SERVICE_DELETE_SMS = 'delete_sms'
+SERVICE_SET_OPTION = 'set_option'
+SERVICE_CONNECT_LTE = 'connect_lte'
 
 ATTR_HOST = 'host'
 ATTR_SMS_ID = 'sms_id'
 ATTR_FROM = 'from'
 ATTR_MESSAGE = 'message'
+ATTR_FAILOVER = 'failover'
+ATTR_AUTOCONNECT = 'autoconnect'
+
+FAILOVER_MODES = ['auto', 'wire', 'mobile']
+AUTOCONNECT_MODES = ['never', 'home', 'always']
 
 
 NOTIFY_SCHEMA = vol.Schema({
@@ -74,8 +81,20 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 DELETE_SMS_SCHEMA = vol.Schema({
-    vol.Required(ATTR_HOST): cv.string,
+    vol.Optional(ATTR_HOST): cv.string,
     vol.Required(ATTR_SMS_ID): vol.All(cv.ensure_list, [cv.positive_int]),
+})
+
+SET_OPTION_SCHEMA = vol.Schema(
+    vol.All(cv.has_at_least_one_key(ATTR_FAILOVER, ATTR_AUTOCONNECT), {
+        vol.Optional(ATTR_HOST): cv.string,
+        vol.Optional(ATTR_FAILOVER): vol.In(FAILOVER_MODES),
+        vol.Optional(ATTR_AUTOCONNECT): vol.In(AUTOCONNECT_MODES),
+    })
+)
+
+CONNECT_LTE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_HOST): cv.string,
 })
 
 
@@ -116,7 +135,11 @@ class LTEData:
 
     def get_modem_data(self, config):
         """Get modem_data for the host in config."""
-        return self.modem_data.get(config[CONF_HOST])
+        if config[CONF_HOST] is not None:
+            return self.modem_data.get(config[CONF_HOST])
+        if len(self.modem_data) != 1:
+            return None
+        return next(iter(self.modem_data.values()))
 
 
 async def async_setup(hass, config):
@@ -126,23 +149,42 @@ async def async_setup(hass, config):
             hass, cookie_jar=aiohttp.CookieJar(unsafe=True))
         hass.data[DATA_KEY] = LTEData(websession)
 
-        async def delete_sms_handler(service):
+        async def service_handler(service):
             """Apply a service."""
-            host = service.data[ATTR_HOST]
+            host = service.data.get(ATTR_HOST)
             conf = {CONF_HOST: host}
             modem_data = hass.data[DATA_KEY].get_modem_data(conf)
 
             if not modem_data:
                 _LOGGER.error(
-                    "%s: host %s unavailable", SERVICE_DELETE_SMS, host)
+                    "%s: host %s unavailable", service.service, host)
                 return
 
-            for sms_id in service.data[ATTR_SMS_ID]:
-                await modem_data.modem.delete_sms(sms_id)
+            if service.service == SERVICE_DELETE_SMS:
+                for sms_id in service.data[ATTR_SMS_ID]:
+                    await modem_data.modem.delete_sms(sms_id)
+            elif service.service == SERVICE_SET_OPTION:
+                failover = service.data.get(ATTR_FAILOVER)
+                if failover:
+                    await modem_data.modem.set_failover_mode(failover)
+
+                autoconnect = service.data.get(ATTR_AUTOCONNECT)
+                if autoconnect:
+                    await modem_data.modem.set_autoconnect_mode(autoconnect)
+            elif service.service == SERVICE_CONNECT_LTE:
+                await modem_data.modem.connect_lte()
 
         hass.services.async_register(
-            DOMAIN, SERVICE_DELETE_SMS, delete_sms_handler,
+            DOMAIN, SERVICE_DELETE_SMS, service_handler,
             schema=DELETE_SMS_SCHEMA)
+
+        hass.services.async_register(
+            DOMAIN, SERVICE_SET_OPTION, service_handler,
+            schema=SET_OPTION_SCHEMA)
+
+        hass.services.async_register(
+            DOMAIN, SERVICE_CONNECT_LTE, service_handler,
+            schema=CONNECT_LTE_SCHEMA)
 
     netgear_lte_config = config[DOMAIN]
 

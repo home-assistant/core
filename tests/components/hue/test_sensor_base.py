@@ -48,7 +48,7 @@ PRESENCE_SENSOR_1_PRESENT = {
 }
 LIGHT_LEVEL_SENSOR_1 = {
     "state": {
-        "lightlevel": 0,
+        "lightlevel": 1,
         "dark": True,
         "daylight": True,
         "lastupdated": "2019-01-01T01:00:00"
@@ -141,7 +141,7 @@ PRESENCE_SENSOR_2_NOT_PRESENT = {
 }
 LIGHT_LEVEL_SENSOR_2 = {
     "state": {
-        "lightlevel": 100,
+        "lightlevel": 10001,
         "dark": True,
         "daylight": True,
         "lastupdated": "2019-01-01T01:00:00"
@@ -234,7 +234,7 @@ PRESENCE_SENSOR_3_PRESENT = {
 }
 LIGHT_LEVEL_SENSOR_3 = {
     "state": {
-        "lightlevel": 0,
+        "lightlevel": 1,
         "dark": True,
         "daylight": True,
         "lastupdated": "2019-01-01T01:00:00"
@@ -399,7 +399,7 @@ async def test_sensors(hass, mock_bridge):
     assert presence_sensor_1 is not None
     assert presence_sensor_1.state == 'on'
     assert light_level_sensor_1 is not None
-    assert light_level_sensor_1.state == '0'
+    assert light_level_sensor_1.state == '1.0'
     assert light_level_sensor_1.name == 'Living room sensor light level'
     assert temperature_sensor_1 is not None
     assert temperature_sensor_1.state == '17.75'
@@ -414,7 +414,7 @@ async def test_sensors(hass, mock_bridge):
     assert presence_sensor_2 is not None
     assert presence_sensor_2.state == 'off'
     assert light_level_sensor_2 is not None
-    assert light_level_sensor_2.state == '100'
+    assert light_level_sensor_2.state == '10.0'
     assert light_level_sensor_2.name == 'Kitchen sensor light level'
     assert temperature_sensor_2 is not None
     assert temperature_sensor_2.state == '18.75'

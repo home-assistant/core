@@ -92,36 +92,6 @@ async def test_brightness_light(hass):
     }
 
 
-async def test_brightness_media_player(hass):
-    """Test brightness trait support for media player domain."""
-    assert helpers.get_google_type(media_player.DOMAIN, None) is not None
-    assert trait.BrightnessTrait.supported(media_player.DOMAIN,
-                                           media_player.SUPPORT_VOLUME_SET,
-                                           None)
-
-    trt = trait.BrightnessTrait(hass, State(
-        'media_player.bla', media_player.STATE_PLAYING, {
-            media_player.ATTR_MEDIA_VOLUME_LEVEL: .3
-        }), BASIC_CONFIG)
-
-    assert trt.sync_attributes() == {}
-
-    assert trt.query_attributes() == {
-        'brightness': 30
-    }
-
-    calls = async_mock_service(
-        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_SET)
-    await trt.execute(
-        trait.COMMAND_BRIGHTNESS_ABSOLUTE, BASIC_DATA,
-        {'brightness': 60}, {})
-    assert len(calls) == 1
-    assert calls[0].data == {
-        ATTR_ENTITY_ID: 'media_player.bla',
-        media_player.ATTR_MEDIA_VOLUME_LEVEL: .6
-    }
-
-
 async def test_camera_stream(hass):
     """Test camera stream trait support for camera domain."""
     hass.config.api = Mock(base_url='http://1.1.1.1:8123')
@@ -1139,36 +1109,9 @@ async def test_openclose_cover(hass):
     assert trait.OpenCloseTrait.supported(cover.DOMAIN,
                                           cover.SUPPORT_SET_POSITION, None)
 
-    # No position
     trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
-    }), BASIC_CONFIG)
-
-    assert trt.sync_attributes() == {}
-    assert trt.query_attributes() == {
-        'openPercent': 100
-    }
-
-    # No state
-    trt = trait.OpenCloseTrait(hass, State('cover.bla', STATE_UNKNOWN, {
-    }), BASIC_CONFIG)
-
-    assert trt.sync_attributes() == {}
-
-    with pytest.raises(helpers.SmartHomeError):
-        trt.query_attributes()
-
-    # Assumed state
-    trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
-        ATTR_ASSUMED_STATE: True,
-    }), BASIC_CONFIG)
-
-    assert trt.sync_attributes() == {}
-
-    with pytest.raises(helpers.SmartHomeError):
-        trt.query_attributes()
-
-    trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
-        cover.ATTR_CURRENT_POSITION: 75
+        cover.ATTR_CURRENT_POSITION: 75,
+        ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
     }), BASIC_CONFIG)
 
     assert trt.sync_attributes() == {}
@@ -1188,6 +1131,89 @@ async def test_openclose_cover(hass):
     }
 
 
+async def test_openclose_cover_unknown_state(hass):
+    """Test OpenClose trait support for cover domain with unknown state."""
+    assert helpers.get_google_type(cover.DOMAIN, None) is not None
+    assert trait.OpenCloseTrait.supported(cover.DOMAIN,
+                                          cover.SUPPORT_SET_POSITION, None)
+
+    # No state
+    trt = trait.OpenCloseTrait(hass, State('cover.bla', STATE_UNKNOWN, {
+    }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+
+    with pytest.raises(helpers.SmartHomeError):
+        trt.query_attributes()
+
+    calls = async_mock_service(
+        hass, cover.DOMAIN, cover.SERVICE_OPEN_COVER)
+    await trt.execute(
+        trait.COMMAND_OPENCLOSE, BASIC_DATA,
+        {'openPercent': 100}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'cover.bla',
+    }
+
+    assert trt.query_attributes() == {'openPercent': 100}
+
+
+async def test_openclose_cover_assumed_state(hass):
+    """Test OpenClose trait support for cover domain."""
+    assert helpers.get_google_type(cover.DOMAIN, None) is not None
+    assert trait.OpenCloseTrait.supported(cover.DOMAIN,
+                                          cover.SUPPORT_SET_POSITION, None)
+
+    trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
+        ATTR_ASSUMED_STATE: True,
+        ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
+    }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+
+    with pytest.raises(helpers.SmartHomeError):
+        trt.query_attributes()
+
+    calls = async_mock_service(
+        hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
+    await trt.execute(
+        trait.COMMAND_OPENCLOSE, BASIC_DATA,
+        {'openPercent': 40}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'cover.bla',
+        cover.ATTR_POSITION: 40
+    }
+
+    assert trt.query_attributes() == {'openPercent': 40}
+
+
+async def test_openclose_cover_no_position(hass):
+    """Test OpenClose trait support for cover domain."""
+    assert helpers.get_google_type(cover.DOMAIN, None) is not None
+    assert trait.OpenCloseTrait.supported(cover.DOMAIN,
+                                          cover.SUPPORT_SET_POSITION, None)
+
+    trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
+    }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+    assert trt.query_attributes() == {
+        'openPercent': 100
+    }
+
+    calls = async_mock_service(
+        hass, cover.DOMAIN, cover.SERVICE_CLOSE_COVER)
+    await trt.execute(
+        trait.COMMAND_OPENCLOSE, BASIC_DATA,
+        {'openPercent': 0}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'cover.bla',
+    }
+
+
 @pytest.mark.parametrize('device_class', (
     cover.DEVICE_CLASS_DOOR,
     cover.DEVICE_CLASS_GARAGE,
@@ -1200,6 +1226,7 @@ async def test_openclose_cover_secure(hass, device_class):
 
     trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
         ATTR_DEVICE_CLASS: device_class,
+        ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
         cover.ATTR_CURRENT_POSITION: 75
     }), PIN_CONFIG)
 
@@ -1275,4 +1302,66 @@ async def test_openclose_binary_sensor(hass, device_class):
 
     assert trt.query_attributes() == {
         'openPercent': 0
+    }
+
+
+async def test_volume_media_player(hass):
+    """Test volume trait support for media player domain."""
+    assert helpers.get_google_type(media_player.DOMAIN, None) is not None
+    assert trait.VolumeTrait.supported(media_player.DOMAIN,
+                                       media_player.SUPPORT_VOLUME_SET |
+                                       media_player.SUPPORT_VOLUME_MUTE,
+                                       None)
+
+    trt = trait.VolumeTrait(hass, State(
+        'media_player.bla', media_player.STATE_PLAYING, {
+            media_player.ATTR_MEDIA_VOLUME_LEVEL: .3,
+            media_player.ATTR_MEDIA_VOLUME_MUTED: False,
+        }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+
+    assert trt.query_attributes() == {
+        'currentVolume': 30,
+        'isMuted': False
+    }
+
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_SET)
+    await trt.execute(
+        trait.COMMAND_SET_VOLUME, BASIC_DATA,
+        {'volumeLevel': 60}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'media_player.bla',
+        media_player.ATTR_MEDIA_VOLUME_LEVEL: .6
+    }
+
+
+async def test_volume_media_player_relative(hass):
+    """Test volume trait support for media player domain."""
+    trt = trait.VolumeTrait(hass, State(
+        'media_player.bla', media_player.STATE_PLAYING, {
+            media_player.ATTR_MEDIA_VOLUME_LEVEL: .3,
+            media_player.ATTR_MEDIA_VOLUME_MUTED: False,
+        }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+
+    assert trt.query_attributes() == {
+        'currentVolume': 30,
+        'isMuted': False
+    }
+
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_SET)
+
+    await trt.execute(
+        trait.COMMAND_VOLUME_RELATIVE, BASIC_DATA,
+        {'volumeRelativeLevel': 20,
+         'relativeSteps': 2}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'media_player.bla',
+        media_player.ATTR_MEDIA_VOLUME_LEVEL: .5
     }

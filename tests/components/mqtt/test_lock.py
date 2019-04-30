@@ -86,8 +86,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     assert state.state is STATE_UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    common.async_lock(hass, 'lock.test')
-    await hass.async_block_till_done()
+    await common.async_lock(hass, 'lock.test')
 
     mqtt_mock.async_publish.assert_called_once_with(
         'command-topic', 'LOCK', 0, False)
@@ -96,8 +95,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     assert state.state is STATE_LOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    common.async_unlock(hass, 'lock.test')
-    await hass.async_block_till_done()
+    await common.async_unlock(hass, 'lock.test')
 
     mqtt_mock.async_publish.assert_called_once_with(
         'command-topic', 'UNLOCK', 0, False)
@@ -125,8 +123,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
     assert state.state is STATE_UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    common.async_lock(hass, 'lock.test')
-    await hass.async_block_till_done()
+    await common.async_lock(hass, 'lock.test')
 
     mqtt_mock.async_publish.assert_called_once_with(
         'command-topic', 'LOCK', 0, False)
@@ -135,8 +132,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
     assert state.state is STATE_LOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    common.async_unlock(hass, 'lock.test')
-    await hass.async_block_till_done()
+    await common.async_unlock(hass, 'lock.test')
 
     mqtt_mock.async_publish.assert_called_once_with(
         'command-topic', 'UNLOCK', 0, False)
@@ -218,7 +214,7 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     async_fire_mqtt_message(hass, 'attr-topic', '{ "val": "100" }')
     state = hass.states.get('lock.test')
 
-    assert '100' == state.attributes.get('val')
+    assert state.attributes.get('val') == '100'
 
 
 async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
@@ -276,7 +272,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
     async_fire_mqtt_message(hass, 'attr-topic1', '{ "val": "100" }')
     state = hass.states.get('lock.beer')
-    assert '100' == state.attributes.get('val')
+    assert state.attributes.get('val') == '100'
 
     # Change json_attributes_topic
     async_fire_mqtt_message(hass, 'homeassistant/lock/bla/config',
@@ -286,12 +282,12 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     # Verify we are no longer subscribing to the old topic
     async_fire_mqtt_message(hass, 'attr-topic1', '{ "val": "50" }')
     state = hass.states.get('lock.beer')
-    assert '100' == state.attributes.get('val')
+    assert state.attributes.get('val') == '100'
 
     # Verify we are subscribing to the new topic
     async_fire_mqtt_message(hass, 'attr-topic2', '{ "val": "75" }')
     state = hass.states.get('lock.beer')
-    assert '75' == state.attributes.get('val')
+    assert state.attributes.get('val') == '75'
 
 
 async def test_unique_id(hass):
