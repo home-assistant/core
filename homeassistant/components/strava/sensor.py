@@ -72,7 +72,8 @@ ICON_MAPPING_FIELDS = {
     'max_heartrate': 'mdi:heart',
     'average_heartrate': 'mdi:heart',
     'calories': 'mdi:fire',
-    'suffer_score': 'mdi:hospital'
+    'suffer_score': 'mdi:hospital',
+    'pr_count': 'mdi:trophy'
 }
 
 ICON_MAPPING_ACTIVITY_TYPES = {
