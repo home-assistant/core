@@ -387,6 +387,7 @@ async def test_thermostat_fahrenheit(hass, hk_driver, cls, events):
     assert len(events) == 3
     assert events[-1].data[ATTR_VALUE] == '75.0°F'
 
+
 async def test_thermostat_linked_humidity_sensor(hass, hk_driver, caplog, cls,
                                                  events):
     """Test humidity chat with linked_humidity_sensor."""
