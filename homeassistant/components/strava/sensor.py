@@ -292,6 +292,12 @@ class StravaLastActivitySensor(StravaSensor):
     def name_prefix(self):
         return 'Last Activity '
 
+    @property
+    def device_state_attributes(self):
+        return {
+            'activity_id': self._state.id
+        }
+
 
 class StravaAthleteDetailsSensor(StravaSensor):
     """Representation of an Athlete Sensor."""
@@ -319,6 +325,12 @@ class StravaAthleteDetailsSensor(StravaSensor):
         if self.available:
             return self._data.details.profile
 
+    @property
+    def device_state_attributes(self):
+        return {
+            'athlete_id': self._data.details.id
+        }
+
 
 class StravaAthleteStatsSensor(StravaSensor):
 
@@ -345,6 +357,12 @@ class StravaAthleteStatsSensor(StravaSensor):
         if self._data.details:
             return self._data.details.profile
 
+    @property
+    def device_state_attributes(self):
+        return {
+            'athlete_id': self._data.details.id
+        }
+
 
 class StravaClubSensor(StravaSensor):
 
@@ -362,6 +380,12 @@ class StravaClubSensor(StravaSensor):
         if self.available:
             return self._state.profile_medium
 
+    @property
+    def device_state_attributes(self):
+        return {
+            'club_id': self._state.id
+        }
+
 
 class StravaGearSensor(StravaSensor):
 
@@ -373,3 +397,9 @@ class StravaGearSensor(StravaSensor):
     @property
     def _state(self):
         return self._data.gear
+
+    @property
+    def device_state_attributes(self):
+        return {
+            'gear_id': self._state.id
+        }
