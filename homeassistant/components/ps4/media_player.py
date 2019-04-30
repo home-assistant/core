@@ -280,7 +280,7 @@ class PS4Device(MediaPlayerDevice):
                     self._unique_id = entry.unique_id
                     self.entity_id = entity_id
                     break
-            for device_id, device in d_registry.devices.items():
+            for device in d_registry.devices.values():
                 if self._entry_id in device.config_entries:
                     self._info = {
                         'name': device.name,
@@ -289,6 +289,7 @@ class PS4Device(MediaPlayerDevice):
                         'manufacturer': device.manufacturer,
                         'sw_version': device.sw_version
                     }
+                    break
 
         else:
             _sw_version = status['system-version']
