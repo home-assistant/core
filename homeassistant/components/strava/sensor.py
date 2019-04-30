@@ -205,11 +205,10 @@ class StravaSensor(Entity):
                 attr = unit('km')(attr)
 
             return '%1.4g' % attr.num
-        elif isinstance(attr, str):
-            if len(attr) > 255:
-                return attr[:255]
+        elif isinstance(attr, str) and len(attr) > 255:
+            return attr[:255]
         else:
-            return attr
+            return str(attr)
 
     @property
     def unit_of_measurement(self):
