@@ -173,6 +173,7 @@ omit =
     homeassistant/components/esphome/light.py
     homeassistant/components/esphome/sensor.py
     homeassistant/components/esphome/switch.py
+    homeassistant/components/essent/sensor.py
     homeassistant/components/etherscan/sensor.py
     homeassistant/components/eufy/*
     homeassistant/components/everlights/light.py
