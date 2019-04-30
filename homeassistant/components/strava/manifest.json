@@ -1,0 +1,8 @@
+{
+    "domain": "strava",
+    "name": "Strava",
+    "documentation": "https://www.home-assistant.io/components/strava",
+    "dependencies": ["http", "configurator"],
+    "codeowners": ["@stv0g"],
+    "requirements": ["stravalib==0.10.2"]
+}

@@ -6,8 +6,6 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['stravalib>=0.10.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
@@ -24,8 +22,6 @@ CONFIGURATOR_LINK_NAME = 'Link Strava account'
 CONFIGURATOR_SUBMIT_CAPTION = 'I authorized successfully'
 
 DEFAULT_NAME = 'Strava'
-
-DEPENDENCIES = ['http', 'configurator']
 
 DOMAIN = 'strava'
 
