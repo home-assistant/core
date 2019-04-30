@@ -39,30 +39,53 @@ class DiscordNotificationService(BaseNotificationService):
 
         discord.VoiceClient.warn_nacl = False
         discord_bot = discord.Client(loop=self.hass.loop)
+        images = None
 
         if ATTR_TARGET not in kwargs:
             _LOGGER.error("No target specified")
             return None
+
+        if ATTR_DATA in kwargs:
+            data = kwargs.get(ATTR_DATA)
+
+            if ATTR_IMAGES in data:
+                import os.path
+                images = list()
+
+                for image in data.get(ATTR_IMAGES):
+                    if os.path.isfile(image):
+                        images.append(image)
+                    else:
+                        _LOGGER.warning("Image not found: %s", image)
 
         # pylint: disable=unused-variable
         @discord_bot.event
         async def on_ready():
             """Send the messages when the bot is ready."""
             try:
-                data = kwargs.get(ATTR_DATA)
-                images = None
-                if data:
-                    images = data.get(ATTR_IMAGES)
                 for channelid in kwargs[ATTR_TARGET]:
-                    channel = discord.Object(id=channelid)
-                    await discord_bot.send_message(channel, message)
+                    channelid = int(channelid)
+                    channel = discord_bot.get_channel(channelid)
+
+                    if channel is None:
+                        _LOGGER.warning(
+                            "Channel not found for id: %s",
+                            channelid)
+                        continue
+
+                    # Must create new instances of File for each channel.
+                    files = None
                     if images:
-                        for anum, f_name in enumerate(images):
-                            await discord_bot.send_file(channel, f_name)
+                        files = list()
+                        for image in images:
+                            files.append(discord.File(image))
+
+                    await channel.send(message, files=files)
             except (discord.errors.HTTPException,
                     discord.errors.NotFound) as error:
                 _LOGGER.warning("Communication error: %s", error)
             await discord_bot.logout()
             await discord_bot.close()
 
-        await discord_bot.start(self.token)
+        # Using reconnect=False prevents multiple ready events to be fired.
+        await discord_bot.start(self.token, reconnect=False)
