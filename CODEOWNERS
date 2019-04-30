@@ -153,6 +153,7 @@ homeassistant/components/nello/* @pschmitt
 homeassistant/components/ness_alarm/* @nickw444
 homeassistant/components/nest/* @awarecan
 homeassistant/components/netdata/* @fabaff
+homeassistant/components/nextbus/* @vividboarder
 homeassistant/components/nissan_leaf/* @filcole
 homeassistant/components/nmbs/* @thibmaek
 homeassistant/components/no_ip/* @fabaff
@@ -168,6 +169,7 @@ homeassistant/components/owlet/* @oblogic7
 homeassistant/components/panel_custom/* @home-assistant/core
 homeassistant/components/panel_iframe/* @home-assistant/core
 homeassistant/components/persistent_notification/* @home-assistant/core
+homeassistant/components/philips_js/* @elupus
 homeassistant/components/pi_hole/* @fabaff
 homeassistant/components/plant/* @ChristianKuehnel
 homeassistant/components/point/* @fredrike

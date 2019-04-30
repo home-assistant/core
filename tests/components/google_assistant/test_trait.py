@@ -1109,36 +1109,9 @@ async def test_openclose_cover(hass):
     assert trait.OpenCloseTrait.supported(cover.DOMAIN,
                                           cover.SUPPORT_SET_POSITION, None)
 
-    # No position
     trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
-    }), BASIC_CONFIG)
-
-    assert trt.sync_attributes() == {}
-    assert trt.query_attributes() == {
-        'openPercent': 100
-    }
-
-    # No state
-    trt = trait.OpenCloseTrait(hass, State('cover.bla', STATE_UNKNOWN, {
-    }), BASIC_CONFIG)
-
-    assert trt.sync_attributes() == {}
-
-    with pytest.raises(helpers.SmartHomeError):
-        trt.query_attributes()
-
-    # Assumed state
-    trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
-        ATTR_ASSUMED_STATE: True,
-    }), BASIC_CONFIG)
-
-    assert trt.sync_attributes() == {}
-
-    with pytest.raises(helpers.SmartHomeError):
-        trt.query_attributes()
-
-    trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
-        cover.ATTR_CURRENT_POSITION: 75
+        cover.ATTR_CURRENT_POSITION: 75,
+        ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
     }), BASIC_CONFIG)
 
     assert trt.sync_attributes() == {}
@@ -1158,6 +1131,89 @@ async def test_openclose_cover(hass):
     }
 
 
+async def test_openclose_cover_unknown_state(hass):
+    """Test OpenClose trait support for cover domain with unknown state."""
+    assert helpers.get_google_type(cover.DOMAIN, None) is not None
+    assert trait.OpenCloseTrait.supported(cover.DOMAIN,
+                                          cover.SUPPORT_SET_POSITION, None)
+
+    # No state
+    trt = trait.OpenCloseTrait(hass, State('cover.bla', STATE_UNKNOWN, {
+    }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+
+    with pytest.raises(helpers.SmartHomeError):
+        trt.query_attributes()
+
+    calls = async_mock_service(
+        hass, cover.DOMAIN, cover.SERVICE_OPEN_COVER)
+    await trt.execute(
+        trait.COMMAND_OPENCLOSE, BASIC_DATA,
+        {'openPercent': 100}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'cover.bla',
+    }
+
+    assert trt.query_attributes() == {'openPercent': 100}
+
+
+async def test_openclose_cover_assumed_state(hass):
+    """Test OpenClose trait support for cover domain."""
+    assert helpers.get_google_type(cover.DOMAIN, None) is not None
+    assert trait.OpenCloseTrait.supported(cover.DOMAIN,
+                                          cover.SUPPORT_SET_POSITION, None)
+
+    trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
+        ATTR_ASSUMED_STATE: True,
+        ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
+    }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+
+    with pytest.raises(helpers.SmartHomeError):
+        trt.query_attributes()
+
+    calls = async_mock_service(
+        hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
+    await trt.execute(
+        trait.COMMAND_OPENCLOSE, BASIC_DATA,
+        {'openPercent': 40}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'cover.bla',
+        cover.ATTR_POSITION: 40
+    }
+
+    assert trt.query_attributes() == {'openPercent': 40}
+
+
+async def test_openclose_cover_no_position(hass):
+    """Test OpenClose trait support for cover domain."""
+    assert helpers.get_google_type(cover.DOMAIN, None) is not None
+    assert trait.OpenCloseTrait.supported(cover.DOMAIN,
+                                          cover.SUPPORT_SET_POSITION, None)
+
+    trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
+    }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+    assert trt.query_attributes() == {
+        'openPercent': 100
+    }
+
+    calls = async_mock_service(
+        hass, cover.DOMAIN, cover.SERVICE_CLOSE_COVER)
+    await trt.execute(
+        trait.COMMAND_OPENCLOSE, BASIC_DATA,
+        {'openPercent': 0}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'cover.bla',
+    }
+
+
 @pytest.mark.parametrize('device_class', (
     cover.DEVICE_CLASS_DOOR,
     cover.DEVICE_CLASS_GARAGE,
@@ -1170,6 +1226,7 @@ async def test_openclose_cover_secure(hass, device_class):
 
     trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
         ATTR_DEVICE_CLASS: device_class,
+        ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
         cover.ATTR_CURRENT_POSITION: 75
     }), PIN_CONFIG)
 

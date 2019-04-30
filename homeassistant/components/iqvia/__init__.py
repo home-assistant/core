@@ -1,28 +1,32 @@
 """Support for IQVIA."""
+import asyncio
 from datetime import timedelta
 import logging
 
+from pyiqvia import Client
+from pyiqvia.errors import IQVIAError, InvalidZipError
+
 import voluptuous as vol
 
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL)
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
-from homeassistant.helpers import (
-    aiohttp_client, config_validation as cv, discovery)
+from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.decorator import Registry
 
 from .const import (
     DATA_CLIENT, DATA_LISTENER, DOMAIN, SENSORS, TOPIC_DATA_UPDATE,
-    TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_HISTORIC, TYPE_ALLERGY_INDEX,
-    TYPE_ALLERGY_OUTLOOK, TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
-    TYPE_ALLERGY_YESTERDAY, TYPE_ASTHMA_FORECAST, TYPE_ASTHMA_HISTORIC,
+    TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_INDEX, TYPE_ALLERGY_OUTLOOK,
+    TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW, TYPE_ASTHMA_FORECAST,
     TYPE_ASTHMA_INDEX, TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
-    TYPE_ASTHMA_YESTERDAY, TYPE_DISEASE_FORECAST)
+    TYPE_DISEASE_FORECAST, TYPE_DISEASE_INDEX, TYPE_DISEASE_TODAY)
 
 _LOGGER = logging.getLogger(__name__)
+
 
 CONF_ZIP_CODE = 'zip_code'
 
@@ -31,8 +35,17 @@ DATA_CONFIG = 'config'
 DEFAULT_ATTRIBUTION = 'Data provided by IQVIA™'
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
-NOTIFICATION_ID = 'iqvia_setup'
-NOTIFICATION_TITLE = 'IQVIA Setup'
+FETCHER_MAPPING = {
+    (TYPE_ALLERGY_FORECAST,): (TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_OUTLOOK),
+    (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW): (
+        TYPE_ALLERGY_INDEX,),
+    (TYPE_ASTHMA_FORECAST,): (TYPE_ASTHMA_FORECAST,),
+    (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW): (
+        TYPE_ASTHMA_INDEX,),
+    (TYPE_DISEASE_FORECAST,): (TYPE_DISEASE_FORECAST,),
+    (TYPE_DISEASE_TODAY,): (TYPE_DISEASE_INDEX,),
+}
+
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -45,15 +58,9 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up the IQVIA component."""
-    from pyiqvia import Client
-    from pyiqvia.errors import IQVIAError
-
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_CLIENT] = {}
     hass.data[DOMAIN][DATA_LISTENER] = {}
-
-    if DOMAIN not in config:
-        return True
 
     conf = config[DOMAIN]
 
@@ -66,17 +73,12 @@ async def async_setup(hass, config):
         await iqvia.async_update()
     except IQVIAError as err:
         _LOGGER.error('Unable to set up IQVIA: %s', err)
-        hass.components.persistent_notification.create(
-            'Error: {0}<br />'
-            'You will need to restart hass after fixing.'
-            ''.format(err),
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID)
         return False
 
     hass.data[DOMAIN][DATA_CLIENT] = iqvia
 
-    discovery.load_platform(hass, 'sensor', DOMAIN, {}, conf)
+    hass.async_create_task(
+        async_load_platform(hass, 'sensor', DOMAIN, {}, config))
 
     async def refresh(event_time):
         """Refresh IQVIA data."""
@@ -86,9 +88,7 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN][DATA_LISTENER] = async_track_time_interval(
         hass, refresh,
-        timedelta(
-            seconds=conf.get(
-                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL.seconds)))
+        DEFAULT_SCAN_INTERVAL)
 
     return True
 
@@ -103,94 +103,80 @@ class IQVIAData:
         self.sensor_types = sensor_types
         self.zip_code = client.zip_code
 
-    async def _get_data(self, method, key):
-        """Return API data from a specific call."""
-        from pyiqvia.errors import IQVIAError
-
-        try:
-            data = await method()
-            self.data[key] = data
-        except IQVIAError as err:
-            _LOGGER.error('Unable to get "%s" data: %s', key, err)
-            self.data[key] = {}
+        self.fetchers = Registry()
+        self.fetchers.register(TYPE_ALLERGY_FORECAST)(
+            self._client.allergens.extended)
+        self.fetchers.register(TYPE_ALLERGY_OUTLOOK)(
+            self._client.allergens.outlook)
+        self.fetchers.register(TYPE_ALLERGY_INDEX)(
+            self._client.allergens.current)
+        self.fetchers.register(TYPE_ASTHMA_FORECAST)(
+            self._client.asthma.extended)
+        self.fetchers.register(TYPE_ASTHMA_INDEX)(self._client.asthma.current)
+        self.fetchers.register(TYPE_DISEASE_FORECAST)(
+            self._client.disease.extended)
+        self.fetchers.register(TYPE_DISEASE_INDEX)(
+            self._client.disease.current)
 
     async def async_update(self):
         """Update IQVIA data."""
-        from pyiqvia.errors import InvalidZipError
+        tasks = {}
+
+        for conditions, fetcher_types in FETCHER_MAPPING.items():
+            if not any(c in self.sensor_types for c in conditions):
+                continue
+
+            for fetcher_type in fetcher_types:
+                tasks[fetcher_type] = self.fetchers[fetcher_type]()
+
+        results = await asyncio.gather(*tasks.values(), return_exceptions=True)
 
         # IQVIA sites require a bit more complicated error handling, given that
-        # it sometimes has parts (but not the whole thing) go down:
-        #
-        # 1. If `InvalidZipError` is thrown, quit everything immediately.
-        # 2. If an individual request throws any other error, try the others.
-        try:
-            if TYPE_ALLERGY_FORECAST in self.sensor_types:
-                await self._get_data(
-                    self._client.allergens.extended, TYPE_ALLERGY_FORECAST)
-                await self._get_data(
-                    self._client.allergens.outlook, TYPE_ALLERGY_OUTLOOK)
+        # they sometimes have parts (but not the whole thing) go down:
+        #   1. If `InvalidZipError` is thrown, quit everything immediately.
+        #   2. If a single request throws any other error, try the others.
+        for key, result in zip(tasks, results):
+            if isinstance(result, InvalidZipError):
+                _LOGGER.error("No data for ZIP: %s", self._client.zip_code)
+                self.data = {}
+                return
 
-            if TYPE_ALLERGY_HISTORIC in self.sensor_types:
-                await self._get_data(
-                    self._client.allergens.historic, TYPE_ALLERGY_HISTORIC)
+            if isinstance(result, IQVIAError):
+                _LOGGER.error('Unable to get %s data: %s', key, result)
+                self.data[key] = {}
+                continue
 
-            if any(s in self.sensor_types
-                   for s in [TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
-                             TYPE_ALLERGY_YESTERDAY]):
-                await self._get_data(
-                    self._client.allergens.current, TYPE_ALLERGY_INDEX)
-
-            if TYPE_ASTHMA_FORECAST in self.sensor_types:
-                await self._get_data(
-                    self._client.asthma.extended, TYPE_ASTHMA_FORECAST)
-
-            if TYPE_ASTHMA_HISTORIC in self.sensor_types:
-                await self._get_data(
-                    self._client.asthma.historic, TYPE_ASTHMA_HISTORIC)
-
-            if any(s in self.sensor_types
-                   for s in [TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
-                             TYPE_ASTHMA_YESTERDAY]):
-                await self._get_data(
-                    self._client.asthma.current, TYPE_ASTHMA_INDEX)
-
-            if TYPE_DISEASE_FORECAST in self.sensor_types:
-                await self._get_data(
-                    self._client.disease.extended, TYPE_DISEASE_FORECAST)
-
-            _LOGGER.debug("New data retrieved: %s", self.data)
-        except InvalidZipError:
-            _LOGGER.error(
-                "Cannot retrieve data for ZIP code: %s", self._client.zip_code)
-            self.data = {}
+            _LOGGER.debug('Loaded new %s data', key)
+            self.data[key] = result
 
 
 class IQVIAEntity(Entity):
     """Define a base IQVIA entity."""
 
-    def __init__(self, iqvia, kind, name, icon, zip_code):
+    def __init__(self, iqvia, sensor_type, name, icon, zip_code):
         """Initialize the sensor."""
         self._async_unsub_dispatcher_connect = None
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._icon = icon
         self._iqvia = iqvia
-        self._kind = kind
         self._name = name
         self._state = None
+        self._type = sensor_type
         self._zip_code = zip_code
 
     @property
     def available(self):
         """Return True if entity is available."""
-        if self._kind in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
-                          TYPE_ALLERGY_YESTERDAY):
+        if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW):
             return self._iqvia.data.get(TYPE_ALLERGY_INDEX) is not None
 
-        if self._kind in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
-                          TYPE_ASTHMA_YESTERDAY):
+        if self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW):
             return self._iqvia.data.get(TYPE_ASTHMA_INDEX) is not None
 
-        return self._iqvia.data.get(self._kind) is not None
+        if self._type == TYPE_DISEASE_TODAY:
+            return self._iqvia.data.get(TYPE_DISEASE_INDEX) is not None
+
+        return self._iqvia.data.get(self._type) is not None
 
     @property
     def device_state_attributes(self):
@@ -215,7 +201,7 @@ class IQVIAEntity(Entity):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return '{0}_{1}'.format(self._zip_code, self._kind)
+        return '{0}_{1}'.format(self._zip_code, self._type)
 
     @property
     def unit_of_measurement(self):

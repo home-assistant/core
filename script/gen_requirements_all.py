@@ -232,7 +232,6 @@ def gather_modules():
     if errors:
         print("******* ERROR")
         print("Errors while importing: ", ', '.join(errors))
-        print("Make sure you import 3rd party libraries inside methods.")
         return None
 
     return reqs
