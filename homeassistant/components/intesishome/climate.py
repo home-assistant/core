@@ -81,7 +81,8 @@ async def async_setup_platform(hass, config, async_add_entities,
     controller = IntesisHome(ihuser, ihpass, hass.loop)
 
     await hass.async_add_executor_job(controller.connect)
-    await asyncio.sleep(2)
+    while not controller.is_connected and not controller.error_message:
+        await asyncio.sleep(0.1)
 
     if controller.is_connected:
         intesis_devices = controller.get_devices().items()
