@@ -35,7 +35,6 @@ def test_validate_entity_config():
                {'media_player.test': {CONF_FEATURE_LIST: [
                    {CONF_FEATURE: FEATURE_ON_OFF},
                    {CONF_FEATURE: FEATURE_ON_OFF}]}},
-               {'media_player.test': {CONF_TYPE: 'invalid_type'}},
                {'switch.test': {CONF_TYPE: 'invalid_type'}}]
 
     for conf in configs:
@@ -61,14 +60,12 @@ def test_validate_entity_config():
         {'lock.demo': {ATTR_CODE: '1234'}}
 
     assert vec({'media_player.demo': {}}) == \
-        {'media_player.demo': {CONF_TYPE: TYPE_SWITCH, CONF_FEATURE_LIST: {}}}
+        {'media_player.demo': {CONF_FEATURE_LIST: {}}}
     config = {CONF_FEATURE_LIST: [{CONF_FEATURE: FEATURE_ON_OFF},
                                   {CONF_FEATURE: FEATURE_PLAY_PAUSE}]}
     assert vec({'media_player.demo': config}) == \
-        {'media_player.demo': {CONF_TYPE: TYPE_SWITCH, CONF_FEATURE_LIST:
+        {'media_player.demo': {CONF_FEATURE_LIST:
                                {FEATURE_ON_OFF: {}, FEATURE_PLAY_PAUSE: {}}}}
-    assert vec({'media_player.demo': {}}) == \
-        {'media_player.demo': {CONF_TYPE: TYPE_SWITCH, CONF_FEATURE_LIST: {}}}
 
     assert vec({'switch.demo': {CONF_TYPE: TYPE_FAUCET}}) == \
         {'switch.demo': {CONF_TYPE: TYPE_FAUCET}}

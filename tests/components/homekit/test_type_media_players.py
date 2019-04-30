@@ -1,9 +1,9 @@
 """Test different accessory types: Media Players."""
 
 from homeassistant.components.homekit.const import (
-    ATTR_VALUE, CONF_FEATURE_LIST, DEVICE_CLASS_TV, FEATURE_ON_OFF,
-    FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP, FEATURE_SELECT_SOURCE,
-    FEATURE_TOGGLE_MUTE, FEATURE_VOLUME_STEP)
+    ATTR_VALUE, CONF_FEATURE_LIST, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
+    FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE)
+from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.components.homekit.type_media_players import (
     MediaPlayer, TelevisionMediaPlayer)
 from homeassistant.components.media_player.const import (
@@ -137,10 +137,6 @@ async def test_media_player_set_state(hass, hk_driver, events):
 
 async def test_media_player_television_set_state(hass, hk_driver, events):
     """Test if television accessory and HA are updated accordingly."""
-    config = {CONF_FEATURE_LIST: {
-        FEATURE_ON_OFF: None, FEATURE_PLAY_PAUSE: None,
-        FEATURE_SELECT_SOURCE: None, FEATURE_TOGGLE_MUTE: None,
-        FEATURE_VOLUME_STEP: None}}
     entity_id = 'media_player.television'
 
     hass.states.async_set(entity_id, None, {ATTR_DEVICE_CLASS: DEVICE_CLASS_TV,
@@ -152,25 +148,25 @@ async def test_media_player_television_set_state(hass, hk_driver, events):
                                             })
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, 'MediaPlayer', entity_id, 2,
-                                config)
+                                None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
     assert acc.category == 31  # Television
 
-    assert acc.chars[FEATURE_ON_OFF].value == 0
-    assert acc.chars[FEATURE_PLAY_PAUSE].value == 0
+    assert acc.char_active.value == 0
+    assert acc.char_remote_key.value == 0
     assert acc.char_active_identifier.value == 0
-    assert acc.chars[FEATURE_TOGGLE_MUTE].value is False
+    assert acc.char_toggle_mute.value is False
 
     hass.states.async_set(entity_id, STATE_ON, {ATTR_MEDIA_VOLUME_MUTED: True})
     await hass.async_block_till_done()
-    assert acc.chars[FEATURE_ON_OFF].value == 1
-    assert acc.chars[FEATURE_TOGGLE_MUTE].value is True
+    assert acc.char_active.value == 1
+    assert acc.char_toggle_mute.value is True
 
     hass.states.async_set(entity_id, STATE_OFF)
     await hass.async_block_till_done()
-    assert acc.chars[FEATURE_ON_OFF].value == 0
+    assert acc.char_active.value == 0
 
     hass.states.async_set(entity_id, STATE_ON, {ATTR_INPUT_SOURCE: 'HDMI 2'})
     await hass.async_block_till_done()
