@@ -61,13 +61,13 @@ class MinioEventStreamIterator(collections.Iterable):
 
     def __init__(self, response):
         """Init."""
-        self.__response = response
-        self.__stream = response.stream()
+        self._response = response
+        self._stream = response.stream()
 
     def __next__(self):
         """Get next not empty line."""
         while True:
-            line = next(self.__stream)
+            line = next(self._stream)
             if line.strip():
                 event = json.loads(line.decode('utf-8'))
                 if event['Records'] is not None:
@@ -75,7 +75,7 @@ class MinioEventStreamIterator(collections.Iterable):
 
     def close(self):
         """Close the response."""
-        self.__response.close()
+        self._response.close()
 
 
 class MinioEventThread(threading.Thread):
@@ -95,16 +95,16 @@ class MinioEventThread(threading.Thread):
     ):
         """Copy over all Minio client options."""
         super().__init__()
-        self.__queue = queue
-        self.__endpoint = endpoint
-        self.__access_key = access_key
-        self.__secret_key = secret_key
-        self.__secure = secure
-        self.__bucket_name = bucket_name
-        self.__prefix = prefix
-        self.__suffix = suffix
-        self.__events = events
-        self.__event_stream_it = None
+        self._queue = queue
+        self._endpoint = endpoint
+        self._access_key = access_key
+        self._secret_key = secret_key
+        self._secure = secure
+        self._bucket_name = bucket_name
+        self._prefix = prefix
+        self._suffix = suffix
+        self._events = events
+        self._event_stream_it = None
 
     def __enter__(self):
         """Start the thread."""
@@ -119,26 +119,26 @@ class MinioEventThread(threading.Thread):
         _LOGGER.info('Running MinioEventThread')
 
         minio_client = Minio(
-            self.__endpoint,
-            self.__access_key,
-            self.__secret_key,
-            self.__secure
+            self._endpoint,
+            self._access_key,
+            self._secret_key,
+            self._secure
         )
 
         while True:
             _LOGGER.info('Connecting to minio event stream')
             response = get_minio_notification_response(
                 minio_client,
-                self.__bucket_name,
-                self.__prefix,
-                self.__suffix,
-                self.__events
+                self._bucket_name,
+                self._prefix,
+                self._suffix,
+                self._events
             )
             try:
-                self.__event_stream_it = MinioEventStreamIterator(response)
+                self._event_stream_it = MinioEventStreamIterator(response)
 
                 self._iterate_event_stream(
-                    self.__event_stream_it,
+                    self._event_stream_it,
                     minio_client
                 )
             except json.JSONDecodeError:
@@ -169,14 +169,14 @@ class MinioEventThread(threading.Thread):
                     "metadata": metadata,
                 }
                 _LOGGER.debug('Queue entry, %s', queue_entry)
-                self.__queue.put(queue_entry)
+                self._queue.put(queue_entry)
 
     def stop(self):
         """Cancel event stream and join the thread."""
         _LOGGER.info('Stopping event thread')
-        if self.__event_stream_it is not None:
-            self.__event_stream_it.close()
-            self.__event_stream_it = None
+        if self._event_stream_it is not None:
+            self._event_stream_it.close()
+            self._event_stream_it = None
 
         _LOGGER.info('Joining event thread')
         self.join()

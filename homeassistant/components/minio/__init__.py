@@ -75,14 +75,14 @@ class QueueListener(threading.Thread):
     def __init__(self, hass):
         """Create queue."""
         super().__init__()
-        self.__hass = hass
-        self.__q = Queue()
+        self._hass = hass
+        self._q = Queue()
 
     def run(self):
         """Listen to queue events, and forward them to HASS event bus."""
         _LOGGER.info('Running QueueListener')
         while True:
-            event = self.__q.get()
+            event = self._q.get()
             if event is None:
                 break
 
@@ -94,7 +94,7 @@ class QueueListener(threading.Thread):
                 event['bucket'],
                 event['key']
             )
-            self.__hass.bus.fire(DOMAIN, {
+            self._hass.bus.fire(DOMAIN, {
                 'file_name': file_name,
                 **event,
             })
@@ -102,12 +102,12 @@ class QueueListener(threading.Thread):
     @property
     def queue(self):
         """Return wrapped queue."""
-        return self.__q
+        return self._q
 
     def stop(self):
         """Stop run by putting None into queue and join the thread."""
         _LOGGER.info('Stopping QueueListener')
-        self.__q.put(None)
+        self._q.put(None)
         self.join()
         _LOGGER.info('Stopped QueueListener')
 
@@ -136,38 +136,38 @@ class MinioListener:
             events: List[str]
     ):
         """Create Listener."""
-        self.__queue = queue
-        self.__endpoint = endpoint
-        self.__access_key = access_key
-        self.__secret_key = secret_key
-        self.__secure = secure
-        self.__bucket_name = bucket_name
-        self.__prefix = prefix
-        self.__suffix = suffix
-        self.__events = events
-        self.__minio_event_thread = None
+        self._queue = queue
+        self._endpoint = endpoint
+        self._access_key = access_key
+        self._secret_key = secret_key
+        self._secure = secure
+        self._bucket_name = bucket_name
+        self._prefix = prefix
+        self._suffix = suffix
+        self._events = events
+        self._minio_event_thread = None
 
     def start_handler(self, _):
         """Create and start the event thread."""
         from .minio_helper import MinioEventThread
 
-        self.__minio_event_thread = MinioEventThread(
-            self.__queue,
-            self.__endpoint,
-            self.__access_key,
-            self.__secret_key,
-            self.__secure,
-            self.__bucket_name,
-            self.__prefix,
-            self.__suffix,
-            self.__events
+        self._minio_event_thread = MinioEventThread(
+            self._queue,
+            self._endpoint,
+            self._access_key,
+            self._secret_key,
+            self._secure,
+            self._bucket_name,
+            self._prefix,
+            self._suffix,
+            self._events
         )
-        self.__minio_event_thread.start()
+        self._minio_event_thread.start()
 
     def stop_handler(self, _):
         """Issue stop and wait for thread to join."""
-        if self.__minio_event_thread is not None:
-            self.__minio_event_thread.stop()
+        if self._minio_event_thread is not None:
+            self._minio_event_thread.stop()
 
 
 def setup(hass, config):
