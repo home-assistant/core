@@ -1305,6 +1305,9 @@ pyspcwebgw==0.4.0
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2
 
+# homeassistant.components.strava
+stravalib==stravalib==0.10.2
+
 # homeassistant.components.stride
 pystride==0.1.7
 
