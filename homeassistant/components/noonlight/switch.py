@@ -33,7 +33,7 @@ class NoonlightSwitch(SwitchDevice):
     def name(self):
         """Return the name of the switch."""
         return self._name
-        
+
     @property
     def available(self):
         """ensure that the Noonlight access token is valid"""
@@ -46,20 +46,20 @@ class NoonlightSwitch(SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Activate an alarm"""
-        #[TODO] read list of monitored sensors, use sensor type to determine 
+        #[TODO] read list of monitored sensors, use sensor type to determine
         #   whether medical, fire, or police should be notified
         if self._alarm is None:
             self._alarm = await self.noonlight.client.create_alarm(
-                body = {
+                body={
                     'location.coordinates': {
-                        'lat':self.noonlight.latitude, 
-                        'lng':self.noonlight.latitude, 
+                        'lat':self.noonlight.latitude,
+                        'lng':self.noonlight.latitude,
                         'accuracy': 5
-                    } 
+                    }
                 }
             )
             if self._alarm and self._alarm.status == 'ACTIVE':
-                self._state = True        
+                self._state = True
 
     async def async_turn_off(self, **kwargs):
         """Send a command to cancel the active alarm"""
