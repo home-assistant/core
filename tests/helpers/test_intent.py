@@ -1,11 +1,11 @@
 """Tests for the intent helpers."""
 
-import unittest
 import voluptuous as vol
+
+import pytest
 
 from homeassistant.core import State
 from homeassistant.helpers import (intent, config_validation as cv)
-import pytest
 
 
 class MockIntentHandler(intent.IntentHandler):
@@ -25,23 +25,20 @@ def test_async_match_state():
     assert state is state1
 
 
-class TestIntentHandler(unittest.TestCase):
-    """Test the Home Assistant event helpers."""
+def test_async_validate_slots():
+    """Test async_validate_slots of IntentHandler."""
+    handler1 = MockIntentHandler({
+        vol.Required('name'): cv.string,
+        })
 
-    def test_async_validate_slots(self):
-        """Test async_validate_slots of IntentHandler."""
-        handler1 = MockIntentHandler({
-            vol.Required('name'): cv.string,
-            })
-
-        with pytest.raises(vol.error.MultipleInvalid):
-            handler1.async_validate_slots({})
-        with pytest.raises(vol.error.MultipleInvalid):
-            handler1.async_validate_slots({'name': 1})
-        with pytest.raises(vol.error.MultipleInvalid):
-            handler1.async_validate_slots({'name': 'kitchen'})
-        handler1.async_validate_slots({'name': {'value': 'kitchen'}})
-        handler1.async_validate_slots({
-            'name': {'value': 'kitchen'},
-            'probability': {'value': '0.5'}
-            })
+    with pytest.raises(vol.error.MultipleInvalid):
+        handler1.async_validate_slots({})
+    with pytest.raises(vol.error.MultipleInvalid):
+        handler1.async_validate_slots({'name': 1})
+    with pytest.raises(vol.error.MultipleInvalid):
+        handler1.async_validate_slots({'name': 'kitchen'})
+    handler1.async_validate_slots({'name': {'value': 'kitchen'}})
+    handler1.async_validate_slots({
+        'name': {'value': 'kitchen'},
+        'probability': {'value': '0.5'}
+        })
