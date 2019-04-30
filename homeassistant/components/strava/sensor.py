@@ -187,13 +187,20 @@ class StravaSensor(Entity):
         """Return the state of the sensor."""
         from stravalib.model import ActivityTotals
         from units.quantity import Quantity
+        from units import unit
 
         attr = getattr(self._state, self._field, None)
         if isinstance(attr, ActivityTotals):
             attr = getattr(attr, self._subfield, None)
 
         if isinstance(attr, Quantity):
-            return attr.num
+            if attr > unit('km')(10):
+                attr = unit('km')(attr)
+
+            return '%1.4g' % attr.num
+        if isinstance(attr, str):
+            if len(attr) > 255:
+                return attr[:255]
         else:
             return attr
 
@@ -201,12 +208,16 @@ class StravaSensor(Entity):
     def unit_of_measurement(self):
         from stravalib.model import ActivityTotals
         from units.quantity import Quantity
+        from units import unit
 
         attr = getattr(self._state, self._field, None)
         if isinstance(attr, ActivityTotals):
             attr = getattr(attr, self._subfield, None)
 
         if isinstance(attr, Quantity):
+            if attr > unit('km')(10):
+                attr = unit('km')(attr)
+
             return str(attr.unit)
         elif field in UNIT_MAPPING_FIELDS:
             return UNIT_MAPPING_FIELDS[field]
