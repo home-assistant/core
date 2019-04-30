@@ -116,8 +116,8 @@ SENSOR_TYPES = {
                             '_chamber_'],
     'current_state': ['state', None, 'mdi:printer-3d', ''],
     'current_job': ['progress', '%', 'mdi:file-percent', '_current_job'],
-    'time_remaining': ['progress', None, 'mdi:clock-end', '_remaining'],
-    'time_elapsed': ['progress', None, 'mdi:clock-start', '_elapsed'],
+    'time_remaining': ['progress', None, 'mdi:clock-end', '_job_end'],
+    'time_elapsed': ['progress', None, 'mdi:clock-start', '_job_start'],
 }
 
 SENSOR_SCHEMA = vol.Schema({

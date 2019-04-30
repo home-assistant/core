@@ -1,5 +1,5 @@
 """Support for monitoring Repetier Server Sensors."""
-from datetime import datetime
+from datetime import datetime, tzinfo, timedelta
 import logging
 import time
 
@@ -12,6 +12,12 @@ from . import REPETIER_API, SENSOR_TYPES, UPDATE_SIGNAL
 
 _LOGGER = logging.getLogger(__name__)
 
+
+class simple_utc(tzinfo):
+    def tzname(self,**kwargs):
+        return "UTC"
+    def utcoffset(self, dt):
+        return timedelta(0)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available Repetier Server sensors."""
@@ -169,6 +175,7 @@ class RepetierJobSensor(RepetierSensor):
 class RepetierRemainingSensor(RepetierSensor):
     """Class to create and populate a Repetier Time Remaining Sensor."""
 
+    @property
     def device_class(self):
         """Return the device class."""
         return DEVICE_CLASS_TIMESTAMP
@@ -180,24 +187,20 @@ class RepetierRemainingSensor(RepetierSensor):
             return
         job_name = data['job_name']
         start = data['start']
-        end = data['print_time']
+        print_time = data['print_time']
         from_start = data['from_start']
-        time_end = start + round(end, 0)
-        remaining = end - from_start
+        time_end = start + round(print_time, 0)
+        self._state = datetime.utcfromtimestamp(time_end).isoformat()
+        remaining = print_time - from_start
         remaining_secs = int(round(remaining, 0))
-        state = time.strftime('%H:%M:%S', time.gmtime(remaining_secs))
-        self._state = state
-        end_time = datetime.utcfromtimestamp(time_end).isoformat()
-        self._attributes['finish'] = end_time
-        self._attributes['seconds'] = remaining_secs
         _LOGGER.debug(
             "Job %s remaining %s",
             job_name, time.strftime('%H:%M:%S', time.gmtime(remaining_secs)))
 
-
 class RepetierElapsedSensor(RepetierSensor):
     """Class to create and populate a Repetier Time Elapsed Sensor."""
 
+    @property
     def device_class(self):
         """Return the device class."""
         return DEVICE_CLASS_TIMESTAMP
@@ -210,12 +213,8 @@ class RepetierElapsedSensor(RepetierSensor):
         job_name = data['job_name']
         start = data['start']
         from_start = data['from_start']
-        start_time = datetime.utcfromtimestamp(start).isoformat()
+        self._state = datetime.utcfromtimestamp(start).isoformat()
         elapsed_secs = int(round(from_start, 0))
-        state = time.strftime('%H:%M:%S', time.gmtime(elapsed_secs))
-        self._attributes['started'] = start_time
-        self._attributes['seconds'] = elapsed_secs
-        self._state = state
         _LOGGER.debug(
             "Job %s elapsed %s",
             job_name, time.strftime('%H:%M:%S', time.gmtime(elapsed_secs)))
