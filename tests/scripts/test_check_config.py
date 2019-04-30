@@ -28,15 +28,6 @@ BAD_CORE_CONFIG = (
 )
 
 
-def setup():
-    """Prepare the test."""
-    # Make sure whe have an event loop.
-    try:
-        asyncio.get_event_loop()
-    except RuntimeError:
-        asyncio.set_event_loop(asyncio.new_event_loop())
-
-
 def normalize_yaml_files(check_dict):
     """Remove configuration path from ['yaml_files']."""
     root = get_test_config_dir()
@@ -46,7 +37,7 @@ def normalize_yaml_files(check_dict):
 
 # pylint: disable=no-self-use,invalid-name
 @patch('os.path.isfile', return_value=True)
-def test_bad_core_config(isfile_patch):
+def test_bad_core_config(isfile_patch, loop):
     """Test a bad core config setup."""
     files = {
         YAML_CONFIG_FILE: BAD_CORE_CONFIG,
@@ -58,7 +49,7 @@ def test_bad_core_config(isfile_patch):
 
 
 @patch('os.path.isfile', return_value=True)
-def test_config_platform_valid(isfile_patch):
+def test_config_platform_valid(isfile_patch, loop):
     """Test a valid platform setup."""
     files = {
         YAML_CONFIG_FILE: BASE_CONFIG + 'light:\n  platform: demo',
@@ -74,7 +65,7 @@ def test_config_platform_valid(isfile_patch):
 
 
 @patch('os.path.isfile', return_value=True)
-def test_component_platform_not_found(isfile_patch):
+def test_component_platform_not_found(isfile_patch, loop):
     """Test errors if component or platform not found."""
     # Make sure they don't exist
     files = {
@@ -107,7 +98,7 @@ def test_component_platform_not_found(isfile_patch):
 
 
 @patch('os.path.isfile', return_value=True)
-def test_secrets(isfile_patch):
+def test_secrets(isfile_patch, loop):
     """Test secrets config checking method."""
     secrets_path = get_test_config_dir('secrets.yaml')
 
@@ -143,7 +134,7 @@ def test_secrets(isfile_patch):
 
 
 @patch('os.path.isfile', return_value=True)
-def test_package_invalid(isfile_patch):
+def test_package_invalid(isfile_patch, loop):
     """Test a valid platform setup."""
     files = {
         YAML_CONFIG_FILE: BASE_CONFIG + (
@@ -165,7 +156,7 @@ def test_package_invalid(isfile_patch):
         assert len(res['yaml_files']) == 1
 
 
-def test_bootstrap_error():
+def test_bootstrap_error(loop):
     """Test a valid platform setup."""
     files = {
         YAML_CONFIG_FILE: BASE_CONFIG + 'automation: !include no.yaml',
