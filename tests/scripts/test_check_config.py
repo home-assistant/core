@@ -1,5 +1,4 @@
 """Test check_config script."""
-import asyncio
 import logging
 import os  # noqa: F401 pylint: disable=unused-import
 from unittest.mock import patch
