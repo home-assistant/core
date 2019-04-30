@@ -209,6 +209,7 @@ homeassistant/components/spider/* @peternijssen
 homeassistant/components/sql/* @dgomes
 homeassistant/components/statistics/* @fabaff
 homeassistant/components/stiebel_eltron/* @fucm
+homeassistant/components/strava/* @stv0g
 homeassistant/components/sun/* @home-assistant/core
 homeassistant/components/supla/* @mwegrzynek
 homeassistant/components/swiss_hydrological_data/* @fabaff
