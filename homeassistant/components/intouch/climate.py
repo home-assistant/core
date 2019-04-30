@@ -99,12 +99,3 @@ class InTouchClimate(ClimateDevice):
     def should_poll(self) -> bool:
         """Return True as this device should never be polled."""
         return False
-
-    async def async_update(self):
-        """Get the latest data from the hub."""
-        #try:
-        #    await self._objref.update()
-
-        #except (AssertionError, asyncio.TimeoutError) as err:
-        #    _LOGGER.warning("Update for %s failed, message: %s",
-        #                    self._name, err)

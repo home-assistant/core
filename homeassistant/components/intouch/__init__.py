@@ -67,11 +67,4 @@ async def async_setup(hass, hass_config):
         hass.async_create_task(async_load_platform(
             hass, 'climate', DOMAIN, {}, hass_config))
 
-    @callback
-    def _first_update(event):
-        """When HA has started, tell the hub to retrieve it's first update."""
-        async_dispatcher_send(hass, DOMAIN, {'signal': 'update'})
-
-    # hass.bus.listen(EVENT_HOMEASSISTANT_START, _first_update)
-
     return True

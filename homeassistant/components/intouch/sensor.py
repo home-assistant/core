@@ -63,14 +63,14 @@ class IntouchSensor(Entity):
         """Return True as this device should never be polled."""
         return False
 
-    async def async_update(self):
+    async def async_update(self):                                                # TODO: this shouldn't be needed
         """Get the latest data from the hub."""
         try:
             await self._objref.update()
 
         except (AssertionError, asyncio.TimeoutError) as err:
             _LOGGER.warning("Update for %s failed, message: %s",
-                            self._id, err)
+                            self._name, err)
 
 
 class IntouchPressure(IntouchSensor):
@@ -87,7 +87,7 @@ class IntouchPressure(IntouchSensor):
     @property
     def state(self):
         """Return the state/value of the sensor."""
-        return self._objref.pressure
+        return self._objref.status['pressure']
 
 
 class IntouchSignal(IntouchSensor):
@@ -104,10 +104,10 @@ class IntouchSignal(IntouchSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._objref._data['rf_message_rssi']
+        return self._objref.status['rf_message_rssi']
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        return {k: self._objref._data[k]
+        return {k: self._objref.status[k]
                 for k in ['nodenr', 'rf_message_rssi', 'rfstatus_cntr']}
