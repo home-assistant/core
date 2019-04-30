@@ -289,7 +289,6 @@ class PS4Device(MediaPlayerDevice):
                         'manufacturer': device.manufacturer,
                         'sw_version': device.sw_version
                     }
-                    _LOGGER.warning(self.entity_id)
 
         else:
             _sw_version = status['system-version']
