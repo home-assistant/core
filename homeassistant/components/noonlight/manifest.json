@@ -1,0 +1,15 @@
+{
+  "domain": "noonlight",
+  "name": "Noonlight",
+  "documentation": "https://www.home-assistant.io/components/noonlight",
+  "requirements": [
+    "noonlight>=0.1.0"
+  ],
+  "dependencies": [
+    "http"
+  ],
+  "codeowners": [
+    "@heythisisnate",
+	"@snicker"
+  ]
+}
