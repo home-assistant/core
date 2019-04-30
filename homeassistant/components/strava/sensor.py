@@ -170,8 +170,9 @@ async def async_setup_platform(hass, config, add_entities,
 
 class StravaSensor(Entity):
 
-    def __init__(self, field):
-        self._state = None
+    def __init__(self, typ, field):
+        self._data = None
+        self._type = typ
 
         if '.' in field:
             comps = field.split('.')
@@ -181,6 +182,12 @@ class StravaSensor(Entity):
         else:
             self._field = field
             self._subfield = None
+
+    async def async_update(self):
+        try:
+            await self._data.update(self.hass)
+        except:
+            self._state = None
 
     @property
     def state(self):
@@ -194,11 +201,11 @@ class StravaSensor(Entity):
             attr = getattr(attr, self._subfield, None)
 
         if isinstance(attr, Quantity):
-            if attr > unit('km')(10):
+            if attr.unit == unit('m') and attr > unit('km')(10):
                 attr = unit('km')(attr)
 
             return '%1.4g' % attr.num
-        if isinstance(attr, str):
+        elif isinstance(attr, str):
             if len(attr) > 255:
                 return attr[:255]
         else:
@@ -210,12 +217,14 @@ class StravaSensor(Entity):
         from units.quantity import Quantity
         from units import unit
 
+        field = self._field
         attr = getattr(self._state, self._field, None)
         if isinstance(attr, ActivityTotals):
             attr = getattr(attr, self._subfield, None)
+            field = self._subfield
 
         if isinstance(attr, Quantity):
-            if attr > unit('km')(10):
+            if attr.unit == unit('m') and attr > unit('km')(10):
                 attr = unit('km')(attr)
 
             return str(attr.unit)
@@ -237,214 +246,130 @@ class StravaSensor(Entity):
     def available(self):
         return self._state is not None
 
-
-class StravaLastActivitySensor(StravaSensor):
-    """Representation of an Activity Sensor."""
-
-    def __init__(self, data, athlete_id, field):
-        super().__init__(field)
-
-        self._data = data.get_athlete(athlete_id)
-
-    async def async_update(self):
-        try:
-            await self._data.update(self.hass)
-            self._state = self._data.last_activity
-        except:
-            self._state = None
-
-    @property
-    def name(self):
-        if self.available:
-            name = self._data.last_activity.name
-        else:
-            name = "Last Activity"
-
-        field = self._field.replace('_', ' ').title()
-
-        return "{}: {}".format(name, field)
-
     @property
     def unique_id(self):
         field = self._field
         if self._subfield:
             field += '_' + self._subfield
 
-        return 'strava_athlete_{}_last_activity_{}'.format(
-            self._data.id, field)
+        return 'strava_{}_{}_{}'.format(
+            self._type, self._data.id, field)
+
+    @property
+    def name_prefix(self):
+        if self.available:
+            return self._state.name + ' '
+        else:
+            return '{} {}: '.format(
+                self._type.replace('_', ' ').title(),
+                self._data.id)
+
+    @property
+    def name(self):
+        name = self.name_prefix
+        name += self._field.replace('_', ' ').title()
+
+        if self._subfield:
+            name += " {}".format(
+                self._subfield.replace('_', ' ').title())
+
+        return name
+
+
+class StravaLastActivitySensor(StravaSensor):
+    """Representation of an Activity Sensor."""
+
+    def __init__(self, data, athlete_id, field):
+        super().__init__('last_activity', field)
+
+        self._data = data.get_athlete(athlete_id)
+
+    @property
+    def _state(self):
+        return self._data.last_activity
+
+    @property
+    def name_prefix(self):
+        return 'Last Activity '
 
 
 class StravaAthleteDetailsSensor(StravaSensor):
     """Representation of an Athlete Sensor."""
 
     def __init__(self, data, athlete_id, field):
-        super().__init__(field)
+        super().__init__('athlete', field)
 
         self._data = data.get_athlete(athlete_id)
 
-    async def async_update(self):
-        try:
-            await self._data.update(self.hass)
-            self._state = self._data.details
-        except:
-            self._state = None
+    @property
+    def _state(self):
+        return self._data.details
 
     @property
-    def name(self):
+    def name_prefix(self):
         if self.available:
-            name = '{} {}'.format(
-                self._data.details.firstname,
-                self._data.details.lastname)
+            return self._data.details.firstname + ': '
         elif self._data.id:
-            name = "Athlete {}".format(self._data.id)
+            return 'Athlete {}: '.format(self._data.id)
         else:
-            name = 'Athlete'
-
-        field = self._field.replace('_', ' ').title()
-        name += ": {}".format(field)
-
-        if self._subfield:
-            subfield = self._subfield.replace('_', ' ').title()
-            name += " {}".format(subfield)
-
-        return name
+            return 'Athlete: '
 
     @property
     def entity_picture(self):
         if self.available:
             return self._data.details.profile
-
-    @property
-    def unique_id(self):
-        field = self._field
-        if self._subfield:
-            field += '_' + self._subfield
-
-        return 'strava_athelete_{}_details_{}'.format(
-            self._data.id, field)
 
 
 class StravaAthleteStatsSensor(StravaSensor):
 
     def __init__(self, data, athlete_id, field):
-        super().__init__(field)
+        super().__init__('stats', field)
 
         self._data = data.get_athlete(athlete_id)
 
-    async def async_update(self):
-        try:
-            await self._data.update(self.hass)
-            self._state = self._data.stats
-        except:
-            self._state = None
+    @property
+    def _state(self):
+        return self._data.stats
 
     @property
-    def name(self):
-        if self._data.details:
-            name = "{} {}".format(
-                self._data.details.firstname,
-                self._data.details.lastname)
+    def name_prefix(self):
+        if self.available:
+            return self._data.details.firstname + ': '
         elif self._data.id:
-            name = "Athlete {}".format(self._data.id)
+            return 'Athlete {}: '.format(self._data.id)
         else:
-            name = 'Athlete'
-
-        field = self._field.replace('_', ' ').title()
-        name += ": {}".format(field)
-
-        if self._subfield:
-            subfield = self._subfield.replace('_', ' ').title()
-            name += " {}".format(subfield)
-
-        return name
+            return 'Athlete: '
 
     @property
     def entity_picture(self):
         if self._data.details:
             return self._data.details.profile
 
-    @property
-    def unique_id(self):
-        field = self._field
-        if self._subfield:
-            field += '_' + self._subfield
-
-        return 'strava_athelete_{}_stats_{}'.format(
-            self._data.id, field)
-
 
 class StravaClubSensor(StravaSensor):
 
     def __init__(self, data, club_id, field):
-        super().__init__(field)
+        super().__init__('club', field)
 
         self._data = data.get_club(club_id)
 
-    async def async_update(self):
-        try:
-            await self._data.update(self.hass)
-            self._state = self._data.club
-        except:
-            self._state = None
-
     @property
-    def name(self):
-        if self.available:
-            name = self._state.name
-        else:
-            name = "Club {}".format(self._data.id)
-
-        field = self._field.replace('_', ' ').title()
-        name += ": {}".format(field)
-
-        if self._subfield:
-            subfield = self._subfield.replace('_', ' ').title()
-            name += " {}".format(subfield)
-
-        return name
+    def _state(self):
+        return self._data.club
 
     @property
     def entity_picture(self):
         if self.available:
             return self._state.profile_medium
 
-    @property
-    def unique_id(self):
-        return 'strava_club_{}_{}'.format(
-            self._data.id, self._field)
-
 
 class StravaGearSensor(StravaSensor):
 
     def __init__(self, data, gear_id, field):
-        super().__init__(field)
+        super().__init__('gear', field)
 
         self._data = data.get_gear(gear_id)
 
-    async def async_update(self):
-        try:
-            await self._data.update(self.hass)
-            self._state = self._data.gear
-        except:
-            self._state = None
-
     @property
-    def name(self):
-        if self.available:
-            name = self._state.name
-        else:
-            name = "Gear {}".format(self._data.id)
-
-        field = self._field.replace('_', ' ').title()
-        name += ": {}".format(field)
-
-        if self._subfield:
-            subfield = self._subfield.replace('_', ' ').title()
-            name += " {}".format(subfield)
-
-        return name
-
-    @property
-    def unique_id(self):
-        return 'strava_gear_{}_{}'.format(
-            self._data.id, self._field)
+    def _state(self):
+        return self._data.gear

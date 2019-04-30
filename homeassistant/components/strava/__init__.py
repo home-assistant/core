@@ -45,6 +45,7 @@ async def async_setup(hass, config):
 
     return True
 
+
 class StravaData:
 
     def __init__(self, hass, config):
@@ -226,6 +227,7 @@ class StravaClubData:
         self.club = await hass.async_add_executor_job(
             self.data.client.get_club, self.id)
 
+
 class StravaGearData:
 
     def __init__(self, data, id):
@@ -239,6 +241,7 @@ class StravaGearData:
         await self.data.get_token()
         self.gear = await hass.async_add_executor_job(
             self.data.client.get_gear, self.id)
+
 
 class StravaAuthCallbackView(HomeAssistantView):
     """Strava Authorization Callback View."""
