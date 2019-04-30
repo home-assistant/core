@@ -46,8 +46,8 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
         self._target_humidity = None
         self._min_target_temp = None
         self._max_target_temp = None
-        self._min_target_humidty = None
-        self._max_target_humidty = None
+        self._min_target_humidity = None
+        self._max_target_humidity = None
         super().__init__(*args)
 
     def get_characteristic_types(self):
@@ -101,11 +101,11 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
         self._features |= SUPPORT_TARGET_HUMIDITY
 
         if 'minValue' in characteristic:
-            self._min_target_humidty = characteristic['minValue']
+            self._min_target_humidity = characteristic['minValue']
             self._features |= SUPPORT_TARGET_HUMIDITY_LOW
 
         if 'maxValue' in characteristic:
-            self._max_target_humidty = characteristic['maxValue']
+            self._max_target_humidity = characteristic['maxValue']
             self._features |= SUPPORT_TARGET_HUMIDITY_HIGH
 
     def _update_heating_cooling_current(self, value):
@@ -198,12 +198,12 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
     @property
     def min_humidity(self):
         """Return the minimum humidity."""
-        return self._min_target_humidty
+        return self._min_target_humidity
 
     @property
     def max_humidity(self):
         """Return the maximum humidity."""
-        return self._max_target_humidty
+        return self._max_target_humidity
 
     @property
     def current_operation(self):
