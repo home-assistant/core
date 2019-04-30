@@ -451,6 +451,7 @@ omit =
     homeassistant/components/proxy/camera.py
     homeassistant/components/ps4/__init__.py
     homeassistant/components/ps4/media_player.py
+    homeassistant/components/ptvsd/*
     homeassistant/components/pulseaudio_loopback/switch.py
     homeassistant/components/pushbullet/notify.py
     homeassistant/components/pushbullet/sensor.py
