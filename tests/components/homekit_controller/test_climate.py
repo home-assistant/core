@@ -138,6 +138,8 @@ async def test_climate_read_thermostat_state(hass, utcnow):
     assert state.state == 'heat'
     assert state.attributes['current_temperature'] == 19
     assert state.attributes['current_humidity'] == 50
+    assert state.attributes['min_temp'] == 7
+    assert state.attributes['max_temp'] == 35
 
     # Simulate that cooling is on
     helper.characteristics[TEMPERATURE_CURRENT].value = 21

@@ -180,6 +180,12 @@ async def setup_accessories_from_file(hass, path):
                     char.description = char_data['description']
                 if 'value' in char_data:
                     char.value = char_data['value']
+                if 'minValue' in char_data:
+                    char.minValue = char_data['minValue']
+                if 'maxValue' in char_data:
+                    char.maxValue = char_data['maxValue']
+                if 'valid-values' in char_data:
+                    char.valid_values = char_data['valid-values']
                 service.characteristics.append(char)
 
             accessory.services.append(service)
