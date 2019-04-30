@@ -620,6 +620,18 @@ def say_curr_entity(hass):
             else:
                 _say_it(hass, info_name + " " + info_data + ". Naciśnij OK by wybrać.", None)
         return
+    elif entity_id in ('sensor.radiolist', 'sensor.podcastlist', 'sensor.spotifylist', 'sensor.youtubelist'):
+        if CURR_BUTTON_CODE == 4:
+            if int(info_data) == -1:
+                _say_it(hass, "Brak wyboru", None)
+            else:
+                _say_it(hass, "Wybrałeś " + info_data, None)
+        else:
+            if int(info_data) != -1:
+                _say_it(hass, "Stacja radiowa " + info_data + ". Naciśnij OK by zmienić.", None)
+            else:
+                _say_it(hass, "Stacja radiowa. Naciśnij OK by wybrać.", None)
+        return
     # normal case
     # decode None
     if not info_name:
@@ -677,30 +689,26 @@ def set_next_position(hass):
     global CURR_ENTITIE_POSITION
     CURR_ENTITIE_POSITION = get_curent_position(hass)
     state = hass.states.get(CURR_ENTITIE)
+    attr = state.attributes
     if CURR_ENTITIE.startswith('input_select.'):
-        arr = state.attributes.get('options')
         # the "-" option is always first
-        if (len(arr) < 2):
+        options = attr.get('options')
+        if len(options) < 2:
             _say_it(hass, "brak pozycji", None)
         else:
-            CURR_ENTITIE_POSITION = get_next(arr, CURR_ENTITIE_POSITION)
-            if CURR_ENTITIE == "input_select.folder_name":
-                if CURR_ENTITIE_POSITION == "..":
-                    CURR_ENTITIE_POSITION = get_next(arr, CURR_ENTITIE_POSITION)
-                # check if we have remote or local path
-                if CURR_ENTITIE_POSITION.startswith(ais_drives_service.G_CLOUD_PREFIX):
-                    if CURR_ENTITIE_POSITION == ais_drives_service.G_CLOUD_PREFIX:
-                        item = ais_drives_service.G_CLOUD_PREFIX.replace("/", "")
-                    else:
-                        item = CURR_ENTITIE_POSITION.replace(ais_drives_service.G_CLOUD_PREFIX, "")
-                        k = item.find(":")
-                        if k+1 < len(item):
-                            item = item[k:]
-                    _say_it(hass, os.path.basename(item), None)
-                else:
-                    _say_it(hass, os.path.basename(CURR_ENTITIE_POSITION), None)
-            else:
-                _say_it(hass, CURR_ENTITIE_POSITION, None)
+            CURR_ENTITIE_POSITION = get_next(options, CURR_ENTITIE_POSITION)
+            _say_it(hass, CURR_ENTITIE_POSITION, None)
+    elif CURR_ENTITIE in ('sensor.radiolist', 'sensor.podcastlist', 'sensor.spotifylist', 'sensor.youtubelist'):
+        if len(attr) == 0:
+            _say_it(hass, "brak pozycji", None)
+        else:
+            curr_id = int(state.state)
+            next_id = int(curr_id) + 1
+            if next_id == len(attr):
+                next_id = 0
+            track = attr.get(int(next_id))
+            
+            _say_it(hass, track["title"], None)
     elif CURR_ENTITIE.startswith('input_number.'):
         _max = float(state.attributes.get('max'))
         _step = float(state.attributes.get('step'))
@@ -713,13 +721,24 @@ def set_prev_position(hass):
     global CURR_ENTITIE_POSITION
     CURR_ENTITIE_POSITION = get_curent_position(hass)
     state = hass.states.get(CURR_ENTITIE)
+    attr = state.attributes
     if CURR_ENTITIE.startswith('input_select.'):
-        arr = state.attributes.get('options')
-        if len(arr) < 2:
+        options = attr.get('options')
+        if len(options) < 2:
             _say_it(hass, "brak pozycji", None)
         else:
-            CURR_ENTITIE_POSITION = get_prev(arr, CURR_ENTITIE_POSITION)
+            CURR_ENTITIE_POSITION = get_prev(options, CURR_ENTITIE_POSITION)
             _say_it(hass, CURR_ENTITIE_POSITION, None)
+    elif CURR_ENTITIE in ('sensor.radiolist', 'sensor.podcastlist', 'sensor.spotifylist', 'sensor.youtubelist'):
+        if len(attr) == 0:
+            _say_it(hass, "brak pozycji", None)
+        else:
+            curr_id = int(state.state)
+            prev_id = curr_id - 1
+            if prev_id < 0:
+                prev_id = len(attr) - 1
+            track = attr.get(int(prev_id))
+            _say_it(hass, track["title"], None)
     elif CURR_ENTITIE.startswith('input_number.'):
         _min = float(state.attributes.get('min'))
         _step = float(state.attributes.get('step'))
@@ -880,7 +899,11 @@ def can_entity_be_changed(hass, entity):
         "light.",
         "input_text.",
         "input_select.",
-        "input_number."
+        "input_number.",
+        "sensor.radiolist",
+        "sensor.podcastlist",
+        "sensor.spotifylist",
+        "sensor.youtubelist"
     )):
         return True
     else:
@@ -1008,15 +1031,15 @@ def set_focus_on_next_entity(hass, long_press):
             return
     # no group is selected go to next in the groups view menu
     if CURR_GROUP is None:
-            set_next_group_view()
-            say_curr_group_view(hass)
-            return
+        set_next_group_view()
+        say_curr_group_view(hass)
+        return
     # group is selected
     # check if the entity in the group is selected
     if CURR_ENTITIE is None:
-            set_next_group(hass)
-            say_curr_group(hass)
-            return
+        set_next_group(hass)
+        say_curr_group(hass)
+        return
     # entity in the group is selected
     # check if the entity option can be selected
     if can_entity_be_changed(hass, CURR_ENTITIE) and CURR_ENTITIE_ENTERED is True:
@@ -1206,16 +1229,6 @@ def get_groups(hass):
             # add sensors to the all_ais_sensors group
             device_class = entity.attributes.get('device_class', None)
             if device_class is not None:
-                # new_sensor = {
-                #     "entity_id": entity.entity_id,
-                #     "friendly_name": entity.attributes.get('friendly_name', "Brak nazwy")}
-                # ALL_AIS_SENSORS.append(new_sensor)
-                # # sort by name
-                # entities = []
-                # for sorted_sensors in sorted(ALL_AIS_SENSORS, key=lambda i: i['friendly_name']):
-                #     entities.append(sorted_sensors['entity_id'])
-                # # distinct
-                # entities = list(set(entities))
                 ALL_AIS_SENSORS.append(entity.entity_id)
                 all_unique_sensors = list(set(ALL_AIS_SENSORS))
                 all_unique_sensors.sort()
@@ -1946,10 +1959,10 @@ def _say_it(hass, message, caller_ip=None, img=None):
         GLOBAL_TTS_TEXT = message + ' '
     if img is not None:
         GLOBAL_TTS_TEXT = GLOBAL_TTS_TEXT + ' \n\n' + '![Zdjęcie](' + img + ')'
-    hass.states.async_set(
-        'sensor.ais_knowledge_answer', 'ok', {
-            'text': GLOBAL_TTS_TEXT
-            })
+    if len(message) > 60:
+        hass.states.async_set('sensor.ais_knowledge_answer', message[0:60] + "...", {'text': GLOBAL_TTS_TEXT})
+    else:
+        hass.states.async_set('sensor.ais_knowledge_answer', message, {'text': GLOBAL_TTS_TEXT})
 
 
 def _create_matcher(utterance):

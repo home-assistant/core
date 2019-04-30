@@ -130,6 +130,10 @@ def async_setup(hass, config):
         _LOGGER.info("play_next")
         data.play_next(call)
 
+    def change_audio_service(call):
+        _LOGGER.info("change_audio_service")
+        data.change_audio_service(call)
+
     # register services
     hass.services.async_register(DOMAIN, 'get_radio_types', get_radio_types)
     hass.services.async_register(DOMAIN, 'get_radio_names', get_radio_names)
@@ -148,6 +152,8 @@ def async_setup(hass, config):
     hass.services.async_register(DOMAIN, 'select_rss_help_item', select_rss_help_item)
     hass.services.async_register(DOMAIN, 'play_prev', play_prev)
     hass.services.async_register(DOMAIN, 'play_next', play_next)
+    hass.services.async_register(DOMAIN, 'change_audio_service', change_audio_service)
+
     def device_discovered(service):
         """ Called when a device has been discovered. """
         _LOGGER.info("Discovered a new device type: " + str(service.as_dict()))
@@ -564,6 +570,10 @@ class AisColudData:
 
     def get_podcast_tracks(self, call):
         import feedparser
+        import homeassistant.components.ais_ai_service as ais_ai
+        selected_by_remote = False
+        if ais_ai.CURR_ENTITIE == 'input_select.podcast_name' and ais_ai.CURR_BUTTON_CODE == 23:
+            selected_by_remote = True
         if "podcast_name" not in call.data:
             _LOGGER.error("No podcast_name")
             return
@@ -576,6 +586,7 @@ class AisColudData:
                     "options": [ais_global.G_EMPTY_OPTION]})
             return
 
+        self.hass.services.call('ais_ai_service', 'say_it', {"text": "Pobieram odcinki"})
         podcast_name = call.data["podcast_name"]
         if "lookup_url" in call.data:
             _lookup_url = call.data["lookup_url"]
@@ -650,19 +661,13 @@ class AisColudData:
                             "option": track["title"]})
                 else:
                     # check if the change was done form remote
-                    import homeassistant.components.ais_ai_service as ais_ai
-                    if (ais_ai.CURR_ENTITIE
-                            == 'input_select.podcast_name'
-                            and ais_ai.CURR_BUTTON_CODE == 23):
-                            ais_ai.set_curr_entity(
-                                self.hass,
-                                'input_select.podcast_track')
-                            self.hass.services.call(
-                                'ais_ai_service',
-                                'say_it', {
-                                    "text": "Pobrano " + str(len(d.entries))
-                                    + " odcinków, wybierz odcinek"
-                                })
+                    if selected_by_remote:
+                        if len(d.entries) > 0:
+                            ais_ai.set_curr_entity(self.hass, 'input_select.podcast_track')
+                            self.hass.services.call('ais_ai_service', 'say_it', {
+                                "text": "Pobrano " + str(len(d.entries)) + " odcinków, wybierz odcinek"})
+                        else:
+                            self.hass.services.call('ais_ai_service', 'say_it', {"text": "Brak odcinków"})
                     else:
                         self.hass.services.call(
                             'ais_ai_service',
@@ -734,14 +739,14 @@ class AisColudData:
                         "media_content_id": _audio_info
                     })
 
-    def play_radio(self, id):
+    def play_radio(self, item_id):
         _LOGGER.info("play_radio")
         # """play radio by id on sensor list."""
         state = self.hass.states.get('sensor.radiolist')
         attr = state.attributes
-        track = attr.get(int(id))
+        track = attr.get(int(item_id))
         # update list
-        self.hass.states.async_set("sensor.radiolist", id, attr)
+        self.hass.states.async_set("sensor.radiolist", item_id, attr)
         player_name = self.hass.states.get('input_select.ais_music_player').state
         player = get_player_data(player_name)
         self.hass.services.call('media_player', 'play_media', {"entity_id": player["entity_id"],
@@ -868,6 +873,12 @@ class AisColudData:
             self.play_radio(next_id)
         elif audio_type == ais_global.G_AN_PODCAST:
             self.play_podcast(call.data["id"])
+
+    def change_audio_service(self, call):
+        # we have only 2 now we can toggle
+        self.hass.services.call('input_select', 'select_next', {"entity_id": "input_select.ais_music_service"})
+        # clear search field
+        self.hass.services.call('input_text', 'set_value', {"entity_id": "input_text.ais_music_query", "value": " "})
 
     def select_media_player(self, call):
         if "media_player_type" not in call.data:
