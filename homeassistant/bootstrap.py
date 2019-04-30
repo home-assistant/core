@@ -349,7 +349,7 @@ async def _async_set_up_integrations(
     stage_2_domains = domains - logging_domains - stage_1_domains
 
     if logging_domains:
-        _LOGGER.debug("Setting up %s", logging_domains)
+        _LOGGER.info("Setting up %s", logging_domains)
 
         await asyncio.gather(*[
             async_setup_component(hass, domain, config)
