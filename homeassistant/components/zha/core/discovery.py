@@ -8,6 +8,8 @@ https://home-assistant.io/components/zha/
 import logging
 
 from homeassistant import const as ha_const
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .channels import (
@@ -58,19 +60,18 @@ def async_process_endpoint(
                 endpoint.device_type, None):
             profile_info = DEVICE_CLASS[endpoint.profile_id]
             component = profile_info[endpoint.device_type]
-            if component and component in COMPONENT_CLUSTERS:
-                profile_clusters = COMPONENT_CLUSTERS[component]
 
     if ha_const.CONF_TYPE in node_config:
         component = node_config[ha_const.CONF_TYPE]
-        if component and component in COMPONENT_CLUSTERS:
-            profile_clusters = COMPONENT_CLUSTERS[component]
 
-    if component and component in COMPONENTS:
-        profile_match = _async_handle_profile_match(
-            hass, endpoint, profile_clusters, zha_device,
-            component, device_key, is_new_join)
-        discovery_infos.append(profile_match)
+    if component and component in COMPONENTS and \
+            component in COMPONENT_CLUSTERS:
+        profile_clusters = COMPONENT_CLUSTERS[component]
+        if profile_clusters:
+            profile_match = _async_handle_profile_match(
+                hass, endpoint, profile_clusters, zha_device,
+                component, device_key, is_new_join)
+            discovery_infos.append(profile_match)
 
     discovery_infos.extend(_async_handle_single_cluster_matches(
         hass,
@@ -142,7 +143,7 @@ def _async_handle_profile_match(hass, endpoint, profile_clusters, zha_device,
         'component': component
     }
 
-    if component == 'binary_sensor':
+    if component == BINARY_SENSOR:
         discovery_info.update({SENSOR_TYPE: UNKNOWN})
         for cluster_id in profile_clusters:
             if cluster_id in BINARY_SENSOR_TYPES:
@@ -242,11 +243,11 @@ def _async_handle_single_cluster_match(hass, zha_device, cluster, device_key,
         'component': component
     }
 
-    if component == 'sensor':
+    if component == SENSOR:
         discovery_info.update({
             SENSOR_TYPE: SENSOR_TYPES.get(cluster.cluster_id, GENERIC)
         })
-    if component == 'binary_sensor':
+    if component == BINARY_SENSOR:
         discovery_info.update({
             SENSOR_TYPE: BINARY_SENSOR_TYPES.get(cluster.cluster_id, UNKNOWN)
         })
