@@ -5,8 +5,8 @@ from pyhap.const import CATEGORY_SWITCH, CATEGORY_TELEVISION
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE, ATTR_MEDIA_VOLUME_MUTED, SERVICE_SELECT_SOURCE, DOMAIN,
-    SUPPORT_PLAY, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE)
+    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_STOP,
@@ -22,9 +22,9 @@ from .const import (
     CHAR_IS_CONFIGURED, CHAR_NAME, CHAR_SLEEP_DISCOVER_MODE,
     CHAR_MUTE, CHAR_ON, CHAR_REMOTE_KEY, CHAR_VOLUME_CONTROL_TYPE,
     CHAR_VOLUME_SELECTOR, CHAR_VOLUME, CONF_FEATURE_LIST, FEATURE_ON_OFF,
-    FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP, CHAR_ACTIVE_IDENTIFIER,
-    FEATURE_TOGGLE_MUTE, FEATURE_VOLUME_STEP, SERV_SWITCH, SERV_TELEVISION,
-    SERV_TELEVISION_SPEAKER, SERV_INPUT_SOURCE)
+    FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE,
+    SERV_SWITCH, SERV_TELEVISION, SERV_TELEVISION_SPEAKER,
+    SERV_INPUT_SOURCE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,6 @@ REMOTE_KEYS = {
 MEDIA_PLAYER_KEYS = {
     11: SERVICE_MEDIA_PLAY_PAUSE,
 }
-
 
 MODE_FRIENDLY_NAME = {
     FEATURE_ON_OFF: 'Power',
@@ -196,7 +195,7 @@ class TelevisionMediaPlayer(HomeAccessory):
             self.chars.append(CHAR_REMOTE_KEY)
         if features & SUPPORT_VOLUME_MUTE or features & SUPPORT_VOLUME_STEP:
             self.chars.extend((CHAR_VOLUME, CHAR_VOLUME_CONTROL_TYPE,
-                              CHAR_VOLUME_SELECTOR))
+                               CHAR_VOLUME_SELECTOR))
         if features & SUPPORT_SELECT_SOURCE:
             self.chars.append(CHAR_ACTIVE_IDENTIFIER)
 
@@ -209,8 +208,8 @@ class TelevisionMediaPlayer(HomeAccessory):
             CHAR_ACTIVE, setter_callback=self.set_on_off)
 
         if CHAR_REMOTE_KEY in self.chars:
-            serv_tv.configure_char(CHAR_REMOTE_KEY,
-                                   setter_callback=self.set_remote_key)
+            self.char_remote_key = serv_tv.configure_char(
+                CHAR_REMOTE_KEY, setter_callback=self.set_remote_key)
 
         if CHAR_VOLUME in self.chars:
             serv_tv_speaker = self.add_preload_service(
@@ -251,7 +250,7 @@ class TelevisionMediaPlayer(HomeAccessory):
                         CHAR_IS_CONFIGURED, value=True)
                     input_type = 3 if "hdmi" in source.lower() else 0
                     serv_input.configure_char(CHAR_INPUT_SOURCE_TYPE,
-                                                value=input_type)
+                                              value=input_type)
                     serv_input.configure_char(
                         CHAR_CURRENT_VISIBILITY_STATE, value=False)
                     serv_tv.add_linked_service(serv_input)
