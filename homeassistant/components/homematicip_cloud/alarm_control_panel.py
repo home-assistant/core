@@ -147,7 +147,8 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
 
     def _device_changed(self, *args, **kwargs):
         """Handle device state changes."""
-        _LOGGER.debug("Event %s (%s)", self.name, CONST_ALARM_CONTROL_PANEL_NAME)
+        _LOGGER.debug("Event %s (%s)", self.name,
+                      CONST_ALARM_CONTROL_PANEL_NAME)
         self.async_schedule_update_ha_state()
 
     @property
