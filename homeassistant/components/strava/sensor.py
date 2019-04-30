@@ -28,7 +28,7 @@ UNIT_MAPPING_FIELDS = {
     'max_watts': 'W',
     'average_heartrate': 'bpm',
     'max_heartrate': 'bpm',
-    'calories': 'C',
+    'calories': 'kC',
     'member_count': 'Members',
     'kudos_count': 'Kudos',
     'comment_count': 'Comments',
