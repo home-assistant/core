@@ -1030,7 +1030,7 @@ pydukeenergy==0.0.6
 pyebox==1.1.4
 
 # homeassistant.components.econet
-pyeconet==0.0.10
+pyeconet==0.0.11
 
 # homeassistant.components.edimax
 pyedimax==0.1
