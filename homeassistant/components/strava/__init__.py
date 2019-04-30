@@ -178,18 +178,39 @@ class StravaAthleteData:
         self.stats = None
         self.last_activity = None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def update(self, hass):
-        await self.data.get_token()
+    async def update_last_actitivity(self, hass):
         activities = await hass.async_add_executor_job(
             self.data.client.get_activities, None, None, 1)
 
         self.last_activity = next(activities)
 
+        _LOGGER.info("Fetched last activity")
+
+    async def update_details(self, hass):
         self.details = await hass.async_add_executor_job(
             self.data.client.get_athlete, self.id)
+
+        _LOGGER.info("Fetched athlete details")
+
+    async def update_stats(self, hass):
         self.stats = await hass.async_add_executor_job(
             self.data.client.get_athlete_stats, self.id)
+
+        _LOGGER.info("Fetched athlete stats")
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    async def update(self, hass):
+        import asyncio
+
+        # Request or refresh token
+        await self.data.get_token()
+
+        await asyncio.gather(
+            self.update_last_actitivity(hass),
+            self.update_details(hass),
+            self.update_stats(hass)
+        )
+
 
 class StravaClubData:
 
