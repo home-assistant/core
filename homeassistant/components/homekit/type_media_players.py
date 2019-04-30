@@ -222,22 +222,22 @@ class TelevisionMediaPlayer(HomeAccessory):
             ATTR_INPUT_SOURCE)
         if self.sources:
             for index, source in enumerate(self.sources):
-                input_service = self.add_preload_service(SERV_INPUT_SOURCE, [
+                serv_input = self.add_preload_service(SERV_INPUT_SOURCE, [
                     CHAR_IDENTIFIER, CHAR_NAME])
 
-                input_service.configure_char(
+                serv_input.configure_char(
                     CHAR_CONFIGURED_NAME, value=source)
-                input_service.configure_char(CHAR_NAME, value=source)
-                input_service.configure_char(
+                serv_input.configure_char(CHAR_NAME, value=source)
+                serv_input.configure_char(
                     CHAR_IDENTIFIER, value=index)
-                input_service.configure_char(
+                serv_input.configure_char(
                     CHAR_IS_CONFIGURED, value=True)
                 input_type = 3 if "hdmi" in source.lower() else 0
-                input_service.configure_char(CHAR_INPUT_SOURCE_TYPE,
+                serv_input.configure_char(CHAR_INPUT_SOURCE_TYPE,
                                              value=input_type)
-                input_service.configure_char(
+                serv_input.configure_char(
                     CHAR_CURRENT_VISIBILITY_STATE, value=False)
-                serv_tv.add_linked_service(input_service)
+                serv_tv.add_linked_service(serv_input)
                 _LOGGER.debug('%s: Added source %s.', self.entity_id,
                               source)
 
