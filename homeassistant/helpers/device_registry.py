@@ -134,16 +134,19 @@ class DeviceRegistry:
 
     @callback
     def async_update_device(
-            self, device_id, *, area_id=_UNDEF, name_by_user=_UNDEF):
+            self, device_id, *, area_id=_UNDEF, name_by_user=_UNDEF,
+            new_identifiers=_UNDEF):
         """Update properties of a device."""
         return self._async_update_device(
-            device_id, area_id=area_id, name_by_user=name_by_user)
+            device_id, area_id=area_id, name_by_user=name_by_user,
+            new_identifiers=new_identifiers)
 
     @callback
     def _async_update_device(self, device_id, *, add_config_entry_id=_UNDEF,
                              remove_config_entry_id=_UNDEF,
                              merge_connections=_UNDEF,
                              merge_identifiers=_UNDEF,
+                             new_identifiers=_UNDEF,
                              manufacturer=_UNDEF,
                              model=_UNDEF,
                              name=_UNDEF,
@@ -177,6 +180,9 @@ class DeviceRegistry:
             # If not undefined, check if `value` contains new items.
             if value is not _UNDEF and not value.issubset(old_value):
                 changes[attr_name] = old_value | value
+
+        if new_identifiers is not _UNDEF:
+            changes['identifiers'] = new_identifiers
 
         for attr_name, value in (
                 ('manufacturer', manufacturer),
