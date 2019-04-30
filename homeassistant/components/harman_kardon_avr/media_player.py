@@ -1,9 +1,5 @@
-"""
-Support for interface with an Harman/Kardon or JBL AVR.
+"""Support for interface with an Harman/Kardon or JBL AVR."""
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.harman_kardon_avr/
-"""
 import logging
 import time
 
@@ -11,14 +7,12 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA, MediaPlayerDevice)
+    MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.components.media_player.const import (
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
     SUPPORT_TURN_ON, SUPPORT_SELECT_SOURCE, SUPPORT_VOLUME_SET)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, CONF_SOURCE, STATE_OFF, STATE_ON)
-
-REQUIREMENTS = ['hkavr==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,12 +53,12 @@ def setup_platform(hass, config, add_entities, discover_info=None):
     """Set up the AVR platform."""
     import hkavr
 
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    key_interval = config.get(CONF_KEY_INTERVAL)
-    simulate_volume_set = config.get(CONF_SIMULATE_VOLUME_SET)
-    sources = config.get(CONF_SOURCES)
+    name = config[CONF_NAME]
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
+    key_interval = config[CONF_KEY_INTERVAL]
+    simulate_volume_set = config[CONF_SIMULATE_VOLUME_SET]
+    sources = config[CONF_SOURCES]
 
     avr = hkavr.HkAVR(host, port, name)
     avr_device = HkAvrDevice(avr, key_interval, sources, simulate_volume_set)
