@@ -1465,7 +1465,7 @@ pyuptimerobot==0.0.5
 pyvera==0.2.45
 
 # homeassistant.components.vesync
-pyvesync_v2==0.9.6
+pyvesync_v2==0.9.7
 
 # homeassistant.components.vizio
 pyvizio==0.0.7
