@@ -3,7 +3,7 @@
   "name": "Noonlight",
   "documentation": "https://www.home-assistant.io/components/noonlight",
   "requirements": [
-    "noonlight>=0.1.0"
+    "noonlight==0.1.0"
   ],
   "dependencies": [
     "http"

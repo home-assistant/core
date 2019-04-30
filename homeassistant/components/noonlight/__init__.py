@@ -22,8 +22,6 @@ CONF_SECRET = 'secret'
 CONF_API_ENDPOINT = 'api_endpoint'
 CONF_TOKEN_ENDPOINT = 'token_endpoint'
 
-REQUIREMENTS = ['noonlight>=0.1.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({
