@@ -680,8 +680,11 @@ async def test_purecool_update_state(devices, login, hass):
                                "osau": "0095", "ancp": "CUST"}}
     device.state = DysonPureCoolV2State(json.dumps(event))
 
-    callback = device.add_message_listener.call_args_list[3][0][0]
-    callback(device.state)
+    for call in device.add_message_listener.call_args_list:
+        callback = call[0][0]
+        if type(callback.__self__) == dyson.DysonPureCoolDevice:
+            callback(device.state)
+
     await hass.async_block_till_done()
     fan_state = hass.states.get("fan.living_room")
     attributes = fan_state.attributes

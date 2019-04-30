@@ -86,8 +86,11 @@ async def test_purecool_aiq_update_state(devices, login, hass):
     device.environmental_state = \
         DysonEnvironmentalSensorV2State(json.dumps(event))
 
-    callback = device.add_message_listener.call_args_list[2][0][0]
-    callback(device.environmental_state)
+    for call in device.add_message_listener.call_args_list:
+        callback = call[0][0]
+        if type(callback.__self__) == dyson.DysonAirSensor:
+            callback(device.environmental_state)
+
     await hass.async_block_till_done()
     fan_state = hass.states.get("air_quality.living_room")
     attributes = fan_state.attributes
