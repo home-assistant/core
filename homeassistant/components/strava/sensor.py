@@ -1,6 +1,5 @@
-import logging
-
 from datetime import timedelta
+import logging
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)

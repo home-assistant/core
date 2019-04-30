@@ -1,10 +1,9 @@
 from datetime import datetime, timedelta
 import logging
 import voluptuous as vol
-
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
