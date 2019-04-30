@@ -1,5 +1,5 @@
 """Support for monitoring Repetier Server Sensors."""
-from datetime import datetime, tzinfo, timedelta
+from datetime import datetime
 import logging
 import time
 
@@ -12,12 +12,6 @@ from . import REPETIER_API, SENSOR_TYPES, UPDATE_SIGNAL
 
 _LOGGER = logging.getLogger(__name__)
 
-
-class simple_utc(tzinfo):
-    def tzname(self,**kwargs):
-        return "UTC"
-    def utcoffset(self, dt):
-        return timedelta(0)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available Repetier Server sensors."""
@@ -196,6 +190,7 @@ class RepetierRemainingSensor(RepetierSensor):
         _LOGGER.debug(
             "Job %s remaining %s",
             job_name, time.strftime('%H:%M:%S', time.gmtime(remaining_secs)))
+
 
 class RepetierElapsedSensor(RepetierSensor):
     """Class to create and populate a Repetier Time Elapsed Sensor."""
