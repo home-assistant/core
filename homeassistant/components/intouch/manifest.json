@@ -3,7 +3,7 @@
   "name": "Intergas Intouch Lan2RF gateway",
   "documentation": "https://www.home-assistant.io/components/intouch",
   "requirements": [
-    "intouch-client==0.1.0"
+    "intouch-client==0.2.2"
   ],
   "dependencies": [],
   "codeowners": [

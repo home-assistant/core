@@ -1,0 +1,113 @@
+"""Support for the Sensors of an Intouch Lan2RF gateway."""
+import asyncio
+import logging
+
+from homeassistant.const import (
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_SIGNAL_STRENGTH)
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
+
+from . import DOMAIN
+
+
+async def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
+    """Set up an Intouch sensor entity."""
+    client = hass.data[DOMAIN]['client']
+
+    # await client.update()
+    water_heaters = await client.heaters
+
+    async_add_entities([
+        IntouchSignal(client, water_heaters[0]),
+        IntouchPressure(client, water_heaters[0])
+    ], update_before_add=False)
+
+
+class IntouchSensor(Entity):
+    """Representation of an InTouch sensor."""
+
+    def __init__(self, client, boiler):
+        """Initialize the sensor."""
+        self._client = client
+        self._objref = boiler
+
+    async def async_added_to_hass(self):
+        """Set up a listener when this entity is added to HA."""
+        async_dispatcher_connect(self.hass, DOMAIN, self._connect)
+
+    @callback
+    def _connect(self, packet):
+        if packet['signal'] == 'refresh':
+            self.async_schedule_update_ha_state(force_refresh=True)
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return self._device_class
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of the ensor"""
+        return self._unit_of_measurement
+
+    @property
+    def should_poll(self) -> bool:
+        """Return True as this device should never be polled."""
+        return False
+
+    async def async_update(self):
+        """Get the latest data from the hub."""
+        try:
+            await self._objref.update()
+
+        except (AssertionError, asyncio.TimeoutError) as err:
+            _LOGGER.warning("Update for %s failed, message: %s",
+                            self._id, err)
+
+
+class IntouchPressure(IntouchSensor):
+    """Representation of an InTouch CV Pressure sensor."""
+
+    def __init__(self, client, boiler):
+        """Initialize the sensor."""
+        super().__init__(client, boiler)
+
+        self._name = 'CV Pressure'
+        self._device_class = DEVICE_CLASS_PRESSURE
+        self._unit_of_measurement = 'bar'
+
+    @property
+    def state(self):
+        """Return the state/value of the sensor."""
+        return self._objref.pressure
+
+
+class IntouchSignal(IntouchSensor):
+    """Representation of an InTouch Signal strength sensor."""
+
+    def __init__(self, client, boiler):
+        """Initialize the signal strength sensor."""
+        super().__init__(client, boiler)
+
+        self._name = 'RF Signal'
+        self._device_class = DEVICE_CLASS_SIGNAL_STRENGTH
+        self._unit_of_measurement = 'dBm'
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._objref._data['rf_message_rssi']
+
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        return {k: self._objref._data[k]
+                for k in ['nodenr', 'rf_message_rssi', 'rfstatus_cntr']}
