@@ -60,19 +60,18 @@ def async_process_endpoint(
                 endpoint.device_type, None):
             profile_info = DEVICE_CLASS[endpoint.profile_id]
             component = profile_info[endpoint.device_type]
-            if component and component in COMPONENT_CLUSTERS:
-                profile_clusters = COMPONENT_CLUSTERS[component]
 
     if ha_const.CONF_TYPE in node_config:
         component = node_config[ha_const.CONF_TYPE]
-        if component and component in COMPONENT_CLUSTERS:
-            profile_clusters = COMPONENT_CLUSTERS[component]
 
-    if component and component in COMPONENTS:
-        profile_match = _async_handle_profile_match(
-            hass, endpoint, profile_clusters, zha_device,
-            component, device_key, is_new_join)
-        discovery_infos.append(profile_match)
+    if component and component in COMPONENTS and\
+            component in COMPONENT_CLUSTERS:
+        profile_clusters = COMPONENT_CLUSTERS[component]
+        if profile_clusters:
+            profile_match = _async_handle_profile_match(
+                hass, endpoint, profile_clusters, zha_device,
+                component, device_key, is_new_join)
+            discovery_infos.append(profile_match)
 
     discovery_infos.extend(_async_handle_single_cluster_matches(
         hass,
