@@ -140,7 +140,7 @@ async def test_media_player_television_set_state(hass, hk_driver, events):
     entity_id = 'media_player.television'
 
     hass.states.async_set(entity_id, None, {ATTR_DEVICE_CLASS: DEVICE_CLASS_TV,
-                                            ATTR_SUPPORTED_FEATURES: 20873,
+                                            ATTR_SUPPORTED_FEATURES: 3469,
                                             ATTR_MEDIA_VOLUME_MUTED: False,
                                             ATTR_INPUT_SOURCE_LIST:
                                             ['HDMI 1', 'HDMI 2', 'HDMI 3',

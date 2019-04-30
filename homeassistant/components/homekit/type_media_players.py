@@ -4,9 +4,9 @@ import logging
 from pyhap.const import CATEGORY_SWITCH, CATEGORY_TELEVISION
 
 from homeassistant.components.media_player import (
-    ATTR_INPUT_SOURCE, ATTR_MEDIA_VOLUME_MUTED, SERVICE_SELECT_SOURCE, DOMAIN,
-    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE)
+    ATTR_INPUT_SOURCE, ATTR_INPUT_SOURCE_LIST, ATTR_MEDIA_VOLUME_MUTED,
+    SERVICE_SELECT_SOURCE, DOMAIN, SUPPORT_PAUSE, SUPPORT_PLAY,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_STOP,
@@ -231,7 +231,7 @@ class TelevisionMediaPlayer(HomeAccessory):
 
         if CHAR_ACTIVE_IDENTIFIER in self.chars:
             self.sources = self.hass.states.get(self.entity_id).attributes.get(
-                ATTR_INPUT_SOURCE)
+                ATTR_INPUT_SOURCE_LIST)
             if self.sources:
                 self.char_active_identifier = serv_tv.configure_char(
                     CHAR_ACTIVE_IDENTIFIER,
