@@ -64,7 +64,7 @@ def async_process_endpoint(
     if ha_const.CONF_TYPE in node_config:
         component = node_config[ha_const.CONF_TYPE]
 
-    if component and component in COMPONENTS and\
+    if component and component in COMPONENTS and \
             component in COMPONENT_CLUSTERS:
         profile_clusters = COMPONENT_CLUSTERS[component]
         if profile_clusters:
