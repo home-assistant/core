@@ -21,6 +21,27 @@ SCAN_INTERVAL = timedelta(minutes=1)
 
 DEPENDENCIES = ['strava']
 
+UNIT_MAPPING_FIELDS = {
+    'kilojoules': 'kJ',
+    'average_watts': 'W',
+    'device_watts': 'W',
+    'max_watts': 'W',
+    'average_heartrate': 'bpm',
+    'max_heartrate': 'bpm',
+    'calories': 'C',
+    'member_count': 'Members',
+    'kudos_count': 'Kudos',
+    'comment_count': 'Comments',
+    'athlete_count': 'Athletes',
+    'follower_count': 'Followers',
+    'achievement_count': 'Achievements',
+    'friend_count': 'Friends',
+    'photo_count': 'Photos',
+    'total_photo_count': 'Photos',
+    'pr_count': 'Records',
+    'average_cadence': 'rpm'
+}
+
 ICON_MAPPING_FIELDS = {
     'member_count': 'mdi:account-multiple',
     'follower_count': 'mdi:account-multiple',
@@ -186,6 +207,8 @@ class StravaSensor(Entity):
 
         if isinstance(attr, Quantity):
             return str(attr.unit)
+        elif field in UNIT_MAPPING_FIELDS:
+            return UNIT_MAPPING_FIELDS[field]
         else:
             return None
 
