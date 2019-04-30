@@ -180,10 +180,14 @@ class StravaAthleteData:
         self.last_activity = None
 
     async def update_last_actitivity(self, hass):
-        activities = await hass.async_add_executor_job(
-            self.data.client.get_activities, None, None, 1)
+        def get_last_activity(client):
+            activities = client.get_activities(limit=1)
+            last_activity = next(activities)
+            last_activity_detailed = client.get_activity(last_activity.id, True)
 
-        self.last_activity = next(activities)
+            return last_activity_detailed
+
+        self.last_activity = await hass.async_add_executor_job(get_last_activity, self.data.client)
 
         _LOGGER.info("Fetched last activity")
 
