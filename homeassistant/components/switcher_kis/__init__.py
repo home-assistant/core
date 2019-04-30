@@ -11,7 +11,8 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.discovery import (async_listen_platform,
+                                             async_load_platform)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import (EventType, HomeAssistantType,
@@ -84,6 +85,36 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
         DATA_DEVICE: device_data
     }
 
+    async def async_switch_platform_discoverd(
+            platform: str, discovery_info: Optional[Dict]) -> None:
+        """Use for registering services after switch platform is discoverd."""
+        async def async_set_auto_off_service(service: ServiceCallType) -> None:
+            """Use for handling setting device auto-off service calls."""
+            from aioswitcher.api import SwitcherV2Api
+            async with SwitcherV2Api(hass.loop, device_data.ip_addr, phone_id,
+                                     device_id, device_password) as swapi:
+                await swapi.set_auto_shutdown(service.data[CONF_AUTO_OFF])
+
+        hass.services.async_register(
+            DOMAIN, SERVICE_SET_AUTO_OFF_NAME,
+            async_set_auto_off_service,
+            schema=SERVICE_SET_AUTO_OFF_SCHEMA)
+
+        async def async_update_name_service(service: ServiceCallType) -> None:
+            """Use for handling update device name service calls."""
+            from aioswitcher.api import SwitcherV2Api
+            async with SwitcherV2Api(hass.loop, device_data.ip_addr, phone_id,
+                                     device_id, device_password) as swapi:
+                await swapi.set_device_name(service.data[CONF_NAME])
+
+        hass.services.async_register(
+            DOMAIN, SERVICE_UPDATE_DEVICE_NAME_NAME,
+            async_update_name_service,
+            schema=SERVICE_UPDATE_DEVICE_NAME_SCHEMA)
+
+    async_listen_platform(
+        hass, SWITCH_DOMAIN, async_switch_platform_discoverd)
+
     hass.async_create_task(async_load_platform(
         hass, SWITCH_DOMAIN, DOMAIN, {}, config))
 
@@ -100,29 +131,5 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
                 pass
 
     async_track_time_interval(hass, device_updates, timedelta(seconds=4))
-
-    async def async_set_auto_off_service(service: ServiceCallType) -> None:
-        """Use for handling setting device auto-off service calls."""
-        from aioswitcher.api import SwitcherV2Api
-        async with SwitcherV2Api(hass.loop, device_data.ip_addr, phone_id,
-                                 device_id, device_password) as swapi:
-            await swapi.set_auto_shutdown(service.data[CONF_AUTO_OFF])
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_AUTO_OFF_NAME,
-        async_set_auto_off_service,
-        schema=SERVICE_SET_AUTO_OFF_SCHEMA)
-
-    async def async_update_name_service(service: ServiceCallType) -> None:
-        """Use for handling update device name service calls."""
-        from aioswitcher.api import SwitcherV2Api
-        async with SwitcherV2Api(hass.loop, device_data.ip_addr, phone_id,
-                                 device_id, device_password) as swapi:
-            await swapi.set_device_name(service.data[CONF_NAME])
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_UPDATE_DEVICE_NAME_NAME,
-        async_update_name_service,
-        schema=SERVICE_UPDATE_DEVICE_NAME_SCHEMA)
 
     return True
