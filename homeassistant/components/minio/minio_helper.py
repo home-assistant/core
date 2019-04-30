@@ -19,12 +19,12 @@ _METADATA_RE = re.compile('x-amz-meta-(.*)', re.IGNORECASE)
 def normalize_metadata(metadata: dict) -> dict:
     """Normalize object metadata by stripping the prefix."""
     new_metadata = {}
-    for meta_key in metadata.keys():
+    for meta_key, meta_value in metadata.items():
         match = _METADATA_RE.match(meta_key)
         if not match:
             continue
 
-        new_metadata[match.group(1).lower()] = metadata[meta_key]
+        new_metadata[match.group(1).lower()] = meta_value
 
     return new_metadata
 

@@ -11,6 +11,10 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START, \
     EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 
+from minio import Minio
+
+from .minio_helper import MinioEventThread
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'minio'
@@ -25,9 +29,9 @@ CONF_LISTEN_PREFIX = 'prefix'
 CONF_LISTEN_SUFFIX = 'suffix'
 CONF_LISTEN_EVENTS = 'events'
 
-CONF_LISTEN_PREFIX_DEFAULT = ''
-CONF_LISTEN_SUFFIX_DEFAULT = '.*'
-CONF_LISTEN_EVENTS_DEFAULT = 's3:ObjectCreated:*'
+DEFAULT_LISTEN_PREFIX = ''
+DEFAULT_LISTEN_SUFFIX = '.*'
+DEFAULT_LISTEN_EVENTS = 's3:ObjectCreated:*'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -36,19 +40,19 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_ACCESS_KEY): cv.string,
         vol.Required(CONF_SECRET_KEY): cv.string,
         vol.Required(CONF_SECURE): cv.boolean,
-        vol.Optional(CONF_LISTEN): vol.All(cv.ensure_list, [vol.Schema({
+        vol.Optional(CONF_LISTEN, default=[]): vol.All(cv.ensure_list, [vol.Schema({
             vol.Required(CONF_LISTEN_BUCKET): cv.string,
             vol.Optional(
                 CONF_LISTEN_PREFIX,
-                default=CONF_LISTEN_PREFIX_DEFAULT
+                default=DEFAULT_LISTEN_PREFIX
             ): cv.string,
             vol.Optional(
                 CONF_LISTEN_SUFFIX,
-                default=CONF_LISTEN_SUFFIX_DEFAULT
+                default=DEFAULT_LISTEN_SUFFIX
             ): cv.string,
             vol.Optional(
                 CONF_LISTEN_EVENTS,
-                default=CONF_LISTEN_EVENTS_DEFAULT
+                default=DEFAULT_LISTEN_EVENTS
             ): cv.string,
         })])
     })
@@ -64,9 +68,117 @@ BUCKET_KEY_FILE_SCHEMA = BUCKET_KEY_SCHEMA.extend({
 })
 
 
+def setup(hass, config):
+    """Set up MinioClient and event listeners."""
+    conf = config[DOMAIN]
+
+    host = conf[CONF_HOST]
+    port = conf[CONF_PORT]
+    access_key = conf[CONF_ACCESS_KEY]
+    secret_key = conf[CONF_SECRET_KEY]
+    secure = conf[CONF_SECURE]
+
+    queue_listener = QueueListener(hass)
+    queue = queue_listener.queue
+
+    hass.bus.listen_once(
+        EVENT_HOMEASSISTANT_START,
+        queue_listener.start_handler
+    )
+    hass.bus.listen_once(
+        EVENT_HOMEASSISTANT_STOP,
+        queue_listener.stop_handler
+    )
+
+    def _setup_listener(listener_conf):
+        bucket = listener_conf[CONF_LISTEN_BUCKET]
+        prefix = listener_conf[CONF_LISTEN_PREFIX]
+        suffix = listener_conf[CONF_LISTEN_SUFFIX]
+        events = listener_conf[CONF_LISTEN_EVENTS]
+
+        minio_listener = MinioListener(
+            queue,
+            get_minio_endpoint(host, port),
+            access_key,
+            secret_key,
+            secure,
+            bucket,
+            prefix,
+            suffix,
+            events
+        )
+
+        hass.bus.listen_once(
+            EVENT_HOMEASSISTANT_START,
+            minio_listener.start_handler
+        )
+        hass.bus.listen_once(
+            EVENT_HOMEASSISTANT_STOP,
+            minio_listener.stop_handler
+        )
+
+    for listen_conf in conf.get(CONF_LISTEN):
+        _setup_listener(listen_conf)
+
+    minio_client = Minio(
+        get_minio_endpoint(host, port),
+        access_key,
+        secret_key,
+        secure
+    )
+
+    def _render_service_value(service, key):
+        value = service.data.get(key)
+        value.hass = hass
+        return value.async_render()
+
+    def put_file(service):
+        """Upload file service."""
+        bucket = _render_service_value(service, 'bucket')
+        key = _render_service_value(service, 'key')
+        file_path = _render_service_value(service, 'file_path')
+
+        if not hass.config.is_allowed_path(file_path):
+            _LOGGER.error('Invalid file_path %s', file_path)
+            return
+
+        minio_client.fput_object(bucket, key, file_path)
+
+    def get_file(service):
+        """Download file service."""
+        bucket = _render_service_value(service, 'bucket')
+        key = _render_service_value(service, 'key')
+        file_path = _render_service_value(service, 'file_path')
+
+        if not hass.config.is_allowed_path(file_path):
+            _LOGGER.error('Invalid file_path %s', file_path)
+            return
+
+        minio_client.fget_object(bucket, key, file_path)
+
+    def remove_file(service):
+        """Delete file service."""
+        bucket = _render_service_value(service, 'bucket')
+        key = _render_service_value(service, 'key')
+
+        minio_client.remove_object(bucket, key)
+
+    hass.services.register(
+        DOMAIN, 'put', put_file, schema=BUCKET_KEY_FILE_SCHEMA
+    )
+    hass.services.register(
+        DOMAIN, 'get', get_file, schema=BUCKET_KEY_FILE_SCHEMA
+    )
+    hass.services.register(
+        DOMAIN, 'remove', remove_file, schema=BUCKET_KEY_SCHEMA
+    )
+
+    return True
+
+
 def get_minio_endpoint(host: str, port: int) -> str:
     """Create minio endpoint from host and port."""
-    return host + ':' + str(port)
+    return "{}:{}".format(host, port)
 
 
 class QueueListener(threading.Thread):
@@ -149,8 +261,6 @@ class MinioListener:
 
     def start_handler(self, _):
         """Create and start the event thread."""
-        from .minio_helper import MinioEventThread
-
         self._minio_event_thread = MinioEventThread(
             self._queue,
             self._endpoint,
@@ -168,113 +278,3 @@ class MinioListener:
         """Issue stop and wait for thread to join."""
         if self._minio_event_thread is not None:
             self._minio_event_thread.stop()
-
-
-def setup(hass, config):
-    """Set up MinioClient and event listeners."""
-    conf = config[DOMAIN]
-
-    host = conf[CONF_HOST]
-    port = conf[CONF_PORT]
-    access_key = conf[CONF_ACCESS_KEY]
-    secret_key = conf[CONF_SECRET_KEY]
-    secure = conf[CONF_SECURE]
-
-    queue_listener = QueueListener(hass)
-    queue = queue_listener.queue
-
-    hass.bus.listen_once(
-        EVENT_HOMEASSISTANT_START,
-        queue_listener.start_handler
-    )
-    hass.bus.listen_once(
-        EVENT_HOMEASSISTANT_STOP,
-        queue_listener.stop_handler
-    )
-
-    def _setup_listener(listener_conf):
-        bucket = listener_conf[CONF_LISTEN_BUCKET]
-        prefix = listener_conf[CONF_LISTEN_PREFIX]
-        suffix = listener_conf[CONF_LISTEN_SUFFIX]
-        events = listener_conf[CONF_LISTEN_EVENTS]
-
-        minio_listener = MinioListener(
-            queue,
-            get_minio_endpoint(host, port),
-            access_key,
-            secret_key,
-            secure,
-            bucket,
-            prefix,
-            suffix,
-            events
-        )
-
-        hass.bus.listen_once(
-            EVENT_HOMEASSISTANT_START,
-            minio_listener.start_handler
-        )
-        hass.bus.listen_once(
-            EVENT_HOMEASSISTANT_STOP,
-            minio_listener.stop_handler
-        )
-
-    for listen_conf in conf.get(CONF_LISTEN, []):
-        _setup_listener(listen_conf)
-
-    from minio import Minio
-
-    minio_client = Minio(
-        get_minio_endpoint(host, port),
-        access_key,
-        secret_key,
-        secure
-    )
-
-    def _render_service_value(service, key):
-        value = service.data.get(key)
-        value.hass = hass
-        return value.async_render()
-
-    def put_file(service):
-        """Upload file service."""
-        bucket = _render_service_value(service, 'bucket')
-        key = _render_service_value(service, 'key')
-        file_path = _render_service_value(service, 'file_path')
-
-        if not hass.config.is_allowed_path(file_path):
-            _LOGGER.error('Invalid file_path %s', file_path)
-            return
-
-        minio_client.fput_object(bucket, key, file_path)
-
-    def get_file(service):
-        """Download file service."""
-        bucket = _render_service_value(service, 'bucket')
-        key = _render_service_value(service, 'key')
-        file_path = _render_service_value(service, 'file_path')
-
-        if not hass.config.is_allowed_path(file_path):
-            _LOGGER.error('Invalid file_path %s', file_path)
-            return
-
-        minio_client.fget_object(bucket, key, file_path)
-
-    def remove_file(service):
-        """Delete file service."""
-        bucket = _render_service_value(service, 'bucket')
-        key = _render_service_value(service, 'key')
-
-        minio_client.remove_object(bucket, key)
-
-    hass.services.register(
-        DOMAIN, 'put', put_file, schema=BUCKET_KEY_FILE_SCHEMA
-    )
-    hass.services.register(
-        DOMAIN, 'get', get_file, schema=BUCKET_KEY_FILE_SCHEMA
-    )
-    hass.services.register(
-        DOMAIN, 'remove', remove_file, schema=BUCKET_KEY_SCHEMA
-    )
-
-    return True
