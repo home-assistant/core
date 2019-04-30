@@ -15,10 +15,10 @@ CONF_CLIENT_SECRET = 'client_secret'
 AUTH_CALLBACK_NAME = 'api:strava'
 AUTH_CALLBACK_PATH = '/api/strava'
 
-CONFIGURATOR_DESCRIPTION = 'To link your Strava account, ' \
-                           'click the link, login, and authorize:'
-CONFIGURATOR_LINK_NAME = 'Link Strava account'
-CONFIGURATOR_SUBMIT_CAPTION = 'I authorized successfully'
+CONFIGURATOR_DESCRIPTION = "To link your Strava account, " \
+                           "click the link, login, and authorize:"
+CONFIGURATOR_LINK_NAME = "Link Strava account"
+CONFIGURATOR_SUBMIT_CAPTION = "I authorized successfully"
 
 DEFAULT_NAME = 'Strava'
 
@@ -100,7 +100,7 @@ class StravaData:
             await self.refresh_token()
 
     async def authorize(self, code, hass):
-        """ Request initial authorization. """
+        """Request initial authorization."""
         self._token = await hass.async_add_executor_job(
             self.client.exchange_code_for_token,
             self._client_id,

@@ -258,11 +258,11 @@ class StravaLastActivitySensor(StravaSensor):
         if self.available:
             name = self._data.last_activity.name
         else:
-            name = 'Last Activity'
+            name = "Last Activity"
 
         field = self._field.replace('_', ' ').title()
 
-        return '{}: {}'.format(name, field)
+        return "{}: {}".format(name, field)
 
     @property
     def unique_id(self):
@@ -296,16 +296,16 @@ class StravaAthleteDetailsSensor(StravaSensor):
                 self._data.details.firstname,
                 self._data.details.lastname)
         elif self._data.id:
-            name = 'Athlete {}'.format(self._data.id)
+            name = "Athlete {}".format(self._data.id)
         else:
             name = 'Athlete'
 
         field = self._field.replace('_', ' ').title()
-        name += ': {}'.format(field)
+        name += ": {}".format(field)
 
         if self._subfield:
             subfield = self._subfield.replace('_', ' ').title()
-            name += ' {}'.format(subfield)
+            name += " {}".format(subfield)
 
         return name
 
@@ -341,20 +341,20 @@ class StravaAthleteStatsSensor(StravaSensor):
     @property
     def name(self):
         if self._data.details:
-            name = '{} {}'.format(
+            name = "{} {}".format(
                 self._data.details.firstname,
                 self._data.details.lastname)
         elif self._data.id:
-            name = 'Athlete {}'.format(self._data.id)
+            name = "Athlete {}".format(self._data.id)
         else:
             name = 'Athlete'
 
         field = self._field.replace('_', ' ').title()
-        name += ': {}'.format(field)
+        name += ": {}".format(field)
 
         if self._subfield:
             subfield = self._subfield.replace('_', ' ').title()
-            name += ' {}'.format(subfield)
+            name += " {}".format(subfield)
 
         return name
 
@@ -392,14 +392,14 @@ class StravaClubSensor(StravaSensor):
         if self.available:
             name = self._state.name
         else:
-            name = 'Club {}'.format(self._data.id)
+            name = "Club {}".format(self._data.id)
 
         field = self._field.replace('_', ' ').title()
-        name += ': {}'.format(field)
+        name += ": {}".format(field)
 
         if self._subfield:
             subfield = self._subfield.replace('_', ' ').title()
-            name += ' {}'.format(subfield)
+            name += " {}".format(subfield)
 
         return name
 
@@ -433,14 +433,14 @@ class StravaGearSensor(StravaSensor):
         if self.available:
             name = self._state.name
         else:
-            name = 'Gear {}'.format(self._data.id)
+            name = "Gear {}".format(self._data.id)
 
         field = self._field.replace('_', ' ').title()
-        name += ': {}'.format(field)
+        name += ": {}".format(field)
 
         if self._subfield:
             subfield = self._subfield.replace('_', ' ').title()
-            name += ' {}'.format(subfield)
+            name += " {}".format(subfield)
 
         return name
 
