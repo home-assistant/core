@@ -62,7 +62,7 @@ class SesameDevice(LockDevice):
     @property
     def state(self) -> str:
         """Get the state of the device."""
-        return self._is_locked and STATE_LOCKED or STATE_UNLOCKED
+        return STATE_LOCKED if self._is_locked else STATE_UNLOCKED
 
     def lock(self, **kwargs) -> None:
         """Lock the device."""
