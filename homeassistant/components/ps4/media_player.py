@@ -88,7 +88,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         name = device[CONF_NAME]
         ps4 = pyps4.Ps4(host, creds)
         device_list.append(PS4Device(
-            name, host, region, ps4, creds, games_file))
+            config, name, host, region, ps4, creds, games_file))
     add_entities(device_list, True)
 
 
@@ -103,8 +103,9 @@ class PS4Data():
 class PS4Device(MediaPlayerDevice):
     """Representation of a PS4."""
 
-    def __init__(self, name, host, region, ps4, creds, games_file):
+    def __init__(self, config, name, host, region, ps4, creds, games_file):
         """Initialize the ps4 device."""
+        self._entry_id = config.entry_id
         self._ps4 = ps4
         self._host = host
         self._name = name
@@ -133,20 +134,20 @@ class PS4Device(MediaPlayerDevice):
         """Retrieve the latest data."""
         try:
             status = self._ps4.get_status()
-            if self._info is None:
-                # Add entity to registry
-                self.get_device_info(status)
-                self._games = self.load_games()
-                if self._games is not None:
-                    self._source_list = list(sorted(self._games.values()))
-                # Non-Breaking although data returned may be inaccurate.
-                if self._region in deprecated_regions:
-                    _LOGGER.info("""Region: %s has been deprecated.
-                                    Please remove PS4 integration
-                                    and Re-configure again to utilize
-                                    current regions""", self._region)
         except socket.timeout:
             status = None
+        if self._info is None:
+            # Add entity to registry
+            self.get_device_info(status)
+            self._games = self.load_games()
+            if self._games is not None:
+                self._source_list = list(sorted(self._games.values()))
+            # Non-Breaking although data returned may be inaccurate.
+            if self._region in deprecated_regions:
+                _LOGGER.info("""Region: %s has been deprecated.
+                                Please remove PS4 integration
+                                and Re-configure again to utilize
+                                current regions""", self._region)
         if status is not None:
             self._retry = 0
             self._disconnected = False
@@ -270,20 +271,41 @@ class PS4Device(MediaPlayerDevice):
 
     def get_device_info(self, status):
         """Set device info for registry."""
-        _sw_version = status['system-version']
-        _sw_version = _sw_version[1:4]
-        sw_version = "{}.{}".format(_sw_version[0], _sw_version[1:])
-        self._info = {
-            'name': status['host-name'],
-            'model': 'PlayStation 4',
-            'identifiers': {
-                (PS4_DOMAIN, status['host-id'])
-            },
-            'manufacturer': 'Sony Interactive Entertainment Inc.',
-            'sw_version': sw_version
-        }
+        # If cannot get status on startup, assume info from registry.
+        if status is None:
+            e_registry = self.hass.data['entity_registry']
+            d_registry = self.hass.data['device_registry']
+            for entity_id, entry in e_registry.entities.items():
+                if entry.config_entry_id == self._entry_id:
+                    self._unique_id = entry.unique_id
+                    self.entity_id = entity_id
+                    break
+            for device_id, device in d_registry.devices.items():
+                if self._entry_id in device.config_entries:
+                    self._info = {
+                        'name': device.name,
+                        'model': device.model,
+                        'identifiers': device.identifiers,
+                        'manufacturer': device.manufacturer,
+                        'sw_version': device.sw_version
+                    }
+                    _LOGGER.warning(self.entity_id)
 
-        self._unique_id = format_unique_id(self._creds, status['host-id'])
+        else:
+            _sw_version = status['system-version']
+            _sw_version = _sw_version[1:4]
+            sw_version = "{}.{}".format(_sw_version[0], _sw_version[1:])
+            self._info = {
+                'name': status['host-name'],
+                'model': 'PlayStation 4',
+                'identifiers': {
+                    (PS4_DOMAIN, status['host-id'])
+                },
+                'manufacturer': 'Sony Interactive Entertainment Inc.',
+                'sw_version': sw_version
+            }
+
+            self._unique_id = format_unique_id(self._creds, status['host-id'])
 
     async def async_will_remove_from_hass(self):
         """Remove Entity from Hass."""
