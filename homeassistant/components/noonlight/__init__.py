@@ -5,16 +5,15 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_ID, CONF_ACCESS_TOKEN, CONF_LATITUDE, CONF_LONGITUDE, 
-    CONF_BINARY_SENSORS, CONF_FILENAME, CONF_MONITORED_CONDITIONS,
-    CONF_SENSORS, CONF_STRUCTURE, EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP)
+    CONF_ACCESS_TOKEN, CONF_BINARY_SENSORS, CONF_FILENAME, CONF_ID,
+    CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS, CONF_SENSORS,
+    CONF_STRUCTURE, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
-from homeassistant.helpers.discovery import load_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.dt as dt_util
-    
+
 DOMAIN = 'noonlight'
 
 TOKEN_CHECK_INTERVAL = timedelta(minutes=15)
@@ -56,7 +55,7 @@ async def async_setup(hass, config):
         result = await noonlight_platform.check_api_token()
         
         if not result:
-            _LOGGER.error('Noonlight token failed to renew, trying again in 3 minutes...')
+            _LOGGER.error("api token failed renewal, retrying in 3 min...")
             next_check_interval = timedelta(minutes=3)
 
         async_track_point_in_utc_time(
@@ -67,7 +66,8 @@ async def async_setup(hass, config):
         """Schedule the first token renewal when Home Assistant starts up."""
         async_track_point_in_utc_time(hass, check_api_token, dt_util.utcnow())
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, schedule_first_token_check)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, 
+        schedule_first_token_check)
     
     load_platform(hass, 'switch', DOMAIN, None, config)
     
@@ -83,19 +83,25 @@ class NoonlightPlatform(object):
         
     @property
     def latitude(self):
-        return self.config.get(CONF_LATITUDE, self.hass.config.latitude)
+        return self.config \
+            .get(CONF_LATITUDE, self.hass.config.latitude)
         
     @property
     def longitude(self):
-        return self.config.get(CONF_LONGITUDE, self.hass.config.longitude)
+        return self.config \
+            .get(CONF_LONGITUDE, self.hass.config.longitude)
         
     @property
     def access_token(self):
-        return self.config.get(CONF_ACCESS_TOKEN,{}).get('token')
+        return self.config \
+            .get(CONF_ACCESS_TOKEN,{}) \
+            .get('token')
         
     @property
     def access_token_expiry(self):
-        return self.config.get(CONF_ACCESS_TOKEN,{}).get('expires',dt_util.utc_from_timestamp(0))
+        return self.config \
+            .get(CONF_ACCESS_TOKEN,{}) \
+            .get('expires',dt_util.utc_from_timestamp(0))
         
     @property
     def access_token_expires_in(self):
@@ -103,29 +109,42 @@ class NoonlightPlatform(object):
         
     @property
     def should_token_be_renewed(self):
-        return self.access_token is None or self.access_token_expires_in <= self._time_to_renew
+        return self.access_token is None \
+            or self.access_token_expires_in <= self._time_to_renew
         
     @property
     def client(self):
         if self._client is None:
-            import noonlight
-            self._client = noonlight.NoonlightClient(token = self.access_token)
+            import noonlight as nl
+            self._client = nl.NoonlightClient(token = self.access_token)
         return self._client
         
     async def check_api_token(self, force_renew = False):
-        _LOGGER.debug('Checking to see if Noonlight access token needs renewal, expires in {0:.1f}h'.format(self.access_token_expires_in.total_seconds() / 3600.0))
+        _LOGGER.debug("checking if token needs renewal, expires: {0:.1f}h" \
+            .format(self.access_token_expires_in.total_seconds() / 3600.0))
         if self.should_token_be_renewed or force_renew:
             try:
-                _LOGGER.debug('Renewing Noonlight access token...')
-                token_response = await self.client._post(path = self.config.get(CONF_TOKEN_ENDPOINT), data = {'id': self.config.get(CONF_ID), 'secret': self.config.get(CONF_SECRET)})
+                _LOGGER.debug("Renewing Noonlight access token...")
+                path = self.config.get(CONF_TOKEN_ENDPOINT)
+                data = {
+                    'id': self.config.get(CONF_ID), 
+                    'secret': self.config.get(CONF_SECRET)
+                }
+                token_response = await self.client._post(path=path, data=data)
                 if 'token' in token_response and 'expires' in token_response:
                     self._set_token_response(token_response)
-                    _LOGGER.info('Noonlight access token successfully renewed, expires at {0} ({1:.1f}h)'.format(self.access_token_expiry,self.access_token_expires_in.total_seconds() / 3600.0))
+                    _LOGGER.debug("token renewed, expires at {0} ({1:.1f}h)" \
+                        .format(
+                            self.access_token_expiry,
+                            self.access_token_expires_in.total_seconds()/3600.0
+                        )
+                    )
                     return True
                 else:
-                    raise Exception('unexpected token_response: {}'.format(token_response))
+                    raise Exception("unexpected token_response: {}" \
+                        .format(token_response))
             except:
-                _LOGGER.exception('Failed to renew Noonlight token!')
+                _LOGGER.exception("Failed to renew Noonlight token!")
                 return False
         return True
                 
@@ -137,5 +156,3 @@ class NoonlightPlatform(object):
             token_response['expires'] = dt_util.utc_from_timestamp(0)
         self.client.set_token(token = token_response.get('token'))
         self.config[CONF_ACCESS_TOKEN] = token_response
-        
-    

@@ -1,16 +1,15 @@
 """Create a switch to trigger an alarm in Noonlight"""
 import logging
 
+from homeassistant.components.switch import SwitchDevice
+
 from . import DOMAIN
+
 DEFAULT_NAME = 'noonlight_switch'
 
-from homeassistant.components.switch import SwitchDevice
 
 
 _LOGGER = logging.getLogger(__name__)
-
-# DEPENDENCIES = ['noonlight']
-
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
@@ -50,8 +49,16 @@ class NoonlightSwitch(SwitchDevice):
         #[TODO] read list of monitored sensors, use sensor type to determine 
         #   whether medical, fire, or police should be notified
         if self._alarm is None:
-            self._alarm = await self.noonlight.client.create_alarm(body = {'location.coordinates': {'lat':self.noonlight.latitude, 'lng':self.noonlight.latitude, 'accuracy': 5} })
-            if self._alarm and self._alarm.status == 'ACTIVE': #[todo] change to constant from noonlight library
+            self._alarm = await self.noonlight.client.create_alarm(
+                body = {
+                    'location.coordinates': {
+                        'lat':self.noonlight.latitude, 
+                        'lng':self.noonlight.latitude, 
+                        'accuracy': 5
+                    } 
+                }
+            )
+            if self._alarm and self._alarm.status == 'ACTIVE':
                 self._state = True        
 
     async def async_turn_off(self, **kwargs):
