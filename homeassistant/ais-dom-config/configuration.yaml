@@ -51,7 +51,6 @@ recorder:
       - sensor.time
       - sensor.ais_drives
       - input_select.radio_type
-      - input_select.radio_station_name
       - input_select.radio_player
       - input_select.podcast_type
       - input_select.podcast_name
@@ -77,7 +76,6 @@ history:
       - sensor.time
       - sensor.ais_drives
       - input_select.radio_type
-      - input_select.radio_station_name
       - input_select.radio_player
       - input_select.podcast_type
       - input_select.podcast_name

@@ -393,18 +393,6 @@
       data_template:
         radio_type: "{{ states('input_select.radio_type') }}"
 
-- id: '201807081923023'
-  alias: 'Select Radio Name'
-  initial_state: True
-  hide_entity: True
-  trigger:
-    platform: state
-    entity_id: input_select.radio_station_name
-  action:
-    - service: ais_cloud.select_radio_name
-      data_template:
-        radio_name: "{{ states('input_select.radio_station_name') }}"
-
 - id: '201807081923024'
   alias: 'Select Radio Player'
   initial_state: True

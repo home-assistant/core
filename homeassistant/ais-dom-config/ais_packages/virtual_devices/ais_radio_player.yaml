@@ -15,12 +15,6 @@ input_select:
       - "-"
     initial: "-"
     icon: mdi:format-list-bulleted-type
-  radio_station_name:
-    name: 'Stacja:'
-    options:
-      - "-"
-    initial: "-"
-    icon: mdi:radio
   radio_player:
     name: 'Głośnik:'
     options:
@@ -47,5 +41,5 @@ group:
     name: Radia Internetowe
     entities:
       - input_select.radio_type
-      - input_select.radio_station_name
+      - sensor.radiolist
       - input_select.radio_player

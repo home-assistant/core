@@ -57,13 +57,13 @@ def async_setup(hass, config):
             'iframe', "Konsola", "mdi:console",
             "console", {'url': 'http://' + my_ip + ':8888'})
     #
-    hass.states.async_set("sensor.radiolist", 0, {})
-    hass.states.async_set("sensor.podcastlist", 0, {})
-    hass.states.async_set("sensor.youtubelist", 0, {})
-    hass.states.async_set("sensor.spotifylist", 0, {})
+    hass.states.async_set("sensor.radiolist", -1, {})
+    hass.states.async_set("sensor.podcastlist", -1, {})
+    hass.states.async_set("sensor.youtubelist", -1, {})
+    hass.states.async_set("sensor.spotifylist", -1, {})
 
     def get_radio_types(call):
-        _LOGGER.info("get_radio_types  ")
+        _LOGGER.info("get_radio_types")
         data.get_radio_types(call)
 
     def get_radio_names(call):
@@ -75,19 +75,19 @@ def async_setup(hass, config):
         data.select_radio_name(call)
 
     def get_players(call):
-        _LOGGER.info("get_players  ")
+        _LOGGER.info("get_players")
         data.get_players(call, hass)
 
     def play_audio(call):
-        _LOGGER.info("play_audio  ")
+        _LOGGER.info("play_audio")
         data.play_audio(call)
 
     def get_podcast_types(call):
-        _LOGGER.info("get_podcast_types  ")
+        _LOGGER.info("get_podcast_types")
         data.get_podcast_types(call)
 
     def get_podcast_names(call):
-        _LOGGER.info("get_podcast_names  ")
+        _LOGGER.info("get_podcast_names")
         data.get_podcast_names(call)
 
     def get_podcast_tracks(call):
@@ -111,7 +111,7 @@ def async_setup(hass, config):
         data.get_rss_news_channels(call)
 
     def get_rss_news_items(call):
-        _LOGGER.info("get_rss_news_items  ")
+        _LOGGER.info("get_rss_news_items")
         data.get_rss_news_items(call)
 
     def select_rss_news_item(call):
@@ -122,38 +122,32 @@ def async_setup(hass, config):
         _LOGGER.info("select_rss_help_item")
         data.select_rss_help_item(call)
 
-    # register services
-    hass.services.async_register(
-        DOMAIN, 'get_radio_types', get_radio_types)
-    hass.services.async_register(
-        DOMAIN, 'get_radio_names', get_radio_names)
-    hass.services.async_register(
-        DOMAIN, 'select_radio_name', select_radio_name)
-    hass.services.async_register(
-        DOMAIN, 'get_players', get_players)
-    hass.services.async_register(
-        DOMAIN, 'play_audio', play_audio)
-    hass.services.async_register(
-        DOMAIN, 'get_podcast_types', get_podcast_types)
-    hass.services.async_register(
-        DOMAIN, 'get_podcast_names', get_podcast_names)
-    hass.services.async_register(
-        DOMAIN, 'get_podcast_tracks', get_podcast_tracks)
-    hass.services.async_register(
-        DOMAIN, 'select_podcast_track', select_podcast_track)
-    hass.services.async_register(
-        DOMAIN, 'select_media_player', select_media_player)
-    hass.services.async_register(
-        DOMAIN, 'get_rss_news_category', get_rss_news_category)
-    hass.services.async_register(
-        DOMAIN, 'get_rss_news_channels', get_rss_news_channels)
-    hass.services.async_register(
-        DOMAIN, 'get_rss_news_items', get_rss_news_items)
-    hass.services.async_register(
-        DOMAIN, 'select_rss_news_item', select_rss_news_item)
-    hass.services.async_register(
-        DOMAIN, 'select_rss_help_item', select_rss_help_item)
+    def play_prev(call):
+        _LOGGER.info("play_prev")
+        data.play_prev(call)
 
+    def play_next(call):
+        _LOGGER.info("play_next")
+        data.play_next(call)
+
+    # register services
+    hass.services.async_register(DOMAIN, 'get_radio_types', get_radio_types)
+    hass.services.async_register(DOMAIN, 'get_radio_names', get_radio_names)
+    hass.services.async_register(DOMAIN, 'select_radio_name', select_radio_name)
+    hass.services.async_register(DOMAIN, 'get_players', get_players)
+    hass.services.async_register(DOMAIN, 'play_audio', play_audio)
+    hass.services.async_register(DOMAIN, 'get_podcast_types', get_podcast_types)
+    hass.services.async_register(DOMAIN, 'get_podcast_names', get_podcast_names)
+    hass.services.async_register(DOMAIN, 'get_podcast_tracks', get_podcast_tracks)
+    hass.services.async_register(DOMAIN, 'select_podcast_track', select_podcast_track)
+    hass.services.async_register(DOMAIN, 'select_media_player', select_media_player)
+    hass.services.async_register(DOMAIN, 'get_rss_news_category', get_rss_news_category)
+    hass.services.async_register(DOMAIN, 'get_rss_news_channels', get_rss_news_channels)
+    hass.services.async_register(DOMAIN, 'get_rss_news_items', get_rss_news_items)
+    hass.services.async_register(DOMAIN, 'select_rss_news_item', select_rss_news_item)
+    hass.services.async_register(DOMAIN, 'select_rss_help_item', select_rss_help_item)
+    hass.services.async_register(DOMAIN, 'play_prev', play_prev)
+    hass.services.async_register(DOMAIN, 'play_next', play_next)
     def device_discovered(service):
         """ Called when a device has been discovered. """
         _LOGGER.info("Discovered a new device type: " + str(service.as_dict()))
@@ -445,26 +439,15 @@ class AisColudData:
             _LOGGER.error("No radio_type")
             return []
         if call.data["radio_type"] == ais_global.G_EMPTY_OPTION:
-            # reset status for item below
-            self.hass.services.call(
-                'input_select',
-                'set_options', {
-                    "entity_id": "input_select.radio_station_name",
-                    "options": [ais_global.G_EMPTY_OPTION]})
-            # update list
+            # reset status for list
             self.hass.states.async_set("sensor.radiolist", 0, {})
             return
 
         ws_resp = self.cloud.audio_name(ais_global.G_AN_RADIO, call.data["radio_type"])
         json_ws_resp = ws_resp.json()
-        self.radio_names = []
-        names = [ais_global.G_EMPTY_OPTION]
         list_info = {}
         list_idx = 0
         for item in json_ws_resp["data"]:
-            names.append(item["NAME"])
-            self.radio_names.append(item)
-            # list
             list_info[list_idx] = {}
             list_info[list_idx]["title"] = item["NAME"]
             list_info[list_idx]["name"] = item["NAME"]
@@ -477,34 +460,12 @@ class AisColudData:
 
         # create lists
         self.hass.states.async_set("sensor.radiolist", -1, list_info)
-        self.hass.services.call(
-            'input_select',
-            'set_options', {
-                "entity_id": "input_select.radio_station_name",
-                "options": names})
-        # select the radio name
-        if self.audio_name is not None:
-            self.hass.block_till_done()
-            self.hass.services.call(
-                'input_select',
-                'select_option', {
-                    "entity_id": "input_select.radio_station_name",
-                    "option": self.audio_name})
-            # this name will be set after the list refresh
-            self.audio_name = None
 
         # check if the change was done form remote
         import homeassistant.components.ais_ai_service as ais_ai
-        if (ais_ai.CURR_ENTITIE == 'input_select.radio_type'
-                and ais_ai.CURR_BUTTON_CODE == 23):
-            ais_ai.set_curr_entity(
-                self.hass,
-                'input_select.radio_station_name')
-            self.hass.services.call(
-                'ais_ai_service',
-                'say_it', {
-                    "text": "Wybierz stację"
-                })
+        if ais_ai.CURR_ENTITIE == 'input_select.radio_type' and ais_ai.CURR_BUTTON_CODE == 23:
+            ais_ai.set_curr_entity(self.hass, 'sensor.radiolist')
+            self.hass.services.call('ais_ai_service', 'say_it', {"text": "Wybierz stację"})
 
     def select_radio_name(self, call):
         """Get station stream url for the selected name."""
@@ -789,13 +750,13 @@ class AisColudData:
         # set stream image and title
         if player["entity_id"] == 'media_player.wbudowany_glosnik':
             _audio_info = json.dumps(
-                {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": ais_global.G_AN_MUSIC})
+                {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": ais_global.G_AN_RADIO})
             self.hass.services.call('media_player', 'play_media', {"entity_id": player["entity_id"],
                                                                    "media_content_type": "ais_info",
                                                                    "media_content_id": _audio_info})
 
     def play_podcast(self, id):
-        _LOGGER.info("play_radio")
+        _LOGGER.info("play_podcast")
         # """play radio by id on sensor list."""
         state = self.hass.states.get('sensor.podcastlist')
         attr = state.attributes
@@ -804,13 +765,17 @@ class AisColudData:
         self.hass.states.async_set("sensor.podcastlist", id, attr)
         player_name = self.hass.states.get('input_select.ais_music_player').state
         player = get_player_data(player_name)
+        try:
+            play_uri = track["uri"]['href']
+        except Exception:
+            play_uri = track["uri"]
         self.hass.services.call('media_player', 'play_media', {"entity_id": player["entity_id"],
                                                                "media_content_type": "audio/mp4",
-                                                               "media_content_id": track["uri"]})
+                                                               "media_content_id": play_uri})
         # set stream image and title
         if player["entity_id"] == 'media_player.wbudowany_glosnik':
             _audio_info = json.dumps(
-                {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": ais_global.G_AN_MUSIC})
+                {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": ais_global.G_AN_PODCAST})
             self.hass.services.call('media_player', 'play_media', {"entity_id": player["entity_id"],
                                                                    "media_content_type": "ais_info",
                                                                    "media_content_id": _audio_info})
@@ -828,44 +793,7 @@ class AisColudData:
                 self.play_podcast(call.data["id"])
 
         else:
-            if audio_type == ais_global.G_AN_RADIO:
-                self.hass.services.call(
-                    'input_select',
-                    'select_option', {
-                        "entity_id": "input_select.radio_type",
-                        "option": call.data["type"]})
-                self.hass.block_till_done()
-                self.hass.services.call(
-                    'input_select',
-                    'select_option', {
-                        "entity_id": "input_select.radio_station_name",
-                        "option": call.data["name"]})
-                # this name will be set after the list refresh
-                self.audio_name = call.data["name"]
-                self.hass.block_till_done()
-                player_name = self.hass.states.get(
-                    'input_select.radio_player').state
-                player = get_player_data(player_name)
-                self.hass.services.call(
-                    'media_player',
-                    'play_media', {
-                        "entity_id": player["entity_id"],
-                        "media_content_type": "audio/mp4",
-                        "media_content_id": check_url(call.data["stream_url"])
-                    })
-                # set stream image and title
-                if player["device_ip"] is not None:
-                    _audio_info = {"IMAGE_URL": call.data["image_url"], "NAME": call.data["name"],
-                                   "MEDIA_SOURCE": ais_global.G_AN_RADIO}
-                    _audio_info = json.dumps(_audio_info)
-                    self.hass.services.call(
-                        'media_player',
-                        'play_media', {
-                            "entity_id": player["entity_id"],
-                            "media_content_type": "ais_info",
-                            "media_content_id": _audio_info
-                        })
-            elif audio_type == ais_global.G_AN_PODCAST:
+            if audio_type == ais_global.G_AN_PODCAST:
                 self.hass.services.call(
                     'input_select',
                     'select_option', {
@@ -911,6 +839,36 @@ class AisColudData:
                         "entity_id": "input_text.ais_music_query",
                         "value": call.data["text"] + " "})
 
+    def play_prev(self, call):
+        audio_type = call.data["audio_type"]
+        if audio_type == ais_global.G_AN_RADIO:
+            state = self.hass.states.get('sensor.radiolist')
+            curr_id = int(state.state)
+            attr = state.attributes
+            prev_id = curr_id - 1
+            if prev_id < 0:
+                prev_id = len(attr) - 1
+            # update list
+            self.hass.states.async_set("sensor.radiolist", prev_id, attr)
+            self.play_radio(prev_id)
+        elif audio_type == ais_global.G_AN_PODCAST:
+            self.play_podcast(call.data["id"])
+
+    def play_next(self, call):
+        audio_type = call.data["audio_type"]
+        if audio_type == ais_global.G_AN_RADIO:
+            state = self.hass.states.get('sensor.radiolist')
+            curr_id = state.state
+            attr = state.attributes
+            next_id = int(curr_id) + 1
+            if next_id == len(attr):
+                next_id = 0
+            # update list
+            self.hass.states.async_set("sensor.radiolist", next_id, attr)
+            self.play_radio(next_id)
+        elif audio_type == ais_global.G_AN_PODCAST:
+            self.play_podcast(call.data["id"])
+
     def select_media_player(self, call):
         if "media_player_type" not in call.data:
             _LOGGER.error("No media_player_type")
@@ -920,19 +878,18 @@ class AisColudData:
         _audio_info = {}
         media_player_type = call.data["media_player_type"]
         if media_player_type == "Radio":
-            radio_name = self.hass.states.get(
-                'input_select.radio_station_name').state
-            if radio_name == ais_global.G_EMPTY_OPTION:
+            state = self.hass.states.get('sensor.radiolist')
+            attr = state.attributes
+            id = state.state
+            track = attr.get(id)
+            if int(id) == -1:
                 return
-            player_name = self.hass.states.get(
-                'input_select.radio_player').state
-            for radio in self.radio_names:
-                if radio["NAME"] == radio_name:
-                    if "STREAM_URL" in radio:
-                        _url = radio["STREAM_URL"]
-                        _audio_info["NAME"] = radio["NAME"]
-                        _audio_info["MEDIA_SOURCE"] = ais_global.G_AN_RADIO
-                        _audio_info["IMAGE_URL"] = radio["IMAGE_URL"]
+            player_name = self.hass.states.get('input_select.radio_player').state
+            _url = track["uri"]
+            _audio_info["NAME"] = track["title"]
+            _audio_info["MEDIA_SOURCE"] = ais_global.G_AN_RADIO
+            _audio_info["IMAGE_URL"] = track["thumbnail"]
+
         if media_player_type == "Podcast":
             podcast_track = self.hass.states.get(
                 'input_select.podcast_track').state
