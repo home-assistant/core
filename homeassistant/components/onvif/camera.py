@@ -104,7 +104,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     await hass_camera.async_initialize()
 
     async_add_entities([hass_camera])
-    return True
+    return
 
 
 class ONVIFHassCamera(Camera):
