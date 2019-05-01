@@ -83,6 +83,12 @@ class IntouchPressure(IntouchSensor):
         """Return the state/value of the sensor."""
         return self._objref.status['pressure']
 
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        keys = ['is_pumping', 'heater_temp', 'tap_temp']
+        return {k: self._objref.status[k] for k in keys}
+
 
 class IntouchSignal(IntouchSensor):
     """Representation of an InTouch Signal strength sensor."""

@@ -93,6 +93,11 @@ class IntouchPumping(IntouchBinarySensor):
         self._name = 'Pumping'
         self._is_on = self._objref.is_pumping
 
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        return {k: self._objref.status[k] for k in ['pressure']}
+
 
 class IntouchTapping(IntouchBinarySensor):
     """Representation of an InTouch Tapping sensor."""
@@ -103,3 +108,8 @@ class IntouchTapping(IntouchBinarySensor):
 
         self._name = 'Tapping'
         self._is_on = self._objref.is_tapping
+
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        return {k: self._objref.status[k] for k in ['tap_temp']}
