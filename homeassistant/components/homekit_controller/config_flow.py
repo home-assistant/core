@@ -249,7 +249,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
                 return self.async_abort(reason='already_paired')
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception(
-                    "Pairing attempt failed with an unhandled exception."
+                    "Pairing attempt failed with an unhandled exception"
                 )
                 errors['pairing_code'] = 'pairing_failed'
 
