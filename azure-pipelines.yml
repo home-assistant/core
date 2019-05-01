@@ -28,7 +28,7 @@ jobs:
   steps:
   - script: |
       mkdir -p ~/.ssh
-      echo "$(sshKey)" > ~/.ssh/id_rsa
+      echo -e "-----BEGIN RSA PRIVATE KEY-----\n$(sshKey)\n-----END RSA PRIVATE KEY-----" >> ~/.ssh/id_rsa
       ssh-keyscan -H wheels.hass.io >> ~/.ssh/known_hosts
       chmod 600 ~/.ssh/*
     displayName: 'Install ssh key'
