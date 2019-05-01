@@ -29,7 +29,8 @@ jobs:
   - script: |
       mkdir -p ~/.ssh
       echo "$(sshKey)" > ~/.ssh/id_rsa
-      chmod 600 ~/.ssh/id_rsa
+      ssh-keyscan -H wheels.hass.io >> ~/.ssh/known_hosts
+      chmod 600 ~/.ssh/*
     displayName: 'Install ssh key'
   - script: sudo docker pull homeassistant/$(buildArch)-wheels:$(versionWheels)
     displayName: 'Install wheels builder'
