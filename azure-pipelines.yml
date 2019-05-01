@@ -1,6 +1,7 @@
 # https://dev.azure.com/home-assistant
 
 trigger:
+  batch: true
   branches:
     include:
     - dev
@@ -12,7 +13,6 @@ variables:
   versionBuilder: '3.1'
   versionWheels: 'dev'
 
-
 jobs:
 
 - job: 'Wheels'
@@ -21,7 +21,7 @@ jobs:
   pool:
     vmImage: 'ubuntu-16.04'
   strategy:
-    maxParallel: 2
+    maxParallel: 3
     matrix:
       amd64:
         buildArch: 'amd64'
