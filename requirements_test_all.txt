@@ -127,7 +127,7 @@ google-api-python-client==1.6.4
 ha-ffmpeg==2.0
 
 # homeassistant.components.hangouts
-hangups==0.4.6
+hangups==0.4.9
 
 # homeassistant.components.cloud
 hass-nabucasa==0.12
