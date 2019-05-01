@@ -4,6 +4,8 @@ import re
 
 import voluptuous as vol
 
+from enum import Enum
+
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, MediaPlayerDevice)
 from homeassistant.components.media_player.const import (
@@ -13,7 +15,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
-    STATE_UNAVAILABLE)
+    STATE_UNAVAILABLE, ATTR_ENTITY_ID)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,6 +24,9 @@ SERVICE_PLAY_EVERYWHERE = 'soundtouch_play_everywhere'
 SERVICE_CREATE_ZONE = 'soundtouch_create_zone'
 SERVICE_ADD_ZONE_SLAVE = 'soundtouch_add_zone_slave'
 SERVICE_REMOVE_ZONE_SLAVE = 'soundtouch_remove_zone_slave'
+
+SERVICE_SNAPSHOT = 'soundtouch_snapshot'
+SERVICE_RESTORE = 'soundtouch_restore'
 
 MAP_STATUS = {
     "PLAY_STATE": STATE_PLAYING,
@@ -51,6 +56,10 @@ SOUNDTOUCH_REMOVE_ZONE_SCHEMA = vol.Schema({
     vol.Required('slaves'): cv.entity_ids,
 })
 
+SOUNDTOUCH = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+})
+
 DEFAULT_NAME = 'Bose Soundtouch'
 DEFAULT_PORT = 8090
 
@@ -64,7 +73,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Bose Soundtouch platform."""
@@ -99,7 +107,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hass.data[DATA_SOUNDTOUCH].append(soundtouch_device)
         add_entities([soundtouch_device])
 
-    def service_handle(service):
+    def service_handle_zoning(service):
         """Handle the applying of a service."""
         master_device_id = service.data.get('master')
         slaves_ids = service.data.get('slaves')
@@ -127,18 +135,47 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         elif service.service == SERVICE_ADD_ZONE_SLAVE:
             master.add_zone_slave(slaves)
 
+    def service_handle(service):
+        """Handle the applying of a service."""
+        entity_id = service.data.get('entity_id')
+
+        master = next([device for device in hass.data[DATA_SOUNDTOUCH] if
+                       device.entity_id == entity_id].__iter__(), None)
+
+        if master is None:
+            _LOGGER.warning("Unable to find device with entity_id: %s",
+                            str(entity_id))
+            return
+
+        _LOGGER.debug("Found device with entity_id: %s",
+                        str(entity_id))
+
+        if  service.service == SERVICE_SNAPSHOT:
+            master.snapshot()
+        elif service.service == SERVICE_RESTORE:
+            master.restore()
+
+    # zoning services
     hass.services.register(DOMAIN, SERVICE_PLAY_EVERYWHERE,
-                           service_handle,
+                           service_handle_zoning,
                            schema=SOUNDTOUCH_PLAY_EVERYWHERE)
     hass.services.register(DOMAIN, SERVICE_CREATE_ZONE,
-                           service_handle,
+                           service_handle_zoning,
                            schema=SOUNDTOUCH_CREATE_ZONE_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_REMOVE_ZONE_SLAVE,
-                           service_handle,
+                           service_handle_zoning,
                            schema=SOUNDTOUCH_REMOVE_ZONE_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_ADD_ZONE_SLAVE,
-                           service_handle,
+                           service_handle_zoning,
                            schema=SOUNDTOUCH_ADD_ZONE_SCHEMA)
+
+    # other services
+    hass.services.register(DOMAIN, SERVICE_SNAPSHOT,
+                           service_handle,
+                           schema=SOUNDTOUCH)
+    hass.services.register(DOMAIN, SERVICE_RESTORE,
+                           service_handle,
+                           schema=SOUNDTOUCH)
 
 
 class SoundTouchDevice(MediaPlayerDevice):
@@ -254,6 +291,28 @@ class SoundTouchDevice(MediaPlayerDevice):
         self._device.previous_track()
         self._status = self._device.status()
 
+    def snapshot(self):
+        """Create a snapshot of this media player."""
+        self._device.snapshot()
+        _LOGGER.debug("Created snapshot: %s", self._device._snapshot)
+
+    def restore(self):
+        """Restore a snapshot of this media player."""
+        _LOGGER.debug("Restoring snapshot: %s", self._device._snapshot)
+
+        # Unable to use the self._device.restore() function as it used the Source Enum lacking TUNEIN support
+        try:
+            if self._device._snapshot:
+                self._device.select_content_item(Source[self._device._snapshot.source],
+                                         self._device._snapshot.source_account,
+                                         self._device._snapshot.location,
+                                         self._device._snapshot.type)
+
+            self._status = self._device.status()
+        except (TypeError, AttributeError) as ex:
+            # Unsupported type to restore
+            _LOGGER.warning("Error on restore %s: %s", self.entity_id, ex)
+
     @property
     def media_image_url(self):
         """Image url of current playing media."""
@@ -354,3 +413,25 @@ class SoundTouchDevice(MediaPlayerDevice):
             _LOGGER.info("Adding slaves to zone with master %s",
                          self._device.config.name)
             self._device.add_zone_slave([slave.device for slave in slaves])
+
+#Overriding the official libsoundtouch Source Enum (it missed TUNEIN in version 0.8.0)
+class Source(Enum):
+    """Music sources supported by the device."""
+
+    SLAVE_SOURCE = "SLAVE_SOURCE"
+    INTERNET_RADIO = "INTERNET_RADIO"
+    PANDORA = "PANDORA"
+    AIRPLAY = "AIRPLAY"
+    STORED_MUSIC = "STORED_MUSIC"
+    AUX = "AUX"
+    OFF_SOURCE = "OFF_SOURCE"
+    CURRATED_RADIO = "CURRATED_RADIO"
+    STANDBY = "STANDBY"
+    UPDATE = "UPDATE"
+    DEEZER = "DEEZER"
+    SPOTIFY = "SPOTIFY"
+    IHEART = "IHEART"
+    LOCAL_MUSIC = "LOCAL_MUSIC"
+    BLUETOOTH = "BLUETOOTH"
+    INVALID_SOURCE = "INVALID_SOURCE"
+    TUNEIN = "TUNEIN"

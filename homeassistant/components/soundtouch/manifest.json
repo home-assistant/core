@@ -3,7 +3,7 @@
   "name": "Soundtouch",
   "documentation": "https://www.home-assistant.io/components/soundtouch",
   "requirements": [
-    "libsoundtouch==0.7.2"
+    "libsoundtouch==0.8.0"
   ],
   "dependencies": [],
   "codeowners": []
