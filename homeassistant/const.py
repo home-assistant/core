@@ -185,6 +185,7 @@ DEVICE_CLASS_TEMPERATURE = 'temperature'
 DEVICE_CLASS_TIMESTAMP = 'timestamp'
 DEVICE_CLASS_PRESSURE = 'pressure'
 DEVICE_CLASS_POWER = 'power'
+DEVICE_CLASS_SWITCH = 'switch'
 
 # #### STATES ####
 STATE_ON = 'on'

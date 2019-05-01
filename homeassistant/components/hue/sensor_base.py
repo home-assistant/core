@@ -55,8 +55,8 @@ class SensorManager:
         import aiohue
         from .binary_sensor import HuePresence, PRESENCE_NAME_FORMAT
         from .sensor import (
-            HueLightLevel, HueTemperature, LIGHT_LEVEL_NAME_FORMAT,
-            TEMPERATURE_NAME_FORMAT)
+            HueLightLevel, HueTemperature, HueSwitch, LIGHT_LEVEL_NAME_FORMAT,
+            TEMPERATURE_NAME_FORMAT, BUTTON_EVENT_NAME_FORMAT)
 
         self.hass = hass
         self.bridge = bridge
@@ -78,6 +78,16 @@ class SensorManager:
                 "binary": True,
                 "name_format": PRESENCE_NAME_FORMAT,
                 "class": HuePresence,
+            },
+            aiohue.sensors.TYPE_ZLL_SWITCH: {
+                "binary": False,
+                "name_format": BUTTON_EVENT_NAME_FORMAT,
+                "class": HueSwitch,
+            },
+            aiohue.sensors.TYPE_ZGP_SWITCH: {
+                "binary": False,
+                "name_format": BUTTON_EVENT_NAME_FORMAT,
+                "class": HueSwitch,
             },
         })
 
@@ -279,5 +289,6 @@ class GenericZLLSensor(GenericHueSensor):
     def device_state_attributes(self):
         """Return the device state attributes."""
         return {
-            "battery_level": self.sensor.battery
+            "battery_level": self.sensor.battery,
+            "last_updated": self.sensor.lastupdated
         }
