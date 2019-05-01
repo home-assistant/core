@@ -57,7 +57,7 @@ def login(client, username, password):
         client.login(username, password)
         return True
     except growatt.LoginError as error:
-        logging.error(error)
+        _LOGGER.error(error)
         return False
 
 
@@ -85,7 +85,7 @@ class GrowattPlant(Entity):
                 "Found an unsupported metric name {}"
                 "cannot convert safely to kWh."
             ).format(metric_name)
-            logging.error(message)
+            _LOGGER.error(message)
             raise ValueError(message)
         return multiplier_lookup[metric_name]
 
