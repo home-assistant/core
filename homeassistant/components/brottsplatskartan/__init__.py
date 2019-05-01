@@ -4,13 +4,15 @@ import uuid
 import voluptuous as vol
 
 from homeassistant.const import (ATTR_ATTRIBUTION, CONF_LATITUDE,
-                                 CONF_LONGITUDE, CONF_NAME)
+                                 CONF_LONGITUDE, CONF_MONITORED_CONDITIONS,
+                                 CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util import slugify
 
-from .const import (_LOGGER, ATTR_INCIDENTS, CONF_AREA, CONF_SENSOR,
-                    DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN,
+from .const import (_LOGGER, ATTR_INCIDENTS, CONF_AREAS, CONF_SENSOR,
+                    DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN, SENSOR_TYPES,
                     SIGNAL_UPDATE_BPK)
 
 AREAS = [
@@ -22,6 +24,11 @@ AREAS = [
     "Örebro län", "Östergötlands län"
 ]
 
+SENSOR_SCHEMA = vol.Schema({
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
+    vol.All(cv.ensure_list, vol.Unique(), [vol.In(SENSOR_TYPES)])
+})
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN:
@@ -32,10 +39,10 @@ CONFIG_SCHEMA = vol.Schema(
             cv.longitude,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME):
             cv.string,
-            vol.Optional(CONF_AREA, default=[]):
+            vol.Optional(CONF_AREAS, default=[]):
             vol.All(cv.ensure_list, [vol.In(AREAS)]),
-            vol.Optional(CONF_SENSOR):
-            cv.boolean,
+            vol.Optional(CONF_SENSOR, default={}):
+            SENSOR_SCHEMA,
         })
     },
     extra=vol.ALLOW_EXTRA)
@@ -48,7 +55,7 @@ async def async_setup(hass, config):
 
     conf = config[DOMAIN]
 
-    area = conf.get(CONF_AREA)
+    areas = conf.get(CONF_AREAS)
     latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
     longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
     name = conf.get(CONF_NAME)
@@ -61,27 +68,40 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN] = {}
     bpk = brottsplatskartan.BrottsplatsKartan(app=app,
-                                              area=area,
+                                              areas=areas,
                                               latitude=latitude,
                                               longitude=longitude)
     incidents = bpk.get_incidents()
 
     hass.data[DOMAIN][CONF_NAME] = name
     hass.data[DOMAIN][ATTR_ATTRIBUTION] = brottsplatskartan.ATTRIBUTION
-    hass.data[DOMAIN][ATTR_INCIDENTS] = []
     hass.data[DOMAIN][ATTR_INCIDENTS] = incidents
 
     def hub_refresh(event_time):
         """Call Brottsplatskartan API to refresh information."""
         incidents = bpk.get_incidents()
-        if len(incidents) != len(hass.data[DOMAIN][ATTR_INCIDENTS]):
-            _LOGGER.debug("Updating Brottsplatskartan data")
-            hass.data[DOMAIN][ATTR_INCIDENTS].clear()
-            hass.data[DOMAIN][ATTR_INCIDENTS].extend(incidents)
-            async_dispatcher_send(hass, SIGNAL_UPDATE_BPK)
+        for incident_area in incidents:
+            slugify_incident_area = slugify(incident_area)
+            incident_area_update_signal = "{}_{}".format(
+                SIGNAL_UPDATE_BPK, slugify_incident_area)
+            if len(incidents[incident_area]) != len(
+                    hass.data[DOMAIN][ATTR_INCIDENTS][incident_area]):
+                _LOGGER.debug("Updating Brottsplatskartan data for %s",
+                              incident_area)
+                hass.data[DOMAIN][ATTR_INCIDENTS][incident_area].clear()
+                hass.data[DOMAIN][ATTR_INCIDENTS][incident_area].extend(
+                    incidents[incident_area])
+                async_dispatcher_send(hass, incident_area_update_signal)
+
+    monitored_conditions = conf.get(CONF_SENSOR).get(CONF_MONITORED_CONDITIONS)
+    sensor_config = {
+        CONF_MONITORED_CONDITIONS: monitored_conditions,
+        'name': name,
+    }
 
     if conf.get(CONF_SENSOR):
-        hass.helpers.discovery.load_platform(CONF_SENSOR, DOMAIN, {}, config)
+        hass.helpers.discovery.load_platform(CONF_SENSOR, DOMAIN,
+                                             sensor_config, config)
 
     # Call the Brottsplatskartan API to refresh updates.
     async_track_time_interval(hass, hub_refresh, DEFAULT_SCAN_INTERVAL)
