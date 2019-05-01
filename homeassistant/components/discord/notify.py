@@ -1,5 +1,6 @@
 """Discord platform for notify component."""
 import logging
+import os.path
 
 import voluptuous as vol
 
@@ -35,8 +36,6 @@ class DiscordNotificationService(BaseNotificationService):
 
     def file_exists(self, filename):
         """Check if a file exists on disk and is in authorized path."""
-        import os.path
-
         if not self.hass.config.is_allowed_path(filename):
             return False
 
