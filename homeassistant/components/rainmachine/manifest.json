@@ -3,7 +3,7 @@
   "name": "Rainmachine",
   "documentation": "https://www.home-assistant.io/components/rainmachine",
   "requirements": [
-    "regenmaschine==1.4.0"
+    "regenmaschine==1.5.0"
   ],
   "dependencies": [],
   "codeowners": [

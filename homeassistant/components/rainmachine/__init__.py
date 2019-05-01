@@ -7,8 +7,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_BINARY_SENSORS, CONF_IP_ADDRESS, CONF_PASSWORD,
-    CONF_PORT, CONF_SCAN_INTERVAL, CONF_SENSORS, CONF_SSL,
+    ATTR_ATTRIBUTION, CONF_BINARY_SENSORS, CONF_EMAIL, CONF_IP_ADDRESS,
+    CONF_PASSWORD, CONF_PORT, CONF_SCAN_INTERVAL, CONF_SENSORS, CONF_SSL,
     CONF_MONITORED_CONDITIONS, CONF_SWITCHES)
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
@@ -121,19 +121,26 @@ SERVICE_STOP_ZONE_SCHEMA = vol.Schema({
 
 SWITCH_SCHEMA = vol.Schema({vol.Optional(CONF_ZONE_RUN_TIME): cv.positive_int})
 
-
-CONTROLLER_SCHEMA = vol.Schema({
+LOCAL_SCHEMA = vol.Schema({
     vol.Required(CONF_IP_ADDRESS): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-        cv.time_period,
-    vol.Optional(CONF_BINARY_SENSORS, default={}): BINARY_SENSOR_SCHEMA,
-    vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-    vol.Optional(CONF_SWITCHES, default={}): SWITCH_SCHEMA,
 })
 
+REMOTE_SCHEMA = vol.Schema({
+    vol.Required(CONF_EMAIL): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+})
+
+CONTROLLER_SCHEMA = vol.All(
+    vol.Schema(vol.Any(LOCAL_SCHEMA, REMOTE_SCHEMA), {
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
+            cv.time_period,
+        vol.Optional(CONF_BINARY_SENSORS, default={}): BINARY_SENSOR_SCHEMA,
+        vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+        vol.Optional(CONF_SWITCHES, default={}): SWITCH_SCHEMA,
+    }), cv.has_at_least_one_key(CONF_IP_ADDRESS, CONF_EMAIL))
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -155,7 +162,8 @@ async def async_setup(hass, config):
     conf = config[DOMAIN]
 
     for controller in conf[CONF_CONTROLLERS]:
-        if controller[CONF_IP_ADDRESS] in configured_instances(hass):
+        key = controller.get(CONF_IP_ADDRESS) or controller.get(CONF_EMAIL)
+        if key in configured_instances(hass):
             continue
 
         hass.async_create_task(

@@ -5,13 +5,29 @@
             "invalid_credentials": "Invalid credentials"
         },
         "step": {
-            "user": {
+            "local": {
                 "data": {
-                    "ip_address": "Hostname or IP Address",
+                    "ip_address": "IP Address",
                     "password": "Password",
                     "port": "Port"
                 },
-                "title": "Fill in your information"
+                "description": "Connect your controller over the LAN.",
+                "title": "Via Local IP Address"
+            },
+            "remote": {
+                "data": {
+                    "email": "Email Address",
+                    "password": "Password"
+                },
+                "description": "Connect your controller over RainMachine Cloud.",
+                "title": "Via RainMachine Cloud"
+            },
+            "user": {
+                "data": {
+                    "type": "Connection Type"
+                },
+                "description": "How do you want to connect to your controller?",
+                "title": "RainMachine"
             }
         },
         "title": "RainMachine"

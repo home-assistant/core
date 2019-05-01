@@ -3,11 +3,27 @@
     "title": "RainMachine",
     "step": {
       "user": {
-        "title": "Fill in your information",
+        "title": "RainMachine",
+        "description": "How do you want to connect to your controller?",
         "data": {
-          "ip_address": "Hostname or IP Address",
+          "type": "Connection Type"
+        }
+      },
+      "local": {
+        "title": "Via Local IP Address",
+        "description": "Connect your controller over the LAN.",
+        "data": {
+          "ip_address": "IP Address",
           "password": "Password",
           "port": "Port"
+        }
+      },
+      "remote": {
+        "title": "Via RainMachine Cloud",
+        "description": "Connect your controller over RainMachine Cloud.",
+        "data": {
+          "email": "Email Address",
+          "password": "Password"
         }
       }
     },
