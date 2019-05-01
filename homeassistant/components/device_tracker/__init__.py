@@ -199,7 +199,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
                 # This is needed during transition phase to EntityComponent.
                 # Remove when all device_tracker platforms have been converted
                 # to EntityPlatforms.
-                async def placeholder_setup_platform():
+                async def placeholder_setup_platform(
+                        hass, config, async_add_entities, discovery_info=None):
                     """Define placeholder for async_setup_platform."""
                     pass
                 platform.async_setup_platform = placeholder_setup_platform
