@@ -55,8 +55,8 @@ class SensorManager:
         import aiohue
         from .binary_sensor import HuePresence, PRESENCE_NAME_FORMAT
         from .sensor import (
-            HueLightLevel, HueTemperature, LIGHT_LEVEL_NAME_FORMAT,
-            TEMPERATURE_NAME_FORMAT)
+            HueLightLevel, HueTemperature, HueSwitch, LIGHT_LEVEL_NAME_FORMAT,
+            TEMPERATURE_NAME_FORMAT, BUTTON_EVENT_NAME_FORMAT)
 
         self.hass = hass
         self.bridge = bridge
@@ -79,6 +79,16 @@ class SensorManager:
                 "name_format": PRESENCE_NAME_FORMAT,
                 "class": HuePresence,
             },
+            aiohue.sensors.TYPE_ZLL_SWITCH: {
+                "binary": False,
+                "name_format": BUTTON_EVENT_NAME_FORMAT,
+                "class": HueSwitch,
+            },
+            aiohue.sensors.TYPE_ZGP_SWITCH: {
+                "binary": False,
+                "name_format": BUTTON_EVENT_NAME_FORMAT,
+                "class": HueSwitch,
+            },            
         })
 
     def register_component(self, binary, async_add_entities):
@@ -154,9 +164,6 @@ class SensorManager:
         # finding the remaining ones that may or may not be related to the
         # presence sensors.
         for item_id in api:
-            if api[item_id].type != aiohue.sensors.TYPE_ZLL_PRESENCE:
-                continue
-
             primary_sensor_devices[_device_id(api[item_id])] = api[item_id]
 
         # Iterate again now we have all the presence sensors, and add the
@@ -279,5 +286,6 @@ class GenericZLLSensor(GenericHueSensor):
     def device_state_attributes(self):
         """Return the device state attributes."""
         return {
-            "battery_level": self.sensor.battery
+            "battery_level": self.sensor.battery,
+            "last_updated": self.sensor.lastupdated
         }
