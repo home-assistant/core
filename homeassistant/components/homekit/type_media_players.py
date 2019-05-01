@@ -5,8 +5,8 @@ from pyhap.const import CATEGORY_SWITCH, CATEGORY_TELEVISION
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE, ATTR_INPUT_SOURCE_LIST, ATTR_MEDIA_VOLUME_MUTED,
-    ATTR_MEDIA_VOLUME_LEVEL ,SERVICE_SELECT_SOURCE, DOMAIN, SUPPORT_PAUSE,
-    SUPPORT_PLAY, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
+    ATTR_MEDIA_VOLUME_LEVEL, SERVICE_SELECT_SOURCE, DOMAIN, SUPPORT_PAUSE,
+    SUPPORT_PLAY, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
     SUPPORT_SELECT_SOURCE)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_MEDIA_PAUSE,
@@ -194,14 +194,15 @@ class TelevisionMediaPlayer(HomeAccessory):
         if features & (SUPPORT_PLAY | SUPPORT_PAUSE):
             self.chars_tv.append(CHAR_REMOTE_KEY)
         if features & SUPPORT_VOLUME_MUTE or features & SUPPORT_VOLUME_STEP:
-            self.chars_speaker.extend((CHAR_VOLUME, CHAR_VOLUME_CONTROL_TYPE,
+            self.chars_speaker.extend((CHAR_NAME, CHAR_ACTIVE,
+                                       CHAR_VOLUME_CONTROL_TYPE,
                                        CHAR_VOLUME_SELECTOR))
+            if features & SUPPORT_VOLUME_SET:
+                self.support_volume_level = True
+                self.chars_speaker.append(CHAR_VOLUME)
+
         if features & SUPPORT_SELECT_SOURCE:
             self.support_select_source = True
-
-        # TODO: find a place for these chars
-        if len(self.chars_speaker):
-            self.chars_speaker.extend((CHAR_NAME, CHAR_ACTIVE))
 
         serv_tv = self.add_preload_service(SERV_TELEVISION, self.chars_tv)
         self.set_primary_service(serv_tv)
@@ -214,7 +215,7 @@ class TelevisionMediaPlayer(HomeAccessory):
             self.char_remote_key = serv_tv.configure_char(
                 CHAR_REMOTE_KEY, setter_callback=self.set_remote_key)
 
-        if CHAR_VOLUME in self.chars_speaker:
+        if CHAR_VOLUME_SELECTOR in self.chars_speaker:
             serv_speaker = self.add_preload_service(
                 SERV_TELEVISION_SPEAKER, self.chars_speaker)
             serv_tv.add_linked_service(serv_speaker)
@@ -226,13 +227,16 @@ class TelevisionMediaPlayer(HomeAccessory):
             self.char_mute = serv_speaker.configure_char(
                 CHAR_MUTE, value=False, setter_callback=self.set_toggle_mute)
 
-            serv_speaker.configure_char(CHAR_VOLUME_CONTROL_TYPE, value=1)
-
-            self.char_volume = serv_speaker.configure_char(
-                CHAR_VOLUME, setter_callback=self.set_volume)
+            volume_control_type = 1 if self.support_volume_level else 2
+            serv_speaker.configure_char(CHAR_VOLUME_CONTROL_TYPE,
+                                        value=volume_control_type)
 
             self.char_volume_selector = serv_speaker.configure_char(
                 CHAR_VOLUME_SELECTOR, setter_callback=self.set_volume_step)
+
+            if self.support_volume_level:
+                self.char_volume = serv_speaker.configure_char(
+                    CHAR_VOLUME, setter_callback=self.set_volume)
 
         if self.support_select_source:
             self.sources = self.hass.states.get(self.entity_id).attributes.get(
@@ -339,8 +343,7 @@ class TelevisionMediaPlayer(HomeAccessory):
             self.char_active.set_value(hk_state)
         self._flag[CHAR_ACTIVE] = False
 
-        # TODO: Add logic to detect if media player supports volume_level
-        if CHAR_VOLUME in self.chars_speaker:
+        if CHAR_VOLUME_SELECTOR in self.chars_speaker:
             current_mute_state = new_state.attributes.get(
                 ATTR_MEDIA_VOLUME_MUTED)
             if not self._flag[FEATURE_TOGGLE_MUTE]:
@@ -349,6 +352,7 @@ class TelevisionMediaPlayer(HomeAccessory):
                 self.char_mute.set_value(current_mute_state)
             self._flag[FEATURE_TOGGLE_MUTE] = False
 
+        if self.support_volume_level:
             current_voume_state = new_state.attributes.get(
                 ATTR_MEDIA_VOLUME_LEVEL)
             if not self._flag[CHAR_VOLUME]:
