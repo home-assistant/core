@@ -14,7 +14,7 @@ from homeassistant.components.homekit.const import (
     BRIDGE_MODEL, BRIDGE_NAME, BRIDGE_SERIAL_NUMBER, CHAR_FIRMWARE_REVISION,
     CHAR_MANUFACTURER, CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER,
     CONF_LINKED_BATTERY_SENSOR, CONF_LOW_BATTERY_THRESHOLD,
-    DEFAULT_LOW_BATTERY_THRESHOLD, MANUFACTURER, SERV_ACCESSORY_INFO)
+    MANUFACTURER, SERV_ACCESSORY_INFO)
 from homeassistant.const import (
     __version__, ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID,
     ATTR_SERVICE, ATTR_NOW, EVENT_TIME_CHANGED)
@@ -107,9 +107,7 @@ async def test_battery_service(hass, hk_driver, caplog):
     hass.states.async_set(entity_id, None, {ATTR_BATTERY_LEVEL: 50})
     await hass.async_block_till_done()
 
-    acc = HomeAccessory(hass, hk_driver, 'Battery Service', entity_id, 2,
-                        {CONF_LOW_BATTERY_THRESHOLD:
-                         DEFAULT_LOW_BATTERY_THRESHOLD})
+    acc = HomeAccessory(hass, hk_driver, 'Battery Service', entity_id, 2, None)
     acc.update_state = lambda x: None
     assert acc._char_battery.value == 0
     assert acc._char_low_battery.value == 0
@@ -139,9 +137,7 @@ async def test_battery_service(hass, hk_driver, caplog):
         ATTR_BATTERY_LEVEL: 10, ATTR_BATTERY_CHARGING: True})
     await hass.async_block_till_done()
 
-    acc = HomeAccessory(hass, hk_driver, 'Battery Service', entity_id, 2,
-                        {CONF_LOW_BATTERY_THRESHOLD:
-                         DEFAULT_LOW_BATTERY_THRESHOLD})
+    acc = HomeAccessory(hass, hk_driver, 'Battery Service', entity_id, 2, None)
     acc.update_state = lambda x: None
     assert acc._char_battery.value == 0
     assert acc._char_low_battery.value == 0
@@ -170,9 +166,7 @@ async def test_linked_battery_sensor(hass, hk_driver, caplog):
     await hass.async_block_till_done()
 
     acc = HomeAccessory(hass, hk_driver, 'Battery Service', entity_id, 2,
-                        {CONF_LINKED_BATTERY_SENSOR: linked_battery,
-                         CONF_LOW_BATTERY_THRESHOLD:
-                         DEFAULT_LOW_BATTERY_THRESHOLD})
+                        {CONF_LINKED_BATTERY_SENSOR: linked_battery})
     acc.update_state = lambda x: None
     assert acc.linked_battery_sensor == linked_battery
 
