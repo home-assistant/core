@@ -17,14 +17,12 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
                                discovery_info=None):
     """Set up an Intouch climate entity."""
     client = hass.data[DOMAIN]['client']
+    heater = hass.data[DOMAIN]['heater']
 
-    water_heaters = await client.heaters
-    await water_heaters[0].update()
-    water_heater = water_heaters[0]
-
-    async_add_entities([
-        InTouchClimate(client, water_heater.rooms[0])
-    ])
+    rooms = [InTouchClimate(client, r)
+             for r in heater.rooms if not r.room_temp]                 # TODO: remove 'not'
+    if rooms:
+        async_add_entities(rooms)
 
 
 class InTouchClimate(ClimateDevice):
@@ -34,7 +32,7 @@ class InTouchClimate(ClimateDevice):
         """Initialize the climate device."""
         self._client = client
         self._objref = room
-        self._name = 'Room'
+        self._name = 'Room {}'.format(room.room_no)
 
     async def async_added_to_hass(self):
         """Set up a listener when this entity is added to HA."""
@@ -63,7 +61,7 @@ class InTouchClimate(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self._objref.override  # self._objref.setpoint
+        return self._objref.override  # or: self._objref.setpoint?
 
     @property
     def min_temp(self):

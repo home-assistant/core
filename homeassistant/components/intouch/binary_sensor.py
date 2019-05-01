@@ -6,19 +6,22 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import DOMAIN
 
 
+
+
+
+
+
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up an Intouch sensor entity."""
     client = hass.data[DOMAIN]['client']
-
-    water_heaters = await client.heaters
-    await water_heaters[0].update()
+    heater = hass.data[DOMAIN]['heater']
 
     async_add_entities([
-        IntouchBurning(client, water_heaters[0]),
-        IntouchPumping(client, water_heaters[0]),
-        IntouchTapping(client, water_heaters[0]),
-        IntouchFailed(client, water_heaters[0])
+        IntouchBurning(client, heater),
+        IntouchPumping(client, heater),
+        IntouchTapping(client, heater),
+        IntouchFailed(client, heater)
     ])
 
 
@@ -76,6 +79,10 @@ class IntouchFailed(IntouchBinarySensor):
         self._name = 'Failed'
         self._is_on = self._objref.is_failed
 
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        return {k: self._objref.status[k] for k in ['fault_code']}
 
 class IntouchPumping(IntouchBinarySensor):
     """Representation of an InTouch Pumping sensor."""

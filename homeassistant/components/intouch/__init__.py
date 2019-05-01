@@ -43,8 +43,8 @@ async def async_setup(hass, hass_config):
             hostname, **kwargs, session=async_get_clientsession(hass)
         )
 
-        heaters = await client.heaters
-        await heaters[0].update()
+        heater = intouch_data['heater'] = list(await client.heaters)[0]
+        await heater.update()
 
     except AssertionError:  # assert response.status == HTTP_OK
         _LOGGER.warning(
@@ -53,15 +53,15 @@ async def async_setup(hass, hass_config):
         return False
 
     hass.async_create_task(async_load_platform(
-        hass, 'binary_sensor', DOMAIN, {}, hass_config))
+        hass, 'water_heater', DOMAIN, {}, hass_config))
 
     hass.async_create_task(async_load_platform(
-        hass, 'water_heater', DOMAIN, {}, hass_config))
+        hass, 'binary_sensor', DOMAIN, {}, hass_config))
 
     hass.async_create_task(async_load_platform(
         hass, 'sensor', DOMAIN, {}, hass_config))
 
-    if len(heaters[0].rooms) > -1:  # TODO: this is for testing, should be > 0
+    if len(heater.rooms) > -1:  # TODO: this is for testing, should be > 0
         hass.async_create_task(async_load_platform(
             hass, 'climate', DOMAIN, {}, hass_config))
 

@@ -20,12 +20,10 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
                                discovery_info=None):
     """Set up an Intouch water_heater entity."""
     client = hass.data[DOMAIN]['client']
+    heater = hass.data[DOMAIN]['heater']
 
-    # await client.update()
-    water_heaters = await client.heaters
-
-    async_add_entities([IntouchWaterHeater(client, water_heaters[0])],
-                       update_before_add=True)
+    async_add_entities([
+        IntouchWaterHeater(client, heater)], update_before_add=True)
 
 
 class IntouchWaterHeater(WaterHeaterDevice):
@@ -45,7 +43,11 @@ class IntouchWaterHeater(WaterHeaterDevice):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        return {'status': self._objref.status}
+        keys = ['nodenr', 'rf_message_rssi', 'rfstatus_cntr', 'room_1',
+                'room_2']
+        state = {k: self._objref.status[k]
+                 for k in self._objref.status if k not in keys}
+        return {'status': state}
 
     @property
     def current_temperature(self):
@@ -93,6 +95,8 @@ class IntouchWaterHeater(WaterHeaterDevice):
         except (AssertionError, asyncio.TimeoutError) as err:
             _LOGGER.warning("Update for %s failed, message: %s",
                             self._name, err)
+
+        _LOGGER.warn("Updated state: %s", self._objref.status)
 
         # inform the child devices that updated state data is available
         async_dispatcher_send(self.hass, DOMAIN, {'signal': 'refresh'})

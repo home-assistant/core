@@ -1,4 +1,6 @@
 """Support for the Sensors of an Intouch Lan2RF gateway."""
+import logging
+
 from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_SIGNAL_STRENGTH)
@@ -8,18 +10,18 @@ from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up an Intouch sensor entity."""
     client = hass.data[DOMAIN]['client']
-
-    # await client.update()
-    water_heaters = await client.heaters
+    heater = hass.data[DOMAIN]['heater']
 
     async_add_entities([
-        IntouchSignal(client, water_heaters[0]),
-        IntouchPressure(client, water_heaters[0])
+        IntouchSignal(client, heater),
+        IntouchPressure(client, heater)
     ])
 
 
@@ -97,5 +99,4 @@ class IntouchSignal(IntouchSensor):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        return {k: self._objref.status[k]
-                for k in ['nodenr', 'rf_message_rssi', 'rfstatus_cntr']}
+        return {k: self._objref.status[k] for k in ['nodenr', 'rfstatus_cntr']}
