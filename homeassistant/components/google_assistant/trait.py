@@ -1027,6 +1027,8 @@ class OpenCloseTrait(_Trait):
         COMMAND_OPENCLOSE
     ]
 
+    override_position = None
+
     @staticmethod
     def supported(domain, features, device_class):
         """Test if state is supported."""
@@ -1043,20 +1045,22 @@ class OpenCloseTrait(_Trait):
 
     def sync_attributes(self):
         """Return opening direction."""
-        attrs = {}
+        response = {}
         if self.state.domain == binary_sensor.DOMAIN:
-            attrs['queryOnlyOpenClose'] = True
-        return attrs
+            response['queryOnlyOpenClose'] = True
+        return response
 
     def query_attributes(self):
         """Return state query attributes."""
         domain = self.state.domain
         response = {}
 
-        if domain == cover.DOMAIN:
-            # When it's an assumed state, we will always report it as 50%
-            # Google will not issue an open command if the assumed state is
-            # open, even if that is currently incorrect.
+        if self.override_position is not None:
+            response['openPercent'] = self.override_position
+
+        elif domain == cover.DOMAIN:
+            # When it's an assumed state, we will return that querying state
+            # is not supported.
             if self.state.attributes.get(ATTR_ASSUMED_STATE):
                 raise SmartHomeError(
                     ERR_NOT_SUPPORTED,
@@ -1067,7 +1071,7 @@ class OpenCloseTrait(_Trait):
                     ERR_NOT_SUPPORTED,
                     'Querying state is not supported')
 
-            position = self.state.attributes.get(
+            position = self.override_position or self.state.attributes.get(
                 cover.ATTR_CURRENT_POSITION
             )
 
@@ -1096,7 +1100,6 @@ class OpenCloseTrait(_Trait):
             ):
                 _verify_pin_challenge(data, challenge)
 
-            position = self.state.attributes.get(cover.ATTR_CURRENT_POSITION)
             if params['openPercent'] == 0:
                 await self.hass.services.async_call(
                     cover.DOMAIN, cover.SERVICE_CLOSE_COVER, {
@@ -1107,7 +1110,8 @@ class OpenCloseTrait(_Trait):
                     cover.DOMAIN, cover.SERVICE_OPEN_COVER, {
                         ATTR_ENTITY_ID: self.state.entity_id
                     }, blocking=True, context=data.context)
-            elif position is not None:
+            elif (self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) &
+                  cover.SUPPORT_SET_POSITION):
                 await self.hass.services.async_call(
                     cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION, {
                         ATTR_ENTITY_ID: self.state.entity_id,
@@ -1117,6 +1121,11 @@ class OpenCloseTrait(_Trait):
                 raise SmartHomeError(
                     ERR_FUNCTION_NOT_SUPPORTED,
                     'Setting a position is not supported')
+
+            if (self.state.attributes.get(ATTR_ASSUMED_STATE) or
+                    self.state.state == STATE_UNKNOWN):
+                print("YOO")
+                self.override_position = params['openPercent']
 
 
 @register_trait

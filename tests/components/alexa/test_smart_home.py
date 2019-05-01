@@ -574,6 +574,32 @@ async def test_media_player(hass):
         payload={'volumeSteps': -20})
 
 
+async def test_media_player_power(hass):
+    """Test media player discovery with mapped on/off."""
+    device = (
+        'media_player.test',
+        'off', {
+            'friendly_name': "Test media player",
+            'supported_features': 0xfa3f,
+            'volume_level': 0.75
+        }
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance['endpointId'] == 'media_player#test'
+    assert appliance['displayCategories'][0] == "TV"
+    assert appliance['friendlyName'] == "Test media player"
+
+    assert_endpoint_capabilities(
+        appliance,
+        'Alexa.InputController',
+        'Alexa.Speaker',
+        'Alexa.StepSpeaker',
+        'Alexa.PlaybackController',
+        'Alexa.EndpointHealth',
+    )
+
+
 async def test_alert(hass):
     """Test alert discovery."""
     device = ('alert.test', 'off', {'friendly_name': "Test alert"})

@@ -41,6 +41,9 @@ Mastodon.py==1.3.1
 # homeassistant.components.orangepi_gpio
 OPi.GPIO==0.3.6
 
+# homeassistant.components.essent
+PyEssent==0.10
+
 # homeassistant.components.github
 PyGithub==1.43.5
 
@@ -140,7 +143,7 @@ aioimaplib==0.7.15
 aiolifx==0.6.7
 
 # homeassistant.components.lifx
-aiolifx_effects==0.2.1
+aiolifx_effects==0.2.2
 
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==1.6.14
@@ -161,7 +164,7 @@ alarmdecoder==1.13.2
 alpha_vantage==2.1.0
 
 # homeassistant.components.amcrest
-amcrest==1.3.0
+amcrest==1.4.0
 
 # homeassistant.components.androidtv
 androidtv==0.0.15
@@ -341,7 +344,7 @@ directpy==0.5
 discogs_client==2.2.1
 
 # homeassistant.components.discord
-discord.py==0.16.12
+discord.py==1.0.1
 
 # homeassistant.components.updater
 distro==1.4.0
@@ -515,7 +518,7 @@ gstreamer-player==1.1.2
 ha-ffmpeg==2.0
 
 # homeassistant.components.philips_js
-ha-philipsjs==0.0.6
+ha-philipsjs==0.0.8
 
 # homeassistant.components.habitica
 habitipy==0.2.0
@@ -554,13 +557,13 @@ hole==0.3.0
 holidays==0.9.10
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190424.0
+home-assistant-frontend==20190427.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.4
 
 # homeassistant.components.homekit_controller
-homekit[IP]==0.13.0
+homekit[IP]==0.14.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.10.7
@@ -881,6 +884,9 @@ protobuf==3.6.1
 # homeassistant.components.systemmonitor
 psutil==5.6.1
 
+# homeassistant.components.ptvsd
+ptvsd==4.2.8
+
 # homeassistant.components.wink
 pubnubsub-handler==1.0.3
 
@@ -985,7 +991,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==3.2.0
+pychromecast==3.2.1
 
 # homeassistant.components.cmus
 pycmus==0.1.1
@@ -1006,7 +1012,7 @@ pycsspeechtts==1.0.2
 pydaikin==1.4.0
 
 # homeassistant.components.danfoss_air
-pydanfossair==0.0.7
+pydanfossair==0.1.0
 
 # homeassistant.components.deconz
 pydeconz==55
@@ -1024,7 +1030,7 @@ pydukeenergy==0.0.6
 pyebox==1.1.4
 
 # homeassistant.components.econet
-pyeconet==0.0.10
+pyeconet==0.0.11
 
 # homeassistant.components.edimax
 pyedimax==0.1
@@ -1288,7 +1294,7 @@ pysmartthings==0.6.7
 pysnmp==4.4.8
 
 # homeassistant.components.sonos
-pysonos==0.0.10
+pysonos==0.0.12
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -1830,7 +1836,7 @@ yeelight==0.5.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2019.04.24
+youtube_dl==2019.04.30
 
 # homeassistant.components.zengge
 zengge==0.2
@@ -1839,7 +1845,7 @@ zengge==0.2
 zeroconf==0.21.3
 
 # homeassistant.components.zha
-zha-quirks==0.0.8
+zha-quirks==0.0.9
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9

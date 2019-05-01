@@ -23,7 +23,7 @@ from .const import (
     TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_INDEX, TYPE_ALLERGY_OUTLOOK,
     TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW, TYPE_ASTHMA_FORECAST,
     TYPE_ASTHMA_INDEX, TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
-    TYPE_DISEASE_FORECAST)
+    TYPE_DISEASE_FORECAST, TYPE_DISEASE_INDEX, TYPE_DISEASE_TODAY)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +43,7 @@ FETCHER_MAPPING = {
     (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW): (
         TYPE_ASTHMA_INDEX,),
     (TYPE_DISEASE_FORECAST,): (TYPE_DISEASE_FORECAST,),
+    (TYPE_DISEASE_TODAY,): (TYPE_DISEASE_INDEX,),
 }
 
 
@@ -114,6 +115,8 @@ class IQVIAData:
         self.fetchers.register(TYPE_ASTHMA_INDEX)(self._client.asthma.current)
         self.fetchers.register(TYPE_DISEASE_FORECAST)(
             self._client.disease.extended)
+        self.fetchers.register(TYPE_DISEASE_INDEX)(
+            self._client.disease.current)
 
     async def async_update(self):
         """Update IQVIA data."""
@@ -169,6 +172,9 @@ class IQVIAEntity(Entity):
 
         if self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW):
             return self._iqvia.data.get(TYPE_ASTHMA_INDEX) is not None
+
+        if self._type == TYPE_DISEASE_TODAY:
+            return self._iqvia.data.get(TYPE_DISEASE_INDEX) is not None
 
         return self._iqvia.data.get(self._type) is not None
 
