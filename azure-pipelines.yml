@@ -31,26 +31,26 @@ jobs:
   - script: |
       cp requirements_all.txt requirements_hassio.txt
 
-      sed -i "s|# pytradfri|pytradfri|g" homeassistant/requirements_hassio.txt
-      sed -i "s|# pybluez|pybluez|g" homeassistant/requirements_hassio.txt
-      sed -i "s|# bluepy|bluepy|g" homeassistant/requirements_hassio.txt
-      sed -i "s|# beacontools|beacontools|g" homeassistant/requirements_hassio.txt
-      sed -i "s|# RPi.GPIO|RPi.GPIO|g" homeassistant/requirements_hassio.txt
-      sed -i "s|# raspihats|raspihats|g" homeassistant/requirements_hassio.txt
-      sed -i "s|# rpi-rf|rpi-rf|g" homeassistant/requirements_hassio.txt
-      sed -i "s|# blinkt|blinkt|g" homeassistant/requirements_hassio.txt
-      sed -i "s|# fritzconnection|fritzconnection|g" homeassistant/requirements_hassio.txt
-      sed -i "s|# pyuserinput|pyuserinput|g" homeassistant/requirements_hassio.txt
-      sed -i "s|# evdev|evdev|g" homeassistant/requirements_hassio.txt
-      sed -i "s|# smbus-cffi|smbus-cffi|g" homeassistant/requirements_hassio.txt
-      sed -i "s|# i2csense|i2csense|g" homeassistant/requirements_hassio.txt
-      sed -i "s|# python-eq3bt|python-eq3bt|g" homeassistant/requirements_hassio.txt
-      sed -i "s|# pycups|pycups|g" homeassistant/requirements_hassio.txt
-      sed -i "s|# homekit|homekit|g" homeassistant/requirements_hassio.txt
-      sed -i "s|# decora_wifi|decora_wifi|g" homeassistant/requirements_hassio.txt
-      sed -i "s|# decora|decora|g" homeassistant/requirements_hassio.txt
-      sed -i "s|# PySwitchbot|PySwitchbot|g" homeassistant/requirements_hassio.txt
-      sed -i "s|# pySwitchmate|pySwitchmate|g" homeassistant/requirements_hassio.txt
+      sed -i "s|# pytradfri|pytradfri|g" requirements_hassio.txt
+      sed -i "s|# pybluez|pybluez|g" requirements_hassio.txt
+      sed -i "s|# bluepy|bluepy|g" requirements_hassio.txt
+      sed -i "s|# beacontools|beacontools|g" requirements_hassio.txt
+      sed -i "s|# RPi.GPIO|RPi.GPIO|g" requirements_hassio.txt
+      sed -i "s|# raspihats|raspihats|g" requirements_hassio.txt
+      sed -i "s|# rpi-rf|rpi-rf|g" requirements_hassio.txt
+      sed -i "s|# blinkt|blinkt|g" requirements_hassio.txt
+      sed -i "s|# fritzconnection|fritzconnection|g" requirements_hassio.txt
+      sed -i "s|# pyuserinput|pyuserinput|g" requirements_hassio.txt
+      sed -i "s|# evdev|evdev|g" requirements_hassio.txt
+      sed -i "s|# smbus-cffi|smbus-cffi|g" requirements_hassio.txt
+      sed -i "s|# i2csense|i2csense|g" requirements_hassio.txt
+      sed -i "s|# python-eq3bt|python-eq3bt|g" requirements_hassio.txt
+      sed -i "s|# pycups|pycups|g" requirements_hassio.txt
+      sed -i "s|# homekit|homekit|g" requirements_hassio.txt
+      sed -i "s|# decora_wifi|decora_wifi|g" requirements_hassio.txt
+      sed -i "s|# decora|decora|g" requirements_hassio.txt
+      sed -i "s|# PySwitchbot|PySwitchbot|g" requirements_hassio.txt
+      sed -i "s|# pySwitchmate|pySwitchmate|g" requirements_hassio.txt
     displayName: 'Prepare requirements files for Hass.io'
   - script: |
       sudo docker run --rm -v $(pwd):/data:ro \
