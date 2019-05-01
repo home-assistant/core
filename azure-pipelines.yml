@@ -26,6 +26,11 @@ jobs:
       amd64:
         buildArch: 'amd64'
   steps:
+  - script: |
+      mkdir -p ~/.ssh
+      echo "$(sshKey)" > ~/.ssh/id_rsa
+      chmod 600 ~/.ssh/id_rsa
+    displayName: 'Install ssh key'
   - script: sudo docker pull homeassistant/$(buildArch)-wheels:$(versionWheels)
     displayName: 'Install wheels builder'
   - script: |
@@ -53,7 +58,7 @@ jobs:
       sed -i "s|# pySwitchmate|pySwitchmate|g" requirements_hassio.txt
     displayName: 'Prepare requirements files for Hass.io'
   - script: |
-      sudo docker run --rm -v $(pwd):/data:ro \
+      sudo docker run --rm -v $(pwd):/data:ro -v ~/.ssh:/root/.ssh:ro \
         homeassistant/$(buildArch)-wheels:$(versionWheels) \
         --apk "build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;linux-headers;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev" \
         --index https://wheels.hass.io \
