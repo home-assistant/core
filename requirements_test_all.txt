@@ -164,7 +164,7 @@ jsonpath==0.75
 libpurecool==0.5.0
 
 # homeassistant.components.soundtouch
-libsoundtouch==0.7.2
+libsoundtouch==0.8.0
 
 # homeassistant.components.luftdaten
 luftdaten==0.3.4
