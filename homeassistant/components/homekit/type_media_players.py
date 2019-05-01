@@ -241,10 +241,8 @@ class TelevisionMediaPlayer(HomeAccessory):
                     serv_input.configure_char(
                         CHAR_CONFIGURED_NAME, value=source)
                     serv_input.configure_char(CHAR_NAME, value=source)
-                    serv_input.configure_char(
-                        CHAR_IDENTIFIER, value=index)
-                    serv_input.configure_char(
-                        CHAR_IS_CONFIGURED, value=True)
+                    serv_input.configure_char(CHAR_IDENTIFIER, value=index)
+                    serv_input.configure_char(CHAR_IS_CONFIGURED, value=True)
                     input_type = 3 if "hdmi" in source.lower() else 0
                     serv_input.configure_char(CHAR_INPUT_SOURCE_TYPE,
                                               value=input_type)
