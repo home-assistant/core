@@ -128,8 +128,6 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow):
 
     async def _get_authorize_url(self):
         oauth = self._generate_oauth()
-        if oauth is None:
-            return ""
         return oauth.get_authorize_url()
 
 
