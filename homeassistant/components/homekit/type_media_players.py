@@ -183,6 +183,8 @@ class TelevisionMediaPlayer(HomeAccessory):
 
         self._flag = {CHAR_ACTIVE: False, CHAR_ACTIVE_IDENTIFIER: False,
                       FEATURE_TOGGLE_MUTE: False, CHAR_VOLUME: False}
+        self.support_select_source = False
+        self.support_volume_level = False
 
         # Add additional characteristics if volume or input selection supported
         self.chars_tv = []

@@ -8,7 +8,7 @@ from homeassistant.components.homekit.type_media_players import (
     MediaPlayer, TelevisionMediaPlayer)
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE, ATTR_INPUT_SOURCE_LIST,
-    ATTR_MEDIA_VOLUME_MUTED, DOMAIN)
+    ATTR_MEDIA_VOLUME_MUTED, ATTR_MEDIA_VOLUME_LEVEL, DOMAIN)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_IDLE,
     STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING)
@@ -256,4 +256,23 @@ async def test_media_player_television_set_state(hass, hk_driver, events):
     assert len(events) == 9
     assert events[-1].data[ATTR_VALUE] is None
 
-    # TODO Add some tests to check volume char
+
+async def test_media_player_television_volume_level(hass, hk_driver, events):
+    """Test if television accessory and HA are updated accordingly."""
+    entity_id = 'media_player.television'
+
+    hass.states.async_set(entity_id, None, {ATTR_DEVICE_CLASS: DEVICE_CLASS_TV,
+                                            ATTR_SUPPORTED_FEATURES: 1420,
+                                            ATTR_MEDIA_VOLUME_MUTED: False,
+                                            })
+    await hass.async_block_till_done()
+    acc = TelevisionMediaPlayer(hass, hk_driver, 'MediaPlayer', entity_id, 2,
+                                None)
+    await hass.async_add_job(acc.run)
+
+    assert acc.aid == 2
+    assert acc.category == 31  # Television
+
+    assert acc.char_active.value == 0
+    assert acc.char_volume.value is 0
+    assert acc.char_mute.value is False
