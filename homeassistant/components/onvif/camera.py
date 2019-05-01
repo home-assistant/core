@@ -208,9 +208,6 @@ class ONVIFHassCamera(Camera):
             _LOGGER.error("Couldn't connect to camera '%s', please verify "
                           "that the credentials are correct. Error: %s",
                           self._name, err)
-        except Exception as err:
-            _LOGGER.error("Couldn't setup camera '%s'. Error: %s",
-                          self._name, err)
         return
 
     async def async_obtain_input_uri(self):
