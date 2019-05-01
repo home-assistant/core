@@ -34,7 +34,11 @@ class DiscordNotificationService(BaseNotificationService):
         self.hass = hass
 
     def file_exists(self, filename):
+        """Check if a file exists on disk and is in authorized path."""
         import os.path
+
+        if not self.hass.config.is_allowed_path(filename):
+            return False
 
         return os.path.isfile(filename)
 
