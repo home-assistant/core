@@ -17,7 +17,7 @@ jobs:
 
 - job: 'Wheels'
   condition: eq(variables['Build.SourceBranchName'], 'dev')
-  timeoutInMinutes: 240
+  timeoutInMinutes: 360
   pool:
     vmImage: 'ubuntu-16.04'
   strategy:
