@@ -61,8 +61,8 @@ class DiscordNotificationService(BaseNotificationService):
 
                 for image in data.get(ATTR_IMAGES):
                     image_exists = await self.hass.async_add_executor_job(
-                            self.file_exists,
-                            image)
+                        self.file_exists,
+                        image)
 
                     if image_exists:
                         images.append(image)
