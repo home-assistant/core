@@ -1,0 +1,31 @@
+# https://dev.azure.com/home-assistant
+
+trigger:
+  branches:
+    include:
+    - dev
+  tags:
+    include:
+    - '*'
+
+variables:
+  versionWheels: 'dev'
+  versionBuilder: '3.1'
+
+
+jobs:
+
+- job: 'Wheels'
+  condition: eq(variables['Build.SourceBranchName'], 'dev')
+  pool:
+    vmImage: 'ubuntu-16.04'
+  strategy:
+    maxParallel: 2
+    matrix:
+      amd64:
+        buildContainer: 'homeassistant/amd64-wheels:$(versionWheels)'
+  container: $[ variables['buildContainer'] ]
+  steps:
+  - script: |
+      python3 -m builder --help
+    displayName: 'Run wheels build'
