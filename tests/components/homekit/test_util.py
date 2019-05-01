@@ -35,10 +35,10 @@ def test_validate_entity_config():
                {'demo.test': 'test'}, {'demo.test': [1, 2]},
                {'demo.test': None}, {'demo.test': {CONF_NAME: None}},
                {'media_player.test': {CONF_FEATURE_LIST: [
-                   {CONF_FEATURE: 'invalid_feature'}]}},
+                    {CONF_FEATURE: 'invalid_feature'}]}},
                {'media_player.test': {CONF_FEATURE_LIST: [
-                   {CONF_FEATURE: FEATURE_ON_OFF},
-                   {CONF_FEATURE: FEATURE_ON_OFF}]}},
+                    {CONF_FEATURE: FEATURE_ON_OFF},
+                    {CONF_FEATURE: FEATURE_ON_OFF}]}},
                {'switch.test': {CONF_TYPE: 'invalid_type'}}]
 
     for conf in configs:
