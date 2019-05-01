@@ -17,6 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 LUTRON_BUTTONS = 'lutron_buttons'
 LUTRON_CONTROLLER = 'lutron_controller'
 LUTRON_DEVICES = 'lutron_devices'
+BUTTON_UNKNOWN = "Unknown Button"
+BUTTON_TYPE = ('SingleAction', 'Toggle')
 
 # Attribute on events that indicates what action was taken with the button.
 ATTR_ACTION = 'action'
@@ -65,13 +67,13 @@ def setup(hass, base_config):
                 # which buttons actually control scenes.
                 for led in keypad.leds:
                     if (led.number == button.number and
-                            button.name != 'Unknown Button' and
-                            button.button_type in ('SingleAction', 'Toggle')):
+                            button.name != BUTTON_UNKNOWN and
+                            button.button_type in BUTTON_TYPE):
                         hass.data[LUTRON_DEVICES]['scene'].append(
                             (area.name, keypad.name, button, led))
                 # catch for main_repeater scenes
-                if (button.name != 'Unknown Button' and
-                        button.button_type in ('SingleAction', 'Toggle') and
+                if (button.name != BUTTON_UNKNOWN and
+                        button.button_type in BUTTON_TYPE and
                         keypad.name == 'Enclosure Device 001'):
                     hass.data[LUTRON_DEVICES]['scene'].append(
                         (area.name, keypad.name, button, None))
