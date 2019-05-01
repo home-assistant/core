@@ -58,11 +58,12 @@ jobs:
       sed -i "s|# pySwitchmate|pySwitchmate|g" requirements_hassio.txt
     displayName: 'Prepare requirements files for Hass.io'
   - script: |
+      echo "aiohttp==3.5.4" > test_requirements.txt
       sudo docker run --rm -v $(pwd):/data:ro -v ~/.ssh:/root/.ssh:ro \
         homeassistant/$(buildArch)-wheels:$(versionWheels) \
         --apk "build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;linux-headers;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev" \
         --index https://wheels.hass.io \
-        --requirement requirements_hassio.txt \
+        --requirement test_requirements.txt \
         --upload rsync \
         --remote wheels@wheels.hass.io:/opt/wheels
     displayName: 'Run wheels build'
