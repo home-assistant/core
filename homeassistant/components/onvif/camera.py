@@ -148,50 +148,68 @@ class ONVIFHassCamera(Camera):
         Initializes the camera by obtaining the input uri and connecting to
         the camera. Also retrieves the ONVIF profiles.
         """
-        _LOGGER.debug("Updating service addresses")
+        from homeassistant.exceptions import PlatformNotReady
+        import homeassistant.util.dt as dt_util
+        
+        try:
+            _LOGGER.debug("Updating service addresses")
 
-        await self._camera.update_xaddrs()
+            await self._camera.update_xaddrs()
 
-        _LOGGER.debug("Setting up the ONVIF device management service")
+            _LOGGER.debug("Setting up the ONVIF device management service")
 
-        devicemgmt = self._camera.create_devicemgmt_service()
+            devicemgmt = self._camera.create_devicemgmt_service()
 
-        _LOGGER.debug("Retrieving current camera date/time")
+            _LOGGER.debug("Retrieving current camera date/time")
 
-        system_date = dt_util.utcnow()
-        device_time = await devicemgmt.GetSystemDateAndTime()
-        cdate = device_time.UTCDateTime
-        cam_date = dt.datetime(cdate.Date.Year, cdate.Date.Month,
-                               cdate.Date.Day, cdate.Time.Hour,
-                               cdate.Time.Minute, cdate.Time.Second)
+            system_date = dt_util.utcnow()
+            device_time = await devicemgmt.GetSystemDateAndTime()
+            cdate = device_time.UTCDateTime
+            cam_date = dt.datetime(cdate.Date.Year, cdate.Date.Month,
+                                   cdate.Date.Day, cdate.Time.Hour,
+                                   cdate.Time.Minute, cdate.Time.Second,
+                                   0, dt_util.UTC)
 
-        _LOGGER.debug("Camera date/time: %s",
-                      cam_date)
+            _LOGGER.debug("Camera date/time: %s",
+                          cam_date)
 
-        _LOGGER.debug("System date/time: %s",
-                      system_date)
+            _LOGGER.debug("System date/time: %s",
+                          system_date)
 
-        dt_diff = cam_date - system_date
-        dt_diff_seconds = dt_diff.total_seconds()
+            dt_diff = cam_date - system_date
+            dt_diff_seconds = dt_diff.total_seconds()
 
-        if dt_diff_seconds > 5:
-            _LOGGER.warning("The date/time on the camera is '%s', "
-                            "which is different from the system '%s', "
-                            "this could lead to authentication issues",
-                            cam_date,
-                            system_date)
+            if dt_diff_seconds > 5:
+                _LOGGER.warning("The date/time on the camera is '%s', "
+                                "which is different from the system '%s', "
+                                "this could lead to authentication issues",
+                                cam_date,
+                                system_date)
 
-        _LOGGER.debug("Obtaining input uri")
+            _LOGGER.debug("Obtaining input uri")
 
-        await self.async_obtain_input_uri()
+            await self.async_obtain_input_uri()
 
-        _LOGGER.debug("Setting up the ONVIF PTZ service")
+            _LOGGER.debug("Setting up the ONVIF PTZ service")
 
-        if self._camera.get_service('ptz', create=False) is None:
-            _LOGGER.warning("PTZ is not available on this camera")
-        else:
-            self._ptz_service = self._camera.create_ptz_service()
-            _LOGGER.debug("Completed set up of the ONVIF camera component")
+            if self._camera.get_service('ptz', create=False) is None:
+                _LOGGER.warning("PTZ is not available on this camera")
+            else:
+                self._ptz_service = self._camera.create_ptz_service()
+                _LOGGER.debug("Completed set up of the ONVIF camera component")
+        except aiohttp.client_exceptions.ClientConnectorError as err:
+            _LOGGER.warning("Couldn't connect to camera '%s', but will retry "
+                            "later. Error: %s",
+                            self._name, err)
+            raise PlatformNotReady
+        except zeep.exceptions.Fault as error:
+            _LOGGER.error("Couldn't connect to camera '%s', please verify that "
+                          "the credentials are correct. Error: %s",
+                          self._name, err)
+        except Exception as err:
+            _LOGGER.error("Couldn't setup camera '%s'. Error: %s",
+                          self._name, err)
+        return
 
     async def async_obtain_input_uri(self):
         """Set the input uri for the camera."""
