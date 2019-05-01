@@ -415,7 +415,8 @@ class SoundTouchDevice(MediaPlayerDevice):
             self._device.add_zone_slave([slave.device for slave in slaves])
 
 
-# Overriding the official libsoundtouch Source Enum (it missed TUNEIN in version 0.8.0)
+# Overriding the official libsoundtouch Source Enum
+# (it missed TUNEIN in version 0.8.0)
 class Source(Enum):
     """Music sources supported by the device."""
 
