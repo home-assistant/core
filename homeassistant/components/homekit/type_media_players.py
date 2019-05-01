@@ -233,26 +233,26 @@ class TelevisionMediaPlayer(HomeAccessory):
         if self.support_select_source:
             self.sources = self.hass.states.get(self.entity_id).attributes.get(
                 ATTR_INPUT_SOURCE_LIST)
-            if self.sources:
-                self.char_active_identifier = serv_tv.configure_char(
-                    CHAR_ACTIVE_IDENTIFIER, setter_callback=self.set_input_source)
-                for index, source in enumerate(self.sources):
-                    serv_input = self.add_preload_service(
-                        SERV_INPUT_SOURCE, [CHAR_IDENTIFIER, CHAR_NAME])
+            if not self.sources:
+                return
+            self.char_active_identifier = serv_tv.configure_char(
+                CHAR_ACTIVE_IDENTIFIER, setter_callback=self.set_input_source)
+            for index, source in enumerate(self.sources):
+                serv_input = self.add_preload_service(
+                    SERV_INPUT_SOURCE, [CHAR_IDENTIFIER, CHAR_NAME])
 
-                    serv_input.configure_char(
-                        CHAR_CONFIGURED_NAME, value=source)
-                    serv_input.configure_char(CHAR_NAME, value=source)
-                    serv_input.configure_char(CHAR_IDENTIFIER, value=index)
-                    serv_input.configure_char(CHAR_IS_CONFIGURED, value=True)
-                    input_type = 3 if "hdmi" in source.lower() else 0
-                    serv_input.configure_char(CHAR_INPUT_SOURCE_TYPE,
-                                              value=input_type)
-                    serv_input.configure_char(
-                        CHAR_CURRENT_VISIBILITY_STATE, value=False)
-                    serv_tv.add_linked_service(serv_input)
-                    _LOGGER.debug('%s: Added source %s.', self.entity_id,
-                                  source)
+                serv_input.configure_char(
+                    CHAR_CONFIGURED_NAME, value=source)
+                serv_input.configure_char(CHAR_NAME, value=source)
+                serv_input.configure_char(CHAR_IDENTIFIER, value=index)
+                serv_input.configure_char(CHAR_IS_CONFIGURED, value=True)
+                input_type = 3 if "hdmi" in source.lower() else 0
+                serv_input.configure_char(CHAR_INPUT_SOURCE_TYPE,
+                                          value=input_type)
+                serv_input.configure_char(CHAR_CURRENT_VISIBILITY_STATE,
+                                          value=False)
+                serv_tv.add_linked_service(serv_input)
+                _LOGGER.debug('%s: Added source %s.', self.entity_id, source)
 
     def set_on_off(self, value):
         """Move switch state to value if call came from HomeKit."""
