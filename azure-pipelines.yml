@@ -35,7 +35,7 @@ jobs:
         buildArch: 'aarch64'
   steps:
   - script: |
-      sudo apt-get update && apt-get install -y --no-install-recommends \
+      sudo apt-get install -y --no-install-recommends \
         qemu-user-static \
         binfmt-support
       
