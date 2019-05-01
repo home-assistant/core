@@ -12,7 +12,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-from ..huawei_lte import DATA_KEY, RouterData
+from . import DATA_KEY, RouterData
 
 _LOGGER = logging.getLogger(__name__)
 
