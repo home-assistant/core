@@ -39,7 +39,7 @@ REMOTE_KEYS = {
     8: "Select",
     9: "Back",
     10: "Exit",
-    15: "Information"
+    15: "Information",
 }
 
 MEDIA_PLAYER_KEYS = {
@@ -180,9 +180,8 @@ class TelevisionMediaPlayer(HomeAccessory):
         """Initialize a Switch accessory object."""
         super().__init__(*args, category=CATEGORY_TELEVISION)
 
-        self._flag_active = False
-        self._flag_active_identifier = False
-        self._flag_toggle_mute = False
+        self._flag = {CHAR_ACTIVE: False, CHAR_ACTIVE_IDENTIFIER: False,
+                      FEATURE_TOGGLE_MUTE: False}
 
         # Add additional characteristics if volume or input selection supported
         self.chars = []
@@ -322,30 +321,29 @@ class TelevisionMediaPlayer(HomeAccessory):
 
         if self.char_active:
             hk_state = current_state not in (STATE_OFF, STATE_UNKNOWN, 'None')
-            if not self._flag_active:
+            if not self._flag[CHAR_ACTIVE]:
                 hk_state = 1 if hk_state else 0
                 _LOGGER.debug('%s: Set current active state to %s',
                               self.entity_id, hk_state)
                 self.char_active.set_value(hk_state)
-            self._flag_active = False
+            self._flag[CHAR_ACTIVE] = False
 
         if self.char_toggle_mute:
             current_state = new_state.attributes.get(ATTR_MEDIA_VOLUME_MUTED)
-            if not self._flag_toggle_mute:
+            if not self._flag[FEATURE_TOGGLE_MUTE]:
                 _LOGGER.debug('%s: Set current mute state to %s',
                               self.entity_id, current_state)
                 self.char_toggle_mute.set_value(current_state)
-            self._flag_toggle_mute = False
+            self._flag[FEATURE_TOGGLE_MUTE] = False
 
         if self.char_active_identifier:
             source_name = new_state.attributes.get(ATTR_INPUT_SOURCE)
-            if self.sources and not self._flag_active_identifier:
-                _LOGGER.debug(
-                    '%s: Set current input to %s',
-                    self.entity_id, source_name)
+            if self.sources and not self._flag[CHAR_ACTIVE_IDENTIFIER]:
+                _LOGGER.debug('%s: Set current input to %s', self.entity_id,
+                              source_name)
                 if source_name in self.sources:
                     index = self.sources.index(source_name)
                     self.char_active_identifier.set_value(index)
                 else:
                     self.char_active_identifier.set_value(0)
-            self._flag_active_identifier = False
+            self._flag[CHAR_ACTIVE_IDENTIFIER] = False
