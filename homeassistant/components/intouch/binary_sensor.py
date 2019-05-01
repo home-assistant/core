@@ -1,14 +1,9 @@
 """Support for the Sensors of an Intouch Lan2RF gateway."""
-import asyncio
-import logging
-
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -35,6 +30,15 @@ class IntouchBinarySensor(BinarySensorDevice):
         self._client = client
         self._objref = boiler
 
+    async def async_added_to_hass(self):
+        """Set up a listener when this entity is added to HA."""
+        async_dispatcher_connect(self.hass, DOMAIN, self._connect)
+
+    @callback
+    def _connect(self, packet):
+        if packet['signal'] == 'refresh':
+            self.async_schedule_update_ha_state(force_refresh=True)
+
     @property
     def name(self):
         """Return the name of the sensor."""
@@ -47,20 +51,8 @@ class IntouchBinarySensor(BinarySensorDevice):
 
     @property
     def should_poll(self) -> bool:
-        """Return True as this device should always be polled."""
-        return True
-
-    async def async_update(self):
-        """Get the latest state data from the gateway."""
-        try:
-            await self._objref.update()
-
-        except (AssertionError, asyncio.TimeoutError) as err:
-            _LOGGER.warning("Update for %s failed, message: %s",
-                            self._name, err)
-
-        # inform the child devices that updated state data is available
-        async_dispatcher_send(self.hass, DOMAIN, {'signal': 'refresh'})
+        """Return False as this device should never be polled."""
+        return False
 
 
 class IntouchBurning(IntouchBinarySensor):

@@ -37,15 +37,6 @@ class IntouchWaterHeater(WaterHeaterDevice):
         self._objref = boiler
         self._name = 'Boiler'
 
-    async def async_added_to_hass(self):
-        """Set up a listener when this entity is added to HA."""
-        async_dispatcher_connect(self.hass, DOMAIN, self._connect)
-
-    @callback
-    def _connect(self, packet):
-        if packet['signal'] == 'refresh':
-            self.async_schedule_update_ha_state(force_refresh=True)
-
     @property
     def name(self):
         """Return the name of the water_heater device."""
@@ -91,5 +82,17 @@ class IntouchWaterHeater(WaterHeaterDevice):
 
     @property
     def should_poll(self) -> bool:
-        """Return False as this device should never be polled."""
-        return False
+        """Return True as this device should always be polled."""
+        return True
+
+    async def async_update(self):
+        """Get the latest state data from the gateway."""
+        try:
+            await self._objref.update()
+
+        except (AssertionError, asyncio.TimeoutError) as err:
+            _LOGGER.warning("Update for %s failed, message: %s",
+                            self._name, err)
+
+        # inform the child devices that updated state data is available
+        async_dispatcher_send(self.hass, DOMAIN, {'signal': 'refresh'})

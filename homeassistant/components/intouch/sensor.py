@@ -1,7 +1,4 @@
 """Support for the Sensors of an Intouch Lan2RF gateway."""
-import asyncio
-import logging
-
 from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_SIGNAL_STRENGTH)
@@ -13,7 +10,7 @@ from . import DOMAIN
 
 
 async def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+                               discovery_info=None):
     """Set up an Intouch sensor entity."""
     client = hass.data[DOMAIN]['client']
 
@@ -23,7 +20,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     async_add_entities([
         IntouchSignal(client, water_heaters[0]),
         IntouchPressure(client, water_heaters[0])
-    ], update_before_add=False)
+    ])
 
 
 class IntouchSensor(Entity):
@@ -62,15 +59,6 @@ class IntouchSensor(Entity):
     def should_poll(self) -> bool:
         """Return False as this device should never be polled."""
         return False
-
-    async def async_update(self):                                                # TODO: this shouldn't be needed
-        """Get the latest data from the hub."""
-        try:
-            await self._objref.update()
-
-        except (AssertionError, asyncio.TimeoutError) as err:
-            _LOGGER.warning("Update for %s failed, message: %s",
-                            self._name, err)
 
 
 class IntouchPressure(IntouchSensor):

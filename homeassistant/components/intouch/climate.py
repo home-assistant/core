@@ -1,7 +1,4 @@
 """Support for a Room thermostat attached to an Intouch Lan2RF gateway."""
-import asyncio
-import logging
-
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import SUPPORT_TARGET_TEMPERATURE
 from homeassistant.const import (ATTR_TEMPERATURE, TEMP_CELSIUS)
@@ -9,8 +6,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 INTOUCH_SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 
@@ -27,8 +22,8 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     await water_heaters[0].update()
     water_heater = water_heaters[0]
 
-    async_add_entities(
-        [InTouchClimate(client, water_heater.rooms[0])
+    async_add_entities([
+        InTouchClimate(client, water_heater.rooms[0])
     ])
 
 
