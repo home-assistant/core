@@ -1,19 +1,18 @@
 """Test Home Assistant template helper methods."""
-from datetime import datetime
-import random
 import math
+import random
+from datetime import datetime
 from unittest.mock import patch
 
 import pytest
 import pytz
 
+import homeassistant.util.dt as dt_util
 from homeassistant.components import group
-from homeassistant.const import (
-    LENGTH_METERS, MASS_GRAMS, PRESSURE_PA,
-    TEMP_CELSIUS, VOLUME_LITERS, MATCH_ALL)
+from homeassistant.const import (LENGTH_METERS, MASS_GRAMS, MATCH_ALL,
+                                 PRESSURE_PA, TEMP_CELSIUS, VOLUME_LITERS)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
-import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
 
 
@@ -1227,24 +1226,6 @@ states.sensor.pick_humidity.state ~ „ %“
         ))
 
 
-def test_jinja_namespace(hass):
-    """Test Jinja's namespace command can be used."""
-    test_template = template.Template(
-        (
-            "{% set ns = namespace(a_key='') %}"
-            "{% set ns.a_key = states.sensor.dummy.state %}"
-            "{{ ns.a_key }}"
-        ),
-        hass
-    )
-
-    hass.states.async_set('sensor.dummy', 'a value')
-    assert test_template.async_render() == 'a value'
-
-    hass.states.async_set('sensor.dummy', 'another value')
-    assert test_template.async_render() == 'another value'
-
-
 def test_extract_entities_with_variables(hass):
     """Test extract entities function with variables and entities stuff."""
     hass.states.async_set('input_boolean.switch', 'on')
@@ -1283,6 +1264,24 @@ def test_extract_entities_with_variables(hass):
             hass,
             "{{ is_state('media_player.' ~ where , 'playing') }}",
             {'where': 'livingroom'})
+
+
+def test_jinja_namespace(hass):
+    """Test Jinja's namespace command can be used."""
+    test_template = template.Template(
+        (
+            "{% set ns = namespace(a_key='') %}"
+            "{% set ns.a_key = states.sensor.dummy.state %}"
+            "{{ ns.a_key }}"
+        ),
+        hass
+    )
+
+    hass.states.async_set('sensor.dummy', 'a value')
+    assert test_template.async_render() == 'a value'
+
+    hass.states.async_set('sensor.dummy', 'another value')
+    assert test_template.async_render() == 'another value'
 
 
 def test_state_with_unit(hass):
