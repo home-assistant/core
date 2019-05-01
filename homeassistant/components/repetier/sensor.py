@@ -24,8 +24,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         'chamber_temperature': RepetierTempSensor,
         'current_state': RepetierSensor,
         'current_job': RepetierJobSensor,
-        'time_remaining': RepetierRemainingSensor,
-        'time_elapsed': RepetierElapsedSensor,
+        'job_end': RepetierJobEndSensor,
+        'job_start': RepetierJobStartSensor,
     }
 
     entities = []
@@ -166,8 +166,8 @@ class RepetierJobSensor(RepetierSensor):
         return round(self._state, 2)
 
 
-class RepetierRemainingSensor(RepetierSensor):
-    """Class to create and populate a Repetier Time Remaining Sensor."""
+class RepetierJobEndSensor(RepetierSensor):
+    """Class to create and populate a Repetier Job End timestamp Sensor."""
 
     @property
     def device_class(self):
@@ -192,8 +192,8 @@ class RepetierRemainingSensor(RepetierSensor):
             job_name, time.strftime('%H:%M:%S', time.gmtime(remaining_secs)))
 
 
-class RepetierElapsedSensor(RepetierSensor):
-    """Class to create and populate a Repetier Time Elapsed Sensor."""
+class RepetierJobStartSensor(RepetierSensor):
+    """Class to create and populate a Repetier Job Start timestamp Sensor."""
 
     @property
     def device_class(self):

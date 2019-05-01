@@ -73,7 +73,7 @@ API_PRINTER_METHODS = {
             'z': 'z',
         },
     },
-    'time_remaining': {
+    'job_end': {
         'offline': {
             'job': None, 'state': 'off', 'start': None, 'printtime': None},
         'state': {
@@ -83,7 +83,7 @@ API_PRINTER_METHODS = {
             'printedtimecomp': 'from_start',
         },
     },
-    'time_elapsed': {
+    'job_start': {
         'offline': {
             'job': None,
             'state': 'off',
@@ -116,8 +116,8 @@ SENSOR_TYPES = {
                             '_chamber_'],
     'current_state': ['state', None, 'mdi:printer-3d', ''],
     'current_job': ['progress', '%', 'mdi:file-percent', '_current_job'],
-    'time_remaining': ['progress', None, 'mdi:clock-end', '_job_end'],
-    'time_elapsed': ['progress', None, 'mdi:clock-start', '_job_start'],
+    'job_end': ['progress', None, 'mdi:clock-end', '_job_end'],
+    'job_start': ['progress', None, 'mdi:clock-start', '_job_start'],
 }
 
 SENSOR_SCHEMA = vol.Schema({
