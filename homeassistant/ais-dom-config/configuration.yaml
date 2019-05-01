@@ -57,9 +57,7 @@ recorder:
       - input_select.rss_news_category
       - input_select.rss_news_channel
       - input_select.rss_news_item
-      - input_select.rss_news_player
       - input_select.ais_music_track_name
-      - input_select.ais_music_player
       - input_select.book_autor
       - input_select.book_name
       - input_select.book_chapter
@@ -79,9 +77,7 @@ history:
       - input_select.rss_news_category
       - input_select.rss_news_channel
       - input_select.rss_news_item
-      - input_select.rss_news_player
       - input_select.ais_music_track_name
-      - input_select.ais_music_player
       - input_select.book_autor
       - input_select.book_name
       - input_select.book_chapter

@@ -335,13 +335,10 @@ class SpotifyData:
                 break
 
         if item_uri is not None:
-            player_name = self.hass.states.get(
-                'input_select.ais_music_player').state
-            player = ais_cloud.get_player_data(player_name)
             self.hass.services.call(
                 'media_player',
                 'play_media', {
-                    "entity_id": player["entity_id"],
+                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
                     "media_content_type": "audio/mp4",
                     "media_content_id": item_uri
                 })
@@ -349,7 +346,7 @@ class SpotifyData:
             self.hass.services.call(
                 'media_player',
                 'play_media', {
-                    "entity_id": player["entity_id"],
+                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
                     "media_content_type": "ais_info",
                     "media_content_id": _audio_info
                 })
@@ -366,13 +363,10 @@ class SpotifyData:
         attr = state.attributes
         track = attr.get(int(call_id))
 
-        player_name = self.hass.states.get(
-            'input_select.ais_music_player').state
-        player = ais_cloud.get_player_data(player_name)
         self.hass.services.call(
             'media_player',
             'play_media', {
-                "entity_id": player["entity_id"],
+                "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
                 "media_content_type": "audio/mp4",
                 "media_content_id": track["uri"]
             })
@@ -382,7 +376,7 @@ class SpotifyData:
         self.hass.services.call(
             'media_player',
             'play_media', {
-                "entity_id": player["entity_id"],
+                "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
                 "media_content_type": "ais_info",
                 "media_content_id": _audio_info
             })

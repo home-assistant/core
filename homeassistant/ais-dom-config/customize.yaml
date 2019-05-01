@@ -237,69 +237,68 @@ group.day_info:
   order: 8
   friendly_name: Kalendarium
   remote_group_view: Twój Dom
-group.bookmarks:
-  order: 9
-  context_key_words: zakładki,ulubione
-  context_answer: OK, wybierz pozycję
-  friendly_name: Zakładki
-  remote_group_view: Twój Dom
+
 #group.ais_wyszukiwarka:
 #  order: 8
 #  context_key_words: asystent,asystentka
 #  context_answer: Powiedz proszę jakie informację mam wyszukać?
 #  context_suffix: Znajdź informacje o
 #  remote_group_view: Twój Dom
+
 group.ais_rss_news_remote:
-  order: 1
   context_key_words: wiadomości,informacje
   context_answer: OK, wybierz pilotem kategorię, kanał i artykuł który mam przeczytać
   remote_group_view: Audio
-group.radio_player:
-  context_key_words: radio,radia,radia internetowe
-  context_answer: OK, powiedz jakiej stacji chcesz posłuchać lub wybierz pilotem typ
-    radia i stację radiową
-  context_suffix: Radio
+  order: 1
+group.local_audio:
+  context_key_words: lokalne pliki,dyski
+  context_answer: OK, wybierz plik
   remote_group_view: Audio
   order: 2
+group.radio_player:
+  context_key_words: radio,radia,radia internetowe
+  context_answer: OK, powiedz jakiej stacji chcesz posłuchać lub wybierz pilotem typ radia i stację radiową
+  context_suffix: Radio
+  remote_group_view: Audio
+  order: 3
 group.podcast_player:
   context_key_words: podcast,podcasty,podkasty,podkast
   context_answer: OK, powiedz jaką audycję mam włączyć lub wybierz pilotem typ, audycję i odcinek podcasta
   context_suffix: Podcast
   remote_group_view: Audio
-  order: 3
+  order: 4
 group.music_player:
   context_key_words: youtube,muzyka,yt,tuba,spotify
   context_answer: OK, powiedz jakiej muzyki chcesz posłuchać?
   context_suffix: Muzyka
   remote_group_view: Audio
-  order: 4
-group.audiobooks_player:
-  context_key_words: książki,książka,audiobook,audiobooks
-  context_answer: OK, powiedz jakiej książki chcesz posłuchać lub wybierz pilotem
-    autora, książkę i rozdział książki
-  context_suffix: Książka
-  remote_group_view: Audio
   order: 5
-group.local_audio:
-  context_key_words: lokalne pliki,dyski
-  context_answer: OK, wybierz plik
+group.bookmarks:
+  context_key_words: zakładki,ulubione
+  context_answer: OK, wybierz pozycję
+  friendly_name: Zakładki
   remote_group_view: Audio
   order: 6
-group.audio_player:
-  context_key_words: odtwarzacz, odtwarzacze
-  context_answer: OK, wybrano odtwarzacz.
-  order: 7
-  remote_group_view: Audio
+#group.audiobooks_player:
+#  context_key_words: książki,książka,audiobook,audiobooks
+#  context_answer: OK, powiedz jakiej książki chcesz posłuchać lub wybierz pilotem
+#    autora, książkę i rozdział książki
+#  context_suffix: Książka
+#  remote_group_view: Audio
+#  order: 5
+#group.audio_player:
+#  context_key_words: odtwarzacz, odtwarzacze
+#  context_answer: OK, wybrano odtwarzacz.
+#  order: 7
+#  remote_group_view: Audio
 group.internet_status:
   context_key_words: internet,sieć,ustawienia sieci,wifi
-  context_answer: OK, wybrano internet. Możesz nawigowac pilotem by uzyskać informację
-    o statusie Twojej sieci.
+  context_answer: OK, wybrano internet. Możesz nawigowac pilotem by uzyskać informację o statusie Twojej sieci.
   remote_group_view: Ustawienia
   order: 1
 group.ais_add_iot_device:
   context_key_words: dodaj urządzenie
-  context_answer: OK, wybrano dodawanie nowego urządzenia. Możesz nawigowac pilotem
-    by dodać urządzenie do systemu.
+  context_answer: OK, wybrano dodawanie nowego urządzenia. Możesz nawigowac pilotem by dodać urządzenie do systemu.
   remote_group_view: Ustawienia
   order: 2
 group.ais_tts_configuration:

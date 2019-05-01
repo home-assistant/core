@@ -17,11 +17,6 @@ input_select:
       - "-"
     initial: "-"
     icon: mdi:format-list-numbers
-  rss_news_player:
-    name: 'Głośnik:'
-    options:
-     - Podłączony głośnik
-    icon: mdi:speaker-wireless
 
 sensor:
     - platform: ais_long_text
@@ -37,7 +32,6 @@ group:
       - input_select.rss_news_category
       - input_select.rss_news_channel
       - input_select.rss_news_item
-      - input_select.rss_news_player
       - sensor.rss_news_text
   ais_rss_news_remote:
     control: hidden

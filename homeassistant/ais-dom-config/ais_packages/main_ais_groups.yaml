@@ -25,12 +25,6 @@ group:
       - weather.openweathermap
       - sensor.dark_sky_hourly_summary
       - sensor.dark_sky_daily_summary
-
-  audio_player:
-    name: Odtwarzacz
-    entities:
-      - media_player.wbudowany_glosnik
-      - input_number.media_player_speed
   news:
     name: Wiadomości
     view: yes

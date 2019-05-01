@@ -9,11 +9,6 @@ input_select:
       - "-"
     initial: "-"
     icon: mdi:music
-  ais_music_player:
-    name: 'Głośnik:'
-    options:
-     - Podłączony głośnik
-    icon: mdi:speaker-wireless
   ais_music_service:
     name: 'Serwis muzyczny:'
     options:
@@ -30,4 +25,3 @@ group:
       - input_select.ais_music_service
       - input_text.ais_music_query
       - input_select.ais_music_track_name
-      - input_select.ais_music_player

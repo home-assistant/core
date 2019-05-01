@@ -262,18 +262,6 @@
       data_template:
         name: "{{ states('input_select.ais_music_track_name') }}"
 
-- id: '201807081905014'
-  alias: 'Select Music Player'
-  initial_state: True
-  hide_entity: True
-  trigger:
-    platform: state
-    entity_id: input_select.ais_music_player
-  action:
-    - service: ais_cloud.select_media_player
-      data_template:
-        media_player_type: "Music"
-
 - id: '201807081916015'
   alias: 'Get RSS News Channels'
   initial_state: True
@@ -309,18 +297,6 @@
     - service: ais_cloud.select_rss_news_item
       data_template:
         rss_news_item: "{{ states('input_select.rss_news_item') }}"
-
-- id: '201807081916018'
-  alias: 'Select Rss News Player'
-  initial_state: True
-  hide_entity: True
-  trigger:
-    platform: state
-    entity_id: input_select.rss_news_player
-  action:
-    - service: ais_cloud.select_media_player
-      data_template:
-        media_player_type: "News"
 
 - id: '201807081919019'
   alias: 'Get Podcast Names'

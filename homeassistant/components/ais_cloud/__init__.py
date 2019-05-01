@@ -195,8 +195,7 @@ def async_setup(hass, config):
         if entity_id.startswith('media_player.'):
             _new = state_event.data['new_state'].attributes
             if state_event.data['old_state'] is None:
-                _old = {}
-                _old['friendly_name'] = 'new ais dome device'
+                _old = {'friendly_name': 'new ais dome device'}
             else:
                 _old = state_event.data['old_state'].attributes
             # check if name was changed
@@ -254,8 +253,6 @@ class AisCloudWS:
     def ask(self, question, org_answer):
         self.setCloudToken()
         payload = {'question': question, 'org_answer': org_answer}
-        # rest_url = self.url + 'ask?question=' + question + " "
-        # rest_url += '&org_answer=' + org_answer
         ws_resp = requests.get(self.url + 'ask', headers=CLOUD_WS_HEADER, params=payload, timeout=5)
         return ws_resp
 
@@ -329,11 +326,6 @@ class AisCacheData:
         else:
             with open(path) as file:
                 data = json.loads(file.read())
-                # items = data["data"]
-                # for item in items:
-                #     # values.add(item['type'])
-                #     # types = list(sorted(values))
-                #     _LOGGER.error("item " + str(item))
         return data
 
     def store_audio_type(self, nature, json_data):
@@ -651,17 +643,13 @@ class AisColudData:
         attr = state.attributes
         track = attr.get(int(item_id))
         # update list
-        self.hass.states.async_set("sensor.radiolist", item_id, attr)
-        player_name = self.hass.states.get('input_select.ais_music_player').state
-        player = get_player_data(player_name)
-        self.hass.services.call('media_player', 'play_media', {"entity_id": player["entity_id"],
+        self.hass.services.call('media_player', 'play_media', {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
                                                                "media_content_type": "audio/mp4",
                                                                "media_content_id": track["uri"]})
         # set stream image and title
-        if player["entity_id"] == 'media_player.wbudowany_glosnik':
-            _audio_info = json.dumps(
+        _audio_info = json.dumps(
                 {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": ais_global.G_AN_RADIO})
-            self.hass.services.call('media_player', 'play_media', {"entity_id": player["entity_id"],
+        self.hass.services.call('media_player', 'play_media', {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
                                                                    "media_content_type": "ais_info",
                                                                    "media_content_id": _audio_info})
 
@@ -673,22 +661,19 @@ class AisColudData:
         track = attr.get(int(id))
         # update list
         self.hass.states.async_set("sensor.podcastlist", id, attr)
-        player_name = self.hass.states.get('input_select.ais_music_player').state
-        player = get_player_data(player_name)
         try:
             play_uri = track["uri"]['href']
         except Exception:
             play_uri = track["uri"]
-        self.hass.services.call('media_player', 'play_media', {"entity_id": player["entity_id"],
+        self.hass.services.call('media_player', 'play_media', {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
                                                                "media_content_type": "audio/mp4",
                                                                "media_content_id": play_uri})
         # set stream image and title
-        if player["entity_id"] == 'media_player.wbudowany_glosnik':
-            _audio_info = json.dumps(
+        _audio_info = json.dumps(
                 {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": ais_global.G_AN_PODCAST})
-            self.hass.services.call('media_player', 'play_media', {"entity_id": player["entity_id"],
-                                                                   "media_content_type": "ais_info",
-                                                                   "media_content_id": _audio_info})
+        self.hass.services.call('media_player', 'play_media', {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+                                                               "media_content_type": "ais_info",
+                                                               "media_content_id": _audio_info})
 
     def play_audio(self, call):
         audio_type = call.data["audio_type"]
@@ -808,8 +793,6 @@ class AisColudData:
                 'input_select.ais_music_track_name').state
             if track_name == ais_global.G_EMPTY_OPTION:
                 return
-            player_name = self.hass.states.get(
-                'input_select.ais_music_player').state
             import homeassistant.components.ais_yt_service as yt
             for music_track in yt.G_YT_FOUND:
                 if music_track["title"] == track_name:
@@ -825,19 +808,18 @@ class AisColudData:
             self.hass.services.call(
                 'media_player',
                 'play_media', {
-                    "entity_id": player["entity_id"],
+                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
                     "media_content_type": "audio/mp4",
                     "media_content_id": check_url(_url)
                 })
-            if player["device_ip"] is not None:
-                # set stream image and title
-                self.hass.services.call(
-                    'media_player',
-                    'play_media', {
-                        "entity_id": player["entity_id"],
-                        "media_content_type": "ais_info",
-                        "media_content_id": json.dumps(_audio_info)
-                    })
+            # set stream image and title
+            self.hass.services.call(
+                'media_player',
+                'play_media', {
+                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+                    "media_content_type": "ais_info",
+                    "media_content_id": json.dumps(_audio_info)
+                })
 
     def get_players(self, call, hass):
         global G_PLAYERS

@@ -454,7 +454,7 @@ def set_curr_group(hass, group):
     # set display context for mega audio plauer
     if CURR_GROUP['entity_id'] in (
             'group.radio_player', 'group.podcast_player', 'group.music_player',
-            'group.audiobooks_player',  'group.local_audio', "sensor.ais_drives", "group.bookmarks"):
+            'group.ais_rss_news_remote',  'group.local_audio', "sensor.ais_drives", "group.bookmarks"):
         hass.states.async_set("sensor.ais_player_mode", CURR_GROUP['entity_id'].replace('group.', ''))
 
 
@@ -1579,7 +1579,7 @@ async def async_setup(hass, config):
     async_register(hass, INTENT_SAY_IT, ['Powiedz', 'Mów', 'Powiedz {item}', 'Mów {item}', 'Echo {item}'])
 
     # initial status of the player
-    hass.states.async_set("sensor.ais_player_mode", 'radio_player')
+    hass.states.async_set("sensor.ais_player_mode", 'bookmarks')
 
     return True
 

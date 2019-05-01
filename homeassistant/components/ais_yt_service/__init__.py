@@ -169,10 +169,6 @@ class YouTubeData:
                 _audio_info = json.dumps(
                     {"IMAGE_URL": item["thumbnail"], "NAME": item["title"], "MEDIA_SOURCE": ais_global.G_AN_MUSIC}
                 )
-
-        player_name = self.hass.states.get(
-            'input_select.ais_music_player').state
-        player = ais_cloud.get_player_data(player_name)
         url = "https://www.youtube.com/watch?v="
 
         # try to get media url from AIS cloud
@@ -190,7 +186,7 @@ class YouTubeData:
             self.hass.services.call(
                 'media_player',
                 'play_media', {
-                    "entity_id": player["entity_id"],
+                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
                     "media_content_type": "audio/mp4",
                     "media_content_id": media_url
                 })
@@ -200,19 +196,18 @@ class YouTubeData:
             self.hass.services.call(
                 'media_extractor',
                 'play_media', {
-                    "entity_id": player["entity_id"],
+                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
                     "media_content_id": url + item_id,
                     "media_content_type": "video/youtube"})
 
         # set stream image and title
-        if player["entity_id"] == 'media_player.wbudowany_glosnik':
-            self.hass.services.call(
-                'media_player',
-                'play_media', {
-                    "entity_id": player["entity_id"],
-                    "media_content_type": "ais_info",
-                    "media_content_id": _audio_info
-                })
+        self.hass.services.call(
+            'media_player',
+            'play_media', {
+                "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+                "media_content_type": "ais_info",
+                "media_content_id": _audio_info
+            })
 
     def process_select_track_uri(self, call):
         _LOGGER.info("process_select_track_uri")
@@ -221,9 +216,6 @@ class YouTubeData:
         state = self.hass.states.get('sensor.youtubelist')
         attr = state.attributes
         track = attr.get(int(call_id))
-
-        player_name = self.hass.states.get('input_select.ais_music_player').state
-        player = ais_cloud.get_player_data(player_name)
         url = "https://www.youtube.com/watch?v="
 
         # update list
@@ -244,24 +236,22 @@ class YouTubeData:
             self.hass.services.call(
                 'media_player',
                 'play_media', {
-                    "entity_id": player["entity_id"],
+                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
                     "media_content_type": "audio/mp4",
                     "media_content_id": media_url
                 })
-
         else:
             # use media_extractor to extract locally
             self.hass.services.call(
                 'media_extractor',
                 'play_media', {
-                    "entity_id": player["entity_id"],
+                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
                     "media_content_id": url + track["uri"],
                     "media_content_type": "video/youtube"})
 
         # set stream image and title
-        if player["entity_id"] == 'media_player.wbudowany_glosnik':
-            _audio_info = json.dumps(
-                {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": ais_global.G_AN_MUSIC})
-            self.hass.services.call('media_player', 'play_media', {"entity_id": player["entity_id"],
-                                                                   "media_content_type": "ais_info",
-                                                                   "media_content_id": _audio_info})
+        _audio_info = json.dumps(
+            {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": ais_global.G_AN_MUSIC})
+        self.hass.services.call('media_player', 'play_media', {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+                                                                "media_content_type": "ais_info",
+                                                                "media_content_id": _audio_info})
