@@ -196,7 +196,7 @@ class TelevisionMediaPlayer(HomeAccessory):
             self.chars_speaker.extend((CHAR_VOLUME, CHAR_VOLUME_CONTROL_TYPE,
                                        CHAR_VOLUME_SELECTOR))
         if features & SUPPORT_SELECT_SOURCE:
-            self.chars_speaker.append(CHAR_ACTIVE_IDENTIFIER)
+            self.support_select_source = True
 
         # TODO: find a place for these chars
         if len(self.chars_speaker):
@@ -230,13 +230,12 @@ class TelevisionMediaPlayer(HomeAccessory):
             self.char_volume_selector = serv_speaker.configure_char(
                 CHAR_VOLUME_SELECTOR, setter_callback=self.set_volume_step)
 
-        if CHAR_ACTIVE_IDENTIFIER in self.chars:
+        if self.support_select_source:
             self.sources = self.hass.states.get(self.entity_id).attributes.get(
                 ATTR_INPUT_SOURCE_LIST)
             if self.sources:
                 self.char_active_identifier = serv_tv.configure_char(
-                    CHAR_ACTIVE_IDENTIFIER,
-                    setter_callback=self.set_input_source)
+                    CHAR_ACTIVE_IDENTIFIER, setter_callback=self.set_input_source)
                 for index, source in enumerate(self.sources):
                     serv_input = self.add_preload_service(
                         SERV_INPUT_SOURCE, [CHAR_IDENTIFIER, CHAR_NAME])
@@ -336,7 +335,7 @@ class TelevisionMediaPlayer(HomeAccessory):
                 self.char_mute.set_value(current_state)
             self._flag[FEATURE_TOGGLE_MUTE] = False
 
-        if self.char_active_identifier:
+        if self.support_select_source:
             source_name = new_state.attributes.get(ATTR_INPUT_SOURCE)
             if self.sources and not self._flag[CHAR_ACTIVE_IDENTIFIER]:
                 _LOGGER.debug('%s: Set current input to %s', self.entity_id,
