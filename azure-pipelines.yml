@@ -17,6 +17,7 @@ jobs:
 
 - job: 'Wheels'
   condition: eq(variables['Build.SourceBranchName'], 'dev')
+  timeoutInMinutes: 180
   pool:
     vmImage: 'ubuntu-16.04'
   strategy:
@@ -28,11 +29,35 @@ jobs:
   - script: sudo docker pull homeassistant/$(buildArch)-wheels:$(versionWheels)
     displayName: 'Install wheels builder'
   - script: |
+      cp requirements_all.txt requirements_hassio.txt
+
+      sed -i "s|# pytradfri|pytradfri|g" homeassistant/requirements_hassio.txt
+      sed -i "s|# pybluez|pybluez|g" homeassistant/requirements_hassio.txt
+      sed -i "s|# bluepy|bluepy|g" homeassistant/requirements_hassio.txt
+      sed -i "s|# beacontools|beacontools|g" homeassistant/requirements_hassio.txt
+      sed -i "s|# RPi.GPIO|RPi.GPIO|g" homeassistant/requirements_hassio.txt
+      sed -i "s|# raspihats|raspihats|g" homeassistant/requirements_hassio.txt
+      sed -i "s|# rpi-rf|rpi-rf|g" homeassistant/requirements_hassio.txt
+      sed -i "s|# blinkt|blinkt|g" homeassistant/requirements_hassio.txt
+      sed -i "s|# fritzconnection|fritzconnection|g" homeassistant/requirements_hassio.txt
+      sed -i "s|# pyuserinput|pyuserinput|g" homeassistant/requirements_hassio.txt
+      sed -i "s|# evdev|evdev|g" homeassistant/requirements_hassio.txt
+      sed -i "s|# smbus-cffi|smbus-cffi|g" homeassistant/requirements_hassio.txt
+      sed -i "s|# i2csense|i2csense|g" homeassistant/requirements_hassio.txt
+      sed -i "s|# python-eq3bt|python-eq3bt|g" homeassistant/requirements_hassio.txt
+      sed -i "s|# pycups|pycups|g" homeassistant/requirements_hassio.txt
+      sed -i "s|# homekit|homekit|g" homeassistant/requirements_hassio.txt
+      sed -i "s|# decora_wifi|decora_wifi|g" homeassistant/requirements_hassio.txt
+      sed -i "s|# decora|decora|g" homeassistant/requirements_hassio.txt
+      sed -i "s|# PySwitchbot|PySwitchbot|g" homeassistant/requirements_hassio.txt
+      sed -i "s|# pySwitchmate|pySwitchmate|g" homeassistant/requirements_hassio.txt
+    displayName: 'Prepare requirements files for Hass.io'
+  - script: |
       sudo docker run --rm -v $(pwd):/data:ro \
         homeassistant/$(buildArch)-wheels:$(versionWheels) \
         --apk "build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;linux-headers;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev" \
         --index https://wheels.hass.io \
-        --requirement requirement_all.txt \
+        --requirement requirements_hassio.txt \
         --upload rsync \
         --remote wheels@wheels.hass.io:/opt/wheels
     displayName: 'Run wheels build'
