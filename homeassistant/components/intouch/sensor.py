@@ -60,7 +60,7 @@ class IntouchSensor(Entity):
 
     @property
     def should_poll(self) -> bool:
-        """Return True as this device should never be polled."""
+        """Return False as this device should never be polled."""
         return False
 
     async def async_update(self):                                                # TODO: this shouldn't be needed

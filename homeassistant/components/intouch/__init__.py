@@ -55,13 +55,13 @@ async def async_setup(hass, hass_config):
         return False
 
     hass.async_create_task(async_load_platform(
+        hass, 'binary_sensor', DOMAIN, {}, hass_config))
+
+    hass.async_create_task(async_load_platform(
         hass, 'water_heater', DOMAIN, {}, hass_config))
 
     hass.async_create_task(async_load_platform(
         hass, 'sensor', DOMAIN, {}, hass_config))
-
-    hass.async_create_task(async_load_platform(
-        hass, 'binary_sensor', DOMAIN, {}, hass_config))
 
     if len(heaters[0].rooms) > -1:  # TODO: should be > 0
         hass.async_create_task(async_load_platform(

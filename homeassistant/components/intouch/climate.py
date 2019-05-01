@@ -97,5 +97,5 @@ class InTouchClimate(ClimateDevice):
 
     @property
     def should_poll(self) -> bool:
-        """Return True as this device should never be polled."""
+        """Return False as this device should never be polled."""
         return False
