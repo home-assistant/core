@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import PlatformNotReady
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -31,6 +32,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PRINTERS): vol.All(cv.ensure_list, [cv.string])
 })
 
+PRINTER_STATES = {
+    3: 'Idle',
+    4: 'Printing',
+    5: 'Stopped',
+}
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the IPP platform."""
@@ -38,12 +45,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     dev = []
     for printer in printers:
-        try:
-            data = IPPData(printer)
-            data.update()
-        except RuntimeError:
+        data = IPPData(printer)
+        data.update()
+        if data.available is False:
             _LOGGER.error("Unable to connect to IPP printer: %s", printer)
-            continue
+            raise PlatformNotReady()
 
         dev.append(PrinterSensor(data,
                                  data.attributes['printer-make-and-model']))
@@ -69,6 +75,7 @@ class MarkerSensor(Entity):
         self._name = name
         self._index = index
         self._attributes = None
+        self._available = False
 
     @property
     def name(self):
@@ -79,6 +86,11 @@ class MarkerSensor(Entity):
     def icon(self):
         """Return the icon to use in the frontend."""
         return ICON_MARKER
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
 
     @property
     def state(self):
@@ -118,6 +130,7 @@ class MarkerSensor(Entity):
         """Update the state of the sensor."""
         # Data fetching is done by PrinterSensor
         self._attributes = self.data.attributes
+        self._available = self.data.available
 
 
 class PrinterSensor(Entity):
@@ -130,7 +143,8 @@ class PrinterSensor(Entity):
         """Initialize the sensor."""
         self.data = data
         self._name = name
-        self._status = None
+        self._attributes = None
+        self._available = False
 
     @property
     def name(self):
@@ -143,28 +157,25 @@ class PrinterSensor(Entity):
         return ICON_PRINTER
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
+
+    @property
     def state(self):
         """Return the state of the sensor."""
-        if self._status is not None:
-            return self._status
+        if self._attributes is not None:
+            try:
+                return next(v for k, v in PRINTER_STATES.items()
+                            if self._attributes['printer-state'] == k)
+            except StopIteration:
+                return self._attributes['printer-state']
 
     def update(self):
         """Fetch new state data for the sensor."""
-        try:
-            self.data.update()
-            status = self.data.attributes["printer-state"]
-
-            if status == 3:
-                self._status = "Ready"
-            elif status == 4:
-                self._status = "Printing"
-            elif status == 5:
-                self._status = "Stopped"
-            else:
-                self._status = "Unknown"
-        except RuntimeError:
-            self._status = "Offline"
-            return False
+        self.data.update()
+        self._attributes = self.data.attributes
+        self._available = self.data.available
 
 
 class IPPData:
@@ -181,10 +192,15 @@ class IPPData:
 
         self._printer = printer
         self.attributes = None
+        self.available = False
 
     def update(self):
         """Get the latest data from the IPP printer using the CUPS library."""
         cups = importlib.import_module('cups')
 
-        conn = cups.Connection(host=self._host, port=self._port)
-        self.attributes = conn.getPrinterAttributes(uri=self._printer)
+        try:
+            conn = cups.Connection(host=self._host, port=self._port)
+            self.attributes = conn.getPrinterAttributes(uri=self._printer)
+            self.available = True
+        except RuntimeError:
+            self.available = False
