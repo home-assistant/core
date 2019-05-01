@@ -2,6 +2,7 @@
 import unittest
 from unittest import mock
 
+import asynctest
 from libpurecool.const import (FocusMode, HeatMode,
                                HeatState, HeatTarget, TiltState)
 from libpurecool.dyson_pure_hotcool_link import DysonPureHotCoolLink
@@ -10,7 +11,7 @@ from libpurecool.dyson_pure_state import DysonPureHotCoolState
 from homeassistant.components import dyson as dyson_parent
 from homeassistant.components.dyson import climate as dyson
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component
 from tests.common import get_test_home_assistant
 
 
@@ -20,6 +21,25 @@ class MockDysonState(DysonPureHotCoolState):
     def __init__(self):
         """Create new Mock Dyson State."""
         pass
+
+
+def _get_config():
+    """Return a config dictionary."""
+    return {dyson_parent.DOMAIN: {
+        dyson_parent.CONF_USERNAME: "email",
+        dyson_parent.CONF_PASSWORD: "password",
+        dyson_parent.CONF_LANGUAGE: "GB",
+        dyson_parent.CONF_DEVICES: [
+            {
+                "device_id": "XX-XXXXX-XX",
+                "device_ip": "192.168.0.1"
+            },
+            {
+                "device_id": "YY-YYYYY-YY",
+                "device_ip": "192.168.0.2"
+            }
+        ]
+    }}
 
 
 def _get_device_with_no_state():
@@ -60,6 +80,7 @@ def _get_device_cool():
     """Return a device with state of cooling."""
     device = mock.Mock(spec=DysonPureHotCoolLink)
     device.name = "Device_name"
+    device.serial = "XX-XXXXX-XX"
     device.state.tilt = TiltState.TILT_FALSE.value
     device.state.focus_mode = FocusMode.FOCUS_OFF.value
     device.state.heat_target = HeatTarget.celsius(12)
@@ -89,6 +110,7 @@ def _get_device_heat_on():
     """Return a device with state of heating."""
     device = mock.Mock(spec=DysonPureHotCoolLink)
     device.name = "Device_name"
+    device.serial = "YY-YYYYY-YY"
     device.state = mock.Mock()
     device.state.tilt = TiltState.TILT_FALSE.value
     device.state.focus_mode = FocusMode.FOCUS_ON.value
@@ -110,24 +132,6 @@ class DysonTest(unittest.TestCase):
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
         self.hass.stop()
-
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_device_heat_on(), _get_device_cool()])
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    def test_setup_component_with_parent_discovery(self, mocked_login,
-                                                   mocked_devices):
-        """Test setup_component using discovery."""
-        setup_component(self.hass, dyson_parent.DOMAIN, {
-            dyson_parent.DOMAIN: {
-                dyson_parent.CONF_USERNAME: "email",
-                dyson_parent.CONF_PASSWORD: "password",
-                dyson_parent.CONF_LANGUAGE: "US",
-                }
-            })
-        assert len(self.hass.data[dyson.DYSON_DEVICES]) == 2
-        self.hass.block_till_done()
-        for m in mocked_devices.return_value:
-            assert m.add_message_listener.called
 
     def test_setup_component_without_devices(self):
         """Test setup component with no devices."""
@@ -357,3 +361,15 @@ class DysonTest(unittest.TestCase):
         device = _get_device_heat_on()
         entity = dyson.DysonPureHotCoolLinkDevice(device)
         assert entity.target_temperature == 23
+
+
+@asynctest.patch('libpurecool.dyson.DysonAccount.devices',
+                 return_value=[_get_device_heat_on(), _get_device_cool()])
+@asynctest.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+async def test_setup_component_with_parent_discovery(mocked_login,
+                                                     mocked_devices, hass):
+    """Test setup_component using discovery."""
+    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await hass.async_block_till_done()
+
+    assert len(hass.data[dyson.DYSON_DEVICES]) == 2

@@ -145,7 +145,7 @@ holidays==0.9.10
 home-assistant-frontend==20190427.0
 
 # homeassistant.components.homekit_controller
-homekit[IP]==0.13.0
+homekit[IP]==0.14.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.10.7
@@ -204,6 +204,9 @@ pmsensor==0.4
 # homeassistant.components.prometheus
 prometheus_client==0.2.0
 
+# homeassistant.components.ptvsd
+ptvsd==4.2.8
+
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
 
@@ -258,7 +261,7 @@ pysmartapp==0.3.2
 pysmartthings==0.6.7
 
 # homeassistant.components.sonos
-pysonos==0.0.11
+pysonos==0.0.12
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
