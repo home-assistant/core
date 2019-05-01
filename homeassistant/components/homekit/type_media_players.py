@@ -5,14 +5,15 @@ from pyhap.const import CATEGORY_SWITCH, CATEGORY_TELEVISION
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE, ATTR_INPUT_SOURCE_LIST, ATTR_MEDIA_VOLUME_MUTED,
-    SERVICE_SELECT_SOURCE, DOMAIN, SUPPORT_PAUSE, SUPPORT_PLAY,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE)
+    ATTR_MEDIA_VOLUME_LEVEL ,SERVICE_SELECT_SOURCE, DOMAIN, SUPPORT_PAUSE,
+    SUPPORT_PLAY, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
+    SUPPORT_SELECT_SOURCE)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_STOP,
     SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_MUTE, SERVICE_VOLUME_UP,
-    SERVICE_VOLUME_DOWN, STATE_OFF, STATE_PLAYING, STATE_PAUSED,
-    STATE_UNKNOWN)
+    SERVICE_VOLUME_DOWN, SERVICE_VOLUME_SET, STATE_OFF, STATE_PLAYING,
+    STATE_PAUSED, STATE_UNKNOWN)
 
 from . import TYPES
 from .accessories import HomeAccessory
@@ -181,7 +182,7 @@ class TelevisionMediaPlayer(HomeAccessory):
         super().__init__(*args, category=CATEGORY_TELEVISION)
 
         self._flag = {CHAR_ACTIVE: False, CHAR_ACTIVE_IDENTIFIER: False,
-                      FEATURE_TOGGLE_MUTE: False}
+                      FEATURE_TOGGLE_MUTE: False, CHAR_VOLUME: False}
 
         # Add additional characteristics if volume or input selection supported
         self.chars_tv = []
@@ -226,6 +227,9 @@ class TelevisionMediaPlayer(HomeAccessory):
                 CHAR_MUTE, value=False, setter_callback=self.set_toggle_mute)
 
             serv_speaker.configure_char(CHAR_VOLUME_CONTROL_TYPE, value=1)
+
+            self.char_volume = serv_speaker.configure_char(
+                CHAR_VOLUME, setter_callback=self.set_volume)
 
             self.char_volume_selector = serv_speaker.configure_char(
                 CHAR_VOLUME_SELECTOR, setter_callback=self.set_volume_step)
@@ -279,6 +283,15 @@ class TelevisionMediaPlayer(HomeAccessory):
                   ATTR_MEDIA_VOLUME_MUTED: value}
         self.call_service(DOMAIN, SERVICE_VOLUME_MUTE, params)
 
+    def set_volume(self, value):
+        """Send volume step value if call came from HomeKit."""
+        _LOGGER.debug('%s: Set volume to %s', self.entity_id, value)
+
+        self._flag[CHAR_VOLUME] = True
+        params = {ATTR_ENTITY_ID: self.entity_id,
+                  ATTR_MEDIA_VOLUME_LEVEL: value}
+        self.call_service(DOMAIN, SERVICE_VOLUME_SET, params)
+
     def set_volume_step(self, value):
         """Send volume step value if call came from HomeKit."""
         _LOGGER.debug('%s: Step volume by %s',
@@ -326,13 +339,23 @@ class TelevisionMediaPlayer(HomeAccessory):
             self.char_active.set_value(hk_state)
         self._flag[CHAR_ACTIVE] = False
 
+        # TODO: Add logic to detect if media player supports volume_level
         if CHAR_VOLUME in self.chars_speaker:
-            current_state = new_state.attributes.get(ATTR_MEDIA_VOLUME_MUTED)
+            current_mute_state = new_state.attributes.get(
+                ATTR_MEDIA_VOLUME_MUTED)
             if not self._flag[FEATURE_TOGGLE_MUTE]:
                 _LOGGER.debug('%s: Set current mute state to %s',
-                              self.entity_id, current_state)
-                self.char_mute.set_value(current_state)
+                              self.entity_id, current_mute_state)
+                self.char_mute.set_value(current_mute_state)
             self._flag[FEATURE_TOGGLE_MUTE] = False
+
+            current_voume_state = new_state.attributes.get(
+                ATTR_MEDIA_VOLUME_LEVEL)
+            if not self._flag[CHAR_VOLUME]:
+                _LOGGER.debug('%s: Set current volume to %s',
+                              self.entity_id, current_voume_state)
+                self.char_volume.set_value(current_voume_state)
+            self._flag[CHAR_VOLUME] = False
 
         if self.support_select_source:
             source_name = new_state.attributes.get(ATTR_INPUT_SOURCE)
