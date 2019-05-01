@@ -23,8 +23,8 @@ jobs:
     maxParallel: 2
     matrix:
       amd64:
-        buildContainer: 'homeassistant/amd64-wheels:$(versionWheels)'
-  container: $[ variables['buildContainer'] ]
+        buildContainer: 'homeassistant/amd64-wheels'
+  container: $[ variables['buildContainer'] ]:$(versionWheels)
   steps:
   - script: |
       python3 -m builder --help
