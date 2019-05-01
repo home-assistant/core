@@ -9,7 +9,6 @@ trigger:
     - '*'
 
 variables:
-  versionWheels: 'dev'
   versionBuilder: '3.1'
 
 
@@ -23,8 +22,8 @@ jobs:
     maxParallel: 2
     matrix:
       amd64:
-        buildContainer: 'homeassistant/amd64-wheels'
-  container: $[ variables['buildContainer'] ]:$(versionWheels)
+        buildContainer: 'homeassistant/amd64-wheels:dev'
+  container: $[ variables['buildContainer'] ]
   steps:
   - script: |
       python3 -m builder --help
