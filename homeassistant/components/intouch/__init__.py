@@ -34,12 +34,12 @@ async def async_setup(hass, hass_config):
     """Create a Intergas Intouch system."""
     intouch_data = hass.data[DOMAIN] = {}
 
-    kwargs = dict(hass_config[DOMAIN])
-    hostname = kwargs.pop(CONF_HOST)
+    credentials = dict(hass_config[DOMAIN])
+    hostname = credentials.pop(CONF_HOST)
 
     try:
         client = intouch_data['client'] = InTouchGateway(
-            hostname, **kwargs, session=async_get_clientsession(hass)
+            hostname, **credentials, session=async_get_clientsession(hass)
         )
 
         heater = intouch_data['heater'] = list(await client.heaters)[0]

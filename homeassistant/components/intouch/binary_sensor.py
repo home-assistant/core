@@ -48,7 +48,7 @@ class IntouchBinarySensor(BinarySensorDevice):
     @property
     def is_on(self):
         """Return the status of the sensor."""
-        return self._is_on
+        return self._objref.status[self._is_on_key]
 
     @property
     def should_poll(self) -> bool:
@@ -64,7 +64,7 @@ class IntouchBurning(IntouchBinarySensor):
         super().__init__(client, boiler)
 
         self._name = 'Burning'
-        self._is_on = self._objref.is_burning
+        self._is_on_key = 'is_burning'
 
 
 class IntouchFailed(IntouchBinarySensor):
@@ -75,12 +75,12 @@ class IntouchFailed(IntouchBinarySensor):
         super().__init__(client, boiler)
 
         self._name = 'Failed'
-        self._is_on = self._objref.is_failed
+        self._is_on_key = 'is_failed'
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        fault_code = self._objref.fault_code if self._is_on else None
+        fault_code = self._objref.fault_code if self.is_on else None
         return {'fault_code': fault_code}
 
 
@@ -92,12 +92,12 @@ class IntouchPumping(IntouchBinarySensor):
         super().__init__(client, boiler)
 
         self._name = 'Pumping'
-        self._is_on = self._objref.is_pumping
+        self._is_on_key = 'is_pumping'
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        heater_temp = self._objref.heater_temp if self._is_on else None
+        heater_temp = self._objref.heater_temp if self.is_on else None
         return {'heater_temp': heater_temp}
 
 
@@ -109,10 +109,10 @@ class IntouchTapping(IntouchBinarySensor):
         super().__init__(client, boiler)
 
         self._name = 'Tapping'
-        self._is_on = self._objref.is_tapping
+        self._is_on_key = 'is_tapping'
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        tap_temp = self._objref.tap_temp if self._is_on else None
+        tap_temp = self._objref.tap_temp if self.is_on else None
         return {'tap_temp': tap_temp}
