@@ -14,10 +14,12 @@ from tests.common import (
     async_fire_time_changed, mock_component, async_mock_service)
 from tests.components.automation import common
 
+ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
+
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, 'test', 'automation')
 
 
@@ -28,6 +30,11 @@ def setup_comp(hass):
     dt_util.set_default_time_zone(hass.config.time_zone)
     hass.loop.run_until_complete(async_setup_component(hass, sun.DOMAIN, {
             sun.DOMAIN: {sun.CONF_ELEVATION: 0}}))
+
+
+def teardown():
+    """Restore."""
+    dt_util.set_default_time_zone(ORIG_TIME_ZONE)
 
 
 async def test_sunset_trigger(hass, calls):
