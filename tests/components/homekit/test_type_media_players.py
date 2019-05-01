@@ -156,13 +156,13 @@ async def test_media_player_television_set_state(hass, hk_driver, events):
 
     assert acc.char_active.value == 0
     assert acc.char_remote_key.value == 0
-    assert acc.char_active_identifier.value == 0
-    assert acc.char_toggle_mute.value is False
+    assert acc.char_input_source.value == 0
+    assert acc.char_mute.value is False
 
     hass.states.async_set(entity_id, STATE_ON, {ATTR_MEDIA_VOLUME_MUTED: True})
     await hass.async_block_till_done()
     assert acc.char_active.value == 1
-    assert acc.char_toggle_mute.value is True
+    assert acc.char_mute.value is True
 
     hass.states.async_set(entity_id, STATE_OFF)
     await hass.async_block_till_done()
@@ -170,11 +170,11 @@ async def test_media_player_television_set_state(hass, hk_driver, events):
 
     hass.states.async_set(entity_id, STATE_ON, {ATTR_INPUT_SOURCE: 'HDMI 2'})
     await hass.async_block_till_done()
-    assert acc.char_active_identifier.value == 1
+    assert acc.char_input_source.value == 1
 
     hass.states.async_set(entity_id, STATE_ON, {ATTR_INPUT_SOURCE: 'HDMI 3'})
     await hass.async_block_till_done()
-    assert acc.char_active_identifier.value == 2
+    assert acc.char_input_source.value == 2
 
     # Set from HomeKit
     call_turn_on = async_mock_service(hass, DOMAIN, 'turn_on')
@@ -218,7 +218,7 @@ async def test_media_player_television_set_state(hass, hk_driver, events):
     assert len(events) == 4
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.char_toggle_mute.client_update_value, True)
+    await hass.async_add_job(acc.char_mute.client_update_value, True)
     await hass.async_block_till_done()
     assert call_toggle_mute
     assert call_toggle_mute[0].data[ATTR_ENTITY_ID] == entity_id
@@ -226,7 +226,7 @@ async def test_media_player_television_set_state(hass, hk_driver, events):
     assert len(events) == 5
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.char_toggle_mute.client_update_value, False)
+    await hass.async_add_job(acc.char_mute.client_update_value, False)
     await hass.async_block_till_done()
     assert call_toggle_mute
     assert call_toggle_mute[1].data[ATTR_ENTITY_ID] == entity_id
@@ -234,7 +234,7 @@ async def test_media_player_television_set_state(hass, hk_driver, events):
     assert len(events) == 6
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.char_active_identifier.client_update_value, 1)
+    await hass.async_add_job(acc.char_input_source.client_update_value, 1)
     await hass.async_block_till_done()
     assert call_select_source
     assert call_select_source[0].data[ATTR_ENTITY_ID] == entity_id

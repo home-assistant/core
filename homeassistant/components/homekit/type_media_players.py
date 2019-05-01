@@ -355,7 +355,7 @@ class TelevisionMediaPlayer(HomeAccessory):
         if self.support_volume_level:
             current_voume_state = new_state.attributes.get(
                 ATTR_MEDIA_VOLUME_LEVEL)
-            if not self._flag[CHAR_VOLUME]:
+            if not self._flag[CHAR_VOLUME] and current_voume_state:
                 _LOGGER.debug('%s: Set current volume to %s',
                               self.entity_id, current_voume_state)
                 self.char_volume.set_value(current_voume_state)
