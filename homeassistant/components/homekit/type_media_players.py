@@ -209,22 +209,22 @@ class TelevisionMediaPlayer(HomeAccessory):
                 CHAR_REMOTE_KEY, setter_callback=self.set_remote_key)
 
         if CHAR_VOLUME in self.chars:
-            serv_tv_speaker = self.add_preload_service(
+            serv_speaker = self.add_preload_service(
                 SERV_TELEVISION_SPEAKER, [CHAR_NAME, CHAR_ACTIVE, CHAR_VOLUME,
                                           CHAR_VOLUME_CONTROL_TYPE,
                                           CHAR_VOLUME_SELECTOR])
-            serv_tv.add_linked_service(serv_tv_speaker)
+            serv_tv.add_linked_service(serv_speaker)
 
             name = '{} {}'.format(self.display_name, 'Volume')
-            serv_tv_speaker.configure_char(CHAR_NAME, value=name)
-            serv_tv_speaker.configure_char(CHAR_ACTIVE, value=1)
+            serv_speaker.configure_char(CHAR_NAME, value=name)
+            serv_speaker.configure_char(CHAR_ACTIVE, value=1)
 
-            self.char_toggle_mute = serv_tv_speaker.configure_char(
+            self.char_toggle_mute = serv_speaker.configure_char(
                 CHAR_MUTE, value=False, setter_callback=self.set_toggle_mute)
 
-            serv_tv_speaker.configure_char(CHAR_VOLUME_CONTROL_TYPE, value=1)
+            serv_speaker.configure_char(CHAR_VOLUME_CONTROL_TYPE, value=1)
 
-            self.char_volume_selector = serv_tv_speaker.configure_char(
+            self.char_volume_selector = serv_speaker.configure_char(
                 CHAR_VOLUME_SELECTOR, setter_callback=self.set_volume_step)
 
         if CHAR_ACTIVE_IDENTIFIER in self.chars:
