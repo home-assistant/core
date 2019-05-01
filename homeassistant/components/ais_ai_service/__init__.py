@@ -454,7 +454,7 @@ def set_curr_group(hass, group):
     # set display context for mega audio plauer
     if CURR_GROUP['entity_id'] in (
             'group.radio_player', 'group.podcast_player', 'group.music_player',
-            'group.audiobooks_player',  'group.local_audio', "sensor.ais_drives"):
+            'group.audiobooks_player',  'group.local_audio', "sensor.ais_drives", "group.bookmarks"):
         hass.states.async_set("sensor.ais_player_mode", CURR_GROUP['entity_id'].replace('group.', ''))
 
 
@@ -623,7 +623,10 @@ def say_curr_entity(hass):
     elif entity_id in ('sensor.radiolist', 'sensor.podcastlist', 'sensor.spotifylist', 'sensor.youtubelist'):
         info_name = ""
         if int(info_data) != -1:
-            info_name = hass.states.get(entity_id).attributes.get(int(info_data))["title"]
+            try:
+                info_name = hass.states.get(entity_id).attributes.get(int(info_data))["title"]
+            except Exception:
+                info_name = ""
         if CURR_BUTTON_CODE == 4:
             if int(info_data) == -1:
                 _say_it(hass, "Brak wyboru", None)
@@ -635,9 +638,9 @@ def say_curr_entity(hass):
             elif entity_id == 'sensor.podcastlist':
               info = "Odcinek "
             elif entity_id == 'sensor.spotifylist':
-              info = "POzycja "
+              info = "Pozycja "
             elif entity_id == 'sensor.youtubelist':
-              info = "POzycja "
+              info = "Pozycja "
             if int(info_data) != -1:
                 additional_info = ". Naciśnij OK by zmienić."
             else:
@@ -734,7 +737,7 @@ def set_next_position(hass):
             track = attr.get(int(next_id))
             _say_it(hass, track["title"], None)
             # update list
-            hass.states.async_set("sensor.radiolist", next_id, attr)
+            hass.states.async_set(CURR_ENTITIE, next_id, attr)
     elif CURR_ENTITIE.startswith('input_number.'):
         _max = float(state.attributes.get('max'))
         _step = float(state.attributes.get('step'))
@@ -766,7 +769,7 @@ def set_prev_position(hass):
             track = attr.get(int(prev_id))
             _say_it(hass, track["title"], None)
             # update list
-            hass.states.async_set("sensor.radiolist", prev_id, attr)
+            hass.states.async_set(CURR_ENTITIE, prev_id, attr)
     elif CURR_ENTITIE.startswith('input_number.'):
         _min = float(state.attributes.get('min'))
         _step = float(state.attributes.get('step'))

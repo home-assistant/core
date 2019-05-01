@@ -239,6 +239,8 @@ group.day_info:
   remote_group_view: Twój Dom
 group.bookmarks:
   order: 9
+  context_key_words: zakładki,ulubione
+  context_answer: OK, wybierz pozycję
   friendly_name: Zakładki
   remote_group_view: Twój Dom
 #group.ais_wyszukiwarka:
@@ -261,8 +263,7 @@ group.radio_player:
   order: 2
 group.podcast_player:
   context_key_words: podcast,podcasty,podkasty,podkast
-  context_answer: OK, powiedz jaką audycję mam włączyć lub wybierz pilotem typ, audycję
-    i odcinek podcasta
+  context_answer: OK, powiedz jaką audycję mam włączyć lub wybierz pilotem typ, audycję i odcinek podcasta
   context_suffix: Podcast
   remote_group_view: Audio
   order: 3

@@ -324,8 +324,10 @@ class SpeechManager:
             message, language, options)
 
         if data is None or extension is None:
-            raise HomeAssistantError(
-                "No TTS from {} for '{}'".format(engine, message))
+            # ais-dom -fix
+            return
+            # raise HomeAssistantError(
+            #     "No TTS from {} for '{}'".format(engine, message))
 
         # Create file infos
         filename = ("{}.{}".format(key, extension)).lower()

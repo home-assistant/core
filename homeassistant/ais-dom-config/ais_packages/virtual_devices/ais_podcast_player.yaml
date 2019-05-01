@@ -1,9 +1,6 @@
 #########################################################
 #                                                       #
-# This package creates a device which provides a audio  #
-# player of sorts in the front end, allowing to select  #
-# a radio station, or a google music playlist and play  #
-# them across the chromecasts, like a Sonos system      #
+# AIS DOM podcast device                                #
 #                                                       #
 #########################################################
 
@@ -20,18 +17,6 @@ input_select:
       - "-"
     initial: "-"
     icon: mdi:itunes
-  podcast_track:
-    name: 'Odcinek:'
-    options:
-      - "-"
-    initial: "-"
-    icon: mdi:format-list-numbers
-  # odtwarzacze
-  podcast_player:
-    name: 'Głośnik:'
-    options:
-     - Podłączony głośnik
-    icon: mdi:speaker-wireless
 
 group:
   podcast_player:
@@ -40,5 +25,4 @@ group:
     entities:
       - input_select.podcast_type
       - input_select.podcast_name
-      - input_select.podcast_track
-      - input_select.podcast_player
+      - sensor.podcastlist

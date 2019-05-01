@@ -70,10 +70,6 @@ def async_setup(hass, config):
         _LOGGER.info("get_radio_names")
         data.get_radio_names(call)
 
-    def select_radio_name(call):
-        _LOGGER.info("select_radio_name")
-        data.select_radio_name(call)
-
     def get_players(call):
         _LOGGER.info("get_players")
         data.get_players(call, hass)
@@ -137,7 +133,6 @@ def async_setup(hass, config):
     # register services
     hass.services.async_register(DOMAIN, 'get_radio_types', get_radio_types)
     hass.services.async_register(DOMAIN, 'get_radio_names', get_radio_names)
-    hass.services.async_register(DOMAIN, 'select_radio_name', select_radio_name)
     hass.services.async_register(DOMAIN, 'get_players', get_players)
     hass.services.async_register(DOMAIN, 'play_audio', play_audio)
     hass.services.async_register(DOMAIN, 'get_podcast_types', get_podcast_types)
@@ -355,9 +350,7 @@ class AisColudData:
 
     def __init__(self, hass):
         self.hass = hass
-        self.radio_names = []
         self.podcast_names = []
-        self.podcast_tracks = []
         self.audio_name = None
         self.cloud = AisCloudWS()
         self.cache = AisCacheData(hass)
@@ -446,7 +439,7 @@ class AisColudData:
             return []
         if call.data["radio_type"] == ais_global.G_EMPTY_OPTION:
             # reset status for list
-            self.hass.states.async_set("sensor.radiolist", 0, {})
+            self.hass.states.async_set("sensor.radiolist", -1, {})
             return
 
         ws_resp = self.cloud.audio_name(ais_global.G_AN_RADIO, call.data["radio_type"])
@@ -472,49 +465,6 @@ class AisColudData:
         if ais_ai.CURR_ENTITIE == 'input_select.radio_type' and ais_ai.CURR_BUTTON_CODE == 23:
             ais_ai.set_curr_entity(self.hass, 'sensor.radiolist')
             self.hass.services.call('ais_ai_service', 'say_it', {"text": "Wybierz stację"})
-
-    def select_radio_name(self, call):
-        """Get station stream url for the selected name."""
-        if "radio_name" not in call.data:
-            _LOGGER.error("No radio_name")
-            return
-
-        # the station was selected from select list in app
-        # we need to find the url and play it
-        radio_name = call.data["radio_name"]
-        _url = None
-        _audio_info = {}
-        for audio in self.radio_names:
-            if audio["NAME"] == radio_name:
-                if "STREAM_URL" in audio:
-                    _url = check_url(audio["STREAM_URL"])
-                    _audio_info["NAME"] = audio["NAME"]
-                    _audio_info["MEDIA_SOURCE"] = ais_global.G_AN_RADIO
-                    _audio_info["IMAGE_URL"] = audio["IMAGE_URL"]
-                    _audio_info = json.dumps(_audio_info)
-
-        if _url is not None:
-            # take the entity_id dynamically
-            # according to the input_select.radio_player LV
-            player_name = self.hass.states.get(
-                'input_select.radio_player').state
-            player = get_player_data(player_name)
-            self.hass.services.call(
-                'media_player',
-                'play_media', {
-                    "entity_id": player["entity_id"],
-                    "media_content_type": "audio/mp4",
-                    "media_content_id": check_url(_url)
-                })
-            # set stream image and title only if the player is AIS dom player
-            if player["device_ip"] is not None:
-                self.hass.services.call(
-                    'media_player',
-                    'play_media', {
-                        "entity_id": player["entity_id"],
-                        "media_content_type": "ais_info",
-                        "media_content_id": _audio_info
-                    })
 
     def get_podcast_types(self, call):
         ws_resp = self.cloud.audio_type(ais_global.G_AN_PODCAST)
@@ -559,14 +509,8 @@ class AisColudData:
         import homeassistant.components.ais_ai_service as ais_ai
         if (ais_ai.CURR_ENTITIE == 'input_select.podcast_type'
                 and ais_ai.CURR_BUTTON_CODE == 23):
-            ais_ai.set_curr_entity(
-                self.hass,
-                'input_select.podcast_name')
-            self.hass.services.call(
-                'ais_ai_service',
-                'say_it', {
-                    "text": "Wybierz audycję"
-                })
+            ais_ai.set_curr_entity(self.hass, 'input_select.podcast_name')
+            self.hass.services.call('ais_ai_service', 'say_it', {"text": "Wybierz audycję"})
 
     def get_podcast_tracks(self, call):
         import feedparser
@@ -578,12 +522,8 @@ class AisColudData:
             _LOGGER.error("No podcast_name")
             return
         if call.data["podcast_name"] == ais_global.G_EMPTY_OPTION:
-            # reset status for item below
-            self.hass.services.call(
-                'input_select',
-                'set_options', {
-                    "entity_id": "input_select.podcast_track",
-                    "options": [ais_global.G_EMPTY_OPTION]})
+            # reset status for item list below
+            self.hass.states.async_set("sensor.podcastlist", -1, {})
             return
 
         self.hass.services.call('ais_ai_service', 'say_it', {"text": "Pobieram odcinki"})
@@ -603,30 +543,17 @@ class AisColudData:
                     _image_url = podcast["IMAGE_URL"]
 
         if _lookup_url is not None:
-            # download the episodes
-            self.hass.services.call(
-                'ais_ai_service',
-                'say_it', {
-                    "text": "Pobieram"
-                })
             try:
                 d = feedparser.parse(check_url(_lookup_url))
-                tracks = [ais_global.G_EMPTY_OPTION]
-                self.podcast_tracks = []
                 list_info = {}
                 list_idx = 0
                 for e in d.entries:
-                    track = {'title': e.title, 'link': e.enclosures[0]}
                     # list
                     list_info[list_idx] = {}
                     try:
-                        track['image_url'] = d.feed.image.href
                         list_info[list_idx]["thumbnail"] = d.feed.image.href
                     except Exception:
-                        track['image_url'] = _image_url
                         list_info[list_idx]["thumbnail"] = _image_url
-                    tracks.append(e.title)
-                    self.podcast_tracks.append(track)
                     list_info[list_idx]["title"] = e.title
                     list_info[list_idx]["name"] = e.title
                     list_info[list_idx]["uri"] = e.enclosures[0]
@@ -637,41 +564,27 @@ class AisColudData:
 
                 # update list
                 self.hass.states.async_set("sensor.podcastlist", -1, list_info)
-                #
-                self.hass.services.call(
-                    'input_select',
-                    'set_options', {
-                        "entity_id": "input_select.podcast_track",
-                        "options": tracks})
-
                 if selected_by_voice_command:
-                    track = self.podcast_tracks[0]
                     self.hass.services.call(
                         'ais_ai_service',
                         'say_it', {
                             "text": "Pobrano " + str(len(d.entries))
                             + " odcinków"
                             + ", audycji " + podcast_name
-                            + ", włączam najnowszy odcinek: " + track["title"]
+                            + ", włączam najnowszy odcinek: " + 'xxx'
                         })
-                    self.hass.services.call(
-                        'input_select',
-                        'select_option', {
-                            "entity_id": "input_select.podcast_track",
-                            "option": track["title"]})
+                    # TODO play first from list
                 else:
                     # check if the change was done form remote
                     if selected_by_remote:
                         if len(d.entries) > 0:
-                            ais_ai.set_curr_entity(self.hass, 'input_select.podcast_track')
+                            ais_ai.set_curr_entity(self.hass, 'sensor.podcastlist')
                             self.hass.services.call('ais_ai_service', 'say_it', {
                                 "text": "Pobrano " + str(len(d.entries)) + " odcinków, wybierz odcinek"})
                         else:
                             self.hass.services.call('ais_ai_service', 'say_it', {"text": "Brak odcinków"})
                     else:
-                        self.hass.services.call(
-                            'ais_ai_service',
-                            'say_it', {
+                        self.hass.services.call('ais_ai_service', 'say_it', {
                                 "text": "Pobrano " + str(len(d.entries))
                                 + " odcinków"
                                 + ", audycji " + podcast_name
@@ -679,10 +592,7 @@ class AisColudData:
             except Exception as e:
                 _LOGGER.error("Error: " + str(e))
                 self.hass.services.call(
-                    'ais_ai_service',
-                    'say_it', {
-                        "text": "Nie można pobrać odcinków. " + podcast_name
-                    })
+                    'ais_ai_service', 'say_it', {"text": "Nie można pobrać odcinków. " + podcast_name})
 
     def select_podcast_track(self, call):
         """Get track stream url for the selected name."""
@@ -710,34 +620,29 @@ class AisColudData:
                     _audio_info = json.dumps(_audio_info)
 
         if _url is not None:
-            # take the entity_id dynamically
-            # according to the input_select.radio_player LV
-            player_name = self.hass.states.get(
-                'input_select.podcast_player').state
-            player = get_player_data(player_name)
             self.hass.services.call(
                 'media_player',
                 'play_media', {
-                    "entity_id": player["entity_id"],
+                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
                     "media_content_type": "audio/mp4",
                     "media_content_id": check_url(_url)
                 })
             self.hass.services.call(
                 'media_player',
                 'play_media', {
-                    "entity_id": player["entity_id"],
+                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
                     "media_content_type": "audio/mp4",
                     "media_content_id": _url
                 })
             # set stream image and title
-            if player["device_ip"] is not None:
-                self.hass.services.call(
-                    'media_player',
-                    'play_media', {
-                        "entity_id": player["entity_id"],
-                        "media_content_type": "ais_info",
-                        "media_content_id": _audio_info
-                    })
+            self.hass.services.call(
+                'media_player',
+                'play_media', {
+                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+                    "media_content_type": "ais_info",
+                    "media_content_id": _audio_info
+                })
+
 
     def play_radio(self, item_id):
         _LOGGER.info("play_radio")
@@ -847,32 +752,42 @@ class AisColudData:
     def play_prev(self, call):
         audio_type = call.data["audio_type"]
         if audio_type == ais_global.G_AN_RADIO:
-            state = self.hass.states.get('sensor.radiolist')
-            curr_id = int(state.state)
-            attr = state.attributes
-            prev_id = curr_id - 1
-            if prev_id < 0:
-                prev_id = len(attr) - 1
-            # update list
-            self.hass.states.async_set("sensor.radiolist", prev_id, attr)
+            track_list = 'sensor.radiolist'
+        elif audio_type == ais_global.G_AN_PODCAST:
+            track_list = 'sensor.podcastlist'
+        # get prev from list
+        state = self.hass.states.get(track_list)
+        curr_id = int(state.state)
+        attr = state.attributes
+        prev_id = curr_id - 1
+        if prev_id < 0:
+            prev_id = len(attr) - 1
+        # update list
+        self.hass.states.async_set(track_list, prev_id, attr)
+        if audio_type == ais_global.G_AN_RADIO:
             self.play_radio(prev_id)
         elif audio_type == ais_global.G_AN_PODCAST:
-            self.play_podcast(call.data["id"])
+            self.play_podcast(prev_id)
 
     def play_next(self, call):
         audio_type = call.data["audio_type"]
         if audio_type == ais_global.G_AN_RADIO:
-            state = self.hass.states.get('sensor.radiolist')
-            curr_id = state.state
-            attr = state.attributes
-            next_id = int(curr_id) + 1
-            if next_id == len(attr):
-                next_id = 0
-            # update list
-            self.hass.states.async_set("sensor.radiolist", next_id, attr)
+            track_list = 'sensor.radiolist'
+        elif audio_type == ais_global.G_AN_PODCAST:
+            track_list = 'sensor.podcastlist'
+        # get next from list
+        state = self.hass.states.get(track_list)
+        curr_id = state.state
+        attr = state.attributes
+        next_id = int(curr_id) + 1
+        if next_id == len(attr):
+            next_id = 0
+        # update list
+        self.hass.states.async_set(track_list, next_id, attr)
+        if audio_type == ais_global.G_AN_RADIO:
             self.play_radio(next_id)
         elif audio_type == ais_global.G_AN_PODCAST:
-            self.play_podcast(call.data["id"])
+            self.play_podcast(next_id)
 
     def change_audio_service(self, call):
         # we have only 2 now we can toggle
@@ -888,36 +803,6 @@ class AisColudData:
         _url = None
         _audio_info = {}
         media_player_type = call.data["media_player_type"]
-        if media_player_type == "Radio":
-            state = self.hass.states.get('sensor.radiolist')
-            attr = state.attributes
-            id = state.state
-            track = attr.get(id)
-            if int(id) == -1:
-                return
-            player_name = self.hass.states.get('input_select.radio_player').state
-            _url = track["uri"]
-            _audio_info["NAME"] = track["title"]
-            _audio_info["MEDIA_SOURCE"] = ais_global.G_AN_RADIO
-            _audio_info["IMAGE_URL"] = track["thumbnail"]
-
-        if media_player_type == "Podcast":
-            podcast_track = self.hass.states.get(
-                'input_select.podcast_track').state
-            if podcast_track == ais_global.G_EMPTY_OPTION:
-                return
-            player_name = self.hass.states.get(
-                'input_select.podcast_player').state
-            for track in self.podcast_tracks:
-                if track["title"] == podcast_track:
-                    if "link" in track:
-                        _url = track["link"].href
-                        try:
-                            _audio_info["IMAGE_URL"] = track["image_url"]
-                        except Exception as e:
-                            _audio_info["IMAGE_URL"] = ''
-                        _audio_info["NAME"] = track["title"]
-                        _audio_info["MEDIA_SOURCE"] = ais_global.G_AN_PODCAST
         if media_player_type == "Music":
             track_name = self.hass.states.get(
                 'input_select.ais_music_track_name').state
@@ -933,19 +818,6 @@ class AisColudData:
                     _audio_info["IMAGE_URL"] = music_track["thumbnail"]
                     _audio_info["NAME"] = music_track["title"]
                     _audio_info["MEDIA_SOURCE"] = ais_global.G_AN_MUSIC
-        if media_player_type == "Book":
-            chapter_name = self.hass.states.get(
-                'input_select.book_chapter').state
-            if chapter_name == ais_global.G_EMPTY_OPTION:
-                return
-            player_name = self.hass.states.get(
-                'input_select.book_player').state
-            import homeassistant.components.ais_gm_service as gm
-            for ch in gm.G_SELECTED_TRACKS:
-                if ch["name"] == chapter_name:
-                    _url = gm.G_GM_MOBILE_CLIENT_API.get_stream_url(ch["id"])
-                    _audio_info = {"IMAGE_URL": ch["image"], "NAME": ch["name"],
-                                   "MEDIA_SOURCE": ais_global.G_AN_AUDIOBOOK}
         if player_name is not None:
             player = get_player_data(player_name)
         if _url is not None:
@@ -1006,37 +878,6 @@ class AisColudData:
                         'set', {
                             "object_id": "audio_player",
                             "add_entities": [entity.entity_id]}))
-
-        hass.async_add_job(
-            hass.services.async_call(
-                'input_select',
-                'set_options', {
-                    "entity_id": "input_select.radio_player",
-                    "options": players_lv}))
-        hass.async_add_job(
-            hass.services.async_call(
-                'input_select',
-                'set_options', {
-                    "entity_id": "input_select.podcast_player",
-                    "options": players_lv}))
-        hass.async_add_job(
-            hass.services.async_call(
-                'input_select',
-                'set_options', {
-                    "entity_id": "input_select.ais_music_player",
-                    "options": players_lv}))
-        hass.async_add_job(
-            hass.services.async_call(
-                'input_select',
-                'set_options', {
-                    "entity_id": "input_select.book_player",
-                    "options": players_lv}))
-        hass.async_add_job(
-            hass.services.async_call(
-                'input_select',
-                'set_options', {
-                    "entity_id": "input_select.rss_news_player",
-                    "options": players_lv}))
         # TODO remove Podłączony głośnik from the list
         hass.async_add_job(
             hass.services.async_call(

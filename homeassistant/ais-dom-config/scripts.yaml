@@ -89,38 +89,3 @@ ais_connect_iot_device_to_network:
       data_template:
         key: "s"
         val: "{{ states('input_select.ais_iot_devices_in_network') }}"
-
-ais_set_context_radio:
-  alias: 'Ustaw kontekst radio'
-  sequence:
-    - service: ais_ai_service.set_context
-      data:
-        text: "radio"
-
-ais_set_context_podcast:
-  alias: 'Ustaw kontekst podcast'
-  sequence:
-    - service: ais_ai_service.set_context
-      data:
-        text: "podcast"
-
-ais_set_context_music:
-  alias: 'Ustaw kontekst muzyka'
-  sequence:
-    - service: ais_ai_service.set_context
-      data:
-        text: "muzyka"
-
-ais_set_context_audiobooks:
-  alias: 'Ustaw kontekst ksiazki'
-  sequence:
-    - service: ais_ai_service.set_context
-      data:
-        text: "książki"
-
-ais_set_context_drives:
-  alias: 'Ustaw kontekst dyski'
-  sequence:
-    - service: ais_ai_service.set_context
-      data:
-        text: "dyski"

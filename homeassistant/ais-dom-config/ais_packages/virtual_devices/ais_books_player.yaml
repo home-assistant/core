@@ -28,4 +28,3 @@ group:
     - input_select.book_autor
     - input_select.book_name
     - input_select.book_chapter
-    - input_select.book_player

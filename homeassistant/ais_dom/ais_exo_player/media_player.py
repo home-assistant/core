@@ -426,11 +426,11 @@ class ExoPlayerDevice(MediaPlayerDevice):
             self.hass.services.call('ais_drives_service', 'play_next')
         elif self._media_source == ais_global.G_AN_RADIO:
             self.hass.services.call('ais_cloud', 'play_next', {"audio_type": ais_global.G_AN_RADIO})
+        elif self._media_source == ais_global.G_AN_PODCAST:
+            self.hass.services.call('ais_cloud', 'play_next', {"audio_type": ais_global.G_AN_PODCAST})
         else:
             entity_id = ""
-            if self._media_source == ais_global.G_AN_PODCAST:
-                entity_id = "input_select.podcast_track"
-            elif self._media_source == ais_global.G_AN_MUSIC:
+            if self._media_source == ais_global.G_AN_MUSIC:
                 entity_id = "input_select.ais_music_track_name"
             elif self._media_source == ais_global.G_AN_SPOTIFY:
                 entity_id = "input_select.ais_music_track_name"
@@ -463,11 +463,11 @@ class ExoPlayerDevice(MediaPlayerDevice):
             self.hass.services.call('ais_drives_service', 'play_prev')
         elif self._media_source == ais_global.G_AN_RADIO:
             self.hass.services.call('ais_cloud', 'play_prev', {"audio_type": ais_global.G_AN_RADIO})
+        elif self._media_source == ais_global.G_AN_PODCAST:
+            self.hass.services.call('ais_cloud', 'play_prev', {"audio_type": ais_global.G_AN_PODCAST})
         else:
             entity_id = ""
-            if self._media_source == ais_global.G_AN_PODCAST:
-                entity_id = "input_select.podcast_track"
-            elif self._media_source == ais_global.G_AN_MUSIC:
+            if self._media_source == ais_global.G_AN_MUSIC:
                 entity_id = "input_select.ais_music_track_name"
             elif self._media_source == ais_global.G_AN_SPOTIFY:
                 entity_id = "input_select.ais_music_track_name"

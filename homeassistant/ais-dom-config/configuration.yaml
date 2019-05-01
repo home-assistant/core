@@ -54,8 +54,6 @@ recorder:
       - input_select.radio_player
       - input_select.podcast_type
       - input_select.podcast_name
-      - input_select.podcast_track
-      - input_select.podcast_player
       - input_select.rss_news_category
       - input_select.rss_news_channel
       - input_select.rss_news_item
@@ -65,7 +63,6 @@ recorder:
       - input_select.book_autor
       - input_select.book_name
       - input_select.book_chapter
-      - input_select.book_player
       - input_select.ais_bookmark_last_played
       - input_select.ais_bookmark_favorites
     domains:
@@ -79,8 +76,6 @@ history:
       - input_select.radio_player
       - input_select.podcast_type
       - input_select.podcast_name
-      - input_select.podcast_track
-      - input_select.podcast_player
       - input_select.rss_news_category
       - input_select.rss_news_channel
       - input_select.rss_news_item
@@ -90,9 +85,6 @@ history:
       - input_select.book_autor
       - input_select.book_name
       - input_select.book_chapter
-      - input_select.book_player
-      - input_select.book_player
-      - input_select.book_player
       - input_select.ais_bookmark_last_played
       - input_select.ais_bookmark_favorites
     domains:
@@ -135,3 +127,7 @@ ais_mdns:
 
 #
 ais_spotify_service:
+
+#
+tts:
+  - platform: ais_tts

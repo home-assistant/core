@@ -166,17 +166,6 @@
       data_template:
         book_chapter: "{{ states('input_select.book_chapter') }}"
 
-- id: '201807081858010'
-  alias: 'Select Book Player'
-  initial_state: True
-  hide_entity: True
-  trigger:
-    platform: state
-    entity_id: input_select.book_player
-  action:
-      service: ais_cloud.select_media_player
-      data_template:
-        media_player_type: "Book"
 
 - id: '201807081905011'
   alias: 'Ask The Question'
@@ -356,30 +345,6 @@
     - service: ais_cloud.get_podcast_tracks
       data_template:
         podcast_name: "{{ states('input_select.podcast_name') }}"
-
-- id: '201807081919020'
-  alias: 'Select Podcast Track'
-  initial_state: True
-  hide_entity: True
-  trigger:
-    platform: state
-    entity_id: input_select.podcast_track
-  action:
-    - service: ais_cloud.select_podcast_track
-      data_template:
-        podcast_track: "{{ states('input_select.podcast_track') }}"
-
-- id: '201807081919021'
-  alias: 'Select Podcast Player'
-  initial_state: True
-  hide_entity: True
-  trigger:
-    platform: state
-    entity_id: input_select.podcast_player
-  action:
-    - service: ais_cloud.select_media_player
-      data_template:
-        media_player_type: "Podcast"
 
 - id: '201807081923022'
   alias: 'Get Radio Names'

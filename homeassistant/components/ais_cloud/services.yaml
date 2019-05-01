@@ -74,12 +74,6 @@ select_podcast_track:
       description: Odcinek podcasta.
       example: 'Odcinek 1'
 
-select_radio_name:
-  description: Wybranie stacji radiowej
-  fields:
-    radio_name:
-      description: Stacja radiowa.
-      example: 'Antyradio Katowice'
 
 select_rss_news_item:
   description: Wybranie artykułu do przeczytania

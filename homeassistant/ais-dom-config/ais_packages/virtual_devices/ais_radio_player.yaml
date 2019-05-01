@@ -1,9 +1,6 @@
 #########################################################
 #                                                       #
-# This package creates a device which provides a audio  #
-# player of sorts in the front end, allowing to select  #
-# a radio station, or a google music playlist and play  #
-# them across the chromecasts, like a Sonos system      #
+# AIS DOM radio device                                  #
 #                                                       #
 #########################################################
 
@@ -15,12 +12,6 @@ input_select:
       - "-"
     initial: "-"
     icon: mdi:format-list-bulleted-type
-  radio_player:
-    name: 'Głośnik:'
-    options:
-     - Podłączony głośnik
-    icon: mdi:speaker-wireless
-
 
 media_player:
   - platform: ais_exo_player
@@ -42,4 +33,3 @@ group:
     entities:
       - input_select.radio_type
       - sensor.radiolist
-      - input_select.radio_player
