@@ -331,7 +331,7 @@ class TelevisionMediaPlayer(HomeAccessory):
         current_state = new_state.state
 
         # Power state television
-        hk_state = current_state not in (STATE_OFF, STATE_UNKNOWN, 'None')
+        hk_state = current_state not in (STATE_OFF, STATE_UNKNOWN)
         if not self._flag[CHAR_ACTIVE]:
             hk_state = 1 if hk_state else 0
             _LOGGER.debug('%s: Set current active state to %s',
