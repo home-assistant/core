@@ -80,7 +80,8 @@ class IntouchFailed(IntouchBinarySensor):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        return {k: self._objref.status[k] for k in ['fault_code']}
+        fault_code = self._objref.fault_code if self._is_on else None
+        return {'fault_code': fault_code}
 
 
 class IntouchPumping(IntouchBinarySensor):
@@ -112,4 +113,5 @@ class IntouchTapping(IntouchBinarySensor):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        return {k: self._objref.status[k] for k in ['tap_temp']}
+        tap_temp = self._objref.tap_temp if self._is_on else None
+        return {'tap_temp': tap_temp}
