@@ -74,6 +74,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Bose Soundtouch platform."""
     if DATA_SOUNDTOUCH not in hass.data:
@@ -147,10 +148,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                             str(entity_id))
             return
 
-        _LOGGER.debug("Found device with entity_id: %s",
-                        str(entity_id))
-
-        if  service.service == SERVICE_SNAPSHOT:
+        if service.service == SERVICE_SNAPSHOT:
             master.snapshot()
         elif service.service == SERVICE_RESTORE:
             master.restore()
@@ -300,13 +298,15 @@ class SoundTouchDevice(MediaPlayerDevice):
         """Restore a snapshot of this media player."""
         _LOGGER.debug("Restoring snapshot: %s", self._device._snapshot)
 
-        # Unable to use the self._device.restore() function as it used the Source Enum lacking TUNEIN support
+        # Unable to use the self._device.restore() function
+        # as it used the Source Enum lacking TUNEIN support
         try:
             if self._device._snapshot:
-                self._device.select_content_item(Source[self._device._snapshot.source],
-                                         self._device._snapshot.source_account,
-                                         self._device._snapshot.location,
-                                         self._device._snapshot.type)
+                self._device.select_content_item(
+                    Source[self._device._snapshot.source],
+                    self._device._snapshot.source_account,
+                    self._device._snapshot.location,
+                    self._device._snapshot.type)
 
             self._status = self._device.status()
         except (TypeError, AttributeError) as ex:
@@ -414,7 +414,8 @@ class SoundTouchDevice(MediaPlayerDevice):
                          self._device.config.name)
             self._device.add_zone_slave([slave.device for slave in slaves])
 
-#Overriding the official libsoundtouch Source Enum (it missed TUNEIN in version 0.8.0)
+
+# Overriding the official libsoundtouch Source Enum (it missed TUNEIN in version 0.8.0)
 class Source(Enum):
     """Music sources supported by the device."""
 
