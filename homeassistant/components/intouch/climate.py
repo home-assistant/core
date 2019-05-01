@@ -20,7 +20,7 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     heater = hass.data[DOMAIN]['heater']
 
     rooms = [InTouchClimate(client, r)
-             for r in heater.rooms if not r.room_temp]                           # TODO: remove 'not'
+             for r in heater.rooms if not r.room_temp]
     if rooms:
         async_add_entities(rooms)
 

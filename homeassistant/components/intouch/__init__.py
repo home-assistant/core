@@ -61,7 +61,7 @@ async def async_setup(hass, hass_config):
     hass.async_create_task(async_load_platform(
         hass, 'sensor', DOMAIN, {}, hass_config))
 
-    if len(heater.rooms) > -1:                                                   # TODO: should be > 0
+    if len(heater.rooms) > -1:
         hass.async_create_task(async_load_platform(
             hass, 'climate', DOMAIN, {}, hass_config))
 
