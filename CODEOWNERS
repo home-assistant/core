@@ -71,6 +71,7 @@ homeassistant/components/ephember/* @ttroy50
 homeassistant/components/epsonworkforce/* @ThaStealth
 homeassistant/components/eq3btsmart/* @rytilahti
 homeassistant/components/esphome/* @OttoWinter
+homeassistant/components/essent/* @TheLastProject
 homeassistant/components/file/* @fabaff
 homeassistant/components/filter/* @dgomes
 homeassistant/components/fitbit/* @robbiet480
@@ -174,6 +175,7 @@ homeassistant/components/pi_hole/* @fabaff
 homeassistant/components/plant/* @ChristianKuehnel
 homeassistant/components/point/* @fredrike
 homeassistant/components/ps4/* @ktnrg45
+homeassistant/components/ptvsd/* @swamp-ig
 homeassistant/components/push/* @dgomes
 homeassistant/components/pvoutput/* @fabaff
 homeassistant/components/qnap/* @colinodell
