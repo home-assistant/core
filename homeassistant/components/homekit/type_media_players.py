@@ -235,7 +235,7 @@ class TelevisionMediaPlayer(HomeAccessory):
                 ATTR_INPUT_SOURCE_LIST)
             if not self.sources:
                 return
-            self.char_active_identifier = serv_tv.configure_char(
+            self.char_input_source = serv_tv.configure_char(
                 CHAR_ACTIVE_IDENTIFIER, setter_callback=self.set_input_source)
             for index, source in enumerate(self.sources):
                 serv_input = self.add_preload_service(
@@ -342,7 +342,7 @@ class TelevisionMediaPlayer(HomeAccessory):
                               source_name)
                 if source_name in self.sources:
                     index = self.sources.index(source_name)
-                    self.char_active_identifier.set_value(index)
+                    self.char_input_source.set_value(index)
                 else:
-                    self.char_active_identifier.set_value(0)
+                    self.char_input_source.set_value(0)
             self._flag[CHAR_ACTIVE_IDENTIFIER] = False
