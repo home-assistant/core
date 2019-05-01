@@ -621,16 +621,30 @@ def say_curr_entity(hass):
                 _say_it(hass, info_name + " " + info_data + ". Naciśnij OK by wybrać.", None)
         return
     elif entity_id in ('sensor.radiolist', 'sensor.podcastlist', 'sensor.spotifylist', 'sensor.youtubelist'):
+        info_name = ""
+        if int(info_data) != -1:
+            info_name = hass.states.get(entity_id).attributes.get(int(info_data))["title"]
         if CURR_BUTTON_CODE == 4:
             if int(info_data) == -1:
                 _say_it(hass, "Brak wyboru", None)
             else:
-                _say_it(hass, "Wybrałeś " + info_data, None)
+                _say_it(hass, "Wybrałeś " + info_name, None)
         else:
+            if entity_id == 'sensor.radiolist':
+              info = "Stacja radiowa "
+            elif entity_id == 'sensor.podcastlist':
+              info = "Odcinek "
+            elif entity_id == 'sensor.spotifylist':
+              info = "POzycja "
+            elif entity_id == 'sensor.youtubelist':
+              info = "POzycja "
             if int(info_data) != -1:
-                _say_it(hass, "Stacja radiowa " + info_data + ". Naciśnij OK by zmienić.", None)
+                additional_info = ". Naciśnij OK by zmienić."
             else:
-                _say_it(hass, "Stacja radiowa. Naciśnij OK by wybrać.", None)
+                additional_info = ". Naciśnij OK by wybrać."
+
+            _say_it(hass, info + info_name + additional_info, None)
+
         return
     # normal case
     # decode None
@@ -672,6 +686,17 @@ def commit_current_position(hass):
             'set_value', {
                 "entity_id": CURR_ENTITIE,
                 "value": get_curent_position(hass)})
+    elif CURR_ENTITIE in ("sensor.radiolist", "sensor.podcastlist", "sensor.spotifylist", "sensor.youtubelist"):
+        # play selected source
+        idx = hass.states.get(CURR_ENTITIE).state
+        if CURR_ENTITIE == "sensor.radiolist":
+            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "audio_type": ais_global.G_AN_RADIO})
+        elif CURR_ENTITIE == "sensor.podcastlist":
+            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "audio_type": ais_global.G_AN_PODCAST})
+        elif CURR_ENTITIE == "sensor.spotifylist":
+            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "audio_type": ais_global.G_AN_SPOTIFY})
+        elif CURR_ENTITIE == "sensor.youtubelist":
+            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "audio_type": ais_global.G_AN_MUSIC})
 
     if CURR_ENTITIE == "input_select.ais_android_wifi_network":
         _say_it(hass, "wybrano wifi: " + get_curent_position(hass).split(';')[0], None)
@@ -707,8 +732,9 @@ def set_next_position(hass):
             if next_id == len(attr):
                 next_id = 0
             track = attr.get(int(next_id))
-            
             _say_it(hass, track["title"], None)
+            # update list
+            hass.states.async_set("sensor.radiolist", next_id, attr)
     elif CURR_ENTITIE.startswith('input_number.'):
         _max = float(state.attributes.get('max'))
         _step = float(state.attributes.get('step'))
@@ -739,6 +765,8 @@ def set_prev_position(hass):
                 prev_id = len(attr) - 1
             track = attr.get(int(prev_id))
             _say_it(hass, track["title"], None)
+            # update list
+            hass.states.async_set("sensor.radiolist", prev_id, attr)
     elif CURR_ENTITIE.startswith('input_number.'):
         _min = float(state.attributes.get('min'))
         _step = float(state.attributes.get('step'))
@@ -865,9 +893,8 @@ def select_entity(hass, long_press):
             # these items can be controlled from remote
             # if we are here it means that the enter on the same item was
             # pressed twice, we should do something - to mange the item status
-            if CURR_ENTITIE.startswith('input_select.'):
-                commit_current_position(hass)
-            elif CURR_ENTITIE.startswith('input_number.'):
+            if CURR_ENTITIE.startswith(("input_select.", "input_number.", "sensor.radiolist",
+                                        "sensor.podcastlist", "sensor.spotifylist", "sensor.youtubelist")):
                 commit_current_position(hass)
             elif CURR_ENTITIE.startswith("media_player."):
                 # play / pause on selected player
