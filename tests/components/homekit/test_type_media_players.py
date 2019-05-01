@@ -255,3 +255,5 @@ async def test_media_player_television_set_state(hass, hk_driver, events):
     assert call_volume_down[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 9
     assert events[-1].data[ATTR_VALUE] is None
+
+    # TODO Add some tests to check volume char
