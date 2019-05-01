@@ -97,7 +97,8 @@ class IntouchPumping(IntouchBinarySensor):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        return {k: self._objref.status[k] for k in ['pressure']}
+        heater_temp = self._objref.heater_temp if self._is_on else None
+        return {'heater_temp': heater_temp}
 
 
 class IntouchTapping(IntouchBinarySensor):
