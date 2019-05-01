@@ -184,35 +184,38 @@ class TelevisionMediaPlayer(HomeAccessory):
                       FEATURE_TOGGLE_MUTE: False}
 
         # Add additional characteristics if volume or input selection supported
-        self.chars = []
+        self.chars_tv = []
+        self.chars_speaker = []
         self.sources = []
         features = self.hass.states.get(self.entity_id) \
             .attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if features & (SUPPORT_PLAY | SUPPORT_PAUSE):
-            self.chars.append(CHAR_REMOTE_KEY)
+            self.chars_tv.append(CHAR_REMOTE_KEY)
         if features & SUPPORT_VOLUME_MUTE or features & SUPPORT_VOLUME_STEP:
-            self.chars.extend((CHAR_VOLUME, CHAR_VOLUME_CONTROL_TYPE,
-                               CHAR_VOLUME_SELECTOR))
+            self.chars_speaker.extend((CHAR_VOLUME, CHAR_VOLUME_CONTROL_TYPE,
+                                       CHAR_VOLUME_SELECTOR))
         if features & SUPPORT_SELECT_SOURCE:
-            self.chars.append(CHAR_ACTIVE_IDENTIFIER)
+            self.chars_speaker.append(CHAR_ACTIVE_IDENTIFIER)
 
-        serv_tv = self.add_preload_service(SERV_TELEVISION, [CHAR_REMOTE_KEY])
+        # TODO: find a place for these chars
+        if len(self.chars_speaker):
+            self.chars_speaker.extend((CHAR_NAME, CHAR_ACTIVE))
+
+        serv_tv = self.add_preload_service(SERV_TELEVISION, self.chars_tv)
         self.set_primary_service(serv_tv)
         serv_tv.configure_char(CHAR_CONFIGURED_NAME, value=self.display_name)
         serv_tv.configure_char(CHAR_SLEEP_DISCOVER_MODE, value=True)
         self.char_active = serv_tv.configure_char(
             CHAR_ACTIVE, setter_callback=self.set_on_off)
 
-        if CHAR_REMOTE_KEY in self.chars:
+        if CHAR_REMOTE_KEY in self.chars_tv:
             self.char_remote_key = serv_tv.configure_char(
                 CHAR_REMOTE_KEY, setter_callback=self.set_remote_key)
 
-        if CHAR_VOLUME in self.chars:
+        if CHAR_VOLUME in self.chars_speaker:
             serv_speaker = self.add_preload_service(
-                SERV_TELEVISION_SPEAKER, [CHAR_NAME, CHAR_ACTIVE, CHAR_VOLUME,
-                                          CHAR_VOLUME_CONTROL_TYPE,
-                                          CHAR_VOLUME_SELECTOR])
+                SERV_TELEVISION_SPEAKER, self.chars_speaker)
             serv_tv.add_linked_service(serv_speaker)
 
             name = '{} {}'.format(self.display_name, 'Volume')
