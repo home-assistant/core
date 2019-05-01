@@ -227,7 +227,7 @@ class TelevisionMediaPlayer(HomeAccessory):
             serv_speaker.configure_char(CHAR_ACTIVE, value=1)
 
             self.char_mute = serv_speaker.configure_char(
-                CHAR_MUTE, value=False, setter_callback=self.set_toggle_mute)
+                CHAR_MUTE, value=False, setter_callback=self.set_mute)
 
             volume_control_type = 1 if self.support_volume_level else 2
             serv_speaker.configure_char(CHAR_VOLUME_CONTROL_TYPE,
@@ -280,7 +280,7 @@ class TelevisionMediaPlayer(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id}
         self.call_service(DOMAIN, service, params)
 
-    def set_toggle_mute(self, value):
+    def set_mute(self, value):
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set switch state for "toggle_mute" to %s',
                       self.entity_id, value)
