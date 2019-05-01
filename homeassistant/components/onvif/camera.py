@@ -159,7 +159,7 @@ class ONVIFHassCamera(Camera):
 
         _LOGGER.debug("Retrieving current camera date/time")
 
-        system_date = dt.datetime.utcnow()
+        system_date = dt_util.utcnow()
         device_time = await devicemgmt.GetSystemDateAndTime()
         cdate = device_time.UTCDateTime
         cam_date = dt.datetime(cdate.Date.Year, cdate.Date.Month,
