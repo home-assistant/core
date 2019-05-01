@@ -240,7 +240,7 @@ class TelevisionMediaPlayer(HomeAccessory):
             for index, source in enumerate(self.sources):
                 serv_input = self.add_preload_service(
                     SERV_INPUT_SOURCE, [CHAR_IDENTIFIER, CHAR_NAME])
-
+                serv_tv.add_linked_service(serv_input)
                 serv_input.configure_char(
                     CHAR_CONFIGURED_NAME, value=source)
                 serv_input.configure_char(CHAR_NAME, value=source)
@@ -251,7 +251,6 @@ class TelevisionMediaPlayer(HomeAccessory):
                                           value=input_type)
                 serv_input.configure_char(CHAR_CURRENT_VISIBILITY_STATE,
                                           value=False)
-                serv_tv.add_linked_service(serv_input)
                 _LOGGER.debug('%s: Added source %s.', self.entity_id, source)
 
     def set_on_off(self, value):
