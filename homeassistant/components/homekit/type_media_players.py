@@ -261,7 +261,7 @@ class TelevisionMediaPlayer(HomeAccessory):
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set switch state for "on_off" to %s',
                       self.entity_id, value)
-        self._flag_active = True
+        self._flag[CHAR_ACTIVE] = True
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
         params = {ATTR_ENTITY_ID: self.entity_id}
         self.call_service(DOMAIN, service, params)
@@ -278,7 +278,7 @@ class TelevisionMediaPlayer(HomeAccessory):
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set switch state for "toggle_mute" to %s',
                       self.entity_id, value)
-        self._flag_toggle_mute = True
+        self._flag[FEATURE_TOGGLE_MUTE] = True
         params = {ATTR_ENTITY_ID: self.entity_id,
                   ATTR_MEDIA_VOLUME_MUTED: value}
         self.call_service(DOMAIN, SERVICE_VOLUME_MUTE, params)
@@ -307,7 +307,7 @@ class TelevisionMediaPlayer(HomeAccessory):
                       self.entity_id, value)
 
         source = self.sources[value]
-        self._flag_active_identifier = True
+        self._flag[CHAR_ACTIVE_IDENTIFIER] = True
         params = {ATTR_ENTITY_ID: self.entity_id,
                   ATTR_INPUT_SOURCE: source}
         self.call_service(DOMAIN, SERVICE_SELECT_SOURCE, params)
