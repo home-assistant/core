@@ -27,7 +27,6 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 class IntouchSensor(Entity):
     """Representation of an InTouch sensor."""
-    # p#ylint: disable=no-member
 
     def __init__(self, client, boiler):
         """Initialize the sensor."""
@@ -59,7 +58,7 @@ class IntouchSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Return the unit of measurement of the ensor"""
+        """Return the unit of measurement of the sensor."""
         return self._unit_of_measurement
 
     @property

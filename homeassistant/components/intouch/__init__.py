@@ -32,7 +32,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, hass_config):
     """Create a Intergas Intouch system."""
-
     intouch_data = hass.data[DOMAIN] = {}
 
     kwargs = dict(hass_config[DOMAIN])

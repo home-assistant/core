@@ -31,7 +31,6 @@ class IntouchBinarySensor(BinarySensorDevice):
         self._name = None
         self._is_on = None
 
-
     async def async_added_to_hass(self):
         """Set up a listener when this entity is added to HA."""
         async_dispatcher_connect(self.hass, DOMAIN, self._connect)
