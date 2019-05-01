@@ -326,7 +326,7 @@ class TelevisionMediaPlayer(HomeAccessory):
             self.char_active.set_value(hk_state)
         self._flag[CHAR_ACTIVE] = False
 
-        if self.char_mute:
+        if CHAR_VOLUME in self.chars_speaker:
             current_state = new_state.attributes.get(ATTR_MEDIA_VOLUME_MUTED)
             if not self._flag[FEATURE_TOGGLE_MUTE]:
                 _LOGGER.debug('%s: Set current mute state to %s',
