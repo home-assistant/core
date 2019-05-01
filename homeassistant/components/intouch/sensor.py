@@ -27,11 +27,16 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 class IntouchSensor(Entity):
     """Representation of an InTouch sensor."""
+    # p#ylint: disable=no-member
 
     def __init__(self, client, boiler):
         """Initialize the sensor."""
         self._client = client
         self._objref = boiler
+
+        self._name = None
+        self._device_class = None
+        self._unit_of_measurement = None
 
     async def async_added_to_hass(self):
         """Set up a listener when this entity is added to HA."""

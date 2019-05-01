@@ -96,7 +96,5 @@ class IntouchWaterHeater(WaterHeaterDevice):
             _LOGGER.warning("Update for %s failed, message: %s",
                             self._name, err)
 
-        _LOGGER.warn("Updated state: %s", self._objref.status)
-
         # inform the child devices that updated state data is available
         async_dispatcher_send(self.hass, DOMAIN, {'signal': 'refresh'})

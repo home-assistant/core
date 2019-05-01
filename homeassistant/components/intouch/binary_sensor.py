@@ -6,11 +6,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import DOMAIN
 
 
-
-
-
-
-
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up an Intouch sensor entity."""
@@ -32,6 +27,10 @@ class IntouchBinarySensor(BinarySensorDevice):
         """Initialize the binary sensor."""
         self._client = client
         self._objref = boiler
+
+        self._name = None
+        self._is_on = None
+
 
     async def async_added_to_hass(self):
         """Set up a listener when this entity is added to HA."""
@@ -83,6 +82,7 @@ class IntouchFailed(IntouchBinarySensor):
     def device_state_attributes(self):
         """Return the device state attributes."""
         return {k: self._objref.status[k] for k in ['fault_code']}
+
 
 class IntouchPumping(IntouchBinarySensor):
     """Representation of an InTouch Pumping sensor."""
