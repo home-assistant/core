@@ -148,9 +148,11 @@ class ONVIFHassCamera(Camera):
         Initializes the camera by obtaining the input uri and connecting to
         the camera. Also retrieves the ONVIF profiles.
         """
+        from aiohttp.client_exceptions import ClientConnectorError
         from homeassistant.exceptions import PlatformNotReady
+        from zeep.exceptions import Fault
         import homeassistant.util.dt as dt_util
-        
+
         try:
             _LOGGER.debug("Updating service addresses")
 
@@ -197,14 +199,14 @@ class ONVIFHassCamera(Camera):
             else:
                 self._ptz_service = self._camera.create_ptz_service()
                 _LOGGER.debug("Completed set up of the ONVIF camera component")
-        except aiohttp.client_exceptions.ClientConnectorError as err:
-            _LOGGER.warning("Couldn't connect to camera '%s', but will retry "
-                            "later. Error: %s",
+        except ClientConnectorError as err:
+            _LOGGER.warning("Couldn't connect to camera '%s', but will "
+                            "retry later. Error: %s",
                             self._name, err)
             raise PlatformNotReady
-        except zeep.exceptions.Fault as error:
-            _LOGGER.error("Couldn't connect to camera '%s', please verify that "
-                          "the credentials are correct. Error: %s",
+        except Fault as err:
+            _LOGGER.error("Couldn't connect to camera '%s', please verify "
+                          "that the credentials are correct. Error: %s",
                           self._name, err)
         except Exception as err:
             _LOGGER.error("Couldn't setup camera '%s'. Error: %s",
