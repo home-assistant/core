@@ -192,17 +192,6 @@ class Template:
         except jinja2.TemplateError as err:
             raise TemplateError(err)
 
-    def render_to_info(
-            self, variables: TemplateVarsType = None,
-            **kwargs) -> RenderInfo:
-        """Render given template and collect an entity filter."""
-        if variables is not None:
-            kwargs.update(variables)
-
-        return run_callback_threadsafe(
-            self.hass.loop, self.async_render_to_info,
-            kwargs).result()
-
     @callback
     def async_render_to_info(
             self, variables: TemplateVarsType = None,
