@@ -829,7 +829,7 @@ class StateMachine:
         return self._states.get(entity_id.lower())
 
     def is_state(self, entity_id: str, state: str) -> bool:
-        """Test if entity exists and is specified state.
+        """Test if entity exists and is in specified state.
 
         Async friendly.
         """
