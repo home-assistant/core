@@ -20,11 +20,10 @@ from homeassistant.util.decorator import Registry
 
 from .const import (
     DATA_CLIENT, DATA_LISTENER, DOMAIN, SENSORS, TOPIC_DATA_UPDATE,
-    TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_HISTORIC, TYPE_ALLERGY_INDEX,
-    TYPE_ALLERGY_OUTLOOK, TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
-    TYPE_ALLERGY_YESTERDAY, TYPE_ASTHMA_FORECAST, TYPE_ASTHMA_HISTORIC,
+    TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_INDEX, TYPE_ALLERGY_OUTLOOK,
+    TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW, TYPE_ASTHMA_FORECAST,
     TYPE_ASTHMA_INDEX, TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
-    TYPE_ASTHMA_YESTERDAY, TYPE_DISEASE_FORECAST)
+    TYPE_DISEASE_FORECAST, TYPE_DISEASE_INDEX, TYPE_DISEASE_TODAY)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,14 +37,13 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
 FETCHER_MAPPING = {
     (TYPE_ALLERGY_FORECAST,): (TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_OUTLOOK),
-    (TYPE_ALLERGY_HISTORIC,): (TYPE_ALLERGY_HISTORIC,),
-    (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW, TYPE_ALLERGY_YESTERDAY): (
+    (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW): (
         TYPE_ALLERGY_INDEX,),
     (TYPE_ASTHMA_FORECAST,): (TYPE_ASTHMA_FORECAST,),
-    (TYPE_ASTHMA_HISTORIC,): (TYPE_ASTHMA_HISTORIC,),
-    (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW, TYPE_ASTHMA_YESTERDAY): (
+    (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW): (
         TYPE_ASTHMA_INDEX,),
     (TYPE_DISEASE_FORECAST,): (TYPE_DISEASE_FORECAST,),
+    (TYPE_DISEASE_TODAY,): (TYPE_DISEASE_INDEX,),
 }
 
 
@@ -108,19 +106,17 @@ class IQVIAData:
         self.fetchers = Registry()
         self.fetchers.register(TYPE_ALLERGY_FORECAST)(
             self._client.allergens.extended)
-        self.fetchers.register(TYPE_ALLERGY_HISTORIC)(
-            self._client.allergens.historic)
         self.fetchers.register(TYPE_ALLERGY_OUTLOOK)(
             self._client.allergens.outlook)
         self.fetchers.register(TYPE_ALLERGY_INDEX)(
             self._client.allergens.current)
         self.fetchers.register(TYPE_ASTHMA_FORECAST)(
             self._client.asthma.extended)
-        self.fetchers.register(TYPE_ASTHMA_HISTORIC)(
-            self._client.asthma.historic)
         self.fetchers.register(TYPE_ASTHMA_INDEX)(self._client.asthma.current)
         self.fetchers.register(TYPE_DISEASE_FORECAST)(
             self._client.disease.extended)
+        self.fetchers.register(TYPE_DISEASE_INDEX)(
+            self._client.disease.current)
 
     async def async_update(self):
         """Update IQVIA data."""
@@ -171,13 +167,14 @@ class IQVIAEntity(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
-                          TYPE_ALLERGY_YESTERDAY):
+        if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW):
             return self._iqvia.data.get(TYPE_ALLERGY_INDEX) is not None
 
-        if self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
-                          TYPE_ASTHMA_YESTERDAY):
+        if self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW):
             return self._iqvia.data.get(TYPE_ASTHMA_INDEX) is not None
+
+        if self._type == TYPE_DISEASE_TODAY:
+            return self._iqvia.data.get(TYPE_DISEASE_INDEX) is not None
 
         return self._iqvia.data.get(self._type) is not None
 

@@ -71,6 +71,7 @@ homeassistant/components/ephember/* @ttroy50
 homeassistant/components/epsonworkforce/* @ThaStealth
 homeassistant/components/eq3btsmart/* @rytilahti
 homeassistant/components/esphome/* @OttoWinter
+homeassistant/components/essent/* @TheLastProject
 homeassistant/components/file/* @fabaff
 homeassistant/components/filter/* @dgomes
 homeassistant/components/fitbit/* @robbiet480
@@ -153,6 +154,7 @@ homeassistant/components/nello/* @pschmitt
 homeassistant/components/ness_alarm/* @nickw444
 homeassistant/components/nest/* @awarecan
 homeassistant/components/netdata/* @fabaff
+homeassistant/components/nextbus/* @vividboarder
 homeassistant/components/nissan_leaf/* @filcole
 homeassistant/components/nmbs/* @thibmaek
 homeassistant/components/no_ip/* @fabaff
@@ -168,10 +170,12 @@ homeassistant/components/owlet/* @oblogic7
 homeassistant/components/panel_custom/* @home-assistant/core
 homeassistant/components/panel_iframe/* @home-assistant/core
 homeassistant/components/persistent_notification/* @home-assistant/core
+homeassistant/components/philips_js/* @elupus
 homeassistant/components/pi_hole/* @fabaff
 homeassistant/components/plant/* @ChristianKuehnel
 homeassistant/components/point/* @fredrike
 homeassistant/components/ps4/* @ktnrg45
+homeassistant/components/ptvsd/* @swamp-ig
 homeassistant/components/push/* @dgomes
 homeassistant/components/pvoutput/* @fabaff
 homeassistant/components/qnap/* @colinodell

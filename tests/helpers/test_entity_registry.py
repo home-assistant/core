@@ -271,3 +271,29 @@ async def test_loading_race_condition(hass):
 
         mock_load.assert_called_once_with()
         assert results[0] == results[1]
+
+
+async def test_update_entity_unique_id(registry):
+    """Test entity's unique_id is updated."""
+    entry = registry.async_get_or_create(
+        'light', 'hue', '5678', config_entry_id='mock-id-1')
+    new_unique_id = '1234'
+    with patch.object(registry, 'async_schedule_save') as mock_schedule_save:
+        updated_entry = registry.async_update_entity(
+            entry.entity_id, new_unique_id=new_unique_id)
+    assert updated_entry != entry
+    assert updated_entry.unique_id == new_unique_id
+    assert mock_schedule_save.call_count == 1
+
+
+async def test_update_entity_unique_id_conflict(registry):
+    """Test migration raises when unique_id already in use."""
+    entry = registry.async_get_or_create(
+        'light', 'hue', '5678', config_entry_id='mock-id-1')
+    entry2 = registry.async_get_or_create(
+        'light', 'hue', '1234', config_entry_id='mock-id-1')
+    with patch.object(registry, 'async_schedule_save') as mock_schedule_save, \
+            pytest.raises(ValueError):
+        registry.async_update_entity(
+            entry.entity_id, new_unique_id=entry2.unique_id)
+    assert mock_schedule_save.call_count == 0

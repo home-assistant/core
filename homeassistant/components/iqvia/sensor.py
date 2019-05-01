@@ -5,12 +5,11 @@ from statistics import mean
 import numpy as np
 
 from homeassistant.components.iqvia import (
-    DATA_CLIENT, DOMAIN, SENSORS, TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_HISTORIC,
-    TYPE_ALLERGY_OUTLOOK, TYPE_ALLERGY_INDEX, TYPE_ALLERGY_TODAY,
-    TYPE_ALLERGY_TOMORROW, TYPE_ALLERGY_YESTERDAY, TYPE_ASTHMA_FORECAST,
-    TYPE_ASTHMA_HISTORIC, TYPE_ASTHMA_INDEX, TYPE_ASTHMA_TODAY,
-    TYPE_ASTHMA_TOMORROW, TYPE_ASTHMA_YESTERDAY, TYPE_DISEASE_FORECAST,
-    IQVIAEntity)
+    DATA_CLIENT, DOMAIN, SENSORS, TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_OUTLOOK,
+    TYPE_ALLERGY_INDEX, TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
+    TYPE_ASTHMA_FORECAST, TYPE_ASTHMA_INDEX, TYPE_ASTHMA_TODAY,
+    TYPE_ASTHMA_TOMORROW, TYPE_DISEASE_FORECAST, TYPE_DISEASE_INDEX,
+    TYPE_DISEASE_TODAY, IQVIAEntity)
 from homeassistant.const import ATTR_STATE
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,6 +47,7 @@ RATING_MAPPING = [{
     'maximum': 12
 }]
 
+TREND_FLAT = 'Flat'
 TREND_INCREASING = 'Increasing'
 TREND_SUBSIDING = 'Subsiding'
 
@@ -59,16 +59,13 @@ async def async_setup_platform(
 
     sensor_class_mapping = {
         TYPE_ALLERGY_FORECAST: ForecastSensor,
-        TYPE_ALLERGY_HISTORIC: HistoricalSensor,
         TYPE_ALLERGY_TODAY: IndexSensor,
         TYPE_ALLERGY_TOMORROW: IndexSensor,
-        TYPE_ALLERGY_YESTERDAY: IndexSensor,
         TYPE_ASTHMA_FORECAST: ForecastSensor,
-        TYPE_ASTHMA_HISTORIC: HistoricalSensor,
         TYPE_ASTHMA_TODAY: IndexSensor,
         TYPE_ASTHMA_TOMORROW: IndexSensor,
-        TYPE_ASTHMA_YESTERDAY: IndexSensor,
         TYPE_DISEASE_FORECAST: ForecastSensor,
+        TYPE_DISEASE_TODAY: IndexSensor,
     }
 
     sensors = []
@@ -80,27 +77,20 @@ async def async_setup_platform(
     async_add_entities(sensors, True)
 
 
-def calculate_average_rating(indices):
-    """Calculate the human-friendly historical allergy average."""
-    ratings = list(
-        r['label'] for n in indices for r in RATING_MAPPING
-        if r['minimum'] <= n <= r['maximum'])
-    return max(set(ratings), key=ratings.count)
-
-
 def calculate_trend(indices):
     """Calculate the "moving average" of a set of indices."""
-    def moving_average(data, samples):
-        """Determine the "moving average" (http://tinyurl.com/yaereb3c)."""
-        ret = np.cumsum(data, dtype=float)
-        ret[samples:] = ret[samples:] - ret[:-samples]
-        return ret[samples - 1:] / samples
+    index_range = np.arange(0, len(indices))
+    index_array = np.array(indices)
+    linear_fit = np.polyfit(index_range, index_array, 1)
+    slope = round(linear_fit[0], 2)
 
-    increasing = np.all(np.diff(moving_average(np.array(indices), 4)) > 0)
-
-    if increasing:
+    if slope > 0:
         return TREND_INCREASING
-    return TREND_SUBSIDING
+
+    if slope < 0:
+        return TREND_SUBSIDING
+
+    return TREND_FLAT
 
 
 class ForecastSensor(IQVIAEntity):
@@ -138,32 +128,6 @@ class ForecastSensor(IQVIAEntity):
         self._state = average
 
 
-class HistoricalSensor(IQVIAEntity):
-    """Define sensor related to historical data."""
-
-    async def async_update(self):
-        """Update the sensor."""
-        if not self._iqvia.data:
-            return
-
-        data = self._iqvia.data[self._type].get('Location')
-        if not data:
-            return
-
-        indices = [p['Index'] for p in data['periods']]
-        average = round(mean(indices), 1)
-
-        self._attrs.update({
-            ATTR_CITY: data['City'].title(),
-            ATTR_RATING: calculate_average_rating(indices),
-            ATTR_STATE: data['State'],
-            ATTR_TREND: calculate_trend(indices),
-            ATTR_ZIP_CODE: data['ZIP']
-        })
-
-        self._state = average
-
-
 class IndexSensor(IQVIAEntity):
     """Define sensor related to indices."""
 
@@ -173,12 +137,12 @@ class IndexSensor(IQVIAEntity):
             return
 
         data = {}
-        if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
-                          TYPE_ALLERGY_YESTERDAY):
+        if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW):
             data = self._iqvia.data[TYPE_ALLERGY_INDEX].get('Location')
-        elif self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
-                            TYPE_ASTHMA_YESTERDAY):
+        elif self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW):
             data = self._iqvia.data[TYPE_ASTHMA_INDEX].get('Location')
+        elif self._type == TYPE_DISEASE_TODAY:
+            data = self._iqvia.data[TYPE_DISEASE_INDEX].get('Location')
 
         if not data:
             return
@@ -197,8 +161,7 @@ class IndexSensor(IQVIAEntity):
             ATTR_ZIP_CODE: data['ZIP']
         })
 
-        if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
-                          TYPE_ALLERGY_YESTERDAY):
+        if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW):
             for idx, attrs in enumerate(period['Triggers']):
                 index = idx + 1
                 self._attrs.update({
@@ -209,8 +172,7 @@ class IndexSensor(IQVIAEntity):
                     '{0}_{1}'.format(ATTR_ALLERGEN_TYPE, index):
                         attrs['PlantType'],
                 })
-        elif self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
-                            TYPE_ASTHMA_YESTERDAY):
+        elif self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW):
             for idx, attrs in enumerate(period['Triggers']):
                 index = idx + 1
                 self._attrs.update({
@@ -219,5 +181,9 @@ class IndexSensor(IQVIAEntity):
                     '{0}_{1}'.format(ATTR_ALLERGEN_AMOUNT, index):
                         attrs['PPM'],
                 })
+        elif self._type == TYPE_DISEASE_TODAY:
+            for attrs in period['Triggers']:
+                self._attrs['{0}_index'.format(
+                    attrs['Name'].lower())] = attrs['Index']
 
         self._state = period['Index']

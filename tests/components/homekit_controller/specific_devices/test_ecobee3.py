@@ -10,6 +10,7 @@ from homekit import AccessoryDisconnectedError
 
 from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY,
+    SUPPORT_TARGET_HUMIDITY_HIGH, SUPPORT_TARGET_HUMIDITY_LOW,
     SUPPORT_OPERATION_MODE)
 from tests.components.homekit_controller.common import (
     FakePairing, device_config_changed, setup_accessories_from_file,
@@ -32,8 +33,14 @@ async def test_ecobee3_setup(hass):
     assert climate_state.attributes['friendly_name'] == 'HomeW'
     assert climate_state.attributes['supported_features'] == (
         SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_HUMIDITY |
+        SUPPORT_TARGET_HUMIDITY_HIGH | SUPPORT_TARGET_HUMIDITY_LOW |
         SUPPORT_OPERATION_MODE
     )
+
+    assert climate_state.attributes['min_temp'] == 7.2
+    assert climate_state.attributes['max_temp'] == 33.3
+    assert climate_state.attributes['min_humidity'] == 20
+    assert climate_state.attributes['max_humidity'] == 50
 
     occ1 = entity_registry.async_get('binary_sensor.kitchen')
     assert occ1.unique_id == 'homekit-AB1C-56'
