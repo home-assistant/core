@@ -47,6 +47,7 @@ async def async_setup(hass, config):
 
 
 class StravaData:
+    """A model which stores the Strava data."""
 
     def __init__(self, hass, config):
         from stravalib.client import Client
@@ -68,10 +69,12 @@ class StravaData:
 
     @property
     def is_authorized(self):
+        """Check if there is a (possiblly expired) OAuth2 token."""
         return self._token is not None
 
     @property
     def is_token_valid(self):
+        """Check if OAuth2 token is present and not expired."""
         if not self.is_authorized:
             _LOGGER.info("Not authorized")
             return False
@@ -84,6 +87,7 @@ class StravaData:
         return False
 
     async def get_token(self):
+        """Load the OAuth2 token from the store."""
         if not self.is_authorized:
             store = self._hass.helpers.storage.Store(STORAGE_VERSION,
                                                      STORAGE_KEY)
@@ -123,7 +127,6 @@ class StravaData:
 
     async def request_token(self):
         """Request Strava access token."""
-
         callback_url = '{}{}'.format(self._hass.config.api.base_url,
                                      AUTH_CALLBACK_PATH)
         authorize_url = self.client.authorization_url(
@@ -140,7 +143,6 @@ class StravaData:
 
     async def refresh_token(self):
         """Renew Strava access token."""
-
         self._token = await self._hass.async_add_executor_job(
             self.client.refresh_access_token,
             self._client_id,
@@ -151,18 +153,21 @@ class StravaData:
         await store.async_save(self._token)
 
     def get_athlete(self, id):
+        """Get existing Athlete model or create if not existing."""
         if id not in self.athletes:
             self.athletes[id] = StravaAthleteData(self, id)
 
         return self.athletes[id]
 
     def get_gear(self, id):
+        """Get existing Gear model or create if not existing."""
         if id not in self.gears:
             self.gears[id] = StravaGearData(self, id)
 
         return self.gears[id]
 
     def get_club(self, id):
+        """Get existing Club model or create if not existing."""
         if id not in self.clubs:
             self.clubs[id] = StravaClubData(self, id)
 
@@ -182,12 +187,13 @@ class StravaAthleteData:
     async def update_last_actitivity(self, hass):
         def get_last_activity(client):
             activities = client.get_activities(limit=1)
-            last_activity = next(activities)
-            last_activity_detailed = client.get_activity(last_activity.id, True)
+            last = next(activities)
+            detailed = client.get_activity(last.id, True)
 
-            return last_activity_detailed
+            return detailed
 
-        self.last_activity = await hass.async_add_executor_job(get_last_activity, self.data.client)
+        self.last_activity = await hass.async_add_executor_job(
+            get_last_activity, self.data.client)
 
         _LOGGER.info("Fetched last activity")
 

@@ -186,7 +186,7 @@ class StravaSensor(Entity):
     async def async_update(self):
         try:
             await self._data.update(self.hass)
-        except:
+        except Exception:
             self._state = None
 
     @property
