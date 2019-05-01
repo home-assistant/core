@@ -602,7 +602,7 @@ influxdb==5.2.0
 insteonplm==0.15.2
 
 # homeassistant.components.intouch
-intouch-client==0.2.3
+intouch-client==0.2.4
 
 # homeassistant.components.iperf3
 iperf3==0.1.10
