@@ -35,6 +35,15 @@ jobs:
         buildArch: 'aarch64'
   steps:
   - script: |
+      sudo apt-get update && apt-get install -y --no-install-recommends \
+        qemu-user-static \
+        binfmt-support
+      
+      sudo mount binfmt_misc -t binfmt_misc /proc/sys/fs/binfmt_misc
+      sudo update-binfmts --enable qemu-arm
+      sudo update-binfmts --enable qemu-aarch64
+    displayName: 'Initial cross build'
+  - script: |
       mkdir -p ~/.ssh
       echo -e "-----BEGIN RSA PRIVATE KEY-----\n$(sshKey)\n-----END RSA PRIVATE KEY-----" >> ~/.ssh/id_rsa
       ssh-keyscan -H wheels.hass.io >> ~/.ssh/known_hosts
