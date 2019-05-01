@@ -318,11 +318,20 @@ def sun(
     """Test if current time matches sun requirements."""
     utcnow = dt_util.utcnow()
     today = dt_util.as_local(utcnow).date()
+    tomorrow = dt_util.as_local(utcnow + timedelta(days=1)).date()
     before_offset = before_offset or timedelta(0)
     after_offset = after_offset or timedelta(0)
 
     sunrise = get_astral_event_date(hass, SUN_EVENT_SUNRISE, today)
     sunset = get_astral_event_date(hass, SUN_EVENT_SUNSET, today)
+    midnight = get_astral_event_date(hass, 'solar_midnight', today)
+    sunrise_tomorrow = get_astral_event_date(hass, SUN_EVENT_SUNRISE, tomorrow)
+    sunset_tomorrow = get_astral_event_date(hass, SUN_EVENT_SUNSET, tomorrow)
+    midnight_tomorrow = get_astral_event_date(hass, 'solar_midnight', tomorrow)
+
+    if utcnow > midnight_tomorrow:
+        sunrise = sunrise_tomorrow
+        sunset = sunset_tomorrow
 
     if sunrise is None and SUN_EVENT_SUNRISE in (before, after):
         # There is no sunrise today
@@ -331,6 +340,27 @@ def sun(
     if sunset is None and SUN_EVENT_SUNSET in (before, after):
         # There is no sunset today
         return False
+
+    if before == SUN_EVENT_SUNRISE and utcnow > cast(datetime, sunrise) + before_offset:
+    _LOGGER.warning("---------------------------------")
+    _LOGGER.warning("today: %s",
+                    today)
+    _LOGGER.warning("  local: %s, sunrise: %s, sunset: %s, midnight: %s",
+                    dt_util.as_local(utcnow), dt_util.as_local(sunrise),
+                    dt_util.as_local(sunset), dt_util.as_local(midnight))
+    _LOGGER.warning("  UTC: %s, sunrise: %s, sunset: %s, midnight: %s",
+                    utcnow, sunrise, sunset, midnight)
+    _LOGGER.warning("tomorrow: %s",
+                    tomorrow)
+    _LOGGER.warning("  local: %s, sunrise: %s, sunset: %s, midnight: %s",
+                    dt_util.as_local(utcnow),
+                    dt_util.as_local(sunrise_tomorrow),
+                    dt_util.as_local(sunset_tomorrow),
+                    dt_util.as_local(midnight_tomorrow))
+    _LOGGER.warning("  UTC: %s, sunrise: %s, sunset: %s, midnight UTC: %s",
+                    utcnow, sunrise_tomorrow, sunset_tomorrow,
+                    midnight_tomorrow)
+    _LOGGER.warning("---------------------------------")
 
     if before == SUN_EVENT_SUNRISE and utcnow > cast(datetime, sunrise) + before_offset:
         return False
