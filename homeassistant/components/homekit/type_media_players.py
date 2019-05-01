@@ -318,14 +318,14 @@ class TelevisionMediaPlayer(HomeAccessory):
         """Update Television state after state changed."""
         current_state = new_state.state
 
-        if self.char_active:
-            hk_state = current_state not in (STATE_OFF, STATE_UNKNOWN, 'None')
-            if not self._flag[CHAR_ACTIVE]:
-                hk_state = 1 if hk_state else 0
-                _LOGGER.debug('%s: Set current active state to %s',
-                              self.entity_id, hk_state)
-                self.char_active.set_value(hk_state)
-            self._flag[CHAR_ACTIVE] = False
+        # Power state television
+        hk_state = current_state not in (STATE_OFF, STATE_UNKNOWN, 'None')
+        if not self._flag[CHAR_ACTIVE]:
+            hk_state = 1 if hk_state else 0
+            _LOGGER.debug('%s: Set current active state to %s',
+                          self.entity_id, hk_state)
+            self.char_active.set_value(hk_state)
+        self._flag[CHAR_ACTIVE] = False
 
         if self.char_mute:
             current_state = new_state.attributes.get(ATTR_MEDIA_VOLUME_MUTED)
