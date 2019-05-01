@@ -150,7 +150,8 @@ async def test_if_action_before_sunrise_no_offset(hass, calls):
     """
     Test if action was before sunrise.
 
-    Before sunrise is true from midnight until sunset, local time."""
+    Before sunrise is true from midnight until sunset, local time.
+    """
     await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'trigger': {
@@ -206,7 +207,8 @@ async def test_if_action_after_sunrise_no_offset(hass, calls):
     """
     Test if action was after sunrise.
 
-    After sunrise is true from sunrise until midnight, local time."""
+    After sunrise is true from sunrise until midnight, local time.
+    """
     await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'trigger': {
@@ -262,7 +264,8 @@ async def test_if_action_before_sunrise_with_offset(hass, calls):
     """
     Test if action was before sunrise with offset.
 
-    Before sunrise is true from midnight until sunset, local time."""
+    Before sunrise is true from midnight until sunset, local time.
+    """
     await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'trigger': {
@@ -351,7 +354,8 @@ async def test_if_action_before_sunset_with_offset(hass, calls):
     """
     Test if action was before sunset with offset.
 
-    Before sunset is true from midnight until sunset, local time."""
+    Before sunset is true from midnight until sunset, local time.
+    """
     await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'trigger': {
@@ -440,7 +444,8 @@ async def test_if_action_after_sunrise_with_offset(hass, calls):
     """
     Test if action was after sunrise with offset.
 
-    After sunrise is true from sunrise until midnight, local time."""
+    After sunrise is true from sunrise until midnight, local time.
+    """
     await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'trigger': {
