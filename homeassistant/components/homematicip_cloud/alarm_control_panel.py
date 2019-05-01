@@ -34,9 +34,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
     for group in home.groups:
         if isinstance(group, AsyncSecurityZoneGroup):
             security_zones.append(group)
-            # to be removed in later release.
+            # To be removed in a later release.
             devices.append(HomematicipSecurityZone(home, group))
-
+            _LOGGER.warning("Homematic IP: alarm_control_panel.%s is "
+                            "deprecated. Please switch to "
+                            "alarm_control_panel.*hmip_alarm_control_panel.",
+                            group.label)
     if security_zones:
         devices.append(HomematicipAlarmControlPanel(home, security_zones))
 
@@ -52,10 +55,6 @@ class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
         device.modelType = 'Group-SecurityZone'
         device.windowState = None
         super().__init__(home, device)
-        _LOGGER.error("Homematic IP: %s %s is deprecated. Please switch to "
-                      "alarm_control_panel.hmip_alarm_control_panel.",
-                      self.name,
-                      self._device.modelType)
 
     @property
     def state(self) -> str:
@@ -142,10 +141,10 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self._internal_alarm_zone.on_update(self._device_changed)
-        self._external_alarm_zone.on_update(self._device_changed)
+        self._internal_alarm_zone.on_update(self._async_device_changed)
+        self._external_alarm_zone.on_update(self._async_device_changed)
 
-    def _device_changed(self, *args, **kwargs):
+    def _async_device_changed(self, *args, **kwargs):
         """Handle device state changes."""
         _LOGGER.debug("Event %s (%s)", self.name,
                       CONST_ALARM_CONTROL_PANEL_NAME)
@@ -155,7 +154,7 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
     def name(self) -> str:
         """Return the name of the generic device."""
         name = CONST_ALARM_CONTROL_PANEL_NAME
-        if self._home.name is not None and self._home.name != '':
+        if self._home.name:
             name = "{} {}".format(self._home.name, name)
         return name
 
