@@ -10,6 +10,7 @@ trigger:
 
 variables:
   versionBuilder: '3.1'
+  versionWheels: 'dev'
 
 
 jobs:
@@ -22,9 +23,14 @@ jobs:
     maxParallel: 2
     matrix:
       amd64:
-        buildContainer: 'homeassistant/amd64-wheels:dev'
-  container: $[ variables['buildContainer'] ]
+        buildArch: 'amd64'
   steps:
+  - script: sudo docker pull homeassistant/$(buildArch)-wheels:$(versionWheels)
+    displayName: 'Install wheels builder'
   - script: |
-      python3 -m builder --help
+      sudo docker run --rm -v $(pwd):/data:ro \
+        homeassistant/$(buildArch)-wheels:$(versionWheels) \
+        --index https://wheels.hass.io
+        --requirement requirement_all.txt
+        --remote wheels@wheels.hass.io:/opt/wheels
     displayName: 'Run wheels build'
