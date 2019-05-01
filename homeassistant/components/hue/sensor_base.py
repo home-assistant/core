@@ -47,7 +47,7 @@ class SensorManager:
     Intended to be a singleton.
     """
 
-    SCAN_INTERVAL = timedelta(seconds=5)
+    SCAN_INTERVAL = timedelta(seconds=0.1)
     sensor_config_map = {}
 
     def __init__(self, hass, bridge):
@@ -288,7 +288,12 @@ class GenericZLLSensor(GenericHueSensor):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        return {
-            "battery_level": self.sensor.battery,
-            "last_updated": self.sensor.lastupdated
-        }
+        attributes = dict()
+        attributes.update(self.sensor.config)
+        """ Removing unnecessary values."""
+        if 'pending' in attributes: del attributes['pending']
+        if 'reachable' in attributes: del attributes['reachable']
+        if 'alert' in attributes: del attributes['alert']
+        if 'ledindication' in attributes: del attributes['ledindication']
+        if 'usertest' in attributes: del attributes['usertest']
+        return attributes
