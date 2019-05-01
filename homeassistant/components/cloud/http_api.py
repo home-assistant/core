@@ -19,7 +19,7 @@ from homeassistant.components.google_assistant import (
 
 from .const import (
     DOMAIN, REQUEST_TIMEOUT, PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE,
-    PREF_GOOGLE_ALLOW_UNLOCK, InvalidTrustedNetworks)
+    PREF_GOOGLE_SECURE_DEVICES_PIN, InvalidTrustedNetworks)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,15 +27,6 @@ _LOGGER = logging.getLogger(__name__)
 WS_TYPE_STATUS = 'cloud/status'
 SCHEMA_WS_STATUS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_STATUS,
-})
-
-
-WS_TYPE_UPDATE_PREFS = 'cloud/update_prefs'
-SCHEMA_WS_UPDATE_PREFS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): WS_TYPE_UPDATE_PREFS,
-    vol.Optional(PREF_ENABLE_GOOGLE): bool,
-    vol.Optional(PREF_ENABLE_ALEXA): bool,
-    vol.Optional(PREF_GOOGLE_ALLOW_UNLOCK): bool,
 })
 
 
@@ -77,9 +68,7 @@ async def async_setup(hass):
         SCHEMA_WS_SUBSCRIPTION
     )
     hass.components.websocket_api.async_register_command(
-        WS_TYPE_UPDATE_PREFS, websocket_update_prefs,
-        SCHEMA_WS_UPDATE_PREFS
-    )
+        websocket_update_prefs)
     hass.components.websocket_api.async_register_command(
         WS_TYPE_HOOK_CREATE, websocket_hook_create,
         SCHEMA_WS_HOOK_CREATE
@@ -358,6 +347,12 @@ async def websocket_subscription(hass, connection, msg):
 
 @_require_cloud_login
 @websocket_api.async_response
+@websocket_api.websocket_command({
+    vol.Required('type'): 'cloud/update_prefs',
+    vol.Optional(PREF_ENABLE_GOOGLE): bool,
+    vol.Optional(PREF_ENABLE_ALEXA): bool,
+    vol.Optional(PREF_GOOGLE_SECURE_DEVICES_PIN): vol.Any(None, str),
+})
 async def websocket_update_prefs(hass, connection, msg):
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]

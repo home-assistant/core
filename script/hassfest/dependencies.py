@@ -68,5 +68,5 @@ def validate(integrations: Dict[str, Integration], config):
             if dep not in integrations:
                 integration.add_error(
                     'dependencies',
-                    "Dependency {} does not exist"
+                    "Dependency {} does not exist".format(dep)
                 )

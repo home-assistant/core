@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_setup_ingress(hass: HomeAssistantType, host: str):
+def async_setup_ingress_view(hass: HomeAssistantType, host: str):
     """Auth setup."""
     websession = hass.helpers.aiohttp_client.async_get_clientsession()
 

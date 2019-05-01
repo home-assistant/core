@@ -48,7 +48,7 @@ PRESENCE_SENSOR_1_PRESENT = {
 }
 LIGHT_LEVEL_SENSOR_1 = {
     "state": {
-        "lightlevel": 0,
+        "lightlevel": 1,
         "dark": True,
         "daylight": True,
         "lastupdated": "2019-01-01T01:00:00"
@@ -141,7 +141,7 @@ PRESENCE_SENSOR_2_NOT_PRESENT = {
 }
 LIGHT_LEVEL_SENSOR_2 = {
     "state": {
-        "lightlevel": 100,
+        "lightlevel": 10001,
         "dark": True,
         "daylight": True,
         "lastupdated": "2019-01-01T01:00:00"
@@ -234,7 +234,7 @@ PRESENCE_SENSOR_3_PRESENT = {
 }
 LIGHT_LEVEL_SENSOR_3 = {
     "state": {
-        "lightlevel": 0,
+        "lightlevel": 1,
         "dark": True,
         "daylight": True,
         "lastupdated": "2019-01-01T01:00:00"
@@ -391,7 +391,7 @@ async def test_sensors(hass, mock_bridge):
     assert len(hass.states.async_all()) == 6
 
     presence_sensor_1 = hass.states.get(
-        'binary_sensor.living_room_sensor_presence')
+        'binary_sensor.living_room_sensor_motion')
     light_level_sensor_1 = hass.states.get(
         'sensor.living_room_sensor_light_level')
     temperature_sensor_1 = hass.states.get(
@@ -399,14 +399,14 @@ async def test_sensors(hass, mock_bridge):
     assert presence_sensor_1 is not None
     assert presence_sensor_1.state == 'on'
     assert light_level_sensor_1 is not None
-    assert light_level_sensor_1.state == '0'
+    assert light_level_sensor_1.state == '1.0'
     assert light_level_sensor_1.name == 'Living room sensor light level'
     assert temperature_sensor_1 is not None
     assert temperature_sensor_1.state == '17.75'
     assert temperature_sensor_1.name == 'Living room sensor temperature'
 
     presence_sensor_2 = hass.states.get(
-        'binary_sensor.kitchen_sensor_presence')
+        'binary_sensor.kitchen_sensor_motion')
     light_level_sensor_2 = hass.states.get(
         'sensor.kitchen_sensor_light_level')
     temperature_sensor_2 = hass.states.get(
@@ -414,7 +414,7 @@ async def test_sensors(hass, mock_bridge):
     assert presence_sensor_2 is not None
     assert presence_sensor_2.state == 'off'
     assert light_level_sensor_2 is not None
-    assert light_level_sensor_2.state == '100'
+    assert light_level_sensor_2.state == '10.0'
     assert light_level_sensor_2.name == 'Kitchen sensor light level'
     assert temperature_sensor_2 is not None
     assert temperature_sensor_2.state == '18.75'
@@ -459,7 +459,7 @@ async def test_new_sensor_discovered(hass, mock_bridge):
     assert len(mock_bridge.mock_requests) == 2
     assert len(hass.states.async_all()) == 9
 
-    presence = hass.states.get('binary_sensor.bedroom_sensor_presence')
+    presence = hass.states.get('binary_sensor.bedroom_sensor_motion')
     assert presence is not None
     assert presence.state == 'on'
     temperature = hass.states.get('sensor.bedroom_sensor_temperature')

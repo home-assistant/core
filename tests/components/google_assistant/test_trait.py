@@ -19,7 +19,8 @@ from homeassistant.components import (
     group,
 )
 from homeassistant.components.climate import const as climate
-from homeassistant.components.google_assistant import trait, helpers, const
+from homeassistant.components.google_assistant import (
+    trait, helpers, const, error)
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF,
     TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE,
@@ -30,7 +31,6 @@ from tests.common import async_mock_service, mock_coro
 
 BASIC_CONFIG = helpers.Config(
     should_expose=lambda state: True,
-    allow_unlock=False
 )
 
 REQ_ID = 'ff36a3cc-ec34-11e6-b1a0-64510650abcf'
@@ -41,9 +41,15 @@ BASIC_DATA = helpers.RequestData(
     REQ_ID,
 )
 
-UNSAFE_CONFIG = helpers.Config(
+PIN_CONFIG = helpers.Config(
     should_expose=lambda state: True,
-    allow_unlock=True,
+    secure_devices_pin='1234'
+)
+
+PIN_DATA = helpers.RequestData(
+    PIN_CONFIG,
+    'test-agent',
+    REQ_ID,
 )
 
 
@@ -69,7 +75,7 @@ async def test_brightness_light(hass):
     calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
     await trt.execute(
         trait.COMMAND_BRIGHTNESS_ABSOLUTE, BASIC_DATA,
-        {'brightness': 50})
+        {'brightness': 50}, {})
     await hass.async_block_till_done()
 
     assert len(calls) == 1
@@ -83,36 +89,6 @@ async def test_brightness_light(hass):
         'domain': 'light',
         'service': 'turn_on',
         'service_data': {'brightness_pct': 50, 'entity_id': 'light.bla'}
-    }
-
-
-async def test_brightness_media_player(hass):
-    """Test brightness trait support for media player domain."""
-    assert helpers.get_google_type(media_player.DOMAIN, None) is not None
-    assert trait.BrightnessTrait.supported(media_player.DOMAIN,
-                                           media_player.SUPPORT_VOLUME_SET,
-                                           None)
-
-    trt = trait.BrightnessTrait(hass, State(
-        'media_player.bla', media_player.STATE_PLAYING, {
-            media_player.ATTR_MEDIA_VOLUME_LEVEL: .3
-        }), BASIC_CONFIG)
-
-    assert trt.sync_attributes() == {}
-
-    assert trt.query_attributes() == {
-        'brightness': 30
-    }
-
-    calls = async_mock_service(
-        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_SET)
-    await trt.execute(
-        trait.COMMAND_BRIGHTNESS_ABSOLUTE, BASIC_DATA,
-        {'brightness': 60})
-    assert len(calls) == 1
-    assert calls[0].data == {
-        ATTR_ENTITY_ID: 'media_player.bla',
-        media_player.ATTR_MEDIA_VOLUME_LEVEL: .6
     }
 
 
@@ -139,7 +115,7 @@ async def test_camera_stream(hass):
 
     with patch('homeassistant.components.camera.async_request_stream',
                return_value=mock_coro('/api/streams/bla')):
-        await trt.execute(trait.COMMAND_GET_CAMERA_STREAM, BASIC_DATA, {})
+        await trt.execute(trait.COMMAND_GET_CAMERA_STREAM, BASIC_DATA, {}, {})
 
     assert trt.query_attributes() == {
         'cameraStreamAccessUrl': 'http://1.1.1.1:8123/api/streams/bla'
@@ -169,7 +145,7 @@ async def test_onoff_group(hass):
     on_calls = async_mock_service(hass, HA_DOMAIN, SERVICE_TURN_ON)
     await trt_on.execute(
         trait.COMMAND_ONOFF, BASIC_DATA,
-        {'on': True})
+        {'on': True}, {})
     assert len(on_calls) == 1
     assert on_calls[0].data == {
         ATTR_ENTITY_ID: 'group.bla',
@@ -178,7 +154,7 @@ async def test_onoff_group(hass):
     off_calls = async_mock_service(hass, HA_DOMAIN, SERVICE_TURN_OFF)
     await trt_on.execute(
         trait.COMMAND_ONOFF, BASIC_DATA,
-        {'on': False})
+        {'on': False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {
         ATTR_ENTITY_ID: 'group.bla',
@@ -209,7 +185,7 @@ async def test_onoff_input_boolean(hass):
     on_calls = async_mock_service(hass, input_boolean.DOMAIN, SERVICE_TURN_ON)
     await trt_on.execute(
         trait.COMMAND_ONOFF, BASIC_DATA,
-        {'on': True})
+        {'on': True}, {})
     assert len(on_calls) == 1
     assert on_calls[0].data == {
         ATTR_ENTITY_ID: 'input_boolean.bla',
@@ -219,7 +195,7 @@ async def test_onoff_input_boolean(hass):
                                    SERVICE_TURN_OFF)
     await trt_on.execute(
         trait.COMMAND_ONOFF, BASIC_DATA,
-        {'on': False})
+        {'on': False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {
         ATTR_ENTITY_ID: 'input_boolean.bla',
@@ -250,7 +226,7 @@ async def test_onoff_switch(hass):
     on_calls = async_mock_service(hass, switch.DOMAIN, SERVICE_TURN_ON)
     await trt_on.execute(
         trait.COMMAND_ONOFF, BASIC_DATA,
-        {'on': True})
+        {'on': True}, {})
     assert len(on_calls) == 1
     assert on_calls[0].data == {
         ATTR_ENTITY_ID: 'switch.bla',
@@ -259,7 +235,7 @@ async def test_onoff_switch(hass):
     off_calls = async_mock_service(hass, switch.DOMAIN, SERVICE_TURN_OFF)
     await trt_on.execute(
         trait.COMMAND_ONOFF, BASIC_DATA,
-        {'on': False})
+        {'on': False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {
         ATTR_ENTITY_ID: 'switch.bla',
@@ -287,7 +263,7 @@ async def test_onoff_fan(hass):
     on_calls = async_mock_service(hass, fan.DOMAIN, SERVICE_TURN_ON)
     await trt_on.execute(
         trait.COMMAND_ONOFF, BASIC_DATA,
-        {'on': True})
+        {'on': True}, {})
     assert len(on_calls) == 1
     assert on_calls[0].data == {
         ATTR_ENTITY_ID: 'fan.bla',
@@ -296,7 +272,7 @@ async def test_onoff_fan(hass):
     off_calls = async_mock_service(hass, fan.DOMAIN, SERVICE_TURN_OFF)
     await trt_on.execute(
         trait.COMMAND_ONOFF, BASIC_DATA,
-        {'on': False})
+        {'on': False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {
         ATTR_ENTITY_ID: 'fan.bla',
@@ -326,7 +302,7 @@ async def test_onoff_light(hass):
     on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
     await trt_on.execute(
         trait.COMMAND_ONOFF, BASIC_DATA,
-        {'on': True})
+        {'on': True}, {})
     assert len(on_calls) == 1
     assert on_calls[0].data == {
         ATTR_ENTITY_ID: 'light.bla',
@@ -335,7 +311,7 @@ async def test_onoff_light(hass):
     off_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_OFF)
     await trt_on.execute(
         trait.COMMAND_ONOFF, BASIC_DATA,
-        {'on': False})
+        {'on': False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {
         ATTR_ENTITY_ID: 'light.bla',
@@ -366,7 +342,7 @@ async def test_onoff_media_player(hass):
     on_calls = async_mock_service(hass, media_player.DOMAIN, SERVICE_TURN_ON)
     await trt_on.execute(
         trait.COMMAND_ONOFF, BASIC_DATA,
-        {'on': True})
+        {'on': True}, {})
     assert len(on_calls) == 1
     assert on_calls[0].data == {
         ATTR_ENTITY_ID: 'media_player.bla',
@@ -377,7 +353,7 @@ async def test_onoff_media_player(hass):
 
     await trt_on.execute(
         trait.COMMAND_ONOFF, BASIC_DATA,
-        {'on': False})
+        {'on': False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {
         ATTR_ENTITY_ID: 'media_player.bla',
@@ -408,7 +384,7 @@ async def test_dock_vacuum(hass):
     calls = async_mock_service(hass, vacuum.DOMAIN,
                                vacuum.SERVICE_RETURN_TO_BASE)
     await trt.execute(
-        trait.COMMAND_DOCK, BASIC_DATA, {})
+        trait.COMMAND_DOCK, BASIC_DATA, {}, {})
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'vacuum.bla',
@@ -433,7 +409,7 @@ async def test_startstop_vacuum(hass):
 
     start_calls = async_mock_service(hass, vacuum.DOMAIN,
                                      vacuum.SERVICE_START)
-    await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {'start': True})
+    await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {'start': True}, {})
     assert len(start_calls) == 1
     assert start_calls[0].data == {
         ATTR_ENTITY_ID: 'vacuum.bla',
@@ -441,7 +417,8 @@ async def test_startstop_vacuum(hass):
 
     stop_calls = async_mock_service(hass, vacuum.DOMAIN,
                                     vacuum.SERVICE_STOP)
-    await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {'start': False})
+    await trt.execute(
+        trait.COMMAND_STARTSTOP, BASIC_DATA, {'start': False}, {})
     assert len(stop_calls) == 1
     assert stop_calls[0].data == {
         ATTR_ENTITY_ID: 'vacuum.bla',
@@ -449,7 +426,8 @@ async def test_startstop_vacuum(hass):
 
     pause_calls = async_mock_service(hass, vacuum.DOMAIN,
                                      vacuum.SERVICE_PAUSE)
-    await trt.execute(trait.COMMAND_PAUSEUNPAUSE, BASIC_DATA, {'pause': True})
+    await trt.execute(
+        trait.COMMAND_PAUSEUNPAUSE, BASIC_DATA, {'pause': True}, {})
     assert len(pause_calls) == 1
     assert pause_calls[0].data == {
         ATTR_ENTITY_ID: 'vacuum.bla',
@@ -457,7 +435,8 @@ async def test_startstop_vacuum(hass):
 
     unpause_calls = async_mock_service(hass, vacuum.DOMAIN,
                                        vacuum.SERVICE_START)
-    await trt.execute(trait.COMMAND_PAUSEUNPAUSE, BASIC_DATA, {'pause': False})
+    await trt.execute(
+        trait.COMMAND_PAUSEUNPAUSE, BASIC_DATA, {'pause': False}, {})
     assert len(unpause_calls) == 1
     assert unpause_calls[0].data == {
         ATTR_ENTITY_ID: 'vacuum.bla',
@@ -502,7 +481,7 @@ async def test_color_setting_color_light(hass):
         'color': {
             'spectrumRGB': 1052927
         }
-    })
+    }, {})
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'light.bla',
@@ -517,7 +496,7 @@ async def test_color_setting_color_light(hass):
                 'value': .20,
             }
         }
-    })
+    }, {})
     assert len(calls) == 2
     assert calls[1].data == {
         ATTR_ENTITY_ID: 'light.bla',
@@ -565,14 +544,14 @@ async def test_color_setting_temperature_light(hass):
             'color': {
                 'temperature': 5555
             }
-        })
+        }, {})
     assert err.value.code == const.ERR_VALUE_OUT_OF_RANGE
 
     await trt.execute(trait.COMMAND_COLOR_ABSOLUTE, BASIC_DATA, {
         'color': {
             'temperature': 2857
         }
-    })
+    }, {})
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'light.bla',
@@ -608,7 +587,7 @@ async def test_scene_scene(hass):
     assert trt.can_execute(trait.COMMAND_ACTIVATE_SCENE, {})
 
     calls = async_mock_service(hass, scene.DOMAIN, SERVICE_TURN_ON)
-    await trt.execute(trait.COMMAND_ACTIVATE_SCENE, BASIC_DATA, {})
+    await trt.execute(trait.COMMAND_ACTIVATE_SCENE, BASIC_DATA, {}, {})
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'scene.bla',
@@ -626,7 +605,7 @@ async def test_scene_script(hass):
     assert trt.can_execute(trait.COMMAND_ACTIVATE_SCENE, {})
 
     calls = async_mock_service(hass, script.DOMAIN, SERVICE_TURN_ON)
-    await trt.execute(trait.COMMAND_ACTIVATE_SCENE, BASIC_DATA, {})
+    await trt.execute(trait.COMMAND_ACTIVATE_SCENE, BASIC_DATA, {}, {})
 
     # We don't wait till script execution is done.
     await hass.async_block_till_done()
@@ -671,14 +650,14 @@ async def test_temperature_setting_climate_onoff(hass):
         hass, climate.DOMAIN, SERVICE_TURN_ON)
     await trt.execute(trait.COMMAND_THERMOSTAT_SET_MODE, BASIC_DATA, {
         'thermostatMode': 'on',
-    })
+    }, {})
     assert len(calls) == 1
 
     calls = async_mock_service(
         hass, climate.DOMAIN, SERVICE_TURN_OFF)
     await trt.execute(trait.COMMAND_THERMOSTAT_SET_MODE, BASIC_DATA, {
         'thermostatMode': 'off',
-    })
+    }, {})
     assert len(calls) == 1
 
 
@@ -731,7 +710,7 @@ async def test_temperature_setting_climate_range(hass):
         trait.COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE, BASIC_DATA, {
             'thermostatTemperatureSetpointHigh': 25,
             'thermostatTemperatureSetpointLow': 20,
-        })
+        }, {})
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'climate.bla',
@@ -743,7 +722,7 @@ async def test_temperature_setting_climate_range(hass):
         hass, climate.DOMAIN, climate.SERVICE_SET_OPERATION_MODE)
     await trt.execute(trait.COMMAND_THERMOSTAT_SET_MODE, BASIC_DATA, {
         'thermostatMode': 'heatcool',
-    })
+    }, {})
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'climate.bla',
@@ -753,7 +732,7 @@ async def test_temperature_setting_climate_range(hass):
     with pytest.raises(helpers.SmartHomeError) as err:
         await trt.execute(
             trait.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT, BASIC_DATA,
-            {'thermostatTemperatureSetpoint': -100})
+            {'thermostatTemperatureSetpoint': -100}, {})
     assert err.value.code == const.ERR_VALUE_OUT_OF_RANGE
     hass.config.units.temperature_unit = TEMP_CELSIUS
 
@@ -799,11 +778,11 @@ async def test_temperature_setting_climate_setpoint(hass):
     with pytest.raises(helpers.SmartHomeError):
         await trt.execute(
             trait.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT, BASIC_DATA,
-            {'thermostatTemperatureSetpoint': -100})
+            {'thermostatTemperatureSetpoint': -100}, {})
 
     await trt.execute(
         trait.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT, BASIC_DATA,
-        {'thermostatTemperatureSetpoint': 19})
+        {'thermostatTemperatureSetpoint': 19}, {})
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'climate.bla',
@@ -851,7 +830,7 @@ async def test_temperature_setting_climate_setpoint_auto(hass):
 
     await trt.execute(
         trait.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT, BASIC_DATA,
-        {'thermostatTemperatureSetpoint': 19})
+        {'thermostatTemperatureSetpoint': 19}, {})
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'climate.bla',
@@ -867,7 +846,7 @@ async def test_lock_unlock_lock(hass):
 
     trt = trait.LockUnlockTrait(hass,
                                 State('lock.front_door', lock.STATE_UNLOCKED),
-                                BASIC_CONFIG)
+                                PIN_CONFIG)
 
     assert trt.sync_attributes() == {}
 
@@ -878,7 +857,26 @@ async def test_lock_unlock_lock(hass):
     assert trt.can_execute(trait.COMMAND_LOCKUNLOCK, {'lock': True})
 
     calls = async_mock_service(hass, lock.DOMAIN, lock.SERVICE_LOCK)
-    await trt.execute(trait.COMMAND_LOCKUNLOCK, BASIC_DATA, {'lock': True})
+
+    # No challenge data
+    with pytest.raises(error.ChallengeNeeded) as err:
+        await trt.execute(
+            trait.COMMAND_LOCKUNLOCK, PIN_DATA, {'lock': True}, {})
+        assert len(calls) == 0
+        assert err.code == const.ERR_CHALLENGE_NEEDED
+        assert err.challenge_type == const.CHALLENGE_PIN_NEEDED
+
+    # invalid pin
+    with pytest.raises(error.ChallengeNeeded) as err:
+        await trt.execute(
+            trait.COMMAND_LOCKUNLOCK, PIN_DATA, {'lock': True},
+            {'pin': 9999})
+        assert len(calls) == 0
+        assert err.code == const.ERR_CHALLENGE_NEEDED
+        assert err.challenge_type == const.CHALLENGE_FAILED_PIN_NEEDED
+
+    await trt.execute(trait.COMMAND_LOCKUNLOCK, PIN_DATA, {'lock': True},
+                      {'pin': '1234'})
 
     assert len(calls) == 1
     assert calls[0].data == {
@@ -894,19 +892,7 @@ async def test_lock_unlock_unlock(hass):
 
     trt = trait.LockUnlockTrait(hass,
                                 State('lock.front_door', lock.STATE_LOCKED),
-                                BASIC_CONFIG)
-
-    assert trt.sync_attributes() == {}
-
-    assert trt.query_attributes() == {
-        'isLocked': True
-    }
-
-    assert not trt.can_execute(trait.COMMAND_LOCKUNLOCK, {'lock': False})
-
-    trt = trait.LockUnlockTrait(hass,
-                                State('lock.front_door', lock.STATE_LOCKED),
-                                UNSAFE_CONFIG)
+                                PIN_CONFIG)
 
     assert trt.sync_attributes() == {}
 
@@ -917,7 +903,26 @@ async def test_lock_unlock_unlock(hass):
     assert trt.can_execute(trait.COMMAND_LOCKUNLOCK, {'lock': False})
 
     calls = async_mock_service(hass, lock.DOMAIN, lock.SERVICE_UNLOCK)
-    await trt.execute(trait.COMMAND_LOCKUNLOCK, BASIC_DATA, {'lock': False})
+
+    # No challenge data
+    with pytest.raises(error.ChallengeNeeded) as err:
+        await trt.execute(
+            trait.COMMAND_LOCKUNLOCK, PIN_DATA, {'lock': False}, {})
+        assert len(calls) == 0
+        assert err.code == const.ERR_CHALLENGE_NEEDED
+        assert err.challenge_type == const.CHALLENGE_PIN_NEEDED
+
+    # invalid pin
+    with pytest.raises(error.ChallengeNeeded) as err:
+        await trt.execute(
+            trait.COMMAND_LOCKUNLOCK, PIN_DATA, {'lock': False},
+            {'pin': 9999})
+        assert len(calls) == 0
+        assert err.code == const.ERR_CHALLENGE_NEEDED
+        assert err.challenge_type == const.CHALLENGE_FAILED_PIN_NEEDED
+
+    await trt.execute(
+        trait.COMMAND_LOCKUNLOCK, PIN_DATA, {'lock': False}, {'pin': '1234'})
 
     assert len(calls) == 1
     assert calls[0].data == {
@@ -1000,7 +1005,7 @@ async def test_fan_speed(hass):
 
     calls = async_mock_service(hass, fan.DOMAIN, fan.SERVICE_SET_SPEED)
     await trt.execute(
-        trait.COMMAND_FANSPEED, BASIC_DATA, {'fanSpeed': 'medium'})
+        trait.COMMAND_FANSPEED, BASIC_DATA, {'fanSpeed': 'medium'}, {})
 
     assert len(calls) == 1
     assert calls[0].data == {
@@ -1089,7 +1094,7 @@ async def test_modes(hass):
         trait.COMMAND_MODES, BASIC_DATA, {
             'updateModeSettings': {
                 trt.HA_TO_GOOGLE.get(media_player.ATTR_INPUT_SOURCE): 'media'
-            }})
+            }}, {})
 
     assert len(calls) == 1
     assert calls[0].data == {
@@ -1145,7 +1150,58 @@ async def test_openclose_cover(hass):
         hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
     await trt.execute(
         trait.COMMAND_OPENCLOSE, BASIC_DATA,
-        {'openPercent': 50})
+        {'openPercent': 50}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'cover.bla',
+        cover.ATTR_POSITION: 50
+    }
+
+
+@pytest.mark.parametrize('device_class', (
+    cover.DEVICE_CLASS_DOOR,
+    cover.DEVICE_CLASS_GARAGE,
+))
+async def test_openclose_cover_secure(hass, device_class):
+    """Test OpenClose trait support for cover domain."""
+    assert helpers.get_google_type(cover.DOMAIN, device_class) is not None
+    assert trait.OpenCloseTrait.supported(
+        cover.DOMAIN, cover.SUPPORT_SET_POSITION, device_class)
+
+    trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
+        ATTR_DEVICE_CLASS: device_class,
+        cover.ATTR_CURRENT_POSITION: 75
+    }), PIN_CONFIG)
+
+    assert trt.sync_attributes() == {}
+    assert trt.query_attributes() == {
+        'openPercent': 75
+    }
+
+    calls = async_mock_service(
+        hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
+
+    # No challenge data
+    with pytest.raises(error.ChallengeNeeded) as err:
+        await trt.execute(
+            trait.COMMAND_OPENCLOSE, PIN_DATA,
+            {'openPercent': 50}, {})
+        assert len(calls) == 0
+        assert err.code == const.ERR_CHALLENGE_NEEDED
+        assert err.challenge_type == const.CHALLENGE_PIN_NEEDED
+
+    # invalid pin
+    with pytest.raises(error.ChallengeNeeded) as err:
+        await trt.execute(
+            trait.COMMAND_OPENCLOSE, PIN_DATA,
+            {'openPercent': 50}, {'pin': '9999'})
+        assert len(calls) == 0
+        assert err.code == const.ERR_CHALLENGE_NEEDED
+        assert err.challenge_type == const.CHALLENGE_FAILED_PIN_NEEDED
+
+    await trt.execute(
+        trait.COMMAND_OPENCLOSE, PIN_DATA,
+        {'openPercent': 50}, {'pin': '1234'})
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'cover.bla',
@@ -1189,4 +1245,66 @@ async def test_openclose_binary_sensor(hass, device_class):
 
     assert trt.query_attributes() == {
         'openPercent': 0
+    }
+
+
+async def test_volume_media_player(hass):
+    """Test volume trait support for media player domain."""
+    assert helpers.get_google_type(media_player.DOMAIN, None) is not None
+    assert trait.VolumeTrait.supported(media_player.DOMAIN,
+                                       media_player.SUPPORT_VOLUME_SET |
+                                       media_player.SUPPORT_VOLUME_MUTE,
+                                       None)
+
+    trt = trait.VolumeTrait(hass, State(
+        'media_player.bla', media_player.STATE_PLAYING, {
+            media_player.ATTR_MEDIA_VOLUME_LEVEL: .3,
+            media_player.ATTR_MEDIA_VOLUME_MUTED: False,
+        }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+
+    assert trt.query_attributes() == {
+        'currentVolume': 30,
+        'isMuted': False
+    }
+
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_SET)
+    await trt.execute(
+        trait.COMMAND_SET_VOLUME, BASIC_DATA,
+        {'volumeLevel': 60}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'media_player.bla',
+        media_player.ATTR_MEDIA_VOLUME_LEVEL: .6
+    }
+
+
+async def test_volume_media_player_relative(hass):
+    """Test volume trait support for media player domain."""
+    trt = trait.VolumeTrait(hass, State(
+        'media_player.bla', media_player.STATE_PLAYING, {
+            media_player.ATTR_MEDIA_VOLUME_LEVEL: .3,
+            media_player.ATTR_MEDIA_VOLUME_MUTED: False,
+        }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+
+    assert trt.query_attributes() == {
+        'currentVolume': 30,
+        'isMuted': False
+    }
+
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_SET)
+
+    await trt.execute(
+        trait.COMMAND_VOLUME_RELATIVE, BASIC_DATA,
+        {'volumeRelativeLevel': 20,
+         'relativeSteps': 2}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'media_player.bla',
+        media_player.ATTR_MEDIA_VOLUME_LEVEL: .5
     }

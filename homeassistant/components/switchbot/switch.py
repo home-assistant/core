@@ -46,7 +46,7 @@ class SwitchBot(SwitchDevice, RestoreEntity):
         state = await self.async_get_last_state()
         if not state:
             return
-        self._state = state.state
+        self._state = state.state == 'on'
 
     def turn_on(self, **kwargs) -> None:
         """Turn device on."""

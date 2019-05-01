@@ -19,12 +19,12 @@ from .error import SmartHomeError
 class Config:
     """Hold the configuration for Google Assistant."""
 
-    def __init__(self, should_expose, allow_unlock,
-                 entity_config=None):
+    def __init__(self, should_expose,
+                 entity_config=None, secure_devices_pin=None):
         """Initialize the configuration."""
         self.should_expose = should_expose
         self.entity_config = entity_config or {}
-        self.allow_unlock = allow_unlock
+        self.secure_devices_pin = secure_devices_pin
 
 
 class RequestData:
@@ -168,15 +168,18 @@ class GoogleEntity:
 
         return attrs
 
-    async def execute(self, command, data, params):
+    async def execute(self, data, command_payload):
         """Execute a command.
 
         https://developers.google.com/actions/smarthome/create-app#actiondevicesexecute
         """
+        command = command_payload['command']
+        params = command_payload.get('params', {})
+        challenge = command_payload.get('challenge', {})
         executed = False
         for trt in self.traits():
             if trt.can_execute(command, params):
-                await trt.execute(command, data, params)
+                await trt.execute(command, data, params, challenge)
                 executed = True
                 break
 
