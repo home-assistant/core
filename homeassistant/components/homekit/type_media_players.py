@@ -219,7 +219,7 @@ class TelevisionMediaPlayer(HomeAccessory):
             serv_speaker.configure_char(CHAR_NAME, value=name)
             serv_speaker.configure_char(CHAR_ACTIVE, value=1)
 
-            self.char_toggle_mute = serv_speaker.configure_char(
+            self.char_mute = serv_speaker.configure_char(
                 CHAR_MUTE, value=False, setter_callback=self.set_toggle_mute)
 
             serv_speaker.configure_char(CHAR_VOLUME_CONTROL_TYPE, value=1)
@@ -327,12 +327,12 @@ class TelevisionMediaPlayer(HomeAccessory):
                 self.char_active.set_value(hk_state)
             self._flag[CHAR_ACTIVE] = False
 
-        if self.char_toggle_mute:
+        if self.char_mute:
             current_state = new_state.attributes.get(ATTR_MEDIA_VOLUME_MUTED)
             if not self._flag[FEATURE_TOGGLE_MUTE]:
                 _LOGGER.debug('%s: Set current mute state to %s',
                               self.entity_id, current_state)
-                self.char_toggle_mute.set_value(current_state)
+                self.char_mute.set_value(current_state)
             self._flag[FEATURE_TOGGLE_MUTE] = False
 
         if self.char_active_identifier:
