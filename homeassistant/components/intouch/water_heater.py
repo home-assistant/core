@@ -52,7 +52,7 @@ class IntouchWaterHeater(WaterHeaterDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self._objref.heater_temp  # self._objref.tap_temp
+        return self._objref.heater_temp  # or: self._objref.tap_temp?
 
     @property
     def min_temp(self):

@@ -9,8 +9,8 @@ from . import DOMAIN
 
 INTOUCH_SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 
-INTOUCH_MAX_TEMP = 28.0
-INTOUCH_MIN_TEMP = 4.0
+INTOUCH_MAX_TEMP = 30.0
+INTOUCH_MIN_TEMP = 5.0
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
