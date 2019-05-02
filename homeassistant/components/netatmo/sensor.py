@@ -103,7 +103,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     not_handled = {}
 
     if config.get(CONF_AREAS) is not None:
-        _LOGGER.error("Setting up Netatmo public sensor %s", config[CONF_AREAS])
         for area in config[CONF_AREAS]:
             data = NetatmoPublicData(
                 auth,
@@ -115,7 +114,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 dev.append(NetatmoPublicSensor(area[CONF_NAME], data,
                                                sensor_type, area[CONF_MODE]))
     else:
-        _LOGGER.error("Setting up Netatmo sensor")
         for data_class in all_classes:
             data = NetatmoData(auth, data_class, config.get(CONF_STATION))
             try:
