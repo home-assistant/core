@@ -17,7 +17,7 @@ DEFAULT_GENDER = GENDERS[0]
 
 SUPPORT_LANGUAGES = [
     'en', 'da', 'nl', 'fr', 'de', 'it', 'ja', 'ko', 'nb',
-    'pl', 'pt', 'ru', 'sk', 'es', 'sv', 'tr', 'uk', 
+    'pl', 'pt', 'ru', 'sk', 'es', 'sv', 'tr', 'uk',
 ]
 DEFAULT_LANG = SUPPORT_LANGUAGES[0]
 
@@ -32,6 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_VOICE, default=''): cv.string,
     vol.Optional(CONF_KEY_FILE, default=''): cv.string,
 })
+
 
 async def async_get_engine(hass, config):
     """Set up Google Cloud TTS component."""
@@ -57,8 +58,9 @@ class GoogleCloudTTSProvider(Provider):
         path = hass.config.path(key_file)
         if key_file and os.path.isfile(path):
             os.environ[GOOGLE_APPLICATION_CREDENTIALS] = path
-        if not GOOGLE_APPLICATION_CREDENTIALS in os.environ:
-            _LOGGER.error("You need to specify valid GOOGLE_APPLICATION_CREDENTIALS file location.")
+        if GOOGLE_APPLICATION_CREDENTIALS not in os.environ:
+            _LOGGER.error("You need to specify valid"
+            " GOOGLE_APPLICATION_CREDENTIALS file location.")
         self.client = texttospeech.TextToSpeechClient()
         self.audio_config = texttospeech.types.AudioConfig(
             audio_encoding=texttospeech.enums.AudioEncoding.MP3
@@ -81,7 +83,6 @@ class GoogleCloudTTSProvider(Provider):
 
     async def async_get_tts_audio(self, message, language, options=None):
         """Load TTS from google."""
-
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
                 gender = self._gender
@@ -94,14 +95,15 @@ class GoogleCloudTTSProvider(Provider):
                 self.voice = texttospeech.types.VoiceSelectionParams(
                     language_code=language or self._lang,
                     name=voice,
-                    ssml_gender=
-                        texttospeech.enums.SsmlVoiceGender.NEUTRAL if gender==GENDERS[0] else
-                        (
-                            texttospeech.enums.SsmlVoiceGender.FEMALE if gender==GENDERS[1] else
-                            texttospeech.enums.SsmlVoiceGender.MALE
-                        )
+                    ssml_gender={
+                        'Neutral': texttospeech.enums.SsmlVoiceGender.NEUTRAL,
+                        'Female': texttospeech.enums.SsmlVoiceGender.FEMALE,
+                        'Male': texttospeech.enums.SsmlVoiceGender.MALE,
+                    }.get(gender, DEFAULT_GENDER)
                 )
-                synthesis_input = texttospeech.types.SynthesisInput(text=message)
+                synthesis_input = texttospeech.types.SynthesisInput(
+                    text=message
+                )
                 response = self.client.synthesize_speech(
                     synthesis_input,
                     self.voice,
@@ -111,5 +113,5 @@ class GoogleCloudTTSProvider(Provider):
                 return "mp3", response.audio_content
 
         except Exception as e:
-            _LOGGER.error("Timeout for google speech or some other problem.", e)
+            _LOGGER.error("Timeout for google speech or other problem.", e)
             return None, None
