@@ -128,7 +128,15 @@ class FakeCharacteristic(AbstractCharacteristic):
     needed even though it doesn't add any methods.
     """
 
-    pass
+    def to_accessory_and_service_list(self):
+        """Serialize the characteristic."""
+        # Upstream doesn't correctly serialize valid_values
+        # This fix will be upstreamed and this function removed when it
+        # is fixed.
+        record = super().to_accessory_and_service_list()
+        if self.valid_values:
+            record['valid-values'] = self.valid_values
+        return record
 
 
 class FakeService(AbstractService):
