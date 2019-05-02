@@ -30,7 +30,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Platform setup."""
     import solax
 
-    api = solax.solax.RealTimeAPI(config.get(CONF_IP_ADDRESS))
+    api = solax.solax.RealTimeAPI(config[CONF_IP_ADDRESS])
     endpoint = RealTimeDataEndpoint(hass, api)
     hass.async_add_job(endpoint.async_refresh)
     async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
