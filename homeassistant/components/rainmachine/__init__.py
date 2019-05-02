@@ -177,31 +177,36 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up RainMachine as config entry."""
-    from regenmaschine import login
+    from regenmaschine import Client
     from regenmaschine.errors import RainMachineError
 
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
     websession = aiohttp_client.async_get_clientsession(hass)
+    client = Client(websession)
 
     try:
-        client = await login(
-            config_entry.data[CONF_IP_ADDRESS],
-            config_entry.data[CONF_PASSWORD],
-            websession,
-            port=config_entry.data[CONF_PORT],
-            ssl=config_entry.data[CONF_SSL])
-        rainmachine = RainMachine(
-            client,
-            config_entry.data.get(CONF_BINARY_SENSORS, {}).get(
-                CONF_MONITORED_CONDITIONS, list(BINARY_SENSORS)),
-            config_entry.data.get(CONF_SENSORS, {}).get(
-                CONF_MONITORED_CONDITIONS, list(SENSORS)),
-            config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN))
-        await rainmachine.async_update()
+        if config_entry.data.get(CONF_IP_ADDRESS):
+            await client.load_local(
+                config_entry.data[CONF_IP_ADDRESS],
+                config_entry.data[CONF_PASSWORD],
+                port=config_entry.data[CONF_PORT])
+        else:
+            await client.load_remote(
+                config_entry.data[CONF_EMAIL],
+                config_entry.data[CONF_PASSWORD])
     except RainMachineError as err:
-        _LOGGER.error('An error occurred: %s', err)
+        _LOGGER.error('An error occurred during setup: %s', err)
         raise ConfigEntryNotReady
+
+    rainmachine = RainMachine(
+        client,
+        config_entry.data.get(CONF_BINARY_SENSORS, {}).get(
+            CONF_MONITORED_CONDITIONS, list(BINARY_SENSORS)),
+        config_entry.data.get(CONF_SENSORS, {}).get(
+            CONF_MONITORED_CONDITIONS, list(SENSORS)),
+        config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN))
+    await rainmachine.async_update()
 
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = rainmachine
 

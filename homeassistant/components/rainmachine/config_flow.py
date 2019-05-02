@@ -33,7 +33,7 @@ def configured_instances(hass):
 class RainMachineFlowHandler(config_entries.ConfigFlow):
     """Handle a RainMachine config flow."""
 
-    VERSION = 2
+    VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
@@ -71,8 +71,6 @@ class RainMachineFlowHandler(config_entries.ConfigFlow):
                 step_id=connect_type,
                 data_schema=vol.Schema(schema),
                 errors={CONF_EMAIL: 'invalid_credentials'})
-
-        user_input[CONF_TYPE] = connect_type
 
         # Since the config entry doesn't allow for configuration of SSL, make
         # sure it's set:
