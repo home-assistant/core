@@ -659,7 +659,7 @@ class CastDevice(MediaPlayerDevice):
             self.entity_id, self._cast_info.friendly_name,
             self._cast_info.host, self._cast_info.port, cast_info)
 
-        self.async_del_dynamic_group()
+        await self.async_del_dynamic_group()
         self._dynamic_group_cast_info = cast_info
 
         # pylint: disable=protected-access
