@@ -8,7 +8,7 @@ from homeassistant.components.homekit.type_media_players import (
     MediaPlayer, TelevisionMediaPlayer)
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE, ATTR_INPUT_SOURCE_LIST,
-    ATTR_MEDIA_VOLUME_MUTED, ATTR_MEDIA_VOLUME_LEVEL, DOMAIN)
+    ATTR_MEDIA_VOLUME_MUTED, DOMAIN)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_IDLE,
     STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING)
@@ -274,5 +274,5 @@ async def test_media_player_television_volume_level(hass, hk_driver, events):
     assert acc.category == 31  # Television
 
     assert acc.char_active.value == 0
-    assert acc.char_volume.value is 0
+    assert acc.char_volume.value == 0
     assert acc.char_mute.value is False
