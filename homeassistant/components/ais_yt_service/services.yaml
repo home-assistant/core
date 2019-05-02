@@ -5,10 +5,3 @@ search:
     query:
       description: zapytanie
       example: 'Czesław Niemen'
-
-select_track_name:
-  description: Wybranie utworu do odtwarzania ze zwróconej listy wyników
-  fields:
-    name:
-      description: Nazwa utworu
-      example: 'Sen o Warszawie'

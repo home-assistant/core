@@ -17,6 +17,12 @@ group:
       - group.all_ais_sensors
       - group.all_fans
       - group.bookmarks
+  audio_player:
+    name: Odtwarzacz
+    entities:
+      - media_player.wbudowany_glosnik
+      - input_number.media_player_speed
+      - input_select.media_player_sound_mode
   pogoda:
     name: Pogoda
     view: yes
@@ -40,8 +46,8 @@ group:
       - group.podcast_player
       - group.music_player
       - group.audiobooks_player
-      - group.audio_player
       - group.local_audio
+      - group.audio_player
   settings:
     name: Ustawienia
     view: yes

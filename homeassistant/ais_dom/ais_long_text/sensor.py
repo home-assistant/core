@@ -43,5 +43,5 @@ class LongTextSensor(Entity):
 
     @property
     def state(self):
-        return
+        return ' '
 

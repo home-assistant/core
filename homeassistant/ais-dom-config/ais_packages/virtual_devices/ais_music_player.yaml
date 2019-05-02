@@ -3,12 +3,6 @@ input_text:
     name: Szukaj
     initial: " "
 input_select:
-  ais_music_track_name:
-    name: 'Wyszukane pozycje:'
-    options:
-      - "-"
-    initial: "-"
-    icon: mdi:music
   ais_music_service:
     name: 'Serwis muzyczny:'
     options:
@@ -16,6 +10,19 @@ input_select:
       - "Spotify"
     initial: "YouTube"
     icon: mdi:shopping-music
+  media_player_sound_mode:
+    name: 'Tryb dźwięku:'
+    options:
+      - "Normal"
+      - "Boost"
+      - "Treble"
+      - "Pop"
+      - "Rock"
+      - "Clasic"
+      - "Jazz"
+      - "Dance"
+      - "R&P"
+    initial: "Normal"
 
 group:
   music_player:
@@ -24,4 +31,5 @@ group:
     entities:
       - input_select.ais_music_service
       - input_text.ais_music_query
-      - input_select.ais_music_track_name
+      - sensor.youtubelist
+      - sensor.spotifylist

@@ -60,6 +60,7 @@ def async_setup(hass, config):
     hass.states.async_set("sensor.radiolist", -1, {})
     hass.states.async_set("sensor.podcastlist", -1, {})
     hass.states.async_set("sensor.youtubelist", -1, {})
+    hass.states.async_set("sensor.spotifysearchlist", -1, {})
     hass.states.async_set("sensor.spotifylist", -1, {})
 
     def get_radio_types(call):
@@ -565,7 +566,6 @@ class AisColudData:
                             + ", audycji " + podcast_name
                             + ", włączam najnowszy odcinek: " + 'xxx'
                         })
-                    # TODO play first from list
                 else:
                     # check if the change was done form remote
                     if selected_by_remote:
@@ -619,13 +619,6 @@ class AisColudData:
                     "media_content_type": "audio/mp4",
                     "media_content_id": check_url(_url)
                 })
-            self.hass.services.call(
-                'media_player',
-                'play_media', {
-                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                    "media_content_type": "audio/mp4",
-                    "media_content_id": _url
-                })
             # set stream image and title
             self.hass.services.call(
                 'media_player',
@@ -635,7 +628,6 @@ class AisColudData:
                     "media_content_id": _audio_info
                 })
 
-
     def play_radio(self, item_id):
         _LOGGER.info("play_radio")
         # """play radio by id on sensor list."""
@@ -643,6 +635,8 @@ class AisColudData:
         attr = state.attributes
         track = attr.get(int(item_id))
         # update list
+        self.hass.states.async_set('sensor.radiolist', item_id, attr)
+        # play
         self.hass.services.call('media_player', 'play_media', {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
                                                                "media_content_type": "audio/mp4",
                                                                "media_content_id": track["uri"]})
@@ -653,14 +647,14 @@ class AisColudData:
                                                                    "media_content_type": "ais_info",
                                                                    "media_content_id": _audio_info})
 
-    def play_podcast(self, id):
+    def play_podcast(self, item_id):
         _LOGGER.info("play_podcast")
         # """play radio by id on sensor list."""
         state = self.hass.states.get('sensor.podcastlist')
         attr = state.attributes
-        track = attr.get(int(id))
+        track = attr.get(int(item_id))
         # update list
-        self.hass.states.async_set("sensor.podcastlist", id, attr)
+        self.hass.states.async_set('sensor.podcastlist', item_id, attr)
         try:
             play_uri = track["uri"]['href']
         except Exception:
@@ -678,7 +672,9 @@ class AisColudData:
     def play_audio(self, call):
         audio_type = call.data["audio_type"]
         if 'id' in call.data:
-            if audio_type == ais_global.G_AN_SPOTIFY:
+            if audio_type == ais_global.G_AN_SPOTIFY_SEARCH:
+                self.hass.services.call('ais_spotify_service', 'select_search_uri', {"id": call.data['id']})
+            elif audio_type == ais_global.G_AN_SPOTIFY:
                 self.hass.services.call('ais_spotify_service', 'select_track_uri', {"id": call.data['id']})
             elif audio_type == ais_global.G_AN_MUSIC:
                 self.hass.services.call('ais_yt_service', 'select_track_uri', {"id": call.data['id']})
@@ -767,8 +763,6 @@ class AisColudData:
         next_id = int(curr_id) + 1
         if next_id == len(attr):
             next_id = 0
-        # update list
-        self.hass.states.async_set(track_list, next_id, attr)
         if audio_type == ais_global.G_AN_RADIO:
             self.play_radio(next_id)
         elif audio_type == ais_global.G_AN_PODCAST:
@@ -787,20 +781,7 @@ class AisColudData:
         player_name = None
         _url = None
         _audio_info = {}
-        media_player_type = call.data["media_player_type"]
-        if media_player_type == "Music":
-            track_name = self.hass.states.get(
-                'input_select.ais_music_track_name').state
-            if track_name == ais_global.G_EMPTY_OPTION:
-                return
-            import homeassistant.components.ais_yt_service as yt
-            for music_track in yt.G_YT_FOUND:
-                if music_track["title"] == track_name:
-                    _url = "https://www.youtube.com/watch?v="
-                    _url += music_track["id"]
-                    _audio_info["IMAGE_URL"] = music_track["thumbnail"]
-                    _audio_info["NAME"] = music_track["title"]
-                    _audio_info["MEDIA_SOURCE"] = ais_global.G_AN_MUSIC
+        # TODO
         if player_name is not None:
             player = get_player_data(player_name)
         if _url is not None:

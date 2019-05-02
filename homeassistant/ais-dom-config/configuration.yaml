@@ -57,12 +57,16 @@ recorder:
       - input_select.rss_news_category
       - input_select.rss_news_channel
       - input_select.rss_news_item
-      - input_select.ais_music_track_name
       - input_select.book_autor
       - input_select.book_name
       - input_select.book_chapter
       - input_select.ais_bookmark_last_played
       - input_select.ais_bookmark_favorites
+      - sensor.radiolist
+      - sensor.podcastlist
+      - sensor.youtubelist
+      - sensor.spotifysearchlist
+      - sensor.spotifylist
     domains:
       - mqtt
 history:
@@ -77,12 +81,16 @@ history:
       - input_select.rss_news_category
       - input_select.rss_news_channel
       - input_select.rss_news_item
-      - input_select.ais_music_track_name
       - input_select.book_autor
       - input_select.book_name
       - input_select.book_chapter
       - input_select.ais_bookmark_last_played
       - input_select.ais_bookmark_favorites
+      - sensor.radiolist
+      - sensor.podcastlist
+      - sensor.youtubelist
+      - sensor.spotifysearchlist
+      - sensor.spotifylist
     domains:
       - mqtt
 media_extractor:

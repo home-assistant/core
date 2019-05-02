@@ -118,12 +118,16 @@ async def async_setup(hass, config):
                     "icon": "mdi:download"
                 }
             )
-
-            hass.services.async_call(
-                'ais_ai_service', 'say_it', {"text": info})
+            # say info about update
+            await hass.services.async_call('ais_ai_service', 'say_it', {"text": info})
 
         else:
+
             info = 'Twój system jest aktualny, wersja ' + newest + '. '
+            # only if from remote
+            import homeassistant.components.ais_ai_service as ais_ai
+            if ais_ai.CURR_ENTITIE == 'script.ais_update_system' and ais_ai.CURR_BUTTON_CODE == 23:
+                await hass.services.async_call('ais_ai_service', 'say_it', {"text": info})
             info += releasenotes
             hass.states.async_set(
                 ENTITY_ID, info, {

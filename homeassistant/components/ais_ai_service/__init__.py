@@ -1989,8 +1989,8 @@ def _say_it(hass, message, caller_ip=None, img=None):
         GLOBAL_TTS_TEXT = message + ' '
     if img is not None:
         GLOBAL_TTS_TEXT = GLOBAL_TTS_TEXT + ' \n\n' + '![Zdjęcie](' + img + ')'
-    if len(message) > 60:
-        hass.states.async_set('sensor.ais_knowledge_answer', message[0:60] + "...", {'text': GLOBAL_TTS_TEXT})
+    if len(message) > 100:
+        hass.states.async_set('sensor.ais_knowledge_answer', message[0:100] + "...", {'text': GLOBAL_TTS_TEXT})
     else:
         hass.states.async_set('sensor.ais_knowledge_answer', message, {'text': GLOBAL_TTS_TEXT})
 

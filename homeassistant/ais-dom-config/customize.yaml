@@ -286,11 +286,7 @@ group.bookmarks:
 #  context_suffix: Książka
 #  remote_group_view: Audio
 #  order: 5
-#group.audio_player:
-#  context_key_words: odtwarzacz, odtwarzacze
-#  context_answer: OK, wybrano odtwarzacz.
-#  order: 7
-#  remote_group_view: Audio
+
 group.internet_status:
   context_key_words: internet,sieć,ustawienia sieci,wifi
   context_answer: OK, wybrano internet. Możesz nawigowac pilotem by uzyskać informację o statusie Twojej sieci.
@@ -301,9 +297,14 @@ group.ais_add_iot_device:
   context_answer: OK, wybrano dodawanie nowego urządzenia. Możesz nawigowac pilotem by dodać urządzenie do systemu.
   remote_group_view: Ustawienia
   order: 2
+group.audio_player:
+  context_key_words: odtwarzacz, odtwarzacze
+  context_answer: OK, wybrano odtwarzacz.
+  order: 3
+  remote_group_view: Ustawienia
 group.ais_tts_configuration:
   context_key_words: głos,ustawienia głosu
   context_answer: OK, wybrano konfigurację zamiany tekstu na mowę
   remote_group_view: Ustawienia
-  order: 3
+  order: 4
 

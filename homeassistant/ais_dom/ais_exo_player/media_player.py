@@ -424,73 +424,21 @@ class ExoPlayerDevice(MediaPlayerDevice):
         """Service to send the ExoPlayer the command for next track."""
         if self._media_source == ais_global.G_AN_LOCAL:
             self.hass.services.call('ais_drives_service', 'play_next')
-        elif self._media_source == ais_global.G_AN_RADIO:
-            self.hass.services.call('ais_cloud', 'play_next', {"audio_type": ais_global.G_AN_RADIO})
-        elif self._media_source == ais_global.G_AN_PODCAST:
-            self.hass.services.call('ais_cloud', 'play_next', {"audio_type": ais_global.G_AN_PODCAST})
         else:
-            entity_id = ""
-            if self._media_source == ais_global.G_AN_MUSIC:
-                entity_id = "input_select.ais_music_track_name"
-            elif self._media_source == ais_global.G_AN_SPOTIFY:
-                entity_id = "input_select.ais_music_track_name"
-            elif self._media_source == ais_global.G_AN_AUDIOBOOK:
-                entity_id = "input_select.book_chapter"
+            self.hass.services.call('ais_cloud', 'play_next', {"audio_type": self._media_source})
 
-            self.hass.services.call(
-                'input_select',
-                'select_next', {
-                    "entity_id": entity_id})
-            self.hass.block_till_done()
-            name = self.hass.states.get(entity_id).state
-            self.hass.block_till_done()
-            if name == '-':
-                self.hass.services.call(
-                    'input_select',
-                    'select_next', {
-                        "entity_id": entity_id})
-            self.hass.block_till_done()
-            name = self.hass.states.get(entity_id).state
-            name = 'Odtwarzam kolejny: ' + name
-            self.hass.services.call(
-                'ais_ai_service',
-                'say_it', {
-                    "text": name})
+        # name = 'Odtwarzam kolejny: ' + name
+        # self.hass.services.call('ais_ai_service', 'say_it', {"text": name})
 
     def media_previous_track(self):
         """Service to send the ExoPlayer the command for previous track."""
         if self._media_source == ais_global.G_AN_LOCAL:
             self.hass.services.call('ais_drives_service', 'play_prev')
-        elif self._media_source == ais_global.G_AN_RADIO:
-            self.hass.services.call('ais_cloud', 'play_prev', {"audio_type": ais_global.G_AN_RADIO})
-        elif self._media_source == ais_global.G_AN_PODCAST:
-            self.hass.services.call('ais_cloud', 'play_prev', {"audio_type": ais_global.G_AN_PODCAST})
         else:
-            entity_id = ""
-            if self._media_source == ais_global.G_AN_MUSIC:
-                entity_id = "input_select.ais_music_track_name"
-            elif self._media_source == ais_global.G_AN_SPOTIFY:
-                entity_id = "input_select.ais_music_track_name"
-            elif self._media_source == ais_global.G_AN_AUDIOBOOK:
-                entity_id = "input_select.book_chapter"
-            self.hass.services.call(
-                'input_select',
-                'select_previous', {
-                    "entity_id": entity_id})
-            self.hass.block_till_done()
-            name = self.hass.states.get(entity_id).state
-            if name == '-':
-                self.hass.services.call(
-                    'input_select',
-                    'select_previous', {
-                        "entity_id": entity_id})
-            self.hass.block_till_done()
-            name = self.hass.states.get(entity_id).state
-            name = 'Odtwarzam poprzedni: ' + name
-            self.hass.services.call(
-                'ais_ai_service',
-                'say_it', {
-                    "text": name})
+            self.hass.services.call('ais_cloud', 'play_prev', {"audio_type": self._media_source})
+
+        # name = 'Odtwarzam poprzedni: ' + name
+        # self.hass.services.call('ais_ai_service', 'say_it', {"text": name})
 
     def play_media(self, media_type, media_content_id, **kwargs):
         """Send the media player the command for playing a media."""

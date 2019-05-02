@@ -224,43 +224,6 @@
       data_template:
         query: "{{ states('input_text.ais_music_query') }}"
 
-- id: '201807081905013'
-  alias: 'Select YouTube Track Name'
-  initial_state: True
-  hide_entity: True
-  trigger:
-    platform: state
-    entity_id: input_select.ais_music_track_name
-  condition:
-    condition: and
-    conditions:
-      - condition: template
-        value_template: "{{ states.input_select.ais_music_name.state != '-' }}"
-      - condition: template
-        value_template: "{{ states.input_select.ais_music_service.state == 'YouTube' }}"
-  action:
-    - service: ais_yt_service.select_track_name
-      data_template:
-        name: "{{ states('input_select.ais_music_track_name') }}"
-
-- id: '2018070819050134'
-  alias: 'Select Spotify Track Name'
-  initial_state: True
-  hide_entity: True
-  trigger:
-    platform: state
-    entity_id: input_select.ais_music_track_name
-  condition:
-    condition: and
-    conditions:
-      - condition: template
-        value_template: "{{ states.input_select.ais_music_name.state != '-' }}"
-      - condition: template
-        value_template: "{{ states.input_select.ais_music_service.state == 'Spotify' }}"
-  action:
-    - service: ais_spotify_service.select_track_name
-      data_template:
-        name: "{{ states('input_select.ais_music_track_name') }}"
 
 - id: '201807081916015'
   alias: 'Get RSS News Channels'

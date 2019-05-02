@@ -21,6 +21,7 @@ G_AN_MUSIC = "Music"
 G_AN_AUDIOBOOK = "AudioBook"
 G_AN_NEWS = "News"
 G_AN_LOCAL = "Local"
+G_AN_SPOTIFY_SEARCH = "SpotifySearch"
 G_AN_SPOTIFY = "Spotify"
 G_LOCAL_EXO_PLAYER_ENTITY_ID = "media_player.wbudowany_glosnik"
 # tokens
