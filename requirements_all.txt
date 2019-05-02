@@ -937,7 +937,7 @@ pyRFXtrx==0.23
 # pySwitchmate==0.4.5
 
 # homeassistant.components.tibber
-pyTibber==0.10.1
+pyTibber==0.10.2
 
 # homeassistant.components.dlink
 pyW215==0.6.0
