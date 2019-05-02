@@ -349,15 +349,6 @@ class TelevisionMediaPlayer(HomeAccessory):
                 self.char_mute.set_value(current_mute_state)
             self._flag[FEATURE_TOGGLE_MUTE] = False
 
-        if self.support_volume_level:
-            current_voume_state = new_state.attributes.get(
-                ATTR_MEDIA_VOLUME_LEVEL)
-            if not self._flag[CHAR_VOLUME] and current_voume_state:
-                _LOGGER.debug('%s: Set current volume to %s',
-                              self.entity_id, current_voume_state)
-                self.char_volume.set_value(current_voume_state)
-            self._flag[CHAR_VOLUME] = False
-
         # Set active input
         if self.support_select_source:
             source_name = new_state.attributes.get(ATTR_INPUT_SOURCE)
