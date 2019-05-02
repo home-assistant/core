@@ -4,7 +4,6 @@ import json
 import logging
 import os
 import pathlib
-from urllib.parse import urlparse
 
 from aiohttp import web
 import voluptuous as vol
@@ -28,8 +27,6 @@ CONF_EXTRA_HTML_URL = 'extra_html_url'
 CONF_EXTRA_HTML_URL_ES5 = 'extra_html_url_es5'
 CONF_FRONTEND_REPO = 'development_repo'
 CONF_JS_VERSION = 'javascript_version'
-JS_DEFAULT_OPTION = 'auto'
-JS_OPTIONS = ['es5', 'latest', 'auto']
 
 DEFAULT_THEME_COLOR = '#03A9F4'
 
@@ -74,10 +71,9 @@ CONFIG_SCHEMA = vol.Schema({
         }),
         vol.Optional(CONF_EXTRA_HTML_URL):
             vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_EXTRA_HTML_URL_ES5):
-            vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_JS_VERSION, default=JS_DEFAULT_OPTION):
-            vol.In(JS_OPTIONS)
+        # We no longer use these options.
+        vol.Optional(CONF_EXTRA_HTML_URL_ES5): cv.match_all,
+        vol.Optional(CONF_JS_VERSION):  cv.match_all,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -217,7 +213,6 @@ async def async_setup(hass, config):
 
     repo_path = conf.get(CONF_FRONTEND_REPO)
     is_dev = repo_path is not None
-    hass.data[DATA_JS_VERSION] = js_version = conf.get(CONF_JS_VERSION)
     root_path = _frontend_root(repo_path)
 
     for path, should_cache in (
@@ -238,7 +233,7 @@ async def async_setup(hass, config):
     if os.path.isdir(local):
         hass.http.register_static_path("/local", local, not is_dev)
 
-    index_view = IndexView(repo_path, js_version)
+    index_view = IndexView(repo_path)
     hass.http.register_view(index_view)
 
     @callback
@@ -263,13 +258,9 @@ async def async_setup(hass, config):
 
     if DATA_EXTRA_HTML_URL not in hass.data:
         hass.data[DATA_EXTRA_HTML_URL] = set()
-    if DATA_EXTRA_HTML_URL_ES5 not in hass.data:
-        hass.data[DATA_EXTRA_HTML_URL_ES5] = set()
 
     for url in conf.get(CONF_EXTRA_HTML_URL, []):
         add_extra_html_url(hass, url, False)
-    for url in conf.get(CONF_EXTRA_HTML_URL_ES5, []):
-        add_extra_html_url(hass, url, True)
 
     _async_setup_themes(hass, conf.get(CONF_THEMES))
 
@@ -334,13 +325,12 @@ class IndexView(HomeAssistantView):
     name = 'frontend:index'
     requires_auth = False
 
-    def __init__(self, repo_path, js_option):
+    def __init__(self, repo_path):
         """Initialize the frontend view."""
         self.repo_path = repo_path
-        self.js_option = js_option
         self._template_cache = None
 
-    def get_template(self, latest):
+    def get_template(self):
         """Get template."""
         tpl = self._template_cache
         if tpl is None:
@@ -358,32 +348,24 @@ class IndexView(HomeAssistantView):
     async def get(self, request, extra=None):
         """Serve the index view."""
         hass = request.app['hass']
-        latest = self.repo_path is not None or \
-            _is_latest(self.js_option, request)
 
         if not hass.components.onboarding.async_is_onboarded():
             return web.Response(status=302, headers={
                 'location': '/onboarding.html'
             })
 
-        no_auth = '1'
-        if not request[KEY_AUTHENTICATED]:
-            # do not try to auto connect on load
-            no_auth = '0'
+        template = self._template_cache
 
-        template = await hass.async_add_job(self.get_template, latest)
+        if template is not None:
+            template = await hass.async_add_executor_job(self.get_template)
 
-        extra_key = DATA_EXTRA_HTML_URL if latest else DATA_EXTRA_HTML_URL_ES5
-
-        template_params = dict(
-            no_auth=no_auth,
-            theme_color=MANIFEST_JSON['theme_color'],
-            extra_urls=hass.data[extra_key],
-            use_oauth='1'
+        return web.Response(
+            text=template.render(
+                theme_color=MANIFEST_JSON['theme_color'],
+                extra_urls=hass.data[DATA_EXTRA_HTML_URL],
+            ),
+            content_type='text/html'
         )
-
-        return web.Response(text=template.render(**template_params),
-                            content_type='text/html')
 
 
 class ManifestJSONView(HomeAssistantView):
@@ -398,38 +380,6 @@ class ManifestJSONView(HomeAssistantView):
         """Return the manifest.json."""
         msg = json.dumps(MANIFEST_JSON, sort_keys=True)
         return web.Response(text=msg, content_type="application/manifest+json")
-
-
-def _is_latest(js_option, request):
-    """
-    Return whether we should serve latest untranspiled code.
-
-    Set according to user's preference and URL override.
-    """
-    import hass_frontend
-
-    if request is None:
-        return js_option == 'latest'
-
-    # latest in query
-    if 'latest' in request.query or (
-            request.headers.get('Referer') and
-            'latest' in urlparse(request.headers['Referer']).query):
-        return True
-
-    # es5 in query
-    if 'es5' in request.query or (
-            request.headers.get('Referer') and
-            'es5' in urlparse(request.headers['Referer']).query):
-        return False
-
-    # non-auto option in config
-    if js_option != 'auto':
-        return js_option == 'latest'
-
-    useragent = request.headers.get('User-Agent')
-
-    return useragent and hass_frontend.version(useragent)
 
 
 @callback
