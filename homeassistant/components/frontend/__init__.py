@@ -356,7 +356,7 @@ class IndexView(HomeAssistantView):
 
         template = self._template_cache
 
-        if template is not None:
+        if template is None:
             template = await hass.async_add_executor_job(self.get_template)
 
         return web.Response(
