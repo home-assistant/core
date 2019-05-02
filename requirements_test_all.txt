@@ -57,6 +57,9 @@ aioswitcher==2019.3.21
 # homeassistant.components.unifi
 aiounifi==4
 
+# homeassistant.components.ambiclimate
+ambiclimate==0.1.1
+
 # homeassistant.components.apns
 apns2==0.3.0
 
@@ -130,7 +133,7 @@ growatt==0.0.2
 ha-ffmpeg==2.0
 
 # homeassistant.components.hangouts
-hangups==0.4.6
+hangups==0.4.9
 
 # homeassistant.components.cloud
 hass-nabucasa==0.12
@@ -145,10 +148,10 @@ hdate==0.8.7
 holidays==0.9.10
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190424.0
+home-assistant-frontend==20190427.0
 
 # homeassistant.components.homekit_controller
-homekit[IP]==0.13.0
+homekit[IP]==0.14.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.10.7
@@ -207,6 +210,9 @@ pmsensor==0.4
 # homeassistant.components.prometheus
 prometheus_client==0.2.0
 
+# homeassistant.components.ptvsd
+ptvsd==4.2.8
+
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
 
@@ -226,7 +232,7 @@ pydeconz==55
 pydispatcher==2.0.5
 
 # homeassistant.components.heos
-pyheos==0.4.1
+pyheos==0.5.1
 
 # homeassistant.components.homematic
 pyhomematic==0.1.58
@@ -261,7 +267,7 @@ pysmartapp==0.3.2
 pysmartthings==0.6.7
 
 # homeassistant.components.sonos
-pysonos==0.0.10
+pysonos==0.0.12
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0

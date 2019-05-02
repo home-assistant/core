@@ -79,7 +79,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
             const.CONTROL_PLAY_NEXT: SUPPORT_NEXT_TRACK
         }
 
-    async def _controller_event(self, event):
+    async def _controller_event(self, event, data):
         """Handle controller event."""
         from pyheos import const
         if event == const.EVENT_PLAYERS_CHANGED:
@@ -277,6 +277,11 @@ class HeosMediaPlayer(MediaPlayerDevice):
         if not self._player.now_playing_media.duration:
             return None
         return self._media_position_updated_at
+
+    @property
+    def media_image_remotely_accessible(self) -> bool:
+        """If the image url is remotely accessible."""
+        return True
 
     @property
     def media_image_url(self) -> str:

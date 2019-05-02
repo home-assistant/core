@@ -20,11 +20,15 @@ class Config:
     """Hold the configuration for Google Assistant."""
 
     def __init__(self, should_expose,
-                 entity_config=None, secure_devices_pin=None):
+                 entity_config=None, secure_devices_pin=None,
+                 agent_user_id=None):
         """Initialize the configuration."""
         self.should_expose = should_expose
         self.entity_config = entity_config or {}
         self.secure_devices_pin = secure_devices_pin
+
+        # Agent User Id to use for query responses
+        self.agent_user_id = agent_user_id
 
 
 class RequestData:

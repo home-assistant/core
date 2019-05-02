@@ -321,12 +321,12 @@ class InfluxThread(threading.Thread):
 
                 _LOGGER.debug("Wrote %d events", len(json))
                 break
-            except (exceptions.InfluxDBClientError, IOError):
+            except (exceptions.InfluxDBClientError, IOError) as err:
                 if retry < self.max_tries:
                     time.sleep(RETRY_DELAY)
                 else:
                     if not self.write_errors:
-                        _LOGGER.exception("Write error")
+                        _LOGGER.error("Write error: %s", err)
                     self.write_errors += len(json)
 
     def run(self):
