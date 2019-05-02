@@ -249,7 +249,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         # Handle service call for EntityPlatform platforms.
         # Replace this service handler when all platforms have been converted
         # to EntityPlatform.
-        entity_ids = hass.helpers.service.extract_entity_ids(call)
+        entity_ids = await hass.helpers.service.async_extract_entity_ids(call)
         data.pop(ATTR_ENTITY_ID, None)
         entity_comp_data = dict(data)
         if ATTR_GPS in entity_comp_data:
