@@ -184,7 +184,7 @@ class EvoZone(EvoDevice, ClimateDevice):
 
     @property
     def max_temp(self):
-        """Return the minimum target temperature of a evohome Zone.
+        """Return the maximum target temperature of a evohome Zone.
 
         The default is 35 (in Celsius), but it is configurable within 5-35.
         """
@@ -335,7 +335,7 @@ class EvoController(EvoDevice, ClimateDevice):
         expected by the HA schema.
         """
         tmp_list = [x for x in self._status['zones']
-                    if x['temperatureStatus']['isAvailable'] is True]
+                    if x['temperatureStatus']['isAvailable']]
         temps = [zone['temperatureStatus']['temperature'] for zone in tmp_list]
 
         avg_temp = round(sum(temps) / len(temps), 1) if temps else None
@@ -379,7 +379,7 @@ class EvoController(EvoDevice, ClimateDevice):
 
     @property
     def max_temp(self):
-        """Return the minimum target temperature of a evohome Controller.
+        """Return the maximum target temperature of a evohome Controller.
 
         Although evohome Controllers do not have a maximum target temp, one is
         expected by the HA schema; the default for an evohome HR92 is used.
