@@ -59,8 +59,10 @@ class GoogleCloudTTSProvider(Provider):
         if key_file and os.path.isfile(path):
             os.environ[GOOGLE_APPLICATION_CREDENTIALS] = path
         if GOOGLE_APPLICATION_CREDENTIALS not in os.environ:
-            _LOGGER.error("You need to specify valid"
-            " GOOGLE_APPLICATION_CREDENTIALS file location.")
+            _LOGGER.error(
+                "You need to specify valid"
+                " GOOGLE_APPLICATION_CREDENTIALS file location."
+            )
         self.client = texttospeech.TextToSpeechClient()
         self.audio_config = texttospeech.types.AudioConfig(
             audio_encoding=texttospeech.enums.AudioEncoding.MP3
