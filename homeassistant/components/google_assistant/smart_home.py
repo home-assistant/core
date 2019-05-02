@@ -99,7 +99,7 @@ async def async_devices_sync(hass, data, payload):
         devices.append(serialized)
 
     response = {
-        'agentUserId': data.context.user_id,
+        'agentUserId': data.config.agent_user_id or data.context.user_id,
         'devices': devices,
     }
 
