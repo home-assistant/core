@@ -88,3 +88,52 @@ jobs:
         --upload rsync \
         --remote wheels@wheels.hass.io:/opt/wheels
     displayName: 'Run wheels build'
+
+
+- job: 'Release'
+  condition: startsWith(variables['Build.SourceBranch'], 'refs/tags')
+  timeoutInMinutes: 120
+  pool:
+    vmImage: 'ubuntu-16.04'
+  strategy:
+    maxParallel: 5
+    matrix:
+      amd64:
+        buildArch: 'amd64'
+        buildMachine: 'qemux86-64,intel-nuc'
+      i386:
+        buildArch: 'i386'
+        buildMachine: 'qemux86'
+      armhf:
+        buildArch: 'armhf'
+        buildMachine: 'qemuarm,raspberrypi'
+      armv7:
+        buildArch: 'armv7'
+        buildMachine: 'raspberrypi2,raspberrypi3,odroid-xu,tinker'
+      aarch64:
+        buildArch: 'aarch64'
+        buildMachine: 'qemuarm-64,raspberrypi3-64,odroid-c2,orangepi-prime'
+  steps:
+  - script: sudo docker login -u $(dockerUser) -p $(dockerPassword)
+    displayName: 'Docker hub login'
+  - script: sudo docker pull homeassistant/amd64-builder:$(versionBuilder)
+    displayName: 'Install Builder'
+  - script: |
+      set -e
+
+      sudo docker run --rm --privileged \
+        -v ~/.docker:/root/.docker \
+        -v /run/docker.sock:/run/docker.sock:rw \
+        homeassistant/amd64-builder:$(versionBuilder) \
+        --homeassistant $(Build.SourceBranchName) "--$(buildArch)" \
+        -r https://github.com/home-assistant/hassio-homeassistant \
+        -t generic --docker-hub homeassistant
+
+      sudo docker run --rm --privileged \
+        -v ~/.docker:/root/.docker \
+        -v /run/docker.sock:/run/docker.sock:rw \
+        homeassistant/amd64-builder:$(versionBuilder) \
+        --homeassistant-machine "$(Build.SourceBranchName)=$(buildMachine)" \
+        -r https://github.com/home-assistant/hassio-homeassistant \
+        -t machine --docker-hub homeassistant
+    displayName: 'Build Release'
