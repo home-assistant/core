@@ -161,7 +161,7 @@ async def test_update_sources_retry(hass, config_entry, config, controller,
     source_manager.max_retry_attempts = 1
     controller.get_favorites.side_effect = CommandError("Test", "test", 0)
     controller.dispatcher.send(
-        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_SOURCES_CHANGED)
+        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_SOURCES_CHANGED, {})
     # Wait until it's finished
     while "Unable to update sources" not in caplog.text:
         await asyncio.sleep(0.1)
