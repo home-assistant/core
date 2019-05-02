@@ -153,12 +153,17 @@ class EvoDevice(Entity):
     (optionally) a DHW controller.
     """
 
-    # pylint: disable=no-member
-
     def __init__(self, evo_data, client, obj_ref):
         """Initialize the evohome entity."""
         self._client = client
         self._obj = obj_ref
+
+        self._name = None
+        self._icon = None
+        self._type = None
+
+        self._supported_features = None
+        self._operation_list = None
 
         self._params = evo_data['params']
         self._timers = evo_data['timers']
