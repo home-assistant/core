@@ -146,8 +146,8 @@ async def async_setup(hass, config):
     for platform in enabled_platforms:
         if platform in DEFAULT_ENABLED:
             logger.warning(
-                'Deprecated config for discovery: service %s is enabled by'
-                'default - ignoring',
+                "Please remove %s from your discovery.enable configuration "
+                "as it is now enabled by default.",
                 platform,
             )
 
