@@ -37,11 +37,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     growatt_client = growatt.GrowattApi()
 
     if login(growatt_client, username, password):
-        sensor_today = GrowattPlantToday(
-            hass, growatt_client, username, password
+        sensor_today = GrowattPlantTotals(
+            hass,
+            growatt_client,
+            username,
+            password,
+            "Growatt plant today",
+            "todayEnergySum",
         )
-        sensor_total = GrowattPlantTotal(
-            hass, growatt_client, username, password
+        sensor_total = GrowattPlantTotals(
+            hass,
+            growatt_client,
+            username,
+            password,
+            "Growatt plant total",
+            "totalEnergySum",
         )
         sensor_current = GrowattPlantCurrent(
             hass, growatt_client, username, password
@@ -93,6 +103,12 @@ class GrowattPlant(Entity):
 class GrowattPlantTotals(GrowattPlant):
     """Representation of a Growatt plant sensor."""
 
+    def __init__(self, hass, client, username, password, name, metric_name):
+        """Initialize the sensor."""
+        super().__init__(hass, client, username, password)
+        self._name = name
+        self._metric_name = metric_name
+
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
@@ -119,31 +135,14 @@ class GrowattPlantTotals(GrowattPlant):
             self._convert_to_kwh(*plant_info["totalData"][key].split(" "))
         )
 
-
-class GrowattPlantToday(GrowattPlantTotals):
-    """Representation of a Growatt plant daily sensor."""
-
     def update(self):
         """Get the latest data from Growatt server."""
-        self._state = self._get_total_energy("todayEnergySum")
+        self._state = self._get_total_energy(self._metric_name)
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "Growatt plant today"
-
-
-class GrowattPlantTotal(GrowattPlantTotals):
-    """Representation of a Growatt plant total sensor."""
-
-    def update(self):
-        """Get the latest data from Growatt server."""
-        self._state = self._get_total_energy("totalEnergySum")
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return "Growatt plant total"
+        return self.name
 
 
 class GrowattPlantCurrent(GrowattPlant):

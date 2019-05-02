@@ -78,8 +78,8 @@ dummy_plant_info = {
 @mock.patch("growatt.GrowattApi.plant_list", return_value=dummy_plant_info)
 def test_today_energy(_, __):
     """Test extracting todays energy from plant."""
-    sensor = growatt_sensor.GrowattPlantToday(
-        None, growatt.GrowattApi(), "foo", "bar"
+    sensor = growatt_sensor.GrowattPlantTotals(
+        None, growatt.GrowattApi(), "foo", "bar", "today", "todayEnergySum"
     )
     sensor.update()
     assert sensor.state == 0.6
@@ -89,8 +89,8 @@ def test_today_energy(_, __):
 @mock.patch("growatt.GrowattApi.plant_list", return_value=dummy_plant_info)
 def test_total_energy(_, __):
     """Test extracting total energy from plant."""
-    sensor = growatt_sensor.GrowattPlantTotal(
-        None, growatt.GrowattApi(), "foo", "bar"
+    sensor = growatt_sensor.GrowattPlantTotals(
+        None, growatt.GrowattApi(), "foo", "bar", "total", "totalEnergySum"
     )
     sensor.update()
     assert sensor.state == 114.9
