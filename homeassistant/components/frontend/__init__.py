@@ -31,7 +31,8 @@ DEFAULT_THEME_COLOR = '#03A9F4'
 
 MANIFEST_JSON = {
     'background_color': '#FFFFFF',
-    'description': 'Open-source home automation platform running on Python 3.',
+    'description':
+    'Home automation platform that puts local control and privacy first.',
     'dir': 'ltr',
     'display': 'standalone',
     'icons': [],
