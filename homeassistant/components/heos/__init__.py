@@ -195,7 +195,7 @@ class SourceManager:
                                       exc_info=isinstance(error, CommandError))
                         return
 
-        async def update_sources(event):
+        async def update_sources(event, data):
             if event in (const.EVENT_SOURCES_CHANGED,
                          const.EVENT_USER_CHANGED):
                 sources = await get_sources()
