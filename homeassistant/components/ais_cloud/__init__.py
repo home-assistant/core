@@ -743,8 +743,11 @@ class AisColudData:
         prev_id = curr_id - 1
         if prev_id < 0:
             prev_id = len(attr) - 1
-        # update list
-        self.hass.states.async_set(track_list, prev_id, attr)
+        # say only if from remote
+        import homeassistant.components.ais_ai_service as ais_ai
+        if ais_ai.CURR_ENTITIE == 'media_player.wbudowany_glosnik' and ais_ai.CURR_BUTTON_CODE == 23:
+            # TODO read the name
+            pass
         if audio_type == ais_global.G_AN_RADIO:
             self.play_radio(prev_id)
         elif audio_type == ais_global.G_AN_PODCAST:
@@ -761,8 +764,15 @@ class AisColudData:
         curr_id = state.state
         attr = state.attributes
         next_id = int(curr_id) + 1
+
         if next_id == len(attr):
             next_id = 0
+
+        # say only if from remote
+        import homeassistant.components.ais_ai_service as ais_ai
+        if ais_ai.CURR_ENTITIE == 'media_player.wbudowany_glosnik' and ais_ai.CURR_BUTTON_CODE == 23:
+            # TODO read the name
+            pass
         if audio_type == ais_global.G_AN_RADIO:
             self.play_radio(next_id)
         elif audio_type == ais_global.G_AN_PODCAST:

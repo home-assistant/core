@@ -276,7 +276,7 @@ group.music_player:
 group.bookmarks:
   context_key_words: zakładki,ulubione
   context_answer: OK, wybierz pozycję
-  friendly_name: Zakładki
+  friendly_name: Zakładki i ulubione
   remote_group_view: Audio
   order: 6
 #group.audiobooks_player:
