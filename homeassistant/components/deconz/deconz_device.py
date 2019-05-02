@@ -15,7 +15,6 @@ class DeconzDevice(Entity):
         self._device = device
         self.gateway = gateway
         self.unsub_dispatcher = None
-        self._cancel_retry_set_state = None
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""
@@ -30,10 +29,6 @@ class DeconzDevice(Entity):
         self._device.remove_callback(self.async_update_callback)
         del self.gateway.deconz_ids[self.entity_id]
         self.unsub_dispatcher()
-
-        if self._cancel_retry_set_state is not None:
-            self._cancel_retry_set_state()
-            self._cancel_retry_set_state = None
 
     @callback
     def async_update_callback(self, reason):
@@ -79,21 +74,3 @@ class DeconzDevice(Entity):
             'sw_version': self._device.swversion,
             'via_hub': (DECONZ_DOMAIN, bridgeid),
         }
-
-    async def async_device_set_state(self, data, tries=0):
-        """Set state of device."""
-        from pydeconz import errors
-
-        try:
-            await self._device.async_set_state(data)
-
-        except errors.BridgeBusy:
-            async def retry_set_state(_now):
-                """Retry set state."""
-                await self.async_device_set_state(data, tries + 1)
-
-            if tries < 5:
-                retry_delay = 2 ** (tries + 1)
-                self._cancel_retry_set_state = \
-                    self.hass.helpers.event.async_call_later(
-                        retry_delay, retry_set_state)

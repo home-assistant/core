@@ -140,7 +140,7 @@ class DeconzLight(DeconzDevice, Light):
             else:
                 data['effect'] = 'none'
 
-        await self.async_device_set_state(data)
+        await self._device.async_set_state(data)
 
     async def async_turn_off(self, **kwargs):
         """Turn off light."""
@@ -158,7 +158,7 @@ class DeconzLight(DeconzDevice, Light):
                 data['alert'] = 'lselect'
                 del data['on']
 
-        await self.async_device_set_state(data)
+        await self._device.async_set_state(data)
 
     @property
     def device_state_attributes(self):

@@ -53,12 +53,12 @@ class DeconzPowerPlug(DeconzDevice, SwitchDevice):
     async def async_turn_on(self, **kwargs):
         """Turn on switch."""
         data = {'on': True}
-        await self.async_device_set_state(data)
+        await self._device.async_set_state(data)
 
     async def async_turn_off(self, **kwargs):
         """Turn off switch."""
         data = {'on': False}
-        await self.async_device_set_state(data)
+        await self._device.async_set_state(data)
 
 
 class DeconzSiren(DeconzDevice, SwitchDevice):
@@ -72,9 +72,9 @@ class DeconzSiren(DeconzDevice, SwitchDevice):
     async def async_turn_on(self, **kwargs):
         """Turn on switch."""
         data = {'alert': 'lselect'}
-        await self.async_device_set_state(data)
+        await self._device.async_set_state(data)
 
     async def async_turn_off(self, **kwargs):
         """Turn off switch."""
         data = {'alert': 'none'}
-        await self.async_device_set_state(data)
+        await self._device.async_set_state(data)
