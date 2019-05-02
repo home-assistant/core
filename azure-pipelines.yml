@@ -11,7 +11,7 @@ trigger:
 
 variables:
   versionBuilder: '3.1'
-  versionWheels: '0.1'
+  versionWheels: '0.2'
 
 jobs:
 
@@ -54,6 +54,7 @@ jobs:
   - script: |
       cp requirements_all.txt requirements_hassio.txt
 
+      # Enable because we can build it
       sed -i "s|# pytradfri|pytradfri|g" requirements_hassio.txt
       sed -i "s|# pybluez|pybluez|g" requirements_hassio.txt
       sed -i "s|# bluepy|bluepy|g" requirements_hassio.txt
@@ -74,6 +75,9 @@ jobs:
       sed -i "s|# decora|decora|g" requirements_hassio.txt
       sed -i "s|# PySwitchbot|PySwitchbot|g" requirements_hassio.txt
       sed -i "s|# pySwitchmate|pySwitchmate|g" requirements_hassio.txt
+
+      # Disable because of error
+      sed -i "s|insteonplm|# insteonplm|g" requirements_hassio.txt
     displayName: 'Prepare requirements files for Hass.io'
   - script: |
       sudo docker run --rm -v $(pwd):/data:ro -v ~/.ssh:/root/.ssh:rw \
