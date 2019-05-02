@@ -780,6 +780,25 @@ async def async_setup_entry(hass, config_entry):
                                test_node,
                                schema=TEST_NODE_SCHEMA)
 
+    async def node_removed():
+        # node_id = service.data.get('node')
+        node_id = 14
+        entities = hass.data[DATA_DEVICES]
+        node_key = 'node-{}'.format(node_id)
+        _LOGGER.info("Node Removed: %s",
+                     hass.data[DATA_DEVICES][node_key])
+        for key in entities:
+            if '{}-'.format(node_id) in key:
+                entity = hass.data[DATA_DEVICES][key]
+                _LOGGER.info('Removing Entity - value: %s - entity_id: %s',
+                             key, entity.entity_id)
+                await entity.node_removed()
+                del hass.data[DATA_DEVICES][key]
+
+        entity = hass.data[DATA_DEVICES][node_key]
+        await entity.node_removed()
+        del hass.data[DATA_DEVICES][node_key]
+
     # Setup autoheal
     if autoheal:
         _LOGGER.info("Z-Wave network autoheal is enabled")
