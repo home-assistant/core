@@ -186,10 +186,11 @@ class TelevisionMediaPlayer(HomeAccessory):
         self.support_select_source = False
         self.support_volume_level = False
 
+        self.sources = []
+
         # Add additional characteristics if volume or input selection supported
         self.chars_tv = []
         self.chars_speaker = []
-        self.sources = []
         features = self.hass.states.get(self.entity_id) \
             .attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
