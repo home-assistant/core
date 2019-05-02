@@ -79,7 +79,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
             const.CONTROL_PLAY_NEXT: SUPPORT_NEXT_TRACK
         }
 
-    async def _controller_event(self, event):
+    async def _controller_event(self, event, data):
         """Handle controller event."""
         from pyheos import const
         if event == const.EVENT_PLAYERS_CHANGED:
