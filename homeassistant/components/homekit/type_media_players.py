@@ -182,7 +182,7 @@ class TelevisionMediaPlayer(HomeAccessory):
         super().__init__(*args, category=CATEGORY_TELEVISION)
 
         self._flag = {CHAR_ACTIVE: False, CHAR_ACTIVE_IDENTIFIER: False,
-                      FEATURE_TOGGLE_MUTE: False, CHAR_VOLUME: False}
+                      FEATURE_TOGGLE_MUTE: False}
         self.support_select_source = False
         self.support_volume_level = False
 
@@ -281,15 +281,6 @@ class TelevisionMediaPlayer(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id,
                   ATTR_MEDIA_VOLUME_MUTED: value}
         self.call_service(DOMAIN, SERVICE_VOLUME_MUTE, params)
-
-    def set_volume(self, value):
-        """Send volume step value if call came from HomeKit."""
-        _LOGGER.debug('%s: Set volume to %s', self.entity_id, value)
-
-        self._flag[CHAR_VOLUME] = True
-        params = {ATTR_ENTITY_ID: self.entity_id,
-                  ATTR_MEDIA_VOLUME_LEVEL: value}
-        self.call_service(DOMAIN, SERVICE_VOLUME_SET, params)
 
     def set_volume_step(self, value):
         """Send volume step value if call came from HomeKit."""
