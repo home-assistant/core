@@ -3,15 +3,15 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME
-from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_NAME
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SERIAL_DEVICE = 'serial_device'
 CONF_BRAND = 'brand'
+CONF_SERIAL_DEVICE = 'serial_device'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_BRAND): cv.string,
@@ -82,7 +82,3 @@ class ParticulateMatterSensor(Entity):
             self._state = self._collector.read_data()[self._pmname]
         except KeyError:
             _LOGGER.error("Could not read PM%s value", self._pmname)
-
-    def should_poll(self):
-        """Sensor needs polling."""
-        return True
