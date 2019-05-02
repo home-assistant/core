@@ -36,9 +36,9 @@ def test_convert_multiplier_no_value():
 def test_convert_to_kwh():
     """Test converting to kWh."""
     assert (
-        growatt_sensor.GrowattPlantTotals(None, None, "", "")._convert_to_kwh(
-            "5.42", "GWh"
-        )
+        growatt_sensor.GrowattPlantTotals(
+            None, None, "", "", "", ""
+        )._convert_to_kwh("5.42", "GWh")
         == 5420000
     )
 
