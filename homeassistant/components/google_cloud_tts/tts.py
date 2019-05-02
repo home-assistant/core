@@ -11,7 +11,7 @@ from google.cloud import texttospeech
 _LOGGER = logging.getLogger(__name__)
 
 GENDERS = [
-    'Female', 'Male',
+    'Neutral', 'Female', 'Male',
 ]
 DEFAULT_GENDER = GENDERS[0]
 
@@ -94,7 +94,12 @@ class GoogleCloudTTSProvider(Provider):
                 self.voice = texttospeech.types.VoiceSelectionParams(
                     language_code=language or self._lang,
                     name=voice,
-                    ssml_gender=texttospeech.enums.SsmlVoiceGender.FEMALE if gender==GENDERS[0] else texttospeech.enums.SsmlVoiceGender.MALE
+                    ssml_gender=
+                        texttospeech.enums.SsmlVoiceGender.NEUTRAL if gender==GENDERS[0] else
+                        (
+                            texttospeech.enums.SsmlVoiceGender.FEMALE if gender==GENDERS[1] else
+                            texttospeech.enums.SsmlVoiceGender.MALE
+                        )
                 )
                 synthesis_input = texttospeech.types.SynthesisInput(text=message)
                 response = self.client.synthesize_speech(
