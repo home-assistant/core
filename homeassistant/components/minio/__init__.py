@@ -1,5 +1,4 @@
 """Minio component."""
-
 import logging
 import os
 import threading
@@ -7,11 +6,11 @@ from queue import Queue
 from typing import List
 
 import voluptuous as vol
+from minio import Minio
+
 from homeassistant.const import EVENT_HOMEASSISTANT_START, \
     EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
-
-from minio import Minio
 
 from .minio_helper import MinioEventThread
 
@@ -40,21 +39,24 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_ACCESS_KEY): cv.string,
         vol.Required(CONF_SECRET_KEY): cv.string,
         vol.Required(CONF_SECURE): cv.boolean,
-        vol.Optional(CONF_LISTEN, default=[]): vol.All(cv.ensure_list, [vol.Schema({
-            vol.Required(CONF_LISTEN_BUCKET): cv.string,
-            vol.Optional(
-                CONF_LISTEN_PREFIX,
-                default=DEFAULT_LISTEN_PREFIX
-            ): cv.string,
-            vol.Optional(
-                CONF_LISTEN_SUFFIX,
-                default=DEFAULT_LISTEN_SUFFIX
-            ): cv.string,
-            vol.Optional(
-                CONF_LISTEN_EVENTS,
-                default=DEFAULT_LISTEN_EVENTS
-            ): cv.string,
-        })])
+        vol.Optional(CONF_LISTEN, default=[]): vol.All(
+            cv.ensure_list,
+            [vol.Schema({
+                vol.Required(CONF_LISTEN_BUCKET): cv.string,
+                vol.Optional(
+                    CONF_LISTEN_PREFIX,
+                    default=DEFAULT_LISTEN_PREFIX
+                ): cv.string,
+                vol.Optional(
+                    CONF_LISTEN_SUFFIX,
+                    default=DEFAULT_LISTEN_SUFFIX
+                ): cv.string,
+                vol.Optional(
+                    CONF_LISTEN_EVENTS,
+                    default=DEFAULT_LISTEN_EVENTS
+                ): cv.string,
+            })]
+        )
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -117,7 +119,7 @@ def setup(hass, config):
             minio_listener.stop_handler
         )
 
-    for listen_conf in conf.get(CONF_LISTEN):
+    for listen_conf in conf[CONF_LISTEN]:
         _setup_listener(listen_conf)
 
     minio_client = Minio(
@@ -128,7 +130,7 @@ def setup(hass, config):
     )
 
     def _render_service_value(service, key):
-        value = service.data.get(key)
+        value = service.data[key]
         value.hass = hass
         return value.async_render()
 
@@ -188,13 +190,13 @@ class QueueListener(threading.Thread):
         """Create queue."""
         super().__init__()
         self._hass = hass
-        self._q = Queue()
+        self._queue = Queue()
 
     def run(self):
         """Listen to queue events, and forward them to HASS event bus."""
         _LOGGER.info('Running QueueListener')
         while True:
-            event = self._q.get()
+            event = self._queue.get()
             if event is None:
                 break
 
@@ -214,12 +216,12 @@ class QueueListener(threading.Thread):
     @property
     def queue(self):
         """Return wrapped queue."""
-        return self._q
+        return self._queue
 
     def stop(self):
         """Stop run by putting None into queue and join the thread."""
         _LOGGER.info('Stopping QueueListener')
-        self._q.put(None)
+        self._queue.put(None)
         self.join()
         _LOGGER.info('Stopped QueueListener')
 
