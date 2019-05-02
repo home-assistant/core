@@ -10,8 +10,12 @@ trigger:
     - '*'
 
 variables:
-  versionBuilder: '3.1'
-  versionWheels: '0.2'
+  - name: versionBuilder
+    value: '3.1'
+  - name: versionWheels
+    value: '0.2'
+  - group: docker
+  - group: wheels
 
 jobs:
 
@@ -44,10 +48,10 @@ jobs:
       sudo update-binfmts --enable qemu-aarch64
     displayName: 'Initial cross build'
   - script: |
-      mkdir -p ~/.ssh
-      echo -e "-----BEGIN RSA PRIVATE KEY-----\n$(sshKey)\n-----END RSA PRIVATE KEY-----" >> ~/.ssh/id_rsa
-      ssh-keyscan -H wheels.hass.io >> ~/.ssh/known_hosts
-      chmod 600 ~/.ssh/*
+      mkdir -p .ssh
+      echo -e "-----BEGIN RSA PRIVATE KEY-----\n$(wheelsSSH)\n-----END RSA PRIVATE KEY-----" >> .ssh/id_rsa
+      ssh-keyscan -H $(wheelsHost) >> .ssh/known_hosts
+      chmod 600 .ssh/*
     displayName: 'Install ssh key'
   - script: sudo docker pull homeassistant/$(buildArch)-wheels:$(versionWheels)
     displayName: 'Install wheels builder'
@@ -80,13 +84,13 @@ jobs:
       sed -i "s|insteonplm|# insteonplm|g" requirements_hassio.txt
     displayName: 'Prepare requirements files for Hass.io'
   - script: |
-      sudo docker run --rm -v $(pwd):/data:ro -v ~/.ssh:/root/.ssh:rw \
+      sudo docker run --rm -v $(pwd):/data:ro -v $(pwd)/.ssh:/root/.ssh:rw \
         homeassistant/$(buildArch)-wheels:$(versionWheels) \
         --apk "build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;linux-headers;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev" \
         --index https://wheels.hass.io \
         --requirement requirements_hassio.txt \
         --upload rsync \
-        --remote wheels@wheels.hass.io:/opt/wheels
+        --remote wheels@$(wheelsHost):/opt/wheels
     displayName: 'Run wheels build'
 
 
