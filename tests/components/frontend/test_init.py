@@ -232,15 +232,6 @@ def test_extra_urls(mock_http_client_with_urls, mock_onboarded):
     assert text.find('href="https://domain.com/my_extra_url.html"') >= 0
 
 
-@asyncio.coroutine
-def test_extra_urls_es5(mock_http_client_with_urls, mock_onboarded):
-    """Test that es5 extra urls are loaded."""
-    resp = yield from mock_http_client_with_urls.get('/states?es5')
-    assert resp.status == 200
-    text = yield from resp.text()
-    assert text.find('href="https://domain.com/my_extra_url_es5.html"') >= 0
-
-
 async def test_get_panels(hass, hass_ws_client):
     """Test get_panels command."""
     await async_setup_component(hass, 'frontend', {})
