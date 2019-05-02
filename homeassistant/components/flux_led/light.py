@@ -306,7 +306,7 @@ class FluxLight(Light):
         if self._mode == MODE_RGBW:
             if white is None:
                 self._bulb.setRgbw(*color_util.color_hsv_to_RGB(*color))
-            elif color is None:
+            elif hs_color is None:
                 self._bulb.setRgbw(w=white)
             else:
                 self._bulb.setRgbw(*color_util.color_hsv_to_RGB(*color), w=white)
