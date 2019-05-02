@@ -3,6 +3,7 @@ import asyncio
 import json
 import logging
 import os
+import pathlib
 from urllib.parse import urlparse
 
 from aiohttp import web
@@ -191,6 +192,15 @@ def add_manifest_json_key(key, val):
     MANIFEST_JSON[key] = val
 
 
+def _frontend_root(dev_repo_path):
+    """Return root path to the frontend files."""
+    if dev_repo_path is not None:
+        return pathlib.Path(dev_repo_path) / 'hass_frontend'
+
+    import hass_frontend
+    return hass_frontend.where()
+
+
 async def async_setup(hass, config):
     """Set up the serving of the frontend."""
     await async_setup_frontend_storage(hass)
@@ -208,30 +218,21 @@ async def async_setup(hass, config):
     repo_path = conf.get(CONF_FRONTEND_REPO)
     is_dev = repo_path is not None
     hass.data[DATA_JS_VERSION] = js_version = conf.get(CONF_JS_VERSION)
+    root_path = _frontend_root(repo_path)
 
-    if is_dev:
-        hass_frontend_path = os.path.join(repo_path, 'hass_frontend')
-        hass_frontend_es5_path = os.path.join(repo_path, 'hass_frontend_es5')
-    else:
-        import hass_frontend
-        import hass_frontend_es5
-        hass_frontend_path = hass_frontend.where()
-        hass_frontend_es5_path = hass_frontend_es5.where()
+    for path, should_cache in (
+            ("service_worker.js", False),
+            ("robots.txt", False),
+            ("onboarding.html", True),
+            ("static", True),
+            ("frontend_latest", True),
+            ("frontend_es5", True),
+    ):
+        hass.http.register_static_path(
+            "/{}".format(path), str(root_path / path), should_cache)
 
     hass.http.register_static_path(
-        "/service_worker_es5.js",
-        os.path.join(hass_frontend_es5_path, "service_worker.js"), False)
-    hass.http.register_static_path(
-        "/service_worker.js",
-        os.path.join(hass_frontend_path, "service_worker.js"), False)
-    hass.http.register_static_path(
-        "/robots.txt",
-        os.path.join(hass_frontend_path, "robots.txt"), False)
-    hass.http.register_static_path("/static", hass_frontend_path, not is_dev)
-    hass.http.register_static_path(
-        "/frontend_latest", hass_frontend_path, not is_dev)
-    hass.http.register_static_path(
-        "/frontend_es5", hass_frontend_es5_path, not is_dev)
+        "/auth/authorize", str(root_path / "authorize.html"), False)
 
     local = hass.config.path('www')
     if os.path.isdir(local):
@@ -239,7 +240,6 @@ async def async_setup(hass, config):
 
     index_view = IndexView(repo_path, js_version)
     hass.http.register_view(index_view)
-    hass.http.register_view(AuthorizeView(repo_path, js_version))
 
     @callback
     def async_finalize_panel(panel):
@@ -327,36 +327,6 @@ def _async_setup_themes(hass, themes):
     hass.services.async_register(DOMAIN, SERVICE_RELOAD_THEMES, reload_themes)
 
 
-class AuthorizeView(HomeAssistantView):
-    """Serve the frontend."""
-
-    url = '/auth/authorize'
-    name = 'auth:authorize'
-    requires_auth = False
-
-    def __init__(self, repo_path, js_option):
-        """Initialize the frontend view."""
-        self.repo_path = repo_path
-        self.js_option = js_option
-
-    async def get(self, request: web.Request):
-        """Redirect to the authorize page."""
-        latest = self.repo_path is not None or \
-            _is_latest(self.js_option, request)
-
-        if latest:
-            base = 'frontend_latest'
-        else:
-            base = 'frontend_es5'
-
-        location = "/{}/authorize.html{}".format(
-            base, str(request.url.relative())[15:])
-
-        return web.Response(status=302, headers={
-            'location': location
-        })
-
-
 class IndexView(HomeAssistantView):
     """Serve the frontend."""
 
@@ -368,28 +338,20 @@ class IndexView(HomeAssistantView):
         """Initialize the frontend view."""
         self.repo_path = repo_path
         self.js_option = js_option
-        self._template_cache = {}
+        self._template_cache = None
 
     def get_template(self, latest):
         """Get template."""
-        if self.repo_path is not None:
-            root = os.path.join(self.repo_path, 'hass_frontend')
-        elif latest:
-            import hass_frontend
-            root = hass_frontend.where()
-        else:
-            import hass_frontend_es5
-            root = hass_frontend_es5.where()
-
-        tpl = self._template_cache.get(root)
-
+        tpl = self._template_cache
         if tpl is None:
-            with open(os.path.join(root, 'index.html')) as file:
+            with open(
+                    str(_frontend_root(self.repo_path) / 'index.html')
+            ) as file:
                 tpl = jinja2.Template(file.read())
 
             # Cache template if not running from repository
             if self.repo_path is None:
-                self._template_cache[root] = tpl
+                self._template_cache = tpl
 
         return tpl
 
@@ -400,13 +362,8 @@ class IndexView(HomeAssistantView):
             _is_latest(self.js_option, request)
 
         if not hass.components.onboarding.async_is_onboarded():
-            if latest:
-                location = '/frontend_latest/onboarding.html'
-            else:
-                location = '/frontend_es5/onboarding.html'
-
             return web.Response(status=302, headers={
-                'location': location
+                'location': '/onboarding.html'
             })
 
         no_auth = '1'
