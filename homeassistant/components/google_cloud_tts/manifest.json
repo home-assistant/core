@@ -1,0 +1,12 @@
+{
+    "domain": "google_cloud_tts",
+    "name": "Google Cloud TTS",
+    "documentation": "https://www.home-assistant.io/components/google_cloud_tts",
+    "requirements": [
+        "google-cloud-texttospeech==0.4.0"
+    ],
+    "dependencies": [],
+    "codeowners": [
+        "@lufton"
+    ]
+}
