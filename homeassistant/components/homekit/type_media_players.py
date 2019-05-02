@@ -346,6 +346,7 @@ class TelevisionMediaPlayer(HomeAccessory):
             self.char_active.set_value(hk_state)
         self._flag[CHAR_ACTIVE] = False
 
+        # Set mute state
         if CHAR_VOLUME_SELECTOR in self.chars_speaker:
             current_mute_state = new_state.attributes.get(
                 ATTR_MEDIA_VOLUME_MUTED)
@@ -364,6 +365,7 @@ class TelevisionMediaPlayer(HomeAccessory):
                 self.char_volume.set_value(current_voume_state)
             self._flag[CHAR_VOLUME] = False
 
+        # Set active input
         if self.support_select_source:
             source_name = new_state.attributes.get(ATTR_INPUT_SOURCE)
             if self.sources and not self._flag[CHAR_ACTIVE_IDENTIFIER]:
