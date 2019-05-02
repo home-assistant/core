@@ -312,8 +312,8 @@ class TelevisionMediaPlayer(HomeAccessory):
             if service == SERVICE_MEDIA_PLAY_PAUSE:
                 state = self.hass.states.get(self.entity_id).state
                 if state in (STATE_PLAYING, STATE_PAUSED):
-                    service = SERVICE_MEDIA_PLAY if value else
-                    SERVICE_MEDIA_PAUSE
+                    service = SERVICE_MEDIA_PLAY if value else \
+                        SERVICE_MEDIA_PAUSE
             params = {ATTR_ENTITY_ID: self.entity_id}
             self.call_service(DOMAIN, service, params)
 
