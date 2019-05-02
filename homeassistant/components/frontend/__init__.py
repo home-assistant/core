@@ -11,7 +11,6 @@ import jinja2
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.components.http.const import KEY_AUTHENTICATED
 from homeassistant.components import websocket_api
 from homeassistant.config import find_config_file, load_yaml_config_file
 from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
