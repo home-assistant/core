@@ -72,9 +72,10 @@ def get_calendar_info(calendar):
 
 
 @pytest.fixture(autouse=True)
-async def mock_google_setup(hass, test_calendar):
+def mock_google_setup(hass, test_calendar):
     """Mock the google set up functions."""
-    await async_setup_component(hass, 'group', {'group': {}})
+    hass.loop.run_until_complete(
+        async_setup_component(hass, 'group', {'group': {}}))
     calendar = get_calendar_info(test_calendar)
     calendars = {calendar[CONF_CAL_ID]: calendar}
     patch_google_auth = patch(
