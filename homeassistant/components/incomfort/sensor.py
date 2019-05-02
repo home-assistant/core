@@ -1,4 +1,4 @@
-"""Support for the Sensors of an Intouch Lan2RF gateway."""
+"""Support for an Intergas boiler via an InComfort/InTouch Lan2RF gateway."""
 import logging
 
 from homeassistant.const import (
@@ -15,18 +15,18 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Set up an Intouch sensor entity."""
+    """Set up an InComfort/InTouch sensor device."""
     client = hass.data[DOMAIN]['client']
     heater = hass.data[DOMAIN]['heater']
 
     async_add_entities([
-        IntouchSignal(client, heater),
-        IntouchPressure(client, heater)
+        IncomfortSignal(client, heater),
+        IncomfortPressure(client, heater)
     ])
 
 
-class IntouchSensor(Entity):
-    """Representation of an InTouch sensor."""
+class IncomfortSensor(Entity):
+    """Representation of an InComfort/InTouch sensor device."""
 
     def __init__(self, client, boiler):
         """Initialize the sensor."""
@@ -67,7 +67,7 @@ class IntouchSensor(Entity):
         return False
 
 
-class IntouchPressure(IntouchSensor):
+class IncomfortPressure(IncomfortSensor):
     """Representation of an InTouch CV Pressure sensor."""
 
     def __init__(self, client, boiler):
@@ -90,7 +90,7 @@ class IntouchPressure(IntouchSensor):
         return {k: self._objref.status[k] for k in keys}
 
 
-class IntouchSignal(IntouchSensor):
+class IncomfortSignal(IncomfortSensor):
     """Representation of an InTouch Signal strength sensor."""
 
     def __init__(self, client, boiler):

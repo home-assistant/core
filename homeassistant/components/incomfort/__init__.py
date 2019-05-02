@@ -1,8 +1,8 @@
-"""This integration connects to an Intergas Intouch Lan2RF gateway."""
+"""Support for an Intergas boiler via an InComfort/Intouch Lan2RF gateway."""
 import logging
 
 import voluptuous as vol
-from intouchclient import InTouchGateway
+from incomfortclient import Gateway as InComfortGateway
 
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
@@ -12,7 +12,7 @@ from homeassistant.helpers.discovery import async_load_platform
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'intouch'
+DOMAIN = 'incomfort'
 
 _V1_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
@@ -31,18 +31,18 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 async def async_setup(hass, hass_config):
-    """Create a Intergas Intouch system."""
-    intouch_data = hass.data[DOMAIN] = {}
+    """Create an Intergas InComfort/Intouch system."""
+    incomfort_data = hass.data[DOMAIN] = {}
 
     credentials = dict(hass_config[DOMAIN])
     hostname = credentials.pop(CONF_HOST)
 
     try:
-        client = intouch_data['client'] = InTouchGateway(
+        client = incomfort_data['client'] = InComfortGateway(
             hostname, **credentials, session=async_get_clientsession(hass)
         )
 
-        heater = intouch_data['heater'] = list(await client.heaters)[0]
+        heater = incomfort_data['heater'] = list(await client.heaters)[0]
         await heater.update()
 
     except AssertionError:  # assert response.status == HTTP_OK

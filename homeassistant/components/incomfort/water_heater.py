@@ -1,4 +1,4 @@
-"""Support for an Intergas boiler attached to an Intouch Lan2RF gateway."""
+"""Support for an Intergas boiler via an InComfort/Intouch Lan2RF gateway."""
 import asyncio
 import logging
 
@@ -10,24 +10,24 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-INTOUCH_SUPPORT_FLAGS = 0
+INCOMFORT_SUPPORT_FLAGS = 0
 
-INTOUCH_MAX_TEMP = 80.0
-INTOUCH_MIN_TEMP = 30.0
+INCOMFORT_MAX_TEMP = 80.0
+INCOMFORT_MIN_TEMP = 30.0
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
                                discovery_info=None):
-    """Set up an Intouch water_heater entity."""
+    """Set up an InComfort/Intouch water_heater device."""
     client = hass.data[DOMAIN]['client']
     heater = hass.data[DOMAIN]['heater']
 
     async_add_entities([
-        IntouchWaterHeater(client, heater)], update_before_add=True)
+        IncomfortWaterHeater(client, heater)], update_before_add=True)
 
 
-class IntouchWaterHeater(WaterHeaterDevice):
-    """Representation of an InTouch water_heater device."""
+class IncomfortWaterHeater(WaterHeaterDevice):
+    """Representation of an InComfort/Intouch water_heater device."""
 
     def __init__(self, client, boiler):
         """Initialize the water_heater device."""
@@ -57,12 +57,12 @@ class IntouchWaterHeater(WaterHeaterDevice):
     @property
     def min_temp(self):
         """Return max valid temperature that can be set."""
-        return INTOUCH_MIN_TEMP
+        return INCOMFORT_MIN_TEMP
 
     @property
     def max_temp(self):
         """Return max valid temperature that can be set."""
-        return INTOUCH_MAX_TEMP
+        return INCOMFORT_MAX_TEMP
 
     @property
     def temperature_unit(self):
@@ -72,7 +72,7 @@ class IntouchWaterHeater(WaterHeaterDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return INTOUCH_SUPPORT_FLAGS
+        return INCOMFORT_SUPPORT_FLAGS
 
     @property
     def state(self):

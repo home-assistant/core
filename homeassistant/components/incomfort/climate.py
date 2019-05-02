@@ -1,4 +1,4 @@
-"""Support for a Room thermostat attached to an Intouch Lan2RF gateway."""
+"""Support for an Intergas boiler via an InComfort/InTouch Lan2RF gateway."""
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import SUPPORT_TARGET_TEMPERATURE
 from homeassistant.const import (ATTR_TEMPERATURE, TEMP_CELSIUS)
@@ -15,18 +15,18 @@ INTOUCH_MIN_TEMP = 5.0
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
                                discovery_info=None):
-    """Set up an Intouch climate entity."""
+    """Set up an InComfort/InTouch climate device."""
     client = hass.data[DOMAIN]['client']
     heater = hass.data[DOMAIN]['heater']
 
-    rooms = [InTouchClimate(client, r)
+    rooms = [InComfortClimate(client, r)
              for r in heater.rooms if not r.room_temp]
     if rooms:
         async_add_entities(rooms)
 
 
-class InTouchClimate(ClimateDevice):
-    """Representation of an InTouch climate device."""
+class InComfortClimate(ClimateDevice):
+    """Representation of an InComfort/InTouch climate device."""
 
     def __init__(self, client, room):
         """Initialize the climate device."""

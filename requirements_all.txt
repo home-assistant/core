@@ -595,14 +595,14 @@ iglo==1.2.7
 # homeassistant.components.ihc
 ihcsdk==2.3.0
 
+# homeassistant.components.incomfort
+incomfort-client==0.2.6
+
 # homeassistant.components.influxdb
 influxdb==5.2.0
 
 # homeassistant.components.insteon
 insteonplm==0.15.2
-
-# homeassistant.components.intouch
-intouch-client==0.2.4
 
 # homeassistant.components.iperf3
 iperf3==0.1.10

@@ -109,6 +109,7 @@ homeassistant/components/huawei_lte/* @scop
 homeassistant/components/huawei_router/* @abmantis
 homeassistant/components/hue/* @balloob
 homeassistant/components/ign_sismologia/* @exxamalte
+homeassistant/components/incomfort/* @zxdavb
 homeassistant/components/influxdb/* @fabaff
 homeassistant/components/input_boolean/* @home-assistant/core
 homeassistant/components/input_datetime/* @home-assistant/core
@@ -116,7 +117,6 @@ homeassistant/components/input_number/* @home-assistant/core
 homeassistant/components/input_select/* @home-assistant/core
 homeassistant/components/input_text/* @home-assistant/core
 homeassistant/components/integration/* @dgomes
-homeassistant/components/intouch/* @zxdavb
 homeassistant/components/ios/* @robbiet480
 homeassistant/components/ipma/* @dgomes
 homeassistant/components/iqvia/* @bachya
