@@ -273,14 +273,6 @@ class TelevisionMediaPlayer(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id}
         self.call_service(DOMAIN, service, params)
 
-    def set_play_pause(self, value):
-        """Move switch state to value if call came from HomeKit."""
-        _LOGGER.debug('%s: Set switch state for "play_pause" to %s',
-                      self.entity_id, value)
-        service = SERVICE_MEDIA_PLAY if value else SERVICE_MEDIA_PAUSE
-        params = {ATTR_ENTITY_ID: self.entity_id}
-        self.call_service(DOMAIN, service, params)
-
     def set_mute(self, value):
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set switch state for "toggle_mute" to %s',
@@ -325,11 +317,12 @@ class TelevisionMediaPlayer(HomeAccessory):
 
         if value in MEDIA_PLAYER_KEYS:
             service = MEDIA_PLAYER_KEYS[value]
+            # Handle Play Pause
             if service == SERVICE_MEDIA_PLAY_PAUSE:
                 state = self.hass.states.get(self.entity_id).state
                 if state in (STATE_PLAYING, STATE_PAUSED):
-                    self.set_play_pause(state == STATE_PAUSED)
-                    return
+                    service = SERVICE_MEDIA_PLAY if value else
+                    SERVICE_MEDIA_PAUSE
             params = {ATTR_ENTITY_ID: self.entity_id}
             self.call_service(DOMAIN, service, params)
 
