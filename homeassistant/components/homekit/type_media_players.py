@@ -237,7 +237,7 @@ class TelevisionMediaPlayer(HomeAccessory):
             self.char_volume_selector = serv_speaker.configure_char(
                 CHAR_VOLUME_SELECTOR, setter_callback=self.set_volume_step)
 
-            if self.support_volume_level:
+            if CHAR_VOLUME in self.chars_speaker:
                 self.char_volume = serv_speaker.configure_char(
                     CHAR_VOLUME, setter_callback=self.set_volume)
 
