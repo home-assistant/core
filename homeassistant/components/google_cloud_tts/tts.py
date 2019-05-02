@@ -1,12 +1,12 @@
 """Support for the Google Cloud TTS service."""
-import logging
-import async_timeout
-import voluptuous as vol
-import os
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
-
 from google.cloud import texttospeech
+from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
+import logging
+import os
+import async_timeout
+import asyncio
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,33 +87,36 @@ class GoogleCloudTTSProvider(Provider):
         """Load TTS from google."""
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
-                gender = self._gender
-                voice = self._voice
+                _language = language or self._lang
+                _gender = self._gender
+                _voice = self._voice
                 if options:
                     if CONF_GENDER in options:
-                        gender = options[CONF_GENDER].lower().capitalize()
+                        _gender = options[CONF_GENDER].lower().capitalize()
                     if CONF_VOICE in options:
-                        voice = options[CONF_VOICE]
-                self.voice = texttospeech.types.VoiceSelectionParams(
-                    language_code=language or self._lang,
-                    name=voice,
+                        _voice = options[CONF_VOICE]
+                voice = texttospeech.types.VoiceSelectionParams(
+                    language_code=_language,
                     ssml_gender={
                         'Neutral': texttospeech.enums.SsmlVoiceGender.NEUTRAL,
                         'Female': texttospeech.enums.SsmlVoiceGender.FEMALE,
                         'Male': texttospeech.enums.SsmlVoiceGender.MALE,
-                    }.get(gender, DEFAULT_GENDER)
+                    }.get(_gender, DEFAULT_GENDER),
+                    name=_voice
                 )
                 synthesis_input = texttospeech.types.SynthesisInput(
                     text=message
                 )
                 response = self.client.synthesize_speech(
                     synthesis_input,
-                    self.voice,
+                    voice,
                     self.audio_config
                 )
-
                 return "mp3", response.audio_content
 
-        except Exception as e:
-            _LOGGER.error("Timeout for google speech or other problem.", e)
-            return None, None
+        except asyncio.TimeoutError as ex:
+            _LOGGER.error("Timeout for Google Cloud TTS: %s", ex)
+        except Exception as ex:
+            _LOGGER.error("Error occured during Google Cloud TTS call: %s", ex)
+
+        return None, None
