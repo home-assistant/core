@@ -266,12 +266,12 @@ def color_xy_brightness_to_RGB(
             vY = xy_closest[1]
 
     brightness = ibrightness / 255.
-    if brightness == 0:
+    if brightness == 0.0:
         return (0, 0, 0)
 
     Y = brightness
 
-    if vY == 0:
+    if vY == 0.0:
         vY += 0.00000000001
 
     X = (Y / vY) * vX
@@ -304,7 +304,7 @@ def color_xy_brightness_to_RGB(
 
 def color_hsb_to_RGB(fH: float, fS: float, fB: float) -> Tuple[int, int, int]:
     """Convert a hsb into its rgb representation."""
-    if fS == 0:
+    if fS == 0.0:
         fV = int(fB * 255)
         return fV, fV, fV
 
