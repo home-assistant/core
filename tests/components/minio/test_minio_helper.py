@@ -1,4 +1,4 @@
-"""Tests for Minio related helper code"""
+"""Tests for Minio related helper code."""
 import json
 import unittest
 from unittest.mock import MagicMock
@@ -9,7 +9,7 @@ from tests.components.minio.common import TEST_EVENT
 
 
 class TestMinioHelper(unittest.TestCase):
-    """Tests MinioHelper functions"""
+    """Tests MinioHelper functions."""
 
     def setUp(self):
         """Initialize values for this testcase class."""
@@ -20,8 +20,7 @@ class TestMinioHelper(unittest.TestCase):
         self.hass.stop()
 
     def test_event_object_iteration(self):
-        """Test if message is fired on topic match."""
-
+        """Test iterating over records of Minio event."""
         events = [event for event in minio_helper.iterate_objects(TEST_EVENT)]
         self.assertEqual(1, len(events))
 
@@ -32,7 +31,8 @@ class TestMinioHelper(unittest.TestCase):
         self.assertEqual('5jJkTAo.jpg', object_name)
         self.assertEqual(0, len(metadata))
 
-    def test_MinioEventStreamIterator(self):
+    def test_minio_event_stream_iterator(self):
+        """Test event stream iterator over http response."""
         response_mock = MagicMock()
         stream_mock = MagicMock()
 

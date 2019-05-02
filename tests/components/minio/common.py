@@ -1,4 +1,4 @@
-"""Minio Test event"""
+"""Minio Test event."""
 TEST_EVENT = {
     'Records': [{
         'eventVersion': '2.0',

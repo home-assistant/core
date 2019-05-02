@@ -1,4 +1,4 @@
-"""Tests for Minio Hass related code"""
+"""Tests for Minio Hass related code."""
 import unittest
 
 from tests.common import get_test_home_assistant
@@ -6,7 +6,7 @@ import homeassistant.components.minio as minio
 
 
 class TestMinioHelper(unittest.TestCase):
-    """Tests Minio functions"""
+    """Tests Minio functions."""
 
     def setUp(self):
         """Initialize values for this testcase class."""
@@ -17,6 +17,7 @@ class TestMinioHelper(unittest.TestCase):
         self.hass.stop()
 
     def test_queue_listener(self):
+        """Tests QueueListener firing events on Hass event bus."""
         queue_listener = minio.QueueListener(self.hass)
         queue_listener.start()
 
