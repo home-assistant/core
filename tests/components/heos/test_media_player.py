@@ -103,7 +103,7 @@ async def test_updates_start_from_signals(
     # Test controller player change updates
     player.available = False
     player.heos.dispatcher.send(
-        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_PLAYERS_CHANGED)
+        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_PLAYERS_CHANGED, {})
     await hass.async_block_till_done()
     state = hass.states.get('media_player.test_player')
     assert state.state == STATE_UNAVAILABLE
@@ -158,7 +158,7 @@ async def test_updates_from_sources_updated(
 
     input_sources.clear()
     player.heos.dispatcher.send(
-        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_SOURCES_CHANGED)
+        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_SOURCES_CHANGED, {})
     await event.wait()
     source_list = hass.data[DOMAIN][DATA_SOURCE_MANAGER].source_list
     assert len(source_list) == 2
@@ -181,7 +181,7 @@ async def test_updates_from_user_changed(
     controller.is_signed_in = False
     controller.signed_in_username = None
     player.heos.dispatcher.send(
-        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_USER_CHANGED)
+        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_USER_CHANGED, None)
     await event.wait()
     source_list = hass.data[DOMAIN][DATA_SOURCE_MANAGER].source_list
     assert len(source_list) == 1
