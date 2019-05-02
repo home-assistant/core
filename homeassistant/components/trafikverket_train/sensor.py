@@ -1,20 +1,15 @@
-"""
-Train information for departures and delays, provided by Trafikverket.
+"""Train information for departures and delays, provided by Trafikverket."""
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.trafikverket_train/
-"""
-
-from datetime import date, datetime, timedelta
 import asyncio
+from datetime import date, datetime, timedelta
 import logging
+
 import voluptuous as vol
 
-
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_API_KEY, CONF_NAME)
+from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.aiohttp_client import (async_get_clientsession)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,7 +28,7 @@ ATTR_OTHER_INFORMATION = "other_information"
 ATTR_DEVIATIONS = "deviations"
 
 ICON = "mdi:train"
-SCAN_INTERVAL = timedelta(minutes=10)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -41,7 +36,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_TO): cv.string,
         vol.Required(CONF_FROM): cv.string,
-        vol.Optional(CONF_TIME): cv.time}]
+        vol.Optional(CONF_TIME): cv.time,
+        vol.Optional(CONF_WEEKDAY, default=WEEKDAYS):
+            vol.All(cv.ensure_list, [vol.In(WEEKDAYS)])}]
 })
 
 
@@ -49,62 +46,89 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def async_setup_platform(
         hass, config, async_add_devices, discovery_info=None):
     """Set up the departure sensor."""
-    _LOGGER.debug("Start async_setup_platform")
     from pytrafikverket import TrafikverketTrain
     httpsession = async_get_clientsession(hass)
     train_api = TrafikverketTrain(httpsession, config.get(CONF_API_KEY))
     sensors = []
     for train in config.get(CONF_TRAINS):
-        from_sig = yield from train_api.async_get_train_station(
-            train.get(CONF_FROM))
-        to_sig = yield from train_api.async_get_train_station(
-            train.get(CONF_TO))
+        try:
+            from_station = yield from train_api.async_get_train_station(
+                train.get(CONF_FROM))
+            to_station = yield from train_api.async_get_train_station(
+                train.get(CONF_TO))
+        except ValueError as station_error:
+            _LOGGER.error("Problem identifying station %s or %s. Error: %s ",
+                          train.get(CONF_FROM), train.get(CONF_TO),
+                          station_error)
         sensor = TrainSensor(train_api,
                              train.get(CONF_NAME),
-                             from_sig,
-                             to_sig,
+                             from_station,
+                             to_station,
+                             train.get(CONF_WEEKDAY),
                              train.get(CONF_TIME))
         sensors.append(sensor)
 
     async_add_devices(sensors, update_before_add=True)
-    _LOGGER.debug("end async_setup_platform")
+
+
+def dayname(day):
+    """Return the short name with the weekday number as input."""
+    return WEEKDAYS[day]
+
+
+def next_weekday(fromdate, weekday):
+    """Return the date of the next time a specific weekday happen."""
+    days_ahead = weekday - fromdate.weekday()
+    if days_ahead <= 0:
+        days_ahead += 7
+    return fromdate + timedelta(days_ahead)
+
+
+def next_departuredate(departure):
+    """Calculate the next departuredate from an array input of short days."""
+    today_weekday = date.weekday(date.today())
+    today_date = date.today()
+    if dayname(today_weekday) in departure:
+        return date.today()
+    for day in departure:
+        next_departure = WEEKDAYS.index(day)
+        if next_departure > today_weekday:
+            return next_weekday(today_date, next_departure)
+    return next_weekday(today_date, WEEKDAYS.index(departure[0]))
 
 
 class TrainSensor(Entity):
     """Contains data about a train depature."""
 
-    def __init__(self, train_api, name, from_sig, to_sig, time):
+    def __init__(self, train_api, name,
+                 from_station, to_station, weekday, time):
         """Initialize the sensor."""
         self._train_api = train_api
         self._name = name
-        self._from_sig = from_sig
-        self._to_sig = to_sig
+        self._from_station = from_station
+        self._to_station = to_station
+        self._weekday = weekday
         self._time = time
         self._state = None
 
     @asyncio.coroutine
     def async_update(self):
         """Retrieve latest state."""
-        _LOGGER.debug("start async_update")
+        departure_day = next_departuredate(self._weekday)
         if self._time is not None:
-            when = datetime.combine(date.today(), self._time)
-            _LOGGER.debug("self._from_sig: %s, self._to_sig: %s, when: %s",
-                          self._from_sig.name, self._to_sig.name, when)
+            when = datetime.combine(departure_day, self._time)
             try:
                 self._state = yield from \
                     self._train_api.async_get_train_stop(
-                        self._from_sig, self._to_sig, when)
-            except ValueError:
-                _LOGGER.debug("API error or no departure found for time %s",
-                              when)
+                        self._from_station, self._to_station, when)
+            except ValueError as output_error:
+                _LOGGER.error("Departure %s encountered a problem: %s",
+                              when, output_error)
         else:
             when = datetime.now()
-            _LOGGER.debug("self._from_sig: %s, self._to_sig: %s, when: %s",
-                          self._from_sig.name, self._to_sig.name, when)
             self._state = yield from \
                 self._train_api.async_get_next_train_stop(
-                    self._from_sig, self._to_sig, when)
-        _LOGGER.debug("end async_update")
+                    self._from_station, self._to_station, when)
 
     @property
     def device_state_attributes(self):
@@ -113,10 +137,10 @@ class TrainSensor(Entity):
             return None
         state = self._state
         other_information = None
-        if state.other_information is not None and state.other_information:
+        if state.other_information is not None:
             other_information = ", ".join(state.other_information)
         deviations = None
-        if state.deviations is not None and state.deviations:
+        if state.deviations is not None:
             deviations = ", ".join(state.deviations)
         delay_in_minutes = state.get_delay_time()
         if delay_in_minutes is not None:
