@@ -147,7 +147,7 @@ async def async_setup(hass, config):
         if platform in DEFAULT_ENABLED:
             logger.warning(
                 "Please remove %s from your discovery.enable configuration "
-                "as it is now enabled by default.",
+                "as it is now enabled by default",
                 platform,
             )
 
