@@ -11,8 +11,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_API_KEY
 )
 
-REQUIREMENTS = ['clearpasspy==1.0.2']
-
 SCAN_INTERVAL = timedelta(seconds=120)
 
 CLIENT_ID = 'client_id'

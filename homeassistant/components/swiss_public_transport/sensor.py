@@ -11,8 +11,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['python_opendata_transport==0.1.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DEPARTURE_TIME1 = 'next_departure'

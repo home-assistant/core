@@ -6,8 +6,6 @@ from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 
 
-REQUIREMENTS = ['pyvesync_v2==0.9.6']
-
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

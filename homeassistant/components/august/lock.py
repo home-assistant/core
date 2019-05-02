@@ -9,8 +9,6 @@ from . import DATA_AUGUST
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['august']
-
 SCAN_INTERVAL = timedelta(seconds=5)
 
 

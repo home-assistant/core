@@ -1,6 +1,7 @@
 """Support for esphome devices."""
 import asyncio
 import logging
+import math
 from typing import Any, Dict, List, Optional, TYPE_CHECKING, Callable, Tuple
 
 import attr
@@ -32,8 +33,6 @@ if TYPE_CHECKING:
         ServiceCall, UserService
 
 DOMAIN = 'esphome'
-REQUIREMENTS = ['aioesphomeapi==2.0.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DISPATCHER_UPDATE_ENTITY = 'esphome_{entry_id}_update_{component_key}_{key}'
@@ -49,6 +48,7 @@ STORAGE_VERSION = 1
 HA_COMPONENTS = [
     'binary_sensor',
     'camera',
+    'climate',
     'cover',
     'fan',
     'light',
@@ -149,7 +149,8 @@ class RuntimeEntryData:
 
 
 def _attr_obj_from_dict(cls, **kwargs):
-    return cls(**{key: kwargs[key] for key in attr.fields_dict(cls)})
+    return cls(**{key: kwargs[key] for key in attr.fields_dict(cls)
+                  if key in kwargs})
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
@@ -521,6 +522,51 @@ async def platform_async_setup_entry(hass: HomeAssistantType,
     )
 
 
+def esphome_state_property(func):
+    """Wrap a state property of an esphome entity.
+
+    This checks if the state object in the entity is set, and
+    prevents writing NAN values to the Home Assistant state machine.
+    """
+    @property
+    def _wrapper(self):
+        if self._state is None:
+            return None
+        val = func(self)
+        if isinstance(val, float) and math.isnan(val):
+            # Home Assistant doesn't use NAN values in state machine
+            # (not JSON serializable)
+            return None
+        return val
+    return _wrapper
+
+
+class EsphomeEnumMapper:
+    """Helper class to convert between hass and esphome enum values."""
+
+    def __init__(self, func: Callable[[], Dict[int, str]]):
+        """Construct a EsphomeEnumMapper."""
+        self._func = func
+
+    def from_esphome(self, value: int) -> str:
+        """Convert from an esphome int representation to a hass string."""
+        return self._func()[value]
+
+    def from_hass(self, value: str) -> int:
+        """Convert from a hass string to a esphome int representation."""
+        inverse = {v: k for k, v in self._func().items()}
+        return inverse[value]
+
+
+def esphome_map_enum(func: Callable[[], Dict[int, str]]):
+    """Map esphome int enum values to hass string constants.
+
+    This class has to be used as a decorator. This ensures the aioesphomeapi
+    import is only happening at runtime.
+    """
+    return EsphomeEnumMapper(func)
+
+
 class EsphomeEntity(Entity):
     """Define a generic esphome entity."""
 
@@ -556,11 +602,11 @@ class EsphomeEntity(Entity):
                 self.async_schedule_update_ha_state)
         )
 
-    async def _on_update(self):
+    async def _on_update(self) -> None:
         """Update the entity state when state or static info changed."""
         self.async_schedule_update_ha_state()
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Unregister callbacks."""
         for remove_callback in self._remove_callbacks:
             remove_callback()
@@ -609,7 +655,7 @@ class EsphomeEntity(Entity):
         return self._static_info.unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> Dict[str, Any]:
         """Return device registry information for this entity."""
         return {
             'connections': {(dr.CONNECTION_NETWORK_MAC,

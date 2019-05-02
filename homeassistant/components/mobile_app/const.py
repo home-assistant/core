@@ -28,7 +28,6 @@ DATA_DEVICES = 'devices'
 DATA_SENSOR = 'sensor'
 DATA_STORE = 'store'
 
-ATTR_APP_COMPONENT = 'app_component'
 ATTR_APP_DATA = 'app_data'
 ATTR_APP_ID = 'app_id'
 ATTR_APP_NAME = 'app_name'
@@ -66,7 +65,6 @@ ATTR_WEBHOOK_ENCRYPTED_DATA = 'encrypted_data'
 ATTR_WEBHOOK_TYPE = 'type'
 
 ERR_ENCRYPTION_REQUIRED = 'encryption_required'
-ERR_INVALID_COMPONENT = 'invalid_component'
 ERR_SENSOR_NOT_REGISTERED = 'not_registered'
 ERR_SENSOR_DUPLICATE_UNIQUE_ID = 'duplicate_unique_id'
 
@@ -89,7 +87,6 @@ WEBHOOK_TYPES = [WEBHOOK_TYPE_CALL_SERVICE, WEBHOOK_TYPE_FIRE_EVENT,
 
 
 REGISTRATION_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_APP_COMPONENT): cv.string,
     vol.Optional(ATTR_APP_DATA, default={}): dict,
     vol.Required(ATTR_APP_ID): cv.string,
     vol.Required(ATTR_APP_NAME): cv.string,

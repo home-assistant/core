@@ -18,8 +18,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['liveboxplaytv==2.0.2', 'pyteleloisirs==3.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Livebox Play TV'

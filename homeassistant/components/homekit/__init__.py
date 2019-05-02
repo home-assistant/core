@@ -26,8 +26,6 @@ from .const import (
 from .util import (
     show_setup_message, validate_entity_config, validate_media_player_features)
 
-REQUIREMENTS = ['HAP-python==2.4.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 MAX_DEVICES = 100
@@ -112,7 +110,7 @@ def get_accessory(hass, driver, state, aid, config):
     if state.domain == 'alarm_control_panel':
         a_type = 'SecuritySystem'
 
-    elif state.domain == 'binary_sensor' or state.domain == 'device_tracker':
+    elif state.domain in ('binary_sensor', 'device_tracker', 'person'):
         a_type = 'BinarySensor'
 
     elif state.domain == 'climate':

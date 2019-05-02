@@ -29,6 +29,7 @@ class ColorChannel(ZigbeeChannel):
     async def async_configure(self):
         """Configure channel."""
         await self.fetch_color_capabilities(False)
+        await super().async_configure()
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""

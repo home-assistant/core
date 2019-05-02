@@ -3,6 +3,9 @@
   "name": "Generic thermostat",
   "documentation": "https://www.home-assistant.io/components/generic_thermostat",
   "requirements": [],
-  "dependencies": [],
+  "dependencies": [
+    "sensor",
+    "switch"
+  ],
   "codeowners": []
 }

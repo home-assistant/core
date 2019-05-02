@@ -19,8 +19,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['evohomeclient==0.3.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'evohome'

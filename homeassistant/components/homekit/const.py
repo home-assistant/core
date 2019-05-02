@@ -15,10 +15,13 @@ CONF_ENTITY_CONFIG = 'entity_config'
 CONF_FEATURE = 'feature'
 CONF_FEATURE_LIST = 'feature_list'
 CONF_FILTER = 'filter'
+CONF_LINKED_BATTERY_SENSOR = 'linked_battery_sensor'
+CONF_LOW_BATTERY_THRESHOLD = 'low_battery_threshold'
 CONF_SAFE_MODE = 'safe_mode'
 
 # #### Config Defaults ####
 DEFAULT_AUTO_START = True
+DEFAULT_LOW_BATTERY_THRESHOLD = 20
 DEFAULT_PORT = 51827
 DEFAULT_SAFE_MODE = False
 
@@ -109,8 +112,8 @@ CHAR_MODEL = 'Model'
 CHAR_MOTION_DETECTED = 'MotionDetected'
 CHAR_NAME = 'Name'
 CHAR_OCCUPANCY_DETECTED = 'OccupancyDetected'
-CHAR_OUTLET_IN_USE = 'OutletInUse'
 CHAR_ON = 'On'
+CHAR_OUTLET_IN_USE = 'OutletInUse'
 CHAR_POSITION_STATE = 'PositionState'
 CHAR_ROTATION_DIRECTION = 'RotationDirection'
 CHAR_ROTATION_SPEED = 'RotationSpeed'

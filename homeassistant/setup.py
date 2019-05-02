@@ -24,14 +24,14 @@ SLOW_SETUP_WARNING = 10
 
 
 def setup_component(hass: core.HomeAssistant, domain: str,
-                    config: Optional[Dict] = None) -> bool:
+                    config: Dict) -> bool:
     """Set up a component and all its dependencies."""
     return run_coroutine_threadsafe(  # type: ignore
         async_setup_component(hass, domain, config), loop=hass.loop).result()
 
 
 async def async_setup_component(hass: core.HomeAssistant, domain: str,
-                                config: Optional[Dict] = None) -> bool:
+                                config: Dict) -> bool:
     """Set up a component and all its dependencies.
 
     This method is a coroutine.
@@ -39,16 +39,10 @@ async def async_setup_component(hass: core.HomeAssistant, domain: str,
     if domain in hass.config.components:
         return True
 
-    setup_tasks = hass.data.get(DATA_SETUP)
+    setup_tasks = hass.data.setdefault(DATA_SETUP, {})
 
-    if setup_tasks is not None and domain in setup_tasks:
+    if domain in setup_tasks:
         return await setup_tasks[domain]  # type: ignore
-
-    if config is None:
-        config = {}
-
-    if setup_tasks is None:
-        setup_tasks = hass.data[DATA_SETUP] = {}
 
     task = setup_tasks[domain] = hass.async_create_task(
         _async_setup_component(hass, domain, config))
@@ -100,16 +94,16 @@ async def _async_setup_component(hass: core.HomeAssistant,
         _LOGGER.error("Setup failed for %s: %s", domain, msg)
         async_notify_setup_error(hass, domain, link)
 
-    component = loader.get_component(hass, domain)
-
-    if not component:
-        log_error("Component not found.", False)
+    try:
+        integration = await loader.async_get_integration(hass, domain)
+    except loader.IntegrationNotFound:
+        log_error("Integration not found.", False)
         return False
 
     # Validate all dependencies exist and there are no circular dependencies
     try:
-        loader.component_dependencies(hass, domain)
-    except loader.ComponentNotFound as err:
+        await loader.async_component_dependencies(hass, domain)
+    except loader.IntegrationNotFound as err:
         _LOGGER.error(
             "Not setting up %s because we are unable to resolve "
             "(sub)dependency %s", domain, err.domain)
@@ -120,21 +114,29 @@ async def _async_setup_component(hass: core.HomeAssistant,
             "%s -> %s", domain, err.from_domain, err.to_domain)
         return False
 
-    processed_config = \
-        conf_util.async_process_component_config(hass, config, domain)
+    # Process requirements as soon as possible, so we can import the component
+    # without requiring imports to be in functions.
+    try:
+        await async_process_deps_reqs(hass, config, integration)
+    except HomeAssistantError as err:
+        log_error(str(err))
+        return False
+
+    processed_config = await conf_util.async_process_component_config(
+        hass, config, integration)
 
     if processed_config is None:
         log_error("Invalid config.")
         return False
 
-    try:
-        await async_process_deps_reqs(hass, config, domain, component)
-    except HomeAssistantError as err:
-        log_error(str(err))
-        return False
-
     start = timer()
     _LOGGER.info("Setting up %s", domain)
+
+    try:
+        component = integration.get_component()
+    except ImportError:
+        log_error("Unable to import component", False)
+        return False
 
     if hasattr(component, 'PLATFORM_SCHEMA'):
         # Entity components have their own warning
@@ -149,9 +151,12 @@ async def _async_setup_component(hass: core.HomeAssistant,
         if hasattr(component, 'async_setup'):
             result = await component.async_setup(  # type: ignore
                 hass, processed_config)
-        else:
+        elif hasattr(component, 'setup'):
             result = await hass.async_add_executor_job(
                 component.setup, hass, processed_config)  # type: ignore
+        else:
+            log_error("No setup function defined.")
+            return False
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Error during setup of component %s", domain)
         async_notify_setup_error(hass, domain, True)
@@ -168,14 +173,13 @@ async def _async_setup_component(hass: core.HomeAssistant,
     if result is not True:
         log_error("Component {!r} did not return boolean if setup was "
                   "successful. Disabling component.".format(domain))
-        loader.set_component(hass, domain, None)
         return False
 
     if hass.config_entries:
         for entry in hass.config_entries.async_entries(domain):
-            await entry.async_setup(hass, component=component)
+            await entry.async_setup(hass, integration=integration)
 
-    hass.config.components.add(component.DOMAIN)  # type: ignore
+    hass.config.components.add(domain)
 
     # Cleanup
     if domain in hass.data[DATA_SETUP]:
@@ -183,13 +187,14 @@ async def _async_setup_component(hass: core.HomeAssistant,
 
     hass.bus.async_fire(
         EVENT_COMPONENT_LOADED,
-        {ATTR_COMPONENT: component.DOMAIN}  # type: ignore
+        {ATTR_COMPONENT: domain}
     )
 
     return True
 
 
-async def async_prepare_setup_platform(hass: core.HomeAssistant, config: Dict,
+async def async_prepare_setup_platform(hass: core.HomeAssistant,
+                                       hass_config: Dict,
                                        domain: str, platform_name: str) \
                                  -> Optional[ModuleType]:
     """Load a platform and makes sure dependencies are setup.
@@ -202,13 +207,26 @@ async def async_prepare_setup_platform(hass: core.HomeAssistant, config: Dict,
     def log_error(msg: str) -> None:
         """Log helper."""
         _LOGGER.error("Unable to prepare setup for platform %s: %s",
-                      platform_path, msg)
+                      platform_name, msg)
         async_notify_setup_error(hass, platform_path)
 
-    platform = loader.get_platform(hass, domain, platform_name)
+    try:
+        integration = await loader.async_get_integration(hass, platform_name)
+    except loader.IntegrationNotFound:
+        log_error("Integration not found")
+        return None
 
-    # Not found
-    if platform is None:
+    # Process deps and reqs as soon as possible, so that requirements are
+    # available when we import the platform.
+    try:
+        await async_process_deps_reqs(hass, hass_config, integration)
+    except HomeAssistantError as err:
+        log_error(str(err))
+        return None
+
+    try:
+        platform = integration.get_platform(domain)
+    except ImportError:
         log_error("Platform not found.")
         return None
 
@@ -216,19 +234,29 @@ async def async_prepare_setup_platform(hass: core.HomeAssistant, config: Dict,
     if platform_path in hass.config.components:
         return platform
 
-    try:
-        await async_process_deps_reqs(
-            hass, config, platform_path, platform)
-    except HomeAssistantError as err:
-        log_error(str(err))
-        return None
+    # Platforms cannot exist on their own, they are part of their integration.
+    # If the integration is not set up yet, and can be set up, set it up.
+    if integration.domain not in hass.config.components:
+        try:
+            component = integration.get_component()
+        except ImportError:
+            log_error("Unable to import the component")
+            return None
+
+        if (hasattr(component, 'setup')
+                or hasattr(component, 'async_setup')):
+            if not await async_setup_component(
+                    hass, integration.domain, hass_config
+            ):
+                log_error("Unable to set up component.")
+                return None
 
     return platform
 
 
 async def async_process_deps_reqs(
-        hass: core.HomeAssistant, config: Dict, name: str,
-        module: ModuleType) -> None:
+        hass: core.HomeAssistant, config: Dict,
+        integration: loader.Integration) -> None:
     """Process all dependencies and requirements for a module.
 
     Module is a Python module of either a component or platform.
@@ -237,24 +265,23 @@ async def async_process_deps_reqs(
 
     if processed is None:
         processed = hass.data[DATA_DEPS_REQS] = set()
-    elif name in processed:
+    elif integration.domain in processed:
         return
 
-    if hasattr(module, 'DEPENDENCIES'):
-        dep_success = await _async_process_dependencies(
-            hass, config, name, module.DEPENDENCIES)  # type: ignore
+    if integration.dependencies and not await _async_process_dependencies(
+            hass,
+            config,
+            integration.domain,
+            integration.dependencies
+    ):
+        raise HomeAssistantError("Could not set up all dependencies.")
 
-        if not dep_success:
-            raise HomeAssistantError("Could not set up all dependencies.")
+    if (not hass.config.skip_pip and integration.requirements and
+            not await requirements.async_process_requirements(
+                hass, integration.domain, integration.requirements)):
+        raise HomeAssistantError("Could not install all requirements.")
 
-    if not hass.config.skip_pip and hasattr(module, 'REQUIREMENTS'):
-        req_success = await requirements.async_process_requirements(
-            hass, name, module.REQUIREMENTS)  # type: ignore
-
-        if not req_success:
-            raise HomeAssistantError("Could not install all requirements.")
-
-    processed.add(name)
+    processed.add(integration.domain)
 
 
 @core.callback

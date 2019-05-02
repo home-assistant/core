@@ -6,10 +6,8 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
-    CONF_OUTPUTS, CONF_ZONE_NAME, CONF_ZONE_TYPE, CONF_ZONES, DATA_SATEL,
-    SIGNAL_OUTPUTS_UPDATED, SIGNAL_ZONES_UPDATED)
-
-DEPENDENCIES = ['satel_integra']
+    CONF_OUTPUTS, CONF_ZONE_NAME, CONF_ZONE_TYPE, CONF_ZONES,
+    SIGNAL_OUTPUTS_UPDATED, SIGNAL_ZONES_UPDATED, DATA_SATEL)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,6 +19,7 @@ async def async_setup_platform(
         return
 
     configured_zones = discovery_info[CONF_ZONES]
+    controller = hass.data[DATA_SATEL]
 
     devices = []
 
@@ -28,7 +27,7 @@ async def async_setup_platform(
         zone_type = device_config_data[CONF_ZONE_TYPE]
         zone_name = device_config_data[CONF_ZONE_NAME]
         device = SatelIntegraBinarySensor(
-            zone_num, zone_name, zone_type, SIGNAL_ZONES_UPDATED)
+            controller, zone_num, zone_name, zone_type, SIGNAL_ZONES_UPDATED)
         devices.append(device)
 
     configured_outputs = discovery_info[CONF_OUTPUTS]
@@ -37,7 +36,7 @@ async def async_setup_platform(
         zone_type = device_config_data[CONF_ZONE_TYPE]
         zone_name = device_config_data[CONF_ZONE_NAME]
         device = SatelIntegraBinarySensor(
-            zone_num, zone_name, zone_type, SIGNAL_OUTPUTS_UPDATED)
+            controller, zone_num, zone_name, zone_type, SIGNAL_OUTPUTS_UPDATED)
         devices.append(device)
 
     async_add_entities(devices)
@@ -46,25 +45,25 @@ async def async_setup_platform(
 class SatelIntegraBinarySensor(BinarySensorDevice):
     """Representation of an Satel Integra binary sensor."""
 
-    def __init__(self, device_number, device_name, zone_type, react_to_signal):
+    def __init__(self, controller, device_number, device_name,
+                 zone_type, react_to_signal):
         """Initialize the binary_sensor."""
         self._device_number = device_number
         self._name = device_name
         self._zone_type = zone_type
         self._state = 0
         self._react_to_signal = react_to_signal
+        self._satel = controller
 
     async def async_added_to_hass(self):
         """Register callbacks."""
         if self._react_to_signal == SIGNAL_OUTPUTS_UPDATED:
-            if self._device_number in\
-               self.hass.data[DATA_SATEL].violated_outputs:
+            if self._device_number in self._satel.violated_outputs:
                 self._state = 1
             else:
                 self._state = 0
         else:
-            if self._device_number in\
-               self.hass.data[DATA_SATEL].violated_zones:
+            if self._device_number in self._satel.violated_zones:
                 self._state = 1
             else:
                 self._state = 0

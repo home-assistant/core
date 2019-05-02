@@ -7,7 +7,6 @@ from homeassistant.util import slugify
 from . import CONF_DEFAULT_REVERSE, DATA_SOMFY_MYLINK
 
 _LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = ['somfy_mylink']
 
 
 async def async_setup_platform(hass,
@@ -59,7 +58,12 @@ class SomfyShade(CoverDevice):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        pass
+        return None
+
+    @property
+    def assumed_state(self):
+        """Let HA know the integration is assumed state."""
+        return True
 
     @property
     def device_class(self):

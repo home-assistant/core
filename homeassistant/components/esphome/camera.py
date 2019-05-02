@@ -13,7 +13,6 @@ if TYPE_CHECKING:
     # pylint: disable=unused-import
     from aioesphomeapi import CameraInfo, CameraState  # noqa
 
-DEPENDENCIES = ['esphome']
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -48,7 +47,7 @@ class EsphomeCamera(Camera, EsphomeEntity):
     def _state(self) -> Optional['CameraState']:
         return super()._state
 
-    async def _on_update(self):
+    async def _on_update(self) -> None:
         """Notify listeners of new image when update arrives."""
         await super()._on_update()
         async with self._image_cond:

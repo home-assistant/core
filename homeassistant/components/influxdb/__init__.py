@@ -18,8 +18,6 @@ from homeassistant.helpers import state as state_helper, event as event_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
 
-REQUIREMENTS = ['influxdb==5.2.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DB_NAME = 'database'
@@ -323,12 +321,12 @@ class InfluxThread(threading.Thread):
 
                 _LOGGER.debug("Wrote %d events", len(json))
                 break
-            except (exceptions.InfluxDBClientError, IOError):
+            except (exceptions.InfluxDBClientError, IOError) as err:
                 if retry < self.max_tries:
                     time.sleep(RETRY_DELAY)
                 else:
                     if not self.write_errors:
-                        _LOGGER.exception("Write error")
+                        _LOGGER.error("Write error: %s", err)
                     self.write_errors += len(json)
 
     def run(self):

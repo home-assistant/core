@@ -5,9 +5,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.helpers import config_entry_flow
 
-REQUIREMENTS = ['twilio==6.19.1']
-DEPENDENCIES = ['webhook']
-
 DOMAIN = 'twilio'
 
 CONF_ACCOUNT_SID = 'account_sid'

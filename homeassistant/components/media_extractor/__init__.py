@@ -8,11 +8,8 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA)
-from homeassistant.const import (
-    ATTR_ENTITY_ID)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers import config_validation as cv
-
-REQUIREMENTS = ['youtube_dl==2019.03.18']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +17,6 @@ CONF_CUSTOMIZE_ENTITIES = 'customize'
 CONF_DEFAULT_STREAM_QUERY = 'default_query'
 
 DEFAULT_STREAM_QUERY = 'best'
-DEPENDENCIES = ['media_player']
 DOMAIN = 'media_extractor'
 
 CONFIG_SCHEMA = vol.Schema({

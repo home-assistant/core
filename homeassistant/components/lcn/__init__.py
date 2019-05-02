@@ -1,6 +1,8 @@
 """Support for LCN devices."""
 import logging
 
+import pypck
+from pypck.connection import PchkConnectionManager
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -19,8 +21,6 @@ from .const import (
     SETPOINTS, THRESHOLDS, VAR_UNITS, VARIABLES)
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['pypck==0.5.9']
 
 
 def has_unique_connection_names(connections):
@@ -151,9 +151,6 @@ def get_connection(connections, connection_id=None):
 
 async def async_setup(hass, config):
     """Set up the LCN component."""
-    import pypck
-    from pypck.connection import PchkConnectionManager
-
     hass.data[DATA_LCN] = {}
 
     conf_connections = config[DOMAIN][CONF_CONNECTIONS]
@@ -203,7 +200,6 @@ class LcnDevice(Entity):
 
     def __init__(self, config, address_connection):
         """Initialize the LCN device."""
-        import pypck
         self.pypck = pypck
         self.config = config
         self.address_connection = address_connection

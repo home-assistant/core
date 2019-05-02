@@ -1,4 +1,6 @@
 """Support for LCN binary sensors."""
+import pypck
+
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import CONF_ADDRESS
 
@@ -6,16 +8,12 @@ from . import LcnDevice, get_connection
 from .const import (
     BINSENSOR_PORTS, CONF_CONNECTIONS, CONF_SOURCE, DATA_LCN, SETPOINTS)
 
-DEPENDENCIES = ['lcn']
-
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
                                discovery_info=None):
     """Set up the LCN binary sensor platform."""
     if discovery_info is None:
         return
-
-    import pypck
 
     devices = []
     for config in discovery_info:
@@ -52,9 +50,8 @@ class LcnRegulatorLockSensor(LcnDevice, BinarySensorDevice):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        self.hass.async_create_task(
-            self.address_connection.activate_status_request_handler(
-                self.setpoint_variable))
+        await self.address_connection.activate_status_request_handler(
+            self.setpoint_variable)
 
     @property
     def is_on(self):
@@ -86,9 +83,8 @@ class LcnBinarySensor(LcnDevice, BinarySensorDevice):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        self.hass.async_create_task(
-            self.address_connection.activate_status_request_handler(
-                self.bin_sensor_port))
+        await self.address_connection.activate_status_request_handler(
+            self.bin_sensor_port)
 
     @property
     def is_on(self):
@@ -117,9 +113,8 @@ class LcnLockKeysSensor(LcnDevice, BinarySensorDevice):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        self.hass.async_create_task(
-            self.address_connection.activate_status_request_handler(
-                self.source))
+        await self.address_connection.activate_status_request_handler(
+            self.source)
 
     @property
     def is_on(self):

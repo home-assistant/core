@@ -17,8 +17,6 @@ from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['zha']
-
 DEFAULT_DURATION = 5
 
 CAPABILITIES_COLOR_XY = 0x08
@@ -26,6 +24,7 @@ CAPABILITIES_COLOR_TEMP = 0x10
 
 UNSUPPORTED_ATTRIBUTE = 0x86
 SCAN_INTERVAL = timedelta(minutes=60)
+PARALLEL_UPDATES = 5
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -266,7 +265,9 @@ class Light(ZhaEntity, light.Light):
                     'current_x', from_cache=from_cache)
                 color_y = await self._color_channel.get_attribute_value(
                     'current_y', from_cache=from_cache)
-                self._hs_color = color_util.color_xy_to_hs(color_x, color_y)
+                if color_x is not None and color_y is not None:
+                    self._hs_color = color_util.color_xy_to_hs(
+                        float(color_x / 65535), float(color_y / 65535))
 
     async def refresh(self, time):
         """Call async_get_state at an interval."""

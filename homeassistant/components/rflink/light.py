@@ -15,8 +15,6 @@ from . import (
     CONF_SIGNAL_REPETITIONS, DATA_DEVICE_REGISTER, DEVICE_DEFAULTS_SCHEMA,
     EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice, remove_deprecated)
 
-DEPENDENCIES = ['rflink']
-
 _LOGGER = logging.getLogger(__name__)
 
 TYPE_DIMMABLE = 'dimmable'

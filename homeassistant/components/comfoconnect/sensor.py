@@ -12,8 +12,6 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['comfoconnect']
-
 SENSOR_TYPES = {}
 
 

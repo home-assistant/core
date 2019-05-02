@@ -8,13 +8,13 @@ from homeassistant.components.fan import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import EsphomeEntity, platform_async_setup_entry
+from . import EsphomeEntity, platform_async_setup_entry, \
+    esphome_state_property, esphome_map_enum
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import
     from aioesphomeapi import FanInfo, FanState, FanSpeed  # noqa
 
-DEPENDENCIES = ['esphome']
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -32,24 +32,15 @@ async def async_setup_entry(hass: HomeAssistantType,
     )
 
 
-def _ha_fan_speed_to_esphome(speed: str) -> 'FanSpeed':
-    # pylint: disable=redefined-outer-name
-    from aioesphomeapi import FanSpeed  # noqa
-    return {
-        SPEED_LOW: FanSpeed.LOW,
-        SPEED_MEDIUM: FanSpeed.MEDIUM,
-        SPEED_HIGH: FanSpeed.HIGH,
-    }[speed]
-
-
-def _esphome_fan_speed_to_ha(speed: 'FanSpeed') -> str:
+@esphome_map_enum
+def _fan_speeds():
     # pylint: disable=redefined-outer-name
     from aioesphomeapi import FanSpeed  # noqa
     return {
         FanSpeed.LOW: SPEED_LOW,
         FanSpeed.MEDIUM: SPEED_MEDIUM,
         FanSpeed.HIGH: SPEED_HIGH,
-    }[speed]
+    }
 
 
 class EsphomeFan(EsphomeEntity, FanEntity):
@@ -70,7 +61,7 @@ class EsphomeFan(EsphomeEntity, FanEntity):
             return
 
         await self._client.fan_command(
-            self._static_info.key, speed=_ha_fan_speed_to_esphome(speed))
+            self._static_info.key, speed=_fan_speeds.from_hass(speed))
 
     async def async_turn_on(self, speed: Optional[str] = None,
                             **kwargs) -> None:
@@ -80,7 +71,7 @@ class EsphomeFan(EsphomeEntity, FanEntity):
             return
         data = {'key': self._static_info.key, 'state': True}
         if speed is not None:
-            data['speed'] = _ha_fan_speed_to_esphome(speed)
+            data['speed'] = _fan_speeds.from_hass(speed)
         await self._client.fan_command(**data)
 
     # pylint: disable=arguments-differ
@@ -88,32 +79,26 @@ class EsphomeFan(EsphomeEntity, FanEntity):
         """Turn off the fan."""
         await self._client.fan_command(key=self._static_info.key, state=False)
 
-    async def async_oscillate(self, oscillating: bool):
+    async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
         await self._client.fan_command(key=self._static_info.key,
                                        oscillating=oscillating)
 
-    @property
+    @esphome_state_property
     def is_on(self) -> Optional[bool]:
         """Return true if the entity is on."""
-        if self._state is None:
-            return None
         return self._state.state
 
-    @property
+    @esphome_state_property
     def speed(self) -> Optional[str]:
         """Return the current speed."""
-        if self._state is None:
-            return None
         if not self._static_info.supports_speed:
             return None
-        return _esphome_fan_speed_to_ha(self._state.speed)
+        return _fan_speeds.from_esphome(self._state.speed)
 
-    @property
+    @esphome_state_property
     def oscillating(self) -> None:
         """Return the oscillation state."""
-        if self._state is None:
-            return None
         if not self._static_info.supports_oscillation:
             return None
         return self._state.oscillating

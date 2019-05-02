@@ -9,14 +9,13 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_HOSTS
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
 from . import config_flow  # noqa  pylint_disable=unused-import
-
-REQUIREMENTS = ['pydaikin==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,10 +63,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     if not daikin_api:
         return False
     hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: daikin_api})
-    await asyncio.wait([
-        hass.config_entries.async_forward_entry_setup(entry, component)
-        for component in COMPONENT_TYPES
-    ])
+    for component in COMPONENT_TYPES:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(
+                entry, component))
     return True
 
 
@@ -88,17 +87,17 @@ async def daikin_api_setup(hass, host):
     from pydaikin.appliance import Appliance
     session = hass.helpers.aiohttp_client.async_get_clientsession()
     try:
-        with timeout(10, loop=hass.loop):
+        with timeout(10):
             device = Appliance(host, session)
             await device.init()
     except asyncio.TimeoutError:
-        _LOGGER.error("Connection to Daikin timeout")
-        return None
+        _LOGGER.debug("Connection to %s timed out", host)
+        raise ConfigEntryNotReady
     except ClientConnectionError:
-        _LOGGER.error("ServerDisconected")
-        return None
+        _LOGGER.debug("ClientConnectionError to %s", host)
+        raise ConfigEntryNotReady
     except Exception:  # pylint: disable=broad-except
-        _LOGGER.error("Unexpected error creating device")
+        _LOGGER.error("Unexpected error creating device %s", host)
         return None
 
     api = DaikinApi(device)

@@ -10,8 +10,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['gps3==0.33.3']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CLIMB = 'climb'

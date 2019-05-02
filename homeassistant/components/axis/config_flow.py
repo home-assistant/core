@@ -66,7 +66,6 @@ class AxisFlowHandler(config_entries.ConfigFlow):
 
         Manage device specific parameters.
         """
-        from axis.vapix import VAPIX_MODEL_ID, VAPIX_SERIAL_NUMBER
         errors = {}
 
         if user_input is not None:
@@ -79,13 +78,12 @@ class AxisFlowHandler(config_entries.ConfigFlow):
                 }
                 device = await get_device(self.hass, self.device_config)
 
-                self.serial_number = device.vapix.get_param(
-                    VAPIX_SERIAL_NUMBER)
+                self.serial_number = device.vapix.params.system_serialnumber
 
                 if self.serial_number in configured_devices(self.hass):
                     raise AlreadyConfigured
 
-                self.model = device.vapix.get_param(VAPIX_MODEL_ID)
+                self.model = device.vapix.params.prodnbr
 
                 return await self._create_entry()
 

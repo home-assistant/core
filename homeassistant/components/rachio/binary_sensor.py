@@ -10,8 +10,6 @@ from . import (
     SIGNAL_RACHIO_CONTROLLER_UPDATE, STATUS_OFFLINE, STATUS_ONLINE,
     SUBTYPE_OFFLINE, SUBTYPE_ONLINE)
 
-DEPENDENCIES = ['rachio']
-
 _LOGGER = logging.getLogger(__name__)
 
 

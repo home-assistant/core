@@ -14,8 +14,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['panacotta==0.1']
-
 DEFAULT_NAME = "Panasonic Blu-Ray"
 SCAN_INTERVAL = timedelta(seconds=30)
 

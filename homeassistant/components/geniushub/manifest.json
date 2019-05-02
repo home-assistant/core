@@ -1,0 +1,10 @@
+{
+  "domain": "geniushub",
+  "name": "Genius Hub",
+  "documentation": "https://www.home-assistant.io/components/geniushub",
+  "requirements": [
+    "geniushub-client==0.4.5"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

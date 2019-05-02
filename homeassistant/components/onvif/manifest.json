@@ -7,6 +7,8 @@
     "suds-passworddigest-homeassistant==0.1.2a0.dev0",
     "suds-py3==1.3.3.0"
   ],
-  "dependencies": [],
+  "dependencies": [
+    "ffmpeg"
+  ],
   "codeowners": []
 }

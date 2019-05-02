@@ -1,6 +1,4 @@
 """Support for Broadlink RM devices."""
-import asyncio
-from base64 import b64decode, b64encode
 import binascii
 from datetime import timedelta
 import logging
@@ -9,15 +7,14 @@ import socket
 import voluptuous as vol
 
 from homeassistant.components.switch import (
-    DOMAIN, PLATFORM_SCHEMA, SwitchDevice, ENTITY_ID_FORMAT)
+    ENTITY_ID_FORMAT, PLATFORM_SCHEMA, SwitchDevice)
 from homeassistant.const import (
     CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_FRIENDLY_NAME, CONF_HOST, CONF_MAC,
     CONF_SWITCHES, CONF_TIMEOUT, CONF_TYPE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle, slugify
-from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['broadlink==0.9.0']
+from . import async_setup_service, data_packet
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,9 +22,6 @@ TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 DEFAULT_NAME = 'Broadlink switch'
 DEFAULT_TIMEOUT = 10
-DEFAULT_RETRY = 3
-SERVICE_LEARN = 'broadlink_learn_command'
-SERVICE_SEND = 'broadlink_send_packet'
 CONF_SLOTS = 'slots'
 
 RM_TYPES = ['rm', 'rm2', 'rm_mini', 'rm_pro_phicomm', 'rm2_home_plus',
@@ -40,8 +34,8 @@ MP1_TYPES = ['mp1']
 SWITCH_TYPES = RM_TYPES + SP1_TYPES + SP2_TYPES + MP1_TYPES
 
 SWITCH_SCHEMA = vol.Schema({
-    vol.Optional(CONF_COMMAND_OFF): cv.string,
-    vol.Optional(CONF_COMMAND_ON): cv.string,
+    vol.Optional(CONF_COMMAND_OFF): data_packet,
+    vol.Optional(CONF_COMMAND_ON): data_packet,
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
 })
 
@@ -75,57 +69,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         config.get(CONF_MAC).encode().replace(b':', b''))
     switch_type = config.get(CONF_TYPE)
 
-    async def _learn_command(call):
-        """Handle a learn command."""
-        try:
-            auth = await hass.async_add_job(broadlink_device.auth)
-        except socket.timeout:
-            _LOGGER.error("Failed to connect to device, timeout")
-            return
-        if not auth:
-            _LOGGER.error("Failed to connect to device")
-            return
-
-        await hass.async_add_job(broadlink_device.enter_learning)
-
-        _LOGGER.info("Press the key you want Home Assistant to learn")
-        start_time = utcnow()
-        while (utcnow() - start_time) < timedelta(seconds=20):
-            packet = await hass.async_add_job(
-                broadlink_device.check_data)
-            if packet:
-                log_msg = "Received packet is: {}".\
-                          format(b64encode(packet).decode('utf8'))
-                _LOGGER.info(log_msg)
-                hass.components.persistent_notification.async_create(
-                    log_msg, title='Broadlink switch')
-                return
-            await asyncio.sleep(1, loop=hass.loop)
-        _LOGGER.error("Did not received any signal")
-        hass.components.persistent_notification.async_create(
-            "Did not received any signal", title='Broadlink switch')
-
-    async def _send_packet(call):
-        """Send a packet."""
-        packets = call.data.get('packet', [])
-        for packet in packets:
-            for retry in range(DEFAULT_RETRY):
-                try:
-                    extra = len(packet) % 4
-                    if extra > 0:
-                        packet = packet + ('=' * (4 - extra))
-                    payload = b64decode(packet)
-                    await hass.async_add_job(
-                        broadlink_device.send_data, payload)
-                    break
-                except (socket.timeout, ValueError):
-                    try:
-                        await hass.async_add_job(
-                            broadlink_device.auth)
-                    except socket.timeout:
-                        if retry == DEFAULT_RETRY-1:
-                            _LOGGER.error("Failed to send packet to device")
-
     def _get_mp1_slot_name(switch_friendly_name, slot):
         """Get slot name."""
         if not slots['slot_{}'.format(slot)]:
@@ -134,13 +77,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if switch_type in RM_TYPES:
         broadlink_device = broadlink.rm((ip_addr, 80), mac_addr, None)
-        hass.services.register(DOMAIN, SERVICE_LEARN + '_' +
-                               slugify(ip_addr.replace('.', '_')),
-                               _learn_command)
-        hass.services.register(DOMAIN, SERVICE_SEND + '_' +
-                               slugify(ip_addr.replace('.', '_')),
-                               _send_packet,
-                               vol.Schema({'packet': cv.ensure_list}))
+        hass.add_job(async_setup_service, hass, ip_addr, broadlink_device)
+
         switches = []
         for object_id, device_config in devices.items():
             switches.append(
@@ -185,8 +123,8 @@ class BroadlinkRMSwitch(SwitchDevice):
         self.entity_id = ENTITY_ID_FORMAT.format(slugify(name))
         self._name = friendly_name
         self._state = False
-        self._command_on = b64decode(command_on) if command_on else None
-        self._command_off = b64decode(command_off) if command_off else None
+        self._command_on = command_on
+        self._command_off = command_off
         self._device = device
 
     @property

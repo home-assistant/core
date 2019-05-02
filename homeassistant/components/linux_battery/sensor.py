@@ -9,8 +9,6 @@ from homeassistant.const import ATTR_NAME, CONF_NAME, DEVICE_CLASS_BATTERY
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['batinfo==0.4.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_PATH = 'path'

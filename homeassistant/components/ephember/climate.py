@@ -11,8 +11,6 @@ from homeassistant.const import (
     ATTR_TEMPERATURE, TEMP_CELSIUS, CONF_USERNAME, CONF_PASSWORD, STATE_OFF)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyephember==0.2.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 # Return cached results if last scan was less then this time ago

@@ -15,8 +15,6 @@ from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['google-cloud-pubsub==0.39.1']
-
 DOMAIN = 'google_pubsub'
 
 CONF_PROJECT_ID = 'project_id'

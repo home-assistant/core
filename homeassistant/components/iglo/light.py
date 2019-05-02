@@ -12,8 +12,6 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
-REQUIREMENTS = ['iglo==1.2.7']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'iGlo Light'
