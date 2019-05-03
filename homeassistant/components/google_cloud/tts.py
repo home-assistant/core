@@ -47,8 +47,10 @@ SUPPORTED_OPTIONS = [
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORTED_LANGUAGES),
-    vol.Optional(CONF_GENDER, default=DEFAULT_GENDER): \
-        vol.In(SUPPORTED_GENDERS),
+    vol.Optional(
+        CONF_GENDER,
+        default=DEFAULT_GENDER
+    ): vol.In(SUPPORTED_GENDERS),
     vol.Optional(CONF_VOICE, default=''): cv.string,
     vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
     vol.Optional(CONF_KEY_FILE, default=''): cv.string,
