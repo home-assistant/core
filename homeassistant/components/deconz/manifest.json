@@ -3,7 +3,7 @@
   "name": "Deconz",
   "documentation": "https://www.home-assistant.io/components/deconz",
   "requirements": [
-    "pydeconz==57"
+    "pydeconz==58"
   ],
   "dependencies": [],
   "codeowners": [
