@@ -145,9 +145,10 @@ class DeconzGateway:
     @callback
     def async_add_remote(self, sensors):
         """Set up remote from deCONZ."""
-        from pydeconz.sensor import SWITCH as DECONZ_REMOTE
+        from pydeconz.sensor import Switch
+
         for sensor in sensors:
-            if sensor.type in DECONZ_REMOTE and \
+            if sensor.type in Switch.ZHATYPE and \
                not (not self.allow_clip_sensor and
                     sensor.type.startswith('CLIP')):
                 self.events.append(DeconzEvent(self.hass, sensor))

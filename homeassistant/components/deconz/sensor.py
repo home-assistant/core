@@ -27,17 +27,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     @callback
     def async_add_sensor(sensors):
         """Add sensors from deCONZ."""
-        from pydeconz.sensor import (
-            DECONZ_SENSOR, SWITCH as DECONZ_REMOTE)
+        from pydeconz.sensor import Switch
         entities = []
 
         for sensor in sensors:
 
-            if sensor.type in DECONZ_SENSOR and \
+            if not sensor.BINARY and \
                not (not gateway.allow_clip_sensor and
                     sensor.type.startswith('CLIP')):
 
-                if sensor.type in DECONZ_REMOTE:
+                if sensor.type in Switch.ZHATYPE:
                     if sensor.battery:
                         entities.append(DeconzBattery(sensor, gateway))
 
@@ -76,34 +75,41 @@ class DeconzSensor(DeconzDevice):
     @property
     def device_class(self):
         """Return the class of the sensor."""
-        return self._device.sensor_class
+        return self._device.SENSOR_CLASS
 
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        return self._device.sensor_icon
+        return self._device.SENSOR_ICON
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this sensor."""
-        return self._device.sensor_unit
+        return self._device.SENSOR_UNIT
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        from pydeconz.sensor import LIGHTLEVEL
+        from pydeconz.sensor import LightLevel
+
         attr = {}
         if self._device.battery:
             attr[ATTR_BATTERY_LEVEL] = self._device.battery
+
         if self._device.on is not None:
             attr[ATTR_ON] = self._device.on
-        if self._device.type in LIGHTLEVEL and self._device.dark is not None:
+
+        if self._device.type in LightLevel.ZHATYPE and \
+                self._device.dark is not None:
             attr[ATTR_DARK] = self._device.dark
+
         if self.unit_of_measurement == 'Watts':
             attr[ATTR_CURRENT] = self._device.current
             attr[ATTR_VOLTAGE] = self._device.voltage
-        if self._device.sensor_class == 'daylight':
+
+        if self._device.SENSOR_CLASS == 'daylight':
             attr[ATTR_DAYLIGHT] = self._device.daylight
+
         return attr
 
 

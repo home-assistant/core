@@ -22,12 +22,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     @callback
     def async_add_climate(sensors):
         """Add climate devices from deCONZ."""
-        from pydeconz.sensor import THERMOSTAT
+        from pydeconz.sensor import Thermostat
         entities = []
 
         for sensor in sensors:
 
-            if sensor.type in THERMOSTAT and \
+            if sensor.type in Thermostat.ZHATYPE and \
                not (not gateway.allow_clip_sensor and
                     sensor.type.startswith('CLIP')):
 
