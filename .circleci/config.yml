@@ -202,23 +202,6 @@ jobs:
           path: test-reports
           destination: test-reports
 
-  # This job use machine executor, e.g. classic CircleCI VM because we need both lokalise-cli and a Python runtime.
-  # Classic CircleCI included python 2.7.12 and python 3.5.2 managed by pyenv, the Python version may need change if
-  # CircleCI changed its VM in future.
-  upload-translations:
-    machine: true
-
-    steps:
-      - checkout
-
-      - run:
-          name: upload english translations
-          command: |
-            pyenv versions
-            pyenv global 3.5.2
-            docker pull lokalise/lokalise-cli@sha256:2198814ebddfda56ee041a4b427521757dd57f75415ea9693696a64c550cef21
-            script/translations_upload
-
 workflows:
   version: 2
   build:
