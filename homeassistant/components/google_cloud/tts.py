@@ -47,7 +47,8 @@ SUPPORTED_OPTIONS = [
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORTED_LANGUAGES),
-    vol.Optional(CONF_GENDER, default=DEFAULT_GENDER): vol.In(SUPPORTED_GENDERS),
+    vol.Optional(CONF_GENDER, default=DEFAULT_GENDER): \
+        vol.In(SUPPORTED_GENDERS),
     vol.Optional(CONF_VOICE, default=''): cv.string,
     vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
     vol.Optional(CONF_KEY_FILE, default=''): cv.string,
@@ -60,7 +61,9 @@ async def async_get_engine(hass, config):
     if key_file:
         key_file = hass.config.path(key_file)
         if not os.path.isfile(key_file):
-            _LOGGER.error("API key file doesn't exist!")
+            _LOGGER.error(
+                "GOOGLE_APPLICATION_CREDENTIALS file doesn't exist!"
+            )
             return None
 
     return GoogleCloudTTSProvider(
@@ -84,7 +87,7 @@ class GoogleCloudTTSProvider(Provider):
         self._gender = gender
         self._voice = voice
         self._encoding = encoding
-        
+
         if key_file:
             self._client = texttospeech \
                 .TextToSpeechClient.from_service_account_json(key_file)
@@ -114,7 +117,7 @@ class GoogleCloudTTSProvider(Provider):
                 _gender = self._gender
                 _voice = self._voice
                 _encoding = self._encoding
-                
+
                 if options:
                     if CONF_GENDER in options:
                         _gender = options[CONF_GENDER].lower().capitalize()
@@ -122,11 +125,11 @@ class GoogleCloudTTSProvider(Provider):
                         _voice = options[CONF_VOICE]
                     if CONF_ENCODING in options:
                         _encoding = options[CONF_ENCODING].lower()
-                
+
                 synthesis_input = texttospeech.types.SynthesisInput(
                     text=message
                 )  # pylint: disable=no-member
-                
+
                 voice = texttospeech.types.VoiceSelectionParams(
                     language_code=_language,
                     ssml_gender=GENDERS_DICT.get(
@@ -135,13 +138,14 @@ class GoogleCloudTTSProvider(Provider):
                     ),
                     name=_voice
                 )  # pylint: disable=no-member
-                
+
                 audio_config = texttospeech.types.AudioConfig(
                     audio_encoding=ENCODINGS_DICT.get(
                         _encoding,
                         DEFAULT_ENCODING
                     )
                 )  # pylint: disable=no-member
+
                 response = await self.hass.async_add_executor_job(
                     self._client.synthesize_speech,
                     synthesis_input,
