@@ -61,8 +61,10 @@ class DeconzDevice(Entity):
         if (self._device.uniqueid is None or
                 self._device.uniqueid.count(':') != 7):
             return None
+
         serial = self._device.uniqueid.split('-', 1)[0]
         bridgeid = self.gateway.api.config.bridgeid
+
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},
