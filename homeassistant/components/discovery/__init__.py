@@ -105,16 +105,19 @@ OPTIONAL_SERVICE_HANDLERS = {
     SERVICE_DLNA_DMR: ('media_player', 'dlna_dmr'),
 }
 
+DEFAULT_ENABLED = list(CONFIG_ENTRY_HANDLERS) + list(SERVICE_HANDLERS)
+DEFAULT_DISABLED = list(OPTIONAL_SERVICE_HANDLERS)
+
 CONF_IGNORE = 'ignore'
 CONF_ENABLE = 'enable'
 
 CONFIG_SCHEMA = vol.Schema({
     vol.Optional(DOMAIN): vol.Schema({
         vol.Optional(CONF_IGNORE, default=[]):
-            vol.All(cv.ensure_list, [
-                vol.In(list(CONFIG_ENTRY_HANDLERS) + list(SERVICE_HANDLERS))]),
+            vol.All(cv.ensure_list, [vol.In(DEFAULT_ENABLED)]),
         vol.Optional(CONF_ENABLE, default=[]):
-            vol.All(cv.ensure_list, [vol.In(OPTIONAL_SERVICE_HANDLERS)])
+            vol.All(cv.ensure_list, [
+                vol.In(DEFAULT_DISABLED + DEFAULT_ENABLED)]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -139,6 +142,14 @@ async def async_setup(hass, config):
     else:
         ignored_platforms = []
         enabled_platforms = []
+
+    for platform in enabled_platforms:
+        if platform in DEFAULT_ENABLED:
+            logger.warning(
+                "Please remove %s from your discovery.enable configuration "
+                "as it is now enabled by default",
+                platform,
+            )
 
     async def new_service_found(service, info):
         """Handle a new service if one is found."""

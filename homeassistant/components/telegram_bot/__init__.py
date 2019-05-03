@@ -446,11 +446,15 @@ class TelegramNotificationService:
                 params[ATTR_REPLY_TO_MSGID] = data[ATTR_REPLY_TO_MSGID]
             # Keyboards:
             if ATTR_KEYBOARD in data:
-                from telegram import ReplyKeyboardMarkup
+                from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
                 keys = data.get(ATTR_KEYBOARD)
                 keys = keys if isinstance(keys, list) else [keys]
-                params[ATTR_REPLYMARKUP] = ReplyKeyboardMarkup(
-                    [[key.strip() for key in row.split(",")] for row in keys])
+                if keys:
+                    params[ATTR_REPLYMARKUP] = ReplyKeyboardMarkup(
+                        [[key.strip() for key in row.split(",")]
+                         for row in keys])
+                else:
+                    params[ATTR_REPLYMARKUP] = ReplyKeyboardRemove(True)
             elif ATTR_KEYBOARD_INLINE in data:
                 from telegram import InlineKeyboardMarkup
                 keys = data.get(ATTR_KEYBOARD_INLINE)

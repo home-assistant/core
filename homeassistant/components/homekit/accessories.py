@@ -20,7 +20,8 @@ from .const import (
     ATTR_DISPLAY_NAME, ATTR_VALUE, BRIDGE_MODEL, BRIDGE_SERIAL_NUMBER,
     CHAR_BATTERY_LEVEL, CHAR_CHARGING_STATE, CHAR_STATUS_LOW_BATTERY,
     CONF_LINKED_BATTERY_SENSOR, CONF_LOW_BATTERY_THRESHOLD, DEBOUNCE_TIMEOUT,
-    EVENT_HOMEKIT_CHANGED, MANUFACTURER, SERV_BATTERY_SERVICE)
+    DEFAULT_LOW_BATTERY_THRESHOLD, EVENT_HOMEKIT_CHANGED, MANUFACTURER,
+    SERV_BATTERY_SERVICE)
 from .util import convert_to_float, dismiss_setup_message, show_setup_message
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,7 +75,8 @@ class HomeAccessory(Accessory):
         self.linked_battery_sensor = \
             self.config.get(CONF_LINKED_BATTERY_SENSOR)
         self.low_battery_threshold = \
-            self.config.get(CONF_LOW_BATTERY_THRESHOLD)
+            self.config.get(CONF_LOW_BATTERY_THRESHOLD,
+                            DEFAULT_LOW_BATTERY_THRESHOLD)
 
         """Add battery service if available"""
         battery_found = self.hass.states.get(self.entity_id).attributes \
