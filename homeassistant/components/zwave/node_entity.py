@@ -76,7 +76,7 @@ class ZWaveBaseEntity(Entity):
             self.hass.add_job(_async_remove_and_add)
 
     async def node_removed(self):
-        """Called when a node is removed from the Z-Wave network."""
+        """Call when a node is removed from the Z-Wave network."""
         registry = await async_get_registry(self.hass)
         if self.entity_id not in registry.entities:
             return
