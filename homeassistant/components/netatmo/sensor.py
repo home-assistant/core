@@ -38,6 +38,11 @@ NETATMO_UPDATE_INTERVAL = 600
 # NetAtmo Public Data is uploaded to server every 10 minutes
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
 
+SUPPORTED_PUBLIC_SENSOR_TYPES = [
+    'temperature', 'pressure', 'humidity', 'rain', 'windstrength',
+    'guststrength'
+]
+
 SENSOR_TYPES = {
     'temperature': ['Temperature', TEMP_CELSIUS, 'mdi:thermometer',
                     DEVICE_CLASS_TEMPERATURE],
@@ -95,12 +100,8 @@ MODULE_TYPE_INDOOR = 'NAModule4'
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available Netatmo weather sensors."""
     dev = []
-    auth = hass.data[DATA_NETATMO_AUTH]
-
-    import pyatmo
-
-    all_classes = all_product_classes()
     not_handled = {}
+    auth = hass.data[DATA_NETATMO_AUTH]
 
     if config.get(CONF_AREAS) is not None:
         for area in config[CONF_AREAS]:
@@ -109,50 +110,53 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 lat_ne=area[CONF_LAT_NE],
                 lon_ne=area[CONF_LON_NE],
                 lat_sw=area[CONF_LAT_SW],
-                lon_sw=area[CONF_LON_SW])
+                lon_sw=area[CONF_LON_SW]
+            )
             for sensor_type in area[CONF_MONITORED_CONDITIONS]:
-                dev.append(NetatmoPublicSensor(area[CONF_NAME], data,
-                                               sensor_type, area[CONF_MODE]))
-    else:
-        for data_class in all_classes:
-            data = NetatmoData(auth, data_class, config.get(CONF_STATION))
-            try:
-                module_items = []
-                # Test if manually configured
-                if CONF_MODULES in config:
-                    module_items = config[CONF_MODULES].items()
+                if sensor_type in SUPPORTED_PUBLIC_SENSOR_TYPES:
+                    dev.append(NetatmoPublicSensor(
+                        area[CONF_NAME],
+                        data,
+                        sensor_type,
+                        area[CONF_MODE]
+                    ))
                 else:
-                    # otherwise add all modules and conditions
-                    for module_name in data.get_module_names():
-                        monitored_conditions = \
-                            data.station_data.monitoredConditions(module_name)
-                        module_items.append(
-                            (module_name, monitored_conditions))
+                    _LOGGER.error("Sensor type %s not supported", sensor_type)
+    else:
+        for data_class in all_product_classes():
+            data = NetatmoData(auth, data_class, config.get(CONF_STATION))
+            module_items = []
+            # Test if manually configured
+            if CONF_MODULES in config:
+                module_items = config[CONF_MODULES].items()
+            else:
+                # otherwise add all modules and conditions
+                for module_name in data.get_module_names():
+                    monitored_conditions = \
+                        data.station_data.monitoredConditions(module_name)
+                    module_items.append(
+                        (module_name, monitored_conditions))
 
-                for module_name, monitored_conditions in module_items:
-                    # Test if module exists
-                    if module_name not in data.get_module_names():
-                        not_handled[module_name] = \
-                            not_handled[module_name]+1 \
-                            if module_name in not_handled else 1
-                    else:
-                        # Only create sensors for monitored properties
-                        for condition in monitored_conditions:
-                            if condition in SENSOR_TYPES.keys():
-                                dev.append(
-                                    NetatmoSensor(
-                                        data, module_name, condition))
-                            else:
-                                _LOGGER.warning(
-                                    "Unknown condition %s for module %s",
-                                    condition, module_name)
+            for module_name, monitored_conditions in module_items:
+                # Test if module exists
+                if module_name not in data.get_module_names():
+                    not_handled[module_name] = \
+                        not_handled[module_name]+1 \
+                        if module_name in not_handled else 1
+                else:
+                    # Only create sensors for monitored properties
+                    for condition in monitored_conditions:
+                        if condition in SENSOR_TYPES.keys():
+                            dev.append(
+                                NetatmoSensor(
+                                    data, module_name, condition))
+                        else:
+                            _LOGGER.warning(
+                                "Unknown condition %s for module %s",
+                                condition, module_name)
 
-            except pyatmo.NoDevice:
-                continue
-
-        for module_name, count in not_handled.items():
-            if count == len(all_classes):
-                _LOGGER.error('Module name: "%s" not found', module_name)
+        for module_name, _ in not_handled.items():
+            _LOGGER.error('Module name: "%s" not found', module_name)
 
     if dev:
         add_entities(dev, True)
@@ -505,7 +509,7 @@ class NetatmoData:
         """Initialize the data object."""
         self.auth = auth
         self.data_class = data_class
-        self.data = None
+        self.data = {}
         self.station_data = None
         self.station = station
         self._next_update = time()
@@ -514,8 +518,6 @@ class NetatmoData:
     def get_module_names(self):
         """Return all module available on the API as a list."""
         self.update()
-        if not self.data:
-            return []
         return self.data.keys()
 
     def _detect_platform_type(self):
@@ -523,12 +525,16 @@ class NetatmoData:
 
         The return can be a WeatherStationData or a HomeCoachData.
         """
+        from pyatmo import NoDevice
         try:
             station_data = self.data_class(self.auth)
             _LOGGER.debug("%s detected!", str(self.data_class.__name__))
             return station_data
-        except TypeError:
-            return
+        except NoDevice:
+            _LOGGER.error("No Weather or HomeCoach devices found for %s", str(
+                self.station
+                ))
+            raise
 
     def update(self):
         """Call the Netatmo API to update the data.
@@ -541,11 +547,13 @@ class NetatmoData:
                 not self._update_in_progress.acquire(False):
             return
 
+        from pyatmo import NoDevice
         try:
             self.station_data = self._detect_platform_type()
-            if not self.station_data:
-                raise Exception("No Weather nor HomeCoach devices found")
+        except NoDevice:
+            return
 
+        try:
             if self.station is not None:
                 self.data = self.station_data.lastData(
                     station=self.station, exclude=3600)
