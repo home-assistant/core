@@ -163,9 +163,9 @@ class ControllerManager:
             try:
                 # Retrieve latest players and refresh status
                 data = await self.controller.load_players()
+                self.update_ids(data[const.DATA_MAPPED_IDS])
             except (CommandError, asyncio.TimeoutError, ConnectionError) as ex:
                 _LOGGER.error("Unable to refresh players: %s", ex)
-            self.update_ids(data[const.DATA_MAPPED_IDS])
         # Update players
         self._hass.helpers.dispatcher.async_dispatcher_send(
             SIGNAL_HEOS_UPDATED)
@@ -177,7 +177,7 @@ class ControllerManager:
             # update device registry
             entry = self._device_registry.async_get_device(
                 {(DOMAIN, old_id)}, set())
-            new_identifiers = {DOMAIN, new_id}
+            new_identifiers = {(DOMAIN, new_id)}
             if entry:
                 self._device_registry.async_update_device(
                     entry.id, new_identifiers=new_identifiers)
@@ -185,10 +185,10 @@ class ControllerManager:
                               entry.id, new_identifiers)
             # update entity registry
             entity_id = self._entity_registry.async_get_entity_id(
-                DOMAIN, MEDIA_PLAYER_DOMAIN, old_id)
+                MEDIA_PLAYER_DOMAIN, DOMAIN, str(old_id))
             if entity_id:
                 self._entity_registry.async_update_entity(
-                    entity_id, new_unique_id=new_id)
+                    entity_id, new_unique_id=str(new_id))
                 _LOGGER.debug("Updated entity %s unique id to %s",
                               entity_id, new_id)
 
@@ -276,7 +276,7 @@ class SourceManager:
                                       exc_info=isinstance(error, CommandError))
                         return
 
-        async def update_sources(event, data):
+        async def update_sources(event, data=None):
             if event in (const.EVENT_SOURCES_CHANGED,
                          const.EVENT_USER_CHANGED,
                          const.EVENT_CONNECTED):
