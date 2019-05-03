@@ -57,9 +57,11 @@ def async_setup_platform(
             to_station = yield from train_api.async_get_train_station(
                 train.get(CONF_TO))
         except ValueError as station_error:
-            _LOGGER.error("Problem identifying station %s or %s. Error: %s ",
+            _LOGGER.error("Problem when trying station %s to %s. Error: %s ",
                           train.get(CONF_FROM), train.get(CONF_TO),
                           station_error)
+            return
+
         sensor = TrainSensor(train_api,
                              train.get(CONF_NAME),
                              from_station,
@@ -69,11 +71,6 @@ def async_setup_platform(
         sensors.append(sensor)
 
     async_add_devices(sensors, update_before_add=True)
-
-
-def dayname(day):
-    """Return the short name with the weekday number as input."""
-    return WEEKDAYS[day]
 
 
 def next_weekday(fromdate, weekday):
@@ -88,7 +85,7 @@ def next_departuredate(departure):
     """Calculate the next departuredate from an array input of short days."""
     today_weekday = date.weekday(date.today())
     today_date = date.today()
-    if dayname(today_weekday) in departure:
+    if WEEKDAYS[today_weekday] in departure:
         return date.today()
     for day in departure:
         next_departure = WEEKDAYS.index(day)
@@ -110,6 +107,8 @@ class TrainSensor(Entity):
         self._weekday = weekday
         self._time = time
         self._state = None
+        self._departure_state = None
+        self._delay_in_minutes = None
 
     @asyncio.coroutine
     def async_update(self):
@@ -129,6 +128,8 @@ class TrainSensor(Entity):
             self._state = yield from \
                 self._train_api.async_get_next_train_stop(
                     self._from_station, self._to_station, when)
+        self._departure_state = self._state.get_state().name
+        self._delay_in_minutes = self._state.get_delay_time()
 
     @property
     def device_state_attributes(self):
@@ -142,11 +143,11 @@ class TrainSensor(Entity):
         deviations = None
         if state.deviations is not None:
             deviations = ", ".join(state.deviations)
-        delay_in_minutes = state.get_delay_time()
-        if delay_in_minutes is not None:
-            delay_in_minutes = delay_in_minutes.total_seconds() / 60
+        if self._delay_in_minutes is not None:
+            self._delay_in_minutes = \
+                self._delay_in_minutes.total_seconds() / 60
         return {ATTR_CANCELED: state.canceled,
-                ATTR_DELAY_TIME: delay_in_minutes,
+                ATTR_DELAY_TIME: self._delay_in_minutes,
                 ATTR_PLANNED_TIME: state.advertised_time_at_location,
                 ATTR_ESTIMATED_TIME: state.estimated_time_at_location,
                 ATTR_ACTUAL_TIME: state.time_at_location,
@@ -166,6 +167,6 @@ class TrainSensor(Entity):
     @property
     def state(self):
         """Return the departure state."""
-        if self._state is None:
-            return None
-        return self._state.get_state().name
+        if self._state is not None:
+            return self._departure_state
+        return None
