@@ -105,16 +105,8 @@ def boolean(value: Any) -> bool:
     raise vol.Invalid('invalid boolean value {}'.format(value))
 
 
-def boolean_tolerant(value: Any) -> bool:
-    """Coerce a boolean value to true, or return false."""
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, str):
-        value = value.lower().strip()
-        return value in ('1', 'true', 'yes', 'on', 'enable')
-    if isinstance(value, Number):
-        return value != 0
-    return False
+boolean_coerce = vol.Any(boolean, lambda val: False)
+"""Coerce a boolean value to true, or return false."""
 
 
 _WS = re.compile('\\s*')

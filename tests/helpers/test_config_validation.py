@@ -31,14 +31,14 @@ def test_boolean():
         assert not schema(value)
 
 
-def test_boolean_tolerant():
+def test_boolean_coerce():
     """Test boolean_true validation."""
-    schema = vol.Schema(cv.boolean_tolerant)
+    schema = vol.Schema(cv.boolean_coerce)
 
     for value in (
             'false', 'Off', '0', 'NO', 'disable', 0, False,
             'T', 'negative', 'lock', 'true like', 'tr ue',
-            None, [], [1, 2], {'one': 'two'}, test_boolean_tolerant):
+            None, [], [1, 2], {'one': 'two'}, test_boolean_coerce):
         assert not schema(value)
 
     for value in ('true', 'On', '1', 'YES', '   true ',
