@@ -703,6 +703,9 @@ mbddns==0.1.2
 # homeassistant.components.message_bird
 messagebird==1.2.0
 
+# homeassistant.components.meteoalarm
+meteoalertapi==0.0.8
+
 # homeassistant.components.meteo_france
 meteofrance==0.3.4
 
@@ -1867,6 +1870,3 @@ zigpy-xbee-homeassistant==0.2.0
 
 # homeassistant.components.zoneminder
 zm-py==0.3.3
-
-# homeassistant.components.meteoalarm
-meteoalertapi==0.0.8
