@@ -499,7 +499,7 @@ google-api-python-client==1.6.4
 # homeassistant.components.google_pubsub
 google-cloud-pubsub==0.39.1
 
-# homeassistant.components.google_cloud_tts
+# homeassistant.components.google_cloud
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.googlehome
