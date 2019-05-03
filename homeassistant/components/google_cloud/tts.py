@@ -103,7 +103,18 @@ async def async_get_engine(hass, config):
 class GoogleCloudTTSProvider(Provider):
     """The Google Cloud TTS API provider."""
 
-    def __init__(self, hass, key_file, lang, gender, voice, encoding, speed, pitch, gain):
+    def __init__(
+        self,
+        hass,
+        key_file,
+        lang,
+        gender,
+        voice,
+        encoding,
+        speed,
+        pitch,
+        gain
+    ):
         """Init Google Cloud TTS service."""
         self.hass = hass
         self.name = 'Google Cloud TTS'
