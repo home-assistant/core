@@ -1,0 +1,99 @@
+"""Sensor for MeteoAlarm.eu."""
+from datetime import timedelta
+import logging
+
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, CONF_NAME)
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
+
+_LOGGER = logging.getLogger(__name__)
+
+CONF_COUNTRY = 'country'
+CONF_PROVINCE = 'province'
+CONF_LANGUAGE = 'language'
+
+ATTRIBUTION = ("Information provided by MeteoAlarm, time delays between this"
+               "website and the www.meteoalarm.eu website are possible, for"
+               "the most up to date information about alert levels as"
+               "published by the participating National Meteorological"
+               "Services please use www.meteoalarm.eu")
+
+DEFAULT_NAME = 'meteoalarm'
+
+ICON = 'mdi:alert'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_COUNTRY): cv.string,
+    vol.Required(CONF_PROVINCE): cv.string,
+    vol.Optional(CONF_LANGUAGE, default='en'): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
+
+
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the MeteoAlarm sensor platform."""
+    from meteoalertapi import Meteoalert
+
+    country = config.get(CONF_COUNTRY)
+    province = config.get(CONF_PROVINCE)
+    language = config.get(CONF_LANGUAGE)
+    name = config.get(CONF_NAME)
+
+    try:
+        api = Meteoalert(country, province, language)
+    except KeyError():
+        _LOGGER.exception("Wrong country digits, or province name")
+        return
+
+    add_entities([MeteoAlertSensor(api, name)], True)
+
+
+class MeteoAlertSensor(Entity):
+    """Representation of a MeteoAlert sensor."""
+
+    def __init__(self, api, name):
+        """Initialize the MeteoAlert sensor."""
+        self._name = name
+        self._attributes = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
+        self._state = None
+        self._api = api
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return self._attributes
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend."""
+        return ICON
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        """Update device state."""
+        alert = self._api.get_alert()
+        if alert:
+            for key, value in alert.items():
+                self._attributes[key] = value
+            self._state = alert['headline']
+        else:
+            self._state = 'no warnings'
