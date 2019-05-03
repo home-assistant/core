@@ -1,11 +1,11 @@
 """Support for the Google Cloud TTS service."""
-from google.cloud import texttospeech
-from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 import logging
 import os
-import async_timeout
 import asyncio
+import async_timeout
 import voluptuous as vol
+from google.cloud import texttospeech
+from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
