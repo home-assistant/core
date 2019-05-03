@@ -13,6 +13,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_IDLE,
     STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING)
 
+from pytest import raises
 
 from tests.common import async_mock_service
 
@@ -262,7 +263,7 @@ async def test_media_player_television_volume_level(hass, hk_driver, events):
     entity_id = 'media_player.television'
 
     hass.states.async_set(entity_id, None, {ATTR_DEVICE_CLASS: DEVICE_CLASS_TV,
-                                            ATTR_SUPPORTED_FEATURES: 1420,
+                                            ATTR_SUPPORTED_FEATURES: 3468,
                                             ATTR_MEDIA_VOLUME_MUTED: False,
                                             })
     await hass.async_block_till_done()
@@ -276,6 +277,9 @@ async def test_media_player_television_volume_level(hass, hk_driver, events):
     assert acc.char_active.value == 0
     assert acc.char_volume.value == 0
     assert acc.char_mute.value is False
+
+    with raises(AttributeError, match="no attribute 'char_input_source'"):
+        acc.char_input_source
 
     # Set from HomeKit
     call_volume_set = async_mock_service(hass, DOMAIN, 'volume_set')
