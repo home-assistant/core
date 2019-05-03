@@ -184,7 +184,6 @@ class TelevisionMediaPlayer(HomeAccessory):
         self._flag = {CHAR_ACTIVE: False, CHAR_ACTIVE_IDENTIFIER: False,
                       FEATURE_TOGGLE_MUTE: False}
         self.support_select_source = False
-        self.support_volume_level = False
 
         self.sources = []
 
@@ -215,8 +214,8 @@ class TelevisionMediaPlayer(HomeAccessory):
             CHAR_ACTIVE, setter_callback=self.set_on_off)
 
         if CHAR_REMOTE_KEY in self.chars_tv:
-            self.char_remote_key = serv_tv.configure_char(
-                CHAR_REMOTE_KEY, setter_callback=self.set_remote_key)
+            serv_tv.configure_char(CHAR_REMOTE_KEY,
+                                   setter_callback=self.set_remote_key)
 
         if CHAR_VOLUME_SELECTOR in self.chars_speaker:
             serv_speaker = self.add_preload_service(
@@ -230,20 +229,20 @@ class TelevisionMediaPlayer(HomeAccessory):
             self.char_mute = serv_speaker.configure_char(
                 CHAR_MUTE, value=False, setter_callback=self.set_mute)
 
-            volume_control_type = 1 if self.support_volume_level else 2
+            volume_control_type = 1 if CHAR_VOLUME in self.chars_speaker else 2
             serv_speaker.configure_char(CHAR_VOLUME_CONTROL_TYPE,
                                         value=volume_control_type)
 
-            self.char_volume_selector = serv_speaker.configure_char(
-                CHAR_VOLUME_SELECTOR, setter_callback=self.set_volume_step)
+            serv_speaker.configure_char(CHAR_VOLUME_SELECTOR,
+                                        setter_callback=self.set_volume_step)
 
             if CHAR_VOLUME in self.chars_speaker:
-                self.char_volume = serv_speaker.configure_char(
-                    CHAR_VOLUME, setter_callback=self.set_volume)
+                serv_speaker.configure_char(CHAR_VOLUME,
+                                            setter_callback=self.set_volume)
 
         if self.support_select_source:
-            self.sources = self.hass.states.get(self.entity_id).attributes.get(
-                ATTR_INPUT_SOURCE_LIST)
+            self.sources = self.hass.states.get(self.entity_id) \
+                .attributes.get(ATTR_INPUT_SOURCE_LIST)
             if not self.sources:
                 return
             self.char_input_source = serv_tv.configure_char(
@@ -282,11 +281,17 @@ class TelevisionMediaPlayer(HomeAccessory):
                   ATTR_MEDIA_VOLUME_MUTED: value}
         self.call_service(DOMAIN, SERVICE_VOLUME_MUTE, params)
 
+    def set_volume(self, value):
+        """Send volume step value if call came from HomeKit."""
+        _LOGGER.debug('%s: Set volume to %s', self.entity_id, value)
+        params = {ATTR_ENTITY_ID: self.entity_id,
+                  ATTR_MEDIA_VOLUME_LEVEL: value}
+        self.call_service(DOMAIN, SERVICE_VOLUME_SET, params)
+
     def set_volume_step(self, value):
         """Send volume step value if call came from HomeKit."""
         _LOGGER.debug('%s: Step volume by %s',
                       self.entity_id, value)
-
         service = SERVICE_VOLUME_DOWN if value else SERVICE_VOLUME_UP
         params = {ATTR_ENTITY_ID: self.entity_id}
         self.call_service(DOMAIN, service, params)
@@ -295,7 +300,6 @@ class TelevisionMediaPlayer(HomeAccessory):
         """Send input set value if call came from HomeKit."""
         _LOGGER.debug('%s: Set active_identifer to %s',
                       self.entity_id, value)
-
         source = self.sources[value]
         self._flag[CHAR_ACTIVE_IDENTIFIER] = True
         params = {ATTR_ENTITY_ID: self.entity_id,
@@ -305,7 +309,6 @@ class TelevisionMediaPlayer(HomeAccessory):
     def set_remote_key(self, value):
         """Send remote key value if call came from HomeKit."""
         _LOGGER.debug('%s: Set remote key to %s', self.entity_id, value)
-
         if value in MEDIA_PLAYER_KEYS:
             service = MEDIA_PLAYER_KEYS[value]
             # Handle Play Pause
