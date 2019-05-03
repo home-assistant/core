@@ -84,7 +84,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
             vol.Required(CONF_LAT_SW): cv.latitude,
             vol.Required(CONF_LON_NE): cv.longitude,
             vol.Required(CONF_LON_SW): cv.longitude,
-            vol.Required(CONF_MONITORED_CONDITIONS): [vol.In(SENSOR_TYPES)],
+            vol.Required(CONF_MONITORED_CONDITIONS): [vol.In(SUPPORTED_PUBLIC_SENSOR_TYPES)],
             vol.Optional(CONF_MODE, default=DEFAULT_MODE): vol.In(MODE_TYPES),
             vol.Optional(CONF_NAME, default=DEFAULT_NAME_PUBLIC): cv.string
         }
@@ -113,15 +113,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 lon_sw=area[CONF_LON_SW]
             )
             for sensor_type in area[CONF_MONITORED_CONDITIONS]:
-                if sensor_type in SUPPORTED_PUBLIC_SENSOR_TYPES:
-                    dev.append(NetatmoPublicSensor(
-                        area[CONF_NAME],
-                        data,
-                        sensor_type,
-                        area[CONF_MODE]
-                    ))
-                else:
-                    _LOGGER.error("Sensor type %s not supported", sensor_type)
+                dev.append(NetatmoPublicSensor(
+                    area[CONF_NAME],
+                    data,
+                    sensor_type,
+                    area[CONF_MODE]
+                ))
     else:
         for data_class in all_product_classes():
             data = NetatmoData(auth, data_class, config.get(CONF_STATION))
