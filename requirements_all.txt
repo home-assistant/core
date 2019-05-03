@@ -1867,3 +1867,6 @@ zigpy-xbee-homeassistant==0.2.0
 
 # homeassistant.components.zoneminder
 zm-py==0.3.3
+
+# homeassistant.components.meteoalarm
+meteoalertapi==0.0.8
