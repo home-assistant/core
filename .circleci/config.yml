@@ -247,9 +247,3 @@ workflows:
       # - test:
       #     name: test 3.8
       #     python: 3.8-rc-stretch
-      - upload-translations:
-          requires:
-            - static-check
-          filters:
-            branches:
-              only: dev
