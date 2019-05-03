@@ -142,8 +142,8 @@ class GoogleCloudTTSProvider(Provider):
                         DEFAULT_ENCODING
                     )
                 )  # pylint: disable=no-member
-                
-                response = self._client.synthesize_speech(
+                response = await self.hass.async_add_executor_job(
+                    self._client.synthesize_speech,
                     synthesis_input,
                     voice,
                     audio_config
