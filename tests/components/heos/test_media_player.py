@@ -9,9 +9,10 @@ from homeassistant.components.heos.const import (
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE, ATTR_INPUT_SOURCE_LIST, ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ARTIST, ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_DURATION, ATTR_MEDIA_POSITION, ATTR_MEDIA_POSITION_UPDATED_AT,
-    ATTR_MEDIA_SHUFFLE, ATTR_MEDIA_TITLE, ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED, DOMAIN as MEDIA_PLAYER_DOMAIN, MEDIA_TYPE_MUSIC,
+    ATTR_MEDIA_DURATION, ATTR_MEDIA_ENQUEUE, ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_POSITION_UPDATED_AT, ATTR_MEDIA_SHUFFLE, ATTR_MEDIA_TITLE,
+    ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED,
+    DOMAIN as MEDIA_PLAYER_DOMAIN, MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_URL, SERVICE_CLEAR_PLAYLIST, SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP)
@@ -461,6 +462,112 @@ async def test_play_media_url(hass, config_entry, config, controller, caplog):
         player.play_url.reset_mock()
         player.play_url.side_effect = CommandError(None, "Failure", 1)
     assert "Unable to play media: Failure (1)" in caplog.text
+
+
+async def test_play_media_quick_select(
+        hass, config_entry, config, controller, caplog, quick_selects):
+    """Test the play media service with type quick_select."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    quick_select = list(quick_selects.items())[0]
+    index = quick_select[0]
+    name = quick_select[1]
+    # Play by index
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_MEDIA_CONTENT_TYPE: 'quick_select',
+         ATTR_MEDIA_CONTENT_ID: str(index)}, blocking=True)
+    player.play_quick_select.assert_called_once_with(index)
+    # Play by name
+    player.play_quick_select.reset_mock()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_MEDIA_CONTENT_TYPE: 'quick_select',
+         ATTR_MEDIA_CONTENT_ID: name}, blocking=True)
+    player.play_quick_select.assert_called_once_with(index)
+    # Invalid name
+    player.play_quick_select.reset_mock()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_MEDIA_CONTENT_TYPE: 'quick_select',
+         ATTR_MEDIA_CONTENT_ID: "Invalid"}, blocking=True)
+    assert player.play_quick_select.call_count == 0
+    assert "Unable to play media: Invalid quick select 'Invalid'" \
+        in caplog.text
+
+
+async def test_play_media_playlist(
+        hass, config_entry, config, controller, caplog, playlists):
+    """Test the play media service with type playlist."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    playlist = playlists[0]
+    # Play without enqueing
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_PLAYLIST,
+         ATTR_MEDIA_CONTENT_ID: playlist.name}, blocking=True)
+    player.add_to_queue.assert_called_once_with(
+        playlist, const.ADD_QUEUE_REPLACE_AND_PLAY)
+    # Play with enqueing
+    player.add_to_queue.reset_mock()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_PLAYLIST,
+         ATTR_MEDIA_CONTENT_ID: playlist.name,
+         ATTR_MEDIA_ENQUEUE: True}, blocking=True)
+    player.add_to_queue.assert_called_once_with(
+        playlist, const.ADD_QUEUE_ADD_TO_END)
+    # Invalid name
+    player.add_to_queue.reset_mock()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_PLAYLIST,
+         ATTR_MEDIA_CONTENT_ID: 'Invalid'}, blocking=True)
+    assert player.add_to_queue.call_count == 0
+    assert "Unable to play media: Invalid playlist 'Invalid'" \
+        in caplog.text
+
+
+async def test_play_media_favorite(
+        hass, config_entry, config, controller, caplog, favorites):
+    """Test the play media service with type favorite."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    quick_select = list(favorites.items())[0]
+    index = quick_select[0]
+    name = quick_select[1].name
+    # Play by index
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_MEDIA_CONTENT_TYPE: 'favorite',
+         ATTR_MEDIA_CONTENT_ID: str(index)}, blocking=True)
+    player.play_favorite.assert_called_once_with(index)
+    # Play by name
+    player.play_favorite.reset_mock()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_MEDIA_CONTENT_TYPE: 'favorite',
+         ATTR_MEDIA_CONTENT_ID: name}, blocking=True)
+    player.play_favorite.assert_called_once_with(index)
+    # Invalid name
+    player.play_favorite.reset_mock()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_MEDIA_CONTENT_TYPE: 'favorite',
+         ATTR_MEDIA_CONTENT_ID: "Invalid"}, blocking=True)
+    assert player.play_favorite.call_count == 0
+    assert "Unable to play media: Invalid favorite 'Invalid'" \
+        in caplog.text
 
 
 async def test_play_media_invalid_type(

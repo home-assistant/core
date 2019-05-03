@@ -7,10 +7,11 @@ from typing import Sequence
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
-    DOMAIN, MEDIA_TYPE_MUSIC, MEDIA_TYPE_URL, SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET,
-    SUPPORT_STOP, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
+    ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST,
+    MEDIA_TYPE_URL, SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_STOP,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.helpers.typing import HomeAssistantType
@@ -49,7 +50,8 @@ def log_command_error(command: str):
             from pyheos import CommandError
             try:
                 await func(*args, **kwargs)
-            except (CommandError, asyncio.TimeoutError, ConnectionError) as ex:
+            except (CommandError, asyncio.TimeoutError, ConnectionError,
+                    ValueError) as ex:
                 _LOGGER.error("Unable to %s: %s", command, ex)
         return wrapper
     return decorator
@@ -167,9 +169,49 @@ class HeosMediaPlayer(MediaPlayerDevice):
         """Play a piece of media."""
         if media_type == MEDIA_TYPE_URL:
             await self._player.play_url(media_id)
-        else:
-            _LOGGER.error("Unable to play media: Unsupported media type '%s'",
-                          media_type)
+            return
+
+        if media_type == "quick_select":
+            # media_id may be an int or a str
+            selects = await self._player.get_quick_selects()
+            try:
+                index = int(media_id)
+            except ValueError:
+                # Try finding index by name
+                index = next((index for index, select in selects.items()
+                              if select == media_id), None)
+            if index is None:
+                raise ValueError("Invalid quick select '{}'".format(media_id))
+            await self._player.play_quick_select(index)
+            return
+
+        if media_type == MEDIA_TYPE_PLAYLIST:
+            from pyheos import const
+            playlists = await self._player.heos.get_playlists()
+            playlist = next((p for p in playlists if p.name == media_id), None)
+            if not playlist:
+                raise ValueError("Invalid playlist '{}'".format(media_id))
+            add_queue_option = const.ADD_QUEUE_ADD_TO_END \
+                if kwargs.get(ATTR_MEDIA_ENQUEUE) \
+                else const.ADD_QUEUE_REPLACE_AND_PLAY
+            await self._player.add_to_queue(playlist, add_queue_option)
+            return
+
+        if media_type == "favorite":
+            # media_id may be an int or str
+            try:
+                index = int(media_id)
+            except ValueError:
+                # Try finding index by name
+                index = next((index for index, favorite
+                              in self._source_manager.favorites.items()
+                              if favorite.name == media_id), None)
+            if index is None:
+                raise ValueError("Invalid favorite '{}'".format(media_id))
+            await self._player.play_favorite(index)
+            return
+
+        raise ValueError("Unsupported media type '{}'".format(media_type))
 
     @log_command_error("select source")
     async def async_select_source(self, source):
