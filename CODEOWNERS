@@ -86,7 +86,7 @@ homeassistant/components/gearbest/* @HerrHofrat
 homeassistant/components/gitter/* @fabaff
 homeassistant/components/glances/* @fabaff
 homeassistant/components/gntp/* @robbiet480
-homeassistant/components/google_cloud_tts/* @lufton
+homeassistant/components/google_cloud/* @lufton
 homeassistant/components/google_translate/* @awarecan
 homeassistant/components/google_travel_time/* @robbiet480
 homeassistant/components/googlehome/* @ludeeus
