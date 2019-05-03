@@ -6,7 +6,7 @@ from pyhap.const import CATEGORY_SWITCH, CATEGORY_TELEVISION
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE, ATTR_INPUT_SOURCE_LIST, ATTR_MEDIA_VOLUME_MUTED,
     ATTR_MEDIA_VOLUME_LEVEL, SERVICE_SELECT_SOURCE, DOMAIN, SUPPORT_PAUSE,
-    SUPPORT_PLAY, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
+    SUPPORT_PLAY, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
     SUPPORT_SELECT_SOURCE)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_MEDIA_PAUSE,
@@ -199,6 +199,8 @@ class TelevisionMediaPlayer(HomeAccessory):
             self.chars_speaker.extend((CHAR_NAME, CHAR_ACTIVE,
                                        CHAR_VOLUME_CONTROL_TYPE,
                                        CHAR_VOLUME_SELECTOR))
+            if features & SUPPORT_VOLUME_SET:
+                self.chars_speaker.append(CHAR_VOLUME)
 
         if features & SUPPORT_SELECT_SOURCE:
             self.support_select_source = True
@@ -211,8 +213,8 @@ class TelevisionMediaPlayer(HomeAccessory):
             CHAR_ACTIVE, setter_callback=self.set_on_off)
 
         if CHAR_REMOTE_KEY in self.chars_tv:
-            serv_tv.configure_char(CHAR_REMOTE_KEY,
-                                   setter_callback=self.set_remote_key)
+            self.char_remote_key = serv_tv.configure_char(
+                CHAR_REMOTE_KEY, setter_callback=self.set_remote_key)
 
         if CHAR_VOLUME_SELECTOR in self.chars_speaker:
             serv_speaker = self.add_preload_service(
@@ -230,12 +232,12 @@ class TelevisionMediaPlayer(HomeAccessory):
             serv_speaker.configure_char(CHAR_VOLUME_CONTROL_TYPE,
                                         value=volume_control_type)
 
-            serv_speaker.configure_char(CHAR_VOLUME_SELECTOR,
-                                        setter_callback=self.set_volume_step)
+            self.char_volume_selector = serv_speaker.configure_char(
+                CHAR_VOLUME_SELECTOR, setter_callback=self.set_volume_step)
 
             if CHAR_VOLUME in self.chars_speaker:
-                serv_speaker.configure_char(CHAR_VOLUME,
-                                            setter_callback=self.set_volume)
+                self.char_volume = serv_speaker.configure_char(
+                    CHAR_VOLUME, setter_callback=self.set_volume)
 
         if self.support_select_source:
             self.sources = self.hass.states.get(self.entity_id) \
@@ -312,8 +314,8 @@ class TelevisionMediaPlayer(HomeAccessory):
             if service == SERVICE_MEDIA_PLAY_PAUSE:
                 state = self.hass.states.get(self.entity_id).state
                 if state in (STATE_PLAYING, STATE_PAUSED):
-                    service = SERVICE_MEDIA_PLAY if value else \
-                        SERVICE_MEDIA_PAUSE
+                    service = SERVICE_MEDIA_PLAY if state == STATE_PAUSED \
+                        else SERVICE_MEDIA_PAUSE
             params = {ATTR_ENTITY_ID: self.entity_id}
             self.call_service(DOMAIN, service, params)
 
