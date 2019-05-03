@@ -82,8 +82,6 @@ class ZWaveBaseEntity(Entity):
             return
 
         registry.async_remove(self.entity_id)
-        _LOGGER.info('removed entity from entity_registry: %s', self.entity_id)
-
         await self.async_remove()
 
 

@@ -376,6 +376,24 @@ async def async_setup_entry(hass, config_entry):
         hass.add_job(check_has_unique_id, entity, _on_ready, _on_timeout,
                      hass.loop)
 
+    def node_removed(node):
+        node_id = node.node_id
+        node_key = 'node-{}'.format(node_id)
+        _LOGGER.info("Node Removed: %s",
+                     hass.data[DATA_DEVICES][node_key])
+        for key in list(hass.data[DATA_DEVICES]):
+            if '{}-'.format(node_id) in key:
+                entity = hass.data[DATA_DEVICES][key]
+                _LOGGER.info('Removing Entity - value: %s - entity_id: %s',
+                             key, entity.entity_id)
+                asyncio.run_coroutine_threadsafe(entity.node_removed(),
+                                                 hass.loop)
+                del hass.data[DATA_DEVICES][key]
+
+        entity = hass.data[DATA_DEVICES][node_key]
+        asyncio.run_coroutine_threadsafe(entity.node_removed(), hass.loop)
+        del hass.data[DATA_DEVICES][node_key]
+
     def network_ready():
         """Handle the query of all awake nodes."""
         _LOGGER.info("Z-Wave network is ready for use. All awake nodes "
@@ -399,6 +417,8 @@ async def async_setup_entry(hass, config_entry):
         value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED, weak=False)
     dispatcher.connect(
         node_added, ZWaveNetwork.SIGNAL_NODE_ADDED, weak=False)
+    dispatcher.connect(
+        node_removed, ZWaveNetwork.SIGNAL_NODE_REMOVED, weak=False)
     dispatcher.connect(
         network_ready, ZWaveNetwork.SIGNAL_AWAKE_NODES_QUERIED, weak=False)
     dispatcher.connect(
@@ -779,25 +799,6 @@ async def async_setup_entry(hass, config_entry):
         hass.services.register(DOMAIN, const.SERVICE_TEST_NODE,
                                test_node,
                                schema=TEST_NODE_SCHEMA)
-
-    async def node_removed():
-        # node_id = service.data.get('node')
-        node_id = 14
-        entities = hass.data[DATA_DEVICES]
-        node_key = 'node-{}'.format(node_id)
-        _LOGGER.info("Node Removed: %s",
-                     hass.data[DATA_DEVICES][node_key])
-        for key in entities:
-            if '{}-'.format(node_id) in key:
-                entity = hass.data[DATA_DEVICES][key]
-                _LOGGER.info('Removing Entity - value: %s - entity_id: %s',
-                             key, entity.entity_id)
-                await entity.node_removed()
-                del hass.data[DATA_DEVICES][key]
-
-        entity = hass.data[DATA_DEVICES][node_key]
-        await entity.node_removed()
-        del hass.data[DATA_DEVICES][node_key]
 
     # Setup autoheal
     if autoheal:
