@@ -36,4 +36,5 @@ async def test_minio_event_stream_iterator(hass):
 
     event = next(event_it)
 
-    assert json.dumps(TEST_EVENT) == json.dumps(event)
+    assert json.dumps(TEST_EVENT, sort_keys=True) == \
+        json.dumps(event, sort_keys=True)
