@@ -25,6 +25,7 @@ ATTR_WEATHER_HUMIDITY = 'humidity'
 ATTR_WEATHER_OZONE = 'ozone'
 ATTR_WEATHER_PRESSURE = 'pressure'
 ATTR_WEATHER_TEMPERATURE = 'temperature'
+ATTR_WEATHER_TIME_ZONE = 'time_zone'
 ATTR_WEATHER_VISIBILITY = 'visibility'
 ATTR_WEATHER_WIND_BEARING = 'wind_bearing'
 ATTR_WEATHER_WIND_SPEED = 'wind_speed'
@@ -98,6 +99,11 @@ class WeatherEntity(Entity):
         return None
 
     @property
+    def time_zone(self):
+        """Return the time zone."""
+        return None
+
+    @property
     def visibility(self):
         """Return the visibility."""
         return None
@@ -145,6 +151,10 @@ class WeatherEntity(Entity):
         visibility = self.visibility
         if visibility is not None:
             data[ATTR_WEATHER_VISIBILITY] = visibility
+
+        time_zone = self.time_zone
+        if time_zone is not None:
+            data[ATTR_WEATHER_TIME_ZONE] = time_zone
 
         attribution = self.attribution
         if attribution is not None:

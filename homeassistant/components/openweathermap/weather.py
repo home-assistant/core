@@ -9,8 +9,8 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME, ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED, PLATFORM_SCHEMA, WeatherEntity)
 from homeassistant.const import (
-    CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE, CONF_NAME,
-    PRESSURE_HPA, PRESSURE_INHG, STATE_UNKNOWN, TEMP_CELSIUS)
+    CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_TIME_ZONE, CONF_MODE,
+    CONF_NAME, PRESSURE_HPA, PRESSURE_INHG, STATE_UNKNOWN, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.util.pressure import convert as convert_pressure
@@ -47,6 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_LATITUDE): cv.latitude,
     vol.Optional(CONF_LONGITUDE): cv.longitude,
+    vol.Optional(CONF_TIME_ZONE): cv.time_zone,
     vol.Optional(CONF_MODE, default='hourly'): vol.In(FORECAST_MODE),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
@@ -58,6 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     longitude = config.get(CONF_LONGITUDE, round(hass.config.longitude, 5))
     latitude = config.get(CONF_LATITUDE, round(hass.config.latitude, 5))
+    time_zone = config.get(CONF_TIME_ZONE)
     name = config.get(CONF_NAME)
     mode = config.get(CONF_MODE)
 
@@ -67,7 +69,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Error while connecting to OpenWeatherMap")
         return False
 
-    data = WeatherData(owm, latitude, longitude, mode)
+    data = WeatherData(owm, latitude, longitude, time_zone, mode)
 
     add_entities([OpenWeatherMapWeather(
         name, data, hass.config.units.temperature_unit, mode)], True)
@@ -140,6 +142,11 @@ class OpenWeatherMapWeather(WeatherEntity):
     def attribution(self):
         """Return the attribution."""
         return ATTRIBUTION
+
+    @property
+    def time_zone(self):
+        """Return the time zone."""
+        return self._owm.time_zone
 
     @property
     def forecast(self):
@@ -215,12 +222,13 @@ class OpenWeatherMapWeather(WeatherEntity):
 class WeatherData:
     """Get the latest data from OpenWeatherMap."""
 
-    def __init__(self, owm, latitude, longitude, mode):
+    def __init__(self, owm, latitude, longitude, time_zone, mode):
         """Initialize the data object."""
         self._mode = mode
         self.owm = owm
         self.latitude = latitude
         self.longitude = longitude
+        self.time_zone = time_zone
         self.data = None
         self.forecast_data = None
 
