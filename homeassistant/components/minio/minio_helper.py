@@ -1,5 +1,5 @@
 """Minio helper methods."""
-import collections
+from collections.abc import Iterable
 import json
 import logging
 import re
@@ -51,7 +51,7 @@ def get_minio_notification_response(
     )
 
 
-class MinioEventStreamIterator(collections.Iterable):
+class MinioEventStreamIterator(Iterable):
     """Iterator wrapper over notification http response stream."""
 
     def __iter__(self) -> Iterator:

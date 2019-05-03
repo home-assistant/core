@@ -208,7 +208,7 @@ class QueueListener(threading.Thread):
                 event['bucket'],
                 event['key']
             )
-            self._hass.bus.fire(DOMAIN, {
+            self._hass.bus.async_fire(DOMAIN, {
                 'file_name': file_name,
                 **event,
             })

@@ -1,52 +1,39 @@
 """Tests for Minio related helper code."""
 import json
-import unittest
 from unittest.mock import MagicMock
 
 import homeassistant.components.minio.minio_helper as minio_helper
-from tests.common import get_test_home_assistant
 from tests.components.minio.common import TEST_EVENT
 
 
-class TestMinioHelper(unittest.TestCase):
-    """Tests MinioHelper functions."""
+async def test_event_object_iteration(hass):
+    """Test iterating over records of Minio event."""
+    events = [event for event in minio_helper.iterate_objects(TEST_EVENT)]
+    assert 1 == len(events)
 
-    def setUp(self):
-        """Initialize values for this testcase class."""
-        self.hass = get_test_home_assistant()
+    event_name, bucket_name, object_name, metadata = events[0]
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+    assert 's3:ObjectCreated:Put' == event_name
+    assert 'test' == bucket_name
+    assert '5jJkTAo.jpg' == object_name
+    assert 0 == len(metadata)
 
-    def test_event_object_iteration(self):
-        """Test iterating over records of Minio event."""
-        events = [event for event in minio_helper.iterate_objects(TEST_EVENT)]
-        self.assertEqual(1, len(events))
 
-        event_name, bucket_name, object_name, metadata = events[0]
+async def test_minio_event_stream_iterator(hass):
+    """Test event stream iterator over http response."""
+    response_mock = MagicMock()
+    stream_mock = MagicMock()
 
-        self.assertEqual('s3:ObjectCreated:Put', event_name)
-        self.assertEqual('test', bucket_name)
-        self.assertEqual('5jJkTAo.jpg', object_name)
-        self.assertEqual(0, len(metadata))
+    response_mock.stream.return_value = stream_mock
 
-    def test_minio_event_stream_iterator(self):
-        """Test event stream iterator over http response."""
-        response_mock = MagicMock()
-        stream_mock = MagicMock()
+    stream_mock.__next__.side_effect = [
+        '',
+        '',
+        bytearray(json.dumps(TEST_EVENT), 'utf-8')
+    ]
 
-        response_mock.stream.return_value = stream_mock
+    event_it = minio_helper.MinioEventStreamIterator(response_mock)
 
-        stream_mock.__next__.side_effect = [
-            '',
-            '',
-            bytearray(json.dumps(TEST_EVENT), 'utf-8')
-        ]
+    event = next(event_it)
 
-        event_it = minio_helper.MinioEventStreamIterator(response_mock)
-
-        event = next(event_it)
-
-        self.assertEqual(json.dumps(TEST_EVENT), json.dumps(event))
-        self.assertDictEqual(TEST_EVENT, event)
+    assert json.dumps(TEST_EVENT) == json.dumps(event)
