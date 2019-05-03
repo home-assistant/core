@@ -48,8 +48,10 @@ def setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
         username=event_hub_sas_policy,
         password=event_hub_sas_key)
 
-    encoder = DateTimeJSONEncoder()
+    client.run_async()
     sender = client.add_async_sender()
+
+    encoder = DateTimeJSONEncoder()
 
     async def send_to_eventhub(event: Event):
         """Send states to Pub/Sub."""
