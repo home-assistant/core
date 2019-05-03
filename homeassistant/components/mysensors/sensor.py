@@ -8,21 +8,28 @@ SENSORS = {
     'V_TEMP': [None, 'mdi:thermometer'],
     'V_HUM': ['%', 'mdi:water-percent'],
     'V_DIMMER': ['%', 'mdi:percent'],
-    'V_LIGHT_LEVEL': ['%', 'white-balance-sunny'],
+    'V_PERCENTAGE': ['%', 'mdi:percent'],
+    'V_PRESSURE': [None, 'mdi:gauge'],
+    'V_FORECAST': [None, 'mdi:weather-partlycloudy'],
+    'V_RAIN': [None, 'mdi:weather-rainy'],
+    'V_RAINRATE': [None, 'mdi:weather-rainy'],
+    'V_WIND': [None, 'mdi:weather-windy'],
+    'V_GUST': [None, 'mdi:weather-windy'],
     'V_DIRECTION': ['°', 'mdi:compass'],
     'V_WEIGHT': ['kg', 'mdi:weight-kilogram'],
     'V_DISTANCE': ['m', 'mdi:ruler'],
     'V_IMPEDANCE': ['ohm', None],
     'V_WATT': [POWER_WATT, None],
     'V_KWH': [ENERGY_KILO_WATT_HOUR, None],
-    'V_FLOW': ['m', None],
+    'V_LIGHT_LEVEL': ['%', 'white-balance-sunny'],
+    'V_FLOW': ['m', 'mdi:gauge'],
     'V_VOLUME': ['m³', None],
-    'V_VOLTAGE': ['V', 'mdi:flash'],
-    'V_CURRENT': ['A', 'mdi:flash-auto'],
-    'V_PERCENTAGE': ['%', 'mdi:percent'],
     'V_LEVEL': {
         'S_SOUND': ['dB', 'mdi:volume-high'], 'S_VIBRATION': ['Hz', None],
         'S_LIGHT_LEVEL': ['lx', 'white-balance-sunny']},
+    'V_VOLTAGE': ['V', 'mdi:flash'],
+    'V_CURRENT': ['A', 'mdi:flash-auto'],
+    'V_PH': ['pH', None],
     'V_ORP': ['mV', None],
     'V_EC': ['μS/cm', None],
     'V_VAR': ['var', None],
@@ -65,8 +72,8 @@ class MySensorsSensor(mysensors.device.MySensorsEntity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
         set_req = self.gateway.const.SetReq
-        if (float(self.gateway.protocol_version) >= 1.5 and
-                set_req.V_UNIT_PREFIX in self._values):
+        if (float(self.gateway.protocol_version) >= 1.5
+                and set_req.V_UNIT_PREFIX in self._values):
             return self._values[set_req.V_UNIT_PREFIX]
         unit, _ = self._get_sensor_type()
         return unit

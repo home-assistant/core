@@ -237,8 +237,21 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
                 errors['pairing_code'] = 'authentication_error'
             except homekit.UnknownError:
                 errors['pairing_code'] = 'unknown_error'
+            except homekit.MaxTriesError:
+                errors['pairing_code'] = 'max_tries_error'
+            except homekit.BusyError:
+                errors['pairing_code'] = 'busy_error'
+            except homekit.MaxPeersError:
+                errors['pairing_code'] = 'max_peers_error'
+            except homekit.AccessoryNotFoundError:
+                return self.async_abort(reason='accessory_not_found_error')
             except homekit.UnavailableError:
                 return self.async_abort(reason='already_paired')
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception(
+                    "Pairing attempt failed with an unhandled exception"
+                )
+                errors['pairing_code'] = 'pairing_failed'
 
         return self.async_show_form(
             step_id='pair',

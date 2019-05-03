@@ -22,6 +22,7 @@ omit =
     homeassistant/components/alarmdotcom/alarm_control_panel.py
     homeassistant/components/alpha_vantage/sensor.py
     homeassistant/components/amazon_polly/tts.py
+    homeassistant/components/ambiclimate/climate.py
     homeassistant/components/ambient_station/*
     homeassistant/components/amcrest/*
     homeassistant/components/ampio/*
@@ -173,6 +174,7 @@ omit =
     homeassistant/components/esphome/light.py
     homeassistant/components/esphome/sensor.py
     homeassistant/components/esphome/switch.py
+    homeassistant/components/essent/sensor.py
     homeassistant/components/etherscan/sensor.py
     homeassistant/components/eufy/*
     homeassistant/components/everlights/light.py
@@ -451,6 +453,7 @@ omit =
     homeassistant/components/proxy/camera.py
     homeassistant/components/ps4/__init__.py
     homeassistant/components/ps4/media_player.py
+    homeassistant/components/ptvsd/*
     homeassistant/components/pulseaudio_loopback/switch.py
     homeassistant/components/pushbullet/notify.py
     homeassistant/components/pushbullet/sensor.py
