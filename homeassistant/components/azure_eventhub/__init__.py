@@ -48,8 +48,8 @@ def setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
         username=event_hub_sas_policy,
         password=event_hub_sas_key)
 
-    client.run_async()
     sender = client.add_async_sender()
+    client.run_async()
 
     encoder = DateTimeJSONEncoder()
 
