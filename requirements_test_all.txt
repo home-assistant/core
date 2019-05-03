@@ -175,6 +175,9 @@ mbddns==0.1.2
 # homeassistant.components.mfi
 mficlient==0.3.0
 
+# homeassistant.components.minio
+minio==4.0.9
+
 # homeassistant.components.iqvia
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow

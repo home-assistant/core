@@ -87,6 +87,7 @@ TEST_REQUIREMENTS = (
     'luftdaten',
     'mbddns',
     'mficlient',
+    'minio',
     'numpy',
     'oauth2client',
     'paho-mqtt',
