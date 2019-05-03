@@ -131,6 +131,16 @@ class TestRestSwitch:
             aioclient_mock.mock_calls[-1][2].decode()
         assert self.switch.is_on
 
+    def test_turn_on_success_no_content(self, aioclient_mock):
+        """Test turn_on with 204 response."""
+        aioclient_mock.post(self.resource, status=204)
+        run_coroutine_threadsafe(
+            self.switch.async_turn_on(), self.hass.loop).result()
+
+        assert self.body_on.template == \
+            aioclient_mock.mock_calls[-1][2].decode()
+        assert self.switch.is_on
+
     def test_turn_on_status_not_ok(self, aioclient_mock):
         """Test turn_on when error status returned."""
         aioclient_mock.post(self.resource, status=500)
@@ -152,6 +162,16 @@ class TestRestSwitch:
     def test_turn_off_success(self, aioclient_mock):
         """Test turn_off."""
         aioclient_mock.post(self.resource, status=200)
+        run_coroutine_threadsafe(
+            self.switch.async_turn_off(), self.hass.loop).result()
+
+        assert self.body_off.template == \
+            aioclient_mock.mock_calls[-1][2].decode()
+        assert not self.switch.is_on
+
+    def test_turn_off_success_no_content(self, aioclient_mock):
+        """Test turn_off with 204 response."""
+        aioclient_mock.post(self.resource, status=204)
         run_coroutine_threadsafe(
             self.switch.async_turn_off(), self.hass.loop).result()
 

@@ -121,7 +121,7 @@ class RestSwitch(SwitchDevice):
         try:
             req = await self.set_device_state(body_on_t)
 
-            if req.status == 200:
+            if req.status == 200 and req.status == 204:
                 self._state = True
             else:
                 _LOGGER.error(
@@ -136,7 +136,7 @@ class RestSwitch(SwitchDevice):
 
         try:
             req = await self.set_device_state(body_off_t)
-            if req.status == 200:
+            if req.status == 200 and req.status == 204:
                 self._state = False
             else:
                 _LOGGER.error(
