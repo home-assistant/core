@@ -7,7 +7,7 @@ from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.components.homekit.type_media_players import (
     MediaPlayer, TelevisionMediaPlayer)
 from homeassistant.components.media_player.const import (
-    ATTR_INPUT_SOURCE, ATTR_INPUT_SOURCE_LIST,
+    ATTR_INPUT_SOURCE, ATTR_INPUT_SOURCE_LIST, ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED, DOMAIN)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_IDLE,
@@ -276,3 +276,14 @@ async def test_media_player_television_volume_level(hass, hk_driver, events):
     assert acc.char_active.value == 0
     assert acc.char_volume.value == 0
     assert acc.char_mute.value is False
+
+    # Set from HomeKit
+    call_volume_set = async_mock_service(hass, DOMAIN, 'volume_set')
+
+    await hass.async_add_job(acc.char_volume.client_update_value, 20)
+    await hass.async_block_till_done()
+    assert call_volume_set[0]
+    assert call_volume_set[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_volume_set[0].data[ATTR_MEDIA_VOLUME_LEVEL] == 20
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] is None
