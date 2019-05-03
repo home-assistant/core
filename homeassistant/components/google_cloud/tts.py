@@ -10,6 +10,14 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_KEY_FILE = 'key_file'
+CONF_GENDER = 'gender'
+CONF_VOICE = 'voice'
+CONF_ENCODING = 'encoding'
+CONF_SPEED = 'speed'
+CONF_PITCH = 'pitch'
+CONF_GAIN = 'gain'
+
 SUPPORTED_LANGUAGES = [
     'en', 'da', 'nl', 'fr', 'de', 'it', 'ja', 'ko', 'nb',
     'pl', 'pt', 'ru', 'sk', 'es', 'sv', 'tr', 'uk',
@@ -36,10 +44,17 @@ ENCODINGS_DICT = {
     'wav': texttospeech.enums.AudioEncoding.LINEAR16,
 }
 
-CONF_GENDER = 'gender'
-CONF_VOICE = 'voice'
-CONF_ENCODING = 'encoding'
-CONF_KEY_FILE = 'key_file'
+MIN_SPEED = 0.25
+MAX_SPEED = 4.0
+DEFAULT_SPEED = 1.0
+
+MIN_PITCH = -20.0
+MAX_PITCH = 20.0
+DEFAULT_PITCH = 0
+
+MIN_GAIN = -96.0
+MAX_GAIN = 16.0
+DEFAULT_GAIN = 0
 
 SUPPORTED_OPTIONS = [
     CONF_VOICE, CONF_GENDER, CONF_ENCODING,
@@ -47,12 +62,16 @@ SUPPORTED_OPTIONS = [
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORTED_LANGUAGES),
-    vol.Optional(
-        CONF_GENDER,
-        default=DEFAULT_GENDER
-    ): vol.In(SUPPORTED_GENDERS),
+    vol.Optional(CONF_GENDER, default=DEFAULT_GENDER):
+        vol.In(SUPPORTED_GENDERS),
     vol.Optional(CONF_VOICE, default=''): cv.string,
     vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
+    vol.Optional(CONF_SPEED, default=DEFAULT_SPEED):
+        vol.Range(min=MIN_SPEED, max=MAX_SPEED),
+    vol.Optional(CONF_PITCH, default=DEFAULT_PITCH):
+        vol.Range(min=MIN_PITCH, max=MAX_PITCH),
+    vol.Optional(CONF_GAIN, default=DEFAULT_GAIN):
+        vol.Range(min=MIN_GAIN, max=MAX_GAIN),
     vol.Optional(CONF_KEY_FILE, default=''): cv.string,
 })
 
@@ -74,14 +93,17 @@ async def async_get_engine(hass, config):
         config[CONF_LANG],
         config[CONF_GENDER],
         config[CONF_VOICE],
-        config[CONF_ENCODING]
+        config[CONF_ENCODING],
+        config[CONF_SPEED],
+        config[CONF_PITCH],
+        config[CONF_GAIN]
     )
 
 
 class GoogleCloudTTSProvider(Provider):
     """The Google Cloud TTS API provider."""
 
-    def __init__(self, hass, key_file, lang, gender, voice, encoding):
+    def __init__(self, hass, key_file, lang, gender, voice, encoding, speed, pitch, gain):
         """Init Google Cloud TTS service."""
         self.hass = hass
         self.name = 'Google Cloud TTS'
@@ -89,6 +111,9 @@ class GoogleCloudTTSProvider(Provider):
         self._gender = gender
         self._voice = voice
         self._encoding = encoding
+        self._speed = speed
+        self._pitch = pitch
+        self._gain = gain
 
         if key_file:
             self._client = texttospeech \
@@ -119,6 +144,9 @@ class GoogleCloudTTSProvider(Provider):
                 _gender = self._gender
                 _voice = self._voice
                 _encoding = self._encoding
+                _speed = self._speed
+                _pitch = self._pitch
+                _gain = self._gain
 
                 if options:
                     if CONF_GENDER in options:
@@ -127,6 +155,12 @@ class GoogleCloudTTSProvider(Provider):
                         _voice = options[CONF_VOICE]
                     if CONF_ENCODING in options:
                         _encoding = options[CONF_ENCODING].lower()
+                    if CONF_SPEED in options:
+                        _speed = options[CONF_SPEED]
+                    if CONF_PITCH in options:
+                        _pitch = options[CONF_PITCH]
+                    if CONF_GAIN in options:
+                        _gain = options[CONF_GAIN]
 
                 synthesis_input = texttospeech.types.SynthesisInput(
                     text=message
@@ -145,7 +179,10 @@ class GoogleCloudTTSProvider(Provider):
                     audio_encoding=ENCODINGS_DICT.get(
                         _encoding,
                         DEFAULT_ENCODING
-                    )
+                    ),
+                    speaking_rate=_speed,
+                    pitch=_pitch,
+                    volume_gain_db=_gain
                 )  # pylint: disable=no-member
 
                 response = await self.hass.async_add_executor_job(
