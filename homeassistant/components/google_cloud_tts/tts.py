@@ -1,11 +1,11 @@
 """Support for the Google Cloud TTS service."""
-import logging
-import os
-import asyncio
-import async_timeout
-import voluptuous as vol
 from google.cloud import texttospeech
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
+import logging
+import os
+import async_timeout
+import asyncio
+import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,7 +24,10 @@ DEFAULT_LANG = SUPPORT_LANGUAGES[0]
 CONF_GENDER = 'gender'
 CONF_VOICE = 'voice'
 CONF_KEY_FILE = 'key_file'
-GOOGLE_APPLICATION_CREDENTIALS = 'GOOGLE_APPLICATION_CREDENTIALS'
+
+SUPPORTED_OPTIONS = [
+    CONF_VOICE, CONF_GENDER
+]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
@@ -56,14 +59,16 @@ class GoogleCloudTTSProvider(Provider):
         self._voice = voice
         self.name = 'Google Cloud TTS'
         path = hass.config.path(key_file)
-        if key_file and os.path.isfile(path):
-            os.environ[GOOGLE_APPLICATION_CREDENTIALS] = path
-        if GOOGLE_APPLICATION_CREDENTIALS not in os.environ:
-            _LOGGER.error(
-                "You need to specify valid"
-                " GOOGLE_APPLICATION_CREDENTIALS file location."
-            )
-        self.client = texttospeech.TextToSpeechClient()
+        if key_file:
+            if os.path.isfile(path):
+                self._client = texttospeech \
+                    .TextToSpeechClient.from_service_account_json(path)
+            else:
+                _LOGGER.error(
+                    "GOOGLE_APPLICATION_CREDENTIALS file doesn't exist!"
+                )
+        else:
+            self._client = texttospeech.TextToSpeechClient()
         self.audio_config = texttospeech.types.AudioConfig(
             audio_encoding=texttospeech.enums.AudioEncoding.MP3
         )
@@ -81,7 +86,7 @@ class GoogleCloudTTSProvider(Provider):
     @property
     def supported_options(self):
         """Return a list of supported options."""
-        return ["voice", "gender"]
+        return SUPPORTED_OPTIONS
 
     async def async_get_tts_audio(self, message, language, options=None):
         """Load TTS from google."""
@@ -107,7 +112,7 @@ class GoogleCloudTTSProvider(Provider):
                 synthesis_input = texttospeech.types.SynthesisInput(
                     text=message
                 )
-                response = self.client.synthesize_speech(
+                response = self._client.synthesize_speech(
                     synthesis_input,
                     voice,
                     self.audio_config
@@ -115,7 +120,7 @@ class GoogleCloudTTSProvider(Provider):
                 return "mp3", response.audio_content
 
         except asyncio.TimeoutError as ex:
-            _LOGGER.error("Timeout for Google Cloud TTS: %s", ex)
+            _LOGGER.error("Timeout for Google Cloud TTS call: %s", ex)
         except Exception as ex:
             _LOGGER.error("Error occured during Google Cloud TTS call: %s", ex)
 
