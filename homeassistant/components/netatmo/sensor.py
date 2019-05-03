@@ -144,14 +144,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 else:
                     # Only create sensors for monitored properties
                     for condition in monitored_conditions:
-                        if condition in SENSOR_TYPES.keys():
-                            dev.append(
-                                NetatmoSensor(
-                                    data, module_name, condition))
-                        else:
-                            _LOGGER.warning(
-                                "Unknown condition %s for module %s",
-                                condition, module_name)
+                        dev.append(NetatmoSensor(
+                            data, module_name, condition))
 
         for module_name, _ in not_handled.items():
             _LOGGER.error('Module name: "%s" not found', module_name)
