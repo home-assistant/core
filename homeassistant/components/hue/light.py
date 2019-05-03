@@ -312,9 +312,9 @@ class HueLight(Light):
     @property
     def effect_list(self):
         """Return the list of supported effects."""
-        if self.is_philips:
-            return [EFFECT_COLORLOOP, EFFECT_RANDOM]
-        return [EFFECT_RANDOM]
+        if self.is_osram:
+            return [EFFECT_RANDOM]
+        return [EFFECT_COLORLOOP, EFFECT_RANDOM]
 
     @property
     def device_info(self):
