@@ -99,12 +99,7 @@ def async_track_state_change(hass, entity_ids, action, from_state=None,
 track_state_change = threaded_listener_factory(async_track_state_change)
 
 
-def _boolean_tolerant(value: Any) -> bool:
-    """Coerce a boolean value to true, or return false."""
-    try:
-        return cv.boolean(value)
-    except vol.Invalid:
-        return False
+_boolean_coerce = vol.Any(cv.boolean, lambda val: False)
 
 
 @callback
@@ -162,16 +157,16 @@ def async_track_template(
             _LOGGER.exception(result)
             return
 
-        # These really should use the new `cv.boolean_tolerant`
+        # These really should use the new `cv.boolean_coerce`
         # validator as per #23293 rather than have potential exceptions
         # thrown. Change once #23293 merged.
         if last_result is not None:
-            if not _boolean_tolerant(last_result) \
-                    and _boolean_tolerant(result):
+            if not _boolean_coerce(last_result) \
+                    and _boolean_coerce(result):
                 hass.async_run_job(action, event.data.get('entity_id'),
                                    event.data.get('old_state'),
                                    event.data.get('new_state'))
-        elif _boolean_tolerant(result):
+        elif _boolean_coerce(result):
             # First run of the listener. Figure out an entity ID to
             # pass back to the action because it expects one.
             info = template.async_render_to_info(variables)
