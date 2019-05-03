@@ -1,4 +1,5 @@
 """Minio helper methods."""
+import time
 from collections.abc import Iterable
 import json
 import logging
@@ -104,6 +105,7 @@ class MinioEventThread(threading.Thread):
         self._suffix = suffix
         self._events = events
         self._event_stream_it = None
+        self._should_stop = False
 
     def __enter__(self):
         """Start the thread."""
@@ -117,6 +119,8 @@ class MinioEventThread(threading.Thread):
         """Create MinioClient and run the loop."""
         _LOGGER.info('Running MinioEventThread')
 
+        self._should_stop = False
+
         minio_client = Minio(
             self._endpoint,
             self._access_key,
@@ -125,6 +129,9 @@ class MinioEventThread(threading.Thread):
         )
 
         while True:
+            if self._should_stop:
+                break
+
             _LOGGER.info('Connecting to minio event stream')
             response = get_minio_notification_response(
                 minio_client,
@@ -144,6 +151,9 @@ class MinioEventThread(threading.Thread):
                 response.close()
             except AttributeError:
                 break
+
+            # Wait before attempting to connect again.
+            time.sleep(1)
 
     def _iterate_event_stream(self, event_stream_it, minio_client):
         for event in event_stream_it:
@@ -175,6 +185,7 @@ class MinioEventThread(threading.Thread):
     def stop(self):
         """Cancel event stream and join the thread."""
         _LOGGER.info('Stopping event thread')
+        self._should_stop = True
         if self._event_stream_it is not None:
             self._event_stream_it.close()
             self._event_stream_it = None
