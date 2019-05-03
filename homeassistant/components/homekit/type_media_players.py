@@ -199,9 +199,6 @@ class TelevisionMediaPlayer(HomeAccessory):
             self.chars_speaker.extend((CHAR_NAME, CHAR_ACTIVE,
                                        CHAR_VOLUME_CONTROL_TYPE,
                                        CHAR_VOLUME_SELECTOR))
-            if features & SUPPORT_VOLUME_SET:
-                self.support_volume_level = True
-                self.chars_speaker.append(CHAR_VOLUME)
 
         if features & SUPPORT_SELECT_SOURCE:
             self.support_select_source = True
