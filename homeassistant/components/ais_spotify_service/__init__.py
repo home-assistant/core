@@ -256,8 +256,17 @@ class SpotifyData:
 
         # update list
         self.hass.states.async_set("sensor.spotifylist", 0, items_info)
-        # play the first one
-        yield from self.hass.services.async_call('ais_spotify_service', 'select_track_uri', {"id": 0})
+
+        # from remote
+        import homeassistant.components.ais_ai_service as ais_ai
+        if ais_ai.CURR_ENTITIE == 'sensor.spotifysearchlist' and ais_ai.CURR_BUTTON_CODE == 23:
+            ais_ai.set_curr_entity(self.hass, 'sensor.spotifylist')
+            ais_ai.CURR_ENTITIE_ENTERED = True
+            text = "Mamy %s utworów, wybierz który mam włączyć" % (str(len(items_info)))
+            yield from self.hass.services.async_call('ais_ai_service', 'say_it', {"text": text})
+        else:
+            # play the first one
+            yield from self.hass.services.async_call('ais_spotify_service', 'select_track_uri', {"id": 0})
 
     @asyncio.coroutine
     def process_search_async(self, call):
@@ -290,12 +299,18 @@ class SpotifyData:
         self.hass.states.async_set("sensor.spotifylist", -1, {})
 
         if len(list_info) > 0:
-            text = "Znaleziono: %s, włączam utwory %s" % (str(len(list_info)), list_info[0]["title"])
+            # from remote
+            import homeassistant.components.ais_ai_service as ais_ai
+            if ais_ai.CURR_ENTITIE == 'input_text.ais_music_query' and ais_ai.CURR_BUTTON_CODE == 4:
+                ais_ai.set_curr_entity(self.hass, 'sensor.spotifysearchlist')
+                ais_ai.CURR_ENTITIE_ENTERED = True
+                text = "Znaleziono: %s, wybierz pozycję która mam włączyć" % (str(len(list_info)))
+            else:
+                text = "Znaleziono: %s, włączam utwory %s" % (str(len(list_info)), list_info[0]["title"])
+                yield from self.hass.services.async_call('ais_spotify_service', 'select_search_uri', {"id": 0})
         else:
             text = "Brak wyników na Spotify dla zapytania %s" % search_text
         yield from self.hass.services.async_call('ais_ai_service', 'say_it', {"text": text})
-        if len(list_info) > 0:
-            yield from self.hass.services.async_call('ais_spotify_service', 'select_search_uri', {"id": 0})
 
     def select_search_uri(self, call):
         _LOGGER.info("select_search_uri")

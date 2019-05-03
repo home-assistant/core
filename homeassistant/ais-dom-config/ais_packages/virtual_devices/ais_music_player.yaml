@@ -32,4 +32,5 @@ group:
       - input_select.ais_music_service
       - input_text.ais_music_query
       - sensor.youtubelist
+      - sensor.spotifysearchlist
       - sensor.spotifylist

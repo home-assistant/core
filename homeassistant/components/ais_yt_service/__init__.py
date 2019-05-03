@@ -120,15 +120,23 @@ class YouTubeData:
         # update list
         self.hass.states.async_set("sensor.youtubelist", -1, list_info)
 
-        # TODO play only if not from remote... see on radio stations
         if len(list_info) > 0:
-            text = "Znaleziono: %s, włączam pierwszy: %s" % (str(len(list_info)), list_info[0]["title"])
+            # from remote
+            import homeassistant.components.ais_ai_service as ais_ai
+            if ais_ai.CURR_ENTITIE == 'input_text.ais_music_query' and ais_ai.CURR_BUTTON_CODE == 4:
+                ais_ai.set_curr_entity(self.hass, 'sensor.youtubelist')
+                ais_ai.CURR_ENTITIE_ENTERED = True
+                text = "Znaleziono: %s, wybierz pozycję która mam włączyć" % (str(len(list_info)))
+            else:
+                text = "Znaleziono: %s, włączam pierwszy: %s" % (str(len(list_info)), list_info[0]["title"])
+                yield from self.hass.services.async_call('ais_yt_service', 'select_track_uri', {"id": 0})
         else:
             text = "Brak wnyników na YouTube dla zapytania %s" % query
-
+        # info to user
         yield from self.hass.services.async_call('ais_ai_service', 'say_it', {"text": text})
 
-        yield from self.hass.services.async_call('ais_yt_service', 'select_track_uri', {"id": 0})
+
+
 
     def process_select_track_uri(self, call):
         _LOGGER.info("process_select_track_uri")

@@ -427,9 +427,6 @@ class ExoPlayerDevice(MediaPlayerDevice):
         else:
             self.hass.services.call('ais_cloud', 'play_next', {"audio_type": self._media_source})
 
-        # name = 'Odtwarzam kolejny: ' + name
-        # self.hass.services.call('ais_ai_service', 'say_it', {"text": name})
-
     def media_previous_track(self):
         """Service to send the ExoPlayer the command for previous track."""
         if self._media_source == ais_global.G_AN_LOCAL:

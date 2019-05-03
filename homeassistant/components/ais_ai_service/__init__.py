@@ -10,7 +10,6 @@ import json
 import voluptuous as vol
 import datetime
 import requests
-import os
 from homeassistant import core
 from homeassistant.loader import bind_hass
 from homeassistant.const import (
@@ -24,12 +23,10 @@ from homeassistant.const import (
 from homeassistant.helpers import intent, config_validation as cv
 from homeassistant.components import ais_cloud
 import homeassistant.components.mqtt as mqtt
-from homeassistant.components import ais_drives_service
 import homeassistant.ais_dom.ais_global as ais_global
 aisCloudWS = ais_cloud.AisCloudWS()
 
 REQUIREMENTS = ['fuzzywuzzy==0.15.1', 'babel']
-# DEPENDENCIES = ['http']
 
 ATTR_TEXT = 'text'
 DOMAIN = 'ais_ai_service'
@@ -82,7 +79,7 @@ INTENT_CLIMATE_SET_ALL_OFF = 'AisClimateSetAllOff'
 REGEX_TYPE = type(re.compile(''))
 
 _LOGGER = logging.getLogger(__name__)
-GROUP_VIEWS = ['Pomoc', 'Twój Dom', 'Audio', 'Ustawienia']
+GROUP_VIEWS = ['Pomoc', 'Mój Dom', 'Audio', 'Ustawienia']
 CURR_GROUP_VIEW = None
 # group entities in each group view, see main_ais_groups.yaml
 GROUP_ENTITIES = []
@@ -398,8 +395,7 @@ def reset_virtual_keyboard(hass):
     CURR_VIRTUAL_KEY = None
     CURR_VIRTUAL_KEYBOARD_VALUE = None
     # reset field value
-    hass.services.call('input_text', 'set_value', {
-        "entity_id": CURR_ENTITIE, "value": ""})
+    hass.services.call('input_text', 'set_value', {"entity_id": CURR_ENTITIE, "value": ""})
 
 
 # Groups in Groups views
@@ -410,6 +406,7 @@ def get_curr_group():
         for group in GROUP_ENTITIES:
             if group['remote_group_view'] == get_curr_group_view():
                 CURR_GROUP = group
+                break
     return CURR_GROUP
 
 
@@ -445,9 +442,7 @@ def set_curr_group(hass, group):
     CURR_ENTITIE_POSITION = None
     if group is None:
         CURR_GROUP = get_curr_group()
-        hass.states.async_set(
-            'binary_sensor.selected_entity',
-            CURR_GROUP['entity_id'])
+        hass.states.async_set('binary_sensor.selected_entity', CURR_GROUP['entity_id'])
     else:
         CURR_GROUP_VIEW = group['remote_group_view']
         CURR_GROUP = group
@@ -529,22 +524,37 @@ def set_curr_entity(hass, entity):
     else:
         CURR_ENTITIE = entity
     CURR_ENTITIE_POSITION = None
-    hass.states.async_set(
-        'binary_sensor.selected_entity',
-        CURR_ENTITIE)
+    hass.states.async_set('binary_sensor.selected_entity', CURR_ENTITIE)
 
 
 def set_next_entity(hass):
     # set next entity
     global CURR_ENTITIE
-    entity_idx = get_curr_entity_idx()
-    group_idx = get_curr_group_idx()
-    l_group_len = len(GROUP_ENTITIES[group_idx]['entities'])
-    if entity_idx + 1 == l_group_len:
-        entity_idx = 0
+    # special case for music
+    if CURR_ENTITIE == 'input_text.ais_music_query':
+        state = hass.states.get('input_select.ais_music_service')
+        if state.state == 'YouTube':
+            CURR_ENTITIE = 'sensor.youtubelist'
+        elif state.state == 'Spotify':
+            CURR_ENTITIE = 'sensor.spotifysearchlist'
+        else:
+            CURR_ENTITIE = 'input_select.ais_music_service'
+    elif CURR_ENTITIE == 'sensor.youtubelist':
+        CURR_ENTITIE = 'input_select.ais_music_service'
+    elif CURR_ENTITIE == 'sensor.spotifysearchlist':
+        CURR_ENTITIE = 'sensor.spotifylist'
+    elif CURR_ENTITIE == 'sensor.spotifylist':
+        CURR_ENTITIE = 'input_select.ais_music_service'
     else:
-        entity_idx = entity_idx + 1
-    CURR_ENTITIE = GROUP_ENTITIES[group_idx]['entities'][entity_idx]
+        entity_idx = get_curr_entity_idx()
+        group_idx = get_curr_group_idx()
+        l_group_len = len(GROUP_ENTITIES[group_idx]['entities'])
+        if entity_idx + 1 == l_group_len:
+            entity_idx = 0
+        else:
+            entity_idx = entity_idx + 1
+        CURR_ENTITIE = GROUP_ENTITIES[group_idx]['entities'][entity_idx]
+
     # to reset variables
     set_curr_entity(hass, None)
     say_curr_entity(hass)
@@ -553,13 +563,29 @@ def set_next_entity(hass):
 def set_prev_entity(hass):
     # set prev entity
     global CURR_ENTITIE
-    idx = get_curr_entity_idx()
-    l_group_len = len(GROUP_ENTITIES[get_curr_group_idx()]['entities'])
-    if idx == 0:
-        idx = l_group_len - 1
+    # special case for music
+    if CURR_ENTITIE == 'input_select.ais_music_service':
+        state = hass.states.get('input_select.ais_music_service')
+        if state.state == 'YouTube':
+            CURR_ENTITIE = 'sensor.youtubelist'
+        elif state.state == 'Spotify':
+            CURR_ENTITIE = 'sensor.spotifylist'
+        else:
+            CURR_ENTITIE = 'input_text.ais_music_query'
+    elif CURR_ENTITIE == 'sensor.youtubelist':
+        CURR_ENTITIE = 'input_text.ais_music_query'
+    elif CURR_ENTITIE == 'sensor.spotifysearchlist':
+        CURR_ENTITIE = 'input_text.ais_music_query'
+    elif CURR_ENTITIE == 'sensor.spotifylist':
+        CURR_ENTITIE = 'sensor.spotifysearchlist'
     else:
-        idx = idx - 1
-    CURR_ENTITIE = GROUP_ENTITIES[get_curr_group_idx()]['entities'][idx]
+        idx = get_curr_entity_idx()
+        l_group_len = len(GROUP_ENTITIES[get_curr_group_idx()]['entities'])
+        if idx == 0:
+            idx = l_group_len - 1
+        else:
+            idx = idx - 1
+        CURR_ENTITIE = GROUP_ENTITIES[get_curr_group_idx()]['entities'][idx]
     # to reset variables
     set_curr_entity(hass, None)
     say_curr_entity(hass)
@@ -606,7 +632,7 @@ def say_curr_entity(hass):
             else:
                 _say_it(hass, "Wpisałeś " + CURR_VIRTUAL_KEYBOARD_VALUE, None)
         else:
-            _say_it(hass, info_name + " " + info_data + ". Naciśnij OK by wpisać.", None)
+            _say_it(hass, info_name + " " + info_data + ". Naciśnij OK aby wpisać lub dyktować tekst", None)
         return
     elif entity_id.startswith('input_select.'):
         if CURR_BUTTON_CODE == 4:
@@ -620,7 +646,8 @@ def say_curr_entity(hass):
             else:
                 _say_it(hass, info_name + " " + info_data + ". Naciśnij OK by wybrać.", None)
         return
-    elif entity_id in ('sensor.radiolist', 'sensor.podcastlist', 'sensor.spotifylist', 'sensor.youtubelist'):
+    elif entity_id in ('sensor.radiolist', 'sensor.podcastlist', 'sensor.spotifylist',
+                       'sensor.youtubelist', 'sensor.spotifysearchlist'):
         info_name = ""
         if int(info_data) != -1:
             try:
@@ -637,8 +664,10 @@ def say_curr_entity(hass):
               info = "Stacja radiowa "
             elif entity_id == 'sensor.podcastlist':
               info = "Odcinek "
+            elif entity_id == 'sensor.spotifysearchlist':
+                info = "Pozycja "
             elif entity_id == 'sensor.spotifylist':
-              info = "Pozycja "
+              info = "Utwór "
             elif entity_id == 'sensor.youtubelist':
               info = "Pozycja "
             if int(info_data) != -1:
@@ -689,13 +718,16 @@ def commit_current_position(hass):
             'set_value', {
                 "entity_id": CURR_ENTITIE,
                 "value": get_curent_position(hass)})
-    elif CURR_ENTITIE in ("sensor.radiolist", "sensor.podcastlist", "sensor.spotifylist", "sensor.youtubelist"):
+    elif CURR_ENTITIE in ("sensor.radiolist", "sensor.podcastlist", "sensor.spotifylist",
+                          "sensor.youtubelist", "sensor.spotifysearchlist"):
         # play selected source
         idx = hass.states.get(CURR_ENTITIE).state
         if CURR_ENTITIE == "sensor.radiolist":
             hass.services.call('ais_cloud', 'play_audio', {"id": idx, "audio_type": ais_global.G_AN_RADIO})
         elif CURR_ENTITIE == "sensor.podcastlist":
             hass.services.call('ais_cloud', 'play_audio', {"id": idx, "audio_type": ais_global.G_AN_PODCAST})
+        elif CURR_ENTITIE == "sensor.spotifysearchlist":
+            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "audio_type": ais_global.G_AN_SPOTIFY_SEARCH})
         elif CURR_ENTITIE == "sensor.spotifylist":
             hass.services.call('ais_cloud', 'play_audio', {"id": idx, "audio_type": ais_global.G_AN_SPOTIFY})
         elif CURR_ENTITIE == "sensor.youtubelist":
@@ -704,7 +736,7 @@ def commit_current_position(hass):
     if CURR_ENTITIE == "input_select.ais_android_wifi_network":
         _say_it(hass, "wybrano wifi: " + get_curent_position(hass).split(';')[0], None)
     elif CURR_ENTITIE == "input_select.ais_music_service":
-        _say_it(hass, "Wybrano " + position + ", jakiej muzyki mam wyszukać", None)
+        _say_it(hass, "Wybrano " + position + ", napisz lub powiedz jakiej muzyki mam wyszukać", None)
         hass.services.call('input_text', 'set_value', {"entity_id": "input_text.ais_music_query", "value": ""})
         set_curr_entity(hass, 'input_text.ais_music_query')
     else:
@@ -726,7 +758,8 @@ def set_next_position(hass):
         else:
             CURR_ENTITIE_POSITION = get_next(options, CURR_ENTITIE_POSITION)
             _say_it(hass, CURR_ENTITIE_POSITION, None)
-    elif CURR_ENTITIE in ('sensor.radiolist', 'sensor.podcastlist', 'sensor.spotifylist', 'sensor.youtubelist'):
+    elif CURR_ENTITIE in ('sensor.radiolist', 'sensor.podcastlist', 'sensor.spotifylist',
+                          'sensor.youtubelist', 'sensor.spotifysearchlist'):
         if len(attr) == 0:
             _say_it(hass, "brak pozycji", None)
         else:
@@ -758,7 +791,8 @@ def set_prev_position(hass):
         else:
             CURR_ENTITIE_POSITION = get_prev(options, CURR_ENTITIE_POSITION)
             _say_it(hass, CURR_ENTITIE_POSITION, None)
-    elif CURR_ENTITIE in ('sensor.radiolist', 'sensor.podcastlist', 'sensor.spotifylist', 'sensor.youtubelist'):
+    elif CURR_ENTITIE in ('sensor.radiolist', 'sensor.podcastlist', 'sensor.spotifylist',
+                          'sensor.youtubelist', 'sensor.spotifysearchlist'):
         if len(attr) == 0:
             _say_it(hass, "brak pozycji", None)
         else:
@@ -810,9 +844,8 @@ def select_entity(hass, long_press):
             if can_entity_be_entered(hass, CURR_ENTITIE):
                 CURR_ENTITIE_ENTERED = True
                 if CURR_ENTITIE.startswith('input_text.'):
-                    _say_it(hass, "Wpisywanie tekstu włączone", None)
-                    hass.services.call('input_text', 'set_value',
-                                       {"entity_id": CURR_ENTITIE, "value": ""})
+                    _say_it(hass, "Wpisywanie/dyktowanie tekstu włączone", None)
+                    hass.services.call('input_text', 'set_value', {"entity_id": CURR_ENTITIE, "value": ""})
                     reset_virtual_keyboard(hass)
                 else:
                     set_next_position(hass)
@@ -896,8 +929,8 @@ def select_entity(hass, long_press):
             # these items can be controlled from remote
             # if we are here it means that the enter on the same item was
             # pressed twice, we should do something - to mange the item status
-            if CURR_ENTITIE.startswith(("input_select.", "input_number.", "sensor.radiolist",
-                                        "sensor.podcastlist", "sensor.spotifylist", "sensor.youtubelist")):
+            if CURR_ENTITIE.startswith(("input_select.", "input_number.", "sensor.radiolist", "sensor.podcastlist",
+                                        "sensor.spotifylist", "sensor.youtubelist", "sensor.spotifysearchlist")):
                 commit_current_position(hass)
             elif CURR_ENTITIE.startswith("media_player."):
                 # play / pause on selected player
@@ -932,6 +965,7 @@ def can_entity_be_changed(hass, entity):
         "input_number.",
         "sensor.radiolist",
         "sensor.podcastlist",
+        "sensor.spotifysearchlist",
         "sensor.spotifylist",
         "sensor.youtubelist"
     )):
@@ -1092,7 +1126,7 @@ def set_focus_on_next_entity(hass, long_press):
 
 def go_up_in_menu(hass):
     # on back on remote
-    global CURR_ENTITIE_ENTERED
+    global CURR_ENTITIE_ENTERED, CURR_ENTITIE
     # check if the entity in the group is selected
     if CURR_ENTITIE is not None:
         # check if we are browsing files
@@ -1106,13 +1140,18 @@ def go_up_in_menu(hass):
                 # go up in the group menu
                 set_curr_group(hass, None)
                 say_curr_group(hass)
-        elif CURR_ENTITIE == 'media_player.wbudowany_glosnik' and PREV_CURR_GROUP is not None:
-            # go back to prev context
-            set_curr_group(hass, PREV_CURR_GROUP)
-            set_curr_entity(hass, None)
-            CURR_ENTITIE_ENTERED = False
-            PREV_CURR_GROUP['friendly_name']
-            _say_it(hass, PREV_CURR_GROUP['friendly_name'])
+        elif CURR_ENTITIE == 'media_player.wbudowany_glosnik':
+            if PREV_CURR_GROUP is not None:
+                # go back to prev context
+                set_curr_group(hass, PREV_CURR_GROUP)
+                # set_curr_entity(hass, None)
+                CURR_ENTITIE = None
+                CURR_ENTITIE_ENTERED = False
+                PREV_CURR_GROUP['friendly_name']
+                _say_it(hass, PREV_CURR_GROUP['friendly_name'])
+            else:
+                # go home
+                go_home(hass)
         elif not CURR_ENTITIE_ENTERED:
             # go up in the group menu
             set_curr_group(hass, None)
@@ -1222,7 +1261,7 @@ def go_home(hass):
     if len(GROUP_ENTITIES) == 0:
         get_groups(hass)
     global CURR_GROUP_VIEW
-    CURR_GROUP_VIEW = 'Twój Dom'
+    CURR_GROUP_VIEW = 'Mój Dom'
     # to reset
     set_curr_group_view()
     say_curr_group_view(hass)
@@ -1355,6 +1394,18 @@ async def async_setup(hass, config):
             "sensor.internal_ip_address", ip, {"friendly_name": "Lokalny adres IP", "icon": "mdi:access-point-network"})
 
     @asyncio.coroutine
+    def switch_ui(service):
+        _LOGGER.info("switch_ui")
+        mode = service.data['mode']
+        if mode in ('YouTube', 'Spotify'):
+            hass.states.async_set("sensor.ais_player_mode", "music_player")
+            yield from hass.services.async_call("input_select", "select_option",
+                                                {"entity_id": "input_select.ais_music_service", "option": mode})
+        elif mode == 'Radio':
+            hass.states.async_set("sensor.ais_player_mode", "radio_player")
+        elif mode == 'Podcast':
+            hass.states.async_set("sensor.ais_player_mode", "podcast_player")
+    @asyncio.coroutine
     def publish_command_to_frame(service):
         key = service.data['key']
         val = service.data['val']
@@ -1434,6 +1485,8 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, 'on_new_iot_device_selection', on_new_iot_device_selection)
     hass.services.async_register(DOMAIN, 'set_context', set_context)
     hass.services.async_register(DOMAIN, 'check_local_ip', check_local_ip)
+    hass.services.async_register(DOMAIN, 'switch_ui', switch_ui)
+
     # register intents
     hass.helpers.intent.async_register(GetTimeIntent())
     hass.helpers.intent.async_register(GetDateIntent())
@@ -1592,7 +1645,6 @@ def _publish_command_to_frame(hass, key, val, ip):
         # enable the wifi info
         hass.async_run_job(
             hass.services.async_call(
-                'input_boolean',
                 'input_boolean',
                 'turn_on', {"entity_id": "input_boolean.ais_android_wifi_changes_notify"})
         )
@@ -2156,7 +2208,15 @@ def _process(hass, text, callback):
     """Process a line of text."""
     _LOGGER.info('Process text: ' + text)
     # clear text
+    text = text.replace("&", 'and')
     text = text.replace("-", " ").lower()
+    # check if the text input is selected
+    #  binary_sensor.selected_entity / binary_sensor.ais_remote_button
+    if CURR_ENTITIE_ENTERED and CURR_ENTITIE is not None:
+        if CURR_ENTITIE.startswith('input_text.'):
+            yield from hass.services.async_call('input_text', 'set_value', {"entity_id": CURR_ENTITIE, "value": text})
+            return
+
     global CURR_BUTTON_CODE
     s = False
     m = None
@@ -2465,9 +2525,7 @@ class PlayRadioIntent(intent.IntentHandler):
             if len(name.replace(" ", "")) == 0:
                 message = "Niestety nie znajduję radia " + station
             else:
-                yield from hass.services.async_call(
-                     'ais_cloud', 'play_audio',
-                     json_ws_resp, blocking=False)
+                yield from hass.services.async_call('ais_cloud', 'play_audio', json_ws_resp)
                 message = "OK, gramy radio " + name
                 success = True
         return message, success
@@ -2500,9 +2558,7 @@ class AisPlayPodcastIntent(intent.IntentHandler):
             if len(name.replace(" ", "")) == 0:
                 message = "Niestety nie znajduję podcasta " + item
             else:
-                yield from hass.services.async_call(
-                     'ais_cloud', 'play_audio',
-                     json_ws_resp, blocking=False)
+                yield from hass.services.async_call('ais_cloud', 'play_audio', json_ws_resp)
                 message = "OK, pobieram odcinki audycji " + item
                 success = True
         return message, success
@@ -2527,13 +2583,10 @@ class AisPlayYtMusicIntent(intent.IntentHandler):
         if not item:
             message = 'Nie wiem jaką muzykę mam szukać '
         else:
-            success = True
-            yt_query = {}
-            yt_query["audio_type"] = ais_global.G_AN_MUSIC
-            yt_query["text"] = item
-            yield from hass.services.async_call(
-                 'ais_cloud', 'play_audio',
-                 yt_query, blocking=False)
+            yield from hass.services.async_call('ais_yt_service', 'search', {"query": item})
+            # switch UI to YT
+            yield from hass.services.async_call('ais_ai_service', 'switch_ui', {"mode": 'YouTube'})
+            #
             message = "OK, szukam na YouTube " + item
             success = True
         return message, success
@@ -2559,10 +2612,10 @@ class AisPlaySpotifyIntent(intent.IntentHandler):
         if not item:
             message = 'Nie wiem jaką muzykę mam szukać '
         else:
-            _query = {"audio_type": ais_global.G_AN_SPOTIFY, "text": item}
-            yield from hass.services.async_call(
-                'ais_cloud', 'play_audio',
-                _query, blocking=False)
+            yield from hass.services.async_call('ais_spotify_service', 'search', {"query": item})
+            # switch UI to Spotify
+            yield from hass.services.async_call('ais_ai_service', 'switch_ui', {"mode": 'Spotify'})
+            #
             message = "OK, szukam na Spotify " + item
             success = True
         return message, success

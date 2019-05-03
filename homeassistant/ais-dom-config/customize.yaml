@@ -191,43 +191,42 @@ group.all_switches:
   order: 1
   hidden: false
   control: hidden
-  context_key_words: przełaczniki,wszystkie przełączniki
+  context_key_words: przełaczniki
   context_answer: OK, wybrano wszystkie przełączniki. Możesz powiedzieć co włączyć
     lub nawigować pilotem by sprawdzać status oraz przełączać.
-  friendly_name: Wszystkie przełączniki
-  remote_group_view: Twój Dom
+  friendly_name: Przełączniki
+  remote_group_view: Mój Dom
 group.all_lights:
   order: 2
   hidden: false
   control: hidden
-  context_key_words: światła,wszystkie światła
-  context_answer: OK, wybrano wszystkie światła. Możesz powiedzieć co włączyć lub
-    nawigować pilotem by sprawdzać status oraz przełączać.
-  friendly_name: Wszystkie światła
-  remote_group_view: Twój Dom
+  context_key_words: światła
+  context_answer: OK, wybrano wszystkie światła. Możesz powiedzieć co włączyć lub nawigować pilotem by sprawdzać status oraz przełączać.
+  friendly_name: Światła
+  remote_group_view: Mój Dom
 group.all_ais_sensors:
   order: 3
   hidden: false
-  context_key_words: czujniki, wszystkie czujniki
+  context_key_words: czujniki
   context_answer: OK, wybrano wszystkie czujniki.
-  friendly_name: Wszystkie czujniki
-  remote_group_view: Twój Dom
+  friendly_name: Czujniki
+  remote_group_view: Mój Dom
 group.all_fans:
   order: 4
   hidden: false
-  context_key_words: wentylatory, wszystkie wentylatory
+  context_key_words: wentylatory
   context_answer: OK, wybrano wszystkie wentylatory.
-  friendly_name: Wszystkie wentylatory
-  remote_group_view: Twój Dom
+  friendly_name: Wentylatory
+  remote_group_view: Mój Dom
 group.all_devices:
   order: 4
   hidden: false
-  context_key_words: Urządzenia,wszystkie urządzenia
+  context_key_words: urządzenia
   context_answer: OK, urządzenia
-  friendly_name: Wszystkie urządzenia
-  remote_group_view: Twój Dom
+  friendly_name: Urządzenia
+  remote_group_view: Mój Dom
 group.ais_pogoda:
-  remote_group_view: Twój Dom
+  remote_group_view: Mój Dom
   order: 5
 group.all_automations:
   order: 7
@@ -236,14 +235,14 @@ group.all_automations:
 group.day_info:
   order: 8
   friendly_name: Kalendarium
-  remote_group_view: Twój Dom
+  remote_group_view: Mój Dom
 
 #group.ais_wyszukiwarka:
 #  order: 8
 #  context_key_words: asystent,asystentka
 #  context_answer: Powiedz proszę jakie informację mam wyszukać?
 #  context_suffix: Znajdź informacje o
-#  remote_group_view: Twój Dom
+#  remote_group_view: Mój Dom
 
 group.ais_rss_news_remote:
   context_key_words: wiadomości,informacje
@@ -299,7 +298,7 @@ group.ais_add_iot_device:
   order: 2
 group.audio_player:
   context_key_words: odtwarzacz, odtwarzacze
-  context_answer: OK, wybrano odtwarzacz.
+  context_answer: OK, wybrano odtwarzacze.
   order: 3
   remote_group_view: Ustawienia
 group.ais_tts_configuration:

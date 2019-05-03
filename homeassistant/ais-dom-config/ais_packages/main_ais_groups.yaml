@@ -18,7 +18,7 @@ group:
       - group.all_fans
       - group.bookmarks
   audio_player:
-    name: Odtwarzacz
+    name: Odtwarzacze
     entities:
       - media_player.wbudowany_glosnik
       - input_number.media_player_speed
