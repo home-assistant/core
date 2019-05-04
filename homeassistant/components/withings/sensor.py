@@ -52,7 +52,7 @@ async def async_setup_entry(
 
     _LOGGER.debug("Confirming we're authenticated")
     try:
-        await data_manager.async_check_authenticated()
+        data_manager.check_authenticated()
     except NotAuthenticatedError:
         # Trigger new config flow.
         hass.async_create_task(
@@ -81,7 +81,7 @@ def create_sensor_entities(
 
     measures = hass.data.get(const.DOMAIN, {}) \
         .get(const.CONFIG, {}) \
-        .get(const.MEASURES, list(WITHINGS_MEASUREMENTS_MAP.keys()))
+        .get(const.MEASURES, list(WITHINGS_MEASUREMENTS_MAP))
 
     for attribute in WITHINGS_ATTRIBUTES:
         if attribute.measurement not in measures:
@@ -456,17 +456,17 @@ class WithingsHealthSensor(Entity):
 
         if isinstance(self._attribute, WithingsMeasureAttribute):
             _LOGGER.debug("Updating measures state")
-            await self._data_manager.async_update_measures()
+            self._data_manager.update_measures()
             await self.async_update_measure(self._data_manager.measures)
 
         elif isinstance(self._attribute, WithingsSleepStateAttribute):
             _LOGGER.debug("Updating sleep state")
-            await self._data_manager.async_update_sleep()
+            self._data_manager.update_sleep()
             await self.async_update_sleep_state(self._data_manager.sleep)
 
         elif isinstance(self._attribute, WithingsSleepSummaryAttribute):
             _LOGGER.debug("Updating sleep summary state")
-            await self._data_manager.async_update_sleep_summary()
+            self._data_manager.update_sleep_summary()
             await self.async_update_sleep_summary(
                 self._data_manager.sleep_summary
             )

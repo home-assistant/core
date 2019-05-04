@@ -34,7 +34,7 @@ def data_manager_fixture(nokia_api: nokia.NokiaApi):
     )
 
 
-async def test_data_manager_init(
+def test_data_manager_init(
         data_manager: WithingsDataManager,
         nokia_api: nokia.NokiaApi
 ):
@@ -44,48 +44,48 @@ async def test_data_manager_init(
     assert data_manager.slug == 'my_profile'
 
 
-async def test_data_manager_async_check_authenticated(
+def test_data_manager_check_authenticated(
         data_manager: WithingsDataManager,
         nokia_api: nokia.NokiaApi
 ):
     """Test method."""
     nokia_api.request = MagicMock(return_value='DATA')
-    results1 = await data_manager.async_check_authenticated()
+    results1 = data_manager.check_authenticated()
     nokia_api.request.assert_called_with('user', 'getdevice', version='v2')
     assert results1 == 'DATA'
 
     nokia_api.request.reset_mock()
 
     nokia_api.request = MagicMock(return_value='DATA_NEW')
-    await data_manager.async_check_authenticated()
+    data_manager.check_authenticated()
     nokia_api.request.assert_not_called()
 
 
-async def test_data_manager_async_update_measures(
+def test_data_manager_update_measures(
         data_manager: WithingsDataManager,
         nokia_api: nokia.NokiaApi
 ):
     """Test method."""
     nokia_api.get_measures = MagicMock(return_value='DATA')
-    results1 = await data_manager.async_update_measures()
+    results1 = data_manager.update_measures()
     nokia_api.get_measures.assert_called_with()
     assert results1 == 'DATA'
 
     nokia_api.get_measures.reset_mock()
 
     nokia_api.get_measures = MagicMock(return_value='DATA_NEW')
-    await data_manager.async_update_measures()
+    data_manager.update_measures()
     nokia_api.get_measures.assert_not_called()
 
 
-async def test_data_manager_async_update_sleep(
+def test_data_manager_update_sleep(
         data_manager: WithingsDataManager,
         nokia_api: nokia.NokiaApi
 ):
     """Test method."""
     with patch('time.time', return_value=100000.101):
         nokia_api.get_sleep = MagicMock(return_value='DATA')
-        results1 = await data_manager.async_update_sleep()
+        results1 = data_manager.update_sleep()
         nokia_api.get_sleep.assert_called_with(
             startdate=78400,
             enddate=100000
@@ -95,11 +95,11 @@ async def test_data_manager_async_update_sleep(
         nokia_api.get_sleep.reset_mock()
 
         nokia_api.get_sleep = MagicMock(return_value='DATA_NEW')
-        await data_manager.async_update_sleep()
+        data_manager.update_sleep()
         nokia_api.get_sleep.assert_not_called()
 
 
-async def test_data_manager_async_update_sleep_summary(
+def test_data_manager_update_sleep_summary(
         data_manager: WithingsDataManager,
         nokia_api: nokia.NokiaApi
 ):
@@ -113,7 +113,7 @@ async def test_data_manager_async_update_sleep_summary(
     yesterday_noon_timestamp = noon.timestamp() - 86400
 
     nokia_api.get_sleep_summary = MagicMock(return_value='DATA')
-    results1 = await data_manager.async_update_sleep_summary()
+    results1 = data_manager.update_sleep_summary()
     nokia_api.get_sleep_summary.assert_called_with(
         lastupdate=callee.And(
             callee.GreaterOrEqualTo(yesterday_noon_timestamp),
@@ -125,11 +125,11 @@ async def test_data_manager_async_update_sleep_summary(
     nokia_api.get_sleep_summary.reset_mock()
 
     nokia_api.get_sleep_summary = MagicMock(return_value='DATA_NEW')
-    await data_manager.async_update_sleep_summary()
+    data_manager.update_sleep_summary()
     nokia_api.get_sleep_summary.assert_not_called()
 
 
-async def test_print_service():
+def test_print_service():
     """Test method."""
     # Go from None to True
     WithingsDataManager.service_available = None
@@ -158,17 +158,17 @@ async def test_print_service():
     assert not WithingsDataManager.print_service_unavailable()
 
 
-async def test_data_manager_async_call():
+def test_data_manager_call():
     """Test method."""
     # Token refreshed.
-    async def hello_func():
+    def hello_func():
         return 'HELLO2'
 
     function = MagicMock(side_effect=[
         TokenUpdated('my_token'),
         hello_func(),
     ])
-    result = await WithingsDataManager.async_call(function)
+    result = WithingsDataManager.call(function)
     assert result == 'HELLO2'
     assert function.call_count == 2
 
@@ -178,7 +178,7 @@ async def test_data_manager_async_call():
         TokenUpdated('my_token'),
     ])
     try:
-        result = await WithingsDataManager.async_call(function)
+        result = WithingsDataManager.call(function)
         assert False, "This should not have ran."
     except ServiceError:
         assert True
@@ -187,7 +187,7 @@ async def test_data_manager_async_call():
     # Not authenticated 1.
     test_function = MagicMock(side_effect=MissingTokenError('Error Code 401'))
     try:
-        result = await WithingsDataManager.async_call(test_function)
+        result = WithingsDataManager.call(test_function)
         assert False, "An exception should have been thrown."
     except NotAuthenticatedError:
         assert True
@@ -195,7 +195,7 @@ async def test_data_manager_async_call():
     # Not authenticated 2.
     test_function = MagicMock(side_effect=Exception('Error Code 401'))
     try:
-        result = await WithingsDataManager.async_call(test_function)
+        result = WithingsDataManager.call(test_function)
         assert False, "An exception should have been thrown."
     except NotAuthenticatedError:
         assert True
@@ -203,7 +203,7 @@ async def test_data_manager_async_call():
     # Service error.
     test_function = MagicMock(side_effect=PlatformNotReady())
     try:
-        result = await WithingsDataManager.async_call(test_function)
+        result = WithingsDataManager.call(test_function)
         assert False, "An exception should have been thrown."
     except PlatformNotReady:
         assert True

@@ -13,7 +13,10 @@ from homeassistant.util import slugify, Throttle
 from . import const
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
-NOT_AUTHENTICATED_ERROR = re.compile(".*(Error Code (100|101|102|200|401)|Missing access token parameter).*", re.IGNORECASE)  # pylint: disable=line-too-long  # noqa: E501
+NOT_AUTHENTICATED_ERROR = re.compile(
+    ".*(Error Code (100|101|102|200|401)|Missing access token parameter).*",
+    re.IGNORECASE
+)
 
 
 class NotAuthenticatedError(Exception):
@@ -94,11 +97,11 @@ class WithingsDataManager:
             return True
 
     @staticmethod
-    async def async_call(function, is_first_call=True):
+    def call(function, is_first_call=True):
         """Call an api method and handle the result."""
         try:
             _LOGGER.debug("Running call.")
-            result = await function()
+            result = function()
             WithingsDataManager.print_service_available()
             return result
 
@@ -110,7 +113,7 @@ class WithingsDataManager:
                 )
 
             _LOGGER.info("Token updated, re-running call.")
-            return await WithingsDataManager.async_call(function, False)
+            return WithingsDataManager.call(function, False)
 
         except MissingTokenError as ex:
             raise NotAuthenticatedError(ex)
@@ -125,41 +128,41 @@ class WithingsDataManager:
             raise PlatformNotReady(ex)
 
     @Throttle(const.SCAN_INTERVAL)
-    async def async_check_authenticated(self):
+    def check_authenticated(self):
         """Check if the user is authenticated."""
-        async def function():
+        def function():
             return self._api.request('user', 'getdevice', version='v2')
 
-        return await WithingsDataManager.async_call(function)
+        return WithingsDataManager.call(function)
 
     @Throttle(const.SCAN_INTERVAL)
-    async def async_update_measures(self):
+    def update_measures(self):
         """Update the measures data."""
-        async def function():
+        def function():
             return self._api.get_measures()
 
-        self._measures = await WithingsDataManager.async_call(function)
+        self._measures = WithingsDataManager.call(function)
 
         return self._measures
 
     @Throttle(const.SCAN_INTERVAL)
-    async def async_update_sleep(self):
+    def update_sleep(self):
         """Update the sleep data."""
         end_date = int(time.time())
         start_date = end_date - (6 * 60 * 60)
 
-        async def function():
+        def function():
             return self._api.get_sleep(
                 startdate=start_date,
                 enddate=end_date
             )
 
-        self._sleep = await WithingsDataManager.async_call(function)
+        self._sleep = WithingsDataManager.call(function)
 
         return self._sleep
 
     @Throttle(const.SCAN_INTERVAL)
-    async def async_update_sleep_summary(self):
+    def update_sleep_summary(self):
         """Update the sleep summary data."""
         now = datetime.datetime.utcnow()
         yesterday = now - datetime.timedelta(days=1)
@@ -174,11 +177,11 @@ class WithingsDataManager:
             yesterday.strftime('%Y-%m-%d %H:%M:%S UTC')
         )
 
-        async def function():
+        def function():
             return self._api.get_sleep_summary(
                 lastupdate=yesterday_noon.timestamp()
             )
 
-        self._sleep_summary = await WithingsDataManager.async_call(function)
+        self._sleep_summary = WithingsDataManager.call(function)
 
         return self._sleep_summary

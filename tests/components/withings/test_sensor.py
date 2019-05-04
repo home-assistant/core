@@ -47,7 +47,7 @@ async def test_async_setup_entry(hass: HomeAssistantType):
 
         data_manager_instance = MagicMock(spec=WithingsDataManager)
         data_manager_instance.async_refresh_token = MagicMock()
-        data_manager_instance.async_check_authenticated = MagicMock()
+        data_manager_instance.check_authenticated = MagicMock()
 
         nokia_api_mock.return_value = nokia_api_instance
         data_manager_mock.return_value = data_manager_instance
