@@ -189,10 +189,12 @@ class StravaSensor(Entity):
 
     async def async_update(self):
         """Update state of Strava sensor."""
-        try:
-            await self._data.update(self.hass)
-        except Exception:
-            self._state = None
+        await self._data.update(self.hass)
+
+    @property
+    def _state(self):
+        """Overwritten by child classes."""
+        pass
 
     @property
     def state(self):
@@ -210,10 +212,11 @@ class StravaSensor(Entity):
                 attr = unit('km')(attr)
 
             return '%1.4g' % attr.num
-        elif isinstance(attr, str) and len(attr) > 255:
+
+        if isinstance(attr, str) and len(attr) > 255:
             return attr[:255]
-        else:
-            return str(attr)
+
+        return str(attr)
 
     @property
     def unit_of_measurement(self):
@@ -231,22 +234,23 @@ class StravaSensor(Entity):
         if isinstance(attr, Quantity):
             if attr.unit == unit('m') and attr > unit('km')(10):
                 attr = unit('km')(attr)
-
             return str(attr.unit)
-        elif field in UNIT_MAPPING_FIELDS:
+
+        if field in UNIT_MAPPING_FIELDS:
             return UNIT_MAPPING_FIELDS[field]
-        else:
-            return None
+
+        return None
 
     @property
     def icon(self):
         """Getter for entity icon."""
         if self._field and self._field in ICON_MAPPING_FIELDS:
             return ICON_MAPPING_FIELDS[self._field]
-        elif self._subfield and self._subfield in ICON_MAPPING_FIELDS:
+
+        if self._subfield and self._subfield in ICON_MAPPING_FIELDS:
             return ICON_MAPPING_FIELDS[self._subfield]
-        else:
-            return ICON
+
+        return ICON
 
     @property
     def available(self):
@@ -267,10 +271,10 @@ class StravaSensor(Entity):
     def _name_prefix(self):
         if self.available:
             return self._state.name + ' '
-        else:
-            return '{} {}: '.format(
-                self._type.replace('_', ' ').title(),
-                self._data.id)
+
+        return '{} {}: '.format(
+            self._type.replace('_', ' ').title(),
+            self._data.id)
 
     @property
     def name(self):
@@ -327,10 +331,11 @@ class StravaAthleteDetailsSensor(StravaSensor):
     def _name_prefix(self):
         if self.available:
             return self._data.details.firstname + ': '
-        elif self._data.id:
+
+        if self._data.id:
             return 'Athlete {}: '.format(self._data.id)
-        else:
-            return 'Athlete: '
+
+        return 'Athlete: '
 
     @property
     def entity_picture(self):
@@ -363,10 +368,11 @@ class StravaAthleteStatsSensor(StravaSensor):
     def _name_prefix(self):
         if self.available:
             return self._data.details.firstname + ': '
-        elif self._data.id:
+
+        if self._data.id:
             return 'Athlete {}: '.format(self._data.id)
-        else:
-            return 'Athlete: '
+
+        return 'Athlete: '
 
     @property
     def entity_picture(self):

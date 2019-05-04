@@ -156,34 +156,34 @@ class StravaData:
         store = self._hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         await store.async_save(self._token)
 
-    def get_athlete(self, id):
+    def get_athlete(self, sid):
         """Get existing Athlete model or create if not existing."""
         if id not in self.athletes:
-            self.athletes[id] = StravaAthleteData(self, id)
+            self.athletes[sid] = StravaAthleteData(self, sid)
 
-        return self.athletes[id]
+        return self.athletes[sid]
 
-    def get_gear(self, id):
+    def get_gear(self, sid):
         """Get existing Gear model or create if not existing."""
         if id not in self.gears:
-            self.gears[id] = StravaGearData(self, id)
+            self.gears[sid] = StravaGearData(self, sid)
 
-        return self.gears[id]
+        return self.gears[sid]
 
-    def get_club(self, id):
+    def get_club(self, sid):
         """Get existing Club model or create if not existing."""
         if id not in self.clubs:
-            self.clubs[id] = StravaClubData(self, id)
+            self.clubs[sid] = StravaClubData(self, sid)
 
-        return self.clubs[id]
+        return self.clubs[sid]
 
 
 class StravaAthleteData:
     """Strava athlete data model."""
 
-    def __init__(self, data, id=None):
+    def __init__(self, data, sid=None):
         """Initialize Strava athlete data model."""
-        self.id = id
+        self.strava_id = sid
         self.data = data
 
         self.details = None
@@ -207,14 +207,14 @@ class StravaAthleteData:
     async def update_details(self, hass):
         """Update Strava athlete details."""
         self.details = await hass.async_add_executor_job(
-            self.data.client.get_athlete, self.id)
+            self.data.client.get_athlete, self.strava_id)
 
         _LOGGER.debug("Fetched athlete details")
 
     async def update_stats(self, hass):
         """Update Strava athlete statistics."""
         self.stats = await hass.async_add_executor_job(
-            self.data.client.get_athlete_stats, self.id)
+            self.data.client.get_athlete_stats, self.strava_id)
 
         _LOGGER.debug("Fetched athlete statistics")
 
@@ -236,9 +236,9 @@ class StravaAthleteData:
 class StravaClubData:
     """Strava club data model."""
 
-    def __init__(self, data, id):
+    def __init__(self, data, sid):
         """Initialize Strava club data model."""
-        self.id = id
+        self.strava_id = sid
         self.data = data
 
         self.club = None
@@ -248,15 +248,15 @@ class StravaClubData:
         """Update Strava club data model."""
         await self.data.get_token()
         self.club = await hass.async_add_executor_job(
-            self.data.client.get_club, self.id)
+            self.data.client.get_club, self.strava_id)
 
 
 class StravaGearData:
     """Strava gear data model."""
 
-    def __init__(self, data, id):
+    def __init__(self, data, sid):
         """Initialize Strava gear data model."""
-        self.id = id
+        self.strava_id = sid
         self.data = data
 
         self.gear = None
@@ -266,7 +266,7 @@ class StravaGearData:
         """Update Strava gear data model."""
         await self.data.get_token()
         self.gear = await hass.async_add_executor_job(
-            self.data.client.get_gear, self.id)
+            self.data.client.get_gear, self.strava_id)
 
 
 class StravaAuthCallbackView(HomeAssistantView):
