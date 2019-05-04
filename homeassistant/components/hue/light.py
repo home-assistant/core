@@ -362,17 +362,16 @@ class HueLight(Light):
         if ATTR_BRIGHTNESS in kwargs:
             command['bri'] = kwargs[ATTR_BRIGHTNESS]
 
-        if ATTR_FLASH in kwargs:
-            flash = kwargs[ATTR_FLASH]
+        flash = kwargs.get(ATTR_FLASH)
 
-            if flash == FLASH_LONG:
-                command['alert'] = 'lselect'
-                del command['on']
-            elif flash == FLASH_SHORT:
-                command['alert'] = 'select'
-                del command['on']
-            else:
-                command['alert'] = 'none'
+        if flash == FLASH_LONG:
+            command['alert'] = 'lselect'
+            del command['on']
+        elif flash == FLASH_SHORT:
+            command['alert'] = 'select'
+            del command['on']
+        else:
+            command['alert'] = 'none'
 
         if ATTR_EFFECT in kwargs:
             effect = kwargs[ATTR_EFFECT]
@@ -396,16 +395,16 @@ class HueLight(Light):
         if ATTR_TRANSITION in kwargs:
             command['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
 
-        if ATTR_FLASH in kwargs:
-            flash = kwargs[ATTR_FLASH]
-            if flash == FLASH_LONG:
-                command['alert'] = 'lselect'
-                del command['on']
-            elif flash == FLASH_SHORT:
-                command['alert'] = 'select'
-                del command['on']
-            else:
-                command['alert'] = 'none'
+        flash = kwargs.get(ATTR_FLASH)
+
+        if flash == FLASH_LONG:
+            command['alert'] = 'lselect'
+            del command['on']
+        elif flash == FLASH_SHORT:
+            command['alert'] = 'select'
+            del command['on']
+        else:
+            command['alert'] = 'none'
 
         if self.is_group:
             await self.light.set_action(**command)
