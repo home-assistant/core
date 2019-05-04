@@ -92,21 +92,38 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     update_net_consumption()
 
     # Update Dataset
-    add_entities([NeurioEnergy(
-        data, JSON_DATASET, DAILY_TYPE, update_dataset)])
+    add_entities([NeurioEnergy(data,
+                               JSON_DATASET,
+                               DAILY_TYPE,
+                               update_dataset)]
+                )
     # Active power sensor
-    add_entities([NeurioEnergy(
-        data, ACTIVE_NAME, ACTIVE_TYPE, update_active)])
-    add_entities([NeurioEnergy(
-        data, GENERATION_NAME, ACTIVE_TYPE, update_generation)])
+    add_entities([NeurioEnergy(data,
+                               ACTIVE_NAME,
+                               ACTIVE_TYPE,
+                               update_active)]
+                )
+    add_entities([NeurioEnergy(data,
+                               GENERATION_NAME,
+                               ACTIVE_TYPE,
+                               update_generation)]
+                )
     # Daily power sensor
-    add_entities([NeurioEnergy(
-        data, DAILY_NAME, DAILY_TYPE, update_daily)])
-    add_entities([NeurioEnergy(
-        data, GENERATION_DAILY_NAME, DAILY_TYPE, update_generation_daily)])
-    add_entities([NeurioEnergy(
-        data, NET_CONSUMPTION, DAILY_TYPE, update_net_consumption)])
-
+    add_entities([NeurioEnergy(data,
+                               DAILY_NAME,
+                               DAILY_TYPE,
+                               update_daily)]
+                )
+    add_entities([NeurioEnergy(data,
+                               GENERATION_DAILY_NAME,
+                               DAILY_TYPE,
+                               update_generation_daily)]
+                )
+    add_entities([NeurioEnergy(data,
+                               NET_CONSUMPTION,
+                               DAILY_TYPE,
+                               update_net_consumption)]
+                )
 
 class NeurioData:
     """Stores data retrieved from Neurio sensor."""
@@ -170,10 +187,8 @@ class NeurioData:
         return self._net_consumption
 
     def get_dataset(self):
-        """
-        Get the most recent data from the api once
-        so we don't hit the ratelimit each hour.
-        """
+        """Get the most recent data from the api once
+        so we don't hit the ratelimit each hour."""
 
         start_time = dt_util.start_of_local_day() \
             .astimezone(dt_util.UTC).isoformat()
@@ -182,8 +197,8 @@ class NeurioData:
         _LOGGER.debug('Start: %s, End: %s', start_time, end_time)
 
         try:
-            self._dataset = self.neurio_client.get_samples_stats
-            (self.sensor_id, start_time, 'days', end_time)
+            self._dataset = self.neurio_client.get_samples_stats \
+                (self.sensor_id, start_time, 'days', end_time)
         except (requests.exceptions.RequestException, ValueError, KeyError):
             _LOGGER.warning("Could not update dataset")
             return None
@@ -191,10 +206,10 @@ class NeurioData:
     def get_active_power(self):
         """Return current power value."""
         header = {'Authorization': 'bearer <token>'}
-        resp = requests.get(
-        	'http://' + self.sensor_ip + '/current-sample',
-            headers=header,
-            verify=False)
+        resp = requests.get('http://'+self.sensor_ip+'/current-sample',
+                            headers=header,
+                            verify=False
+                           )
         try:
             sample = json.loads(resp.text)
             self._active_power = sample['channels'][4]['p_W']
@@ -205,10 +220,10 @@ class NeurioData:
     def get_active_generation(self):
         """Return current solar generation value."""
         header = {'Authorization': 'bearer <token>'}
-        resp = requests.get(
-            'http://' + self.sensor_ip + '/current-sample',
-            headers=header,
-            verify=False)
+        resp = requests.get('http://'+self.sensor_ip+'/current-sample',
+                            headers=header,
+                            verify=False
+                           )
         try:
             sample = json.loads(resp.text)
             self._active_generation = sample['channels'][3]['p_W']
