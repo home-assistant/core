@@ -6,5 +6,5 @@
     "meteoalertapi==0.0.8"
   ],
   "dependencies": [],
-  "codeowners": ['@rolfberkenbosch']
+  "codeowners": ["@rolfberkenbosch"]
 }
