@@ -80,7 +80,7 @@ class StravaData:
     def is_token_valid(self):
         """Check if OAuth2 token is present and not expired."""
         if not self.is_authorized:
-            _LOGGER.info("Not authorized")
+            _LOGGER.error("Not authorized")
             return False
 
         expires_at = datetime.fromtimestamp(self._token['expires_at'])
@@ -202,21 +202,21 @@ class StravaAthleteData:
         self.last_activity = await hass.async_add_executor_job(
             get_last_activity, self.data.client)
 
-        _LOGGER.info("Fetched last activity")
+        _LOGGER.debug("Fetched last activity")
 
     async def update_details(self, hass):
         """Update Strava athlete details."""
         self.details = await hass.async_add_executor_job(
             self.data.client.get_athlete, self.id)
 
-        _LOGGER.info("Fetched athlete details")
+        _LOGGER.debug("Fetched athlete details")
 
     async def update_stats(self, hass):
         """Update Strava athlete statistics."""
         self.stats = await hass.async_add_executor_job(
             self.data.client.get_athlete_stats, self.id)
 
-        _LOGGER.info("Fetched athlete stats")
+        _LOGGER.debug("Fetched athlete statistics")
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def update(self, hass):
