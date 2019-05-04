@@ -259,7 +259,7 @@ class NeurioData:
             kwh_in += result['importedEnergy'] / 3600000
         for result in history:
             kwh_out += result['exportedEnergy'] / 3600000
-        self._net_consumption = round(kwhIn-kwhOut, 2)
+        self._net_consumption = round(kwh_in-kwh_out, 2)
 
 
 class NeurioEnergy(Entity):
