@@ -485,6 +485,24 @@ async def test_track_template_result_refresh_cancel(hass):
 
     assert len(refresh_runs) == 3
 
+    template_refresh = Template(
+        "{{ value }}", hass)
+    refresh_runs = []
+
+    info = async_track_template_result(
+        hass, template_refresh,
+        refresh_listener, {'value': 'duck'})
+    await hass.async_block_till_done()
+    assert refresh_runs == ['duck']
+
+    info.async_refresh()
+    await hass.async_block_till_done()
+    assert refresh_runs == ['duck']
+
+    info.async_refresh({'value': 'dog'})
+    await hass.async_block_till_done()
+    assert refresh_runs == ['duck', 'dog']
+
 
 async def test_track_same_state_simple_trigger(hass):
     """Test track_same_change with trigger simple."""

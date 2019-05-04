@@ -196,6 +196,9 @@ def async_track_template(
 track_template = threaded_listener_factory(async_track_template)
 
 
+_UNCHANGED = object()
+
+
 class TrackTemplateResultInfo:
     """Return value from async_track_template_result."""
 
@@ -230,8 +233,10 @@ class TrackTemplateResultInfo:
         self._cancel()
 
     @callback
-    def async_refresh(self) -> None:
+    def async_refresh(self, variables=_UNCHANGED) -> None:
         """Force recalculate the template."""
+        if variables is not _UNCHANGED:
+            self._variables = variables
         self._refresh()
 
     @callback
