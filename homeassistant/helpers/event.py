@@ -180,7 +180,7 @@ def async_track_template(
                     break
             if not state:
                 for st in hass.states.async_all():
-                    if info.filter(st.entity_id):
+                    if info.filter_lifecycle(st.entity_id):
                         state = st
                         entity_id = st.entity_id
                         break

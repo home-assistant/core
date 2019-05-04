@@ -2,32 +2,25 @@
 # pylint: disable=protected-access
 import asyncio
 from datetime import datetime, timedelta
+from logging import Logger
 from unittest.mock import patch
 
 from astral import Astral
 import pytest
 
-from homeassistant.core import callback
-from homeassistant.setup import async_setup_component
-import homeassistant.core as ha
+from homeassistant.components import sun
 from homeassistant.const import MATCH_ALL
+import homeassistant.core as ha
+from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.event import (
-    async_call_later,
-    async_track_point_in_time,
-    async_track_point_in_utc_time,
-    async_track_same_state,
-    async_track_state_change,
-    async_track_sunrise,
-    async_track_sunset,
-    async_track_template,
-    async_track_template_result,
-    async_track_time_change,
-    async_track_time_interval,
-    async_track_utc_time_change,
-)
+    async_call_later, async_track_point_in_time, async_track_point_in_utc_time,
+    async_track_same_state, async_track_state_change, async_track_sunrise,
+    async_track_sunset, async_track_template, async_track_template_result,
+    async_track_time_change, async_track_time_interval,
+    async_track_utc_time_change)
 from homeassistant.helpers.template import Template
-from homeassistant.components import sun
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
@@ -180,7 +173,7 @@ async def test_track_template(hass):
         hass
     )
 
-    hass.states.async_set('switch.test', 'off')
+    hass.states.async_set('switch.test', 'on')
 
     def specific_run_callback(entity_id, old_state, new_state):
         specific_runs.append(1)
@@ -201,7 +194,6 @@ async def test_track_template(hass):
         hass, template_condition_var, wildercard_run_callback,
         {'test': 5})
 
-    hass.states.async_set('switch.test', 'on')
     await hass.async_block_till_done()
 
     assert len(specific_runs) == 1
@@ -235,6 +227,40 @@ async def test_track_template(hass):
     assert len(specific_runs) == 2
     assert len(wildcard_runs) == 2
     assert len(wildercard_runs) == 2
+
+    template_iterate = Template(
+        "{{ (states.switch | length) > 0 }}", hass)
+    iterate_calls = []
+    @ha.callback
+    def iterate_callback(entity_id, old_state, new_state):
+        iterate_calls.append((entity_id, old_state, new_state))
+
+    async_track_template(
+        hass, template_iterate, iterate_callback)
+    await hass.async_block_till_done()
+
+    assert len(iterate_calls) == 1
+    assert iterate_calls[0][0] == 'switch.test'
+    assert iterate_calls[0][1].state == 'on'
+    assert iterate_calls[0][2].state == 'on'
+
+
+async def test_track_template_error(hass):
+    """Test tracking template with error."""
+    template_error = Template(
+        "{{ (states.switch | lunch) > 0 }}", hass)
+    error_calls = []
+    @ha.callback
+    def error_callback(entity_id, old_state, new_state):
+        error_calls.append((entity_id, old_state, new_state))
+
+    with patch.object(Logger, 'exception') as call:
+        async_track_template(
+            hass, template_error, error_callback)
+        await hass.async_block_till_done()
+
+        assert not error_calls
+        assert call.call_count == 1
 
 
 async def test_track_template_result(hass):
@@ -365,7 +391,7 @@ async def test_track_template_result_errors(hass):
     template_syntax_error = Template("{{states.switch", hass)
 
     template_not_exist = Template(
-        "{{states.switch.not_exist.state}}", hass)
+        "{{states.switch.not_exist.state }}", hass)
 
     syntax_error_runs = []
     not_exist_runs = []
@@ -396,17 +422,68 @@ async def test_track_template_result_errors(hass):
     hass.states.async_set('switch.not_exist', 'off')
     await hass.async_block_till_done()
 
-    assert 2 == len(not_exist_runs)
+    assert len(not_exist_runs) == 2
+    assert not_exist_runs[1][0].data.get('entity_id') == 'switch.not_exist'
     assert not_exist_runs[1][1] == template_not_exist
+    assert not_exist_runs[1][2] == ''
     assert not_exist_runs[1][3] == 'off'
 
     hass.states.async_set('switch.not_exist', 'on')
     await hass.async_block_till_done()
 
-    assert 1 == len(syntax_error_runs)
-    assert 3 == len(not_exist_runs)
+    assert len(syntax_error_runs) == 1
+    assert len(not_exist_runs) == 3
+    assert not_exist_runs[2][0].data.get('entity_id') == 'switch.not_exist'
     assert not_exist_runs[2][1] == template_not_exist
+    assert not_exist_runs[2][2] == 'off'
     assert not_exist_runs[2][3] == 'on'
+
+    with patch.object(Template, 'async_render') as render:
+        render.side_effect = TemplateError("Test")
+
+        hass.states.async_set('switch.not_exist', 'off')
+        await hass.async_block_till_done()
+
+        assert len(not_exist_runs) == 4
+        assert not_exist_runs[3][0].data.get('entity_id') == 'switch.not_exist'
+        assert not_exist_runs[3][1] == template_not_exist
+        assert not_exist_runs[3][2] == 'on'
+        assert isinstance(not_exist_runs[3][3], TemplateError)
+
+
+async def test_track_template_result_refresh_cancel(hass):
+    """Test cancelling and refreshing result."""
+    template_refresh = Template(
+        "{{states.switch.test.state == 'on' and now() }}", hass)
+
+    refresh_runs = []
+
+    def refresh_listener(event, template, last_result, result):
+        refresh_runs.append(result)
+
+    info = async_track_template_result(
+        hass, template_refresh,
+        refresh_listener)
+    await hass.async_block_till_done()
+
+    assert refresh_runs == ['False']
+
+    hass.states.async_set('switch.test', 'on')
+    await hass.async_block_till_done()
+
+    assert len(refresh_runs) == 2
+
+    info.async_refresh()
+    await hass.async_block_till_done()
+
+    assert len(refresh_runs) == 3
+    assert refresh_runs[1] != refresh_runs[2]
+
+    info.async_remove()
+    hass.states.async_set('switch.test', 'off')
+    await hass.async_block_till_done()
+
+    assert len(refresh_runs) == 3
 
 
 async def test_track_same_state_simple_trigger(hass):
