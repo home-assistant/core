@@ -329,7 +329,7 @@ def sun(
 
     sunrise = sunrise_today
     sunset = sunset_today
-    if today > dt_util.as_local(sunrise_today).date():
+    if today > dt_util.as_local(cast(datetime, sunrise_today)).date():
         sunrise = sunrise_tomorrow
         sunset = sunset_tomorrow
 
@@ -347,21 +347,21 @@ def sun(
     _LOGGER.warning("today: %s",
                     today)
     _LOGGER.warning("  local: sunrise: %s, sunset: %s",
-                    dt_util.as_local(sunrise_today),
-                    dt_util.as_local(sunset_today))
+                    dt_util.as_local(cast(datetime, sunrise_today)),
+                    dt_util.as_local(cast(datetime, sunset_today)))
     _LOGGER.warning("  UTC: sunrise: %s, sunset: %s",
                     sunrise_today, sunset_today)
     _LOGGER.warning("tomorrow: %s",
                     tomorrow)
     _LOGGER.warning("  local: sunrise: %s, sunset: %s",
-                    dt_util.as_local(sunrise_tomorrow),
-                    dt_util.as_local(sunset_tomorrow))
+                    dt_util.as_local(cast(datetime, sunrise_tomorrow)),
+                    dt_util.as_local(cast(datetime, sunset_tomorrow)))
     _LOGGER.warning("  UTC: sunrise: %s, sunset: %s",
                     sunrise_tomorrow, sunset_tomorrow)
     _LOGGER.warning("used:")
     _LOGGER.warning("  local: sunrise: %s, sunset: %s",
-                    dt_util.as_local(sunrise),
-                    dt_util.as_local(sunset))
+                    dt_util.as_local(cast(datetime, sunrise)),
+                    dt_util.as_local(cast(datetime, sunset)))
     _LOGGER.warning("  UTC: sunrise: %s, sunset: %s",
                     sunrise, sunset)
     _LOGGER.warning("---------------------------------")
