@@ -142,7 +142,7 @@ class NeurioData:
         self._daily_usage = None
         self._active_power = None
         self._active_generation = None
-        self._generation_daily = None
+        self._daily_generation = None
         self._net_consumption = None
 
         self._state = None
@@ -251,14 +251,14 @@ class NeurioData:
 
     def get_net_consumption(self):
         """Return current daily power usage."""
-        kwhIn = 0
-        kwhOut = 0
+        kwh_in = 0
+        kwh_out = 0
 
         history = self._dataset
         for result in history:
-            kwhIn += result['importedEnergy'] / 3600000
+            kwh_in += result['importedEnergy'] / 3600000
         for result in history:
-            kwhOut += result['exportedEnergy'] / 3600000
+            kwh_out += result['exportedEnergy'] / 3600000
         self._net_consumption = round(kwhIn-kwhOut, 2)
 
 
