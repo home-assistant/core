@@ -128,7 +128,15 @@ class FakeCharacteristic(AbstractCharacteristic):
     needed even though it doesn't add any methods.
     """
 
-    pass
+    def to_accessory_and_service_list(self):
+        """Serialize the characteristic."""
+        # Upstream doesn't correctly serialize valid_values
+        # This fix will be upstreamed and this function removed when it
+        # is fixed.
+        record = super().to_accessory_and_service_list()
+        if self.valid_values:
+            record['valid-values'] = self.valid_values
+        return record
 
 
 class FakeService(AbstractService):
@@ -180,6 +188,12 @@ async def setup_accessories_from_file(hass, path):
                     char.description = char_data['description']
                 if 'value' in char_data:
                     char.value = char_data['value']
+                if 'minValue' in char_data:
+                    char.minValue = char_data['minValue']
+                if 'maxValue' in char_data:
+                    char.maxValue = char_data['maxValue']
+                if 'valid-values' in char_data:
+                    char.valid_values = char_data['valid-values']
                 service.characteristics.append(char)
 
             accessory.services.append(service)

@@ -200,7 +200,8 @@ class WebSocketHandler:
             else:
                 self._logger.warning("Disconnected: %s", disconnect_warn)
 
-            self.hass.data[DATA_CONNECTIONS] -= 1
+            if connection is not None:
+                self.hass.data[DATA_CONNECTIONS] -= 1
             self.hass.helpers.dispatcher.async_dispatcher_send(
                 SIGNAL_WEBSOCKET_DISCONNECTED)
 

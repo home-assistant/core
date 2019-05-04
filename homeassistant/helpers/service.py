@@ -327,7 +327,8 @@ async def _handle_service_platform_call(func, data, entities, context,
 
         # Skip entities that don't have the required feature.
         if required_features is not None \
-                and not entity.supported_features & required_features:
+                and not any(entity.supported_features & feature_set
+                            for feature_set in required_features):
             continue
 
         entity.async_set_context(context)
