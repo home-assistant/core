@@ -14,6 +14,11 @@ from .common import (
     WithingsDataManager,
 )
 
+# There's only 3 calls (per profile) made to the withings api every 5
+# minutes (see throttle values). This component wouldn't benefit
+# much from parallel updates.
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
         hass: HomeAssistantType,
