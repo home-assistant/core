@@ -121,8 +121,8 @@ class Sun(Entity):
         self.update_sun_position(now)
         self.update_as_of(now)
         self.async_write_ha_state()
-        state = self.hass.states.get('sun.sun')
-        _LOGGER.debug("sun point_in_time_listener@%s: %s", now, state)
+        _LOGGER.debug("sun point_in_time_listener@%s: %s, %s",
+                      now, self.state, self.state_attributes)
 
         # Schedule next update at next_change+1 second so sun state has changed
         async_track_point_in_utc_time(
@@ -135,5 +135,5 @@ class Sun(Entity):
         """Needed to update solar elevation and azimuth."""
         self.update_sun_position(time)
         self.async_write_ha_state()
-        state = self.hass.states.get('sun.sun')
-        _LOGGER.debug("sun timer_update@%s: %s", time, state)
+        _LOGGER.debug("sun timer_update@%s: %s, %s",
+                      time, self.state, self.state_attributes)
