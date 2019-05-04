@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    STATE_HEAT,SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
+    STATE_HEAT, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import (
     TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_PORT, CONF_NAME, CONF_ID,
     PRECISION_WHOLE, STATE_OFF, STATE_ON, STATE_UNKNOWN)
@@ -33,8 +33,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TSTATS, default=[]): TSTATS_SCHEMA,
 })
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the heatmiser thermostat."""
+    
+    
     from heatmiserV3 import heatmiser, connection
 
     ipaddress = config.get(CONF_IPADDRESS)
@@ -64,9 +67,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 ])
         time.sleep(2.4)
 
+        
 class HeatmiserV3Thermostat(ClimateDevice):
     """Representation of a HeatmiserV3 thermostat."""
 
+    
     def __init__(
                 self, thermostat, name, sensor, uh1,
                 def_min_temp, def_max_temp
@@ -130,7 +135,7 @@ class HeatmiserV3Thermostat(ClimateDevice):
             self._mode = STATE_ON
 
         self.thermostat._hm_send_address(
-            self.thermostat.address,23,self.heating,1)
+            self.thermostat.address, 23, self.heating, 1)
 
     @property
     def min_temp(self):
