@@ -96,34 +96,35 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                                JSON_DATASET,
                                DAILY_TYPE,
                                update_dataset)]
-                )
+                 )
     # Active power sensor
     add_entities([NeurioEnergy(data,
                                ACTIVE_NAME,
                                ACTIVE_TYPE,
                                update_active)]
-                )
+                 )
     add_entities([NeurioEnergy(data,
                                GENERATION_NAME,
                                ACTIVE_TYPE,
                                update_generation)]
-                )
+                 )
     # Daily power sensor
     add_entities([NeurioEnergy(data,
                                DAILY_NAME,
                                DAILY_TYPE,
                                update_daily)]
-                )
+                 )
     add_entities([NeurioEnergy(data,
                                GENERATION_DAILY_NAME,
                                DAILY_TYPE,
                                update_generation_daily)]
-                )
+                 )
     add_entities([NeurioEnergy(data,
                                NET_CONSUMPTION,
                                DAILY_TYPE,
                                update_net_consumption)]
-                )
+                 )
+
 
 class NeurioData:
     """Stores data retrieved from Neurio sensor."""
@@ -187,8 +188,10 @@ class NeurioData:
         return self._net_consumption
 
     def get_dataset(self):
-        """Get the most recent data from the api once
-        so we don't hit the ratelimit each hour."""
+        """
+		Get the most recent data from the api once \
+        so we don't hit the ratelimit each hour.
+		"""
 
         start_time = dt_util.start_of_local_day() \
             .astimezone(dt_util.UTC).isoformat()
