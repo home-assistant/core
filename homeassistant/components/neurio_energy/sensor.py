@@ -188,10 +188,9 @@ class NeurioData:
         return self._net_consumption
 
     def get_dataset(self):
-        """
-		Get the most recent data from the api once \
+        """Get the most recent data from the api once
         so we don't hit the ratelimit each hour.
-		"""
+        """
 
         start_time = dt_util.start_of_local_day() \
             .astimezone(dt_util.UTC).isoformat()
@@ -201,7 +200,7 @@ class NeurioData:
 
         try:
             self._dataset = self.neurio_client.get_samples_stats \
-                (self.sensor_id, start_time, 'days', end_time)
+               (self.sensor_id, start_time, 'days', end_time)
         except (requests.exceptions.RequestException, ValueError, KeyError):
             _LOGGER.warning("Could not update dataset")
             return None
@@ -212,7 +211,7 @@ class NeurioData:
         resp = requests.get('http://'+self.sensor_ip+'/current-sample',
                             headers=header,
                             verify=False
-                           )
+                            )
         try:
             sample = json.loads(resp.text)
             self._active_power = sample['channels'][4]['p_W']
@@ -226,7 +225,7 @@ class NeurioData:
         resp = requests.get('http://'+self.sensor_ip+'/current-sample',
                             headers=header,
                             verify=False
-                           )
+                            )
         try:
             sample = json.loads(resp.text)
             self._active_generation = sample['channels'][3]['p_W']
