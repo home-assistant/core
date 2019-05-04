@@ -36,9 +36,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the heatmiser thermostat."""
-    
     from heatmiserV3 import heatmiser, connection
-    
+
     ipaddress = config.get(CONF_IPADDRESS)
     port = str(config.get(CONF_PORT))
     tstats = config.get(CONF_TSTATS)
@@ -65,11 +64,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 def_min_temp, def_max_temp)
                 ])
         time.sleep(2.4)
-        
-        
+
+
 class HeatmiserV3Thermostat(ClimateDevice):
     """Representation of a HeatmiserV3 thermostat."""
-    
+
     def __init__(
                 self, thermostat, name, sensor, uh1,
                 def_min_temp, def_max_temp
