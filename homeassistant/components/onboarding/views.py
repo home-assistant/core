@@ -41,7 +41,6 @@ class OnboardingView(HomeAssistantView):
 class _BaseOnboardingView(HomeAssistantView):
     """Base class for onboarding."""
 
-    requires_auth = False
     step = None
 
     def __init__(self, data, store):
@@ -64,10 +63,11 @@ class _BaseOnboardingView(HomeAssistantView):
 
 
 class UserOnboardingView(_BaseOnboardingView):
-    """View to handle onboarding."""
+    """View to handle create user onboarding step."""
 
     url = '/api/onboarding/users'
     name = 'api:onboarding:users'
+    requires_auth = False
     step = STEP_USER
 
     @RequestDataValidator(vol.Schema({
@@ -75,9 +75,10 @@ class UserOnboardingView(_BaseOnboardingView):
         vol.Required('username'): str,
         vol.Required('password'): str,
         vol.Required('client_id'): str,
+        vol.Required('language'): str,
     }))
     async def post(self, request, data):
-        """Return the manifest.json."""
+        """Handle user creation, area creation."""
         hass = request.app['hass']
 
         async with self._lock:
@@ -100,14 +101,33 @@ class UserOnboardingView(_BaseOnboardingView):
                     data['name'], user_id=user.id
                 )
 
+            # Create default areas using the users supplied language.
+            translations = \
+                await hass.helpers.translation.async_get_translations(
+                    data['language'])
+
+            area_registry = \
+                await hass.helpers.area_registry.async_get_registry()
+
+            for area in ('living_room', 'bedroom', 'kitchen'):
+                area_registry.async_create(
+                    translations['component.onboarding.area.{}'.format(area)]
+                )
+
             await self._async_mark_done(hass)
 
-            # Return an authorization code to allow fetching tokens.
+            # Return two authorization code for fetching tokens.
+            # One token to connect during onboarding.
+            # Second token to redirect when onboarding done.
             auth_code = hass.components.auth.create_auth_code(
                 data['client_id'], user
             )
+            auth_code_2 = hass.components.auth.create_auth_code(
+                data['client_id'], user
+            )
             return self.json({
-                'auth_code': auth_code
+                'auth_code': auth_code,
+                'auth_code_2': auth_code_2
             })
 
 

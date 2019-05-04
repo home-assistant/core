@@ -63,6 +63,7 @@ async def test_onboarding_user_already_done(hass, hass_storage,
         'name': 'Test Name',
         'username': 'test-user',
         'password': 'test-pass',
+        'language': 'en',
     })
 
     assert resp.status == 403
@@ -84,6 +85,7 @@ async def test_onboarding_user(hass, hass_storage, aiohttp_client):
         'name': 'Test Name',
         'username': 'test-user',
         'password': 'test-pass',
+        'language': 'en',
     })
 
     assert resp.status == 200
@@ -98,7 +100,7 @@ async def test_onboarding_user(hass, hass_storage, aiohttp_client):
     assert user.credentials[0].data['username'] == 'test-user'
     assert len(hass.data['person'].storage_data) == 1
 
-    # Request refresh tokens
+    # Validate refresh token 1
     resp = await client.post('/auth/token', data={
         'client_id': CLIENT_ID,
         'grant_type': 'authorization_code',
@@ -112,6 +114,28 @@ async def test_onboarding_user(hass, hass_storage, aiohttp_client):
         await hass.auth.async_validate_access_token(tokens['access_token'])
         is not None
     )
+
+    # Validate refresh token 2
+    resp = await client.post('/auth/token', data={
+        'client_id': CLIENT_ID,
+        'grant_type': 'authorization_code',
+        'code': data['auth_code_2']
+    })
+
+    assert resp.status == 200
+    tokens = await resp.json()
+
+    assert (
+        await hass.auth.async_validate_access_token(tokens['access_token'])
+        is not None
+    )
+
+    area_registry = await hass.helpers.area_registry.async_get_registry()
+    assert len(area_registry.areas) == 3
+    assert sorted([area.name for area
+                   in area_registry.async_list_areas()]) == [
+        'Bedroom', 'Kitchen', 'Living Room'
+    ]
 
 
 async def test_onboarding_user_invalid_name(hass, hass_storage,
@@ -129,6 +153,7 @@ async def test_onboarding_user_invalid_name(hass, hass_storage,
         'client_id': CLIENT_ID,
         'username': 'test-user',
         'password': 'test-pass',
+        'language': 'en',
     })
 
     assert resp.status == 400
@@ -149,12 +174,14 @@ async def test_onboarding_user_race(hass, hass_storage, aiohttp_client):
         'name': 'Test 1',
         'username': '1-user',
         'password': '1-pass',
+        'language': 'en',
     })
     resp2 = client.post('/api/onboarding/users', json={
         'client_id': CLIENT_ID,
         'name': 'Test 2',
         'username': '2-user',
         'password': '2-pass',
+        'language': 'es',
     })
 
     res1, res2 = await asyncio.gather(resp1, resp2)
