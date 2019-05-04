@@ -6,5 +6,7 @@
     "pyicloud==0.9.1"
   ],
   "dependencies": ["configurator"],
-  "codeowners": []
+  "codeowners": [
+    "@Quentame"
+  ]
 }
