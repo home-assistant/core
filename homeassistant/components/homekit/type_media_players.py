@@ -29,19 +29,19 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 MEDIA_PLAYER_KEYS = {
-    0: "Rewind",
-    1: "FastForward",
-    2: "NextTrack",
-    3: "PreviousTrack",
-    4: "ArrowUp",
-    5: "ArrowDown",
-    6: "ArrowLeft",
-    7: "ArrowRight",
-    8: "Select",
-    9: "Back",
-    10: "Exit",
+    # 0: "Rewind",
+    # 1: "FastForward",
+    # 2: "NextTrack",
+    # 3: "PreviousTrack",
+    # 4: "ArrowUp",
+    # 5: "ArrowDown",
+    # 6: "ArrowLeft",
+    # 7: "ArrowRight",
+    # 8: "Select",
+    # 9: "Back",
+    # 10: "Exit",
     11: SERVICE_MEDIA_PLAY_PAUSE,
-    15: "Information",
+    # 15: "Information",
 }
 
 MODE_FRIENDLY_NAME = {
@@ -238,9 +238,7 @@ class TelevisionMediaPlayer(HomeAccessory):
 
         if self.support_select_source:
             self.sources = self.hass.states.get(self.entity_id) \
-                .attributes.get(ATTR_INPUT_SOURCE_LIST)
-            if not self.sources:
-                return
+                .attributes.get(ATTR_INPUT_SOURCE_LIST, [])
             self.char_input_source = serv_tv.configure_char(
                 CHAR_ACTIVE_IDENTIFIER, setter_callback=self.set_input_source)
             for index, source in enumerate(self.sources):
@@ -305,7 +303,7 @@ class TelevisionMediaPlayer(HomeAccessory):
     def set_remote_key(self, value):
         """Send remote key value if call came from HomeKit."""
         _LOGGER.debug('%s: Set remote key to %s', self.entity_id, value)
-        service = MEDIA_PLAYER_KEYS[value]
+        service = MEDIA_PLAYER_KEYS.get(value)
         if service:
             # Handle Play Pause
             if service == SERVICE_MEDIA_PLAY_PAUSE:

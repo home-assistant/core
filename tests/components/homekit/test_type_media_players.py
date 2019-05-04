@@ -13,8 +13,6 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_IDLE,
     STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING)
 
-from pytest import raises
-
 from tests.common import async_mock_service
 
 
@@ -140,13 +138,10 @@ async def test_media_player_television_set_state(hass, hk_driver, events):
     """Test if television accessory and HA are updated accordingly."""
     entity_id = 'media_player.television'
 
-    hass.states.async_set(entity_id, None, {ATTR_DEVICE_CLASS: DEVICE_CLASS_TV,
-                                            ATTR_SUPPORTED_FEATURES: 3469,
-                                            ATTR_MEDIA_VOLUME_MUTED: False,
-                                            ATTR_INPUT_SOURCE_LIST:
-                                            ['HDMI 1', 'HDMI 2', 'HDMI 3',
-                                             'HDMI 4']
-                                            })
+    hass.states.async_set(entity_id, None, {
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_TV, ATTR_SUPPORTED_FEATURES: 3469,
+        ATTR_MEDIA_VOLUME_MUTED: False, ATTR_INPUT_SOURCE_LIST: [
+            'HDMI 1', 'HDMI 2', 'HDMI 3', 'HDMI 4']})
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, 'MediaPlayer', entity_id, 2,
                                 None)
@@ -182,10 +177,13 @@ async def test_media_player_television_set_state(hass, hk_driver, events):
     call_turn_off = async_mock_service(hass, DOMAIN, 'turn_off')
     call_media_play = async_mock_service(hass, DOMAIN, 'media_play')
     call_media_pause = async_mock_service(hass, DOMAIN, 'media_pause')
+    call_media_play_pause = async_mock_service(hass, DOMAIN,
+                                               'media_play_pause')
     call_toggle_mute = async_mock_service(hass, DOMAIN, 'volume_mute')
     call_select_source = async_mock_service(hass, DOMAIN, 'select_source')
     call_volume_up = async_mock_service(hass, DOMAIN, 'volume_up')
     call_volume_down = async_mock_service(hass, DOMAIN, 'volume_down')
+    call_volume_set = async_mock_service(hass, DOMAIN, 'volume_set')
 
     await hass.async_add_job(acc.char_active.client_update_value, 1)
     await hass.async_block_till_done()
@@ -201,13 +199,25 @@ async def test_media_player_television_set_state(hass, hk_driver, events):
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is None
 
+    await hass.async_add_job(acc.char_remote_key.client_update_value, 11)
+    await hass.async_block_till_done()
+    assert call_media_play_pause
+    assert call_media_play_pause[0].data[ATTR_ENTITY_ID] == entity_id
+    assert len(events) == 3
+    assert events[-1].data[ATTR_VALUE] is None
+
     hass.states.async_set(entity_id, STATE_PLAYING)
     await hass.async_block_till_done()
     await hass.async_add_job(acc.char_remote_key.client_update_value, 11)
     await hass.async_block_till_done()
     assert call_media_pause
     assert call_media_pause[0].data[ATTR_ENTITY_ID] == entity_id
-    assert len(events) == 3
+    assert len(events) == 4
+    assert events[-1].data[ATTR_VALUE] is None
+
+    await hass.async_add_job(acc.char_remote_key.client_update_value, 10)
+    await hass.async_block_till_done()
+    assert len(events) == 4
     assert events[-1].data[ATTR_VALUE] is None
 
     hass.states.async_set(entity_id, STATE_PAUSED)
@@ -216,7 +226,7 @@ async def test_media_player_television_set_state(hass, hk_driver, events):
     await hass.async_block_till_done()
     assert call_media_play
     assert call_media_play[0].data[ATTR_ENTITY_ID] == entity_id
-    assert len(events) == 4
+    assert len(events) == 5
     assert events[-1].data[ATTR_VALUE] is None
 
     await hass.async_add_job(acc.char_mute.client_update_value, True)
@@ -224,7 +234,7 @@ async def test_media_player_television_set_state(hass, hk_driver, events):
     assert call_toggle_mute
     assert call_toggle_mute[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_toggle_mute[0].data[ATTR_MEDIA_VOLUME_MUTED] is True
-    assert len(events) == 5
+    assert len(events) == 6
     assert events[-1].data[ATTR_VALUE] is None
 
     await hass.async_add_job(acc.char_mute.client_update_value, False)
@@ -232,7 +242,7 @@ async def test_media_player_television_set_state(hass, hk_driver, events):
     assert call_toggle_mute
     assert call_toggle_mute[1].data[ATTR_ENTITY_ID] == entity_id
     assert call_toggle_mute[1].data[ATTR_MEDIA_VOLUME_MUTED] is False
-    assert len(events) == 6
+    assert len(events) == 7
     assert events[-1].data[ATTR_VALUE] is None
 
     await hass.async_add_job(acc.char_input_source.client_update_value, 1)
@@ -240,21 +250,29 @@ async def test_media_player_television_set_state(hass, hk_driver, events):
     assert call_select_source
     assert call_select_source[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_select_source[0].data[ATTR_INPUT_SOURCE] == 'HDMI 2'
-    assert len(events) == 7
+    assert len(events) == 8
     assert events[-1].data[ATTR_VALUE] is None
 
     await hass.async_add_job(acc.char_volume_selector.client_update_value, 0)
     await hass.async_block_till_done()
     assert call_volume_up
     assert call_volume_up[0].data[ATTR_ENTITY_ID] == entity_id
-    assert len(events) == 8
+    assert len(events) == 9
     assert events[-1].data[ATTR_VALUE] is None
 
     await hass.async_add_job(acc.char_volume_selector.client_update_value, 1)
     await hass.async_block_till_done()
     assert call_volume_down
     assert call_volume_down[0].data[ATTR_ENTITY_ID] == entity_id
-    assert len(events) == 9
+    assert len(events) == 10
+    assert events[-1].data[ATTR_VALUE] is None
+
+    await hass.async_add_job(acc.char_volume.client_update_value, 20)
+    await hass.async_block_till_done()
+    assert call_volume_set[0]
+    assert call_volume_set[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_volume_set[0].data[ATTR_MEDIA_VOLUME_LEVEL] == 20
+    assert len(events) == 11
     assert events[-1].data[ATTR_VALUE] is None
 
 
@@ -262,10 +280,8 @@ async def test_media_player_television_volume_level(hass, hk_driver, events):
     """Test if television accessory and HA are updated accordingly."""
     entity_id = 'media_player.television'
 
-    hass.states.async_set(entity_id, None, {ATTR_DEVICE_CLASS: DEVICE_CLASS_TV,
-                                            ATTR_SUPPORTED_FEATURES: 3468,
-                                            ATTR_MEDIA_VOLUME_MUTED: False,
-                                            })
+    hass.states.async_set(entity_id, None, {
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_TV, ATTR_SUPPORTED_FEATURES: 16769})
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, 'MediaPlayer', entity_id, 2,
                                 None)
@@ -275,19 +291,21 @@ async def test_media_player_television_volume_level(hass, hk_driver, events):
     assert acc.category == 31  # Television
 
     assert acc.char_active.value == 0
-    assert acc.char_volume.value == 0
-    assert acc.char_mute.value is False
+    assert acc.char_remote_key.value == 0
+    assert acc.support_select_source is False
+    assert hasattr(acc, 'char_mute') is False
+    assert hasattr(acc, 'char_volume') is False
+    assert hasattr(acc, 'char_volume_selector') is False
+    assert hasattr(acc, 'char_input_source') is False
 
-    with raises(AttributeError, match="no attribute 'char_input_source'"):
-        acc.char_input_source
-
-    # Set from HomeKit
-    call_volume_set = async_mock_service(hass, DOMAIN, 'volume_set')
-
-    await hass.async_add_job(acc.char_volume.client_update_value, 20)
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_MEDIA_VOLUME_MUTED: True})
     await hass.async_block_till_done()
-    assert call_volume_set[0]
-    assert call_volume_set[0].data[ATTR_ENTITY_ID] == entity_id
-    assert call_volume_set[0].data[ATTR_MEDIA_VOLUME_LEVEL] == 20
-    assert len(events) == 1
-    assert events[-1].data[ATTR_VALUE] is None
+    assert acc.char_active.value == 1
+
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    assert acc.char_active.value == 0
+
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_INPUT_SOURCE: 'HDMI 3'})
+    await hass.async_block_till_done()
+    assert acc.char_active.value == 1
