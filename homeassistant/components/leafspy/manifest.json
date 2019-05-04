@@ -1,0 +1,8 @@
+{
+  "domain": "leafspy",
+  "name": "Leaf Spy",
+  "documentation": "https://www.home-assistant.io/components/leafspy",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -160,6 +160,7 @@ FLOWS = [
     'ifttt',
     'ios',
     'ipma',
+    'leafspy',
     'lifx',
     'locative',
     'logi_circle',
