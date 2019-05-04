@@ -1,4 +1,3 @@
-
 """Support for Bizkaibus, Biscay (Basque Country, Spain) Bus service."""
 
 import logging
