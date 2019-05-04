@@ -7,18 +7,17 @@ products of a similar vintage.
 """
 import asyncio
 import logging
+
 import voluptuous as vol
+
 from homeassistant.components.media_player import (
-    DOMAIN, MediaPlayerDevice, PLATFORM_SCHEMA)
+    DOMAIN, PLATFORM_SCHEMA, MediaPlayerDevice)
 from homeassistant.components.media_player.const import (
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, SUPPORT_VOLUME_SET)
+    SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_DEVICE, CONF_NAME,
-    STATE_OFF, STATE_ON,
-    EVENT_HOMEASSISTANT_STOP)
+    ATTR_ENTITY_ID, CONF_DEVICE, CONF_NAME, EVENT_HOMEASSISTANT_STOP,
+    STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
