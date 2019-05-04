@@ -538,7 +538,7 @@ hbmqtt==0.9.4
 # homeassistant.components.jewish_calendar
 hdate==0.8.7
 
-# homeassistant.components.heatmiser.climate
+# homeassistant.components.heatmiser
 heatmiserV3==1.1.8
 
 # homeassistant.components.hikvisioncam
