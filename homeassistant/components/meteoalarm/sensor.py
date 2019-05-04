@@ -17,11 +17,7 @@ CONF_COUNTRY = 'country'
 CONF_PROVINCE = 'province'
 CONF_LANGUAGE = 'language'
 
-ATTRIBUTION = ("Information provided by MeteoAlarm, time delays between this"
-               "website and the www.meteoalarm.eu website are possible, for"
-               "the most up to date information about alert levels as"
-               "published by the participating National Meteorological"
-               "Services please use www.meteoalarm.eu")
+ATTRIBUTION = ("Information provided by MeteoAlarm.")
 
 DEFAULT_NAME = 'meteoalarm'
 
