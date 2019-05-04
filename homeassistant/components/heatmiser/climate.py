@@ -1,34 +1,44 @@
-"""
-Support for the PRT Heatmiser themostats using the V3 protocol.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.heatmiser/
-"""
+"""Support for the PRT Heatmiser themostats using the V3 protocol."""
 import logging
 import time
+import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     STATE_HEAT,SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
-
 from homeassistant.const import (
-    TEMP_CELSIUS, ATTR_TEMPERATURE, PRECISION_WHOLE,
-    STATE_OFF, STATE_ON, STATE_UNKNOWN)
-
-REQUIREMENTS = ['heatmiserV3==1.1.8']
+    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_PORT, CONF_NAME, CONF_ID,
+    PRECISION_WHOLE, STATE_OFF, STATE_ON, STATE_UNKNOWN)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_IPADDRESS = 'ipaddress'
-CONF_SERIALPORT = 'port'
 CONF_TSTATS = 'tstats'
+CONF_MODEL = 'model'
+CONF_SENSOR = 'sensor'
+
+TSTAT_SCHEMA = vol.Schema({
+    vol.Required(CONF_ID): cv.string,
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_MODEL): cv.string,
+    vol.Required(CONF_SENSOR): cv.string,
+})
+
+TSTATS_SCHEMA = vol.All(cv.ensure_list, [TSTAT_SCHEMA])
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_IPADDRESS): cv.string,
+    vol.Required(CONF_PORT): cv.port,
+    vol.Optional(CONF_TSTATS, default=[]): TSTATS_SCHEMA,
+})
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the heatmiser thermostat."""
     from heatmiserV3 import heatmiser, connection
 
     ipaddress = config.get(CONF_IPADDRESS)
-    port = str(config.get(CONF_SERIALPORT))
+    port = str(config.get(CONF_PORT))
     tstats = config.get(CONF_TSTATS)
     def_min_temp = 5
     def_max_temp = 35
@@ -38,10 +48,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for tstat in tstats:
         index += 1
-        room = tstat.get('room')
-        therm_id = tstat.get('id')
-        model = tstat.get('model')
-        sensor = tstat.get('sensor')
+        room = tstat.get(CONF_ID)
+        therm_id = tstat.get(CONF_ID)
+        model = tstat.get(CONF_MODEL)
+        sensor = tstat.get(CONF_SENSOR)
         thermostat = heatmiser.HeatmiserThermostat(therm_id, model, uh1)
         uh1_per = None
         if index == 1:
@@ -120,7 +130,7 @@ class HeatmiserV3Thermostat(ClimateDevice):
             self._mode = STATE_ON
 
         self.thermostat._hm_send_address(
-            self.thermostat.address, 23, self.heating, 1)
+            self.thermostat.address,23,self.heating,1)
 
     @property
     def min_temp(self):
