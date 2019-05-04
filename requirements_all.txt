@@ -1683,7 +1683,7 @@ tahoma-api==0.0.14
 tank_utility==1.4.0
 
 # homeassistant.components.tapsaff
-tapsaff==0.2.0
+tapsaff==0.2.1
 
 # homeassistant.components.tellstick
 tellcore-net==0.4
