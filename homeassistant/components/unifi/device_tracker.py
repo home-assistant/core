@@ -1,9 +1,4 @@
-"""
-Support for Unifi WAP controllers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.unifi/
-"""
+"""Support for Unifi WAP controllers."""
 import logging
 from datetime import timedelta
 import voluptuous as vol
@@ -14,8 +9,6 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.const import CONF_VERIFY_SSL, CONF_MONITORED_CONDITIONS
 import homeassistant.util.dt as dt_util
-
-REQUIREMENTS = ['pyunifi==2.16']
 
 _LOGGER = logging.getLogger(__name__)
 CONF_PORT = 'port'

@@ -8,19 +8,19 @@ from homeassistant.components.discovery import SERVICE_YEELIGHT
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_SCAN_INTERVAL, \
     CONF_HOST, ATTR_ENTITY_ID
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.binary_sensor import DOMAIN as \
+    BINARY_SENSOR_DOMAIN
 from homeassistant.helpers import discovery
 from homeassistant.helpers.discovery import load_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['yeelight==0.4.3']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "yeelight"
 DATA_YEELIGHT = DOMAIN
-DATA_UPDATED = '{}_data_updated'.format(DOMAIN)
+DATA_UPDATED = 'yeelight_{}_data_updated'
 
 DEFAULT_NAME = 'Yeelight'
 DEFAULT_TRANSITION = 350
@@ -39,9 +39,6 @@ ATTR_TRANSITIONS = 'transitions'
 ACTION_RECOVER = 'recover'
 ACTION_STAY = 'stay'
 ACTION_OFF = 'off'
-
-MODE_MOONLIGHT = 'moonlight'
-MODE_DAYLIGHT = 'normal'
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -90,60 +87,31 @@ YEELIGHT_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
-NIGHTLIGHT_SUPPORTED_MODELS = [
-    "ceiling3",
-    'ceiling4'
-]
-
 UPDATE_REQUEST_PROPERTIES = [
     "power",
+    "main_power",
     "bright",
     "ct",
     "rgb",
     "hue",
     "sat",
     "color_mode",
-    "flowing",
-    "music_on",
+    "bg_power",
+    "bg_lmode",
+    "bg_flowing",
+    "bg_ct",
+    "bg_bright",
+    "bg_hue",
+    "bg_sat",
+    "bg_rgb",
     "nl_br",
     "active_mode",
 ]
 
 
-def _transitions_config_parser(transitions):
-    """Parse transitions config into initialized objects."""
-    import yeelight
-
-    transition_objects = []
-    for transition_config in transitions:
-        transition, params = list(transition_config.items())[0]
-        transition_objects.append(getattr(yeelight, transition)(*params))
-
-    return transition_objects
-
-
-def _parse_custom_effects(effects_config):
-    import yeelight
-
-    effects = {}
-    for config in effects_config:
-        params = config[CONF_FLOW_PARAMS]
-        action = yeelight.Flow.actions[params[ATTR_ACTION]]
-        transitions = _transitions_config_parser(
-            params[ATTR_TRANSITIONS])
-
-        effects[config[CONF_NAME]] = {
-            ATTR_COUNT: params[ATTR_COUNT],
-            ATTR_ACTION: action,
-            ATTR_TRANSITIONS: transitions
-        }
-
-    return effects
-
-
 def setup(hass, config):
     """Set up the Yeelight bulbs."""
-    conf = config[DOMAIN]
+    conf = config.get(DOMAIN, {})
     yeelight_data = hass.data[DATA_YEELIGHT] = {}
 
     def device_discovered(service, info):
@@ -164,16 +132,17 @@ def setup(hass, config):
     discovery.listen(hass, SERVICE_YEELIGHT, device_discovered)
 
     def update(event):
-        for device in yeelight_data.values():
+        for device in list(yeelight_data.values()):
             device.update()
 
     track_time_interval(
-        hass, update, conf[CONF_SCAN_INTERVAL]
+        hass, update, conf.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     )
 
-    for ipaddr, device_config in conf[CONF_DEVICES].items():
-        _LOGGER.debug("Adding configured %s", device_config[CONF_NAME])
-        _setup_device(hass, config, ipaddr, device_config)
+    if DOMAIN in config:
+        for ipaddr, device_config in conf[CONF_DEVICES].items():
+            _LOGGER.debug("Adding configured %s", device_config[CONF_NAME])
+            _setup_device(hass, config, ipaddr, device_config)
 
     return True
 
@@ -190,11 +159,12 @@ def _setup_device(hass, hass_config, ipaddr, device_config):
 
     platform_config = device_config.copy()
     platform_config[CONF_HOST] = ipaddr
-    platform_config[CONF_CUSTOM_EFFECTS] = _parse_custom_effects(
-        hass_config[DATA_YEELIGHT].get(CONF_CUSTOM_EFFECTS, {})
-    )
+    platform_config[CONF_CUSTOM_EFFECTS] = \
+        hass_config.get(DOMAIN, {}).get(CONF_CUSTOM_EFFECTS, {})
 
     load_platform(hass, LIGHT_DOMAIN, DOMAIN, platform_config, hass_config)
+    load_platform(hass, BINARY_SENSOR_DOMAIN, DOMAIN, platform_config,
+                  hass_config)
 
 
 class YeelightDevice:
@@ -208,26 +178,25 @@ class YeelightDevice:
         self._name = config.get(CONF_NAME)
         self._model = config.get(CONF_MODEL)
         self._bulb_device = None
+        self._available = False
 
     @property
     def bulb(self):
         """Return bulb device."""
-        import yeelight
         if self._bulb_device is None:
+            from yeelight import Bulb, BulbException
             try:
-                self._bulb_device = yeelight.Bulb(self._ipaddr,
-                                                  model=self._model)
+                self._bulb_device = Bulb(self._ipaddr, model=self._model)
                 # force init for type
-                self._update_properties()
+                self.update()
 
-            except yeelight.BulbException as ex:
+                self._available = True
+            except BulbException as ex:
+                self._available = False
                 _LOGGER.error("Failed to connect to bulb %s, %s: %s",
                               self._ipaddr, self._name, ex)
 
         return self._bulb_device
-
-    def _update_properties(self):
-        self._bulb_device.get_properties(UPDATE_REQUEST_PROPERTIES)
 
     @property
     def name(self):
@@ -245,41 +214,61 @@ class YeelightDevice:
         return self._ipaddr
 
     @property
+    def available(self):
+        """Return true is device is available."""
+        return self._available
+
+    @property
     def is_nightlight_enabled(self) -> bool:
         """Return true / false if nightlight is currently enabled."""
-        if self._bulb_device is None:
+        if self.bulb is None:
             return False
 
         return self.bulb.last_properties.get('active_mode') == '1'
 
-    def turn_on(self, duration=DEFAULT_TRANSITION):
+    @property
+    def is_nightlight_supported(self) -> bool:
+        """Return true / false if nightlight is supported."""
+        return self.bulb.get_model_specs().get('night_light', False)
+
+    @property
+    def is_ambilight_supported(self) -> bool:
+        """Return true / false if ambilight is supported."""
+        return self.bulb.get_model_specs().get('background_light', False)
+
+    def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None):
         """Turn on device."""
-        import yeelight
+        from yeelight import BulbException
 
         try:
-            self._bulb_device.turn_on(duration=duration)
-        except yeelight.BulbException as ex:
+            self.bulb.turn_on(duration=duration, light_type=light_type)
+        except BulbException as ex:
             _LOGGER.error("Unable to turn the bulb on: %s", ex)
             return
 
-        self.update()
-
-    def turn_off(self, duration=DEFAULT_TRANSITION):
+    def turn_off(self, duration=DEFAULT_TRANSITION, light_type=None):
         """Turn off device."""
-        import yeelight
+        from yeelight import BulbException
 
         try:
-            self._bulb_device.turn_off(duration=duration)
-        except yeelight.BulbException as ex:
-            _LOGGER.error("Unable to turn the bulb on: %s", ex)
+            self.bulb.turn_off(duration=duration, light_type=light_type)
+        except BulbException as ex:
+            _LOGGER.error("Unable to turn the bulb off: %s", ex)
             return
-
-        self.update()
 
     def update(self):
         """Read new properties from the device."""
+        from yeelight import BulbException
+
         if not self.bulb:
             return
 
-        self._update_properties()
-        dispatcher_send(self._hass, DATA_UPDATED, self._ipaddr)
+        try:
+            self.bulb.get_properties(UPDATE_REQUEST_PROPERTIES)
+            self._available = True
+        except BulbException as ex:
+            if self._available:  # just inform once
+                _LOGGER.error("Unable to update bulb status: %s", ex)
+            self._available = False
+
+        dispatcher_send(self._hass, DATA_UPDATED.format(self._ipaddr))

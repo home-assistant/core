@@ -1,0 +1,12 @@
+{
+  "domain": "conversation",
+  "name": "Conversation",
+  "documentation": "https://www.home-assistant.io/components/conversation",
+  "requirements": [],
+  "dependencies": [
+    "http"
+  ],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

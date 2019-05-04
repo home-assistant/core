@@ -1,9 +1,4 @@
-"""
-Support for Xiaomi Mi Temp BLE environmental sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.mitemp_bt/
-"""
+"""Support for Xiaomi Mi Temp BLE environmental sensor."""
 import logging
 
 import voluptuous as vol
@@ -16,8 +11,6 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_BATTERY
 )
 
-
-REQUIREMENTS = ['mitemp_bt==0.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 

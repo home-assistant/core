@@ -14,11 +14,9 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_PORT, CONF_SSL, CONF_USERNAME, CONF_VERIFY_SSL,
     EVENT_STATE_CHANGED, EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE,
     STATE_UNKNOWN)
-from homeassistant.helpers import state as state_helper
+from homeassistant.helpers import state as state_helper, event as event_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
-
-REQUIREMENTS = ['influxdb==5.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +37,7 @@ DOMAIN = 'influxdb'
 TIMEOUT = 5
 RETRY_DELAY = 20
 QUEUE_BACKLOG_SECONDS = 30
+RETRY_INTERVAL = 60  # seconds
 
 BATCH_TIMEOUT = 1
 BATCH_BUFFER_SIZE = 100
@@ -134,11 +133,16 @@ def setup(hass, config):
         influx.write_points([])
     except (exceptions.InfluxDBClientError,
             requests.exceptions.ConnectionError) as exc:
-        _LOGGER.error("Database host is not accessible due to '%s', please "
-                      "check your entries in the configuration file (host, "
-                      "port, etc.) and verify that the database exists and is "
-                      "READ/WRITE", exc)
-        return False
+        _LOGGER.warning(
+            "Database host is not accessible due to '%s', please "
+            "check your entries in the configuration file (host, "
+            "port, etc.) and verify that the database exists and is "
+            "READ/WRITE. Retrying again in %s seconds.", exc, RETRY_INTERVAL
+        )
+        event_helper.call_later(
+            hass, RETRY_INTERVAL, lambda _: setup(hass, config)
+        )
+        return True
 
     def event_to_json(event):
         """Add an event to the outgoing Influx list."""
@@ -317,12 +321,12 @@ class InfluxThread(threading.Thread):
 
                 _LOGGER.debug("Wrote %d events", len(json))
                 break
-            except (exceptions.InfluxDBClientError, IOError):
+            except (exceptions.InfluxDBClientError, IOError) as err:
                 if retry < self.max_tries:
                     time.sleep(RETRY_DELAY)
                 else:
                     if not self.write_errors:
-                        _LOGGER.exception("Write error")
+                        _LOGGER.error("Write error: %s", err)
                     self.write_errors += len(json)
 
     def run(self):

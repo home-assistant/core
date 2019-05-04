@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Heos \uc5f0\uacb0\uc740 \ub124\ud2b8\uc6cc\ud06c\uc0c1\uc758 \ubaa8\ub4e0 \uae30\uae30\ub97c \uc9c0\uc6d0\ud558\uae30 \ub54c\ubb38\uc5d0 \ud558\ub098\ub9cc \uad6c\uc131\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
+        },
+        "error": {
+            "connection_failure": "\uc9c0\uc815\ub41c \ud638\uc2a4\ud2b8\uc5d0 \uc5f0\uacb0\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "\ud638\uc2a4\ud2b8",
+                    "host": "\ud638\uc2a4\ud2b8"
+                },
+                "description": "Heos \uae30\uae30\uc758 \ud638\uc2a4\ud2b8 \uc774\ub984 \ub610\ub294 IP \uc8fc\uc18c\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694. (\uc720\uc120 \ub124\ud2b8\uc6cc\ud06c\ub85c \uc5f0\uacb0\ud558\ub294 \uac83\uc774 \uc88b\uc2b5\ub2c8\ub2e4)",
+                "title": "Heos \uc5f0\uacb0"
+            }
+        },
+        "title": "Heos"
+    }
+}

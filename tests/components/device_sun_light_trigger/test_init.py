@@ -5,7 +5,6 @@ from asynctest import patch
 import pytest
 
 from homeassistant.setup import async_setup_component
-import homeassistant.loader as loader
 from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME
 from homeassistant.components import (
     device_tracker, light, device_sun_light_trigger)
@@ -18,13 +17,13 @@ from tests.components.light import common as common_light
 @pytest.fixture
 def scanner(hass):
     """Initialize components."""
-    scanner = loader.get_component(
-        hass, 'device_tracker.test').get_scanner(None, None)
+    scanner = getattr(
+        hass.components, 'test.device_tracker').get_scanner(None, None)
 
     scanner.reset()
     scanner.come_home('DEV1')
 
-    loader.get_component(hass, 'light.test').init()
+    getattr(hass.components, 'test.light').init()
 
     with patch(
         'homeassistant.components.device_tracker.load_yaml_config_file',
@@ -66,9 +65,7 @@ async def test_lights_on_when_sun_sets(hass, scanner):
             hass, device_sun_light_trigger.DOMAIN, {
                 device_sun_light_trigger.DOMAIN: {}})
 
-    common_light.async_turn_off(hass)
-
-    await hass.async_block_till_done()
+    await common_light.async_turn_off(hass)
 
     test_time = test_time.replace(hour=3)
     with patch('homeassistant.util.dt.utcnow', return_value=test_time):
@@ -80,9 +77,7 @@ async def test_lights_on_when_sun_sets(hass, scanner):
 
 async def test_lights_turn_off_when_everyone_leaves(hass, scanner):
     """Test lights turn off when everyone leaves the house."""
-    common_light.async_turn_on(hass)
-
-    await hass.async_block_till_done()
+    await common_light.async_turn_on(hass)
 
     assert await async_setup_component(
         hass, device_sun_light_trigger.DOMAIN, {
@@ -100,8 +95,7 @@ async def test_lights_turn_on_when_coming_home_after_sun_set(hass, scanner):
     """Test lights turn on when coming home after sun set."""
     test_time = datetime(2017, 4, 5, 3, 2, 3, tzinfo=dt_util.UTC)
     with patch('homeassistant.util.dt.utcnow', return_value=test_time):
-        common_light.async_turn_off(hass)
-        await hass.async_block_till_done()
+        await common_light.async_turn_off(hass)
 
         assert await async_setup_component(
             hass, device_sun_light_trigger.DOMAIN, {

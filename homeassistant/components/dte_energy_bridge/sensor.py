@@ -1,9 +1,4 @@
-"""
-Support for monitoring energy usage using the DTE energy bridge.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.dte_energy_bridge/
-"""
+"""Support for monitoring energy usage using the DTE energy bridge."""
 import logging
 
 import voluptuous as vol

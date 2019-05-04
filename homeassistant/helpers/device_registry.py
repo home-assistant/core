@@ -1,14 +1,16 @@
 """Provide a way to connect entities belonging to one device."""
 import logging
 import uuid
-from typing import List, Optional
-
+from asyncio import Event
 from collections import OrderedDict
+from typing import List, Optional, cast
 
 import attr
 
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
+
+from .typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 _UNDEF = object()
@@ -132,16 +134,19 @@ class DeviceRegistry:
 
     @callback
     def async_update_device(
-            self, device_id, *, area_id=_UNDEF, name_by_user=_UNDEF):
+            self, device_id, *, area_id=_UNDEF, name_by_user=_UNDEF,
+            new_identifiers=_UNDEF):
         """Update properties of a device."""
         return self._async_update_device(
-            device_id, area_id=area_id, name_by_user=name_by_user)
+            device_id, area_id=area_id, name_by_user=name_by_user,
+            new_identifiers=new_identifiers)
 
     @callback
     def _async_update_device(self, device_id, *, add_config_entry_id=_UNDEF,
                              remove_config_entry_id=_UNDEF,
                              merge_connections=_UNDEF,
                              merge_identifiers=_UNDEF,
+                             new_identifiers=_UNDEF,
                              manufacturer=_UNDEF,
                              model=_UNDEF,
                              name=_UNDEF,
@@ -175,6 +180,9 @@ class DeviceRegistry:
             # If not undefined, check if `value` contains new items.
             if value is not _UNDEF and not value.issubset(old_value):
                 changes[attr_name] = old_value | value
+
+        if new_identifiers is not _UNDEF:
+            changes['identifiers'] = new_identifiers
 
         for attr_name, value in (
                 ('manufacturer', manufacturer),
@@ -273,19 +281,26 @@ class DeviceRegistry:
 
 
 @bind_hass
-async def async_get_registry(hass) -> DeviceRegistry:
+async def async_get_registry(hass: HomeAssistantType) -> DeviceRegistry:
     """Return device registry instance."""
-    task = hass.data.get(DATA_REGISTRY)
+    reg_or_evt = hass.data.get(DATA_REGISTRY)
 
-    if task is None:
-        async def _load_reg():
-            registry = DeviceRegistry(hass)
-            await registry.async_load()
-            return registry
+    if not reg_or_evt:
+        evt = hass.data[DATA_REGISTRY] = Event()
 
-        task = hass.data[DATA_REGISTRY] = hass.async_create_task(_load_reg())
+        reg = DeviceRegistry(hass)
+        await reg.async_load()
 
-    return await task
+        hass.data[DATA_REGISTRY] = reg
+        evt.set()
+        return reg
+
+    if isinstance(reg_or_evt, Event):
+        evt = reg_or_evt
+        await evt.wait()
+        return cast(DeviceRegistry, hass.data.get(DATA_REGISTRY))
+
+    return cast(DeviceRegistry, reg_or_evt)
 
 
 @callback

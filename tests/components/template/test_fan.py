@@ -2,6 +2,8 @@
 import logging
 import pytest
 
+import voluptuous as vol
+
 from homeassistant import setup
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.components.fan import (
@@ -279,16 +281,14 @@ async def test_on_off(hass, calls):
     await _register_components(hass)
 
     # Turn on fan
-    common.async_turn_on(hass, _TEST_FAN)
-    await hass.async_block_till_done()
+    await common.async_turn_on(hass, _TEST_FAN)
 
     # verify
     assert hass.states.get(_STATE_INPUT_BOOLEAN).state == STATE_ON
     _verify(hass, STATE_ON, None, None, None)
 
     # Turn off fan
-    common.async_turn_off(hass, _TEST_FAN)
-    await hass.async_block_till_done()
+    await common.async_turn_off(hass, _TEST_FAN)
 
     # verify
     assert hass.states.get(_STATE_INPUT_BOOLEAN).state == STATE_OFF
@@ -300,8 +300,7 @@ async def test_on_with_speed(hass, calls):
     await _register_components(hass)
 
     # Turn on fan with high speed
-    common.async_turn_on(hass, _TEST_FAN, SPEED_HIGH)
-    await hass.async_block_till_done()
+    await common.async_turn_on(hass, _TEST_FAN, SPEED_HIGH)
 
     # verify
     assert hass.states.get(_STATE_INPUT_BOOLEAN).state == STATE_ON
@@ -314,20 +313,17 @@ async def test_set_speed(hass, calls):
     await _register_components(hass)
 
     # Turn on fan
-    common.async_turn_on(hass, _TEST_FAN)
-    await hass.async_block_till_done()
+    await common.async_turn_on(hass, _TEST_FAN)
 
     # Set fan's speed to high
-    common.async_set_speed(hass, _TEST_FAN, SPEED_HIGH)
-    await hass.async_block_till_done()
+    await common.async_set_speed(hass, _TEST_FAN, SPEED_HIGH)
 
     # verify
     assert hass.states.get(_SPEED_INPUT_SELECT).state == SPEED_HIGH
     _verify(hass, STATE_ON, SPEED_HIGH, None, None)
 
     # Set fan's speed to medium
-    common.async_set_speed(hass, _TEST_FAN, SPEED_MEDIUM)
-    await hass.async_block_till_done()
+    await common.async_set_speed(hass, _TEST_FAN, SPEED_MEDIUM)
 
     # verify
     assert hass.states.get(_SPEED_INPUT_SELECT).state == SPEED_MEDIUM
@@ -339,12 +335,10 @@ async def test_set_invalid_speed_from_initial_stage(hass, calls):
     await _register_components(hass)
 
     # Turn on fan
-    common.async_turn_on(hass, _TEST_FAN)
-    await hass.async_block_till_done()
+    await common.async_turn_on(hass, _TEST_FAN)
 
     # Set fan's speed to 'invalid'
-    common.async_set_speed(hass, _TEST_FAN, 'invalid')
-    await hass.async_block_till_done()
+    await common.async_set_speed(hass, _TEST_FAN, 'invalid')
 
     # verify speed is unchanged
     assert hass.states.get(_SPEED_INPUT_SELECT).state == ''
@@ -356,20 +350,17 @@ async def test_set_invalid_speed(hass, calls):
     await _register_components(hass)
 
     # Turn on fan
-    common.async_turn_on(hass, _TEST_FAN)
-    await hass.async_block_till_done()
+    await common.async_turn_on(hass, _TEST_FAN)
 
     # Set fan's speed to high
-    common.async_set_speed(hass, _TEST_FAN, SPEED_HIGH)
-    await hass.async_block_till_done()
+    await common.async_set_speed(hass, _TEST_FAN, SPEED_HIGH)
 
     # verify
     assert hass.states.get(_SPEED_INPUT_SELECT).state == SPEED_HIGH
     _verify(hass, STATE_ON, SPEED_HIGH, None, None)
 
     # Set fan's speed to 'invalid'
-    common.async_set_speed(hass, _TEST_FAN, 'invalid')
-    await hass.async_block_till_done()
+    await common.async_set_speed(hass, _TEST_FAN, 'invalid')
 
     # verify speed is unchanged
     assert hass.states.get(_SPEED_INPUT_SELECT).state == SPEED_HIGH
@@ -381,20 +372,17 @@ async def test_custom_speed_list(hass, calls):
     await _register_components(hass, ['1', '2', '3'])
 
     # Turn on fan
-    common.async_turn_on(hass, _TEST_FAN)
-    await hass.async_block_till_done()
+    await common.async_turn_on(hass, _TEST_FAN)
 
     # Set fan's speed to '1'
-    common.async_set_speed(hass, _TEST_FAN, '1')
-    await hass.async_block_till_done()
+    await common.async_set_speed(hass, _TEST_FAN, '1')
 
     # verify
     assert hass.states.get(_SPEED_INPUT_SELECT).state == '1'
     _verify(hass, STATE_ON, '1', None, None)
 
     # Set fan's speed to 'medium' which is invalid
-    common.async_set_speed(hass, _TEST_FAN, SPEED_MEDIUM)
-    await hass.async_block_till_done()
+    await common.async_set_speed(hass, _TEST_FAN, SPEED_MEDIUM)
 
     # verify that speed is unchanged
     assert hass.states.get(_SPEED_INPUT_SELECT).state == '1'
@@ -406,20 +394,17 @@ async def test_set_osc(hass, calls):
     await _register_components(hass)
 
     # Turn on fan
-    common.async_turn_on(hass, _TEST_FAN)
-    await hass.async_block_till_done()
+    await common.async_turn_on(hass, _TEST_FAN)
 
     # Set fan's osc to True
-    common.async_oscillate(hass, _TEST_FAN, True)
-    await hass.async_block_till_done()
+    await common.async_oscillate(hass, _TEST_FAN, True)
 
     # verify
     assert hass.states.get(_OSC_INPUT).state == 'True'
     _verify(hass, STATE_ON, None, True, None)
 
     # Set fan's osc to False
-    common.async_oscillate(hass, _TEST_FAN, False)
-    await hass.async_block_till_done()
+    await common.async_oscillate(hass, _TEST_FAN, False)
 
     # verify
     assert hass.states.get(_OSC_INPUT).state == 'False'
@@ -431,12 +416,11 @@ async def test_set_invalid_osc_from_initial_state(hass, calls):
     await _register_components(hass)
 
     # Turn on fan
-    common.async_turn_on(hass, _TEST_FAN)
-    await hass.async_block_till_done()
+    await common.async_turn_on(hass, _TEST_FAN)
 
     # Set fan's osc to 'invalid'
-    common.async_oscillate(hass, _TEST_FAN, 'invalid')
-    await hass.async_block_till_done()
+    with pytest.raises(vol.Invalid):
+        await common.async_oscillate(hass, _TEST_FAN, 'invalid')
 
     # verify
     assert hass.states.get(_OSC_INPUT).state == ''
@@ -448,20 +432,18 @@ async def test_set_invalid_osc(hass, calls):
     await _register_components(hass)
 
     # Turn on fan
-    common.async_turn_on(hass, _TEST_FAN)
-    await hass.async_block_till_done()
+    await common.async_turn_on(hass, _TEST_FAN)
 
     # Set fan's osc to True
-    common.async_oscillate(hass, _TEST_FAN, True)
-    await hass.async_block_till_done()
+    await common.async_oscillate(hass, _TEST_FAN, True)
 
     # verify
     assert hass.states.get(_OSC_INPUT).state == 'True'
     _verify(hass, STATE_ON, None, True, None)
 
-    # Set fan's osc to False
-    common.async_oscillate(hass, _TEST_FAN, None)
-    await hass.async_block_till_done()
+    # Set fan's osc to None
+    with pytest.raises(vol.Invalid):
+        await common.async_oscillate(hass, _TEST_FAN, None)
 
     # verify osc is unchanged
     assert hass.states.get(_OSC_INPUT).state == 'True'
@@ -473,12 +455,10 @@ async def test_set_direction(hass, calls):
     await _register_components(hass)
 
     # Turn on fan
-    common.async_turn_on(hass, _TEST_FAN)
-    await hass.async_block_till_done()
+    await common.async_turn_on(hass, _TEST_FAN)
 
     # Set fan's direction to forward
-    common.async_set_direction(hass, _TEST_FAN, DIRECTION_FORWARD)
-    await hass.async_block_till_done()
+    await common.async_set_direction(hass, _TEST_FAN, DIRECTION_FORWARD)
 
     # verify
     assert hass.states.get(_DIRECTION_INPUT_SELECT).state \
@@ -486,8 +466,7 @@ async def test_set_direction(hass, calls):
     _verify(hass, STATE_ON, None, None, DIRECTION_FORWARD)
 
     # Set fan's direction to reverse
-    common.async_set_direction(hass, _TEST_FAN, DIRECTION_REVERSE)
-    await hass.async_block_till_done()
+    await common.async_set_direction(hass, _TEST_FAN, DIRECTION_REVERSE)
 
     # verify
     assert hass.states.get(_DIRECTION_INPUT_SELECT).state \
@@ -500,12 +479,10 @@ async def test_set_invalid_direction_from_initial_stage(hass, calls):
     await _register_components(hass)
 
     # Turn on fan
-    common.async_turn_on(hass, _TEST_FAN)
-    await hass.async_block_till_done()
+    await common.async_turn_on(hass, _TEST_FAN)
 
     # Set fan's direction to 'invalid'
-    common.async_set_direction(hass, _TEST_FAN, 'invalid')
-    await hass.async_block_till_done()
+    await common.async_set_direction(hass, _TEST_FAN, 'invalid')
 
     # verify direction is unchanged
     assert hass.states.get(_DIRECTION_INPUT_SELECT).state == ''
@@ -517,12 +494,10 @@ async def test_set_invalid_direction(hass, calls):
     await _register_components(hass)
 
     # Turn on fan
-    common.async_turn_on(hass, _TEST_FAN)
-    await hass.async_block_till_done()
+    await common.async_turn_on(hass, _TEST_FAN)
 
     # Set fan's direction to forward
-    common.async_set_direction(hass, _TEST_FAN, DIRECTION_FORWARD)
-    await hass.async_block_till_done()
+    await common.async_set_direction(hass, _TEST_FAN, DIRECTION_FORWARD)
 
     # verify
     assert hass.states.get(_DIRECTION_INPUT_SELECT).state == \
@@ -530,8 +505,7 @@ async def test_set_invalid_direction(hass, calls):
     _verify(hass, STATE_ON, None, None, DIRECTION_FORWARD)
 
     # Set fan's direction to 'invalid'
-    common.async_set_direction(hass, _TEST_FAN, 'invalid')
-    await hass.async_block_till_done()
+    await common.async_set_direction(hass, _TEST_FAN, 'invalid')
 
     # verify direction is unchanged
     assert hass.states.get(_DIRECTION_INPUT_SELECT).state == \

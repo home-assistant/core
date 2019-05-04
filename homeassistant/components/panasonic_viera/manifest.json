@@ -1,0 +1,11 @@
+{
+  "domain": "panasonic_viera",
+  "name": "Panasonic viera",
+  "documentation": "https://www.home-assistant.io/components/panasonic_viera",
+  "requirements": [
+    "panasonic_viera==0.3.2",
+    "wakeonlan==1.1.6"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,9 +1,4 @@
-"""
-Pushbullet platform for sensor component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.pushbullet/
-"""
+"""Pushbullet platform for sensor component."""
 import logging
 
 import voluptuous as vol
@@ -12,8 +7,6 @@ from homeassistant.const import (CONF_API_KEY, CONF_MONITORED_CONDITIONS)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['pushbullet.py==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 

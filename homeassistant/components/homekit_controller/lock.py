@@ -5,9 +5,7 @@ from homeassistant.components.lock import LockDevice
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, STATE_LOCKED, STATE_UNLOCKED)
 
-from . import KNOWN_ACCESSORIES, HomeKitEntity
-
-DEPENDENCIES = ['homekit_controller']
+from . import KNOWN_DEVICES, HomeKitEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Homekit Lock support."""
     if discovery_info is None:
         return
-    accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
+    accessory = hass.data[KNOWN_DEVICES][discovery_info['serial']]
     add_entities([HomeKitLock(accessory, discovery_info)], True)
 
 
@@ -63,11 +61,6 @@ class HomeKitLock(HomeKitEntity, LockDevice):
     def is_locked(self):
         """Return true if device is locked."""
         return self._state == STATE_LOCKED
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._state is not None
 
     async def async_lock(self, **kwargs):
         """Lock the device."""

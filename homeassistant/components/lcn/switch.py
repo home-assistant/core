@@ -1,11 +1,11 @@
 """Support for LCN switches."""
+import pypck
+
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import CONF_ADDRESS
 
 from . import LcnDevice, get_connection
 from .const import CONF_CONNECTIONS, CONF_OUTPUT, DATA_LCN, OUTPUT_PORTS
-
-DEPENDENCIES = ['lcn']
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
@@ -13,8 +13,6 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     """Set up the LCN switch platform."""
     if discovery_info is None:
         return
-
-    import pypck
 
     devices = []
     for config in discovery_info:
@@ -48,9 +46,8 @@ class LcnOutputSwitch(LcnDevice, SwitchDevice):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        self.hass.async_create_task(
-            self.address_connection.activate_status_request_handler(
-                self.output))
+        await self.address_connection.activate_status_request_handler(
+            self.output)
 
     @property
     def is_on(self):
@@ -93,9 +90,8 @@ class LcnRelaySwitch(LcnDevice, SwitchDevice):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        self.hass.async_create_task(
-            self.address_connection.activate_status_request_handler(
-                self.output))
+        await self.address_connection.activate_status_request_handler(
+            self.output)
 
     @property
     def is_on(self):

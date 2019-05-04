@@ -1,9 +1,4 @@
-"""
-Platform for the Garadget cover component.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/garadget/
-"""
+"""Platform for the Garadget cover component."""
 import logging
 
 import requests

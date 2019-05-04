@@ -1,9 +1,4 @@
-"""
-Support for Ankuoo RecSwitch MS6126 devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.recswitch/
-"""
+"""Support for Ankuoo RecSwitch MS6126 devices."""
 
 import logging
 
@@ -15,8 +10,6 @@ import homeassistant.helpers.config_validation as cv
 
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['pyrecswitch==1.0.2']
 
 DEFAULT_NAME = 'RecSwitch {0}'
 

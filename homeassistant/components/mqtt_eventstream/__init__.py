@@ -15,8 +15,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.json import JSONEncoder
 
 DOMAIN = 'mqtt_eventstream'
-DEPENDENCIES = ['mqtt']
-
 CONF_PUBLISH_TOPIC = 'publish_topic'
 CONF_SUBSCRIBE_TOPIC = 'subscribe_topic'
 CONF_PUBLISH_EVENTSTREAM_RECEIVED = 'publish_eventstream_received'

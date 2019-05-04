@@ -20,8 +20,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyhydroquebec==2.2.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 KILOWATT_HOUR = ENERGY_KILO_WATT_HOUR

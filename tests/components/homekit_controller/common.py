@@ -1,5 +1,6 @@
 """Code to support homekit_controller tests."""
 import json
+import os
 from datetime import timedelta
 from unittest import mock
 
@@ -8,11 +9,13 @@ from homekit.model.characteristics import (
     AbstractCharacteristic, CharacteristicPermissions, CharacteristicsTypes)
 from homekit.model import Accessory, get_id
 from homekit.exceptions import AccessoryNotFoundError
-from homeassistant.components.homekit_controller import (
-    DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, SERVICE_HOMEKIT)
+from homeassistant.components.homekit_controller import SERVICE_HOMEKIT
+from homeassistant.components.homekit_controller.const import (
+    CONTROLLER, DOMAIN, HOMEKIT_ACCESSORY_DISPATCH)
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from tests.common import async_fire_time_changed, fire_service_discovered
+from tests.common import (
+    async_fire_time_changed, async_fire_service_discovered, load_fixture)
 
 
 class FakePairing:
@@ -125,7 +128,15 @@ class FakeCharacteristic(AbstractCharacteristic):
     needed even though it doesn't add any methods.
     """
 
-    pass
+    def to_accessory_and_service_list(self):
+        """Serialize the characteristic."""
+        # Upstream doesn't correctly serialize valid_values
+        # This fix will be upstreamed and this function removed when it
+        # is fixed.
+        record = super().to_accessory_and_service_list()
+        if self.valid_values:
+            record['valid-values'] = self.valid_values
+        return record
 
 
 class FakeService(AbstractService):
@@ -148,10 +159,13 @@ class FakeService(AbstractService):
         return char
 
 
-def setup_accessories_from_file(path):
+async def setup_accessories_from_file(hass, path):
     """Load an collection of accessory defs from JSON data."""
-    with open(path, 'r') as accessories_data:
-        accessories_json = json.load(accessories_data)
+    accessories_fixture = await hass.async_add_executor_job(
+        load_fixture,
+        os.path.join('homekit_controller', path),
+    )
+    accessories_json = json.loads(accessories_fixture)
 
     accessories = []
 
@@ -174,6 +188,12 @@ def setup_accessories_from_file(path):
                     char.description = char_data['description']
                 if 'value' in char_data:
                     char.value = char_data['value']
+                if 'minValue' in char_data:
+                    char.minValue = char_data['minValue']
+                if 'maxValue' in char_data:
+                    char.maxValue = char_data['maxValue']
+                if 'valid-values' in char_data:
+                    char.valid_values = char_data['valid-values']
                 service.characteristics.append(char)
 
             accessory.services.append(service)
@@ -215,10 +235,35 @@ async def setup_test_accessories(hass, accessories, capitalize=False):
         }
     }
 
-    fire_service_discovered(hass, SERVICE_HOMEKIT, discovery_info)
+    async_fire_service_discovered(hass, SERVICE_HOMEKIT, discovery_info)
     await hass.async_block_till_done()
 
     return pairing
+
+
+async def device_config_changed(hass, accessories):
+    """Discover new devices added to HomeAssistant at runtime."""
+    # Update the accessories our FakePairing knows about
+    controller = hass.data[CONTROLLER]
+    pairing = controller.pairings['00:00:00:00:00:00']
+    pairing.accessories = accessories
+
+    discovery_info = {
+        'host': '127.0.0.1',
+        'port': 8080,
+        'properties': {
+            'md': 'TestDevice',
+            'id': '00:00:00:00:00:00',
+            'c#': '2',
+            'sf': '0',
+        }
+    }
+
+    async_fire_service_discovered(hass, SERVICE_HOMEKIT, discovery_info)
+
+    # Wait for services to reconfigure
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
 
 async def setup_test_component(hass, services, capitalize=False, suffix=None):

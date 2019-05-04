@@ -65,6 +65,12 @@ API_THERMOSTAT_MODES = OrderedDict([
     (climate.STATE_DRY, 'OFF'),
 ])
 
+PERCENTAGE_FAN_MAP = {
+    fan.SPEED_LOW: 33,
+    fan.SPEED_MEDIUM: 66,
+    fan.SPEED_HIGH: 100,
+}
+
 SMART_HOME_HTTP_ENDPOINT = '/api/alexa/smart_home'
 
 CONF_DESCRIPTION = 'description'
@@ -443,9 +449,9 @@ class _AlexaPowerController(_AlexaInterface):
         if name != 'powerState':
             raise _UnsupportedProperty(name)
 
-        if self.entity.state == STATE_ON:
-            return 'ON'
-        return 'OFF'
+        if self.entity.state == STATE_OFF:
+            return 'OFF'
+        return 'ON'
 
 
 class _AlexaLockController(_AlexaInterface):
@@ -579,6 +585,26 @@ class _AlexaPercentageController(_AlexaInterface):
 
     def name(self):
         return 'Alexa.PercentageController'
+
+    def properties_supported(self):
+        return [{'name': 'percentage'}]
+
+    def properties_retrievable(self):
+        return True
+
+    def get_property(self, name):
+        if name != 'percentage':
+            raise _UnsupportedProperty(name)
+
+        if self.entity.domain == fan.DOMAIN:
+            speed = self.entity.attributes.get(fan.ATTR_SPEED)
+
+            return PERCENTAGE_FAN_MAP.get(speed, 0)
+
+        if self.entity.domain == cover.DOMAIN:
+            return self.entity.attributes.get(cover.ATTR_CURRENT_POSITION, 0)
+
+        return 0
 
 
 class _AlexaSpeaker(_AlexaInterface):
@@ -885,12 +911,16 @@ class _MediaPlayerCapabilities(_AlexaEntity):
         return [_DisplayCategory.TV]
 
     def interfaces(self):
-        yield _AlexaPowerController(self.entity)
         yield _AlexaEndpointHealth(self.hass, self.entity)
 
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & media_player.const.SUPPORT_VOLUME_SET:
             yield _AlexaSpeaker(self.entity)
+
+        power_features = (media_player.SUPPORT_TURN_ON |
+                          media_player.SUPPORT_TURN_OFF)
+        if supported & power_features:
+            yield _AlexaPowerController(self.entity)
 
         step_volume_features = (media_player.const.SUPPORT_VOLUME_MUTE |
                                 media_player.const.SUPPORT_VOLUME_STEP)

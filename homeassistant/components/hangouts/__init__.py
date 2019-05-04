@@ -19,8 +19,6 @@ from .const import (
     MESSAGE_SCHEMA, SERVICE_RECONNECT, SERVICE_SEND_MESSAGE, SERVICE_UPDATE,
     TARGETS_SCHEMA)
 
-REQUIREMENTS = ['hangups==0.4.6']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({

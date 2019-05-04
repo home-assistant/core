@@ -4,12 +4,13 @@ from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import (
-    ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DECONZ_DOMAIN,
-    NEW_SENSOR)
+from .const import ATTR_DARK, ATTR_ON, NEW_SENSOR
 from .deconz_device import DeconzDevice
+from .gateway import get_gateway_from_config_entry
 
-DEPENDENCIES = ['deconz']
+ATTR_ORIENTATION = 'orientation'
+ATTR_TILTANGLE = 'tiltangle'
+ATTR_VIBRATIONSTRENGTH = 'vibrationstrength'
 
 
 async def async_setup_platform(
@@ -20,22 +21,26 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ binary sensor."""
-    gateway = hass.data[DECONZ_DOMAIN]
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
     @callback
     def async_add_sensor(sensors):
         """Add binary sensor from deCONZ."""
         from pydeconz.sensor import DECONZ_BINARY_SENSOR
         entities = []
-        allow_clip_sensor = config_entry.data.get(CONF_ALLOW_CLIP_SENSOR, True)
+
         for sensor in sensors:
+
             if sensor.type in DECONZ_BINARY_SENSOR and \
-               not (not allow_clip_sensor and sensor.type.startswith('CLIP')):
+               not (not gateway.allow_clip_sensor and
+                    sensor.type.startswith('CLIP')):
+
                 entities.append(DeconzBinarySensor(sensor, gateway))
+
         async_add_entities(entities, True)
 
-    gateway.listeners.append(
-        async_dispatcher_connect(hass, NEW_SENSOR, async_add_sensor))
+    gateway.listeners.append(async_dispatcher_connect(
+        hass, gateway.async_event_new_device(NEW_SENSOR), async_add_sensor))
 
     async_add_sensor(gateway.api.sensors.values())
 
@@ -74,7 +79,7 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        from pydeconz.sensor import PRESENCE
+        from pydeconz.sensor import PRESENCE, VIBRATION
         attr = {}
         if self._device.battery:
             attr[ATTR_BATTERY_LEVEL] = self._device.battery
@@ -82,4 +87,8 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorDevice):
             attr[ATTR_ON] = self._device.on
         if self._device.type in PRESENCE and self._device.dark is not None:
             attr[ATTR_DARK] = self._device.dark
+        elif self._device.type in VIBRATION:
+            attr[ATTR_ORIENTATION] = self._device.orientation
+            attr[ATTR_TILTANGLE] = self._device.tiltangle
+            attr[ATTR_VIBRATIONSTRENGTH] = self._device.vibrationstrength
         return attr

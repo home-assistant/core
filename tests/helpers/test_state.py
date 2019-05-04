@@ -1,13 +1,12 @@
 """Test state helpers."""
 import asyncio
 from datetime import timedelta
-import unittest
 from unittest.mock import patch
 
+import pytest
+
 import homeassistant.core as ha
-import homeassistant.components as core_components
 from homeassistant.const import (SERVICE_TURN_ON, SERVICE_TURN_OFF)
-from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.util import dt as dt_util
 from homeassistant.helpers import state
 from homeassistant.const import (
@@ -18,8 +17,7 @@ from homeassistant.const import (
 from homeassistant.components.sun import (STATE_ABOVE_HORIZON,
                                           STATE_BELOW_HORIZON)
 
-from tests.common import get_test_home_assistant, mock_service
-import pytest
+from tests.common import async_mock_service
 
 
 @asyncio.coroutine
@@ -82,141 +80,134 @@ def test_call_to_component(hass):
                 context=context)
 
 
-class TestStateHelpers(unittest.TestCase):
-    """Test the Home Assistant event helpers."""
+async def test_get_changed_since(hass):
+    """Test get_changed_since."""
+    point1 = dt_util.utcnow()
+    point2 = point1 + timedelta(seconds=5)
+    point3 = point2 + timedelta(seconds=5)
 
-    def setUp(self):     # pylint: disable=invalid-name
-        """Run when tests are started."""
-        self.hass = get_test_home_assistant()
-        run_coroutine_threadsafe(core_components.async_setup(
-            self.hass, {}), self.hass.loop).result()
+    with patch('homeassistant.core.dt_util.utcnow', return_value=point1):
+        hass.states.async_set('light.test', 'on')
+        state1 = hass.states.get('light.test')
 
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop when tests are finished."""
-        self.hass.stop()
+    with patch('homeassistant.core.dt_util.utcnow', return_value=point2):
+        hass.states.async_set('light.test2', 'on')
+        state2 = hass.states.get('light.test2')
 
-    def test_get_changed_since(self):
-        """Test get_changed_since."""
-        point1 = dt_util.utcnow()
-        point2 = point1 + timedelta(seconds=5)
-        point3 = point2 + timedelta(seconds=5)
+    with patch('homeassistant.core.dt_util.utcnow', return_value=point3):
+        hass.states.async_set('light.test3', 'on')
+        state3 = hass.states.get('light.test3')
 
-        with patch('homeassistant.core.dt_util.utcnow', return_value=point1):
-            self.hass.states.set('light.test', 'on')
-            state1 = self.hass.states.get('light.test')
+    assert [state2, state3] == \
+        state.get_changed_since([state1, state2, state3], point2)
 
-        with patch('homeassistant.core.dt_util.utcnow', return_value=point2):
-            self.hass.states.set('light.test2', 'on')
-            state2 = self.hass.states.get('light.test2')
 
-        with patch('homeassistant.core.dt_util.utcnow', return_value=point3):
-            self.hass.states.set('light.test3', 'on')
-            state3 = self.hass.states.get('light.test3')
+async def test_reproduce_with_no_entity(hass):
+    """Test reproduce_state with no entity."""
+    calls = async_mock_service(hass, 'light', SERVICE_TURN_ON)
 
-        assert [state2, state3] == \
-            state.get_changed_since([state1, state2, state3], point2)
+    await state.async_reproduce_state(hass, ha.State('light.test', 'on'))
 
-    def test_reproduce_with_no_entity(self):
-        """Test reproduce_state with no entity."""
-        calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
+    await hass.async_block_till_done()
 
-        state.reproduce_state(self.hass, ha.State('light.test', 'on'))
+    assert len(calls) == 0
+    assert hass.states.get('light.test') is None
 
-        self.hass.block_till_done()
 
-        assert len(calls) == 0
-        assert self.hass.states.get('light.test') is None
+async def test_reproduce_turn_on(hass):
+    """Test reproduce_state with SERVICE_TURN_ON."""
+    calls = async_mock_service(hass, 'light', SERVICE_TURN_ON)
 
-    def test_reproduce_turn_on(self):
-        """Test reproduce_state with SERVICE_TURN_ON."""
-        calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
+    hass.states.async_set('light.test', 'off')
 
-        self.hass.states.set('light.test', 'off')
+    await state.async_reproduce_state(hass, ha.State('light.test', 'on'))
 
-        state.reproduce_state(self.hass, ha.State('light.test', 'on'))
+    await hass.async_block_till_done()
 
-        self.hass.block_till_done()
+    assert len(calls) > 0
+    last_call = calls[-1]
+    assert last_call.domain == 'light'
+    assert SERVICE_TURN_ON == last_call.service
+    assert ['light.test'] == last_call.data.get('entity_id')
 
-        assert len(calls) > 0
-        last_call = calls[-1]
-        assert 'light' == last_call.domain
-        assert SERVICE_TURN_ON == last_call.service
-        assert ['light.test'] == last_call.data.get('entity_id')
 
-    def test_reproduce_turn_off(self):
-        """Test reproduce_state with SERVICE_TURN_OFF."""
-        calls = mock_service(self.hass, 'light', SERVICE_TURN_OFF)
+async def test_reproduce_turn_off(hass):
+    """Test reproduce_state with SERVICE_TURN_OFF."""
+    calls = async_mock_service(hass, 'light', SERVICE_TURN_OFF)
 
-        self.hass.states.set('light.test', 'on')
+    hass.states.async_set('light.test', 'on')
 
-        state.reproduce_state(self.hass, ha.State('light.test', 'off'))
+    await state.async_reproduce_state(hass, ha.State('light.test', 'off'))
 
-        self.hass.block_till_done()
+    await hass.async_block_till_done()
 
-        assert len(calls) > 0
-        last_call = calls[-1]
-        assert 'light' == last_call.domain
-        assert SERVICE_TURN_OFF == last_call.service
-        assert ['light.test'] == last_call.data.get('entity_id')
+    assert len(calls) > 0
+    last_call = calls[-1]
+    assert last_call.domain == 'light'
+    assert SERVICE_TURN_OFF == last_call.service
+    assert ['light.test'] == last_call.data.get('entity_id')
 
-    def test_reproduce_complex_data(self):
-        """Test reproduce_state with complex service data."""
-        calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
 
-        self.hass.states.set('light.test', 'off')
+async def test_reproduce_complex_data(hass):
+    """Test reproduce_state with complex service data."""
+    calls = async_mock_service(hass, 'light', SERVICE_TURN_ON)
 
-        complex_data = ['hello', {'11': '22'}]
+    hass.states.async_set('light.test', 'off')
 
-        state.reproduce_state(self.hass, ha.State('light.test', 'on', {
-            'complex': complex_data
-        }))
+    complex_data = ['hello', {'11': '22'}]
 
-        self.hass.block_till_done()
+    await state.async_reproduce_state(hass, ha.State('light.test', 'on', {
+        'complex': complex_data
+    }))
 
-        assert len(calls) > 0
-        last_call = calls[-1]
-        assert 'light' == last_call.domain
-        assert SERVICE_TURN_ON == last_call.service
-        assert complex_data == last_call.data.get('complex')
+    await hass.async_block_till_done()
 
-    def test_reproduce_bad_state(self):
-        """Test reproduce_state with bad state."""
-        calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
+    assert len(calls) > 0
+    last_call = calls[-1]
+    assert last_call.domain == 'light'
+    assert SERVICE_TURN_ON == last_call.service
+    assert complex_data == last_call.data.get('complex')
 
-        self.hass.states.set('light.test', 'off')
 
-        state.reproduce_state(self.hass, ha.State('light.test', 'bad'))
+async def test_reproduce_bad_state(hass):
+    """Test reproduce_state with bad state."""
+    calls = async_mock_service(hass, 'light', SERVICE_TURN_ON)
 
-        self.hass.block_till_done()
+    hass.states.async_set('light.test', 'off')
 
-        assert len(calls) == 0
-        assert 'off' == self.hass.states.get('light.test').state
+    await state.async_reproduce_state(hass, ha.State('light.test', 'bad'))
 
-    def test_as_number_states(self):
-        """Test state_as_number with states."""
-        zero_states = (STATE_OFF, STATE_CLOSED, STATE_UNLOCKED,
-                       STATE_BELOW_HORIZON, STATE_NOT_HOME)
-        one_states = (STATE_ON, STATE_OPEN, STATE_LOCKED, STATE_ABOVE_HORIZON,
-                      STATE_HOME)
-        for _state in zero_states:
-            assert 0 == state.state_as_number(
-                ha.State('domain.test', _state, {}))
-        for _state in one_states:
-            assert 1 == state.state_as_number(
-                ha.State('domain.test', _state, {}))
+    await hass.async_block_till_done()
 
-    def test_as_number_coercion(self):
-        """Test state_as_number with number."""
-        for _state in ('0', '0.0', 0, 0.0):
-            assert 0.0 == state.state_as_number(
-                    ha.State('domain.test', _state, {}))
-        for _state in ('1', '1.0', 1, 1.0):
-            assert 1.0 == state.state_as_number(
-                    ha.State('domain.test', _state, {}))
+    assert len(calls) == 0
+    assert hass.states.get('light.test').state == 'off'
 
-    def test_as_number_invalid_cases(self):
-        """Test state_as_number with invalid cases."""
-        for _state in ('', 'foo', 'foo.bar', None, False, True, object,
-                       object()):
-            with pytest.raises(ValueError):
-                state.state_as_number(ha.State('domain.test', _state, {}))
+
+async def test_as_number_states(hass):
+    """Test state_as_number with states."""
+    zero_states = (STATE_OFF, STATE_CLOSED, STATE_UNLOCKED,
+                   STATE_BELOW_HORIZON, STATE_NOT_HOME)
+    one_states = (STATE_ON, STATE_OPEN, STATE_LOCKED, STATE_ABOVE_HORIZON,
+                  STATE_HOME)
+    for _state in zero_states:
+        assert state.state_as_number(ha.State('domain.test', _state, {})) == 0
+    for _state in one_states:
+        assert state.state_as_number(ha.State('domain.test', _state, {})) == 1
+
+
+async def test_as_number_coercion(hass):
+    """Test state_as_number with number."""
+    for _state in ('0', '0.0', 0, 0.0):
+        assert state.state_as_number(
+            ha.State('domain.test', _state, {})) == 0.0
+    for _state in ('1', '1.0', 1, 1.0):
+        assert state.state_as_number(
+            ha.State('domain.test', _state, {})) == 1.0
+
+
+async def test_as_number_invalid_cases(hass):
+    """Test state_as_number with invalid cases."""
+    for _state in ('', 'foo', 'foo.bar', None, False, True, object,
+                   object()):
+        with pytest.raises(ValueError):
+            state.state_as_number(ha.State('domain.test', _state, {}))

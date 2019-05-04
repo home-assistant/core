@@ -1,0 +1,10 @@
+{
+  "domain": "venstar",
+  "name": "Venstar",
+  "documentation": "https://www.home-assistant.io/components/venstar",
+  "requirements": [
+    "venstarcolortouch==0.6"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -13,8 +13,6 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOSTS
 
-REQUIREMENTS = ['python-nmap==0.6.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_EXCLUDE = 'exclude'
@@ -49,7 +47,7 @@ def _arp(ip_address):
     out, _ = arp.communicate()
     match = re.search(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})', str(out))
     if match:
-        return match.group(0)
+        return ':'.join([i.zfill(2) for i in match.group(0).split(':')])
     _LOGGER.info('No MAC address found for %s', ip_address)
     return None
 

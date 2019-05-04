@@ -1,9 +1,4 @@
-"""
-Support for the Mediaroom Set-up-box.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.mediaroom/
-"""
+"""Support for the Mediaroom Set-up-box."""
 import logging
 
 import voluptuous as vol
@@ -23,8 +18,6 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, dispatcher_send)
-
-REQUIREMENTS = ['pymediaroom==0.6.4']
 
 _LOGGER = logging.getLogger(__name__)
 

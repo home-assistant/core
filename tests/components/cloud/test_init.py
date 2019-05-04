@@ -1,6 +1,10 @@
 """Test the cloud component."""
 from unittest.mock import patch
 
+import pytest
+
+from homeassistant.core import Context
+from homeassistant.exceptions import Unauthorized
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import cloud
 from homeassistant.components.cloud.const import DOMAIN
@@ -34,7 +38,7 @@ async def test_constructor_loads_info_from_config(hass):
     assert cl.relayer == 'test-relayer'
 
 
-async def test_remote_services(hass, mock_cloud_fixture):
+async def test_remote_services(hass, mock_cloud_fixture, hass_read_only_user):
     """Setup cloud component and test services."""
     cloud = hass.data[DOMAIN]
 
@@ -57,6 +61,26 @@ async def test_remote_services(hass, mock_cloud_fixture):
 
     assert mock_disconnect.called
     assert not cloud.client.remote_autostart
+
+    # Test admin access required
+    non_admin_context = Context(user_id=hass_read_only_user.id)
+
+    with patch(
+        "hass_nabucasa.remote.RemoteUI.connect", return_value=mock_coro()
+    ) as mock_connect, pytest.raises(Unauthorized):
+        await hass.services.async_call(DOMAIN, "remote_connect", blocking=True,
+                                       context=non_admin_context)
+
+    assert mock_connect.called is False
+
+    with patch(
+        "hass_nabucasa.remote.RemoteUI.disconnect", return_value=mock_coro()
+    ) as mock_disconnect, pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN, "remote_disconnect", blocking=True,
+            context=non_admin_context)
+
+    assert mock_disconnect.called is False
 
 
 async def test_startup_shutdown_events(hass, mock_cloud_fixture):

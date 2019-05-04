@@ -11,7 +11,8 @@ from .entry import TelldusLiveEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up TelldusLive.
 
     Can only be called when a user accidentally mentions the platform in their
@@ -66,6 +67,11 @@ class TelldusLiveLight(TelldusLiveEntity, Light):
     def turn_on(self, **kwargs):
         """Turn the light on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS, self._last_brightness)
+        if brightness == 0:
+            fallback_brightness = 100
+            _LOGGER.info("Setting brightness to %d%%, because it was 0",
+                         fallback_brightness)
+            brightness = int(fallback_brightness*255/100)
         self.device.dim(level=brightness)
         self.changed()
 

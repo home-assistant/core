@@ -5,9 +5,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.helpers import config_entry_flow
 
-REQUIREMENTS = ['twilio==6.19.1']
-DEPENDENCIES = ['webhook']
-
 DOMAIN = 'twilio'
 
 CONF_ACCOUNT_SID = 'account_sid'
@@ -59,6 +56,11 @@ async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
     return True
+
+
+# pylint: disable=invalid-name
+async_remove_entry = config_entry_flow.webhook_async_remove_entry
+
 
 config_entry_flow.register_webhook_flow(
     DOMAIN,

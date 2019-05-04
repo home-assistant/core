@@ -1,0 +1,10 @@
+{
+  "domain": "smhi",
+  "name": "Smhi",
+  "documentation": "https://www.home-assistant.io/components/smhi",
+  "requirements": [
+    "smhi-pkg==1.0.10"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

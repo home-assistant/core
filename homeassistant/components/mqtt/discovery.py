@@ -1,9 +1,4 @@
-"""
-Support for MQTT discovery.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mqtt/#discovery
-"""
+"""Support for MQTT discovery."""
 import asyncio
 import json
 import logging
@@ -15,7 +10,7 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC
+from .const import ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,21 +19,30 @@ TOPIC_MATCHER = re.compile(
     r'(?:(?P<node_id>[a-zA-Z0-9_-]+)/)?(?P<object_id>[a-zA-Z0-9_-]+)/config')
 
 SUPPORTED_COMPONENTS = [
-    'binary_sensor', 'camera', 'cover', 'fan',
-    'light', 'sensor', 'switch', 'lock', 'climate',
-    'alarm_control_panel', 'vacuum']
-
-CONFIG_ENTRY_COMPONENTS = [
+    'alarm_control_panel',
     'binary_sensor',
     'camera',
+    'climate',
     'cover',
+    'fan',
     'light',
     'lock',
     'sensor',
     'switch',
-    'climate',
+    'vacuum',
+]
+
+CONFIG_ENTRY_COMPONENTS = [
     'alarm_control_panel',
+    'binary_sensor',
+    'camera',
+    'climate',
+    'cover',
     'fan',
+    'light',
+    'lock',
+    'sensor',
+    'switch',
     'vacuum',
 ]
 
@@ -48,6 +52,14 @@ DEPRECATED_PLATFORM_TO_SCHEMA = {
         'mqtt_template': 'template',
     }
 }
+
+# These components require state_topic to be set.
+# If not specified, infer state_topic from discovery topic.
+IMPLICIT_STATE_TOPIC_COMPONENTS = [
+    'alarm_control_panel',
+    'binary_sensor',
+    'sensor',
+]
 
 
 ALREADY_DISCOVERED = 'mqtt_discovered_components'
@@ -198,6 +210,12 @@ def clear_discovery_hash(hass, discovery_hash):
     del hass.data[ALREADY_DISCOVERED][discovery_hash]
 
 
+class MQTTConfig(dict):
+    """Dummy class to allow adding attributes."""
+
+    pass
+
+
 async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                       config_entry=None) -> bool:
     """Initialize of MQTT Discovery."""
@@ -224,7 +242,7 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                                 object_id, payload)
                 return
 
-        payload = dict(payload)
+        payload = MQTTConfig(payload)
 
         for key in list(payload.keys()):
             abbreviated_key = key
@@ -252,6 +270,10 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
         discovery_hash = (component, discovery_id)
 
         if payload:
+            # Attach MQTT topic to the payload, used for debug prints
+            setattr(payload, '__configuration_source__',
+                    "MQTT (topic: '{}')".format(topic))
+
             if CONF_PLATFORM in payload and 'schema' not in payload:
                 platform = payload[CONF_PLATFORM]
                 if (component in DEPRECATED_PLATFORM_TO_SCHEMA and
@@ -263,10 +285,16 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                                     platform, schema)
             payload[CONF_PLATFORM] = 'mqtt'
 
-            if CONF_STATE_TOPIC not in payload:
+            if (CONF_STATE_TOPIC not in payload and
+                    component in IMPLICIT_STATE_TOPIC_COMPONENTS):
+                # state_topic not specified, infer from discovery topic
                 payload[CONF_STATE_TOPIC] = '{}/{}/{}{}/state'.format(
                     discovery_topic, component,
                     '%s/' % node_id if node_id else '', object_id)
+                _LOGGER.warning('implicit %s is deprecated, add "%s":"%s" to '
+                                '%s discovery message',
+                                CONF_STATE_TOPIC, CONF_STATE_TOPIC,
+                                payload[CONF_STATE_TOPIC], topic)
 
             payload[ATTR_DISCOVERY_HASH] = discovery_hash
 

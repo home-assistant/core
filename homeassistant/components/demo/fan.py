@@ -1,9 +1,4 @@
-"""
-Demo fan platform that has a fake fan.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo fan platform that has a fake fan."""
 from homeassistant.const import STATE_OFF
 
 from homeassistant.components.fan import (

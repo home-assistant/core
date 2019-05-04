@@ -18,8 +18,26 @@ from ..models import Credentials, UserMeta
 IPAddress = Union[IPv4Address, IPv6Address]
 IPNetwork = Union[IPv4Network, IPv6Network]
 
+CONF_TRUSTED_NETWORKS = 'trusted_networks'
+CONF_TRUSTED_USERS = 'trusted_users'
+CONF_GROUP = 'group'
+CONF_ALLOW_BYPASS_LOGIN = 'allow_bypass_login'
+
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend({
-    vol.Required('trusted_networks'): vol.All(cv.ensure_list, [ip_network])
+    vol.Required(CONF_TRUSTED_NETWORKS): vol.All(
+        cv.ensure_list, [ip_network]
+    ),
+    vol.Optional(CONF_TRUSTED_USERS, default={}): vol.Schema(
+        # we only validate the format of user_id or group_id
+        {ip_network: vol.All(
+            cv.ensure_list,
+            [vol.Or(
+                cv.uuid4_hex,
+                vol.Schema({vol.Required(CONF_GROUP): cv.uuid4_hex}),
+            )],
+        )}
+    ),
+    vol.Optional(CONF_ALLOW_BYPASS_LOGIN, default=False): cv.boolean,
 }, extra=vol.PREVENT_EXTRA)
 
 
@@ -43,7 +61,12 @@ class TrustedNetworksAuthProvider(AuthProvider):
     @property
     def trusted_networks(self) -> List[IPNetwork]:
         """Return trusted networks."""
-        return cast(List[IPNetwork], self.config['trusted_networks'])
+        return cast(List[IPNetwork], self.config[CONF_TRUSTED_NETWORKS])
+
+    @property
+    def trusted_users(self) -> Dict[IPNetwork, Any]:
+        """Return trusted users per network."""
+        return cast(Dict[IPNetwork, Any], self.config[CONF_TRUSTED_USERS])
 
     @property
     def support_mfa(self) -> bool:
@@ -53,13 +76,34 @@ class TrustedNetworksAuthProvider(AuthProvider):
     async def async_login_flow(self, context: Optional[Dict]) -> LoginFlow:
         """Return a flow to login."""
         assert context is not None
+        ip_addr = cast(IPAddress, context.get('ip_address'))
         users = await self.store.async_get_users()
-        available_users = {user.id: user.name
-                           for user in users
-                           if not user.system_generated and user.is_active}
+        available_users = [user for user in users
+                           if not user.system_generated and user.is_active]
+        for ip_net, user_or_group_list in self.trusted_users.items():
+            if ip_addr in ip_net:
+                user_list = [user_id for user_id in user_or_group_list
+                             if isinstance(user_id, str)]
+                group_list = [group[CONF_GROUP] for group in user_or_group_list
+                              if isinstance(group, dict)]
+                flattened_group_list = [group for sublist in group_list
+                                        for group in sublist]
+                available_users = [
+                    user for user in available_users
+                    if (user.id in user_list or
+                        any([group.id in flattened_group_list
+                             for group in user.groups]))
+                ]
+                break
 
         return TrustedNetworksLoginFlow(
-            self, cast(IPAddress, context.get('ip_address')), available_users)
+            self,
+            ip_addr,
+            {
+                user.id: user.name for user in available_users
+            },
+            self.config[CONF_ALLOW_BYPASS_LOGIN],
+        )
 
     async def async_get_or_create_credentials(
             self, flow_result: Dict[str, str]) -> Credentials:
@@ -109,11 +153,13 @@ class TrustedNetworksLoginFlow(LoginFlow):
 
     def __init__(self, auth_provider: TrustedNetworksAuthProvider,
                  ip_addr: IPAddress,
-                 available_users: Dict[str, Optional[str]]) -> None:
+                 available_users: Dict[str, Optional[str]],
+                 allow_bypass_login: bool) -> None:
         """Initialize the login flow."""
         super().__init__(auth_provider)
         self._available_users = available_users
         self._ip_address = ip_addr
+        self._allow_bypass_login = allow_bypass_login
 
     async def async_step_init(
             self, user_input: Optional[Dict[str, str]] = None) \
@@ -130,6 +176,11 @@ class TrustedNetworksLoginFlow(LoginFlow):
 
         if user_input is not None:
             return await self.async_finish(user_input)
+
+        if self._allow_bypass_login and len(self._available_users) == 1:
+            return await self.async_finish({
+                'user': next(iter(self._available_users.keys()))
+            })
 
         return self.async_show_form(
             step_id='init',

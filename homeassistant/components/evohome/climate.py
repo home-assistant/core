@@ -2,22 +2,23 @@
 from datetime import datetime, timedelta
 import logging
 
-from requests.exceptions import HTTPError
+import requests.exceptions
+
+import evohomeclient2
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     STATE_AUTO, STATE_ECO, STATE_MANUAL, SUPPORT_AWAY_MODE, SUPPORT_ON_OFF,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
-    CONF_SCAN_INTERVAL, HTTP_TOO_MANY_REQUESTS, PRECISION_HALVES, STATE_OFF,
-    TEMP_CELSIUS)
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
+    CONF_SCAN_INTERVAL, STATE_OFF,)
+from homeassistant.helpers.dispatcher import dispatcher_send
 
 from . import (
-    CONF_LOCATION_IDX, DATA_EVOHOME, DISPATCHER_EVOHOME, EVO_CHILD, EVO_PARENT,
-    GWS, SCAN_INTERVAL_DEFAULT, TCS)
+    EvoDevice,
+    CONF_LOCATION_IDX, EVO_CHILD, EVO_PARENT)
+from .const import (
+    DATA_EVOHOME, DISPATCHER_EVOHOME, GWS, TCS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +82,7 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
 
     # evohomeclient has exposed no means of accessing non-default location
     # (i.e. loc_idx > 0) other than using a protected member, such as below
-    tcs_obj_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]  # noqa E501; pylint: disable=protected-access
+    tcs_obj_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]  # noqa: E501; pylint: disable=protected-access
 
     _LOGGER.debug(
         "Found Controller, id=%s [%s], name=%s (location_idx=%s)",
@@ -103,95 +104,7 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     async_add_entities(entities, update_before_add=False)
 
 
-class EvoClimateDevice(ClimateDevice):
-    """Base for a Honeywell evohome Climate device."""
-
-    # pylint: disable=no-member
-
-    def __init__(self, evo_data, client, obj_ref):
-        """Initialize the evohome entity."""
-        self._client = client
-        self._obj = obj_ref
-
-        self._params = evo_data['params']
-        self._timers = evo_data['timers']
-        self._status = {}
-
-        self._available = False  # should become True after first update()
-
-    async def async_added_to_hass(self):
-        """Run when entity about to be added."""
-        async_dispatcher_connect(self.hass, DISPATCHER_EVOHOME, self._connect)
-
-    @callback
-    def _connect(self, packet):
-        if packet['to'] & self._type and packet['signal'] == 'refresh':
-            self.async_schedule_update_ha_state(force_refresh=True)
-
-    def _handle_requests_exceptions(self, err):
-        if err.response.status_code == HTTP_TOO_MANY_REQUESTS:
-            # execute a backoff: pause, and also reduce rate
-            old_interval = self._params[CONF_SCAN_INTERVAL]
-            new_interval = min(old_interval, SCAN_INTERVAL_DEFAULT) * 2
-            self._params[CONF_SCAN_INTERVAL] = new_interval
-
-            _LOGGER.warning(
-                "API rate limit has been exceeded. Suspending polling for %s "
-                "seconds, and increasing '%s' from %s to %s seconds",
-                new_interval * 3, CONF_SCAN_INTERVAL, old_interval,
-                new_interval)
-
-            self._timers['statusUpdated'] = datetime.now() + new_interval * 3
-
-        else:
-            raise err  # we dont handle any other HTTPErrors
-
-    @property
-    def name(self) -> str:
-        """Return the name to use in the frontend UI."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend UI."""
-        return self._icon
-
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes of the evohome Climate device.
-
-        This is state data that is not available otherwise, due to the
-        restrictions placed upon ClimateDevice properties, etc. by HA.
-        """
-        return {'status': self._status}
-
-    @property
-    def available(self) -> bool:
-        """Return True if the device is currently available."""
-        return self._available
-
-    @property
-    def supported_features(self):
-        """Get the list of supported features of the device."""
-        return self._supported_features
-
-    @property
-    def operation_list(self):
-        """Return the list of available operations."""
-        return self._operation_list
-
-    @property
-    def temperature_unit(self):
-        """Return the temperature unit to use in the frontend UI."""
-        return TEMP_CELSIUS
-
-    @property
-    def precision(self):
-        """Return the temperature precision to use in the frontend UI."""
-        return PRECISION_HALVES
-
-
-class EvoZone(EvoClimateDevice):
+class EvoZone(EvoDevice, ClimateDevice):
     """Base for a Honeywell evohome Zone device."""
 
     def __init__(self, evo_data, client, obj_ref):
@@ -214,32 +127,6 @@ class EvoZone(EvoClimateDevice):
             SUPPORT_OPERATION_MODE | \
             SUPPORT_TARGET_TEMPERATURE | \
             SUPPORT_ON_OFF
-
-    @property
-    def min_temp(self):
-        """Return the minimum target temperature of a evohome Zone.
-
-        The default is 5 (in Celsius), but it is configurable within 5-35.
-        """
-        return self._config['setpointCapabilities']['minHeatSetpoint']
-
-    @property
-    def max_temp(self):
-        """Return the minimum target temperature of a evohome Zone.
-
-        The default is 35 (in Celsius), but it is configurable within 5-35.
-        """
-        return self._config['setpointCapabilities']['maxHeatSetpoint']
-
-    @property
-    def target_temperature(self):
-        """Return the target temperature of the evohome Zone."""
-        return self._status['setpointStatus']['targetHeatTemperature']
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature of the evohome Zone."""
-        return self._status['temperatureStatus']['temperature']
 
     @property
     def current_operation(self):
@@ -265,6 +152,17 @@ class EvoZone(EvoClimateDevice):
         return current_operation
 
     @property
+    def current_temperature(self):
+        """Return the current temperature of the evohome Zone."""
+        return (self._status['temperatureStatus']['temperature']
+                if self._status['temperatureStatus']['isAvailable'] else None)
+
+    @property
+    def target_temperature(self):
+        """Return the target temperature of the evohome Zone."""
+        return self._status['setpointStatus']['targetHeatTemperature']
+
+    @property
     def is_on(self) -> bool:
         """Return True if the evohome Zone is off.
 
@@ -276,6 +174,22 @@ class EvoZone(EvoClimateDevice):
             self._status['setpointStatus']['setpointMode'] == EVO_PERMOVER
         return not is_off
 
+    @property
+    def min_temp(self):
+        """Return the minimum target temperature of a evohome Zone.
+
+        The default is 5 (in Celsius), but it is configurable within 5-35.
+        """
+        return self._config['setpointCapabilities']['minHeatSetpoint']
+
+    @property
+    def max_temp(self):
+        """Return the maximum target temperature of a evohome Zone.
+
+        The default is 35 (in Celsius), but it is configurable within 5-35.
+        """
+        return self._config['setpointCapabilities']['maxHeatSetpoint']
+
     def _set_temperature(self, temperature, until=None):
         """Set the new target temperature of a Zone.
 
@@ -285,8 +199,9 @@ class EvoZone(EvoClimateDevice):
         """
         try:
             self._obj.set_temperature(temperature, until)
-        except HTTPError as err:
-            self._handle_exception("HTTPError", str(err))  # noqa: E501; pylint: disable=no-member
+        except (requests.exceptions.RequestException,
+                evohomeclient2.AuthenticationError) as err:
+            self._handle_exception(err)
 
     def set_temperature(self, **kwargs):
         """Set new target temperature, indefinitely."""
@@ -306,6 +221,29 @@ class EvoZone(EvoClimateDevice):
         indefinitely (i.e. 'PermanentOverride' mode).
         """
         self._set_temperature(self.min_temp, until=None)
+
+    def _set_operation_mode(self, operation_mode):
+        if operation_mode == EVO_FOLLOW:
+            try:
+                self._obj.cancel_temp_override()
+            except (requests.exceptions.RequestException,
+                    evohomeclient2.AuthenticationError) as err:
+                self._handle_exception(err)
+
+        elif operation_mode == EVO_TEMPOVER:
+            _LOGGER.error(
+                "_set_operation_mode(op_mode=%s): mode not yet implemented",
+                operation_mode
+            )
+
+        elif operation_mode == EVO_PERMOVER:
+            self._set_temperature(self.target_temperature, until=None)
+
+        else:
+            _LOGGER.error(
+                "_set_operation_mode(op_mode=%s): mode not valid",
+                operation_mode
+            )
 
     def set_operation_mode(self, operation_mode):
         """Set an operating mode for a Zone.
@@ -331,36 +269,6 @@ class EvoZone(EvoClimateDevice):
         """
         self._set_operation_mode(HA_STATE_TO_ZONE.get(operation_mode))
 
-    def _set_operation_mode(self, operation_mode):
-        if operation_mode == EVO_FOLLOW:
-            try:
-                self._obj.cancel_temp_override(self._obj)
-            except HTTPError as err:
-                self._handle_exception("HTTPError", str(err))  # noqa: E501; pylint: disable=no-member
-
-        elif operation_mode == EVO_TEMPOVER:
-            _LOGGER.error(
-                "_set_operation_mode(op_mode=%s): mode not yet implemented",
-                operation_mode
-            )
-
-        elif operation_mode == EVO_PERMOVER:
-            self._set_temperature(self.target_temperature, until=None)
-
-        else:
-            _LOGGER.error(
-                "_set_operation_mode(op_mode=%s): mode not valid",
-                operation_mode
-            )
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False as evohome child devices should never be polled.
-
-        The evohome Controller will inform its children when to update().
-        """
-        return False
-
     def update(self):
         """Process the evohome Zone's state data."""
         evo_data = self.hass.data[DATA_EVOHOME]
@@ -373,7 +281,7 @@ class EvoZone(EvoClimateDevice):
         self._available = True
 
 
-class EvoController(EvoClimateDevice):
+class EvoController(EvoDevice, ClimateDevice):
     """Base for a Honeywell evohome hub/Controller device.
 
     The Controller (aka TCS, temperature control system) is the parent of all
@@ -420,22 +328,18 @@ class EvoController(EvoClimateDevice):
         return TCS_STATE_TO_HA.get(self._status['systemModeStatus']['mode'])
 
     @property
-    def min_temp(self):
-        """Return the minimum target temperature of a evohome Controller.
+    def current_temperature(self):
+        """Return the average current temperature of the Heating/DHW zones.
 
-        Although evohome Controllers do not have a minimum target temp, one is
-        expected by the HA schema; the default for an evohome HR92 is used.
+        Although evohome Controllers do not have a target temp, one is
+        expected by the HA schema.
         """
-        return 5
+        tmp_list = [x for x in self._status['zones']
+                    if x['temperatureStatus']['isAvailable']]
+        temps = [zone['temperatureStatus']['temperature'] for zone in tmp_list]
 
-    @property
-    def max_temp(self):
-        """Return the minimum target temperature of a evohome Controller.
-
-        Although evohome Controllers do not have a maximum target temp, one is
-        expected by the HA schema; the default for an evohome HR92 is used.
-        """
-        return 35
+        avg_temp = round(sum(temps) / len(temps), 1) if temps else None
+        return avg_temp
 
     @property
     def target_temperature(self):
@@ -451,18 +355,9 @@ class EvoController(EvoClimateDevice):
         return avg_temp
 
     @property
-    def current_temperature(self):
-        """Return the average current temperature of the Heating/DHW zones.
-
-        Although evohome Controllers do not have a target temp, one is
-        expected by the HA schema.
-        """
-        tmp_list = [x for x in self._status['zones']
-                    if x['temperatureStatus']['isAvailable'] is True]
-        temps = [zone['temperatureStatus']['temperature'] for zone in tmp_list]
-
-        avg_temp = round(sum(temps) / len(temps), 1) if temps else None
-        return avg_temp
+    def is_away_mode_on(self) -> bool:
+        """Return True if away mode is on."""
+        return self._status['systemModeStatus']['mode'] == EVO_AWAY
 
     @property
     def is_on(self) -> bool:
@@ -474,9 +369,42 @@ class EvoController(EvoClimateDevice):
         return True
 
     @property
-    def is_away_mode_on(self) -> bool:
-        """Return True if away mode is on."""
-        return self._status['systemModeStatus']['mode'] == EVO_AWAY
+    def min_temp(self):
+        """Return the minimum target temperature of a evohome Controller.
+
+        Although evohome Controllers do not have a minimum target temp, one is
+        expected by the HA schema; the default for an evohome HR92 is used.
+        """
+        return 5
+
+    @property
+    def max_temp(self):
+        """Return the maximum target temperature of a evohome Controller.
+
+        Although evohome Controllers do not have a maximum target temp, one is
+        expected by the HA schema; the default for an evohome HR92 is used.
+        """
+        return 35
+
+    @property
+    def should_poll(self) -> bool:
+        """Return True as the evohome Controller should always be polled."""
+        return True
+
+    def _set_operation_mode(self, operation_mode):
+        try:
+            self._obj._set_status(operation_mode)  # noqa: E501; pylint: disable=protected-access
+        except (requests.exceptions.RequestException,
+                evohomeclient2.AuthenticationError) as err:
+            self._handle_exception(err)
+
+    def set_operation_mode(self, operation_mode):
+        """Set new target operation mode for the TCS.
+
+        Currently limited to 'Auto', 'AutoWithEco' & 'HeatingOff'. If 'Away'
+        mode is needed, it can be enabled via turn_away_mode_on method.
+        """
+        self._set_operation_mode(HA_STATE_TO_TCS.get(operation_mode))
 
     def turn_away_mode_on(self):
         """Turn away mode on.
@@ -493,25 +421,6 @@ class EvoController(EvoClimateDevice):
         Controller's mode back to Auto.
         """
         self._set_operation_mode(EVO_AUTO)
-
-    def _set_operation_mode(self, operation_mode):
-        try:
-            self._obj._set_status(operation_mode)  # noqa: E501; pylint: disable=protected-access
-        except HTTPError as err:
-            self._handle_requests_exceptions(err)
-
-    def set_operation_mode(self, operation_mode):
-        """Set new target operation mode for the TCS.
-
-        Currently limited to 'Auto', 'AutoWithEco' & 'HeatingOff'. If 'Away'
-        mode is needed, it can be enabled via turn_away_mode_on method.
-        """
-        self._set_operation_mode(HA_STATE_TO_TCS.get(operation_mode))
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True as the evohome Controller should always be polled."""
-        return True
 
     def update(self):
         """Get the latest state data of the entire evohome Location.
@@ -534,8 +443,9 @@ class EvoController(EvoClimateDevice):
         try:
             self._status.update(
                 self._client.locations[loc_idx].status()[GWS][0][TCS][0])
-        except HTTPError as err:  # check if we've exceeded the api rate limit
-            self._handle_requests_exceptions(err)
+        except (requests.exceptions.RequestException,
+                evohomeclient2.AuthenticationError) as err:
+            self._handle_exception(err)
         else:
             self._timers['statusUpdated'] = datetime.now()
             self._available = True

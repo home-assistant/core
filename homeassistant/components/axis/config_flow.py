@@ -40,8 +40,8 @@ DEVICE_SCHEMA = vol.Schema({
 @callback
 def configured_devices(hass):
     """Return a set of the configured devices."""
-    return set(entry.data[CONF_DEVICE][CONF_HOST] for entry
-               in hass.config_entries.async_entries(DOMAIN))
+    return {entry.data[CONF_MAC]: entry for entry
+            in hass.config_entries.async_entries(DOMAIN)}
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -66,14 +66,10 @@ class AxisFlowHandler(config_entries.ConfigFlow):
 
         Manage device specific parameters.
         """
-        from axis.vapix import VAPIX_MODEL_ID, VAPIX_SERIAL_NUMBER
         errors = {}
 
         if user_input is not None:
             try:
-                if user_input[CONF_HOST] in configured_devices(self.hass):
-                    raise AlreadyConfigured
-
                 self.device_config = {
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PORT: user_input[CONF_PORT],
@@ -82,9 +78,12 @@ class AxisFlowHandler(config_entries.ConfigFlow):
                 }
                 device = await get_device(self.hass, self.device_config)
 
-                self.serial_number = device.vapix.get_param(
-                    VAPIX_SERIAL_NUMBER)
-                self.model = device.vapix.get_param(VAPIX_MODEL_ID)
+                self.serial_number = device.vapix.params.system_serialnumber
+
+                if self.serial_number in configured_devices(self.hass):
+                    raise AlreadyConfigured
+
+                self.model = device.vapix.params.prodnbr
 
                 return await self._create_entry()
 
@@ -142,21 +141,29 @@ class AxisFlowHandler(config_entries.ConfigFlow):
             data=data
         )
 
+    async def _update_entry(self, entry, host):
+        """Update existing entry if it is the same device."""
+        entry.data[CONF_DEVICE][CONF_HOST] = host
+        self.hass.config_entries.async_update_entry(entry)
+
     async def async_step_discovery(self, discovery_info):
         """Prepare configuration for a discovered Axis device.
 
         This flow is triggered by the discovery component.
         """
-        if discovery_info[CONF_HOST] in configured_devices(self.hass):
-            return self.async_abort(reason='already_configured')
-
         if discovery_info[CONF_HOST].startswith('169.254'):
             return self.async_abort(reason='link_local_address')
 
+        serialnumber = discovery_info['properties']['macaddress']
+        device_entries = configured_devices(self.hass)
+
+        if serialnumber in device_entries:
+            entry = device_entries[serialnumber]
+            await self._update_entry(entry, discovery_info[CONF_HOST])
+            return self.async_abort(reason='already_configured')
+
         config_file = await self.hass.async_add_executor_job(
             load_json, self.hass.config.path(CONFIG_FILE))
-
-        serialnumber = discovery_info['properties']['macaddress']
 
         if serialnumber not in config_file:
             self.discovery_schema = {

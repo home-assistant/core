@@ -38,6 +38,7 @@ MEDIA_TYPE_CHANNEL = 'channel'
 MEDIA_TYPE_PLAYLIST = 'playlist'
 MEDIA_TYPE_IMAGE = 'image'
 MEDIA_TYPE_URL = 'url'
+MEDIA_TYPE_GAME = 'game'
 
 SERVICE_CLEAR_PLAYLIST = 'clear_playlist'
 SERVICE_PLAY_MEDIA = 'play_media'

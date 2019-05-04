@@ -1,98 +1,64 @@
 """AWS platform for notify component."""
 import asyncio
-import logging
-import json
 import base64
+import json
+import logging
 
-import voluptuous as vol
-
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_PLATFORM, CONF_NAME, ATTR_CREDENTIALS
 from homeassistant.components.notify import (
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
-    PLATFORM_SCHEMA,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.const import CONF_PLATFORM, CONF_NAME
 from homeassistant.helpers.json import JSONEncoder
-
 from .const import (
-    CONF_ACCESS_KEY_ID,
+    CONF_CONTEXT,
     CONF_CREDENTIAL_NAME,
     CONF_PROFILE_NAME,
     CONF_REGION,
-    CONF_SECRET_ACCESS_KEY,
+    CONF_SERVICE,
     DATA_SESSIONS,
 )
 
-DEPENDENCIES = ["aws"]
-
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CONTEXT = "context"
-CONF_SERVICE = "service"
 
-SUPPORTED_SERVICES = ["lambda", "sns", "sqs"]
-
-
-def _in_avilable_region(config):
-    """Check if region is available."""
+async def get_available_regions(hass, service):
+    """Get available regions for a service."""
     import aiobotocore
 
     session = aiobotocore.get_session()
-    available_regions = session.get_available_regions(config[CONF_SERVICE])
-    if config[CONF_REGION] not in available_regions:
-        raise vol.Invalid(
-            "Region {} is not available for {} service, mustin {}".format(
-                config[CONF_REGION], config[CONF_SERVICE], available_regions
-            )
-        )
-    return config
-
-
-PLATFORM_SCHEMA = vol.Schema(
-    vol.All(
-        PLATFORM_SCHEMA.extend(
-            {
-                # override notify.PLATFORM_SCHEMA.CONF_PLATFORM to Optional
-                # we don't need this field when we use discovery
-                vol.Optional(CONF_PLATFORM): cv.string,
-                vol.Required(CONF_SERVICE): vol.All(
-                    cv.string, vol.Lower, vol.In(SUPPORTED_SERVICES)
-                ),
-                vol.Required(CONF_REGION): vol.All(cv.string, vol.Lower),
-                vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
-                vol.Inclusive(
-                    CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS
-                ): cv.string,
-                vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
-                vol.Exclusive(
-                    CONF_CREDENTIAL_NAME, ATTR_CREDENTIALS
-                ): cv.string,
-                vol.Optional(CONF_CONTEXT): vol.Coerce(dict),
-            },
-            extra=vol.PREVENT_EXTRA,
-        ),
-        _in_avilable_region,
+    # get_available_regions is not a coroutine since it does not perform
+    # network I/O. But it still perform file I/O heavily, so put it into
+    # an executor thread to unblock event loop
+    return await hass.async_add_executor_job(
+        session.get_available_regions, service
     )
-)
 
 
 async def async_get_service(hass, config, discovery_info=None):
     """Get the AWS notification service."""
+    if discovery_info is None:
+        _LOGGER.error('Please config aws notify platform in aws component')
+        return None
+
     import aiobotocore
 
     session = None
 
-    if discovery_info is not None:
-        conf = discovery_info
-    else:
-        conf = config
+    conf = discovery_info
 
     service = conf[CONF_SERVICE]
     region_name = conf[CONF_REGION]
+
+    available_regions = await get_available_regions(hass, service)
+    if region_name not in available_regions:
+        _LOGGER.error(
+            "Region %s is not available for %s service, must in %s",
+            region_name, service, available_regions
+        )
+        return None
 
     aws_config = conf.copy()
 
@@ -106,13 +72,14 @@ async def async_get_service(hass, config, discovery_info=None):
         del aws_config[CONF_CONTEXT]
 
     if not aws_config:
-        # no platform config, use aws component config instead
+        # no platform config, use the first aws component credential instead
         if hass.data[DATA_SESSIONS]:
-            session = list(hass.data[DATA_SESSIONS].values())[0]
+            session = next(iter(hass.data[DATA_SESSIONS].values()))
         else:
-            raise ValueError(
-                "No available aws session for {}".format(config[CONF_NAME])
+            _LOGGER.error(
+                "Missing aws credential for %s", config[CONF_NAME]
             )
+            return None
 
     if session is None:
         credential_name = aws_config.get(CONF_CREDENTIAL_NAME)
@@ -148,7 +115,8 @@ async def async_get_service(hass, config, discovery_info=None):
     if service == "sqs":
         return AWSSQS(session, aws_config)
 
-    raise ValueError("Unsupported service {}".format(service))
+    # should not reach here since service was checked in schema
+    return None
 
 
 class AWSNotify(BaseNotificationService):
@@ -158,17 +126,6 @@ class AWSNotify(BaseNotificationService):
         """Initialize the service."""
         self.session = session
         self.aws_config = aws_config
-
-    def send_message(self, message, **kwargs):
-        """Send notification."""
-        raise NotImplementedError("Please call async_send_message()")
-
-    async def async_send_message(self, message="", **kwargs):
-        """Send notification."""
-        targets = kwargs.get(ATTR_TARGET)
-
-        if not targets:
-            raise HomeAssistantError("At least one target is required")
 
 
 class AWSLambda(AWSNotify):
@@ -183,9 +140,11 @@ class AWSLambda(AWSNotify):
 
     async def async_send_message(self, message="", **kwargs):
         """Send notification to specified LAMBDA ARN."""
-        await super().async_send_message(message, **kwargs)
+        if not kwargs.get(ATTR_TARGET):
+            _LOGGER.error("At least one target is required")
+            return
 
-        cleaned_kwargs = dict((k, v) for k, v in kwargs.items() if v)
+        cleaned_kwargs = {k: v for k, v in kwargs.items() if v is not None}
         payload = {"message": message}
         payload.update(cleaned_kwargs)
         json_payload = json.dumps(payload)
@@ -214,12 +173,14 @@ class AWSSNS(AWSNotify):
 
     async def async_send_message(self, message="", **kwargs):
         """Send notification to specified SNS ARN."""
-        await super().async_send_message(message, **kwargs)
+        if not kwargs.get(ATTR_TARGET):
+            _LOGGER.error("At least one target is required")
+            return
 
         message_attributes = {
             k: {"StringValue": json.dumps(v), "DataType": "String"}
             for k, v in kwargs.items()
-            if v
+            if v is not None
         }
         subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
@@ -248,9 +209,11 @@ class AWSSQS(AWSNotify):
 
     async def async_send_message(self, message="", **kwargs):
         """Send notification to specified SQS ARN."""
-        await super().async_send_message(message, **kwargs)
+        if not kwargs.get(ATTR_TARGET):
+            _LOGGER.error("At least one target is required")
+            return
 
-        cleaned_kwargs = dict((k, v) for k, v in kwargs.items() if v)
+        cleaned_kwargs = {k: v for k, v in kwargs.items() if v is not None}
         message_body = {"message": message}
         message_body.update(cleaned_kwargs)
         json_body = json.dumps(message_body)
