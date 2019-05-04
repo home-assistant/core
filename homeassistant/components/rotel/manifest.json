@@ -1,9 +1,9 @@
 {
-  "domain": "rotel_rsp1570",
-  "name": "Rotel RSP-1570",
-  "documentation": "https://github.com/pp81381/hassdev/blob/master/README.md",
+  "domain": "rotel",
+  "name": "Rotel Media Player",
+  "documentation": "https://www.home-assistant.io/components/rotel",
   "requirements": [
-    "rsp1570serial-pp81381==0.1.1"
+    "rsp1570serial-pp81381==0.1.4"
   ],
   "dependencies": [],
   "codeowners": ["@pp81381"]

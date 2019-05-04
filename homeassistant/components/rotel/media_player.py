@@ -1,5 +1,5 @@
 """
-Support for the Rotel RSP-1570 processor.
+Rotel platform.
 
 Although only the RSP-1570 is supported at the moment, the
 low level library could easily be updated to support other
@@ -82,7 +82,7 @@ async def async_setup_platform(
     """Set up the rsp1570serial platform."""
     # pylint: disable=unused-argument
 
-    device = RotelRSP1570Device(
+    device = RotelMediaPlayer(
         config.get(CONF_NAME),
         config.get(CONF_DEVICE),
         config.get(CONF_SOURCE_ALIASES))
@@ -115,7 +115,7 @@ def setup_hass_services(hass):
 
     async def async_handle_send_command(entity, call):
         command_name = call.data.get(ATTR_COMMAND_NAME)
-        if isinstance(entity, RotelRSP1570Device):
+        if isinstance(entity, RotelMediaPlayer):
             _LOGGER.debug(
                 "%s service sending command %s to entity %s",
                 SERVICE_SEND_COMMAND,
@@ -131,7 +131,7 @@ def setup_hass_services(hass):
 
     async def async_handle_reconnect(entity, call):
         # pylint: disable=unused-argument
-        if isinstance(entity, RotelRSP1570Device):
+        if isinstance(entity, RotelMediaPlayer):
             _LOGGER.debug("%s service reconnecting entity %s",
                           SERVICE_RECONNECT, entity.entity_id)
             await entity.reconnect()
@@ -148,15 +148,15 @@ def setup_hass_services(hass):
         async_handle_reconnect)
 
 
-class RotelRSP1570Device(MediaPlayerDevice):
-    """Representation of a Rotel RSP-1570 device."""
+class RotelMediaPlayer(MediaPlayerDevice):
+    """Representation of a Rotel media player."""
 
     # pylint: disable=abstract-method
     # pylint: disable=too-many-public-methods
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self, name, device, source_aliases):
-        """Initialize the Rotel RSP-1570 device."""
+        """Initialize the device."""
         self._name = name
         self._device = device
         self._conn = None  # Make sure that you call open_connection...
@@ -301,7 +301,7 @@ class RotelRSP1570Device(MediaPlayerDevice):
         Example of using source_aliases in configuration.yaml:
 
         media_player:
-        - platform: rotel_rsp1570
+        - platform: rotel
           device: /dev/ttyUSB0
           source_aliases:
             TAPE:
