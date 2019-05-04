@@ -1,3 +1,5 @@
+"""The Strava component."""
+
 from datetime import datetime, timedelta
 import logging
 import voluptuous as vol
@@ -36,6 +38,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 async def async_setup(hass, config):
+    """Setups Strava platform."""
     data = StravaData(hass, config.get(DOMAIN))
 
     if not data.is_authorized:
@@ -50,6 +53,7 @@ class StravaData:
     """A model which stores the Strava data."""
 
     def __init__(self, hass, config):
+        """Initialize strava data model."""
         from stravalib.client import Client
 
         self.client = Client()
@@ -175,8 +179,10 @@ class StravaData:
 
 
 class StravaAthleteData:
+    """Strava athlete data model."""
 
     def __init__(self, data, id=None):
+        """Initialize Strava athlete data model."""
         self.id = id
         self.data = data
 
@@ -185,6 +191,7 @@ class StravaAthleteData:
         self.last_activity = None
 
     async def update_last_actitivity(self, hass):
+        """Update last Strava activity."""
         def get_last_activity(client):
             activities = client.get_activities(limit=1)
             last = next(activities)
@@ -198,12 +205,14 @@ class StravaAthleteData:
         _LOGGER.info("Fetched last activity")
 
     async def update_details(self, hass):
+        """Update Strava athlete details."""
         self.details = await hass.async_add_executor_job(
             self.data.client.get_athlete, self.id)
 
         _LOGGER.info("Fetched athlete details")
 
     async def update_stats(self, hass):
+        """Update Strava athlete statistics."""
         self.stats = await hass.async_add_executor_job(
             self.data.client.get_athlete_stats, self.id)
 
@@ -211,6 +220,7 @@ class StravaAthleteData:
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def update(self, hass):
+        """Updata Strava athlete data model."""
         import asyncio
 
         # Request or refresh token
@@ -224,8 +234,10 @@ class StravaAthleteData:
 
 
 class StravaClubData:
+    """Strava club data model."""
 
     def __init__(self, data, id):
+        """Initialize Strava club data model."""
         self.id = id
         self.data = data
 
@@ -233,14 +245,17 @@ class StravaClubData:
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def update(self, hass):
+        """Update Strava club data model."""
         await self.data.get_token()
         self.club = await hass.async_add_executor_job(
             self.data.client.get_club, self.id)
 
 
 class StravaGearData:
+    """Strava gear data model."""
 
     def __init__(self, data, id):
+        """Initialize Strava gear data model."""
         self.id = id
         self.data = data
 
@@ -248,6 +263,7 @@ class StravaGearData:
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def update(self, hass):
+        """Update Strava gear data model."""
         await self.data.get_token()
         self.gear = await hass.async_add_executor_job(
             self.data.client.get_gear, self.id)
@@ -261,9 +277,11 @@ class StravaAuthCallbackView(HomeAssistantView):
     name = AUTH_CALLBACK_NAME
 
     def __init__(self, data):
+        """Initialize Strava Authorization Callback View."""
         self._data = data
 
     async def get(self, request):
+        """Get Strava Authorization Callback View."""
         hass = request.app['hass']
         code = request.query['code']
 

@@ -1,3 +1,5 @@
+"""Sensor entity for the Strava platform."""
+
 from datetime import timedelta
 import logging
 from homeassistant.helpers.entity import Entity
@@ -119,7 +121,7 @@ ICON_MAPPING_ACTIVITY_TYPES = {
 
 async def async_setup_platform(hass, config, add_entities,
                                discovery_info=None):
-
+    """Setups Strava sensors."""
     data = hass.data.get(DOMAIN)
 
     athlete_id = config.get(CONF_ATHLETE)
@@ -169,8 +171,10 @@ async def async_setup_platform(hass, config, add_entities,
 
 
 class StravaSensor(Entity):
+    """Common base class for Strava sensor entities."""
 
     def __init__(self, typ, field):
+        """Initialize Strava Sensor."""
         self._data = None
         self._type = typ
 
@@ -184,6 +188,7 @@ class StravaSensor(Entity):
             self._subfield = None
 
     async def async_update(self):
+        """Update state of Strava sensor."""
         try:
             await self._data.update(self.hass)
         except Exception:
@@ -212,6 +217,7 @@ class StravaSensor(Entity):
 
     @property
     def unit_of_measurement(self):
+        """Getter for sensor unit."""
         from stravalib.model import ActivityTotals
         from units.quantity import Quantity
         from units import unit
@@ -234,6 +240,7 @@ class StravaSensor(Entity):
 
     @property
     def icon(self):
+        """Getter for entity icon."""
         if self._field and self._field in ICON_MAPPING_FIELDS:
             return ICON_MAPPING_FIELDS[self._field]
         elif self._subfield and self._subfield in ICON_MAPPING_FIELDS:
@@ -243,10 +250,12 @@ class StravaSensor(Entity):
 
     @property
     def available(self):
+        """Getter for entity availability state."""
         return self._state is not None
 
     @property
     def unique_id(self):
+        """Getter for unique entity id."""
         field = self._field
         if self._subfield:
             field += '_' + self._subfield
@@ -255,7 +264,7 @@ class StravaSensor(Entity):
             self._type, self._data.id, field)
 
     @property
-    def name_prefix(self):
+    def _name_prefix(self):
         if self.available:
             return self._state.name + ' '
         else:
@@ -265,7 +274,8 @@ class StravaSensor(Entity):
 
     @property
     def name(self):
-        name = self.name_prefix
+        """Getter for entity name."""
+        name = self._name_prefix
         name += self._field.replace('_', ' ').title()
 
         if self._subfield:
@@ -276,9 +286,10 @@ class StravaSensor(Entity):
 
 
 class StravaLastActivitySensor(StravaSensor):
-    """Representation of an Activity Sensor."""
+    """Entity of an Strava last acitivty sensor."""
 
     def __init__(self, data, athlete_id, field):
+        """Initialize Strava last activity sensor."""
         super().__init__('last_activity', field)
 
         self._data = data.get_athlete(athlete_id)
@@ -288,20 +299,22 @@ class StravaLastActivitySensor(StravaSensor):
         return self._data.last_activity
 
     @property
-    def name_prefix(self):
+    def _name_prefix(self):
         return 'Last Activity '
 
     @property
     def device_state_attributes(self):
+        """Getter for device state attributes."""
         return {
             'activity_id': self._state.id
         }
 
 
 class StravaAthleteDetailsSensor(StravaSensor):
-    """Representation of an Athlete Sensor."""
+    """Entity of an Strava athlete details sensor."""
 
     def __init__(self, data, athlete_id, field):
+        """Initialize an Strava athlete sensor."""
         super().__init__('athlete', field)
 
         self._data = data.get_athlete(athlete_id)
@@ -311,7 +324,7 @@ class StravaAthleteDetailsSensor(StravaSensor):
         return self._data.details
 
     @property
-    def name_prefix(self):
+    def _name_prefix(self):
         if self.available:
             return self._data.details.firstname + ': '
         elif self._data.id:
@@ -321,19 +334,23 @@ class StravaAthleteDetailsSensor(StravaSensor):
 
     @property
     def entity_picture(self):
+        """Getter for entity picture."""
         if self.available:
             return self._data.details.profile
 
     @property
     def device_state_attributes(self):
+        """Getter for device state attributes."""
         return {
             'athlete_id': self._data.details.id
         }
 
 
 class StravaAthleteStatsSensor(StravaSensor):
+    """Entity of an Strava athlete statistics sensor."""
 
     def __init__(self, data, athlete_id, field):
+        """Initialize an Strava athlete statistics sensor."""
         super().__init__('stats', field)
 
         self._data = data.get_athlete(athlete_id)
@@ -343,7 +360,7 @@ class StravaAthleteStatsSensor(StravaSensor):
         return self._data.stats
 
     @property
-    def name_prefix(self):
+    def _name_prefix(self):
         if self.available:
             return self._data.details.firstname + ': '
         elif self._data.id:
@@ -353,19 +370,23 @@ class StravaAthleteStatsSensor(StravaSensor):
 
     @property
     def entity_picture(self):
+        """Getter for entity picture."""
         if self._data.details:
             return self._data.details.profile
 
     @property
     def device_state_attributes(self):
+        """Getter for device state attributes."""
         return {
             'athlete_id': self._data.details.id
         }
 
 
 class StravaClubSensor(StravaSensor):
+    """Entity of an Strava club sensor."""
 
     def __init__(self, data, club_id, field):
+        """Initialize an Strava club sensor."""
         super().__init__('club', field)
 
         self._data = data.get_club(club_id)
@@ -376,19 +397,23 @@ class StravaClubSensor(StravaSensor):
 
     @property
     def entity_picture(self):
+        """Getter for entity picture."""
         if self.available:
             return self._state.profile_medium
 
     @property
     def device_state_attributes(self):
+        """Getter for device state attributes."""
         return {
             'club_id': self._state.id
         }
 
 
 class StravaGearSensor(StravaSensor):
+    """Entity of an Strava gear sensor."""
 
     def __init__(self, data, gear_id, field):
+        """Initialize an Strava gear sensor."""
         super().__init__('gear', field)
 
         self._data = data.get_gear(gear_id)
@@ -399,6 +424,7 @@ class StravaGearSensor(StravaSensor):
 
     @property
     def device_state_attributes(self):
+        """Getter for device state attributes."""
         return {
             'gear_id': self._state.id
         }
