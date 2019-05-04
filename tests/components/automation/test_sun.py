@@ -672,7 +672,7 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(hass, calls):
                return_value=now):
         hass.bus.async_fire('test_event')
         await hass.async_block_till_done()
-        assert 1 == len(calls)
+        assert 2 == len(calls)
 
     # now = local midnight - 1s -> 'before sunrise' not true
     now = datetime(2015, 7, 24, 7, 59, 59, tzinfo=dt_util.UTC)
@@ -680,4 +680,68 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(hass, calls):
                return_value=now):
         hass.bus.async_fire('test_event')
         await hass.async_block_till_done()
+        assert 2 == len(calls)
+
+
+async def test_if_action_after_sunrise_no_offset_kotzebue(hass, calls):
+    """
+    Test if action was after sunrise.
+
+    Local timezone: Alaska time
+    Location: Kotzebue, which has a very skewed local timezone with sunrise
+    at 7 AM and sunset at 3AM during summer
+    Before sunrise is true from midnight until sunset, local time.
+    """
+    tz = dt_util.get_time_zone('America/Anchorage')
+    dt_util.set_default_time_zone(tz)
+    hass.config.latitude = 66.5
+    hass.config.longitude = 162.4
+    await async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'trigger': {
+                'platform': 'event',
+                'event_type': 'test_event',
+            },
+            'condition': {
+                'condition': 'sun',
+                'after': SUN_EVENT_SUNRISE,
+            },
+            'action': {
+                'service': 'test.automation'
+            }
+        }
+    })
+
+    # sunrise: 2015-07-24 07:17:24 local, sunset: 2015-07-25 03:16:27 local
+    # sunrise: 2015-07-24 15:17:24 UTC,   sunset: 2015-07-25 11:16:27 UTC
+    # now = sunrise -> 'after sunrise' true
+    now = datetime(2015, 7, 24, 15, 17, 24, tzinfo=dt_util.UTC)
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=now):
+        hass.bus.async_fire('test_event')
+        await hass.async_block_till_done()
         assert 1 == len(calls)
+
+    # now = sunrise - 1s -> 'after sunrise' not true
+    now = datetime(2015, 7, 24, 15, 17, 23, tzinfo=dt_util.UTC)
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=now):
+        hass.bus.async_fire('test_event')
+        await hass.async_block_till_done()
+        assert 1 == len(calls)
+
+    # now = local midnight -> 'after sunrise' not true
+    now = datetime(2015, 7, 24, 8, 0, 1, tzinfo=dt_util.UTC)
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=now):
+        hass.bus.async_fire('test_event')
+        await hass.async_block_till_done()
+        assert 1 == len(calls)
+
+    # now = local midnight - 1s -> 'after sunrise' true
+    now = datetime(2015, 7, 24, 7, 59, 59, tzinfo=dt_util.UTC)
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=now):
+        hass.bus.async_fire('test_event')
+        await hass.async_block_till_done()
+        assert 2 == len(calls)
