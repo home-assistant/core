@@ -1,6 +1,5 @@
 """Component to embed TP-Link smart home devices."""
 import logging
-from typing import Dict, List
 
 import voluptuous as vol
 
@@ -64,15 +63,13 @@ async def async_setup_entry(hass, config_entry):
     """Set up TPLink from a config entry."""
     from pyHS100 import SmartBulb, SmartPlug, SmartDeviceException
 
-    devices: Dict[str, TPLinkDevice] = {}
+    devices = {}
 
     config_data = hass.data[DOMAIN].get(ATTR_CONFIG)
 
     # These will contain the initialized devices
-    lights: List[TPLinkDevice] = []
-    switches: List[TPLinkDevice] = []
-    hass.data[DOMAIN][CONF_LIGHT] = lights
-    hass.data[DOMAIN][CONF_SWITCH] = switches
+    lights = hass.data[DOMAIN][CONF_LIGHT] = []
+    switches = hass.data[DOMAIN][CONF_SWITCH] = []
 
     # If discovery is defined and not disabled, discover devices
     # If initialized from configure integrations, there's no config
