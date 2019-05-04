@@ -188,8 +188,10 @@ class NeurioData:
         return self._net_consumption
 
     def get_dataset(self):
-        """Get the most recent data from the api once so we don't hit the ratelimit each hour."""
+        """Get the most recent data from the api once
+        so we don't hit the ratelimit each hour.
 
+        """
         start_time = dt_util.start_of_local_day() \
             .astimezone(dt_util.UTC).isoformat()
         end_time = dt_util.utcnow().isoformat()
