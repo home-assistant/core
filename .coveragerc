@@ -493,6 +493,7 @@ omit =
     homeassistant/components/rocketchat/notify.py
     homeassistant/components/roku/*
     homeassistant/components/roomba/vacuum.py
+    homeassistant/components/rotel_rsp1570/*
     homeassistant/components/route53/*
     homeassistant/components/rova/sensor.py
     homeassistant/components/rpi_camera/camera.py

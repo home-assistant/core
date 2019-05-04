@@ -1,0 +1,17 @@
+rotel_send_command:
+  description: "Send a command to a Rotel device."
+  fields:
+    command_name:
+      description: >-
+        Command name.
+        See rsp1570serial module commands.py for available commands.
+      example: 'POWER_TOGGLE'
+    entity_id:
+      description: Name(s) of the entities to set (or 'all')
+      example: 'media_player.rotel_rsp_1570'
+rotel_reconnect:
+  description: "Reconnect to a Rotel device that may have been disconnected."
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set (or 'all')
+      example: 'media_player.rotel_rsp_1570'

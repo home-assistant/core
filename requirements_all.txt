@@ -1545,6 +1545,9 @@ rova==0.1.0
 # homeassistant.components.rpi_rf
 # rpi-rf==0.9.7
 
+# homeassistant.components.rotel_rsp1570
+rsp1570serial-pp81381==0.1.1
+
 # homeassistant.components.russound_rnet
 russound==0.1.9
 

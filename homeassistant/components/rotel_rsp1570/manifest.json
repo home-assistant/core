@@ -1,0 +1,10 @@
+{
+  "domain": "rotel_rsp1570",
+  "name": "Rotel RSP-1570",
+  "documentation": "https://github.com/pp81381/hassdev/blob/master/README.md",
+  "requirements": [
+    "rsp1570serial-pp81381==0.1.1"
+  ],
+  "dependencies": [],
+  "codeowners": ["@pp81381"]
+}
