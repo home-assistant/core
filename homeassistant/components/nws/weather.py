@@ -37,7 +37,8 @@ ATTR_FORECAST_PRECIP_PROB = 'precipitation_probability'
 ATTR_FORECAST_DAYTIME = 'daytime'
 
 # Ordered so that a single condition can be chosen from multiple weather codes.
-# Known NWS conditions that do not map: cold
+# Catalog of NWS icon weather codes listed at:
+# https://api.weather.gov/icons
 CONDITION_CLASSES = OrderedDict([
     ('snowy', ['snow', 'snow_sleet', 'sleet', 'blizzard']),
     ('snowy-rainy', ['rain_snow', 'rain_sleet', 'fzra',
