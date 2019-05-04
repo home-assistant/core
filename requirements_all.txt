@@ -1294,7 +1294,7 @@ pysmartapp==0.3.2
 pysmartthings==0.6.7
 
 # homeassistant.components.snmp
-pysnmp==4.4.8
+pysnmp==4.4.9
 
 # homeassistant.components.sonos
 pysonos==0.0.12
