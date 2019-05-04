@@ -8,6 +8,7 @@ from homeassistant.const import ATTR_VOLTAGE
 import homeassistant.helpers.device_registry as dr
 
 from . import CONF_SWITCH, DOMAIN as TPLINK_DOMAIN
+from .common import SOURCE_CONFIG, TPLinkDevice
 
 PARALLEL_UPDATES = 0
 
@@ -30,8 +31,8 @@ async def async_setup_platform(hass, config, add_entities,
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up discovered switches."""
     devs = []
-    for dev in hass.data[TPLINK_DOMAIN][CONF_SWITCH]:
-        devs.append(SmartPlugSwitch(dev))
+    for tplink_device in hass.data[TPLINK_DOMAIN][CONF_SWITCH]:
+        devs.append(SmartPlugSwitch(tplink_device))
 
     async_add_entities(devs, True)
 
@@ -41,10 +42,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SmartPlugSwitch(SwitchDevice):
     """Representation of a TPLink Smart Plug switch."""
 
-    def __init__(self, smartplug):
+    def __init__(self, tplink_device: TPLinkDevice) -> None:
         """Initialize the switch."""
-        self.smartplug = smartplug
-        self._sysinfo = None
+        self.tplink_device = tplink_device
+        self.smartplug = tplink_device.dev
+        self._sysinfo = {}
         self._state = None
         self._available = False
         # Set up emeter cache
@@ -53,24 +55,34 @@ class SmartPlugSwitch(SwitchDevice):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._sysinfo["mac"]
+        if self.tplink_device.source == SOURCE_CONFIG:
+            return 'tplink_plug_switch_%s' % self.smartplug.host
+
+        # Not using alternative id above as the optional value to this
+        # .get() call. Doing so would introduce a situation where the
+        # unique_id changes once the device is available and  sysinfo
+        # is populated.
+        return self._sysinfo.get("mac")
 
     @property
     def name(self):
         """Return the name of the Smart Plug."""
-        return self._sysinfo["alias"]
+        return self._sysinfo.get("alias", self.smartplug.host)
 
     @property
     def device_info(self):
         """Return information about the device."""
         return {
             "name": self.name,
-            "model": self._sysinfo["model"],
+            "model": self._sysinfo.get("model", "Unknown"),
             "manufacturer": 'TP-Link',
             "connections": {
-                (dr.CONNECTION_NETWORK_MAC, self._sysinfo["mac"])
-            },
-            "sw_version": self._sysinfo["sw_ver"],
+                (
+                    dr.CONNECTION_NETWORK_MAC,
+                    self._sysinfo.get("mac", "Unknown")
+                )
+            } if self._sysinfo.get("mac") else {},
+            "sw_version": self._sysinfo.get("sw_ver", "Unknown"),
         }
 
     @property

@@ -1,5 +1,6 @@
 """Component to embed TP-Link smart home devices."""
 import logging
+from typing import Dict, List
 
 import voluptuous as vol
 
@@ -8,6 +9,7 @@ from homeassistant import config_entries
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 
+from .common import TPLinkDevice, SOURCE_CONFIG, SOURCE_DISCOVERY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,13 +64,15 @@ async def async_setup_entry(hass, config_entry):
     """Set up TPLink from a config entry."""
     from pyHS100 import SmartBulb, SmartPlug, SmartDeviceException
 
-    devices = {}
+    devices: Dict[str, TPLinkDevice] = {}
 
     config_data = hass.data[DOMAIN].get(ATTR_CONFIG)
 
     # These will contain the initialized devices
-    lights = hass.data[DOMAIN][CONF_LIGHT] = []
-    switches = hass.data[DOMAIN][CONF_SWITCH] = []
+    lights: List[TPLinkDevice] = []
+    switches: List[TPLinkDevice] = []
+    hass.data[DOMAIN][CONF_LIGHT] = lights
+    hass.data[DOMAIN][CONF_SWITCH] = switches
 
     # If discovery is defined and not disabled, discover devices
     # If initialized from configure integrations, there's no config
@@ -76,7 +80,10 @@ async def async_setup_entry(hass, config_entry):
     if config_data is None or config_data[CONF_DISCOVERY]:
         devs = await _async_has_devices(hass)
         _LOGGER.info("Discovered %s TP-Link smart home device(s)", len(devs))
-        devices.update(devs)
+        for host, dev in devs.items():
+            devices[host] = TPLinkDevice(
+                dev, SOURCE_DISCOVERY
+            )
 
     def _device_for_type(host, type_):
         dev = None
@@ -91,31 +98,35 @@ async def async_setup_entry(hass, config_entry):
     if config_data is not None:
         for type_ in [CONF_LIGHT, CONF_SWITCH]:
             for entry in config_data[type_]:
+                host = entry['host']
                 try:
-                    host = entry['host']
                     dev = _device_for_type(host, type_)
-                    devices[host] = dev
+                    devices[host] = TPLinkDevice(
+                        dev, SOURCE_CONFIG
+                    )
                     _LOGGER.debug("Succesfully added %s %s: %s",
-                                  type_, host, dev)
+                                  type_, host, type(dev))
                 except SmartDeviceException as ex:
                     _LOGGER.error("Unable to initialize %s %s: %s",
                                   type_, host, ex)
 
     # This is necessary to avoid I/O blocking on is_dimmable
     def _fill_device_lists():
-        for dev in devices.values():
+        for tplink_device in devices.values():
+            dev = tplink_device.dev
+
             if isinstance(dev, SmartPlug):
                 try:
                     if dev.is_dimmable:  # Dimmers act as lights
-                        lights.append(dev)
+                        lights.append(tplink_device)
                     else:
-                        switches.append(dev)
+                        switches.append(tplink_device)
                 except SmartDeviceException as ex:
                     _LOGGER.error("Unable to connect to device %s: %s",
                                   dev.host, ex)
 
             elif isinstance(dev, SmartBulb):
-                lights.append(dev)
+                lights.append(tplink_device)
             else:
                 _LOGGER.error("Unknown smart device type: %s", type(dev))
 

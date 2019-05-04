@@ -11,6 +11,7 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin)
 
 from . import CONF_LIGHT, DOMAIN as TPLINK_DOMAIN
+from .common import SOURCE_CONFIG, TPLinkDevice
 
 PARALLEL_UPDATES = 0
 
@@ -34,8 +35,8 @@ async def async_setup_platform(hass, config, add_entities,
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up discovered switches."""
     devs = []
-    for dev in hass.data[TPLINK_DOMAIN][CONF_LIGHT]:
-        devs.append(TPLinkSmartBulb(dev))
+    for tplink_device in hass.data[TPLINK_DOMAIN][CONF_LIGHT]:
+        devs.append(TPLinkSmartBulb(tplink_device))
 
     async_add_entities(devs, True)
 
@@ -55,10 +56,11 @@ def brightness_from_percentage(percent):
 class TPLinkSmartBulb(Light):
     """Representation of a TPLink Smart Bulb."""
 
-    def __init__(self, smartbulb) -> None:
+    def __init__(self, tplink_device: TPLinkDevice) -> None:
         """Initialize the bulb."""
-        self.smartbulb = smartbulb
-        self._sysinfo = None
+        self.tplink_device = tplink_device
+        self.smartbulb = self.tplink_device.dev
+        self._sysinfo = {}
         self._state = None
         self._available = False
         self._color_temp = None
@@ -72,24 +74,31 @@ class TPLinkSmartBulb(Light):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._sysinfo["mac"]
+        if self.tplink_device.source == SOURCE_CONFIG:
+            return 'tplink_smart_bulb_%s' % self.smartbulb.host
+
+        # Not using alternative id above as the optional value to this
+        # .get() call. Doing so would introduce a situation where the
+        # unique_id changes once the device is available and  sysinfo
+        # is populated.
+        return self._sysinfo.get("mac")
 
     @property
     def name(self):
         """Return the name of the Smart Bulb."""
-        return self._sysinfo["alias"]
+        return self._sysinfo.get("alias", self.smartbulb.host)
 
     @property
     def device_info(self):
         """Return information about the device."""
         return {
             "name": self.name,
-            "model": self._sysinfo["model"],
+            "model": self._sysinfo.get("model", "Unknown"),
             "manufacturer": 'TP-Link',
             "connections": {
-                (dr.CONNECTION_NETWORK_MAC, self._sysinfo["mac"])
-            },
-            "sw_version": self._sysinfo["sw_ver"],
+                (dr.CONNECTION_NETWORK_MAC, self._sysinfo.get("mac"))
+            } if self._sysinfo.get("mac") else {},
+            "sw_version": self._sysinfo.get("sw_ver", "Unknown"),
         }
 
     @property
