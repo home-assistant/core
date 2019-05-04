@@ -222,7 +222,7 @@ class PS4Device(MediaPlayerDevice):
             self._media_title = app_name or name
             self._source = self._media_title
             self._media_image = art
-            if title.game_type == 'App'
+            if title.game_type == 'App':
                 self._media_type = MEDIA_TYPE_APP
             else:
                 self._media_type = MEDIA_TYPE_GAME
