@@ -83,10 +83,10 @@ def next_weekday(fromdate, weekday):
 
 def next_departuredate(departure):
     """Calculate the next departuredate from an array input of short days."""
-    today_weekday = date.weekday(date.today())
     today_date = date.today()
+    today_weekday = date.weekday(today_date)
     if WEEKDAYS[today_weekday] in departure:
-        return date.today()
+        return today_date
     for day in departure:
         next_departure = WEEKDAYS.index(day)
         if next_departure > today_weekday:
@@ -113,8 +113,8 @@ class TrainSensor(Entity):
     @asyncio.coroutine
     def async_update(self):
         """Retrieve latest state."""
-        departure_day = next_departuredate(self._weekday)
         if self._time is not None:
+            departure_day = next_departuredate(self._weekday)
             when = datetime.combine(departure_day, self._time)
             try:
                 self._state = yield from \
