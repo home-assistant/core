@@ -75,7 +75,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LATITUDE): cv.latitude,
     vol.Optional(CONF_LONGITUDE): cv.longitude,
     vol.Optional(CONF_MODE, default='daynight'): vol.In(FORECAST_MODE),
-    vol.Optional(CONF_STATION, default=''): cv.string,
+    vol.Optional(CONF_STATION): cv.string,
     vol.Required(CONF_API_KEY): cv.string
 })
 
@@ -85,7 +85,7 @@ def parse_icon(icon):
     Parse icon url to NWS weather codes.
 
     Example:
-    https://api.weather.gov/icons/land/day/skc/tsra,40/ovc?size=medium
+    https://api.weather.gov/icons/land/day/skc/tsra,40?size=medium
 
     Example return:
     ('day', (('skc', 0), ('tsra', 40),))
@@ -124,29 +124,29 @@ def convert_condition(time, weather):
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Set up the nws platform."""
+    """Set up the NWS weather platform."""
+    from pynws import Nws
+
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     station = config.get(CONF_STATION)
-    api_key = config.get(CONF_API_KEY)
+    api_key = config[CONF_API_KEY]
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude/longitude not set in Home Assistant config")
         return
 
-    from pynws import Nws
-
     websession = async_get_clientsession(hass)
     # ID request as being from HA, pynws prepends the api_key in addition
-    api_key_ha = [api_key + 'homeassistant']
+    api_key_ha = '{} {}'.format(api_key, 'homeassistant')
     nws = Nws(websession, latlon=(float(latitude), float(longitude)),
               userid=api_key_ha)
 
     _LOGGER.debug("Setting up station: %s", station)
-    if station == '':
+    if station is None:
         with async_timeout.timeout(10, loop=hass.loop):
             stations = await nws.stations()
-        _LOGGER.info("Station list: %s", stations)
+        _LOGGER.debug("Station list: %s", stations)
         nws.station = stations[0]
         _LOGGER.debug("Initialized for coordinates %s, %s -> station %s",
                       latitude, longitude, stations[0])
@@ -182,8 +182,6 @@ class NWSWeather(WeatherEntity):
                 self._forecast = await self._nws.forecast()
             elif self._mode == 'hourly':
                 self._forecast = await self._nws.forecast_hourly()
-            else:
-                _LOGGER.error("Invalid Forecast Mode")
         _LOGGER.debug("Observations: %s", self._observation)
         _LOGGER.debug("Forecasts: %s", self._forecast)
 
