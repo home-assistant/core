@@ -329,8 +329,12 @@ def sun(
 
     sunrise = sunrise_today
     sunset = sunset_today
-    if today > dt_util.as_local(cast(datetime, sunrise_today)).date():
+    if (today > dt_util.as_local(cast(datetime, sunrise_today)).date() and
+            SUN_EVENT_SUNRISE in (before, after)):
         sunrise = sunrise_tomorrow
+
+    if (today > dt_util.as_local(cast(datetime, sunset_today)).date() and
+            SUN_EVENT_SUNSET in (before, after)):
         sunset = sunset_tomorrow
 
     if sunrise is None and SUN_EVENT_SUNRISE in (before, after):
