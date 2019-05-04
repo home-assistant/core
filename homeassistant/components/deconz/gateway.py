@@ -126,8 +126,7 @@ class DeconzGateway:
     def async_connection_status_callback(self, available):
         """Handle signals of gateway connection status."""
         self.available = available
-        async_dispatcher_send(self.hass, self.event_reachable,
-                              {'state': True, 'attr': 'reachable'})
+        async_dispatcher_send(self.hass, self.event_reachable, True)
 
     @callback
     def async_event_new_device(self, device_type):
@@ -233,8 +232,8 @@ class DeconzEvent:
         self._device = None
 
     @callback
-    def async_update_callback(self, reason):
+    def async_update_callback(self, force_update=False):
         """Fire the event if reason is that state is updated."""
-        if reason['state']:
+        if 'state' in self._device.changed_keys:
             data = {CONF_ID: self._id, CONF_EVENT: self._device.state}
             self._hass.bus.async_fire(self._event, data, EventOrigin.remote)

@@ -55,16 +55,15 @@ class DeconzSensor(DeconzDevice):
     """Representation of a deCONZ sensor."""
 
     @callback
-    def async_update_callback(self, reason):
+    def async_update_callback(self, force_update=False):
         """Update the sensor's state.
 
         If reason is that state is updated,
         or reachable has changed or battery has changed.
         """
-        if reason['state'] or \
-           'reachable' in reason['attr'] or \
-           'battery' in reason['attr'] or \
-           'on' in reason['attr']:
+        reason = self._device.changed_keys
+        if force_update or 'state' in reason or 'reachable' in reason or \
+           'battery' in reason or 'on' in reason:
             self.async_schedule_update_ha_state()
 
     @property
@@ -124,9 +123,10 @@ class DeconzBattery(DeconzDevice):
         self._unit_of_measurement = "%"
 
     @callback
-    def async_update_callback(self, reason):
+    def async_update_callback(self, force_update=False):
         """Update the battery's state, if needed."""
-        if 'reachable' in reason['attr'] or 'battery' in reason['attr']:
+        reason = self._device.changed_keys
+        if force_update or 'reachable' in reason or 'battery' in reason:
             self.async_schedule_update_ha_state()
 
     @property
