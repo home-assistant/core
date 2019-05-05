@@ -1,6 +1,5 @@
 """Use serial protocol of Acer projector to obtain state of the projector."""
 import logging
-import re
 import time
 
 import voluptuous as vol
@@ -40,7 +39,6 @@ CMD_DICT = {
     STATE_ON: '* 0 IR 001\r',
     STATE_OFF: '* 0 IR 002\r',
 }
-
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_FILENAME): cv.isdevice,
@@ -90,14 +88,13 @@ class AcerSwitch(SwitchDevice):
         try:
             if not self.ser.is_open:
                 self.ser.open()
-            else:    
+            else:
                 self.ser.flushInput()
                 self.ser.flushOutput()
-                
+
             msg = msg.encode('utf-8')
             self.ser.write(msg)
-            #Try to get a response a maximum of 5 times
-            #for x in range(0, 5):
+            # Try to get a response a maximum of 5 times
             time.sleep(1)
             if self.ser.inWaiting() > 0:
                 _LOGGER.debug('Number of characters to read %s', self.ser.inWaiting())
@@ -111,8 +108,6 @@ class AcerSwitch(SwitchDevice):
                 
             _LOGGER.debug('No response for %s', msg)
             self.ser.close()
-                
-                    
             
         except serial.SerialException:
             _LOGGER.error('Problem communicating with %s', self._serial_port)
@@ -120,7 +115,7 @@ class AcerSwitch(SwitchDevice):
     def _write_read_format(self, msg):
         """Write msg, obtain answer and format output."""
         # answers are formatted as ***\answer\r***
-        #Try 5 times to get a response
+        # Try 5 times to get a response
         for x in range(0, 5):
             lines = self._write_read(msg)
                     
@@ -131,7 +126,7 @@ class AcerSwitch(SwitchDevice):
                         return decodeLine
             time.sleep(1)
         
-        #If it gets to here something has gone wrong
+        # If it gets to here something has gone wrong
         _LOGGER.warn('Not able to get the relevant state for %s', msg)
         _LOGGER.warn(lines)
         return STATE_UNKNOWN
