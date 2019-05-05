@@ -96,7 +96,7 @@ async def async_get_engine(hass, config):
         key_file,
         config.get(CONF_LANG),
         config.get(CONF_GENDER),
-        config.get(CONF_VOICE),
+        config.get(CONF_VOICE, ''),
         config.get(CONF_ENCODING),
         config.get(CONF_SPEED),
         config.get(CONF_PITCH),
@@ -161,18 +161,19 @@ class GoogleCloudTTSProvider(Provider):
     async def async_get_tts_audio(self, message, language, options=None):
         """Load TTS from google."""
         _gender = options.get(CONF_GENDER).upper()
-        if _gender not in SUPPORTED_GENDERS
+        if _gender not in SUPPORTED_GENDERS:
             _gender = self._gender
-        
-        _voice = options.get(CONF_VOICE) or self._voice or ''
-        if not re.match(VOICE_REGEX, _voice)
+
+        _voice = options.get(CONF_VOICE) or self._voice
+        if not re.match(VOICE_REGEX, _voice):
             _voice = self._voice
-        if not _voice.startswith(language)
+        if not _voice.startswith(language):
             language = _voice[:5]
-        
+
         _encoding = options.get(CONF_ENCODING).upper()
-        if _encoding not in SUPPORTED_ENCODINGS: _encoding = self._encoding
-        
+        if _encoding not in SUPPORTED_ENCODINGS:
+            _encoding = self._encoding
+
         _speed = options.get(CONF_SPEED)
         _pitch = options.get(CONF_PITCH)
         _gain = options.get(CONF_GAIN)
@@ -191,7 +192,7 @@ class GoogleCloudTTSProvider(Provider):
 
             audio_config = texttospeech.types.AudioConfig(
                 audio_encoding=texttospeech.enums.AudioEncoding[_encoding],
-                speaking_rate=max(min(_speed , MAX_SPEED), MIN_SPEED),
+                speaking_rate=max(min(_speed, MAX_SPEED), MIN_SPEED),
                 pitch=max(min(_pitch, MAX_PITCH), MIN_PITCH),
                 volume_gain_db=max(min(_gain, MAX_GAIN), MIN_GAIN),
                 effects_profile_id=_profiles,
