@@ -8,20 +8,15 @@ from homeassistant.setup import async_setup_component
 from homeassistant.components import device_tracker
 from homeassistant.const import CONF_PLATFORM
 
-from tests.common import (
-    async_mock_mqtt_component, async_fire_mqtt_message)
+from tests.common import async_fire_mqtt_message
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
-def setup_comp(hass):
-    """Initialize components."""
-    hass.loop.run_until_complete(async_mock_mqtt_component(hass))
-    yaml_devices = hass.config.path(device_tracker.YAML_DEVICES)
-    yield
-    if os.path.isfile(yaml_devices):
-        os.remove(yaml_devices)
+def setup_comp(hass, mqtt_mock):
+    """Set up mqtt component."""
+    pass
 
 
 async def test_ensure_device_tracker_platform_validation(hass):
@@ -45,7 +40,7 @@ async def test_ensure_device_tracker_platform_validation(hass):
         assert mock_sp.call_count == 1
 
 
-async def test_new_message(hass):
+async def test_new_message(hass, mock_device_tracker_conf):
     """Test new message."""
     dev_id = 'paulus'
     entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
@@ -64,7 +59,7 @@ async def test_new_message(hass):
     assert location == hass.states.get(entity_id).state
 
 
-async def test_single_level_wildcard_topic(hass):
+async def test_single_level_wildcard_topic(hass, mock_device_tracker_conf):
     """Test single level wildcard topic."""
     dev_id = 'paulus'
     entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
@@ -84,7 +79,7 @@ async def test_single_level_wildcard_topic(hass):
     assert location == hass.states.get(entity_id).state
 
 
-async def test_multi_level_wildcard_topic(hass):
+async def test_multi_level_wildcard_topic(hass, mock_device_tracker_conf):
     """Test multi level wildcard topic."""
     dev_id = 'paulus'
     entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
@@ -104,7 +99,8 @@ async def test_multi_level_wildcard_topic(hass):
     assert location == hass.states.get(entity_id).state
 
 
-async def test_single_level_wildcard_topic_not_matching(hass):
+async def test_single_level_wildcard_topic_not_matching(
+        hass, mock_device_tracker_conf):
     """Test not matching single level wildcard topic."""
     dev_id = 'paulus'
     entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
@@ -124,7 +120,8 @@ async def test_single_level_wildcard_topic_not_matching(hass):
     assert hass.states.get(entity_id) is None
 
 
-async def test_multi_level_wildcard_topic_not_matching(hass):
+async def test_multi_level_wildcard_topic_not_matching(
+        hass, mock_device_tracker_conf):
     """Test not matching multi level wildcard topic."""
     dev_id = 'paulus'
     entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
