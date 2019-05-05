@@ -116,8 +116,6 @@ class AcerSwitch(SwitchDevice):
             
         except serial.SerialException:
             _LOGGER.error('Problem communicating with %s', self._serial_port)
-        #self.ser.close()
-        #return ret
 
     def _write_read_format(self, msg):
         """Write msg, obtain answer and format output."""
