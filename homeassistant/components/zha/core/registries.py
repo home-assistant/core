@@ -292,8 +292,6 @@ def establish_device_mappings():
     BINARY_SENSOR_CLUSTERS.add(
         zcl.clusters.measurement.OccupancySensing.cluster_id)
     BINARY_SENSOR_CLUSTERS.add(SMARTTHINGS_ACCELERATION_CLUSTER)
-    BINARY_SENSOR_CLUSTERS.add(zcl.clusters.general.MultistateInput.cluster_id)
-    BINARY_SENSOR_CLUSTERS.add(zcl.clusters.general.AnalogInput.cluster_id)
 
     LIGHT_CLUSTERS.add(zcl.clusters.general.OnOff.cluster_id)
     LIGHT_CLUSTERS.add(zcl.clusters.general.LevelControl.cluster_id)
