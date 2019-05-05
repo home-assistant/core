@@ -70,7 +70,7 @@ av==6.1.2
 axis==22
 
 # homeassistant.components.zha
-bellows-homeassistant==0.7.2
+bellows-homeassistant==0.7.3
 
 # homeassistant.components.caldav
 caldav==0.6.1
@@ -342,4 +342,4 @@ vultr==0.1.2
 wakeonlan==1.1.6
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.3.2
+zigpy-homeassistant==0.3.3
