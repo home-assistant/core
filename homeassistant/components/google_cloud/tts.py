@@ -1,6 +1,7 @@
 """Support for the Google Cloud TTS service."""
 import logging
 import os
+import re
 import asyncio
 import async_timeout
 import voluptuous as vol
@@ -28,6 +29,8 @@ DEFAULT_LANG = 'en-US'
 
 SUPPORTED_GENDERS = ['NEUTRAL', 'FEMALE', 'MALE']
 DEFAULT_GENDER = 'NEUTRAL'
+
+VOICE_REGEX = r'[a-z]{2}-[A-Z]{2}-(Standard|Wavenet)-[A-Z]'
 
 SUPPORTED_ENCODINGS = ['OGG_OPUS', 'MP3', 'LINEAR16']
 DEFAULT_ENCODING = 'OGG_OPUS'
@@ -58,20 +61,22 @@ SUPPORTED_OPTIONS = [
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_KEY_FILE): cv.string,
+    vol.Optional(CONF_KEY_FILE):
+        cv.string,
     vol.Optional(CONF_LANG, default=DEFAULT_LANG):
         vol.In(SUPPORTED_LANGUAGES),
     vol.Optional(CONF_GENDER, default=DEFAULT_GENDER):
         vol.All(vol.Upper, vol.In(SUPPORTED_GENDERS)),
-    vol.Optional(CONF_VOICE): cv.string,
+    vol.Optional(CONF_VOICE):
+        vol.All(cv.string, vol.Match(VOICE_REGEX)),
     vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING):
         vol.All(vol.Upper, vol.In(SUPPORTED_ENCODINGS)),
     vol.Optional(CONF_SPEED, default=DEFAULT_SPEED):
-        vol.Range(min=MIN_SPEED, max=MAX_SPEED),
+        vol.Clamp(min=MIN_SPEED, max=MAX_SPEED),
     vol.Optional(CONF_PITCH, default=DEFAULT_PITCH):
-        vol.Range(min=MIN_PITCH, max=MAX_PITCH),
+        vol.Clamp(min=MIN_PITCH, max=MAX_PITCH),
     vol.Optional(CONF_GAIN, default=DEFAULT_GAIN):
-        vol.Range(min=MIN_GAIN, max=MAX_GAIN),
+        vol.Clamp(min=MIN_GAIN, max=MAX_GAIN),
     vol.Optional(CONF_PROFILES, default=[]):
         vol.All(cv.ensure_list, [vol.In(SUPPORTED_PROFILES)]),
 })
@@ -102,6 +107,7 @@ async def async_get_engine(hass, config):
 
 class GoogleCloudTTSProvider(Provider):
     """The Google Cloud TTS API provider."""
+
     def __init__(
             self, hass, key_file, language, gender, voice, encoding, speed,
             pitch, gain, profiles
@@ -155,11 +161,18 @@ class GoogleCloudTTSProvider(Provider):
     async def async_get_tts_audio(self, message, language, options=None):
         """Load TTS from google."""
         _gender = options.get(CONF_GENDER).upper()
-        if _gender not in SUPPORTED_GENDERS: _gender = self._gender
-        _voice = options.get(CONF_VOICE) or self._voice
-        if _voice and not _voice.startswith(language): language = _voice[:5]
+        if _gender not in SUPPORTED_GENDERS
+            _gender = self._gender
+        
+        _voice = options.get(CONF_VOICE) or self._voice or ''
+        if not re.match(VOICE_REGEX, _voice)
+            _voice = self._voice
+        if not _voice.startswith(language)
+            language = _voice[:5]
+        
         _encoding = options.get(CONF_ENCODING).upper()
         if _encoding not in SUPPORTED_ENCODINGS: _encoding = self._encoding
+        
         _speed = options.get(CONF_SPEED)
         _pitch = options.get(CONF_PITCH)
         _gain = options.get(CONF_GAIN)
