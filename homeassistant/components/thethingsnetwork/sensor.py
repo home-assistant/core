@@ -79,7 +79,7 @@ class TtnDataSensor(Entity):
             try:
                 return round(self._state[self._value], 1)
             except (KeyError, TypeError):
-                pass
+                return None
 
     @property
     def unit_of_measurement(self):
@@ -128,22 +128,22 @@ class TtnDataStorage:
 
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error while accessing: %s", self._url)
-            return
+            return None
 
         status = response.status
 
         if status == 204:
             _LOGGER.error("The device is not available: %s", self._device_id)
-            return
+            return None
 
         if status == 401:
             _LOGGER.error(
                 "Not authorized for Application ID: %s", self._app_id)
-            return
+            return None
 
         if status == 404:
             _LOGGER.error("Application ID is not available: %s", self._app_id)
-            return
+            return None
 
         data = await response.json()
         self.data = data[-1]
