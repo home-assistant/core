@@ -42,6 +42,7 @@ async def async_setup_entry(hass, entry):
 
     return True
 
+
 class LeafSpyContext:
     """Hold the current Leaf Spy context."""
 
@@ -49,7 +50,6 @@ class LeafSpyContext:
         """Initialize a Leaf Spy context."""
         self.hass = hass
         self.secret = secret
-
 
     async def async_see(self, **data):
         """Send a see message to the device tracker."""
