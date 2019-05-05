@@ -6,10 +6,8 @@ import pytest
 import homeassistant.components.google as google
 from homeassistant.setup import async_setup_component
 
-# pylint: disable=redefined-outer-name
 
-
-@pytest.fixture()
+@pytest.fixture(name='google_setup')
 async def mock_google_setup(hass):
     """Mock the google set up functions."""
     p_auth = patch(
@@ -29,7 +27,7 @@ async def mock_google_setup(hass):
         yield
 
 
-async def test_setup_component(hass, mock_google_setup):
+async def test_setup_component(hass, google_setup):
     """Test setup component."""
     config = {
         'google': {
@@ -57,7 +55,7 @@ async def test_get_calendar_info(hass, test_calendar):
 
 
 async def test_found_calendar(
-        hass, mock_google_setup, mock_next_event, test_calendar):
+        hass, google_setup, mock_next_event, test_calendar):
     """Test when a calendar is found."""
     config = {
         'google': {

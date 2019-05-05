@@ -17,8 +17,6 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import async_mock_service
 
-# pylint: disable=redefined-outer-name
-
 GOOGLE_CONFIG = {
     CONF_CLIENT_ID: 'client_id',
     CONF_CLIENT_SECRET: 'client_secret',
@@ -108,7 +106,7 @@ def set_time_zone():
     dt_util.set_default_time_zone(dt_util.get_time_zone('UTC'))
 
 
-@pytest.fixture
+@pytest.fixture(name='google_service')
 def mock_google_service():
     """Mock google service."""
     patch_google_service = patch(
@@ -306,9 +304,9 @@ async def test_all_day_offset_event(hass, mock_next_event):
     }
 
 
-async def test_update_false(hass, mock_google_service):
+async def test_update_false(hass, google_service):
     """Test that the calendar handles a server error."""
-    mock_google_service.return_value.get = Mock(
+    google_service.return_value.get = Mock(
         side_effect=httplib2.ServerNotFoundError("unit test"))
     assert await async_setup_component(
         hass, 'google', {'google': GOOGLE_CONFIG})
