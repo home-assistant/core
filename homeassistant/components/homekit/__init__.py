@@ -6,6 +6,7 @@ from zlib import adler32
 import voluptuous as vol
 
 from homeassistant.components import cover
+from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.const import (
     ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
     CONF_IP_ADDRESS, CONF_NAME, CONF_PORT, CONF_TYPE, DEVICE_CLASS_HUMIDITY,
@@ -99,7 +100,7 @@ async def async_setup(hass, config):
 def get_accessory(hass, driver, state, aid, config):
     """Take state and return an accessory object if supported."""
     if not aid:
-        _LOGGER.warning('The entitiy "%s" is not supported, since it '
+        _LOGGER.warning('The entity "%s" is not supported, since it '
                         'generates an invalid aid, please change it.',
                         state.entity_id)
         return None
@@ -138,10 +139,15 @@ def get_accessory(hass, driver, state, aid, config):
         a_type = 'Lock'
 
     elif state.domain == 'media_player':
+        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         feature_list = config.get(CONF_FEATURE_LIST)
-        if feature_list and \
-                validate_media_player_features(state, feature_list):
-            a_type = 'MediaPlayer'
+
+        if device_class == DEVICE_CLASS_TV:
+            a_type = 'TelevisionMediaPlayer'
+        else:
+            if feature_list and \
+                    validate_media_player_features(state, feature_list):
+                a_type = 'MediaPlayer'
 
     elif state.domain == 'sensor':
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
