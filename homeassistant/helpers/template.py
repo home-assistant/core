@@ -1,28 +1,28 @@
 """Template helper methods for rendering strings with Home Assistant data."""
 import base64
+from datetime import datetime
 import json
 import logging
 import math
 import random
 import re
-from datetime import datetime
+from typing import Iterable
 
 import jinja2
 from jinja2 import contextfilter
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 
-from homeassistant.const import (ATTR_LATITUDE, ATTR_LONGITUDE, MATCH_ALL,
-                                 ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_UNIT_OF_MEASUREMENT,
+    MATCH_ALL, STATE_UNKNOWN)
 from homeassistant.core import (
-    State, callback, valid_entity_id, split_entity_id)
+    State, callback, split_entity_id, valid_entity_id)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
-from homeassistant.util import convert
-from homeassistant.util import dt as dt_util
-from homeassistant.util import location as loc_util
+from homeassistant.util import convert, dt as dt_util, location as loc_util
 from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
@@ -262,6 +262,7 @@ class Template:
             'is_state': template_methods.is_state,
             'is_state_attr': template_methods.is_state_attr,
             'state_attr': template_methods.state_attr,
+            'expand': template_methods.expand,
             'states': AllStates(self.hass),
         })
 
@@ -384,6 +385,7 @@ class TemplateState(State):
     def _access_state(self):
         state = object.__getattribute__(self, '_state')
         hass = object.__getattribute__(self, '_hass')
+
         _collect_state(hass, state.entity_id)
         return state
 
@@ -445,6 +447,36 @@ class TemplateMethods:
         """Initialize the helpers."""
         self._hass = hass
 
+    def expand(self, *args) -> Iterable[State]:
+        """Expand out any groups into entity states."""
+        search = list(args)
+        found = {}
+        while search:
+            entity = search.pop()
+            if isinstance(entity, str):
+                entity_id = entity
+                entity = _get_state(self._hass, entity)
+                if entity is None:
+                    continue
+            elif isinstance(entity, State):
+                entity_id = entity.entity_id
+            elif isinstance(entity, Iterable):
+                search += entity
+                continue
+            else:
+                # ignore other types
+                continue
+
+            from homeassistant.components import group
+            if split_entity_id(entity_id)[0] == group.DOMAIN:
+                # Collect state will be called in here since it's wrapped
+                group_entities = entity.attributes.get(ATTR_ENTITY_ID)
+                if group_entities:
+                    search += group_entities
+            else:
+                found[entity_id] = entity
+        return sorted(found.values(), key=lambda a: a.entity_id)
+
     def closest(self, *args):
         """Find closest entity.
 
@@ -493,19 +525,7 @@ class TemplateMethods:
 
             entities = args[2]
 
-        if isinstance(entities, (AllStates, DomainStates)):
-            states = list(entities)
-        else:
-            if isinstance(entities, State):
-                gr_entity_id = entities.entity_id
-            else:
-                gr_entity_id = str(entities)
-
-            _collect_state(self._hass, gr_entity_id)
-
-            group = self._hass.components.group
-            states = [_get_state(self._hass, entity_id) for entity_id
-                      in group.expand_entity_ids([gr_entity_id])]
+        states = self.expand(entities)
 
         # state will already be wrapped here
         return loc_helper.closest(latitude, longitude, states)
