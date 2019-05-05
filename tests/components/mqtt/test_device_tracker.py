@@ -1,6 +1,4 @@
 """The tests for the MQTT device tracker platform."""
-import logging
-import os
 from asynctest import patch
 import pytest
 
@@ -9,8 +7,6 @@ from homeassistant.components import device_tracker
 from homeassistant.const import CONF_PLATFORM
 
 from tests.common import async_fire_mqtt_message
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
