@@ -8,7 +8,7 @@ from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture(name='google_setup')
-async def mock_google_setup(hass):
+def mock_google_setup(hass):
     """Mock the google set up functions."""
     p_auth = patch(
         'homeassistant.components.google.do_authentication',
