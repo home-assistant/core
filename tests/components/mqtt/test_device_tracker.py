@@ -2,9 +2,9 @@
 from asynctest import patch
 import pytest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import device_tracker
 from homeassistant.const import CONF_PLATFORM
+from homeassistant.setup import async_setup_component
 
 from tests.common import async_fire_mqtt_message
 
