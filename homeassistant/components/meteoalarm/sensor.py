@@ -37,10 +37,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the MeteoAlarm sensor platform."""
     from meteoalertapi import Meteoalert
 
-    country = config.get(CONF_COUNTRY)
-    province = config.get(CONF_PROVINCE)
-    language = config.get(CONF_LANGUAGE)
-    name = config.get(CONF_NAME)
+    country = config[CONF_COUNTRY]
+    province = config[CONF_PROVINCE]
+    language = config[CONF_LANGUAGE]
+    name = config[CONF_NAME]
 
     try:
         api = Meteoalert(country, province, language)
@@ -57,9 +57,7 @@ class MeteoAlertSensor(Entity):
     def __init__(self, api, name):
         """Initialize the MeteoAlert sensor."""
         self._name = name
-        self._attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
+        self._attributes = {}
         self._state = None
         self._api = api
 
@@ -76,6 +74,7 @@ class MeteoAlertSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
+        self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
         return self._attributes
 
     @property
