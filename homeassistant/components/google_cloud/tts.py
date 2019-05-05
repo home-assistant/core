@@ -121,7 +121,7 @@ class GoogleCloudTTSProvider(Provider):
     def __init__(
             self,
             hass,
-            key_file = None,
+            key_file=None,
             language=DEFAULT_LANG,
             gender=DEFAULT_GENDER,
             voice=DEFAULT_VOICE,
