@@ -3,6 +3,7 @@ Module with location helpers.
 
 detect_location_info and elevation are mocked by default during tests.
 """
+import asyncio
 import collections
 import math
 from typing import Any, Optional, Tuple, Dict
@@ -33,7 +34,8 @@ LocationInfo = collections.namedtuple(
      'use_metric'])
 
 
-async def async_detect_location_info(session) -> Optional[LocationInfo]:
+async def async_detect_location_info(session: aiohttp.ClientSession) \
+        -> Optional[LocationInfo]:
     """Detect location information."""
     data = await _get_ipapi(session)
 
@@ -63,14 +65,14 @@ def distance(lat1: Optional[float], lon1: Optional[float],
     return result * 1000
 
 
-async def async_get_elevation(session, latitude: float, longitude: float) \
-        -> int:
+async def async_get_elevation(session: aiohttp.ClientSession, latitude: float,
+                              longitude: float) -> int:
     """Return elevation for given latitude and longitude."""
     try:
         resp = await session.get(ELEVATION_URL, params={
             'locations': '{},{}'.format(latitude, longitude),
         }, timeout=5)
-    except aiohttp.ClientError:
+    except (aiohttp.ClientError, asyncio.TimeoutError):
         return 0
 
     if resp.status != 200:
@@ -161,11 +163,12 @@ def vincenty(point1: Tuple[float, float], point2: Tuple[float, float],
     return round(s, 6)
 
 
-async def _get_ipapi(session) -> Optional[Dict[str, Any]]:
+async def _get_ipapi(session: aiohttp.ClientSession) \
+        -> Optional[Dict[str, Any]]:
     """Query ipapi.co for location data."""
     try:
         resp = await session.get(IPAPI, timeout=5)
-    except aiohttp.ClientError:
+    except (aiohttp.ClientError, asyncio.TimeoutError):
         return None
 
     try:
@@ -187,11 +190,12 @@ async def _get_ipapi(session) -> Optional[Dict[str, Any]]:
     }
 
 
-async def _get_ip_api(session) -> Optional[Dict[str, Any]]:
+async def _get_ip_api(session: aiohttp.ClientSession) \
+        -> Optional[Dict[str, Any]]:
     """Query ip-api.com for location data."""
     try:
         resp = await session.get(IP_API, timeout=5)
-    except aiohttp.ClientError:
+    except (aiohttp.ClientError, asyncio.TimeoutError):
         return None
 
     try:

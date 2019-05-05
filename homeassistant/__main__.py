@@ -86,10 +86,11 @@ def ensure_config_path(config_dir: str) -> None:
             sys.exit(1)
 
 
-def ensure_config_file(config_dir: str) -> str:
+async def ensure_config_file(hass, config_dir: str) -> str:
     """Ensure configuration file exists."""
     import homeassistant.config as config_util
-    config_path = config_util.ensure_config_exists(config_dir)
+    config_path = await config_util.async_ensure_config_exists(
+        hass, config_dir)
 
     if config_path is None:
         print('Error getting configuration path')
@@ -275,7 +276,7 @@ async def setup_and_run_hass(config_dir: str,
             skip_pip=args.skip_pip, log_rotate_days=args.log_rotate_days,
             log_file=args.log_file, log_no_color=args.log_no_color)
     else:
-        config_file = ensure_config_file(config_dir)
+        config_file = await ensure_config_file(hass, config_dir)
         print('Config directory:', config_dir)
         await bootstrap.async_from_config_file(
             config_file, hass, verbose=args.verbose, skip_pip=args.skip_pip,
