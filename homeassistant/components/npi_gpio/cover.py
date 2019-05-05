@@ -6,8 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.cover import CoverDevice, PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
-#from homeassistant.components import npi_gpio #use this instead of the custom_component below when send to official release
-from custom_components import npi_gpio
+from homeassistant.components import npi_gpio
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
