@@ -54,7 +54,7 @@ TREND_SUBSIDING = 'Subsiding'
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
-    """Configure the platform and add the sensors."""
+    """Configure the IQVIA platform and add the sensors."""
     iqvia = hass.data[DOMAIN][DATA_CLIENT]
 
     sensor_class_mapping = {
@@ -94,14 +94,19 @@ def calculate_trend(indices):
 
 
 class ForecastSensor(IQVIAEntity):
-    """Define sensor related to forecast data."""
+    """Define sensor related to IQVIA forecast data."""
 
     async def async_update(self):
         """Update the sensor."""
         if not self._iqvia.data:
             return
 
-        data = self._iqvia.data[self._type].get('Location')
+        try:
+            data = self._iqvia.data[self._type].get('Location')
+        except AttributeError:
+            _LOGGER.error("Unable to get data")
+            return
+
         if not data:
             return
 
@@ -129,7 +134,7 @@ class ForecastSensor(IQVIAEntity):
 
 
 class IndexSensor(IQVIAEntity):
-    """Define sensor related to indices."""
+    """Define sensor related to IQVIA indices."""
 
     async def async_update(self):
         """Update the sensor."""
@@ -137,12 +142,16 @@ class IndexSensor(IQVIAEntity):
             return
 
         data = {}
-        if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW):
-            data = self._iqvia.data[TYPE_ALLERGY_INDEX].get('Location')
-        elif self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW):
-            data = self._iqvia.data[TYPE_ASTHMA_INDEX].get('Location')
-        elif self._type == TYPE_DISEASE_TODAY:
-            data = self._iqvia.data[TYPE_DISEASE_INDEX].get('Location')
+        try:
+            if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW):
+                data = self._iqvia.data[TYPE_ALLERGY_INDEX].get('Location')
+            elif self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW):
+                data = self._iqvia.data[TYPE_ASTHMA_INDEX].get('Location')
+            elif self._type == TYPE_DISEASE_TODAY:
+                data = self._iqvia.data[TYPE_DISEASE_INDEX].get('Location')
+        except AttributeError:
+            _LOGGER.error("Unable to get data")
+            return
 
         if not data:
             return
