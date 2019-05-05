@@ -129,7 +129,7 @@ class GoogleCloudTTSProvider(Provider):
             speed=1.0,
             pitch=0,
             gain=0,
-            profiles=[]
+            profiles=None
     ):
         """Init Google Cloud TTS service."""
         self.hass = hass
@@ -215,7 +215,7 @@ class GoogleCloudTTSProvider(Provider):
                 speaking_rate=max(min(_speed, MAX_SPEED), MIN_SPEED),
                 pitch=max(min(_pitch, MAX_PITCH), MIN_PITCH),
                 volume_gain_db=max(min(_gain, MAX_GAIN), MIN_GAIN),
-                effects_profile_id=_profiles,
+                effects_profile_id=_profiles or [],
             )
             # pylint: enable=no-member
 
