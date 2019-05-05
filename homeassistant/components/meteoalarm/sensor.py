@@ -23,7 +23,8 @@ DEFAULT_NAME = 'meteoalarm'
 
 ICON = 'mdi:alert'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
+SCAN_INTERVAL = timedelta(minutes=30)
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COUNTRY): cv.string,
@@ -45,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         api = Meteoalert(country, province, language)
     except KeyError():
-        _LOGGER.exception("Wrong country digits, or province name")
+        _LOGGER.error("Wrong country digits, or province name")
         return
 
     add_entities([MeteoAlertSensor(api, name)], True)
@@ -83,13 +84,12 @@ class MeteoAlertSensor(Entity):
         """Icon to use in the frontend."""
         return ICON
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update device state."""
         alert = self._api.get_alert()
         if alert:
-            for key, value in alert.items():
-                self._attributes[key] = value
+            self._attributes = alert.items()
             self._state = alert['headline']
         else:
+            self._attributes = {}
             self._state = 'no warnings'
