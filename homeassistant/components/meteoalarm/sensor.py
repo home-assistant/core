@@ -87,8 +87,8 @@ class MeteoAlertSensor(Entity):
         """Update device state."""
         alert = self._api.get_alert()
         if alert:
-            self._attributes = alert.items()
-            self._state = alert['headline']
+            self._attributes = alert
+            self._state = alert.pop('headline')
         else:
             self._attributes = {}
             self._state = 'no warnings'
