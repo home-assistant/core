@@ -9,7 +9,6 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
