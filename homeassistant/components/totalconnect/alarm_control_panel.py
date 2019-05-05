@@ -9,7 +9,7 @@ from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED,
-    STATE_ALARM_ARMING, STATE_ALARM_DISARMING, STATE_ALARM_TRIGGERED, 
+    STATE_ALARM_ARMING, STATE_ALARM_DISARMING, STATE_ALARM_TRIGGERED,
     STATE_ALARM_TRIGGERED_FIRE_SMOKE, STATE_ALARM_TRIGGERED_CARBON_MONOXIDE,
     CONF_NAME, STATE_ALARM_ARMED_CUSTOM_BYPASS)
 
@@ -83,9 +83,10 @@ class TotalConnect(alarm.AlarmControlPanel):
         elif status == self._client.ALARMING_FIRE_SMOKE:
             state = STATE_ALARM_TRIGGERED_FIRE_SMOKE
         elif status == self._client.ALARMING_CARBON_MONOXIDE:
-            state = STATE_ALARM_TRIGGERED_CARBON_MONOXIDE        
+            state = STATE_ALARM_TRIGGERED_CARBON_MONOXIDE
         else:
-            logging.info("Total Connect Client returned unknown status code: " + str(status))
+            logging.info("Total Connect Client returned "
+                         "unknown status code: %s", status)
             state = None
 
         self._state = state
