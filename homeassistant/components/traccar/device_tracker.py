@@ -21,7 +21,7 @@ from .const import (
     EVENT_GEOFENCE_EXIT, EVENT_DEVICE_OVERSPEED, EVENT_DEVICE_ONLINE,
     EVENT_DEVICE_STOPPED, EVENT_MAINTENANCE, EVENT_ALARM, EVENT_TEXT_MESSAGE,
     EVENT_DEVICE_UNKNOWN, EVENT_IGNITION_OFF, EVENT_IGNITION_ON,
-    EVENT_ALL_EVENTS, CONF_MAX_ACCURACY)
+    EVENT_ALL_EVENTS, CONF_MAX_ACCURACY, CONF_SKIP_ACCURACY_ON)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,6 +38,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     vol.Required(CONF_MAX_ACCURACY, default=0): cv.vol.All(vol.Coerce(int),
                                                            vol.Range(min=0)),
+    vol.Optional(CONF_SKIP_ACCURACY_ON,
+                 default=[]): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_MONITORED_CONDITIONS,
                  default=[]): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_EVENT,
@@ -74,7 +76,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     scanner = TraccarScanner(
         api, hass, async_see,
         config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
-        config.get(CONF_MAX_ACCURACY),
+        config.get(CONF_MAX_ACCURACY), config[CONF_SKIP_ACCURACY_ON],
         config[CONF_MONITORED_CONDITIONS], config[CONF_EVENT])
 
     return await scanner.async_init()
@@ -84,7 +86,7 @@ class TraccarScanner:
     """Define an object to retrieve Traccar data."""
 
     def __init__(self, api, hass, async_see, scan_interval, max_accuracy,
-                 custom_attributes, event_types):
+                 skip_accuracy_on, custom_attributes, event_types):
         """Initialize."""
         from stringcase import camelcase
         self._event_types = {camelcase(evt): evt for evt in event_types}
@@ -95,6 +97,7 @@ class TraccarScanner:
         self.connected = False
         self._hass = hass
         self._max_accuracy = max_accuracy
+        self._skip_accuracy_on = skip_accuracy_on
 
     async def async_init(self):
         """Further initialize connection to Traccar."""
@@ -132,7 +135,8 @@ class TraccarScanner:
             device_info = self._api.device_info[device_unique_id]
             device = None
             attr = {}
-            has_custom_attributes = False
+            skip_accuracy_filter = False
+
             attr[ATTR_TRACKER] = 'traccar'
             if device_info.get('address') is not None:
                 attr[ATTR_ADDRESS] = device_info['address']
@@ -155,12 +159,13 @@ class TraccarScanner:
             for custom_attr in self._custom_attributes:
                 if device_info.get(custom_attr) is not None:
                     attr[custom_attr] = device_info[custom_attr]
-                    has_custom_attributes = True
+                    if custom_attr in self._skip_accuracy_on:
+                        skip_accuracy_filter = True
 
             accuracy = float(0)
             if device_info.get('accuracy') is not None:
                 accuracy = device_info['accuracy']
-            if (not has_custom_attributes and self._max_accuracy > 0 and
+            if (not skip_accuracy_filter and self._max_accuracy > 0 and
                     accuracy > self._max_accuracy):
                 _LOGGER.info('Excluded position by accuracy filter: %f (%s)',
                              accuracy, attr[ATTR_TRACCAR_ID])

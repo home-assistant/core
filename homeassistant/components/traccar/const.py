@@ -1,6 +1,7 @@
 """Constants for Traccar platform."""
 
 CONF_MAX_ACCURACY = 'max_accuracy'
+CONF_SKIP_ACCURACY_ON = 'skip_accuracy_filter_on'
 
 ATTR_ADDRESS = 'address'
 ATTR_CATEGORY = 'category'
