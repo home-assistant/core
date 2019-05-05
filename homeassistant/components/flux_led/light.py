@@ -298,14 +298,14 @@ class FluxLight(Light):
         if hs_color is not None:
             # Special case warm-white mode
             if hs_color == (29.6, 58.824):
-                white = 100 if brightness is None else (self.brightness / 255 * 100)
+                white = 255 if brightness is None else self.brightness
             else:
                 if brightness is None:
                     brightness = self.brightness
                 color = (hs_color[0], hs_color[1], brightness / 255 * 100)
         elif brightness is not None:
             if self._color == (0.0, 0.0, 0.0) and self._white_value > 0:
-                white = brightness / 255 * 100
+                white = brightness
             else:
                 color = (self._color[0], self._color[1],
                         brightness / 255 * 100)
