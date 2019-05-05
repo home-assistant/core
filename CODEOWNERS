@@ -129,6 +129,7 @@ homeassistant/components/kodi/* @armills
 homeassistant/components/konnected/* @heythisisnate
 homeassistant/components/lametric/* @robbiet480
 homeassistant/components/launch_library/* @ludeeus
+homeassistant/components/leafspy/* @jesserockz
 homeassistant/components/lifx/* @amelchio
 homeassistant/components/lifx_cloud/* @amelchio
 homeassistant/components/lifx_legacy/* @amelchio
