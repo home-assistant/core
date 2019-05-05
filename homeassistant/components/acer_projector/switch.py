@@ -1,6 +1,7 @@
 """Use serial protocol of Acer projector to obtain state of the projector."""
 import logging
 import re
+import time
 
 import voluptuous as vol
 
@@ -89,24 +90,52 @@ class AcerSwitch(SwitchDevice):
         try:
             if not self.ser.is_open:
                 self.ser.open()
+            else:    
+                self.ser.flushInput()
+                self.ser.flushOutput()
+                
             msg = msg.encode('utf-8')
             self.ser.write(msg)
-            # Size is an experience value there is no real limit.
-            # AFAIK there is no limit and no end character so we will usually
-            # need to wait for timeout
-            ret = self.ser.read_until(size=20).decode('utf-8')
+            #Try to get a response a maximum of 5 times
+            #for x in range(0, 5):
+            time.sleep(1)
+            if self.ser.inWaiting() > 0:
+                _LOGGER.debug('Number of characters to read %s', self.ser.inWaiting())
+                # Changed to read number of waiting characters
+                test_list = self.ser.read(self.ser.inWaiting()).split(b'\r')
+                # Remove empty strings from the list
+                ret = [i for i in test_list if i]
+                if len(ret) > 0:
+                    self.ser.close()
+                    return ret
+                
+            _LOGGER.debug('No response for %s', msg)
+            self.ser.close()
+                
+                    
+            
         except serial.SerialException:
             _LOGGER.error('Problem communicating with %s', self._serial_port)
-        self.ser.close()
-        return ret
+        #self.ser.close()
+        #return ret
 
     def _write_read_format(self, msg):
         """Write msg, obtain answer and format output."""
         # answers are formatted as ***\answer\r***
-        awns = self._write_read(msg)
-        match = re.search(r'\r(.+)\r', awns)
-        if match:
-            return match.group(1)
+        #Try 5 times to get a response
+        for x in range(0, 5):
+            lines = self._write_read(msg)
+                    
+            if (lines is not None):
+                for line in lines:
+                    decodeLine = line.decode('utf-8')
+                    if not decodeLine.startswith('*'):
+                        return decodeLine
+            time.sleep(1)
+        
+        #If it gets to here something has gone wrong
+        _LOGGER.warn('Not able to get the relevant state for %s', msg)
+        _LOGGER.warn(lines)
         return STATE_UNKNOWN
 
     @property
@@ -133,20 +162,23 @@ class AcerSwitch(SwitchDevice):
         """Get the latest state from the projector."""
         msg = CMD_DICT[LAMP]
         awns = self._write_read_format(msg)
+        
         if awns == 'Lamp 1':
             self._state = True
             self._available = True
-        elif awns == 'Lamp 0':
+        elif awns in ('LMAP 0', 'Lamp 0'):
             self._state = False
             self._available = True
         else:
+            _LOGGER.warn('Unknown status ' + awns)
             self._available = False
 
-        for key in self._attributes:
-            msg = CMD_DICT.get(key, None)
-            if msg:
-                awns = self._write_read_format(msg)
-                self._attributes[key] = awns
+        if self._state and self._available:
+            for key in self._attributes:
+                msg = CMD_DICT.get(key, None)
+                if msg:
+                    awns = self._write_read_format(msg)
+                    self._attributes[key] = awns
 
     def turn_on(self, **kwargs):
         """Turn the projector on."""
