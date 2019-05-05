@@ -5,6 +5,7 @@ from datetime import datetime
 from datetime import timedelta
 
 import requests
+import aiohttp
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -20,7 +21,7 @@ DOMAIN = 'azuredns'
 
 INTERVAL = timedelta(minutes=5)
 
-AUTHORITYHOSTURL = 'https://login.microsoftonline.com'
+AUTHORITY_HOST_URL = 'https://login.microsoftonline.com'
 RESOURCE = 'https://management.azure.com/'
 
 CONF_CLIENTID = 'clientid'
@@ -58,16 +59,16 @@ async def async_setup(hass, config):
     resourcegroupname = config[DOMAIN][CONF_RESOURCEGROUPNAME]
     timeout = config[DOMAIN][CONF_TIMEOUT]
     ttl = config[DOMAIN][CONF_TTL]
-    authority_url = AUTHORITYHOSTURL + '/' + config[DOMAIN][CONF_TENANT]
-    api_url = ('https://management.azure.com/subscriptions/' +
+    authority_url = AUTHORITY_HOST_URL + "/" + config[DOMAIN][CONF_TENANT]
+    api_url = ("https://management.azure.com/subscriptions/" +
                subscriptionid +
-               '/resourceGroups/' +
+               "/resourceGroups/" +
                resourcegroupname +
-               '/providers/Microsoft.Network/dnsZones/' +
+               "/providers/Microsoft.Network/dnsZones/" +
                domain +
-               '/A/' +
+               "/A/" +
                host +
-               '?api-version=2018-05-01')
+               "?api-version=2018-05-01")
 
     async_get_clientsession(hass)
 
@@ -76,7 +77,7 @@ async def async_setup(hass, config):
                                     authority_url, api_url, timeout, ttl)
 
     if not result:
-        _LOGGER.error("Failed to update Azure DNS record.")
+        _LOGGER.error("Failed to update Azure DNS record")
         return False
 
     async def update_domain_interval():
@@ -94,7 +95,6 @@ async def _update_azuredns(resource, tenant,
                            api_url, timeout, ttl):
     """Update the Azure DNS Record with the external IP address."""
     import adal
-    import aiohttp
 
     params = {
         'resource': resource,
@@ -117,9 +117,9 @@ async def _update_azuredns(resource, tenant,
     access_token = token.get('accessToken')
 
     if not access_token:
-        _LOGGER.error("Failed to acquire Azure AD Access Token.")
+        _LOGGER.error("Failed to acquire Azure AD Access Token")
     else:
-        _LOGGER.debug("Azure AD App Token was acquired.")
+        _LOGGER.debug("Azure AD App Token was acquired")
 
     # Get the external IP address of the Home Assistant instance.
     aiotimeout = aiohttp.ClientTimeout(total=timeout)
@@ -161,7 +161,7 @@ async def _update_azuredns(resource, tenant,
 
         if ipv4address == azureip:
             _LOGGER.debug(
-                "IP address in Azure DNS configured correctly to %s.",
+                "IP address in Azure DNS configured correctly to %s",
                 ipv4address)
         else:
             _LOGGER.error(
