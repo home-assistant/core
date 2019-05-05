@@ -1,5 +1,6 @@
 """Helpers for config validation using voluptuous."""
 import inspect
+import ipaddress
 import json
 import logging
 import os
@@ -530,6 +531,72 @@ def url(value: Any) -> str:
         return vol.Schema(vol.Url())(url_in)
 
     raise vol.Invalid('invalid url')
+
+
+def ip_address(value: Any) -> str:
+    """Validate an IP address (IPv4/IPv6)."""
+    value = str(value)
+    try:
+        ip = ipaddress.ip_address(value)
+    except ValueError:
+        raise vol.Invalid("Invalid IP address: {}.".format(value))
+    return str(ip)
+
+
+def ipv4_address(value: Any) -> str:
+    """Validate an IPv4 address."""
+    value = str(value)
+    try:
+        ip = ipaddress.ip_address(value)
+    except ValueError:
+        raise vol.Invalid("Invalid IPv4 address: {}.".format(value))
+    if ip.version != 4:
+        raise vol.Invalid("IPv{} addresses not allowed.".format(ip.version))
+    return str(ip)
+
+
+def ipv6_address(value: Any) -> str:
+    """Validate an IPv6 address."""
+    value = str(value)
+    try:
+        ip = ipaddress.ip_address(value)
+    except ValueError:
+        raise vol.Invalid("Invalid IPv6 address: {}.".format(value))
+    if ip.version != 6:
+        raise vol.Invalid("IPv{} addresses not allowed.".format(ip.version))
+    return str(ip)
+
+
+def mac48_address(value: Any) -> str:
+    """Validate and normalize a 48-bit MAC address."""
+    mac = str(value).upper()
+    if re.match(r'[\dA-F]{1,2}([-:\s])[\dA-F]{1,2}(\1[\dA-F]{1,2}){4}$', mac):
+        octets = [octet.zfill(2) for octet in re.split(r':|-|\s', mac)]
+        return '-'.join(octets)
+    if re.match(r'[\dA-F]{4}([-.\s])[\dA-F]{4}\1[\dA-F]{4}$', mac):
+        mac = re.sub(r'[-.\s]', '', mac)
+        octets = ['{}{}'.format(mac[i], mac[i+1]) for i in range(0, 12, 2)]
+        return '-'.join(octets)
+    if re.match(r'[\dA-F]{12}$', mac):
+        octets = ["{}{}".format(mac[i], mac[i+1]) for i in range(0, 12, 2)]
+        return '-'.join(octets)
+    raise vol.Invalid("Invalid MAC address: {}".format(value))
+
+
+def mac64_address(value: Any) -> str:
+    """Validate and normalize a 64-bit MAC address."""
+    mac = str(value).upper()
+    if re.match(r'^[\dA-F]{1,2}([-:\s])[\dA-F]{1,2}(\1[\dA-F]{1,2}){6}$', mac):
+        octets = [octet.zfill(2) for octet in re.split(r':|-|\s', mac)]
+        return '-'.join(octets)
+    if re.match(r'^[\dA-F]{4}([-.\s])[\dA-F]{4}(\1[\dA-F]{4}){2}$', mac):
+        mac = re.sub(r'[-.\s]', '', mac)
+        octets = ['{}{}'.format(mac[i], mac[i+1]) for i in range(0, 16, 2)]
+        return '-'.join(octets)
+    if re.match(r'^[\dA-F]{16}$', mac):
+        octets = ["{}{}".format(mac[i], mac[i+1]) for i in range(0, 16, 2)]
+        return '-'.join(octets)
+    raise vol.Invalid("Invalid extended address: {}".format(value))
 
 
 def x10_address(value):

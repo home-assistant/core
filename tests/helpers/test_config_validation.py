@@ -97,6 +97,147 @@ def test_url():
         assert schema(value)
 
 
+def test_ip_address():
+    """Test IP address validation."""
+    test = vol.Schema(cv.ip_address)
+    invalid = (
+        None, True, False, 123, 123.456, 123+456j,
+        [], [1, 2, 3, 4], ['a', 'b', 'c', 'd'],
+        {}, {'a': 1, 'b': 2, 'c': 3, 'd': 4},
+        '', 'abc', '123', '!@#$%', 'abc::123::def', '...', ':::::::',
+        '1.2.3', '1.2.3.4.5', 'abc1.2.3.4', '1.2.3.4abc', '.2.3.4', '1..3.4',
+        '1.2.3.', '*.2.3.4', '1.*.3.4', '1.2.*.4', '1.2.3.*', 'a.2.3.4',
+        '1.b.3.4', '1.2.c.4', '1.2.3.d', '256.2.3.4', '1.256.3.4', '1.2.256.4',
+        '1.2.3.256', '1:2:3:4', '1-2-3-4','1/2/3/4', '1_2_3_4', '1,2,3,4',
+        '1 2 3 4', '1:2:3:4:5:6:7', '1:2:3:4:5:6:7:8:9', 'xyz1:2:3:4:5:6:7:8',
+        '1:2:3:4:5:6:7:8xyz', ':2:3:4:5:6:7:8', '1:2:3:4:5:6:7:',
+        '*:2:3:4:5:6:7:8', '1:2:3:*:5:6:7:8', '1:2:3:4:5:6:7:*',
+        'g:2:3:4:5:6:7:8', '1:2:3:g:5:6:7:8', '1:2:3:4:5:6:7:g',
+        '10000:2:3:4:5:6:7:8', '1:2:3:10000:5:6:7:8', '1:2:3:4:5:6:7:10000',
+        '1.2.3.4.5.6.7.8', '1-2-3-4-5-6-7-8', '1/2/3/4/5/6/7/8',
+        '1_2_3_4_5_6_7_8', '1,2,3,4,5,6,7,8', '1 2 3 4 5 6 7 8')
+    valid = (
+        '172.16.54.1', '192.168.0.1', '10.0.0.1', '255.255.255.1',
+        '2001:db8:85a3:0:0:8a2e:370:7334', 'FE80::B3FF:FE1E:8329')
+    for value in invalid:
+        with pytest.raises(vol.MultipleInvalid):
+            test(value)
+    for value in valid:
+        assert test(value)
+
+
+def test_ipv4_address():
+    """Test IP address validation."""
+    test = vol.Schema(cv.ipv4_address)
+    invalid = (
+        None, True, False, 123, 123.456, 123+456j,
+        [], [1, 2, 3, 4], ['a', 'b', 'c', 'd'],
+        {}, {'a': 1, 'b': 2, 'c': 3, 'd': 4},
+        '', 'abc', '123', '!@#$%', '...',
+        '1.2.3', '1.2.3.4.5', 'abc1.2.3.4', '1.2.3.4abc', '.2.3.4', '1..3.4',
+        '1.2.3.', '*.2.3.4', '1.*.3.4', '1.2.*.4', '1.2.3.*', 'a.2.3.4',
+        '1.b.3.4', '1.2.c.4', '1.2.3.d', '256.2.3.4', '1.256.3.4', '1.2.256.4',
+        '1.2.3.256', '1:2:3:4', '1-2-3-4','1/2/3/4', '1_2_3_4', '1,2,3,4',
+        '1 2 3 4', '2001:db8:85a3:0:0:8a2e:370:7334', 'FE80::B3FF:FE1E:8329')
+    valid = ('172.16.54.1', '192.168.0.1', '10.0.0.1', '255.255.255.1')
+    for value in invalid:
+        with pytest.raises(vol.MultipleInvalid):
+            test(value)
+    for value in valid:
+        assert test(value)
+
+
+def test_ipv6_address():
+    """Test IP address validation."""
+    test = vol.Schema(cv.ipv6_address)
+    invalid = (
+        None, True, False, 123, 123.456, 123+456j,
+        [], [1, 2, 3, 4], ['a', 'b', 'c', 'd'],
+        {}, {'a': 1, 'b': 2, 'c': 3, 'd': 4},
+        '', 'abc', '123', '!@#$%', ':::::::', 'abc::123::def',
+        '1:2:3:4:5:6:7', '1:2:3:4:5:6:7:8:9', 'xyz1:2:3:4:5:6:7:8',
+        '1:2:3:4:5:6:7:8xyz', ':2:3:4:5:6:7:8', '1:2:3:4:5:6:7:',
+        '*:2:3:4:5:6:7:8', '1:2:3:*:5:6:7:8', '1:2:3:4:5:6:7:*',
+        'g:2:3:4:5:6:7:8', '1:2:3:g:5:6:7:8', '1:2:3:4:5:6:7:g',
+        '10000:2:3:4:5:6:7:8', '1:2:3:10000:5:6:7:8', '1:2:3:4:5:6:7:10000',
+        '1.2.3.4.5.6.7.8', '1-2-3-4-5-6-7-8', '1/2/3/4/5/6/7/8',
+        '1_2_3_4_5_6_7_8', '1,2,3,4,5,6,7,8', '1 2 3 4 5 6 7 8',
+        '172.16.54.1', '192.168.0.1', '10.0.0.1', '255.255.255.1')
+    valid = ('2001:db8:85a3:0:0:8a2e:370:7334', 'FE80::B3FF:FE1E:8329')
+    for value in invalid:
+        with pytest.raises(vol.MultipleInvalid):
+            test(value)
+    for value in valid:
+        assert test(value)
+
+
+def test_mac48_address():
+    """Test 48-bit MAC address validation."""
+    test = vol.Schema(cv.mac48_address)
+    invalid = (
+        None, True, False, 123, 123.456, 123+456j,
+        [], [1, 2, 3, 4], ['a', 'b', 'c', 'd'],
+        {}, {'a': 1, 'b': 2, 'c': 3, 'd': 4},
+        '', 'abc', '123', '!@#$%', ':::::', '-----', '..', '--',
+        'a1-b2-c3-d4-e5', 'a1-b2-c3-d4-e5-f6-a7', 'xyza1-b2-c3-d4-e5-f6',
+        'a1-b2-c3-d4-e5-f6xyz', '-b2-c3-d4-e5-f6', 'a1-b2--d4-e5-f6',
+        'a1-b2-c3-d4-e5-', '*-b2-c3-d4-e5-f6', 'a1-b2-*-d4-e5-f6',
+        'a1-b2-c3-d4-e5-*', 'g1-b2-c3-d4-e5-f6', 'a1-b2-g3-d4-e5-f6',
+        'a1-b2-c3-d4-e5-g6', '100-b2-c3-d4-e5-f6', 'a1-b2-100-d4-e5-f6',
+        'a1-b2-c3-d4-e5-100', 'a1.b2.c3.d4.e5.f6', 'a1,b2,c3,d4,e5,f6',
+        'a1/b2/c3/d4/e5/f6', 'a1_b2_c3_d4_e5_f6', 'a1b2:c3d4:e5f6',
+        'a1b2,c3d4,e5f6', 'a1b2/c3d4/e5f6', 'a1b2_c3d4_e5f6',
+        'a1-b2:c3-d4:e5-f6')
+    valid = (
+        'a1-b2-c3-d4-e4-f6', 'A1-B2-C3-D4-E5-F6', 'a1:b2:c3:d4:e4:f6',
+        'A1:B2:C3:D4:E5:F6', 'a1b2.c3d4.e5f6', 'A1B2.C3D4.E5F6',
+        'a1b2-c3d4-e5f6', 'A1B2-C3D4-E5F6', 'a1b2c3d4e4f6', 'A1B2C3D4E5F6',
+        'a1 b2 c3 d4 e4 f6', 'A1 B2 C3 D4 E5 F6', 'a1b2 c3d4 e4f6',
+        'A1B2 C3D4 E5F6', 'a-1-b-2-c-3', 'A-1-B-2-C-3', 'A:1:B:2:C:3',
+        'a:1:b:2:c:3', 'a 1 b 2 c 3', 'A 1 B 2 C 3')
+    for value in invalid:
+        with pytest.raises(vol.MultipleInvalid):
+            test(value)
+    for value in valid:
+        assert test(value)
+
+
+def test_mac64_address():
+    """Test 64-bit MAC address validation."""
+    test = vol.Schema(cv.mac64_address)
+    invalid = (
+        None, True, False, 123, 123.456, 123+456j,
+        [], [1, 2, 3, 4], ['a', 'b', 'c', 'd'] ,
+        {}, {'a': 1, 'b': 2, 'c': 3, 'd': 4},
+        '', 'abc', '123', '!@#$%', ':::::::', '-------', '...', '---',
+        'a1-b2-c3-d4-e5-f6-a7', 'a1-b2-c3-d4-e5-f6-a7-b8-c9',
+        'xyza1-b2-c3-d4-e5-f6-a7-b8', 'a1-b2-c3-d4-e5-f6-a7-b8xyz',
+        '-b2-c3-d4-e5-f6-a7-b8', 'a1-b2-c3--e5-f6-a7-b8',
+        'a1-b2-c3-d4-e5-f6-a7-', '*-b2-c3-d4-e5-f6-a7-b8',
+        'a1-b2-*-d4-e5-f6-a7-b8', 'a1-b2-c3-d4-e5-f6-a7-*',
+        'g1-b2-c3-d4-e5-f6-a7-b8', 'a1-b2-g3-d4-e5-f6-a7-b8',
+        'a1-b2-c3-d4-e5-f6-a7-g8', '100-b2-c3-d4-e5-f6-a7-b8',
+        'a1-b2-100-d4-e5-f6-a7-b8', 'a1-b2-c3-d4-e5-f6-a7-100',
+        'a1.b2.c3.d4.e5.f6.a7.b8', 'a1,b2,c3,d4,e5,f6,a7,b8',
+        'a1/b2/c3/d4/e5/f6/a7/b8', 'a1_b2_c3_d4_e5_f6_a7_b8',
+        'a1b2:c3d4:e5f6:a7b8', 'a1b2,c3d4,e5f6,a7b8', 'a1b2/c3d4/e5f6/a7b8',
+        'a1b2_c3d4_e5f6_a7b8', 'a1-b2:c3-d4:e5-f6:a7-b8')
+    valid = (
+        'a1-b2-c3-d4-e4-f6-a7-b8', 'A1-B2-C3-D4-E5-F6-A7-B8',
+        'a1:b2:c3:d4:e5:f6:a7:b8', 'A1:B2:C3:D4:E5:F6:A7:B8',
+        'a1b2.c3d4.e5f6.a7b8', 'A1B2.C3D4.E5F6.A7B8', 'a1b2-c3d4-e5f6-a7b8',
+        'A1B2-C3D4-E5F6-A7B8', 'a1b2c3d4e4f6a7b8', 'A1B2C3D4E5F6A7B8',
+        'a1 b2 c3 d4 e4 f6 a7 b8', 'A1 B2 C3 D4 E5 F6 A7 B8',
+        'a1b2 c3d4 e4f6 a7b8', 'A1B2 C3D4 E5F6 A7B8', 'a-1-b-2-c-3-d-4',
+        'A-1-B-2-C-3-D-4', 'a:1:b:2:c:3:d:4', 'A:1:B:2:C:3:D:4',
+        'a 1 b 2 c 3 d 4', 'A 1 B 2 C 3 D 4')
+    for value in invalid:
+        with pytest.raises(vol.MultipleInvalid):
+            test(value)
+    for value in valid:
+        assert test(value)
+
+
 def test_platform_config():
     """Test platform config validation."""
     options = (
