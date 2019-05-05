@@ -1305,9 +1305,6 @@ pyspcwebgw==0.4.0
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2
 
-# homeassistant.components.strava
-stravalib==stravalib==0.10.2
-
 # homeassistant.components.stride
 pystride==0.1.7
 
@@ -1664,6 +1661,9 @@ statsd==3.2.1
 
 # homeassistant.components.steam_online
 steamodd==4.21
+
+# homeassistant.components.strava
+stravalib==0.10.2
 
 # homeassistant.components.solaredge
 # homeassistant.components.thermoworks_smoke
