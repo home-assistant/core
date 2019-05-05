@@ -1,0 +1,10 @@
+{
+    "domain": "npi_gpio",
+    "name": "Npi gpio",
+    "documentation": "https://www.home-assistant.io/components/npi_gpio",
+    "requirements": [
+        "NPi.GPIO==0.5.8.2"
+    ],
+    "dependencies": [ "npi_gpio" ],
+    "codeowners": []
+}
