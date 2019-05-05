@@ -144,25 +144,6 @@ def data_manager_factory_fixture(nokia_api: nokia.NokiaApi):
     return factory
 
 
-def test_health_sensor_properties(
-        data_manager_factory: Callable[[], WithingsDataManager]
-):
-    """Test method."""
-    attribute = WITHINGS_MEASUREMENTS_MAP[const.MEAS_WEIGHT_KG]
-    sensor = WithingsHealthSensor(
-        data_manager_factory(),
-        attribute
-    )
-
-    assert sensor.name == 'Withings weight_kg person_1'
-    assert sensor.unique_id == 'withings_person_1_USER_ID_weight_kg'
-    assert sensor.state is None
-    assert sensor.unit_of_measurement == 'kg'
-    assert sensor.icon == 'mdi:weight-kilogram'
-    assert sensor.device_state_attributes == attribute.__dict__
-    assert not sensor.convert_units
-
-
 async def test_health_sensor_async_update(
         nokia_api: nokia.NokiaApi,
         data_manager_factory: Callable[[], WithingsDataManager]
