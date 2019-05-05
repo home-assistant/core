@@ -8,7 +8,7 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION, ATTR_POSITION, DEVICE_CLASSES_SCHEMA,
     CoverDevice)
 from homeassistant.const import (
-    CONF_NAME, STATE_OPEN, STATE_CLOSED, CONF_DEVICE_CLASS)
+    CONF_NAME, CONF_DEVICE_CLASS)
 import homeassistant.helpers.config_validation as cv
 
 from . import CONF_ADS_VAR, CONF_ADS_VAR_POSITION, DATA_ADS, \
@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the cover platform for ADS."""
-    ads_hub = hass.data.get(DATA_ADS)
+    ads_hub = hass.data[DATA_ADS]
 
     ads_var_is_closed = config.get(CONF_ADS_VAR)
     ads_var_position = config.get(CONF_ADS_VAR_POSITION)
@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     ads_var_open = config.get(CONF_ADS_VAR_OPEN)
     ads_var_close = config.get(CONF_ADS_VAR_CLOSE)
     ads_var_stop = config.get(CONF_ADS_VAR_STOP)
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
     device_class = config.get(CONF_DEVICE_CLASS)
 
     add_entities([AdsCover(ads_hub,
@@ -96,16 +96,6 @@ class AdsCover(AdsEntity, CoverDevice):
                                                STATE_KEY_POSITION)
 
     @property
-    def state(self):
-        """Return the state of the cover."""
-        closed = self.is_closed
-
-        if closed is None:
-            return None
-
-        return STATE_CLOSED if closed else STATE_OPEN
-
-    @property
     def device_class(self):
         """Return the class of this cover."""
         return self._device_class
@@ -145,8 +135,8 @@ class AdsCover(AdsEntity, CoverDevice):
 
     def set_cover_position(self, **kwargs):
         """Set cover position."""
-        position = kwargs.get(ATTR_POSITION)
-        if self._ads_var_pos_set is not None and position is not None:
+        position = kwargs[ATTR_POSITION]
+        if self._ads_var_pos_set is not None:
             self._ads_hub.write_by_name(self._ads_var_pos_set, position,
                                         self._ads_hub.PLCTYPE_BYTE)
 
