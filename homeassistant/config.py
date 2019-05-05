@@ -225,7 +225,7 @@ async def async_ensure_config_exists(hass: HomeAssistant, config_dir: str,
 
 
 async def async_create_default_config(
-        hass, config_dir: str, detect_location: bool = True
+        hass: HomeAssistant, config_dir: str, detect_location: bool = True
         ) -> Optional[str]:
     """Create a default configuration file in given configuration directory.
 
@@ -260,7 +260,7 @@ async def async_create_default_config(
     )
 
 
-def _write_default_config(config_dir: str, info)\
+def _write_default_config(config_dir: str, info: Dict)\
         -> Optional[str]:
     """Write the default config."""
     from homeassistant.components.config.group import (
