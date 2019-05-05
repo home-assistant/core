@@ -309,7 +309,7 @@ class FluxLight(Light):
                 white = brightness
             else:
                 color = (self._color[0], self._color[1],
-                        brightness / 255 * 100)
+                         brightness / 255 * 100)
         # handle RGBW mode
         if self._mode == MODE_RGBW:
             if white is not None:
