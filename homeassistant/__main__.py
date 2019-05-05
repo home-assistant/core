@@ -7,8 +7,9 @@ import platform
 import subprocess
 import sys
 import threading
-from typing import List, Dict, Any  # noqa pylint: disable=unused-import
-
+from typing import (  # noqa pylint: disable=unused-import
+    List, Dict, Any, TYPE_CHECKING
+)
 
 from homeassistant import monkey_patch
 from homeassistant.const import (
@@ -17,6 +18,9 @@ from homeassistant.const import (
     REQUIRED_PYTHON_VER,
     RESTART_EXIT_CODE,
 )
+
+if TYPE_CHECKING:
+    from homeassistant import core
 
 
 def set_loop() -> None:
@@ -86,7 +90,7 @@ def ensure_config_path(config_dir: str) -> None:
             sys.exit(1)
 
 
-async def ensure_config_file(hass, config_dir: str) -> str:
+async def ensure_config_file(hass: core.HomeAssistant, config_dir: str) -> str:
     """Ensure configuration file exists."""
     import homeassistant.config as config_util
     config_path = await config_util.async_ensure_config_exists(
@@ -373,7 +377,7 @@ def main() -> int:
 
     if args.script is not None:
         from homeassistant import scripts
-        return scripts.run(args.script)
+        return scripts.run(args.script)  # type: ignore
 
     config_dir = os.path.join(os.getcwd(), args.config)
     ensure_config_path(config_dir)
@@ -391,7 +395,7 @@ def main() -> int:
     if exit_code == RESTART_EXIT_CODE and not args.runner:
         try_to_restart()
 
-    return exit_code  # type: ignore # mypy cannot yet infer it
+    return exit_code
 
 
 if __name__ == "__main__":
