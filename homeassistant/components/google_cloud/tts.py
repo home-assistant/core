@@ -27,12 +27,11 @@ SUPPORTED_LANGUAGES = [
 ]
 DEFAULT_LANG = 'en-US'
 
-SUPPORTED_GENDERS = ['NEUTRAL', 'FEMALE', 'MALE']
 DEFAULT_GENDER = 'NEUTRAL'
 
-VOICE_REGEX = r'[a-z]{2}-[A-Z]{2}-(Standard|Wavenet)-[A-Z]'
+VOICE_REGEX = r'[a-z]{2}-[A-Z]{2}-(Standard|Wavenet)-[A-Z]|'
+DEFAULT_VOICE = ''
 
-SUPPORTED_ENCODINGS = ['OGG_OPUS', 'MP3', 'LINEAR16']
 DEFAULT_ENCODING = 'OGG_OPUS'
 
 MIN_SPEED = 0.25
@@ -48,35 +47,46 @@ MAX_GAIN = 16.0
 DEFAULT_GAIN = 0
 
 SUPPORTED_PROFILES = [
-    "wearable-class-device", "handset-class-device", "headphone-class-device",
+    "wearable-class-device",
+    "handset-class-device",
+    "headphone-class-device",
     "small-bluetooth-speaker-class-device",
     "medium-bluetooth-speaker-class-device",
     "large-home-entertainment-class-device",
-    "large-automotive-class-device", "telephony-class-application",
+    "large-automotive-class-device",
+    "telephony-class-application",
 ]
 
 SUPPORTED_OPTIONS = [
-    CONF_VOICE, CONF_GENDER, CONF_ENCODING, CONF_SPEED, CONF_PITCH, CONF_GAIN,
+    CONF_VOICE,
+    CONF_GENDER,
+    CONF_ENCODING,
+    CONF_SPEED,
+    CONF_PITCH,
+    CONF_GAIN,
     CONF_PROFILES,
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_KEY_FILE):
-        cv.string,
+    vol.Optional(CONF_KEY_FILE): cv.string,
     vol.Optional(CONF_LANG, default=DEFAULT_LANG):
         vol.In(SUPPORTED_LANGUAGES),
     vol.Optional(CONF_GENDER, default=DEFAULT_GENDER):
-        vol.All(vol.Upper, vol.In(SUPPORTED_GENDERS)),
-    vol.Optional(CONF_VOICE):
-        vol.All(cv.string, vol.Match(VOICE_REGEX)),
+        vol.All(vol.Upper, vol.In(
+            texttospeech.enums.SsmlVoiceGender.__members__
+        )),
+    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE):
+        cv.matches_regex(VOICE_REGEX),
     vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING):
-        vol.All(vol.Upper, vol.In(SUPPORTED_ENCODINGS)),
+        vol.All(vol.Upper, vol.In(
+            texttospeech.enums.AudioEncoding.__members__
+        )),
     vol.Optional(CONF_SPEED, default=DEFAULT_SPEED):
-        vol.Clamp(min=MIN_SPEED, max=MAX_SPEED),
+        vol.All(vol.Coerce(float), vol.Clamp(min=MIN_SPEED, max=MAX_SPEED)),
     vol.Optional(CONF_PITCH, default=DEFAULT_PITCH):
-        vol.Clamp(min=MIN_PITCH, max=MAX_PITCH),
+        vol.All(vol.Coerce(float), vol.Clamp(min=MIN_PITCH, max=MAX_PITCH)),
     vol.Optional(CONF_GAIN, default=DEFAULT_GAIN):
-        vol.Clamp(min=MIN_GAIN, max=MAX_GAIN),
+        vol.All(vol.Coerce(float), vol.Clamp(min=MIN_GAIN, max=MAX_GAIN)),
     vol.Optional(CONF_PROFILES, default=[]):
         vol.All(cv.ensure_list, [vol.In(SUPPORTED_PROFILES)]),
 })
@@ -88,7 +98,7 @@ async def async_get_engine(hass, config):
     if key_file:
         key_file = hass.config.path(key_file)
         if not os.path.isfile(key_file):
-            _LOGGER.error("%s doesn't exist", key_file)
+            _LOGGER.error("File %s doesn't exist", key_file)
             return None
 
     return GoogleCloudTTSProvider(
@@ -96,7 +106,7 @@ async def async_get_engine(hass, config):
         key_file,
         config.get(CONF_LANG),
         config.get(CONF_GENDER),
-        config.get(CONF_VOICE, ''),
+        config.get(CONF_VOICE),
         config.get(CONF_ENCODING),
         config.get(CONF_SPEED),
         config.get(CONF_PITCH),
@@ -109,8 +119,17 @@ class GoogleCloudTTSProvider(Provider):
     """The Google Cloud TTS API provider."""
 
     def __init__(
-            self, hass, key_file, language, gender, voice, encoding, speed,
-            pitch, gain, profiles
+            self,
+            hass,
+            key_file = None,
+            language=DEFAULT_LANG,
+            gender=DEFAULT_GENDER,
+            voice=DEFAULT_VOICE,
+            encoding=DEFAULT_ENCODING,
+            speed=1.0,
+            pitch=0,
+            gain=0,
+            profiles=[]
     ):
         """Init Google Cloud TTS service."""
         self.hass = hass
@@ -161,17 +180,17 @@ class GoogleCloudTTSProvider(Provider):
     async def async_get_tts_audio(self, message, language, options=None):
         """Load TTS from google."""
         _gender = options.get(CONF_GENDER).upper()
-        if _gender not in SUPPORTED_GENDERS:
+        if _gender not in texttospeech.enums.SsmlVoiceGender.__members__:
             _gender = self._gender
 
         _voice = options.get(CONF_VOICE) or self._voice
         if not re.match(VOICE_REGEX, _voice):
             _voice = self._voice
-        if not _voice.startswith(language):
+        if _voice and not _voice.startswith(language):
             language = _voice[:5]
 
         _encoding = options.get(CONF_ENCODING).upper()
-        if _encoding not in SUPPORTED_ENCODINGS:
+        if _encoding not in texttospeech.enums.AudioEncoding.__members__:
             _encoding = self._encoding
 
         _speed = options.get(CONF_SPEED)
@@ -180,15 +199,16 @@ class GoogleCloudTTSProvider(Provider):
         _profiles = options.get(CONF_PROFILES)
 
         try:
+            # pylint: disable=no-member
             synthesis_input = texttospeech.types.SynthesisInput(
                 text=message
-            )  # pylint: disable=no-member
+            )
 
             voice = texttospeech.types.VoiceSelectionParams(
                 language_code=language,
                 ssml_gender=texttospeech.enums.SsmlVoiceGender[_gender],
                 name=_voice
-            )  # pylint: disable=no-member
+            )
 
             audio_config = texttospeech.types.AudioConfig(
                 audio_encoding=texttospeech.enums.AudioEncoding[_encoding],
@@ -196,7 +216,8 @@ class GoogleCloudTTSProvider(Provider):
                 pitch=max(min(_pitch, MAX_PITCH), MIN_PITCH),
                 volume_gain_db=max(min(_gain, MAX_GAIN), MIN_GAIN),
                 effects_profile_id=_profiles,
-            )  # pylint: disable=no-member
+            )
+            # pylint: enable=no-member
 
             with async_timeout.timeout(10, loop=self.hass.loop):
                 response = await self.hass.async_add_executor_job(
