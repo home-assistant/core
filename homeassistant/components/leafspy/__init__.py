@@ -38,7 +38,7 @@ async def async_setup_entry(hass, entry):
     hass.http.register_view(LeafSpyView())
 
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(
-            entry, 'device_tracker'))
+        entry, 'device_tracker'))
 
     return True
 
