@@ -1,23 +1,14 @@
 """Support for Leaf Spy."""
-from collections import defaultdict
 import logging
 
 from aiohttp.web import Response
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import mqtt
-from homeassistant.const import CONF_WEBHOOK_ID
-from homeassistant.core import callback
-from homeassistant.loader import bind_hass
-import homeassistant.helpers.config_validation as cv
-from homeassistant.setup import async_when_setup
 from homeassistant.components.http.view import HomeAssistantView
 
 
-from .const import (CONF_SECRET, DOMAIN, URL_LEAFSPY_PATH)
-# Need to import .config_flow at least once
-from .config_flow import LeafSpyFlow
+from .config_flow import CONF_SECRET, DOMAIN, URL_LEAFSPY_PATH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,13 +50,14 @@ class LeafSpyContext:
         self.hass = hass
         self.secret = secret
 
+
     async def async_see(self, **data):
         """Send a see message to the device tracker."""
         raise NotImplementedError
 
 
 class LeafSpyView(HomeAssistantView):
-    """Handle incoming Leaf Spy requests"""
+    """Handle incoming Leaf Spy requests."""
 
     url = URL_LEAFSPY_PATH
     name = "api:leafspy"
@@ -77,8 +69,6 @@ class LeafSpyView(HomeAssistantView):
         context = hass.data[DOMAIN]['context']
 
         try:
-            # Do processing here
-            # _LOGGER.info(request.query)
             message = request.query
 
             if message['pass'] != context.secret:

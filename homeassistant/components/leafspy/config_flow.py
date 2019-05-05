@@ -2,11 +2,10 @@
 import re
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.auth.util import generate_secret
 
 
-from .const import (URL_LEAFSPY_PATH, CONF_SECRET, DOMAIN)
+from .const import URL_LEAFSPY_PATH, CONF_SECRET, DOMAIN
 
 
 @config_entries.HANDLERS.register(DOMAIN)

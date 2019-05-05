@@ -1,5 +1,4 @@
 """Device tracker platform that adds support for Leaf Spy."""
-import json
 import logging
 
 from homeassistant.components.device_tracker import (
@@ -31,11 +30,11 @@ async def async_setup_entry(hass, entry, async_see):
         DOMAIN, async_handle_message)
     return True
 
+
 def _parse_see_args(message):
-    """Parse the Leaf Spy parameters, into the format see expects.
-    """
-    dev_id = slugify('{}_{}'.format('leaf', message['VIN']))
-    kwargs = {
+    """Parse the Leaf Spy parameters, into the format see expects."""
+    dev_id = slugify('leaf_{}'.format(message['VIN']))
+    args = {
         'dev_id': dev_id,
         'host_name': message['user'],
         'gps': (message['Lat'], message['Long']),
@@ -57,13 +56,13 @@ def _parse_see_args(message):
         }
     }
 
-    return dev_id, kwargs
+    return args
+
 
 async def async_handle_message(hass, context, message):
     """Handle an Leaf Spy message."""
-
     _LOGGER.debug("Received %s", message)
 
-    dev_id, kwargs = _parse_see_args(message)
+    args = _parse_see_args(message)
 
-    await context.async_see(**kwargs)
+    await context.async_see(**args)
