@@ -37,12 +37,10 @@ BINDABLE_CLUSTERS = []
 BINARY_SENSOR_CLUSTERS = set()
 LIGHT_CLUSTERS = set()
 SWITCH_CLUSTERS = set()
-SENSOR_CLUSTERS = set()
 COMPONENT_CLUSTERS = {
     BINARY_SENSOR: BINARY_SENSOR_CLUSTERS,
     LIGHT: LIGHT_CLUSTERS,
-    SWITCH: SWITCH_CLUSTERS,
-    SENSOR: SENSOR_CLUSTERS
+    SWITCH: SWITCH_CLUSTERS
 }
 
 
@@ -298,6 +296,3 @@ def establish_device_mappings():
     LIGHT_CLUSTERS.add(zcl.clusters.lighting.Color.cluster_id)
 
     SWITCH_CLUSTERS.add(zcl.clusters.general.OnOff.cluster_id)
-
-    SENSOR_CLUSTERS.add(zcl.clusters.general.MultistateInput.cluster_id)
-    SENSOR_CLUSTERS.add(zcl.clusters.general.AnalogInput.cluster_id)
