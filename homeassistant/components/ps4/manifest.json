@@ -3,7 +3,7 @@
   "name": "Ps4",
   "documentation": "https://www.home-assistant.io/components/ps4",
   "requirements": [
-    "pyps4-homeassistant==0.7.2"
+    "pyps4-homeassistant==0.7.3"
   ],
   "dependencies": [],
   "codeowners": [
