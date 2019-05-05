@@ -3,8 +3,7 @@ import logging
 
 import voluptuous as vol
 
-#from homeassistant.components import npi_gpio #use this instead of the custom_component below when send to official release
-from custom_components import npi_gpio
+from homeassistant.components import npi_gpio 
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.const import DEVICE_DEFAULT_NAME
