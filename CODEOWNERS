@@ -187,7 +187,7 @@ homeassistant/components/random/* @fabaff
 homeassistant/components/rfxtrx/* @danielhiversen
 homeassistant/components/rmvtransport/* @cgtobi
 homeassistant/components/roomba/* @pschmitt
-homeassistant/components/rotel_rsp1570/* @pp81381
+homeassistant/components/rotel/* @pp81381
 homeassistant/components/ruter/* @ludeeus
 homeassistant/components/scene/* @home-assistant/core
 homeassistant/components/scrape/* @fabaff
