@@ -37,10 +37,12 @@ BINDABLE_CLUSTERS = []
 BINARY_SENSOR_CLUSTERS = set()
 LIGHT_CLUSTERS = set()
 SWITCH_CLUSTERS = set()
+SENSOR_CLUSTERS = set()
 COMPONENT_CLUSTERS = {
     BINARY_SENSOR: BINARY_SENSOR_CLUSTERS,
     LIGHT: LIGHT_CLUSTERS,
-    SWITCH: SWITCH_CLUSTERS
+    SWITCH: SWITCH_CLUSTERS,
+    SENSOR: SENSOR_CLUSTERS
 }
 
 
@@ -153,6 +155,8 @@ def establish_device_mappings():
         zcl.clusters.measurement.OccupancySensing: BINARY_SENSOR,
         zcl.clusters.hvac.Fan: FAN,
         SMARTTHINGS_ACCELERATION_CLUSTER: BINARY_SENSOR,
+        zcl.clusters.general.MultistateInput.cluster_id: SENSOR,
+        zcl.clusters.general.AnalogInput.cluster_id: SENSOR
     })
 
     SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS.update({
@@ -288,9 +292,14 @@ def establish_device_mappings():
     BINARY_SENSOR_CLUSTERS.add(
         zcl.clusters.measurement.OccupancySensing.cluster_id)
     BINARY_SENSOR_CLUSTERS.add(SMARTTHINGS_ACCELERATION_CLUSTER)
+    BINARY_SENSOR_CLUSTERS.add(zcl.clusters.general.MultistateInput.cluster_id)
+    BINARY_SENSOR_CLUSTERS.add(zcl.clusters.general.AnalogInput.cluster_id)
 
     LIGHT_CLUSTERS.add(zcl.clusters.general.OnOff.cluster_id)
     LIGHT_CLUSTERS.add(zcl.clusters.general.LevelControl.cluster_id)
     LIGHT_CLUSTERS.add(zcl.clusters.lighting.Color.cluster_id)
 
     SWITCH_CLUSTERS.add(zcl.clusters.general.OnOff.cluster_id)
+
+    SENSOR_CLUSTERS.add(zcl.clusters.general.MultistateInput.cluster_id)
+    SENSOR_CLUSTERS.add(zcl.clusters.general.AnalogInput.cluster_id)
