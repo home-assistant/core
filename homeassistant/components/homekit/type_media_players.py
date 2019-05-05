@@ -292,7 +292,7 @@ class TelevisionMediaPlayer(HomeAccessory):
 
     def set_input_source(self, value):
         """Send input set value if call came from HomeKit."""
-        _LOGGER.debug('%s: Set active_identifer to %s',
+        _LOGGER.debug('%s: Set current input to %s',
                       self.entity_id, value)
         source = self.sources[value]
         self._flag[CHAR_ACTIVE_IDENTIFIER] = True
@@ -346,7 +346,7 @@ class TelevisionMediaPlayer(HomeAccessory):
                     index = self.sources.index(source_name)
                     self.char_input_source.set_value(index)
                 else:
-                    _LOGGER.warning('%s: Sources out of sync. Please %s',
-                                    self.entity_id, 'restart HomeAssistant.')
+                    _LOGGER.warning('%s: Sources out of sync. '
+                                    'Restart HomeAssistant', self.entity_id)
                     self.char_input_source.set_value(0)
             self._flag[CHAR_ACTIVE_IDENTIFIER] = False

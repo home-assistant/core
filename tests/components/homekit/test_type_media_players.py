@@ -134,10 +134,12 @@ async def test_media_player_set_state(hass, hk_driver, events):
     assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_media_player_television_set_state(hass, hk_driver, events):
+async def test_media_player_television(hass, hk_driver, events, caplog):
     """Test if television accessory and HA are updated accordingly."""
     entity_id = 'media_player.television'
 
+    # Supports 'select_source', 'volume_step', 'turn_on', 'turn_off',
+    #       'volume_mute', 'volume_set', 'pause'
     hass.states.async_set(entity_id, None, {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TV, ATTR_SUPPORTED_FEATURES: 3469,
         ATTR_MEDIA_VOLUME_MUTED: False, ATTR_INPUT_SOURCE_LIST: [
@@ -171,6 +173,11 @@ async def test_media_player_television_set_state(hass, hk_driver, events):
     hass.states.async_set(entity_id, STATE_ON, {ATTR_INPUT_SOURCE: 'HDMI 3'})
     await hass.async_block_till_done()
     assert acc.char_input_source.value == 2
+
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_INPUT_SOURCE: 'HDMI 5'})
+    await hass.async_block_till_done()
+    assert acc.char_input_source.value == 0
+    assert caplog.records[-2].levelname == 'WARNING'
 
     # Set from HomeKit
     call_turn_on = async_mock_service(hass, DOMAIN, 'turn_on')
@@ -276,27 +283,21 @@ async def test_media_player_television_set_state(hass, hk_driver, events):
     assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_media_player_television_volume_level(hass, hk_driver, events):
-    """Test if television accessory and HA are updated accordingly."""
+async def test_media_player_television_basic(hass, hk_driver, events, caplog):
+    """Test if basic television accessory and HA are updated accordingly."""
     entity_id = 'media_player.television'
 
+    # Supports turn_on', 'turn_off'
     hass.states.async_set(entity_id, None, {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TV, ATTR_SUPPORTED_FEATURES: 16769})
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_TV, ATTR_SUPPORTED_FEATURES: 384})
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, 'MediaPlayer', entity_id, 2,
                                 None)
     await hass.async_add_job(acc.run)
 
-    assert acc.aid == 2
-    assert acc.category == 31  # Television
-
-    assert acc.char_active.value == 0
-    assert acc.char_remote_key.value == 0
+    assert acc.chars_tv == []
+    assert acc.chars_speaker == []
     assert acc.support_select_source is False
-    assert hasattr(acc, 'char_mute') is False
-    assert hasattr(acc, 'char_volume') is False
-    assert hasattr(acc, 'char_volume_selector') is False
-    assert hasattr(acc, 'char_input_source') is False
 
     hass.states.async_set(entity_id, STATE_ON, {ATTR_MEDIA_VOLUME_MUTED: True})
     await hass.async_block_till_done()
@@ -309,3 +310,5 @@ async def test_media_player_television_volume_level(hass, hk_driver, events):
     hass.states.async_set(entity_id, STATE_ON, {ATTR_INPUT_SOURCE: 'HDMI 3'})
     await hass.async_block_till_done()
     assert acc.char_active.value == 1
+
+    assert 'Error' not in caplog.messages[-1]
