@@ -10,15 +10,16 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['epsonprinter==0.0.8']
+REQUIREMENTS = ['epsonprinter==0.0.9']
 
 _LOGGER = logging.getLogger(__name__)
 MONITORED_CONDITIONS = {
-    'black': ['Inklevel Black', '%', 'mdi:water'],
-    'magenta': ['Inklevel Magenta', '%', 'mdi:water'],
-    'cyan': ['Inklevel Cyan', '%', 'mdi:water'],
-    'yellow': ['Inklevel Yellow', '%', 'mdi:water'],
-    'clean': ['Inklevel Cleaning', '%', 'mdi:water'],
+    'black': ['Ink level Black', '%', 'mdi:water'],
+    'photoblack': ['Ink level Photoblack', '%', 'mdi:water'],
+    'magenta': ['Ink level Magenta', '%', 'mdi:water'],
+    'cyan': ['Ink level Cyan', '%', 'mdi:water'],
+    'yellow': ['Ink level Yellow', '%', 'mdi:water'],
+    'clean': ['Cleaning level', '%', 'mdi:water'],
 }
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
