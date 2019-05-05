@@ -97,7 +97,7 @@ class AcerSwitch(SwitchDevice):
             # Try to get a response a maximum of 5 times
             time.sleep(1)
             if self.ser.inWaiting() > 0:
-                _LOGGER.debug('Number of characters to read %s', self.ser.inWaiting())
+                _LOGGER.debug('Characters to read %s', self.ser.inWaiting())
                 # Changed to read number of waiting characters
                 test_list = self.ser.read(self.ser.inWaiting()).split(b'\r')
                 # Remove empty strings from the list
@@ -105,10 +105,10 @@ class AcerSwitch(SwitchDevice):
                 if len(ret) > 0:
                     self.ser.close()
                     return ret
-                
+
             _LOGGER.debug('No response for %s', msg)
             self.ser.close()
-            
+
         except serial.SerialException:
             _LOGGER.error('Problem communicating with %s', self._serial_port)
 
@@ -118,14 +118,14 @@ class AcerSwitch(SwitchDevice):
         # Try 5 times to get a response
         for x in range(0, 5):
             lines = self._write_read(msg)
-                    
+
             if (lines is not None):
                 for line in lines:
                     decodeLine = line.decode('utf-8')
                     if not decodeLine.startswith('*'):
                         return decodeLine
             time.sleep(1)
-        
+
         # If it gets to here something has gone wrong
         _LOGGER.warn('Not able to get the relevant state for %s', msg)
         _LOGGER.warn(lines)
@@ -155,7 +155,7 @@ class AcerSwitch(SwitchDevice):
         """Get the latest state from the projector."""
         msg = CMD_DICT[LAMP]
         awns = self._write_read_format(msg)
-        
+
         if awns == 'Lamp 1':
             self._state = True
             self._available = True
