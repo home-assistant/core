@@ -359,7 +359,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
         self.async_schedule_update_ha_state()
 
     async def async_update(self):
-        """Update the calculate fields of the thermostat."""
+        """Update the calculated fields of the AC."""
         operations = set()
         for mode in self._device.status.supported_ac_modes:
             state = AC_MODE_TO_STATE.get(mode)
