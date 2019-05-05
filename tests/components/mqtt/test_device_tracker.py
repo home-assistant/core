@@ -52,7 +52,7 @@ async def test_new_message(hass, mock_device_tracker_conf):
     })
     async_fire_mqtt_message(hass, topic, location)
     await hass.async_block_till_done()
-    assert location == hass.states.get(entity_id).state
+    assert hass.states.get(entity_id).state == location
 
 
 async def test_single_level_wildcard_topic(hass, mock_device_tracker_conf):
@@ -72,7 +72,7 @@ async def test_single_level_wildcard_topic(hass, mock_device_tracker_conf):
     })
     async_fire_mqtt_message(hass, topic, location)
     await hass.async_block_till_done()
-    assert location == hass.states.get(entity_id).state
+    assert hass.states.get(entity_id).state == location
 
 
 async def test_multi_level_wildcard_topic(hass, mock_device_tracker_conf):
@@ -92,7 +92,7 @@ async def test_multi_level_wildcard_topic(hass, mock_device_tracker_conf):
     })
     async_fire_mqtt_message(hass, topic, location)
     await hass.async_block_till_done()
-    assert location == hass.states.get(entity_id).state
+    assert hass.states.get(entity_id).state == location
 
 
 async def test_single_level_wildcard_topic_not_matching(
