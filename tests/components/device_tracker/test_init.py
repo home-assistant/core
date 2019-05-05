@@ -527,7 +527,7 @@ async def test_async_added_to_hass(hass):
         path: 'jk:\n  name: JK Phone\n  track: True',
     }
     with patch_yaml_files(files):
-        await device_tracker.async_setup(hass, {})
+        assert await async_setup_component(hass, device_tracker.DOMAIN, {})
 
     state = hass.states.get('device_tracker.jk')
     assert state
@@ -546,7 +546,7 @@ async def test_bad_platform(hass):
         }]
     }
     with assert_setup_component(0, device_tracker.DOMAIN):
-        assert await device_tracker.async_setup(hass, config)
+        assert await async_setup_component(hass, device_tracker.DOMAIN, config)
 
 
 async def test_adding_unknown_device_to_config(mock_device_tracker_conf, hass):
