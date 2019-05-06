@@ -60,7 +60,7 @@ class MeteoAlertSensor(Entity):
         """Initialize the MeteoAlert sensor."""
         self._name = name
         self._attributes = {}
-        self._state = None
+        self._is_on = False
         self._api = api
 
     @property
