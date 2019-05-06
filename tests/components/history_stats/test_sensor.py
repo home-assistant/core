@@ -5,7 +5,6 @@ import unittest
 from unittest.mock import patch
 import pytest
 import pytz
-from homeassistant.helpers import template
 
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.setup import setup_component
@@ -50,10 +49,12 @@ class TestHistoryStatsSensor(unittest.TestCase):
         state = self.hass.states.get('sensor.test')
         assert state.state == STATE_UNKNOWN
 
-    def test_period_parsing(self):
+    @patch('homeassistant.helpers.template.TemplateEnvironment.'
+           'is_safe_callable', return_value=True)
+    def test_period_parsing(self, mock):
         """Test the conversion from templates to period."""
         now = datetime(2019, 1, 1, 23, 30, 0, tzinfo=pytz.utc)
-        with patch.dict(template.ENV.globals, {'now': lambda: now}):
+        with patch('homeassistant.util.dt.now', return_value=now):
             today = Template('{{ now().replace(hour=0).replace(minute=0)'
                              '.replace(second=0) }}', self.hass)
             duration = timedelta(hours=2, minutes=1)

@@ -620,8 +620,7 @@ def test_states_function(hass):
 def test_now(mock_is_safe, hass):
     """Test now method."""
     now = dt_util.now()
-    with patch('homeassistant.util.dt.now') as func:
-        func.return_value = now
+    with patch('homeassistant.util.dt.now', return_value=now):
         assert now.isoformat() == \
             template.Template('{{ now().isoformat() }}',
                               hass).async_render()
@@ -632,8 +631,7 @@ def test_now(mock_is_safe, hass):
 def test_utcnow(mock_is_safe, hass):
     """Test utcnow method."""
     now = dt_util.utcnow()
-    with patch('homeassistant.util.dt.utcnow') as func:
-        func.return_value = now
+    with patch('homeassistant.util.dt.utcnow', return_value=now):
         assert now.isoformat() == \
             template.Template('{{ utcnow().isoformat() }}',
                               hass).async_render()
