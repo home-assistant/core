@@ -262,7 +262,7 @@ def test_config_schema_measurements():
             'Person 1',
         ],
         const.MEASURES: [
-            const.MEAS_BODY_TEMP_C,
+            const.MEAS_BODY_TEMP_AUTO,
             'AAA'
         ]
     })
@@ -273,8 +273,8 @@ def test_config_schema_measurements():
             'Person 1',
         ],
         const.MEASURES: [
-            const.MEAS_BODY_TEMP_C,
-            const.MEAS_BODY_TEMP_C,
+            const.MEAS_BODY_TEMP_AUTO,
+            const.MEAS_BODY_TEMP_AUTO,
         ]
     })
     result = config_schema_validate({
@@ -284,11 +284,11 @@ def test_config_schema_measurements():
             'Person 1',
         ],
         const.MEASURES: [
-            const.MEAS_BODY_TEMP_C,
+            const.MEAS_BODY_TEMP_AUTO,
         ]
     })
     assert result[const.DOMAIN].get(const.MEASURES) == [
-        const.MEAS_BODY_TEMP_C,
+        const.MEAS_BODY_TEMP_AUTO,
     ]
 
     result = config_schema_validate({
@@ -298,14 +298,12 @@ def test_config_schema_measurements():
             'Person 1',
         ],
         const.MEASURES: [
-            const.MEAS_BODY_TEMP_C,
-            const.MEAS_BODY_TEMP_F,
+            const.MEAS_BODY_TEMP_AUTO,
             const.MEAS_BONE_MASS_KG,
         ]
     })
     assert result[const.DOMAIN].get(const.MEASURES) == [
-        const.MEAS_BODY_TEMP_C,
-        const.MEAS_BODY_TEMP_F,
+        const.MEAS_BODY_TEMP_AUTO,
         const.MEAS_BONE_MASS_KG,
     ]
 
@@ -326,7 +324,7 @@ async def test_async_setup(hass: HomeAssistantType):
             ],
             const.MEASURES: [
                 const.MEAS_BODY_TEMP_F,
-                const.MEAS_BODY_TEMP_C
+                const.MEAS_BODY_TEMP_AUTO
             ]
         },
     }

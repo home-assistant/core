@@ -1,15 +1,16 @@
 """Common code for Withings."""
-import time
 import datetime
 import logging
 import re
+import time
 
 import nokia
 from oauthlib.oauth2.rfc6749.errors import MissingTokenError
 from requests_oauthlib import TokenUpdated
 
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.util import slugify, Throttle
+from homeassistant.util import slugify
+
 from . import const
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
@@ -47,6 +48,7 @@ class WithingsDataManager:
         self._sleep_summary = None
 
         self.sleep_summary_last_update_parameter = None
+        self.throttle_domains = {}
 
     @property
     def profile(self) -> str:
@@ -79,6 +81,11 @@ class WithingsDataManager:
         return self._sleep_summary
 
     @staticmethod
+    def get_throttle_interval():
+        """Get the throttle interval."""
+        return const.THROTTLE_INTERVAL
+
+    @staticmethod
     def print_service_unavailable():
         """Print the service is unavailable (once) to the log."""
         if WithingsDataManager.service_available is not False:
@@ -96,9 +103,18 @@ class WithingsDataManager:
             WithingsDataManager.service_available = True
             return True
 
-    @staticmethod
-    def call(function, is_first_call=True):
+    def call(self, function, is_first_call=True, throttle_domain=None):
         """Call an api method and handle the result."""
+        last_run = self.throttle_domains.get(throttle_domain, 0)
+        current_time = int(time.time())
+        throttle_interval = WithingsDataManager.get_throttle_interval()
+
+        if throttle_domain and current_time - last_run < throttle_interval:
+            _LOGGER.debug("Throttling call for domain: %s", throttle_domain)
+            return None
+
+        self.throttle_domains[throttle_domain] = current_time
+
         try:
             _LOGGER.debug("Running call.")
             result = function()
@@ -113,7 +129,7 @@ class WithingsDataManager:
                 )
 
             _LOGGER.info("Token updated, re-running call.")
-            return WithingsDataManager.call(function, False)
+            return self.call(function, False)
 
         except MissingTokenError as ex:
             raise NotAuthenticatedError(ex)
@@ -127,25 +143,22 @@ class WithingsDataManager:
             WithingsDataManager.print_service_unavailable()
             raise PlatformNotReady(ex)
 
-    @Throttle(const.SCAN_INTERVAL)
     def check_authenticated(self):
         """Check if the user is authenticated."""
         def function():
             return self._api.request('user', 'getdevice', version='v2')
 
-        return WithingsDataManager.call(function)
+        return self.call(function)
 
-    @Throttle(const.SCAN_INTERVAL)
     def update_measures(self):
         """Update the measures data."""
         def function():
             return self._api.get_measures()
 
-        self._measures = WithingsDataManager.call(function)
+        self._measures = self.call(function, throttle_domain='update_measures')
 
         return self._measures
 
-    @Throttle(const.SCAN_INTERVAL)
     def update_sleep(self):
         """Update the sleep data."""
         end_date = int(time.time())
@@ -157,11 +170,10 @@ class WithingsDataManager:
                 enddate=end_date
             )
 
-        self._sleep = WithingsDataManager.call(function)
+        self._sleep = self.call(function, throttle_domain='update_sleep')
 
         return self._sleep
 
-    @Throttle(const.SCAN_INTERVAL)
     def update_sleep_summary(self):
         """Update the sleep summary data."""
         now = datetime.datetime.utcnow()
@@ -182,6 +194,9 @@ class WithingsDataManager:
                 lastupdate=yesterday_noon.timestamp()
             )
 
-        self._sleep_summary = WithingsDataManager.call(function)
+        self._sleep_summary = self.call(
+            function,
+            throttle_domain='update_sleep_summary'
+        )
 
         return self._sleep_summary

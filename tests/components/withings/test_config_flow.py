@@ -1,7 +1,6 @@
 """Tests for the Withings config flow."""
 from aiohttp.web_request import BaseRequest
 from asynctest import MagicMock, patch
-import callee
 import nokia
 import pytest
 
@@ -162,10 +161,9 @@ async def test_flow_handler_async_step_profile(
     })
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'auth'
-    assert result['description_placeholders'] == {
-        'authorization_url': callee.StartsWith('https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=my_client_id&redirect_uri=http%3A%2F%2Flocalhost%2Fapi%2Fwithings%2Fcallback%2Fperson_1&scope=user.info%2Cuser.metrics%2Cuser.activity&state='),  # pylint: disable=line-too-long  # noqa: E501
-        'profile': 'Person 1',
-    }
+    assert result['description_placeholders']
+    assert result['description_placeholders']['authorization_url'].startswith('https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=my_client_id&redirect_uri=http%3A%2F%2Flocalhost%2Fapi%2Fwithings%2Fcallback%2Fperson_1&scope=user.info%2Cuser.metrics%2Cuser.activity&state=')  # pylint: disable=line-too-long  # noqa: E501
+    assert result['description_placeholders']['profile'] == 'Person 1'  # pylint: disable=line-too-long  # noqa: E501
     assert result['errors'] == {
         'base': 'follow_link',
     }
@@ -289,10 +287,9 @@ async def test_flow_handler_full_flow(
         )
         assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
         assert result['step_id'] == 'auth'
-        assert result['description_placeholders'] == {
-            'authorization_url': callee.StartsWith('https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=my_client_id&redirect_uri=http%3A%2F%2Flocalhost%2Fapi%2Fwithings%2Fcallback%2Fperson_1&scope=user.info%2Cuser.metrics%2Cuser.activity&state='),  # pylint: disable=line-too-long  # noqa: E501
-            'profile': 'Person 1',
-        }
+        assert result['description_placeholders']
+        assert result['description_placeholders']['authorization_url'].startswith('https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=my_client_id&redirect_uri=http%3A%2F%2Flocalhost%2Fapi%2Fwithings%2Fcallback%2Fperson_1&scope=user.info%2Cuser.metrics%2Cuser.activity&state=')  # pylint: disable=line-too-long  # noqa: E501
+        assert result['description_placeholders']['profile'] == 'Person 1'
         assert result['errors'] == {'base': 'follow_link'}
 
         callback_view = register_view.call_args[0][0]
@@ -353,7 +350,7 @@ async def test_flow_handler_full_flow(
 
 def test_auth_callback_view_init():
     """Test method."""
-    view = WithingsAuthCallbackView('Person 1')
+    view = WithingsAuthCallbackView('my_flow_id', 'Person 1')
     assert view.profile == 'Person 1'
     assert view.url == '/api/withings/callback/person_1'
     assert not view.requires_auth
@@ -362,9 +359,9 @@ def test_auth_callback_view_init():
 
 def test_auth_callback_view_get(hass: HomeAssistantType):
     """Test get api path."""
-    view = WithingsAuthCallbackView('Person 1')
+    view = WithingsAuthCallbackView('my_flow_id', 'Person 1')
     hass.async_create_task = MagicMock(return_value=None)
-    hass.config_entries.flow.async_init = MagicMock(
+    hass.config_entries.flow.async_configure = MagicMock(
         return_value='AAAA'
     )
 
@@ -375,10 +372,10 @@ def test_auth_callback_view_get(hass: HomeAssistantType):
 
     assert view.get(request) == "OK!"
     hass.async_create_task.assert_not_called()
-    hass.config_entries.flow.async_init.assert_not_called()
+    hass.config_entries.flow.async_configure.assert_not_called()
 
     hass.async_create_task.reset_mock()
-    hass.config_entries.flow.async_init.reset_mock()
+    hass.config_entries.flow.async_configure.reset_mock()
 
     request.query = {
         'code': 'my_code'
@@ -386,10 +383,9 @@ def test_auth_callback_view_get(hass: HomeAssistantType):
 
     assert view.get(request) == "OK!"
     hass.async_create_task.assert_called_with('AAAA')
-    hass.config_entries.flow.async_init.assert_called_with(
-        const.DOMAIN,
-        context={'source': const.CODE},
-        data={
+    hass.config_entries.flow.async_configure.assert_called_with(
+        'my_flow_id',
+        {
             const.PROFILE: view.profile,
             const.CODE: request.query['code'],
         },

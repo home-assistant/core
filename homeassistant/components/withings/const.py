@@ -1,6 +1,4 @@
 """Constants used by the Withings component."""
-import datetime
-
 import homeassistant.const as const
 
 SOURCE_USER = 'user'
@@ -20,7 +18,7 @@ PROFILES = 'profiles'
 AUTH_CALLBACK_PATH = '/api/withings/callback'
 AUTH_CALLBACK_NAME = 'api:withings:callback'
 
-SCAN_INTERVAL = datetime.timedelta(minutes=5)
+THROTTLE_INTERVAL = 300
 
 STATE_UNKNOWN = const.STATE_UNKNOWN
 STATE_AWAKE = 'awake'
@@ -62,6 +60,7 @@ MEASURE_TYPE_SYSTOLIC_BP = 10
 MEASURE_TYPE_TEMP = 12
 MEASURE_TYPE_WEIGHT = 1
 
+MEAS_BODY_TEMP_AUTO = 'body_temperature_auto'
 MEAS_BODY_TEMP_C = 'body_temperature_c'
 MEAS_BODY_TEMP_F = 'body_temperature_f'
 MEAS_BONE_MASS_KG = 'bone_mass_kg'
@@ -85,6 +84,7 @@ MEAS_MUSCLE_MASS_KG = 'muscle_mass_kg'
 MEAS_MUSCLE_MASS_LB = 'muscle_mass_lb'
 MEAS_MUSCLE_MASS_STONE = 'muscle_mass_st'
 MEAS_PWV = 'pulse_wave_velocity'
+MEAS_SKIN_TEMP_AUTO = 'skin_temperature_auto'
 MEAS_SKIN_TEMP_C = 'skin_temperature_c'
 MEAS_SKIN_TEMP_F = 'skin_temperature_f'
 MEAS_SLEEP_DEEP_DURATION_HOURS = 'sleep_deep_duration_hours'
@@ -109,6 +109,7 @@ MEAS_SLEEP_WAKEUP_DURATION_HOURS = 'sleep_wakeup_duration_hours'
 MEAS_SLEEP_WAKEUP_DURATION_MINUTES = 'sleep_wakeup_duration_minutes'
 MEAS_SPO2_PCT = 'spo2_pct'
 MEAS_SYSTOLIC_MMGH = 'systolic_blood_pressure_mmhg'
+MEAS_TEMP_AUTO = 'temperature_auto'
 MEAS_TEMP_C = 'temperature_c'
 MEAS_TEMP_F = 'temperature_f'
 MEAS_WEIGHT_KG = 'weight_kg'

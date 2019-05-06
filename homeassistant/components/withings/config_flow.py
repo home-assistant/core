@@ -11,6 +11,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.util import slugify
+
 from . import const
 
 DATA_FLOW_IMPL = 'withings_flow_implementation'
@@ -112,7 +113,7 @@ class WithingsFlowHandler(config_entries.ConfigFlow):
             _LOGGER.debug("no flows")
             return self.async_abort(reason='no_flows')
 
-        if user_input is not None and const.PROFILE in user_input:
+        if user_input and const.PROFILE in user_input:
             return await self.async_step_auth(user_input)
 
         return self.async_show_form(
@@ -124,6 +125,9 @@ class WithingsFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_auth(self, user_input=None):
         """Create an entry for auth."""
+        if user_input and const.CODE in user_input:
+            return await self.async_step_code(user_input)
+
         errors = {}
 
         if user_input is not None:
@@ -134,6 +138,7 @@ class WithingsFlowHandler(config_entries.ConfigFlow):
         auth_client = self.get_auth_client(profile)
 
         self.hass.http.register_view(WithingsAuthCallbackView(
+            self.flow_id,
             profile
         ))
 
@@ -148,26 +153,26 @@ class WithingsFlowHandler(config_entries.ConfigFlow):
             errors=errors,
         )
 
-    async def async_step_code(self, data=None):
+    async def async_step_code(self, user_input=None):
         """Received code for authentication."""
         # if self.hass.config_entries.async_entries(const.DOMAIN):
         #     return self.async_abort(reason='already_setup')
 
-        if data is None:
+        if user_input is None:
             return self.async_abort(reason='api_no_data')
 
-        if const.PROFILE not in data or not data[const.PROFILE]:
+        if const.PROFILE not in user_input or not user_input[const.PROFILE]:
             return self.async_abort(reason='api_no_profile_data')
 
-        if const.CODE not in data or not data[const.CODE]:
+        if const.CODE not in user_input or not user_input[const.CODE]:
             return self.async_abort(reason='api_no_code_data')
 
         _LOGGER.debug("Should close all flows below %s",
                       self.hass.config_entries.flow.async_progress())
         # Remove notification if no other discovery config entries in progress
 
-        profile = data[const.PROFILE]
-        code = data[const.CODE]
+        profile = user_input[const.PROFILE]
+        code = user_input[const.CODE]
 
         return await self._async_create_session(profile, code)
 
@@ -192,11 +197,32 @@ class WithingsAuthCallbackView(HomeAssistantView):
 
     requires_auth = False
 
-    def __init__(self, profile: str):
+    def __init__(self, flow_id: str, profile: str):
         """Constructor."""
-        self.profile = profile
-        self.url = auth_callback_path(profile)
-        self.name = auth_callback_name(profile)
+        self._profile = profile
+        self._flow_id = flow_id
+        self._url = auth_callback_path(profile)
+        self._name = auth_callback_name(profile)
+
+    @property
+    def profile(self):
+        """Return profile."""
+        return self._profile
+
+    @property
+    def flow_id(self):
+        """Return flow id."""
+        return self._flow_id
+
+    @property
+    def url(self):
+        """Return url."""
+        return self._url
+
+    @property
+    def name(self):
+        """Return name."""
+        return self._name
 
     @callback
     def get(self, request):
@@ -204,13 +230,12 @@ class WithingsAuthCallbackView(HomeAssistantView):
         hass = request.app['hass']
         if 'code' in request.query:
             hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    const.DOMAIN,
-                    context={'source': const.CODE},
-                    data={
+                hass.config_entries.flow.async_configure(
+                    self.flow_id,
+                    {
                         const.PROFILE: self.profile,
                         const.CODE: request.query['code'],
-                    },
+                    }
                 )
             )
 

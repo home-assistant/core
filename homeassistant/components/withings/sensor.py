@@ -7,6 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
+
 from . import const
 from .common import (
     _LOGGER,
@@ -73,7 +74,6 @@ async def async_setup_entry(
         return
 
     entities = create_sensor_entities(hass, data_manager)
-
     async_add_entities(entities, True)
 
 
@@ -123,15 +123,6 @@ class WithingsAttribute:
         self.friendly_name = friendly_name
         self.unit_of_measurement = unit_of_measurement
         self.icon = icon
-
-    def __eq__(self, that):
-        """Compare two attributes."""
-        return that is not None \
-            and self.measurement == that.measurement \
-            and self.measure_type == that.measure_type \
-            and self.friendly_name == that.friendly_name \
-            and self.unit_of_measurement == that.unit_of_measurement \
-            and self.icon == that.icon
 
 
 class WithingsMeasureAttribute(WithingsAttribute):
@@ -239,29 +230,24 @@ WITHINGS_ATTRIBUTES = [
         'Height', const.UOM_IMPERIAL_HEIGHT, 'mdi:ruler'
     ),
 
+    # These temperature values are automatically converted to
+    # ha's configured system of measurement by the entity api.
+    # There is no way to override this behaviour and there are
+    # discussions to change this.
+    # https://github.com/home-assistant/architecture/issues/10
+    # So we set the OUM to celsius for now and let the Entity class
+    # perform the necessary conversions.
     WithingsMeasureAttribute(
-        const.MEAS_TEMP_C, const.MEASURE_TYPE_TEMP,
-        'Temperature', const.UOM_TEMP_C, 'mdi:temperature-celsius'
+        const.MEAS_TEMP_AUTO, const.MEASURE_TYPE_TEMP,
+        'Temperature', const.UOM_TEMP_C, 'mdi:temperature'
     ),
     WithingsMeasureAttribute(
-        const.MEAS_TEMP_F, const.MEASURE_TYPE_TEMP,
-        'Temperature', const.UOM_TEMP_F, 'mdi:temperature-fahrenheit'
+        const.MEAS_BODY_TEMP_AUTO, const.MEASURE_TYPE_BODY_TEMP,
+        'Body Temperature', const.UOM_TEMP_C, 'mdi:temperature'
     ),
     WithingsMeasureAttribute(
-        const.MEAS_BODY_TEMP_C, const.MEASURE_TYPE_BODY_TEMP,
-        'Body Temperature', const.UOM_TEMP_C, 'mdi:temperature-celsius'
-    ),
-    WithingsMeasureAttribute(
-        const.MEAS_BODY_TEMP_F, const.MEASURE_TYPE_BODY_TEMP,
-        'Body Temperature', const.UOM_TEMP_F, 'mdi:temperature-fahrenheit'
-    ),
-    WithingsMeasureAttribute(
-        const.MEAS_SKIN_TEMP_C, const.MEASURE_TYPE_SKIN_TEMP,
-        'Skin Temperature', const.UOM_TEMP_C, 'mdi:temperature-celsius'
-    ),
-    WithingsMeasureAttribute(
-        const.MEAS_SKIN_TEMP_F, const.MEASURE_TYPE_SKIN_TEMP,
-        'Skin Temperature', const.UOM_TEMP_F, 'mdi:temperature-fahrenheit'
+        const.MEAS_SKIN_TEMP_AUTO, const.MEASURE_TYPE_SKIN_TEMP,
+        'Skin Temperature', const.UOM_TEMP_C, 'mdi:temperature'
     ),
 
     WithingsMeasureAttribute(
@@ -447,11 +433,6 @@ class WithingsHealthSensor(Entity):
         """Get withings attributes."""
         return self._attribute.__dict__
 
-    @property
-    def convert_units(self):
-        """Prevent home assistant from converting units."""
-        return False
-
     async def async_update(self) -> None:
         """Update the data."""
         _LOGGER.debug(
@@ -479,7 +460,9 @@ class WithingsHealthSensor(Entity):
     async def async_update_measure(self, data) -> None:
         """Update the measures data."""
         if data is None:
-            _LOGGER.error("Provided data is None. Not updating state")
+            _LOGGER.error(
+                "Provided data is None. Probably throttled, changing nothing"
+            )
             return
 
         measurement = self._attribute.measurement
@@ -496,7 +479,11 @@ class WithingsHealthSensor(Entity):
         )]
 
         if not measure_groups:
-            _LOGGER.warning("No measure groups found")
+            _LOGGER.warning(
+                "No measure groups found, setting state to %s",
+                const.STATE_UNKNOWN
+            )
+            self._state = const.STATE_UNKNOWN
             return
 
         _LOGGER.debug(
@@ -566,15 +553,13 @@ class WithingsHealthSensor(Entity):
         """Update the sleep state data."""
         if data is None:
             _LOGGER.error(
-                "Provided data is None, setting value to %s",
-                const.STATE_UNKNOWN
+                "Provided data is None, probably throttled, changing nothing"
             )
-            self._state = None
             return
 
         if not data.series:
             _LOGGER.warning(
-                "No sleep data, setting value to %s",
+                "No sleep data, setting state to %s",
                 const.STATE_UNKNOWN
             )
             self._state = None
@@ -602,11 +587,17 @@ class WithingsHealthSensor(Entity):
     async def async_update_sleep_summary(self, data) -> None:
         """Update the sleep summary data."""
         if data is None:
-            _LOGGER.error("Provided data is None. Not updating state")
+            _LOGGER.error(
+                "Provided data is None, probably throttled, changing nothing"
+            )
             return
 
         if not data.series:
-            _LOGGER.warning("Sleep data has no series")
+            _LOGGER.warning(
+                "Sleep data has no series, setting state to %s",
+                const.STATE_UNKNOWN
+            )
+            self._state = const.STATE_UNKNOWN
             return
 
         measurement = self._attribute.measurement

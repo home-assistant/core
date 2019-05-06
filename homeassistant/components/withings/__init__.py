@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.helpers import config_validation as cv
+
 from . import config_flow, const
 from .sensor import WITHINGS_MEASUREMENTS_MAP
 
