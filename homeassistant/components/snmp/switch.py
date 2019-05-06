@@ -3,59 +3,27 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT, CONF_PAYLOAD_ON, CONF_PAYLOAD_OFF,
+    CONF_HOST, CONF_NAME, CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON, CONF_PORT,
     CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 
+from .const import (
+    CONF_AUTH_KEY, CONF_AUTH_PROTOCOL, CONF_BASEOID, CONF_COMMUNITY,
+    CONF_PRIV_KEY, CONF_PRIV_PROTOCOL, CONF_VERSION, DEFAULT_AUTH_PROTOCOL,
+    DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DEFAULT_PRIV_PROTOCOL,
+    DEFAULT_VERSION, MAP_AUTH_PROTOCOLS, MAP_PRIV_PROTOCOLS, SNMP_VERSIONS)
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_BASEOID = 'baseoid'
 CONF_COMMAND_OID = 'command_oid'
-CONF_COMMAND_PAYLOAD_ON = 'command_payload_on'
 CONF_COMMAND_PAYLOAD_OFF = 'command_payload_off'
-CONF_COMMUNITY = 'community'
-CONF_VERSION = 'version'
-CONF_AUTH_KEY = 'auth_key'
-CONF_AUTH_PROTOCOL = 'auth_protocol'
-CONF_PRIV_KEY = 'priv_key'
-CONF_PRIV_PROTOCOL = 'priv_protocol'
+CONF_COMMAND_PAYLOAD_ON = 'command_payload_on'
 
-DEFAULT_NAME = 'SNMP Switch'
-DEFAULT_HOST = 'localhost'
-DEFAULT_PORT = '161'
 DEFAULT_COMMUNITY = 'private'
-DEFAULT_VERSION = '1'
-DEFAULT_AUTH_PROTOCOL = 'none'
-DEFAULT_PRIV_PROTOCOL = 'none'
-DEFAULT_PAYLOAD_ON = 1
 DEFAULT_PAYLOAD_OFF = 0
-
-SNMP_VERSIONS = {
-    '1': 0,
-    '2c': 1,
-    '3': None
-}
-
-MAP_AUTH_PROTOCOLS = {
-    'none': 'usmNoAuthProtocol',
-    'hmac-md5': 'usmHMACMD5AuthProtocol',
-    'hmac-sha': 'usmHMACSHAAuthProtocol',
-    'hmac128-sha224': 'usmHMAC128SHA224AuthProtocol',
-    'hmac192-sha256': 'usmHMAC192SHA256AuthProtocol',
-    'hmac256-sha384': 'usmHMAC256SHA384AuthProtocol',
-    'hmac384-sha512': 'usmHMAC384SHA512AuthProtocol',
-}
-
-MAP_PRIV_PROTOCOLS = {
-    'none': 'usmNoPrivProtocol',
-    'des': 'usmDESPrivProtocol',
-    '3des-ede': 'usm3DESEDEPrivProtocol',
-    'aes-cfb-128': 'usmAesCfb128Protocol',
-    'aes-cfb-192': 'usmAesCfb192Protocol',
-    'aes-cfb-256': 'usmAesCfb256Protocol',
-}
+DEFAULT_PAYLOAD_ON = 1
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_BASEOID): cv.string,
@@ -115,8 +83,8 @@ class SnmpSwitch(SwitchDevice):
                  command_payload_off):
         """Initialize the switch."""
         from pysnmp.hlapi.asyncio import (
-            CommunityData, ContextData, SnmpEngine,
-            UdpTransportTarget, UsmUserData)
+            CommunityData, ContextData, SnmpEngine, UdpTransportTarget,
+            UsmUserData)
 
         self._name = name
         self._baseoid = baseoid
@@ -172,8 +140,8 @@ class SnmpSwitch(SwitchDevice):
 
     async def async_update(self):
         """Update the state."""
-        from pysnmp.hlapi.asyncio import (getCmd, ObjectType, ObjectIdentity)
-        from pyasn1.type.univ import (Integer)
+        from pysnmp.hlapi.asyncio import getCmd, ObjectType, ObjectIdentity
+        from pyasn1.type.univ import Integer
 
         errindication, errstatus, errindex, restable = await getCmd(
             *self._request_args, ObjectType(ObjectIdentity(self._baseoid)))
@@ -203,7 +171,7 @@ class SnmpSwitch(SwitchDevice):
         return self._state
 
     async def _set(self, value):
-        from pysnmp.hlapi.asyncio import (setCmd, ObjectType, ObjectIdentity)
+        from pysnmp.hlapi.asyncio import setCmd, ObjectType, ObjectIdentity
 
         await setCmd(
             *self._request_args,
