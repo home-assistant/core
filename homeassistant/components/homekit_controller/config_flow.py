@@ -78,9 +78,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
         if user_input is not None:
             key = user_input['device']
-            props = self.devices[key]['properties']
-            self.hkid = props['id']
-            self.model = props['md']
+            self.hkid = self.devices[key]['id']
+            self.model = self.devices[key]['md']
             return await self.async_step_pair()
 
         controller = homekit.Controller()
@@ -90,11 +89,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
         self.devices = {}
         for host in all_hosts:
-            status_flags = int(host['properties']['sf'])
+            status_flags = int(host['sf'])
             paired = not status_flags & 0x01
             if paired:
                 continue
-            self.devices[host['properties']['id']] = host
+            self.devices[host['name']] = host
 
         if not self.devices:
             return self.async_abort(
