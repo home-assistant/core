@@ -1,15 +1,14 @@
-"""Sensor for MeteoAlarm.eu."""
+"""Binary Sensor for MeteoAlarm.eu."""
 from datetime import timedelta
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA)
+    PLATFORM_SCHEMA, BinarySensorDevice)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +16,7 @@ CONF_COUNTRY = 'country'
 CONF_PROVINCE = 'province'
 CONF_LANGUAGE = 'language'
 
-ATTRIBUTION = ("Information provided by MeteoAlarm.")
+ATTRIBUTION = "Information provided by MeteoAlarm."
 
 DEFAULT_NAME = 'meteoalarm'
 DEFAULT_DEVICE_CLASS = 'safety'
@@ -36,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the MeteoAlarm sensor platform."""
+    """Set up the MeteoAlarm binary sensor platform."""
     from meteoalertapi import Meteoalert
 
     country = config[CONF_COUNTRY]
@@ -50,14 +49,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Wrong country digits, or province name")
         return
 
-    add_entities([MeteoAlertSensor(api, name)], True)
+    add_entities([MeteoAlertBinarySensor(api, name)], True)
 
 
-class MeteoAlertSensor(Entity):
-    """Representation of a MeteoAlert sensor."""
+class MeteoAlertBinarySensor(BinarySensorDevice):
+    """Representation of a MeteoAlert binary sensor."""
 
     def __init__(self, api, name):
-        """Initialize the MeteoAlert sensor."""
+        """Initialize the MeteoAlert binary sensor."""
         self._name = name
         self._attributes = {}
         self._state = None
@@ -65,12 +64,12 @@ class MeteoAlertSensor(Entity):
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+        """Return the name of the binarysensor."""
         return self._name
 
     @property
     def is_on(self):
-        """Return the status of the sensor."""
+        """Return the status of the binary sensor."""
         return self._state
 
     @property
@@ -86,7 +85,7 @@ class MeteoAlertSensor(Entity):
 
     @property
     def device_class(self):
-        """Return the class of this sensor."""
+        """Return the class of this binary sensor."""
         return DEFAULT_DEVICE_CLASS
 
     def update(self):
