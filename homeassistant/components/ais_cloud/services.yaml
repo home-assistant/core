@@ -74,14 +74,6 @@ select_podcast_track:
       description: Odcinek podcasta.
       example: 'Odcinek 1'
 
-
-select_rss_news_item:
-  description: Wybranie artykułu do przeczytania
-  fields:
-    rss_news_item:
-      description: Artykuł.
-      example: 'Klamka zapadła - Microsoft przejmuje GitHub'
-
 select_rss_help_item:
   description: Wybranie strony pomocy do przeczytania
   fields:

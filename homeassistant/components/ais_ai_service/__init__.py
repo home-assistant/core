@@ -605,7 +605,7 @@ def say_curr_entity(hass):
     if not text:
         text = ""
     # handle special cases...
-    if entity_id == "sensor.ais_knowledge_answer":
+    if entity_id == "sensor.aisknowledgeanswer":
         _say_it(hass, "Odpowiedź: " + text, None)
         return
     elif entity_id == 'sensor.ais_drives':
@@ -646,8 +646,7 @@ def say_curr_entity(hass):
             else:
                 _say_it(hass, info_name + " " + info_data + ". Naciśnij OK by wybrać.", None)
         return
-    elif entity_id in ('sensor.radiolist', 'sensor.podcastlist', 'sensor.spotifylist',
-                       'sensor.youtubelist', 'sensor.spotifysearchlist'):
+    elif entity_id.startswith('sensor.') and entity_id.endswith('list'):
         info_name = ""
         if int(info_data) != -1:
             try:
@@ -661,15 +660,19 @@ def say_curr_entity(hass):
                 _say_it(hass, "Wybrałeś " + info_name, None)
         else:
             if entity_id == 'sensor.radiolist':
-              info = "Stacja radiowa "
+                info = "Stacja radiowa "
             elif entity_id == 'sensor.podcastlist':
-              info = "Odcinek "
-            elif entity_id == 'sensor.spotifysearchlist':
-                info = "Pozycja "
+                info = "Odcinek "
             elif entity_id == 'sensor.spotifylist':
-              info = "Utwór "
-            elif entity_id == 'sensor.youtubelist':
-              info = "Pozycja "
+                info = "Utwór "
+            elif entity_id == 'sensor.rssnewslist':
+                info = "Artykuł "
+            elif entity_id == 'sensor.aisbookmarkslist':
+                info = "Zakładki "
+            elif entity_id == 'sensor.aisfavoriteslist':
+                info = "Ulubione "
+            else:
+                info = "Pozycja "
             if int(info_data) != -1:
                 additional_info = ". Naciśnij OK by zmienić."
             else:
@@ -718,9 +721,8 @@ def commit_current_position(hass):
             'set_value', {
                 "entity_id": CURR_ENTITIE,
                 "value": get_curent_position(hass)})
-    elif CURR_ENTITIE in ("sensor.radiolist", "sensor.podcastlist", "sensor.spotifylist",
-                          "sensor.youtubelist", "sensor.spotifysearchlist"):
-        # play selected source
+    elif CURR_ENTITIE.startswith('sensor.') and CURR_ENTITIE.endswith('list'):
+        # play/read selected source
         idx = hass.states.get(CURR_ENTITIE).state
         if CURR_ENTITIE == "sensor.radiolist":
             hass.services.call('ais_cloud', 'play_audio', {"id": idx, "audio_type": ais_global.G_AN_RADIO})
@@ -732,12 +734,19 @@ def commit_current_position(hass):
             hass.services.call('ais_cloud', 'play_audio', {"id": idx, "audio_type": ais_global.G_AN_SPOTIFY})
         elif CURR_ENTITIE == "sensor.youtubelist":
             hass.services.call('ais_cloud', 'play_audio', {"id": idx, "audio_type": ais_global.G_AN_MUSIC})
+        elif CURR_ENTITIE == "sensor.rssnewslist":
+            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "audio_type": ais_global.G_AN_NEWS})
+        elif CURR_ENTITIE == "sensor.aisbookmarkslist":
+            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "audio_type": ais_global.G_AN_BOOKMARK})
+        elif CURR_ENTITIE == "sensor.aisfavoriteslist":
+            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "audio_type": ais_global.G_AN_FAVORITE})
 
     if CURR_ENTITIE == "input_select.ais_android_wifi_network":
         _say_it(hass, "wybrano wifi: " + get_curent_position(hass).split(';')[0], None)
     elif CURR_ENTITIE == "input_select.ais_music_service":
         _say_it(hass, "Wybrano " + position + ", napisz lub powiedz jakiej muzyki mam wyszukać", None)
         hass.services.call('input_text', 'set_value', {"entity_id": "input_text.ais_music_query", "value": ""})
+        reset_virtual_keyboard(hass)
         set_curr_entity(hass, 'input_text.ais_music_query')
     else:
         _beep_it(hass, 33)
@@ -758,8 +767,7 @@ def set_next_position(hass):
         else:
             CURR_ENTITIE_POSITION = get_next(options, CURR_ENTITIE_POSITION)
             _say_it(hass, CURR_ENTITIE_POSITION, None)
-    elif CURR_ENTITIE in ('sensor.radiolist', 'sensor.podcastlist', 'sensor.spotifylist',
-                          'sensor.youtubelist', 'sensor.spotifysearchlist'):
+    elif CURR_ENTITIE.startswith('sensor.') and CURR_ENTITIE.endswith('list'):
         if len(attr) == 0:
             _say_it(hass, "brak pozycji", None)
         else:
@@ -791,8 +799,7 @@ def set_prev_position(hass):
         else:
             CURR_ENTITIE_POSITION = get_prev(options, CURR_ENTITIE_POSITION)
             _say_it(hass, CURR_ENTITIE_POSITION, None)
-    elif CURR_ENTITIE in ('sensor.radiolist', 'sensor.podcastlist', 'sensor.spotifylist',
-                          'sensor.youtubelist', 'sensor.spotifysearchlist'):
+    elif CURR_ENTITIE.startswith('sensor.') and CURR_ENTITIE.endswith('list'):
         if len(attr) == 0:
             _say_it(hass, "brak pozycji", None)
         else:
@@ -845,7 +852,6 @@ def select_entity(hass, long_press):
                 CURR_ENTITIE_ENTERED = True
                 if CURR_ENTITIE.startswith('input_text.'):
                     _say_it(hass, "Wpisywanie/dyktowanie tekstu włączone", None)
-                    hass.services.call('input_text', 'set_value', {"entity_id": CURR_ENTITIE, "value": ""})
                     reset_virtual_keyboard(hass)
                 else:
                     set_next_position(hass)
@@ -929,8 +935,7 @@ def select_entity(hass, long_press):
             # these items can be controlled from remote
             # if we are here it means that the enter on the same item was
             # pressed twice, we should do something - to mange the item status
-            if CURR_ENTITIE.startswith(("input_select.", "input_number.", "sensor.radiolist", "sensor.podcastlist",
-                                        "sensor.spotifylist", "sensor.youtubelist", "sensor.spotifysearchlist")):
+            if CURR_ENTITIE.startswith('sensor.') and CURR_ENTITIE.endswith('list'):
                 commit_current_position(hass)
             elif CURR_ENTITIE.startswith("media_player."):
                 # play / pause on selected player
@@ -962,13 +967,10 @@ def can_entity_be_changed(hass, entity):
         "light.",
         "input_text.",
         "input_select.",
-        "input_number.",
-        "sensor.radiolist",
-        "sensor.podcastlist",
-        "sensor.spotifysearchlist",
-        "sensor.spotifylist",
-        "sensor.youtubelist"
+        "input_number."
     )):
+        return True
+    elif CURR_ENTITIE.startswith('sensor.') and CURR_ENTITIE.endswith('list'):
         return True
     else:
         return False
@@ -2042,9 +2044,9 @@ def _say_it(hass, message, caller_ip=None, img=None):
     if img is not None:
         GLOBAL_TTS_TEXT = GLOBAL_TTS_TEXT + ' \n\n' + '![Zdjęcie](' + img + ')'
     if len(message) > 100:
-        hass.states.async_set('sensor.ais_knowledge_answer', message[0:100] + "...", {'text': GLOBAL_TTS_TEXT})
+        hass.states.async_set('sensor.aisknowledgeanswer', message[0:100] + "...", {'text': GLOBAL_TTS_TEXT})
     else:
-        hass.states.async_set('sensor.ais_knowledge_answer', message, {'text': GLOBAL_TTS_TEXT})
+        hass.states.async_set('sensor.aisknowledgeanswer', message, {'text': GLOBAL_TTS_TEXT})
 
 
 def _create_matcher(utterance):
@@ -2142,7 +2144,8 @@ def _process_code(hass, data, callback):
         # PG+ -> KEYCODE_PAGE_UP
         set_bookmarks_curr_group(hass)
         CURR_ENTITIE_ENTERED = True
-        set_curr_entity(hass, 'input_select.ais_bookmark_favorites')
+        # go to bookmarks
+        set_curr_entity(hass, 'sensor.aisfavorites')
 
         say_curr_entity(hass)
     elif code == 4:

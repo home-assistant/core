@@ -123,9 +123,6 @@ sensor.ais_android_wifi_current_network_info:
 sensor.local_host_name:
   friendly_name: Lokalna nazwa hosta
   icon: mdi:dns
-sensor.ais_rss_help_text:
-  friendly_name: Tekst strony
-  text: ""
 script.ais_scan_android_wifi_network:
   icon: mdi:router-wireless
 script.ais_scan_iot_devices_in_network:
@@ -136,12 +133,6 @@ script.ais_connect_iot_device_to_network:
   icon: mdi:send-secure
 sensor.ais_connect_iot_device_info:
   friendly_name: Instrukcja
-sensor.ais_knowledge_answer:
-  friendly_name: Odpowiedz
-  text: ""
-sensor.rss_news_text:
-  friendly_name: Tekst strony
-  text: ""
 sensor.network_devices_info_value:
   text: ""
 media_player.wbudowany_glosnik:
@@ -178,15 +169,11 @@ group.dom_system_version:
   friendly_name: System
   remote_group_view: Pomoc
   order: 1
-group.dom_cloud:
-  friendly_name: Konfiguracja treści i usług
-  remote_group_view: Pomoc
-  order: 2
 group.ais_rss_help_remote:
   context_key_words: instrukcja,pomoc,pomocy,help
   context_answer: OK, wybierz pilotem stronę pomocy
   remote_group_view: Pomoc
-  order: 4
+  order: 2
 group.all_switches:
   order: 1
   hidden: false
@@ -244,40 +231,41 @@ group.day_info:
 #  context_suffix: Znajdź informacje o
 #  remote_group_view: Mój Dom
 
-group.ais_rss_news_remote:
-  context_key_words: wiadomości,informacje
-  context_answer: OK, wybierz pilotem kategorię, kanał i artykuł który mam przeczytać
-  remote_group_view: Audio
-  order: 1
-group.local_audio:
-  context_key_words: lokalne pliki,dyski
-  context_answer: OK, wybierz plik
-  remote_group_view: Audio
-  order: 2
-group.radio_player:
-  context_key_words: radio,radia,radia internetowe
-  context_answer: OK, powiedz jakiej stacji chcesz posłuchać lub wybierz pilotem typ radia i stację radiową
-  context_suffix: Radio
-  remote_group_view: Audio
-  order: 3
-group.podcast_player:
-  context_key_words: podcast,podcasty,podkasty,podkast
-  context_answer: OK, powiedz jaką audycję mam włączyć lub wybierz pilotem typ, audycję i odcinek podcasta
-  context_suffix: Podcast
-  remote_group_view: Audio
-  order: 4
-group.music_player:
-  context_key_words: youtube,muzyka,yt,tuba,spotify
-  context_answer: OK, powiedz jakiej muzyki chcesz posłuchać?
-  context_suffix: Muzyka
-  remote_group_view: Audio
-  order: 5
 group.bookmarks:
   context_key_words: zakładki,ulubione
   context_answer: OK, wybierz pozycję
   friendly_name: Zakładki i ulubione
   remote_group_view: Audio
+  order: 1
+group.ais_rss_news_remote:
+  context_key_words: wiadomości,informacje
+  context_answer: OK, wybierz pilotem kategorię, kanał i artykuł który mam przeczytać
+  remote_group_view: Audio
+  order: 2
+group.local_audio:
+  context_key_words: lokalne pliki,dyski
+  context_answer: OK, wybierz plik
+  remote_group_view: Audio
+  order: 3
+group.radio_player:
+  context_key_words: radio,radia,radia internetowe
+  context_answer: OK, powiedz jakiej stacji chcesz posłuchać lub wybierz pilotem typ radia i stację radiową
+  context_suffix: Radio
+  remote_group_view: Audio
+  order: 4
+group.podcast_player:
+  context_key_words: podcast,podcasty,podkasty,podkast
+  context_answer: OK, powiedz jaką audycję mam włączyć lub wybierz pilotem typ, audycję i odcinek podcasta
+  context_suffix: Podcast
+  remote_group_view: Audio
+  order: 5
+group.music_player:
+  context_key_words: youtube,muzyka,yt,tuba,spotify
+  context_answer: OK, powiedz jakiej muzyki chcesz posłuchać?
+  context_suffix: Muzyka
+  remote_group_view: Audio
   order: 6
+
 #group.audiobooks_player:
 #  context_key_words: książki,książka,audiobook,audiobooks
 #  context_answer: OK, powiedz jakiej książki chcesz posłuchać lub wybierz pilotem
@@ -301,9 +289,13 @@ group.audio_player:
   context_answer: OK, wybrano odtwarzacze.
   order: 3
   remote_group_view: Ustawienia
+group.dom_cloud:
+  friendly_name: Konfiguracja treści i usług
+  remote_group_view: Ustawienia
+  order: 4
 group.ais_tts_configuration:
   context_key_words: głos,ustawienia głosu
   context_answer: OK, wybrano konfigurację zamiany tekstu na mowę
   remote_group_view: Ustawienia
-  order: 4
+  order: 5
 

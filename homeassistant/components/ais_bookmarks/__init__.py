@@ -48,153 +48,130 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def get_bookmarks_service(call):
-        """Return the list of bookmarks to app LOV"""
+        """Return the list of bookmarks to app list"""
         d = hass.data[DOMAIN]
-        lv_options = [ais_global.G_EMPTY_OPTION]
+        list_info = {}
+        list_idx = 0
         for item in reversed(d.bookmarks):
-            lv_options.append(item['source'] + '; ' + item['name'])
-        hass.async_add_job(
-            hass.services.async_call(
-                'input_select', 'set_options', {
-                    "entity_id": "input_select.ais_bookmark_last_played",
-                    "options": lv_options})
-        )
+            if "media_stream_image" in item and item["media_stream_image"] is not None:
+                img = item["media_stream_image"]
+            else:
+                img = "/static/icons/tile-win-310x150.png"
+            list_info[list_idx] = {}
+            list_info[list_idx]["title"] = item['source'] + " " + item['name']
+            list_info[list_idx]["name"] = item['source'] + " " + item['name']
+            list_info[list_idx]["thumbnail"] = img
+            list_info[list_idx]["uri"] = item["media_content_id"]
+            list_info[list_idx]["mediasource"] = ais_global.G_AN_RADIO
+            list_info[list_idx]["type"] = item['source']
+            list_info[list_idx]["icon"] = 'mdi:play'
+            list_info[list_idx]["options"] = 'options'
+            list_info[list_idx]["option"] = 'option'
+            list_idx = list_idx + 1
+        # create lists
+        hass.states.async_set("sensor.aisbookmarkslist", -1, list_info)
 
     @asyncio.coroutine
     def get_favorites_service(call):
-        """Return the list of favorites to app LOV"""
+        """Return the list of favorites to app list"""
         d = hass.data[DOMAIN]
-        lv_options = [ais_global.G_EMPTY_OPTION]
+        list_info = {}
+        list_idx = 0
         for item in reversed(d.favorites):
-            lv_options.append(item['source'] + '; ' + item['name'])
-        hass.async_add_job(
-            hass.services.async_call(
-                'input_select', 'set_options', {
-                    "entity_id": "input_select.ais_bookmark_favorites",
-                    "options": lv_options})
-        )
+            if "media_stream_image" in item and item["media_stream_image"] is not None:
+                img = item["media_stream_image"]
+            else:
+                img = "/static/icons/tile-win-310x150.png"
+            list_info[list_idx] = {}
+            list_info[list_idx]["title"] = item['source'] + " " + item['name']
+            list_info[list_idx]["name"] = item['source'] + " " + item['name']
+            list_info[list_idx]["thumbnail"] = img
+            list_info[list_idx]["uri"] = item["media_content_id"]
+            list_info[list_idx]["mediasource"] = ais_global.G_AN_RADIO
+            list_info[list_idx]["type"] = item['source']
+            list_info[list_idx]["icon"] = 'mdi:play'
+            list_info[list_idx]["options"] = 'options'
+            list_info[list_idx]["option"] = 'option'
+            list_idx = list_idx + 1
+        # create lists
+        hass.states.async_set("sensor.aisfavoriteslist", -1, list_info)
 
 
     @asyncio.coroutine
     def play_bookmark_service(call):
         """Play selected bookmark"""
-        bookmark = call.data.get("bookmark")
-        d = hass.data[DOMAIN]
-        name = bookmark.split(';', 1)[1].strip()
-        album = bookmark.split(';', 1)[0].strip()
-        item = next((itm for itm in d.bookmarks if (itm['name'] == name and itm['source'] == album)), None)
-        if item is not None:
-            # set the global bookmark
-            ais_global.set_media_bookmark(item['media_content_id'], item['media_position'])
-            hass.async_add_job(
-                hass.services.async_call(
-                    'input_select',
-                    'set_options', {
-                        "entity_id": "input_select.folder_name",
-                        "options": item['options']
-                    })
-            )
-            hass.async_add_job(
-                hass.services.async_call(
-                    'input_select',
-                    'select_option', {
-                        "entity_id": "input_select.folder_name",
-                        "option": item['option']
-                    })
-            )
-            # call without a services to avoid the double automation trigger
-            # hass.states.async_set('input_select.folder_name',
-            #                       item['option'],
-            #                       {"options": item['options'],
-            #                        "friendly_name": "Przeglądaj",
-            #                        "icon": "mdi:folder-search"},
-            #                        force_update=True)
-            # else:
-            #     hass.async_add_job(
-            #         hass.services.async_call(
-            #             'media_player',
-            #             'play_media', {
-            #                 "entity_id": "media_player.wbudowany_glosnik",
-            #                 "media_content_type": "audio/mp4",
-            #                 "media_content_id": item['media_content_id']
-            #             })
-            #     )
-            #     _audio_info = json.dumps(
-            #         {"IMAGE_URL": item["media_stream_image"], "NAME": item['name'], "MEDIA_SOURCE": item['source']}
-            #     )
-            #     # set stream image and title
-            #     hass.async_add_job(
-            #         hass.services.async_call(
-            #             'media_player',
-            #             'play_media', {
-            #                 "entity_id": "media_player.wbudowany_glosnik",
-            #                 "media_content_type": "ais_info",
-            #                 "media_content_id": _audio_info
-            #             })
-            #     )
-            #
-            #     hass.async_add_job(
-            #         hass.services.async_call(
-            #             'media_player',
-            #             'media_seek', {
-            #                 "entity_id": "media_player.wbudowany_glosnik",
-            #                 "seek_position": item['media_position']
-            #             })
-            #     )
+        bookmark_id = int(call.data.get("id"))
+        # get item from list
+        state = hass.states.get("sensor.aisbookmarkslist")
+        attr = state.attributes
+        track = attr.get(bookmark_id)
+
+        hass.async_add_job(
+            hass.services.async_call(
+                'media_player',
+                'play_media', {
+                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+                    "media_content_type": "audio/mp4",
+                    "media_content_id": track['uri']
+                })
+        )
+        _audio_info = json.dumps(
+            {"IMAGE_URL": track["thumbnail"], "NAME": track['name'], "MEDIA_SOURCE": track['type']}
+        )
+        # set stream image and title
+        hass.async_add_job(
+            hass.services.async_call(
+                'media_player',
+                'play_media', {
+                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+                    "media_content_type": "ais_info",
+                    "media_content_id": _audio_info
+                })
+        )
+
     @asyncio.coroutine
     def play_favorite_service(call):
         """Play selected favorite"""
-        favorite = call.data.get("favorite")
-        d = hass.data[DOMAIN]
-        name = favorite.split(';', 1)[1].strip()
-        source = favorite.split(';', 1)[0].strip()
-        item = next((itm for itm in d.favorites if (itm['name'] == name and itm['source'] == source)), None)
-        if item is not None:
-            hass.async_add_job(
-                hass.services.async_call(
-                    'media_player',
-                    'play_media', {
-                        "entity_id": "media_player.wbudowany_glosnik",
-                        "media_content_type": "audio/mp4",
-                        "media_content_id": item['media_content_id']
-                    })
+        favorite_id = int(call.data.get("id"))
+        # get item from list
+        state = hass.states.get("sensor.aisfavoriteslist")
+        attr = state.attributes
+        track = attr.get(favorite_id)
+
+
+        hass.async_add_job(
+            hass.services.async_call(
+                'media_player',
+                'play_media', {
+                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+                    "media_content_type": "audio/mp4",
+                    "media_content_id": track['uri']
+                })
             )
-            _audio_info = json.dumps(
-                {"IMAGE_URL": item["media_stream_image"], "NAME": item['name'], "MEDIA_SOURCE": item['source']}
-            )
-            # set stream image and title
-            hass.async_add_job(
-                hass.services.async_call(
-                    'media_player',
-                    'play_media', {
-                        "entity_id": "media_player.wbudowany_glosnik",
-                        "media_content_type": "ais_info",
-                        "media_content_id": _audio_info
-                    })
-            )
+        _audio_info = json.dumps(
+            {"IMAGE_URL": track["thumbnail"], "NAME": track['name'], "MEDIA_SOURCE": track['type']}
+        )
+        # set stream image and title
+        hass.async_add_job(
+            hass.services.async_call(
+                'media_player',
+                'play_media', {
+                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+                    "media_content_type": "ais_info",
+                    "media_content_id": _audio_info
+                })
+        )
 
     data = hass.data[DOMAIN] = BookmarksData(hass)
     intent.async_register(hass, AddFavoriteIntent())
     intent.async_register(hass, ListTopBookmarkIntent())
     intent.async_register(hass, PlayLastBookmarkIntent())
-    hass.services.async_register(
-        DOMAIN, SERVICE_ADD_BOOKMARK, add_bookmark_service
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_ADD_FAVORITE, add_favorite_service
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_GET_BOOKMARKS, get_bookmarks_service
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_GET_FAVORITES, get_favorites_service
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_PLAY_BOOKMARK, play_bookmark_service
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_PLAY_FAVORITE, play_favorite_service
-    )
+    hass.services.async_register(DOMAIN, SERVICE_ADD_BOOKMARK, add_bookmark_service)
+    hass.services.async_register(DOMAIN, SERVICE_ADD_FAVORITE, add_favorite_service)
+    hass.services.async_register(DOMAIN, SERVICE_GET_BOOKMARKS, get_bookmarks_service)
+    hass.services.async_register(DOMAIN, SERVICE_GET_FAVORITES, get_favorites_service)
+    hass.services.async_register(DOMAIN, SERVICE_PLAY_BOOKMARK, play_bookmark_service)
+    hass.services.async_register(DOMAIN, SERVICE_PLAY_FAVORITE, play_favorite_service)
 
     hass.components.conversation.async_register(INTENT_ADD_FAVORITE, [
         'Dodaj do ulubionych',
@@ -209,6 +186,10 @@ def async_setup(hass, config):
     ])
 
     yield from data.async_load()
+
+    hass.states.async_set("sensor.aisbookmarkslist", -1, {})
+    hass.states.async_set("sensor.aisfavoriteslist", -1, {})
+
     return True
 
 
