@@ -1,4 +1,4 @@
-"""Binary Sensor for MeteoAlarm.eu."""
+"""Binarysensor for MeteoAlarm.eu."""
 from datetime import timedelta
 import logging
 
@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the MeteoAlarm binary sensor platform."""
+    """Set up the MeteoAlarm binarysensor platform."""
     from meteoalertapi import Meteoalert
 
     country = config[CONF_COUNTRY]
@@ -53,10 +53,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class MeteoAlertBinarySensor(BinarySensorDevice):
-    """Representation of a MeteoAlert binary sensor."""
+    """Representation of a MeteoAlert binarysensor."""
 
     def __init__(self, api, name):
-        """Initialize the MeteoAlert binary sensor."""
+        """Initialize the MeteoAlert binarysensor."""
         self._name = name
         self._attributes = {}
         self._state = None
@@ -69,7 +69,7 @@ class MeteoAlertBinarySensor(BinarySensorDevice):
 
     @property
     def is_on(self):
-        """Return the status of the binary sensor."""
+        """Return the status of the binarysensor."""
         return self._state
 
     @property
@@ -85,7 +85,7 @@ class MeteoAlertBinarySensor(BinarySensorDevice):
 
     @property
     def device_class(self):
-        """Return the class of this binary sensor."""
+        """Return the class of this binarysensor."""
         return DEFAULT_DEVICE_CLASS
 
     def update(self):
