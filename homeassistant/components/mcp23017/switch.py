@@ -62,7 +62,7 @@ class MCP23017Switch(ToggleEntity):
         self._state = False
 
         self._pin.direction = digitalio.Direction.OUTPUT
-        self._pin.value = True and not self._invert_logic
+        self._pin.value = self._invert_logic
 
     @property
     def name(self):
@@ -87,6 +87,6 @@ class MCP23017Switch(ToggleEntity):
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        self._pin.value = True and not self._invert_logic
+        self._pin.value = self._invert_logic
         self._state = False
         self.schedule_update_ha_state()
