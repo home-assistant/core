@@ -136,9 +136,7 @@ script.ais_connect_iot_device_to_network:
   icon: mdi:send-secure
 sensor.ais_connect_iot_device_info:
   friendly_name: Instrukcja
-sensor.ais_knowledge_answer:
-  friendly_name: Odpowiedz
-  text: ""
+
 sensor.rss_news_text:
   friendly_name: Tekst strony
   text: ""

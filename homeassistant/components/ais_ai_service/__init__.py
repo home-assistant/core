@@ -116,11 +116,6 @@ CURR_VIRTUAL_KEYBOARD_VALUE = None
 CURR_VIRTUAL_KEY = None
 # ais-dom virtual keyboard
 
-GLOBAL_TTS_TEXT = None
-
-def get_tts_text():
-    return GLOBAL_TTS_TEXT
-
 
 def isSwitch(entity_id):
     global ALL_SWITCHES
@@ -1634,6 +1629,9 @@ async def async_setup(hass, config):
     # initial status of the player
     hass.states.async_set("sensor.ais_player_mode", 'bookmarks')
 
+    # sensor
+    hass.states.async_set("sensor.ais_knowledge_answer", -1, {"text": ""})
+
     return True
 
 
@@ -2036,15 +2034,15 @@ def _say_it(hass, message, caller_ip=None, img=None):
     _post_message(message, l_hosts)
 
     if len(message) > 1999:
-        GLOBAL_TTS_TEXT = message[0: 1999] + '...'
+        tts_text = message[0: 1999] + '...'
     else:
-        GLOBAL_TTS_TEXT = message + ' '
+        tts_text = message + ' '
     if img is not None:
-        GLOBAL_TTS_TEXT = GLOBAL_TTS_TEXT + ' \n\n' + '![Zdjęcie](' + img + ')'
+        tts_text = tts_text + ' \n\n' + '![Zdjęcie](' + img + ')'
     if len(message) > 100:
-        hass.states.async_set('sensor.ais_knowledge_answer', message[0:100] + "...", {'text': GLOBAL_TTS_TEXT})
+        hass.states.async_set('sensor.ais_knowledge_answer', message[0:100] + "...", {'text': tts_text})
     else:
-        hass.states.async_set('sensor.ais_knowledge_answer', message, {'text': GLOBAL_TTS_TEXT})
+        hass.states.async_set('sensor.ais_knowledge_answer', message, {'text': tts_text})
 
 
 def _create_matcher(utterance):

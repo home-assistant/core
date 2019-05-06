@@ -24,6 +24,9 @@ G_AN_LOCAL = "Local"
 G_AN_SPOTIFY_SEARCH = "SpotifySearch"
 G_AN_SPOTIFY = "Spotify"
 G_LOCAL_EXO_PLAYER_ENTITY_ID = "media_player.wbudowany_glosnik"
+G_CURR_MEDIA_CONTENT = {}
+
+
 # tokens
 G_OFFLINE_MODE = False
 

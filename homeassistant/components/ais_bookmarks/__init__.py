@@ -231,7 +231,7 @@ class BookmarksData:
 
         media_position = attributes.get("media_position", None)
         media_content_id = attributes.get("media_content_id")
-        media_stream_image = attributes.get("media_stream_image")
+        media_stream_image = ais_global.G_CURR_MEDIA_CONTENT["IMAGE_URL"]
 
         if name is None or source is None or media_content_id is None:
             _LOGGER.warning("can't add the bookmark, no full info provided: " + str(attributes))
@@ -271,11 +271,7 @@ class BookmarksData:
 
             if item is not None:
                 message = '{}, {} jest już w ulubionych.'.format(source, name)
-                self.hass.async_add_job(
-                    self.hass.services.async_call(
-                        'ais_ai_service', 'say_it',
-                        {"text": message})
-                )
+                self.hass.async_add_job(self.hass.services.async_call('ais_ai_service', 'say_it',{"text": message}))
                 return
             # add item
             item = {
@@ -353,8 +349,7 @@ class AddFavoriteIntent(intent.IntentHandler):
             hass.data[DOMAIN].async_add(state.attributes, False)
         response = intent_obj.create_response()
         response.async_set_speech(answer)
-        yield from hass.services.async_call(
-            'ais_ai_service', 'say_it', {"text": answer})
+        yield from hass.services.async_call('ais_ai_service', 'say_it', {"text": answer})
 
         return response
 

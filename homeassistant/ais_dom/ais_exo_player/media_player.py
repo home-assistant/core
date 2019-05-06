@@ -152,15 +152,8 @@ class ExoPlayerDevice(MediaPlayerDevice):
     def _fetch_status(self):
         """Fetch status from ExoPlayer."""
         _LOGGER.debug("_fetch_status")
-        # TODO maybe we should do this for other players in network...
-        # self.hass.services.call(
-        #     'ais_ai_service',
-        #     'publish_command_to_frame', {
-        #         "key": 'getAudioStatus',
-        #         "val": True,
-        #         "ip": self._device_ip
-        #         }
-        #     )
+        # INFO - we are not fetching the status from player
+        # exp player and spotify is pushing the status to asystent domowy
 
     @property
     def source(self):
@@ -442,6 +435,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
         if media_type == 'ais_info':
             # set image and name
             j_info = json.loads(media_content_id)
+            ais_global.G_CURR_MEDIA_CONTENT = j_info
             if "IMAGE_URL" not in j_info:
                 self._stream_image = "http://localhost:8180/static/icons/tile-win-310x150.png"
             else:
