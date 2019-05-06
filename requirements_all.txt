@@ -1573,7 +1573,7 @@ schiene==0.23
 scsgate==0.1.0
 
 # homeassistant.components.sendgrid
-sendgrid==5.6.0
+sendgrid==6.0.5
 
 # homeassistant.components.sensehat
 sense-hat==2.2.0
