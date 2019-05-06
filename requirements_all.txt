@@ -264,7 +264,7 @@ braviarc-homeassistant==0.3.7.dev0
 broadlink==0.9.0
 
 # homeassistant.components.brottsplatskartan
-brottsplatskartan==1.0.2
+brottsplatskartan==1.0.3
 
 # homeassistant.components.brunt
 brunt==0.1.3
