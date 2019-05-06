@@ -59,7 +59,7 @@ class DeconzThermostat(DeconzDevice, ClimateDevice):
     @property
     def is_on(self):
         """Return true if on."""
-        return self._device.on
+        return self._device.state_on
 
     async def async_turn_on(self):
         """Turn on switch."""
