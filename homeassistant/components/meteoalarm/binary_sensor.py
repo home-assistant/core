@@ -88,7 +88,7 @@ class MeteoAlertSensor(Entity, BinarySensorDevice):
     def device_class(self):
         """Return the class of this sensor."""
         return DEFAULT_DEVICE_CLASS
-    
+
     def update(self):
         """Update device state."""
         alert = self._api.get_alert()
