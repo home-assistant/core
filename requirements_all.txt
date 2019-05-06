@@ -1294,7 +1294,7 @@ pysma==0.3.1
 pysmartapp==0.3.2
 
 # homeassistant.components.smartthings
-pysmartthings==0.6.7
+pysmartthings==0.6.8
 
 # homeassistant.components.snmp
 pysnmp==4.4.9
