@@ -9,6 +9,6 @@ group:
     name: Asystentka
     entities:
       - input_text.ais_knowledge_query
-      - sensor.ais_knowledge_answer
+      - sensor.aisknowledgeanswer
 
 

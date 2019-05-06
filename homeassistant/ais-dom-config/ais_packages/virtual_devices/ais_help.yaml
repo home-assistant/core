@@ -16,10 +16,6 @@ sensor:
   - platform: mqtt
     name: internal_ip_address
     state_topic: ais/internal_ip_address/sensor
-  - platform: ais_long_text
-    name: ais_rss_help_text
-    package: homeassistant.components.ais_cloud
-    method: get_rss_help_text
 weblink:
   entities:
     - name: cloud
@@ -42,17 +38,15 @@ input_text:
     initial: ""
 input_select:
   ais_rss_help_topic:
-    name: 'Strona:'
+    name: 'Strona dokuemntacji:'
     options:
       - "-"
-      - "1. Pierwsze kroki"
-      - "2. Co nowego"
-      - "3. Komendy głosowe"
-      - "4. Sterowanie pilotem"
-      - "5. Serwisy audio"
-      - "6. Automatyka domowa"
-      - "7. Dostęp do bramki w sieci lokalnej"
-      - "8. Dostęp do bramki z Internetu"
+      - "Pierwsze kroki"
+      - "Co nowego"
+      - "Komendy głosowe"
+      - "Sterowanie pilotem"
+      - "Automatyka domowa"
+      - "Dostęp do bramki"
     initial: "-"
     icon: mdi:format-list-bulleted-type
   ais_android_wifi_network:
@@ -87,7 +81,7 @@ group:
       - script.ais_connect_android_wifi_network
       - input_boolean.ais_android_wifi_changes_notify
   AIS add IOT device:
-    name: Dodawanie nowych urządzeń
+    name: Dodaj nowe urządzenia
     control: hidden
     entities:
       - sensor.ais_connect_iot_device_info
@@ -103,12 +97,12 @@ group:
       - configurator.ais_dom_host
   ais_rss_help:
     control: hidden
-    name: Strony pomocy
+    name: Instrukcja
     entities:
       - input_select.ais_rss_help_topic
-      - sensor.ais_rss_help_text
+      - sensor.aisrsshelptext
   ais_rss_help_remote:
     control: hidden
-    name: Strony pomocy
+    name: Instrukcja
     entities:
       - input_select.ais_rss_help_topic

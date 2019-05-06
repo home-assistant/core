@@ -23,9 +23,18 @@ G_AN_NEWS = "News"
 G_AN_LOCAL = "Local"
 G_AN_SPOTIFY_SEARCH = "SpotifySearch"
 G_AN_SPOTIFY = "Spotify"
+G_AN_BOOKMARK = "Bookmark"
+G_AN_FAVORITE = "Favorite"
 G_LOCAL_EXO_PLAYER_ENTITY_ID = "media_player.wbudowany_glosnik"
 G_CURR_MEDIA_CONTENT = {}
 
+G_ICON_FOR_AUDIO = {
+    G_AN_RADIO: 'mdi:radio',
+    G_AN_PODCAST: 'mdi:podcast',
+    G_AN_MUSIC: 'mdi:music',
+    G_AN_AUDIOBOOK: 'mdi:audiobook',
+    G_AN_SPOTIFY: 'mdi:spotify'
+}
 
 # tokens
 G_OFFLINE_MODE = False

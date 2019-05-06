@@ -15,17 +15,7 @@ REQUIREMENTS = ['feedparser==5.2.1', 'readability-lxml', 'bs4']
 CLOUD_APP_URL = "https://powiedz.co/ords/f?p=100:1&x01=TOKEN:"
 CLOUD_WS_TOKEN = None
 CLOUD_WS_HEADER = {}
-GLOBAL_RSS_NEWS_TEXT = None
-GLOBAL_RSS_HELP_TEXT = None
 G_PLAYERS = []
-
-
-def get_news_text():
-    return GLOBAL_RSS_NEWS_TEXT
-
-
-def get_rss_help_text():
-    return GLOBAL_RSS_HELP_TEXT
 
 
 def check_url(url_address):
@@ -62,6 +52,11 @@ def async_setup(hass, config):
     hass.states.async_set("sensor.youtubelist", -1, {})
     hass.states.async_set("sensor.spotifysearchlist", -1, {})
     hass.states.async_set("sensor.spotifylist", -1, {})
+    hass.states.async_set("sensor.rssnewslist", -1, {})
+    hass.states.async_set("sensor.rssnewstext", -1, {})
+    hass.states.async_set("sensor.aisrsshelptext", "", {"text": ""})
+    hass.states.async_set("sensor.aisknowledgeanswer", "", {"text": ""})
+
 
     def get_radio_types(call):
         _LOGGER.info("get_radio_types")
@@ -348,7 +343,6 @@ class AisColudData:
         self.cloud = AisCloudWS()
         self.cache = AisCacheData(hass)
         self.news_channels = []
-        self.news_items = []
 
     @asyncio.coroutine
     def get_types_async(self):
@@ -653,30 +647,50 @@ class AisColudData:
                 track_list = 'sensor.radiolist'
             elif audio_type == ais_global.G_AN_PODCAST:
                 track_list = 'sensor.podcastlist'
+            elif audio_type == ais_global.G_AN_NEWS:
+                track_list = 'sensor.rssnewslist'
+            elif audio_type == ais_global.G_AN_BOOKMARK:
+                track_list = 'sensor.aisbookmarkslist'
+            elif audio_type == ais_global.G_AN_FAVORITE:
+                track_list = 'sensor.aisfavoriteslist'
 
-            # play
             state = self.hass.states.get(track_list)
             attr = state.attributes
             track = attr.get(int(call.data['id']))
-            try:
-                track_uri = track["uri"]["href"]
-            except Exception:
-                track_uri = track["uri"]
-            # update list
-            self.hass.states.async_set(track_list, call.data['id'], attr)
-            self.hass.services.call('media_player', 'play_media',
-                                    {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                                     "media_content_type": "audio/mp4",
-                                     "media_content_id": track_uri})
-            # set stream image and title
-            _audio_info = json.dumps(
-                {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": audio_type})
-            self.hass.services.call('media_player', 'play_media',
-                                    {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                                     "media_content_type": "ais_info",
-                                     "media_content_id": _audio_info})
 
+            if audio_type == ais_global.G_AN_NEWS:
+                self.hass.services.call('ais_cloud', 'select_rss_news_item', {"id": call.data['id']})
+
+            elif audio_type in (ais_global.G_AN_RADIO, ais_global.G_AN_PODCAST):
+                # play
+                try:
+                    track_uri = track["uri"]["href"]
+                except Exception:
+                    track_uri = track["uri"]
+                # update list
+                self.hass.states.async_set(track_list, call.data['id'], attr)
+                self.hass.services.call('media_player', 'play_media',
+                                        {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+                                         "media_content_type": "audio/mp4",
+                                         "media_content_id": track_uri})
+                # set stream image and title
+                _audio_info = json.dumps(
+                    {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": audio_type})
+                self.hass.services.call('media_player', 'play_media',
+                                        {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+                                         "media_content_type": "ais_info",
+                                         "media_content_id": _audio_info})
+                return
+            elif audio_type == ais_global.G_AN_BOOKMARK:
+                self.hass.states.async_set(track_list, call.data['id'], attr)
+                self.hass.services.call('ais_bookmarks', 'play_bookmark', {"id": call.data['id']})
+                return
+            elif audio_type == ais_global.G_AN_FAVORITE:
+                self.hass.states.async_set(track_list, call.data['id'], attr)
+                self.hass.services.call('ais_bookmarks', 'play_favorite', {"id": call.data['id']})
+                return
         else:
+            # play by voice
             if audio_type == ais_global.G_AN_RADIO:
                 # play radio
                 self.hass.services.call(
@@ -726,6 +740,10 @@ class AisColudData:
             track_list = 'sensor.spotifysearchlist'
         elif audio_type == ais_global.G_AN_SPOTIFY:
             track_list = 'sensor.spotifylist'
+        elif audio_type == ais_global.G_AN_BOOKMARK:
+            track_list = 'sensor.aisbookmarkslist'
+        elif audio_type == ais_global.G_AN_FAVORITE:
+            track_list = 'sensor.aisfavoriteslist'
 
         # get prev from list
         state = self.hass.states.get(track_list)
@@ -755,6 +773,10 @@ class AisColudData:
             track_list = 'sensor.spotifysearchlist'
         elif audio_type == ais_global.G_AN_SPOTIFY:
             track_list = 'sensor.spotifylist'
+        elif audio_type == ais_global.G_AN_BOOKMARK:
+            track_list = 'sensor.aisbookmarkslist'
+        elif audio_type == ais_global.G_AN_FAVORITE:
+            track_list = 'sensor.aisfavoriteslist'
         # get next from list
         state = self.hass.states.get(track_list)
         curr_id = state.state
@@ -906,11 +928,9 @@ class AisColudData:
             return
         if call.data["rss_news_channel"] == ais_global.G_EMPTY_OPTION:
             # reset status for item below
-            self.hass.services.call(
-                'input_select',
-                'set_options', {
-                    "entity_id": "input_select.rss_news_item",
-                    "options": [ais_global.G_EMPTY_OPTION]})
+            self.hass.services.call('input_select', 'set_options', {"entity_id": "input_select.rss_news_item",
+                                                                    "options": [ais_global.G_EMPTY_OPTION]})
+            self.hass.states.async_set("sensor.rssnewslist", -1, {})
             return
         rss_news_channel = call.data["rss_news_channel"]
         if "lookup_url" in call.data:
@@ -926,135 +946,105 @@ class AisColudData:
                 if channel["NAME"] == rss_news_channel:
                     _lookup_url = channel["LOOKUP_URL"]
                     _image_url = channel["IMAGE_URL"]
+                    break
 
         if _lookup_url is not None:
             # download the episodes
-            self.hass.services.call(
-                'ais_ai_service',
-                'say_it', {
-                    "text": "pobieram"
-                })
+            self.hass.services.call('ais_ai_service', 'say_it', {"text": "pobieram"})
             try:
                 d = feedparser.parse(_lookup_url)
-                items = [ais_global.G_EMPTY_OPTION]
-                self.news_items = []
+                list_info = {}
+                list_idx = 0
                 for e in d.entries:
-                    item = {'title': e.title, 'link': e.link, 'image_url': _image_url, 'description': e.description}
-                    if e.title not in items:
-                        items.append(e.title)
-                        self.news_items.append(item)
-                self.hass.services.call(
-                    'input_select',
-                    'set_options', {
-                        "entity_id": "input_select.rss_news_item",
-                        "options": items})
+                    list_info[list_idx] = {}
+                    list_info[list_idx]["title"] = e.title
+                    list_info[list_idx]["name"] = e.title
+                    list_info[list_idx]["description"] = e.description
+                    list_info[list_idx]["thumbnail"] = _image_url
+                    list_info[list_idx]["uri"] = e.link
+                    list_info[list_idx]["mediasource"] = ais_global.G_AN_NEWS
+                    list_info[list_idx]["type"] = ''
+                    list_info[list_idx]["icon"] = 'mdi:voice'
+                    list_idx = list_idx + 1
+
+                # update list
+                self.hass.states.async_set("sensor.rssnewslist", -1, list_info)
+
+                if len(d.entries) == 0:
+                    self.hass.services.call('ais_ai_service', 'say_it', {"text": "brak artykułów, wybierz inny kanał"})
+                    return
 
                 if selected_by_voice_command:
-                    item = self.news_items[0]
-                    self.hass.services.call(
-                        'ais_ai_service',
-                        'say_it', {
-                            "text": "mamy "
-                            + str(len(d.entries)) + " wiadomości z "
-                            + rss_news_channel
-                            + ", czytam najnowszy artykuł: " + item["title"]
-                        })
-                    self.hass.services.call(
-                        'input_select',
-                        'select_option', {
-                            "entity_id": "input_select.rss_news_item",
-                            "option": item["title"]})
+                    self.hass.services.call('ais_ai_service', 'say_it',
+                                            {"text": "mamy " + str(len(d.entries)) + " wiadomości z "
+                                                     + rss_news_channel
+                                                     + ", czytam najnowszy artykuł: " + list_info[0]["title"]})
 
+                    self.hass.states.async_set("sensor.rssnewslist", 0, list_info)
+                    # call to read
+                    # select_rss_news_item
+                    # TODO
                 else:
-                    self.hass.services.call(
-                        'ais_ai_service',
-                        'say_it', {
-                            "text": "mamy "
-                            + str(len(d.entries))
-                            + " wiadomości, wybierz artykuł"
-                        })
+                    self.hass.services.call('ais_ai_service', 'say_it', {
+                        "text": "mamy " + str(len(d.entries)) + " wiadomości, wybierz artykuł"})
                     # check if the change was done form remote
                     import homeassistant.components.ais_ai_service as ais_ai
-                    if (ais_ai.CURR_ENTITIE
-                            == 'input_select.rss_news_channel'
-                            and ais_ai.CURR_BUTTON_CODE == 23):
-                                ais_ai.set_curr_entity(
-                                    self.hass,
-                                    'input_select.rss_news_item')
+                    if ais_ai.CURR_ENTITIE == 'input_select.rss_news_channel' and ais_ai.CURR_BUTTON_CODE == 23:
+                        ais_ai.set_curr_entity(self.hass, 'sensor.rssnewslist')
 
             except Exception as e:
                 _LOGGER.error("Error: " + str(e))
-                self.hass.services.call(
-                    'ais_ai_service',
-                    'say_it', {
-                        "text": "Nie można pobrać wiadomości z: "
-                                + rss_news_channel
-                    })
+                self.hass.services.call('ais_ai_service', 'say_it',
+                                        {"text": "Nie można pobrać wiadomości z: " + rss_news_channel})
 
     def select_rss_news_item(self, call):
         """Get text for the selected item."""
-        global GLOBAL_RSS_NEWS_TEXT
-        if "rss_news_item" not in call.data:
-            _LOGGER.error("No rss_news_item")
+        if "id" not in call.data:
+            _LOGGER.error("No rss news id")
             return
-        if call.data["rss_news_item"] == ais_global.G_EMPTY_OPTION:
-            # reset status for item below
-            GLOBAL_RSS_NEWS_TEXT = ''
-            self.hass.states.async_set(
-                'sensor.rss_news_text', '-', {
-                    'text': "" + GLOBAL_RSS_NEWS_TEXT,
-                    'friendly_name': 'Tekst strony'
-                    })
-            return
-        # the station was selected from select list in app
-        # we need to find the url and read the text
-        rss_news_item = call.data["rss_news_item"]
-        _url = None
-        for item in self.news_items:
-            if item["title"] == rss_news_item:
-                if "description" in item:
-                    GLOBAL_RSS_NEWS_TEXT = item["description"]
-                if "link" in item:
-                    _url = check_url(item["link"])
+        news_text = ""
+        # find the url and read the text
+        rss_news_item_id = int(call.data["id"])
+        state = self.hass.states.get('sensor.rssnewslist')
+        attr = state.attributes
+        track = attr.get(rss_news_item_id)
+        # update list
+        self.hass.states.async_set('sensor.rssnewslist', rss_news_item_id, attr)
 
-        if _url is not None:
-            import requests
-            from readability import Document
-            response = requests.get(check_url(_url), timeout=5)
-            response.encoding = 'utf-8'
-            doc = Document(response.text)
-            GLOBAL_RSS_NEWS_TEXT += doc.summary()
+        if track['description'] is not None:
+            news_text = track['description']
+
+        if track['uri'] is not None:
+            try:
+                import requests
+                from readability import Document
+                response = requests.get(check_url(track['uri']), timeout=5)
+                response.encoding = 'utf-8'
+                doc = Document(response.text)
+                doc_s = doc.summary()
+                if len(doc_s) > 0:
+                    news_text = doc_s
+            except Exception as e:
+                _LOGGER.error("Can not get article " + str(e))
 
         from bs4 import BeautifulSoup
-        GLOBAL_RSS_NEWS_TEXT = BeautifulSoup(
-            GLOBAL_RSS_NEWS_TEXT, "lxml").text
-
-        text = "Czytam artykuł. " + GLOBAL_RSS_NEWS_TEXT
-        self.hass.services.call(
-            'ais_ai_service',
-            'say_it', {
-                "text": text
-            })
-        self.hass.states.async_set(
-            'sensor.rss_news_text', GLOBAL_RSS_NEWS_TEXT[:200], {
-                'text': "" + GLOBAL_RSS_NEWS_TEXT,
-                'friendly_name': 'Tekst strony'
-                })
+        clear_text = BeautifulSoup(news_text, "lxml").text
+        self.hass.services.call('ais_ai_service', 'say_it', {"text": clear_text})
+        news_text = news_text.replace("<html>", "")
+        news_text = news_text.replace("</html>", "")
+        news_text = news_text.replace("<body>", "")
+        news_text = news_text.replace("</body>", "")
+        self.hass.states.async_set('sensor.rssnewstext', news_text[:200], {'text': "" + news_text})
 
     def select_rss_help_item(self, call):
         """Get text for the selected item."""
-        global GLOBAL_RSS_HELP_TEXT
-        GLOBAL_RSS_HELP_TEXT = ''
+        rss_help_text = ''
         if "rss_help_topic" not in call.data:
             _LOGGER.error("No rss_help_topic")
             return
         if call.data["rss_help_topic"] == ais_global.G_EMPTY_OPTION:
             # reset status for item below
-            self.hass.states.async_set(
-                'sensor.ais_rss_help_text', "-", {
-                    'text': "" + GLOBAL_RSS_HELP_TEXT,
-                    'friendly_name': "Tekst strony"
-                })
+            self.hass.states.async_set('sensor.aisrsshelptext', "-", {'text': "", 'friendly_name': "Tekst strony"})
             return
         # we need to build the url and get the text to read
         rss_help_topic = call.data["rss_help_topic"]
@@ -1065,26 +1055,17 @@ class AisColudData:
 
         response = requests.get(_url, timeout=5)
         doc = Document(response.text)
-        GLOBAL_RSS_HELP_TEXT += doc.summary()
+        rss_help_text += doc.summary()
 
         from markdown import markdown
-        GLOBAL_RSS_HELP_TEXT = markdown(GLOBAL_RSS_HELP_TEXT)
+        rss_help_text = markdown(rss_help_text)
         import re
-        GLOBAL_RSS_HELP_TEXT = re.sub(r'<code>(.*?)</code>', ' ', GLOBAL_RSS_HELP_TEXT)
-        GLOBAL_RSS_HELP_TEXT = re.sub('#', '', GLOBAL_RSS_HELP_TEXT)
+        rss_help_text = re.sub(r'<code>(.*?)</code>', ' ', rss_help_text)
+        rss_help_text = re.sub('#', '', rss_help_text)
 
         from bs4 import BeautifulSoup
-        GLOBAL_RSS_HELP_TEXT = BeautifulSoup(
-            GLOBAL_RSS_HELP_TEXT, "lxml").text
+        rss_help_text = BeautifulSoup(rss_help_text, "lxml").text
 
-        text = "Czytam stronę pomocy. " + GLOBAL_RSS_HELP_TEXT
-        self.hass.services.call(
-            'ais_ai_service',
-            'say_it', {
-                "text": text
-            })
+        self.hass.services.call('ais_ai_service', 'say_it', { "text": "Czytam stronę pomocy. " + rss_help_text })
         self.hass.states.async_set(
-            'sensor.ais_rss_help_text', GLOBAL_RSS_HELP_TEXT[:200], {
-                'text': "" + response.text,
-                'friendly_name': "Tekst strony"
-            })
+            'sensor.aisrsshelptext', rss_help_text[:200], {'text': "" + response.text, 'friendly_name': "Tekst strony"})

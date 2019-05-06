@@ -249,18 +249,6 @@
       data_template:
         rss_news_channel: "{{ states('input_select.rss_news_channel') }}"
 
-- id: '201807081916017'
-  alias: 'Select RSS News Item'
-  initial_state: True
-  hide_entity: True
-  trigger:
-    platform: state
-    entity_id: input_select.rss_news_item
-  action:
-    - service: ais_cloud.select_rss_news_item
-      data_template:
-        rss_news_item: "{{ states('input_select.rss_news_item') }}"
-
 - id: '201807081919019'
   alias: 'Get Podcast Names'
   initial_state: True
@@ -352,20 +340,6 @@
       data_template:
         bookmark: "{{ states('input_select.ais_bookmark_last_played') }}"
 
-- id: '201809171615123'
-  alias: 'Select Favorite To Play'
-  initial_state: True
-  hide_entity: True
-  trigger:
-    platform: state
-    entity_id: input_select.ais_bookmark_favorites
-  condition:
-    condition: template
-    value_template: "{{ states.input_select.ais_bookmark_favorites.state != '-' }}"
-  action:
-    - service: ais_bookmarks.play_favorite
-      data_template:
-        favorite: "{{ states('input_select.ais_bookmark_favorites') }}"
 
 - id: '201809291519123'
   alias: 'Flush logs'

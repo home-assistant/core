@@ -89,3 +89,13 @@ ais_connect_iot_device_to_network:
       data_template:
         key: "s"
         val: "{{ states('input_select.ais_iot_devices_in_network') }}"
+
+add_item_to_bookmarks:
+  alias: 'Dodaj zakładkę'
+  sequence:
+    - service: ais_bookmarks.add_bookmark
+
+add_item_to_favorites:
+  alias: 'Dodaj do ulubionych'
+  sequence:
+    - service: ais_bookmarks.add_favorite

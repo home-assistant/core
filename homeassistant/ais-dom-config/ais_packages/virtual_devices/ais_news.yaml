@@ -11,18 +11,6 @@ input_select:
       - "-"
     initial: "-"
     icon: mdi:newspaper
-  rss_news_item:
-    name: 'Pozycja:'
-    options:
-      - "-"
-    initial: "-"
-    icon: mdi:format-list-numbers
-
-sensor:
-    - platform: ais_long_text
-      name: rss_news_text
-      package: homeassistant.components.ais_cloud
-      method: get_news_text
 
 group:
   ais_rss_news:
@@ -31,12 +19,11 @@ group:
     entities:
       - input_select.rss_news_category
       - input_select.rss_news_channel
-      - input_select.rss_news_item
-      - sensor.rss_news_text
+      - sensor.rssnewslist
   ais_rss_news_remote:
     control: hidden
     name: Wiadomości
     entities:
       - input_select.rss_news_category
       - input_select.rss_news_channel
-      - input_select.rss_news_item
+      - sensor.rssnewslist

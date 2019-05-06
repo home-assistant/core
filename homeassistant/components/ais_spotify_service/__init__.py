@@ -187,20 +187,32 @@ class SpotifyData:
             items = results['playlists']['items']
             title_prefix = 'Playlista: '
             icon = "mdi:playlist-music"
-
         list_idx = len(list_info)
+        cur_idx = 0
         for item in items:
-            if audio_type == 'playlist':
-                item_owner_id = item['owner']['id']
-            if len(item['images']) > 0:
-                thumbnail = item['images'][0]['url']
-            else:
-                thumbnail = "/static/icons/favicon-100x100.png"
-            list_info[list_idx] = {"uri": item['uri'], "title": title_prefix + item['name'],
-                                   "name": title_prefix + item['name'], "type": audio_type,
-                                   "item_owner_id": item_owner_id, "thumbnail": thumbnail,
-                                   "mediasource": ais_global.G_AN_MUSIC, "icon": icon}
-            list_idx = list_idx + 1
+            try:
+                if audio_type == 'playlist':
+                    item_owner_id = item['owner']['id']
+                    i_total = item['tracks']['total']
+                elif audio_type == 'artist':
+                    i_total = item['popularity']
+                elif audio_type == 'album':
+                    i_total = item['total_tracks']
+                if i_total > 0:
+                    if len(item['images']) > 0:
+                        thumbnail = item['images'][0]['url']
+                    else:
+                        thumbnail = "/static/icons/favicon-100x100.png"
+                    list_info[list_idx] = {"uri": item['uri'], "title": title_prefix + item['name'],
+                                           "name": title_prefix + item['name'], "type": audio_type,
+                                           "item_owner_id": item_owner_id, "thumbnail": thumbnail,
+                                           "mediasource": ais_global.G_AN_MUSIC, "icon": icon}
+                    list_idx = list_idx + 1
+                    cur_idx = cur_idx + 1
+                    if cur_idx > 2:
+                        return list_info
+            except Exception as e:
+                _LOGGER.error('get_list_from_results ' + str(item) + ' ERROR: ' + str(e))
 
         return list_info
 
