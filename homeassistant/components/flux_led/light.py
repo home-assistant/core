@@ -208,8 +208,6 @@ class FluxLight(Light):
         """Return the brightness of this light between 0..255."""
         if self._mode == MODE_WHITE:
             return self._white_value
-
-        return int(self._color[2] / 100 * 255)
         return int(self._color[2] / 100 * 255) or self._white_value
 
     @property
