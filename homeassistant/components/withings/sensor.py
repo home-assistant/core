@@ -239,15 +239,15 @@ WITHINGS_ATTRIBUTES = [
     # perform the necessary conversions.
     WithingsMeasureAttribute(
         const.MEAS_TEMP_AUTO, const.MEASURE_TYPE_TEMP,
-        'Temperature', const.UOM_TEMP_C, 'mdi:temperature'
+        'Temperature', const.UOM_TEMP_C, 'mdi:thermometer'
     ),
     WithingsMeasureAttribute(
         const.MEAS_BODY_TEMP_AUTO, const.MEASURE_TYPE_BODY_TEMP,
-        'Body Temperature', const.UOM_TEMP_C, 'mdi:temperature'
+        'Body Temperature', const.UOM_TEMP_C, 'mdi:thermometer'
     ),
     WithingsMeasureAttribute(
         const.MEAS_SKIN_TEMP_AUTO, const.MEASURE_TYPE_SKIN_TEMP,
-        'Skin Temperature', const.UOM_TEMP_C, 'mdi:temperature'
+        'Skin Temperature', const.UOM_TEMP_C, 'mdi:thermometer'
     ),
 
     WithingsMeasureAttribute(
@@ -461,8 +461,10 @@ class WithingsHealthSensor(Entity):
         """Update the measures data."""
         if data is None:
             _LOGGER.error(
-                "Provided data is None. Probably throttled, changing nothing"
+                "Provided data is None. Setting state to %s",
+                const.STATE_UNKNOWN
             )
+            self._state = const.STATE_UNKNOWN
             return
 
         measurement = self._attribute.measurement
@@ -553,8 +555,10 @@ class WithingsHealthSensor(Entity):
         """Update the sleep state data."""
         if data is None:
             _LOGGER.error(
-                "Provided data is None, probably throttled, changing nothing"
+                "Provided data is None. Setting state to %s",
+                const.STATE_UNKNOWN
             )
+            self._state = const.STATE_UNKNOWN
             return
 
         if not data.series:
@@ -588,8 +592,10 @@ class WithingsHealthSensor(Entity):
         """Update the sleep summary data."""
         if data is None:
             _LOGGER.error(
-                "Provided data is None, probably throttled, changing nothing"
+                "Provided data is None. Setting state to %s",
+                const.STATE_UNKNOWN
             )
+            self._state = const.STATE_UNKNOWN
             return
 
         if not data.series:

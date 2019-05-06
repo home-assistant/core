@@ -60,7 +60,7 @@ def test_print_service():
     assert not WithingsDataManager.print_service_unavailable()
 
 
-def test_data_manager_call_throttle_disabled(data_manager):
+def test_data_manager_call(data_manager):
     """Test method."""
     # Token refreshed.
     def hello_func():
@@ -113,11 +113,25 @@ def test_data_manager_call_throttle_disabled(data_manager):
 
 def test_data_manager_call_throttle_enabled(data_manager):
     """Test method."""
-    def hello_func():
-        return 'HELLO2'
+    hello_func = MagicMock(return_value='HELLO2')
 
     result = data_manager.call(hello_func, throttle_domain='test')
     assert result == 'HELLO2'
 
     result = data_manager.call(hello_func, throttle_domain='test')
-    assert not result
+    assert result == 'HELLO2'
+
+    assert hello_func.call_count == 1
+
+
+def test_data_manager_call_throttle_disabled(data_manager):
+    """Test method."""
+    hello_func = MagicMock(return_value='HELLO2')
+
+    result = data_manager.call(hello_func)
+    assert result == 'HELLO2'
+
+    result = data_manager.call(hello_func)
+    assert result == 'HELLO2'
+
+    assert hello_func.call_count == 2

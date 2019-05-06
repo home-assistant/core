@@ -18,7 +18,7 @@ PROFILES = 'profiles'
 AUTH_CALLBACK_PATH = '/api/withings/callback'
 AUTH_CALLBACK_NAME = 'api:withings:callback'
 
-THROTTLE_INTERVAL = 300
+THROTTLE_INTERVAL = 60
 
 STATE_UNKNOWN = const.STATE_UNKNOWN
 STATE_AWAKE = 'awake'

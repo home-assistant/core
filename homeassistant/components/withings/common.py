@@ -32,6 +32,35 @@ class ServiceError(Exception):
     pass
 
 
+class ThrottleData:
+    """Throttle data."""
+
+    def __init__(self, interval: int, data):
+        """Constructor."""
+        self._time = int(time.time())
+        self._interval = interval
+        self._data = data
+
+    @property
+    def time(self):
+        """Get time created."""
+        return self._time
+
+    @property
+    def interval(self):
+        """Get interval."""
+        return self._interval
+
+    @property
+    def data(self):
+        """Get data."""
+        return self._data
+
+    def is_expired(self):
+        """Is this data expired."""
+        return int(time.time()) - self.time > self.interval
+
+
 class WithingsDataManager:
     """A class representing an Withings cloud service connection."""
 
@@ -48,7 +77,7 @@ class WithingsDataManager:
         self._sleep_summary = None
 
         self.sleep_summary_last_update_parameter = None
-        self.throttle_domains = {}
+        self.throttle_data = {}
 
     @property
     def profile(self) -> str:
@@ -85,6 +114,14 @@ class WithingsDataManager:
         """Get the throttle interval."""
         return const.THROTTLE_INTERVAL
 
+    def get_throttle_data(self, domain: str) -> ThrottleData:
+        """Get throttlel data."""
+        return self.throttle_data.get(domain)
+
+    def set_throttle_data(self, domain: str, throttle_data: ThrottleData):
+        """Set throttle data."""
+        self.throttle_data[domain] = throttle_data
+
     @staticmethod
     def print_service_unavailable():
         """Print the service is unavailable (once) to the log."""
@@ -105,19 +142,29 @@ class WithingsDataManager:
 
     def call(self, function, is_first_call=True, throttle_domain=None):
         """Call an api method and handle the result."""
-        last_run = self.throttle_domains.get(throttle_domain, 0)
-        current_time = int(time.time())
-        throttle_interval = WithingsDataManager.get_throttle_interval()
+        throttle_data = self.get_throttle_data(throttle_domain)
 
-        if throttle_domain and current_time - last_run < throttle_interval:
-            _LOGGER.debug("Throttling call for domain: %s", throttle_domain)
-            return None
-
-        self.throttle_domains[throttle_domain] = current_time
+        should_throttle = throttle_domain and \
+            throttle_data and \
+            not throttle_data.is_expired()
 
         try:
-            _LOGGER.debug("Running call.")
-            result = function()
+            if should_throttle:
+                _LOGGER.debug(
+                    "Throttling call for domain: %s",
+                    throttle_domain
+                )
+                result = throttle_data.data
+            else:
+                _LOGGER.debug("Running call.")
+                result = function()
+
+                # Update throttle data.
+                self.set_throttle_data(throttle_domain, ThrottleData(
+                    self.get_throttle_interval(),
+                    result
+                ))
+
             WithingsDataManager.print_service_available()
             return result
 
