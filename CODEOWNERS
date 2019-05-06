@@ -33,6 +33,7 @@ homeassistant/components/automation/* @home-assistant/core
 homeassistant/components/aws/* @awarecan @robbiet480
 homeassistant/components/axis/* @kane610
 homeassistant/components/bitcoin/* @fabaff
+homeassistant/components/bizkaibus/* @UgaitzEtxebarria
 homeassistant/components/blink/* @fronzbot
 homeassistant/components/bmw_connected_drive/* @ChristianKuehnel
 homeassistant/components/braviatv/* @robbiet480
@@ -73,6 +74,7 @@ homeassistant/components/epsonworkforce/* @ThaStealth
 homeassistant/components/eq3btsmart/* @rytilahti
 homeassistant/components/esphome/* @OttoWinter
 homeassistant/components/essent/* @TheLastProject
+homeassistant/components/evohome/* @zxdavb
 homeassistant/components/file/* @fabaff
 homeassistant/components/filter/* @dgomes
 homeassistant/components/fitbit/* @robbiet480
