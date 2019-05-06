@@ -538,9 +538,7 @@ omit =
     homeassistant/components/smappee/*
     homeassistant/components/smtp/notify.py
     homeassistant/components/snapcast/media_player.py
-    homeassistant/components/snmp/device_tracker.py
-    homeassistant/components/snmp/sensor.py
-    homeassistant/components/snmp/switch.py
+    homeassistant/components/snmp/*
     homeassistant/components/sochain/sensor.py
     homeassistant/components/socialblade/sensor.py
     homeassistant/components/solaredge/sensor.py
