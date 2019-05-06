@@ -4,7 +4,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
@@ -52,7 +53,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([MeteoAlertSensor(api, name)], True)
 
 
-class MeteoAlertSensor(Entity):
+class MeteoAlertSensor(Entity, BinarySensorDevice):
     """Representation of a MeteoAlert sensor."""
 
     def __init__(self, api, name):
