@@ -18,7 +18,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
 
 from .const import (
-    DATA_SOURCE_MANAGER, DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_SOURCES_UPDATED)
+    DATA_SOURCE_MANAGER, DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_UPDATED)
 
 BASE_SUPPORTED_FEATURES = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
                           SUPPORT_VOLUME_STEP | SUPPORT_CLEAR_PLAYLIST | \
@@ -81,23 +81,6 @@ class HeosMediaPlayer(MediaPlayerDevice):
             const.CONTROL_PLAY_NEXT: SUPPORT_NEXT_TRACK
         }
 
-    async def _controller_event(self, event, data):
-        """Handle controller event."""
-        from pyheos import const
-        if event == const.EVENT_PLAYERS_CHANGED:
-            await self.async_update_ha_state(True)
-
-    async def _heos_event(self, event):
-        """Handle connection event."""
-        from pyheos import CommandError, const
-        if event == const.EVENT_CONNECTED:
-            try:
-                await self._player.refresh()
-            except (CommandError, asyncio.TimeoutError, ConnectionError) as ex:
-                _LOGGER.error("Unable to refresh player %s: %s",
-                              self._player, ex)
-        await self.async_update_ha_state(True)
-
     async def _player_update(self, player_id, event):
         """Handle player attribute updated."""
         from pyheos import const
@@ -107,7 +90,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
             self._media_position_updated_at = utcnow()
         await self.async_update_ha_state(True)
 
-    async def _sources_updated(self):
+    async def _heos_updated(self):
         """Handle sources changed."""
         await self.async_update_ha_state(True)
 
@@ -118,16 +101,10 @@ class HeosMediaPlayer(MediaPlayerDevice):
         # Update state when attributes of the player change
         self._signals.append(self._player.heos.dispatcher.connect(
             const.SIGNAL_PLAYER_EVENT, self._player_update))
-        # Update state when available players change
-        self._signals.append(self._player.heos.dispatcher.connect(
-            const.SIGNAL_CONTROLLER_EVENT, self._controller_event))
-        # Update state upon connect/disconnects
-        self._signals.append(self._player.heos.dispatcher.connect(
-            const.SIGNAL_HEOS_EVENT, self._heos_event))
-        # Update state when sources change
+        # Update state when heos changes
         self._signals.append(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_HEOS_SOURCES_UPDATED, self._sources_updated))
+                SIGNAL_HEOS_UPDATED, self._heos_updated))
 
     @log_command_error("clear playlist")
     async def async_clear_playlist(self):
@@ -252,7 +229,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
         """Get attributes about the device."""
         return {
             'identifiers': {
-                (DOMAIN, self._player.player_id)
+                (HEOS_DOMAIN, self._player.player_id)
             },
             'name': self._player.name,
             'model': self._player.model,
