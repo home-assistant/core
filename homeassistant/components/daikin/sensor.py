@@ -26,6 +26,8 @@ async def async_setup_platform(
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Daikin climate based on config_entry."""
     daikin_api = hass.data[DAIKIN_DOMAIN].get(entry.entry_id)
+    if not daikin_api.device.support_outside_temperature:
+        SENSOR_TYPES.pop(ATTR_OUTSIDE_TEMPERATURE, None)
     async_add_entities([
         DaikinClimateSensor(daikin_api, sensor, hass.config.units)
         for sensor in SENSOR_TYPES
