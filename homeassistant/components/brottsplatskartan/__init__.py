@@ -7,8 +7,8 @@ from homeassistant.const import (ATTR_ATTRIBUTION, CONF_LATITUDE,
                                  CONF_LONGITUDE, CONF_MONITORED_CONDITIONS,
                                  CONF_NAME)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.event import track_time_interval
 from homeassistant.util import slugify
 
 from .const import (_LOGGER, ATTR_INCIDENTS, CONF_AREAS, CONF_SENSOR,
@@ -48,7 +48,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass, config):
+def setup(hass, config):
     """Set up the Brottsplatskartan platform."""
     if DOMAIN not in config:
         return True
@@ -91,7 +91,7 @@ async def async_setup(hass, config):
                 hass.data[DOMAIN][ATTR_INCIDENTS][incident_area].clear()
                 hass.data[DOMAIN][ATTR_INCIDENTS][incident_area].extend(
                     incidents[incident_area])
-                async_dispatcher_send(hass, incident_area_update_signal)
+                dispatcher_send(hass, incident_area_update_signal)
 
     monitored_conditions = conf.get(CONF_SENSOR).get(CONF_MONITORED_CONDITIONS)
     sensor_config = {
@@ -104,6 +104,6 @@ async def async_setup(hass, config):
                                              sensor_config, config)
 
     # Call the Brottsplatskartan API to refresh updates.
-    async_track_time_interval(hass, hub_refresh, DEFAULT_SCAN_INTERVAL)
+    track_time_interval(hass, hub_refresh, DEFAULT_SCAN_INTERVAL)
 
     return True
