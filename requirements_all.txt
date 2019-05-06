@@ -1426,7 +1426,7 @@ python-vlc==1.1.2
 python-whois==0.7.1
 
 # homeassistant.components.wink
-python-wink==1.10.4
+python-wink==1.10.5
 
 # homeassistant.components.awair
 python_awair==0.0.4
