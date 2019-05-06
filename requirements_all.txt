@@ -67,7 +67,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.1.3
 
 # homeassistant.components.switchbot
-# PySwitchbot==0.6.1
+# PySwitchbot==0.6.2
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -897,7 +897,7 @@ psutil==5.6.2
 ptvsd==4.2.8
 
 # homeassistant.components.wink
-pubnubsub-handler==1.0.3
+pubnubsub-handler==1.0.4
 
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
@@ -1297,7 +1297,7 @@ pysma==0.3.1
 pysmartapp==0.3.2
 
 # homeassistant.components.smartthings
-pysmartthings==0.6.7
+pysmartthings==0.6.8
 
 # homeassistant.components.snmp
 pysnmp==4.4.9
@@ -1429,7 +1429,7 @@ python-vlc==1.1.2
 python-whois==0.7.1
 
 # homeassistant.components.wink
-python-wink==1.10.3
+python-wink==1.10.5
 
 # homeassistant.components.awair
 python_awair==0.0.4
