@@ -274,7 +274,8 @@ class DaikinClimate(ClimateDevice):
     def is_on(self):
         """Return true if on."""
         return self._api.device.represent(
-            HA_ATTR_TO_DAIKIN[ATTR_OPERATION_MODE])[1] != STATE_OFF
+            HA_ATTR_TO_DAIKIN[ATTR_OPERATION_MODE]
+        )[1] != HA_STATE_TO_DAIKIN[STATE_OFF]
 
     async def async_turn_on(self):
         """Turn device on."""
@@ -282,14 +283,17 @@ class DaikinClimate(ClimateDevice):
 
     async def async_turn_off(self):
         """Turn device off."""
-        await self._api.device.set(
-            {HA_ATTR_TO_DAIKIN[ATTR_OPERATION_MODE]: STATE_OFF})
+        await self._api.device.set({
+            HA_ATTR_TO_DAIKIN[ATTR_OPERATION_MODE]:
+            HA_STATE_TO_DAIKIN[STATE_OFF]
+        })
 
     @property
     def is_away_mode_on(self):
         """Return true if away mode is on."""
         return self._api.device.represent(
-            HA_ATTR_TO_DAIKIN[ATTR_AWAY_MODE])[1] != STATE_OFF
+            HA_ATTR_TO_DAIKIN[ATTR_AWAY_MODE]
+        )[1] != HA_STATE_TO_DAIKIN[STATE_OFF]
 
     async def async_turn_away_mode_on(self):
         """Turn away mode on."""
