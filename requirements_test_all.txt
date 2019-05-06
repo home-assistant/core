@@ -70,7 +70,7 @@ av==6.1.2
 axis==22
 
 # homeassistant.components.zha
-bellows-homeassistant==0.7.2
+bellows-homeassistant==0.7.3
 
 # homeassistant.components.caldav
 caldav==0.6.1
@@ -232,7 +232,7 @@ pydeconz==58
 pydispatcher==2.0.5
 
 # homeassistant.components.heos
-pyheos==0.5.1
+pyheos==0.5.2
 
 # homeassistant.components.homematic
 pyhomematic==0.1.58
@@ -255,7 +255,7 @@ pyopenuv==1.0.9
 pyotp==2.2.7
 
 # homeassistant.components.ps4
-pyps4-homeassistant==0.7.2
+pyps4-homeassistant==0.7.3
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.93
@@ -319,7 +319,7 @@ somecomfort==0.5.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.3.0
+sqlalchemy==1.3.3
 
 # homeassistant.components.srp_energy
 srpenergy==1.0.6
@@ -345,4 +345,4 @@ vultr==0.1.2
 wakeonlan==1.1.6
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.3.2
+zigpy-homeassistant==0.3.3
