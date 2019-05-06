@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([MeteoAlertSensor(api, name)], True)
 
 
-class MeteoAlertSensor(Entity, BinarySensorDevice):
+class MeteoAlertSensor(Entity):
     """Representation of a MeteoAlert sensor."""
 
     def __init__(self, api, name):
