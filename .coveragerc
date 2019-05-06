@@ -22,6 +22,7 @@ omit =
     homeassistant/components/alarmdotcom/alarm_control_panel.py
     homeassistant/components/alpha_vantage/sensor.py
     homeassistant/components/amazon_polly/tts.py
+    homeassistant/components/ambiclimate/climate.py
     homeassistant/components/ambient_station/*
     homeassistant/components/amcrest/*
     homeassistant/components/ampio/*
@@ -52,6 +53,7 @@ omit =
     homeassistant/components/bbox/sensor.py
     homeassistant/components/bh1750/sensor.py
     homeassistant/components/bitcoin/sensor.py
+    homeassistant/components/bizkaibus/sensor.py
     homeassistant/components/blink/*
     homeassistant/components/blinksticklight/light.py
     homeassistant/components/blinkt/light.py

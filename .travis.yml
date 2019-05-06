@@ -27,9 +27,7 @@ matrix:
     - python: "3.7"
       env: TOXENV=py37
 
-cache:
-  directories:
-    - $HOME/.cache/pip
+cache: pip
 install: pip install -U tox
 language: python
 script: travis_wait 40 tox --develop

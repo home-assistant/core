@@ -58,7 +58,7 @@ async def test_climate_respect_supported_op_modes_2(hass, utcnow):
     service = FakeService('public.hap.service.thermostat')
     char = service.add_characteristic('heating-cooling.target')
     char.value = 0
-    char.validValues = [0, 1, 2]
+    char.valid_values = [0, 1, 2]
 
     helper = await setup_test_component(hass, [service])
 
