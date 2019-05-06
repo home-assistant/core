@@ -19,6 +19,7 @@ CONF_LANGUAGE = 'language'
 ATTRIBUTION = ("Information provided by MeteoAlarm.")
 
 DEFAULT_NAME = 'meteoalarm'
+DEFAULT_DEVICE_CLASS = 'safety'
 
 ICON = 'mdi:alert'
 
@@ -51,7 +52,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([MeteoAlertSensor(api, name)], True)
 
 
-class MeteoAlertSensor(Entity):
+class MeteoAlertSensor(Entity, BinarySensorDevice):
     """Representation of a MeteoAlert sensor."""
 
     def __init__(self, api, name):
@@ -82,12 +83,17 @@ class MeteoAlertSensor(Entity):
         """Icon to use in the frontend."""
         return ICON
 
+    @property
+    def device_class(self):
+        """Return the class of this sensor."""
+        return DEFAULT_DEVICE_CLASS
+    
     def update(self):
         """Update device state."""
         alert = self._api.get_alert()
         if alert:
             self._attributes = alert
-            self._state = alert.pop('headline')
+            self._is_on = True
         else:
             self._attributes = {}
-            self._state = 'no warnings'
+            self._is_on = False
