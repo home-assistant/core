@@ -5,7 +5,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
+    PLATFORM_SCHEMA)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
