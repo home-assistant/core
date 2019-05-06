@@ -102,7 +102,7 @@ class AcerSwitch(SwitchDevice):
                 test_list = self.ser.read(self.ser.inWaiting()).split(b'\r')
                 # Remove empty strings from the list
                 ret = [i for i in test_list if i]
-                if len(ret) > 0:
+                if ret:
                     self.ser.close()
                     return ret
 
@@ -116,19 +116,20 @@ class AcerSwitch(SwitchDevice):
         """Write msg, obtain answer and format output."""
         # answers are formatted as ***\answer\r***
         # Try 5 times to get a response
-        for x in range(0, 5):
+        for count in range(0, 5):
+            _LOGGER.debug('Attempt to get communicate %s times', count)
             lines = self._write_read(msg)
 
-            if (lines is not None):
+            if lines is not None:
                 for line in lines:
-                    decodeLine = line.decode('utf-8')
-                    if not decodeLine.startswith('*'):
-                        return decodeLine
+                    decode_line = line.decode('utf-8')
+                    if not decode_line.startswith('*'):
+                        return decode_line
             time.sleep(1)
 
         # If it gets to here something has gone wrong
-        _LOGGER.warn('Not able to get the relevant state for %s', msg)
-        _LOGGER.warn(lines)
+        _LOGGER.warning('Not able to get the relevant state for %s', msg)
+        _LOGGER.warning(lines)
         return STATE_UNKNOWN
 
     @property
@@ -163,7 +164,7 @@ class AcerSwitch(SwitchDevice):
             self._state = False
             self._available = True
         else:
-            _LOGGER.warn('Unknown status ' + awns)
+            _LOGGER.warning('Unknown status %s', awns)
             self._available = False
 
         if self._state and self._available:
