@@ -1,11 +1,11 @@
-"""Binary sensor for MeteoAlarm.eu."""
+"""Binary Sensor for MeteoAlarm.eu."""
 from datetime import timedelta
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA, binarysensorDevice)
+    PLATFORM_SCHEMA, BinarySensorDevice)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Wrong country digits, or province name")
         return
 
-    add_entities([MeteoAlertbinarysensor(api, name)], True)
+    add_entities([MeteoAlertBinarySensor(api, name)], True)
 
 
 class MeteoAlertBinarySensor(BinarySensorDevice):
