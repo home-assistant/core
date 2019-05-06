@@ -1,11 +1,11 @@
-"""Binarysensor for MeteoAlarm.eu."""
+"""Binary sensor for MeteoAlarm.eu."""
 from datetime import timedelta
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA, BinarySensorDevice)
+    PLATFORM_SCHEMA, binary sensorDevice)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the MeteoAlarm binarysensor platform."""
+    """Set up the MeteoAlarm binary sensor platform."""
     from meteoalertapi import Meteoalert
 
     country = config[CONF_COUNTRY]
@@ -49,14 +49,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Wrong country digits, or province name")
         return
 
-    add_entities([MeteoAlertBinarySensor(api, name)], True)
+    add_entities([MeteoAlertbinary sensor(api, name)], True)
 
 
 class MeteoAlertBinarySensor(BinarySensorDevice):
-    """Representation of a MeteoAlert binarysensor."""
+    """Representation of a MeteoAlert binary sensor."""
 
     def __init__(self, api, name):
-        """Initialize the MeteoAlert binarysensor."""
+        """Initialize the MeteoAlert binary sensor."""
         self._name = name
         self._attributes = {}
         self._state = None
@@ -64,12 +64,12 @@ class MeteoAlertBinarySensor(BinarySensorDevice):
 
     @property
     def name(self):
-        """Return the name of the binarysensor."""
+        """Return the name of the binary sensor."""
         return self._name
 
     @property
     def is_on(self):
-        """Return the status of the binarysensor."""
+        """Return the status of the binary sensor."""
         return self._state
 
     @property
@@ -85,7 +85,7 @@ class MeteoAlertBinarySensor(BinarySensorDevice):
 
     @property
     def device_class(self):
-        """Return the class of this binarysensor."""
+        """Return the class of this binary sensor."""
         return DEFAULT_DEVICE_CLASS
 
     def update(self):
