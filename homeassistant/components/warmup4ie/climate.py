@@ -9,7 +9,7 @@ from homeassistant.const import (
     TEMP_CELSIUS)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.climate import (
+from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_AWAY_MODE, SUPPORT_OPERATION_MODE,
     SUPPORT_ON_OFF, STATE_AUTO, STATE_MANUAL)
 
@@ -37,6 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo climate devices."""
+    _LOGGER.info("Setting up platform for Warmup4IE component")
     name = config.get(CONF_NAME)
     user = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -44,15 +45,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     room = config.get(CONF_ROOM)
     target_temp = config.get(CONF_TARGET_TEMP)
 
-    import warmup4ie
-    device = warmup4ie.Warmup4IEDevice(user, password, location, room,
-                                       target_temp)
+    from warmup4ie import Warmup4IEDevice
+    device = Warmup4IEDevice(user, password, location, room,
+                             target_temp)
     if device is None or not device.setup_finished:
         raise PlatformNotReady
 
     add_entities(
-        [Warmup4IE(hass, name, device, user, password, location, room,
-                   target_temp)])
+        [Warmup4IE(hass, name, device)])
 
 
 class Warmup4IE(ClimateDevice):
@@ -60,8 +60,7 @@ class Warmup4IE(ClimateDevice):
 
     mode_map = {'prog': STATE_AUTO, 'fixed': STATE_MANUAL}
 
-    def __init__(self, hass, name, device, user, password, location,
-                 room, target_temp):
+    def __init__(self, hass, name, device):
         """Initialize the climate device."""
         _LOGGER.info("Setting up Warmup4IE component")
         self._name = name
