@@ -119,9 +119,10 @@ class HKDevice():
         from homekit.exceptions import AccessoryDisconnectedError
 
         try:
-            self.accessories = await self.hass.async_add_executor_job(
-                self.pairing.list_accessories_and_characteristics,
-            )
+            async with self.pairing_lock:
+                self.accessories = await self.hass.async_add_executor_job(
+                    self.pairing.list_accessories_and_characteristics
+                )
         except AccessoryDisconnectedError:
             # If we fail to refresh this data then we will naturally retry
             # later when Bonjour spots c# is still not up to date.
