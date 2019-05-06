@@ -570,13 +570,17 @@ def ipv6_address(value: Any) -> str:
 def mac48_address(value: Any) -> str:
     """Validate and normalize a 48-bit MAC address."""
     mac = str(value).upper()
+    # A1-0B-C3-D4-0E-F6; A1-B-C3-D4-E-F6; A1:0B:C3:D4:0E:F6;
+    # A1:B:C3:D4:E:F6; A1 0B C3 D4 0E F6; A1 B C3 D4 E F6
     if re.match(r'[\dA-F]{1,2}([-:\s])[\dA-F]{1,2}(\1[\dA-F]{1,2}){4}$', mac):
         octets = [octet.zfill(2) for octet in re.split(r':|-|\s', mac)]
         return '-'.join(octets)
+    # A10B-C3D4-0EF6; A10B.C3D4.0EF6; A10B C3D4 0EF6
     if re.match(r'[\dA-F]{4}([-.\s])[\dA-F]{4}\1[\dA-F]{4}$', mac):
         mac = re.sub(r'[-.\s]', '', mac)
         octets = ['{}{}'.format(mac[i], mac[i+1]) for i in range(0, 12, 2)]
         return '-'.join(octets)
+    # A10BC3D40EF6
     if re.match(r'[\dA-F]{12}$', mac):
         octets = ["{}{}".format(mac[i], mac[i+1]) for i in range(0, 12, 2)]
         return '-'.join(octets)
@@ -586,13 +590,17 @@ def mac48_address(value: Any) -> str:
 def mac64_address(value: Any) -> str:
     """Validate and normalize a 64-bit MAC address."""
     mac = str(value).upper()
+    # A1-0B-C3-D4-0E-F6-4A-B7; A1-B-C3-D4-E-F6-4A-B7; A1:0B:C3:D4:0E:F6:4A:B7;
+    # A1:B:C3:D4:E:F6:4A:B7; A1 0B C3 D4 0E F6 4A B7; A1 B C3 D4 E F6 4A B7
     if re.match(r'^[\dA-F]{1,2}([-:\s])[\dA-F]{1,2}(\1[\dA-F]{1,2}){6}$', mac):
         octets = [octet.zfill(2) for octet in re.split(r':|-|\s', mac)]
         return '-'.join(octets)
+    # A10B-C3D4-0EF6-4AB7; A10B.C3D4.0EF6.4AB7; A10B C3D4 0EF6 4AB7
     if re.match(r'^[\dA-F]{4}([-.\s])[\dA-F]{4}(\1[\dA-F]{4}){2}$', mac):
         mac = re.sub(r'[-.\s]', '', mac)
         octets = ['{}{}'.format(mac[i], mac[i+1]) for i in range(0, 16, 2)]
         return '-'.join(octets)
+    # A10BC3D40EF64AB7
     if re.match(r'^[\dA-F]{16}$', mac):
         octets = ["{}{}".format(mac[i], mac[i+1]) for i in range(0, 16, 2)]
         return '-'.join(octets)
