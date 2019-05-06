@@ -894,7 +894,7 @@ psutil==5.6.2
 ptvsd==4.2.8
 
 # homeassistant.components.wink
-pubnubsub-handler==1.0.3
+pubnubsub-handler==1.0.4
 
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
@@ -1426,7 +1426,7 @@ python-vlc==1.1.2
 python-whois==0.7.1
 
 # homeassistant.components.wink
-python-wink==1.10.3
+python-wink==1.10.5
 
 # homeassistant.components.awair
 python_awair==0.0.4
