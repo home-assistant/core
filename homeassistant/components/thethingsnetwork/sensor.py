@@ -80,6 +80,7 @@ class TtnDataSensor(Entity):
                 return round(self._state[self._value], 1)
             except (KeyError, TypeError):
                 return None
+        return None
 
     @property
     def unit_of_measurement(self):
