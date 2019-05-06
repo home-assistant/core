@@ -60,7 +60,7 @@ class MeteoAlertSensor(Entity):
         """Initialize the MeteoAlert sensor."""
         self._name = name
         self._attributes = {}
-        self._is_on = False
+        self._state = None
         self._api = api
 
     @property
@@ -69,8 +69,8 @@ class MeteoAlertSensor(Entity):
         return self._name
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
+    def is_on(self):
+        """Return the status of the sensor."""
         return self._state
 
     @property
@@ -94,7 +94,7 @@ class MeteoAlertSensor(Entity):
         alert = self._api.get_alert()
         if alert:
             self._attributes = alert
-            self._is_on = True
+            self._state = True
         else:
             self._attributes = {}
-            self._is_on = False
+            self._state = False
