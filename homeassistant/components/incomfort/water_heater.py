@@ -78,7 +78,7 @@ class IncomfortWaterHeater(WaterHeaterDevice):
         return INCOMFORT_SUPPORT_FLAGS
 
     @property
-    def state(self):
+    def current_operation(self):
         """Return the current operation mode."""
         if self._boiler.is_failed:
             return "Failed ({})".format(self._boiler.fault_code)
