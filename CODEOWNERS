@@ -85,6 +85,7 @@ homeassistant/components/foursquare/* @robbiet480
 homeassistant/components/freebox/* @snoof85
 homeassistant/components/frontend/* @home-assistant/core
 homeassistant/components/gearbest/* @HerrHofrat
+homeassistant/components/geniushub/* @zxdavb
 homeassistant/components/gitter/* @fabaff
 homeassistant/components/glances/* @fabaff
 homeassistant/components/gntp/* @robbiet480
