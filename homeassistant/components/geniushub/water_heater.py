@@ -129,7 +129,7 @@ class GeniusWaterHeater(WaterHeaterDevice):
 
     async def async_set_temperature(self, **kwargs):
         """Set a new target temperature for this boiler."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
+        temperature = kwargs[ATTR_TEMPERATURE]
         await self._boiler.set_override(temperature, 3600)  # 1 hour
 
     async def async_update(self):
