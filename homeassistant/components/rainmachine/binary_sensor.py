@@ -23,13 +23,14 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up RainMachine binary sensors based on a config entry."""
-    rainmachine = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]
+    rainmachines = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]
 
     binary_sensors = []
-    for sensor_type in rainmachine.binary_sensor_conditions:
-        name, icon = BINARY_SENSORS[sensor_type]
-        binary_sensors.append(
-            RainMachineBinarySensor(rainmachine, sensor_type, name, icon))
+    for rainmachine in rainmachines:
+        for sensor_type in rainmachine.binary_sensor_conditions:
+            name, icon = BINARY_SENSORS[sensor_type]
+            binary_sensors.append(
+                RainMachineBinarySensor(rainmachine, sensor_type, name, icon))
 
     async_add_entities(binary_sensors, True)
 
@@ -41,7 +42,7 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
         """Initialize the sensor."""
         super().__init__(rainmachine)
 
-        self._icon = icon
+        self._icon = icon  # type: str
         self._name = name
         self._sensor_type = sensor_type
         self._state = None
@@ -65,7 +66,8 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
         return '{0}_{1}'.format(
-            self.rainmachine.device_mac.replace(':', ''), self._sensor_type)
+            self.rainmachine.controller.mac.replace(':', ''),
+            self._sensor_type)
 
     async def async_added_to_hass(self):
         """Register callbacks."""

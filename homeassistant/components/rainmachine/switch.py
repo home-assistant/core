@@ -103,19 +103,21 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up RainMachine switches based on a config entry."""
-    rainmachine = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]
+    rainmachines = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]
 
     entities = []
 
-    programs = await rainmachine.client.programs.all(include_inactive=True)
-    for program in programs:
-        entities.append(RainMachineProgram(rainmachine, program))
+    for rainmachine in rainmachines:
+        programs = await rainmachine.controller.programs.all(
+            include_inactive=True)
+        for program in programs:
+            entities.append(RainMachineProgram(rainmachine, program))
 
-    zones = await rainmachine.client.zones.all(include_inactive=True)
-    for zone in zones:
-        entities.append(
-            RainMachineZone(
-                rainmachine, zone, rainmachine.default_zone_runtime))
+        zones = await rainmachine.controller.zones.all(include_inactive=True)
+        for zone in zones:
+            entities.append(
+                RainMachineZone(
+                    rainmachine, zone, rainmachine.default_zone_runtime))
 
     async_add_entities(entities, True)
 
@@ -146,8 +148,8 @@ class RainMachineSwitch(RainMachineEntity, SwitchDevice):
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
         return '{0}_{1}_{2}'.format(
-            self.rainmachine.device_mac.replace(':', ''), self._switch_type,
-            self._rainmachine_entity_id)
+            self.rainmachine.controller.mac.replace(':', ''),
+            self._switch_type, self._rainmachine_entity_id)
 
     @callback
     def _program_updated(self):
@@ -174,15 +176,16 @@ class RainMachineProgram(RainMachineSwitch):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self._dispatcher_handlers.append(async_dispatcher_connect(
-            self.hass, PROGRAM_UPDATE_TOPIC, self._program_updated))
+        self._dispatcher_handlers.append(
+            async_dispatcher_connect(
+                self.hass, PROGRAM_UPDATE_TOPIC, self._program_updated))
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the program off."""
         from regenmaschine.errors import RequestError
 
         try:
-            await self.rainmachine.client.programs.stop(
+            await self.rainmachine.controller.programs.stop(
                 self._rainmachine_entity_id)
             async_dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
         except RequestError as err:
@@ -195,7 +198,7 @@ class RainMachineProgram(RainMachineSwitch):
         from regenmaschine.errors import RequestError
 
         try:
-            await self.rainmachine.client.programs.start(
+            await self.rainmachine.controller.programs.start(
                 self._rainmachine_entity_id)
             async_dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
         except RequestError as err:
@@ -207,7 +210,7 @@ class RainMachineProgram(RainMachineSwitch):
         from regenmaschine.errors import RequestError
 
         try:
-            self._obj = await self.rainmachine.client.programs.get(
+            self._obj = await self.rainmachine.controller.programs.get(
                 self._rainmachine_entity_id)
 
             try:
@@ -238,7 +241,6 @@ class RainMachineZone(RainMachineSwitch):
         """Initialize a RainMachine zone."""
         super().__init__(rainmachine, 'zone', obj)
 
-        self._properties_json = {}
         self._run_time = zone_run_time
 
     @property
@@ -248,17 +250,19 @@ class RainMachineZone(RainMachineSwitch):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self._dispatcher_handlers.append(async_dispatcher_connect(
-            self.hass, PROGRAM_UPDATE_TOPIC, self._program_updated))
-        self._dispatcher_handlers.append(async_dispatcher_connect(
-            self.hass, ZONE_UPDATE_TOPIC, self._program_updated))
+        self._dispatcher_handlers.append(
+            async_dispatcher_connect(
+                self.hass, PROGRAM_UPDATE_TOPIC, self._program_updated))
+        self._dispatcher_handlers.append(
+            async_dispatcher_connect(
+                self.hass, ZONE_UPDATE_TOPIC, self._program_updated))
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the zone off."""
         from regenmaschine.errors import RequestError
 
         try:
-            await self.rainmachine.client.zones.stop(
+            await self.rainmachine.controller.zones.stop(
                 self._rainmachine_entity_id)
         except RequestError as err:
             _LOGGER.error(
@@ -269,7 +273,7 @@ class RainMachineZone(RainMachineSwitch):
         from regenmaschine.errors import RequestError
 
         try:
-            await self.rainmachine.client.zones.start(
+            await self.rainmachine.controller.zones.start(
                 self._rainmachine_entity_id, self._run_time)
         except RequestError as err:
             _LOGGER.error(
@@ -280,38 +284,33 @@ class RainMachineZone(RainMachineSwitch):
         from regenmaschine.errors import RequestError
 
         try:
-            self._obj = await self.rainmachine.client.zones.get(
+            self._obj = await self.rainmachine.controller.zones.get(
                 self._rainmachine_entity_id)
 
-            self._properties_json = await self.rainmachine.client.zones.get(
+            zone_properties = await self.rainmachine.controller.zones.get(
                 self._rainmachine_entity_id, details=True)
 
             self._attrs.update({
-                ATTR_ID:
-                    self._obj['uid'],
-                ATTR_AREA:
-                    self._properties_json.get('waterSense').get('area'),
-                ATTR_CURRENT_CYCLE:
-                    self._obj.get('cycle'),
+                ATTR_ID: self._obj['uid'],
+                ATTR_AREA: zone_properties.get('waterSense').get('area'),
+                ATTR_CURRENT_CYCLE: self._obj.get('cycle'),
                 ATTR_FIELD_CAPACITY:
-                    self._properties_json.get('waterSense').get(
+                    zone_properties.get('waterSense').get(
                         'fieldCapacity'),
-                ATTR_NO_CYCLES:
-                    self._obj.get('noOfCycles'),
+                ATTR_NO_CYCLES: self._obj.get('noOfCycles'),
                 ATTR_PRECIP_RATE:
-                    self._properties_json.get('waterSense').get(
+                    zone_properties.get('waterSense').get(
                         'precipitationRate'),
-                ATTR_RESTRICTIONS:
-                    self._obj.get('restriction'),
+                ATTR_RESTRICTIONS: self._obj.get('restriction'),
                 ATTR_SLOPE:
-                    SLOPE_TYPE_MAP.get(self._properties_json.get('slope')),
+                    SLOPE_TYPE_MAP.get(zone_properties.get('slope')),
                 ATTR_SOIL_TYPE:
-                    SOIL_TYPE_MAP.get(self._properties_json.get('sun')),
+                    SOIL_TYPE_MAP.get(zone_properties.get('sun')),
                 ATTR_SPRINKLER_TYPE:
                     SPRINKLER_TYPE_MAP.get(
-                        self._properties_json.get('group_id')),
+                        zone_properties.get('group_id')),
                 ATTR_SUN_EXPOSURE:
-                    SUN_EXPOSURE_MAP.get(self._properties_json.get('sun')),
+                    SUN_EXPOSURE_MAP.get(zone_properties.get('sun')),
                 ATTR_VEGETATION_TYPE:
                     VEGETATION_MAP.get(self._obj.get('type')),
             })

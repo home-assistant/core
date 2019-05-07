@@ -199,33 +199,38 @@ async def async_setup_entry(hass, config_entry):
         _LOGGER.error('An error occurred during setup: %s', err)
         raise ConfigEntryNotReady
 
-    rainmachine = RainMachine(
-        client,
-        config_entry.data.get(CONF_BINARY_SENSORS, {}).get(
-            CONF_MONITORED_CONDITIONS, list(BINARY_SENSORS)),
-        config_entry.data.get(CONF_SENSORS, {}).get(
-            CONF_MONITORED_CONDITIONS, list(SENSORS)),
-        config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN))
-    await rainmachine.async_update()
+    hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = []
 
-    hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = rainmachine
+    for controller in client.controllers.values():
+        rainmachine = RainMachine(
+            controller,
+            config_entry.data.get(CONF_BINARY_SENSORS, {}).get(
+                CONF_MONITORED_CONDITIONS, list(BINARY_SENSORS)),
+            config_entry.data.get(CONF_SENSORS, {}).get(
+                CONF_MONITORED_CONDITIONS, list(SENSORS)),
+            config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN))
 
-    for component in ('binary_sensor', 'sensor', 'switch'):
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(
-                config_entry, component))
-
-    async def refresh(event_time):
-        """Refresh RainMachine sensor data."""
-        _LOGGER.debug('Updating RainMachine sensor data')
         await rainmachine.async_update()
-        async_dispatcher_send(hass, SENSOR_UPDATE_TOPIC)
 
-    hass.data[DOMAIN][DATA_LISTENER][
-        config_entry.entry_id] = async_track_time_interval(
-            hass,
-            refresh,
-            timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL]))
+        hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id].append(
+            rainmachine)
+
+        for component in ('binary_sensor', 'sensor', 'switch'):
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(
+                    config_entry, component))
+
+        async def refresh(event_time):
+            """Refresh RainMachine sensor data."""
+            _LOGGER.debug('Updating RainMachine data: %s', controller.name)
+            await rainmachine.async_update()
+            async_dispatcher_send(hass, SENSOR_UPDATE_TOPIC)
+
+        hass.data[DOMAIN][DATA_LISTENER][
+            config_entry.entry_id] = async_track_time_interval(
+                hass,
+                refresh,
+                timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL]))
 
     @_verify_domain_control
     async def disable_program(call):
@@ -332,14 +337,13 @@ class RainMachine:
     """Define a generic RainMachine object."""
 
     def __init__(
-            self, client, binary_sensor_conditions, sensor_conditions,
+            self, controller, binary_sensor_conditions, sensor_conditions,
             default_zone_runtime):
         """Initialize."""
         self.binary_sensor_conditions = binary_sensor_conditions
-        self.client = client
+        self.controller = controller
         self.data = {}
         self.default_zone_runtime = default_zone_runtime
-        self.device_mac = self.client.mac
         self.sensor_conditions = sensor_conditions
 
     async def async_update(self):
@@ -354,18 +358,17 @@ class RainMachine:
                                  TYPE_FLOW_SENSOR_CONSUMED_LITERS,
                                  TYPE_FLOW_SENSOR_START_INDEX,
                                  TYPE_FLOW_SENSOR_WATERING_CLICKS))):
-            tasks[PROVISION_SETTINGS] = self.client.provisioning.settings()
+            tasks[PROVISION_SETTINGS] = self.controller.provisioning.settings()
 
         if any(c in self.binary_sensor_conditions
-               for c in (TYPE_FREEZE, TYPE_HOURLY, TYPE_MONTH, TYPE_RAINDELAY,
-                         TYPE_RAINSENSOR, TYPE_WEEKDAY)):
-            tasks[RESTRICTIONS_CURRENT] = self.client.restrictions.current()
+               for c in (TYPE_FREEZE, TYPE_HOURLY, TYPE_MONTH,
+                         TYPE_RAINDELAY, TYPE_RAINSENSOR, TYPE_WEEKDAY)):
+            tasks[RESTRICTIONS_CURRENT] = self.controller.restrictions.current()
 
         if (any(c in self.binary_sensor_conditions
                 for c in (TYPE_FREEZE_PROTECTION, TYPE_HOT_DAYS))
                 or TYPE_FREEZE_TEMP in self.sensor_conditions):
-            tasks[RESTRICTIONS_UNIVERSAL] = (
-                self.client.restrictions.universal())
+            tasks[RESTRICTIONS_UNIVERSAL] = self.controller.restrictions.universal()
 
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
         for operation, result in zip(tasks, results):
@@ -393,14 +396,14 @@ class RainMachineEntity(Entity):
         """Return device registry information for this entity."""
         return {
             'identifiers': {
-                (DOMAIN, self.rainmachine.client.mac)
+                (DOMAIN, self.rainmachine.controller.mac)
             },
-            'name': self.rainmachine.client.name,
+            'name': self.rainmachine.controller.name,
             'manufacturer': 'RainMachine',
             'model': 'Version {0} (API: {1})'.format(
-                self.rainmachine.client.hardware_version,
-                self.rainmachine.client.api_version),
-            'sw_version': self.rainmachine.client.software_version,
+                self.rainmachine.controller.hardware_version,
+                self.rainmachine.controller.api_version),
+            'sw_version': self.rainmachine.controller.software_version,
         }
 
     @property
@@ -411,7 +414,7 @@ class RainMachineEntity(Entity):
     @property
     def name(self) -> str:
         """Return the name of the entity."""
-        return self._name
+        return '{0} {1}'.format(self.rainmachine.controller.name, self._name)
 
     async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listener when removed."""

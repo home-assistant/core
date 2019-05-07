@@ -22,13 +22,14 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up RainMachine sensors based on a config entry."""
-    rainmachine = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]
+    rainmachines = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]
 
     sensors = []
-    for sensor_type in rainmachine.sensor_conditions:
-        name, icon, unit = SENSORS[sensor_type]
-        sensors.append(
-            RainMachineSensor(rainmachine, sensor_type, name, icon, unit))
+    for rainmachine in rainmachines:
+        for sensor_type in rainmachine.sensor_conditions:
+            name, icon, unit = SENSORS[sensor_type]
+            sensors.append(
+                RainMachineSensor(rainmachine, sensor_type, name, icon, unit))
 
     async_add_entities(sensors, True)
 
@@ -65,7 +66,8 @@ class RainMachineSensor(RainMachineEntity):
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
         return '{0}_{1}'.format(
-            self.rainmachine.device_mac.replace(':', ''), self._sensor_type)
+            self.rainmachine.controller.mac.replace(':', ''),
+            self._sensor_type)
 
     @property
     def unit_of_measurement(self):
