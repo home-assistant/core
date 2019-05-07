@@ -35,6 +35,7 @@ def controller_fixture(
         mock_heos.load_players.return_value = change_data
         mock_heos.is_signed_in = True
         mock_heos.signed_in_username = "user@user.com"
+        mock_heos.connection_state = const.STATE_CONNECTED
         yield mock_heos
 
 

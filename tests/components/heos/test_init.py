@@ -102,8 +102,9 @@ async def test_async_setup_entry_not_signed_in_loads_platforms(
     assert hass.data[DOMAIN][MEDIA_PLAYER_DOMAIN] == controller.players
     assert hass.data[DOMAIN][DATA_SOURCE_MANAGER].favorites == {}
     assert hass.data[DOMAIN][DATA_SOURCE_MANAGER].inputs == input_sources
-    assert "127.0.0.1 is not logged in to your HEOS account and will be " \
-           "unable to retrieve your favorites" in caplog.text
+    assert "127.0.0.1 is not logged in to a HEOS account and will be unable " \
+           "to retrieve HEOS favorites: Use the 'heos.sign_in' service to " \
+           "sign-in to a HEOS account" in caplog.text
 
 
 async def test_async_setup_entry_connect_failure(
