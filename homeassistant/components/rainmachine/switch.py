@@ -145,6 +145,13 @@ class RainMachineSwitch(RainMachineEntity, SwitchDevice):
         return 'mdi:water'
 
     @property
+    def name(self) -> str:
+        """Return the name of the switch."""
+        return '{0} {1}: {2}'.format(
+            self.rainmachine.controller.name, self._switch_type.title(),
+            self._name)
+
+    @property
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
         return '{0}_{1}_{2}'.format(
