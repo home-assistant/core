@@ -936,7 +936,7 @@ class Service:
         """Initialize a service."""
         self.func = func
         self.schema = schema
-        # Properly detect wraped functions
+        # Properly detect wrapped functions
         while isinstance(func, functools.partial):
             func = func.func
         self.is_callback = is_callback(func)
