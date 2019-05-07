@@ -61,24 +61,24 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
 class GeniusWaterHeater(WaterHeaterDevice):
     """Representation of a Genius Hub water_heater device."""
 
-    def __init__(self, client, zone):
+    def __init__(self, client, boiler):
         """Initialize the water_heater device."""
         self._client = client
-        self._objref = zone
-        self._id = zone.id
-        self._name = zone.name
+        self._boiler = boiler
+        self._id = boiler.id
+        self._name = boiler.name
 
         self._operation_list = list(HA_OPMODE_TO_GH)
 
     @property
     def name(self):
         """Return the name of the water_heater device."""
-        return self._objref.name
+        return self._boiler.name
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        tmp = self._objref.__dict__.items()
+        tmp = self._boiler.__dict__.items()
         state = {k: v for k, v in tmp if k in GH_DEVICE_STATE_ATTRS}
 
         return {'status': state}
@@ -86,12 +86,12 @@ class GeniusWaterHeater(WaterHeaterDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self._objref.temperature
+        return self._boiler.temperature
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self._objref.setpoint
+        return self._boiler.setpoint
 
     @property
     def min_temp(self):
@@ -121,21 +121,21 @@ class GeniusWaterHeater(WaterHeaterDevice):
     @property
     def current_operation(self):
         """Return the current operation mode."""
-        return GH_STATE_TO_HA.get(self._objref.mode)
+        return GH_STATE_TO_HA.get(self._boiler.mode)
 
     async def async_set_operation_mode(self, operation_mode):
-        """Set a new operation mode for this zone."""
-        await self._objref.set_mode(HA_OPMODE_TO_GH.get(operation_mode))
+        """Set a new operation mode for this boiler."""
+        await self._boiler.set_mode(HA_OPMODE_TO_GH.get(operation_mode))
 
     async def async_set_temperature(self, **kwargs):
-        """Set a new target temperature for this zone."""
+        """Set a new target temperature for this boiler."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        await self._objref.set_override(temperature, 3600)  # 1 hour
+        await self._boiler.set_override(temperature, 3600)  # 1 hour
 
     async def async_update(self):
         """Get the latest data from the hub."""
         try:
-            await self._objref.update()
+            await self._boiler.update()
         except (AssertionError, asyncio.TimeoutError) as err:
             _LOGGER.warning("Update for %s failed, message: %s",
                             self._id, err)
