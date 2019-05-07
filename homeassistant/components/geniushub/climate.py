@@ -8,7 +8,9 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_ON_OFF)
 from homeassistant.const import (
     ATTR_TEMPERATURE, TEMP_CELSIUS)
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, async_dispatcher_send)
 
 from . import DOMAIN
 
@@ -55,8 +57,6 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     parent = [GeniusClimateHub(client, z)
               for z in client.hub.zone_objs if z.type == GH_PARENT_ZONE]
 
-    _LOGGER.warn("Parent = %s", parent)
-
     children = [GeniusClimateZone(client, z)
                 for z in client.hub.zone_objs if z.type in GH_CHILD_ZONES]
 
@@ -70,19 +70,22 @@ class GeniusClimateBase(ClimateDevice):
         """Initialize the climate device."""
         self._client = client
         self._objref = zone
+
         self._id = zone.id
         self._name = zone.name
+        self._icon = None
 
-        # Only some zones have movement detectors, which allows footprint mode
-        op_list = list(HA_OPMODE_TO_GH)
-        if not hasattr(self._objref, 'occupied'):
-            op_list.remove(STATE_ECO)
-        self._operation_list = op_list
+        self._operation_list = self._supported_features = None
 
     @property
     def name(self):
         """Return the name of the climate device."""
         return self._objref.name
+
+    @property
+    def icon(self):                                                              # TODO: in the correct order?
+        """Return the icon to use in the frontend UI."""
+        return self._icon
 
     @property
     def device_state_attributes(self):
@@ -170,10 +173,7 @@ class GeniusClimateZone(GeniusClimateBase):
         """Initialize the climate device."""
         super().__init__(client, zone)
 
-        self._client = client
-        self._objref = zone
-        self._id = zone.id
-        self._name = zone.name
+        self._icon = "mdi:radiator"
 
         # Only some zones have movement detectors, which allows footprint mode
         op_list = list(HA_OPMODE_TO_GH)
@@ -182,13 +182,22 @@ class GeniusClimateZone(GeniusClimateBase):
         self._operation_list = op_list
         self._supported_features = GENIUSHUB_SUPPORT_FLAGS
 
-    async def async_update(self):
-        """Get the latest data from the hub."""
-        try:
-            await self._objref.update()
-        except (AssertionError, asyncio.TimeoutError) as err:
-            _LOGGER.warning("Update for %s failed, message: %s",
-                            self._id, err)
+    @callback
+    def _connect(self, packet):
+        if packet['signal'] == 'refresh':
+            # self.async_schedule_update_ha_state()                              # TODO: try this
+            self.async_schedule_update_ha_state(force_refresh=True)
+
+    # These properties, methods are from the Entity class
+    async def async_added_to_hass(self):
+        """Run when entity about to be added."""
+        async_dispatcher_connect(self.hass, DOMAIN, self._connect)
+
+    @property
+    def should_poll(self) -> bool:                                               # TODO: in the correct location?
+        """Return False as the geniushub zones should never be polled."""
+        return False
+
 
 class GeniusClimateHub(GeniusClimateBase):
     """Representation of a Genius Hub climate device."""
@@ -197,10 +206,7 @@ class GeniusClimateHub(GeniusClimateBase):
         """Initialize the climate device."""
         super().__init__(client, zone)
 
-        self._client = client
-        self._objref = zone
-        self._id = zone.id
-        self._name = zone.name
+        self._name = "mdi:thermostat"
 
         self._operation_list = []
         self._supported_features = 0
@@ -222,3 +228,7 @@ class GeniusClimateHub(GeniusClimateBase):
         except (AssertionError, asyncio.TimeoutError) as err:
             _LOGGER.warning("Update for %s failed, message: %s",
                             self._id, err)
+
+        # inform the child devices that state data has been updated
+        pkt = {'signal': 'refresh'}
+        async_dispatcher_send(self.hass, DOMAIN, pkt)
