@@ -81,7 +81,7 @@ def setup_platform(hass, config, add_entities, disc_info=None):
                     cust_calendar.get(CONF_NAME)),
             }
 
-            include_all_day = cust_calendar.get(CONF_INCLUDE_ALL_DAY)
+            include_all_day = cust_calendar[CONF_INCLUDE_ALL_DAY]
 
             calendar_devices.append(
                 WebDavCalendarEventDevice(
@@ -95,7 +95,7 @@ def setup_platform(hass, config, add_entities, disc_info=None):
                 CONF_DEVICE_ID: calendar.name,
             }
 
-            include_all_day = config.get(CONF_INCLUDE_ALL_DAY)
+            include_all_day = config[CONF_INCLUDE_ALL_DAY]
 
             calendar_devices.append(
                 WebDavCalendarEventDevice(hass, device_data, calendar,
