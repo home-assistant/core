@@ -14,19 +14,12 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'incomfort'
 
-_V1_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOST): cv.string,
-})
-_V2_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-})
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Any(
-        _V1_SCHEMA,
-        _V2_SCHEMA,
-    )
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_HOST): cv.string,
+        vol.Inclusive(CONF_USERNAME, 'credentials'): cv.string,
+        vol.Inclusive(CONF_PASSWORD, 'credentials'): cv.string,
+    })
 }, extra=vol.ALLOW_EXTRA)
 
 
