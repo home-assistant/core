@@ -4,7 +4,6 @@ import logging
 
 from homeassistant.components.water_heater import WaterHeaterDevice
 from homeassistant.const import TEMP_CELSIUS
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import DOMAIN
 
