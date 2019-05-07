@@ -51,7 +51,7 @@ async def test_attributes(hass):
     with assert_setup_component(1, DOMAIN):
         await async_setup_component(hass, DOMAIN, config)
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_CLOSED
     assert state.attributes[ATTR_FRIENDLY_NAME] == DEFAULT_NAME
     assert ATTR_ASSUMED_STATE not in state.attributes
@@ -64,7 +64,7 @@ async def test_attributes(hass):
         DEMO_COVER, STATE_OPEN, {ATTR_SUPPORTED_FEATURES: 11})
     await hass.async_block_till_done()
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_OPEN
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 11
@@ -77,7 +77,7 @@ async def test_attributes(hass):
         {ATTR_SUPPORTED_FEATURES: 4, ATTR_CURRENT_POSITION: 70})
     await hass.async_block_till_done()
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_OPEN
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 15
@@ -89,7 +89,7 @@ async def test_attributes(hass):
         DEMO_TILT, STATE_OPEN, {ATTR_SUPPORTED_FEATURES: 112})
     await hass.async_block_till_done()
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_OPEN
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 127
@@ -102,7 +102,7 @@ async def test_attributes(hass):
         {ATTR_SUPPORTED_FEATURES: 128, ATTR_CURRENT_TILT_POSITION: 60})
     await hass.async_block_till_done()
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_OPEN
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 255
@@ -118,7 +118,7 @@ async def test_attributes(hass):
         {ATTR_SUPPORTED_FEATURES: 4, ATTR_CURRENT_POSITION: 100})
     await hass.async_block_till_done()
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_OPEN
     assert state.attributes[ATTR_ASSUMED_STATE] is True
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 244
@@ -129,7 +129,7 @@ async def test_attributes(hass):
     hass.states.async_remove(DEMO_COVER_POS)
     await hass.async_block_till_done()
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_OPEN
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 240
@@ -142,7 +142,7 @@ async def test_attributes(hass):
         {ATTR_SUPPORTED_FEATURES: 128, ATTR_CURRENT_TILT_POSITION: 100})
     await hass.async_block_till_done()
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_OPEN
     assert state.attributes[ATTR_ASSUMED_STATE] is True
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 128
@@ -153,7 +153,7 @@ async def test_attributes(hass):
     hass.states.async_set(DEMO_TILT, STATE_CLOSED)
     await hass.async_block_till_done()
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_CLOSED
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
@@ -164,7 +164,7 @@ async def test_attributes(hass):
         DEMO_TILT, STATE_CLOSED, {ATTR_ASSUMED_STATE: True})
     await hass.async_block_till_done()
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.attributes[ATTR_ASSUMED_STATE] is True
 
 
@@ -178,14 +178,14 @@ async def test_open_covers(hass, setup_comp):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 100
 
-    assert hass.states[DEMO_COVER].state == STATE_OPEN
-    assert hass.states[DEMO_COVER_POS] \
+    assert hass.states.get(DEMO_COVER).state == STATE_OPEN
+    assert hass.states.get(DEMO_COVER_POS) \
                .attributes[ATTR_CURRENT_POSITION] == 100
-    assert hass.states[DEMO_COVER_TILT] \
+    assert hass.states.get(DEMO_COVER_TILT) \
                .attributes[ATTR_CURRENT_POSITION] == 100
 
 
@@ -199,14 +199,14 @@ async def test_close_covers(hass, setup_comp):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_CLOSED
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
-    assert hass.states[DEMO_COVER].state == STATE_CLOSED
-    assert hass.states[DEMO_COVER_POS] \
+    assert hass.states.get(DEMO_COVER).state == STATE_CLOSED
+    assert hass.states.get(DEMO_COVER_POS) \
                .attributes[ATTR_CURRENT_POSITION] == 0
-    assert hass.states[DEMO_COVER_TILT] \
+    assert hass.states.get(DEMO_COVER_TILT) \
                .attributes[ATTR_CURRENT_POSITION] == 0
 
 
@@ -221,7 +221,7 @@ async def test_toggle_covers(hass, setup_comp):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_OPEN
 
     # Toggle will close covers
@@ -233,14 +233,14 @@ async def test_toggle_covers(hass, setup_comp):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_CLOSED
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
-    assert hass.states[DEMO_COVER].state == STATE_CLOSED
-    assert hass.states[DEMO_COVER_POS] \
+    assert hass.states.get(DEMO_COVER).state == STATE_CLOSED
+    assert hass.states.get(DEMO_COVER_POS) \
                .attributes[ATTR_CURRENT_POSITION] == 0
-    assert hass.states[DEMO_COVER_TILT] \
+    assert hass.states.get(DEMO_COVER_TILT) \
                .attributes[ATTR_CURRENT_POSITION] == 0
 
     # Toggle again will open covers
@@ -252,14 +252,14 @@ async def test_toggle_covers(hass, setup_comp):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 100
 
-    assert hass.states[DEMO_COVER].state == STATE_OPEN
-    assert hass.states[DEMO_COVER_POS] \
+    assert hass.states.get(DEMO_COVER).state == STATE_OPEN
+    assert hass.states.get(DEMO_COVER_POS) \
                .attributes[ATTR_CURRENT_POSITION] == 100
-    assert hass.states[DEMO_COVER_TILT] \
+    assert hass.states.get(DEMO_COVER_TILT) \
                .attributes[ATTR_CURRENT_POSITION] == 100
 
 
@@ -279,14 +279,14 @@ async def test_stop_covers(hass, setup_comp):
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 100
 
-    assert hass.states[DEMO_COVER].state == STATE_OPEN
-    assert hass.states[DEMO_COVER_POS] \
+    assert hass.states.get(DEMO_COVER).state == STATE_OPEN
+    assert hass.states.get(DEMO_COVER_POS) \
         .attributes[ATTR_CURRENT_POSITION] == 20
-    assert hass.states[DEMO_COVER_TILT] \
+    assert hass.states.get(DEMO_COVER_TILT) \
         .attributes[ATTR_CURRENT_POSITION] == 80
 
 
@@ -300,14 +300,14 @@ async def test_set_cover_position(hass, setup_comp):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 50
 
-    assert hass.states[DEMO_COVER].state == STATE_CLOSED
-    assert hass.states[DEMO_COVER_POS] \
+    assert hass.states.get(DEMO_COVER).state == STATE_CLOSED
+    assert hass.states.get(DEMO_COVER_POS) \
         .attributes[ATTR_CURRENT_POSITION] == 50
-    assert hass.states[DEMO_COVER_TILT] \
+    assert hass.states.get(DEMO_COVER_TILT) \
         .attributes[ATTR_CURRENT_POSITION] == 50
 
 
@@ -321,11 +321,11 @@ async def test_open_tilts(hass, setup_comp):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_OPEN
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 100
 
-    assert hass.states[DEMO_COVER_TILT] \
+    assert hass.states.get(DEMO_COVER_TILT) \
         .attributes[ATTR_CURRENT_TILT_POSITION] == 100
 
 
@@ -339,11 +339,11 @@ async def test_close_tilts(hass, setup_comp):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_OPEN
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
 
-    assert hass.states[DEMO_COVER_TILT] \
+    assert hass.states.get(DEMO_COVER_TILT) \
         .attributes[ATTR_CURRENT_TILT_POSITION] == 0
 
 
@@ -358,11 +358,11 @@ async def test_toggle_tilts(hass, setup_comp):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_OPEN
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 100
 
-    assert hass.states[DEMO_COVER_TILT] \
+    assert hass.states.get(DEMO_COVER_TILT) \
         .attributes[ATTR_CURRENT_TILT_POSITION] == 100
 
     # Toggle will tilt closed
@@ -374,11 +374,11 @@ async def test_toggle_tilts(hass, setup_comp):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_OPEN
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
 
-    assert hass.states[DEMO_COVER_TILT] \
+    assert hass.states.get(DEMO_COVER_TILT) \
         .attributes[ATTR_CURRENT_TILT_POSITION] == 0
 
     # Toggle again will tilt open
@@ -390,11 +390,11 @@ async def test_toggle_tilts(hass, setup_comp):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_OPEN
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 100
 
-    assert hass.states[DEMO_COVER_TILT] \
+    assert hass.states.get(DEMO_COVER_TILT) \
         .attributes[ATTR_CURRENT_TILT_POSITION] == 100
 
 
@@ -414,11 +414,11 @@ async def test_stop_tilts(hass, setup_comp):
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_OPEN
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 60
 
-    assert hass.states[DEMO_COVER_TILT] \
+    assert hass.states.get(DEMO_COVER_TILT) \
         .attributes[ATTR_CURRENT_TILT_POSITION] == 60
 
 
@@ -432,9 +432,9 @@ async def test_set_tilt_positions(hass, setup_comp):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    state = hass.states[COVER_GROUP]
+    state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_OPEN
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 80
 
-    assert hass.states[DEMO_COVER_TILT] \
+    assert hass.states.get(DEMO_COVER_TILT) \
         .attributes[ATTR_CURRENT_TILT_POSITION] == 80
