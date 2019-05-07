@@ -7,6 +7,7 @@ import homeassistant.core
 
 GPSType = Tuple[float, float]
 ConfigType = Dict[str, Any]
+ContextType = homeassistant.core.Context
 EventType = homeassistant.core.Event
 HomeAssistantType = homeassistant.core.HomeAssistant
 ServiceCallType = homeassistant.core.ServiceCall
