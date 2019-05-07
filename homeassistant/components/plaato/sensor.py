@@ -116,14 +116,14 @@ class PlaatoSensor(Entity):
         """Return the unit of measurement."""
         if self._type == ATTR_TEMP:
             return self.get_sensors_unit_of_measurement(ATTR_TEMP_UNIT)
-        elif self._type == ATTR_BATCH_VOLUME or self._type == ATTR_CO2_VOLUME:
+        if self._type == ATTR_BATCH_VOLUME or self._type == ATTR_CO2_VOLUME:
             return self.get_sensors_unit_of_measurement(ATTR_VOLUME_UNIT)
-        elif self._type == ATTR_BPM:
+        if self._type == ATTR_BPM:
             return 'bpm'
-        elif self._type == ATTR_ABV:
+        if self._type == ATTR_ABV:
             return '%'
-        else:
-            return ''
+
+        return ''
 
     async def async_update(self):
         """Fetch new state data for the sensor."""
