@@ -94,6 +94,7 @@ ABBREVIATIONS = {
     'cln_tpl': 'cleaning_template',
     'cmd_t': 'command_topic',
     'curr_temp_t': 'current_temperature_topic',
+    'curr_temp_tpl': 'current_temperature_template',
     'dev': 'device',
     'dev_cla': 'device_class',
     'dock_t': 'docked_topic',
