@@ -47,7 +47,7 @@ async def async_setup(hass, hass_config):
 
     except AssertionError:  # assert response.status == HTTP_OK
         _LOGGER.warning(
-            "setup(): Failed, check your configuration.",
+            "Setup failed, check your configuration.",
             exc_info=True)
         return False
 

@@ -14,6 +14,8 @@ INCOMFORT_SUPPORT_FLAGS = 0
 INCOMFORT_MAX_TEMP = 80.0
 INCOMFORT_MIN_TEMP = 30.0
 
+BOILER_NAME = 'Boiler'
+
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
                                discovery_info=None):
@@ -32,7 +34,7 @@ class IncomfortWaterHeater(WaterHeaterDevice):
         """Initialize the water_heater device."""
         self._client = client
         self._boiler = boiler
-        self._name = 'Boiler'
+        self._name = BOILER_NAME
 
     @property
     def name(self):
@@ -51,7 +53,9 @@ class IncomfortWaterHeater(WaterHeaterDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self._boiler.heater_temp  # or: self._boiler.tap_temp?
+        if self._boiler.is_tapping:
+            return self._boiler.tap_temp
+        return self._boiler.heater_temp
 
     @property
     def min_temp(self):
@@ -80,11 +84,6 @@ class IncomfortWaterHeater(WaterHeaterDevice):
             return "Failed ({})".format(self._boiler.fault_code)
 
         return self._boiler.display_text
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True as this device should always be polled."""
-        return True
 
     async def async_update(self):
         """Get the latest state data from the gateway."""
