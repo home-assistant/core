@@ -235,6 +235,7 @@ class TestUVC(unittest.TestCase):
 
     def test_properties(self):
         """Test the properties."""
+        yield from self.async_added_to_hass()
         assert self.name == self.uvc.name
         assert self.uvc.is_recording
         assert 'Ubiquiti' == self.uvc.brand
@@ -244,6 +245,7 @@ class TestUVC(unittest.TestCase):
     @mock.patch('uvcclient.camera.UVCCameraClientV320')
     def test_login(self, mock_camera, mock_store):
         """Test the login."""
+        yield from self.async_added_to_hass()
         self.uvc._login()
         assert mock_camera.call_count == 1
         assert mock_camera.call_args == mock.call('host-a', 'admin', 'seekret')
@@ -254,6 +256,7 @@ class TestUVC(unittest.TestCase):
     @mock.patch('uvcclient.camera.UVCCameraClient')
     def test_login_v31x(self, mock_camera, mock_store):
         """Test login with v3.1.x server."""
+        yield from self.async_added_to_hass()
         self.nvr.server_version = (3, 1, 3)
         self.uvc._login()
         assert mock_camera.call_count == 1
@@ -265,6 +268,7 @@ class TestUVC(unittest.TestCase):
     @mock.patch('uvcclient.camera.UVCCameraClientV320')
     def test_login_tries_both_addrs_and_caches(self, mock_camera, mock_store):
         """Test the login tries."""
+        yield from self.async_added_to_hass()
         responses = [0]
 
         def mock_login(*a):
@@ -292,6 +296,7 @@ class TestUVC(unittest.TestCase):
     @mock.patch('uvcclient.camera.UVCCameraClientV320')
     def test_login_fails_both_properly(self, mock_camera, mock_store):
         """Test if login fails properly."""
+        yield from self.async_added_to_hass()
         mock_camera.return_value.login.side_effect = socket.error
         assert self.uvc._login() is None
         assert self.uvc._connect_addr is None
