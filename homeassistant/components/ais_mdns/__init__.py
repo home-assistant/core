@@ -9,6 +9,7 @@ import socket
 import subprocess
 import voluptuous as vol
 
+from homeassistant.ais_dom import ais_global
 from homeassistant import util
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, __version__)
 
@@ -49,10 +50,15 @@ def setup(hass, config):
         ip = socket.inet_pton(socket.AF_INET, host_ip)
     except socket.error:
         ip = socket.inet_pton(socket.AF_INET6, host_ip)
+    try:
+        gate_id = ais_global.get_sercure_android_id_dom()
+    except:
+        gate_id = 'xxx'
 
     params = {
         'version': __version__,
         'company_url': "https://ai-speaker.com",
+        'gate_id': gate_id,
     }
 
     # HASS
