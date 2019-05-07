@@ -113,6 +113,7 @@ homeassistant/components/huawei_lte/* @scop
 homeassistant/components/huawei_router/* @abmantis
 homeassistant/components/hue/* @balloob
 homeassistant/components/ign_sismologia/* @exxamalte
+homeassistant/components/incomfort/* @zxdavb
 homeassistant/components/influxdb/* @fabaff
 homeassistant/components/input_boolean/* @home-assistant/core
 homeassistant/components/input_datetime/* @home-assistant/core
