@@ -34,12 +34,11 @@ class IncomfortWaterHeater(WaterHeaterDevice):
         """Initialize the water_heater device."""
         self._client = client
         self._boiler = boiler
-        self._name = BOILER_NAME
 
     @property
     def name(self):
         """Return the name of the water_heater device."""
-        return self._name
+        return BOILER_NAME
 
     @property
     def device_state_attributes(self):
