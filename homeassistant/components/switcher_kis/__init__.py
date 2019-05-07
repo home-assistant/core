@@ -85,7 +85,7 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
         DATA_DEVICE: device_data
     }
 
-    async def async_switch_platform_discoverd(
+    async def async_switch_platform_discovered(
             platform: str, discovery_info: Optional[Dict]) -> None:
         """Use for registering services after switch platform is discoverd."""
         async def async_set_auto_off_service(service: ServiceCallType) -> None:
