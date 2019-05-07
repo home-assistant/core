@@ -38,7 +38,7 @@ def _parse_see_args(message):
         'dev_id': dev_id,
         'host_name': message['user'],
         'gps': (message['Lat'], message['Long']),
-        'battery': message['SOC'],
+        'battery': float(message['SOC']),
         'attributes': {
             'amp_hours': float(message['AHr']),
             'trip': int(message['Trip']),
@@ -52,6 +52,9 @@ def _parse_see_args(message):
             'power_switch': message['PwrSw'] == '1',
             'device_battery': int(message['DevBat']),
             'rpm': int(message['RPM']),
+            'gids': int(message['Gids']),
+            'elevation': int(message['Elv']),
+            'sequence': int(message['Seq']),
             ATTR_SOURCE_TYPE: SOURCE_TYPE_GPS
         }
     }
