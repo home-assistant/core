@@ -33,10 +33,10 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
 class IncomfortWaterHeater(WaterHeaterDevice):
     """Representation of an InComfort/Intouch water_heater device."""
 
-    def __init__(self, client, boiler):
+    def __init__(self, client, heater):
         """Initialize the water_heater device."""
         self._client = client
-        self._boiler = boiler
+        self._heater = heater
 
     @property
     def name(self):
@@ -46,16 +46,16 @@ class IncomfortWaterHeater(WaterHeaterDevice):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        state = {k: self._boiler.status[k]
-                 for k in self._boiler.status if k in BOILER_ATTRS}
+        state = {k: self._heater.status[k]
+                 for k in self._heater.status if k in BOILER_ATTRS}
         return state
 
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        if self._boiler.is_tapping:
-            return self._boiler.tap_temp
-        return self._boiler.heater_temp
+        if self._heater.is_tapping:
+            return self._heater.tap_temp
+        return self._heater.heater_temp
 
     @property
     def min_temp(self):
@@ -80,15 +80,15 @@ class IncomfortWaterHeater(WaterHeaterDevice):
     @property
     def current_operation(self):
         """Return the current operation mode."""
-        if self._boiler.is_failed:
-            return "Failed ({})".format(self._boiler.fault_code)
+        if self._heater.is_failed:
+            return "Failed ({})".format(self._heater.fault_code)
 
-        return self._boiler.display_text
+        return self._heater.display_text
 
     async def async_update(self):
         """Get the latest state data from the gateway."""
         try:
-            await self._boiler.update()
+            await self._heater.update()
 
         except (AssertionError, asyncio.TimeoutError) as err:
             _LOGGER.warning("Update for failed, message: %s", err)
