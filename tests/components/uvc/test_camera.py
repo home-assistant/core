@@ -309,6 +309,16 @@ class TestUVC(unittest.TestCase):
             assert mock_login.call_count == 1
             assert mock_login.call_args == mock.call()
 
+    def test_camera_supported_features(self):
+        """Test the camera supported features."""
+        yield from self.async_added_to_hass()
+        assert self.supported_features == SUPPORT_STREAM
+
+    def test_camera_stream_source(self):
+        """Test the cameras RTSP URI."""
+        yield from self.async_added_to_hass()
+        assert self.stream_source == 'rtsp://host-b:7447/stream_1'
+
     def test_camera_image_logged_in(self):
         """Test the login state."""
         self.uvc._camera = mock.MagicMock()
