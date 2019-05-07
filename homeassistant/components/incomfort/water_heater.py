@@ -17,7 +17,7 @@ INCOMFORT_MIN_TEMP = 30.0
 HEATER_NAME = 'Boiler'
 HEATER_ATTRS = [
     'display_code', 'display_text', 'fault_code', 'is_burning', 'is_failed',
-    'is_pumping' 'is_tapping', 'heater_temp', 'tap_temp', 'pressure']
+    'is_pumping', 'is_tapping', 'heater_temp', 'tap_temp', 'pressure']
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
