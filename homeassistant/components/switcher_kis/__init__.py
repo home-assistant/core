@@ -88,6 +88,9 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
     async def async_switch_platform_discovered(
             platform: str, discovery_info: Optional[Dict]) -> None:
         """Use for registering services after switch platform is discoverd."""
+        if platform != DOMAIN:
+            return
+
         async def async_set_auto_off_service(service: ServiceCallType) -> None:
             """Use for handling setting device auto-off service calls."""
             from aioswitcher.api import SwitcherV2Api
