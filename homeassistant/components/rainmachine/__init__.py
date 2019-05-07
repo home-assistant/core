@@ -69,7 +69,7 @@ BINARY_SENSORS = {
 
 SENSORS = {
     TYPE_FLOW_SENSOR_CLICK_M3: (
-        'Flow Sensor Clicks', 'mdi:water-pump', 'clicks/m^3'),
+        'Flow Sensor Clicks per Cubic Meter', 'mdi:water-pump', 'clicks/m^3'),
     TYPE_FLOW_SENSOR_CONSUMED_LITERS: (
         'Flow Sensor Consumed Liters', 'mdi:water-pump', 'liter'),
     TYPE_FLOW_SENSOR_START_INDEX: (

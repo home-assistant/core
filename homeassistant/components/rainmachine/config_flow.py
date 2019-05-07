@@ -92,8 +92,9 @@ class RainMachineFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
-        # TODO
-        # return await self.async_step_user(import_config)
+        if import_config.get(CONF_IP_ADDRESS):
+            return await self.async_step_local(import_config)
+        return await self.async_step_remote(import_config)
 
     async def async_step_local(self, user_input=None):
         """Handle the case where the user inputs local credentials."""
