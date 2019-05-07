@@ -8,12 +8,14 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_ON_OFF)
 from homeassistant.const import (
     ATTR_TEMPERATURE, TEMP_CELSIUS)
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-GH_CLIMATE_DEVICES = ['radiator']
+GH_PARENT_ZONE = 'manager'
+GH_CHILD_ZONES = ['radiator']
 
 GENIUSHUB_SUPPORT_FLAGS = \
     SUPPORT_TARGET_TEMPERATURE | \
@@ -50,13 +52,18 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     """Set up the Genius Hub climate entities."""
     client = hass.data[DOMAIN]['client']
 
-    entities = [GeniusClimate(client, z)
-                for z in client.hub.zone_objs if z.type in GH_CLIMATE_DEVICES]
+    parent = [GeniusClimateHub(client, z)
+              for z in client.hub.zone_objs if z.type == GH_PARENT_ZONE]
 
-    async_add_entities(entities)
+    _LOGGER.warn("Parent = %s", parent)
+
+    children = [GeniusClimateZone(client, z)
+                for z in client.hub.zone_objs if z.type in GH_CHILD_ZONES]
+
+    async_add_entities(parent + children)
 
 
-class GeniusClimate(ClimateDevice):
+class GeniusClimateBase(ClimateDevice):
     """Representation of a Genius Hub climate device."""
 
     def __init__(self, client, zone):
@@ -113,7 +120,7 @@ class GeniusClimate(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return GENIUSHUB_SUPPORT_FLAGS
+        return self._supported_features
 
     @property
     def operation_list(self):
@@ -146,6 +153,67 @@ class GeniusClimate(ClimateDevice):
     async def async_turn_off(self):
         """Turn off this heating zone (i.e. to frost protect)."""
         await self._objref.set_mode(GH_OPMODE_OFF)
+
+    async def async_update(self):
+        """Get the latest data from the hub."""
+        try:
+            await self._objref.update()
+        except (AssertionError, asyncio.TimeoutError) as err:
+            _LOGGER.warning("Update for %s failed, message: %s",
+                            self._id, err)
+
+
+class GeniusClimateZone(GeniusClimateBase):
+    """Representation of a Genius Hub climate device."""
+
+    def __init__(self, client, zone):
+        """Initialize the climate device."""
+        super().__init__(client, zone)
+
+        self._client = client
+        self._objref = zone
+        self._id = zone.id
+        self._name = zone.name
+
+        # Only some zones have movement detectors, which allows footprint mode
+        op_list = list(HA_OPMODE_TO_GH)
+        if not hasattr(self._objref, 'occupied'):
+            op_list.remove(STATE_ECO)
+        self._operation_list = op_list
+        self._supported_features = GENIUSHUB_SUPPORT_FLAGS
+
+    async def async_update(self):
+        """Get the latest data from the hub."""
+        try:
+            await self._objref.update()
+        except (AssertionError, asyncio.TimeoutError) as err:
+            _LOGGER.warning("Update for %s failed, message: %s",
+                            self._id, err)
+
+class GeniusClimateHub(GeniusClimateBase):
+    """Representation of a Genius Hub climate device."""
+
+    def __init__(self, client, zone):
+        """Initialize the climate device."""
+        super().__init__(client, zone)
+
+        self._client = client
+        self._objref = zone
+        self._id = zone.id
+        self._name = zone.name
+
+        self._operation_list = []
+        self._supported_features = 0
+
+    @property
+    def current_temperature(self):
+        """Return the current temperature."""
+        return None
+
+    @property
+    def target_temperature(self):
+        """Return the temperature we try to reach."""
+        return None
 
     async def async_update(self):
         """Get the latest data from the hub."""

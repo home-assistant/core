@@ -1,7 +1,8 @@
-"""This module connects to a Genius hub and shares the data."""
+"""Support for a Genius Hub."""
 import logging
 
 import voluptuous as vol
+from geniushubclient import GeniusHubClient
 
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME)
@@ -31,8 +32,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, hass_config):
     """Create a Genius Hub system."""
-    from geniushubclient import GeniusHubClient  # noqa; pylint: disable=no-name-in-module
-
     geniushub_data = hass.data[DOMAIN] = {}
 
     kwargs = dict(hass_config[DOMAIN])
@@ -50,14 +49,14 @@ async def async_setup(hass, hass_config):
 
     except AssertionError:  # assert response.status == HTTP_OK
         _LOGGER.warning(
-            "setup(): Failed, check your configuration.",
+            "Setup failed, check your configuration.",
             exc_info=True)
         return False
 
     hass.async_create_task(async_load_platform(
         hass, 'climate', DOMAIN, {}, hass_config))
 
-    hass.async_create_task(async_load_platform(
-        hass, 'water_heater', DOMAIN, {}, hass_config))
+#   hass.async_create_task(async_load_platform(
+#       hass, 'water_heater', DOMAIN, {}, hass_config))
 
     return True
