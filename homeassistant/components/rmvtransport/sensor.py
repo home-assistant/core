@@ -1,12 +1,12 @@
 """Support for departure information for Rhein-Main public transport."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, CONF_TIMEOUT
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -24,7 +24,6 @@ CONF_LINES = 'lines'
 CONF_PRODUCTS = 'products'
 CONF_TIME_OFFSET = 'time_offset'
 CONF_MAX_JOURNEYS = 'max_journeys'
-CONF_TIMEOUT = 'timeout'
 
 DEFAULT_NAME = 'RMV Journey'
 
@@ -59,13 +58,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
             vol.All(cv.ensure_list, [vol.In(VALID_PRODUCTS)]),
         vol.Optional(CONF_TIME_OFFSET, default=0): cv.positive_int,
         vol.Optional(CONF_MAX_JOURNEYS, default=5): cv.positive_int,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}],
-    vol.Optional(CONF_TIMEOUT, default=10): cv.positive_int
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }],
+    vol.Optional(CONF_TIMEOUT, default=10): cv.positive_int,
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the RMV departure sensor."""
     timeout = config.get(CONF_TIMEOUT)
 
@@ -170,7 +170,7 @@ class RMVDepartureData:
 
     def __init__(self, session, station_id, destinations, direction, lines,
                  products, time_offset, max_journeys, timeout):
-        """Initialize the sensor."""
+        """Initialize the RMV sensor."""
         from RMVtransport import RMVtransport
 
         self.station = None
@@ -190,13 +190,12 @@ class RMVDepartureData:
         from RMVtransport.rmvtransport import RMVtransportApiConnectionError
 
         try:
-            _data = await self.rmv.get_departures(self._station_id,
-                                                  products=self._products,
-                                                  directionId=self._direction,
-                                                  maxJourneys=50)
+            _data = await self.rmv.get_departures(
+                self._station_id, products=self._products,
+                direction_id=self._direction, max_journeys=50)
         except RMVtransportApiConnectionError:
             self.departures = []
-            _LOGGER.warning("Could not retrive data from rmv.de")
+            _LOGGER.warning("Could not retrieve data from rmv.de")
             return
         self.station = _data.get('station')
         _deps = []
