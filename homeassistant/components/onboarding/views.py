@@ -7,7 +7,7 @@ from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import callback
 
-from .const import DOMAIN, STEP_USER, STEPS
+from .const import DOMAIN, STEP_USER, STEPS, DEFAULT_AREAS
 
 
 async def async_setup(hass, data, store):
@@ -109,7 +109,7 @@ class UserOnboardingView(_BaseOnboardingView):
             area_registry = \
                 await hass.helpers.area_registry.async_get_registry()
 
-            for area in ('living_room', 'bedroom', 'kitchen'):
+            for area in DEFAULT_AREAS:
                 area_registry.async_create(
                     translations['component.onboarding.area.{}'.format(area)]
                 )
