@@ -14,8 +14,8 @@ INCOMFORT_SUPPORT_FLAGS = 0
 INCOMFORT_MAX_TEMP = 80.0
 INCOMFORT_MIN_TEMP = 30.0
 
-BOILER_NAME = 'Boiler'
-BOILER_ATTRS = [
+HEATER_NAME = 'Boiler'
+HEATER_ATTRS = [
     'display_code', 'display_text', 'fault_code', 'is_burning', 'is_failed',
     'is_pumping' 'is_tapping', 'heater_temp', 'tap_temp', 'pressure']
 
@@ -41,13 +41,13 @@ class IncomfortWaterHeater(WaterHeaterDevice):
     @property
     def name(self):
         """Return the name of the water_heater device."""
-        return BOILER_NAME
+        return HEATER_NAME
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         state = {k: self._heater.status[k]
-                 for k in self._heater.status if k in BOILER_ATTRS}
+                 for k in self._heater.status if k in HEATER_ATTRS}
         return state
 
     @property
