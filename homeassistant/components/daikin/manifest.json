@@ -3,7 +3,7 @@
   "name": "Daikin",
   "documentation": "https://www.home-assistant.io/components/daikin",
   "requirements": [
-    "pydaikin==1.4.0"
+    "pydaikin==1.4.3"
   ],
   "dependencies": [],
   "codeowners": [
