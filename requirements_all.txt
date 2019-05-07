@@ -115,7 +115,7 @@ aioautomatic==0.6.5
 aiobotocore==0.10.2
 
 # homeassistant.components.dnsip
-aiodns==1.1.1
+aiodns==2.0.0
 
 # homeassistant.components.esphome
 aioesphomeapi==2.0.1
