@@ -77,7 +77,7 @@ class LeafSpyView(HomeAssistantView):
             hass.helpers.dispatcher.async_dispatcher_send(
                 DOMAIN, hass, context, message)
 
-            return Response(status=200, text="\"status\":\"0\"")
+            return Response(status=200, text='"status":"0"')
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Error processing leafspy webhook")
             return Response(status=200, text="")
