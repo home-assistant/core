@@ -113,7 +113,7 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
             schema=SERVICE_UPDATE_DEVICE_NAME_SCHEMA)
 
     async_listen_platform(
-        hass, SWITCH_DOMAIN, async_switch_platform_discoverd)
+        hass, SWITCH_DOMAIN, async_switch_platform_discovered)
 
     hass.async_create_task(async_load_platform(
         hass, SWITCH_DOMAIN, DOMAIN, {}, config))
