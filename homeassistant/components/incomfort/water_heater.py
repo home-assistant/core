@@ -15,6 +15,9 @@ INCOMFORT_MAX_TEMP = 80.0
 INCOMFORT_MIN_TEMP = 30.0
 
 BOILER_NAME = 'Boiler'
+BOILER_ATTRS = [
+    'display_code', 'display_text', 'fault_code', 'is_burning', 'is_failed',
+    'is_pumping' 'is_tapping', 'heater_temp', 'tap_temp', 'pressure']
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
@@ -43,11 +46,9 @@ class IncomfortWaterHeater(WaterHeaterDevice):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        keys = ['nodenr', 'rf_message_rssi', 'rfstatus_cntr', 'room_1',
-                'room_2']
         state = {k: self._boiler.status[k]
-                 for k in self._boiler.status if k not in keys}
-        return {'status': state}
+                 for k in self._boiler.status if k in BOILER_ATTRS}
+        return state
 
     @property
     def current_temperature(self):
