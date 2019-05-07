@@ -31,7 +31,7 @@ class InComfortClimate(ClimateDevice):
     def __init__(self, client, room):
         """Initialize the climate device."""
         self._client = client
-        self._objref = room
+        self._room = room
         self._name = 'Room {}'.format(room.room_no)
 
     async def async_added_to_hass(self):
@@ -51,17 +51,17 @@ class InComfortClimate(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        return {'status': self._objref.status}
+        return {'status': self._room.status}
 
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self._objref.room_temp
+        return self._room.room_temp
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self._objref.override  # or: self._objref.setpoint?
+        return self._room.override  # or: self._room.setpoint?
 
     @property
     def min_temp(self):
@@ -86,7 +86,7 @@ class InComfortClimate(ClimateDevice):
     async def async_set_temperature(self, **kwargs):
         """Set a new target temperature for this zone."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        await self._objref.set_override(temperature)
+        await self._room.set_override(temperature)
 
     @property
     def should_poll(self) -> bool:

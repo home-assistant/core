@@ -26,7 +26,7 @@ class IncomfortBinarySensor(BinarySensorDevice):
     def __init__(self, client, boiler):
         """Initialize the binary sensor."""
         self._client = client
-        self._objref = boiler
+        self._boiler = boiler
 
         self._name = None
         self._is_on_key = None
@@ -49,14 +49,14 @@ class IncomfortBinarySensor(BinarySensorDevice):
     @property
     def is_on(self):
         """Return the status of the sensor."""
-        return self._objref.status[self._is_on_key]
+        return self._boiler.status[self._is_on_key]
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         if self._other_key is None:
             return None
-        value = self._objref.status[self._other_key] if self.is_on else None
+        value = self._boiler.status[self._other_key] if self.is_on else None
         return {self._other_key: value}
 
     @property

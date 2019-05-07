@@ -31,7 +31,7 @@ class IncomfortSensor(Entity):
     def __init__(self, client, boiler):
         """Initialize the sensor."""
         self._client = client
-        self._objref = boiler
+        self._boiler = boiler
 
         self._name = None
         self._device_class = None
@@ -81,13 +81,13 @@ class IncomfortPressure(IncomfortSensor):
     @property
     def state(self):
         """Return the state/value of the sensor."""
-        return self._objref.status['pressure']
+        return self._boiler.status['pressure']
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         keys = ['is_pumping', 'heater_temp', 'tap_temp']
-        return {k: self._objref.status[k] for k in keys}
+        return {k: self._boiler.status[k] for k in keys}
 
 
 class IncomfortSignal(IncomfortSensor):
@@ -104,9 +104,9 @@ class IncomfortSignal(IncomfortSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._objref.status['rf_message_rssi']
+        return self._boiler.status['rf_message_rssi']
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        return {k: self._objref.status[k] for k in ['nodenr', 'rfstatus_cntr']}
+        return {k: self._boiler.status[k] for k in ['nodenr', 'rfstatus_cntr']}
