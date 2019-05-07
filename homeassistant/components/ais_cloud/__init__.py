@@ -74,6 +74,10 @@ def async_setup(hass, config):
         _LOGGER.info("play_audio")
         data.process_play_audio(call)
 
+    def delete_audio(call):
+        _LOGGER.info("delete_audio")
+        data.process_delete_audio(call)
+
     def get_podcast_types(call):
         _LOGGER.info("get_podcast_types")
         data.get_podcast_types(call)
@@ -85,10 +89,6 @@ def async_setup(hass, config):
     def get_podcast_tracks(call):
         _LOGGER.info("get_podcast_tracks")
         data.get_podcast_tracks(call)
-
-    def select_podcast_track(call):
-        _LOGGER.info("select_podcast_track")
-        data.select_podcast_track(call)
 
     def select_media_player(call):
         _LOGGER.info("select_media_player")
@@ -131,10 +131,10 @@ def async_setup(hass, config):
     hass.services.async_register(DOMAIN, 'get_radio_names', get_radio_names)
     hass.services.async_register(DOMAIN, 'get_players', get_players)
     hass.services.async_register(DOMAIN, 'play_audio', play_audio)
+    hass.services.async_register(DOMAIN, 'delete_audio', delete_audio)
     hass.services.async_register(DOMAIN, 'get_podcast_types', get_podcast_types)
     hass.services.async_register(DOMAIN, 'get_podcast_names', get_podcast_names)
     hass.services.async_register(DOMAIN, 'get_podcast_tracks', get_podcast_tracks)
-    hass.services.async_register(DOMAIN, 'select_podcast_track', select_podcast_track)
     hass.services.async_register(DOMAIN, 'select_media_player', select_media_player)
     hass.services.async_register(DOMAIN, 'get_rss_news_category', get_rss_news_category)
     hass.services.async_register(DOMAIN, 'get_rss_news_channels', get_rss_news_channels)
@@ -479,8 +479,7 @@ class AisColudData:
                     "entity_id": "input_select.podcast_name",
                     "options": [ais_global.G_EMPTY_OPTION]})
             return
-        ws_resp = self.cloud.audio_name(
-            ais_global.G_AN_PODCAST, call.data["podcast_type"])
+        ws_resp = self.cloud.audio_name(ais_global.G_AN_PODCAST, call.data["podcast_type"])
         json_ws_resp = ws_resp.json()
         names = [ais_global.G_EMPTY_OPTION]
         self.podcast_names = []
@@ -519,11 +518,6 @@ class AisColudData:
             _lookup_url = call.data["lookup_url"]
             _image_url = call.data["image_url"]
             selected_by_voice_command = True
-            # set the podcast name
-            # self.hass.services.call("input_select", "select_option",
-            #                         {"entity_id": "input_select.podcast_name", "option": podcast_name})
-            # return
-
         else:
             # the podcast was selected from select list in app
             _lookup_url = None
@@ -553,6 +547,8 @@ class AisColudData:
                     list_info[list_idx]["mediasource"] = ais_global.G_AN_PODCAST
                     list_info[list_idx]["type"] = ''
                     list_info[list_idx]["icon"] = 'mdi:play'
+                    list_info[list_idx]["lookup_url"] = _lookup_url
+                    list_info[list_idx]["lookup_name"] = podcast_name
                     list_idx = list_idx + 1
 
                 # update list
@@ -564,8 +560,12 @@ class AisColudData:
                             "text": "Pobrano " + str(len(d.entries))
                             + " odcinków"
                             + ", audycji " + podcast_name
-                            + ", włączam najnowszy odcinek: " + 'xxx'
+                            + ", włączam najnowszy odcinek: " + list_info[0]["title"]
                         })
+                    # play it
+                    self.hass.services.call('ais_cloud', 'play_audio',
+                                            {"audio_type": ais_global.G_AN_PODCAST, "id": 0,
+                                             "lookup_url": _lookup_url, "lookup_name": podcast_name})
                 else:
                     # check if the change was done form remote
                     if selected_by_remote:
@@ -586,47 +586,13 @@ class AisColudData:
                 self.hass.services.call(
                     'ais_ai_service', 'say_it', {"text": "Nie można pobrać odcinków. " + podcast_name})
 
-    def select_podcast_track(self, call):
-        """Get track stream url for the selected name."""
-        if "podcast_track" not in call.data:
-            _LOGGER.error("No podcast_track")
-            return
-        if call.data["podcast_track"] == ais_global.G_EMPTY_OPTION:
-            # TODO stop selected player
-            pass
-        # the station was selected from select list in app
-        # we need to find the url and play it
-        podcast_track = call.data["podcast_track"]
-        _url = None
-        _audio_info = {}
-        for podcast in self.podcast_tracks:
-            if podcast["title"] == podcast_track:
-                if "link" in podcast:
-                    _url = check_url(podcast["link"].href)
-                    try:
-                        _audio_info["IMAGE_URL"] = podcast["image_url"]
-                    except Exception as e:
-                        _audio_info["IMAGE_URL"] = ''
-                    _audio_info["NAME"] = podcast["title"]
-                    _audio_info["MEDIA_SOURCE"] = ais_global.G_AN_PODCAST
-                    _audio_info = json.dumps(_audio_info)
-
-        if _url is not None:
-            self.hass.services.call(
-                'media_player',
-                'play_media', {
-                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                    "media_content_type": "audio/mp4",
-                    "media_content_id": check_url(_url)
-                })
-            # set stream image and title
-            self.hass.services.call(
-                'media_player',
-                'play_media', {
-                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                    "media_content_type": "ais_info",
-                    "media_content_id": _audio_info
-                })
+    def process_delete_audio(self, call):
+        _LOGGER.info("process_play_audio")
+        audio_type = call.data["audio_type"]
+        if audio_type == ais_global.G_AN_FAVORITE:
+            self.hass.services.call('ais_bookmarks', 'delete_favorite', {"id": call.data['id']})
+        elif audio_type == ais_global.G_AN_BOOKMARK:
+            self.hass.services.call('ais_bookmarks', 'delete_bookmark', {"id": call.data['id']})
 
     def process_play_audio(self, call):
         _LOGGER.info("process_play_audio")
@@ -641,7 +607,6 @@ class AisColudData:
             elif audio_type == ais_global.G_AN_MUSIC:
                 self.hass.services.call('ais_yt_service', 'select_track_uri', {"id": call.data['id']})
                 return
-
             #
             if audio_type == ais_global.G_AN_RADIO:
                 track_list = 'sensor.radiolist'
@@ -661,24 +626,30 @@ class AisColudData:
             if audio_type == ais_global.G_AN_NEWS:
                 self.hass.services.call('ais_cloud', 'select_rss_news_item', {"id": call.data['id']})
 
+            elif audio_type == ais_global.G_AN_FAVORITE and track["type"] == ais_global.G_AN_PODCAST:
+                # selected from favorite - get the podcast tracks
+                self.hass.services.call('ais_cloud', 'get_podcast_tracks', {"lookup_url": track["uri"],
+                                                                            "podcast_name": track["name"],
+                                                                            "image_url": track["thumbnail"]})
             elif audio_type in (ais_global.G_AN_RADIO, ais_global.G_AN_PODCAST):
-                # play
+                lookup_url = ""
+                lookup_name = ""
+                if audio_type == ais_global.G_AN_PODCAST:
+                    lookup_url = track["lookup_url"]
+                    lookup_name = track["lookup_name"]
                 try:
                     track_uri = track["uri"]["href"]
                 except Exception:
                     track_uri = track["uri"]
                 # update list
                 self.hass.states.async_set(track_list, call.data['id'], attr)
-                self.hass.services.call('media_player', 'play_media',
-                                        {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                                         "media_content_type": "audio/mp4",
-                                         "media_content_id": track_uri})
-                # set stream image and title
+                # set stream uri, image and title
                 _audio_info = json.dumps(
-                    {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": audio_type})
+                    {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": audio_type,
+                     "media_content_id": track_uri, "lookup_url": lookup_url, "lookup_name": lookup_name})
                 self.hass.services.call('media_player', 'play_media',
                                         {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                                         "media_content_type": "ais_info",
+                                         "media_content_type": "ais_content_info",
                                          "media_content_id": _audio_info})
                 return
             elif audio_type == ais_global.G_AN_BOOKMARK:
@@ -692,21 +663,14 @@ class AisColudData:
         else:
             # play by voice
             if audio_type == ais_global.G_AN_RADIO:
-                # play radio
-                self.hass.services.call(
-                    'media_player',
-                    'play_media', {
-                        "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                        "media_content_type": "audio/mp4",
-                        "media_content_id": check_url(call.data["stream_url"])
-                    })
-                # set stream image and title
+                # set stream uri, image and title
                 _audio_info = {"IMAGE_URL": call.data["image_url"], "NAME": call.data["name"],
-                               "MEDIA_SOURCE": ais_global.G_AN_RADIO}
+                               "MEDIA_SOURCE": ais_global.G_AN_RADIO,
+                               "media_content_id": check_url(call.data["stream_url"])}
                 _audio_info = json.dumps(_audio_info)
                 self.hass.services.call('media_player', 'play_media',
                                         {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                                         "media_content_type": "ais_info",
+                                         "media_content_type": "ais_content_info",
                                          "media_content_id": _audio_info})
 
                 # switch UI to Radio
@@ -810,19 +774,13 @@ class AisColudData:
             player = get_player_data(player_name)
         if _url is not None:
             # play media on selected device
-            self.hass.services.call(
-                'media_player',
-                'play_media', {
-                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                    "media_content_type": "audio/mp4",
-                    "media_content_id": check_url(_url)
-                })
+            _audio_info["media_content_id"] = check_url(_url)
             # set stream image and title
             self.hass.services.call(
                 'media_player',
                 'play_media', {
                     "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                    "media_content_type": "ais_info",
+                    "media_content_type": "ais_content_info",
                     "media_content_id": json.dumps(_audio_info)
                 })
 

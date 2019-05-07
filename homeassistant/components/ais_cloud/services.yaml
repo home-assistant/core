@@ -67,13 +67,6 @@ select_media_player:
       description: Typ odtwarzacza.
       example: 'Radio'
 
-select_podcast_track:
-  description: Wybranie odcinka podcasta
-  fields:
-    podcast_track:
-      description: Odcinek podcasta.
-      example: 'Odcinek 1'
-
 select_rss_help_item:
   description: Wybranie strony pomocy do przeczytania
   fields:

@@ -33,7 +33,19 @@ G_ICON_FOR_AUDIO = {
     G_AN_PODCAST: 'mdi:podcast',
     G_AN_MUSIC: 'mdi:music',
     G_AN_AUDIOBOOK: 'mdi:audiobook',
-    G_AN_SPOTIFY: 'mdi:spotify'
+    G_AN_SPOTIFY: 'mdi:spotify',
+    G_AN_LOCAL: 'mdi:folder'
+}
+
+G_NAME_FOR_AUDIO = {
+    G_AN_RADIO: 'Radio',
+    G_AN_PODCAST: 'Podcast',
+    G_AN_MUSIC: 'Muzyka',
+    G_AN_AUDIOBOOK: 'Audio książka',
+    G_AN_SPOTIFY: 'Spotify',
+    G_AN_LOCAL: 'Plik',
+    G_AN_FAVORITE: 'Ulubione',
+    G_AN_BOOKMARK: 'Zakładki'
 }
 
 # tokens
@@ -59,11 +71,6 @@ G_MODEL_SONOFF_T11 = "sonoff_t11"
 G_MODEL_SONOFF_T12 = "sonoff_t12"
 G_MODEL_SONOFF_T13 = "sonoff_t13"
 #
-
-G_BOOKMARK_MEDIA_POSITION = 0
-G_BOOKMARK_MEDIA_CONTENT_ID = ""
-
-#
 G_AIS_SECURE_ANDROID_ID_DOM = None
 
 #
@@ -86,21 +93,17 @@ def get_sercure_android_id_dom():
     return G_AIS_SECURE_ANDROID_ID_DOM
 
 
-def set_media_bookmark(media_content_id, position):
-    global G_BOOKMARK_MEDIA_POSITION
-    global G_BOOKMARK_MEDIA_CONTENT_ID
-    G_BOOKMARK_MEDIA_POSITION = position
-    G_BOOKMARK_MEDIA_CONTENT_ID = media_content_id
-
-
-def get_bookmark_position(media_content_id):
-    global G_BOOKMARK_MEDIA_POSITION
-    global G_BOOKMARK_MEDIA_CONTENT_ID
-    if G_BOOKMARK_MEDIA_CONTENT_ID != media_content_id:
-        # reset the bookmark
-        G_BOOKMARK_MEDIA_CONTENT_ID = ""
-        G_BOOKMARK_MEDIA_POSITION = 0
-    return G_BOOKMARK_MEDIA_POSITION
+def get_milliseconds_formated(millis):
+    try:
+        millis = int(millis)
+        seconds = (millis / 1000) % 60
+        seconds = int(seconds)
+        minutes = (millis / (1000 * 60)) % 60
+        minutes = int(minutes)
+        hours = (millis / (1000 * 60 * 60)) % 24
+        return "%d:%d:%d" % (hours, minutes, seconds)
+    except Exception:
+        return "%d:%d:%d" % (0, 0, 0)
 
 
 def set_my_ssid(ssid):

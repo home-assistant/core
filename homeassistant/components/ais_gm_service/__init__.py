@@ -240,22 +240,16 @@ class GMusicData:
         for ch in G_SELECTED_TRACKS:
             if ch["name"] == book_chapter:
                 _url = G_GM_MOBILE_CLIENT_API.get_stream_url(ch["id"])
-                _audio_info = {"IMAGE_URL": ch["image"], "NAME": ch["name"], "MEDIA_SOURCE": ais_global.G_AN_AUDIOBOOK}
+                _audio_info = {"IMAGE_URL": ch["image"], "NAME": ch["name"],
+                               "MEDIA_SOURCE": ais_global.G_AN_AUDIOBOOK, "media_content_id": _url}
                 _audio_info = json.dumps(_audio_info)
-
+                break
         if _url is not None:
             self.hass.services.call(
                 'media_player',
                 'play_media', {
                     "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                    "media_content_type": "audio/mp4",
-                    "media_content_id": _url
-                })
-            self.hass.services.call(
-                'media_player',
-                'play_media', {
-                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                    "media_content_type": "ais_info",
+                    "media_content_type": "ais_content_info",
                     "media_content_id": _audio_info
                 })
 

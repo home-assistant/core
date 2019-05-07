@@ -3,7 +3,6 @@ import asyncio
 import logging
 import uuid
 import json
-import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.helpers import intent
 from homeassistant.util.json import load_json, save_json
@@ -24,6 +23,8 @@ SERVICE_GET_BOOKMARKS = 'get_bookmarks'
 SERVICE_GET_FAVORITES = 'get_favorites'
 SERVICE_PLAY_BOOKMARK = 'play_bookmark'
 SERVICE_PLAY_FAVORITE = 'play_favorite'
+SERVICE_DELETE_BOOKMARK = 'delete_bookmark'
+SERVICE_DELETE_FAVORITE = 'delete_favorite'
 
 
 @asyncio.coroutine
@@ -57,9 +58,12 @@ def async_setup(hass, config):
             list_info[list_idx]["name"] = item['source'] + " " + item['name']
             list_info[list_idx]["thumbnail"] = img
             list_info[list_idx]["uri"] = item["media_content_id"]
-            list_info[list_idx]["mediasource"] = ais_global.G_AN_RADIO
+            list_info[list_idx]["mediasource"] = item['source']
             list_info[list_idx]["type"] = item['source']
             list_info[list_idx]["icon"] = 'mdi:bookmark-music'
+            list_info[list_idx]["icon_remove"] = 'mdi:delete-forever'
+            list_info[list_idx]["id"] = item['id']
+            list_info[list_idx]["media_position"] = ais_global.get_milliseconds_formated(item['media_position'])
             list_idx = list_idx + 1
         # create lists
         hass.states.async_set("sensor.aisbookmarkslist", -1, list_info)
@@ -80,10 +84,12 @@ def async_setup(hass, config):
             list_info[list_idx]["name"] = item['source'] + " " + item['name']
             list_info[list_idx]["thumbnail"] = img
             list_info[list_idx]["uri"] = item["media_content_id"]
-            list_info[list_idx]["mediasource"] = ais_global.G_AN_RADIO
+            list_info[list_idx]["mediasource"] = ais_global.G_AN_FAVORITE
             list_info[list_idx]["type"] = item['source']
             list_info[list_idx]["icon_type"] = ais_global.G_ICON_FOR_AUDIO.get(item['source'], 'mdi:play')
+            list_info[list_idx]["icon_remove"] = 'mdi:delete-forever'
             list_info[list_idx]["icon"] = 'mdi:play'
+            list_info[list_idx]["id"] = item['id']
             list_idx = list_idx + 1
         # create lists
         hass.states.async_set("sensor.aisfavoriteslist", -1, list_info)
@@ -97,26 +103,15 @@ def async_setup(hass, config):
         state = hass.states.get("sensor.aisbookmarkslist")
         attr = state.attributes
         track = attr.get(bookmark_id)
-
+        _audio_info = json.dumps({"IMAGE_URL": track["thumbnail"], "NAME": track['name'],
+                                  "MEDIA_SOURCE": track['type'],"media_content_id": track['uri']})
+        # set stream uri, image and title
         hass.async_add_job(
             hass.services.async_call(
                 'media_player',
                 'play_media', {
                     "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                    "media_content_type": "audio/mp4",
-                    "media_content_id": track['uri']
-                })
-        )
-        _audio_info = json.dumps(
-            {"IMAGE_URL": track["thumbnail"], "NAME": track['name'], "MEDIA_SOURCE": track['type']}
-        )
-        # set stream image and title
-        hass.async_add_job(
-            hass.services.async_call(
-                'media_player',
-                'play_media', {
-                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                    "media_content_type": "ais_info",
+                    "media_content_type": "ais_content_info",
                     "media_content_id": _audio_info
                 })
         )
@@ -130,28 +125,38 @@ def async_setup(hass, config):
         attr = state.attributes
         track = attr.get(favorite_id)
 
+        _audio_info = json.dumps({"IMAGE_URL": track["thumbnail"], "NAME": track['name'], "ais_list_id": favorite_id,
+                                  "MEDIA_SOURCE": ais_global.G_AN_FAVORITE, "media_content_id": track['uri']})
+        # set stream uri, image and title
         hass.async_add_job(
             hass.services.async_call(
                 'media_player',
                 'play_media', {
                     "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                    "media_content_type": "audio/mp4",
-                    "media_content_id": track['uri']
-                })
-            )
-        _audio_info = json.dumps(
-            {"IMAGE_URL": track["thumbnail"], "NAME": track['name'], "MEDIA_SOURCE": track['type']}
-        )
-        # set stream image and title
-        hass.async_add_job(
-            hass.services.async_call(
-                'media_player',
-                'play_media', {
-                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                    "media_content_type": "ais_info",
+                    "media_content_type": "ais_content_info",
                     "media_content_id": _audio_info
                 })
         )
+
+    @asyncio.coroutine
+    def delete_bookmark_service(call):
+        """Delete selected bookmark"""
+        bookmark_id = int(call.data.get("id"))
+        state = hass.states.get('sensor.aisbookmarkslist')
+        attr = state.attributes
+        track = attr.get(bookmark_id)
+        d = hass.data[DOMAIN]
+        d.async_remove_bookmark(track['id'], True)
+
+    @asyncio.coroutine
+    def delete_favorite_service(call):
+        """Delete selected favorite"""
+        favorite_id = int(call.data.get("id"))
+        state = hass.states.get('sensor.aisfavoriteslist')
+        attr = state.attributes
+        track = attr.get(favorite_id)
+        d = hass.data[DOMAIN]
+        d.async_remove_bookmark(track['id'], False)
 
     data = hass.data[DOMAIN] = BookmarksData(hass)
     intent.async_register(hass, AddFavoriteIntent())
@@ -163,6 +168,8 @@ def async_setup(hass, config):
     hass.services.async_register(DOMAIN, SERVICE_GET_FAVORITES, get_favorites_service)
     hass.services.async_register(DOMAIN, SERVICE_PLAY_BOOKMARK, play_bookmark_service)
     hass.services.async_register(DOMAIN, SERVICE_PLAY_FAVORITE, play_favorite_service)
+    hass.services.async_register(DOMAIN, SERVICE_DELETE_BOOKMARK, delete_bookmark_service)
+    hass.services.async_register(DOMAIN, SERVICE_DELETE_FAVORITE, delete_favorite_service)
 
     hass.components.conversation.async_register(INTENT_ADD_FAVORITE, [
         'Dodaj do ulubionych',
@@ -204,7 +211,7 @@ class BookmarksData:
             media_position = attributes.get("media_position", None)
             media_content_id = attributes.get("media_content_id")
         else:
-            state = self.hass.states.get('media_player.wbudowany_glosnik')
+            state = self.hass.states.get(ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID)
             attributes = state.attributes
             name = attributes.get("media_title")
             source = attributes.get("source")
@@ -220,11 +227,19 @@ class BookmarksData:
             return
 
         if bookmark:
+            # type validation
+            if source not in (ais_global.G_AN_SPOTIFY, ais_global.G_AN_MUSIC, ais_global.G_AN_LOCAL,
+                              ais_global.G_AN_PODCAST, ais_global.G_AN_RADIO):
+                source_pl = ais_global.G_ICON_FOR_AUDIO.get(source, '')
+                message = "Nie można dodać zakładki do".format(source_pl, name)
+                self.hass.async_add_job(self.hass.services.async_call('ais_ai_service', 'say_it', {"text": message}))
+                return
+
             # check if the audio is on bookmark list
             item = next((itm for itm in self.bookmarks if (itm['name'] == name and itm['source'] == source)), None)
             if item is not None:
                 # delete the old bookmark
-                self.async_remove_bookmark(item['id'])
+                self.async_remove_bookmark(item['id'], True)
             # add the bookmark
             item = {
                 'name': name,
@@ -235,12 +250,22 @@ class BookmarksData:
                 'media_stream_image': media_stream_image
             }
             self.bookmarks.append(item)
-            self.hass.async_add_job(self.save)
+            self.hass.async_add_job(self.save, True)
             return item
         else:
+            # type validation
+            if source == ais_global.G_AN_FAVORITE:
+                source_pl = ais_global.G_NAME_FOR_AUDIO.get(source, 'Pozycja')
+                message = "{}, {} jest już w ulubionych.".format(source_pl, name)
+                self.hass.async_add_job(self.hass.services.async_call('ais_ai_service', 'say_it', {"text": message}))
+                return
+            # if podcast then we will add not track but audition
+            if source == ais_global.G_AN_PODCAST:
+                media_content_id = ais_global.G_CURR_MEDIA_CONTENT["lookup_url"]
+                name = ais_global.G_CURR_MEDIA_CONTENT["lookup_name"]
+
             # check if the audio is on favorites list
             item = next((itm for itm in self.favorites if (itm['name'] == name and itm['source'] == source)), None)
-
             if item is not None:
                 message = '{}, {} jest już w ulubionych.'.format(source, name)
                 self.hass.async_add_job(self.hass.services.async_call('ais_ai_service', 'say_it', {"text": message}))
@@ -254,7 +279,7 @@ class BookmarksData:
                 'media_stream_image': media_stream_image
             }
             self.favorites.append(item)
-            self.hass.async_add_job(self.save)
+            self.hass.async_add_job(self.save, False)
             message = "Dobrze zapamiętam - dodaje {} {} do Twoich ulubionych".format(source, name)
             self.hass.async_add_job(self.hass.services.async_call('ais_ai_service', 'say_it', {"text": message}))
             return item
@@ -272,10 +297,15 @@ class BookmarksData:
         return item
 
     @callback
-    def async_remove_bookmark(self, item_id):
-        """Reemove completed bookmarks."""
-        self.bookmarks = [itm for itm in self.bookmarks if not itm['id'] == item_id]
-        self.hass.async_add_job(self.save)
+    def async_remove_bookmark(self, item_id, bookmark):
+        if bookmark:
+            """Reemove bookmark """
+            self.bookmarks = [itm for itm in self.bookmarks if not itm['id'] == item_id]
+            self.hass.async_add_job(self.save, True)
+        else:
+            """Reemove favorites """
+            self.favorites = [itm for itm in self.favorites if not itm['id'] == item_id]
+            self.hass.async_add_job(self.save, False)
 
 
     @asyncio.coroutine
@@ -290,15 +320,16 @@ class BookmarksData:
                 _LOGGER.error("Can't load bookmarks data: " + str(e))
         yield from self.hass.async_add_job(load)
 
-    def save(self):
+    def save(self, bookmark):
         """Save the bookmarks and favorites."""
-        self.bookmarks = self.bookmarks[-50:]
-        self.favorites = self.favorites[-50:]
-        save_json(self.hass.config.path(PERSISTENCE_BOOKMARKS), self.bookmarks)
-        save_json(self.hass.config.path(PERSISTENCE_FAVORITES), self.favorites)
-        # LV list
-        self.hass.async_add_job(self.hass.services.async_call(DOMAIN, SERVICE_GET_BOOKMARKS))
-        self.hass.async_add_job(self.hass.services.async_call(DOMAIN, SERVICE_GET_FAVORITES))
+        if bookmark:
+            self.bookmarks = self.bookmarks[-50:]
+            save_json(self.hass.config.path(PERSISTENCE_BOOKMARKS), self.bookmarks)
+            self.hass.async_add_job(self.hass.services.async_call(DOMAIN, SERVICE_GET_BOOKMARKS))
+        else:
+            self.favorites = self.favorites[-50:]
+            save_json(self.hass.config.path(PERSISTENCE_FAVORITES), self.favorites)
+            self.hass.async_add_job(self.hass.services.async_call(DOMAIN, SERVICE_GET_FAVORITES))
 
 
 class AddFavoriteIntent(intent.IntentHandler):
@@ -335,16 +366,14 @@ class ListTopBookmarkIntent(intent.IntentHandler):
         hass = intent_obj.hass
         bookmarks = intent_obj.hass.data[DOMAIN].bookmarks[-5:]
         response = intent_obj.create_response()
-
         if not bookmarks:
             answer = "Nie ma żadnych zakładek"
-
         else:
             answer = "Oto ostatnie {} zakładki na twojej liście: {}".format(
                         min(len(bookmarks), 5),
                         ', '.join(itm['name'] for itm in reversed(bookmarks)))
-
         response.async_set_speech(answer)
+        yield from hass.services.async_call('ais_ai_service', 'say_it', {"text": answer})
         return response
 
 
@@ -359,17 +388,12 @@ class PlayLastBookmarkIntent(intent.IntentHandler):
         hass = intent_obj.hass
         bookmarks = intent_obj.hass.data[DOMAIN].bookmarks[-1:]
         response = intent_obj.create_response()
-
         if not bookmarks:
             answer = "Nie ma żadnych zakładek"
-
         else:
             bookmark = bookmarks[0]["source"] + '; ' + bookmarks[0]["name"]
             answer = "Włączam ostatnią zakładkę {}".format(bookmark)
-            yield from hass.services.async_call(
-                'ais_bookmarks', 'play_bookmark', {"bookmark": bookmark})
+            yield from hass.services.async_call('ais_bookmarks', 'play_bookmark', {"bookmark": bookmark})
         response.async_set_speech(answer)
-        yield from hass.services.async_call(
-            'ais_ai_service', 'say_it', {"text": answer})
-
+        yield from hass.services.async_call('ais_ai_service', 'say_it', {"text": answer})
         return response

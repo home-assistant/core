@@ -401,27 +401,21 @@ class LocalData:
                            "MEDIA_SOURCE": ais_global.G_AN_LOCAL,
                            "ALBUM_NAME": os.path.basename(os.path.dirname(self.current_path)),
                            "IMAGE_URL": album_cover_path,
-                           "DURATION": file_length}
+                           "DURATION": file_length,
+                           "media_content_id": _url}
             _audio_info = json.dumps(_audio_info)
 
             if _url is not None:
+                # set url stream image and title
                 self.hass.services.call(
                     'media_player',
                     'play_media', {
                         "entity_id": "media_player.wbudowany_glosnik",
-                        "media_content_type": "audio/mp4",
-                        "media_content_id": _url
-                    })
-                # set stream image and title
-                self.hass.services.call(
-                    'media_player',
-                    'play_media', {
-                        "entity_id": "media_player.wbudowany_glosnik",
-                        "media_content_type": "ais_info",
+                        "media_content_type": "ais_content_info",
                         "media_content_id": _audio_info
                     })
                 # skipTo
-                position = ais_global.get_bookmark_position(_url)
+                position = 1
                 if position != 0:
                     self.hass.services.call(
                         'media_player',
@@ -649,26 +643,18 @@ class LocalData:
                 self.say("Nie udało się otworzyć pliku ")
 
     def rclone_play_the_stream(self):
-        self.hass.services.call(
-            'media_player',
-            'play_media', {
-                "entity_id": "media_player.wbudowany_glosnik",
-                "media_content_type": "audio/mp4",
-                "media_content_id": self.rclone_url_to_stream
-            })
         _audio_info = {"NAME": os.path.basename(self.rclone_url_to_stream),
                        "MEDIA_SOURCE": ais_global.G_AN_LOCAL,
-                       "ALBUM_NAME": os.path.basename(os.path.dirname(self.current_path))}
+                       "ALBUM_NAME": os.path.basename(os.path.dirname(self.current_path)),
+                       "media_content_id": self.rclone_url_to_stream}
         _audio_info = json.dumps(_audio_info)
         # to set the stream image and title
-        self.hass.services.call(
-            'media_player',
-            'play_media', {
+        self.hass.services.call('media_player', 'play_media', {
                 "entity_id": "media_player.wbudowany_glosnik",
-                "media_content_type": "ais_info",
+                "media_content_type": "ais_content_info",
                 "media_content_id": _audio_info
             })
-        position = ais_global.get_bookmark_position(self.rclone_url_to_stream)
+        position = 1
         if position != 0:
             self.hass.services.call(
                 'media_player',
@@ -738,7 +724,8 @@ class LocalData:
                 break
         if is_dir is None:
             # check if this is file selected from bookmarks
-            bookmark = ais_global.G_BOOKMARK_MEDIA_CONTENT_ID.replace(G_RCLONE_URL_TO_STREAM, "")
+            # bookmark = ais_global.G_BOOKMARK_MEDIA_CONTENT_ID.replace(G_RCLONE_URL_TO_STREAM, "")
+            bookmark = ""
             if bookmark != "" and path.endswith(bookmark):
                 is_dir = False
                 mime_type = 'audio/'

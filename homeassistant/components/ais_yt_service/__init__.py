@@ -161,13 +161,16 @@ class YouTubeData:
             _LOGGER.error("extract_media error: " + str(e))
 
         if media_url is not None and len(media_url) > 0:
-            # play media extracted in the cloud
+            # set stream url, image and title
+            _audio_info = json.dumps(
+                {"IMAGE_URL": track["thumbnail"], "NAME": track["title"],
+                 "MEDIA_SOURCE": ais_global.G_AN_MUSIC, "media_content_id": media_url})
             self.hass.services.call(
                 'media_player',
                 'play_media', {
                     "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                    "media_content_type": "audio/mp4",
-                    "media_content_id": media_url
+                    "media_content_type": "ais_content_info",
+                    "media_content_id": _audio_info
                 })
         else:
             # use media_extractor to extract locally
@@ -178,9 +181,10 @@ class YouTubeData:
                     "media_content_id": url + track["uri"],
                     "media_content_type": "video/youtube"})
 
-        # set stream image and title
-        _audio_info = json.dumps(
-            {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": ais_global.G_AN_MUSIC})
-        self.hass.services.call('media_player', 'play_media', {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                                                                "media_content_type": "ais_info",
-                                                                "media_content_id": _audio_info})
+            # set stream image and title
+            _audio_info = json.dumps(
+                {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": ais_global.G_AN_MUSIC})
+            self.hass.services.call('media_player', 'play_media',
+                                    {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+                                     "media_content_type": "ais_info",
+                                     "media_content_id": _audio_info})

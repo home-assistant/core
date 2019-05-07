@@ -96,7 +96,8 @@ class ExoPlayerDevice(MediaPlayerDevice):
                            ais_global.G_AN_AUDIOBOOK,
                            ais_global.G_AN_NEWS,
                            ais_global.G_AN_LOCAL,
-                           ais_global.G_AN_SPOTIFY]
+                           ais_global.G_AN_SPOTIFY,
+                           ais_global.G_AN_FAVORITE]
         self._currentplaylist = None
         self._media_status_received_time = None
         self._media_position = 0
@@ -427,17 +428,22 @@ class ExoPlayerDevice(MediaPlayerDevice):
         else:
             self.hass.services.call('ais_cloud', 'play_prev', {"audio_type": self._media_source})
 
-        # name = 'Odtwarzam poprzedni: ' + name
-        # self.hass.services.call('ais_ai_service', 'say_it', {"text": name})
-
     def play_media(self, media_type, media_content_id, **kwargs):
         """Send the media player the command for playing a media."""
-        if media_type == 'ais_info':
-            # set image and name
+        if media_type == 'ais_content_info':
             j_info = json.loads(media_content_id)
+            # set image and name and id on list to be able to set correct bookmark and favorites
             ais_global.G_CURR_MEDIA_CONTENT = j_info
+            # play
+            self._media_content_id = j_info["media_content_id"]
+            self._media_position = 0
+            self._media_status_received_time = dt_util.utcnow()
+            # TODO one call to frame
+            self.hass.services.call('ais_ai_service', 'publish_command_to_frame', {
+                    "key": 'playAudio', "val": media_content_id, "ip": self._device_ip})
+
             if "IMAGE_URL" not in j_info:
-                self._stream_image = "http://localhost:8180/static/icons/tile-win-310x150.png"
+                self._stream_image = "/static/icons/tile-win-310x150.png"
             else:
                 self._stream_image = j_info["IMAGE_URL"]
             self._media_title = j_info["NAME"]
@@ -455,17 +461,61 @@ class ExoPlayerDevice(MediaPlayerDevice):
                                 "media_source": self._media_source,
                                 "media_stream_image": self._stream_image,
                                 "media_album_name": self._album_name}
-                self.hass.services.call(
-                    'ais_ai_service',
-                    'publish_command_to_frame', {
-                        "key": 'setAudioInfo',
-                        "val": j_media_info,
-                        "ip": self._device_ip
-                    }
-                )
+                self.hass.services.call('ais_ai_service', 'publish_command_to_frame', {
+                        "key": 'setAudioInfo', "val": j_media_info, "ip": self._device_ip})
             except Exception as e:
                 _LOGGER.info("problem to publish setAudioInfo: " + str(e))
+
+            # go to media player context on localhost
+            if self._device_ip == 'localhost':
+                # refresh state
+                self._playing = True
+                self._status = 3
+                old_state = self.hass.states.get('media_player.wbudowany_glosnik')
+                self.hass.states.set('media_player.wbudowany_glosnik', STATE_PLAYING,
+                                     old_state.attributes, force_update=True)
+                self.hass.services.call('ais_ai_service', 'process_command_from_frame',
+                                        {"topic": 'ais/go_to_player', "payload": ""})
+
+        elif media_type == 'ais_info':
+            j_info = json.loads(media_content_id)
+            ais_global.G_CURR_MEDIA_CONTENT = j_info
+            if "IMAGE_URL" not in j_info:
+                self._stream_image = "/static/icons/tile-win-310x150.png"
+            else:
+                self._stream_image = j_info["IMAGE_URL"]
+            self._media_title = j_info["NAME"]
+            self._media_source = j_info["MEDIA_SOURCE"]
+            self._currentplaylist = j_info["MEDIA_SOURCE"]
+            if "ALBUM_NAME" in j_info:
+                self._album_name = j_info["ALBUM_NAME"]
+            else:
+                self._album_name = None
+            if "DURATION" in j_info:
+                self._duration = j_info["DURATION"]
+
+            try:
+                j_media_info = {"media_title": self._media_title,
+                                "media_source": self._media_source,
+                                "media_stream_image": self._stream_image,
+                                "media_album_name": self._album_name}
+                self.hass.services.call('ais_ai_service', 'publish_command_to_frame', {
+                    "key": 'setAudioInfo', "val": j_media_info, "ip": self._device_ip})
+            except Exception as e:
+                _LOGGER.info("problem to publish setAudioInfo: " + str(e))
+
+            # go to media player context on localhost
+            if self._device_ip == 'localhost':
+                # refresh state
+                self._playing = True
+                self._status = 3
+                old_state = self.hass.states.get('media_player.wbudowany_glosnik')
+                self.hass.states.set('media_player.wbudowany_glosnik', STATE_PLAYING,
+                                     old_state.attributes, force_update=True)
+                self.hass.services.call('ais_ai_service', 'process_command_from_frame',
+                                        {"topic": 'ais/go_to_player', "payload": ""})
         else:
+            # play only - old way - TODO delete this part soon...
             self._media_content_id = media_content_id
             self._media_position = 0
             self._media_status_received_time = dt_util.utcnow()
@@ -478,18 +528,4 @@ class ExoPlayerDevice(MediaPlayerDevice):
                     }
                 )
 
-            # go to media player context on localhost
-            if self._device_ip == 'localhost':
-                # refresh state
-                self._playing = True
-                self._status = 3
-                old_state = self.hass.states.get('media_player.wbudowany_glosnik')
-                self.hass.states.set(
-                    'media_player.wbudowany_glosnik', STATE_PLAYING, old_state.attributes, force_update=True)
-                self.hass.services.call(
-                    'ais_ai_service',
-                    'process_command_from_frame', {
-                        "topic": 'ais/go_to_player',
-                        "payload": ""
-                    }
-                )
+
