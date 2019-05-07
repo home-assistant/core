@@ -40,7 +40,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entities = []
             sensors = get_device_sensors(device_id)
 
-            for sensor_type, value in sensors.items():
+            for sensor_type in sensors.items():
                 entities.append(PlaatoSensor(device_id, sensor_type))
 
             devices[device_id] = entities
@@ -122,8 +122,8 @@ class PlaatoSensor(Entity):
             return 'bpm'
         elif self._type == ATTR_ABV:
             return '%'
-
-        return ''
+        else:
+            return ''
 
     async def async_update(self):
         """Fetch new state data for the sensor."""
