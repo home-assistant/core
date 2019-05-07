@@ -95,6 +95,3 @@ class IncomfortWaterHeater(WaterHeaterDevice):
         except (AssertionError, asyncio.TimeoutError) as err:
             _LOGGER.warning("Update for %s failed, message: %s",
                             self._name, err)
-
-        # inform the child devices that updated state data is available
-        async_dispatcher_send(self.hass, DOMAIN, {'signal': 'refresh'})
