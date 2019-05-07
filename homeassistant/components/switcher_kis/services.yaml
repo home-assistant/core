@@ -1,6 +1,9 @@
 set_auto_off:
   description: 'Update Switcher device auto off setting.'
   fields:
+    entity_id:
+      description: "Name of the entity id associated with the integration, used for permission validation."
+      example: "switch.switcher_kis_boiler"
     auto_off:
       description: 'Time period string containing hours and minutes.'
       example: '"02:30"'
@@ -8,6 +11,9 @@ set_auto_off:
 update_device_name:
   description: 'Update Switcher device name setting.'
   fields:
+    entity_id:
+      description: "Name of the entity id associated with the integration, used for permission validation."
+      example: "switch.switcher_kis_boiler"
     name:
       description: 'Any string with the minimum length of 2 and the maximum length of 32.'
       example: '"My Switcher Device"'

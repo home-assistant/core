@@ -7,16 +7,20 @@ from typing import Dict, Optional
 
 import voluptuous as vol
 
+from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (CONF_ENTITY_ID, CONF_NAME,
+                                 EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
+from homeassistant.exceptions import Unauthorized, UnknownUser
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import (async_listen_platform,
                                              async_load_platform)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import (EventType, HomeAssistantType,
-                                          ServiceCallType)
+from homeassistant.helpers.typing import (ContextType, EventType,
+                                          HomeAssistantType, ServiceCallType)
+from homeassistant.loader import bind_hass
 
 _LOGGER = getLogger(__name__)
 
@@ -45,14 +49,33 @@ CONFIG_SCHEMA = vol.Schema({
 
 SERVICE_SET_AUTO_OFF_NAME = 'set_auto_off'
 SERVICE_SET_AUTO_OFF_SCHEMA = vol.Schema({
+    vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Required(CONF_AUTO_OFF): cv.time_period_str
 })
 
 SERVICE_UPDATE_DEVICE_NAME_NAME = 'update_device_name'
 SERVICE_UPDATE_DEVICE_NAME_SCHEMA = vol.Schema({
+    vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Required(CONF_NAME): vol.All(
         cv.string, vol.Length(min=2, max=32))
 })
+
+
+@bind_hass
+async def _validate_control_permission(
+        hass: HomeAssistantType, context: ContextType,
+        entity_id: str) -> None:
+    """Use for validating user control permissions."""
+    user = await hass.auth.async_get_user(context.user_id)
+    if user is None:
+        raise UnknownUser(
+            context=context, entity_id=entity_id,
+            permission=(POLICY_CONTROL, ))
+
+    if not user.permissions.check_entity(entity_id, POLICY_CONTROL):
+        raise Unauthorized(
+            context=context, entity_id=entity_id,
+            permission=(POLICY_CONTROL, ))
 
 
 async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
@@ -94,6 +117,10 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
         async def async_set_auto_off_service(service: ServiceCallType) -> None:
             """Use for handling setting device auto-off service calls."""
             from aioswitcher.api import SwitcherV2Api
+
+            await _validate_control_permission(
+                hass, service.context, service.data[CONF_ENTITY_ID])
+
             async with SwitcherV2Api(hass.loop, device_data.ip_addr, phone_id,
                                      device_id, device_password) as swapi:
                 await swapi.set_auto_shutdown(service.data[CONF_AUTO_OFF])
@@ -106,6 +133,10 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
         async def async_update_name_service(service: ServiceCallType) -> None:
             """Use for handling update device name service calls."""
             from aioswitcher.api import SwitcherV2Api
+
+            await _validate_control_permission(
+                hass, service.context, service.data[CONF_ENTITY_ID])
+
             async with SwitcherV2Api(hass.loop, device_data.ip_addr, phone_id,
                                      device_id, device_password) as swapi:
                 await swapi.set_device_name(service.data[CONF_NAME])
