@@ -8,7 +8,7 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.const import CONF_ID, CONF_NAME
+from homeassistant.const import CONF_NAME
 
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -29,22 +29,22 @@ DIM_RANGE = vol.All(vol.Coerce(int), vol.Range(min=120, max=700))
 
 PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend({
-        vol.Optional(CONF_DIMENSION): DIM_RANGE,
-        vol.Optional(CONF_DELTA): vol.All(vol.Coerce(float),
-                                          vol.Range(min=0)),
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_DIMENSION, default=512): DIM_RANGE,
+        vol.Optional(CONF_DELTA, default=600.0): vol.All(vol.Coerce(float),
+                                                         vol.Range(min=0)),
+        vol.Optional(CONF_NAME, default="Buienradar loop"): cv.string,
     }))
 
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up buienradar radar-loop camera component."""
-    c_id = config.get(CONF_ID)
-    dimension = config.get(CONF_DIMENSION) or 512
-    delta = config.get(CONF_DELTA) or 600.0
-    name = config.get(CONF_NAME) or "Buienradar loop"
+    dimension = config.get(CONF_DIMENSION)
+    delta = config.get(CONF_DELTA)
+    name = config.get(CONF_NAME)
 
-    async_add_entities([BuienradarCam(hass, name, c_id, dimension, delta)])
+    async_add_entities([BuienradarCam(name, dimension, delta,
+                                      loop=hass.loop)])
 
 
 class BuienradarCam(Camera):
@@ -60,7 +60,13 @@ class BuienradarCam(Camera):
     """ Deadline for image refresh """
     _deadline = None        # type: Optional[datetime]
     _name = ""              # type: str
-    _delta = 0.0         # type: float
+    _delta = 600.0          # type: float
+    """
+    Ensures that only one reader can cause an http request at the same time,
+    and that all readers return after this request completes.
+
+    invariant: this condition is private to and owned by this instance.
+    """
     _condition = None       # type: Optional[asyncio.Condition]
     """ Loading status """
     _loading = False        # type: bool
@@ -69,17 +75,22 @@ class BuienradarCam(Camera):
     """ last modified HTTP response header"""
     _last_modified = None   # type: Optional[str]
 
-    def __init__(self, hass, name: str, c_id: Optional[str], dimension: int,
-                 delta: float):
-        """Initialize the component."""
+    def __init__(self, name: str, dimension: int, delta: float,
+                 loop: Optional[asyncio.AbstractEventLoop] = None):
+        """
+        Initialize the component.
+
+        This constructor must be run in the event loop _or_ be provided with
+        an applicable event loop as argument.
+        """
         super().__init__()
-        self._hass = hass
+
         self._name = name
 
         self._dimension = dimension
         self._delta = delta
 
-        self._condition = asyncio.Condition(loop=hass.loop)
+        self._condition = asyncio.Condition(loop=loop)
 
         self._last_image = None
         self._last_modified = None
@@ -100,7 +111,7 @@ class BuienradarCam(Camera):
 
     async def __retrieve_radar_image(self) -> bool:
         """Retrieve new radar image and return whether this succeeded."""
-        session = async_get_clientsession(self._hass)
+        session = async_get_clientsession(self.hass)
 
         url = RADAR_MAP_URL_TEMPLATE.format(w=self._dimension,
                                             h=self._dimension)
