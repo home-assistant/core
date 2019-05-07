@@ -602,7 +602,7 @@ iglo==1.2.7
 ihcsdk==2.3.0
 
 # homeassistant.components.incomfort
-incomfort-client==0.2.6
+incomfort-client==0.2.7
 
 # homeassistant.components.influxdb
 influxdb==5.2.0
