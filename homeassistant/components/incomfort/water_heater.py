@@ -9,10 +9,10 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-INCOMFORT_SUPPORT_FLAGS = 0
+HEATER_SUPPORT_FLAGS = 0
 
-INCOMFORT_MAX_TEMP = 80.0
-INCOMFORT_MIN_TEMP = 30.0
+HEATER_MAX_TEMP = 80.0
+HEATER_MIN_TEMP = 30.0
 
 HEATER_NAME = 'Boiler'
 HEATER_ATTRS = [
@@ -60,12 +60,12 @@ class IncomfortWaterHeater(WaterHeaterDevice):
     @property
     def min_temp(self):
         """Return max valid temperature that can be set."""
-        return INCOMFORT_MIN_TEMP
+        return HEATER_MIN_TEMP
 
     @property
     def max_temp(self):
         """Return max valid temperature that can be set."""
-        return INCOMFORT_MAX_TEMP
+        return HEATER_MAX_TEMP
 
     @property
     def temperature_unit(self):
@@ -75,7 +75,7 @@ class IncomfortWaterHeater(WaterHeaterDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return INCOMFORT_SUPPORT_FLAGS
+        return HEATER_SUPPORT_FLAGS
 
     @property
     def current_operation(self):
