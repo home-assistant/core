@@ -10,6 +10,8 @@ from uvcclient import nvr
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import setup_component
 from homeassistant.components.uvc import camera as uvc
+from homeassistant.components.camera import (
+    SUPPORT_STREAM)
 from tests.common import get_test_home_assistant
 import pytest
 
