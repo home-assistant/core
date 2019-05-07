@@ -15,6 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import Throttle
 
+from . import services
 from .config_flow import format_title
 from .const import (
     COMMAND_RETRY_ATTEMPTS, COMMAND_RETRY_DELAY, DATA_CONTROLLER_MANAGER,
@@ -81,8 +82,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         if controller.is_signed_in:
             favorites = await controller.get_favorites()
         else:
-            _LOGGER.warning("%s is not logged in to your HEOS account and will"
-                            " be unable to retrieve your favorites", host)
+            _LOGGER.warning(
+                "%s is not logged in to a HEOS account and will be unable "
+                "to retrieve HEOS favorites: Use the 'heos.sign_in' service "
+                "to sign-in to a HEOS account", host)
         inputs = await controller.get_input_sources()
     except (asyncio.TimeoutError, ConnectionError, CommandError) as error:
         await controller.disconnect()
@@ -101,6 +104,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         DATA_SOURCE_MANAGER: source_manager,
         MEDIA_PLAYER_DOMAIN: players
     }
+
+    services.register(hass, controller)
+
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(
         entry, MEDIA_PLAYER_DOMAIN))
     return True
@@ -111,6 +117,9 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     controller_manager = hass.data[DOMAIN][DATA_CONTROLLER_MANAGER]
     await controller_manager.disconnect()
     hass.data.pop(DOMAIN)
+
+    services.remove(hass)
+
     return await hass.config_entries.async_forward_entry_unload(
         entry, MEDIA_PLAYER_DOMAIN)
 
