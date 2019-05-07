@@ -91,4 +91,4 @@ class IncomfortWaterHeater(WaterHeaterDevice):
             await self._heater.update()
 
         except (AssertionError, asyncio.TimeoutError) as err:
-            _LOGGER.warning("Update for failed, message: %s", err)
+            _LOGGER.warning("Update failed, message: %s", err)
