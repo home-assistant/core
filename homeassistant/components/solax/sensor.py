@@ -73,7 +73,7 @@ class RealTimeDataEndpoint:
         for sensor in self.sensors:
             if sensor.key in self.data:
                 sensor.value = self.data[sensor.key]
-            sensor.async_schedule_update_ha_state()
+                sensor.async_schedule_update_ha_state()
 
 
 class Inverter(Entity):
