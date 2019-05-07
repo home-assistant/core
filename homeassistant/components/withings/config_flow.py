@@ -21,12 +21,12 @@ _LOGGER = logging.getLogger(__name__)
 
 def auth_callback_path(profile: str) -> str:
     """Create an auth callback path."""
-    return '%s/%s' % (const.AUTH_CALLBACK_PATH, slugify(profile))
+    return '{}/{}'.format(const.AUTH_CALLBACK_PATH, slugify(profile))
 
 
 def auth_callback_name(profile: str) -> str:
     """Create an auth callback name."""
-    return '%s:%s' % (const.AUTH_CALLBACK_NAME, slugify(profile))
+    return '{}:{}'.format(const.AUTH_CALLBACK_NAME, slugify(profile))
 
 
 @callback

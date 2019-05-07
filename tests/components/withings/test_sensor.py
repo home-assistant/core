@@ -15,14 +15,14 @@ from .conftest import WithingsFactory, WithingsFactoryConfig
 
 def get_entity_id(measure, profile):
     """Get an entity id for a measure and profile."""
-    return 'sensor.%s_%s_%s' % (
+    return 'sensor.{}_{}_{}'.format(
         DOMAIN,
         measure,
         slugify(profile)
     )
 
 
-async def assert_state_equals(
+def assert_state_equals(
         hass: HomeAssistantType,
         profile: str,
         measure: str,
@@ -33,12 +33,12 @@ async def assert_state_equals(
     state_obj = hass.states.get(entity_id)
 
     assert state_obj, \
-        "Expected entity %s to exist but it did not" % (
+        "Expected entity {} to exist but it did not".format(
             entity_id
         )
 
     assert state_obj.state == str(expected), \
-        "Expected %s but was %s for measure %s" % (
+        "Expected {} but was {} for measure {}".format(
             expected,
             state_obj.state,
             measure
@@ -89,19 +89,19 @@ async def test_health_sensor_temperature_fahrenheit(
     profile = WithingsFactoryConfig.PROFILE_1
     await data.configure_all(profile, 'authorization_code')
 
-    await assert_state_equals(
+    assert_state_equals(
         data.hass,
         profile,
         const.MEAS_TEMP_AUTO,
         104
     )
-    await assert_state_equals(
+    assert_state_equals(
         data.hass,
         profile,
         const.MEAS_BODY_TEMP_AUTO,
         95
     )
-    await assert_state_equals(
+    assert_state_equals(
         data.hass,
         profile,
         const.MEAS_SKIN_TEMP_AUTO,
@@ -172,7 +172,7 @@ async def test_health_sensor_throttled(
     await data.configure_all(profile, 'authorization_code')
 
     # Checking initial data.
-    await assert_state_equals(
+    assert_state_equals(
         data.hass,
         profile,
         measure,
@@ -188,7 +188,7 @@ async def test_health_sensor_throttled(
         )
     )
 
-    await assert_state_equals(
+    assert_state_equals(
         data.hass,
         profile,
         measure,
@@ -240,7 +240,7 @@ async def test_sleep_state_throttled(
     await data.configure_all(profile, 'authorization_code')
 
     # Check initial data.
-    await assert_state_equals(
+    assert_state_equals(
         data.hass,
         profile,
         measure,
@@ -256,7 +256,7 @@ async def test_sleep_state_throttled(
         )
     )
 
-    await assert_state_equals(
+    assert_state_equals(
         data.hass,
         profile,
         measure,

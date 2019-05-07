@@ -404,13 +404,15 @@ class WithingsHealthSensor(Entity):
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return 'Withings %s %s' % (self._attribute.measurement, self._slug)
+        return 'Withings {} {}'.format(self._attribute.measurement, self._slug)
 
     @property
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
-        return 'withings_%s_%s_%s' % (
-            self._slug, self._user_id, slugify(self._attribute.measurement)
+        return 'withings_{}_{}_{}'.format(
+            self._slug,
+            self._user_id,
+            slugify(self._attribute.measurement)
         )
 
     @property
@@ -462,9 +464,9 @@ class WithingsHealthSensor(Entity):
         if data is None:
             _LOGGER.error(
                 "Provided data is None. Setting state to %s",
-                const.STATE_UNKNOWN
+                None
             )
-            self._state = const.STATE_UNKNOWN
+            self._state = None
             return
 
         measurement = self._attribute.measurement
@@ -483,9 +485,9 @@ class WithingsHealthSensor(Entity):
         if not measure_groups:
             _LOGGER.warning(
                 "No measure groups found, setting state to %s",
-                const.STATE_UNKNOWN
+                None
             )
-            self._state = const.STATE_UNKNOWN
+            self._state = None
             return
 
         _LOGGER.debug(
@@ -538,9 +540,9 @@ class WithingsHealthSensor(Entity):
             feet_raw = value * 3.281
             feet = int(feet_raw)
             inches_ratio = feet_raw - feet
-            inches = round(inches_ratio * 12, 1)
+            inches = int(round(inches_ratio * 12, 1))
 
-            state = "%d' %d\"" % (feet, inches)
+            state = "{}' {}\"".format(feet, inches)
 
         elif unit_of_measurement is const.UOM_METERS_PER_SECOND:
             state = round(value, 0)
@@ -556,15 +558,15 @@ class WithingsHealthSensor(Entity):
         if data is None:
             _LOGGER.error(
                 "Provided data is None. Setting state to %s",
-                const.STATE_UNKNOWN
+                None
             )
-            self._state = const.STATE_UNKNOWN
+            self._state = None
             return
 
         if not data.series:
             _LOGGER.warning(
                 "No sleep data, setting state to %s",
-                const.STATE_UNKNOWN
+                None
             )
             self._state = None
             return
@@ -583,7 +585,7 @@ class WithingsHealthSensor(Entity):
         elif serie.state == const.MEASURE_TYPE_SLEEP_STATE_REM:
             state = const.STATE_REM
         else:
-            state = const.STATE_UNKNOWN
+            state = None
 
         _LOGGER.debug("Setting state: %s", state)
         self._state = state
@@ -593,17 +595,17 @@ class WithingsHealthSensor(Entity):
         if data is None:
             _LOGGER.error(
                 "Provided data is None. Setting state to %s",
-                const.STATE_UNKNOWN
+                None
             )
-            self._state = const.STATE_UNKNOWN
+            self._state = None
             return
 
         if not data.series:
             _LOGGER.warning(
                 "Sleep data has no series, setting state to %s",
-                const.STATE_UNKNOWN
+                None
             )
-            self._state = const.STATE_UNKNOWN
+            self._state = None
             return
 
         measurement = self._attribute.measurement

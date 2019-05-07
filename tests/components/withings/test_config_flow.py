@@ -159,11 +159,15 @@ async def test_flow_handler_async_step_profile(
     result = await flow_handler.async_step_user({
         const.PROFILE: 'Person 1',
     })
+    assert result
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'auth'
-    assert result['description_placeholders']
-    assert result['description_placeholders']['authorization_url'].startswith('https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=my_client_id&redirect_uri=http%3A%2F%2Flocalhost%2Fapi%2Fwithings%2Fcallback%2Fperson_1&scope=user.info%2Cuser.metrics%2Cuser.activity&state=')  # pylint: disable=line-too-long  # noqa: E501
-    assert result['description_placeholders']['profile'] == 'Person 1'  # pylint: disable=line-too-long  # noqa: E501
+    placeholders = result['description_placeholders']
+    assert placeholders
+    assert placeholders['authorization_url'].startswith(
+        'https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=my_client_id&redirect_uri=http%3A%2F%2Flocalhost%2Fapi%2Fwithings%2Fcallback%2Fperson_1&scope=user.info%2Cuser.metrics%2Cuser.activity&state='  # pylint: disable=line-too-long  # noqa: E501
+    )
+    assert placeholders['profile'] == 'Person 1'
     assert result['errors'] == {
         'base': 'follow_link',
     }

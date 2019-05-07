@@ -114,8 +114,8 @@ def nokia_sleep_response(states):
     data = []
     for state in states:
         data.append(new_sleep_data_serie(
-            '2019-02-01 0%s:00:00' % len(data),
-            '2019-02-01 0%s:00:00' % (len(data) + 1),
+            '2019-02-01 0{}:00:00'.format(str(len(data))),
+            '2019-02-01 0{}:00:00'.format(str(len(data) + 1)),
             state
         ))
 
