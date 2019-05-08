@@ -18,7 +18,7 @@ from .accessories import HomeAccessory, debounce
 from .const import (
     CHAR_CURRENT_DOOR_STATE, CHAR_CURRENT_POSITION, CHAR_POSITION_STATE,
     CHAR_TARGET_DOOR_STATE, CHAR_TARGET_POSITION, SERV_GARAGE_DOOR_OPENER,
-    CHAR_CURRENT_TILT_POSITION, CHAR_TARGET_TILT_POSITION, 
+    CHAR_CURRENT_TILT_POSITION, CHAR_TARGET_TILT_POSITION,
     SERV_WINDOW_COVERING)
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,6 +68,7 @@ class GarageDoorOpener(HomeAccessory):
                 self.char_target_state.set_value(current_state)
             self._flag_state = False
 
+
 @TYPES.register('WindowCovering')
 class WindowCovering(HomeAccessory):
     """Generate a Window accessory for a cover entity.
@@ -106,7 +107,7 @@ class WindowCovering(HomeAccessory):
             self.char_current_tilt_position = serv_cover.configure_char(
                 CHAR_CURRENT_TILT_POSITION, value=0)
             self.char_target_tilt_position = serv_cover.configure_char(
-                CHAR_TARGET_TILT_POSITION, value=0, 
+                CHAR_TARGET_TILT_POSITION, value=0,
                 setter_callback=self.move_tilt)
 
     @debounce
@@ -142,8 +143,8 @@ class WindowCovering(HomeAccessory):
             params = {ATTR_ENTITY_ID: self.entity_id}
         else:
             service = SERVICE_SET_COVER_TILT_POSITION
-            params = {ATTR_ENTITY_ID: self.entity_id, 
-                     ATTR_TILT_POSITION: angle}
+            params =  \
+                {ATTR_ENTITY_ID: self.entity_id, ATTR_TILT_POSITION: angle}
 
         self.call_service(DOMAIN, service, params, angle)
 
@@ -169,6 +170,7 @@ class WindowCovering(HomeAccessory):
                 self.char_target_tilt_position \
                     .set_value(current_tilt_position)
                 self._homekit_target = None
+
 
 @TYPES.register('WindowCoveringBasic')
 class WindowCoveringBasic(HomeAccessory):
