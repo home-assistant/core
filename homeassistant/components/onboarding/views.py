@@ -3,17 +3,19 @@ import asyncio
 
 import voluptuous as vol
 
+from homeassistant.exceptions import Unauthorized
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import callback
 
-from .const import DOMAIN, STEP_USER, STEPS, DEFAULT_AREAS
+from .const import DOMAIN, STEP_USER, STEPS, DEFAULT_AREAS, STEP_INTEGRATION
 
 
 async def async_setup(hass, data, store):
     """Set up the onboarding view."""
     hass.http.register_view(OnboardingView(data, store))
     hass.http.register_view(UserOnboardingView(data, store))
+    hass.http.register_view(IntegrationOnboardingView(data, store))
 
 
 class OnboardingView(HomeAssistantView):
@@ -59,7 +61,8 @@ class _BaseOnboardingView(HomeAssistantView):
         self._data['done'].append(self.step)
         await self._store.async_save(self._data)
 
-        hass.data[DOMAIN] = len(self._data) == len(STEPS)
+        if set(self._data['done']) == set(STEPS):
+            hass.data[DOMAIN] = True
 
 
 class UserOnboardingView(_BaseOnboardingView):
@@ -116,18 +119,43 @@ class UserOnboardingView(_BaseOnboardingView):
 
             await self._async_mark_done(hass)
 
-            # Return two authorization code for fetching tokens.
-            # One token to connect during onboarding.
-            # Second token to redirect when onboarding done.
+            # Return authorization code for fetching tokens and connect
+            # during onboarding.
             auth_code = hass.components.auth.create_auth_code(
-                data['client_id'], user
-            )
-            auth_code_2 = hass.components.auth.create_auth_code(
                 data['client_id'], user
             )
             return self.json({
                 'auth_code': auth_code,
-                'auth_code_2': auth_code_2
+            })
+
+
+class IntegrationOnboardingView(_BaseOnboardingView):
+    """View to finish integration onboarding step."""
+
+    url = '/api/onboarding/integration'
+    name = 'api:onboarding:integration'
+    step = STEP_INTEGRATION
+
+    @RequestDataValidator(vol.Schema({
+        vol.Required('client_id'): str,
+    }))
+    async def post(self, request, data):
+        """Handle user creation, area creation."""
+        hass = request.app['hass']
+        user = request['hass_user']
+
+        async with self._lock:
+            if self._async_is_done():
+                return self.json_message('Integration step already done', 403)
+
+            await self._async_mark_done(hass)
+
+            # Return authorization code so we can redirect user and log them in
+            auth_code = hass.components.auth.create_auth_code(
+                data['client_id'], user
+            )
+            return self.json({
+                'auth_code': auth_code,
             })
 
 

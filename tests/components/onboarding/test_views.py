@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.setup import async_setup_component
 from homeassistant.components import onboarding
-from homeassistant.components.onboarding import views
+from homeassistant.components.onboarding import const, views
 
 from tests.common import CLIENT_ID, register_auth_provider
 
@@ -115,21 +115,7 @@ async def test_onboarding_user(hass, hass_storage, aiohttp_client):
         is not None
     )
 
-    # Validate refresh token 2
-    resp = await client.post('/auth/token', data={
-        'client_id': CLIENT_ID,
-        'grant_type': 'authorization_code',
-        'code': data['auth_code_2']
-    })
-
-    assert resp.status == 200
-    tokens = await resp.json()
-
-    assert (
-        await hass.auth.async_validate_access_token(tokens['access_token'])
-        is not None
-    )
-
+    # Validate created areas
     area_registry = await hass.helpers.area_registry.async_get_registry()
     assert len(area_registry.areas) == 3
     assert sorted([area.name for area
@@ -142,7 +128,7 @@ async def test_onboarding_user_invalid_name(hass, hass_storage,
                                             aiohttp_client):
     """Test not providing name."""
     mock_storage(hass_storage, {
-        'done': ['hello']
+        'done': []
     })
 
     assert await async_setup_component(hass, 'onboarding', {})
@@ -187,3 +173,55 @@ async def test_onboarding_user_race(hass, hass_storage, aiohttp_client):
     res1, res2 = await asyncio.gather(resp1, resp2)
 
     assert sorted([res1.status, res2.status]) == [200, 403]
+
+
+async def test_onboarding_integration(hass, hass_storage, hass_client):
+    """Test finishing integration step."""
+    mock_storage(hass_storage, {
+        'done': [const.STEP_USER]
+    })
+
+    assert await async_setup_component(hass, 'onboarding', {})
+
+    client = await hass_client()
+
+    resp = await client.post('/api/onboarding/integration', json={
+        'client_id': CLIENT_ID,
+    })
+
+    assert resp.status == 200
+    data = await resp.json()
+    assert 'auth_code' in data
+
+    # Validate refresh token
+    resp = await client.post('/auth/token', data={
+        'client_id': CLIENT_ID,
+        'grant_type': 'authorization_code',
+        'code': data['auth_code']
+    })
+
+    assert resp.status == 200
+    tokens = await resp.json()
+
+    assert (
+        await hass.auth.async_validate_access_token(tokens['access_token'])
+        is not None
+    )
+
+
+async def test_onboarding_integration_requires_auth(hass, hass_storage,
+                                                    aiohttp_client):
+    """Test finishing integration step."""
+    mock_storage(hass_storage, {
+        'done': [const.STEP_USER]
+    })
+
+    assert await async_setup_component(hass, 'onboarding', {})
+
+    client = await aiohttp_client(hass.http.app)
+
+    resp = await client.post('/api/onboarding/integration', json={
+        'client_id': CLIENT_ID,
+    })
+
+    assert resp.status == 401
