@@ -263,6 +263,8 @@ class BookmarksData:
             if source == ais_global.G_AN_PODCAST:
                 media_content_id = ais_global.G_CURR_MEDIA_CONTENT["lookup_url"]
                 name = ais_global.G_CURR_MEDIA_CONTENT["lookup_name"]
+            elif source == ais_global.G_AN_MUSIC:
+                media_content_id = ais_global.G_CURR_MEDIA_CONTENT["lookup_url"]
 
             # check if the audio is on favorites list
             item = next((itm for itm in self.favorites if (itm['name'] == name and itm['source'] == source)), None)

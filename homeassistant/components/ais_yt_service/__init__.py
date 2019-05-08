@@ -135,18 +135,20 @@ class YouTubeData:
         # info to user
         yield from self.hass.services.async_call('ais_ai_service', 'say_it', {"text": text})
 
-
-
-
     def process_select_track_uri(self, call):
         _LOGGER.info("process_select_track_uri")
         # """play track by id on sensor list."""
         call_id = call.data["id"]
         state = self.hass.states.get('sensor.youtubelist')
+        mediasource = ais_global.G_AN_MUSIC
+        if "mediasource" in call.data:
+            mediasource = call.data["mediasource"]
+            if mediasource == ais_global.G_AN_FAVORITE:
+                state = self.hass.states.get('sensor.aisfavoriteslist')
+            
         attr = state.attributes
         track = attr.get(int(call_id))
         url = "https://www.youtube.com/watch?v="
-
         # update list
         self.hass.states.async_set("sensor.youtubelist", call_id, attr)
 
@@ -163,8 +165,8 @@ class YouTubeData:
         if media_url is not None and len(media_url) > 0:
             # set stream url, image and title
             _audio_info = json.dumps(
-                {"IMAGE_URL": track["thumbnail"], "NAME": track["title"],
-                 "MEDIA_SOURCE": ais_global.G_AN_MUSIC, "media_content_id": media_url})
+                {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "lookup_url": track["uri"],
+                 "MEDIA_SOURCE": mediasource, "media_content_id": media_url})
             self.hass.services.call(
                 'media_player',
                 'play_media', {
@@ -182,8 +184,8 @@ class YouTubeData:
                     "media_content_type": "video/youtube"})
 
             # set stream image and title
-            _audio_info = json.dumps(
-                {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": ais_global.G_AN_MUSIC})
+            _audio_info = json.dumps( {"IMAGE_URL": track["thumbnail"], "NAME": track["title"],
+                                       "MEDIA_SOURCE": ais_global.G_AN_MUSIC, "lookup_url": track["uri"]})
             self.hass.services.call('media_player', 'play_media',
                                     {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
                                      "media_content_type": "ais_info",

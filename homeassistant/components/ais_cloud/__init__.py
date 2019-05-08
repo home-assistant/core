@@ -528,7 +528,10 @@ class AisColudData:
                     _lookup_url = podcast["LOOKUP_URL"]
                     _image_url = podcast["IMAGE_URL"]
                     break
-
+        if "mediasource" in call.data:
+            mediasource = call.data["mediasource"]
+        else:
+            mediasource = ais_global.G_AN_PODCAST
         if _lookup_url is not None:
             try:
                 d = feedparser.parse(check_url(_lookup_url))
@@ -564,7 +567,7 @@ class AisColudData:
                         })
                     # play it
                     self.hass.services.call('ais_cloud', 'play_audio',
-                                            {"audio_type": ais_global.G_AN_PODCAST, "id": 0,
+                                            {"audio_type": ais_global.G_AN_PODCAST, "id": 0, "mediasource": mediasource,
                                              "lookup_url": _lookup_url, "lookup_name": podcast_name})
                 else:
                     # check if the change was done form remote
@@ -587,7 +590,7 @@ class AisColudData:
                     'ais_ai_service', 'say_it', {"text": "Nie można pobrać odcinków. " + podcast_name})
 
     def process_delete_audio(self, call):
-        _LOGGER.info("process_play_audio")
+        _LOGGER.info("process_delete_audio")
         audio_type = call.data["audio_type"]
         if audio_type == ais_global.G_AN_FAVORITE:
             self.hass.services.call('ais_bookmarks', 'delete_favorite', {"id": call.data['id']})
@@ -597,6 +600,10 @@ class AisColudData:
     def process_play_audio(self, call):
         _LOGGER.info("process_play_audio")
         audio_type = call.data["audio_type"]
+        if "mediasource" in call.data:
+            mediasource = call.data["mediasource"]
+        else:
+            mediasource = audio_type
         if 'id' in call.data:
             if audio_type == ais_global.G_AN_SPOTIFY_SEARCH:
                 self.hass.services.call('ais_spotify_service', 'select_search_uri', {"id": call.data['id']})
@@ -622,6 +629,9 @@ class AisColudData:
             state = self.hass.states.get(track_list)
             attr = state.attributes
             track = attr.get(int(call.data['id']))
+            # update list
+            if mediasource == audio_type:
+                self.hass.states.async_set(track_list, int(call.data['id']), attr)
 
             if audio_type == ais_global.G_AN_NEWS:
                 self.hass.services.call('ais_cloud', 'select_rss_news_item', {"id": call.data['id']})
@@ -630,7 +640,13 @@ class AisColudData:
                 # selected from favorite - get the podcast tracks
                 self.hass.services.call('ais_cloud', 'get_podcast_tracks', {"lookup_url": track["uri"],
                                                                             "podcast_name": track["name"],
-                                                                            "image_url": track["thumbnail"]})
+                                                                            "image_url": track["thumbnail"],
+                                                                            "mediasource": ais_global.G_AN_FAVORITE})
+            elif audio_type == ais_global.G_AN_FAVORITE and track["type"] == ais_global.G_AN_MUSIC:
+                # selected from favorite - get the yt url
+                self.hass.services.call('ais_yt_service', 'select_track_uri',
+                                        {"id": call.data['id'], "mediasource": ais_global.G_AN_FAVORITE})
+
             elif audio_type in (ais_global.G_AN_RADIO, ais_global.G_AN_PODCAST):
                 lookup_url = ""
                 lookup_name = ""
@@ -645,7 +661,7 @@ class AisColudData:
                 self.hass.states.async_set(track_list, call.data['id'], attr)
                 # set stream uri, image and title
                 _audio_info = json.dumps(
-                    {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": audio_type,
+                    {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": mediasource,
                      "media_content_id": track_uri, "lookup_url": lookup_url, "lookup_name": lookup_name})
                 self.hass.services.call('media_player', 'play_media',
                                         {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
