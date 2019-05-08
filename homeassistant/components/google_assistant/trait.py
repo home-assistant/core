@@ -742,11 +742,10 @@ class LockUnlockTrait(_Trait):
 
     async def execute(self, command, data, params, challenge):
         """Execute an LockUnlock command."""
-        _verify_pin_challenge(data, challenge)
-
         if params['lock']:
             service = lock.SERVICE_LOCK
         else:
+            _verify_pin_challenge(data, challenge)
             service = lock.SERVICE_UNLOCK
 
         await self.hass.services.async_call(lock.DOMAIN, service, {
@@ -1095,36 +1094,36 @@ class OpenCloseTrait(_Trait):
         domain = self.state.domain
 
         if domain == cover.DOMAIN:
-            if self.state.attributes.get(ATTR_DEVICE_CLASS) in (
-                    cover.DEVICE_CLASS_DOOR, cover.DEVICE_CLASS_GARAGE
-            ):
-                _verify_pin_challenge(data, challenge)
+            svc_params = {ATTR_ENTITY_ID: self.state.entity_id}
 
             if params['openPercent'] == 0:
-                await self.hass.services.async_call(
-                    cover.DOMAIN, cover.SERVICE_CLOSE_COVER, {
-                        ATTR_ENTITY_ID: self.state.entity_id
-                    }, blocking=True, context=data.context)
+                service = cover.SERVICE_CLOSE_COVER
+                should_verify = False
             elif params['openPercent'] == 100:
-                await self.hass.services.async_call(
-                    cover.DOMAIN, cover.SERVICE_OPEN_COVER, {
-                        ATTR_ENTITY_ID: self.state.entity_id
-                    }, blocking=True, context=data.context)
+                service = cover.SERVICE_OPEN_COVER
+                should_verify = True
             elif (self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) &
                   cover.SUPPORT_SET_POSITION):
-                await self.hass.services.async_call(
-                    cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION, {
-                        ATTR_ENTITY_ID: self.state.entity_id,
-                        cover.ATTR_POSITION: params['openPercent']
-                    }, blocking=True, context=data.context)
+                service = cover.SERVICE_SET_COVER_POSITION
+                should_verify = True
+                svc_params[cover.ATTR_POSITION] = params['openPercent']
             else:
                 raise SmartHomeError(
                     ERR_FUNCTION_NOT_SUPPORTED,
                     'Setting a position is not supported')
 
+            if (should_verify and
+                    self.state.attributes.get(ATTR_DEVICE_CLASS)
+                    in (cover.DEVICE_CLASS_DOOR,
+                        cover.DEVICE_CLASS_GARAGE)):
+                _verify_pin_challenge(data, challenge)
+
+            await self.hass.services.async_call(
+                cover.DOMAIN, service, svc_params,
+                blocking=True, context=data.context)
+
             if (self.state.attributes.get(ATTR_ASSUMED_STATE) or
                     self.state.state == STATE_UNKNOWN):
-                print("YOO")
                 self.override_position = params['openPercent']
 
 
