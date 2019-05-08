@@ -72,7 +72,7 @@ class GeniusClimateBase(ClimateDevice):
         self._client = client
         self._zone = zone
 
-        self._supported_features = None
+        self._supported_features = 0
 
     @property
     def name(self):
@@ -195,8 +195,6 @@ class GeniusClimateHub(GeniusClimateBase):
     def __init__(self, client, zone):
         """Initialize the climate device."""
         super().__init__(client, zone)
-
-        self._supported_features = 0
 
     @property
     def hidden(self) -> bool:
