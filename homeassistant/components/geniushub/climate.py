@@ -176,8 +176,11 @@ class GeniusClimateZone(GeniusClimateBase):
         await self._zone.set_override(temperature, 3600)  # 1 hour
 
     async def async_turn_on(self):
-        """Turn on this heating zone."""
-        # Set to Footprint mode if there's a Room sensor, to Timer otherwise
+        """Turn on this heating zone.
+
+        Set Zones with a Room sensor to Footprint mode, and to Timer mode
+        otherwise.
+        """
         mode = STATE_ECO if hasattr(self._zone, 'occupied') else STATE_AUTO
         await self._zone.set_mode(HA_OPMODE_TO_GH.get(mode))
 
