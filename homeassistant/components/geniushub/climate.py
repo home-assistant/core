@@ -7,7 +7,7 @@ from homeassistant.components.climate.const import (
     STATE_AUTO, STATE_ECO, STATE_HEAT, STATE_MANUAL,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_ON_OFF)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, TEMP_CELSIUS)
+    ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
@@ -29,12 +29,14 @@ GENIUSHUB_MIN_TEMP = 4.0
 
 # Genius Hub Zones support only Off, Override/Boost, Footprint & Timer modes
 HA_OPMODE_TO_GH = {
+    STATE_OFF: 'off',
     STATE_AUTO: 'timer',
     STATE_ECO: 'footprint',
     STATE_MANUAL: 'override',
 }
 GH_OPMODE_OFF = 'off'
 GH_STATE_TO_HA = {
+    'off': STATE_OFF,
     'timer': STATE_AUTO,
     'footprint': STATE_ECO,
     'away': None,
@@ -43,7 +45,7 @@ GH_STATE_TO_HA = {
     'test': None,
     'linked': None,
     'other': None,
-}  # intentionally missing 'off': None
+}
 
 # temperature is repeated here, as it gives access to high-precision temps
 GH_DEVICE_STATE_ATTRS = ['temperature', 'type', 'occupied', 'override']
