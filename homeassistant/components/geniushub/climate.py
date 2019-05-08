@@ -70,7 +70,6 @@ class GeniusClimateBase(ClimateDevice):
         """Initialize the climate device."""
         self._client = client
         self._zone = zone
-
         self._name = zone.name
 
         self._operation_list = None
@@ -80,14 +79,6 @@ class GeniusClimateBase(ClimateDevice):
     def name(self):
         """Return the name of the climate device."""
         return self._zone.name
-
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        tmp = self._zone.__dict__.items()
-        state = {k: v for k, v in tmp if k in GH_DEVICE_STATE_ATTRS}
-
-        return {'status': state}
 
     @property
     def temperature_unit(self):
@@ -122,6 +113,14 @@ class GeniusClimateZone(GeniusClimateBase):
     def _connect(self, packet):
         if packet['signal'] == 'refresh':
             self.async_schedule_update_ha_state(force_refresh=True)
+
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        tmp = self._zone.__dict__.items()
+        state = {k: v for k, v in tmp if k in GH_DEVICE_STATE_ATTRS}
+
+        return {'status': state}
 
     @property
     def should_poll(self) -> bool:

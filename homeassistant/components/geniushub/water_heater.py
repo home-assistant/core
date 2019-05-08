@@ -7,6 +7,8 @@ from homeassistant.components.water_heater import (
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS)
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DOMAIN
 
@@ -65,10 +67,18 @@ class GeniusWaterHeater(WaterHeaterDevice):
         """Initialize the water_heater device."""
         self._client = client
         self._boiler = boiler
-        self._id = boiler.id
         self._name = boiler.name
 
         self._operation_list = list(HA_OPMODE_TO_GH)
+
+    async def async_added_to_hass(self):
+        """Run when entity about to be added."""
+        async_dispatcher_connect(self.hass, DOMAIN, self._connect)
+
+    @callback
+    def _connect(self, packet):
+        if packet['signal'] == 'refresh':
+            self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
     def name(self):
@@ -131,11 +141,3 @@ class GeniusWaterHeater(WaterHeaterDevice):
         """Set a new target temperature for this boiler."""
         temperature = kwargs[ATTR_TEMPERATURE]
         await self._boiler.set_override(temperature, 3600)  # 1 hour
-
-    async def async_update(self):
-        """Get the latest data from the hub."""
-        try:
-            await self._boiler.update()
-        except (AssertionError, asyncio.TimeoutError) as err:
-            _LOGGER.warning("Update for %s failed, message: %s",
-                            self._id, err)
