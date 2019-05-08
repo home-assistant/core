@@ -129,11 +129,11 @@ class GeniusWaterHeater(WaterHeaterDevice):
     @property
     def current_operation(self):
         """Return the current operation mode."""
-        return GH_STATE_TO_HA.get(self._boiler.mode)
+        return GH_STATE_TO_HA[self._boiler.mode]
 
     async def async_set_operation_mode(self, operation_mode):
         """Set a new operation mode for this boiler."""
-        await self._boiler.set_mode(HA_OPMODE_TO_GH.get(operation_mode))
+        await self._boiler.set_mode(HA_OPMODE_TO_GH[operation_mode])
 
     async def async_set_temperature(self, **kwargs):
         """Set a new target temperature for this boiler."""
