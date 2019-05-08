@@ -69,41 +69,80 @@ class GeniusClimateBase(ClimateDevice):
     def __init__(self, client, zone):
         """Initialize the climate device."""
         self._client = client
-        self._objref = zone
+        self._zone = zone
 
-        self._id = zone.id
         self._name = zone.name
-        self._icon = None
 
-        self._operation_list = self._supported_features = None
+        self._operation_list = None
+        self._supported_features = None
 
     @property
     def name(self):
         """Return the name of the climate device."""
-        return self._objref.name
-
-    @property
-    def icon(self):                                                              # TODO: in the correct order?
-        """Return the icon to use in the frontend UI."""
-        return self._icon
+        return self._zone.name
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        tmp = self._objref.__dict__.items()
+        tmp = self._zone.__dict__.items()
         state = {k: v for k, v in tmp if k in GH_DEVICE_STATE_ATTRS}
 
         return {'status': state}
 
     @property
+    def temperature_unit(self):
+        """Return the unit of measurement."""
+        return TEMP_CELSIUS
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return self._supported_features
+
+
+class GeniusClimateZone(GeniusClimateBase):
+    """Representation of a Genius Hub climate device."""
+
+    def __init__(self, client, zone):
+        """Initialize the climate device."""
+        super().__init__(client, zone)
+
+        # Only some zones have movement detectors, which allows footprint mode
+        op_list = list(HA_OPMODE_TO_GH)
+        if not hasattr(self._zone, 'occupied'):
+            op_list.remove(STATE_ECO)
+        self._operation_list = op_list
+        self._supported_features = GENIUSHUB_SUPPORT_FLAGS
+
+    async def async_added_to_hass(self):
+        """Run when entity about to be added."""
+        async_dispatcher_connect(self.hass, DOMAIN, self._connect)
+
+    @callback
+    def _connect(self, packet):
+        if packet['signal'] == 'refresh':
+            # self.async_schedule_update_ha_state()                              # TODO: try this
+            self.async_schedule_update_ha_state(force_refresh=True)
+
+    @property
+    def should_poll(self) -> bool:
+        """Return False as the geniushub zones should never be polled."""
+        return False
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend UI."""
+        return "mdi:radiator"
+
+    @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self._objref.temperature
+        return self._zone.temperature
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self._objref.setpoint
+        return self._zone.setpoint
 
     @property
     def min_temp(self):
@@ -116,16 +155,6 @@ class GeniusClimateBase(ClimateDevice):
         return GENIUSHUB_MAX_TEMP
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return self._supported_features
-
-    @property
     def operation_list(self):
         """Return the list of available operation modes."""
         return self._operation_list
@@ -133,70 +162,29 @@ class GeniusClimateBase(ClimateDevice):
     @property
     def current_operation(self):
         """Return the current operation mode."""
-        return GH_STATE_TO_HA.get(self._objref.mode)
+        return GH_STATE_TO_HA.get(self._zone.mode)
 
     @property
     def is_on(self):
         """Return True if the device is on."""
-        return self._objref.mode in GH_STATE_TO_HA
+        return self._zone.mode in GH_STATE_TO_HA
 
     async def async_set_operation_mode(self, operation_mode):
         """Set a new operation mode for this zone."""
-        await self._objref.set_mode(HA_OPMODE_TO_GH.get(operation_mode))
+        await self._zone.set_mode(HA_OPMODE_TO_GH.get(operation_mode))
 
     async def async_set_temperature(self, **kwargs):
         """Set a new target temperature for this zone."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        await self._objref.set_override(temperature, 3600)  # 1 hour
+        await self._zone.set_override(temperature, 3600)  # 1 hour
 
     async def async_turn_on(self):
         """Turn on this heating zone."""
-        await self._objref.set_mode(HA_OPMODE_TO_GH.get(STATE_AUTO))
+        await self._zone.set_mode(HA_OPMODE_TO_GH.get(STATE_AUTO))
 
     async def async_turn_off(self):
         """Turn off this heating zone (i.e. to frost protect)."""
-        await self._objref.set_mode(GH_OPMODE_OFF)
-
-    async def async_update(self):
-        """Get the latest data from the hub."""
-        try:
-            await self._objref.update()
-        except (AssertionError, asyncio.TimeoutError) as err:
-            _LOGGER.warning("Update for %s failed, message: %s",
-                            self._id, err)
-
-
-class GeniusClimateZone(GeniusClimateBase):
-    """Representation of a Genius Hub climate device."""
-
-    def __init__(self, client, zone):
-        """Initialize the climate device."""
-        super().__init__(client, zone)
-
-        self._icon = "mdi:radiator"
-
-        # Only some zones have movement detectors, which allows footprint mode
-        op_list = list(HA_OPMODE_TO_GH)
-        if not hasattr(self._objref, 'occupied'):
-            op_list.remove(STATE_ECO)
-        self._operation_list = op_list
-        self._supported_features = GENIUSHUB_SUPPORT_FLAGS
-
-    @callback
-    def _connect(self, packet):
-        if packet['signal'] == 'refresh':
-            # self.async_schedule_update_ha_state()                              # TODO: try this
-            self.async_schedule_update_ha_state(force_refresh=True)
-
-    # These properties, methods are from the Entity class
-    async def async_added_to_hass(self):
-        """Run when entity about to be added."""
-        async_dispatcher_connect(self.hass, DOMAIN, self._connect)
-
-    @property
-    def should_poll(self) -> bool:                                               # TODO: in the correct location?
-        """Return False as the geniushub zones should never be polled."""
-        return False
+        await self._zone.set_mode(GH_OPMODE_OFF)
 
 
 class GeniusClimateHub(GeniusClimateBase):
@@ -206,25 +194,18 @@ class GeniusClimateHub(GeniusClimateBase):
         """Initialize the climate device."""
         super().__init__(client, zone)
 
-        self._name = "mdi:thermostat"
-
         self._operation_list = []
         self._supported_features = 0
 
     @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return None
-
-    @property
-    def target_temperature(self):
-        """Return the temperature we try to reach."""
-        return None
+    def hidden(self) -> bool:
+        """Return True if the entity should be hidden from UIs."""
+        return True
 
     async def async_update(self):
         """Get the latest data from the hub."""
         try:
-            await self._objref.update()
+            await self._zone.update()
         except (AssertionError, asyncio.TimeoutError) as err:
             _LOGGER.warning("Update for %s failed, message: %s",
                             self._id, err)

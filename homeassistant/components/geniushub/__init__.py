@@ -1,7 +1,8 @@
-"""Support for a Genius Hub."""
+"""Support for a Genius Hub system."""
 import logging
 
 import voluptuous as vol
+
 from geniushubclient import GeniusHubClient
 
 from homeassistant.const import (
