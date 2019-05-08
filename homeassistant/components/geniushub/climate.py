@@ -159,7 +159,7 @@ class GeniusClimateZone(GeniusClimateBase):
     @property
     def current_operation(self):
         """Return the current operation mode."""
-        return GH_STATE_TO_HA.get(self._zone.mode)
+        return GH_STATE_TO_HA[self._zone.mode]
 
     @property
     def is_on(self):
@@ -168,7 +168,7 @@ class GeniusClimateZone(GeniusClimateBase):
 
     async def async_set_operation_mode(self, operation_mode):
         """Set a new operation mode for this zone."""
-        await self._zone.set_mode(HA_OPMODE_TO_GH.get(operation_mode))
+        await self._zone.set_mode(HA_OPMODE_TO_GH[operation_mode])
 
     async def async_set_temperature(self, **kwargs):
         """Set a new target temperature for this zone."""
@@ -182,7 +182,7 @@ class GeniusClimateZone(GeniusClimateBase):
         mode otherwise.
         """
         mode = STATE_ECO if hasattr(self._zone, 'occupied') else STATE_AUTO
-        await self._zone.set_mode(HA_OPMODE_TO_GH.get(mode))
+        await self._zone.set_mode(HA_OPMODE_TO_GH[mode])
 
     async def async_turn_off(self):
         """Turn off this heating zone (i.e. to frost protect)."""
