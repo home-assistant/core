@@ -158,6 +158,7 @@ ABBREVIATIONS = {
     'send_if_off': 'send_if_off',
     'set_pos_tpl': 'set_position_template',
     'set_pos_t': 'set_position_topic',
+    'pos_t': 'position_topic',
     'spd_cmd_t': 'speed_command_topic',
     'spd_stat_t': 'speed_state_topic',
     'spd_val_tpl': 'speed_value_template',
