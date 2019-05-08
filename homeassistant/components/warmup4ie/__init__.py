@@ -1,1 +1,1 @@
-"""The warmup4ie component."""
+"""The warmup component."""
