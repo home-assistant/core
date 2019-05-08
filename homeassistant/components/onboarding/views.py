@@ -3,7 +3,6 @@ import asyncio
 
 import voluptuous as vol
 
-from homeassistant.exceptions import Unauthorized
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import callback
