@@ -82,7 +82,7 @@ coinmarketcap==5.0.3
 # homeassistant.components.namecheapdns
 # homeassistant.components.ohmconnect
 # homeassistant.components.upc_connect
-defusedxml==0.5.0
+defusedxml==0.6.0
 
 # homeassistant.components.dsmr
 dsmr_parser==0.12
