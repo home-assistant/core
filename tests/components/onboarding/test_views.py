@@ -72,10 +72,6 @@ async def test_onboarding_user_already_done(hass, hass_storage,
 async def test_onboarding_user(hass, hass_storage, aiohttp_client):
     """Test creating a new user."""
     assert await async_setup_component(hass, 'person', {})
-    mock_storage(hass_storage, {
-        'done': ['hello']
-    })
-
     assert await async_setup_component(hass, 'onboarding', {})
 
     client = await aiohttp_client(hass.http.app)
@@ -89,6 +85,8 @@ async def test_onboarding_user(hass, hass_storage, aiohttp_client):
     })
 
     assert resp.status == 200
+    assert const.STEP_USER in hass_storage[const.DOMAIN]['data']['done']
+
     data = await resp.json()
     assert 'auth_code' in data
 
