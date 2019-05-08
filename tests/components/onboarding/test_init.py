@@ -99,11 +99,4 @@ async def test_migration(hass, hass_storage):
         }
     }
     assert await async_setup_component(hass, 'onboarding', {})
-
-    hass_storage[onboarding.STORAGE_KEY] = {
-        'version': 2,
-        'data': {
-            'done': ["user", "integration"]
-        }
-    }
     assert onboarding.async_is_onboarded(hass)
