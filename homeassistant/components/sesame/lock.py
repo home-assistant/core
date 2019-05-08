@@ -5,10 +5,11 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.lock import LockDevice, PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ID, ATTR_BATTERY_LEVEL, CONF_API_KEY,
+    ATTR_BATTERY_LEVEL, CONF_API_KEY,
     STATE_LOCKED, STATE_UNLOCKED)
 from homeassistant.helpers.typing import ConfigType
 
+ATTR_DEVICE_ID = 'device_id'
 ATTR_SERIAL_NO = 'serial'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -86,7 +87,7 @@ class SesameDevice(LockDevice):
     def device_state_attributes(self) -> dict:
         """Return the state attributes."""
         attributes = {}
-        attributes[ATTR_ID] = self._device_id
+        attributes[ATTR_DEVICE_ID] = self._device_id
         attributes[ATTR_SERIAL_NO] = self._serial
         attributes[ATTR_BATTERY_LEVEL] = self._battery
         return attributes
