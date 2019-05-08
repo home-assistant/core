@@ -10,7 +10,7 @@ from homeassistant.components.discovery import SERVICE_OCTOPRINT
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONTENT_TYPE_JSON, CONF_NAME, CONF_PATH,
     CONF_PORT, CONF_SSL, TEMP_CELSIUS, CONF_MONITORED_CONDITIONS, CONF_SENSORS,
-    CONF_BINARY_SENSORS)
+    CONF_BINARY_SENSORS, CONF_ENTITY_ID)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -23,6 +23,10 @@ CONF_NUMBER_OF_TOOLS = 'number_of_tools'
 
 DEFAULT_NAME = 'OctoPrint'
 DOMAIN = 'octoprint'
+
+SERVICE_CANCEL_JOB = 'cancel_job'
+SERVICE_PAUSE_JOB = 'pause_job'
+SERVICE_RESUME_JOB = 'resume_job'
 
 
 def has_all_unique_names(value):
@@ -134,6 +138,26 @@ def setup(hass, config):
                       config)
         success = True
 
+    def handle_cancel_job(call):
+        """Aborts current job."""
+        octoprint_api.post('job', "{\"command\": \"cancel\"}")
+
+    def handle_pause_job(call):
+        """Pauses current job."""
+        octoprint_api.post(
+            'job', "{\"command\": \"pause\",\"action\": \"pause\"}")
+
+    def handle_resume_job(call):
+        """Resumes current job."""
+        octoprint_api.post(
+            'job', "{\"command\": \"pause\",\"action\": \"resume\"}")
+
+    hass.services.register(DOMAIN, SERVICE_CANCEL_JOB, handle_cancel_job)
+
+    hass.services.register(DOMAIN, SERVICE_PAUSE_JOB, handle_pause_job)
+
+    hass.services.register(DOMAIN, SERVICE_RESUME_JOB, handle_resume_job)
+
     return success
 
 
@@ -206,7 +230,7 @@ class OctoPrintAPI:
             return response.json()
         except Exception as conn_exc:  # pylint: disable=broad-except
             log_string = "Failed to update OctoPrint status. " + \
-                               "  Error: %s" % (conn_exc)
+                "  Error: %s" % (conn_exc)
             # Only log the first failure
             if endpoint == 'job':
                 log_string = "Endpoint: job " + log_string
@@ -221,6 +245,23 @@ class OctoPrintAPI:
                     self.printer_error_logged = True
                     self.printer_available = False
             self.available = False
+            return None
+
+    def post(self, endpoint, data):
+        """Send a post request, and return the response as a dict."""
+        # Only query the API at most every 30 seconds
+        url = self.api_url + endpoint
+        try:
+            response = requests.post(
+                url, data=data, headers=self.headers, timeout=9)
+            response.raise_for_status()
+            return response.text
+        except Exception as conn_exc:  # pylint: disable=broad-except
+            log_string = "Failed to send to OctoPrint.\n" + \
+                "Error: %s" % (conn_exc)
+            if response is not None:
+                log_string += "\n %s" % (response.text)
+            _LOGGER.error(log_string)
             return None
 
     def update(self, sensor_type, end_point, group, tool=None):

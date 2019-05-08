@@ -1,0 +1,10 @@
+# Describes the format for available octoprint services
+
+cancel_job:
+  description: Cancels current job.
+
+pause_job:
+  description: Pauses current job.
+
+resume_job:
+  description: Resumes current job.
