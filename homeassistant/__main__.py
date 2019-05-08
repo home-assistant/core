@@ -90,7 +90,7 @@ def ensure_config_path(config_dir: str) -> None:
             sys.exit(1)
 
 
-async def ensure_config_file(hass: core.HomeAssistant, config_dir: str) -> str:
+async def ensure_config_file(hass: 'core.HomeAssistant', config_dir: str) -> str:
     """Ensure configuration file exists."""
     import homeassistant.config as config_util
     config_path = await config_util.async_ensure_config_exists(
