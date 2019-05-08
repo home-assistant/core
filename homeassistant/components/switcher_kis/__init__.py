@@ -62,7 +62,7 @@ SERVICE_UPDATE_DEVICE_NAME_SCHEMA = vol.Schema({
 
 
 @bind_hass
-async def _validate_control_permission(
+async def _validate_edit_permission(
         hass: HomeAssistantType, context: ContextType,
         entity_id: str) -> None:
     """Use for validating user control permissions."""
@@ -116,7 +116,7 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
             """Use for handling setting device auto-off service calls."""
             from aioswitcher.api import SwitcherV2Api
 
-            await _validate_control_permission(
+            await _validate_edit_permission(
                 hass, service.context, service.data[CONF_ENTITY_ID])
 
             async with SwitcherV2Api(hass.loop, device_data.ip_addr, phone_id,
@@ -132,7 +132,7 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
             """Use for handling update device name service calls."""
             from aioswitcher.api import SwitcherV2Api
 
-            await _validate_control_permission(
+            await _validate_edit_permission(
                 hass, service.context, service.data[CONF_ENTITY_ID])
 
             async with SwitcherV2Api(hass.loop, device_data.ip_addr, phone_id,
