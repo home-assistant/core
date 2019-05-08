@@ -22,8 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 # prevent .HA_VERSION file from being written
 @patch(
     'homeassistant.bootstrap.conf_util.process_ha_config_upgrade', Mock())
-@patch('homeassistant.util.location.detect_location_info',
-       Mock(return_value=None))
+@patch('homeassistant.util.location.async_detect_location_info',
+       Mock(return_value=mock_coro(None)))
 @patch('os.path.isfile', Mock(return_value=True))
 @patch('os.access', Mock(return_value=True))
 @patch('homeassistant.bootstrap.async_enable_logging',
