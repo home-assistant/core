@@ -37,21 +37,18 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
 FETCHER_MAPPING = {
     (TYPE_ALLERGY_FORECAST,): (TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_OUTLOOK),
-    (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW): (
-        TYPE_ALLERGY_INDEX,),
+    (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW): (TYPE_ALLERGY_INDEX,),
     (TYPE_ASTHMA_FORECAST,): (TYPE_ASTHMA_FORECAST,),
-    (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW): (
-        TYPE_ASTHMA_INDEX,),
+    (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW): (TYPE_ASTHMA_INDEX,),
     (TYPE_DISEASE_FORECAST,): (TYPE_DISEASE_FORECAST,),
     (TYPE_DISEASE_TODAY,): (TYPE_DISEASE_INDEX,),
 }
-
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_ZIP_CODE): str,
         vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSORS)):
-            vol.All(cv.ensure_list, [vol.In(SENSORS)])
+            vol.All(cv.ensure_list, [vol.In(SENSORS)]),
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -87,8 +84,7 @@ async def async_setup(hass, config):
         async_dispatcher_send(hass, TOPIC_DATA_UPDATE)
 
     hass.data[DOMAIN][DATA_LISTENER] = async_track_time_interval(
-        hass, refresh,
-        DEFAULT_SCAN_INTERVAL)
+        hass, refresh, DEFAULT_SCAN_INTERVAL)
 
     return True
 

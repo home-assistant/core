@@ -3,7 +3,7 @@
   "name": "IQVIA",
   "documentation": "https://www.home-assistant.io/components/iqvia",
   "requirements": [
-    "numpy==1.16.2",
+    "numpy==1.16.3",
     "pyiqvia==0.2.0"
   ],
   "dependencies": [],
