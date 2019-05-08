@@ -39,9 +39,9 @@ PLATFORM_SCHEMA = vol.All(
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up buienradar radar-loop camera component."""
-    dimension = config.get(CONF_DIMENSION)
-    delta = config.get(CONF_DELTA)
-    name = config.get(CONF_NAME)
+    dimension = config[CONF_DIMENSION]
+    delta = config[CONF_DELTA]
+    name = config[CONF_NAME]
 
     async_add_entities([BuienradarCam(name, dimension, delta,
                                       loop=hass.loop)])
@@ -56,25 +56,6 @@ class BuienradarCam(Camera):
     [0]: https://www.buienradar.nl/overbuienradar/gratis-weerdata
     """
 
-    _dimension = 0          # type: int
-    """ Deadline for image refresh """
-    _deadline = None        # type: Optional[datetime]
-    _name = ""              # type: str
-    _delta = 600.0          # type: float
-    """
-    Ensures that only one reader can cause an http request at the same time,
-    and that all readers return after this request completes.
-
-    invariant: this condition is private to and owned by this instance.
-    """
-    _condition = None       # type: Optional[asyncio.Condition]
-    """ Loading status """
-    _loading = False        # type: bool
-
-    _last_image = None      # type: Optional[bytes]
-    """ last modified HTTP response header"""
-    _last_modified = None   # type: Optional[str]
-
     def __init__(self, name: str, dimension: int, delta: float,
                  loop: Optional[asyncio.AbstractEventLoop] = None):
         """
@@ -87,16 +68,27 @@ class BuienradarCam(Camera):
 
         self._name = name
 
+        # dimension (x and y) of returned radar image
         self._dimension = dimension
+
+        # time a cached image stays valid for
         self._delta = delta
 
+        # Condition that guards the loading indicator.
+        #
+        # Ensures that only one reader can cause an http request at the same
+        # time, and that all readers are notified after this request completes.
+        #
+        # invariant: this condition is private to and owned by this instance.
         self._condition = asyncio.Condition(loop=loop)
 
-        self._last_image = None
-        self._last_modified = None
+        self._last_image = None     # type: Optional[bytes]
+        # value of the last seen last modified header
+        self._last_modified = None  # type: Optional[str]
+        # loading status
         self._loading = False
-        # deadline for image to be refreshed
-        self._deadline = None
+        # deadline for image refresh - self.delta after last successful load
+        self._deadline = None       # type: Optional[datetime]
 
     @property
     def name(self) -> str:
