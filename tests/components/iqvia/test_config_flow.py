@@ -15,7 +15,7 @@ def allergens_current_response():
 
 
 @pytest.fixture
-def mock_pyiqvia(uv_index_response):
+def mock_pyiqvia(allergens_current_response):
     """Mock the pyiqvia library."""
     with MockDependency('pyiqvia') as mock_pyiqvia_:
         mock_pyiqvia_.Client().allergens.current.return_value = (
