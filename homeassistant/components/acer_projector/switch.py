@@ -95,7 +95,6 @@ class AcerSwitch(SwitchDevice):
             msg = msg.encode('utf-8')
             self.ser.write(msg)
             # Try to get a response a maximum of 5 times
-            time.sleep(1)
             if self.ser.inWaiting() > 0:
                 _LOGGER.debug('Characters to read %s', self.ser.inWaiting())
                 # Changed to read number of waiting characters
@@ -125,7 +124,6 @@ class AcerSwitch(SwitchDevice):
                     decode_line = line.decode('utf-8')
                     if not decode_line.startswith('*'):
                         return decode_line
-            time.sleep(1)
 
         # If it gets to here something has gone wrong
         _LOGGER.warning('Not able to get the relevant state for %s', msg)
@@ -164,7 +162,7 @@ class AcerSwitch(SwitchDevice):
             self._state = False
             self._available = True
         else:
-            _LOGGER.warning('Unknown status %s', awns)
+            _LOGGER.warn('Unknown status ' + awns)
             self._available = False
 
         if self._state and self._available:
