@@ -1,7 +1,5 @@
 """Use serial protocol of Acer projector to obtain state of the projector."""
 import logging
-import time
-
 import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
