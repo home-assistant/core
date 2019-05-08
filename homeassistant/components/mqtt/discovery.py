@@ -195,6 +195,14 @@ ABBREVIATIONS = {
     'xy_cmd_t': 'xy_command_topic',
     'xy_stat_t': 'xy_state_topic',
     'xy_val_tpl': 'xy_value_template',
+    'cmd_on_tpl': 'command_on_template',
+    'cmd_off_tpl': 'command_off_template',
+    'stat_tpl': 'state_template',
+    'bri_tpl': 'brightness_template',
+    'r_tpl': 'red_template',
+    'g_tpl': 'green_template',
+    'b_tpl': 'blue_template',
+    'fx_tpl': 'effect_template',
 }
 
 DEVICE_ABBREVIATIONS = {
