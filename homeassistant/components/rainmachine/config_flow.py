@@ -70,7 +70,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow):
             return self.async_show_form(
                 step_id=connect_type,
                 data_schema=vol.Schema(schema),
-                errors={CONF_EMAIL: 'invalid_credentials'})
+                errors={CONF_PASSWORD: 'invalid_credentials'})
 
         # Since the config entry doesn't allow for configuration of SSL, make
         # sure it's set:
