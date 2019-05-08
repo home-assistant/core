@@ -18,7 +18,7 @@ DUMMY_POWER_CONSUMPTION = 2780
 DUMMY_REMAINING_TIME = '01:29:32'
 
 # Adjust if any modification were made to DUMMY_DEVICE_NAME
-SWITCH_ENTITY_ID = "switch.device_name"
+SWITCH_ENTITY_ID = "switch.switcher_kis_device_name"
 
 MANDATORY_CONFIGURATION = {
     DOMAIN: {

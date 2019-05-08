@@ -11,7 +11,7 @@ from homeassistant.auth.permissions.const import POLICY_EDIT
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (CONF_ENTITY_ID, CONF_NAME,
                                  EVENT_HOMEASSISTANT_STOP)
-from homeassistant.core import callback
+from homeassistant.core import callback, split_entity_id
 from homeassistant.exceptions import Unauthorized, UnknownUser
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import (async_listen_platform,
@@ -66,6 +66,11 @@ async def _validate_edit_permission(
         hass: HomeAssistantType, context: ContextType,
         entity_id: str) -> None:
     """Use for validating user control permissions."""
+    splited = split_entity_id(entity_id)
+    if splited[0] != SWITCH_DOMAIN or not splited[1].startswith(DOMAIN):
+        raise Unauthorized(
+            context=context, entity_id=entity_id, permission=(POLICY_EDIT, ))
+
     user = await hass.auth.async_get_user(context.user_id)
     if user is None:
         raise UnknownUser(

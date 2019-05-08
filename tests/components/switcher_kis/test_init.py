@@ -85,21 +85,30 @@ async def test_update_device_name_service(
          CONF_NAME: DUMMY_DEVICE_NAME},
         blocking=True, context=Context(user_id=hass_owner_user.id))
 
-    with raises(Unauthorized) as unauthorized_exc:
+    with raises(Unauthorized) as unauthorized_read_only_exc:
         await hass.services.async_call(
             DOMAIN, SERVICE_UPDATE_DEVICE_NAME_NAME,
             {CONF_ENTITY_ID: SWITCH_ENTITY_ID,
              CONF_NAME: DUMMY_DEVICE_NAME},
             blocking=True, context=Context(user_id=hass_read_only_user.id))
 
-    assert unauthorized_exc.type is Unauthorized
+    assert unauthorized_read_only_exc.type is Unauthorized
+
+    with raises(Unauthorized) as unauthorized_wrong_entity_exc:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_UPDATE_DEVICE_NAME_NAME,
+            {CONF_ENTITY_ID: "light.not_related_entity",
+             CONF_NAME: DUMMY_DEVICE_NAME},
+            blocking=True, context=Context(user_id=hass_owner_user.id))
+
+    assert unauthorized_wrong_entity_exc.type is Unauthorized
 
     with raises(UnknownUser) as unknown_user_exc:
         await hass.services.async_call(
             DOMAIN, SERVICE_UPDATE_DEVICE_NAME_NAME,
             {CONF_ENTITY_ID: SWITCH_ENTITY_ID,
              CONF_NAME: DUMMY_DEVICE_NAME},
-            blocking=True, context=Context(user_id="fake_user"))
+            blocking=True, context=Context(user_id="not_real_user"))
 
     assert unknown_user_exc.type is UnknownUser
 
@@ -149,21 +158,30 @@ async def test_set_auto_off_service(
          CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
         blocking=True, context=Context(user_id=hass_owner_user.id))
 
-    with raises(Unauthorized) as unauthorized_exc:
+    with raises(Unauthorized) as unauthorized_read_only_exc:
         await hass.services.async_call(
             DOMAIN, SERVICE_SET_AUTO_OFF_NAME,
             {CONF_ENTITY_ID: SWITCH_ENTITY_ID,
              CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
             blocking=True, context=Context(user_id=hass_read_only_user.id))
 
-    assert unauthorized_exc.type is Unauthorized
+    assert unauthorized_read_only_exc.type is Unauthorized
+
+    with raises(Unauthorized) as unauthorized_wrong_entity_exc:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_SET_AUTO_OFF_NAME,
+            {CONF_ENTITY_ID: "light.not_related_entity",
+             CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
+            blocking=True, context=Context(user_id=hass_owner_user.id))
+
+    assert unauthorized_wrong_entity_exc.type is Unauthorized
 
     with raises(UnknownUser) as unknown_user_exc:
         await hass.services.async_call(
             DOMAIN, SERVICE_SET_AUTO_OFF_NAME,
             {CONF_ENTITY_ID: SWITCH_ENTITY_ID,
              CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
-            blocking=True, context=Context(user_id="fake_user"))
+            blocking=True, context=Context(user_id="not_real_user"))
 
     assert unknown_user_exc.type is UnknownUser
 
