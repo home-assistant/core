@@ -1,6 +1,6 @@
 """Custom dumper and representers."""
-import yaml
 from collections import OrderedDict
+import yaml
 
 from .objects import NodeListClass
 
@@ -10,6 +10,14 @@ def dump(_dict: dict) -> str:
     return yaml.safe_dump(
         _dict, default_flow_style=False, allow_unicode=True) \
         .replace(': null\n', ':\n')
+
+
+def save_yaml(path: str, data: dict) -> None:
+    """Save YAML to a file."""
+    # Dump before writing to not truncate the file if dumping fails
+    str_data = dump(data)
+    with open(path, 'w', encoding='utf-8') as outfile:
+        outfile.write(str_data)
 
 
 # From: https://gist.github.com/miracle2k/3184458
