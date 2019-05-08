@@ -1,6 +1,5 @@
 """Support for Efesto heating devices."""
 import logging
-import socket
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -52,7 +51,7 @@ def _setup_efesto(url, username, password, device, config, add_entities):
         [EfestoHeatingDevice(client)],
         True
     )
-    
+
     return True
 
 
