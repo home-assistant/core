@@ -19,6 +19,12 @@ except ImportError:
 
 from homeassistant.exceptions import HomeAssistantError
 
+from .objects import NodeListClass, NodeStrClass
+from .dumper import dump
+
+from .loader import SafeLineLoader
+
+
 _LOGGER = logging.getLogger(__name__)
 _SECRET_NAMESPACE = 'homeassistant'
 SECRET_YAML = 'secrets.yaml'
@@ -26,32 +32,6 @@ __SECRET_CACHE = {}  # type: Dict[str, JSON_TYPE]
 
 JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
 DICT_T = TypeVar('DICT_T', bound=Dict)  # pylint: disable=invalid-name
-
-
-class NodeListClass(list):
-    """Wrapper class to be able to add attributes on a list."""
-
-    pass
-
-
-class NodeStrClass(str):
-    """Wrapper class to be able to add attributes on a string."""
-
-    pass
-
-
-# pylint: disable=too-many-ancestors
-class SafeLineLoader(yaml.SafeLoader):
-    """Loader class that keeps track of line numbers."""
-
-    def compose_node(self, parent: yaml.nodes.Node,
-                     index: int) -> yaml.nodes.Node:
-        """Annotate a node with the first line it was seen."""
-        last_line = self.line  # type: int
-        node = super(SafeLineLoader,
-                     self).compose_node(parent, index)  # type: yaml.nodes.Node
-        node.__line__ = last_line + 1  # type: ignore
-        return node
 
 
 # pylint: disable=pointless-statement
@@ -99,13 +79,6 @@ def load_yaml(fname: str) -> JSON_TYPE:
     except UnicodeDecodeError as exc:
         _LOGGER.error("Unable to read file %s: %s", fname, exc)
         raise HomeAssistantError(exc)
-
-
-def dump(_dict: dict) -> str:
-    """Dump YAML to a string and remove null."""
-    return yaml.safe_dump(
-        _dict, default_flow_style=False, allow_unicode=True) \
-        .replace(': null\n', ':\n')
 
 
 def save_yaml(path: str, data: dict) -> None:
@@ -331,43 +304,3 @@ yaml.SafeLoader.add_constructor('!include_dir_merge_list',
 yaml.SafeLoader.add_constructor('!include_dir_named', _include_dir_named_yaml)
 yaml.SafeLoader.add_constructor('!include_dir_merge_named',
                                 _include_dir_merge_named_yaml)
-
-
-# From: https://gist.github.com/miracle2k/3184458
-# pylint: disable=redefined-outer-name
-def represent_odict(dump, tag, mapping,  # type: ignore
-                    flow_style=None) -> yaml.MappingNode:
-    """Like BaseRepresenter.represent_mapping but does not issue the sort()."""
-    value = []  # type: list
-    node = yaml.MappingNode(tag, value, flow_style=flow_style)
-    if dump.alias_key is not None:
-        dump.represented_objects[dump.alias_key] = node
-    best_style = True
-    if hasattr(mapping, 'items'):
-        mapping = mapping.items()
-    for item_key, item_value in mapping:
-        node_key = dump.represent_data(item_key)
-        node_value = dump.represent_data(item_value)
-        if not (isinstance(node_key, yaml.ScalarNode) and not node_key.style):
-            best_style = False
-        if not (isinstance(node_value, yaml.ScalarNode) and
-                not node_value.style):
-            best_style = False
-        value.append((node_key, node_value))
-    if flow_style is None:
-        if dump.default_flow_style is not None:
-            node.flow_style = dump.default_flow_style
-        else:
-            node.flow_style = best_style
-    return node
-
-
-yaml.SafeDumper.add_representer(
-    OrderedDict,
-    lambda dumper, value:
-    represent_odict(dumper, 'tag:yaml.org,2002:map', value))
-
-yaml.SafeDumper.add_representer(
-    NodeListClass,
-    lambda dumper, value:
-    dumper.represent_sequence('tag:yaml.org,2002:seq', value))
