@@ -1,5 +1,4 @@
 """Support for Genius Hub water_heater devices."""
-import asyncio
 import logging
 
 from homeassistant.components.water_heater import (
