@@ -35,6 +35,7 @@ def create_minio_client(
         secret_key: str,
         secure: bool
 ) -> Minio:
+    """Create Minio client."""
     return Minio(
         endpoint,
         access_key,
