@@ -440,7 +440,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
             self._media_status_received_time = dt_util.utcnow()
             # TODO one call to frame
             self.hass.services.call('ais_ai_service', 'publish_command_to_frame', {
-                    "key": 'playAudio', "val": media_content_id, "ip": self._device_ip})
+                    "key": 'playAudio', "val": self._media_content_id, "ip": self._device_ip})
 
             if "IMAGE_URL" not in j_info:
                 self._stream_image = "/static/icons/tile-win-310x150.png"
