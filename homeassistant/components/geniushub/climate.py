@@ -192,10 +192,6 @@ class GeniusClimateZone(GeniusClimateBase):
 class GeniusClimateHub(GeniusClimateBase):
     """Representation of a Genius Hub climate device."""
 
-    def __init__(self, client, zone):
-        """Initialize the climate device."""
-        super().__init__(client, zone)
-
     @property
     def hidden(self) -> bool:
         """Return True if the entity should be hidden from UIs."""
