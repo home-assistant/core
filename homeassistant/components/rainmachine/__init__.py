@@ -363,12 +363,14 @@ class RainMachine:
         if any(c in self.binary_sensor_conditions
                for c in (TYPE_FREEZE, TYPE_HOURLY, TYPE_MONTH,
                          TYPE_RAINDELAY, TYPE_RAINSENSOR, TYPE_WEEKDAY)):
-            tasks[RESTRICTIONS_CURRENT] = self.controller.restrictions.current()
+            tasks[RESTRICTIONS_CURRENT] = (
+                self.controller.restrictions.current())
 
         if (any(c in self.binary_sensor_conditions
                 for c in (TYPE_FREEZE_PROTECTION, TYPE_HOT_DAYS))
                 or TYPE_FREEZE_TEMP in self.sensor_conditions):
-            tasks[RESTRICTIONS_UNIVERSAL] = self.controller.restrictions.universal()
+            tasks[RESTRICTIONS_UNIVERSAL] = (
+                self.controller.restrictions.universal())
 
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
         for operation, result in zip(tasks, results):
