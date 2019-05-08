@@ -14,7 +14,7 @@ from homeassistant.const import (
     PRECISION_WHOLE, STATE_OFF, STATE_ON, TEMP_CELSIUS
 )
 
-REQUIREMENTS = ['efestoclient==0.0.6']
+REQUIREMENTS = ['efestoclient==0.0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
