@@ -125,16 +125,12 @@ class AbstractDemoPlayer(MediaPlayerDevice):
 
     def volume_up(self):
         """Increase volume."""
-        self._volume_level += 0.1
-        if self._volume_level > 1.0:
-            self._volume_level = 1.0
+        self._volume_level = min(1.0, self._volume_level + 0.1)
         self.schedule_update_ha_state()
 
     def volume_down(self):
         """Decrease volume."""
-        self._volume_level -= 0.1
-        if self._volume_level < 0.0:
-            self._volume_level = 0.0
+        self._volume_level = max(0.0, self._volume_level - 0.1)
         self.schedule_update_ha_state()
 
     def set_volume_level(self, volume):
