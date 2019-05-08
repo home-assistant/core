@@ -201,6 +201,7 @@ async def test_onboarding_integration(hass, hass_storage, hass_client):
     })
 
     assert resp.status == 200
+    assert const.STEP_INTEGRATION in hass_storage[const.DOMAIN]['data']['done']
     tokens = await resp.json()
 
     assert (
