@@ -4,9 +4,9 @@ import logging
 from homematicip.aio.device import (
     AsyncBrandSwitchMeasuring, AsyncFullFlushSwitchMeasuring,
     AsyncHeatingThermostat, AsyncHeatingThermostatCompact, AsyncLightSensor,
-    AsyncMotionDetectorIndoor, AsyncMotionDetectorOutdoor, AsyncPresenceDetectorIndoor,
+    AsyncMotionDetectorIndoor, AsyncMotionDetectorOutdoor,
     AsyncMotionDetectorPushButton, AsyncPlugableSwitchMeasuring,
-    AsyncTemperatureHumiditySensorDisplay,
+    AsyncPresenceDetectorIndoor, AsyncTemperatureHumiditySensorDisplay,
     AsyncTemperatureHumiditySensorOutdoor,
     AsyncTemperatureHumiditySensorWithoutDisplay, AsyncWeatherSensor,
     AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
