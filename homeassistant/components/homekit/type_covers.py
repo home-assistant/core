@@ -4,18 +4,21 @@ import logging
 from pyhap.const import CATEGORY_GARAGE_DOOR_OPENER, CATEGORY_WINDOW_COVERING
 
 from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION, ATTR_POSITION, DOMAIN, SUPPORT_STOP)
+    ATTR_CURRENT_POSITION, ATTR_CURRENT_TILT_POSITION, ATTR_POSITION, 
+    ATTR_TILT_POSITION, DOMAIN, SUPPORT_STOP, SUPPORT_SET_TILT_POSITION,
+    SUPPORT_OPEN, SUPPORT_CLOSE)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER, SERVICE_SET_COVER_POSITION, SERVICE_STOP_COVER,
-    STATE_CLOSED, STATE_OPEN)
+    SERVICE_OPEN_COVER_TILT, SERVICE_SET_COVER_TILT_POSITION, 
+    SERVICE_CLOSE_COVER_TILT, STATE_CLOSED, STATE_OPEN)
 
 from . import TYPES
 from .accessories import HomeAccessory, debounce
 from .const import (
     CHAR_CURRENT_DOOR_STATE, CHAR_CURRENT_POSITION, CHAR_POSITION_STATE,
     CHAR_TARGET_DOOR_STATE, CHAR_TARGET_POSITION, SERV_GARAGE_DOOR_OPENER,
-    SERV_WINDOW_COVERING)
+    CHAR_CURRENT_TILT_POSITION, CHAR_TARGET_TILT_POSITION, SERV_WINDOW_COVERING)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,11 +80,30 @@ class WindowCovering(HomeAccessory):
         super().__init__(*args, category=CATEGORY_WINDOW_COVERING)
         self._homekit_target = None
 
-        serv_cover = self.add_preload_service(SERV_WINDOW_COVERING)
+        chars = []
+        features = self.hass.states.get(self.entity_id) \
+            .attributes.get(ATTR_SUPPORTED_FEATURES)
+
+        self._supports_open = features & SUPPORT_OPEN
+        self._supports_close = features & SUPPORT_CLOSE
+        self._supports_set_tilt_position = features & SUPPORT_SET_TILT_POSITION
+
+        if self._supports_set_tilt_position:
+            chars = [CHAR_CURRENT_TILT_POSITION, CHAR_TARGET_TILT_POSITION]
+
+        serv_cover = self.add_preload_service(SERV_WINDOW_COVERING, chars)
         self.char_current_position = serv_cover.configure_char(
             CHAR_CURRENT_POSITION, value=0)
         self.char_target_position = serv_cover.configure_char(
             CHAR_TARGET_POSITION, value=0, setter_callback=self.move_cover)
+        self.char_position_state = serv_cover.configure_char(
+            CHAR_POSITION_STATE, value=2)
+
+        if self._supports_set_tilt_position:
+            self.char_current_tilt_position = serv_cover.configure_char(
+                CHAR_CURRENT_TILT_POSITION, value=0)
+            self.char_target_tilt_position = serv_cover.configure_char(
+                CHAR_TARGET_TILT_POSITION, value=0, setter_callback=self.move_tilt)
 
     @debounce
     def move_cover(self, value):
@@ -89,12 +111,32 @@ class WindowCovering(HomeAccessory):
         _LOGGER.debug('%s: Set position to %d', self.entity_id, value)
         self._homekit_target = value
 
-        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_POSITION: value}
-        self.call_service(DOMAIN, SERVICE_SET_COVER_POSITION, params, value)
+        if self._supports_close and value == 0:
+            service = SERVICE_CLOSE_COVER
+            params = {ATTR_ENTITY_ID: self.entity_id}
+        elif self._supports_open and value == 100:
+            service = SERVICE_OPEN_COVER
+            params = {ATTR_ENTITY_ID: self.entity_id}    
+        else:
+            service = SERVICE_SET_COVER_POSITION
+            params = {ATTR_ENTITY_ID: self.entity_id, ATTR_POSITION: value}
+
+        self.call_service(DOMAIN, service, params, value)
+
+    def move_tilt(self, value):
+        """Move cover to value if call came from HomeKit."""
+        _LOGGER.debug('%s: Set tilt position to %d', self.entity_id, value)
+        self._homekit_target = value
+
+        angle = round((value+90)/180*100)
+
+        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_TILT_POSITION: angle}
+        self.call_service(DOMAIN, SERVICE_SET_COVER_TILT_POSITION, params, angle)
 
     def update_state(self, new_state):
         """Update cover position after state changed."""
         current_position = new_state.attributes.get(ATTR_CURRENT_POSITION)
+
         if isinstance(current_position, int):
             self.char_current_position.set_value(current_position)
             if self._homekit_target is None or \
@@ -102,6 +144,15 @@ class WindowCovering(HomeAccessory):
                 self.char_target_position.set_value(current_position)
                 self._homekit_target = None
 
+        current_tilt_position = new_state.attributes.get(ATTR_CURRENT_TILT_POSITION)
+
+        if isinstance(current_tilt_position, int):
+            current_tilt_position = current_tilt_position/100*180-90
+            self.char_current_tilt_position.set_value(current_tilt_position)
+            if self._homekit_target is None or \
+                    abs(current_tilt_position - self._homekit_target) < 6:
+                self.char_target_tilt_position.set_value(current_tilt_position)
+                self._homekit_target = None
 
 @TYPES.register('WindowCoveringBasic')
 class WindowCoveringBasic(HomeAccessory):
