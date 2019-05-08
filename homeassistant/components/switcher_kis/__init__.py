@@ -7,7 +7,7 @@ from typing import Dict, Optional
 
 import voluptuous as vol
 
-from homeassistant.auth.permissions.const import POLICY_CONTROL
+from homeassistant.auth.permissions.const import POLICY_EDIT
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (CONF_ENTITY_ID, CONF_NAME,
                                  EVENT_HOMEASSISTANT_STOP)
@@ -69,13 +69,11 @@ async def _validate_control_permission(
     user = await hass.auth.async_get_user(context.user_id)
     if user is None:
         raise UnknownUser(
-            context=context, entity_id=entity_id,
-            permission=(POLICY_CONTROL, ))
+            context=context, entity_id=entity_id, permission=(POLICY_EDIT, ))
 
-    if not user.permissions.check_entity(entity_id, POLICY_CONTROL):
+    if not user.permissions.check_entity(entity_id, POLICY_EDIT):
         raise Unauthorized(
-            context=context, entity_id=entity_id,
-            permission=(POLICY_CONTROL, ))
+            context=context, entity_id=entity_id, permission=(POLICY_EDIT, ))
 
 
 async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
