@@ -29,6 +29,20 @@ def normalize_metadata(metadata: dict) -> dict:
     return new_metadata
 
 
+def create_minio_client(
+        endpoint: str,
+        access_key: str,
+        secret_key: str,
+        secure: bool
+) -> Minio:
+    return Minio(
+        endpoint,
+        access_key,
+        secret_key,
+        secure
+    )
+
+
 def get_minio_notification_response(
         minio_client,
         bucket_name: str,
@@ -121,7 +135,7 @@ class MinioEventThread(threading.Thread):
 
         self._should_stop = False
 
-        minio_client = Minio(
+        minio_client = create_minio_client(
             self._endpoint,
             self._access_key,
             self._secret_key,

@@ -6,13 +6,12 @@ from queue import Queue
 from typing import List
 
 import voluptuous as vol
-from minio import Minio
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, \
     EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 
-from .minio_helper import MinioEventThread
+from .minio_helper import create_minio_client, MinioEventThread
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,7 +121,7 @@ def setup(hass, config):
     for listen_conf in conf[CONF_LISTEN]:
         _setup_listener(listen_conf)
 
-    minio_client = Minio(
+    minio_client = create_minio_client(
         get_minio_endpoint(host, port),
         access_key,
         secret_key,
