@@ -4,7 +4,7 @@ import json
 from unittest.mock import MagicMock
 
 import pytest
-from asynctest import patch
+from asynctest import patch, call
 
 from homeassistant.components.minio import QueueListener, DOMAIN, CONF_HOST, \
     CONF_PORT, CONF_ACCESS_KEY, CONF_SECRET_KEY, CONF_SECURE, CONF_LISTEN, \
@@ -82,7 +82,7 @@ async def test_minio_services(hass, caplog, minio_client):
         },
         blocking=True
     )
-    minio_client.fput_object.assert_called_with(
+    assert minio_client.fput_object.call_args == call(
         'some_bucket', 'some_key', '/tmp/some_file'
     )
     minio_client.reset_mock()
@@ -97,7 +97,7 @@ async def test_minio_services(hass, caplog, minio_client):
         },
         blocking=True
     )
-    minio_client.fget_object.assert_called_with(
+    assert minio_client.fget_object.call_args == call(
         'some_bucket', 'some_key', '/tmp/some_file'
     )
     minio_client.reset_mock()
@@ -111,7 +111,7 @@ async def test_minio_services(hass, caplog, minio_client):
         },
         blocking=True
     )
-    minio_client.remove_object.assert_called_with(
+    assert minio_client.remove_object.call_args == call(
         'some_bucket', 'some_key'
     )
     minio_client.reset_mock()
