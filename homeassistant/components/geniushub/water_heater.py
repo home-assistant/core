@@ -32,7 +32,6 @@ HA_OPMODE_TO_GH = {
     STATE_AUTO: 'timer',
     STATE_MANUAL: 'override',
 }
-GH_OPMODE_OFF = 'off'
 GH_STATE_TO_HA = {
     'off': STATE_OFF,
     'timer': STATE_AUTO,

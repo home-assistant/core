@@ -34,7 +34,6 @@ HA_OPMODE_TO_GH = {
     STATE_ECO: 'footprint',
     STATE_MANUAL: 'override',
 }
-GH_OPMODE_OFF = 'off'
 GH_STATE_TO_HA = {
     'off': STATE_OFF,
     'timer': STATE_AUTO,
@@ -72,9 +71,7 @@ class GeniusClimateBase(ClimateDevice):
         """Initialize the climate device."""
         self._client = client
         self._zone = zone
-        self._name = zone.name
 
-        self._operation_list = None
         self._supported_features = None
 
     @property
@@ -100,12 +97,12 @@ class GeniusClimateZone(GeniusClimateBase):
         """Initialize the climate device."""
         super().__init__(client, zone)
 
+        self._supported_features = GENIUSHUB_SUPPORT_FLAGS
         # Only some zones have movement detectors, which allows footprint mode
         op_list = list(HA_OPMODE_TO_GH)
         if not hasattr(self._zone, 'occupied'):
             op_list.remove(STATE_ECO)
         self._operation_list = op_list
-        self._supported_features = GENIUSHUB_SUPPORT_FLAGS
 
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
@@ -180,11 +177,13 @@ class GeniusClimateZone(GeniusClimateBase):
 
     async def async_turn_on(self):
         """Turn on this heating zone."""
-        await self._zone.set_mode(HA_OPMODE_TO_GH.get(STATE_AUTO))
+        # Set to Footprint mode if there's a Room sensor, to Timer otherwise
+        mode = STATE_ECO if hasattr(self._zone, 'occupied') else STATE_AUTO
+        await self._zone.set_mode(HA_OPMODE_TO_GH.get(mode))
 
     async def async_turn_off(self):
         """Turn off this heating zone (i.e. to frost protect)."""
-        await self._zone.set_mode(GH_OPMODE_OFF)
+        await self._zone.set_mode(HA_OPMODE_TO_GH[STATE_OFF])
 
 
 class GeniusClimateHub(GeniusClimateBase):
@@ -194,7 +193,6 @@ class GeniusClimateHub(GeniusClimateBase):
         """Initialize the climate device."""
         super().__init__(client, zone)
 
-        self._operation_list = []
         self._supported_features = 0
 
     @property
@@ -208,7 +206,7 @@ class GeniusClimateHub(GeniusClimateBase):
             await self._zone.update()
         except (AssertionError, asyncio.TimeoutError) as err:
             _LOGGER.warning("Update for %s failed, message: %s",
-                            self._name, err)
+                            self._zone.name, err)
 
         # inform the child devices that state data has been updated
         pkt = {'signal': 'refresh'}
