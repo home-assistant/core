@@ -69,7 +69,9 @@ SENSOR_TYPES = {
     "Time Remaining": ['job', ['progress', 'printTimeLeft'],
                        'seconds', 'mdi:clock-end'],
     "Time Elapsed": ['job', ['progress', 'printTime'],
-                     'seconds', 'mdi:clock-start']
+                     'seconds', 'mdi:clock-start'],
+    "Job File": ['job', ['job', 'file', 'display'],
+                         None, 'mdi:file'],
 }
 
 SENSOR_SCHEMA = vol.Schema({
