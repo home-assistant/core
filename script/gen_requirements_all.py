@@ -103,6 +103,7 @@ TEST_REQUIREMENTS = (
     'pydispatcher',
     'pyheos',
     'pyhomematic',
+    'pyiqvia',
     'pylitejet',
     'pymonoprice',
     'pynx584',
