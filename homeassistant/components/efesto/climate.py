@@ -48,15 +48,11 @@ def _setup_efesto(url, username, password, device, config, add_entities):
 
     client = EfestoClient(url, username, password, device, False)
 
-    try:
-        add_entities(
-            [EfestoHeatingDevice(client)],
-            True
-        )
-    except socket.error:
-        _LOGGER.error(
-            "Connection error logging into the Efesto web service")
-        return False
+    add_entities(
+        [EfestoHeatingDevice(client)],
+        True
+    )
+    
     return True
 
 
