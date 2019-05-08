@@ -121,7 +121,6 @@ class GeniusClimateZone(GeniusClimateBase):
     @callback
     def _connect(self, packet):
         if packet['signal'] == 'refresh':
-            # self.async_schedule_update_ha_state()                              # TODO: try this
             self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
@@ -208,7 +207,7 @@ class GeniusClimateHub(GeniusClimateBase):
             await self._zone.update()
         except (AssertionError, asyncio.TimeoutError) as err:
             _LOGGER.warning("Update for %s failed, message: %s",
-                            self._id, err)
+                            self._name, err)
 
         # inform the child devices that state data has been updated
         pkt = {'signal': 'refresh'}
