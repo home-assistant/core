@@ -43,39 +43,33 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if octo_type == "Temperatures":
             for tool in tools:
                 for temp_type in types:
-                    new_sensor = OctoPrintSensor(
-                        octoprint_api, temp_type, temp_type, name,
-                        SENSOR_TYPES[octo_type][3], SENSOR_TYPES[octo_type][0],
-                        SENSOR_TYPES[octo_type][1], tool)
-                    devices.append(new_sensor)
+                    path = SENSOR_TYPES[octo_type][1].copy()
+                    path.append(tool)
+                    path.append(temp_type)
+                    devices.append(OctoPrintSensor(
+                        '{} {} {} temp'.format(name, tool, temp_type),
+                        octoprint_api, SENSOR_TYPES[octo_type][0],
+                        path, SENSOR_TYPES[octo_type][2],
+                        SENSOR_TYPES[octo_type][3]))
         else:
-            new_sensor = OctoPrintSensor(
-                octoprint_api, octo_type, SENSOR_TYPES[octo_type][2],
-                name, SENSOR_TYPES[octo_type][3], SENSOR_TYPES[octo_type][0],
-                SENSOR_TYPES[octo_type][1], None, SENSOR_TYPES[octo_type][4])
-            devices.append(new_sensor)
+            devices.append(OctoPrintSensor(
+                '{} {}'.format(name, octo_type), octoprint_api,
+                SENSOR_TYPES[octo_type][0], SENSOR_TYPES[octo_type][1],
+                SENSOR_TYPES[octo_type][2], SENSOR_TYPES[octo_type][3]))
     add_entities(devices, True)
 
 
 class OctoPrintSensor(Entity):
     """Representation of an OctoPrint sensor."""
 
-    def __init__(self, api, condition, sensor_type, sensor_name, unit,
-                 endpoint, group, tool=None, icon=None):
+    def __init__(self, name, api, endpoint, path, unit, icon=None):
         """Initialize a new OctoPrint sensor."""
-        self.sensor_name = sensor_name
-        if tool is None:
-            self._name = '{} {}'.format(sensor_name, condition)
-        else:
-            self._name = '{} {} {} {}'.format(
-                sensor_name, condition, tool, 'temp')
-        self.sensor_type = sensor_type
-        self.api = api
+        self._name = name
         self._state = None
         self._unit_of_measurement = unit
+        self.api = api
         self.api_endpoint = endpoint
-        self.api_group = group
-        self.api_tool = tool
+        self.api_path = path
         self._icon = icon
         _LOGGER.debug("Created OctoPrint sensor %r", self)
 
@@ -103,9 +97,7 @@ class OctoPrintSensor(Entity):
     def update(self):
         """Update state of sensor."""
         try:
-            self._state = self.api.update(
-                self.sensor_type, self.api_endpoint, self.api_group,
-                self.api_tool)
+            self._state = self.api.update(self.api_endpoint, self.api_path)
         except requests.exceptions.ConnectionError:
             # Error calling the api, already logged in api.update()
             return

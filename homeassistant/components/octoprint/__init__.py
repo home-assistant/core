@@ -48,8 +48,8 @@ def ensure_valid_path(value):
 
 BINARY_SENSOR_TYPES = {
     # API Endpoint, Group, Key, unit
-    'Printing': ['printer', 'state', 'printing', None],
-    "Printing Error": ['printer', 'state', 'error', None]
+    'Printing': ['printer', ['state', 'flags', 'printing'], 'moving'],
+    "Printing Error": ['printer', ['state', 'flags', 'error'], 'problem']
 }
 
 BINARY_SENSOR_SCHEMA = vol.Schema({
@@ -60,14 +60,16 @@ BINARY_SENSOR_SCHEMA = vol.Schema({
 
 SENSOR_TYPES = {
     # API Endpoint, Group, Key, unit, icon
-    'Temperatures': ['printer', 'temperature', '*', TEMP_CELSIUS],
-    "Current State": ['printer', 'state', 'text', None, 'mdi:printer-3d'],
-    "Job Percentage": ['job', 'progress', 'completion', '%',
-                       'mdi:file-percent'],
-    "Time Remaining": ['job', 'progress', 'printTimeLeft', 'seconds',
-                       'mdi:clock-end'],
-    "Time Elapsed": ['job', 'progress', 'printTime', 'seconds',
-                     'mdi:clock-start'],
+    'Temperatures': ['printer', ['temperature'],
+                     TEMP_CELSIUS, 'mdi:thermometer'],
+    "Current State": ['printer', ['state', 'text'],
+                      None, 'mdi:printer-3d'],
+    "Job Percentage": ['job', ['progress', 'completion'],
+                       '%', 'mdi:file-percent'],
+    "Time Remaining": ['job', ['progress', 'printTimeLeft'],
+                       'seconds', 'mdi:clock-end'],
+    "Time Elapsed": ['job', ['progress', 'printTime'],
+                     'seconds', 'mdi:clock-start']
 }
 
 SENSOR_SCHEMA = vol.Schema({
@@ -264,26 +266,17 @@ class OctoPrintAPI:
             _LOGGER.error(log_string)
             return None
 
-    def update(self, sensor_type, end_point, group, tool=None):
+    def update(self, endpoint, path):
         """Return the value for sensor_type from the provided endpoint."""
-        response = self.get(end_point)
+        response = self.get(endpoint)
         if response is not None:
-            return get_value_from_json(response, sensor_type, group, tool)
+            return get_value_from_json(response, path)
         return response
 
 
-def get_value_from_json(json_dict, sensor_type, group, tool):
-    """Return the value for sensor_type from the JSON."""
-    if group not in json_dict:
-        return None
-
-    if sensor_type in json_dict[group]:
-        if sensor_type == 'target' and json_dict[sensor_type] is None:
-            return 0
-        return json_dict[group][sensor_type]
-
-    if tool is not None:
-        if sensor_type in json_dict[group][tool]:
-            return json_dict[group][tool][sensor_type]
-
-    return None
+def get_value_from_json(json_dict, path):
+    """Return the value using the path from the JSON result."""
+    value = json_dict
+    for key in path:
+        value = value[key]
+    return value

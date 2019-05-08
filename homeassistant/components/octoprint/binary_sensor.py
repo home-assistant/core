@@ -22,33 +22,25 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     devices = []
     for octo_type in monitored_conditions:
-        new_sensor = OctoPrintBinarySensor(
-            octoprint_api, octo_type, BINARY_SENSOR_TYPES[octo_type][2],
-            name, BINARY_SENSOR_TYPES[octo_type][3],
+        devices.append(OctoPrintBinarySensor(
+            '{} {}'.format(name, octo_type), octoprint_api,
             BINARY_SENSOR_TYPES[octo_type][0],
-            BINARY_SENSOR_TYPES[octo_type][1], 'flags')
-        devices.append(new_sensor)
+            BINARY_SENSOR_TYPES[octo_type][1],
+            BINARY_SENSOR_TYPES[octo_type][2]))
     add_entities(devices, True)
 
 
 class OctoPrintBinarySensor(BinarySensorDevice):
     """Representation an OctoPrint binary sensor."""
 
-    def __init__(self, api, condition, sensor_type, sensor_name, unit,
-                 endpoint, group, tool=None):
+    def __init__(self, name, api, endpoint, path, device_class=None):
         """Initialize a new OctoPrint sensor."""
-        self.sensor_name = sensor_name
-        if tool is None:
-            self._name = '{} {}'.format(sensor_name, condition)
-        else:
-            self._name = '{} {}'.format(sensor_name, condition)
-        self.sensor_type = sensor_type
+        self._name = name
+        self._state = None
+        self._device_class = device_class
         self.api = api
-        self._state = False
-        self._unit_of_measurement = unit
         self.api_endpoint = endpoint
-        self.api_group = group
-        self.api_tool = tool
+        self.api_path = path
         _LOGGER.debug("Created OctoPrint binary sensor %r", self)
 
     @property
@@ -63,15 +55,13 @@ class OctoPrintBinarySensor(BinarySensorDevice):
 
     @property
     def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return None
+        """Return the class of this binary sensor."""
+        return self._device_class
 
     def update(self):
-        """Update state of sensor."""
+        """Update state of the binary sensor."""
         try:
-            self._state = self.api.update(
-                self.sensor_type, self.api_endpoint, self.api_group,
-                self.api_tool)
+            self._state = self.api.update(self.api_endpoint, self.api_path)
         except requests.exceptions.ConnectionError:
             # Error calling the api, already logged in api.update()
             return
