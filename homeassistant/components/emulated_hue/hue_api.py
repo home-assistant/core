@@ -68,6 +68,23 @@ class HueUsernameView(HomeAssistantView):
         return self.json([{'success': {'username': '12345678901234567890'}}])
 
 
+class HueDummyView(HomeAssistantView):
+    """Handle requests to identify emulated hue bridge by sleep cycle.
+    Which identifies emulated hue bridge dummy get to '/api/(null)' """
+
+    url = '/api/(null)'
+    name = 'emulated_hue:api:dummy_response'
+    extra_urls = ['/api/(null)/']
+    requires_auth = False
+
+    async def get(self, request):
+        """Handle a GET request."""
+        if not is_local(request[KEY_REAL_IP]):
+            return self.json_message('only local IPs allowed',
+                                     HTTP_BAD_REQUEST)
+        return self.json([{'dummy': 'view'}])
+
+
 class HueAllGroupsStateView(HomeAssistantView):
     """Group handler."""
 
@@ -115,6 +132,41 @@ class HueGroupView(HomeAssistantView):
                 'description': 'invalid value, dummy for parameter, scene'
             }
         }])
+
+
+class HueUsernameAllLightStateView(HomeAssistantView):
+    """Handle requests for getting and setting info about entities,
+    wrapping dummy config in response to get Sleep Cycle Working."""
+
+    url = '/api/{username}'
+    name = 'emulated_hue:lights:state'
+    extra_urls = ['/api/{username}/']
+    requires_auth = False
+
+    def __init__(self, config):
+        """Initialize the instance of the view."""
+        self.config = config
+
+    @core.callback
+    def get(self, request, username):
+        """Process a request to get the list of available lights."""
+        if not is_local(request[KEY_REAL_IP]):
+            return self.json_message('only local IPs allowed',
+                                     HTTP_BAD_REQUEST)
+
+        hass = request.app['hass']
+        json_response = {}
+
+        for entity in hass.states.async_all():
+            if self.config.is_entity_exposed(entity):
+                state = get_entity_state(self.config, entity)
+                number = self.config.entity_id_to_number(entity.entity_id)
+                json_response[number] = entity_to_json(self.config,
+                                                       entity, state)
+
+        json_response_wrapped = \
+            {'lights': json_response, 'config': {'mac': '00:00:00:00:00:00'}}
+        return self.json(json_response_wrapped)
 
 
 class HueAllLightsStateView(HomeAssistantView):
