@@ -951,3 +951,16 @@ def mock_entity_platform(hass, platform_path, module):
 
     _LOGGER.info("Adding mock integration platform: %s", platform_path)
     module_cache["{}.{}".format(platform_name, domain)] = module
+
+
+def async_capture_events(hass, event_name):
+    """Create a helper that captures events."""
+    events = []
+
+    @ha.callback
+    def capture_events(event):
+        events.append(event)
+
+    hass.bus.async_listen(event_name, capture_events)
+
+    return events
