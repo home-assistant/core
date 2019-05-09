@@ -11,8 +11,6 @@ from requests.exceptions import Timeout
 from homeassistant.components.light import Light
 from . import DOMAIN, DATA_HUB
 
-DEPENDENCIES = ['smarthab']
-
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=60)

@@ -14,8 +14,6 @@ from homeassistant.components.cover import (
 )
 from . import DOMAIN, DATA_HUB
 
-DEPENDENCIES = ['smarthab']
-
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=60)

@@ -9,9 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.const import (
-    CONF_EMAIL, CONF_PASSWORD, CONF_URL)
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'smarthab'
@@ -24,8 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_EMAIL): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_URL): cv.string
+        vol.Required(CONF_PASSWORD): cv.string
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -37,32 +35,27 @@ def setup(hass, config) -> bool:
     sh_conf = config.get(DOMAIN)
 
     # Assign configuration variables
-    username = sh_conf.get(CONF_EMAIL)
-    password = sh_conf.get(CONF_PASSWORD)
-    base_url = sh_conf.get(CONF_URL)
-
-    # Verify that configuration exists
-    if username is None or password is None:
-        _LOGGER.error(
-            "SmartHab username or password is empty, please check your"
-            " configuration")
-        return False
-
-    if base_url is None:
-        base_url = pysmarthab.SmartHab.DEFAULT_BASE_API_URL
+    username = sh_conf[CONF_EMAIL]
+    password = sh_conf[CONF_PASSWORD]
 
     # Setup connection with SmartHab API
-    hub = pysmarthab.SmartHab(base_url=base_url)
+    hub = pysmarthab.SmartHab()
 
     try:
         hub.login(username, password)
     except pysmarthab.RequestFailedException as ex:
-        raise PlatformNotReady(ex)
+        _LOGGER.error("Error while trying to reach SmartHab API.")
+        _LOGGER.debug(ex, exc_info=True)
+        raise HomeAssistantError(
+            "Error while trying to reach SmartHab. Please check service and"
+            " network status, and try again later.")
 
     # Verify that passed in configuration works
     if not hub.is_logged_in():
         _LOGGER.error("Could not authenticate with SmartHab API")
-        raise PlatformNotReady
+        raise HomeAssistantError(
+            "Could not authenticate with SmartHab. Please check your"
+            " credentials.")
 
     # Pass hub object to child platforms
     hass.data[DOMAIN] = {
