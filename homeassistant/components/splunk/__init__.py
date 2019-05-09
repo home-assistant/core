@@ -62,8 +62,8 @@ def setup(hass, config):
         """Listen for new messages on the bus and sends them to Splunk."""
         state = event.data.get('new_state')
 
+        """Skip empty states, and exclude filtered domains/entities."""
         if state is None or not entity_filter(state.entity_id):
-            """Skip empty states, and exclude filtered domains/entities."""
             return
 
         try:
