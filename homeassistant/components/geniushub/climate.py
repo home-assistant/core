@@ -85,16 +85,6 @@ class GeniusClimateZone(ClimateDevice):
         return self._zone.name
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return self._supported_features
-
-    @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         tmp = self._zone.__dict__.items()
@@ -129,6 +119,16 @@ class GeniusClimateZone(ClimateDevice):
     def max_temp(self):
         """Return max valid temperature that can be set."""
         return GH_MAX_TEMP
+
+    @property
+    def temperature_unit(self):
+        """Return the unit of measurement."""
+        return TEMP_CELSIUS
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return self._supported_features
 
     @property
     def operation_list(self):
