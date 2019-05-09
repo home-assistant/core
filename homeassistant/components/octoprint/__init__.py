@@ -78,6 +78,8 @@ SENSOR_TYPES = {
                      'seconds', 'mdi:clock-start'],
     "Job File": ['job', ['job', 'file', 'display'],
                  None, 'mdi:file'],
+    "Printers Avaliable": ['connection', ['options', 'ports'],
+                           None, 'mdi:printer-3d'],
 }
 
 SENSOR_SCHEMA = vol.Schema({

@@ -97,7 +97,11 @@ class OctoPrintSensor(Entity):
     def update(self):
         """Update state of sensor."""
         try:
-            self._state = self.api.update(self.api_endpoint, self.api_path)
+            data = self.api.update(self.api_endpoint, self.api_path)
+            if isinstance(data, list):
+                self._state = len(data)
+            else:
+                self._state = data
         except requests.exceptions.ConnectionError:
             # Error calling the api, already logged in api.update()
             return
