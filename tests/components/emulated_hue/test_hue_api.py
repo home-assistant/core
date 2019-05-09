@@ -14,8 +14,9 @@ from homeassistant.components import (
 from homeassistant.components.emulated_hue import Config
 from homeassistant.components.emulated_hue.hue_api import (
     HUE_API_STATE_ON, HUE_API_STATE_BRI, HUE_API_STATE_HUE, HUE_API_STATE_SAT,
-    HueUsernameView, HueOneLightStateView,
-    HueAllLightsStateView, HueOneLightChangeView, HueAllGroupsStateView)
+    HueUsernameView, HueOneLightStateView, HueAllLightsStateView,
+    HueOneLightChangeView, HueAllGroupsStateView,
+    HueUsernameAllLightStateView, HueDummyView)
 from homeassistant.const import STATE_ON, STATE_OFF
 
 import homeassistant.util.dt as dt_util
@@ -182,10 +183,12 @@ def hue_client(loop, hass_hue, aiohttp_client):
     })
 
     HueUsernameView().register(web_app, web_app.router)
+    HueDummyView().register(web_app, web_app.router)
     HueAllLightsStateView(config).register(web_app, web_app.router)
     HueOneLightStateView(config).register(web_app, web_app.router)
     HueOneLightChangeView(config).register(web_app, web_app.router)
     HueAllGroupsStateView(config).register(web_app, web_app.router)
+    HueUsernameAllLightStateView(config).register(web_app, web_app.router)
 
     return loop.run_until_complete(aiohttp_client(web_app))
 
@@ -201,6 +204,51 @@ def test_discover_lights(hue_client):
     result_json = yield from result.json()
 
     devices = set(val['uniqueid'] for val in result_json.values())
+
+    # Make sure the lights we added to the config are there
+    assert 'light.ceiling_lights' in devices
+    assert 'light.bed_light' not in devices
+    assert 'script.set_kitchen_light' in devices
+    assert 'light.kitchen_lights' not in devices
+    assert 'media_player.living_room' in devices
+    assert 'media_player.bedroom' in devices
+    assert 'media_player.walkman' in devices
+    assert 'media_player.lounge_room' in devices
+    assert 'fan.living_room_fan' in devices
+    assert 'fan.ceiling_fan' not in devices
+    assert 'cover.living_room_window' in devices
+    assert 'climate.hvac' in devices
+    assert 'climate.heatpump' in devices
+    assert 'climate.ecobee' not in devices
+
+
+@asyncio.coroutine
+def test_discover_username_lights(hue_client):
+    """Test the discovery of lights from username."""
+    result = yield from hue_client.get('/api/username')
+
+    assert result.status == 200
+    assert 'application/json' in result.headers['content-type']
+
+    result_json = yield from result.json()
+
+    # Make sure array has correct content
+    assert 'lights' in result_json
+    assert 'lights' not in result_json['config']
+    assert 'config' in result_json
+    assert 'config' not in result_json['lights']
+
+    # Make sure array is correct size
+    assert len(result_json) == 2
+    assert len(result_json['config']) == 1
+    assert len(result_json['lights']) >= 1
+
+    # Make sure the config wrapper added to the config is there
+    assert 'mac' in result_json['config']
+    assert '00:00:00:00:00:00' in result_json['config']['mac']
+    assert 'FF:FF:FF:FF:FF:FF' not in result_json['config']['mac']
+
+    devices = set(val['uniqueid'] for val in result_json['lights'].values())
 
     # Make sure the lights we added to the config are there
     assert 'light.ceiling_lights' in devices
