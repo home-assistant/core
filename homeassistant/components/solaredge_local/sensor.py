@@ -5,6 +5,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.solaredge_local/
 """
 
+<<<<<<< HEAD
+=======
+from datetime import timedelta
+>>>>>>> Basic local SolarEdge monitoring for energy / power
 import logging
 
 import voluptuous as vol
@@ -57,11 +61,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # Check if api can be reached and site is active
     try:
         status = api.get_status()
+<<<<<<< HEAD
         status.energy  # pylint: disable=pointless-statement
         _LOGGER.debug("Credentials correct and site is active")
     except AttributeError:
         _LOGGER.error("Missing details data in solaredge response")
         _LOGGER.debug("Response is: %s", status)
+=======
+        status.energy
+        _LOGGER.info("Credentials correct and site is active")
+    except AttributeError:
+        _LOGGER.error("Missing details data in solaredge response")
+        _LOGGER.error("Response is", status)
+>>>>>>> Basic local SolarEdge monitoring for energy / power
         return
     except (ConnectTimeout, HTTPError):
         _LOGGER.error("Could not retrieve details from SolarEdge API")
@@ -135,6 +147,7 @@ class SolarEdgeData:
         try:
             response = self.api.get_status()
             _LOGGER.debug("response from SolarEdge: %s", response)
+<<<<<<< HEAD
 
             self.data["energyTotal"] = response.energy.total
             self.data["energyThisYear"] = response.energy.thisYear
@@ -146,7 +159,23 @@ class SolarEdgeData:
         except AttributeError:
             _LOGGER.error("Missing details data in solaredge response")
             _LOGGER.debug("Response is: %s", response)
+=======
+            response.energy
+        except AttributeError:
+            _LOGGER.error("Missing details data in solaredge response")
+            _LOGGER.error("Response is: %s", response)
+>>>>>>> Basic local SolarEdge monitoring for energy / power
             return
         except (ConnectTimeout, HTTPError):
             _LOGGER.error("Could not retrieve data, skipping update")
             return
+<<<<<<< HEAD
+=======
+
+        self.data["energyTotal"] = response.energy.total
+        self.data["energyThisYear"] = response.energy.thisYear
+        self.data["energyThisMonth"] = response.energy.thisMonth
+        self.data["energyToday"] = response.energy.today
+        self.data["currentPower"] = response.powerWatt
+        _LOGGER.debug("Updated SolarEdge overview data: %s", self.data)
+>>>>>>> Basic local SolarEdge monitoring for energy / power
