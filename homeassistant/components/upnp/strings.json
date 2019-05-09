@@ -1,0 +1,15 @@
+{
+  "config": {
+    "title": "UPnP/IGD",
+    "step": {
+      "confirm": {
+        "title": "UPnP/IGD",
+        "description": "Do you want to set up UPnP/IGD?"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Only a single configuration of UPnP/IGD is necessary.",
+      "no_devices_found": "No UPnP/IGD devices found on the network."
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "communication_error": "Luftdaten API \uc640 \ud1b5\uc2e0 \ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4",
+            "invalid_sensor": "\uc13c\uc11c\ub97c \uc0ac\uc6a9\ud560 \uc218 \uc5c6\uac70\ub098 \uc720\ud6a8\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4",
+            "sensor_exists": "\uc13c\uc11c\uac00 \uc774\ubbf8 \ub4f1\ub85d\ub41c \uc0c1\ud0dc\uc785\ub2c8\ub2e4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "show_on_map": "\uc9c0\ub3c4\uc5d0 \ud45c\uc2dc\ud558\uae30",
+                    "station_id": "Luftdaten \uc13c\uc11c ID"
+                },
+                "title": "Luftdaten \uc124\uc815"
+            }
+        },
+        "title": "Luftdaten"
+    }
+}

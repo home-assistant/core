@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Point \uacc4\uc815 \ub9cc \uad6c\uc131 \ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4.",
+            "authorize_url_fail": "\uc778\uc99d url \uc0dd\uc131\uc5d0 \uc54c \uc218 \uc5c6\ub294 \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4.",
+            "authorize_url_timeout": "\uc778\uc99d url \uc0dd\uc131 \uc2dc\uac04\uc774 \ucd08\uacfc\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+            "external_setup": "Point \uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5b4 \uc788\uc2b5\ub2c8\ub2e4.",
+            "no_flows": "Point \ub97c \uc778\uc99d\ud558\ub824\uba74 \uba3c\uc800 Point \ub97c \uad6c\uc131\ud574\uc57c \ud569\ub2c8\ub2e4. [\uc548\ub0b4](https://www.home-assistant.io/components/point/) \ub97c \uc77d\uc5b4\ubcf4\uc138\uc694."
+        },
+        "create_entry": {
+            "default": "Point \uae30\uae30\ub294 Minut \ub85c \uc778\uc99d\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "follow_link": "Submit \ubc84\ud2bc\uc744 \ub204\ub974\uae30 \uc804\uc5d0 \ub9c1\ud06c\ub97c \ub530\ub77c \uc778\uc99d\uc744 \ubc1b\uc544\uc8fc\uc138\uc694",
+            "no_token": "Minut \ub85c \uc778\uc99d\ub418\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "auth": {
+                "description": "\uc544\ub798 \ub9c1\ud06c\ub97c \ud074\ub9ad\ud558\uc5ec Minut \uacc4\uc815\uc5d0 \ub300\ud574 <b>\ub3d9\uc758</b> \ud55c \ub2e4\uc74c, \ub2e4\uc2dc \ub3cc\uc544\uc640\uc11c \ud558\ub2e8\uc758 <b>Submit</b> \ubc84\ud2bc\uc744 \ub20c\ub7ec\uc8fc\uc138\uc694. \n\n[\ub9c1\ud06c] ({authorization_url})",
+                "title": "Point \uc778\uc99d"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "\uacf5\uae09\uc790"
+                },
+                "description": "Point \ub97c \uc778\uc99d\ud558\uae30 \uc704\ud55c \uc778\uc99d \uacf5\uae09\uc790\ub97c \uc120\ud0dd\ud574\uc8fc\uc138\uc694.",
+                "title": "\uc778\uc99d \uacf5\uae09\uc790"
+            }
+        },
+        "title": "Minut Point"
+    }
+}

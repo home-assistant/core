@@ -88,7 +88,8 @@ class MockNetwork(MagicMock):
     SIGNAL_NODE_QUERIES_COMPLETE = 'mock_NodeQueriesComplete'
     SIGNAL_AWAKE_NODES_QUERIED = 'mock_AwakeNodesQueried'
     SIGNAL_ALL_NODES_QUERIED = 'mock_AllNodesQueried'
-    SIGNAL_ALL_NODES_QUERIED_SOME_DEAD = 'mock_AllNodesQueriedSomeDead'
+    SIGNAL_ALL_NODES_QUERIED_SOME_DEAD = \
+        'mock_AllNodesQueriedSomeDead'
     SIGNAL_MSG_COMPLETE = 'mock_MsgComplete'
     SIGNAL_NOTIFICATION = 'mock_Notification'
     SIGNAL_CONTROLLER_COMMAND = 'mock_ControllerCommand'

@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Ra\u010dun \u017ee registriran",
+            "invalid_credentials": "Neveljavne poverilnice"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Ime gostitelja ali naslov IP",
+                    "password": "Geslo",
+                    "port": "port"
+                },
+                "title": "Izpolnite svoje podatke"
+            }
+        },
+        "title": "RainMachine"
+    }
+}

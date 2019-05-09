@@ -3,16 +3,16 @@ import asyncio
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
-    dispatcher_send, dispatcher_connect)
+    async_dispatcher_connect, dispatcher_send, dispatcher_connect)
 
 from tests.common import get_test_home_assistant
 
 
-class TestHelpersDispatcher(object):
+class TestHelpersDispatcher:
     """Tests for discovery helper methods."""
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def teardown_method(self, method):
@@ -134,3 +134,20 @@ class TestHelpersDispatcher(object):
         self.hass.block_till_done()
 
         assert calls == [3, 2, 'bla']
+
+
+async def test_callback_exception_gets_logged(hass, caplog):
+    """Test exception raised by signal handler."""
+    @callback
+    def bad_handler(*args):
+        """Record calls."""
+        raise Exception('This is a bad message callback')
+
+    async_dispatcher_connect(hass, 'test', bad_handler)
+    dispatcher_send(hass, 'test', 'bad')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert \
+        "Exception in bad_handler when dispatching 'test': ('bad',)" \
+        in caplog.text

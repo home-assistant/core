@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "ESP ya est\u00e1 configurado"
+        },
+        "error": {
+            "invalid_password": "\u00a1Contrase\u00f1a incorrecta!"
+        },
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Contrase\u00f1a"
+                },
+                "description": "Escribe la contrase\u00f1a que hayas establecido en tu configuraci\u00f3n.",
+                "title": "Escribe la contrase\u00f1a"
+            },
+            "discovery_confirm": {
+                "description": "\u00bfQuieres a\u00f1adir el nodo `{name}` de ESPHome a Home Assistant?",
+                "title": "Nodo ESPHome descubierto"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Puerto"
+                },
+                "title": "ESPHome"
+            }
+        },
+        "title": "ESPHome"
+    }
+}

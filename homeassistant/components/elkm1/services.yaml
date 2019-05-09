@@ -1,0 +1,12 @@
+speak_word:
+  description: Speak a word. See list of words in ElkM1 ASCII Protocol documentation.
+  fields:
+    number:
+      description: Word number to speak.
+      example: 142
+speak_phrase:
+  description: Speak a phrase. See list of phrases in ElkM1 ASCII Protocol documentation.
+  fields:
+    number:
+      description: Phrase number to speak.
+      example: 42

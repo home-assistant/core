@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Kun \u00e9n enkelt konfigurasjon av ZHA er tillatt."
+        },
+        "error": {
+            "cannot_connect": "Kan ikke koble til ZHA-enhet."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radio_type": "Radio type",
+                    "usb_path": "USB enhetsbane"
+                },
+                "title": "ZHA"
+            }
+        },
+        "title": "ZHA"
+    }
+}

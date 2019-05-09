@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Google Hangouts ya est\u00e1 configurado",
+            "unknown": "Error desconocido"
+        },
+        "error": {
+            "invalid_2fa": "Autenticaci\u00f3n de 2 factores no v\u00e1lida, por favor, int\u00e9ntelo de nuevo.",
+            "invalid_2fa_method": "M\u00e9todo 2FA no v\u00e1lido (verificar en el tel\u00e9fono).",
+            "invalid_login": "Inicio de sesi\u00f3n no v\u00e1lido, por favor, int\u00e9ntalo de nuevo."
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "Pin 2FA"
+                },
+                "description": "Vac\u00edo",
+                "title": "Autenticaci\u00f3n de 2 factores"
+            },
+            "user": {
+                "data": {
+                    "authorization_code": "C\u00f3digo de autorizaci\u00f3n (requerido para la autenticaci\u00f3n manual)",
+                    "email": "Correo electr\u00f3nico",
+                    "password": "Contrase\u00f1a"
+                },
+                "description": "Vac\u00edo",
+                "title": "Usuario Google Hangouts"
+            }
+        },
+        "title": "Google Hangouts"
+    }
+}

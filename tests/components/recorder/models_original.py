@@ -14,7 +14,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 import homeassistant.util.dt as dt_util
 from homeassistant.core import Event, EventOrigin, State, split_entity_id
-from homeassistant.remote import JSONEncoder
+from homeassistant.helpers.json import JSONEncoder
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
@@ -157,7 +157,6 @@ def _process_timestamp(ts):
     """Process a timestamp into datetime object."""
     if ts is None:
         return None
-    elif ts.tzinfo is None:
+    if ts.tzinfo is None:
         return dt_util.UTC.localize(ts)
-    else:
-        return dt_util.as_utc(ts)
+    return dt_util.as_utc(ts)

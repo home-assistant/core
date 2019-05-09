@@ -1,9 +1,4 @@
-"""
-Provides functionality to interact with image processing services.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/image_processing/
-"""
+"""Provides functionality to interact with image processing services."""
 import asyncio
 from datetime import timedelta
 import logging
@@ -17,14 +12,11 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'image_processing'
-DEPENDENCIES = ['camera']
-
 SCAN_INTERVAL = timedelta(seconds=10)
 
 DEVICE_CLASSES = [
@@ -61,35 +53,31 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE):
         vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
 })
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
 
 SERVICE_SCAN_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
 
 
-@bind_hass
-def scan(hass, entity_id=None):
-    """Force process an image."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_SCAN, data)
-
-
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the image processing."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
-    yield from component.async_setup(config)
+    await component.async_setup(config)
 
-    @asyncio.coroutine
-    def async_scan_service(service):
+    async def async_scan_service(service):
         """Service handler for scan."""
-        image_entities = component.async_extract_from_service(service)
+        image_entities = await component.async_extract_from_service(service)
 
-        update_task = [entity.async_update_ha_state(True) for
-                       entity in image_entities]
-        if update_task:
-            yield from asyncio.wait(update_task, loop=hass.loop)
+        update_tasks = []
+        for entity in image_entities:
+            entity.async_set_context(service.context)
+            update_tasks.append(
+                entity.async_update_ha_state(True))
+
+        if update_tasks:
+            await asyncio.wait(update_tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SCAN, async_scan_service,
@@ -124,8 +112,7 @@ class ImageProcessingEntity(Entity):
         """
         return self.hass.async_add_job(self.process_image, image)
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Update image and process it.
 
         This method is a coroutine.
@@ -134,7 +121,7 @@ class ImageProcessingEntity(Entity):
         image = None
 
         try:
-            image = yield from camera.async_get_image(
+            image = await camera.async_get_image(
                 self.camera_entity, timeout=self.timeout)
 
         except HomeAssistantError as err:
@@ -142,7 +129,7 @@ class ImageProcessingEntity(Entity):
             return
 
         # process image data
-        yield from self.async_process_image(image.content)
+        await self.async_process_image(image.content)
 
 
 class ImageProcessingFaceEntity(ImageProcessingEntity):

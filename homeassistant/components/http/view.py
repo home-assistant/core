@@ -1,40 +1,49 @@
-"""
-This module provides WSGI application to serve the Home Assistant API.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/http/
-"""
+"""Support for views."""
 import asyncio
 import json
 import logging
 
 from aiohttp import web
-from aiohttp.web_exceptions import HTTPUnauthorized, HTTPInternalServerError
+from aiohttp.web_exceptions import (
+    HTTPBadRequest, HTTPInternalServerError, HTTPUnauthorized)
+import voluptuous as vol
 
-import homeassistant.remote as rem
-from homeassistant.core import is_callback
+from homeassistant import exceptions
 from homeassistant.const import CONTENT_TYPE_JSON
+from homeassistant.core import Context, is_callback
+from homeassistant.helpers.json import JSONEncoder
 
-from .const import KEY_AUTHENTICATED, KEY_REAL_IP
-
+from .ban import process_success_login
+from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_REAL_IP
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class HomeAssistantView(object):
+class HomeAssistantView:
     """Base view for all views."""
 
     url = None
     extra_urls = []
-    requires_auth = True  # Views inheriting from this class can override this
+    # Views inheriting from this class can override this
+    requires_auth = True
+    cors_allowed = False
 
     # pylint: disable=no-self-use
+    def context(self, request):
+        """Generate a context from a request."""
+        user = request.get('hass_user')
+        if user is None:
+            return Context()
+
+        return Context(user_id=user.id)
+
     def json(self, result, status_code=200, headers=None):
         """Return a JSON response."""
         try:
             msg = json.dumps(
-                result, sort_keys=True, cls=rem.JSONEncoder).encode('UTF-8')
-        except TypeError as err:
+                result, sort_keys=True, cls=JSONEncoder, allow_nan=False
+            ).encode('UTF-8')
+        except (ValueError, TypeError) as err:
             _LOGGER.error('Unable to serialize to JSON: %s\n%s', err, result)
             raise HTTPInternalServerError
         response = web.Response(
@@ -51,12 +60,14 @@ class HomeAssistantView(object):
             data['code'] = message_code
         return self.json(data, status_code, headers=headers)
 
-    def register(self, router):
+    def register(self, app, router):
         """Register the view with a router."""
         assert self.url is not None, 'No url set for view'
         urls = [self.url] + self.extra_urls
+        routes = []
 
-        for method in ('get', 'post', 'delete', 'put'):
+        for method in ('get', 'post', 'delete', 'put', 'patch', 'head',
+                       'options'):
             handler = getattr(self, method, None)
 
             if not handler:
@@ -65,13 +76,13 @@ class HomeAssistantView(object):
             handler = request_handler_factory(self, handler)
 
             for url in urls:
-                router.add_route(method, url, handler)
+                routes.append(router.add_route(method, url, handler))
 
-        # aiohttp_cors does not work with class based views
-        # self.app.router.add_route('*', self.url, self, name=self.name)
+        if not self.cors_allowed:
+            return
 
-        # for url in self.extra_urls:
-        #     self.app.router.add_route('*', url, self)
+        for route in routes:
+            app['allow_cors'](route)
 
 
 def request_handler_factory(view, handler):
@@ -81,21 +92,33 @@ def request_handler_factory(view, handler):
 
     async def handle(request):
         """Handle incoming request."""
-        if not request.app['hass'].is_running:
+        if not request.app[KEY_HASS].is_running:
             return web.Response(status=503)
 
         authenticated = request.get(KEY_AUTHENTICATED, False)
 
-        if view.requires_auth and not authenticated:
+        if view.requires_auth:
+            if authenticated:
+                if 'deprecate_warning_message' in request:
+                    _LOGGER.warning(request['deprecate_warning_message'])
+                await process_success_login(request)
+            else:
+                raise HTTPUnauthorized()
+
+        _LOGGER.debug('Serving %s to %s (auth: %s)',
+                      request.path, request.get(KEY_REAL_IP), authenticated)
+
+        try:
+            result = handler(request, **request.match_info)
+
+            if asyncio.iscoroutine(result):
+                result = await result
+        except vol.Invalid:
+            raise HTTPBadRequest()
+        except exceptions.ServiceNotFound:
+            raise HTTPInternalServerError()
+        except exceptions.Unauthorized:
             raise HTTPUnauthorized()
-
-        _LOGGER.info('Serving %s to %s (auth: %s)',
-                     request.path, request.get(KEY_REAL_IP), authenticated)
-
-        result = handler(request, **request.match_info)
-
-        if asyncio.iscoroutine(result):
-            result = await result
 
         if isinstance(result, web.StreamResponse):
             # The method handler returned a ready-made Response, how nice of it

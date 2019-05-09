@@ -1,0 +1,14 @@
+{
+  "domain": "ios",
+  "name": "Ios",
+  "documentation": "https://www.home-assistant.io/components/ios",
+  "requirements": [],
+  "dependencies": [
+    "device_tracker",
+    "http",
+    "zeroconf"
+  ],
+  "codeowners": [
+    "@robbiet480"
+  ]
+}

@@ -7,31 +7,31 @@ from homeassistant.helpers import location
 
 
 class TestHelpersLocation(unittest.TestCase):
-    """Setup the tests."""
+    """Set up the tests."""
 
     def test_has_location_with_invalid_states(self):
-        """Setup the tests."""
+        """Set up the tests."""
         for state in (None, 1, "hello", object):
-            self.assertFalse(location.has_location(state))
+            assert not location.has_location(state)
 
     def test_has_location_with_states_with_invalid_locations(self):
-        """Setup the tests."""
+        """Set up the tests."""
         state = State('hello.world', 'invalid', {
             ATTR_LATITUDE: 'no number',
             ATTR_LONGITUDE: 123.12
         })
-        self.assertFalse(location.has_location(state))
+        assert not location.has_location(state)
 
     def test_has_location_with_states_with_valid_location(self):
-        """Setup the tests."""
+        """Set up the tests."""
         state = State('hello.world', 'invalid', {
             ATTR_LATITUDE: 123.12,
             ATTR_LONGITUDE: 123.12
         })
-        self.assertTrue(location.has_location(state))
+        assert location.has_location(state)
 
     def test_closest_with_no_states_with_location(self):
-        """Setup the tests."""
+        """Set up the tests."""
         state = State('light.test', 'on')
         state2 = State('light.test', 'on', {
             ATTR_LATITUDE: 'invalid',
@@ -41,8 +41,8 @@ class TestHelpersLocation(unittest.TestCase):
             ATTR_LONGITUDE: 123.45,
         })
 
-        self.assertIsNone(
-            location.closest(123.45, 123.45, [state, state2, state3]))
+        assert \
+            location.closest(123.45, 123.45, [state, state2, state3]) is None
 
     def test_closest_returns_closest(self):
         """Test ."""
@@ -55,5 +55,4 @@ class TestHelpersLocation(unittest.TestCase):
             ATTR_LONGITUDE: 125.45,
         })
 
-        self.assertEqual(
-            state, location.closest(123.45, 123.45, [state, state2]))
+        assert state == location.closest(123.45, 123.45, [state, state2])

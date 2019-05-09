@@ -6,23 +6,28 @@ import logging
 import os
 import re
 import shutil
-# pylint: disable=unused-import
-from typing import Any, List, Tuple, Optional  # NOQA
-
+from typing import (  # noqa: F401 pylint: disable=unused-import
+    Any, Tuple, Optional, Dict, List, Union, Callable, Sequence, Set)
+from types import ModuleType
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant import auth
+from homeassistant.auth import providers as auth_providers,\
+    mfa_modules as auth_mfa_modules
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ASSUMED_STATE,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_PACKAGES, CONF_UNIT_SYSTEM,
     CONF_TIME_ZONE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
     __version__, CONF_CUSTOMIZE, CONF_CUSTOMIZE_DOMAIN, CONF_CUSTOMIZE_GLOB,
-    CONF_WHITELIST_EXTERNAL_DIRS, CONF_AUTH_PROVIDERS)
-from homeassistant.core import callback, DOMAIN as CONF_CORE
+    CONF_WHITELIST_EXTERNAL_DIRS, CONF_AUTH_PROVIDERS, CONF_AUTH_MFA_MODULES,
+    CONF_TYPE, CONF_ID)
+from homeassistant.core import callback, DOMAIN as CONF_CORE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import get_component, get_platform
+from homeassistant.loader import (
+    Integration, async_get_integration, IntegrationNotFound
+)
 from homeassistant.util.yaml import load_yaml, SECRET_YAML
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as date_util, location as loc_util
@@ -62,58 +67,24 @@ DEFAULT_CORE_CONFIG = (
     (CONF_CUSTOMIZE, '!include customize.yaml', None, 'Customization file'),
 )  # type: Tuple[Tuple[str, Any, Any, Optional[str]], ...]
 DEFAULT_CONFIG = """
-# Show links to resources in log and frontend
-introduction:
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
 
-# Enables the frontend
-frontend:
-
-# Enables configuration UI
-config:
-
-http:
-  # Secrets are defined in the file secrets.yaml
-  # api_password: !secret http_password
-  # Uncomment this if you are using SSL/TLS, running in Docker container, etc.
-  # base_url: example.duckdns.org:8123
-
-# Checks for available updates
-# Note: This component will send some information about your system to
-# the developers to assist with development of Home Assistant.
-# For more information, please see:
-# https://home-assistant.io/blog/2016/10/25/explaining-the-updater/
-updater:
-  # Optional, allows Home Assistant developers to focus on popular components.
-  # include_used_components: true
+# Uncomment this if you are using SSL/TLS, running in Docker container, etc.
+# http:
+#   base_url: example.duckdns.org:8123
 
 # Discover some devices automatically
 discovery:
 
-# Allows you to issue voice commands from the frontend in enabled browsers
-conversation:
-
-# Enables support for tracking state changes over time
-history:
-
-# View all events in a logbook
-logbook:
-
-# Enables a map showing the location of tracked devices
-map:
-
-# Track the sun
-sun:
-
-# Weather prediction
+# Sensors
 sensor:
+  # Weather prediction
   - platform: yr
 
 # Text to speech
 tts:
-  - platform: google
-
-# Cloud
-cloud:
+  - platform: google_translate
 
 group: !include groups.yaml
 automation: !include automations.yaml
@@ -122,14 +93,64 @@ script: !include scripts.yaml
 DEFAULT_SECRETS = """
 # Use this file to store secrets like usernames and passwords.
 # Learn more at https://home-assistant.io/docs/configuration/secrets/
-http_password: welcome
+some_password: welcome
+"""
+TTS_PRE_92 = """
+tts:
+  - platform: google
+"""
+TTS_92 = """
+tts:
+  - platform: google_translate
+    service_name: google_say
 """
 
 
-PACKAGES_CONFIG_SCHEMA = vol.Schema({
-    cv.slug: vol.Schema(  # Package names are slugs
-        {cv.slug: vol.Any(dict, list, None)})  # Only slugs for component names
-})
+def _no_duplicate_auth_provider(configs: Sequence[Dict[str, Any]]) \
+        -> Sequence[Dict[str, Any]]:
+    """No duplicate auth provider config allowed in a list.
+
+    Each type of auth provider can only have one config without optional id.
+    Unique id is required if same type of auth provider used multiple times.
+    """
+    config_keys = set()  # type: Set[Tuple[str, Optional[str]]]
+    for config in configs:
+        key = (config[CONF_TYPE], config.get(CONF_ID))
+        if key in config_keys:
+            raise vol.Invalid(
+                'Duplicate auth provider {} found. Please add unique IDs if '
+                'you want to have the same auth provider twice'.format(
+                    config[CONF_TYPE]
+                ))
+        config_keys.add(key)
+    return configs
+
+
+def _no_duplicate_auth_mfa_module(configs: Sequence[Dict[str, Any]]) \
+        -> Sequence[Dict[str, Any]]:
+    """No duplicate auth mfa module item allowed in a list.
+
+    Each type of mfa module can only have one config without optional id.
+    A global unique id is required if same type of mfa module used multiple
+    times.
+    Note: this is different than auth provider
+    """
+    config_keys = set()  # type: Set[str]
+    for config in configs:
+        key = config.get(CONF_ID, config[CONF_TYPE])
+        if key in config_keys:
+            raise vol.Invalid(
+                'Duplicate mfa module {} found. Please add unique IDs if '
+                'you want to have the same mfa module twice'.format(
+                    config[CONF_TYPE]
+                ))
+        config_keys.add(key)
+    return configs
+
+
+PACKAGES_CONFIG_SCHEMA = cv.schema_with_slug_keys(  # Package names are slugs
+    vol.Schema({cv.string: vol.Any(dict, list, None)})  # Component config
+)
 
 CUSTOMIZE_DICT_SCHEMA = vol.Schema({
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
@@ -159,7 +180,21 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.IsDir()]),
     vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
     vol.Optional(CONF_AUTH_PROVIDERS):
-        vol.All(cv.ensure_list, [auth.AUTH_PROVIDER_SCHEMA])
+        vol.All(cv.ensure_list,
+                [auth_providers.AUTH_PROVIDER_SCHEMA.extend({
+                    CONF_TYPE: vol.NotIn(['insecure_example'],
+                                         'The insecure_example auth provider'
+                                         ' is for testing only.')
+                })],
+                _no_duplicate_auth_provider),
+    vol.Optional(CONF_AUTH_MFA_MODULES):
+        vol.All(cv.ensure_list,
+                [auth_mfa_modules.MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend({
+                    CONF_TYPE: vol.NotIn(['insecure_example'],
+                                         'The insecure_example mfa module'
+                                         ' is for testing only.')
+                })],
+                _no_duplicate_auth_mfa_module),
 })
 
 
@@ -170,7 +205,8 @@ def get_default_config_dir() -> str:
     return os.path.join(data_dir, CONFIG_DIR_NAME)  # type: ignore
 
 
-def ensure_config_exists(config_dir: str, detect_location: bool = True) -> str:
+def ensure_config_exists(config_dir: str, detect_location: bool = True)\
+        -> Optional[str]:
     """Ensure a configuration file exists in given configuration directory.
 
     Creating a default one if needed.
@@ -186,7 +222,8 @@ def ensure_config_exists(config_dir: str, detect_location: bool = True) -> str:
     return config_path
 
 
-def create_default_config(config_dir, detect_location=True):
+def create_default_config(config_dir: str, detect_location: bool = True)\
+        -> Optional[str]:
     """Create a default configuration file in given configuration directory.
 
     Return path to new config file if success, None if failed.
@@ -268,34 +305,40 @@ def create_default_config(config_dir, detect_location=True):
         return None
 
 
-async def async_hass_config_yaml(hass):
+async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
     """Load YAML from a Home Assistant configuration file.
 
     This function allow a component inside the asyncio loop to reload its
-    configuration by itself.
+    configuration by itself. Include package merge.
 
     This method is a coroutine.
     """
-    def _load_hass_yaml_config():
+    def _load_hass_yaml_config() -> Dict:
         path = find_config_file(hass.config.config_dir)
-        conf = load_yaml_config_file(path)
-        return conf
+        if path is None:
+            raise HomeAssistantError(
+                "Config file not found in: {}".format(hass.config.config_dir))
+        config = load_yaml_config_file(path)
+        return config
 
-    conf = await hass.async_add_job(_load_hass_yaml_config)
-    return conf
+    config = await hass.async_add_executor_job(_load_hass_yaml_config)
+    core_config = config.get(CONF_CORE, {})
+    await merge_packages_config(
+        hass, config, core_config.get(CONF_PACKAGES, {})
+    )
+    return config
 
 
-def find_config_file(config_dir):
-    """Look in given directory for supported configuration files.
-
-    Async friendly.
-    """
+def find_config_file(config_dir: Optional[str]) -> Optional[str]:
+    """Look in given directory for supported configuration files."""
+    if config_dir is None:
+        return None
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
 
     return config_path if os.path.isfile(config_path) else None
 
 
-def load_yaml_config_file(config_path):
+def load_yaml_config_file(config_path: str) -> Dict[Any, Any]:
     """Parse a YAML configuration file.
 
     This method needs to run in an executor.
@@ -318,7 +361,7 @@ def load_yaml_config_file(config_path):
     return conf_dict
 
 
-def process_ha_config_upgrade(hass):
+def process_ha_config_upgrade(hass: HomeAssistant) -> None:
     """Upgrade configuration if necessary.
 
     This method needs to run in an executor.
@@ -344,10 +387,28 @@ def process_ha_config_upgrade(hass):
         if os.path.isdir(lib_path):
             shutil.rmtree(lib_path)
 
+    if LooseVersion(conf_version) < LooseVersion('0.92'):
+        # 0.92 moved google/tts.py to google_translate/tts.py
+        config_path = find_config_file(hass.config.config_dir)
+        assert config_path is not None
+
+        with open(config_path, 'rt', encoding='utf-8') as config_file:
+            config_raw = config_file.read()
+
+        if TTS_PRE_92 in config_raw:
+            _LOGGER.info("Migrating google tts to google_translate tts")
+            config_raw = config_raw.replace(TTS_PRE_92, TTS_92)
+            try:
+                with open(config_path, 'wt', encoding='utf-8') as config_file:
+                    config_file.write(config_raw)
+            except IOError:
+                _LOGGER.exception("Migrating to google_translate tts failed")
+                pass
+
     with open(version_path, 'wt') as outp:
         outp.write(__version__)
 
-    _LOGGER.info("Migrating old system configuration files to new locations")
+    _LOGGER.debug("Migrating old system configuration files to new locations")
     for oldf, newf in FILE_MIGRATION:
         if os.path.isfile(hass.config.path(oldf)):
             _LOGGER.info("Migrating %s to %s", oldf, newf)
@@ -355,7 +416,8 @@ def process_ha_config_upgrade(hass):
 
 
 @callback
-def async_log_exception(ex, domain, config, hass):
+def async_log_exception(ex: vol.Invalid, domain: str, config: Dict,
+                        hass: HomeAssistant) -> None:
     """Log an error for configuration validation.
 
     This method must be run in the event loop.
@@ -366,32 +428,40 @@ def async_log_exception(ex, domain, config, hass):
 
 
 @callback
-def _format_config_error(ex, domain, config):
+def _format_config_error(ex: vol.Invalid, domain: str, config: Dict) -> str:
     """Generate log exception for configuration validation.
 
     This method must be run in the event loop.
     """
     message = "Invalid config for [{}]: ".format(domain)
     if 'extra keys not allowed' in ex.error_message:
-        message += '[{}] is an invalid option for [{}]. Check: {}->{}.'\
-                   .format(ex.path[-1], domain, domain,
-                           '->'.join(str(m) for m in ex.path))
+        message += '[{option}] is an invalid option for [{domain}]. ' \
+            'Check: {domain}->{path}.'.format(
+                option=ex.path[-1], domain=domain,
+                path='->'.join(str(m) for m in ex.path))
     else:
         message += '{}.'.format(humanize_error(config, ex))
 
-    domain_config = config.get(domain, config)
+    try:
+        domain_config = config.get(domain, config)
+    except AttributeError:
+        domain_config = config
+
     message += " (See {}, line {}). ".format(
         getattr(domain_config, '__config_file__', '?'),
         getattr(domain_config, '__line__', '?'))
 
-    if domain != 'homeassistant':
+    if domain != CONF_CORE:
         message += ('Please check the docs at '
                     'https://home-assistant.io/components/{}/'.format(domain))
 
     return message
 
 
-async def async_process_ha_core_config(hass, config):
+async def async_process_ha_core_config(
+        hass: HomeAssistant, config: Dict,
+        api_password: Optional[str] = None,
+        trusted_networks: Optional[Any] = None) -> None:
     """Process the [homeassistant] section from the configuration.
 
     This method is a coroutine.
@@ -400,12 +470,35 @@ async def async_process_ha_core_config(hass, config):
 
     # Only load auth during startup.
     if not hasattr(hass, 'auth'):
-        hass.auth = await auth.auth_manager_from_config(
-            hass, config.get(CONF_AUTH_PROVIDERS, []))
+        auth_conf = config.get(CONF_AUTH_PROVIDERS)
+
+        if auth_conf is None:
+            auth_conf = [
+                {'type': 'homeassistant'}
+            ]
+            if api_password:
+                auth_conf.append({
+                    'type': 'legacy_api_password',
+                    'api_password': api_password,
+                })
+            if trusted_networks:
+                auth_conf.append({
+                    'type': 'trusted_networks',
+                    'trusted_networks': trusted_networks,
+                })
+
+        mfa_conf = config.get(CONF_AUTH_MFA_MODULES, [
+            {'type': 'totp', 'id': 'totp', 'name': 'Authenticator app'},
+        ])
+
+        setattr(hass, 'auth', await auth.auth_manager_from_config(
+            hass,
+            auth_conf,
+            mfa_conf))
 
     hac = hass.config
 
-    def set_time_zone(time_zone_str):
+    def set_time_zone(time_zone_str: Optional[str]) -> None:
         """Help to set the time zone."""
         if time_zone_str is None:
             return
@@ -425,11 +518,10 @@ async def async_process_ha_core_config(hass, config):
         if key in config:
             setattr(hac, attr, config[key])
 
-    if CONF_TIME_ZONE in config:
-        set_time_zone(config.get(CONF_TIME_ZONE))
+    set_time_zone(config.get(CONF_TIME_ZONE))
 
     # Init whitelist external dir
-    hac.whitelist_external_dirs = set((hass.config.path('www'),))
+    hac.whitelist_external_dirs = {hass.config.path('www')}
     if CONF_WHITELIST_EXTERNAL_DIRS in config:
         hac.whitelist_external_dirs.update(
             set(config[CONF_WHITELIST_EXTERNAL_DIRS]))
@@ -479,12 +571,12 @@ async def async_process_ha_core_config(hass, config):
                     hac.time_zone, hac.elevation):
         return
 
-    discovered = []
+    discovered = []  # type: List[Tuple[str, Any]]
 
     # If we miss some of the needed values, auto detect them
     if None in (hac.latitude, hac.longitude, hac.units,
                 hac.time_zone):
-        info = await hass.async_add_job(
+        info = await hass.async_add_executor_job(
             loc_util.detect_location_info)
 
         if info is None:
@@ -510,7 +602,7 @@ async def async_process_ha_core_config(hass, config):
 
     if hac.elevation is None and hac.latitude is not None and \
        hac.longitude is not None:
-        elevation = await hass.async_add_job(
+        elevation = await hass.async_add_executor_job(
             loc_util.elevation, hac.latitude, hac.longitude)
         hac.elevation = elevation
         discovered.append(('elevation', elevation))
@@ -521,7 +613,8 @@ async def async_process_ha_core_config(hass, config):
             ", ".join('{}: {}'.format(key, val) for key, val in discovered))
 
 
-def _log_pkg_error(package, component, config, message):
+def _log_pkg_error(
+        package: str, component: str, config: Dict, message: str) -> None:
     """Log an error while merging packages."""
     message = "Package {} setup failed. Component {} {}".format(
         package, component, message)
@@ -534,22 +627,49 @@ def _log_pkg_error(package, component, config, message):
     _LOGGER.error(message)
 
 
-def _identify_config_schema(module):
+def _identify_config_schema(module: ModuleType) -> \
+        Tuple[Optional[str], Optional[Dict]]:
     """Extract the schema and identify list or dict based."""
     try:
-        schema = module.CONFIG_SCHEMA.schema[module.DOMAIN]
+        schema = module.CONFIG_SCHEMA.schema[module.DOMAIN]  # type: ignore
     except (AttributeError, KeyError):
-        return (None, None)
+        return None, None
     t_schema = str(schema)
-    if t_schema.startswith('{'):
+    if t_schema.startswith('{') or 'schema_with_slug_keys' in t_schema:
         return ('dict', schema)
     if t_schema.startswith(('[', 'All(<function ensure_list')):
         return ('list', schema)
     return '', schema
 
 
-def merge_packages_config(hass, config, packages,
-                          _log_pkg_error=_log_pkg_error):
+def _recursive_merge(
+        conf: Dict[str, Any], package: Dict[str, Any]) -> Union[bool, str]:
+    """Merge package into conf, recursively."""
+    error = False  # type: Union[bool, str]
+    for key, pack_conf in package.items():
+        if isinstance(pack_conf, dict):
+            if not pack_conf:
+                continue
+            conf[key] = conf.get(key, OrderedDict())
+            error = _recursive_merge(conf=conf[key], package=pack_conf)
+
+        elif isinstance(pack_conf, list):
+            if not pack_conf:
+                continue
+            conf[key] = cv.ensure_list(conf.get(key))
+            conf[key].extend(cv.ensure_list(pack_conf))
+
+        else:
+            if conf.get(key) is not None:
+                return key
+            conf[key] = pack_conf
+    return error
+
+
+async def merge_packages_config(hass: HomeAssistant, config: Dict,
+                                packages: Dict,
+                                _log_pkg_error: Callable = _log_pkg_error) \
+        -> Dict:
     """Merge packages into the top-level configuration. Mutate config."""
     # pylint: disable=too-many-nested-blocks
     PACKAGES_CONFIG_SCHEMA(packages)
@@ -557,10 +677,21 @@ def merge_packages_config(hass, config, packages,
         for comp_name, comp_conf in pack_conf.items():
             if comp_name == CONF_CORE:
                 continue
-            component = get_component(hass, comp_name)
+            # If component name is given with a trailing description, remove it
+            # when looking for component
+            domain = comp_name.split(' ')[0]
 
-            if component is None:
+            try:
+                integration = await async_get_integration(hass, domain)
+            except IntegrationNotFound:
                 _log_pkg_error(pack_name, comp_name, config, "does not exist")
+                continue
+
+            try:
+                component = integration.get_component()
+            except ImportError:
+                _log_pkg_error(pack_name, comp_name, config,
+                               "unable to import")
                 continue
 
             if hasattr(component, 'PLATFORM_SCHEMA'):
@@ -580,114 +711,117 @@ def merge_packages_config(hass, config, packages,
                     config[comp_name].extend(cv.ensure_list(comp_conf))
                     continue
 
-                if merge_type == 'dict':
-                    if comp_conf is None:
-                        comp_conf = OrderedDict()
+            if comp_conf is None:
+                comp_conf = OrderedDict()
 
-                    if not isinstance(comp_conf, dict):
-                        _log_pkg_error(
-                            pack_name, comp_name, config,
-                            "cannot be merged. Expected a dict.")
-                        continue
-
-                    if comp_name not in config:
-                        config[comp_name] = OrderedDict()
-
-                    if not isinstance(config[comp_name], dict):
-                        _log_pkg_error(
-                            pack_name, comp_name, config,
-                            "cannot be merged. Dict expected in main config.")
-                        continue
-
-                    for key, val in comp_conf.items():
-                        if key in config[comp_name]:
-                            _log_pkg_error(pack_name, comp_name, config,
-                                           "duplicate key '{}'".format(key))
-                            continue
-                        config[comp_name][key] = val
-                    continue
-
-            # The last merge type are sections that may occur only once
-            if comp_name in config:
+            if not isinstance(comp_conf, dict):
                 _log_pkg_error(
-                    pack_name, comp_name, config, "may occur only once"
-                    " and it already exist in your main configuration")
+                    pack_name, comp_name, config,
+                    "cannot be merged. Expected a dict.")
                 continue
-            config[comp_name] = comp_conf
+
+            if comp_name not in config or config[comp_name] is None:
+                config[comp_name] = OrderedDict()
+
+            if not isinstance(config[comp_name], dict):
+                _log_pkg_error(
+                    pack_name, comp_name, config,
+                    "cannot be merged. Dict expected in main config.")
+                continue
+            if not isinstance(comp_conf, dict):
+                _log_pkg_error(
+                    pack_name, comp_name, config,
+                    "cannot be merged. Dict expected in package.")
+                continue
+
+            error = _recursive_merge(conf=config[comp_name],
+                                     package=comp_conf)
+            if error:
+                _log_pkg_error(pack_name, comp_name, config,
+                               "has duplicate key '{}'".format(error))
 
     return config
 
 
-@callback
-def async_process_component_config(hass, config, domain):
+async def async_process_component_config(
+        hass: HomeAssistant, config: Dict, integration: Integration) \
+            -> Optional[Dict]:
     """Check component configuration and return processed configuration.
 
     Returns None on error.
 
     This method must be run in the event loop.
     """
-    component = get_component(hass, domain)
+    domain = integration.domain
+    component = integration.get_component()
 
     if hasattr(component, 'CONFIG_SCHEMA'):
         try:
-            config = component.CONFIG_SCHEMA(config)
+            return component.CONFIG_SCHEMA(config)  # type: ignore
         except vol.Invalid as ex:
             async_log_exception(ex, domain, config, hass)
             return None
 
-    elif hasattr(component, 'PLATFORM_SCHEMA'):
-        platforms = []
-        for p_name, p_config in config_per_platform(config, domain):
-            # Validate component specific platform schema
-            try:
-                p_validated = component.PLATFORM_SCHEMA(p_config)
-            except vol.Invalid as ex:
-                async_log_exception(ex, domain, config, hass)
-                continue
+    component_platform_schema = getattr(
+        component, 'PLATFORM_SCHEMA_BASE',
+        getattr(component, 'PLATFORM_SCHEMA', None))
 
-            # Not all platform components follow same pattern for platforms
-            # So if p_name is None we are not going to validate platform
-            # (the automation component is one of them)
-            if p_name is None:
-                platforms.append(p_validated)
-                continue
+    if component_platform_schema is None:
+        return config
 
-            platform = get_platform(hass, domain, p_name)
+    platforms = []
+    for p_name, p_config in config_per_platform(config, domain):
+        # Validate component specific platform schema
+        try:
+            p_validated = component_platform_schema(p_config)
+        except vol.Invalid as ex:
+            async_log_exception(ex, domain, p_config, hass)
+            continue
 
-            if platform is None:
-                continue
-
-            # Validate platform specific schema
-            if hasattr(platform, 'PLATFORM_SCHEMA'):
-                # pylint: disable=no-member
-                try:
-                    p_validated = platform.PLATFORM_SCHEMA(p_validated)
-                except vol.Invalid as ex:
-                    async_log_exception(ex, '{}.{}'.format(domain, p_name),
-                                        p_validated, hass)
-                    continue
-
+        # Not all platform components follow same pattern for platforms
+        # So if p_name is None we are not going to validate platform
+        # (the automation component is one of them)
+        if p_name is None:
             platforms.append(p_validated)
+            continue
 
-        # Create a copy of the configuration with all config for current
-        # component removed and add validated config back in.
-        filter_keys = extract_domain_configs(config, domain)
-        config = {key: value for key, value in config.items()
-                  if key not in filter_keys}
-        config[domain] = platforms
+        try:
+            p_integration = await async_get_integration(hass, p_name)
+            platform = p_integration.get_platform(domain)
+        except (IntegrationNotFound, ImportError):
+            continue
+
+        # Validate platform specific schema
+        if hasattr(platform, 'PLATFORM_SCHEMA'):
+            # pylint: disable=no-member
+            try:
+                p_validated = platform.PLATFORM_SCHEMA(  # type: ignore
+                    p_config)
+            except vol.Invalid as ex:
+                async_log_exception(ex, '{}.{}'.format(domain, p_name),
+                                    p_config, hass)
+                continue
+
+        platforms.append(p_validated)
+
+    # Create a copy of the configuration with all config for current
+    # component removed and add validated config back in.
+    filter_keys = extract_domain_configs(config, domain)
+    config = {key: value for key, value in config.items()
+              if key not in filter_keys}
+    config[domain] = platforms
 
     return config
 
 
-async def async_check_ha_config_file(hass):
+async def async_check_ha_config_file(hass: HomeAssistant) -> Optional[str]:
     """Check if Home Assistant configuration file is valid.
 
     This method is a coroutine.
     """
     from homeassistant.scripts.check_config import check_ha_config_file
 
-    res = await hass.async_add_job(
-        check_ha_config_file, hass)
+    res = await check_ha_config_file(hass)  # type: ignore
 
     if not res.errors:
         return None
@@ -695,7 +829,9 @@ async def async_check_ha_config_file(hass):
 
 
 @callback
-def async_notify_setup_error(hass, component, display_link=False):
+def async_notify_setup_error(
+        hass: HomeAssistant, component: str,
+        display_link: bool = False) -> None:
     """Print a persistent notification.
 
     This method must be run in the event loop.

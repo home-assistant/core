@@ -9,7 +9,7 @@ import homeassistant.components.mailbox as mailbox
 
 
 @pytest.fixture
-def mock_http_client(hass, aiohttp_client):
+def mock_http_client(hass, hass_client):
     """Start the Hass HTTP component."""
     config = {
         mailbox.DOMAIN: {
@@ -18,7 +18,7 @@ def mock_http_client(hass, aiohttp_client):
     }
     hass.loop.run_until_complete(
         async_setup_component(hass, mailbox.DOMAIN, config))
-    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
+    return hass.loop.run_until_complete(hass_client())
 
 
 @asyncio.coroutine
@@ -29,7 +29,7 @@ def test_get_platforms_from_mailbox(mock_http_client):
     req = yield from mock_http_client.get(url)
     assert req.status == 200
     result = yield from req.json()
-    assert len(result) == 1 and "DemoMailbox" in result
+    assert len(result) == 1 and "DemoMailbox" == result[0].get('name', None)
 
 
 @asyncio.coroutine

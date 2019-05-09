@@ -1,0 +1,12 @@
+{
+  "domain": "darksky",
+  "name": "Darksky",
+  "documentation": "https://www.home-assistant.io/components/darksky",
+  "requirements": [
+    "python-forecastio==1.4.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

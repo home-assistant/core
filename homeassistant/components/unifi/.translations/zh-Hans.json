@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u63a7\u5236\u5668\u7ad9\u70b9\u5df2\u914d\u7f6e\u5b8c\u6210",
+            "user_privilege": "\u7528\u6237\u987b\u4e3a\u7ba1\u7406\u5458"
+        },
+        "error": {
+            "faulty_credentials": "\u9519\u8bef\u7684\u7528\u6237\u51ed\u636e",
+            "service_unavailable": "\u6ca1\u6709\u53ef\u7528\u7684\u670d\u52a1"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u673a",
+                    "password": "\u5bc6\u7801",
+                    "port": "\u7aef\u53e3",
+                    "site": "\u7ad9\u70b9 ID",
+                    "username": "\u7528\u6237\u540d",
+                    "verify_ssl": "\u4f7f\u7528\u6b63\u786e\u8bc1\u4e66\u7684\u63a7\u5236\u5668"
+                },
+                "title": "\u914d\u7f6e UniFi \u63a7\u5236\u5668"
+            }
+        },
+        "title": "UniFi \u63a7\u5236\u5668"
+    }
+}

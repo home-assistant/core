@@ -1,0 +1,10 @@
+{
+  "domain": "pilight",
+  "name": "Pilight",
+  "documentation": "https://www.home-assistant.io/components/pilight",
+  "requirements": [
+    "pilight==0.1.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

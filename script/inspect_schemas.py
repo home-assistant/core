@@ -18,7 +18,7 @@ def explore_module(package):
 
 
 def main():
-    """Main section of the script."""
+    """Run the script."""
     if not os.path.isfile('requirements_all.txt'):
         print('Run this from HA root dir')
         return
@@ -48,7 +48,7 @@ def main():
 
         schema_type, schema = _identify_config_schema(module)
 
-        add_msg("CONFIG_SCHEMA " + schema_type, module_name + ' ' +
+        add_msg("CONFIG_SCHEMA " + str(schema_type), module_name + ' ' +
                 color('cyan', str(schema)[:60]))
 
     for key in sorted(msg):

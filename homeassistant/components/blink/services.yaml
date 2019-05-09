@@ -1,0 +1,21 @@
+# Describes the format for available Blink services
+
+blink_update:
+    description: Force a refresh.
+
+trigger_camera:
+    description: Request named camera to take new image.
+    fields:
+        name:
+            description: Name of camera to take new image.
+            example: 'Living Room'
+
+save_video:
+    description: Save last recorded video clip to local file.
+    fields:
+        name:
+            description: Name of camera to grab video from.
+            example: 'Living Room'
+        filename:
+            description: Filename to writable path (directory may need to be included in whitelist_dirs in config)
+            example: '/tmp/video.mp4'

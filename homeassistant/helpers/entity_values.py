@@ -2,21 +2,24 @@
 from collections import OrderedDict
 import fnmatch
 import re
+from typing import Any, Dict, Optional, Pattern  # noqa: F401
 
 from homeassistant.core import split_entity_id
 
 
-class EntityValues(object):
+class EntityValues:
     """Class to store entity id based values."""
 
-    def __init__(self, exact=None, domain=None, glob=None):
+    def __init__(self, exact: Optional[Dict] = None,
+                 domain: Optional[Dict] = None,
+                 glob: Optional[Dict] = None) -> None:
         """Initialize an EntityConfigDict."""
-        self._cache = {}
+        self._cache = {}  # type: Dict[str, Dict]
         self._exact = exact
         self._domain = domain
 
         if glob is None:
-            compiled = None
+            compiled = None  # type: Optional[Dict[Pattern[str], Any]]
         else:
             compiled = OrderedDict()
             for key, value in glob.items():
@@ -24,7 +27,7 @@ class EntityValues(object):
 
         self._glob = compiled
 
-    def get(self, entity_id):
+    def get(self, entity_id: str) -> Dict:
         """Get config for an entity id."""
         if entity_id in self._cache:
             return self._cache[entity_id]

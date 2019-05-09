@@ -22,6 +22,12 @@ BASE_CONFIG = (
     '\n\n'
 )
 
+BAD_CORE_CONFIG = (
+    'homeassistant:\n'
+    '  unit_system: bad\n'
+    '\n\n'
+)
+
 
 def normalize_yaml_files(check_dict):
     """Remove configuration path from ['yaml_files']."""
@@ -48,6 +54,17 @@ class TestCheckConfig(unittest.TestCase):
 
     # pylint: disable=no-self-use,invalid-name
     @patch('os.path.isfile', return_value=True)
+    def test_bad_core_config(self, isfile_patch):
+        """Test a bad core config setup."""
+        files = {
+            YAML_CONFIG_FILE: BAD_CORE_CONFIG,
+        }
+        with patch_yaml_files(files):
+            res = check_config.check(get_test_config_dir())
+            assert res['except'].keys() == {'homeassistant'}
+            assert res['except']['homeassistant'][1] == {'unit_system': 'bad'}
+
+    @patch('os.path.isfile', return_value=True)
     def test_config_platform_valid(self, isfile_patch):
         """Test a valid platform setup."""
         files = {
@@ -63,45 +80,6 @@ class TestCheckConfig(unittest.TestCase):
             assert len(res['yaml_files']) == 1
 
     @patch('os.path.isfile', return_value=True)
-    def test_config_component_platform_fail_validation(self, isfile_patch):
-        """Test errors if component & platform not found."""
-        files = {
-            YAML_CONFIG_FILE: BASE_CONFIG + 'http:\n  password: err123',
-        }
-        with patch_yaml_files(files):
-            res = check_config.check(get_test_config_dir())
-            assert res['components'].keys() == {'homeassistant'}
-            assert res['except'].keys() == {'http'}
-            assert res['except']['http'][1] == {'http': {'password': 'err123'}}
-            assert res['secret_cache'] == {}
-            assert res['secrets'] == {}
-            assert len(res['yaml_files']) == 1
-
-        files = {
-            YAML_CONFIG_FILE: (BASE_CONFIG + 'mqtt:\n\n'
-                               'light:\n  platform: mqtt_json'),
-        }
-        with patch_yaml_files(files):
-            res = check_config.check(get_test_config_dir())
-            assert res['components'].keys() == {
-                'homeassistant', 'light', 'mqtt'}
-            assert res['components']['light'] == []
-            assert res['components']['mqtt'] == {
-                'keepalive': 60,
-                'port': 1883,
-                'protocol': '3.1.1',
-                'discovery': False,
-                'discovery_prefix': 'homeassistant',
-                'tls_version': 'auto',
-            }
-            assert res['except'].keys() == {'light.mqtt_json'}
-            assert res['except']['light.mqtt_json'][1] == {
-                'platform': 'mqtt_json'}
-            assert res['secret_cache'] == {}
-            assert res['secrets'] == {}
-            assert len(res['yaml_files']) == 1
-
-    @patch('os.path.isfile', return_value=True)
     def test_component_platform_not_found(self, isfile_patch):
         """Test errors if component or platform not found."""
         # Make sure they don't exist
@@ -112,7 +90,7 @@ class TestCheckConfig(unittest.TestCase):
             res = check_config.check(get_test_config_dir())
             assert res['components'].keys() == {'homeassistant'}
             assert res['except'] == {
-                check_config.ERROR_STR: ['Component not found: beer']}
+                check_config.ERROR_STR: ['Integration not found: beer']}
             assert res['secret_cache'] == {}
             assert res['secrets'] == {}
             assert len(res['yaml_files']) == 1
@@ -126,7 +104,8 @@ class TestCheckConfig(unittest.TestCase):
             assert res['components']['light'] == []
             assert res['except'] == {
                 check_config.ERROR_STR: [
-                    'Platform not found: light.beer',
+                    'Integration beer not found when trying to verify its '
+                    'light platform.',
                 ]}
             assert res['secret_cache'] == {}
             assert res['secrets'] == {}
@@ -160,15 +139,15 @@ class TestCheckConfig(unittest.TestCase):
                 'server_host': '0.0.0.0',
                 'server_port': 8123,
                 'trusted_networks': [],
-                'use_x_forwarded_for': False}
+                'ssl_profile': 'modern',
+            }
             assert res['secret_cache'] == {secrets_path: {'http_pw': 'abc123'}}
             assert res['secrets'] == {'http_pw': 'abc123'}
             assert normalize_yaml_files(res) == [
                 '.../configuration.yaml', '.../secrets.yaml']
 
     @patch('os.path.isfile', return_value=True)
-    def test_package_invalid(self, isfile_patch): \
-            # pylint: disable=no-self-use,invalid-name
+    def test_package_invalid(self, isfile_patch):
         """Test a valid platform setup."""
         files = {
             YAML_CONFIG_FILE: BASE_CONFIG + (
@@ -189,8 +168,7 @@ class TestCheckConfig(unittest.TestCase):
             assert res['secrets'] == {}
             assert len(res['yaml_files']) == 1
 
-    def test_bootstrap_error(self): \
-            # pylint: disable=no-self-use,invalid-name
+    def test_bootstrap_error(self):
         """Test a valid platform setup."""
         files = {
             YAML_CONFIG_FILE: BASE_CONFIG + 'automation: !include no.yaml',

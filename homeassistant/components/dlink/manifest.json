@@ -1,0 +1,10 @@
+{
+  "domain": "dlink",
+  "name": "Dlink",
+  "documentation": "https://www.home-assistant.io/components/dlink",
+  "requirements": [
+    "pyW215==0.6.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

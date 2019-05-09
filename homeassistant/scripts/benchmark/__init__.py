@@ -78,7 +78,6 @@ async def async_million_events(hass):
 
 
 @benchmark
-# pylint: disable=invalid-name
 async def async_million_time_changed_helper(hass):
     """Run a million events through time changed helper."""
     count = 0
@@ -109,7 +108,6 @@ async def async_million_time_changed_helper(hass):
 
 
 @benchmark
-# pylint: disable=invalid-name
 async def async_million_state_changed_helper(hass):
     """Run a million events through state changed helper."""
     count = 0
@@ -182,12 +180,15 @@ def _logbook_filtering(hass, last_changed, last_updated):
         'new_state': new_state
     })
 
-    events = [event] * 10**5
+    def yield_events(event):
+        # pylint: disable=protected-access
+        entities_filter = logbook._generate_filter_from_config({})
+        for _ in range(10**5):
+            if logbook._keep_event(event, entities_filter):
+                yield event
 
     start = timer()
 
-    # pylint: disable=protected-access
-    events = logbook._exclude_events(events, {})
-    list(logbook.humanify(events))
+    list(logbook.humanify(None, yield_events(event)))
 
     return timer() - start

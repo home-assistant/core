@@ -1,10 +1,12 @@
 """Code to handle a Hue bridge."""
 import asyncio
 
+import aiohue
 import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import DOMAIN, LOGGER
@@ -19,7 +21,7 @@ SCENE_SCHEMA = vol.Schema({
 })
 
 
-class HueBridge(object):
+class HueBridge:
     """Manages a single Hue bridge."""
 
     def __init__(self, hass, config_entry, allow_unreachable, allow_groups):
@@ -30,7 +32,6 @@ class HueBridge(object):
         self.allow_groups = allow_groups
         self.available = True
         self.api = None
-        self._cancel_retry_setup = None
 
     @property
     def host(self):
@@ -46,40 +47,32 @@ class HueBridge(object):
             self.api = await get_bridge(
                 hass, host, self.config_entry.data['username'])
         except AuthenticationRequired:
-            # usernames can become invalid if hub is reset or user removed.
+            # Usernames can become invalid if hub is reset or user removed.
             # We are going to fail the config entry setup and initiate a new
             # linking procedure. When linking succeeds, it will remove the
             # old config entry.
-            hass.async_add_job(hass.config_entries.flow.async_init(
-                DOMAIN, source='import', data={
+            hass.async_create_task(hass.config_entries.flow.async_init(
+                DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
+                data={
                     'host': host,
                 }
             ))
             return False
 
         except CannotConnect:
-            retry_delay = 2 ** (tries + 1)
-            LOGGER.error("Error connecting to the Hue bridge at %s. Retrying "
-                         "in %d seconds", host, retry_delay)
-
-            async def retry_setup(_now):
-                """Retry setup."""
-                if await self.async_setup(tries + 1):
-                    # This feels hacky, we should find a better way to do this
-                    self.config_entry.state = config_entries.ENTRY_STATE_LOADED
-
-            self._cancel_retry_setup = hass.helpers.event.async_call_later(
-                retry_delay, retry_setup)
-
-            return False
+            raise ConfigEntryNotReady
 
         except Exception:  # pylint: disable=broad-except
             LOGGER.exception('Unknown error connecting with Hue bridge at %s',
                              host)
             return False
 
-        hass.async_add_job(hass.config_entries.async_forward_entry_setup(
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             self.config_entry, 'light'))
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
+            self.config_entry, 'binary_sensor'))
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
+            self.config_entry, 'sensor'))
 
         hass.services.async_register(
             DOMAIN, SERVICE_HUE_SCENE, self.hue_activate_scene,
@@ -96,13 +89,6 @@ class HueBridge(object):
         # The bridge can be in 3 states:
         #  - Setup was successful, self.api is not None
         #  - Authentication was wrong, self.api is None, not retrying setup.
-        #  - Host was down. self.api is None, we're retrying setup
-
-        # If we have a retry scheduled, we were never setup.
-        if self._cancel_retry_setup is not None:
-            self._cancel_retry_setup()
-            self._cancel_retry_setup = None
-            return True
 
         # If the authentication was wrong.
         if self.api is None:
@@ -112,8 +98,16 @@ class HueBridge(object):
 
         # If setup was successful, we set api variable, forwarded entry and
         # register service
-        return await self.hass.config_entries.async_forward_entry_unload(
-            self.config_entry, 'light')
+        results = await asyncio.gather(
+            self.hass.config_entries.async_forward_entry_unload(
+                self.config_entry, 'light'),
+            self.hass.config_entries.async_forward_entry_unload(
+                self.config_entry, 'binary_sensor'),
+            self.hass.config_entries.async_forward_entry_unload(
+                self.config_entry, 'sensor')
+            )
+        # None and True are OK
+        return False not in results
 
     async def hue_activate_scene(self, call, updated=False):
         """Service to call directly into bridge to set scenes."""
@@ -124,12 +118,16 @@ class HueBridge(object):
             (group for group in self.api.groups.values()
              if group.name == group_name), None)
 
-        scene_id = next(
-            (scene.id for scene in self.api.scenes.values()
-             if scene.name == scene_name), None)
+        # Additional scene logic to handle duplicate scene names across groups
+        scene = next(
+            (scene for scene in self.api.scenes.values()
+             if scene.name == scene_name
+             and group is not None
+             and sorted(scene.lights) == sorted(group.lights)),
+            None)
 
         # If we can't find it, fetch latest info.
-        if not updated and (group is None or scene_id is None):
+        if not updated and (group is None or scene is None):
             await self.api.groups.update()
             await self.api.scenes.update()
             await self.hue_activate_scene(call, updated=True)
@@ -139,17 +137,15 @@ class HueBridge(object):
             LOGGER.warning('Unable to find group %s', group_name)
             return
 
-        if scene_id is None:
+        if scene is None:
             LOGGER.warning('Unable to find scene %s', scene_name)
             return
 
-        await group.set_action(scene=scene_id)
+        await group.set_action(scene=scene.id)
 
 
 async def get_bridge(hass, host, username=None):
     """Create a bridge object and verify authentication."""
-    import aiohue
-
     bridge = aiohue.Bridge(
         host, username=username,
         websession=aiohttp_client.async_get_clientsession(hass)

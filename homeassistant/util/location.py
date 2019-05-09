@@ -9,9 +9,9 @@ from typing import Any, Optional, Tuple, Dict
 
 import requests
 
-ELEVATION_URL = 'http://maps.googleapis.com/maps/api/elevation/json'
-FREEGEO_API = 'https://freegeoip.net/json/'
+ELEVATION_URL = 'https://api.open-elevation.com/api/v1/lookup'
 IP_API = 'http://ip-api.com/json'
+IPAPI = 'https://ipapi.co/json/'
 
 # Constants from https://github.com/maurycyp/vincenty
 # Earth ellipsoid according to WGS 84
@@ -33,9 +33,9 @@ LocationInfo = collections.namedtuple(
      'use_metric'])
 
 
-def detect_location_info():
+def detect_location_info() -> Optional[LocationInfo]:
     """Detect location information."""
-    data = _get_freegeoip()
+    data = _get_ipapi()
 
     if data is None:
         data = _get_ip_api()
@@ -49,22 +49,27 @@ def detect_location_info():
     return LocationInfo(**data)
 
 
-def distance(lat1, lon1, lat2, lon2):
+def distance(lat1: Optional[float], lon1: Optional[float],
+             lat2: float, lon2: float) -> Optional[float]:
     """Calculate the distance in meters between two points.
 
     Async friendly.
     """
-    return vincenty((lat1, lon1), (lat2, lon2)) * 1000
+    if lat1 is None or lon1 is None:
+        return None
+    result = vincenty((lat1, lon1), (lat2, lon2))
+    if result is None:
+        return None
+    return result * 1000
 
 
-def elevation(latitude, longitude):
+def elevation(latitude: float, longitude: float) -> int:
     """Return elevation for given latitude and longitude."""
     try:
         req = requests.get(
             ELEVATION_URL,
             params={
                 'locations': '{},{}'.format(latitude, longitude),
-                'sensor': 'false',
             },
             timeout=10)
     except requests.RequestException:
@@ -82,7 +87,7 @@ def elevation(latitude, longitude):
 # Author: https://github.com/maurycyp
 # Source: https://github.com/maurycyp/vincenty
 # License: https://github.com/maurycyp/vincenty/blob/master/LICENSE
-# pylint: disable=invalid-name, unused-variable, invalid-sequence-index
+# pylint: disable=invalid-name
 def vincenty(point1: Tuple[float, float], point2: Tuple[float, float],
              miles: bool = False) -> Optional[float]:
     """
@@ -153,22 +158,22 @@ def vincenty(point1: Tuple[float, float], point2: Tuple[float, float],
     return round(s, 6)
 
 
-def _get_freegeoip() -> Optional[Dict[str, Any]]:
-    """Query freegeoip.io for location data."""
+def _get_ipapi() -> Optional[Dict[str, Any]]:
+    """Query ipapi.co for location data."""
     try:
-        raw_info = requests.get(FREEGEO_API, timeout=5).json()
+        raw_info = requests.get(IPAPI, timeout=5).json()
     except (requests.RequestException, ValueError):
         return None
 
     return {
         'ip': raw_info.get('ip'),
-        'country_code': raw_info.get('country_code'),
+        'country_code': raw_info.get('country'),
         'country_name': raw_info.get('country_name'),
         'region_code': raw_info.get('region_code'),
-        'region_name': raw_info.get('region_name'),
+        'region_name': raw_info.get('region'),
         'city': raw_info.get('city'),
-        'zip_code': raw_info.get('zip_code'),
-        'time_zone': raw_info.get('time_zone'),
+        'zip_code': raw_info.get('postal'),
+        'time_zone': raw_info.get('timezone'),
         'latitude': raw_info.get('latitude'),
         'longitude': raw_info.get('longitude'),
     }

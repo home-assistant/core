@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El lloc del controlador ja est\u00e0 configurat",
+            "user_privilege": "L'usuari ha de ser administrador"
+        },
+        "error": {
+            "faulty_credentials": "Credencials d'usuari incorrectes",
+            "service_unavailable": "Servei no disponible"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "site": "ID del lloc",
+                    "username": "Nom d'usuari",
+                    "verify_ssl": "El controlador est\u00e0 utilitzant un certificat adequat"
+                },
+                "title": "Configuraci\u00f3 del controlador UniFi"
+            }
+        },
+        "title": "Controlador UniFi"
+    }
+}

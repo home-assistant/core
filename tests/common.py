@@ -1,35 +1,47 @@
 """Test the helper method for writing tests."""
 import asyncio
-from datetime import timedelta
 import functools as ft
-import os
-import sys
-from unittest.mock import patch, MagicMock, Mock
-from io import StringIO
+import json
 import logging
+import os
+import uuid
+import sys
 import threading
-from contextlib import contextmanager
 
-from homeassistant import auth, core as ha, data_entry_flow, config_entries
-from homeassistant.setup import setup_component, async_setup_component
-from homeassistant.config import async_process_component_config
-from homeassistant.helpers import (
-    intent, entity, restore_state,  entity_registry,
-    entity_platform)
-from homeassistant.util.unit_system import METRIC_SYSTEM
+from collections import OrderedDict
+from contextlib import contextmanager
+from datetime import timedelta
+from io import StringIO
+from unittest.mock import MagicMock, Mock, patch
+
 import homeassistant.util.dt as date_util
 import homeassistant.util.yaml as yaml
-from homeassistant.const import (
-    STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
-    EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
-    ATTR_DISCOVERED, SERVER_PORT, EVENT_HOMEASSISTANT_CLOSE)
+
+from homeassistant import auth, config_entries, core as ha, loader
+from homeassistant.auth import (
+    models as auth_models, auth_store, providers as auth_providers,
+    permissions as auth_permissions)
+from homeassistant.auth.permissions import system_policies
 from homeassistant.components import mqtt, recorder
+from homeassistant.config import async_process_component_config
+from homeassistant.const import (
+    ATTR_DISCOVERED, ATTR_SERVICE, DEVICE_DEFAULT_NAME,
+    EVENT_HOMEASSISTANT_CLOSE, EVENT_PLATFORM_DISCOVERED, EVENT_STATE_CHANGED,
+    EVENT_TIME_CHANGED, SERVER_PORT, STATE_ON, STATE_OFF)
+from homeassistant.helpers import (
+    area_registry, device_registry, entity, entity_platform, entity_registry,
+    intent, restore_state, storage)
+from homeassistant.setup import async_setup_component, setup_component
+from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.util.async_ import (
     run_callback_threadsafe, run_coroutine_threadsafe)
+
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
+CLIENT_ID = 'https://example.com/app'
+CLIENT_REDIRECT_URI = 'https://example.com/app/callback'
 
 
 def threadsafe_callback_factory(func):
@@ -106,27 +118,40 @@ def get_test_home_assistant():
 
 
 # pylint: disable=protected-access
-@asyncio.coroutine
-def async_test_home_assistant(loop):
+async def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
     hass = ha.HomeAssistant(loop)
-    hass.config_entries = config_entries.ConfigEntries(hass, {})
-    hass.config_entries._entries = []
     hass.config.async_load = Mock()
-    store = auth.AuthStore(hass)
-    hass.auth = auth.AuthManager(hass, store, {})
+    store = auth_store.AuthStore(hass)
+    hass.auth = auth.AuthManager(hass, store, {}, {})
     ensure_auth_manager_loaded(hass.auth)
     INSTANCES.append(hass)
 
     orig_async_add_job = hass.async_add_job
+    orig_async_add_executor_job = hass.async_add_executor_job
+    orig_async_create_task = hass.async_create_task
 
     def async_add_job(target, *args):
-        """Add a magic mock."""
+        """Add job."""
         if isinstance(target, Mock):
             return mock_coro(target(*args))
         return orig_async_add_job(target, *args)
 
+    def async_add_executor_job(target, *args):
+        """Add executor job."""
+        if isinstance(target, Mock):
+            return mock_coro(target(*args))
+        return orig_async_add_executor_job(target, *args)
+
+    def async_create_task(coroutine):
+        """Create task."""
+        if isinstance(coroutine, Mock):
+            return mock_coro()
+        return orig_async_create_task(coroutine)
+
     hass.async_add_job = async_add_job
+    hass.async_add_executor_job = async_add_executor_job
+    hass.async_create_task = async_create_task
 
     hass.config.location_name = 'test home'
     hass.config.config_dir = get_test_config_dir()
@@ -137,18 +162,21 @@ def async_test_home_assistant(loop):
     hass.config.units = METRIC_SYSTEM
     hass.config.skip_pip = True
 
+    hass.config_entries = config_entries.ConfigEntries(hass, {})
+    hass.config_entries._entries = []
+    hass.config_entries._store._async_ensure_stop_listener = lambda: None
+
     hass.state = ha.CoreState.running
 
     # Mock async_start
     orig_start = hass.async_start
 
-    @asyncio.coroutine
-    def mock_async_start():
+    async def mock_async_start():
         """Start the mocking."""
         # We only mock time during tests and we want to track tasks
         with patch('homeassistant.core._async_create_timer'), \
                 patch.object(hass, 'async_stop_track_tasks'):
-            yield from orig_start()
+            await orig_start()
 
     hass.async_start = mock_async_start
 
@@ -179,7 +207,7 @@ def async_mock_service(hass, domain, service, schema=None):
     """Set up a fake service & return a calls log list to this service."""
     calls = []
 
-    @asyncio.coroutine
+    @ha.callback
     def mock_service_log(call):  # pylint: disable=unnecessary-lambda
         """Mock service call."""
         calls.append(call)
@@ -218,7 +246,7 @@ def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
     if isinstance(payload, str):
         payload = payload.encode('utf-8')
     msg = mqtt.Message(topic, payload, qos, retain)
-    hass.async_run_job(hass.data['mqtt']._mqtt_on_message, None, None, msg)
+    hass.data['mqtt']._mqtt_handle_message(msg)
 
 
 fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
@@ -227,7 +255,7 @@ fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
 @ha.callback
 def async_fire_time_changed(hass, time):
     """Fire a time changes event."""
-    hass.bus.async_fire(EVENT_TIME_CHANGED, {'now': time})
+    hass.bus.async_fire(EVENT_TIME_CHANGED, {'now': date_util.as_utc(time)})
 
 
 fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
@@ -258,11 +286,10 @@ def mock_state_change_event(hass, new_state, old_state=None):
     if old_state:
         event_data['old_state'] = old_state
 
-    hass.bus.fire(EVENT_STATE_CHANGED, event_data)
+    hass.bus.fire(EVENT_STATE_CHANGED, event_data, context=new_state.context)
 
 
-@asyncio.coroutine
-def async_mock_mqtt_component(hass, config=None):
+async def async_mock_mqtt_component(hass, config=None):
     """Mock the MQTT component."""
     if config is None:
         config = {mqtt.CONF_BROKER: 'mock-broker'}
@@ -270,12 +297,14 @@ def async_mock_mqtt_component(hass, config=None):
     with patch('paho.mqtt.client.Client') as mock_client:
         mock_client().connect.return_value = 0
         mock_client().subscribe.return_value = (0, 0)
+        mock_client().unsubscribe.return_value = (0, 0)
         mock_client().publish.return_value = (0, 0)
 
-        result = yield from async_setup_component(hass, mqtt.DOMAIN, {
+        result = await async_setup_component(hass, mqtt.DOMAIN, {
             mqtt.DOMAIN: config
         })
         assert result
+        await hass.async_block_till_done()
 
         hass.data['mqtt'] = MagicMock(spec_set=hass.data['mqtt'],
                                       wraps=hass.data['mqtt'])
@@ -298,18 +327,44 @@ def mock_component(hass, component):
 def mock_registry(hass, mock_entries=None):
     """Mock the Entity Registry."""
     registry = entity_registry.EntityRegistry(hass)
-    registry.entities = mock_entries or {}
+    registry.entities = mock_entries or OrderedDict()
+
     hass.data[entity_registry.DATA_REGISTRY] = registry
     return registry
 
 
-class MockUser(auth.User):
-    """Mock a user in Home Assistant."""
+def mock_area_registry(hass, mock_entries=None):
+    """Mock the Area Registry."""
+    registry = area_registry.AreaRegistry(hass)
+    registry.areas = mock_entries or OrderedDict()
 
-    def __init__(self, id='mock-id', is_owner=True, is_active=True,
-                 name='Mock User'):
-        """Initialize mock user."""
-        super().__init__(id, is_owner, is_active, name)
+    hass.data[area_registry.DATA_REGISTRY] = registry
+    return registry
+
+
+def mock_device_registry(hass, mock_entries=None):
+    """Mock the Device Registry."""
+    registry = device_registry.DeviceRegistry(hass)
+    registry.devices = mock_entries or OrderedDict()
+
+    hass.data[device_registry.DATA_REGISTRY] = registry
+    return registry
+
+
+class MockGroup(auth_models.Group):
+    """Mock a group in Home Assistant."""
+
+    def __init__(self, id=None, name='Mock Group',
+                 policy=system_policies.ADMIN_POLICY):
+        """Mock a group."""
+        kwargs = {
+            'name': name,
+            'policy': policy,
+        }
+        if id is not None:
+            kwargs['id'] = id
+
+        super().__init__(**kwargs)
 
     def add_to_hass(self, hass):
         """Test helper to add entry to hass."""
@@ -317,38 +372,95 @@ class MockUser(auth.User):
 
     def add_to_auth_manager(self, auth_mgr):
         """Test helper to add entry to hass."""
-        auth_mgr._store.users[self.id] = self
+        ensure_auth_manager_loaded(auth_mgr)
+        auth_mgr._store._groups[self.id] = self
         return self
+
+
+class MockUser(auth_models.User):
+    """Mock a user in Home Assistant."""
+
+    def __init__(self, id=None, is_owner=False, is_active=True,
+                 name='Mock User', system_generated=False, groups=None):
+        """Initialize mock user."""
+        kwargs = {
+            'is_owner': is_owner,
+            'is_active': is_active,
+            'name': name,
+            'system_generated': system_generated,
+            'groups': groups or [],
+            'perm_lookup': None,
+        }
+        if id is not None:
+            kwargs['id'] = id
+        super().__init__(**kwargs)
+
+    def add_to_hass(self, hass):
+        """Test helper to add entry to hass."""
+        return self.add_to_auth_manager(hass.auth)
+
+    def add_to_auth_manager(self, auth_mgr):
+        """Test helper to add entry to hass."""
+        ensure_auth_manager_loaded(auth_mgr)
+        auth_mgr._store._users[self.id] = self
+        return self
+
+    def mock_policy(self, policy):
+        """Mock a policy for a user."""
+        self._permissions = auth_permissions.PolicyPermissions(
+            policy, self.perm_lookup)
+
+
+async def register_auth_provider(hass, config):
+    """Register an auth provider."""
+    provider = await auth_providers.auth_provider_from_config(
+        hass, hass.auth._store, config)
+    assert provider is not None, 'Invalid config specified'
+    key = (provider.type, provider.id)
+    providers = hass.auth._providers
+
+    if key in providers:
+        raise ValueError('Provider already registered')
+
+    providers[key] = provider
+    return provider
 
 
 @ha.callback
 def ensure_auth_manager_loaded(auth_mgr):
     """Ensure an auth manager is considered loaded."""
     store = auth_mgr._store
-    if store.clients is None:
-        store.clients = {}
-    if store.users is None:
-        store.users = {}
+    if store._users is None:
+        store._set_defaults()
 
 
-class MockModule(object):
+class MockModule:
     """Representation of a fake module."""
 
     # pylint: disable=invalid-name
     def __init__(self, domain=None, dependencies=None, setup=None,
                  requirements=None, config_schema=None, platform_schema=None,
-                 async_setup=None, async_setup_entry=None,
-                 async_unload_entry=None):
+                 platform_schema_base=None, async_setup=None,
+                 async_setup_entry=None, async_unload_entry=None,
+                 async_migrate_entry=None, async_remove_entry=None,
+                 partial_manifest=None):
         """Initialize the mock module."""
+        self.__name__ = 'homeassistant.components.{}'.format(domain)
+        self.__file__ = 'homeassistant/components/{}'.format(domain)
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies or []
         self.REQUIREMENTS = requirements or []
+        # Overlay to be used when generating manifest from this module
+        self._partial_manifest = partial_manifest
 
         if config_schema is not None:
             self.CONFIG_SCHEMA = config_schema
 
         if platform_schema is not None:
             self.PLATFORM_SCHEMA = platform_schema
+
+        if platform_schema_base is not None:
+            self.PLATFORM_SCHEMA_BASE = platform_schema_base
 
         if setup is not None:
             # We run this in executor, wrap it in function
@@ -366,19 +478,38 @@ class MockModule(object):
         if async_unload_entry is not None:
             self.async_unload_entry = async_unload_entry
 
+        if async_migrate_entry is not None:
+            self.async_migrate_entry = async_migrate_entry
 
-class MockPlatform(object):
+        if async_remove_entry is not None:
+            self.async_remove_entry = async_remove_entry
+
+    def mock_manifest(self):
+        """Generate a mock manifest to represent this module."""
+        return {
+            **loader.manifest_from_legacy_module(self.DOMAIN, self),
+            **(self._partial_manifest or {})
+        }
+
+
+class MockPlatform:
     """Provide a fake platform."""
+
+    __name__ = 'homeassistant.components.light.bla'
+    __file__ = 'homeassistant/components/blah/light'
 
     # pylint: disable=invalid-name
     def __init__(self, setup_platform=None, dependencies=None,
                  platform_schema=None, async_setup_platform=None,
-                 async_setup_entry=None):
+                 async_setup_entry=None, scan_interval=None):
         """Initialize the platform."""
         self.DEPENDENCIES = dependencies or []
 
         if platform_schema is not None:
             self.PLATFORM_SCHEMA = platform_schema
+
+        if scan_interval is not None:
+            self.SCAN_INTERVAL = scan_interval
 
         if setup_platform is not None:
             # We run this in executor, wrap it in function
@@ -469,29 +600,31 @@ class MockToggleDevice(entity.ToggleEntity):
         """Return the last call."""
         if not self.calls:
             return None
-        elif method is None:
+        if method is None:
             return self.calls[-1]
-        else:
-            try:
-                return next(call for call in reversed(self.calls)
-                            if call[0] == method)
-            except StopIteration:
-                return None
+        try:
+            return next(call for call in reversed(self.calls)
+                        if call[0] == method)
+        except StopIteration:
+            return None
 
 
 class MockConfigEntry(config_entries.ConfigEntry):
     """Helper for creating config entries that adds some defaults."""
 
-    def __init__(self, *, domain='test', data=None, version=0, entry_id=None,
-                 source=data_entry_flow.SOURCE_USER, title='Mock Title',
-                 state=None):
+    def __init__(self, *, domain='test', data=None, version=1, entry_id=None,
+                 source=config_entries.SOURCE_USER, title='Mock Title',
+                 state=None, options={},
+                 connection_class=config_entries.CONN_CLASS_UNKNOWN):
         """Initialize a mock config entry."""
         kwargs = {
-            'entry_id': entry_id or 'mock-id',
+            'entry_id': entry_id or uuid.uuid4().hex,
             'domain': domain,
             'data': data or {},
+            'options': options,
             'version': version,
-            'title': title
+            'title': title,
+            'connection_class': connection_class,
         }
         if source is not None:
             kwargs['source'] = source
@@ -541,16 +674,18 @@ def patch_yaml_files(files_dict, endswith=True):
     return patch.object(yaml, 'open', mock_open_f, create=True)
 
 
-def mock_coro(return_value=None):
-    """Return a coro that returns a value."""
-    return mock_coro_func(return_value)()
+def mock_coro(return_value=None, exception=None):
+    """Return a coro that returns a value or raise an exception."""
+    return mock_coro_func(return_value, exception)()
 
 
-def mock_coro_func(return_value=None):
+def mock_coro_func(return_value=None, exception=None):
     """Return a method to create a coro function that returns a value."""
     @asyncio.coroutine
     def coro(*args, **kwargs):
         """Fake coroutine."""
+        if exception:
+            raise exception
         return return_value
 
     return coro
@@ -571,14 +706,16 @@ def assert_setup_component(count, domain=None):
     """
     config = {}
 
-    @ha.callback
-    def mock_psc(hass, config_input, domain):
+    async def mock_psc(hass, config_input, integration):
         """Mock the prepare_setup_component to capture config."""
-        res = async_process_component_config(
-            hass, config_input, domain)
-        config[domain] = None if res is None else res.get(domain)
+        domain_input = integration.domain
+        res = await async_process_component_config(
+            hass, config_input, integration)
+        config[domain_input] = None if res is None else res.get(domain_input)
         _LOGGER.debug("Configuration for %s, Validated: %s, Original %s",
-                      domain, config[domain], config_input.get(domain))
+                      domain_input,
+                      config[domain_input],
+                      config_input.get(domain_input))
         return res
 
     assert isinstance(config, dict)
@@ -611,14 +748,22 @@ def init_recorder_component(hass, add_config=None):
 
 def mock_restore_cache(hass, states):
     """Mock the DATA_RESTORE_CACHE."""
-    key = restore_state.DATA_RESTORE_CACHE
-    hass.data[key] = {
-        state.entity_id: state for state in states}
-    _LOGGER.debug('Restore cache: %s', hass.data[key])
-    assert len(hass.data[key]) == len(states), \
+    key = restore_state.DATA_RESTORE_STATE_TASK
+    data = restore_state.RestoreStateData(hass)
+    now = date_util.utcnow()
+
+    data.last_states = {
+        state.entity_id: restore_state.StoredState(state, now)
+        for state in states}
+    _LOGGER.debug('Restore cache: %s', data.last_states)
+    assert len(data.last_states) == len(states), \
         "Duplicate entity_id? {}".format(states)
-    hass.state = ha.CoreState.starting
-    mock_component(hass, recorder.DOMAIN)
+
+    async def get_restore_state_data() -> restore_state.RestoreStateData:
+        return data
+
+    # Patch the singleton task in hass.data to return our new RestoreStateData
+    hass.data[key] = hass.async_create_task(get_restore_state_data())
 
 
 class MockDependency:
@@ -695,8 +840,103 @@ class MockEntity(entity.Entity):
         """Return True if entity is available."""
         return self._handle('available')
 
+    @property
+    def device_info(self):
+        """Info how it links to a device."""
+        return self._handle('device_info')
+
     def _handle(self, attr):
-        """Helper for the attributes."""
+        """Return attribute value."""
         if attr in self._values:
             return self._values[attr]
         return getattr(super(), attr)
+
+
+@contextmanager
+def mock_storage(data=None):
+    """Mock storage.
+
+    Data is a dict {'key': {'version': version, 'data': data}}
+
+    Written data will be converted to JSON to ensure JSON parsing works.
+    """
+    if data is None:
+        data = {}
+
+    orig_load = storage.Store._async_load
+
+    async def mock_async_load(store):
+        """Mock version of load."""
+        if store._data is None:
+            # No data to load
+            if store.key not in data:
+                return None
+
+            mock_data = data.get(store.key)
+
+            if 'data' not in mock_data or 'version' not in mock_data:
+                _LOGGER.error('Mock data needs "version" and "data"')
+                raise ValueError('Mock data needs "version" and "data"')
+
+            store._data = mock_data
+
+        # Route through original load so that we trigger migration
+        loaded = await orig_load(store)
+        _LOGGER.info('Loading data for %s: %s', store.key, loaded)
+        return loaded
+
+    def mock_write_data(store, path, data_to_write):
+        """Mock version of write data."""
+        _LOGGER.info('Writing data to %s: %s', store.key, data_to_write)
+        # To ensure that the data can be serialized
+        data[store.key] = json.loads(json.dumps(
+            data_to_write, cls=store._encoder))
+
+    with patch('homeassistant.helpers.storage.Store._async_load',
+               side_effect=mock_async_load, autospec=True), \
+        patch('homeassistant.helpers.storage.Store._write_data',
+              side_effect=mock_write_data, autospec=True):
+        yield data
+
+
+async def flush_store(store):
+    """Make sure all delayed writes of a store are written."""
+    if store._data is None:
+        return
+
+    await store._async_handle_write_data()
+
+
+async def get_system_health_info(hass, domain):
+    """Get system health info."""
+    return await hass.data['system_health']['info'][domain](hass)
+
+
+def mock_integration(hass, module):
+    """Mock an integration."""
+    integration = loader.Integration(
+        hass, 'homeassisant.components.{}'.format(module.DOMAIN), None,
+        module.mock_manifest())
+
+    _LOGGER.info("Adding mock integration: %s", module.DOMAIN)
+    hass.data.setdefault(
+        loader.DATA_INTEGRATIONS, {}
+    )[module.DOMAIN] = integration
+    hass.data.setdefault(loader.DATA_COMPONENTS, {})[module.DOMAIN] = module
+
+
+def mock_entity_platform(hass, platform_path, module):
+    """Mock a entity platform.
+
+    platform_path is in form light.hue. Will create platform
+    hue.light.
+    """
+    domain, platform_name = platform_path.split('.')
+    integration_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
+    module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
+
+    if platform_name not in integration_cache:
+        mock_integration(hass, MockModule(platform_name))
+
+    _LOGGER.info("Adding mock integration platform: %s", platform_path)
+    module_cache["{}.{}".format(platform_name, domain)] = module

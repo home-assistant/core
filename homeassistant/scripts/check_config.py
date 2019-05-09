@@ -5,11 +5,10 @@ import logging
 import os
 from collections import OrderedDict, namedtuple
 from glob import glob
-from platform import system
+from typing import Dict, List, Sequence
 from unittest.mock import patch
 
 import attr
-from typing import Dict, List, Sequence
 import voluptuous as vol
 
 from homeassistant import bootstrap, core, loader
@@ -18,19 +17,17 @@ from homeassistant.config import (
     CONF_PACKAGES, merge_packages_config, _format_config_error,
     find_config_file, load_yaml_config_file,
     extract_domain_configs, config_per_platform)
-import homeassistant.util.yaml as yaml
+from homeassistant.util import yaml
 from homeassistant.exceptions import HomeAssistantError
 
-REQUIREMENTS = ('colorlog==3.1.4',)
-if system() == 'Windows':  # Ensure colorama installed for colorlog on Windows
-    REQUIREMENTS += ('colorama<=1',)
+REQUIREMENTS = ('colorlog==4.0.2',)
 
 _LOGGER = logging.getLogger(__name__)
 # pylint: disable=protected-access
 MOCKS = {
     'load': ("homeassistant.util.yaml.load_yaml", yaml.load_yaml),
     'load*': ("homeassistant.config.load_yaml", yaml.load_yaml),
-    'secrets': ("homeassistant.util.yaml._secret_yaml", yaml._secret_yaml),
+    'secrets': ("homeassistant.util.yaml.secret_yaml", yaml.secret_yaml),
 }
 SILENCE = (
     'homeassistant.scripts.check_config.yaml.clear_secret_cache',
@@ -163,13 +160,13 @@ def check(config_dir, secrets=False):
         'secret_cache': None,
     }
 
-    # pylint: disable=unused-variable
+    # pylint: disable=possibly-unused-variable
     def mock_load(filename):
         """Mock hass.util.load_yaml to save config file names."""
         res['yaml_files'][filename] = True
         return MOCKS['load'][1](filename)
 
-    # pylint: disable=unused-variable
+    # pylint: disable=possibly-unused-variable
     def mock_secrets(ldr, node):
         """Mock _get_secrets."""
         try:
@@ -198,13 +195,14 @@ def check(config_dir, secrets=False):
 
     if secrets:
         # Ensure !secrets point to the patched function
-        yaml.yaml.SafeLoader.add_constructor('!secret', yaml._secret_yaml)
+        yaml.yaml.SafeLoader.add_constructor('!secret', yaml.secret_yaml)
 
     try:
         hass = core.HomeAssistant()
         hass.config.config_dir = config_dir
 
-        res['components'] = check_ha_config_file(hass)
+        res['components'] = hass.loop.run_until_complete(
+            check_ha_config_file(hass))
         res['secret_cache'] = OrderedDict(yaml.__SECRET_CACHE)
 
         for err in res['components'].errors:
@@ -223,7 +221,7 @@ def check(config_dir, secrets=False):
             pat.stop()
         if secrets:
             # Ensure !secrets point to the original function
-            yaml.yaml.SafeLoader.add_constructor('!secret', yaml._secret_yaml)
+            yaml.yaml.SafeLoader.add_constructor('!secret', yaml.secret_yaml)
         bootstrap.clear_secret_cache()
 
     return res
@@ -267,7 +265,7 @@ def dump_dict(layer, indent_count=3, listi=False, **kwargs):
                 print(' ', indent_str, i)
 
 
-CheckConfigError = namedtuple(  # pylint: disable=invalid-name
+CheckConfigError = namedtuple(
     'CheckConfigError', "message domain config")
 
 
@@ -283,7 +281,7 @@ class HomeAssistantConfig(OrderedDict):
         return self
 
 
-def check_ha_config_file(hass):
+async def check_ha_config_file(hass):
     """Check if Home Assistant configuration file is valid."""
     config_dir = hass.config.config_dir
     result = HomeAssistantConfig()
@@ -303,10 +301,12 @@ def check_ha_config_file(hass):
 
     # Load configuration.yaml
     try:
-        config_path = find_config_file(config_dir)
+        config_path = await hass.async_add_executor_job(
+            find_config_file, config_dir)
         if not config_path:
             return result.add_error("File configuration.yaml not found.")
-        config = load_yaml_config_file(config_path)
+        config = await hass.async_add_executor_job(
+            load_yaml_config_file, config_path)
     except HomeAssistantError as err:
         return result.add_error(
             "Error loading {}: {}".format(config_path, err))
@@ -323,22 +323,24 @@ def check_ha_config_file(hass):
         core_config = {}
 
     # Merge packages
-    merge_packages_config(
+    await merge_packages_config(
         hass, config, core_config.get(CONF_PACKAGES, {}), _pack_error)
-    del core_config[CONF_PACKAGES]
-
-    # Ensure we have no None values after merge
-    for key, value in config.items():
-        if not value:
-            config[key] = {}
+    core_config.pop(CONF_PACKAGES, None)
 
     # Filter out repeating config sections
     components = set(key.split(' ')[0] for key in config.keys())
 
     # Process and validate config
     for domain in components:
-        component = loader.get_component(hass, domain)
-        if not component:
+        try:
+            integration = await loader.async_get_integration(hass, domain)
+        except loader.IntegrationNotFound:
+            result.add_error("Integration not found: {}".format(domain))
+            continue
+
+        try:
+            component = integration.get_component()
+        except ImportError:
             result.add_error("Component not found: {}".format(domain))
             continue
 
@@ -350,14 +352,19 @@ def check_ha_config_file(hass):
                 _comp_error(ex, domain, config)
                 continue
 
-        if not hasattr(component, 'PLATFORM_SCHEMA'):
+        component_platform_schema = getattr(
+            component, 'PLATFORM_SCHEMA_BASE',
+            getattr(component, 'PLATFORM_SCHEMA', None))
+
+        if component_platform_schema is None:
             continue
 
         platforms = []
         for p_name, p_config in config_per_platform(config, domain):
             # Validate component specific platform schema
             try:
-                p_validated = component.PLATFORM_SCHEMA(p_config)
+                p_validated = component_platform_schema(  # type: ignore
+                    p_config)
             except vol.Invalid as ex:
                 _comp_error(ex, domain, config)
                 continue
@@ -369,16 +376,24 @@ def check_ha_config_file(hass):
                 platforms.append(p_validated)
                 continue
 
-            platform = loader.get_platform(hass, domain, p_name)
+            try:
+                p_integration = await loader.async_get_integration(hass,
+                                                                   p_name)
+            except loader.IntegrationNotFound:
+                result.add_error(
+                    "Integration {} not found when trying to verify its {} "
+                    "platform.".format(p_name, domain))
+                continue
 
-            if platform is None:
+            try:
+                platform = p_integration.get_platform(domain)
+            except ImportError:
                 result.add_error(
                     "Platform not found: {}.{}".format(domain, p_name))
                 continue
 
             # Validate platform specific schema
             if hasattr(platform, 'PLATFORM_SCHEMA'):
-                # pylint: disable=no-member
                 try:
                     p_validated = platform.PLATFORM_SCHEMA(p_validated)
                 except vol.Invalid as ex:

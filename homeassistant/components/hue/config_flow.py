@@ -3,10 +3,11 @@ import asyncio
 import json
 import os
 
+from aiohue.discovery import discover_nupnp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
@@ -41,19 +42,22 @@ def _find_username_from_config(hass, filename):
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class HueFlowHandler(data_entry_flow.FlowHandler):
+class HueFlowHandler(config_entries.ConfigFlow):
     """Handle a Hue config flow."""
 
     VERSION = 1
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize the Hue flow."""
         self.host = None
 
+    async def async_step_user(self, user_input=None):
+        """Handle a flow initialized by the user."""
+        return await self.async_step_init(user_input)
+
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
-        from aiohue.discovery import discover_nupnp
-
         if user_input is not None:
             self.host = user_input['host']
             return await self.async_step_link()
@@ -84,7 +88,7 @@ class HueFlowHandler(data_entry_flow.FlowHandler):
                 reason='all_configured'
             )
 
-        elif len(hosts) == 1:
+        if len(hosts) == 1:
             self.host = hosts[0]
             return await self.async_step_link()
 

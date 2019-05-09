@@ -1,0 +1,30 @@
+{
+  "config": {
+    "title": "HomematicIP Cloud",
+    "step": {
+      "init": {
+        "title": "Pick HomematicIP Access point",
+        "data": {
+          "hapid": "Access point ID (SGTIN)",
+          "pin": "Pin Code (optional)",
+          "name": "Name (optional, used as name prefix for all devices)"
+        }
+      },
+      "link": {
+        "title": "Link Access point",
+        "description": "Press the blue button on the access point and the submit button to register HomematicIP with Home Assistant.\n\n![Location of button on bridge](/static/images/config_flows/config_homematicip_cloud.png)"
+      }
+    },
+    "error": {
+      "register_failed": "Failed to register, please try again.",
+      "invalid_pin": "Invalid PIN, please try again.",
+      "press_the_button": "Please press the blue button.",
+      "timeout_button": "Blue button press timeout, please try again."
+    },
+    "abort": {
+      "unknown": "Unknown error occurred.",
+      "connection_aborted": "Could not connect to HMIP server",
+      "already_configured": "Access point is already configured"
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "credential_error": "Error al obtener las credenciales.",
+            "devices_configured": "Todos los dispositivos encontrados ya est\u00e1n configurados.",
+            "no_devices_found": "No se encuentran dispositivos PlayStation 4 en la red.",
+            "port_987_bind_error": "No se pudo unir al puerto 987.",
+            "port_997_bind_error": "No se pudo unir al puerto 997."
+        },
+        "error": {
+            "login_failed": "No se ha podido emparejar con PlayStation 4. Verifique que el PIN sea correcto.",
+            "no_ipaddress": "Introduce la direcci\u00f3n IP de la PlayStation 4 que quieres configurar.",
+            "not_ready": "PlayStation 4 no est\u00e1 encendido o conectado a la red."
+        },
+        "step": {
+            "creds": {
+                "description": "Credenciales necesarias. Pulsa 'Enviar' y, a continuaci\u00f3n, en la app de segunda pantalla de PS4, actualiza la lista de dispositivos y selecciona el dispositivo 'Home-Assistant' para continuar.",
+                "title": "PlayStation 4"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN",
+                    "ip_address": "Direcci\u00f3n IP",
+                    "name": "Nombre",
+                    "region": "Regi\u00f3n"
+                },
+                "description": "Introduce la informaci\u00f3n de tu PlayStation 4. Para el 'PIN', ve a los 'Ajustes' en tu PlayStation 4. Despu\u00e9s dir\u00edgete hasta 'Ajustes de conexi\u00f3n de la aplicaci\u00f3n para m\u00f3viles' y selecciona 'A\u00f1adir dispositivo'. Introduce el PIN mostrado. Consulta la [documentaci\u00f3n](https://www.home-assistant.io/components/ps4/) para m\u00e1s informaci\u00f3n.",
+                "title": "PlayStation 4"
+            },
+            "mode": {
+                "data": {
+                    "ip_address": "Direcci\u00f3n IP (d\u00e9jalo en blanco si usas la detecci\u00f3n autom\u00e1tica).",
+                    "mode": "Modo configuraci\u00f3n"
+                },
+                "description": "Selecciona el modo de configuraci\u00f3n. El campo de direcci\u00f3n IP puede dejarse en blanco si se selecciona la detecci\u00f3n autom\u00e1tica, ya que los dispositivos se detectar\u00e1n autom\u00e1ticamente.",
+                "title": "PlayStation 4"
+            }
+        },
+        "title": "PlayStation 4"
+    }
+}

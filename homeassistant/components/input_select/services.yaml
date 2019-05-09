@@ -1,0 +1,22 @@
+select_next:
+  description: Select the next options of an input select entity.
+  fields:
+    entity_id: {description: Entity id of the input select to select the next value
+        for., example: input_select.my_select}
+select_option:
+  description: Select an option of an input select entity.
+  fields:
+    entity_id: {description: Entity id of the input select to select the value., example: input_select.my_select}
+    option: {description: Option to be selected., example: '"Item A"'}
+select_previous:
+  description: Select the previous options of an input select entity.
+  fields:
+    entity_id: {description: Entity id of the input select to select the previous
+        value for., example: input_select.my_select}
+set_options:
+  description: Set the options of an input select entity.
+  fields:
+    entity_id: {description: Entity id of the input select to set the new options
+        for., example: input_select.my_select}
+    options: {description: Options for the input select entity., example: '["Item
+        A", "Item B", "Item C"]'}

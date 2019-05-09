@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION, ATTR_POSITION, DOMAIN, SUPPORT_STOP)
+from homeassistant.components.homekit.const import ATTR_VALUE
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES,
     STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE, STATE_UNKNOWN)
@@ -19,7 +20,7 @@ def cls():
     patcher = patch_debounce()
     patcher.start()
     _import = __import__('homeassistant.components.homekit.type_covers',
-                         fromlist=['GarageDoorOpener', 'WindowCovering,',
+                         fromlist=['GarageDoorOpener', 'WindowCovering',
                                    'WindowCoveringBasic'])
     patcher_tuple = namedtuple('Cls', ['window', 'window_basic', 'garage'])
     yield patcher_tuple(window=_import.WindowCovering,
@@ -28,13 +29,13 @@ def cls():
     patcher.stop()
 
 
-async def test_garage_door_open_close(hass, cls):
+async def test_garage_door_open_close(hass, hk_driver, cls, events):
     """Test if accessory and HA are updated accordingly."""
     entity_id = 'cover.garage_door'
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = cls.garage(hass, 'Garage Door', entity_id, 2, None)
+    acc = cls.garage(hass, hk_driver, 'Garage Door', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -73,9 +74,18 @@ async def test_garage_door_open_close(hass, cls):
     assert call_close_cover[0].data[ATTR_ENTITY_ID] == entity_id
     assert acc.char_current_state.value == 2
     assert acc.char_target_state.value == 1
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] is None
 
     hass.states.async_set(entity_id, STATE_CLOSED)
     await hass.async_block_till_done()
+
+    await hass.async_add_job(acc.char_target_state.client_update_value, 1)
+    await hass.async_block_till_done()
+    assert acc.char_current_state.value == 1
+    assert acc.char_target_state.value == 1
+    assert len(events) == 2
+    assert events[-1].data[ATTR_VALUE] is None
 
     await hass.async_add_job(acc.char_target_state.client_update_value, 0)
     await hass.async_block_till_done()
@@ -83,15 +93,27 @@ async def test_garage_door_open_close(hass, cls):
     assert call_open_cover[0].data[ATTR_ENTITY_ID] == entity_id
     assert acc.char_current_state.value == 3
     assert acc.char_target_state.value == 0
+    assert len(events) == 3
+    assert events[-1].data[ATTR_VALUE] is None
+
+    hass.states.async_set(entity_id, STATE_OPEN)
+    await hass.async_block_till_done()
+
+    await hass.async_add_job(acc.char_target_state.client_update_value, 0)
+    await hass.async_block_till_done()
+    assert acc.char_current_state.value == 0
+    assert acc.char_target_state.value == 0
+    assert len(events) == 4
+    assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_window_set_cover_position(hass, cls):
+async def test_window_set_cover_position(hass, hk_driver, cls, events):
     """Test if accessory and HA are updated accordingly."""
     entity_id = 'cover.window'
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = cls.window(hass, 'Cover', entity_id, 2, None)
+    acc = cls.window(hass, hk_driver, 'Cover', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -123,6 +145,8 @@ async def test_window_set_cover_position(hass, cls):
     assert call_set_cover_position[0].data[ATTR_POSITION] == 25
     assert acc.char_current_position.value == 50
     assert acc.char_target_position.value == 25
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] == 25
 
     await hass.async_add_job(acc.char_target_position.client_update_value, 75)
     await hass.async_block_till_done()
@@ -131,15 +155,17 @@ async def test_window_set_cover_position(hass, cls):
     assert call_set_cover_position[1].data[ATTR_POSITION] == 75
     assert acc.char_current_position.value == 50
     assert acc.char_target_position.value == 75
+    assert len(events) == 2
+    assert events[-1].data[ATTR_VALUE] == 75
 
 
-async def test_window_open_close(hass, cls):
+async def test_window_open_close(hass, hk_driver, cls, events):
     """Test if accessory and HA are updated accordingly."""
     entity_id = 'cover.window'
 
     hass.states.async_set(entity_id, STATE_UNKNOWN,
                           {ATTR_SUPPORTED_FEATURES: 0})
-    acc = cls.window_basic(hass, 'Cover', entity_id, 2, None)
+    acc = cls.window_basic(hass, hk_driver, 'Cover', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -178,6 +204,8 @@ async def test_window_open_close(hass, cls):
     assert acc.char_current_position.value == 0
     assert acc.char_target_position.value == 0
     assert acc.char_position_state.value == 2
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] is None
 
     await hass.async_add_job(acc.char_target_position.client_update_value, 90)
     await hass.async_block_till_done()
@@ -186,6 +214,8 @@ async def test_window_open_close(hass, cls):
     assert acc.char_current_position.value == 100
     assert acc.char_target_position.value == 100
     assert acc.char_position_state.value == 2
+    assert len(events) == 2
+    assert events[-1].data[ATTR_VALUE] is None
 
     await hass.async_add_job(acc.char_target_position.client_update_value, 55)
     await hass.async_block_till_done()
@@ -194,15 +224,17 @@ async def test_window_open_close(hass, cls):
     assert acc.char_current_position.value == 100
     assert acc.char_target_position.value == 100
     assert acc.char_position_state.value == 2
+    assert len(events) == 3
+    assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_window_open_close_stop(hass, cls):
+async def test_window_open_close_stop(hass, hk_driver, cls, events):
     """Test if accessory and HA are updated accordingly."""
     entity_id = 'cover.window'
 
     hass.states.async_set(entity_id, STATE_UNKNOWN,
                           {ATTR_SUPPORTED_FEATURES: SUPPORT_STOP})
-    acc = cls.window_basic(hass, 'Cover', entity_id, 2, None)
+    acc = cls.window_basic(hass, hk_driver, 'Cover', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     # Set from HomeKit
@@ -217,6 +249,8 @@ async def test_window_open_close_stop(hass, cls):
     assert acc.char_current_position.value == 0
     assert acc.char_target_position.value == 0
     assert acc.char_position_state.value == 2
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] is None
 
     await hass.async_add_job(acc.char_target_position.client_update_value, 90)
     await hass.async_block_till_done()
@@ -225,6 +259,8 @@ async def test_window_open_close_stop(hass, cls):
     assert acc.char_current_position.value == 100
     assert acc.char_target_position.value == 100
     assert acc.char_position_state.value == 2
+    assert len(events) == 2
+    assert events[-1].data[ATTR_VALUE] is None
 
     await hass.async_add_job(acc.char_target_position.client_update_value, 55)
     await hass.async_block_till_done()
@@ -233,3 +269,5 @@ async def test_window_open_close_stop(hass, cls):
     assert acc.char_current_position.value == 50
     assert acc.char_target_position.value == 50
     assert acc.char_position_state.value == 2
+    assert len(events) == 3
+    assert events[-1].data[ATTR_VALUE] is None

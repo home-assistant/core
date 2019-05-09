@@ -1,0 +1,10 @@
+{
+  "domain": "locative",
+  "name": "Locative",
+  "documentation": "https://www.home-assistant.io/components/locative",
+  "requirements": [],
+  "dependencies": [
+    "webhook"
+  ],
+  "codeowners": []
+}

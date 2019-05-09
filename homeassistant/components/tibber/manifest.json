@@ -1,0 +1,12 @@
+{
+  "domain": "tibber",
+  "name": "Tibber",
+  "documentation": "https://www.home-assistant.io/components/tibber",
+  "requirements": [
+    "pyTibber==0.10.1"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@danielhiversen"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontroller nettstedet er allerede konfigurert",
+            "user_privilege": "Bruker m\u00e5 v\u00e6re administrator"
+        },
+        "error": {
+            "faulty_credentials": "Ugyldig brukerlegitimasjon",
+            "service_unavailable": "Ingen tjeneste tilgjengelig"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "password": "Passord",
+                    "port": "Port",
+                    "site": "Nettsted-ID",
+                    "username": "Brukernavn",
+                    "verify_ssl": "Kontroller bruker riktig sertifikat"
+                },
+                "title": "Sett opp UniFi kontroller"
+            }
+        },
+        "title": "UniFi kontroller"
+    }
+}

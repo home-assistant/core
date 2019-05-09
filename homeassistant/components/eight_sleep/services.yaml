@@ -1,0 +1,6 @@
+heat_set:
+  description: Set heating level for eight sleep.
+  fields:
+    duration: {description: Duration to heat at the target level in seconds., example: 3600}
+    entity_id: {description: Entity id of the bed state to adjust., example: sensor.eight_left_bed_state}
+    target: {description: Target heating level from 0-100., example: 35}

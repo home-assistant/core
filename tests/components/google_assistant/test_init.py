@@ -5,7 +5,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.components import google_assistant as ga
 
 GA_API_KEY = "Agdgjsj399sdfkosd932ksd"
-GA_AGENT_USER_ID = "testid"
 
 
 @asyncio.coroutine
@@ -17,9 +16,6 @@ def test_request_sync_service(aioclient_mock, hass):
     yield from async_setup_component(hass, 'google_assistant', {
         'google_assistant': {
             'project_id': 'test_project',
-            'client_id': 'r7328kwdsdfsdf03223409',
-            'access_token': '8wdsfjsf932492342349234',
-            'agent_user_id': GA_AGENT_USER_ID,
             'api_key': GA_API_KEY
         }})
 

@@ -1,24 +1,15 @@
-"""
-Weather component that handles meteorological data for your location.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/weather/
-"""
-import asyncio
+"""Weather component that handles meteorological data for your location."""
+from datetime import timedelta
 import logging
 
+from homeassistant.const import PRECISION_TENTHS, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
-from homeassistant.const import PRECISION_WHOLE, PRECISION_TENTHS, TEMP_CELSIUS
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = []
-DOMAIN = 'weather'
-
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 ATTR_CONDITION_CLASS = 'condition_class'
 ATTR_FORECAST = 'forecast'
@@ -27,6 +18,8 @@ ATTR_FORECAST_PRECIPITATION = 'precipitation'
 ATTR_FORECAST_TEMP = 'temperature'
 ATTR_FORECAST_TEMP_LOW = 'templow'
 ATTR_FORECAST_TIME = 'datetime'
+ATTR_FORECAST_WIND_BEARING = 'wind_bearing'
+ATTR_FORECAST_WIND_SPEED = 'wind_speed'
 ATTR_WEATHER_ATTRIBUTION = 'attribution'
 ATTR_WEATHER_HUMIDITY = 'humidity'
 ATTR_WEATHER_OZONE = 'ozone'
@@ -36,17 +29,31 @@ ATTR_WEATHER_VISIBILITY = 'visibility'
 ATTR_WEATHER_WIND_BEARING = 'wind_bearing'
 ATTR_WEATHER_WIND_SPEED = 'wind_speed'
 
+DOMAIN = 'weather'
 
-@asyncio.coroutine
-def async_setup(hass, config):
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
+
+SCAN_INTERVAL = timedelta(seconds=30)
+
+
+async def async_setup(hass, config):
     """Set up the weather component."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
-
-    yield from component.async_setup(config)
+    component = hass.data[DOMAIN] = EntityComponent(
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    await component.async_setup(config)
     return True
 
 
-# pylint: disable=no-member, no-self-use
+async def async_setup_entry(hass, entry):
+    """Set up a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
+
+
 class WeatherEntity(Entity):
     """ABC for weather data."""
 

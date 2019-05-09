@@ -1,9 +1,4 @@
-"""
-Provide functionality to TTS.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts/
-"""
+"""Provide functionality to TTS."""
 import asyncio
 import ctypes
 import functools as ft
@@ -18,18 +13,16 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.media_player import (
+from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE, MEDIA_TYPE_MUSIC,
     SERVICE_PLAY_MEDIA)
-from homeassistant.components.media_player import DOMAIN as DOMAIN_MP
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.media_player.const import DOMAIN as DOMAIN_MP
+from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, CONF_PLATFORM
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_prepare_setup_platform
-
-REQUIREMENTS = ['mutagen==1.40.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,15 +32,16 @@ ATTR_MESSAGE = 'message'
 ATTR_OPTIONS = 'options'
 ATTR_PLATFORM = 'platform'
 
+CONF_BASE_URL = 'base_url'
 CONF_CACHE = 'cache'
 CONF_CACHE_DIR = 'cache_dir'
 CONF_LANG = 'language'
+CONF_SERVICE_NAME = 'service_name'
 CONF_TIME_MEMORY = 'time_memory'
 
 DEFAULT_CACHE = True
 DEFAULT_CACHE_DIR = 'tts'
 DEFAULT_TIME_MEMORY = 300
-DEPENDENCIES = ['http']
 DOMAIN = 'tts'
 
 MEM_CACHE_FILENAME = 'filename'
@@ -60,17 +54,31 @@ _RE_VOICE_FILE = re.compile(
     r"([a-f0-9]{40})_([^_]+)_([^_]+)_([a-z_]+)\.[a-z0-9]{3,4}")
 KEY_PATTERN = '{0}_{1}_{2}_{3}'
 
+
+def _deprecated_platform(value):
+    """Validate if platform is deprecated."""
+    if value == 'google':
+        raise vol.Invalid(
+            'google tts service has been renamed to google_translate,'
+            ' please update your configuration.')
+    return value
+
+
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_PLATFORM): vol.All(cv.string, _deprecated_platform),
     vol.Optional(CONF_CACHE, default=DEFAULT_CACHE): cv.boolean,
     vol.Optional(CONF_CACHE_DIR, default=DEFAULT_CACHE_DIR): cv.string,
     vol.Optional(CONF_TIME_MEMORY, default=DEFAULT_TIME_MEMORY):
         vol.All(vol.Coerce(int), vol.Range(min=60, max=57600)),
+    vol.Optional(CONF_BASE_URL): cv.string,
+    vol.Optional(CONF_SERVICE_NAME): cv.string,
 })
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
 
 SCHEMA_SERVICE_SAY = vol.Schema({
     vol.Required(ATTR_MESSAGE): cv.string,
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(ATTR_CACHE): cv.boolean,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Optional(ATTR_LANGUAGE): cv.string,
     vol.Optional(ATTR_OPTIONS): dict,
 })
@@ -87,8 +95,9 @@ async def async_setup(hass, config):
         use_cache = conf.get(CONF_CACHE, DEFAULT_CACHE)
         cache_dir = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
         time_memory = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
+        base_url = conf.get(CONF_BASE_URL) or hass.config.api.base_url
 
-        await tts.async_init_cache(use_cache, cache_dir, time_memory)
+        await tts.async_init_cache(use_cache, cache_dir, time_memory, base_url)
     except (HomeAssistantError, KeyError) as err:
         _LOGGER.error("Error on cache init %s", err)
         return False
@@ -117,12 +126,12 @@ async def async_setup(hass, config):
 
             tts.async_register_engine(p_type, provider, p_config)
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Error setting up platform %s", p_type)
+            _LOGGER.exception("Error setting up platform: %s", p_type)
             return
 
         async def async_say_handle(service):
             """Service handle for say."""
-            entity_ids = service.data.get(ATTR_ENTITY_ID)
+            entity_ids = service.data.get(ATTR_ENTITY_ID, ENTITY_MATCH_ALL)
             message = service.data.get(ATTR_MESSAGE)
             cache = service.data.get(ATTR_CACHE)
             language = service.data.get(ATTR_LANGUAGE)
@@ -134,22 +143,22 @@ async def async_setup(hass, config):
                     options=options
                 )
             except HomeAssistantError as err:
-                _LOGGER.error("Error on init tts: %s", err)
+                _LOGGER.error("Error on init TTS: %s", err)
                 return
 
             data = {
                 ATTR_MEDIA_CONTENT_ID: url,
                 ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+                ATTR_ENTITY_ID: entity_ids,
             }
-
-            if entity_ids:
-                data[ATTR_ENTITY_ID] = entity_ids
 
             await hass.services.async_call(
                 DOMAIN_MP, SERVICE_PLAY_MEDIA, data, blocking=True)
 
+        service_name = p_config.get(CONF_SERVICE_NAME, "{}_{}".format(
+            p_type, SERVICE_SAY))
         hass.services.async_register(
-            DOMAIN, "{}_{}".format(p_type, SERVICE_SAY), async_say_handle,
+            DOMAIN, service_name, async_say_handle,
             schema=SCHEMA_SERVICE_SAY)
 
     setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
@@ -169,7 +178,7 @@ async def async_setup(hass, config):
     return True
 
 
-class SpeechManager(object):
+class SpeechManager:
     """Representation of a speech store."""
 
     def __init__(self, hass):
@@ -180,13 +189,16 @@ class SpeechManager(object):
         self.use_cache = DEFAULT_CACHE
         self.cache_dir = DEFAULT_CACHE_DIR
         self.time_memory = DEFAULT_TIME_MEMORY
+        self.base_url = None
         self.file_cache = {}
         self.mem_cache = {}
 
-    async def async_init_cache(self, use_cache, cache_dir, time_memory):
+    async def async_init_cache(self, use_cache, cache_dir, time_memory,
+                               base_url):
         """Init config folder and load file cache."""
         self.use_cache = use_cache
         self.time_memory = time_memory
+        self.base_url = base_url
 
         def init_tts_cache_dir(cache_dir):
             """Init cache folder."""
@@ -293,17 +305,16 @@ class SpeechManager(object):
         # Is file store in file cache
         elif use_cache and key in self.file_cache:
             filename = self.file_cache[key]
-            self.hass.async_add_job(self.async_file_to_mem(key))
+            self.hass.async_create_task(self.async_file_to_mem(key))
         # Load speech from provider into memory
         else:
             filename = await self.async_get_tts_audio(
                 engine, key, message, use_cache, language, options)
 
-        return "{}/api/tts_proxy/{}".format(
-            self.hass.config.api.base_url, filename)
+        return "{}/api/tts_proxy/{}".format(self.base_url, filename)
 
-    async def async_get_tts_audio(self, engine, key, message, cache, language,
-                                  options):
+    async def async_get_tts_audio(
+            self, engine, key, message, cache, language, options):
         """Receive TTS and store for view in cache.
 
         This method is a coroutine.
@@ -326,7 +337,7 @@ class SpeechManager(object):
         self._async_store_to_memcache(key, filename, data)
 
         if cache:
-            self.hass.async_add_job(
+            self.hass.async_create_task(
                 self.async_save_tts_audio(key, filename, data))
 
         return filename
@@ -440,7 +451,7 @@ class SpeechManager(object):
         return data_bytes.getvalue()
 
 
-class Provider(object):
+class Provider:
     """Represent a single TTS provider."""
 
     hass = None

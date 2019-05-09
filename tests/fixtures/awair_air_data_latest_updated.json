@@ -1,0 +1,50 @@
+[
+  {
+    "timestamp": "2018-11-21T15:46:16.346Z",
+    "score": 79,
+    "sensors": [
+      {
+        "component": "TEMP",
+        "value": 23.4
+      },
+      {
+        "component": "HUMID",
+        "value": 33.73
+      },
+      {
+        "component": "CO2",
+        "value": 613
+      },
+      {
+        "component": "VOC",
+        "value": 1013
+      },
+      {
+        "component": "DUST",
+        "value": 7.2
+      }
+    ],
+    "indices": [
+      {
+        "component": "TEMP",
+        "value": 0
+      },
+      {
+        "component": "HUMID",
+        "value": -2
+      },
+      {
+        "component": "CO2",
+        "value": 0
+      },
+      {
+        "component": "VOC",
+        "value": 2
+      },
+      {
+        "component": "DUST",
+        "value": 0
+      }
+    ]
+  }
+]

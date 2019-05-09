@@ -39,7 +39,6 @@ def printc(the_color, *args):
 
 def validate_requirements_ok():
     """Validate requirements, returns True of ok."""
-    # pylint: disable=E0402
     from gen_requirements_all import main as req_main
     return req_main(True) == 0
 
@@ -70,7 +69,6 @@ async def async_exec(*args, display=False):
                   'stderr': asyncio.subprocess.STDOUT}
         if display:
             kwargs['stderr'] = asyncio.subprocess.PIPE
-        # pylint: disable=E1120
         proc = await asyncio.create_subprocess_exec(*args, **kwargs)
     except FileNotFoundError as err:
         printc(FAIL, "Could not execute {}. Did you install test requirements?"
@@ -155,7 +153,7 @@ async def lint(files):
 
 
 async def main():
-    """The main loop."""
+    """Run the main loop."""
     # Ensure we are in the homeassistant root
     os.chdir(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 

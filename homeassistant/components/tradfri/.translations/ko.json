@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\ube0c\ub9bf\uc9c0\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "cannot_connect": "\uac8c\uc774\ud2b8\uc6e8\uc774\uc5d0 \uc5f0\uacb0\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4.",
+            "invalid_key": "\uc81c\uacf5\ub41c \ud0a4\ub85c \ub4f1\ub85d\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. \uc774 \ubb38\uc81c\uac00 \uacc4\uc18d \ubc1c\uc0dd\ud558\uba74 \uac8c\uc774\ud2b8\uc6e8\uc774\ub97c \ub2e4\uc2dc \uc2dc\uc791\ud574\ubcf4\uc138\uc694.",
+            "timeout": "\ucf54\ub4dc \uc720\ud6a8\uc131 \uac80\uc0ac \uc2dc\uac04\uc774 \ucd08\uacfc\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "host": "\ud638\uc2a4\ud2b8",
+                    "security_code": "\ubcf4\uc548 \ucf54\ub4dc"
+                },
+                "description": "\uac8c\uc774\ud2b8\uc6e8\uc774 \ub4b7\uba74\uc5d0\uc11c \ubcf4\uc548 \ucf54\ub4dc\ub97c \ucc3e\uc744 \uc218 \uc788\uc2b5\ub2c8\ub2e4.",
+                "title": "\ubcf4\uc548 \ucf54\ub4dc \uc785\ub825"
+            }
+        },
+        "title": "IKEA TR\u00c5DFRI"
+    }
+}
