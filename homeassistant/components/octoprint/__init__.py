@@ -10,7 +10,7 @@ from homeassistant.components.discovery import SERVICE_OCTOPRINT
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONTENT_TYPE_JSON, CONF_NAME, CONF_PATH,
     CONF_PORT, CONF_SSL, TEMP_CELSIUS, CONF_MONITORED_CONDITIONS, CONF_SENSORS,
-    CONF_BINARY_SENSORS)
+    CONF_BINARY_SENSORS, ATTR_NAME, ATTR_TEMPERATURE)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -33,6 +33,7 @@ SERVICE_CONNECT = 'connect'
 SERVICE_DISCONNECT = 'disconnect'
 SERVICE_PAUSE_JOB = 'pause_job'
 SERVICE_RESUME_JOB = 'resume_job'
+SERVICE_TARGET_TEMPERATURE = 'target_temperature'
 
 
 def has_all_unique_names(value):
@@ -186,11 +187,31 @@ def setup(hass, config):
         octoprint_api.post(
             'job', "{\"command\": \"pause\",\"action\": \"resume\"}")
 
+    def handle_target_temperature(call):
+        """Sets the target temperature for a tool or the bed."""
+        name = call.data.get(ATTR_NAME)
+        temperature = call.data.get(ATTR_TEMPERATURE)
+
+        if name == "bed":
+            json_string = "{\"command\": \"target\", \"target\": "
+            json_string += str(temperature)
+            json_string += "}"
+            octoprint_api.post('printer/bed', json_string)
+        else:
+            json_string = "{\"command\": \"target\",\"targets\": {\""
+            json_string += str(name)
+            json_string += "\": "
+            json_string += str(temperature)
+            json_string += "}}"
+            octoprint_api.post('printer/tool', json_string)
+
     hass.services.register(DOMAIN, SERVICE_CANCEL_JOB, handle_cancel_job)
     hass.services.register(DOMAIN, SERVICE_CONNECT, handle_connect)
     hass.services.register(DOMAIN, SERVICE_DISCONNECT, handle_disconnect)
     hass.services.register(DOMAIN, SERVICE_PAUSE_JOB, handle_pause_job)
     hass.services.register(DOMAIN, SERVICE_RESUME_JOB, handle_resume_job)
+    hass.services.register(
+        DOMAIN, SERVICE_TARGET_TEMPERATURE, handle_target_temperature)
 
     return success
 

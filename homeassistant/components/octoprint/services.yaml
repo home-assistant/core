@@ -24,3 +24,13 @@ pause_job:
 
 resume_job:
   description: Resumes current job.
+
+target_temperature:
+  description: Sets temperature target for the given tool or bed
+  fields:
+    name:
+      description: The name. You can set tools or set 'bed' to set the bed temperature.
+      example: tool0
+    temperature: 
+      description: The target temperature for the tool or bed
+      example: 200
