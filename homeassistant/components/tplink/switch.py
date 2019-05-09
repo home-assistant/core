@@ -2,13 +2,15 @@
 import logging
 import time
 
+from pyHS100 import SmartDeviceException, SmartPlug
+
 from homeassistant.components.switch import (
     ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH, SwitchDevice)
 from homeassistant.const import ATTR_VOLTAGE
 import homeassistant.helpers.device_registry as dr
 
 from . import CONF_SWITCH, DOMAIN as TPLINK_DOMAIN
-from .common import SOURCE_CONFIG, TPLinkDevice
+from .common import async_add_entities_retry
 
 PARALLEL_UPDATES = 0
 
@@ -30,23 +32,32 @@ async def async_setup_platform(hass, config, add_entities,
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up discovered switches."""
-    devs = []
-    for tplink_device in hass.data[TPLINK_DOMAIN][CONF_SWITCH]:
-        devs.append(SmartPlugSwitch(tplink_device))
-
-    async_add_entities(devs, True)
+    async_add_entities_retry(
+        hass,
+        async_add_entities,
+        hass.data[TPLINK_DOMAIN][CONF_SWITCH],
+        add_entity
+    )
 
     return True
+
+
+def add_entity(device: SmartPlug, async_add_entities):
+    """Check if device is online and add the entity."""
+    device.get_sysinfo()
+    async_add_entities(
+        [SmartPlugSwitch(device)],
+        True
+    )
 
 
 class SmartPlugSwitch(SwitchDevice):
     """Representation of a TPLink Smart Plug switch."""
 
-    def __init__(self, tplink_device: TPLinkDevice) -> None:
+    def __init__(self, smartplug):
         """Initialize the switch."""
-        self.tplink_device = tplink_device
-        self.smartplug = tplink_device.dev
-        self._sysinfo = {}
+        self.smartplug = smartplug
+        self._sysinfo = None
         self._state = None
         self._available = False
         # Set up emeter cache
@@ -55,34 +66,24 @@ class SmartPlugSwitch(SwitchDevice):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        if self.tplink_device.source == SOURCE_CONFIG:
-            return 'tplink_plug_switch_%s' % self.smartplug.host
-
-        # Not using alternative id above as the optional value to this
-        # .get() call. Doing so would introduce a situation where the
-        # unique_id changes once the device is available and  sysinfo
-        # is populated.
-        return self._sysinfo.get("mac")
+        return self._sysinfo["mac"]
 
     @property
     def name(self):
         """Return the name of the Smart Plug."""
-        return self._sysinfo.get("alias", self.smartplug.host)
+        return self._sysinfo["alias"]
 
     @property
     def device_info(self):
         """Return information about the device."""
         return {
             "name": self.name,
-            "model": self._sysinfo.get("model", "Unknown"),
+            "model": self._sysinfo["model"],
             "manufacturer": 'TP-Link',
             "connections": {
-                (
-                    dr.CONNECTION_NETWORK_MAC,
-                    self._sysinfo.get("mac", "Unknown")
-                )
-            } if self._sysinfo.get("mac") else {},
-            "sw_version": self._sysinfo.get("sw_ver", "Unknown"),
+                (dr.CONNECTION_NETWORK_MAC, self._sysinfo["mac"])
+            },
+            "sw_version": self._sysinfo["sw_ver"],
         }
 
     @property
@@ -110,7 +111,6 @@ class SmartPlugSwitch(SwitchDevice):
 
     def update(self):
         """Update the TP-Link switch's state."""
-        from pyHS100 import SmartDeviceException
         try:
             if not self._sysinfo:
                 self._sysinfo = self.smartplug.sys_info

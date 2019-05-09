@@ -2,16 +2,19 @@
 import logging
 import time
 
+from pyHS100 import SmartBulb, SmartDeviceException
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR, SUPPORT_COLOR_TEMP, Light)
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_mired_to_kelvin as mired_to_kelvin)
 
 from . import CONF_LIGHT, DOMAIN as TPLINK_DOMAIN
-from .common import SOURCE_CONFIG, TPLinkDevice
+from .common import async_add_entities_retry
 
 PARALLEL_UPDATES = 0
 
@@ -32,15 +35,29 @@ async def async_setup_platform(hass, config, add_entities,
                     'convert to use the tplink component.')
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+        hass: HomeAssistantType,
+        config_entry,
+        async_add_entities
+):
     """Set up discovered switches."""
-    devs = []
-    for tplink_device in hass.data[TPLINK_DOMAIN][CONF_LIGHT]:
-        devs.append(TPLinkSmartBulb(tplink_device))
-
-    async_add_entities(devs, True)
+    async_add_entities_retry(
+        hass,
+        async_add_entities,
+        hass.data[TPLINK_DOMAIN][CONF_LIGHT],
+        add_entity
+    )
 
     return True
+
+
+def add_entity(device: SmartBulb, async_add_entities):
+    """Check if device is online and add the entity."""
+    device.get_sysinfo()
+    async_add_entities(
+        [TPLinkSmartBulb(device)],
+        True
+    )
 
 
 def brightness_to_percentage(byt):
@@ -56,11 +73,10 @@ def brightness_from_percentage(percent):
 class TPLinkSmartBulb(Light):
     """Representation of a TPLink Smart Bulb."""
 
-    def __init__(self, tplink_device: TPLinkDevice) -> None:
+    def __init__(self, smartbulb) -> None:
         """Initialize the bulb."""
-        self.tplink_device = tplink_device
-        self.smartbulb = self.tplink_device.dev
-        self._sysinfo = {}
+        self.smartbulb = smartbulb
+        self._sysinfo = None
         self._state = None
         self._available = False
         self._color_temp = None
@@ -74,31 +90,24 @@ class TPLinkSmartBulb(Light):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        if self.tplink_device.source == SOURCE_CONFIG:
-            return 'tplink_smart_bulb_%s' % self.smartbulb.host
-
-        # Not using alternative id above as the optional value to this
-        # .get() call. Doing so would introduce a situation where the
-        # unique_id changes once the device is available and  sysinfo
-        # is populated.
-        return self._sysinfo.get("mac")
+        return self._sysinfo["mac"]
 
     @property
     def name(self):
         """Return the name of the Smart Bulb."""
-        return self._sysinfo.get("alias", self.smartbulb.host)
+        return self._sysinfo["alias"]
 
     @property
     def device_info(self):
         """Return information about the device."""
         return {
             "name": self.name,
-            "model": self._sysinfo.get("model", "Unknown"),
+            "model": self._sysinfo["model"],
             "manufacturer": 'TP-Link',
             "connections": {
-                (dr.CONNECTION_NETWORK_MAC, self._sysinfo.get("mac"))
-            } if self._sysinfo.get("mac") else {},
-            "sw_version": self._sysinfo.get("sw_ver", "Unknown"),
+                (dr.CONNECTION_NETWORK_MAC, self._sysinfo["mac"])
+            },
+            "sw_version": self._sysinfo["sw_ver"],
         }
 
     @property
@@ -113,7 +122,6 @@ class TPLinkSmartBulb(Light):
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
-        from pyHS100 import SmartBulb
         self.smartbulb.state = SmartBulb.BULB_STATE_ON
 
         if ATTR_COLOR_TEMP in kwargs:
@@ -131,7 +139,6 @@ class TPLinkSmartBulb(Light):
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
-        from pyHS100 import SmartBulb
         self.smartbulb.state = SmartBulb.BULB_STATE_OFF
 
     @property
@@ -166,7 +173,6 @@ class TPLinkSmartBulb(Light):
 
     def update(self):
         """Update the TP-Link Bulb's state."""
-        from pyHS100 import SmartDeviceException, SmartBulb
         try:
             if self._supported_features is None:
                 self.get_features()

@@ -7,8 +7,18 @@ from homeassistant.const import CONF_HOST
 from homeassistant import config_entries
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .common import TPLinkDevice, SOURCE_CONFIG, SOURCE_DISCOVERY
+from .common import (
+    async_discover_devices,
+    async_get_static_devices,
+    async_has_discoverable_devices,
+    ATTR_CONFIG,
+    CONF_DISCOVERY,
+    CONF_LIGHT,
+    CONF_SWITCH,
+    SmartDevices
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,11 +28,6 @@ TPLINK_HOST_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string
 })
 
-CONF_LIGHT = 'light'
-CONF_SWITCH = 'switch'
-CONF_DISCOVERY = 'discovery'
-
-ATTR_CONFIG = 'config'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -33,16 +38,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional('discovery', default=True): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
-
-
-async def _async_has_devices(hass):
-    """Return if there are devices that can be discovered."""
-    from pyHS100 import Discover
-
-    def discover():
-        devs = Discover.discover()
-        return devs
-    return await hass.async_add_executor_job(discover)
 
 
 async def async_setup(hass, config):
@@ -59,76 +54,38 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigType):
     """Set up TPLink from a config entry."""
-    from pyHS100 import SmartBulb, SmartPlug, SmartDeviceException
-
-    devices = {}
-
     config_data = hass.data[DOMAIN].get(ATTR_CONFIG)
 
     # These will contain the initialized devices
     lights = hass.data[DOMAIN][CONF_LIGHT] = []
     switches = hass.data[DOMAIN][CONF_SWITCH] = []
 
-    # If discovery is defined and not disabled, discover devices
-    # If initialized from configure integrations, there's no config
-    # so we default here to True
-    if config_data is None or config_data[CONF_DISCOVERY]:
-        devs = await _async_has_devices(hass)
-        _LOGGER.info("Discovered %s TP-Link smart home device(s)", len(devs))
-        for host, dev in devs.items():
-            devices[host] = TPLinkDevice(
-                dev, SOURCE_DISCOVERY
-            )
-
-    def _device_for_type(host, type_):
-        dev = None
-        if type_ == CONF_LIGHT:
-            dev = SmartBulb(host)
-        elif type_ == CONF_SWITCH:
-            dev = SmartPlug(host)
-
-        return dev
-
-    # When arriving from configure integrations, we have no config data.
+    # Add static devices
+    static_devices = SmartDevices()
     if config_data is not None:
-        for type_ in [CONF_LIGHT, CONF_SWITCH]:
-            for entry in config_data[type_]:
-                host = entry['host']
-                try:
-                    dev = _device_for_type(host, type_)
-                    devices[host] = TPLinkDevice(
-                        dev, SOURCE_CONFIG
-                    )
-                    _LOGGER.debug("Succesfully added %s %s: %s",
-                                  type_, host, type(dev))
-                except SmartDeviceException as ex:
-                    _LOGGER.error("Unable to initialize %s %s: %s",
-                                  type_, host, ex)
+        static_devices = async_get_static_devices(
+            config_data,
+        )
 
-    # This is necessary to avoid I/O blocking on is_dimmable
-    def _fill_device_lists():
-        for tplink_device in devices.values():
-            dev = tplink_device.dev
+        for light in static_devices.lights:
+            lights.append(light)
 
-            if isinstance(dev, SmartPlug):
-                try:
-                    if dev.is_dimmable:  # Dimmers act as lights
-                        lights.append(tplink_device)
-                    else:
-                        switches.append(tplink_device)
-                except SmartDeviceException as ex:
-                    _LOGGER.error("Unable to connect to device %s: %s",
-                                  dev.host, ex)
+        for switch in static_devices.switches:
+            switches.append(switch)
 
-            elif isinstance(dev, SmartBulb):
-                lights.append(tplink_device)
-            else:
-                _LOGGER.error("Unknown smart device type: %s", type(dev))
+    # Add discovered devices
+    if config_data is None or config_data[CONF_DISCOVERY]:
+        discovered_devices = await async_discover_devices(hass)
 
-    # Avoid blocking on is_dimmable
-    await hass.async_add_executor_job(_fill_device_lists)
+        for light in discovered_devices.lights:
+            if not static_devices.has_device_with_host(light.host):
+                lights.append(light)
+
+        for switch in discovered_devices.switches:
+            if not static_devices.has_device_with_host(switch.host):
+                switches.append(switch)
 
     forward_setup = hass.config_entries.async_forward_entry_setup
     if lights:
@@ -161,5 +118,5 @@ async def async_unload_entry(hass, entry):
 
 config_entry_flow.register_discovery_flow(DOMAIN,
                                           'TP-Link Smart Home',
-                                          _async_has_devices,
+                                          async_has_discoverable_devices,
                                           config_entries.CONN_CLASS_LOCAL_POLL)
