@@ -1,7 +1,0 @@
-group:
-  bookmarks:
-    control: hidden
-    name: Zakładki
-    entities:
-      - sensor.aisbookmarkslist
-      - sensor.aisfavoriteslist

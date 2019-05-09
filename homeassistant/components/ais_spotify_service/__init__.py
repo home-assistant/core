@@ -206,7 +206,7 @@ class SpotifyData:
                     list_info[list_idx] = {"uri": item['uri'], "title": title_prefix + item['name'],
                                            "name": title_prefix + item['name'], "type": audio_type,
                                            "item_owner_id": item_owner_id, "thumbnail": thumbnail,
-                                           "mediasource": ais_global.G_AN_MUSIC, "icon": icon}
+                                           "icon": icon, "audio_type": ais_global.G_AN_SPOTIFY_SEARCH}
                     list_idx = list_idx + 1
                     cur_idx = cur_idx + 1
                     if cur_idx > 2:
@@ -231,7 +231,7 @@ class SpotifyData:
                 else:
                     items_info[idx]["thumbnail"] = "/static/icons/favicon-100x100.png"
                 items_info[idx]["uri"] = track["uri"]
-                items_info[idx]["mediasource"] = ais_global.G_AN_SPOTIFY_SEARCH
+                items_info[idx]["audio_type"] = ais_global.G_AN_SPOTIFY
                 items_info[idx]["type"] = track["type"]
                 items_info[idx]["icon"] = 'mdi:play'
                 idx = idx + 1
@@ -246,7 +246,7 @@ class SpotifyData:
                 else:
                     items_info[idx]["thumbnail"] = "/static/icons/favicon-100x100.png"
                 items_info[idx]["uri"] = track["uri"]
-                items_info[idx]["mediasource"] = ais_global.G_AN_SPOTIFY_SEARCH
+                items_info[idx]["audio_type"] = ais_global.G_AN_SPOTIFY
                 items_info[idx]["type"] = track["type"]
                 items_info[idx]["icon"] = 'mdi:play'
                 idx = idx + 1
@@ -261,7 +261,7 @@ class SpotifyData:
                 else:
                     items_info[idx]["thumbnail"] = "/static/icons/favicon-100x100.png"
                 items_info[idx]["uri"] = items["track"]["uri"]
-                items_info[idx]["mediasource"] = ais_global.G_AN_SPOTIFY_SEARCH
+                items_info[idx]["audio_type"] = ais_global.G_AN_SPOTIFY
                 items_info[idx]["type"] = items["track"]["type"]
                 items_info[idx]["icon"] = 'mdi:play'
                 idx = idx + 1
@@ -283,10 +283,14 @@ class SpotifyData:
     @asyncio.coroutine
     def process_search_async(self, call):
         """Search album on Spotify."""
-        if "query" not in call.data:
-            _LOGGER.error("No text to search")
+        search_text = None
+        if "query" in call.data:
+            search_text = call.data["query"]
+        if search_text is None or len(search_text.strip()) == 0:
+            # get tracks from favorites
+            yield from self.hass.services.async_call(
+                'ais_bookmarks', 'get_favorites', {"audio_source": ais_global.G_AN_SPOTIFY})
             return
-        search_text = call.data["query"]
 
         self.refresh_spotify_instance()
 
@@ -313,7 +317,7 @@ class SpotifyData:
         if len(list_info) > 0:
             # from remote
             import homeassistant.components.ais_ai_service as ais_ai
-            if ais_ai.CURR_ENTITIE == 'input_text.ais_music_query' and ais_ai.CURR_BUTTON_CODE == 4:
+            if ais_ai.CURR_ENTITIE == 'input_text.ais_spotify_query' and ais_ai.CURR_BUTTON_CODE == 4:
                 ais_ai.set_curr_entity(self.hass, 'sensor.spotifysearchlist')
                 ais_ai.CURR_ENTITIE_ENTERED = True
                 text = "Znaleziono: %s, wybierz pozycję która mam włączyć" % (str(len(list_info)))

@@ -1,0 +1,11 @@
+group:
+  ais_favorites:
+    control: hidden
+    name: Wszystkie ulubione
+    entities:
+      - sensor.aisfavoriteslist
+  ais_bookmarks:
+    control: hidden
+    name: Zakładki
+    entities:
+      - sensor.aisbookmarkslist

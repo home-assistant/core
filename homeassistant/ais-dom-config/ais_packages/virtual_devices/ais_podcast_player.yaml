@@ -11,12 +11,6 @@ input_select:
       - "-"
     initial: "-"
     icon: mdi:format-list-bulleted-type
-  podcast_name:
-    name: 'Audycja:'
-    options:
-      - "-"
-    initial: "-"
-    icon: mdi:itunes
 
 group:
   podcast_player:
@@ -24,5 +18,5 @@ group:
     name: Podcasty
     entities:
       - input_select.podcast_type
-      - input_select.podcast_name
+      - sensor.podcastnamelist
       - sensor.podcastlist

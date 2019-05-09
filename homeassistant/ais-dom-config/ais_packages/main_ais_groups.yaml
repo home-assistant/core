@@ -1,79 +1,11 @@
 group:
-  default_view:
-    name: Dom
-    view: yes
-    icon: mdi:home-outline
-    entities:
-      - sensor.time
-      - sensor.daytodisplay
-      - sun.sun
-      - group.ais_wyszukiwarka
-      - media_player.wbudowany_glosnik
-      - sensor.dark_sky_hourly_summary
-      - sensor.dark_sky_daily_summary
-      - group.all_switches
-      - group.all_lights
-      - group.all_automations
-      - group.all_ais_sensors
-      - group.all_fans
-      - group.bookmarks
+  # special groups for remote
   audio_player:
     name: Odtwarzacze
     entities:
       - media_player.wbudowany_glosnik
       - input_number.media_player_speed
       - input_select.media_player_sound_mode
-  pogoda:
-    name: Pogoda
-    view: yes
-    icon: mdi:weather-partlycloudy
-    entities:
-      - weather.openweathermap
-      - sensor.dark_sky_hourly_summary
-      - sensor.dark_sky_daily_summary
-  news:
-    name: Wiadomości
-    view: yes
-    icon: mdi:newspaper
-    entities:
-      - group.ais_rss_news
-  audio:
-    name: Audio
-    view: yes
-    icon:  mdi:music
-    entities:
-      - group.radio_player
-      - group.podcast_player
-      - group.music_player
-      - group.audiobooks_player
-      - group.local_audio
-      - group.audio_player
-  settings:
-    name: Ustawienia
-    view: yes
-    icon:  mdi:settings
-    entities:
-      - group.ais_tts_configuration
-      - group.internet_status
-      - group.ais_add_iot_device
-  pomoc:
-      name: Pomoc
-      view: yes
-      icon: mdi:help
-      entities:
-        - group.dom_system_version
-        - group.ais_rss_help
-  system:
-      name: System
-      view: yes
-      icon: mdi:console
-      entities:
-        - group.ais_pilot
-        - group.ais_dev_ssh
-        - group.ais_host_rename
-        - group.ais_devices_in_network
-
-  # special groups for remote
   pomoc_remote:
     name: Pomoc
     entities:
@@ -87,3 +19,4 @@ group:
     name: Dyski
     entities:
       - sensor.ais_drives
+

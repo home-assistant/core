@@ -1,6 +1,9 @@
 input_text:
   ais_music_query:
-    name: Szukaj
+    name: Szukaj na YouTube
+    initial: " "
+  ais_spotify_query:
+    name: Szukaj na Spotify
     initial: " "
 input_select:
   ais_music_service:
@@ -31,6 +34,7 @@ group:
     entities:
       - input_select.ais_music_service
       - input_text.ais_music_query
+      - input_text.ais_spotify_query
       - sensor.youtubelist
       - sensor.spotifysearchlist
       - sensor.spotifylist

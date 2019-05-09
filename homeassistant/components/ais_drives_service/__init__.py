@@ -27,7 +27,6 @@ G_CLOUD_PREFIX = 'dyski-zdalne:'
 G_RCLONE_CONF_FILE = '/data/data/pl.sviete.dom/files/home/dom/rclone.conf'
 G_RCLONE_CONF = '--config=' + G_RCLONE_CONF_FILE
 G_RCLONE_URL_TO_STREAM = 'http://127.0.0.1:8080/'
-G_LAST_BROWSE_CALL = None
 G_DRIVE_CLIENT_ID = None
 G_DRIVE_SECRET = None
 G_COVER_FILE = "/data/data/pl.sviete.dom/files/home/AIS/www/cover.jpg"
@@ -60,18 +59,6 @@ def async_setup(hass, config):
 
     # register services
     def browse_path(call):
-        global G_LAST_BROWSE_CALL
-        time_now = time.time()
-        secs = 2
-        if G_LAST_BROWSE_CALL is None:
-            G_LAST_BROWSE_CALL = time_now
-        else:
-            secs = time_now - G_LAST_BROWSE_CALL
-            G_LAST_BROWSE_CALL = time_now
-
-        if secs < 0.5:
-            _LOGGER.info("This call is blocked, secs: " + str(secs))
-            return
         data.browse_path(call)
 
     def refresh_files(call):
@@ -375,6 +362,8 @@ class LocalData:
         self.current_path = os.path.abspath(G_LOCAL_FILES_ROOT)
         self.rclone_url_to_stream = None
         self.rclone_pexpect_stream = None
+        self.file_path = None
+        self.seek_position = 0
 
     def beep(self):
         self.hass.services.call('ais_ai_service', 'publish_command_to_frame', {"key": 'tone', "val": 97})
@@ -414,15 +403,13 @@ class LocalData:
                         "media_content_type": "ais_content_info",
                         "media_content_id": _audio_info
                     })
-                # skipTo
-                position = 1
-                if position != 0:
-                    self.hass.services.call(
-                        'media_player',
-                        'media_seek', {
-                            "entity_id": "media_player.wbudowany_glosnik",
-                            "seek_position": position
-                        })
+                # seek position
+                if self.seek_position > 0:
+                    self.hass.async_add_job(self.hass.services.async_call('media_player', 'media_seek', {
+                        "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+                        "seek_position": self.seek_position
+                    }))
+                    self.seek_position = 0
         else:
             _LOGGER.info("Tego typu plików jeszcze nie obsługuję." + str(self.current_path))
             self.say("Tego typu plików jeszcze nie obsługuję.")
@@ -448,6 +435,7 @@ class LocalData:
         items_info = state.attributes
         self.hass.states.set("sensor.ais_drives", self.current_path.replace(G_LOCAL_FILES_ROOT, ''), items_info)
 
+    # browse files on local folder
     def display_current_items(self, say):
         local_items = []
         try:
@@ -464,6 +452,11 @@ class LocalData:
             slen = len(si)
             self.say(get_pozycji_variety(slen))
 
+        # call from bookmarks now (since we have files from folder) we need to play the file
+        if self.file_path is not None:
+            self.hass.services.call('ais_drives_service', 'browse_path',
+                                    {"path": self.file_path, "seek_position": self.seek_position})
+
     def display_current_remotes(self, remotes):
         items_info = [{"name": ".", "icon": "", "path": G_LOCAL_FILES_ROOT},
                       {"name": "..", "icon": "", "path": ".."}]
@@ -475,6 +468,7 @@ class LocalData:
             items_info.append({"name": i["name"], "icon": icon, "path": self.current_path + i["name"] + ':'})
         self.hass.states.set("sensor.ais_drives", self.current_path, {'files': items_info})
 
+    # browse files on cloud folder
     def display_current_remote_items(self, say):
         items_info = [{"name": ".", "icon": "", "path": G_LOCAL_FILES_ROOT},
                       {"name": "..", "icon": "", "path": ".."}]
@@ -510,6 +504,12 @@ class LocalData:
             jlen = len(self.folders_json)
             self.say(get_pozycji_variety(jlen))
 
+        # call from bookmarks now (since we have files from folder) we need to play the file
+        if self.file_path is not None:
+            self.hass.services.call('ais_drives_service', 'browse_path',
+                                    {"path": self.file_path, "seek_position": self.seek_position})
+
+
     def get_icon(self, entry):
         if entry.is_dir():
             return "folder"
@@ -523,7 +523,16 @@ class LocalData:
         if "path" not in call.data:
             _LOGGER.error("No path")
             return
-        self._browse_path(call.data["path"], True)
+        self.file_path = None
+        self.seek_position = 0
+        say = True
+        if "file_path" in call.data:
+            self.file_path = call.data["file_path"]
+            say = False
+        if "seek_position" in call.data:
+            self.seek_position = call.data["seek_position"]
+            say = False
+        self._browse_path(call.data["path"], say)
 
     def _browse_path(self, path, say):
         if path == "..":
@@ -654,14 +663,13 @@ class LocalData:
                 "media_content_type": "ais_content_info",
                 "media_content_id": _audio_info
             })
-        position = 1
-        if position != 0:
-            self.hass.services.call(
-                'media_player',
-                'media_seek', {
-                    "entity_id": "media_player.wbudowany_glosnik",
-                    "seek_position": position
-                })
+        # seek position
+        if self.seek_position > 0:
+            self.hass.async_add_job(self.hass.services.async_call('media_player', 'media_seek', {
+                "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+                "seek_position": self.seek_position
+            }))
+            self.seek_position = 0
 
     def check_kill_process(self, pstring):
         for line in os.popen("ps ax | grep " + pstring + " | grep -v grep"):
@@ -723,19 +731,7 @@ class LocalData:
                     mime_type = item["MimeType"]
                 break
         if is_dir is None:
-            # check if this is file selected from bookmarks
-            # bookmark = ais_global.G_BOOKMARK_MEDIA_CONTENT_ID.replace(G_RCLONE_URL_TO_STREAM, "")
-            bookmark = ""
-            if bookmark != "" and path.endswith(bookmark):
-                is_dir = False
-                mime_type = 'audio/'
-                item_path = bookmark
-                item_name = bookmark
-                path = path.replace(G_CLOUD_PREFIX, "", 1)
-                path = path.rsplit(bookmark, 1)[0]
-                self.rclone_browse_folder(path, say)
-            else:
-                is_dir = True
+            is_dir = True
         if is_dir:
             # browse the cloud drive
             path = path.replace(G_CLOUD_PREFIX, "", 1)

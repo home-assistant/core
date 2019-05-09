@@ -231,40 +231,46 @@ group.day_info:
 #  context_suffix: Znajdź informacje o
 #  remote_group_view: Mój Dom
 
-group.bookmarks:
-  context_key_words: zakładki,ulubione
+group.ais_favorites:
+  context_key_words: ulubione
   context_answer: OK, wybierz pozycję
-  friendly_name: Zakładki i ulubione
+  friendly_name: Wszystkie lubione
   remote_group_view: Audio
   order: 1
+group.ais_bookmarks:
+  context_key_words: zakładki
+  context_answer: OK, wybierz pozycję
+  friendly_name: Wszystkie zakładki
+  remote_group_view: Audio
+  order: 2
 group.ais_rss_news_remote:
   context_key_words: wiadomości,informacje
   context_answer: OK, wybierz pilotem kategorię, kanał i artykuł który mam przeczytać
   remote_group_view: Audio
-  order: 2
+  order: 3
 group.local_audio:
   context_key_words: lokalne pliki,dyski
   context_answer: OK, wybierz plik
   remote_group_view: Audio
-  order: 3
+  order: 4
 group.radio_player:
   context_key_words: radio,radia,radia internetowe
   context_answer: OK, powiedz jakiej stacji chcesz posłuchać lub wybierz pilotem typ radia i stację radiową
   context_suffix: Radio
   remote_group_view: Audio
-  order: 4
+  order: 5
 group.podcast_player:
   context_key_words: podcast,podcasty,podkasty,podkast
   context_answer: OK, powiedz jaką audycję mam włączyć lub wybierz pilotem typ, audycję i odcinek podcasta
   context_suffix: Podcast
   remote_group_view: Audio
-  order: 5
+  order: 6
 group.music_player:
   context_key_words: youtube,muzyka,yt,tuba,spotify
   context_answer: OK, powiedz jakiej muzyki chcesz posłuchać?
   context_suffix: Muzyka
   remote_group_view: Audio
-  order: 6
+  order: 7
 
 #group.audiobooks_player:
 #  context_key_words: książki,książka,audiobook,audiobooks

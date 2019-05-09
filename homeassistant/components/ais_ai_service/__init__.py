@@ -420,7 +420,7 @@ def say_curr_group(hass):
 
 def set_bookmarks_curr_group(hass):
     for idx, g in enumerate(GROUP_ENTITIES, start=0):
-        if g['entity_id'] == 'group.bookmarks':
+        if g['entity_id'] == 'group.ais_bookmarks':
             set_curr_group(hass, g)
 
 
@@ -443,8 +443,8 @@ def set_curr_group(hass, group):
         CURR_GROUP = group
     # set display context for mega audio plauer
     if CURR_GROUP['entity_id'] in (
-            'group.radio_player', 'group.podcast_player', 'group.music_player',
-            'group.ais_rss_news_remote',  'group.local_audio', "sensor.ais_drives", "group.bookmarks"):
+            'group.radio_player', 'group.podcast_player', 'group.music_player', "group.ais_bookmarks",
+            'group.ais_rss_news_remote',  'group.local_audio', "sensor.ais_drives", "group.ais_favorites"):
         hass.states.async_set("sensor.ais_player_mode", CURR_GROUP['entity_id'].replace('group.', ''))
 
 
@@ -528,10 +528,8 @@ def set_next_entity(hass):
     # special case for music
     if CURR_ENTITIE == 'input_text.ais_music_query':
         state = hass.states.get('input_select.ais_music_service')
-        if state.state == 'YouTube':
-            CURR_ENTITIE = 'sensor.youtubelist'
-        elif state.state == 'Spotify':
-            CURR_ENTITIE = 'sensor.spotifysearchlist'
+        if state.state == 'Spotify':
+            CURR_ENTITIE = 'input_select.ais_spotify_service'
         else:
             CURR_ENTITIE = 'input_select.ais_music_service'
     elif CURR_ENTITIE == 'sensor.youtubelist':
@@ -539,7 +537,7 @@ def set_next_entity(hass):
     elif CURR_ENTITIE == 'sensor.spotifysearchlist':
         CURR_ENTITIE = 'sensor.spotifylist'
     elif CURR_ENTITIE == 'sensor.spotifylist':
-        CURR_ENTITIE = 'input_select.ais_music_service'
+        CURR_ENTITIE = 'input_select.ais_spotify_service'
     else:
         entity_idx = get_curr_entity_idx()
         group_idx = get_curr_group_idx()
@@ -549,7 +547,6 @@ def set_next_entity(hass):
         else:
             entity_idx = entity_idx + 1
         CURR_ENTITIE = GROUP_ENTITIES[group_idx]['entities'][entity_idx]
-
     # to reset variables
     set_curr_entity(hass, None)
     say_curr_entity(hass)
@@ -561,18 +558,17 @@ def set_prev_entity(hass):
     # special case for music
     if CURR_ENTITIE == 'input_select.ais_music_service':
         state = hass.states.get('input_select.ais_music_service')
-        if state.state == 'YouTube':
-            CURR_ENTITIE = 'sensor.youtubelist'
-        elif state.state == 'Spotify':
+        if state.state == 'Spotify':
             CURR_ENTITIE = 'sensor.spotifylist'
         else:
-            CURR_ENTITIE = 'input_text.ais_music_query'
+            CURR_ENTITIE = 'sensor.youtubelist'
     elif CURR_ENTITIE == 'sensor.youtubelist':
         CURR_ENTITIE = 'input_text.ais_music_query'
     elif CURR_ENTITIE == 'sensor.spotifysearchlist':
-        CURR_ENTITIE = 'input_text.ais_music_query'
+        CURR_ENTITIE = 'input_text.ais_spotify_query'
     elif CURR_ENTITIE == 'sensor.spotifylist':
         CURR_ENTITIE = 'sensor.spotifysearchlist'
+    # end special case for music
     else:
         idx = get_curr_entity_idx()
         l_group_len = len(GROUP_ENTITIES[get_curr_group_idx()]['entities'])
@@ -650,9 +646,9 @@ def say_curr_entity(hass):
                 info_name = ""
         if CURR_BUTTON_CODE == 4:
             if int(info_data) == -1:
-                _say_it(hass, "Brak wyboru", None)
+                _say_it(hass, "Brak wybranej pozycji ", None)
             else:
-                _say_it(hass, "Wybrałeś " + info_name, None)
+                _say_it(hass, "Lista na pozycji " + info_name, None)
         else:
             if entity_id == 'sensor.radiolist':
                 info = "Stacja radiowa "
@@ -663,9 +659,9 @@ def say_curr_entity(hass):
             elif entity_id == 'sensor.rssnewslist':
                 info = "Artykuł "
             elif entity_id == 'sensor.aisbookmarkslist':
-                info = "Zakładki "
+                info = "Lista zakładek "
             elif entity_id == 'sensor.aisfavoriteslist':
-                info = "Ulubione "
+                info = "Lista ulubionych "
             else:
                 info = "Pozycja "
             if int(info_data) != -1:
@@ -720,29 +716,34 @@ def commit_current_position(hass):
         # play/read selected source
         idx = hass.states.get(CURR_ENTITIE).state
         if CURR_ENTITIE == "sensor.radiolist":
-            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "audio_type": ais_global.G_AN_RADIO})
+            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "media_source": ais_global.G_AN_RADIO})
         elif CURR_ENTITIE == "sensor.podcastlist":
-            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "audio_type": ais_global.G_AN_PODCAST})
+            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "media_source": ais_global.G_AN_PODCAST})
         elif CURR_ENTITIE == "sensor.spotifysearchlist":
-            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "audio_type": ais_global.G_AN_SPOTIFY_SEARCH})
+            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "media_source": ais_global.G_AN_SPOTIFY_SEARCH})
         elif CURR_ENTITIE == "sensor.spotifylist":
-            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "audio_type": ais_global.G_AN_SPOTIFY})
+            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "media_source": ais_global.G_AN_SPOTIFY})
         elif CURR_ENTITIE == "sensor.youtubelist":
-            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "audio_type": ais_global.G_AN_MUSIC})
+            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "media_source": ais_global.G_AN_MUSIC})
         elif CURR_ENTITIE == "sensor.rssnewslist":
-            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "audio_type": ais_global.G_AN_NEWS})
+            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "media_source": ais_global.G_AN_NEWS})
         elif CURR_ENTITIE == "sensor.aisbookmarkslist":
-            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "audio_type": ais_global.G_AN_BOOKMARK})
+            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "media_source": ais_global.G_AN_BOOKMARK})
         elif CURR_ENTITIE == "sensor.aisfavoriteslist":
-            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "audio_type": ais_global.G_AN_FAVORITE})
+            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "media_source": ais_global.G_AN_FAVORITE})
 
     if CURR_ENTITIE == "input_select.ais_android_wifi_network":
         _say_it(hass, "wybrano wifi: " + get_curent_position(hass).split(';')[0], None)
     elif CURR_ENTITIE == "input_select.ais_music_service":
         _say_it(hass, "Wybrano " + position + ", napisz lub powiedz jakiej muzyki mam wyszukać", None)
-        hass.services.call('input_text', 'set_value', {"entity_id": "input_text.ais_music_query", "value": ""})
+        state = hass.states.get(CURR_ENTITIE)
+        if state.state == 'YouTube':
+            input = "input_text.ais_music_query"
+        elif state.state == 'Spotify':
+            input = "input_text.ais_spotify_query"
+        hass.services.call('input_text', 'set_value', {"entity_id": input, "value": ""})
         reset_virtual_keyboard(hass)
-        set_curr_entity(hass, 'input_text.ais_music_query')
+        set_curr_entity(hass, input)
     else:
         _beep_it(hass, 33)
     # TODO - run the script for the item,
@@ -930,7 +931,9 @@ def select_entity(hass, long_press):
             # these items can be controlled from remote
             # if we are here it means that the enter on the same item was
             # pressed twice, we should do something - to mange the item status
-            if CURR_ENTITIE.startswith('sensor.') and CURR_ENTITIE.endswith('list'):
+            if CURR_ENTITIE.startswith(("input_select.", "input_number.")):
+                commit_current_position(hass)
+            elif CURR_ENTITIE.startswith('sensor.') and CURR_ENTITIE.endswith('list'):
                 commit_current_position(hass)
             elif CURR_ENTITIE.startswith("media_player."):
                 # play / pause on selected player
@@ -1629,7 +1632,7 @@ async def async_setup(hass, config):
     async_register(hass, INTENT_SAY_IT, ['Powiedz', 'Mów', 'Powiedz {item}', 'Mów {item}', 'Echo {item}'])
 
     # initial status of the player
-    hass.states.async_set("sensor.ais_player_mode", 'bookmarks')
+    hass.states.async_set("sensor.ais_player_mode", 'ais_favorites')
 
     # sensor
     hass.states.async_set("sensor.aisknowledgeanswer", "", {"text": ""})
@@ -2135,7 +2138,7 @@ def _process_code(hass, data, callback):
     if code == 93:
         # PG- -> KEYCODE_PAGE_DOWN
         set_bookmarks_curr_group(hass)
-        set_curr_entity(hass, 'input_select.ais_bookmark_last_played')
+        set_curr_entity(hass, 'sensor.aisbookmarks')
         CURR_ENTITIE_ENTERED = True
         say_curr_entity(hass)
     elif code == 92:
@@ -2518,10 +2521,9 @@ class PlayRadioIntent(intent.IntentHandler):
         if not station:
             message = 'Nie wiem jaką stację chcesz włączyć.'
         else:
-            ws_resp = aisCloudWS.audio(
-                station, ais_global.G_AN_RADIO, intent_obj.text_input)
+            ws_resp = aisCloudWS.audio( station, ais_global.G_AN_RADIO, intent_obj.text_input)
             json_ws_resp = ws_resp.json()
-            json_ws_resp["audio_type"] = ais_global.G_AN_RADIO
+            json_ws_resp["media_source"] = ais_global.G_AN_RADIO
             name = json_ws_resp['name']
             if len(name.replace(" ", "")) == 0:
                 message = "Niestety nie znajduję radia " + station
@@ -2554,7 +2556,7 @@ class AisPlayPodcastIntent(intent.IntentHandler):
             ws_resp = aisCloudWS.audio(
                 item, ais_global.G_AN_PODCAST, intent_obj.text_input)
             json_ws_resp = ws_resp.json()
-            json_ws_resp["audio_type"] = ais_global.G_AN_PODCAST
+            json_ws_resp["media_source"] = ais_global.G_AN_PODCAST
             name = json_ws_resp['name']
             if len(name.replace(" ", "")) == 0:
                 message = "Niestety nie znajduję podcasta " + item

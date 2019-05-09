@@ -54,16 +54,21 @@ def async_setup(hass, config):
             else:
                 img = "/static/icons/tile-win-310x150.png"
             list_info[list_idx] = {}
-            list_info[list_idx]["title"] = item['source'] + " " + item['name']
-            list_info[list_idx]["name"] = item['source'] + " " + item['name']
+            list_info[list_idx]["title"] = item['name']
+            if item['name'].startswith(item['source']):
+                list_info[list_idx]["name"] = item['name']
+            else:
+                list_info[list_idx]["name"] =\
+                    ais_global.G_NAME_FOR_AUDIO_NATURE.get(item['source'], item['source']) + " " + item['name']
             list_info[list_idx]["thumbnail"] = img
             list_info[list_idx]["uri"] = item["media_content_id"]
-            list_info[list_idx]["mediasource"] = item['source']
-            list_info[list_idx]["type"] = item['source']
+            list_info[list_idx]["audio_type"] = item['source']
+            list_info[list_idx]["media_source"] = item['source']
             list_info[list_idx]["icon"] = 'mdi:bookmark-music'
             list_info[list_idx]["icon_remove"] = 'mdi:delete-forever'
             list_info[list_idx]["id"] = item['id']
             list_info[list_idx]["media_position"] = ais_global.get_milliseconds_formated(item['media_position'])
+            list_info[list_idx]["media_position_ms"] = item['media_position']
             list_idx = list_idx + 1
         # create lists
         hass.states.async_set("sensor.aisbookmarkslist", -1, list_info)
@@ -71,28 +76,49 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def get_favorites_service(call):
         """Return the list of favorites to app list"""
+        audio_source = None
+        if "audio_source" in call.data:
+            audio_source = call.data["audio_source"]
+
         d = hass.data[DOMAIN]
         list_info = {}
         list_idx = 0
         for item in reversed(d.favorites):
-            if "media_stream_image" in item and item["media_stream_image"] is not None:
-                img = item["media_stream_image"]
-            else:
-                img = "/static/icons/tile-win-310x150.png"
-            list_info[list_idx] = {}
-            list_info[list_idx]["title"] = item['source'] + " " + item['name']
-            list_info[list_idx]["name"] = item['source'] + " " + item['name']
-            list_info[list_idx]["thumbnail"] = img
-            list_info[list_idx]["uri"] = item["media_content_id"]
-            list_info[list_idx]["mediasource"] = ais_global.G_AN_FAVORITE
-            list_info[list_idx]["type"] = item['source']
-            list_info[list_idx]["icon_type"] = ais_global.G_ICON_FOR_AUDIO.get(item['source'], 'mdi:play')
-            list_info[list_idx]["icon_remove"] = 'mdi:delete-forever'
-            list_info[list_idx]["icon"] = 'mdi:play'
-            list_info[list_idx]["id"] = item['id']
-            list_idx = list_idx + 1
+            if audio_source is None or audio_source == item['source']:
+                if "media_stream_image" in item and item["media_stream_image"] is not None:
+                    img = item["media_stream_image"]
+                else:
+                    img = "/static/icons/tile-win-310x150.png"
+                list_info[list_idx] = {}
+                list_info[list_idx]["title"] = item['name']
+                if item['name'].startswith(item['source']):
+                    list_info[list_idx]["name"] = item['name']
+                else:
+                    list_info[list_idx]["name"] =\
+                        ais_global.G_NAME_FOR_AUDIO_NATURE.get(item['source'], item['source']) + " " + item['name']
+                list_info[list_idx]["thumbnail"] = img
+                list_info[list_idx]["uri"] = item["media_content_id"]
+                list_info[list_idx]["audio_type"] = item['source']
+                list_info[list_idx]["icon_type"] = ais_global.G_ICON_FOR_AUDIO.get(item['source'], 'mdi:play')
+                list_info[list_idx]["icon_remove"] = 'mdi:delete-forever'
+                list_info[list_idx]["icon"] = 'mdi:play'
+                list_info[list_idx]["id"] = item['id']
+                list_idx = list_idx + 1
+
         # create lists
-        hass.states.async_set("sensor.aisfavoriteslist", -1, list_info)
+        if audio_source is None:
+            hass.states.async_set("sensor.aisfavoriteslist", -1, list_info)
+        else:
+            if audio_source == ais_global.G_AN_RADIO:
+                hass.states.async_set("sensor.radiolist", -1, list_info)
+            elif audio_source == ais_global.G_AN_PODCAST:
+                # TODO
+                pass
+            elif audio_source == ais_global.G_AN_MUSIC:
+                hass.states.async_set("sensor.youtubelist", -1, list_info)
+            elif audio_source == ais_global.G_AN_SPOTIFY:
+                hass.states.async_set("sensor.spotifylist", -1, list_info)
+
 
 
     @asyncio.coroutine
@@ -103,18 +129,39 @@ def async_setup(hass, config):
         state = hass.states.get("sensor.aisbookmarkslist")
         attr = state.attributes
         track = attr.get(bookmark_id)
-        _audio_info = json.dumps({"IMAGE_URL": track["thumbnail"], "NAME": track['name'],
-                                  "MEDIA_SOURCE": track['type'],"media_content_id": track['uri']})
-        # set stream uri, image and title
-        hass.async_add_job(
-            hass.services.async_call(
-                'media_player',
-                'play_media', {
-                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                    "media_content_type": "ais_content_info",
-                    "media_content_id": _audio_info
-                })
-        )
+
+        #
+        if track['media_source'] == ais_global.G_AN_LOCAL:
+            last_slash = track["uri"].rfind("/")
+            if last_slash > 0:
+                dir_path = track["uri"][0:last_slash]
+            else:
+                dir_path = track["uri"]
+            hass.async_add_job(hass.services.async_call(
+                'ais_drives_service', 'browse_path',
+                {"path": dir_path, "file_path": track["uri"], "seek_position": track["media_position_ms"]}))
+
+        else:
+            _audio_info = json.dumps({"IMAGE_URL": track["thumbnail"], "NAME": track['title'],
+                                      "audio_type": track['audio_type'],
+                                      "MEDIA_SOURCE": track['media_source'],
+                                      "media_content_id": track['uri']})
+            # set stream uri, image and title
+            hass.async_add_job(
+                hass.services.async_call(
+                    'media_player',
+                    'play_media', {
+                        "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+                        "media_content_type": "ais_content_info",
+                        "media_content_id": _audio_info
+                    })
+            )
+            # seek to position
+            hass.async_add_job(hass.services.async_call('media_player', 'media_seek', {
+                        "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+                        "seek_position": track["media_position_ms"]
+                    })
+            )
 
     @asyncio.coroutine
     def play_favorite_service(call):
@@ -125,7 +172,8 @@ def async_setup(hass, config):
         attr = state.attributes
         track = attr.get(favorite_id)
 
-        _audio_info = json.dumps({"IMAGE_URL": track["thumbnail"], "NAME": track['name'], "ais_list_id": favorite_id,
+        _audio_info = json.dumps({"IMAGE_URL": track["thumbnail"], "NAME": track['title'],
+                                  "audio_type": track['audio_type'],
                                   "MEDIA_SOURCE": ais_global.G_AN_FAVORITE, "media_content_id": track['uri']})
         # set stream uri, image and title
         hass.async_add_job(
@@ -222,54 +270,61 @@ class BookmarksData:
         except Exception:
             media_stream_image = "/static/icons/favicon-100x100.png"
 
+        try:
+            audio_type = ais_global.G_CURR_MEDIA_CONTENT["audio_type"]
+        except Exception:
+            audio_type = source
+        audio_type_pl = ais_global.G_NAME_FOR_AUDIO_NATURE.get(audio_type, audio_type)
+
         if name is None or source is None or media_content_id is None:
             _LOGGER.warning("can't add the bookmark, no full info provided " + str(attributes))
             return
 
         if bookmark:
             # type validation
-            if source not in (ais_global.G_AN_SPOTIFY, ais_global.G_AN_MUSIC, ais_global.G_AN_LOCAL,
-                              ais_global.G_AN_PODCAST, ais_global.G_AN_RADIO):
-                source_pl = ais_global.G_ICON_FOR_AUDIO.get(source, '')
-                message = "Nie można dodać zakładki do".format(source_pl, name)
+            if audio_type == ais_global.G_AN_RADIO:
+                message = "Nie można dodać zakładki do {}".format(audio_type_pl, name)
                 self.hass.async_add_job(self.hass.services.async_call('ais_ai_service', 'say_it', {"text": message}))
                 return
 
             # check if the audio is on bookmark list
-            item = next((itm for itm in self.bookmarks if (itm['name'] == name and itm['source'] == source)), None)
+            item = next((itm for itm in self.bookmarks if (itm['name'] == name and itm['source'] == audio_type)), None)
             if item is not None:
                 # delete the old bookmark
                 self.async_remove_bookmark(item['id'], True)
+                message = "Przesuwam zakładkę {}".format(name)
+            else:
+                message = "Dodaję nową zakładkę {}".format(name)
             # add the bookmark
             item = {
                 'name': name,
                 'id': uuid.uuid4().hex,
-                'source': source,
+                'source': audio_type,
                 'media_position': media_position,
                 'media_content_id': media_content_id,
                 'media_stream_image': media_stream_image
             }
             self.bookmarks.append(item)
             self.hass.async_add_job(self.save, True)
+            self.hass.async_add_job(self.hass.services.async_call('ais_ai_service', 'say_it', {"text": message}))
             return item
         else:
             # type validation
             if source == ais_global.G_AN_FAVORITE:
-                source_pl = ais_global.G_NAME_FOR_AUDIO.get(source, 'Pozycja')
-                message = "{}, {} jest już w ulubionych.".format(source_pl, name)
+                message = "{}, {} jest już w ulubionych.".format(audio_type_pl, name)
                 self.hass.async_add_job(self.hass.services.async_call('ais_ai_service', 'say_it', {"text": message}))
                 return
             # if podcast then we will add not track but audition
-            if source == ais_global.G_AN_PODCAST:
+            if audio_type == ais_global.G_AN_PODCAST:
                 media_content_id = ais_global.G_CURR_MEDIA_CONTENT["lookup_url"]
                 name = ais_global.G_CURR_MEDIA_CONTENT["lookup_name"]
-            elif source == ais_global.G_AN_MUSIC:
+            elif audio_type == ais_global.G_AN_MUSIC:
                 media_content_id = ais_global.G_CURR_MEDIA_CONTENT["lookup_url"]
 
             # check if the audio is on favorites list
-            item = next((itm for itm in self.favorites if (itm['name'] == name and itm['source'] == source)), None)
+            item = next((itm for itm in self.favorites if (itm['name'] == name and itm['source'] == audio_type)), None)
             if item is not None:
-                message = '{}, {} jest już w ulubionych.'.format(source, name)
+                message = '{}, {} jest już w ulubionych.'.format(audio_type_pl, name)
                 self.hass.async_add_job(self.hass.services.async_call('ais_ai_service', 'say_it', {"text": message}))
                 return
             # add item
@@ -282,7 +337,7 @@ class BookmarksData:
             }
             self.favorites.append(item)
             self.hass.async_add_job(self.save, False)
-            message = "Dobrze zapamiętam - dodaje {} {} do Twoich ulubionych".format(source, name)
+            message = "Dobrze zapamiętam - dodaje {} {} do Twoich ulubionych".format(audio_type_pl, name)
             self.hass.async_add_job(self.hass.services.async_call('ais_ai_service', 'say_it', {"text": message}))
             return item
 

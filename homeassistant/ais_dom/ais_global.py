@@ -6,6 +6,7 @@ import logging
 
 # LV settings
 G_EMPTY_OPTION = "-"
+G_FAVORITE_OPTION = "Ulubione"
 G_DRIVE_SHARED_WITH_ME = "Udostępnione dla mnie"
 
 # TTS settings
@@ -31,16 +32,18 @@ G_CURR_MEDIA_CONTENT = {}
 G_ICON_FOR_AUDIO = {
     G_AN_RADIO: 'mdi:radio',
     G_AN_PODCAST: 'mdi:podcast',
-    G_AN_MUSIC: 'mdi:music',
+    G_AN_MUSIC: 'mdi:youtube',
     G_AN_AUDIOBOOK: 'mdi:audiobook',
     G_AN_SPOTIFY: 'mdi:spotify',
-    G_AN_LOCAL: 'mdi:folder'
+    G_AN_LOCAL: 'mdi:folder',
+    G_AN_FAVORITE: 'mdi:heart',
+    G_AN_BOOKMARK: 'mdi:bookmark'
 }
 
-G_NAME_FOR_AUDIO = {
+G_NAME_FOR_AUDIO_NATURE = {
     G_AN_RADIO: 'Radio',
     G_AN_PODCAST: 'Podcast',
-    G_AN_MUSIC: 'Muzyka',
+    G_AN_MUSIC: 'YouTube',
     G_AN_AUDIOBOOK: 'Audio książka',
     G_AN_SPOTIFY: 'Spotify',
     G_AN_LOCAL: 'Plik',

@@ -1,28 +1,21 @@
 """
 Search the audio on YT
 """
-
 import asyncio
 import logging
-import voluptuous as vol
 import requests
 import json
-from homeassistant.helpers import config_validation as cv
 from homeassistant.components import ais_cloud
 from homeassistant.ais_dom import ais_global
 aisCloud = ais_cloud.AisCloudWS()
 URL_BASE = 'https://www.googleapis.com/youtube/v3/search'
 DEFAULT_ACTION = 'No video'
-# DEPENDENCIES = ['http']
 
 DOMAIN = 'ais_yt_service'
 SERVICE_SEARCH = 'search'
 ATTR_QUERY = 'query'
 ATTR_NAME = 'name'
-SERVICE_SEARCH_SCHEMA = vol.Schema({
-    vol.Required(ATTR_QUERY): cv.string,
-})
-G_YT_FOUND = []
+
 G_YT_KEY = None
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,10 +40,8 @@ def async_setup(hass, config):
         data.process_select_track_uri(service)
 
     # register services
-    hass.services.async_register(
-        DOMAIN, SERVICE_SEARCH, search, schema=SERVICE_SEARCH_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, 'select_track_uri', select_track_uri)
+    hass.services.async_register(DOMAIN, SERVICE_SEARCH, search)
+    hass.services.async_register(DOMAIN, 'select_track_uri', select_track_uri)
 
     return True
 
@@ -79,10 +70,16 @@ class YouTubeData:
     @asyncio.coroutine
     def process_search_async(self, call):
         """Search in service."""
-        global G_YT_FOUND
         global G_YT_KEY
-        query = call.data[ATTR_QUERY]
+        query = None
+        if ATTR_QUERY in call.data:
+            query = call.data[ATTR_QUERY]
 
+        if query is None or len(query.strip()) == 0:
+            # get tracks from favorites
+            yield from self.hass.services.async_call(
+                'ais_bookmarks', 'get_favorites', {"audio_source": ais_global.G_AN_MUSIC})
+            return
         if G_YT_KEY is None:
             try:
                 ws_resp = aisCloud.key("ytsearch")
@@ -112,8 +109,8 @@ class YouTubeData:
                 # item['snippet']['description']
                 list_info[list_idx]["thumbnail"] = item['snippet']['thumbnails']['medium']['url']
                 list_info[list_idx]["uri"] = item['id']['videoId']
-                list_info[list_idx]["mediasource"] = ais_global.G_AN_MUSIC
-                list_info[list_idx]["type"] = ''
+                list_info[list_idx]["media_source"] = ais_global.G_AN_MUSIC
+                list_info[list_idx]["audio_type"] = ais_global.G_AN_MUSIC
                 list_info[list_idx]["icon"] = 'mdi:play'
                 list_idx = list_idx + 1
 
@@ -140,10 +137,10 @@ class YouTubeData:
         # """play track by id on sensor list."""
         call_id = call.data["id"]
         state = self.hass.states.get('sensor.youtubelist')
-        mediasource = ais_global.G_AN_MUSIC
-        if "mediasource" in call.data:
-            mediasource = call.data["mediasource"]
-            if mediasource == ais_global.G_AN_FAVORITE:
+        media_source = ais_global.G_AN_MUSIC
+        if "media_source" in call.data:
+            media_source = call.data["media_source"]
+            if media_source == ais_global.G_AN_FAVORITE:
                 state = self.hass.states.get('sensor.aisfavoriteslist')
             
         attr = state.attributes
@@ -166,7 +163,7 @@ class YouTubeData:
             # set stream url, image and title
             _audio_info = json.dumps(
                 {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "lookup_url": track["uri"],
-                 "MEDIA_SOURCE": mediasource, "media_content_id": media_url})
+                 "MEDIA_SOURCE": media_source, "media_content_id": media_url})
             self.hass.services.call(
                 'media_player',
                 'play_media', {

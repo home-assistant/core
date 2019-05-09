@@ -40,8 +40,10 @@
    - service: ais_cloud.get_radio_types
    - delay: '1'
    - service: ais_cloud.get_podcast_types
-   - delay: 1
+   - delay: '1'
    - service: ais_cloud.get_rss_news_category
+   - service: ais_yt_service.search
+   - service: ais_spotify_service.search
    - delay: '3'
    - service: ais_ai_service.prepare_remote_menu
    - service: ais_ai_service.check_local_ip
@@ -189,15 +191,6 @@
   trigger:
     platform: state
     entity_id: input_text.ais_music_query
-  condition:
-    condition: and
-    conditions:
-      - condition: template
-        value_template: "{{ states.input_text.ais_music_query.state != '' }}"
-      - condition: template
-        value_template: "{{ states.input_text.ais_music_query.state != ' ' }}"
-      - condition: template
-        value_template: "{{ states.input_select.ais_music_service.state == 'YouTube' }}"
   action:
     - service: ais_yt_service.search
       data_template:
@@ -209,20 +202,11 @@
   hide_entity: True
   trigger:
     platform: state
-    entity_id: input_text.ais_music_query
-  condition:
-    condition: and
-    conditions:
-      - condition: template
-        value_template: "{{ states.input_text.ais_music_query.state != '' }}"
-      - condition: template
-        value_template: "{{ states.input_text.ais_music_query.state != ' ' }}"
-      - condition: template
-        value_template: "{{ states.input_select.ais_music_service.state == 'Spotify' }}"
+    entity_id: input_text.ais_spotify_query
   action:
     - service: ais_spotify_service.search
       data_template:
-        query: "{{ states('input_text.ais_music_query') }}"
+        query: "{{ states('input_text.ais_spotify_query') }}"
 
 
 - id: '201807081916015'
@@ -260,18 +244,6 @@
     - service: ais_cloud.get_podcast_names
       data_template:
         podcast_type: "{{ states('input_select.podcast_type') }}"
-
-- id: '201807081919019'
-  alias: 'Get Podcast Tracks'
-  initial_state: True
-  hide_entity: True
-  trigger:
-    platform: state
-    entity_id: input_select.podcast_name
-  action:
-    - service: ais_cloud.get_podcast_tracks
-      data_template:
-        podcast_name: "{{ states('input_select.podcast_name') }}"
 
 - id: '201807081923022'
   alias: 'Get Radio Names'

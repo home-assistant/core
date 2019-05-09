@@ -419,14 +419,14 @@ class ExoPlayerDevice(MediaPlayerDevice):
         if self._media_source == ais_global.G_AN_LOCAL:
             self.hass.services.call('ais_drives_service', 'play_next')
         else:
-            self.hass.services.call('ais_cloud', 'play_next', {"audio_type": self._media_source})
+            self.hass.services.call('ais_cloud', 'play_next', {"media_source": self._media_source})
 
     def media_previous_track(self):
         """Service to send the ExoPlayer the command for previous track."""
         if self._media_source == ais_global.G_AN_LOCAL:
             self.hass.services.call('ais_drives_service', 'play_prev')
         else:
-            self.hass.services.call('ais_cloud', 'play_prev', {"audio_type": self._media_source})
+            self.hass.services.call('ais_cloud', 'play_prev', {"media_source": self._media_source})
 
     def play_media(self, media_type, media_content_id, **kwargs):
         """Send the media player the command for playing a media."""
