@@ -8,6 +8,7 @@
             "port_997_bind_error": "Konnt sech net mam Port 997 verbannen."
         },
         "error": {
+            "credential_timeout": "Z\u00e4it Iwwerschreidung beim Service vun den Umeldungsinformatiounen. Dr\u00e9ck op ofsch\u00e9cke fir nach emol ze starten.",
             "login_failed": "Feeler beim verbanne mat der Playstation 4. Iwwerpr\u00e9ift op de PIN korrekt ass.",
             "no_ipaddress": "Gitt d'IP Adresse vun der Playstation 4 an:",
             "not_ready": "PlayStation 4 ass net un oder mam Netzwierk verbonnen."
