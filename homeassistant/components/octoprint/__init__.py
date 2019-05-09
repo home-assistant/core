@@ -10,7 +10,7 @@ from homeassistant.components.discovery import SERVICE_OCTOPRINT
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONTENT_TYPE_JSON, CONF_NAME, CONF_PATH,
     CONF_PORT, CONF_SSL, TEMP_CELSIUS, CONF_MONITORED_CONDITIONS, CONF_SENSORS,
-    CONF_BINARY_SENSORS, ATTR_NAME, ATTR_TEMPERATURE)
+    CONF_BINARY_SENSORS, ATTR_COMMAND, ATTR_NAME, ATTR_TEMPERATURE)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -29,6 +29,7 @@ ATTR_BAUDRATE = 'baudrate'
 ATTR_PRINTER_PROFILE = 'printer_profile'
 
 SERVICE_CANCEL_JOB = 'cancel_job'
+SERVICE_COMMAND = 'command'
 SERVICE_CONNECT = 'connect'
 SERVICE_DISCONNECT = 'disconnect'
 SERVICE_PAUSE_JOB = 'pause_job'
@@ -155,6 +156,13 @@ def setup(hass, config):
         """Aborts current job."""
         octoprint_api.post('job', "{\"command\": \"cancel\"}")
 
+    def handle_command(call):
+        """Sends a command to the printer."""
+        json_string = "{\"command\": \""
+        json_string += call.data.get(ATTR_COMMAND)
+        json_string += "\"}"
+        octoprint_api.post('printer/command', json_string)
+
     def handle_connect(call):
         """Connects to the printer."""
         port = call.data.get(ATTR_PORT)
@@ -206,6 +214,7 @@ def setup(hass, config):
             octoprint_api.post('printer/tool', json_string)
 
     hass.services.register(DOMAIN, SERVICE_CANCEL_JOB, handle_cancel_job)
+    hass.services.register(DOMAIN, SERVICE_COMMAND, handle_command)
     hass.services.register(DOMAIN, SERVICE_CONNECT, handle_connect)
     hass.services.register(DOMAIN, SERVICE_DISCONNECT, handle_disconnect)
     hass.services.register(DOMAIN, SERVICE_PAUSE_JOB, handle_pause_job)

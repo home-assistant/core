@@ -3,8 +3,15 @@
 cancel_job:
   description: Cancels current job.
 
+command:
+  description: Sends a command to the printer.
+  fields:
+    command:
+      description: The command. This is the same as inputting into the terminal.
+      example: G28
+
 connect:
-  description: Connects to the printer
+  description: Connects to the printer.
   fields:
     port:
       description: 'Optional: The port to connect to. Defaults to preferred or auto detection.'
@@ -17,7 +24,7 @@ connect:
       example: ender_3
 
 disconnect:
-  description: Disconnects from the printer
+  description: Disconnects from the printer.
 
 pause_job:
   description: Pauses current job.
@@ -26,11 +33,11 @@ resume_job:
   description: Resumes current job.
 
 target_temperature:
-  description: Sets temperature target for the given tool or bed
+  description: Sets temperature target for the given tool or bed.
   fields:
     name:
       description: The name. You can set tools or set 'bed' to set the bed temperature.
       example: tool0
     temperature: 
-      description: The target temperature for the tool or bed
+      description: The target temperature for the tool or bed.
       example: 200
