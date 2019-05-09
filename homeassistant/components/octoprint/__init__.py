@@ -157,14 +157,14 @@ def setup(hass, config):
         octoprint_api.post('job', "{\"command\": \"cancel\"}")
 
     def handle_command(call):
-        """Sends a command to the printer."""
+        """Sends a command."""
         json_string = "{\"command\": \""
         json_string += call.data.get(ATTR_COMMAND)
         json_string += "\"}"
         octoprint_api.post('printer/command', json_string)
 
     def handle_connect(call):
-        """Connects to the printer."""
+        """Connects the printer."""
         port = call.data.get(ATTR_PORT)
         baudrate = call.data.get(ATTR_BAUDRATE)
         printer_profile = call.data.get(ATTR_PRINTER_PROFILE)
@@ -182,7 +182,7 @@ def setup(hass, config):
         octoprint_api.post('connection', json_string)
 
     def handle_disconnect(call):
-        """Disconnects from the printer."""
+        """Disconnects the printer."""
         octoprint_api.post('connection', "{\"command\": \"disconnect\"}")
 
     def handle_pause_job(call):
@@ -196,7 +196,7 @@ def setup(hass, config):
             'job', "{\"command\": \"pause\",\"action\": \"resume\"}")
 
     def handle_target_temperature(call):
-        """Sets the target temperature for a tool or the bed."""
+        """Sets the target temperature."""
         name = call.data.get(ATTR_NAME)
         temperature = call.data.get(ATTR_TEMPERATURE)
 
