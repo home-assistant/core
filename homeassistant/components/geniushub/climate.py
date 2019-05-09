@@ -1,5 +1,4 @@
 """Support for Genius Hub climate devices."""
-import asyncio
 import logging
 
 from homeassistant.components.climate import ClimateDevice
@@ -9,23 +8,21 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS)
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, async_dispatcher_send)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-GH_PARENT_ZONE = 'manager'
-GH_CHILD_ZONES = ['radiator']
+GH_ZONES = ['radiator']
 
-GENIUSHUB_SUPPORT_FLAGS = \
+GH_SUPPORT_FLAGS = \
     SUPPORT_TARGET_TEMPERATURE | \
     SUPPORT_ON_OFF | \
     SUPPORT_OPERATION_MODE
 
-GENIUSHUB_MAX_TEMP = 28.0
-GENIUSHUB_MIN_TEMP = 4.0
+GH_MAX_TEMP = 28.0
+GH_MIN_TEMP = 4.0
 
 # Genius Hub Zones support only Off, Override/Boost, Footprint & Timer modes
 HA_OPMODE_TO_GH = {
@@ -45,9 +42,8 @@ GH_STATE_TO_HA = {
     'linked': None,
     'other': None,
 }
-
 # temperature is repeated here, as it gives access to high-precision temps
-GH_DEVICE_STATE_ATTRS = ['temperature', 'type', 'occupied', 'override']
+GH_STATE_ATTRS = ['temperature', 'type', 'occupied', 'override']
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
@@ -55,16 +51,11 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     """Set up the Genius Hub climate entities."""
     client = hass.data[DOMAIN]['client']
 
-    parent = [GeniusClimateHub(client, z)
-              for z in client.hub.zone_objs if z.type == GH_PARENT_ZONE]
-
-    children = [GeniusClimateZone(client, z)
-                for z in client.hub.zone_objs if z.type in GH_CHILD_ZONES]
-
-    async_add_entities(parent + children)
+    async_add_entities([GeniusClimateZone(client, z)
+                        for z in client.hub.zone_objs if z.type in GH_ZONES])
 
 
-class GeniusClimateBase(ClimateDevice):
+class GeniusClimateZone(ClimateDevice):
     """Representation of a Genius Hub climate device."""
 
     def __init__(self, client, zone):
@@ -72,7 +63,21 @@ class GeniusClimateBase(ClimateDevice):
         self._client = client
         self._zone = zone
 
-        self._supported_features = 0
+        # Only some zones have movement detectors, which allows footprint mode
+        op_list = list(HA_OPMODE_TO_GH)
+        if not hasattr(self._zone, 'occupied'):
+            op_list.remove(STATE_ECO)
+        self._operation_list = op_list
+        self._supported_features = GH_SUPPORT_FLAGS
+
+    async def async_added_to_hass(self):
+        """Run when entity about to be added."""
+        async_dispatcher_connect(self.hass, DOMAIN, self._connect)
+
+    @callback
+    def _connect(self, packet):
+        if packet['signal'] == 'refresh':
+            self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
     def name(self):
@@ -89,37 +94,11 @@ class GeniusClimateBase(ClimateDevice):
         """Return the list of supported features."""
         return self._supported_features
 
-
-class GeniusClimateZone(GeniusClimateBase):
-    """Representation of a Genius Hub climate device."""
-
-    def __init__(self, client, zone):
-        """Initialize the climate device."""
-        super().__init__(client, zone)
-
-        self._supported_features = GENIUSHUB_SUPPORT_FLAGS
-        # Only some zones have movement detectors, which allows footprint mode
-        op_list = list(HA_OPMODE_TO_GH)
-        if not hasattr(self._zone, 'occupied'):
-            op_list.remove(STATE_ECO)
-        self._operation_list = op_list
-
-    async def async_added_to_hass(self):
-        """Run when entity about to be added."""
-        async_dispatcher_connect(self.hass, DOMAIN, self._connect)
-
-    @callback
-    def _connect(self, packet):
-        if packet['signal'] == 'refresh':
-            self.async_schedule_update_ha_state(force_refresh=True)
-
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         tmp = self._zone.__dict__.items()
-        state = {k: v for k, v in tmp if k in GH_DEVICE_STATE_ATTRS}
-
-        return {'status': state}
+        return {'status': {k: v for k, v in tmp if k in GH_STATE_ATTRS}}
 
     @property
     def should_poll(self) -> bool:
@@ -144,12 +123,12 @@ class GeniusClimateZone(GeniusClimateBase):
     @property
     def min_temp(self):
         """Return max valid temperature that can be set."""
-        return GENIUSHUB_MIN_TEMP
+        return GH_MIN_TEMP
 
     @property
     def max_temp(self):
         """Return max valid temperature that can be set."""
-        return GENIUSHUB_MAX_TEMP
+        return GH_MAX_TEMP
 
     @property
     def operation_list(self):
@@ -164,7 +143,7 @@ class GeniusClimateZone(GeniusClimateBase):
     @property
     def is_on(self):
         """Return True if the device is on."""
-        return self._zone.mode in GH_STATE_TO_HA
+        return self._zone.mode != HA_OPMODE_TO_GH[STATE_OFF]
 
     async def async_set_operation_mode(self, operation_mode):
         """Set a new operation mode for this zone."""
@@ -172,13 +151,12 @@ class GeniusClimateZone(GeniusClimateBase):
 
     async def async_set_temperature(self, **kwargs):
         """Set a new target temperature for this zone."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        await self._zone.set_override(temperature, 3600)  # 1 hour
+        await self._zone.set_override(kwargs.get(ATTR_TEMPERATURE), 3600)
 
     async def async_turn_on(self):
         """Turn on this heating zone.
 
-        Set Zones to Footprint mode if they have a Room sensor, and to Timer
+        Set a Zone to Footprint mode if they have a Room sensor, and to Timer
         mode otherwise.
         """
         mode = STATE_ECO if hasattr(self._zone, 'occupied') else STATE_AUTO
@@ -187,24 +165,3 @@ class GeniusClimateZone(GeniusClimateBase):
     async def async_turn_off(self):
         """Turn off this heating zone (i.e. to frost protect)."""
         await self._zone.set_mode(HA_OPMODE_TO_GH[STATE_OFF])
-
-
-class GeniusClimateHub(GeniusClimateBase):
-    """Representation of a Genius Hub climate device."""
-
-    @property
-    def hidden(self) -> bool:
-        """Return True if the entity should be hidden from UIs."""
-        return True
-
-    async def async_update(self):
-        """Get the latest data from the hub."""
-        try:
-            await self._zone.update()
-        except (AssertionError, asyncio.TimeoutError) as err:
-            _LOGGER.warning("Update for %s failed, message: %s",
-                            self._zone.name, err)
-
-        # inform the child devices that state data has been updated
-        pkt = {'signal': 'refresh'}
-        async_dispatcher_send(self.hass, DOMAIN, pkt)

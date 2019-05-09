@@ -16,15 +16,15 @@ STATE_MANUAL = 'manual'
 
 _LOGGER = logging.getLogger(__name__)
 
-GH_WATER_HEATERS = ['hot water temperature']
+GH_HEATERS = ['hot water temperature']
 
-GENIUSHUB_SUPPORT_FLAGS = \
+GH_SUPPORT_FLAGS = \
     SUPPORT_TARGET_TEMPERATURE | \
     SUPPORT_OPERATION_MODE
 # HA does not have SUPPORT_ON_OFF for water_heater
 
-GENIUSHUB_MAX_TEMP = 80.0
-GENIUSHUB_MIN_TEMP = 30.0
+GH_MAX_TEMP = 80.0
+GH_MIN_TEMP = 30.0
 
 # Genius Hub HW supports only Off, Override/Boost & Timer modes
 HA_OPMODE_TO_GH = {
@@ -43,8 +43,7 @@ GH_STATE_TO_HA = {
     'linked': None,
     'other': None,
 }
-
-GH_DEVICE_STATE_ATTRS = ['type', 'override']
+GH_STATE_ATTRS = ['type', 'override']
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
@@ -53,7 +52,7 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     client = hass.data[DOMAIN]['client']
 
     entities = [GeniusWaterHeater(client, z)
-                for z in client.hub.zone_objs if z.type in GH_WATER_HEATERS]
+                for z in client.hub.zone_objs if z.type in GH_HEATERS]
 
     async_add_entities(entities)
 
@@ -65,7 +64,6 @@ class GeniusWaterHeater(WaterHeaterDevice):
         """Initialize the water_heater device."""
         self._client = client
         self._boiler = boiler
-        self._name = boiler.name
 
         self._operation_list = list(HA_OPMODE_TO_GH)
 
@@ -87,9 +85,7 @@ class GeniusWaterHeater(WaterHeaterDevice):
     def device_state_attributes(self):
         """Return the device state attributes."""
         tmp = self._boiler.__dict__.items()
-        state = {k: v for k, v in tmp if k in GH_DEVICE_STATE_ATTRS}
-
-        return {'status': state}
+        return {'status': {k: v for k, v in tmp if k in GH_STATE_ATTRS}}
 
     @property
     def current_temperature(self):
@@ -104,12 +100,12 @@ class GeniusWaterHeater(WaterHeaterDevice):
     @property
     def min_temp(self):
         """Return max valid temperature that can be set."""
-        return GENIUSHUB_MIN_TEMP
+        return GH_MIN_TEMP
 
     @property
     def max_temp(self):
         """Return max valid temperature that can be set."""
-        return GENIUSHUB_MAX_TEMP
+        return GH_MAX_TEMP
 
     @property
     def temperature_unit(self):
@@ -119,7 +115,7 @@ class GeniusWaterHeater(WaterHeaterDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return GENIUSHUB_SUPPORT_FLAGS
+        return GH_SUPPORT_FLAGS
 
     @property
     def operation_list(self):
