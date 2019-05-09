@@ -27,8 +27,10 @@ DISCOVER_BINARY_SENSORS = 'homematic.binary_sensor'
 DISCOVER_COVER = 'homematic.cover'
 DISCOVER_CLIMATE = 'homematic.climate'
 DISCOVER_LOCKS = 'homematic.locks'
+DISCOVER_BUTTONS = 'homematic.binary_sensor'
 
 ATTR_DISCOVER_DEVICES = 'devices'
+ATTR_BATTERY_DEVICES = 'battery_devices'
 ATTR_PARAM = 'param'
 ATTR_CHANNEL = 'channel'
 ATTR_ADDRESS = 'address'
@@ -41,6 +43,7 @@ ATTR_TIME = 'time'
 ATTR_UNIQUE_ID = 'unique_id'
 ATTR_PARAMSET_KEY = 'paramset_key'
 ATTR_PARAMSET = 'paramset'
+
 
 EVENT_KEYPRESS = 'homematic.keypress'
 EVENT_IMPULSE = 'homematic.impulse'
@@ -84,7 +87,8 @@ HM_DEVICE_TYPES = {
         'SmartwareMotion', 'IPWeatherSensorPlus', 'MotionIPV2', 'WaterIP',
         'IPMultiIO', 'TiltIP', 'IPShutterContactSabotage'],
     DISCOVER_COVER: ['Blind', 'KeyBlind', 'IPKeyBlind', 'IPKeyBlindTilt'],
-    DISCOVER_LOCKS: ['KeyMatic']
+    DISCOVER_LOCKS: ['KeyMatic'],
+    DISCOVER_BUTTONS: ['HmIP-WRC6', 'HmIP-RC8']
 }
 
 HM_IGNORE_DISCOVERY_NODE = [
@@ -460,7 +464,8 @@ def _system_callback_handler(hass, config, src, *args):
                     ('binary_sensor', DISCOVER_BINARY_SENSORS),
                     ('sensor', DISCOVER_SENSORS),
                     ('climate', DISCOVER_CLIMATE),
-                    ('lock', DISCOVER_LOCKS)):
+                    ('lock', DISCOVER_LOCKS),
+                    ('binary_sensor', DISCOVER_SWITCHES)):
                 # Get all devices of a specific type
                 found_devices = _get_devices(
                     hass, discovery_type, addresses, interface)
@@ -468,9 +473,21 @@ def _system_callback_handler(hass, config, src, *args):
                 # When devices of this type are found
                 # they are setup in HASS and a discovery event is fired
                 if found_devices:
-                    discovery.load_platform(hass, component_name, DOMAIN, {
-                        ATTR_DISCOVER_DEVICES: found_devices
-                    }, config)
+                    discovery_info = {ATTR_DISCOVER_DEVICES: found_devices,
+                                      ATTR_BATTERY_DEVICES: False}
+
+                    # Switches are skipped as a component. They will only
+                    # appear in hass as a battery device.
+                    if not discovery_type == DISCOVER_SWITCHES:
+                        discovery.load_platform(hass, component_name, DOMAIN,
+                                                discovery_info, config)
+
+                    # Pass all devices to binary sensor discovery,
+                    # check whether they are battery operated and
+                    # add them as a battery operated binary sensor device.
+                    discovery_info[ATTR_BATTERY_DEVICES] = True
+                    discovery.load_platform(hass, 'binary_sensor', DOMAIN,
+                                            discovery_info, config)
 
     # Homegear error message
     elif src == 'error':
