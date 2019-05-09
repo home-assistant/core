@@ -80,7 +80,7 @@ class TestEmulatedHue(unittest.TestCase):
         assert 'username' in success_json['success']
 
     def test_dummy_view(self):
-        """Test dummy view"""
+        """Test dummy view."""
         request_json = {'devicetype': 'my_device'}
 
         result = requests.get(

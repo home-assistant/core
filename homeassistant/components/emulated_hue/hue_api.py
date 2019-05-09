@@ -69,11 +69,10 @@ class HueUsernameView(HomeAssistantView):
 
 
 class HueDummyView(HomeAssistantView):
-    """Handle requests to identify emulated hue bridge by sleep cycle.
-    Which identifies emulated hue bridge dummy get to '/api/(null)' """
+    """Handle requests to identify emulated hue bridge for sleep cycle."""
 
     url = '/api/(null)'
-    name = 'emulated_hue:api:dummy_response'
+    name = 'emulated_hue:api:dummy_view'
     extra_urls = ['/api/(null)/']
     requires_auth = False
 
@@ -135,8 +134,8 @@ class HueGroupView(HomeAssistantView):
 
 
 class HueUsernameAllLightStateView(HomeAssistantView):
-    """Handle requests for getting and setting info about entities,
-    wrapping dummy config in response to get Sleep Cycle Working."""
+    """Handle requests for getting and setting info about entities."""
+    """Wrapping dummy config in response to get Sleep Cycle Working."""
 
     url = '/api/{username}'
     name = 'emulated_hue:lights:state'
