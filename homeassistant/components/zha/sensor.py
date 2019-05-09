@@ -14,6 +14,7 @@ from .core.const import (
     SIGNAL_ATTR_UPDATED, SIGNAL_STATE_ATTR)
 from .entity import ZhaEntity
 
+PARALLEL_UPDATES = 5
 _LOGGER = logging.getLogger(__name__)
 
 

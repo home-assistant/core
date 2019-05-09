@@ -29,6 +29,13 @@ class AsyncMediaPlayer(mp.MediaPlayerDevice):
         """Volume level of the media player (0..1)."""
         return self._volume
 
+    @property
+    def supported_features(self):
+        """Flag media player features that are supported."""
+        return mp.const.SUPPORT_VOLUME_SET | mp.const.SUPPORT_PLAY \
+            | mp.const.SUPPORT_PAUSE | mp.const.SUPPORT_TURN_OFF \
+            | mp.const.SUPPORT_TURN_ON
+
     @asyncio.coroutine
     def async_set_volume_level(self, volume):
         """Set volume level, range 0..1."""
@@ -73,6 +80,13 @@ class SyncMediaPlayer(mp.MediaPlayerDevice):
     def volume_level(self):
         """Volume level of the media player (0..1)."""
         return self._volume
+
+    @property
+    def supported_features(self):
+        """Flag media player features that are supported."""
+        return mp.const.SUPPORT_VOLUME_SET | mp.const.SUPPORT_VOLUME_STEP \
+            | mp.const.SUPPORT_PLAY | mp.const.SUPPORT_PAUSE \
+            | mp.const.SUPPORT_TURN_OFF | mp.const.SUPPORT_TURN_ON
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""

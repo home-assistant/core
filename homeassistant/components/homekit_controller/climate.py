@@ -3,8 +3,9 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE)
+    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY,
+    SUPPORT_TARGET_HUMIDITY_HIGH, SUPPORT_TARGET_HUMIDITY_LOW)
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS
 
 from . import KNOWN_DEVICES, HomeKitEntity
@@ -16,6 +17,7 @@ MODE_HOMEKIT_TO_HASS = {
     0: STATE_OFF,
     1: STATE_HEAT,
     2: STATE_COOL,
+    3: STATE_AUTO,
 }
 
 # Map of hass operation modes to homekit modes
@@ -41,6 +43,12 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
         self._valid_modes = []
         self._current_temp = None
         self._target_temp = None
+        self._current_humidity = None
+        self._target_humidity = None
+        self._min_target_temp = None
+        self._max_target_temp = None
+        self._min_target_humidity = None
+        self._max_target_humidity = None
         super().__init__(*args)
 
     def get_characteristic_types(self):
@@ -52,6 +60,8 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
             CharacteristicsTypes.HEATING_COOLING_TARGET,
             CharacteristicsTypes.TEMPERATURE_CURRENT,
             CharacteristicsTypes.TEMPERATURE_TARGET,
+            CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT,
+            CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET,
         ]
 
     def _setup_heating_cooling_target(self, characteristic):
@@ -82,6 +92,23 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
     def _setup_temperature_target(self, characteristic):
         self._features |= SUPPORT_TARGET_TEMPERATURE
 
+        if 'minValue' in characteristic:
+            self._min_target_temp = characteristic['minValue']
+
+        if 'maxValue' in characteristic:
+            self._max_target_temp = characteristic['maxValue']
+
+    def _setup_relative_humidity_target(self, characteristic):
+        self._features |= SUPPORT_TARGET_HUMIDITY
+
+        if 'minValue' in characteristic:
+            self._min_target_humidity = characteristic['minValue']
+            self._features |= SUPPORT_TARGET_HUMIDITY_LOW
+
+        if 'maxValue' in characteristic:
+            self._max_target_humidity = characteristic['maxValue']
+            self._features |= SUPPORT_TARGET_HUMIDITY_HIGH
+
     def _update_heating_cooling_current(self, value):
         self._state = MODE_HOMEKIT_TO_HASS.get(value)
 
@@ -94,6 +121,12 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
     def _update_temperature_target(self, value):
         self._target_temp = value
 
+    def _update_relative_humidity_current(self, value):
+        self._current_humidity = value
+
+    def _update_relative_humidity_target(self, value):
+        self._target_humidity = value
+
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
@@ -101,6 +134,13 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
         characteristics = [{'aid': self._aid,
                             'iid': self._chars['temperature.target'],
                             'value': temp}]
+        await self._accessory.put_characteristics(characteristics)
+
+    async def async_set_humidity(self, humidity):
+        """Set new target humidity."""
+        characteristics = [{'aid': self._aid,
+                            'iid': self._chars['relative-humidity.target'],
+                            'value': humidity}]
         await self._accessory.put_characteristics(characteristics)
 
     async def async_set_operation_mode(self, operation_mode):
@@ -131,6 +171,40 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._target_temp
+
+    @property
+    def min_temp(self):
+        """Return the minimum target temp."""
+        if self._max_target_temp:
+            return self._min_target_temp
+        return super().min_temp
+
+    @property
+    def max_temp(self):
+        """Return the maximum target temp."""
+        if self._max_target_temp:
+            return self._max_target_temp
+        return super().max_temp
+
+    @property
+    def current_humidity(self):
+        """Return the current humidity."""
+        return self._current_humidity
+
+    @property
+    def target_humidity(self):
+        """Return the humidity we try to reach."""
+        return self._target_humidity
+
+    @property
+    def min_humidity(self):
+        """Return the minimum humidity."""
+        return self._min_target_humidity
+
+    @property
+    def max_humidity(self):
+        """Return the maximum humidity."""
+        return self._max_target_humidity
 
     @property
     def current_operation(self):

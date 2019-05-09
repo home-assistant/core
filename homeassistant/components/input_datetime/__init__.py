@@ -20,6 +20,8 @@ CONF_HAS_DATE = 'has_date'
 CONF_HAS_TIME = 'has_time'
 CONF_INITIAL = 'initial'
 
+DEFAULT_VALUE = '1970-01-01 00:00:00'
+
 ATTR_DATE = 'date'
 ATTR_TIME = 'time'
 
@@ -120,13 +122,18 @@ class InputDatetime(RestoreEntity):
             if old_state is not None:
                 restore_val = old_state.state
 
-        if restore_val is not None:
-            if not self.has_date:
-                self._current_datetime = dt_util.parse_time(restore_val)
-            elif not self.has_time:
-                self._current_datetime = dt_util.parse_date(restore_val)
-            else:
-                self._current_datetime = dt_util.parse_datetime(restore_val)
+        if not self.has_date:
+            if not restore_val:
+                restore_val = DEFAULT_VALUE.split()[1]
+            self._current_datetime = dt_util.parse_time(restore_val)
+        elif not self.has_time:
+            if not restore_val:
+                restore_val = DEFAULT_VALUE.split()[0]
+            self._current_datetime = dt_util.parse_date(restore_val)
+        else:
+            if not restore_val:
+                restore_val = DEFAULT_VALUE
+            self._current_datetime = dt_util.parse_datetime(restore_val)
 
     @property
     def should_poll(self):
