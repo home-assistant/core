@@ -15,7 +15,8 @@ from io import StringIO
 from unittest.mock import MagicMock, Mock, patch
 
 import homeassistant.util.dt as date_util
-import homeassistant.util.yaml as yaml
+import homeassistant.util.yaml.loader as yaml_loader
+import homeassistant.util.yaml.dumper as yaml_dumper
 
 from homeassistant import auth, config_entries, core as ha, loader
 from homeassistant.auth import (
@@ -680,7 +681,8 @@ def patch_yaml_files(files_dict, endswith=True):
         # Not found
         raise FileNotFoundError("File not found: {}".format(fname))
 
-    return patch.object(yaml, 'open', mock_open_f, create=True)
+    return patch.object(yaml_loader, 'open', mock_open_f, create=True)
+    return patch.object(yaml_dumper, 'open', mock_open_f, create=True)
 
 
 def mock_coro(return_value=None, exception=None):

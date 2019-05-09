@@ -11,7 +11,7 @@ from homeassistant.helpers import entity_registry
 from tests.common import mock_registry, flush_store
 
 
-YAML__OPEN_PATH = 'homeassistant.util.yaml.open'
+YAML__OPEN_PATH = 'homeassistant.util.yaml.loader.open'
 
 
 @pytest.fixture
