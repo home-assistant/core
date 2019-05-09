@@ -108,7 +108,9 @@ def test_flow_handler_get_auth_client(
     client = flow_handler.get_auth_client('Person 1')
     assert client.client_id == 'my_client_id'
     assert client.consumer_secret == 'my_client_secret'
-    assert client.callback_uri == 'http://localhost/api/withings/callback/person_1'  # pylint: disable=line-too-long  # noqa: E501
+    assert client.callback_uri == (
+        'http://localhost/api/withings/callback/person_1'
+    )
     assert client.scope == 'user.info,user.metrics,user.activity'
 
     # Test the base url gets path stripped and corrected.
@@ -127,7 +129,9 @@ def test_flow_handler_get_auth_client(
             'Person 1'
         )
         client = flow_handler.get_auth_client('Person 1')
-        assert client.callback_uri == 'https://vghome.duckdns.org/api/withings/callback/person_1'  # pylint: disable=line-too-long  # noqa: E501
+        assert client.callback_uri == (
+            'https://vghome.duckdns.org/api/withings/callback/person_1'
+        )
 
 
 async def test_flow_handler_async_step_profile(
@@ -165,7 +169,11 @@ async def test_flow_handler_async_step_profile(
     placeholders = result['description_placeholders']
     assert placeholders
     assert placeholders['authorization_url'].startswith(
-        'https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=my_client_id&redirect_uri=http%3A%2F%2Flocalhost%2Fapi%2Fwithings%2Fcallback%2Fperson_1&scope=user.info%2Cuser.metrics%2Cuser.activity&state='  # pylint: disable=line-too-long  # noqa: E501
+        'https://account.withings.com/oauth2_user/authorize2'
+        '?response_type=code&client_id=my_client_id'
+        '&redirect_uri='
+        'http%3A%2F%2Flocalhost%2Fapi%2Fwithings%2Fcallback%2Fperson_1'
+        '&scope=user.info%2Cuser.metrics%2Cuser.activity&state='
     )
     assert placeholders['profile'] == 'Person 1'
     assert result['errors'] == {
@@ -291,9 +299,16 @@ async def test_flow_handler_full_flow(
         )
         assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
         assert result['step_id'] == 'auth'
-        assert result['description_placeholders']
-        assert result['description_placeholders']['authorization_url'].startswith('https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=my_client_id&redirect_uri=http%3A%2F%2Flocalhost%2Fapi%2Fwithings%2Fcallback%2Fperson_1&scope=user.info%2Cuser.metrics%2Cuser.activity&state=')  # pylint: disable=line-too-long  # noqa: E501
-        assert result['description_placeholders']['profile'] == 'Person 1'
+        placeholders = result['description_placeholders']
+        assert placeholders
+        assert placeholders['authorization_url'].startswith(
+            'https://account.withings.com/oauth2_user/authorize2'
+            '?response_type=code&client_id=my_client_id'
+            '&redirect_uri='
+            'http%3A%2F%2Flocalhost%2Fapi%2Fwithings%2Fcallback%2Fperson_1'
+            '&scope=user.info%2Cuser.metrics%2Cuser.activity&state='
+        )
+        assert placeholders['profile'] == 'Person 1'
         assert result['errors'] == {'base': 'follow_link'}
 
         callback_view = register_view.call_args[0][0]

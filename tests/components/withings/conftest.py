@@ -317,7 +317,8 @@ def withings_factory_fixture(
             nokia_api_get_sleep_summary_patch.start()
 
         data_manager_get_throttle_interval_patch = asynctest.patch(
-            'homeassistant.components.withings.common.WithingsDataManager.get_throttle_interval',  # pylint: disable=line-too-long  # noqa: E501
+            'homeassistant.components.withings.common.WithingsDataManager'
+            '.get_throttle_interval',
             return_value=config.throttle_interval
         )
         data_manager_get_throttle_interval_mock = \
