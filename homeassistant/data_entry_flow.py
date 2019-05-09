@@ -209,7 +209,7 @@ class FlowHandler:
     @callback
     def async_external_step(self, *, step_id: str, url: str,
                             description_placeholders: Optional[Dict] = None) \
-                                -> Dict:
+            -> Dict:
         """Return the definition of an external step for the user to take."""
         return {
             'type': RESULT_TYPE_EXTERNAL_STEP,
