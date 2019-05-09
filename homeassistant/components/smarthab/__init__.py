@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 DOMAIN = 'smarthab'
 DATA_HUB = 'hub'
 
-REQUIREMENTS = ['smarthab==0.19']
+REQUIREMENTS = ['smarthab==0.20']
 
 _LOGGER = logging.getLogger(__name__)
 
