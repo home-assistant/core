@@ -24,7 +24,13 @@ CONF_NUMBER_OF_TOOLS = 'number_of_tools'
 DEFAULT_NAME = 'OctoPrint'
 DOMAIN = 'octoprint'
 
+ATTR_PORT = 'port'
+ATTR_BAUDRATE = 'baudrate'
+ATTR_PRINTER_PROFILE = 'printer_profile'
+
 SERVICE_CANCEL_JOB = 'cancel_job'
+SERVICE_CONNECT = 'connect'
+SERVICE_DISCONNECT = 'disconnect'
 SERVICE_PAUSE_JOB = 'pause_job'
 SERVICE_RESUME_JOB = 'resume_job'
 
@@ -146,6 +152,28 @@ def setup(hass, config):
         """Aborts current job."""
         octoprint_api.post('job', "{\"command\": \"cancel\"}")
 
+    def handle_connect(call):
+        """Connects to the printer."""
+        port = call.data.get(ATTR_PORT)
+        baudrate = call.data.get(ATTR_BAUDRATE)
+        printer_profile = call.data.get(ATTR_PRINTER_PROFILE)
+
+        json_string = "{\"command\": \"connect\""
+        if port is not None:
+            json_string += ", \"port\": \"{}\"".format(port)
+        if baudrate is not None:
+            json_string += ", \"baudrate\": \"{}\"".format(baudrate)
+        if printer_profile is not None:
+            json_string += ", \"printerProfile\": \"{}\"".format(
+                printer_profile)
+        json_string += "}"
+
+        octoprint_api.post('connection', json_string)
+
+    def handle_disconnect(call):
+        """Disconnects from the printer."""
+        octoprint_api.post('connection', "{\"command\": \"disconnect\"}")
+
     def handle_pause_job(call):
         """Pauses current job."""
         octoprint_api.post(
@@ -157,9 +185,9 @@ def setup(hass, config):
             'job', "{\"command\": \"pause\",\"action\": \"resume\"}")
 
     hass.services.register(DOMAIN, SERVICE_CANCEL_JOB, handle_cancel_job)
-
+    hass.services.register(DOMAIN, SERVICE_CONNECT, handle_connect)
+    hass.services.register(DOMAIN, SERVICE_DISCONNECT, handle_disconnect)
     hass.services.register(DOMAIN, SERVICE_PAUSE_JOB, handle_pause_job)
-
     hass.services.register(DOMAIN, SERVICE_RESUME_JOB, handle_resume_job)
 
     return success

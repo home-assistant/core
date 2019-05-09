@@ -3,6 +3,22 @@
 cancel_job:
   description: Cancels current job.
 
+connect:
+  description: Connects to the printer
+  fields:
+    port:
+      description: 'Optional: The port to connect to. Defaults to preferred or auto detection.'
+      example: /dev/ttyUSB0
+    baudrate:
+      description: 'Optional: Specific baudrate to connect with. Defaults to preferred or auto detection.'
+      example: 115200
+    printer_profile:
+      description: 'Optional: Specific printer profile to use. Defaults to current profile.'
+      example: ender_3
+
+disconnect:
+  description: Disconnects from the printer
+
 pause_job:
   description: Pauses current job.
 
