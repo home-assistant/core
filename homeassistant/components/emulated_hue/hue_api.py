@@ -134,7 +134,7 @@ class HueGroupView(HomeAssistantView):
 
 
 class HueUsernameAllLightStateView(HomeAssistantView):
-    """Handle requests for getting and setting info about entities, wrapped"""
+    """Handle requests for getting and setting info about entities."""
 
     url = '/api/{username}'
     name = 'emulated_hue:lights:state'
