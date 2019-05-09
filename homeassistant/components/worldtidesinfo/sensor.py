@@ -18,15 +18,19 @@ ATTRIBUTION = "Data provided by WorldTides"
 
 DEFAULT_NAME = 'WorldTidesInfo'
 
-SCAN_INTERVAL = timedelta(seconds=3600)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=3600)
+
+CONF_SCAN_INTERVAL = 'interval_seconds'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_LATITUDE): cv.latitude,
     vol.Optional(CONF_LONGITUDE): cv.longitude,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_SCAN_INTERVAL): cv.time_period
 })
 
+SCAN_INTERVAL = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the WorldTidesInfo sensor."""
