@@ -12,13 +12,14 @@
             "unable_to_pair": "Kunne ikke koble til, vennligst pr\u00f8v igjen.",
             "unknown_error": "Enheten rapporterte en ukjent feil. Sammenkobling mislyktes."
         },
+        "flow_title": "HomeKit Tilbeh\u00f8r: {name}",
         "step": {
             "pair": {
                 "data": {
                     "pairing_code": "Sammenkoblingskode"
                 },
                 "description": "Skriv inn HomeKit sammenkoblingskoden for \u00e5 bruke dette tilbeh\u00f8ret",
-                "title": "Sammenkoble {{ model }}"
+                "title": "Koble til HomeKit tilbeh\u00f8r"
             },
             "user": {
                 "data": {
