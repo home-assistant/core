@@ -526,18 +526,22 @@ def set_next_entity(hass):
     # set next entity
     global CURR_ENTITIE
     # special case for music
-    if CURR_ENTITIE == 'input_text.ais_music_query':
+    if CURR_ENTITIE == 'input_select.ais_music_service':
         state = hass.states.get('input_select.ais_music_service')
         if state.state == 'Spotify':
-            CURR_ENTITIE = 'input_select.ais_spotify_service'
+            CURR_ENTITIE = 'input_text.ais_spotify_query'
         else:
-            CURR_ENTITIE = 'input_select.ais_music_service'
+            CURR_ENTITIE = 'input_text.ais_music_query'
+    elif CURR_ENTITIE == 'input_text.ais_music_query':
+        CURR_ENTITIE = 'sensor.youtubelist'
+    elif CURR_ENTITIE == 'input_text.ais_spotify_query':
+        CURR_ENTITIE = 'sensor.spotifysearchlist'
     elif CURR_ENTITIE == 'sensor.youtubelist':
         CURR_ENTITIE = 'input_select.ais_music_service'
     elif CURR_ENTITIE == 'sensor.spotifysearchlist':
         CURR_ENTITIE = 'sensor.spotifylist'
     elif CURR_ENTITIE == 'sensor.spotifylist':
-        CURR_ENTITIE = 'input_select.ais_spotify_service'
+        CURR_ENTITIE = 'input_select.ais_music_service'
     else:
         entity_idx = get_curr_entity_idx()
         group_idx = get_curr_group_idx()
@@ -564,10 +568,15 @@ def set_prev_entity(hass):
             CURR_ENTITIE = 'sensor.youtubelist'
     elif CURR_ENTITIE == 'sensor.youtubelist':
         CURR_ENTITIE = 'input_text.ais_music_query'
-    elif CURR_ENTITIE == 'sensor.spotifysearchlist':
-        CURR_ENTITIE = 'input_text.ais_spotify_query'
+    elif CURR_ENTITIE == 'input_text.ais_music_query':
+        CURR_ENTITIE = 'input_select.ais_music_service'
     elif CURR_ENTITIE == 'sensor.spotifylist':
         CURR_ENTITIE = 'sensor.spotifysearchlist'
+    elif CURR_ENTITIE == 'sensor.spotifysearchlist':
+        CURR_ENTITIE = 'input_text.ais_spotify_query'
+    elif CURR_ENTITIE == 'input_text.ais_spotify_query':
+        CURR_ENTITIE = 'input_select.ais_music_service'
+
     # end special case for music
     else:
         idx = get_curr_entity_idx()
@@ -651,17 +660,25 @@ def say_curr_entity(hass):
                 _say_it(hass, "Lista na pozycji " + info_name, None)
         else:
             if entity_id == 'sensor.radiolist':
-                info = "Stacja radiowa "
+                info = "Lista stacji radiowych "
             elif entity_id == 'sensor.podcastlist':
-                info = "Odcinek "
+                info = "Lista odcinków "
             elif entity_id == 'sensor.spotifylist':
-                info = "Utwór "
+                info = "Lista utworów ze Spotify "
+            elif entity_id == 'sensor.youtubelist':
+                info = "Lista utworów z YouTube "
             elif entity_id == 'sensor.rssnewslist':
-                info = "Artykuł "
+                info = "Lista artykułów "
             elif entity_id == 'sensor.aisbookmarkslist':
                 info = "Lista zakładek "
             elif entity_id == 'sensor.aisfavoriteslist':
                 info = "Lista ulubionych "
+            elif entity_id == 'sensor.podcastnamelist':
+                info = "Lista audycji  "
+            elif entity_id == 'sensor.aisfavoriteslist':
+                info = "Lista ulubionych pozycji  "
+            elif entity_id == 'sensor.aisbookmarkslist':
+                info = "Lista zakładek  "
             else:
                 info = "Pozycja "
             if int(info_data) != -1:
@@ -717,7 +734,7 @@ def commit_current_position(hass):
         idx = hass.states.get(CURR_ENTITIE).state
         if CURR_ENTITIE == "sensor.radiolist":
             hass.services.call('ais_cloud', 'play_audio', {"id": idx, "media_source": ais_global.G_AN_RADIO})
-        elif CURR_ENTITIE == "sensor.podcastlist":
+        elif CURR_ENTITIE == "sensor.":
             hass.services.call('ais_cloud', 'play_audio', {"id": idx, "media_source": ais_global.G_AN_PODCAST})
         elif CURR_ENTITIE == "sensor.spotifysearchlist":
             hass.services.call('ais_cloud', 'play_audio', {"id": idx, "media_source": ais_global.G_AN_SPOTIFY_SEARCH})
@@ -731,6 +748,8 @@ def commit_current_position(hass):
             hass.services.call('ais_cloud', 'play_audio', {"id": idx, "media_source": ais_global.G_AN_BOOKMARK})
         elif CURR_ENTITIE == "sensor.aisfavoriteslist":
             hass.services.call('ais_cloud', 'play_audio', {"id": idx, "media_source": ais_global.G_AN_FAVORITE})
+        elif CURR_ENTITIE == "sensor.podcastnamelist":
+            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "media_source": ais_global.G_AN_PODCAST_NAME})
 
     if CURR_ENTITIE == "input_select.ais_android_wifi_network":
         _say_it(hass, "wybrano wifi: " + get_curent_position(hass).split(';')[0], None)
@@ -772,7 +791,7 @@ def set_next_position(hass):
             if next_id == len(attr):
                 next_id = 0
             track = attr.get(int(next_id))
-            _say_it(hass, track["title"], None)
+            _say_it(hass, track["name"], None)
             # update list
             hass.states.async_set(CURR_ENTITIE, next_id, attr)
     elif CURR_ENTITIE.startswith('input_number.'):
@@ -804,7 +823,7 @@ def set_prev_position(hass):
             if prev_id < 0:
                 prev_id = len(attr) - 1
             track = attr.get(int(prev_id))
-            _say_it(hass, track["title"], None)
+            _say_it(hass, track["name"], None)
             # update list
             hass.states.async_set(CURR_ENTITIE, prev_id, attr)
     elif CURR_ENTITIE.startswith('input_number.'):

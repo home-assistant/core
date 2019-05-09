@@ -54,7 +54,7 @@ def async_setup(hass, config):
     hass.states.async_set("sensor.spotifysearchlist", -1, {})
     hass.states.async_set("sensor.spotifylist", -1, {})
     hass.states.async_set("sensor.rssnewslist", -1, {})
-    hass.states.async_set("sensor.rssnewstext", -1, {})
+    hass.states.async_set("sensor.rssnewstext", "", {"text": ""})
     hass.states.async_set("sensor.aisrsshelptext", "", {"text": ""})
     hass.states.async_set("sensor.aisknowledgeanswer", "", {"text": ""})
 
@@ -486,10 +486,10 @@ class AisColudData:
             list_info[list_idx]["title"] = item["NAME"]
             list_info[list_idx]["name"] = item["NAME"]
             list_info[list_idx]["thumbnail"] = item["IMAGE_URL"]
-            list_info[list_idx]["uri"] = item["STREAM_URL"]
-            list_info[list_idx]["mediasource"] = ais_global.G_AN_RADIO
-            list_info[list_idx]["audio_type"] = ais_global.G_AN_RADIO
-            list_info[list_idx]["icon"] = 'mdi:play'
+            list_info[list_idx]["uri"] = item["LOOKUP_URL"]
+            list_info[list_idx]["mediasource"] = ais_global.G_AN_PODCAST
+            list_info[list_idx]["audio_type"] = ais_global.G_AN_PODCAST
+            list_info[list_idx]["icon"] = 'mdi:podcast'
             list_idx = list_idx + 1
 
         # create lists
@@ -637,6 +637,8 @@ class AisColudData:
                 track_list = 'sensor.aisbookmarkslist'
             elif media_source == ais_global.G_AN_FAVORITE:
                 track_list = 'sensor.aisfavoriteslist'
+            elif media_source == ais_global.G_AN_PODCAST_NAME:
+                track_list = 'sensor.podcastnamelist'
 
             state = self.hass.states.get(track_list)
             attr = state.attributes
@@ -649,7 +651,8 @@ class AisColudData:
             if media_source == ais_global.G_AN_NEWS:
                 self.hass.services.call('ais_cloud', 'select_rss_news_item', {"id": call.data['id']})
 
-            elif media_source == ais_global.G_AN_FAVORITE and track["audio_type"] == ais_global.G_AN_PODCAST:
+            elif media_source in (ais_global.G_AN_PODCAST_NAME, ais_global.G_AN_FAVORITE)\
+                    and track["audio_type"] == ais_global.G_AN_PODCAST:
                 # selected from favorite - get the podcast tracks
                 self.hass.services.call('ais_cloud', 'get_podcast_tracks', {"lookup_url": track["uri"],
                                                                             "podcast_name": track["name"],
@@ -690,6 +693,7 @@ class AisColudData:
                 self.hass.states.async_set(track_list, call.data['id'], attr)
                 self.hass.services.call('ais_bookmarks', 'play_favorite', {"id": call.data['id']})
                 return
+
         else:
             # play by voice
             if media_source == ais_global.G_AN_RADIO:

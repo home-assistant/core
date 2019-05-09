@@ -16,6 +16,7 @@ GLOBAL_TTS_VOICE = 'pl-pl-x-oda-local'
 
 # audio nature
 G_AN_RADIO = "Radio"
+G_AN_PODCAST_NAME = "PodcastName"
 G_AN_PODCAST = "Podcast"
 # Music == YouTube
 G_AN_MUSIC = "Music"

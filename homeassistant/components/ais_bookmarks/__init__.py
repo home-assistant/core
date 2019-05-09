@@ -101,19 +101,22 @@ def async_setup(hass, config):
                 list_info[list_idx]["audio_type"] = item['source']
                 list_info[list_idx]["icon_type"] = ais_global.G_ICON_FOR_AUDIO.get(item['source'], 'mdi:play')
                 list_info[list_idx]["icon_remove"] = 'mdi:delete-forever'
-                list_info[list_idx]["icon"] = 'mdi:play'
+                if audio_source == ais_global.G_AN_PODCAST:
+                    list_info[list_idx]["icon"] = 'mdi:podcast'
+                else:
+                    list_info[list_idx]["icon"] = 'mdi:play'
                 list_info[list_idx]["id"] = item['id']
                 list_idx = list_idx + 1
 
         # create lists
         if audio_source is None:
+            # get all items
             hass.states.async_set("sensor.aisfavoriteslist", -1, list_info)
         else:
             if audio_source == ais_global.G_AN_RADIO:
                 hass.states.async_set("sensor.radiolist", -1, list_info)
             elif audio_source == ais_global.G_AN_PODCAST:
-                # TODO
-                pass
+                hass.states.async_set("sensor.podcastnamelist", -1, list_info)
             elif audio_source == ais_global.G_AN_MUSIC:
                 hass.states.async_set("sensor.youtubelist", -1, list_info)
             elif audio_source == ais_global.G_AN_SPOTIFY:
@@ -287,17 +290,24 @@ class BookmarksData:
                 self.hass.async_add_job(self.hass.services.async_call('ais_ai_service', 'say_it', {"text": message}))
                 return
 
+            #
+            full_name = name
+            if audio_type == ais_global.G_AN_LOCAL:
+                media_content_id = ais_global.G_CURR_MEDIA_CONTENT["lookup_url"]
+                full_name = ais_global.G_CURR_MEDIA_CONTENT["ALBUM_NAME"] + " " + name
+
             # check if the audio is on bookmark list
-            item = next((itm for itm in self.bookmarks if (itm['name'] == name and itm['source'] == audio_type)), None)
+            item = next((itm for itm in self.bookmarks if (itm['media_content_id'] == media_content_id)), None)
             if item is not None:
                 # delete the old bookmark
                 self.async_remove_bookmark(item['id'], True)
                 message = "Przesuwam zakładkę {}".format(name)
             else:
                 message = "Dodaję nową zakładkę {}".format(name)
+
             # add the bookmark
             item = {
-                'name': name,
+                'name': full_name,
                 'id': uuid.uuid4().hex,
                 'source': audio_type,
                 'media_position': media_position,

@@ -391,7 +391,8 @@ class LocalData:
                            "ALBUM_NAME": os.path.basename(os.path.dirname(self.current_path)),
                            "IMAGE_URL": album_cover_path,
                            "DURATION": file_length,
-                           "media_content_id": _url}
+                           "media_content_id": _url,
+                           "lookup_url": self.current_path}
             _audio_info = json.dumps(_audio_info)
 
             if _url is not None:
@@ -655,7 +656,8 @@ class LocalData:
         _audio_info = {"NAME": os.path.basename(self.rclone_url_to_stream),
                        "MEDIA_SOURCE": ais_global.G_AN_LOCAL,
                        "ALBUM_NAME": os.path.basename(os.path.dirname(self.current_path)),
-                       "media_content_id": self.rclone_url_to_stream}
+                       "media_content_id": self.rclone_url_to_stream,
+                       "lookup_url": self.current_path}
         _audio_info = json.dumps(_audio_info)
         # to set the stream image and title
         self.hass.services.call('media_player', 'play_media', {
