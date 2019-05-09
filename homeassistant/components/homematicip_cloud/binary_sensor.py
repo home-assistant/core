@@ -3,14 +3,18 @@ import logging
 
 from homematicip.aio.device import (
     AsyncDevice, AsyncMotionDetectorIndoor, AsyncMotionDetectorOutdoor,
-    AsyncMotionDetectorPushButton, AsyncRotaryHandleSensor,
-    AsyncShutterContact, AsyncSmokeDetector, AsyncWaterSensor,
-    AsyncWeatherSensor, AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
+    AsyncMotionDetectorPushButton, AsyncPresenceDetectorIndoor,
+    AsyncRotaryHandleSensor, AsyncShutterContact, AsyncSmokeDetector,
+    AsyncWaterSensor, AsyncWeatherSensor, AsyncWeatherSensorPlus,
+    AsyncWeatherSensorPro)
 from homematicip.aio.group import AsyncSecurityGroup, AsyncSecurityZoneGroup
 from homematicip.aio.home import AsyncHome
 from homematicip.base.enums import SmokeDetectorAlarmType, WindowState
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY, DEVICE_CLASS_DOOR, DEVICE_CLASS_LIGHT,
+    DEVICE_CLASS_MOISTURE, DEVICE_CLASS_MOTION, DEVICE_CLASS_PRESENCE,
+    DEVICE_CLASS_SAFETY, DEVICE_CLASS_SMOKE, BinarySensorDevice)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -47,6 +51,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
                                AsyncMotionDetectorOutdoor,
                                AsyncMotionDetectorPushButton)):
             devices.append(HomematicipMotionDetector(home, device))
+        if isinstance(device, AsyncPresenceDetectorIndoor):
+            devices.append(HomematicipPresenceDetector(home, device))
         if isinstance(device, AsyncSmokeDetector):
             devices.append(HomematicipSmokeDetector(home, device))
         if isinstance(device, AsyncWaterSensor):
@@ -77,7 +83,7 @@ class HomematicipShutterContact(HomematicipGenericDevice, BinarySensorDevice):
     @property
     def device_class(self) -> str:
         """Return the class of this sensor."""
-        return 'door'
+        return DEVICE_CLASS_DOOR
 
     @property
     def is_on(self) -> bool:
@@ -95,7 +101,7 @@ class HomematicipMotionDetector(HomematicipGenericDevice, BinarySensorDevice):
     @property
     def device_class(self) -> str:
         """Return the class of this sensor."""
-        return 'motion'
+        return DEVICE_CLASS_MOTION
 
     @property
     def is_on(self) -> bool:
@@ -105,13 +111,30 @@ class HomematicipMotionDetector(HomematicipGenericDevice, BinarySensorDevice):
         return self._device.motionDetected
 
 
+class HomematicipPresenceDetector(HomematicipGenericDevice,
+                                  BinarySensorDevice):
+    """Representation of a HomematicIP Cloud presence detector."""
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this sensor."""
+        return DEVICE_CLASS_PRESENCE
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if presence is detected."""
+        if hasattr(self._device, 'sabotage') and self._device.sabotage:
+            return True
+        return self._device.presenceDetected
+
+
 class HomematicipSmokeDetector(HomematicipGenericDevice, BinarySensorDevice):
     """Representation of a HomematicIP Cloud smoke detector."""
 
     @property
     def device_class(self) -> str:
         """Return the class of this sensor."""
-        return 'smoke'
+        return DEVICE_CLASS_SMOKE
 
     @property
     def is_on(self) -> bool:
@@ -126,7 +149,7 @@ class HomematicipWaterDetector(HomematicipGenericDevice, BinarySensorDevice):
     @property
     def device_class(self) -> str:
         """Return the class of this sensor."""
-        return 'moisture'
+        return DEVICE_CLASS_MOISTURE
 
     @property
     def is_on(self) -> bool:
@@ -162,7 +185,7 @@ class HomematicipRainSensor(HomematicipGenericDevice, BinarySensorDevice):
     @property
     def device_class(self) -> str:
         """Return the class of this sensor."""
-        return 'moisture'
+        return DEVICE_CLASS_MOISTURE
 
     @property
     def is_on(self) -> bool:
@@ -180,7 +203,7 @@ class HomematicipSunshineSensor(HomematicipGenericDevice, BinarySensorDevice):
     @property
     def device_class(self) -> str:
         """Return the class of this sensor."""
-        return 'light'
+        return DEVICE_CLASS_LIGHT
 
     @property
     def is_on(self) -> bool:
@@ -208,7 +231,7 @@ class HomematicipBatterySensor(HomematicipGenericDevice, BinarySensorDevice):
     @property
     def device_class(self) -> str:
         """Return the class of this sensor."""
-        return 'battery'
+        return DEVICE_CLASS_BATTERY
 
     @property
     def is_on(self) -> bool:
@@ -229,7 +252,7 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice,
     @property
     def device_class(self) -> str:
         """Return the class of this sensor."""
-        return 'safety'
+        return DEVICE_CLASS_SAFETY
 
     @property
     def available(self) -> bool:
