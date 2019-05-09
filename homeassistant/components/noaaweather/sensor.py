@@ -96,7 +96,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pynws==0.5', 'metar==1.7.0']
+REQUIREMENTS = ['pynws==0.6', 'metar==1.7.0']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -4,5 +4,5 @@
   "documentation": "https://www.home-assistant.io/components/noaaweather",
   "dependencies": [],
   "codeowners": ["@rewsssiestedbo"],
-  "requirements": ["pynws==0.5", "metar==1.7.0"]
+  "requirements": ["pynws==0.6", "metar==1.7.0"]
 }
