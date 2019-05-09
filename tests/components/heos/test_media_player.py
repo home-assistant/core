@@ -103,18 +103,45 @@ async def test_updates_start_from_signals(
     # Test controller player change updates
     player.available = False
     player.heos.dispatcher.send(
-        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_PLAYERS_CHANGED)
+        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_PLAYERS_CHANGED, {})
     await hass.async_block_till_done()
     state = hass.states.get('media_player.test_player')
     assert state.state == STATE_UNAVAILABLE
 
-    # Test heos events update
+
+async def test_updates_from_connection_event(
+        hass, config_entry, config, controller, input_sources, caplog):
+    """Tests player updates from connection event after connection failure."""
+    # Connected
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
     player.available = True
     player.heos.dispatcher.send(
         const.SIGNAL_HEOS_EVENT, const.EVENT_CONNECTED)
     await hass.async_block_till_done()
     state = hass.states.get('media_player.test_player')
-    assert state.state == STATE_PLAYING
+    assert state.state == STATE_IDLE
+    assert player.refresh.call_count == 1
+
+    # Connected handles refresh failure
+    player.reset_mock()
+    player.refresh.side_effect = CommandError(None, "Failure", 1)
+    player.heos.dispatcher.send(
+        const.SIGNAL_HEOS_EVENT, const.EVENT_CONNECTED)
+    await hass.async_block_till_done()
+    state = hass.states.get('media_player.test_player')
+    assert player.refresh.call_count == 1
+    assert "Unable to refresh player" in caplog.text
+
+    # Disconnected
+    player.reset_mock()
+    player.available = False
+    player.heos.dispatcher.send(
+        const.SIGNAL_HEOS_EVENT, const.EVENT_DISCONNECTED)
+    await hass.async_block_till_done()
+    state = hass.states.get('media_player.test_player')
+    assert state.state == STATE_UNAVAILABLE
+    assert player.refresh.call_count == 0
 
 
 async def test_updates_from_sources_updated(
@@ -131,7 +158,7 @@ async def test_updates_from_sources_updated(
 
     input_sources.clear()
     player.heos.dispatcher.send(
-        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_SOURCES_CHANGED)
+        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_SOURCES_CHANGED, {})
     await event.wait()
     source_list = hass.data[DOMAIN][DATA_SOURCE_MANAGER].source_list
     assert len(source_list) == 2
@@ -154,7 +181,7 @@ async def test_updates_from_user_changed(
     controller.is_signed_in = False
     controller.signed_in_username = None
     player.heos.dispatcher.send(
-        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_USER_CHANGED)
+        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_USER_CHANGED, None)
     await event.wait()
     source_list = hass.data[DOMAIN][DATA_SOURCE_MANAGER].source_list
     assert len(source_list) == 1

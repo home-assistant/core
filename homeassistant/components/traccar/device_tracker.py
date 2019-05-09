@@ -170,7 +170,7 @@ class TraccarScanner:
         if events is not None:
             for event in events:
                 device_name = next((
-                    dev.get('name') for dev in self._api.devices()
+                    dev.get('name') for dev in self._api.devices
                     if dev.get('id') == event['deviceId']), None)
                 self._hass.bus.async_fire(
                     'traccar_' + self._event_types.get(event["type"]), {

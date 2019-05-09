@@ -911,12 +911,16 @@ class _MediaPlayerCapabilities(_AlexaEntity):
         return [_DisplayCategory.TV]
 
     def interfaces(self):
-        yield _AlexaPowerController(self.entity)
         yield _AlexaEndpointHealth(self.hass, self.entity)
 
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & media_player.const.SUPPORT_VOLUME_SET:
             yield _AlexaSpeaker(self.entity)
+
+        power_features = (media_player.SUPPORT_TURN_ON |
+                          media_player.SUPPORT_TURN_OFF)
+        if supported & power_features:
+            yield _AlexaPowerController(self.entity)
 
         step_volume_features = (media_player.const.SUPPORT_VOLUME_MUTE |
                                 media_player.const.SUPPORT_VOLUME_STEP)

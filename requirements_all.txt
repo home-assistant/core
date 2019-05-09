@@ -459,7 +459,7 @@ gearbest_parser==1.0.7
 geizhals==0.0.9
 
 # homeassistant.components.geniushub
-geniushub-client==0.3.6
+geniushub-client==0.4.5
 
 # homeassistant.components.geo_json_events
 # homeassistant.components.nsw_rural_fire_service_feed
@@ -548,7 +548,7 @@ hole==0.3.0
 holidays==0.9.10
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190424.0
+home-assistant-frontend==20190427.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.4
@@ -976,7 +976,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==3.2.0
+pychromecast==3.2.1
 
 # homeassistant.components.cmus
 pycmus==0.1.1
@@ -1073,7 +1073,7 @@ pygtt==1.1.2
 pyhaversion==2.2.1
 
 # homeassistant.components.heos
-pyheos==0.4.0
+pyheos==0.5.1
 
 # homeassistant.components.hikvision
 pyhik==0.2.2
@@ -1166,7 +1166,7 @@ pymonoprice==0.3
 pymusiccast==0.1.6
 
 # homeassistant.components.myq
-pymyq==1.2.0
+pymyq==1.2.1
 
 # homeassistant.components.mysensors
 pymysensors==0.18.0
@@ -1650,7 +1650,7 @@ steamodd==4.21
 stringcase==1.2.0
 
 # homeassistant.components.ecovacs
-sucks==0.9.3
+sucks==0.9.4
 
 # homeassistant.components.onvif
 suds-passworddigest-homeassistant==0.1.2a0.dev0

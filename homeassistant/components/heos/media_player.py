@@ -1,4 +1,5 @@
 """Denon HEOS Media Player."""
+import asyncio
 from functools import reduce, wraps
 import logging
 from operator import ior
@@ -47,7 +48,7 @@ def log_command_error(command: str):
             from pyheos import CommandError
             try:
                 await func(*args, **kwargs)
-            except CommandError as ex:
+            except (CommandError, asyncio.TimeoutError, ConnectionError) as ex:
                 _LOGGER.error("Unable to %s: %s", command, ex)
         return wrapper
     return decorator
@@ -77,7 +78,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
             const.CONTROL_PLAY_NEXT: SUPPORT_NEXT_TRACK
         }
 
-    async def _controller_event(self, event):
+    async def _controller_event(self, event, data):
         """Handle controller event."""
         from pyheos import const
         if event == const.EVENT_PLAYERS_CHANGED:
@@ -85,6 +86,13 @@ class HeosMediaPlayer(MediaPlayerDevice):
 
     async def _heos_event(self, event):
         """Handle connection event."""
+        from pyheos import CommandError, const
+        if event == const.EVENT_CONNECTED:
+            try:
+                await self._player.refresh()
+            except (CommandError, asyncio.TimeoutError, ConnectionError) as ex:
+                _LOGGER.error("Unable to refresh player %s: %s",
+                              self._player, ex)
         await self.async_update_ha_state(True)
 
     async def _player_update(self, player_id, event):

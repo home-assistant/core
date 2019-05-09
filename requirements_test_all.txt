@@ -136,7 +136,7 @@ hdate==0.8.7
 holidays==0.9.10
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190424.0
+home-assistant-frontend==20190427.0
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.13.0
@@ -217,7 +217,7 @@ pydeconz==54
 pydispatcher==2.0.5
 
 # homeassistant.components.heos
-pyheos==0.4.0
+pyheos==0.5.1
 
 # homeassistant.components.homematic
 pyhomematic==0.1.58
