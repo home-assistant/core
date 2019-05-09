@@ -10,7 +10,7 @@ from homeassistant.components.discovery import SERVICE_OCTOPRINT
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONTENT_TYPE_JSON, CONF_NAME, CONF_PATH,
     CONF_PORT, CONF_SSL, TEMP_CELSIUS, CONF_MONITORED_CONDITIONS, CONF_SENSORS,
-    CONF_BINARY_SENSORS, CONF_ENTITY_ID)
+    CONF_BINARY_SENSORS)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -71,7 +71,7 @@ SENSOR_TYPES = {
     "Time Elapsed": ['job', ['progress', 'printTime'],
                      'seconds', 'mdi:clock-start'],
     "Job File": ['job', ['job', 'file', 'display'],
-                         None, 'mdi:file'],
+                 None, 'mdi:file'],
 }
 
 SENSOR_SCHEMA = vol.Schema({
