@@ -164,7 +164,7 @@ def setup(hass, config):
         if port is not None:
             json_string += ", \"port\": \"{}\"".format(port)
         if baudrate is not None:
-            json_string += ", \"baudrate\": \"{}\"".format(baudrate)
+            json_string += ", \"baudrate\": {}".format(baudrate)
         if printer_profile is not None:
             json_string += ", \"printerProfile\": \"{}\"".format(
                 printer_profile)
