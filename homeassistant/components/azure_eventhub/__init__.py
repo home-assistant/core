@@ -7,7 +7,8 @@ from typing import Any, Dict
 import voluptuous as vol
 
 from homeassistant.const import (
-    EVENT_STATE_CHANGED, STATE_UNAVAILABLE, STATE_UNKNOWN)
+    EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED, STATE_UNAVAILABLE,
+    STATE_UNKNOWN)
 from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
@@ -31,9 +32,9 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
+async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     """Activate Azure EH component."""
-    from azure.eventhub import EventData, EventHubClientAsync, AsyncSender
+    from azure.eventhub import EventData, EventHubClientAsync
 
     config = yaml_config[DOMAIN]
     event_hub_address = config[CONF_EVENT_HUB_ADDRESS]
@@ -48,12 +49,12 @@ def setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
         username=event_hub_sas_policy,
         password=event_hub_sas_key)
 
-    sender = client.add_async_sender()
-    client.run_async()
+    async_sender = client.add_async_sender()
+    await client.run_async()
 
     encoder = DateTimeJSONEncoder()
 
-    async def send_to_eventhub(event: Event):
+    async def async_send_to_eventhub(event: Event):
         """Send states to Pub/Sub."""
         state = event.data.get('new_state')
         if (state is None
@@ -67,10 +68,15 @@ def setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
                 default=encoder.encode
             ).encode('utf-8')
         )
+        await async_sender.send(event_data)
 
-        await sender.send(event_data)
+    async def async_shutdown(event: Event):
+        """Shut down the thread."""
+        await client.stop()
 
-    hass.bus.listen(EVENT_STATE_CHANGED, send_to_eventhub)
+    hass.bus.async_listen(EVENT_STATE_CHANGED, async_send_to_eventhub)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_shutdown)
+
     return True
 
 
