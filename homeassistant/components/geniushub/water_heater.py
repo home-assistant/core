@@ -87,6 +87,11 @@ class GeniusWaterHeater(WaterHeaterDevice):
         return {'status': {k: v for k, v in tmp if k in GH_STATE_ATTRS}}
 
     @property
+    def should_poll(self) -> bool:
+        """Return False as the geniushub devices should not be polled."""
+        return False
+
+    @property
     def current_temperature(self):
         """Return the current temperature."""
         return self._boiler.temperature

@@ -91,7 +91,7 @@ class GeniusClimateZone(ClimateDevice):
 
     @property
     def should_poll(self) -> bool:
-        """Return False as the geniushub zones should never be polled."""
+        """Return False as the geniushub devices should not be polled."""
         return False
 
     @property
