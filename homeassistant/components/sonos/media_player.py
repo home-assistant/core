@@ -25,7 +25,7 @@ from homeassistant.util.dt import utcnow
 
 from . import (
     CONF_ADVERTISE_ADDR, CONF_HOSTS, CONF_INTERFACE_ADDR,
-    DOMAIN as SONOS_DOMAIN,
+    DATA_SERVICE_EVENT, DOMAIN as SONOS_DOMAIN,
     ATTR_ALARM_ID, ATTR_ENABLED, ATTR_INCLUDE_LINKED_ZONES, ATTR_MASTER,
     ATTR_NIGHT_SOUND, ATTR_SLEEP_TIME, ATTR_SPEECH_ENHANCE, ATTR_TIME,
     ATTR_VOLUME, ATTR_WITH_GROUP,
@@ -154,6 +154,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     call = entity.set_option
 
                 hass.async_add_executor_job(call, data)
+
+        # We are ready for the next service call
+        hass.data[DATA_SERVICE_EVENT].set()
 
     async_dispatcher_connect(hass, SONOS_DOMAIN, async_service_handle)
 
