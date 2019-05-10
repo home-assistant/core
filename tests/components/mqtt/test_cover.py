@@ -11,7 +11,7 @@ from homeassistant.const import (
     SERVICE_CLOSE_COVER_TILT, SERVICE_OPEN_COVER, SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION, SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER, STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE,
-    STATE_UNKNOWN)
+    SERVICE_TOGGLE, SERVICE_TOGGLE_COVER_TILT, STATE_UNKNOWN)
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -171,8 +171,8 @@ async def test_optimistic_state_change(hass, mqtt_mock):
     assert state.state == STATE_OPEN
 
     await hass.services.async_call(
-    cover.DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: 'cover.test'},
-    blocking=True)
+        cover.DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: 'cover.test'},
+        blocking=True)
 
     mqtt_mock.async_publish.assert_called_once_with(
         'command-topic', 'CLOSE', 0, False)
@@ -551,15 +551,15 @@ async def test_tilt_via_invocation_defaults(hass, mqtt_mock):
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-    cover.DOMAIN, SERVICE_CLOSE_COVER_TILT, {ATTR_ENTITY_ID: 'cover.test'},
-    blocking=True)
+        cover.DOMAIN, SERVICE_CLOSE_COVER_TILT, {ATTR_ENTITY_ID: 'cover.test'},
+        blocking=True)
 
     mqtt_mock.async_publish.assert_called_once_with(
         'tilt-command-topic', 0, 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     # Close tilt status would be received from device when non-optimistic
-    fire_mqtt_message(hass, 'tilt-status-topic', '0')
+    async_fire_mqtt_message(hass, 'tilt-status-topic', '0')
     hass.block_till_done()
 
     current_cover_tilt_position = hass.states.get(
@@ -576,7 +576,7 @@ async def test_tilt_via_invocation_defaults(hass, mqtt_mock):
     mqtt_mock.async_publish.reset_mock()
 
     # Open tilt status would be received from device when non-optimistic
-    fire_mqtt_message(hass, 'tilt-status-topic', '100')
+    async_fire_mqtt_message(hass, 'tilt-status-topic', '100')
     hass.block_till_done()
 
     current_cover_tilt_position = hass.states.get(
@@ -630,7 +630,7 @@ async def test_tilt_given_value(hass, mqtt_mock):
     mqtt_mock.async_publish.reset_mock()
 
     # Close tilt status would be received from device when non-optimistic
-    fire_mqtt_message(hass, 'tilt-status-topic', '25')
+    async_fire_mqtt_message(hass, 'tilt-status-topic', '25')
     hass.block_till_done()
 
     current_cover_tilt_position = hass.states.get(
@@ -647,7 +647,7 @@ async def test_tilt_given_value(hass, mqtt_mock):
     mqtt_mock.async_publish.reset_mock()
 
     # Open tilt status would be received from device when non-optimistic
-    fire_mqtt_message(hass, 'tilt-status-topic', '80')
+    async_fire_mqtt_message(hass, 'tilt-status-topic', '80')
     hass.block_till_done()
 
     current_cover_tilt_position = hass.states.get(
@@ -665,7 +665,7 @@ async def test_tilt_given_value(hass, mqtt_mock):
 
 async def test_tilt_given_value_optimistic(hass, mqtt_mock):
     """Test tilting to a given value."""
-    assert setup_component(hass, cover.DOMAIN, {
+    assert async_setup_component(hass, cover.DOMAIN, {
         cover.DOMAIN: {
             'platform': 'mqtt',
             'name': 'test',
@@ -710,7 +710,7 @@ async def test_tilt_given_value_optimistic(hass, mqtt_mock):
 
 async def test_tilt_given_value_altered_range(hass, mqtt_mock):
     """Test tilting to a given value."""
-    assert setup_component(hass, cover.DOMAIN, {
+    assert async_setup_component(hass, cover.DOMAIN, {
         cover.DOMAIN: {
             'platform': 'mqtt',
             'name': 'test',
