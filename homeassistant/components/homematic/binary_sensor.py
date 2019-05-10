@@ -37,13 +37,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     battery_devices = discovery_info[ATTR_BATTERY_DEVICES]
 
     for conf in discovery_info[ATTR_DISCOVER_DEVICES]:
+        new_device = None
+
         if battery_devices:
             battery_device = conf.get(ATTR_LOWBAT) or conf.get(ATTR_LOW_BAT)
             if battery_device:
                 new_device = HMBatterySensor(conf)
         else:
             new_device = HMBinarySensor(conf)
-        devices.append(new_device)
+
+        if new_device is not None:
+            devices.append(new_device)
 
     add_entities(devices)
 
