@@ -1,8 +1,7 @@
 """Support for Genius Hub sensor devices."""
 import logging
 
-from homeassistant.const import (
-    DEVICE_CLASS_BATTERY, DEVICE_CLASS_ILLUMINANCE)
+from homeassistant.const import DEVICE_CLASS_BATTERY
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -39,7 +38,6 @@ class GeniusBattery(Entity):
         self._device = device
 
         self._name = '{} {}'.format(device.type, device.id)
-        self._device_class = DEVICE_CLASS_BATTERY
         self._unit_of_measurement = '%'
 
     async def async_added_to_hass(self):
@@ -58,7 +56,7 @@ class GeniusBattery(Entity):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        return self._device_class
+        return DEVICE_CLASS_BATTERY
 
     @property
     def unit_of_measurement(self):
@@ -80,7 +78,6 @@ class GeniusBattery(Entity):
         """Return the device state attributes."""
         attrs = {}
         attrs['location'] = self._device.assignedZones[0]['name']
-#       attrs['lastCommunication'] = 0  # TODO: add this
 
         state = {k: v for k, v in self._device.state.items()
                  if k in GH_STATE_ATTRS}

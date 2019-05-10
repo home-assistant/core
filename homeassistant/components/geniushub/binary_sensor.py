@@ -1,11 +1,9 @@
 """Support for Genius Hub binary_sensor devices."""
 import logging
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, DEVICE_CLASS_POWER)
+from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN
 
@@ -68,7 +66,6 @@ class GeniusSwitch(BinarySensorDevice):
         """Return the device state attributes."""
         attrs = {}
         attrs['location'] = self._device.assignedZones[0]['name']
-#       attrs['lastCommunication'] = 0  # TODO: add this
 
         state = {k: v for k, v in self._device.state.items()
                  if k in GH_STATE_ATTRS}
