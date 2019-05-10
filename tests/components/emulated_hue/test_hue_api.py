@@ -804,8 +804,21 @@ def perform_put_light_state(hass_hue, client, entity_id, is_on,
 
 async def test_external_ip_blocked(hue_client):
     """Test external IP blocked."""
+    getUrls = ['/api/(null)', '/api/username/groups',
+               '/api/username', '/api/username/lights',
+               '/api/username/lights/light.ceiling_lights']
+    postUrls = ['/api']
+    putUrls = ['/api/username/lights/light.ceiling_lights/state']
     with patch('homeassistant.components.http.real_ip.ip_address',
                return_value=ip_address('45.45.45.45')):
-        result = await hue_client.get('/api/username/lights')
+        for getUrl in getUrls:
+            result = await hue_client.get(getUrl)
+            assert result.status == 400
 
-    assert result.status == 400
+        for postUrl in postUrls:
+            result = await hue_client.post(postUrl)
+            assert result.status == 400
+
+        for putUrl in putUrls:
+            result = await hue_client.put(putUrl)
+            assert result.status == 400
