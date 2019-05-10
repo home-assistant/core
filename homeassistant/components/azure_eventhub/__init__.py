@@ -17,14 +17,16 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'azure_eventhub'
 
-CONF_EVENT_HUB_ADDRESS = 'event_hub_address'
+CONF_EVENT_HUB_NAMESPACE = 'event_hub_namespace'
+CONF_EVENT_HUB_INSTANCE_NAME = 'event_hub_instance_name'
 CONF_EVENT_HUB_SAS_POLICY = 'event_hub_sas_policy'
 CONF_EVENT_HUB_SAS_KEY = 'event_hub_sas_key'
 CONF_FILTER = 'filter'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_EVENT_HUB_ADDRESS): cv.string,
+        vol.Required(CONF_EVENT_HUB_NAMESPACE): cv.string,
+        vol.Required(CONF_EVENT_HUB_INSTANCE_NAME): cv.string,
         vol.Required(CONF_EVENT_HUB_SAS_POLICY): cv.string,
         vol.Required(CONF_EVENT_HUB_SAS_KEY): cv.string,
         vol.Required(CONF_FILTER): FILTER_SCHEMA,
@@ -37,9 +39,11 @@ async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     from azure.eventhub import EventData, EventHubClientAsync
 
     config = yaml_config[DOMAIN]
-    event_hub_address = config[CONF_EVENT_HUB_ADDRESS]
     event_hub_sas_policy = config[CONF_EVENT_HUB_SAS_POLICY]
     event_hub_sas_key = config[CONF_EVENT_HUB_SAS_KEY]
+
+    event_hub_address = f"amqps://{config[CONF_EVENT_HUB_NAMESPACE]}\
+        .servicebus.windows.net/{config[CONF_EVENT_HUB_INSTANCE_NAME]}"
 
     entities_filter = config[CONF_FILTER]
 
