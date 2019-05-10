@@ -86,8 +86,7 @@ HM_DEVICE_TYPES = {
         'SmartwareMotion', 'IPWeatherSensorPlus', 'MotionIPV2', 'WaterIP',
         'IPMultiIO', 'TiltIP', 'IPShutterContactSabotage'],
     DISCOVER_COVER: ['Blind', 'KeyBlind', 'IPKeyBlind', 'IPKeyBlindTilt'],
-    DISCOVER_LOCKS: ['KeyMatic'],
-    DISCOVER_BATTERY: ['HmIP-WRC6', 'HmIP-RC8'],
+    DISCOVER_LOCKS: ['KeyMatic']
 }
 
 HM_IGNORE_DISCOVERY_NODE = [
@@ -497,7 +496,8 @@ def _get_devices(hass, discovery_type, keys, interface):
         metadata = {}
 
         # Class not supported by discovery type
-        if class_name not in HM_DEVICE_TYPES[discovery_type]:
+        if discovery_type != DISCOVER_BATTERY and \
+                class_name not in HM_DEVICE_TYPES[discovery_type]:
             continue
 
         # Load metadata needed to generate a parameter list
@@ -506,7 +506,12 @@ def _get_devices(hass, discovery_type, keys, interface):
         elif discovery_type == DISCOVER_BINARY_SENSORS:
             metadata.update(device.BINARYNODE)
         elif discovery_type == DISCOVER_BATTERY:
-            #FIXME: add only ATTRIBUTES / filter low/bat
+            if 'lowbat' in device.ATTRIBUTENODE:
+                metadata.update({'lowbat': device.ATTRIBUTENODE['lowbat']})
+            elif 'low_bat' in device.ATTRIBUTENODE:
+                 metadata.update({'low_bat': device.ATTRIBUTENODE['low_bat']})
+            else:
+                continue
         else:
             metadata.update({None: device.ELEMENT})
 
