@@ -1,6 +1,8 @@
 """Define IQVIA constants."""
 DOMAIN = 'iqvia'
 
+CONF_ZIP_CODE = 'zip_code'
+
 DATA_CLIENT = 'client'
 DATA_LISTENER = 'listener'
 
