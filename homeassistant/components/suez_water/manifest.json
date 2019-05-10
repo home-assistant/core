@@ -4,5 +4,5 @@
   "documentation": "https://github.com/home-assistant/example-custom-config/tree/master/custom_components/example_sensor/",
   "dependencies": [],
   "codeowners": [],
-  "requirements": ["requests", "regex", "voluptuous", "datetime"]
+  "requirements": ["requests==2.21.0", "regex==2019.4.14", "voluptuous==0.11.5", "datetime==4.3"]
 }
