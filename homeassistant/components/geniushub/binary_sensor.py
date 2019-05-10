@@ -65,7 +65,7 @@ class GeniusSwitch(BinarySensorDevice):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        last_comms = self._device._info_raw['childValues']['lastComms']['val']
+        last_comms = self._device._info_raw['childValues']['lastComms']['val']  # noqa: pylint: disable=protected-access
         last_comms = strftime('%Y-%m-%d %H:%M:%S', localtime(last_comms))
 
         attrs = {}
