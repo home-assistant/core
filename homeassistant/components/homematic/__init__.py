@@ -464,7 +464,7 @@ def _system_callback_handler(hass, config, src, *args):
                     ('sensor', DISCOVER_SENSORS),
                     ('climate', DISCOVER_CLIMATE),
                     ('lock', DISCOVER_LOCKS),
-                    ('binary_sensor', DISCOVER_BATTERIE)):
+                    ('binary_sensor', DISCOVER_BATTERY)):
                 # Get all devices of a specific type
                 found_devices = _get_devices(
                     hass, discovery_type, addresses, interface)
