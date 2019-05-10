@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import remote_rpi_gpio
+from .. import remote_rpi_gpio
 from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 from homeassistant.const import DEVICE_DEFAULT_NAME, CONF_HOST
 
@@ -31,14 +31,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Remote Raspberry PI GPIO devices."""
-    if discovery_info is None:
-        address = config[CONF_HOST]
-        invert_logic = config[CONF_INVERT_LOGIC]
-        ports = config[CONF_PORTS]
-    else:
-        address = discovery_info['address']
-        invert_logic = discovery_info['invert_logic']
-        ports = discovery_info['switches']
+#    if discovery_info is None:
+    address = config[CONF_HOST]
+    invert_logic = config[CONF_INVERT_LOGIC]
+    ports = config[CONF_PORTS]
+#    else:
+#        address = discovery_info['address']
+#        invert_logic = discovery_info['invert_logic']
+#        ports = discovery_info['switches']
 
     devices = []
     for port, name in ports.items():
