@@ -42,7 +42,7 @@ ATTR_TIME = 'time'
 ATTR_UNIQUE_ID = 'unique_id'
 ATTR_PARAMSET_KEY = 'paramset_key'
 ATTR_PARAMSET = 'paramset'
-
+ATTR_DISCOVERY_TYPE = 'discovery_type'
 
 EVENT_KEYPRESS = 'homematic.keypress'
 EVENT_IMPULSE = 'homematic.impulse'
@@ -473,7 +473,7 @@ def _system_callback_handler(hass, config, src, *args):
                 if found_devices:
                     discovery.load_platform(hass, component_name, DOMAIN, {
                         ATTR_DISCOVER_DEVICES: found_devices,
-                        ATTR_DISCOVER_TYPE: discovery_type,
+                        ATTR_DISCOVERY_TYPE: discovery_type,
                     }, config)
 
     # Homegear error message
@@ -509,7 +509,7 @@ def _get_devices(hass, discovery_type, keys, interface):
             if 'lowbat' in device.ATTRIBUTENODE:
                 metadata.update({'lowbat': device.ATTRIBUTENODE['lowbat']})
             elif 'low_bat' in device.ATTRIBUTENODE:
-                 metadata.update({'low_bat': device.ATTRIBUTENODE['low_bat']})
+                metadata.update({'low_bat': device.ATTRIBUTENODE['low_bat']})
             else:
                 continue
         else:

@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.homematic import (
-    ATTR_DESCOVER_TYPE, DISCOVER_BATTERY)
+    ATTR_DISCOVERY_TYPE, DISCOVER_BATTERY)
 from homeassistant.const import DEVICE_CLASS_BATTERY
 
 from . import ATTR_DISCOVER_DEVICES, HMDevice
@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     devices = []
     for conf in discovery_info[ATTR_DISCOVER_DEVICES]:
-        if discovery_info[ATTR_DESCOVER_TYPE] == DISCOVER_BATTERY:
+        if discovery_info[ATTR_DISCOVERY_TYPE] == DISCOVER_BATTERY:
             devices.append(HMBatterySensor(conf))
         else:
             devices.append(HMBinarySensor(conf))
