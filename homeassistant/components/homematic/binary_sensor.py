@@ -2,8 +2,9 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.homematic import ATTR_BATTERY_DEVICES
-from homeassistant.const import STATE_UNKNOWN, DEVICE_CLASS_BATTERY
+from homeassistant.components.homematic import (
+    ATTR_DESCOVER_TYPE, DISCOVER_BATTERIE)
+from homeassistant.const import DEVICE_CLASS_BATTERY
 
 from . import ATTR_DISCOVER_DEVICES, HMDevice
 
@@ -34,20 +35,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     devices = []
-    battery_devices = discovery_info[ATTR_BATTERY_DEVICES]
-
     for conf in discovery_info[ATTR_DISCOVER_DEVICES]:
-        new_device = None
-
-        if battery_devices:
-            battery_device = conf.get(ATTR_LOWBAT) or conf.get(ATTR_LOW_BAT)
-            if battery_device:
-                new_device = HMBatterySensor(conf)
+        if discovery_info[ATTR_DESCOVER_TYPE] == DISCOVER_BATTERIE:
+            devices.append(HMBatterySensor(conf))
         else:
-            new_device = HMBinarySensor(conf)
-
-        if new_device is not None:
-            devices.append(new_device)
+            devices.append(HMBinarySensor(conf))
 
     add_entities(devices)
 
@@ -74,7 +66,7 @@ class HMBinarySensor(HMDevice, BinarySensorDevice):
         """Generate the data dictionary (self._data) from metadata."""
         # Add state to data struct
         if self._state:
-            self._data.update({self._state: STATE_UNKNOWN})
+            self._data.update({self._state: None})
 
 
 class HMBatterySensor(HMDevice, BinarySensorDevice):
@@ -88,13 +80,10 @@ class HMBatterySensor(HMDevice, BinarySensorDevice):
     @property
     def is_on(self):
         """Return True if battery is low."""
-        is_on = self._data.get(ATTR_LOW_BAT, False) or self._data.get(
-            ATTR_LOWBAT, False
-        )
-        return is_on
+        return bool(self._data.get(self._state))
 
     def _init_data_struct(self):
         """Generate the data dictionary (self._data) from metadata."""
         # Add state to data struct
         if self._state:
-            self._data.update({self._state: STATE_UNKNOWN})
+            self._data.update({self._state: None})
