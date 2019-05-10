@@ -77,12 +77,13 @@ class ZWaveBaseEntity(Entity):
 
     async def node_removed(self):
         """Call when a node is removed from the Z-Wave network."""
+        await self.async_remove()
+
         registry = await async_get_registry(self.hass)
         if self.entity_id not in registry.entities:
             return
 
         registry.async_remove(self.entity_id)
-        await self.async_remove()
 
 
 class ZWaveNodeEntity(ZWaveBaseEntity):

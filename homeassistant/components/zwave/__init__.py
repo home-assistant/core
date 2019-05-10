@@ -382,13 +382,15 @@ async def async_setup_entry(hass, config_entry):
         _LOGGER.info("Node Removed: %s",
                      hass.data[DATA_DEVICES][node_key])
         for key in list(hass.data[DATA_DEVICES]):
-            if '{}-'.format(node_id) in key:
-                entity = hass.data[DATA_DEVICES][key]
-                _LOGGER.info('Removing Entity - value: %s - entity_id: %s',
-                             key, entity.entity_id)
-                asyncio.run_coroutine_threadsafe(entity.node_removed(),
-                                                 hass.loop)
-                del hass.data[DATA_DEVICES][key]
+            if not key.startswith('{}-'.format(node_id)):
+                continue
+
+            entity = hass.data[DATA_DEVICES][key]
+            _LOGGER.info('Removing Entity - value: %s - entity_id: %s',
+                         key, entity.entity_id)
+            asyncio.run_coroutine_threadsafe(entity.node_removed(),
+                                             hass.loop)
+            del hass.data[DATA_DEVICES][key]
 
         entity = hass.data[DATA_DEVICES][node_key]
         asyncio.run_coroutine_threadsafe(entity.node_removed(), hass.loop)
