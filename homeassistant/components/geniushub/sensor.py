@@ -1,7 +1,6 @@
 """Support for Genius Hub sensor devices."""
-from datetime import timedelta
 import logging
-from time import time
+from time import (localtime, strftime)
 
 from homeassistant.const import DEVICE_CLASS_BATTERY
 from homeassistant.core import callback
@@ -73,18 +72,17 @@ class GeniusBattery(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        _LOGGER.warn("AA %s", self._device._info.items())
         return self._device.state['batteryLevel']
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         last_comms = self._device._info_raw['childValues']['lastComms']['val']
-        last_comms = int(time() - last_comms)
+        last_comms = strftime('%Y-%m-%d %H:%M:%S', localtime(last_comms))
 
         attrs = {}
         attrs['location'] = self._device.assignedZones[0]['name']
-        attrs['lastCommunications'] = str(timedelta(seconds=last_comms))
+        attrs['lastCommunications'] = last_comms
 
         state = {k: v for k, v in self._device.state.items()
                  if k in GH_STATE_ATTRS}

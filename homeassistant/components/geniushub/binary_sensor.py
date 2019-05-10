@@ -1,7 +1,6 @@
 """Support for Genius Hub binary_sensor devices."""
-from datetime import timedelta
 import logging
-from time import time
+from time import (localtime, strftime)
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.core import callback
@@ -61,18 +60,17 @@ class GeniusSwitch(BinarySensorDevice):
     @property
     def is_on(self):
         """Return the status of the sensor."""
-        _LOGGER.warn("BB %s", self._device._info_raw.items())
         return self._device.state['outputOnOff']
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         last_comms = self._device._info_raw['childValues']['lastComms']['val']
-        last_comms = int(time() - last_comms)
+        last_comms = strftime('%Y-%m-%d %H:%M:%S', localtime(last_comms))
 
         attrs = {}
         attrs['location'] = self._device.assignedZones[0]['name']
-        attrs['lastCommunications'] = str(timedelta(seconds=last_comms))
+        attrs['lastCommunications'] = last_comms
 
         state = {k: v for k, v in self._device.state.items()
                  if k in GH_STATE_ATTRS}
