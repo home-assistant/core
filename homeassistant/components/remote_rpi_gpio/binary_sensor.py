@@ -5,7 +5,8 @@ import voluptuous as vol
 
 import requests
 
-from homeassistant.components import remote_rpi_gpio
+# from homeassistant.components import remote_rpi_gpio
+from .. import remote_rpi_gpio
 from homeassistant.const import CONF_HOST
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
@@ -39,18 +40,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Raspberry PI GPIO devices."""
-    if discovery_info is None:
-        address = config['host']
-        invert_logic = config[CONF_INVERT_LOGIC]
-        pull_mode = config[CONF_PULL_MODE]
-        ports = config['ports']
-        bouncetime = config[CONF_BOUNCETIME]/1000
-    else:
-        address = discovery_info['address']
-        pull_mode = discovery_info['pull_mode']
-        invert_logic = discovery_info['invert_logic']
-        bouncetime = discovery_info['bouncetime']/1000
-        ports = discovery_info['binary_sensors']
+#    if discovery_info is None:
+    address = config['host']
+    invert_logic = config[CONF_INVERT_LOGIC]
+    pull_mode = config[CONF_PULL_MODE]
+    ports = config['ports']
+    bouncetime = config[CONF_BOUNCETIME]/1000
+#    else:
+#        address = discovery_info['address']
+#        pull_mode = discovery_info['pull_mode']
+#        invert_logic = discovery_info['invert_logic']
+#        bouncetime = discovery_info['bouncetime']/1000
+#        ports = discovery_info['binary_sensors']
 
     devices = []
     for port_num, port_name in ports.items():
