@@ -301,9 +301,9 @@ class BookmarksData:
             if item is not None:
                 # delete the old bookmark
                 self.async_remove_bookmark(item['id'], True)
-                message = "Przesuwam zakładkę {}".format(name)
+                message = "Przesuwam zakładkę {}".format(full_name)
             else:
-                message = "Dodaję nową zakładkę {}".format(name)
+                message = "Dodaję nową zakładkę {}".format(full_name)
 
             # add the bookmark
             item = {
@@ -316,10 +316,11 @@ class BookmarksData:
             }
             self.bookmarks.append(item)
             self.hass.async_add_job(self.save, True)
-            self.hass.async_add_job(self.hass.services.async_call('ais_ai_service', 'say_it', {"text": message}))
+            # self.hass.async_add_job(self.hass.services.async_call('ais_ai_service', 'say_it', {"text": message}))
+            _LOGGER.info(message)
             return item
         else:
-            # type validation
+            # validation
             if source == ais_global.G_AN_FAVORITE:
                 message = "{}, {} jest już w ulubionych.".format(audio_type_pl, name)
                 self.hass.async_add_job(self.hass.services.async_call('ais_ai_service', 'say_it', {"text": message}))

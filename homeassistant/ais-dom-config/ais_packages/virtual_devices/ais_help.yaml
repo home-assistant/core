@@ -38,7 +38,7 @@ input_text:
     initial: ""
 input_select:
   ais_rss_help_topic:
-    name: 'Strona dokuemntacji:'
+    name: 'Strona dokumentacji:'
     options:
       - "-"
       - "Pierwsze kroki"

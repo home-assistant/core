@@ -123,7 +123,7 @@ class YouTubeData:
             if ais_ai.CURR_ENTITIE == 'input_text.ais_music_query' and ais_ai.CURR_BUTTON_CODE == 4:
                 ais_ai.set_curr_entity(self.hass, 'sensor.youtubelist')
                 ais_ai.CURR_ENTITIE_ENTERED = True
-                text = "Znaleziono: %s, wybierz pozycję która mam włączyć" % (str(len(list_info)))
+                text = "Znaleziono: %s, wybierz pozycję którą mam włączyć" % (str(len(list_info)))
             else:
                 text = "Znaleziono: %s, włączam pierwszy: %s" % (str(len(list_info)), list_info[0]["title"])
                 yield from self.hass.services.async_call('ais_yt_service', 'select_track_uri', {"id": 0})

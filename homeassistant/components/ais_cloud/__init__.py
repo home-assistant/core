@@ -497,8 +497,7 @@ class AisColudData:
 
         # check if the change was done form remote
         import homeassistant.components.ais_ai_service as ais_ai
-        if (ais_ai.CURR_ENTITIE == 'input_select.podcast_type'
-                and ais_ai.CURR_BUTTON_CODE == 23):
+        if ais_ai.CURR_ENTITIE == 'input_select.podcast_type' and ais_ai.CURR_BUTTON_CODE == 23:
             ais_ai.set_curr_entity(self.hass, 'sensor.podcastnamelist')
             self.hass.services.call('ais_ai_service', 'say_it', {"text": "Wybierz audycję"})
 
@@ -1071,6 +1070,11 @@ class AisColudData:
         from bs4 import BeautifulSoup
         rss_help_text = BeautifulSoup(rss_help_text, "lxml").text
 
-        self.hass.services.call('ais_ai_service', 'say_it', { "text": "Czytam stronę pomocy. " + rss_help_text })
         self.hass.states.async_set(
-            'sensor.aisrsshelptext', rss_help_text[:200], {'text': "" + response.text, 'friendly_name': "Tekst strony"})
+            'sensor.aisrsshelptext', rss_help_text[:200],
+            {'text': "" + response.text, 'friendly_name': "Tekst strony"})
+        # say only if from remote
+        import homeassistant.components.ais_ai_service as ais_ai
+        #  binary_sensor.selected_entity / binary_sensor.ais_remote_button
+        if ais_ai.CURR_ENTITIE == 'input_select.ais_rss_help_topic' and ais_ai.CURR_BUTTON_CODE == 23:
+            self.hass.services.call('ais_ai_service', 'say_it', {"text": "Czytam stronę pomocy. " + rss_help_text})
