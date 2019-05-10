@@ -44,7 +44,7 @@ DOMAIN = 'remote_rpi_gpio'
 def setup(hass: HomeAssistant, config):
     """Set up the Raspberry Pi Remote GPIO component."""
 #    if DOMAIN not in config:
-        # Skip setup if no configuration is present
+# Skip setup if no configuration is present
 #        return True
 
 #    for remote_gpio in config[DOMAIN]:
