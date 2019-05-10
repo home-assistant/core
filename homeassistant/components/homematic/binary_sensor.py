@@ -80,7 +80,7 @@ class HMBatterySensor(HMDevice, BinarySensorDevice):
     @property
     def is_on(self):
         """Return True if battery is low."""
-        return bool(self._data.get(self._state))
+        return bool(self._hm_get_state())
 
     def _init_data_struct(self):
         """Generate the data dictionary (self._data) from metadata."""
