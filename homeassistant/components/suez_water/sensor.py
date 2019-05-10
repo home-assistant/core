@@ -1,12 +1,13 @@
-from homeassistant.const import VOLUME_LITERS
-from homeassistant.helpers.entity import Entity
-import logging
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+"""Sensor for Suez Water Consumption data."""
 from datetime import timedelta
+import logging
+
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, VOLUME_LITERS
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 CONF_COUNTER_ID = 'counter_id'
@@ -20,24 +21,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COUNTER_ID): cv.string,
 })
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the sensor platform."""
-    
+    """Set up the sensor platform."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     counter_id = config.get(CONF_COUNTER_ID)
-    _LOGGER.debug("Username is %s and counter_id is %s."
-        , username, counter_id)
+    _LOGGER.debug(
+        "Username is %s and counter_id is %s.",
+        username, counter_id
+        )
     add_devices([SuezClient(username, password, counter_id)], True)
 
 
 class SuezClient(Entity):
-    """Global variables"""
+    """Global variables."""
+
     BASE_URI = 'https://www.toutsurmoneau.fr'
     API_ENDPOINT_LOGIN = '/mon-compte-en-ligne/je-me-connecte'
     API_ENDPOINT_DATA = '/mon-compte-en-ligne/statJData/'
     API_ENDPOINT_HISTORY = '/mon-compte-en-ligne/statMData/'
-
 
     """Representation of a Sensor."""
 
@@ -53,9 +56,8 @@ class SuezClient(Entity):
         self.data = {}
         self.success = False
         self._state = 0
-        self._icon = "mdi:water-pump"
+        self._icon = 'mdi:water-pump'
 
-        
     @property
     def name(self):
         """Return the name of the sensor."""
@@ -81,64 +83,57 @@ class SuezClient(Entity):
         """Return the icon of the sensor."""
         return self._icon
 
-    #@Throttle(MIN_TIME_BETWEEN_UPDATES)
     def _get_token(self):
         import requests
         import re
-        _LOGGER.debug("Début _get_token")
         headers = {
-            "Accept" : "application/json, text/javascript, */*; q=0.01",
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Accept-Language" : "fr,fr-FR;q=0.8,en;q=0.6",
-            "User-Agent" : "curl/7.54.0",
-            "Connection": "keep-alive",
-            "Cookie":''
+            'Accept': "application/json, text/javascript, */*; q=0.01",
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept-Language': 'fr,fr-FR;q=0.8,en;q=0.6',
+            'User-Agent': 'curl/7.54.0',
+            'Connection': 'keep-alive',
+            'Cookie': ''
         }
 
         url = self.BASE_URI+self.API_ENDPOINT_LOGIN
-                        
+
         response = requests.get(url, headers=headers)
-        
-        headers["Cookie"] = ""        
+
+        headers['Cookie'] = ""
         for key in response.cookies.get_dict():
-            # Concatenate cookies
-            if headers["Cookie"]:
-                headers["Cookie"] += "; "
-            headers["Cookie"] += key + "=" + response.cookies[key]
-        
-        ###get token
+            if headers['Cookie']:
+                headers['Cookie'] += "; "
+            headers['Cookie'] += key + "=" + response.cookies[key]
+
+        """get token"""
         p = re.compile('_csrf_token" value="(.*)" />')
         result = p.search(response.content.decode('utf-8'))
         self._token = result.group(1)
-        _LOGGER.debug("Le token est %s", self._token)
+        _LOGGER.debug("Le token is %s", self._token)
         self._headers = headers
-        
+
     def _get_cookie(self):
         import requests
-        _LOGGER.debug("Début _get_cookie")
         login = requests.Session()
         data = {
                     '_username': self._username,
                     '_password': self._password,
                     '_csrf_token': self._token,
                     'signin[username]': self._username,
-                    'signin[password]' : None,
+                    'signin[password]': None,
                     'tsme_user_login[_username]': self._username,
                     'tsme_user_login[_password]': self._password
                 }
         url = self.BASE_URI+self.API_ENDPOINT_LOGIN
         login.post(url, headers=self._headers, data=data)
-        _LOGGER.debug("Le cookie est %s", login.cookies.get("eZSESSID"))
-        self._headers["Cookie"] = ''
-        self._headers["Cookie"] = 'eZSESSID='+login.cookies.get("eZSESSID")
+        _LOGGER.debug("Cookie is %s", login.cookies.get("eZSESSID"))
+        self._headers['Cookie'] = ''
+        self._headers['Cookie'] = 'eZSESSID='+login.cookies.get("eZSESSID")
 
-
-        
     def _fetch_data(self):
         """Fetch latest data from Suez."""
         import datetime
         import requests
-        _LOGGER.debug("Début _fetch_data")
         now = datetime.datetime.now()
         today_year = now.strftime("%Y")
         today_month = now.strftime("%m")
@@ -147,11 +142,13 @@ class SuezClient(Entity):
         yesterday_month = yesterday.strftime('%m')
         yesterday_day = yesterday.strftime('%d')
         url = self.BASE_URI+self.API_ENDPOINT_DATA
-        url += '{}/{}/{}'.format(yesterday_year, 
-            yesterday_month, self._counter_id)
-        
+        url += '{}/{}/{}'.format(
+            yesterday_year,
+            yesterday_month, self._counter_id
+            )
+
         data = requests.get(url, headers=self._headers)
-        
+
         try:
             self._state = int(float(data.json()[int(
                 yesterday_day)-1][1])*1000)
@@ -160,25 +157,25 @@ class SuezClient(Entity):
         except:
             _LOGGER.debug("Issue with this yesterday data")
             pass
-        
+
         try:
             if yesterday_month != today_month:
                 url = self.BASE_URI+self.API_ENDPOINT_DATA
-                url += '{}/{}/{}'.format(today_year, 
-                    today_month, self._counter_id)
+                url += '{}/{}/{}'.format(
+                    today_year,
+                    today_month, self._counter_id
+                    )
                 _LOGGER.debug("Getting data for previous month")
                 data = requests.get(url, headers=self._headers)
-            
-            self._attributes["thisMonthConsumption"] = {}    
+
+            self._attributes['thisMonthConsumption'] = {}
             for item in data.json():
-                self._attributes["thisMonthConsumption"][item[0]] = int(
+                self._attributes['thisMonthConsumption'][item[0]] = int(
                     float(item[1])*1000)
-            
+
         except:
             _LOGGER.debug("Issue with this month data")
             pass
-        
-        #getting history data
 
         try:
             if int(today_month) == 1:
@@ -189,15 +186,17 @@ class SuezClient(Entity):
                 last_month_year = today_year
 
             url = self.BASE_URI+self.API_ENDPOINT_DATA
-            url += '{}/{}/{}'.format(last_month_year, last_month, 
-                self._counter_id)
-            
+            url += '{}/{}/{}'.format(
+                last_month_year, last_month,
+                self._counter_id
+                )
+
             _LOGGER.debug("Getting data for previous month")
             data = requests.get(url, headers=self._headers)
-            
-            self._attributes["previousMonthConsumption"] = {}    
+
+            self._attributes['previousMonthConsumption'] = {}
             for item in data.json():
-                self._attributes["previousMonthConsumption"][item[0]] = int(
+                self._attributes['previousMonthConsumption'][item[0]] = int(
                     float(item[1])*1000)
 
         except:
@@ -228,6 +227,7 @@ class SuezClient(Entity):
 
         except:
             _LOGGER.debug("Issue with history data")
+            raise
 
     def update(self):
         """Return the latest collected data from Linky."""
@@ -237,4 +237,3 @@ class SuezClient(Entity):
         if not self.success:
             return
         _LOGGER.debug("Suez data state is: %s", self._state)
-    
