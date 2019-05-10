@@ -4,7 +4,12 @@ import logging
 from datetime import timedelta
 from typing import Any, Callable, List
 
-from pyHS100 import Discover, SmartBulb, SmartDevice, SmartPlug, SmartDeviceException
+from pyHS100 import (
+    SmartBulb,
+    SmartDevice,
+    SmartPlug,
+    SmartDeviceException
+)
 
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
@@ -51,6 +56,8 @@ class SmartDevices:
 
 async def async_get_discoverable_devices(hass):
     """Return if there are devices that can be discovered."""
+    from pyHS100 import Discover
+
     def discover():
         devs = Discover.discover()
         return devs
