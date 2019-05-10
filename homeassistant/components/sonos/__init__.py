@@ -81,7 +81,7 @@ SONOS_SET_OPTION_SCHEMA = vol.Schema({
     vol.Optional(ATTR_SPEECH_ENHANCE): cv.boolean,
 })
 
-DATA_SERVICE_EVENT ='sonos_service_running'
+DATA_SERVICE_EVENT = 'sonos_service_running'
 
 
 async def async_setup(hass, config):
