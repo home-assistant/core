@@ -4,7 +4,7 @@ import logging
 from datetime import timedelta
 from typing import Any, Callable, List
 
-from pyHS100 import SmartBulb, SmartDevice, SmartPlug, SmartDeviceException
+from pyHS100 import Discover, SmartBulb, SmartDevice, SmartPlug, SmartDeviceException
 
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
@@ -49,20 +49,21 @@ class SmartDevices:
         return False
 
 
-async def async_has_discoverable_devices(hass):
+async def async_get_discoverable_devices(hass):
     """Return if there are devices that can be discovered."""
-    from pyHS100 import Discover
-
     def discover():
         devs = Discover.discover()
         return devs
     return await hass.async_add_executor_job(discover)
 
 
-async def async_discover_devices(hass: HomeAssistantType) -> SmartDevices:
+async def async_discover_devices(
+        hass: HomeAssistantType,
+        exclude_devices: SmartDevices
+) -> SmartDevices:
     """Get devices through discovery."""
     _LOGGER.debug("Discovering devices")
-    devices = await async_has_discoverable_devices(hass)
+    devices = await async_get_discoverable_devices(hass)
     _LOGGER.info(
         "Discovered %s TP-Link smart home device(s)",
         len(devices)
@@ -72,6 +73,10 @@ async def async_discover_devices(hass: HomeAssistantType) -> SmartDevices:
     switches = []
 
     for dev in devices.values():
+        # If this device is configured statically, ignore dynamic setup.
+        if exclude_devices.has_device_with_host(dev.host):
+            continue
+
         if isinstance(dev, SmartPlug):
             try:
                 if dev.is_dimmable:  # Dimmers act as lights
@@ -116,7 +121,7 @@ def async_add_entities_retry(
         async_add_entities: Callable[[List[Any], bool], None],
         objects: List[Any],
         callback: Callable[[Any, Callable], None],
-        interval: timedelta = timedelta(seconds=30)
+        interval: timedelta = timedelta(seconds=60)
 ):
     """
     Add entities now and retry later if issues are encountered.
@@ -149,7 +154,7 @@ def async_add_entities_retry(
                     type(add_object)
                 )
                 result = callback(add_object, async_add_entities)
-            except Exception as ex:  # pylint: disable=broad-except
+            except SmartDeviceException as ex:
                 _LOGGER.debug(
                     "Failed to add object, will try again later. Error: %s",
                     str(ex)

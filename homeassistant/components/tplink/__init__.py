@@ -12,7 +12,7 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from .common import (
     async_discover_devices,
     async_get_static_devices,
-    async_has_discoverable_devices,
+    async_get_discoverable_devices,
     ATTR_CONFIG,
     CONF_DISCOVERY,
     CONF_LIGHT,
@@ -77,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigType):
 
     # Add discovered devices
     if config_data is None or config_data[CONF_DISCOVERY]:
-        discovered_devices = await async_discover_devices(hass)
+        discovered_devices = await async_discover_devices(hass, static_devices)
 
         for light in discovered_devices.lights:
             if not static_devices.has_device_with_host(light.host):
@@ -89,10 +89,18 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigType):
 
     forward_setup = hass.config_entries.async_forward_entry_setup
     if lights:
-        _LOGGER.debug("Got %s lights: %s", len(lights), lights)
+        _LOGGER.debug(
+            "Got %s lights: %s",
+            len(lights),
+            ", ".join([d.host for d in lights])
+        )
         hass.async_create_task(forward_setup(config_entry, 'light'))
     if switches:
-        _LOGGER.debug("Got %s switches: %s", len(switches), switches)
+        _LOGGER.debug(
+            "Got %s switches: %s",
+            len(switches),
+            ", ".join([d.host for d in switches])
+        )
         hass.async_create_task(forward_setup(config_entry, 'switch'))
 
     return True
@@ -118,5 +126,5 @@ async def async_unload_entry(hass, entry):
 
 config_entry_flow.register_discovery_flow(DOMAIN,
                                           'TP-Link Smart Home',
-                                          async_has_discoverable_devices,
+                                          async_get_discoverable_devices,
                                           config_entries.CONN_CLASS_LOCAL_POLL)
