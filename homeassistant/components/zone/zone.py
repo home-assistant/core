@@ -107,3 +107,12 @@ class Zone(Entity):
         if self._passive:
             data[ATTR_PASSIVE] = self._passive
         return data
+
+    def change(self, name, latitude, longitude, radius, icon, passive):
+        """Change zone."""
+        self._name = name
+        self._latitude = latitude
+        self._longitude = longitude
+        self._radius = radius
+        self._icon = icon
+        self._passive = passive

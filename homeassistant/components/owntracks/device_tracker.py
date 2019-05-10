@@ -264,17 +264,12 @@ async def async_handle_waypoint(hass, name_base, waypoint):
     lon = waypoint['lon']
     rad = waypoint['rad']
 
-    # check zone exists
+    # Specify entity_id so multiple zones don't get created from same pretty
+    # name.
     entity_id = zone_comp.ENTITY_ID_FORMAT.format(slugify(pretty_name))
-
-    # Check if state already exists
-    if hass.states.get(entity_id) is not None:
-        return
-
-    zone = zone_comp.Zone(hass, pretty_name, lat, lon, rad,
-                          zone_comp.ICON_IMPORT, False)
-    zone.entity_id = entity_id
-    await zone.async_update_ha_state()
+    await zone_comp.async_create_zone(
+        hass, pretty_name, lat, lon, rad, zone_comp.ICON_IMPORT,
+        entity_id=entity_id, update=False)
 
 
 @HANDLERS.register('waypoint')

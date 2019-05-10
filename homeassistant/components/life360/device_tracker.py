@@ -10,8 +10,7 @@ from homeassistant.components.device_tracker import (
     CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL,
     ENTITY_ID_FORMAT as DT_ENTITY_ID_FORMAT, PLATFORM_SCHEMA)
 from homeassistant.components.zone import (
-    DEFAULT_PASSIVE, ENTITY_ID_FORMAT as ZN_ENTITY_ID_FORMAT, ENTITY_ID_HOME,
-    Zone)
+    create_zone, ENTITY_ID_HOME, ICON_HOME, remove_zone)
 from homeassistant.components.zone.zone import active_zone
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING, ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_LATITUDE,
@@ -19,9 +18,7 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_PREFIX, CONF_USERNAME, LENGTH_FEET, LENGTH_KILOMETERS,
     LENGTH_METERS, LENGTH_MILES, STATE_HOME, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_time_interval
-from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.util.distance import convert
 import homeassistant.util.dt as dt_util
 
@@ -213,14 +210,6 @@ def _setup_zone_updating(hass, config, api):
             else:
                 return places
 
-    def zone_from_place(place, entity_id=None):
-        zone = Zone(hass, *place, None, DEFAULT_PASSIVE)
-        zone.entity_id = (
-            entity_id or
-            generate_entity_id(ZN_ENTITY_ID_FORMAT, place.name, None, hass))
-        zone.schedule_update_ha_state()
-        return zone
-
     def log_places(msg, places):
         plural = 's' if len(places) > 1 else ''
         _LOGGER.debug(
@@ -239,7 +228,7 @@ def _setup_zone_updating(hass, config, api):
         # See if there is a Life360 Place whose name matches CONF_HOME_PLACE.
         # If there is, remove it from set and handle it specially.
         home_place = None
-        for place in places.copy():
+        for place in places:
             if place.name.lower() == home_place_name:
                 home_place = place
                 places.discard(place)
@@ -248,13 +237,18 @@ def _setup_zone_updating(hass, config, api):
         # If a "Home Place" was found and it is different from the current
         # zone.home, then update zone.home with it.
         if home_place:
-            hz_attrs = hass.states.get(ENTITY_ID_HOME).attributes
+            hz_attrs = hass.states.get(ENTITY_ID_HOME).attributes.copy()
+            # Only compare locations & sizes.
+            hz_attrs[ATTR_FRIENDLY_NAME] = home_place.name
             if home_place != Place(hz_attrs[ATTR_FRIENDLY_NAME],
                                    hz_attrs[ATTR_LATITUDE],
                                    hz_attrs[ATTR_LONGITUDE],
                                    hz_attrs[ATTR_RADIUS]):
-                log_places('Updating', [home_place])
-                zone_from_place(home_place, ENTITY_ID_HOME)
+                _LOGGER.debug(
+                    'Updating zone.home from Place: %s',
+                    '{}: {}, {}, {}'.format(*home_place))
+                create_zone(hass, *home_place, ICON_HOME,
+                            entity_id=ENTITY_ID_HOME)
 
         # Do any of the Life360 Places that we created HA zones from no longer
         # exist? If so, remove the corresponding zones.
@@ -262,8 +256,7 @@ def _setup_zone_updating(hass, config, api):
         if remove_places:
             log_places('Removing', remove_places)
             for remove_place in remove_places:
-                run_coroutine_threadsafe(
-                    zones.pop(remove_place).async_remove(), hass.loop).result()
+                remove_zone(hass, zones.pop(remove_place))
 
         # Are there any newly defined Life360 Places since the last time we
         # checked? If so, create HA zones for them.
@@ -271,7 +264,7 @@ def _setup_zone_updating(hass, config, api):
         if add_places:
             log_places('Adding', add_places)
             for add_place in add_places:
-                zones[add_place] = zone_from_place(add_place)
+                zones[add_place] = create_zone(hass, *add_place)
 
     circles_filter = config.get(CONF_CIRCLES)
     places_filter = config.get(CONF_PLACES)
