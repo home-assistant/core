@@ -43,7 +43,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     event_hub_sas_key = config[CONF_EVENT_HUB_SAS_KEY]
 
     event_hub_address = f"amqps://{config[CONF_EVENT_HUB_NAMESPACE]}\
-        .servicebus.windows.net/{config[CONF_EVENT_HUB_INSTANCE_NAME]}"
+.servicebus.windows.net/{config[CONF_EVENT_HUB_INSTANCE_NAME]}"
 
     entities_filter = config[CONF_FILTER]
 
