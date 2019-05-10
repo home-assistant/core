@@ -708,6 +708,7 @@ async def test_tilt_given_value_optimistic(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_called_once_with(
         'tilt-command-topic', 25, 0, False)
 
+
 async def test_tilt_given_value_altered_range(hass, mqtt_mock):
     """Test tilting to a given value."""
     assert async_setup_component(hass, cover.DOMAIN, {
