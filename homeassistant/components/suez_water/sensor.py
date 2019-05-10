@@ -106,8 +106,8 @@ class SuezClient(Entity):
             headers['Cookie'] += key + "=" + response.cookies[key]
 
         """get token"""
-        p = re.compile('_csrf_token" value="(.*)" />')
-        result = p.search(response.content.decode('utf-8'))
+        phrase = re.compile('_csrf_token" value="(.*)" />')
+        result = phrase.search(response.content.decode('utf-8'))
         self._token = result.group(1)
         _LOGGER.debug("Le token is %s", self._token)
         self._headers = headers
@@ -116,13 +116,13 @@ class SuezClient(Entity):
         import requests
         login = requests.Session()
         data = {
-                    '_username': self._username,
-                    '_password': self._password,
-                    '_csrf_token': self._token,
-                    'signin[username]': self._username,
-                    'signin[password]': None,
-                    'tsme_user_login[_username]': self._username,
-                    'tsme_user_login[_password]': self._password
+            '_username': self._username,
+            '_password': self._password,
+            '_csrf_token': self._token,
+            'signin[username]': self._username,
+            'signin[password]': None,
+            'tsme_user_login[_username]': self._username,
+            'tsme_user_login[_password]': self._password
                 }
         url = self.BASE_URI+self.API_ENDPOINT_LOGIN
         login.post(url, headers=self._headers, data=data)
