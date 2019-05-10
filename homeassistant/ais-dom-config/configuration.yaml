@@ -87,6 +87,7 @@ history:
       - sensor.spotifysearchlist
       - sensor.spotifylist
       - sensor.rssnewslist
+      - sensor.podcastnamelist
     domains:
       - mqtt
 media_extractor:

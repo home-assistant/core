@@ -168,7 +168,6 @@
       data_template:
         book_chapter: "{{ states('input_select.book_chapter') }}"
 
-
 - id: '201807081905011'
   alias: 'Ask The Question'
   initial_state: True
@@ -207,7 +206,6 @@
     - service: ais_spotify_service.search
       data_template:
         query: "{{ states('input_text.ais_spotify_query') }}"
-
 
 - id: '201807081916015'
   alias: 'Get RSS News Channels'
@@ -312,7 +310,6 @@
       data_template:
         bookmark: "{{ states('input_select.ais_bookmark_last_played') }}"
 
-
 - id: '201809291519123'
   alias: 'Flush logs'
   initial_state: True
@@ -378,7 +375,6 @@
   hide_entity: True
   trigger:
     platform: time_pattern
-    minutes: '/30'
     minutes: '/30'
   action:
     - service: mqtt.publish
