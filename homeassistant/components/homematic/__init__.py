@@ -465,7 +465,7 @@ def _system_callback_handler(hass, config, src, *args):
                     ('sensor', DISCOVER_SENSORS),
                     ('climate', DISCOVER_CLIMATE),
                     ('lock', DISCOVER_LOCKS),
-                    ('binary_sensor', DISCOVER_SWITCHES)):
+                    ('binary_sensor', DISCOVER_BUTTONS)):
                 # Get all devices of a specific type
                 found_devices = _get_devices(
                     hass, discovery_type, addresses, interface)
@@ -476,9 +476,9 @@ def _system_callback_handler(hass, config, src, *args):
                     discovery_info = {ATTR_DISCOVER_DEVICES: found_devices,
                                       ATTR_BATTERY_DEVICES: False}
 
-                    # Switches are skipped as a component. They will only
+                    # Buttons are skipped as a component. They will only
                     # appear in hass as a battery device.
-                    if not discovery_type == DISCOVER_SWITCHES:
+                    if not discovery_type == DISCOVER_BUTTONS:
                         discovery.load_platform(hass, component_name, DOMAIN,
                                                 discovery_info, config)
 
