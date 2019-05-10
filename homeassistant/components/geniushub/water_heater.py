@@ -69,12 +69,11 @@ class GeniusWaterHeater(WaterHeaterDevice):
 
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
-        async_dispatcher_connect(self.hass, DOMAIN, self._connect)
+        async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
 
     @callback
-    def _connect(self, packet):
-        if packet['signal'] == 'refresh':
-            self.async_schedule_update_ha_state(force_refresh=True)
+    def _refresh(self):
+        self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
     def name(self):

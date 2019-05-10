@@ -69,9 +69,8 @@ class GeniusData:
     def __init__(self, hass, args, kwargs):
         """Initialize the geniushub client."""
         self._hass = hass
-        self._session = async_get_clientsession(hass)
         self._client = hass.data[DOMAIN]['client'] = GeniusHubClient(
-            *args, **kwargs, session=self._session)
+            *args, **kwargs, session=async_get_clientsession(hass))
 
     async def async_update(self, now, **kwargs):
         """Update the geniushub client's data."""
@@ -80,4 +79,4 @@ class GeniusData:
         except AssertionError:  # assert response.status == HTTP_OK
             _LOGGER.warning("Update failed.", exc_info=True)
             return
-        async_dispatcher_send(self._hass, DOMAIN, {'signal': 'refresh'})
+        async_dispatcher_send(self._hass, DOMAIN)
