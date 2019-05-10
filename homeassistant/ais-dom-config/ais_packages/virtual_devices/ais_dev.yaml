@@ -51,7 +51,7 @@ input_number:
 
 group:
   ais_tts_configuration:
-    name: Knofiguracja głosu asystenta
+    name: Wybór głosu Asystenta
     control: hidden
     entities:
       - input_select.assistant_voice

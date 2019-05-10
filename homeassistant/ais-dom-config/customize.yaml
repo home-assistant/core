@@ -234,7 +234,7 @@ group.day_info:
 group.ais_favorites:
   context_key_words: ulubione
   context_answer: OK, wybierz pozycję
-  friendly_name: Wszystkie lubione
+  friendly_name: Wszystkie ulubione
   remote_group_view: Audio
   order: 1
 group.ais_bookmarks:

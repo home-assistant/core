@@ -422,6 +422,14 @@ def set_bookmarks_curr_group(hass):
     for idx, g in enumerate(GROUP_ENTITIES, start=0):
         if g['entity_id'] == 'group.ais_bookmarks':
             set_curr_group(hass, g)
+            return
+
+
+def set_favorites_curr_group(hass):
+    for idx, g in enumerate(GROUP_ENTITIES, start=0):
+        if g['entity_id'] == 'group.ais_favorites':
+            set_curr_group(hass, g)
+            return
 
 
 def set_curr_group(hass, group):
@@ -681,7 +689,10 @@ def say_curr_entity(hass):
                 info = "Lista zakładek  "
             else:
                 info = "Pozycja "
-            if int(info_data) != -1:
+
+            if CURR_ENTITIE_ENTERED:
+                additional_info = ". Wybierz pozycję."
+            elif int(info_data) != -1:
                 additional_info = ". Naciśnij OK by zmienić."
             else:
                 additional_info = ". Naciśnij OK by wybrać."
@@ -2157,15 +2168,15 @@ def _process_code(hass, data, callback):
     if code == 93:
         # PG- -> KEYCODE_PAGE_DOWN
         set_bookmarks_curr_group(hass)
-        set_curr_entity(hass, 'sensor.aisbookmarks')
+        set_curr_entity(hass, 'sensor.aisbookmarkslist')
         CURR_ENTITIE_ENTERED = True
         say_curr_entity(hass)
     elif code == 92:
         # PG+ -> KEYCODE_PAGE_UP
-        set_bookmarks_curr_group(hass)
+        set_favorites_curr_group(hass)
         CURR_ENTITIE_ENTERED = True
         # go to bookmarks
-        set_curr_entity(hass, 'sensor.aisfavorites')
+        set_curr_entity(hass, 'sensor.aisfavoriteslist')
 
         say_curr_entity(hass)
     elif code == 4:

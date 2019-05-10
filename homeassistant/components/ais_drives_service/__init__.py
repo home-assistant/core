@@ -448,7 +448,8 @@ class LocalData:
                       {"name": "..", "icon": "", "path": ".."}]
         for i in si:
             items_info.append({"name": i.name, "icon": self.get_icon(i), "path": i.path})
-        self.hass.states.set("sensor.ais_drives", self.current_path.replace(G_LOCAL_FILES_ROOT, ''), {'files': items_info})
+        self.hass.states.set(
+            "sensor.ais_drives", self.current_path.replace(G_LOCAL_FILES_ROOT, ''), {'files': items_info})
         if say:
             slen = len(si)
             self.say(get_pozycji_variety(slen))
@@ -536,6 +537,8 @@ class LocalData:
         self._browse_path(call.data["path"], say)
 
     def _browse_path(self, path, say):
+        if len(path.strip()) == 0:
+            self.say("Wybierz pozycję do przeglądania")
         if path == "..":
             # check if this is cloud drive
             if self.is_rclone_path(self.current_path):
@@ -607,7 +610,12 @@ class LocalData:
     def rclone_append_listremotes(self):
         remotes = rclone_get_remotes_long()
         self.display_current_remotes(remotes)
-        self.say(get_pozycji_variety(len(remotes)))
+        if len(remotes) == 0:
+            self.say("Nie masz żadnych dysków zdalnych. "
+                     "Dodaj połączenie do dysku zdalnego za pomocą konfiguratora w aplikacji.")
+        else:
+            self.say("Mamy " + get_pozycji_variety(len(remotes) + " w zdalnych dyskach."
+                                                                  " Wybierz dysk który mam przeglądać."))
 
     def rclone_browse_folder(self, path, say):
         if ais_global.G_DRIVE_SHARED_WITH_ME in path:
@@ -873,7 +881,10 @@ class LocalData:
         files = attr.get('files', [])
         if state.state is None or self.selected_item_idx is None:
             self.selected_item_idx = 0
-        self._browse_path(files[self.selected_item_idx]["path"], say)
+        if files[self.selected_item_idx]["path"] == G_LOCAL_FILES_ROOT:
+            self.say("Wybierz pozycję")
+        else:
+            self._browse_path(files[self.selected_item_idx]["path"], say)
 
     def remote_cancel_item(self, say):
         self._browse_path('..', say)
