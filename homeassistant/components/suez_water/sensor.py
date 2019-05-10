@@ -105,7 +105,6 @@ class SuezClient(Entity):
                 headers['Cookie'] += "; "
             headers['Cookie'] += key + "=" + response.cookies[key]
 
-        """get token"""
         phrase = re.compile('_csrf_token" value="(.*)" />')
         result = phrase.search(response.content.decode('utf-8'))
         self._token = result.group(1)
@@ -154,7 +153,7 @@ class SuezClient(Entity):
                 yesterday_day)-1][1])*1000)
             self.success = True
 
-        except:
+        except ValueError:
             _LOGGER.debug("Issue with this yesterday data")
             pass
 
@@ -173,7 +172,7 @@ class SuezClient(Entity):
                 self._attributes['thisMonthConsumption'][item[0]] = int(
                     float(item[1])*1000)
 
-        except:
+        except ValueError:
             _LOGGER.debug("Issue with this month data")
             pass
 
@@ -199,7 +198,7 @@ class SuezClient(Entity):
                 self._attributes['previousMonthConsumption'][item[0]] = int(
                     float(item[1])*1000)
 
-        except:
+        except ValueError:
             _LOGGER.debug("Issue with this previous month data")
             pass
 
@@ -225,7 +224,7 @@ class SuezClient(Entity):
 
             _LOGGER.debug("_attributes est %s", self._attributes)
 
-        except:
+        except ValueError:
             _LOGGER.debug("Issue with history data")
             raise
 
