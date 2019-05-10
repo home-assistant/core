@@ -1,4 +1,4 @@
-Home Assistant |Build Status| |CI Status| |Coverage Status| |Chat Status|
+Home Assistant |Build Status| |CI Status| |Coverage Status| |Chat Status| |Hass.io Status|
 =================================================================================
 
 Home Assistant is a home automation platform running on Python 3. It is able to track and control all devices at home and offer a platform for automating control.
@@ -39,3 +39,5 @@ of a component, check the `Home Assistant help section <https://home-assistant.i
    :target: https://home-assistant.io/demo/
 .. |screenshot-components| image:: https://raw.github.com/home-assistant/home-assistant/dev/docs/screenshot-components.png
    :target: https://home-assistant.io/components/
+.. |Hass.io Status| image:: https://dev.azure.com/home-assistant/Hass.io/_apis/build/status/home-assistant?branchName=dev
+   :target: https://dev.azure.com/home-assistant/Hass.io/_apis/build/status/home-assistant?branchName=dev)](https://dev.azure.com/home-assistant/Hass.io
