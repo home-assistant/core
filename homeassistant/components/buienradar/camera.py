@@ -43,8 +43,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     delta = config[CONF_DELTA]
     name = config[CONF_NAME]
 
-    async_add_entities([BuienradarCam(name, dimension, delta,
-                                      loop=hass.loop)])
+    async_add_entities([BuienradarCam(name, dimension, delta)])
 
 
 class BuienradarCam(Camera):
@@ -56,13 +55,11 @@ class BuienradarCam(Camera):
     [0]: https://www.buienradar.nl/overbuienradar/gratis-weerdata
     """
 
-    def __init__(self, name: str, dimension: int, delta: float,
-                 loop: Optional[asyncio.AbstractEventLoop] = None):
+    def __init__(self, name: str, dimension: int, delta: float):
         """
         Initialize the component.
 
-        This constructor must be run in the event loop _or_ be provided with
-        an applicable event loop as argument.
+        This constructor must be run in the event loop.
         """
         super().__init__()
 
@@ -80,7 +77,7 @@ class BuienradarCam(Camera):
         # time, and that all readers are notified after this request completes.
         #
         # invariant: this condition is private to and owned by this instance.
-        self._condition = asyncio.Condition(loop=loop)
+        self._condition = asyncio.Condition()
 
         self._last_image = None     # type: Optional[bytes]
         # value of the last seen last modified header
