@@ -24,12 +24,27 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 DOMAIN = 'huawei_lte'
 DATA_KEY = 'huawei_lte'
 
+CONF_DEVICE_TYPE = 'device_type'
+
+ATTR_ROUTER = 'router'
+ATTR_MODEM = 'modem'
+
+CONFIG_ROUTER_SCHEMA = vol.Schema({
+    vol.Required(CONF_URL): cv.url,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_DEVICE_TYPE, default=ATTR_ROUTER): ATTR_ROUTER
+})
+
+CONFIG_MODEM_SCHEMA = vol.Schema({
+    vol.Required(CONF_URL): cv.url,
+    vol.Required(CONF_DEVICE_TYPE): ATTR_MODEM
+})
+
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
-        vol.Required(CONF_URL): cv.url,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-    })])
+    DOMAIN: vol.All(cv.ensure_list, [
+        vol.Any(CONFIG_ROUTER_SCHEMA, CONFIG_MODEM_SCHEMA)
+    ])
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -38,6 +53,7 @@ class RouterData:
     """Class for router state."""
 
     client = attr.ib()
+    device_type = attr.ib()
     device_information = attr.ib(init=False, factory=dict)
     device_signal = attr.ib(init=False, factory=dict)
     traffic_statistics = attr.ib(init=False, factory=dict)
@@ -91,9 +107,10 @@ class RouterData:
             self.traffic_statistics = \
                 self.client.monitoring.traffic_statistics()
             _LOGGER.debug("traffic_statistics=%s", self.traffic_statistics)
-        if debugging or "wlan_host_list" in self._subscriptions:
-            self.wlan_host_list = self.client.wlan.host_list()
-            _LOGGER.debug("wlan_host_list=%s", self.wlan_host_list)
+        if self.device_type == ATTR_ROUTER:
+            if (debugging or "wlan_host_list" in self._subscriptions):
+                self.wlan_host_list = self.client.wlan.host_list()
+                _LOGGER.debug("wlan_host_list=%s", self.wlan_host_list)
 
 
 @attr.s
@@ -127,8 +144,9 @@ def _setup_lte(hass, lte_config) -> None:
     from huawei_lte_api.Client import Client
 
     url = lte_config[CONF_URL]
-    username = lte_config[CONF_USERNAME]
-    password = lte_config[CONF_PASSWORD]
+    username = lte_config.get(CONF_USERNAME, "")
+    password = lte_config.get(CONF_PASSWORD, "")
+    device_type = lte_config[CONF_DEVICE_TYPE]
 
     connection = AuthorizedConnection(
         url,
@@ -137,7 +155,7 @@ def _setup_lte(hass, lte_config) -> None:
     )
     client = Client(connection)
 
-    data = RouterData(client)
+    data = RouterData(client, device_type)
     hass.data[DATA_KEY].data[url] = data
 
     def cleanup(event):

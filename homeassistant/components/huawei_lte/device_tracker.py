@@ -1,4 +1,5 @@
 """Support for device tracking of Huawei LTE routers."""
+import logging
 from typing import Any, Dict, List, Optional
 
 import attr
@@ -8,8 +9,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA, DeviceScanner,
 )
+from homeassistant.components.huawei_lte import ATTR_MODEM
 from homeassistant.const import CONF_URL
 from . import DATA_KEY, RouterData
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_URL): cv.url,
@@ -21,6 +25,11 @@ HOSTS_PATH = "wlan_host_list.Hosts"
 def get_scanner(hass, config):
     """Get a Huawei LTE router scanner."""
     data = hass.data[DATA_KEY].get_data(config)
+
+    if data.device_type == ATTR_MODEM:
+        _LOGGER.error("Device tracker not supported for modems")
+        return None
+
     data.subscribe(HOSTS_PATH)
     return HuaweiLteScanner(data)
 
