@@ -722,6 +722,9 @@ mbddns==0.1.2
 # homeassistant.components.message_bird
 messagebird==1.2.0
 
+# homeassistant.components.noaaweather
+metar==1.7.0
+
 # homeassistant.components.meteoalarm
 meteoalertapi==0.0.8
 
@@ -1231,6 +1234,9 @@ pynuki==1.3.2
 
 # homeassistant.components.nut
 pynut2==2.1.2
+
+# homeassistant.components.noaaweather
+pynws==0.6
 
 # homeassistant.components.nx584
 pynx584==0.4
