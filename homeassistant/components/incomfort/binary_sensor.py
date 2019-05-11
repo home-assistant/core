@@ -77,15 +77,10 @@ class IncomfortBurning(IncomfortBinarySensor):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        if self._boiler.status['is_pumping']:
-            value = self._boiler.status['heater_temp']
-        elif self._boiler.status['is_tapping']:
+        if self._boiler.status['is_tapping']:
             value = self._boiler.status['tap_temp']
         else:
-            value = max(
-                self._boiler.status['heater_temp'],
-                self._boiler.status['tap_temp']
-            )
+            value = self._boiler.status['heater_temp']
         return {'water_temp': value}
 
 

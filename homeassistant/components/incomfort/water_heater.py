@@ -57,7 +57,9 @@ class IncomfortWaterHeater(WaterHeaterDevice):
         """Return the current temperature."""
         if self._heater.is_tapping:
             return self._heater.tap_temp
-        return self._heater.heater_temp
+        elif self._heater.is_pumping:
+            return self._heater.heater_temp
+        return max(self._heater.heater_temp, self._heater.tap_temp)
 
     @property
     def min_temp(self):
