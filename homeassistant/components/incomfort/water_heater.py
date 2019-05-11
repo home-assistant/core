@@ -4,6 +4,7 @@ import logging
 
 from homeassistant.components.water_heater import WaterHeaterDevice
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import DOMAIN
 
@@ -27,16 +28,17 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     heater = hass.data[DOMAIN]['heater']
 
     async_add_entities([
-        IncomfortWaterHeater(client, heater)], update_before_add=True)
+        IncomfortWaterHeater(hass, client, heater)], update_before_add=True)
 
 
 class IncomfortWaterHeater(WaterHeaterDevice):
     """Representation of an InComfort/Intouch water_heater device."""
 
-    def __init__(self, client, heater):
+    def __init__(self, hass, client, heater):
         """Initialize the water_heater device."""
         self._client = client
         self._heater = heater
+        self._hass = hass
 
     @property
     def name(self):
@@ -81,7 +83,7 @@ class IncomfortWaterHeater(WaterHeaterDevice):
     def current_operation(self):
         """Return the current operation mode."""
         if self._heater.is_failed:
-            return "Failed ({})".format(self._heater.fault_code)
+            return "Failed, fault code: {}".format(self._heater.fault_code)
 
         return self._heater.display_text
 
@@ -92,3 +94,5 @@ class IncomfortWaterHeater(WaterHeaterDevice):
 
         except (AssertionError, asyncio.TimeoutError) as err:
             _LOGGER.warning("Update failed, message: %s", err)
+
+        async_dispatcher_send(self._hass, DOMAIN)

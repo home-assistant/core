@@ -44,7 +44,7 @@ async def async_setup(hass, hass_config):
             exc_info=True)
         return False
 
-    for platform in ['water_heater', 'climate']:
+    for platform in ['water_heater', 'binary_sensor', 'sensor']:
         hass.async_create_task(async_load_platform(
             hass, platform, DOMAIN, {}, hass_config))
 
