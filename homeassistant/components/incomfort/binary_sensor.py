@@ -53,8 +53,6 @@ class IncomfortBinarySensor(BinarySensorDevice):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        if self._other_key is None:
-            return None
         value = self._boiler.status[self._other_key] if self.is_on else None
         return {self._other_key: value}
 
