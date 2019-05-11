@@ -1,11 +1,10 @@
 """Support for Genius Hub binary_sensor devices."""
 import logging
+from time import (localtime, strftime)
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, DEVICE_CLASS_POWER)
+from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN
 
@@ -68,7 +67,11 @@ class GeniusSwitch(BinarySensorDevice):
         """Return the device state attributes."""
         attrs = {}
         attrs['location'] = self._device.assignedZones[0]['name']
-#       attrs['lastCommunication'] = 0  # TODO: add this
+
+        last_comms = self._device._info_raw['childValues']['lastComms']['val']  # noqa; pylint: disable=protected-access
+        if last_comms != 0:
+            last_comms = strftime('%Y-%m-%d %H:%M:%S', localtime(last_comms))
+            attrs['lastCommunication'] = last_comms
 
         state = {k: v for k, v in self._device.state.items()
                  if k in GH_STATE_ATTRS}

@@ -1,8 +1,8 @@
 """Support for Genius Hub sensor devices."""
 import logging
+from time import (localtime, strftime)
 
-from homeassistant.const import (
-    DEVICE_CLASS_BATTERY, DEVICE_CLASS_ILLUMINANCE)
+from homeassistant.const import DEVICE_CLASS_BATTERY
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -78,9 +78,12 @@ class GeniusBattery(Entity):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
+        last_comms = self._device._info_raw['childValues']['lastComms']['val']  # noqa; pylint: disable=protected-access
+        last_comms = strftime('%Y-%m-%d %H:%M:%S', localtime(last_comms))
+
         attrs = {}
         attrs['location'] = self._device.assignedZones[0]['name']
-#       attrs['lastCommunication'] = 0  # TODO: add this
+        attrs['lastCommunication'] = last_comms
 
         state = {k: v for k, v in self._device.state.items()
                  if k in GH_STATE_ATTRS}
