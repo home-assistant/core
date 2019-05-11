@@ -6,5 +6,7 @@
     "pypck==0.6.0"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@alengwenus"
+  ]
 }
