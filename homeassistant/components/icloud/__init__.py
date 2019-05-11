@@ -125,6 +125,9 @@ def setup(hass, config):
         for account in accounts:
             if account in hass.data[DATA_ICLOUD]:
                 hass.data[DATA_ICLOUD][account].reset_account_icloud()
+        
+        async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_ICLOUD, None)
 
     hass.services.register(DOMAIN, SERVICE_ICLOUD_RESET,
                            reset_account_icloud, schema=SERVICE_SCHEMA)
@@ -427,6 +430,7 @@ class IcloudAccount:
     def update_device(self, devicename):
         """Update the device entity."""
         from pyicloud.exceptions import PyiCloudNoDevicesException
+        _LOGGER.info('-----------------------------------')
         _LOGGER.info('ICLOUD:update_device %s', devicename)
 
         # An entity will not be created by see() when track=false in
@@ -440,21 +444,16 @@ class IcloudAccount:
 
         try:
             for device in self.api.devices:
-                if str(device) != str(self.devices[devicename]):
+                if str(device) != str(self.devices[devicename]._device):
                     continue
 
+                _LOGGER.info('--------------------------------')
                 status = device.status(DEVICE_STATUS_SET)
-                battery = status.get('batteryLevel', 0) * 100
-                location = status['location']
-                if location and location['horizontalAccuracy']:
-                    horizontal_accuracy = int(location['horizontalAccuracy'])
-                    if horizontal_accuracy < self._gps_accuracy_threshold:
-                        self.determine_interval(
-                            devicename, location['latitude'],
-                            location['longitude'], battery)
-                        self.devices[devicename] = IcloudDeviceEntity(self, device)
-                        self.seen_devices[devicename] = True
-            async_dispatcher_send(self.hass, SIGNAL_UPDATE_ICLOUD)
+                if self.devices[devicename]:
+                    self.devices[devicename].update(status)
+                else:
+                    self.devices[devicename] = IcloudDeviceEntity(self, device)
+
         except PyiCloudNoDevicesException:
             _LOGGER.error("No iCloud Devices found")
 
@@ -466,7 +465,7 @@ class IcloudAccount:
 
         self.api.authenticate()
         for device in self.api.devices:
-            if str(device) == str(self.devices[devicename]):
+            if str(device) == str(self.devices[devicename]._device):
                 _LOGGER.info("Playing Lost iPhone sound for %s", devicename)
                 device.play_sound()
 
@@ -512,12 +511,13 @@ class IcloudAccount:
             self.update_device(device)
 
 
-class IcloudDeviceEntity(Entity):
+class IcloudDeviceEntity:
     """Base class for iCloud devices entity."""
 
     def __init__(self, account, device):
         """Store IcloudAccountDataStore upon init."""
-        _LOGGER.info('--IcloudDeviceEntity--')
+        _LOGGER.info('IcloudDeviceEntity:init')
+        self.__account = account
         self._hass = account.hass
         self._accountname = account.accountname
 
@@ -527,14 +527,53 @@ class IcloudDeviceEntity(Entity):
         _LOGGER.debug('Device Status is %s', self.__status)
 
         self._name = self.__status['name']
-        self._dev_id = slugify(self._name.replace(' ', '', 99))
+        self._dev_id = slugify(self._name.replace(' ', '', 99))  # devicename
         self._device_class = self.__status['deviceClass']
         self._device_name = self.__status['deviceDisplayName']
+
+        self._interval = account._intervals.get(self._dev_id, 1)
+
+        self.update(self.__status)
+
+        # pprint(vars(self))
+
+    def update(self, status):
+        _LOGGER.info('IcloudDeviceEntity:update')
+        self.__status = status
+
         self._device_status = DEVICE_STATUS_CODES.get(self.__status['deviceStatus'], 'error')
 
-        if self.__status['location']:
-            location = self.__status['location']
-            self._location = location
+        self._attrs = {
+            ATTR_ACCOUNTNAME: self._accountname,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_DEVICENAME: self._device_name,
+            ATTR_DEVICESTATUS: self._device_status,
+            ATTR_INTERVAL: self._interval,
+        }
+
+        if self.__status['batteryStatus'] != 'Unknown':
+            self._battery_level = round(self.__status.get('batteryLevel', 0)
+                                        * 100)
+            self._battery_status = self.__status['batteryStatus']
+            self._low_power_mode = self.__status['lowPowerMode']
+
+            self._attrs[ATTR_BATTERY] = self._battery_level
+            self._attrs[ATTR_BATTERYSTATUS] = self._battery_status
+            self._attrs[ATTR_LOWPOWERMODE] = self._low_power_mode
+        
+            if self.__status['location']:
+                location = self.__status['location']
+                self._location = location
+
+                if location and location['horizontalAccuracy']:
+                    _LOGGER.info('location %s', location)
+                    horizontal_accuracy = int(location['horizontalAccuracy'])
+                    if horizontal_accuracy < self.__account._gps_accuracy_threshold:
+                        _LOGGER.info('horizontal_accuracy %s', horizontal_accuracy)
+                        self.__account.determine_interval(
+                            self._dev_id, location['latitude'],
+                            location['longitude'], self._battery_level)
+                        self.__account.seen_devices[self._dev_id] = True
             # self._location = {
             #     'latitude': location['latitude'],
             #     'longitude': location['longitude'],
@@ -543,44 +582,11 @@ class IcloudDeviceEntity(Entity):
             # self._location.latitude = location['latitude']
             # self._location.longitude = location['longitude']
             # self._location.gps_accuracy = location['horizontalAccuracy']
+        async_dispatcher_send(self._hass, SIGNAL_UPDATE_ICLOUD)
 
-        if self.__status['batteryStatus'] != 'Unknown':
-            self._battery_level = round(self.__status.get('batteryLevel', 0)
-                                        * 100)
-            self._battery_status = self.__status['batteryStatus']
-            self._low_power_mode = self.__status['lowPowerMode']
+    # async def async_added_to_hass(self):
+    #     """Register callbacks."""
+    #     self.log_registration()
+    #     async_dispatcher_connect(
+    #         self.hass, SIGNAL_UPDATE_ICLOUD, self._update_callback)
 
-        self._interval = account._intervals.get(self._dev_id, 1)
-
-        # pprint(vars(self))
-
-    def log_registration(self):
-        """Log registration."""
-        _LOGGER.info(
-            "Registered %s component for device %s",
-            self.__class__.__name__, self.name)
-
-    @property
-    def device_state_attributes(self):
-        """Return default attributes for the iCloud device entity."""
-        return {
-            ATTR_ACCOUNTNAME: self._accountname,
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_BATTERY: self._battery_level,
-            ATTR_BATTERYSTATUS: self._battery_status,
-            ATTR_DEVICENAME: self._device_name,
-            ATTR_DEVICESTATUS: self._device_status,
-            ATTR_LOWPOWERMODE: self._low_power_mode,
-            ATTR_INTERVAL: self._interval,
-        }
-
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-        self.log_registration()
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_ICLOUD, self._update_callback)
-
-    @callback
-    def _update_callback(self):
-        """Update the state."""
-        self.async_schedule_update_ha_state(True)
