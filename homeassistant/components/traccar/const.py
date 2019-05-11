@@ -1,4 +1,4 @@
-"""Constants for Traccar platform."""
+"""Constants for Traccar integration."""
 
 CONF_MAX_ACCURACY = 'max_accuracy'
 CONF_SKIP_ACCURACY_ON = 'skip_accuracy_filter_on'
