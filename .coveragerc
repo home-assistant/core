@@ -649,7 +649,7 @@ omit =
     homeassistant/components/volvooncall/*
     homeassistant/components/w800rf32/*
     homeassistant/components/waqi/sensor.py
-    homeassistant/components/warmup4ie/climate.py
+    homeassistant/components/warmup/climate.py
     homeassistant/components/waterfurnace/*
     homeassistant/components/watson_iot/*
     homeassistant/components/waze_travel_time/sensor.py

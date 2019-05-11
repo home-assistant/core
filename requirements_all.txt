@@ -1786,7 +1786,7 @@ wakeonlan==1.1.6
 # homeassistant.components.waqi
 waqiasync==1.0.0
 
-# homeassistant.components.warmup4ie
+# homeassistant.components.warmup
 warmup4ie==0.1.3
 
 # homeassistant.components.folder_watcher

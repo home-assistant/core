@@ -1,4 +1,4 @@
-"""Platform that offers a connection to a warmup4ie device."""
+"""Platform that offers a connection to a warmup device."""
 import logging
 
 import voluptuous as vol
@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo climate devices."""
-    _LOGGER.info("Setting up platform for Warmup4IE component")
+    _LOGGER.info("Setting up platform for Warmup component")
     name = config.get(CONF_NAME)
     user = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -52,17 +52,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         raise PlatformNotReady
 
     add_entities(
-        [Warmup4IE(hass, name, device)])
+        [Warmup(hass, name, device)])
 
 
-class Warmup4IE(ClimateDevice):
-    """Representation of a Warmup4IE device."""
+class Warmup(ClimateDevice):
+    """Representation of a Warmup device."""
 
     mode_map = {'prog': STATE_AUTO, 'fixed': STATE_MANUAL}
 
     def __init__(self, hass, name, device):
         """Initialize the climate device."""
-        _LOGGER.info("Setting up Warmup4IE component")
+        _LOGGER.info("Setting up Warmup component")
         self._name = name
         self._support_flags = SUPPORT_FLAGS
         self._operation_list = [STATE_AUTO, STATE_MANUAL]
@@ -179,7 +179,7 @@ class Warmup4IE(ClimateDevice):
         This is the only method that should fetch new data for Home Assistant.
         """
         if not self._device.update_room():
-            _LOGGER.error("Updating Warmup4IE component failed")
+            _LOGGER.error("Updating Warmup component failed")
 
         # set operation mode
         self._current_operation_mode = self.mode_map.get(
