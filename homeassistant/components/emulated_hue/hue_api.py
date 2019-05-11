@@ -68,11 +68,11 @@ class HueUsernameView(HomeAssistantView):
         return self.json([{'success': {'username': '12345678901234567890'}}])
 
 
-class HueDummyView(HomeAssistantView):
-    """Handle requests to identify emulated hue bridge for sleep cycle."""
+class HueNullView(HomeAssistantView):
+    """Handle requests to identify emulated hue bridge for null view."""
 
     url = '/api/(null)'
-    name = 'emulated_hue:api:dummy_view'
+    name = 'emulated_hue:api:null_view'
     extra_urls = ['/api/(null)/']
     requires_auth = False
 
@@ -81,7 +81,13 @@ class HueDummyView(HomeAssistantView):
         if not is_local(request[KEY_REAL_IP]):
             return self.json_message('only local IPs allowed',
                                      HTTP_BAD_REQUEST)
-        return self.json([{'dummy': 'view'}])
+        return self.json([{
+            'error': {
+                'address': '/',
+                'description': 'unauthorized user',
+                'type': '1'
+                }
+            }])
 
 
 class HueAllGroupsStateView(HomeAssistantView):
@@ -133,11 +139,11 @@ class HueGroupView(HomeAssistantView):
         }])
 
 
-class HueUsernameAllLightStateView(HomeAssistantView):
+class HueUsernameAllLightsStateView(HomeAssistantView):
     """Handle requests for getting and setting info about entities."""
 
     url = '/api/{username}'
-    name = 'emulated_hue:lights:state'
+    name = 'emulated_hue:username:lights:state'
     extra_urls = ['/api/{username}/']
     requires_auth = False
 
@@ -162,9 +168,12 @@ class HueUsernameAllLightStateView(HomeAssistantView):
                 json_response[number] = entity_to_json(self.config,
                                                        entity, state)
 
-        json_response_wrapped = \
-            {'lights': json_response, 'config': {'mac': '00:00:00:00:00:00'}}
-        return self.json(json_response_wrapped)
+        return self.json({
+            'lights': json_response,
+            'config': {
+                "mac": "00:00:00:00:00:00"
+                }
+        })
 
 
 class HueAllLightsStateView(HomeAssistantView):

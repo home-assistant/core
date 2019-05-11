@@ -16,7 +16,7 @@ from homeassistant.components.emulated_hue.hue_api import (
     HUE_API_STATE_ON, HUE_API_STATE_BRI, HUE_API_STATE_HUE, HUE_API_STATE_SAT,
     HueUsernameView, HueOneLightStateView, HueAllLightsStateView,
     HueOneLightChangeView, HueAllGroupsStateView,
-    HueUsernameAllLightStateView, HueDummyView)
+    HueUsernameAllLightsStateView, HueNullView)
 from homeassistant.const import STATE_ON, STATE_OFF
 
 import homeassistant.util.dt as dt_util
@@ -183,12 +183,12 @@ def hue_client(loop, hass_hue, aiohttp_client):
     })
 
     HueUsernameView().register(web_app, web_app.router)
-    HueDummyView().register(web_app, web_app.router)
+    HueNullView().register(web_app, web_app.router)
     HueAllLightsStateView(config).register(web_app, web_app.router)
     HueOneLightStateView(config).register(web_app, web_app.router)
     HueOneLightChangeView(config).register(web_app, web_app.router)
     HueAllGroupsStateView(config).register(web_app, web_app.router)
-    HueUsernameAllLightStateView(config).register(web_app, web_app.router)
+    HueUsernameAllLightsStateView(config).register(web_app, web_app.router)
 
     return loop.run_until_complete(aiohttp_client(web_app))
 

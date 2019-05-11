@@ -79,8 +79,8 @@ class TestEmulatedHue(unittest.TestCase):
         assert 'success' in success_json
         assert 'username' in success_json['success']
 
-    def test_dummy_view(self):
-        """Test dummy view."""
+    def test_null_view(self):
+        """Test null view."""
         request_json = {'devicetype': 'my_device'}
 
         result = requests.get(
@@ -95,8 +95,12 @@ class TestEmulatedHue(unittest.TestCase):
         success_json = resp_json[0]
         assert len(success_json) == 1
 
-        assert 'dummy' in success_json
-        assert 'view' in success_json['dummy']
+        assert 'error' in success_json
+        error_json = success_json['error']
+        assert len(error_json) == 3
+        assert '/' in error_json['address']
+        assert 'unauthorized user' in error_json['description']
+        assert '1' in error_json['type']
 
     def test_valid_username_request(self):
         """Test request with a valid username."""
