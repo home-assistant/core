@@ -168,7 +168,7 @@ class TraccarScanner:
             if (not skip_accuracy_filter and self._max_accuracy > 0 and
                     accuracy > self._max_accuracy):
                 _LOGGER.debug('Excluded position by accuracy filter: %f (%s)',
-                             accuracy, attr[ATTR_TRACCAR_ID])
+                              accuracy, attr[ATTR_TRACCAR_ID])
                 continue
 
             await self._async_see(
