@@ -10,9 +10,6 @@ from . import ATTR_DISCOVER_DEVICES, HMDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_LOW_BAT = 'LOW_BAT'
-ATTR_LOWBAT = 'LOWBAT'
-
 SENSOR_TYPES_CLASS = {
     'IPShutterContact': 'opening',
     'MaxShutterContact': 'opening',

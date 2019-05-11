@@ -43,6 +43,9 @@ ATTR_UNIQUE_ID = 'unique_id'
 ATTR_PARAMSET_KEY = 'paramset_key'
 ATTR_PARAMSET = 'paramset'
 ATTR_DISCOVERY_TYPE = 'discovery_type'
+ATTR_LOW_BAT = 'LOW_BAT'
+ATTR_LOWBAT = 'LOWBAT'
+
 
 EVENT_KEYPRESS = 'homematic.keypress'
 EVENT_IMPULSE = 'homematic.impulse'
@@ -506,10 +509,12 @@ def _get_devices(hass, discovery_type, keys, interface):
         elif discovery_type == DISCOVER_BINARY_SENSORS:
             metadata.update(device.BINARYNODE)
         elif discovery_type == DISCOVER_BATTERY:
-            if 'lowbat' in device.ATTRIBUTENODE:
-                metadata.update({'lowbat': device.ATTRIBUTENODE['lowbat']})
-            elif 'low_bat' in device.ATTRIBUTENODE:
-                metadata.update({'low_bat': device.ATTRIBUTENODE['low_bat']})
+            if ATTR_LOWBAT in device.ATTRIBUTENODE:
+                metadata.update(
+                    {ATTR_LOWBAT: device.ATTRIBUTENODE[ATTR_LOWBAT]})
+            elif ATTR_LOW_BAT in device.ATTRIBUTENODE:
+                metadata.update(
+                    {ATTR_LOW_BAT: device.ATTRIBUTENODE[ATTR_LOW_BAT]})
             else:
                 continue
         else:
