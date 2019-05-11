@@ -50,8 +50,6 @@ class AisTTSProvider(Provider):
 
     async def async_get_tts_audio(self, message, language, options=None):
         """Load TTS from AisTTS."""
-        _LOGGER.error(message)
-
         await self.hass.services.async_call('ais_ai_service', 'say_it', {"text": message})
         # filename = os.path.join(os.path.dirname(__file__), 'tts.mp3')
         # try:
