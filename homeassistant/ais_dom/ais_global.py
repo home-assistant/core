@@ -30,6 +30,10 @@ G_AN_FAVORITE = "Favorite"
 G_LOCAL_EXO_PLAYER_ENTITY_ID = "media_player.wbudowany_glosnik"
 G_CURR_MEDIA_CONTENT = {}
 
+# actions on remote
+G_ACTION_DELETE = 'delete'
+
+
 G_ICON_FOR_AUDIO = {
     G_AN_RADIO: 'mdi:radio',
     G_AN_PODCAST: 'mdi:podcast',

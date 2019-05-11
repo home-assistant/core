@@ -87,6 +87,7 @@ ALL_AIS_SENSORS = []
 CURR_GROUP = None
 CURR_ENTITIE = None
 CURR_ENTITIE_ENTERED = False
+CURR_ENTITIE_SELECTED_ACTION = None
 CURR_BUTTON_CODE = None
 CURR_BUTTON_LONG_PRESS = False
 CURR_ENTITIE_POSITION = None
@@ -846,6 +847,7 @@ def set_prev_position(hass):
 
 
 def select_entity(hass, long_press):
+    global CURR_ENTITIE_SELECTED_ACTION
     # on remote OK, select group view, group or entity
     global CURR_ENTITIE_ENTERED
     # OK on remote
@@ -964,6 +966,20 @@ def select_entity(hass, long_press):
             if CURR_ENTITIE.startswith(("input_select.", "input_number.")):
                 commit_current_position(hass)
             elif CURR_ENTITIE.startswith('sensor.') and CURR_ENTITIE.endswith('list'):
+                if CURR_ENTITIE_SELECTED_ACTION == ais_global.G_ACTION_DELETE:
+                    # delete
+                    if CURR_ENTITIE == 'sensor.aisfavoriteslist':
+                        item_idx = hass.states.get("sensor.aisfavoriteslist").state
+                        _say_it(hass, "OK usuwam tą pozycję z ulubionych.", None)
+                        hass.async_run_job(hass.services.call('ais_bookmarks', 'delete_favorite', {"id": item_idx}))
+                    elif CURR_ENTITIE == 'sensor.aisbookmarkslist':
+                        item_idx = hass.states.get("sensor.aisbookmarkslist").state
+                        hass.async_run_job(hass.services.call('ais_bookmarks', 'delete_bookmark', {"id": item_idx}))
+                        _say_it(hass, "OK. Usuwam tą zakładkę.", None)
+                    # reset action
+                    CURR_ENTITIE_SELECTED_ACTION = None
+                    return
+                #
                 commit_current_position(hass)
             elif CURR_ENTITIE.startswith("media_player."):
                 # play / pause on selected player
@@ -1019,7 +1035,7 @@ def can_entity_be_entered(hass, entity):
 
 
 def set_on_dpad_down(hass, long_press):
-    #
+    global CURR_ENTITIE_SELECTED_ACTION
     if CURR_ENTITIE is not None:
         if CURR_ENTITIE.startswith("media_player."):
             # speed up on remote
@@ -1045,6 +1061,15 @@ def set_on_dpad_down(hass, long_press):
         elif CURR_ENTITIE.startswith('input_text.') and CURR_ENTITIE_ENTERED:
             set_prev_virtual_keyboard_mode()
             say_curr_virtual_keyboard_mode(hass)
+        elif CURR_ENTITIE_ENTERED and CURR_ENTITIE =='sensor.aisfavoriteslist':
+            _say_it(hass, "Usuwanie. Naciśnij OK aby usunąć pozycję z ulubionych.", None)
+            CURR_ENTITIE_SELECTED_ACTION = ais_global.G_ACTION_DELETE
+        elif CURR_ENTITIE_ENTERED and CURR_ENTITIE == 'sensor.aisbookmarkslist':
+            _say_it(hass, "Usuwanie. Naciśnij OK aby usunąć tą zakładkę.", None)
+            CURR_ENTITIE_SELECTED_ACTION = ais_global.G_ACTION_DELETE
+        else:
+            _say_it(hass, "Wybrana pozycja nie ma dodatkowych opcji.", None)
+
 
 
 def set_on_dpad_up(hass, long_press):
@@ -1074,6 +1099,8 @@ def set_on_dpad_up(hass, long_press):
         elif CURR_ENTITIE.startswith('input_text.') and CURR_ENTITIE_ENTERED:
             set_next_virtual_keyboard_mode()
             say_curr_virtual_keyboard_mode(hass)
+        else:
+            _say_it(hass, "Wybrana pozycja nie ma dodatkowych informacji.", None)
 
 
 def set_focus_on_prev_entity(hass, long_press):
@@ -2118,6 +2145,7 @@ def _process_code(hass, data, callback):
     global CURR_BUTTON_CODE
     global CURR_BUTTON_LONG_PRESS
     global CURR_ENTITIE_ENTERED
+    global CURR_ENTITIE_MARKED_ACTION
     if 'Action' not in data or 'KeyCode' not in data:
         return
     # check if we have callback
@@ -2163,7 +2191,11 @@ def _process_code(hass, data, callback):
     CURR_BUTTON_CODE = code
     # show the code in web app
     hass.states.set('binary_sensor.ais_remote_button', code)
-    # decode Key Events
+    # remove selected action
+    if code != 23:
+        CURR_ENTITIE_SELECTED_ACTION = None
+
+# decode Key Events
     # codes according to android.view.KeyEvent
     if code == 93:
         # PG- -> KEYCODE_PAGE_DOWN
