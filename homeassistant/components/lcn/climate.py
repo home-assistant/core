@@ -37,13 +37,13 @@ class LcnClimate(LcnDevice, ClimateDevice):
         """Initialize of a LCN climate device."""
         super().__init__(config, address_connection)
 
-        self.variable = self.pypck.lcn_defs.Var[config[CONF_SOURCE]]
-        self.setpoint = self.pypck.lcn_defs.Var[config[CONF_SETPOINT]]
-        self.unit = self.pypck.lcn_defs.VarUnit.parse(
+        self.variable = pypck.lcn_defs.Var[config[CONF_SOURCE]]
+        self.setpoint = pypck.lcn_defs.Var[config[CONF_SETPOINT]]
+        self.unit = pypck.lcn_defs.VarUnit.parse(
             config[CONF_UNIT_OF_MEASUREMENT])
 
         self.regulator_id = \
-            self.pypck.lcn_defs.Var.to_set_point_id(self.setpoint)
+            pypck.lcn_defs.Var.to_set_point_id(self.setpoint)
         self.is_lockable = config[CONF_LOCKABLE]
         self._max_temp = config[CONF_MAX_TEMP]
         self._min_temp = config[CONF_MIN_TEMP]
@@ -125,7 +125,7 @@ class LcnClimate(LcnDevice, ClimateDevice):
 
     def input_received(self, input_obj):
         """Set temperature value when LCN input object is received."""
-        if not isinstance(input_obj, self.pypck.inputs.ModStatusVar):
+        if not isinstance(input_obj, pypck.inputs.ModStatusVar):
             return
 
         if input_obj.get_var() == self.variable:

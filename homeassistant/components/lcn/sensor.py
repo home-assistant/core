@@ -41,8 +41,8 @@ class LcnVariableSensor(LcnDevice):
         """Initialize the LCN sensor."""
         super().__init__(config, address_connection)
 
-        self.variable = self.pypck.lcn_defs.Var[config[CONF_SOURCE]]
-        self.unit = self.pypck.lcn_defs.VarUnit.parse(
+        self.variable = pypck.lcn_defs.Var[config[CONF_SOURCE]]
+        self.unit = pypck.lcn_defs.VarUnit.parse(
             config[CONF_UNIT_OF_MEASUREMENT])
 
         self._value = None
@@ -65,7 +65,7 @@ class LcnVariableSensor(LcnDevice):
 
     def input_received(self, input_obj):
         """Set sensor value when LCN input object (command) is received."""
-        if not isinstance(input_obj, self.pypck.inputs.ModStatusVar) or \
+        if not isinstance(input_obj, pypck.inputs.ModStatusVar) or \
                 input_obj.get_var() != self.variable:
             return
 
@@ -81,9 +81,9 @@ class LcnLedLogicSensor(LcnDevice):
         super().__init__(config, address_connection)
 
         if config[CONF_SOURCE] in LED_PORTS:
-            self.source = self.pypck.lcn_defs.LedPort[config[CONF_SOURCE]]
+            self.source = pypck.lcn_defs.LedPort[config[CONF_SOURCE]]
         else:
-            self.source = self.pypck.lcn_defs.LogicOpPort[config[CONF_SOURCE]]
+            self.source = pypck.lcn_defs.LogicOpPort[config[CONF_SOURCE]]
 
         self._value = None
 
@@ -101,13 +101,13 @@ class LcnLedLogicSensor(LcnDevice):
     def input_received(self, input_obj):
         """Set sensor value when LCN input object (command) is received."""
         if not isinstance(input_obj,
-                          self.pypck.inputs.ModStatusLedsAndLogicOps):
+                          pypck.inputs.ModStatusLedsAndLogicOps):
             return
 
-        if self.source in self.pypck.lcn_defs.LedPort:
+        if self.source in pypck.lcn_defs.LedPort:
             self._value = input_obj.get_led_state(
                 self.source.value).name.lower()
-        elif self.source in self.pypck.lcn_defs.LogicOpPort:
+        elif self.source in pypck.lcn_defs.LogicOpPort:
             self._value = input_obj.get_logic_op_state(
                 self.source.value).name.lower()
 

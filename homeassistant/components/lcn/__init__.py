@@ -2,7 +2,6 @@
 import logging
 
 import pypck
-from pypck.connection import PchkConnectionManager
 import voluptuous as vol
 
 from homeassistant.components.climate import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
@@ -18,10 +17,10 @@ from .const import (
     BINSENSOR_PORTS, CONF_CLIMATES, CONF_CONNECTIONS, CONF_DIM_MODE,
     CONF_DIMMABLE, CONF_LOCKABLE, CONF_MAX_TEMP, CONF_MIN_TEMP, CONF_MOTOR,
     CONF_OUTPUT, CONF_SETPOINT, CONF_SK_NUM_TRIES, CONF_SOURCE,
-    CONF_TRANSITION, DATA_LCN, DEFAULT_NAME, DIM_MODES, DOMAIN, KEYS,
-    LED_PORTS, LOGICOP_PORTS, MOTOR_PORTS, OUTPUT_PORTS, PATTERN_ADDRESS,
-    RELAY_PORTS, S0_INPUTS, SETPOINTS, THRESHOLDS, VAR_UNITS, VARIABLES,
-    get_connection, has_unique_connection_names, is_address)
+    CONF_TRANSITION, DATA_LCN, DIM_MODES, DOMAIN, KEYS, LED_PORTS,
+    LOGICOP_PORTS, MOTOR_PORTS, OUTPUT_PORTS, RELAY_PORTS, S0_INPUTS,
+    SETPOINTS, THRESHOLDS, VAR_UNITS, VARIABLES, has_unique_connection_names,
+    is_address)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,13 +123,14 @@ async def async_setup(hass, config):
                     'DIM_MODE': pypck.lcn_defs.OutputPortDimMode[
                         conf_connection[CONF_DIM_MODE]]}
 
-        connection = PchkConnectionManager(hass.loop,
-                                           conf_connection[CONF_HOST],
-                                           conf_connection[CONF_PORT],
-                                           conf_connection[CONF_USERNAME],
-                                           conf_connection[CONF_PASSWORD],
-                                           settings=settings,
-                                           connection_id=connection_name)
+        connection = pypck.connection.PchkConnectionManager(
+            hass.loop,
+            conf_connection[CONF_HOST],
+            conf_connection[CONF_PORT],
+            conf_connection[CONF_USERNAME],
+            conf_connection[CONF_PASSWORD],
+            settings=settings,
+            connection_id=connection_name)
 
         try:
             # establish connection to PCHK server
@@ -163,7 +163,6 @@ class LcnDevice(Entity):
 
     def __init__(self, config, address_connection):
         """Initialize the LCN device."""
-        self.pypck = pypck
         self.config = config
         self.address_connection = address_connection
         self._name = config[CONF_NAME]

@@ -43,9 +43,9 @@ class LcnOutputLight(LcnDevice, Light):
         """Initialize the LCN light."""
         super().__init__(config, address_connection)
 
-        self.output = self.pypck.lcn_defs.OutputPort[config[CONF_OUTPUT]]
+        self.output = pypck.lcn_defs.OutputPort[config[CONF_OUTPUT]]
 
-        self._transition = self.pypck.lcn_defs.time_to_ramp_value(
+        self._transition = pypck.lcn_defs.time_to_ramp_value(
             config[CONF_TRANSITION])
         self.dimmable = config[CONF_DIMMABLE]
 
@@ -86,7 +86,7 @@ class LcnOutputLight(LcnDevice, Light):
         else:
             percent = 100
         if ATTR_TRANSITION in kwargs:
-            transition = self.pypck.lcn_defs.time_to_ramp_value(
+            transition = pypck.lcn_defs.time_to_ramp_value(
                 kwargs[ATTR_TRANSITION] * 1000)
         else:
             transition = self._transition
@@ -99,7 +99,7 @@ class LcnOutputLight(LcnDevice, Light):
         """Turn the entity off."""
         self._is_on = False
         if ATTR_TRANSITION in kwargs:
-            transition = self.pypck.lcn_defs.time_to_ramp_value(
+            transition = pypck.lcn_defs.time_to_ramp_value(
                 kwargs[ATTR_TRANSITION] * 1000)
         else:
             transition = self._transition
@@ -111,7 +111,7 @@ class LcnOutputLight(LcnDevice, Light):
 
     def input_received(self, input_obj):
         """Set light state when LCN input object (command) is received."""
-        if not isinstance(input_obj, self.pypck.inputs.ModStatusOutput) or \
+        if not isinstance(input_obj, pypck.inputs.ModStatusOutput) or \
                 input_obj.get_output_id() != self.output.value:
             return
 
@@ -130,7 +130,7 @@ class LcnRelayLight(LcnDevice, Light):
         """Initialize the LCN light."""
         super().__init__(config, address_connection)
 
-        self.output = self.pypck.lcn_defs.RelayPort[config[CONF_OUTPUT]]
+        self.output = pypck.lcn_defs.RelayPort[config[CONF_OUTPUT]]
 
         self._is_on = None
 
@@ -149,8 +149,8 @@ class LcnRelayLight(LcnDevice, Light):
         """Turn the entity on."""
         self._is_on = True
 
-        states = [self.pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
-        states[self.output.value] = self.pypck.lcn_defs.RelayStateModifier.ON
+        states = [pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
+        states[self.output.value] = pypck.lcn_defs.RelayStateModifier.ON
         self.address_connection.control_relays(states)
 
         await self.async_update_ha_state()
@@ -159,15 +159,15 @@ class LcnRelayLight(LcnDevice, Light):
         """Turn the entity off."""
         self._is_on = False
 
-        states = [self.pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
-        states[self.output.value] = self.pypck.lcn_defs.RelayStateModifier.OFF
+        states = [pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
+        states[self.output.value] = pypck.lcn_defs.RelayStateModifier.OFF
         self.address_connection.control_relays(states)
 
         await self.async_update_ha_state()
 
     def input_received(self, input_obj):
         """Set light state when LCN input object (command) is received."""
-        if not isinstance(input_obj, self.pypck.inputs.ModStatusRelays):
+        if not isinstance(input_obj, pypck.inputs.ModStatusRelays):
             return
 
         self._is_on = input_obj.get_state(self.output.value)
