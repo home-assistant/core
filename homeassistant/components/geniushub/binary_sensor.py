@@ -1,4 +1,4 @@
-"""Support for Genius Hub binary_sensor devices ."""
+"""Support for Genius Hub binary_sensor devices."""
 import logging
 from time import (localtime, strftime)
 
