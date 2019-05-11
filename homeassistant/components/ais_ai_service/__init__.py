@@ -618,8 +618,8 @@ def say_curr_entity(hass):
         return
     elif entity_id == 'sensor.ais_drives':
         state = hass.states.get('sensor.ais_drives')
-        if state.state is None:
-            _say_it(hass, "Dysk wewnętrzny", None)
+        if state.state is None or state.state == "":
+            _say_it(hass, "dysk wewnętrzny", None)
         else:
             attr = state.attributes
             files = attr.get('files', [])

@@ -93,24 +93,15 @@ def async_setup(hass, config):
         _LOGGER.info("remote_cancel_item")
         data.remote_cancel_item(True)
 
-    hass.services.async_register(
-        DOMAIN, 'browse_path', browse_path)
-    hass.services.async_register(
-        DOMAIN, 'refresh_files', refresh_files)
-    hass.services.async_register(
-        DOMAIN, 'sync_locations', sync_locations)
-    hass.services.async_register(
-        DOMAIN, 'play_next', play_next)
-    hass.services.async_register(
-        DOMAIN, 'play_prev', play_prev)
-    hass.services.async_register(
-        DOMAIN, 'remote_next_item', remote_next_item)
-    hass.services.async_register(
-        DOMAIN, 'remote_prev_item', remote_prev_item)
-    hass.services.async_register(
-        DOMAIN, 'remote_select_item', remote_select_item)
-    hass.services.async_register(
-        DOMAIN, 'remote_cancel_item', remote_cancel_item)
+    hass.services.async_register(DOMAIN, 'browse_path', browse_path)
+    hass.services.async_register(DOMAIN, 'refresh_files', refresh_files)
+    hass.services.async_register(DOMAIN, 'sync_locations', sync_locations)
+    hass.services.async_register(DOMAIN, 'play_next', play_next)
+    hass.services.async_register(DOMAIN, 'play_prev', play_prev)
+    hass.services.async_register(DOMAIN, 'remote_next_item', remote_next_item)
+    hass.services.async_register(DOMAIN, 'remote_prev_item', remote_prev_item)
+    hass.services.async_register(DOMAIN, 'remote_select_item', remote_select_item)
+    hass.services.async_register(DOMAIN, 'remote_cancel_item', remote_cancel_item)
 
     return True
 
@@ -614,8 +605,7 @@ class LocalData:
             self.say("Nie masz żadnych dysków zdalnych. "
                      "Dodaj połączenie do dysku zdalnego za pomocą konfiguratora w aplikacji.")
         else:
-            self.say("Mamy " + get_pozycji_variety(len(remotes) + " w zdalnych dyskach."
-                                                                  " Wybierz dysk który mam przeglądać."))
+            self.say("Mamy " + get_pozycji_variety(len(remotes)) + " Wybierz dysk który mam przeglądać.")
 
     def rclone_browse_folder(self, path, say):
         if ais_global.G_DRIVE_SHARED_WITH_ME in path:

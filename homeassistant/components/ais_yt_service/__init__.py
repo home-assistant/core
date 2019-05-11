@@ -160,6 +160,8 @@ class YouTubeData:
             _LOGGER.error("extract_media error: " + str(e))
 
         if media_url is not None and len(media_url) > 0:
+            # TODO check 403
+
             # set stream url, image and title
             _audio_info = json.dumps(
                 {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "lookup_url": track["uri"],

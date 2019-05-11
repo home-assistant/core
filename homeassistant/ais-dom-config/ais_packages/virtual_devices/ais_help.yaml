@@ -2,9 +2,9 @@ sensor:
   - platform: template
     sensors:
       ais_connect_iot_device_info:
-        value_template: "Podłącz urządzenie do prądu i uruchom 'Skanuj w poszukiwaniu nowych urządzeń'.
-                        Następnie wybierz sieć wifi do której dołączasz urządzenie oraz nazwę nowego urządzenia.
-                        Żeby zatwierdzić wybierz 'Dołącz nowe urządzenie'"
+        value_template: "Podłącz urządzenie do prądu. Upewnij się, że urządzenie znajduje się w zasięgu routera WiFi oraz bramki AIS dom.
+                         Żeby uruchomić tryb parowania naciśnij szybko 4 razy przycisk na urządzeniu i poczkaj aż jego dioda zacznie mrugać.
+                         Następnie przejdz dalej i uruchom 'Skanuj w poszukiwaniu nowych urządzeń'."
 
 
       ais_android_wifi_current_network_info:
