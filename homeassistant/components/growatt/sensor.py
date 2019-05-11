@@ -2,6 +2,7 @@
 import logging
 
 import voluptuous as vol
+from homeassistant.exceptions import HomeAssistantError
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -38,7 +39,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if login(growatt_client, username, password):
         sensor_today = GrowattPlantTotals(
-            hass,
             growatt_client,
             username,
             password,
@@ -46,7 +46,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             "todayEnergySum",
         )
         sensor_total = GrowattPlantTotals(
-            hass,
             growatt_client,
             username,
             password,
@@ -54,7 +53,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             "totalEnergySum",
         )
         sensor_current = GrowattPlantCurrent(
-            hass, growatt_client, username, password
+            growatt_client, username, password
         )
         add_entities([sensor_today, sensor_total, sensor_current])
 
@@ -74,9 +73,8 @@ def login(client, username, password):
 class GrowattPlant(Entity):
     """Base Growatt sensor class."""
 
-    def __init__(self, hass, client, username, password):
+    def __init__(self, client, username, password):
         """Initialize the sensor."""
-        self._hass = hass
         self._client = client
         self._username = username
         self._password = password
@@ -96,16 +94,16 @@ class GrowattPlant(Entity):
                 "cannot convert safely to kWh."
             ).format(metric_name)
             _LOGGER.error(message)
-            raise ValueError(message)
+            raise HomeAssistantError(message)
         return multiplier_lookup[metric_name]
 
 
 class GrowattPlantTotals(GrowattPlant):
     """Representation of a Growatt plant sensor."""
 
-    def __init__(self, hass, client, username, password, name, metric_name):
+    def __init__(self, client, username, password, name, metric_name):
         """Initialize the sensor."""
-        super().__init__(hass, client, username, password)
+        super().__init__(client, username, password)
         self._name = name
         self._metric_name = metric_name
 
@@ -129,15 +127,17 @@ class GrowattPlantTotals(GrowattPlant):
 
         Refreshes login to update the session.
         """
-        login(self._client, self._username, self._password)
+        if not login(self._client, self._username, self._password):
+            raise HomeAssistantError("Not able to login to growatt server.")
         plant_info = self._client.plant_list()
-        return float(
-            self._convert_to_kwh(*plant_info["totalData"][key].split(" "))
-        )
+        return self._convert_to_kwh(*plant_info["totalData"][key].split(" "))
 
     def update(self):
         """Get the latest data from Growatt server."""
-        self._state = self._get_total_energy(self._metric_name)
+        try:
+            self._state = self._get_total_energy(self._metric_name)
+        except HomeAssistantError as e:
+            _LOGGER.error(e)
 
     @property
     def name(self):
@@ -159,7 +159,10 @@ class GrowattPlantCurrent(GrowattPlant):
 
         Refreshes login to update the session.
         """
-        login(self._client, self._username, self._password)
+        if not login(self._client, self._username, self._password):
+            _LOGGER.error("Not able to login to growatt server.")
+            return
+
         plant_info = self._client.plant_list()
         new_state = float(
             self._convert_to_w(
