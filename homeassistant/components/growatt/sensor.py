@@ -136,8 +136,8 @@ class GrowattPlantTotals(GrowattPlant):
         """Get the latest data from Growatt server."""
         try:
             self._state = self._get_total_energy(self._metric_name)
-        except HomeAssistantError as e:
-            _LOGGER.error(e)
+        except HomeAssistantError as error:
+            _LOGGER.error(error)
 
     @property
     def name(self):

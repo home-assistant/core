@@ -37,7 +37,7 @@ def test_convert_to_kwh():
     """Test converting to kWh."""
     assert (
         growatt_sensor.GrowattPlantTotals(
-            None, None, "", "", "", ""
+            None, "", "", "", ""
         )._convert_to_kwh("5.42", "GWh")
         == 5420000
     )
@@ -79,7 +79,7 @@ dummy_plant_info = {
 def test_today_energy(_, __):
     """Test extracting todays energy from plant."""
     sensor = growatt_sensor.GrowattPlantTotals(
-        None, growatt.GrowattApi(), "foo", "bar", "today", "todayEnergySum"
+        growatt.GrowattApi(), "foo", "bar", "today", "todayEnergySum"
     )
     sensor.update()
     assert sensor.state == 0.6
@@ -90,7 +90,7 @@ def test_today_energy(_, __):
 def test_total_energy(_, __):
     """Test extracting total energy from plant."""
     sensor = growatt_sensor.GrowattPlantTotals(
-        None, growatt.GrowattApi(), "foo", "bar", "total", "totalEnergySum"
+        growatt.GrowattApi(), "foo", "bar", "total", "totalEnergySum"
     )
     sensor.update()
     assert sensor.state == 114.9
@@ -101,7 +101,7 @@ def test_total_energy(_, __):
 def test_current_energy(_, __):
     """Test extracting current energy from plant."""
     sensor = growatt_sensor.GrowattPlantCurrent(
-        None, growatt.GrowattApi(), "foo", "bar"
+        growatt.GrowattApi(), "foo", "bar"
     )
     sensor.update()
     assert sensor.state == 142.0
