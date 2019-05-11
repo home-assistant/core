@@ -162,4 +162,5 @@ def _setup_lte(hass, lte_config) -> None:
         """Clean up resources."""
         client.user.logout()
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
+    if device_type == ATTR_ROUTER:
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
