@@ -80,6 +80,8 @@ def setup(hass, config):
     def hub_refresh(event_time):
         """Call Brottsplatskartan API to refresh information."""
         incidents = bpk.get_incidents()
+        if not incidents:
+            return False
         for incident_area in incidents:
             slugify_incident_area = slugify(incident_area)
             incident_area_update_signal = "{}_{}".format(

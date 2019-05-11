@@ -3,7 +3,7 @@
   "name": "Brottsplatskartan",
   "documentation": "https://www.home-assistant.io/components/brottsplatskartan",
   "requirements": [
-    "brottsplatskartan==1.0.3"
+    "brottsplatskartan==1.0.5"
   ],
   "dependencies": [],
   "codeowners": []
