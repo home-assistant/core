@@ -19,20 +19,28 @@ FLOWS = {}
 
 def validate_integration(integration: Integration):
     """Validate we can load config flow without installing requirements."""
-    try:
-        integration.import_pkg('config_flow')
-    except ImportError as err:
-        integration.add_error(
-            'config_flow',
-            "Unable to import config flow: {}. Config flows should be able to "
-            "be imported without installing requirements.".format(err))
-        return
 
-    if integration.domain not in config_entries.HANDLERS:
+    if not (integration.path / "config_flow.py").is_file():
         integration.add_error(
             'config_flow',
-            "Importing the config flow platform did not register a config "
-            "flow handler.")
+            "Config flows need to be defined in the file config_flow.py")
+
+    # Currently not require being able to load config flow without
+    # installing requirements.
+    # try:
+    #     integration.import_pkg('config_flow')
+    # except ImportError as err:
+    #     integration.add_error(
+    #         'config_flow',
+    #         "Unable to import config flow: {}. Config flows should be able to "
+    #         "be imported without installing requirements.".format(err))
+    #     return
+
+    # if integration.domain not in config_entries.HANDLERS:
+    #     integration.add_error(
+    #         'config_flow',
+    #         "Importing the config flow platform did not register a config "
+    #         "flow handler.")
 
 
 def generate_and_validate(integrations: Dict[str, Integration]):
@@ -50,9 +58,7 @@ def generate_and_validate(integrations: Dict[str, Integration]):
         if not config_flow:
             continue
 
-        # Currently not require being able to load config flow without
-        # installing requirements.
-        # validate_integration(integration)
+        validate_integration(integration)
 
         domains.append(domain)
 

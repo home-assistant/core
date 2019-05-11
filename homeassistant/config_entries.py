@@ -666,10 +666,10 @@ class ConfigEntries:
             self.hass, self._hass_config, integration)
 
         try:
-            integration.get_component()
+            integration.get_platform('config_flow')
         except ImportError as err:
             _LOGGER.error(
-                'Error occurred while loading integration %s: %s',
+                'Error occurred loading config flow for integration %s: %s',
                 handler_key, err)
             raise data_entry_flow.UnknownHandler
 
