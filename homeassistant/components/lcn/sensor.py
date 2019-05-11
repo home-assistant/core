@@ -3,10 +3,10 @@ import pypck
 
 from homeassistant.const import CONF_ADDRESS, CONF_UNIT_OF_MEASUREMENT
 
-from . import LcnDevice, get_connection
+from . import LcnDevice
 from .const import (
     CONF_CONNECTIONS, CONF_SOURCE, DATA_LCN, LED_PORTS, S0_INPUTS, SETPOINTS,
-    THRESHOLDS, VARIABLES)
+    THRESHOLDS, VARIABLES, get_connection)
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,

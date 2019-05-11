@@ -4,8 +4,9 @@ import pypck
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import CONF_ADDRESS
 
-from . import LcnDevice, get_connection
-from .const import CONF_CONNECTIONS, CONF_OUTPUT, DATA_LCN, OUTPUT_PORTS
+from . import LcnDevice
+from .const import (
+    CONF_CONNECTIONS, CONF_OUTPUT, DATA_LCN, OUTPUT_PORTS, get_connection)
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,

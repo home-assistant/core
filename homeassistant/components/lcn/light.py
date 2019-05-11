@@ -6,10 +6,10 @@ from homeassistant.components.light import (
     Light)
 from homeassistant.const import CONF_ADDRESS
 
-from . import LcnDevice, get_connection
+from . import LcnDevice
 from .const import (
     CONF_CONNECTIONS, CONF_DIMMABLE, CONF_OUTPUT, CONF_TRANSITION, DATA_LCN,
-    OUTPUT_PORTS)
+    OUTPUT_PORTS, get_connection)
 
 
 async def async_setup_platform(

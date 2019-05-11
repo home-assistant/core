@@ -5,10 +5,10 @@ from homeassistant.components.climate import ClimateDevice, const
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_ADDRESS, CONF_UNIT_OF_MEASUREMENT)
 
-from . import LcnDevice, get_connection
+from . import LcnDevice
 from .const import (
     CONF_CONNECTIONS, CONF_LOCKABLE, CONF_MAX_TEMP, CONF_MIN_TEMP,
-    CONF_SETPOINT, CONF_SOURCE, DATA_LCN)
+    CONF_SETPOINT, CONF_SOURCE, DATA_LCN, get_connection)
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,

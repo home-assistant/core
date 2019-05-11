@@ -4,8 +4,8 @@ import pypck
 from homeassistant.components.cover import CoverDevice
 from homeassistant.const import CONF_ADDRESS
 
-from . import LcnDevice, get_connection
-from .const import CONF_CONNECTIONS, CONF_MOTOR, DATA_LCN
+from . import LcnDevice
+from .const import CONF_CONNECTIONS, CONF_MOTOR, DATA_LCN, get_connection
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,

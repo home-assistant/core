@@ -4,9 +4,10 @@ import pypck
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import CONF_ADDRESS
 
-from . import LcnDevice, get_connection
+from . import LcnDevice
 from .const import (
-    BINSENSOR_PORTS, CONF_CONNECTIONS, CONF_SOURCE, DATA_LCN, SETPOINTS)
+    BINSENSOR_PORTS, CONF_CONNECTIONS, CONF_SOURCE, DATA_LCN, SETPOINTS,
+    get_connection)
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
