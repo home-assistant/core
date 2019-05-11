@@ -159,9 +159,18 @@ class YouTubeData:
         except Exception as e:
             _LOGGER.error("extract_media error: " + str(e))
 
+        all_ok = False
         if media_url is not None and len(media_url) > 0:
-            # TODO check 403
+            # check 403
+            import requests
+            try:
+                r = requests.head(media_url, allow_redirects=True, timeout=1)
+                if r.status_code < 400:
+                    all_ok = True
+            except Exception as e:
+                _LOGGER.warning("Request to youtube error " + str(e))
 
+        if all_ok:
             # set stream url, image and title
             _audio_info = json.dumps(
                 {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "lookup_url": track["uri"],
