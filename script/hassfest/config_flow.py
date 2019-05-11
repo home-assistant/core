@@ -2,8 +2,6 @@
 import json
 from typing import Dict
 
-from homeassistant import config_entries
-
 from .model import Integration, Config
 
 BASE = """
@@ -19,7 +17,6 @@ FLOWS = {}
 
 def validate_integration(integration: Integration):
     """Validate we can load config flow without installing requirements."""
-
     if not (integration.path / "config_flow.py").is_file():
         integration.add_error(
             'config_flow',
@@ -32,8 +29,8 @@ def validate_integration(integration: Integration):
     # except ImportError as err:
     #     integration.add_error(
     #         'config_flow',
-    #         "Unable to import config flow: {}. Config flows should be able to "
-    #         "be imported without installing requirements.".format(err))
+    #         "Unable to import config flow: {}. Config flows should be able "
+    #         "to be imported without installing requirements.".format(err))
     #     return
 
     # if integration.domain not in config_entries.HANDLERS:
