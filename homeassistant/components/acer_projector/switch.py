@@ -160,7 +160,7 @@ class AcerSwitch(SwitchDevice):
             self._state = False
             self._available = True
         else:
-            _LOGGER.warn('Unknown status ' + awns)
+            _LOGGER.warning('Unknown status %s', awns)
             self._available = False
 
         if self._state and self._available:
