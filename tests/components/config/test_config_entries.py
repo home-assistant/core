@@ -12,6 +12,7 @@ from homeassistant.config_entries import HANDLERS
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 from homeassistant.components.config import config_entries
+from homeassistant.generated import config_flows
 
 from tests.common import (
     MockConfigEntry, MockModule, mock_coro_func, mock_integration)
@@ -121,7 +122,7 @@ async def test_remove_entry_unauth(hass, client, hass_admin_user):
 @asyncio.coroutine
 def test_available_flows(hass, client):
     """Test querying the available flows."""
-    with patch.object(core_ce, 'FLOWS', ['hello', 'world']):
+    with patch.object(config_flows, 'FLOWS', ['hello', 'world']):
         resp = yield from client.get(
             '/api/config/config_entries/flow_handlers')
         assert resp.status == 200

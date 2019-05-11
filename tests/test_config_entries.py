@@ -361,6 +361,7 @@ def test_add_entry_calls_setup_entry(hass, manager):
     mock_integration(
         hass,
         MockModule('comp', async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, 'config_flow.comp', None)
 
     class TestFlow(config_entries.ConfigFlow):
 
@@ -416,6 +417,7 @@ async def test_saving_and_loading(hass):
     """Test that we're saving and loading correctly."""
     mock_integration(hass, MockModule(
         'test', async_setup_entry=lambda *args: mock_coro(True)))
+    mock_entity_platform(hass, 'config_flow.test', None)
 
     class TestFlow(config_entries.ConfigFlow):
         VERSION = 5
@@ -511,6 +513,7 @@ async def test_forward_entry_does_not_setup_entry_if_setup_fails(hass):
 async def test_discovery_notification(hass):
     """Test that we create/dismiss a notification when source is discovery."""
     mock_integration(hass, MockModule('test'))
+    mock_entity_platform(hass, 'config_flow.test', None)
     await async_setup_component(hass, 'persistent_notification', {})
 
     class TestFlow(config_entries.ConfigFlow):
@@ -548,6 +551,7 @@ async def test_discovery_notification(hass):
 async def test_discovery_notification_not_created(hass):
     """Test that we not create a notification when discovery is aborted."""
     mock_integration(hass, MockModule('test'))
+    mock_entity_platform(hass, 'config_flow.test', None)
     await async_setup_component(hass, 'persistent_notification', {})
 
     class TestFlow(config_entries.ConfigFlow):
