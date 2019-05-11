@@ -28,17 +28,16 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     heater = hass.data[DOMAIN]['heater']
 
     async_add_entities([
-        IncomfortWaterHeater(hass, client, heater)], update_before_add=True)
+        IncomfortWaterHeater(client, heater)], update_before_add=True)
 
 
 class IncomfortWaterHeater(WaterHeaterDevice):
     """Representation of an InComfort/Intouch water_heater device."""
 
-    def __init__(self, hass, client, heater):
+    def __init__(self, client, heater):
         """Initialize the water_heater device."""
         self._client = client
         self._heater = heater
-        self._hass = hass
 
     @property
     def name(self):
@@ -97,4 +96,4 @@ class IncomfortWaterHeater(WaterHeaterDevice):
         except (AssertionError, asyncio.TimeoutError) as err:
             _LOGGER.warning("Update failed, message: %s", err)
 
-        async_dispatcher_send(self._hass, DOMAIN)
+        async_dispatcher_send(self.hass, DOMAIN)
