@@ -5,20 +5,22 @@ import pypck
 from pypck.connection import PchkConnectionManager
 import voluptuous as vol
 
+from homeassistant.components.climate import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
 from homeassistant.const import (
     CONF_ADDRESS, CONF_BINARY_SENSORS, CONF_COVERS, CONF_HOST, CONF_LIGHTS,
     CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_SENSORS, CONF_SWITCHES,
-    CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME)
+    CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
 
 from .const import (
-    BINSENSOR_PORTS, CONF_CONNECTIONS, CONF_DIM_MODE, CONF_DIMMABLE,
-    CONF_MOTOR, CONF_OUTPUT, CONF_SK_NUM_TRIES, CONF_SOURCE, CONF_TRANSITION,
-    DATA_LCN, DEFAULT_NAME, DIM_MODES, DOMAIN, KEYS, LED_PORTS, LOGICOP_PORTS,
-    MOTOR_PORTS, OUTPUT_PORTS, PATTERN_ADDRESS, RELAY_PORTS, S0_INPUTS,
-    SETPOINTS, THRESHOLDS, VAR_UNITS, VARIABLES)
+    BINSENSOR_PORTS, CONF_CLIMATES, CONF_CONNECTIONS, CONF_DIM_MODE,
+    CONF_DIMMABLE, CONF_LOCKABLE, CONF_MAX_TEMP, CONF_MIN_TEMP, CONF_MOTOR,
+    CONF_OUTPUT, CONF_SETPOINT, CONF_SK_NUM_TRIES, CONF_SOURCE,
+    CONF_TRANSITION, DATA_LCN, DEFAULT_NAME, DIM_MODES, DOMAIN, KEYS,
+    LED_PORTS, LOGICOP_PORTS, MOTOR_PORTS, OUTPUT_PORTS, PATTERN_ADDRESS,
+    RELAY_PORTS, S0_INPUTS, SETPOINTS, THRESHOLDS, VAR_UNITS, VARIABLES)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,6 +74,19 @@ BINARY_SENSORS_SCHEMA = vol.Schema({
                                                          BINSENSOR_PORTS))
     })
 
+CLIMATES_SCHEMA = vol.Schema({
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_ADDRESS): is_address,
+    vol.Required(CONF_SOURCE): vol.All(vol.Upper, vol.In(VARIABLES)),
+    vol.Required(CONF_SETPOINT): vol.All(vol.Upper,
+                                         vol.In(VARIABLES + SETPOINTS)),
+    vol.Optional(CONF_MAX_TEMP, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
+    vol.Optional(CONF_MIN_TEMP, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
+    vol.Optional(CONF_LOCKABLE, default=False): vol.Coerce(bool),
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=TEMP_CELSIUS):
+        vol.In(TEMP_CELSIUS, TEMP_FAHRENHEIT)
+})
+
 COVERS_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_ADDRESS): is_address,
@@ -124,6 +139,8 @@ CONFIG_SCHEMA = vol.Schema({
             cv.ensure_list, has_unique_connection_names, [CONNECTION_SCHEMA]),
         vol.Optional(CONF_BINARY_SENSORS): vol.All(
             cv.ensure_list, [BINARY_SENSORS_SCHEMA]),
+        vol.Optional(CONF_CLIMATES): vol.All(
+            cv.ensure_list, [CLIMATES_SCHEMA]),
         vol.Optional(CONF_COVERS): vol.All(
             cv.ensure_list, [COVERS_SCHEMA]),
         vol.Optional(CONF_LIGHTS): vol.All(
@@ -184,6 +201,7 @@ async def async_setup(hass, config):
 
     # load platforms
     for component, conf_key in (('binary_sensor', CONF_BINARY_SENSORS),
+                                ('climate', CONF_CLIMATES),
                                 ('cover', CONF_COVERS),
                                 ('light', CONF_LIGHTS),
                                 ('sensor', CONF_SENSORS),

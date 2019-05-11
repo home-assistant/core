@@ -21,6 +21,11 @@ CONF_DIMMABLE = 'dimmable'
 CONF_TRANSITION = 'transition'
 CONF_MOTOR = 'motor'
 CONF_SOURCE = 'source'
+CONF_SETPOINT = 'setpoint'
+CONF_LOCKABLE = 'lockable'
+CONF_CLIMATES = 'climates'
+CONF_MAX_TEMP = 'max_temp'
+CONF_MIN_TEMP = 'min_temp'
 
 DIM_MODES = ['STEPS50', 'STEPS200']
 
