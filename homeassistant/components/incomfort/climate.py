@@ -60,7 +60,7 @@ class InComfortClimate(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self._room.override  # or: self._room.setpoint?
+        return self._room.override
 
     @property
     def min_temp(self):
