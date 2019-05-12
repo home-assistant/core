@@ -35,14 +35,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hkid = config_entry.data['AccessoryPairingID']
     conn = hass.data[KNOWN_DEVICES][hkid]
 
-    def add_service(aid, service):
+    def async_add_service(aid, service):
         if service['stype'] != 'lock-mechanism':
             return False
         info = {'aid': aid, 'iid': service['iid']}
         async_add_entities([HomeKitLock(conn, info)], True)
         return True
 
-    conn.add_listener(add_service)
+    conn.add_listener(async_add_service)
 
 
 class HomeKitLock(HomeKitEntity, LockDevice):
