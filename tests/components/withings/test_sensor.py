@@ -1,10 +1,20 @@
 """Tests for the Withings component."""
+from unittest.mock import MagicMock, patch
+
+import asynctest
+from nokia import NokiaApi, NokiaMeasures, NokiaSleep, NokiaSleepSummary
 import pytest
 
 from homeassistant.components.withings import (
     DOMAIN
 )
+from homeassistant.components.withings.common import (
+    NotAuthenticatedError
+)
 import homeassistant.components.withings.const as const
+from homeassistant.components.withings.sensor import async_setup_entry
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
@@ -165,7 +175,105 @@ async def test_health_sensor_throttled(
 ):
     """Test method."""
     data = await withings_factory(WithingsFactoryConfig(
-        measures=measure
+        measures=measure,
+    ))
+
+    profile = WithingsFactoryConfig.PROFILE_1
+    await data.configure_all(profile, 'authorization_code')
+
+    # Checking initial data.
+    assert_state_equals(
+        data.hass,
+        profile,
+        measure,
+        expected
+    )
+
+    # Encountering a throttled data.
+    await async_update_entity(
+        data.hass,
+        get_entity_id(
+            measure,
+            profile
+        )
+    )
+
+    assert_state_equals(
+        data.hass,
+        profile,
+        measure,
+        expected
+    )
+
+
+NONE_SENSOR_TEST_DATA = [
+    (const.MEAS_WEIGHT_KG, STATE_UNKNOWN),
+    (const.MEAS_SLEEP_STATE, STATE_UNKNOWN),
+    (const.MEAS_SLEEP_RESPIRATORY_RATE_MAX, STATE_UNKNOWN),
+]
+
+
+@pytest.mark.parametrize('measure,expected', NONE_SENSOR_TEST_DATA)
+async def test_health_sensor_state_none(
+        withings_factory: WithingsFactory,
+        measure,
+        expected
+):
+    """Test method."""
+    data = await withings_factory(WithingsFactoryConfig(
+        measures=measure,
+        nokia_measures_response=None,
+        nokia_sleep_response=None,
+        nokia_sleep_summary_response=None
+    ))
+
+    profile = WithingsFactoryConfig.PROFILE_1
+    await data.configure_all(profile, 'authorization_code')
+
+    # Checking initial data.
+    assert_state_equals(
+        data.hass,
+        profile,
+        measure,
+        expected
+    )
+
+    # Encountering a throttled data.
+    await async_update_entity(
+        data.hass,
+        get_entity_id(
+            measure,
+            profile
+        )
+    )
+
+    assert_state_equals(
+        data.hass,
+        profile,
+        measure,
+        expected
+    )
+
+
+EMPTY_SENSOR_TEST_DATA = [
+    (const.MEAS_WEIGHT_KG, STATE_UNKNOWN),
+    (const.MEAS_SLEEP_STATE, STATE_UNKNOWN),
+    (const.MEAS_SLEEP_RESPIRATORY_RATE_MAX, STATE_UNKNOWN),
+]
+
+
+@pytest.mark.parametrize('measure,expected', EMPTY_SENSOR_TEST_DATA)
+async def test_health_sensor_state_empty(
+        withings_factory: WithingsFactory,
+        measure,
+        expected
+):
+    """Test method."""
+    data = await withings_factory(WithingsFactoryConfig(
+        measures=measure,
+        nokia_measures_response=NokiaMeasures({'measuregrps': []}),
+        nokia_sleep_response=NokiaSleep({'series': []}),
+        nokia_sleep_summary_response=NokiaSleepSummary({'series': []})
     ))
 
     profile = WithingsFactoryConfig.PROFILE_1
@@ -262,3 +370,97 @@ async def test_sleep_state_throttled(
         measure,
         expected
     )
+
+
+async def test_async_setup_check_credentials(
+        hass: HomeAssistantType,
+        withings_factory: WithingsFactory
+):
+    """Test method."""
+    check_creds_patch = asynctest.patch(
+        'homeassistant.components.withings.common.WithingsDataManager'
+        '.check_authenticated',
+        side_effect=NotAuthenticatedError()
+    )
+
+    async_init_patch = asynctest.patch.object(
+        hass.config_entries.flow,
+        'async_init',
+        wraps=hass.config_entries.flow.async_init
+    )
+
+    with check_creds_patch, async_init_patch as async_init_mock:
+        data = await withings_factory(WithingsFactoryConfig(
+            measures=[
+                const.MEAS_HEIGHT_CM
+            ]
+        ))
+
+        profile = WithingsFactoryConfig.PROFILE_1
+        await data.configure_all(profile, 'authorization_code')
+
+        async_init_mock.assert_called_with(
+            const.DOMAIN,
+            context={
+                'source': const.SOURCE_USER,
+                const.PROFILE: profile
+            },
+            data={}
+        )
+
+
+async def test_async_setup_entry_credentials_saver(
+        hass: HomeAssistantType
+):
+    """Test method."""
+    expected_creds = {
+        'access_token': 'my_access_token2',
+        'refresh_token': 'my_refresh_token2',
+        'token_type': 'my_token_type2',
+        'expires_in': '2',
+    }
+
+    original_nokia_api = NokiaApi
+    nokia_api_instance = None
+
+    def new_nokia_api(*args, **kwargs):
+        nonlocal nokia_api_instance
+        nokia_api_instance = original_nokia_api(*args, **kwargs)
+        nokia_api_instance.request = MagicMock()
+        return nokia_api_instance
+
+    nokia_api_patch = patch('nokia.NokiaApi', side_effect=new_nokia_api)
+    session_patch = patch('requests_oauthlib.OAuth2Session')
+    client_patch = patch('oauthlib.oauth2.WebApplicationClient')
+    update_entry_patch = patch.object(
+        hass.config_entries,
+        'async_update_entry',
+        wraps=hass.config_entries.async_update_entry
+    )
+
+    with session_patch, client_patch, nokia_api_patch, update_entry_patch:
+        async_add_entities = MagicMock()
+        hass.config_entries.async_update_entry = MagicMock()
+        config_entry = ConfigEntry(
+            version=1,
+            domain=const.DOMAIN,
+            title="my title",
+            data={
+                const.PROFILE: 'Person 1',
+                const.CREDENTIALS: {
+                    'access_token': 'my_access_token',
+                    'refresh_token': 'my_refresh_token',
+                    'token_type': 'my_token_type',
+                    'token_expiry': '9999999999',
+                },
+            },
+            source='source',
+            connection_class='conn_class'
+        )
+
+        await async_setup_entry(hass, config_entry, async_add_entities)
+
+        nokia_api_instance.set_token(expected_creds)
+
+        new_creds = config_entry.data[const.CREDENTIALS].__dict__
+        assert new_creds['access_token'] == 'my_access_token2'

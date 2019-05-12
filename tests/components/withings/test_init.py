@@ -1,7 +1,5 @@
 """Tests for the Withings component."""
-from unittest.mock import ANY
-
-from asynctest import patch
+from asynctest import MagicMock
 import voluptuous as vol
 
 import homeassistant.components.api as api
@@ -11,13 +9,11 @@ from homeassistant.components.withings import (
     const,
     CONFIG_SCHEMA,
 )
-from homeassistant.components.withings.config_flow import DATA_FLOW_IMPL
 from homeassistant.components.withings.sensor import (
     WITHINGS_MEASUREMENTS_MAP,
 )
-from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.setup import async_setup_component
 
+from .conftest import WithingsFactory, WithingsFactoryConfig
 
 BASE_HASS_CONFIG = {
     http.DOMAIN: {},
@@ -308,64 +304,31 @@ def test_config_schema_measurements():
     ]
 
 
-async def test_async_setup(hass: HomeAssistantType):
+async def test_async_setup_no_config(hass):
     """Test method."""
-    config = {
-        http.DOMAIN: {},
-        api.DOMAIN: {
-            'base_url': 'http://localhost/'
-        },
-        const.DOMAIN: {
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.PROFILES: [
-                'Person 1',
-                'Person 2',
-            ],
-            const.MEASURES: [
-                const.MEAS_BODY_TEMP_F,
-                const.MEAS_BODY_TEMP_AUTO
-            ]
-        },
-    }
+    hass.async_create_task = MagicMock()
 
-    result = await async_setup_component(hass, 'http', config)
-    assert result
+    await async_setup(hass, {})
 
-    result = await async_setup_component(hass, 'api', config)
-    assert result
+    hass.async_create_task.assert_not_called()
 
-    async_create_task_patch = patch.object(
-        hass,
-        'async_create_task',
-        wraps=hass.async_create_task
-    )
-    async_init_patch = patch.object(
-        hass.config_entries.flow,
-        'async_init',
-        wraps=hass.config_entries.flow.async_init
-    )
 
-    with async_create_task_patch as async_create_task, \
-            async_init_patch as async_init:
-        result = await async_setup(hass, config)
-        assert result is True
-        async_create_task.assert_called_with(ANY)
-        async_init.assert_called_with(
-            const.DOMAIN,
-            context={'source': const.SOURCE_USER},
-            data={}
-        )
+async def test_async_setup_teardown(
+        withings_factory: WithingsFactory,
+        hass
+):
+    """Test method."""
+    data = await withings_factory(WithingsFactoryConfig(
+        measures=[
+            const.MEAS_TEMP_AUTO
+        ]
+    ))
 
-        assert hass.data[DATA_FLOW_IMPL]['Person 1'] == {
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.BASE_URL: 'http://127.0.0.1:8123',
-            const.PROFILE: 'Person 1',
-        }
-        assert hass.data[DATA_FLOW_IMPL]['Person 2'] == {
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.BASE_URL: 'http://127.0.0.1:8123',
-            const.PROFILE: 'Person 2',
-        }
+    profile = WithingsFactoryConfig.PROFILE_1
+    await data.configure_all(profile, 'authorization_code')
+
+    entries = hass.config_entries.async_entries(const.DOMAIN)
+    assert entries
+
+    for entry in entries:
+        await hass.config_entries.async_unload(entry.entry_id)
