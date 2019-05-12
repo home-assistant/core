@@ -13,7 +13,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Brottsplatskartan platform."""
     monitored_conditions = discovery_info['monitored_conditions']
     attribution = hass.data[DOMAIN][ATTR_ATTRIBUTION]
-    bpk = hass.data[DOMAIN]
     name = hass.data[DOMAIN][CONF_NAME]
     incidents = hass.data[DOMAIN][ATTR_INCIDENTS]
 
@@ -28,9 +27,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             incident_area_update_signal = "{}_{}".format(
                 SIGNAL_UPDATE_BPK, slugify_incident_area)
             sensors.append(
-                BrottsplatskartanSensor(attribution, bpk,
-                                        incidents[incident_area], name,
-                                        condition,
+                BrottsplatskartanSensor(attribution, incidents[incident_area],
+                                        name, condition,
                                         incident_area_update_signal))
     add_entities(sensors, True)
 
@@ -38,12 +36,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BrottsplatskartanSensor(Entity):
     """Representation of a Brottsplatskartan Sensor."""
 
-    def __init__(self, attribution, bpk, incidents, name, sensor,
-                 update_signal):
+    def __init__(self, attribution, incidents, name, sensor, update_signal):
         """Initialize the Brottsplatskartan sensor."""
         self._attribution = attribution
         self._attributes = {}
-        self._brottsplatskartan = bpk
         self._incidents = incidents
         self._name = name
         self._state = None
