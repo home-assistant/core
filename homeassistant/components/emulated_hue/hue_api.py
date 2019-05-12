@@ -139,8 +139,8 @@ class HueGroupView(HomeAssistantView):
         }])
 
 
-class HueUsernameAllLightsStateView(HomeAssistantView):
-    """Handle requests for getting and setting info about entities."""
+class HueFullStateView(HomeAssistantView):
+    """Return full state view of emulated hue."""
 
     url = '/api/{username}'
     name = 'emulated_hue:username:lights:state'

@@ -17,7 +17,7 @@ from homeassistant.components.http import real_ip
 from .hue_api import (
     HueUsernameView, HueAllLightsStateView, HueOneLightStateView,
     HueOneLightChangeView, HueGroupView, HueAllGroupsStateView,
-    HueNullView, HueUsernameAllLightsStateView)
+    HueNullView, HueFullStateView)
 from .upnp import DescriptionXmlView, UPNPResponderThread
 
 DOMAIN = 'emulated_hue'
@@ -103,7 +103,7 @@ async def async_setup(hass, yaml_config):
     HueOneLightChangeView(config).register(app, app.router)
     HueAllGroupsStateView(config).register(app, app.router)
     HueGroupView(config).register(app, app.router)
-    HueUsernameAllLightsStateView(config).register(app, app.router)
+    HueFullStateView(config).register(app, app.router)
 
     upnp_listener = UPNPResponderThread(
         config.host_ip_addr, config.listen_port,
