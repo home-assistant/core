@@ -183,13 +183,12 @@ class Sun(Entity):
     @callback
     def update_sun_position(self, utc_point_in_time):
         """Calculate the position of the sun."""
-        # Round azimuth to nearest 0.5
         self.solar_azimuth = round(
             self.location.solar_azimuth(utc_point_in_time), 2)
         self.solar_elevation = round(
             self.location.solar_elevation(utc_point_in_time), 2)
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "sun position_update@%s: elevation=%s azimuth=%s",
             utc_point_in_time.isoformat(),
             self.solar_elevation, self.solar_azimuth
