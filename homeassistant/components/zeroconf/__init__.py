@@ -23,10 +23,8 @@ CONFIG_SCHEMA = vol.Schema({
 async def async_setup(hass, config):
     """Set up Zeroconf and make Home Assistant discoverable."""
     from aiozeroconf import Zeroconf, ServiceInfo
-    import asyncio
-    zeroconf = Zeroconf(hass.loop)
 
-    await asyncio.sleep(5)
+    zeroconf = Zeroconf(hass.loop)
 
     zeroconf_name = '{}.{}'.format(hass.config.location_name, ZEROCONF_TYPE)
 
