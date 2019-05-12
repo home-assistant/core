@@ -163,7 +163,6 @@ def async_add_entities_retry(
                 result = callback(add_object, async_add_entities)
             except SmartDeviceException as ex:
                 _LOGGER.debug(
-                    "Failed to add object, will try again later. Error: %s",
                     str(ex)
                 )
                 result = False
@@ -171,6 +170,8 @@ def async_add_entities_retry(
             if result is True or result is None:
                 _LOGGER.debug("Added object.")
                 success_indexes.append(i)
+            else:
+                _LOGGER.debug("Failed to add object, will try again later")
 
         # Remove successful objects from list for next run.
         for success_index in reversed(success_indexes):
@@ -187,7 +188,7 @@ def async_add_entities_retry(
 
     # Start interval to add again and return a cancel callback.
     if add_objects:
-        _LOGGER.debug("Setting interval to retry adding entities")
+        _LOGGER.debug("Setting interval to retry adding entities %s", interval)
         cancel_interval_callback = async_track_time_interval(
             hass,
             process_objects,

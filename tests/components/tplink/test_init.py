@@ -1,12 +1,13 @@
 """Tests for the TP-Link component."""
-from unittest.mock import patch
+from typing import Dict, Any
+from unittest.mock import MagicMock, patch
 
 import pytest
+from pyHS100 import SmartPlug, SmartBulb, SmartDevice, SmartDeviceException
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import tplink
 from homeassistant.setup import async_setup_component
-from pyHS100 import SmartPlug, SmartBulb
 from tests.common import MockDependency, MockConfigEntry, mock_coro
 
 MOCK_PYHS100 = MockDependency("pyHS100")
@@ -70,6 +71,69 @@ async def test_configuring_device_types(hass, name, cls, platform, count):
 
     assert len(discover.mock_calls) == 1
     assert len(hass.data[tplink.DOMAIN][platform]) == count
+
+
+class UnknownSmartDevice(SmartDevice):
+    """Dummy class for testing."""
+
+    @property
+    def has_emeter(self) -> bool:
+        """Do nothing."""
+        pass
+
+    def turn_off(self) -> None:
+        """Do nothing."""
+        pass
+
+    def turn_on(self) -> None:
+        """Do nothing."""
+        pass
+
+    @property
+    def is_on(self) -> bool:
+        """Do nothing."""
+        pass
+
+    @property
+    def state_information(self) -> Dict[str, Any]:
+        """Do nothing."""
+        pass
+
+
+async def test_configuring_devices_from_multiple_sources(hass):
+    """Test static and discover devices are not duplicated."""
+    with patch("pyHS100.Discover.discover") as discover, patch(
+            "pyHS100.SmartDevice._query_helper"
+    ):
+        discover_device_fail = SmartPlug("123.123.123.123")
+        discover_device_fail.get_sysinfo = MagicMock(
+            side_effect=SmartDeviceException()
+        )
+
+        discover.return_value = {
+            "123.123.123.1": SmartBulb("123.123.123.1"),
+            "123.123.123.2": SmartPlug("123.123.123.2"),
+            "123.123.123.3": SmartBulb("123.123.123.3"),
+            "123.123.123.4": SmartPlug("123.123.123.4"),
+            "123.123.123.123": discover_device_fail,
+            "123.123.123.124": UnknownSmartDevice("123.123.123.124")
+
+        }
+        await async_setup_component(hass, tplink.DOMAIN, {
+            "tplink": {
+                "light": [
+                    {"host": "123.123.123.1"},
+                ],
+                "switch": [
+                    {"host": "123.123.123.2"},
+                ],
+            }
+        })
+        await hass.async_block_till_done()
+
+        assert len(discover.mock_calls) == 1
+        assert len(hass.data[tplink.DOMAIN]["light"]) == 2
+        assert len(hass.data[tplink.DOMAIN]["switch"]) == 2
 
 
 async def test_is_dimmable(hass):
