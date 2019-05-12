@@ -37,6 +37,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             async_add_entities([HomeKitLightSensor(conn, info)], True)
             return True
 
+        return False
+
     conn.add_listener(async_add_service)
 
 
