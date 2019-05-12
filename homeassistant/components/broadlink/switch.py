@@ -133,7 +133,7 @@ class BroadlinkRMSwitch(SwitchDevice, RestoreEntity):
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
         if state:
-          self._state = state.state == STATE_ON
+            self._state = state.state == STATE_ON
 
     @property
     def name(self):
