@@ -223,8 +223,8 @@ def test_discover_lights(hue_client):
 
 
 @asyncio.coroutine
-def test_discover_username_lights(hue_client):
-    """Test the discovery of lights from username."""
+def test_discover_full_state(hue_client):
+    """Test the discovery of full state."""
     result = yield from hue_client.get('/api/username')
 
     assert result.status == 200
