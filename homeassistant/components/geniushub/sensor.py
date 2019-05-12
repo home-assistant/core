@@ -2,7 +2,7 @@
 import logging
 from time import (localtime, strftime)
 
-from homeassistant.const import DEVICE_CLASS_BATTERY
+from homeassistant.const import (DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -15,8 +15,7 @@ GH_HAS_BATTERY = [
     'Room Thermostat', 'Genius Valve', 'Room Sensor', 'Radiator Valve']
 
 GH_STATE_ATTRS = [
-    'setTemperature', 'measuredTemperature', 'luminance', 'occupancyTrigger',
-    'batteryLevel']
+    'setTemperature', 'luminance', 'occupancyTrigger', 'batteryLevel']
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -24,13 +23,13 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Set up the Genius Hub sensor entities."""
     client = hass.data[DOMAIN]['client']
 
-    sensors = [GeniusBattery(client, d)
+    sensors = [GeniusDevice(client, d)
                for d in client.hub.device_objs if d.type in GH_HAS_BATTERY]
 
     async_add_entities(sensors)
 
 
-class GeniusBattery(Entity):
+class GeniusDevice(Entity):
     """Representation of a Genius Hub sensor."""
 
     def __init__(self, client, device):
@@ -39,8 +38,6 @@ class GeniusBattery(Entity):
         self._device = device
 
         self._name = '{} {}'.format(device.type, device.id)
-        self._device_class = DEVICE_CLASS_BATTERY
-        self._unit_of_measurement = '%'
 
     async def async_added_to_hass(self):
         """Set up a listener when this entity is added to HA."""
@@ -58,12 +55,12 @@ class GeniusBattery(Entity):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        return self._device_class
+        return DEVICE_CLASS_TEMPERATURE
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of the sensor."""
-        return self._unit_of_measurement
+        return TEMP_CELSIUS
 
     @property
     def should_poll(self) -> bool:
@@ -73,7 +70,7 @@ class GeniusBattery(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._device.state['batteryLevel']
+        return self._device.state.get('measuredTemperature')
 
     @property
     def device_state_attributes(self):
