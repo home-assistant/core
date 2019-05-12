@@ -11,6 +11,12 @@ UNIT_PERCENT = "%"
 UNIT_LUX = "lux"
 
 
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Legacy set up platform."""
+    pass
+
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Homekit covers."""
     hkid = config_entry.data['AccessoryPairingID']
