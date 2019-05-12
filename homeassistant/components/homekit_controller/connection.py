@@ -129,7 +129,7 @@ class HKDevice():
 
         self.async_load_platforms()
 
-        # Register add new entities that are available
+        # Register and add new entities that are available
         self.add_entities()
 
         return True
