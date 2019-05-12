@@ -248,7 +248,17 @@ class ConfigEntry:
         if integration is None:
             integration = await loader.async_get_integration(hass, self.domain)
 
-        component = integration.get_component()
+        try:
+            component = integration.get_component()
+            if self.domain == integration.domain:
+                integration.get_platform('config_flow')
+        except ImportError as err:
+            _LOGGER.error(
+                'Error importing integration %s to set up %s config entry: %s',
+                integration.domain, self.domain, err)
+            if self.domain == integration.domain:
+                self.state = ENTRY_STATE_SETUP_ERROR
+            return
 
         # Perform migration
         if integration.domain == self.domain:
