@@ -12,10 +12,11 @@ from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import slugify
+from .const import DOMAIN
+
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'geofency'
 CONF_MOBILE_BEACONS = 'mobile_beacons'
 
 CONFIG_SCHEMA = vol.Schema({
@@ -134,12 +135,3 @@ async def async_unload_entry(hass, entry):
 
 # pylint: disable=invalid-name
 async_remove_entry = config_entry_flow.webhook_async_remove_entry
-
-
-config_entry_flow.register_webhook_flow(
-    DOMAIN,
-    'Geofency Webhook',
-    {
-        'docs_url': 'https://www.home-assistant.io/components/geofency/'
-    }
-)
