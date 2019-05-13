@@ -5,14 +5,12 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_HOST
 from homeassistant import config_entries
-from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .common import (
     async_discover_devices,
     async_get_static_devices,
-    async_get_discoverable_devices,
     ATTR_CONFIG,
     CONF_DISCOVERY,
     CONF_LIGHT,
@@ -122,9 +120,3 @@ async def async_unload_entry(hass, entry):
     # We were not able to unload the platforms, either because there
     # were none or one of the forward_unloads failed.
     return False
-
-
-config_entry_flow.register_discovery_flow(DOMAIN,
-                                          'TP-Link Smart Home',
-                                          async_get_discoverable_devices,
-                                          config_entries.CONN_CLASS_LOCAL_POLL)
