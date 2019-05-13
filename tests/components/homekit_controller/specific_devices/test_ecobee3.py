@@ -7,11 +7,15 @@ https://github.com/home-assistant/home-assistant/issues/15336
 from unittest import mock
 
 from homekit import AccessoryDisconnectedError
+import pytest
 
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_HUMIDITY_HIGH, SUPPORT_TARGET_HUMIDITY_LOW,
     SUPPORT_OPERATION_MODE)
+
+
 from tests.components.homekit_controller.common import (
     FakePairing, device_config_changed, setup_accessories_from_file,
     setup_test_accessories, Helper
@@ -110,14 +114,19 @@ async def test_ecobee3_setup_connection_failure(hass):
     list_accessories = 'list_accessories_and_characteristics'
     with mock.patch.object(FakePairing, list_accessories) as laac:
         laac.side_effect = AccessoryDisconnectedError('Connection failed')
-        await setup_test_accessories(hass, accessories)
+
+        # If there is no cached entity map and the accessory connection is
+        # failing then we have to fail the config entry setup.
+        with pytest.raises(ConfigEntryNotReady):
+            await setup_test_accessories(hass, accessories)
 
     climate = entity_registry.async_get('climate.homew')
     assert climate is None
 
-    # When a regular discovery event happens it should trigger another scan
-    # which should cause our entities to be added.
-    await device_config_changed(hass, accessories)
+    # When accessory raises ConfigEntryNoteReady HA will retry - lets make
+    # sure there is no cruft causing conflicts left behind by now doing
+    # a successful setup.
+    await setup_test_accessories(hass, accessories)
 
     climate = entity_registry.async_get('climate.homew')
     assert climate.unique_id == 'homekit-123456789012-16'

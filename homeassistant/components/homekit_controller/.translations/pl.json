@@ -12,6 +12,7 @@
             "unable_to_pair": "Nie mo\u017cna sparowa\u0107, spr\u00f3buj ponownie.",
             "unknown_error": "Urz\u0105dzenie zg\u0142osi\u0142o nieznany b\u0142\u0105d. Parowanie nie powiod\u0142o si\u0119."
         },
+        "flow_title": "Akcesoria HomeKit: {name}",
         "step": {
             "pair": {
                 "data": {

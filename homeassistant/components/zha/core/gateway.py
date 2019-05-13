@@ -93,6 +93,8 @@ class ZHAGateway:
 
         init_tasks = []
         for device in self.application_controller.devices.values():
+            if device.nwk == 0x0000:
+                continue
             init_tasks.append(self.async_device_initialized(device, False))
         await asyncio.gather(*init_tasks)
 

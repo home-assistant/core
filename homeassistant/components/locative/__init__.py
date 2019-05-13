@@ -145,12 +145,3 @@ async def async_unload_entry(hass, entry):
 
 # pylint: disable=invalid-name
 async_remove_entry = config_entry_flow.webhook_async_remove_entry
-
-
-config_entry_flow.register_webhook_flow(
-    DOMAIN,
-    'Locative Webhook',
-    {
-        'docs_url': 'https://www.home-assistant.io/components/locative/'
-    }
-)

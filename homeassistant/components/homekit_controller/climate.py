@@ -26,11 +26,25 @@ MODE_HASS_TO_HOMEKIT = {v: k for k, v in MODE_HOMEKIT_TO_HASS.items()}
 DEFAULT_VALID_MODES = list(MODE_HOMEKIT_TO_HASS)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Legacy set up platform."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Homekit climate."""
-    if discovery_info is not None:
-        accessory = hass.data[KNOWN_DEVICES][discovery_info['serial']]
-        add_entities([HomeKitClimateDevice(accessory, discovery_info)], True)
+    hkid = config_entry.data['AccessoryPairingID']
+    conn = hass.data[KNOWN_DEVICES][hkid]
+
+    def async_add_service(aid, service):
+        if service['stype'] != 'thermostat':
+            return False
+        info = {'aid': aid, 'iid': service['iid']}
+        async_add_entities([HomeKitClimateDevice(conn, info)], True)
+        return True
+
+    conn.add_listener(async_add_service)
 
 
 class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):

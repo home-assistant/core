@@ -11,9 +11,9 @@ trigger:
 
 variables:
   - name: versionBuilder
-    value: '3.1'
+    value: '3.2'
   - name: versionWheels
-    value: '0.2'
+    value: '0.3'
   - group: docker
   - group: wheels
 

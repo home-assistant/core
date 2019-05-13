@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 _UNDEF = object()
 
 DATA_REGISTRY = 'device_registry'
-
+EVENT_DEVICE_REGISTRY_UPDATED = 'device_registry_updated'
 STORAGE_KEY = 'core.device_registry'
 STORAGE_VERSION = 1
 SAVE_DELAY = 10
@@ -42,6 +42,8 @@ class DeviceEntry:
     area_id = attr.ib(type=str, default=None)
     name_by_user = attr.ib(type=str, default=None)
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
+    # This value is not stored, just used to keep track of events to fire.
+    is_new = attr.ib(type=bool, default=False)
 
 
 def format_mac(mac):
@@ -111,7 +113,7 @@ class DeviceRegistry:
         device = self.async_get_device(identifiers, connections)
 
         if device is None:
-            device = DeviceEntry()
+            device = DeviceEntry(is_new=True)
             self.devices[device.id] = device
 
         if via_hub is not None:
@@ -201,11 +203,20 @@ class DeviceRegistry:
                 name_by_user != old.name_by_user):
             changes['name_by_user'] = name_by_user
 
+        if old.is_new:
+            changes['is_new'] = False
+
         if not changes:
             return old
 
         new = self.devices[device_id] = attr.evolve(old, **changes)
         self.async_schedule_save()
+
+        self.hass.bus.async_fire(EVENT_DEVICE_REGISTRY_UPDATED, {
+            'action': 'create' if 'is_new' in changes else 'update',
+            'device_id': new.id,
+        })
+
         return new
 
     async def async_load(self):

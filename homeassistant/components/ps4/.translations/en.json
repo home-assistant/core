@@ -8,6 +8,7 @@
             "port_997_bind_error": "Could not bind to port 997. Refer to the [documentation](https://www.home-assistant.io/components/ps4/) for additional info."
         },
         "error": {
+            "credential_timeout": "Credential service timed out. Press submit to restart.",
             "login_failed": "Failed to pair to PlayStation 4. Verify PIN is correct.",
             "no_ipaddress": "Enter the IP Address of the PlayStation 4 you would like to configure.",
             "not_ready": "PlayStation 4 is not on or connected to network."
