@@ -12,8 +12,9 @@ PROJECT_AUTHOR = 'Andrzej Raczkowski'
 PROJECT_COPYRIGHT = ' 2016-{}, {}'.format(dt.now().year, PROJECT_AUTHOR)
 PROJECT_URL = 'https://ai-speaker.com/'
 PROJECT_EMAIL = 'info@sviete.pl'
-PROJECT_DESCRIPTION = ('IOT hub and automation platform for AI-Spekaer.com'
-                       ' running on Home Assistant.')
+
+PROJECT_GITHUB_USERNAME = 'sviete'
+PROJECT_GITHUB_REPOSITORY = 'AIS-home-assistant'
 
 PROJECT_CLASSIFIERS = [
     'Development Status :: 5 - Production/Stable',
