@@ -4,7 +4,6 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.components import unifi
 from homeassistant.components.unifi.const import (
     CONF_POE_CONTROL, CONF_CONTROLLER, CONF_SITE_ID)
 from homeassistant.const import (
