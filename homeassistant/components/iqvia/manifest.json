@@ -1,6 +1,7 @@
 {
   "domain": "iqvia",
   "name": "IQVIA",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/iqvia",
   "requirements": [
     "numpy==1.16.3",

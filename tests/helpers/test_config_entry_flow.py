@@ -6,7 +6,8 @@ import pytest
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.helpers import config_entry_flow
 from tests.common import (
-    MockConfigEntry, MockModule, mock_coro, mock_integration)
+    MockConfigEntry, MockModule, mock_coro, mock_integration,
+    mock_entity_platform)
 
 
 @pytest.fixture
@@ -102,7 +103,7 @@ async def test_discovery_confirmation(hass, discovery_flow_conf):
 
 async def test_multiple_discoveries(hass, discovery_flow_conf):
     """Test we only create one instance for multiple discoveries."""
-    mock_integration(hass, MockModule('test'))
+    mock_entity_platform(hass, 'config_flow.test', None)
 
     result = await hass.config_entries.flow.async_init(
         'test', context={'source': config_entries.SOURCE_DISCOVERY}, data={})
@@ -116,7 +117,7 @@ async def test_multiple_discoveries(hass, discovery_flow_conf):
 
 async def test_only_one_in_progress(hass, discovery_flow_conf):
     """Test a user initialized one will finish and cancel discovered one."""
-    mock_integration(hass, MockModule('test'))
+    mock_entity_platform(hass, 'config_flow.test', None)
 
     # Discovery starts flow
     result = await hass.config_entries.flow.async_init(
@@ -209,6 +210,7 @@ async def test_webhook_create_cloudhook(hass, webhook_flow_conf):
         async_unload_entry=async_unload_entry,
         async_remove_entry=config_entry_flow.webhook_async_remove_entry,
     ))
+    mock_entity_platform(hass, 'config_flow.test_single', None)
 
     result = await hass.config_entries.flow.async_init(
         'test_single', context={'source': config_entries.SOURCE_USER})

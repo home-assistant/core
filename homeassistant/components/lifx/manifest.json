@@ -1,6 +1,7 @@
 {
   "domain": "lifx",
   "name": "Lifx",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/lifx",
   "requirements": [
     "aiolifx==0.6.7",

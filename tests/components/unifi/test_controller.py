@@ -4,24 +4,27 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.components import unifi
+from homeassistant.components.unifi.const import (
+    CONF_POE_CONTROL, CONF_CONTROLLER, CONF_SITE_ID)
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL)
 from homeassistant.components.unifi import controller, errors
 
 from tests.common import mock_coro
 
 CONTROLLER_DATA = {
-    unifi.CONF_HOST: '1.2.3.4',
-    unifi.CONF_USERNAME: 'username',
-    unifi.CONF_PASSWORD: 'password',
-    unifi.CONF_PORT: 1234,
-    unifi.CONF_SITE_ID: 'site',
-    unifi.CONF_VERIFY_SSL: True
+    CONF_HOST: '1.2.3.4',
+    CONF_USERNAME: 'username',
+    CONF_PASSWORD: 'password',
+    CONF_PORT: 1234,
+    CONF_SITE_ID: 'site',
+    CONF_VERIFY_SSL: True
 }
 
 ENTRY_CONFIG = {
-    unifi.CONF_CONTROLLER: CONTROLLER_DATA,
-    unifi.CONF_POE_CONTROL: True
-    }
+    CONF_CONTROLLER: CONTROLLER_DATA,
+    CONF_POE_CONTROL: True
+}
 
 
 async def test_controller_setup():
@@ -173,7 +176,7 @@ async def test_reset_unloads_entry_without_poe_control():
     hass = Mock()
     entry = Mock()
     entry.data = dict(ENTRY_CONFIG)
-    entry.data[unifi.CONF_POE_CONTROL] = False
+    entry.data[CONF_POE_CONTROL] = False
     api = Mock()
     api.initialize.return_value = mock_coro(True)
 
@@ -201,7 +204,7 @@ async def test_get_controller(hass):
 async def test_get_controller_verify_ssl_false(hass):
     """Successful call with verify ssl set to false."""
     controller_data = dict(CONTROLLER_DATA)
-    controller_data[unifi.CONF_VERIFY_SSL] = False
+    controller_data[CONF_VERIFY_SSL] = False
     with patch('aiounifi.Controller.login', return_value=mock_coro()):
         assert await controller.get_controller(hass, **controller_data)
 
