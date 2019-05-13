@@ -15,7 +15,8 @@ from homeassistant.components.config import config_entries
 from homeassistant.generated import config_flows
 
 from tests.common import (
-    MockConfigEntry, MockModule, mock_coro_func, mock_integration)
+    MockConfigEntry, MockModule, mock_coro_func, mock_integration,
+    mock_entity_platform)
 
 
 @pytest.fixture(autouse=True)
@@ -138,6 +139,8 @@ def test_available_flows(hass, client):
 @asyncio.coroutine
 def test_initialize_flow(hass, client):
     """Test we can initialize a flow."""
+    mock_entity_platform(hass, 'config_flow.test', None)
+
     class TestFlow(core_ce.ConfigFlow):
         @asyncio.coroutine
         def async_step_user(self, user_input=None):
@@ -222,6 +225,8 @@ async def test_initialize_flow_unauth(hass, client, hass_admin_user):
 @asyncio.coroutine
 def test_abort(hass, client):
     """Test a flow that aborts."""
+    mock_entity_platform(hass, 'config_flow.test', None)
+
     class TestFlow(core_ce.ConfigFlow):
         @asyncio.coroutine
         def async_step_user(self, user_input=None):
@@ -245,6 +250,8 @@ def test_abort(hass, client):
 @asyncio.coroutine
 def test_create_account(hass, client):
     """Test a flow that creates an account."""
+    mock_entity_platform(hass, 'config_flow.test', None)
+
     mock_integration(
         hass,
         MockModule('test', async_setup_entry=mock_coro_func(True)))
@@ -287,6 +294,7 @@ def test_two_step_flow(hass, client):
     mock_integration(
         hass,
         MockModule('test', async_setup_entry=mock_coro_func(True)))
+    mock_entity_platform(hass, 'config_flow.test', None)
 
     class TestFlow(core_ce.ConfigFlow):
         VERSION = 1
@@ -353,6 +361,7 @@ async def test_continue_flow_unauth(hass, client, hass_admin_user):
     mock_integration(
         hass,
         MockModule('test', async_setup_entry=mock_coro_func(True)))
+    mock_entity_platform(hass, 'config_flow.test', None)
 
     class TestFlow(core_ce.ConfigFlow):
         VERSION = 1
@@ -403,6 +412,8 @@ async def test_continue_flow_unauth(hass, client, hass_admin_user):
 @asyncio.coroutine
 def test_get_progress_index(hass, client):
     """Test querying for the flows that are in progress."""
+    mock_entity_platform(hass, 'config_flow.test', None)
+
     class TestFlow(core_ce.ConfigFlow):
         VERSION = 5
 
@@ -442,6 +453,8 @@ async def test_get_progress_index_unauth(hass, client, hass_admin_user):
 @asyncio.coroutine
 def test_get_progress_flow(hass, client):
     """Test we can query the API for same result as we get from init a flow."""
+    mock_entity_platform(hass, 'config_flow.test', None)
+
     class TestFlow(core_ce.ConfigFlow):
         @asyncio.coroutine
         def async_step_user(self, user_input=None):
@@ -475,6 +488,8 @@ def test_get_progress_flow(hass, client):
 
 async def test_get_progress_flow_unauth(hass, client, hass_admin_user):
     """Test we can can't query the API for result of flow."""
+    mock_entity_platform(hass, 'config_flow.test', None)
+
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
             schema = OrderedDict()
