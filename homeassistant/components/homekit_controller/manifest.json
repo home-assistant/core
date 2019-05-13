@@ -5,7 +5,7 @@
   "requirements": [
     "homekit[IP]==0.14.0"
   ],
-  "dependencies": ["configurator"],
+  "dependencies": [],
   "codeowners": [
     "@Jc2k"
   ]
