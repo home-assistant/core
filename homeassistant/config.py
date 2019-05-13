@@ -770,7 +770,11 @@ async def async_process_component_config(
     This method must be run in the event loop.
     """
     domain = integration.domain
-    component = integration.get_component()
+    try:
+        component = integration.get_component()
+    except ImportError as ex:
+        _LOGGER.error("Unable to import %s: %s", domain, ex)
+        return None
 
     if hasattr(component, 'CONFIG_SCHEMA'):
         try:
