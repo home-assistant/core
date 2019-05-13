@@ -141,7 +141,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
                 return False
 
         prefix = conf[CONF_PREFIX]
-        device = devices[prefix]
+        device = devices.get(prefix)
         if device is not None:
             if prefix == "":
                 _LOGGER.error("At most one elk m1 configuration may skip " +
