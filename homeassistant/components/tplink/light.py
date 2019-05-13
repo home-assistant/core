@@ -77,6 +77,7 @@ class TPLinkSmartBulb(Light):
         """Initialize the bulb."""
         self.smartbulb = smartbulb
         self._sysinfo = None
+        self._mac = None
         self._state = None
         self._available = False
         self._color_temp = None
@@ -90,7 +91,7 @@ class TPLinkSmartBulb(Light):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._sysinfo["mac"]
+        return self._mac
 
     @property
     def name(self):
@@ -105,7 +106,7 @@ class TPLinkSmartBulb(Light):
             "model": self._sysinfo["model"],
             "manufacturer": 'TP-Link',
             "connections": {
-                (dr.CONNECTION_NETWORK_MAC, self._sysinfo["mac"])
+                (dr.CONNECTION_NETWORK_MAC, self._mac)
             },
             "sw_version": self._sysinfo["sw_ver"],
         }
@@ -227,6 +228,7 @@ class TPLinkSmartBulb(Light):
         """Determine all supported features in one go."""
         self._sysinfo = self.smartbulb.sys_info
         self._supported_features = 0
+        self._mac = self._sysinfo.get("mac") or self._sysinfo.get("mic_mac")
 
         if self.smartbulb.is_dimmable:
             self._supported_features += SUPPORT_BRIGHTNESS
