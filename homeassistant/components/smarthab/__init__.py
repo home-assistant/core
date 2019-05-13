@@ -9,7 +9,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 
