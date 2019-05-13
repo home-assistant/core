@@ -50,14 +50,10 @@ async def async_setup(hass, config):
 
     await zeroconf.register_service(info)
 
-    @callback
-    def stop_zeroconf(event):
+    async def stop_zeroconf(event):
         """Stop Zeroconf."""
-        async def stop():
-            """Stop Zeroconf."""
-            await zeroconf.unregister_service(info)
-            await zeroconf.close()
-        hass.async_create_task(stop())
+        await zeroconf.unregister_service(info)
+        await zeroconf.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_zeroconf)
 
