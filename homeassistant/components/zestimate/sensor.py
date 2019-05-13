@@ -70,7 +70,7 @@ class ZestimateDataSensor(Entity):
     @property
     def unique_id(self):
         """Return the ZPID."""
-        return '{} {}'.format(self._name, self.address)
+        return self.params['zpid']
 
     @property
     def name(self):
