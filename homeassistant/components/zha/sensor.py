@@ -29,7 +29,7 @@ def illuminance_formatter(value):
     # should handle Xiaomi and any other non compliant companies
     if value < 100:
         return value
-    value = 10 ^ ((value - 1) / 10000)
+    value = pow(10, ((value - 1) / 10000))
     return value
 
 
