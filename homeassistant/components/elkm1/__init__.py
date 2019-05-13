@@ -144,7 +144,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
         device = devices.get(prefix)
         if device is not None:
             if prefix == "":
-                _LOGGER.error("At most one elk m1 configuration may skip " +
+                _LOGGER.error("At most one elk m1 configuration may skip "
                               "the prefix; more than one did.")
             else:
                 _LOGGER.error("Duplicate prefix on elk m1, prefix: %s", prefix)
