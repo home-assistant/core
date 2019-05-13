@@ -1,6 +1,7 @@
 {
   "domain": "hue",
   "name": "Philips Hue",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/hue",
   "requirements": [
     "aiohue==1.9.1"

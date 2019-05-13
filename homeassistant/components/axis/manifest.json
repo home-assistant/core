@@ -1,6 +1,7 @@
 {
   "domain": "axis",
   "name": "Axis",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/axis",
   "requirements": ["axis==22"],
   "dependencies": [],
