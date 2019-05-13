@@ -32,23 +32,31 @@ class IcloudDeviceBatterySensor(Entity):
 
     def __init__(self, hass, accountname, devicename):
         _LOGGER.info('-----------------IcloudDeviceBatterySensor:init')
-        self.hass = hass
-        self.accountname = accountname
-        self.devicename = devicename
+        self._hass = hass
+        self._accountname = accountname
+        self._devicename = devicename
 
-        device = self.hass.data[DATA_ICLOUD][self.accountname].devices[self.devicename]
-        self._dev_id = device._dev_id
-        self._name = device._name
-        self._battery_level = device._battery_level
-        self._battery_status = device._battery_status
-        self._attrs = device._attrs
+        device = self._hass.data[DATA_ICLOUD][self._accountname].devices[self._devicename]
+        self._dev_id = device.dev_id + "_battery_state"
+        self._name = device.name
+        self._battery_level = device.battery_level
+        self._battery_status = device.battery_status
+        self._attrs = device.attributes
+
+
+    def update(self):
+        """Fetch new state data for the sensor."""
+        _LOGGER.info('-----------------IcloudDeviceBatterySensor:update')
+        device = self._hass.data[DATA_ICLOUD][self._accountname].devices[self._devicename]
+        self._battery_level = device.battery_level
+        self._battery_status = device.battery_status
+        self._attrs = device.attributes
 
     @property
     def unique_id(self):
         """Return a unique ID."""
-        _LOGGER.info("unique_id : %s", self._dev_id + "_battery_state")
         # sensor.name displayed in dev-state, how to use unique_id ?
-        return self._dev_id + "_battery_state"
+        return self._dev_id
 
     @property
     def name(self):
@@ -83,10 +91,3 @@ class IcloudDeviceBatterySensor(Entity):
         """Return default attributes for the iCloud device entity."""
         return self._attrs
 
-    def update(self):
-        """Fetch new state data for the sensor."""
-        _LOGGER.info('-----------------IcloudDeviceBatterySensor:update')
-        device = self.hass.data[DATA_ICLOUD][self.accountname].devices[self.devicename]
-        self._battery_level = device._battery_level
-        self._battery_status = device._battery_status
-        self._attrs = device._attrs

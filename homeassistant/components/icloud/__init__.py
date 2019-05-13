@@ -7,11 +7,12 @@ from pprint import pprint
 import random
 import sys
 
+from pyicloud.services.findmyiphone import AppleDevice
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import ENTITY_ID_FORMAT
 from homeassistant.components.zone.zone import active_zone
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -85,7 +86,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(ATTR_ACCOUNTNAME): cv.slugify,
-        vol.Optional(CONF_MAX_INTERVAL, default=30): cv.positive_int,
+        vol.Optional(CONF_MAX_INTERVAL, default=10): cv.positive_int,
         vol.Optional(CONF_GPS_ACCURACY_THRESHOLD, default=1000): cv.positive_int
     })])
 }, extra=vol.ALLOW_EXTRA)
@@ -125,9 +126,9 @@ def setup(hass, config):
         for account in accounts:
             if account in hass.data[DATA_ICLOUD]:
                 hass.data[DATA_ICLOUD][account].reset_account_icloud()
-        
+
         async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_ICLOUD, None)
+            hass, SIGNAL_UPDATE_ICLOUD, None)
 
     hass.services.register(DOMAIN, SERVICE_ICLOUD_RESET,
                            reset_account_icloud, schema=SERVICE_SCHEMA)
@@ -145,7 +146,7 @@ def setup(hass, config):
                            schema=SERVICE_SCHEMA)
 
     def setup_icloud(icloud_config):
-        """Set up a iCloud account."""
+        """Set up an iCloud account."""
         _LOGGER.debug("Logging into iCloud...")
 
         username = icloud_config.get(CONF_USERNAME)
@@ -175,7 +176,7 @@ def setup(hass, config):
     return True
 
 
-class IcloudAccount:
+class IcloudAccount():
     """Representation of an iCloud account."""
 
     def __init__(self, hass, username, password, name, max_interval,
@@ -183,7 +184,7 @@ class IcloudAccount:
         """Initialize an iCloud account."""
         self.hass = hass
         self.username = username
-        self.password = password
+        self.__password = password
         self.api = None
         self.accountname = name
         self.devices = {}
@@ -219,7 +220,7 @@ class IcloudAccount:
 
         try:
             self.api = PyiCloudService(
-                self.username, self.password,
+                self.username, self.__password,
                 cookie_directory=icloud_dir,
                 verify=True)
         except PyiCloudFailedLoginException as error:
@@ -247,7 +248,7 @@ class IcloudAccount:
                     continue
                 self._intervals[devicename] = 1
                 self._overridestates[devicename] = None
-                self.devices[devicename] = IcloudDeviceEntity(self, device)
+                self.devices[devicename] = IcloudDevice(self, device)
 
         except PyiCloudNoDevicesException:
             _LOGGER.error('No iCloud Devices found!')
@@ -436,6 +437,7 @@ class IcloudAccount:
         # An entity will not be created by see() when track=false in
         # 'known_devices.yaml', but we need to see() it at least once
         entity = self.hass.states.get(ENTITY_ID_FORMAT.format(devicename))
+        _LOGGER.info('ENTITY_ID_FORMAT == %s', entity)
         if entity is None and devicename in self.seen_devices:
             return
 
@@ -444,7 +446,7 @@ class IcloudAccount:
 
         try:
             for device in self.api.devices:
-                if str(device) != str(self.devices[devicename]._device):
+                if str(device) != str(self.devices[devicename].device):
                     continue
 
                 _LOGGER.info('--------------------------------')
@@ -452,7 +454,7 @@ class IcloudAccount:
                 if self.devices[devicename]:
                     self.devices[devicename].update(status)
                 else:
-                    self.devices[devicename] = IcloudDeviceEntity(self, device)
+                    self.devices[devicename] = IcloudDevice(self, device)
 
         except PyiCloudNoDevicesException:
             _LOGGER.error("No iCloud Devices found")
@@ -465,7 +467,7 @@ class IcloudAccount:
 
         self.api.authenticate()
         for device in self.api.devices:
-            if str(device) == str(self.devices[devicename]._device):
+            if str(device) == str(self.devices[devicename].device):
                 _LOGGER.info("Playing Lost iPhone sound for %s", devicename)
                 device.play_sound()
 
@@ -511,17 +513,16 @@ class IcloudAccount:
             self.update_device(device)
 
 
-class IcloudDeviceEntity:
-    """Base class for iCloud devices entity."""
+class IcloudDevice():
+    """Representation of a iCloud device."""
 
     def __init__(self, account, device):
-        """Store IcloudAccountDataStore upon init."""
-        _LOGGER.info('IcloudDeviceEntity:init')
+        """Initialize the iCloud device."""
+        _LOGGER.info('IcloudDevice:init')
         self.__account = account
         self._hass = account.hass
         self._accountname = account.accountname
 
-        # device: pyicloud.services.findmyiphone.AppleDevice
         self._device = device
         self.__status = device.status(DEVICE_STATUS_SET)
         _LOGGER.debug('Device Status is %s', self.__status)
@@ -538,7 +539,8 @@ class IcloudDeviceEntity:
         # pprint(vars(self))
 
     def update(self, status):
-        _LOGGER.info('IcloudDeviceEntity:update')
+        """Update the iCloud device."""
+        _LOGGER.info('IcloudDevice:update')
         self.__status = status
 
         self._device_status = DEVICE_STATUS_CODES.get(self.__status['deviceStatus'], 'error')
@@ -584,9 +586,42 @@ class IcloudDeviceEntity:
             # self._location.gps_accuracy = location['horizontalAccuracy']
         async_dispatcher_send(self._hass, SIGNAL_UPDATE_ICLOUD)
 
-    # async def async_added_to_hass(self):
-    #     """Register callbacks."""
-    #     self.log_registration()
-    #     async_dispatcher_connect(
-    #         self.hass, SIGNAL_UPDATE_ICLOUD, self._update_callback)
+    @property
+    def device(self) -> AppleDevice:
+        """Return the Apple device."""
+        return self._device
 
+    @property
+    def dev_id(self):
+        """Return the device ID."""
+        return self._dev_id
+
+    @property
+    def device_class(self):
+        """Return the Apple device class."""
+        return self._device_class
+
+    @property
+    def name(self):
+        """Return the Apple device name."""
+        return self._name
+
+    @property
+    def battery_level(self):
+        """Return the Apple device battery level."""
+        return self._battery_level
+
+    @property
+    def battery_status(self):
+        """Return the Apple device battery status."""
+        return self._battery_status
+
+    @property
+    def location(self):
+        """Return the Apple device location."""
+        return self._location
+
+    @property
+    def attributes(self):
+        """Return the attributes."""
+        return self._attrs
