@@ -1,0 +1,10 @@
+{
+  "domain": "zyxelnas",
+  "name": "ZyxelNAS",
+  "documentation": "https://www.home-assistant.io/components/zyxelnas",
+  "requirements": [
+    "python-zyxelnas==0.0.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}
