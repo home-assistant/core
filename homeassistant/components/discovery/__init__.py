@@ -62,6 +62,7 @@ CONFIG_ENTRY_HANDLERS = {
     SERVICE_IKEA_TRADFRI: 'tradfri',
     'sonos': 'sonos',
     SERVICE_IGD: 'upnp',
+    SERVICE_HOMEKIT: 'homekit_controller',
 }
 
 SERVICE_HANDLERS = {
@@ -101,7 +102,6 @@ SERVICE_HANDLERS = {
 }
 
 OPTIONAL_SERVICE_HANDLERS = {
-    SERVICE_HOMEKIT: ('homekit_controller', None),
     SERVICE_DLNA_DMR: ('media_player', 'dlna_dmr'),
 }
 
