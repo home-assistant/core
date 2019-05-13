@@ -9,6 +9,7 @@
         },
         "error": {
             "login_failed": "Misslyckades med att para till PlayStation 4. Verifiera PIN-koden \u00e4r korrekt.",
+            "no_ipaddress": "Ange IP-adressen f\u00f6r PlayStation 4 du vill konfigurera.",
             "not_ready": "PlayStation 4 \u00e4r inte p\u00e5slagen eller ansluten till n\u00e4tverket."
         },
         "step": {
@@ -28,6 +29,7 @@
             },
             "mode": {
                 "data": {
+                    "ip_address": "IP-adress (l\u00e4mna tom om du anv\u00e4nder automatisk uppt\u00e4ckt).",
                     "mode": "Konfigureringsl\u00e4ge"
                 },
                 "title": "PlayStation 4"

@@ -53,6 +53,7 @@ omit =
     homeassistant/components/bbox/sensor.py
     homeassistant/components/bh1750/sensor.py
     homeassistant/components/bitcoin/sensor.py
+    homeassistant/components/bizkaibus/sensor.py
     homeassistant/components/blink/*
     homeassistant/components/blinksticklight/light.py
     homeassistant/components/blinkt/light.py
@@ -249,7 +250,6 @@ omit =
     homeassistant/components/hitron_coda/device_tracker.py
     homeassistant/components/hive/*
     homeassistant/components/hlk_sw16/*
-    homeassistant/components/homekit_controller/*
     homeassistant/components/homematic/*
     homeassistant/components/homematic/climate.py
     homeassistant/components/homematic/cover.py
@@ -277,6 +277,7 @@ omit =
     homeassistant/components/imap_email_content/sensor.py
     homeassistant/components/influxdb/sensor.py
     homeassistant/components/insteon/*
+    homeassistant/components/incomfort/*
     homeassistant/components/ios/*
     homeassistant/components/iota/*
     homeassistant/components/iperf3/*
@@ -347,6 +348,7 @@ omit =
     homeassistant/components/message_bird/notify.py
     homeassistant/components/met/weather.py
     homeassistant/components/meteo_france/*
+    homeassistant/components/meteoalarm/*
     homeassistant/components/metoffice/sensor.py
     homeassistant/components/metoffice/weather.py
     homeassistant/components/microsoft/tts.py
@@ -536,11 +538,10 @@ omit =
     homeassistant/components/slack/notify.py
     homeassistant/components/sma/sensor.py
     homeassistant/components/smappee/*
+    homeassistant/components/smarthab/*
     homeassistant/components/smtp/notify.py
     homeassistant/components/snapcast/media_player.py
-    homeassistant/components/snmp/device_tracker.py
-    homeassistant/components/snmp/sensor.py
-    homeassistant/components/snmp/switch.py
+    homeassistant/components/snmp/*
     homeassistant/components/sochain/sensor.py
     homeassistant/components/socialblade/sensor.py
     homeassistant/components/solaredge/sensor.py

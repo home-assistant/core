@@ -6,7 +6,7 @@ from homematicip.aio.device import (
     AsyncHeatingThermostat, AsyncHeatingThermostatCompact, AsyncLightSensor,
     AsyncMotionDetectorIndoor, AsyncMotionDetectorOutdoor,
     AsyncMotionDetectorPushButton, AsyncPlugableSwitchMeasuring,
-    AsyncTemperatureHumiditySensorDisplay,
+    AsyncPresenceDetectorIndoor, AsyncTemperatureHumiditySensorDisplay,
     AsyncTemperatureHumiditySensorOutdoor,
     AsyncTemperatureHumiditySensorWithoutDisplay, AsyncWeatherSensor,
     AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
@@ -55,6 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
         if isinstance(device, (AsyncLightSensor, AsyncMotionDetectorIndoor,
                                AsyncMotionDetectorOutdoor,
                                AsyncMotionDetectorPushButton,
+                               AsyncPresenceDetectorIndoor,
                                AsyncWeatherSensor,
                                AsyncWeatherSensorPlus,
                                AsyncWeatherSensorPro)):

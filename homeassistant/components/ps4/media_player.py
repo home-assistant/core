@@ -7,8 +7,8 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     ENTITY_IMAGE_URL, MediaPlayerDevice)
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_GAME, SUPPORT_SELECT_SOURCE, SUPPORT_STOP, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON)
+    MEDIA_TYPE_GAME, MEDIA_TYPE_APP, SUPPORT_SELECT_SOURCE,
+    SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
 from homeassistant.components.ps4 import format_unique_id
 from homeassistant.const import (
     ATTR_COMMAND, ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_REGION,
@@ -222,7 +222,10 @@ class PS4Device(MediaPlayerDevice):
             self._media_title = app_name or name
             self._source = self._media_title
             self._media_image = art
-            self._media_type = MEDIA_TYPE_GAME
+            if title.game_type == 'App':
+                self._media_type = MEDIA_TYPE_APP
+            else:
+                self._media_type = MEDIA_TYPE_GAME
             self.update_list()
 
     def update_list(self):

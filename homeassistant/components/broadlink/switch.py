@@ -10,9 +10,10 @@ from homeassistant.components.switch import (
     ENTITY_ID_FORMAT, PLATFORM_SCHEMA, SwitchDevice)
 from homeassistant.const import (
     CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_FRIENDLY_NAME, CONF_HOST, CONF_MAC,
-    CONF_SWITCHES, CONF_TIMEOUT, CONF_TYPE)
+    CONF_SWITCHES, CONF_TIMEOUT, CONF_TYPE, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle, slugify
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import async_setup_service, data_packet
 
@@ -115,7 +116,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(switches)
 
 
-class BroadlinkRMSwitch(SwitchDevice):
+class BroadlinkRMSwitch(SwitchDevice, RestoreEntity):
     """Representation of an Broadlink switch."""
 
     def __init__(self, name, friendly_name, device, command_on, command_off):
@@ -126,6 +127,13 @@ class BroadlinkRMSwitch(SwitchDevice):
         self._command_on = command_on
         self._command_off = command_off
         self._device = device
+
+    async def async_added_to_hass(self):
+        """Call when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        state = await self.async_get_last_state()
+        if state:
+            self._state = state.state == STATE_ON
 
     @property
     def name(self):

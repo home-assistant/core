@@ -1,4 +1,4 @@
-"""YAML utility functions."""
+"""Custom loader."""
 import logging
 import os
 import sys
@@ -7,6 +7,7 @@ from collections import OrderedDict
 from typing import Union, List, Dict, Iterator, overload, TypeVar
 
 import yaml
+
 try:
     import keyring
 except ImportError:
@@ -19,25 +20,23 @@ except ImportError:
 
 from homeassistant.exceptions import HomeAssistantError
 
+from .const import _SECRET_NAMESPACE, SECRET_YAML
+from .objects import NodeListClass, NodeStrClass
+
+
 _LOGGER = logging.getLogger(__name__)
-_SECRET_NAMESPACE = 'homeassistant'
-SECRET_YAML = 'secrets.yaml'
 __SECRET_CACHE = {}  # type: Dict[str, JSON_TYPE]
 
 JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
 DICT_T = TypeVar('DICT_T', bound=Dict)  # pylint: disable=invalid-name
 
 
-class NodeListClass(list):
-    """Wrapper class to be able to add attributes on a list."""
+def clear_secret_cache() -> None:
+    """Clear the secret cache.
 
-    pass
-
-
-class NodeStrClass(str):
-    """Wrapper class to be able to add attributes on a string."""
-
-    pass
+    Async friendly.
+    """
+    __SECRET_CACHE.clear()
 
 
 # pylint: disable=too-many-ancestors
@@ -52,6 +51,21 @@ class SafeLineLoader(yaml.SafeLoader):
                      self).compose_node(parent, index)  # type: yaml.nodes.Node
         node.__line__ = last_line + 1  # type: ignore
         return node
+
+
+def load_yaml(fname: str) -> JSON_TYPE:
+    """Load a YAML file."""
+    try:
+        with open(fname, encoding='utf-8') as conf_file:
+            # If configuration file is empty YAML returns None
+            # We convert that to an empty dict
+            return yaml.load(conf_file, Loader=SafeLineLoader) or OrderedDict()
+    except yaml.YAMLError as exc:
+        _LOGGER.error(str(exc))
+        raise HomeAssistantError(exc)
+    except UnicodeDecodeError as exc:
+        _LOGGER.error("Unable to read file %s: %s", fname, exc)
+        raise HomeAssistantError(exc)
 
 
 # pylint: disable=pointless-statement
@@ -84,44 +98,6 @@ def _add_reference(obj, loader: SafeLineLoader,  # type: ignore # noqa: F811
     setattr(obj, '__config_file__', loader.name)
     setattr(obj, '__line__', node.start_mark.line)
     return obj
-
-
-def load_yaml(fname: str) -> JSON_TYPE:
-    """Load a YAML file."""
-    try:
-        with open(fname, encoding='utf-8') as conf_file:
-            # If configuration file is empty YAML returns None
-            # We convert that to an empty dict
-            return yaml.load(conf_file, Loader=SafeLineLoader) or OrderedDict()
-    except yaml.YAMLError as exc:
-        _LOGGER.error(str(exc))
-        raise HomeAssistantError(exc)
-    except UnicodeDecodeError as exc:
-        _LOGGER.error("Unable to read file %s: %s", fname, exc)
-        raise HomeAssistantError(exc)
-
-
-def dump(_dict: dict) -> str:
-    """Dump YAML to a string and remove null."""
-    return yaml.safe_dump(
-        _dict, default_flow_style=False, allow_unicode=True) \
-        .replace(': null\n', ':\n')
-
-
-def save_yaml(path: str, data: dict) -> None:
-    """Save YAML to a file."""
-    # Dump before writing to not truncate the file if dumping fails
-    str_data = dump(data)
-    with open(path, 'w', encoding='utf-8') as outfile:
-        outfile.write(str_data)
-
-
-def clear_secret_cache() -> None:
-    """Clear the secret cache.
-
-    Async friendly.
-    """
-    __SECRET_CACHE.clear()
 
 
 def _include_yaml(loader: SafeLineLoader,
@@ -331,43 +307,3 @@ yaml.SafeLoader.add_constructor('!include_dir_merge_list',
 yaml.SafeLoader.add_constructor('!include_dir_named', _include_dir_named_yaml)
 yaml.SafeLoader.add_constructor('!include_dir_merge_named',
                                 _include_dir_merge_named_yaml)
-
-
-# From: https://gist.github.com/miracle2k/3184458
-# pylint: disable=redefined-outer-name
-def represent_odict(dump, tag, mapping,  # type: ignore
-                    flow_style=None) -> yaml.MappingNode:
-    """Like BaseRepresenter.represent_mapping but does not issue the sort()."""
-    value = []  # type: list
-    node = yaml.MappingNode(tag, value, flow_style=flow_style)
-    if dump.alias_key is not None:
-        dump.represented_objects[dump.alias_key] = node
-    best_style = True
-    if hasattr(mapping, 'items'):
-        mapping = mapping.items()
-    for item_key, item_value in mapping:
-        node_key = dump.represent_data(item_key)
-        node_value = dump.represent_data(item_value)
-        if not (isinstance(node_key, yaml.ScalarNode) and not node_key.style):
-            best_style = False
-        if not (isinstance(node_value, yaml.ScalarNode) and
-                not node_value.style):
-            best_style = False
-        value.append((node_key, node_value))
-    if flow_style is None:
-        if dump.default_flow_style is not None:
-            node.flow_style = dump.default_flow_style
-        else:
-            node.flow_style = best_style
-    return node
-
-
-yaml.SafeDumper.add_representer(
-    OrderedDict,
-    lambda dumper, value:
-    represent_odict(dumper, 'tag:yaml.org,2002:map', value))
-
-yaml.SafeDumper.add_representer(
-    NodeListClass,
-    lambda dumper, value:
-    dumper.represent_sequence('tag:yaml.org,2002:seq', value))

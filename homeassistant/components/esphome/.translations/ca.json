@@ -13,7 +13,7 @@
                 "data": {
                     "password": "Contrasenya"
                 },
-                "description": "Introdueix la contrasenya que has posat en la teva configuraci\u00f3.",
+                "description": "Introdueix la contrasenya que has posat en la teva configuraci\u00f3 com a {name}.",
                 "title": "Introdueix la contrasenya"
             },
             "discovery_confirm": {

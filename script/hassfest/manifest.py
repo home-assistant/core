@@ -10,6 +10,7 @@ from .model import Integration
 MANIFEST_SCHEMA = vol.Schema({
     vol.Required('domain'): str,
     vol.Required('name'): str,
+    vol.Optional('config_flow'): bool,
     vol.Required('documentation'): str,
     vol.Required('requirements'): [str],
     vol.Required('dependencies'): [str],

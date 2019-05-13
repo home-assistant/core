@@ -78,9 +78,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
         if user_input is not None:
             key = user_input['device']
-            props = self.devices[key]['properties']
-            self.hkid = props['id']
-            self.model = props['md']
+            self.hkid = self.devices[key]['id']
+            self.model = self.devices[key]['md']
             return await self.async_step_pair()
 
         controller = homekit.Controller()
@@ -90,11 +89,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
         self.devices = {}
         for host in all_hosts:
-            status_flags = int(host['properties']['sf'])
+            status_flags = int(host['sf'])
             paired = not status_flags & 0x01
             if paired:
                 continue
-            self.devices[host['properties']['id']] = host
+            self.devices[host['name']] = host
 
         if not self.devices:
             return self.async_abort(
@@ -263,13 +262,26 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
     async def _entry_from_accessory(self, pairing):
         """Return a config entry from an initialized bridge."""
-        accessories = await self.hass.async_add_executor_job(
-            pairing.list_accessories_and_characteristics
-        )
+        # The bulk of the pairing record is stored on the config entry.
+        # A specific exception is the 'accessories' key. This is more
+        # volatile. We do cache it, but not against the config entry.
+        # So copy the pairing data and mutate the copy.
+        pairing_data = pairing.pairing_data.copy()
+
+        # Use the accessories data from the pairing operation if it is
+        # available. Otherwise request a fresh copy from the API.
+        # This removes the 'accessories' key from pairing_data at
+        # the same time.
+        accessories = pairing_data.pop('accessories', None)
+        if not accessories:
+            accessories = await self.hass.async_add_executor_job(
+                pairing.list_accessories_and_characteristics
+            )
+
         bridge_info = get_bridge_information(accessories)
         name = get_accessory_name(bridge_info)
 
         return self.async_create_entry(
             title=name,
-            data=pairing.pairing_data,
+            data=pairing_data,
         )
