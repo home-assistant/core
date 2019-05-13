@@ -28,13 +28,25 @@ TARGET_STATE_MAP = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up Homekit Alarm Control Panel support."""
-    if discovery_info is None:
-        return
-    accessory = hass.data[KNOWN_DEVICES][discovery_info['serial']]
-    add_entities([HomeKitAlarmControlPanel(accessory, discovery_info)],
-                 True)
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Legacy set up platform."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Homekit alarm control panel."""
+    hkid = config_entry.data['AccessoryPairingID']
+    conn = hass.data[KNOWN_DEVICES][hkid]
+
+    def async_add_service(aid, service):
+        if service['stype'] != 'security-system':
+            return False
+        info = {'aid': aid, 'iid': service['iid']}
+        async_add_entities([HomeKitAlarmControlPanel(conn, info)], True)
+        return True
+
+    conn.add_listener(async_add_service)
 
 
 class HomeKitAlarmControlPanel(HomeKitEntity, AlarmControlPanel):
