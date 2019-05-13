@@ -24,6 +24,15 @@ def pass_through_formatter(value):
     return value
 
 
+def illuminance_formatter(value):
+    """Convert Illimination data."""
+    # should handle Xiaomi and any other non compliant companies
+    if value < 100:
+        return value
+    value = 10 ^ ((value - 1) / 10000)
+    return value
+
+
 def temperature_formatter(value):
     """Convert temperature data."""
     if value is None:
@@ -58,6 +67,7 @@ FORMATTER_FUNC_REGISTRY = {
     TEMPERATURE: temperature_formatter,
     PRESSURE: pressure_formatter,
     ELECTRICAL_MEASUREMENT: active_power_formatter,
+    ILLUMINANCE: illuminance_formatter,
     GENERIC: pass_through_formatter,
 }
 
