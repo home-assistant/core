@@ -98,7 +98,7 @@ class ElkKeypad(ElkSensor):
         """Register callback for ElkM1 changes and update entity state."""
         await super().async_added_to_hass()
         elk_datas = self.hass.data[ELK_DOMAIN]
-        for _, elk_data in elk_datas.items():
+        for elk_data in elk_datas.values():
             elk_data['keypads'][self._element.index] = self.entity_id
 
 

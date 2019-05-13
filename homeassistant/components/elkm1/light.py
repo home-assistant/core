@@ -18,6 +18,7 @@ async def async_setup_platform(
                             'plc', ElkLight, entities)
     async_add_entities(entities, True)
 
+
 class ElkLight(ElkEntity, Light):
     """Representation of an Elk lighting device."""
 
