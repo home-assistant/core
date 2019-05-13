@@ -6,7 +6,7 @@ import time
 from homeassistant.core import callback
 from homeassistant.util import slugify
 from .entity import ZhaEntity
-from .const import POWER_CONFIGURATION_CHANNEL, SIGNAL_STATE_ATTR
+from .const import POWER_CONFIGURATION_CHANNEL, SIGNAL_STATE_ATTR, UNKNOWN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -144,6 +144,9 @@ class ZhaDeviceEntity(ZhaEntity):
             'battery_percentage_remaining')
         if battery is not None:
             # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
-            battery = battery / 2
-            battery = int(round(battery))
+            if battery == -1:
+                battery = UNKNOWN
+            else:
+                battery = battery / 2
+                battery = int(round(battery))
             self._device_state_attributes['battery_level'] = battery
