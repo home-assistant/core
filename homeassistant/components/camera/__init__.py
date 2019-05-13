@@ -522,12 +522,10 @@ async def websocket_camera_thumbnail(hass, connection, msg):
     """
     try:
         image = await async_get_image(hass, msg['entity_id'])
-        connection.send_message(websocket_api.result_message(
-            msg['id'], {
-                'content_type': image.content_type,
-                'content': base64.b64encode(image.content).decode('utf-8')
-            }
-        ))
+        await connection.send_big_result(msg['id'], {
+            'content_type': image.content_type,
+            'content': base64.b64encode(image.content).decode('utf-8')
+        })
     except HomeAssistantError:
         connection.send_message(websocket_api.error_message(
             msg['id'], 'image_fetch_failed', 'Unable to fetch image'))
