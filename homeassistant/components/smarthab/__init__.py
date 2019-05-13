@@ -16,8 +16,6 @@ import homeassistant.helpers.config_validation as cv
 DOMAIN = 'smarthab'
 DATA_HUB = 'hub'
 
-REQUIREMENTS = ['smarthab==0.20']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({
@@ -46,16 +44,12 @@ def setup(hass, config) -> bool:
     except pysmarthab.RequestFailedException as ex:
         _LOGGER.error("Error while trying to reach SmartHab API.")
         _LOGGER.debug(ex, exc_info=True)
-        raise HomeAssistantError(
-            "Error while trying to reach SmartHab. Please check service and"
-            " network status, and try again later.")
+        return False
 
     # Verify that passed in configuration works
     if not hub.is_logged_in():
         _LOGGER.error("Could not authenticate with SmartHab API")
-        raise HomeAssistantError(
-            "Could not authenticate with SmartHab. Please check your"
-            " credentials.")
+        return False
 
     # Pass hub object to child platforms
     hass.data[DOMAIN] = {
