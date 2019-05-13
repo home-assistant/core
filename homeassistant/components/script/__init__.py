@@ -168,8 +168,14 @@ class ScriptEntity(ToggleEntity):
             ATTR_NAME: self.script.name,
             ATTR_ENTITY_ID: self.entity_id,
         }, context=context)
-        await self.script.async_run(
-            kwargs.get(ATTR_VARIABLES), context)
+        try:
+            await self.script.async_run(
+                kwargs.get(ATTR_VARIABLES), context)
+        except Exception as err:  # pylint: disable=broad-except
+            self.script.async_log_exception(
+                _LOGGER, "Error executing script {}".format(self.entity_id),
+                err)
+            raise err
 
     async def async_turn_off(self, **kwargs):
         """Turn script off."""
