@@ -7,7 +7,7 @@ To get started:
 
 .. code:: bash
 
-    python3 -m pip install homeassistant
+    python3 -m pip install ais-dom
     hass --open-ui
 
 |screenshot-states|
