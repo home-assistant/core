@@ -2,6 +2,7 @@
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import const
 
+
 async def test_send_big_result(hass, websocket_client):
     """Test sending big results over the WS."""
     @websocket_api.websocket_command({
