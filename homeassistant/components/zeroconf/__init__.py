@@ -6,7 +6,6 @@ import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, __version__)
-from homeassistant.core import callback
 
 _LOGGER = logging.getLogger(__name__)
 
