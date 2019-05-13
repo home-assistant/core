@@ -12,6 +12,7 @@ DOMAIN = 'ais_bookmarks'
 DEPENDENCIES = ['http']
 _LOGGER = logging.getLogger(__name__)
 INTENT_ADD_FAVORITE = 'AisBookmarksAddFavorite'
+INTENT_ADD_BOOKMARK = 'AisBookmarksAddBookmark'
 INTENT_LAST_BOOKMARKS = 'AisBookmarksLastBookmarks'
 INTENT_PLAY_LAST_BOOKMARK = 'AisBookmarkPlayLastBookmark'
 PERSISTENCE_BOOKMARKS = '.dom/.ais_bookmarks.json'
@@ -211,6 +212,7 @@ def async_setup(hass, config):
 
     data = hass.data[DOMAIN] = BookmarksData(hass)
     intent.async_register(hass, AddFavoriteIntent())
+    intent.async_register(hass, AddBookmarkIntent())
     intent.async_register(hass, ListTopBookmarkIntent())
     intent.async_register(hass, PlayLastBookmarkIntent())
     hass.services.async_register(DOMAIN, SERVICE_ADD_BOOKMARK, add_bookmark_service)
@@ -227,6 +229,7 @@ def async_setup(hass, config):
         'Do ulubionych',
         'Lubię to',
     ])
+    hass.components.conversation.async_register(INTENT_ADD_BOOKMARK, ['Dodaj zakładkę', 'Zakładka'])
     hass.components.conversation.async_register(INTENT_LAST_BOOKMARKS, [
         'Jakie mam zakładki', 'Jakie są zakładki'
     ])
@@ -254,6 +257,9 @@ class BookmarksData:
     @callback
     def async_add(self, call, bookmark):
         """Add a item."""
+        voice_call = False
+        if 'voice_call' in call.data:
+            voice_call = True
         attributes = {}
         if "attr" in call.data:
             attributes = call.data["attr"]
@@ -295,6 +301,9 @@ class BookmarksData:
             if audio_type == ais_global.G_AN_LOCAL:
                 media_content_id = ais_global.G_CURR_MEDIA_CONTENT["lookup_url"]
                 full_name = ais_global.G_CURR_MEDIA_CONTENT["ALBUM_NAME"] + " " + name
+            # if yt then not bookmark to current search but to lookup url
+            elif audio_type == ais_global.G_AN_MUSIC:
+                media_content_id = ais_global.G_CURR_MEDIA_CONTENT["lookup_url"]
 
             # check if the audio is on bookmark list
             item = next((itm for itm in self.bookmarks if (itm['media_content_id'] == media_content_id)), None)
@@ -316,8 +325,10 @@ class BookmarksData:
             }
             self.bookmarks.append(item)
             self.hass.async_add_job(self.save, True)
-            # self.hass.async_add_job(self.hass.services.async_call('ais_ai_service', 'say_it', {"text": message}))
-            _LOGGER.info(message)
+            if voice_call:
+                self.hass.async_add_job(self.hass.services.async_call('ais_ai_service', 'say_it', {"text": message}))
+            else:
+                _LOGGER.info(message)
             return item
         else:
             # validation
@@ -417,7 +428,31 @@ class AddFavoriteIntent(intent.IntentHandler):
             answer = "Nie można dodać do ulubionych - brak informacji o odtwarzanym audio."
         else:
             answer = "Dobrze zapamiętam - dodaje {} do Twoich ulubionych".format(name)
-            hass.data[DOMAIN].async_add(state.attributes, False)
+            # hass.data[DOMAIN].async_add(state.attributes, False)
+            yield from hass.services.async_call('ais_bookmarks', 'add_favorite', {'voice_call': True})
+        response = intent_obj.create_response()
+        response.async_set_speech(answer)
+        return response
+
+
+class AddBookmarkIntent(intent.IntentHandler):
+    """Handle AddItem intents."""
+    intent_type = INTENT_ADD_BOOKMARK
+
+    @asyncio.coroutine
+    def async_handle(self, intent_obj):
+        """Handle the intent."""
+        hass = intent_obj.hass
+        state = hass.states.get('media_player.wbudowany_glosnik')
+        name = state.attributes.get("media_title")
+        source = state.attributes.get("source")
+        media_content_id = state.attributes.get("media_content_id")
+        # check if all fields are provided
+        if name is None or source is None or media_content_id is None:
+            answer = "Nie można dodać zakładki - brak informacji o odtwarzanym audio."
+        else:
+            answer = "Dobrze dodaję zakładkę {}".format(name)
+            yield from hass.services.async_call('ais_bookmarks', 'add_bookmark', {'voice_call': True})
         response = intent_obj.create_response()
         response.async_set_speech(answer)
         return response

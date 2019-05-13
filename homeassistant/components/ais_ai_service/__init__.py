@@ -24,6 +24,7 @@ from homeassistant.helpers import intent, config_validation as cv
 from homeassistant.components import ais_cloud
 import homeassistant.components.mqtt as mqtt
 import homeassistant.ais_dom.ais_global as ais_global
+from homeassistant.components import ais_drives_service
 aisCloudWS = ais_cloud.AisCloudWS()
 
 REQUIREMENTS = ['fuzzywuzzy==0.15.1', 'babel']
@@ -624,7 +625,6 @@ def say_curr_entity(hass):
         else:
             attr = state.attributes
             files = attr.get('files', [])
-            from homeassistant.components import ais_drives_service
             info = ais_drives_service.get_pozycji_variety(len(files))
             _say_it(hass, info, None)
         return
@@ -870,8 +870,13 @@ def select_entity(hass, long_press):
         return
 
     if CURR_ENTITIE == 'sensor.ais_drives':
-        hass.services.call('ais_drives_service', 'remote_select_item')
-        return
+        if CURR_ENTITIE_SELECTED_ACTION == ais_global.G_ACTION_DELETE:
+            hass.async_run_job(hass.services.call('ais_drives_service', 'remote_delete_item'))
+            CURR_ENTITIE_SELECTED_ACTION = None
+            return
+        else:
+            hass.services.call('ais_drives_service', 'remote_select_item')
+            return
 
     if CURR_ENTITIE_ENTERED is False:
         # check if the entity option can be selected
@@ -1045,31 +1050,28 @@ def set_on_dpad_down(hass, long_press):
             _curr = round(max(float(state.state) - _step, _min), 2)
             _say_it(hass, str(_curr), None)
             _LOGGER.info("speed down the player - info from remote: " + str(_curr))
-            hass.services.call(
-                'ais_ai_service',
-                'publish_command_to_frame', {
-                    "key": 'setPlaybackSpeed',
-                    "val": _curr
-                }
-            )
-            hass.services.call(
-                'input_number',
-                'set_value', {
-                    "entity_id": "input_number.media_player_speed",
-                    "value": _curr})
+            hass.services.call('ais_ai_service', 'publish_command_to_frame', {"key": 'setPlaybackSpeed',"val": _curr})
+            hass.services.call('input_number', 'set_value',
+                               {"entity_id": "input_number.media_player_speed", "value": _curr})
             return
         elif CURR_ENTITIE.startswith('input_text.') and CURR_ENTITIE_ENTERED:
             set_prev_virtual_keyboard_mode()
             say_curr_virtual_keyboard_mode(hass)
-        elif CURR_ENTITIE_ENTERED and CURR_ENTITIE =='sensor.aisfavoriteslist':
+        elif CURR_ENTITIE_ENTERED and CURR_ENTITIE == 'sensor.aisfavoriteslist':
             _say_it(hass, "Usuwanie. Naciśnij OK aby usunąć pozycję z ulubionych.", None)
             CURR_ENTITIE_SELECTED_ACTION = ais_global.G_ACTION_DELETE
         elif CURR_ENTITIE_ENTERED and CURR_ENTITIE == 'sensor.aisbookmarkslist':
             _say_it(hass, "Usuwanie. Naciśnij OK aby usunąć tą zakładkę.", None)
             CURR_ENTITIE_SELECTED_ACTION = ais_global.G_ACTION_DELETE
+        elif CURR_ENTITIE == 'sensor.ais_drives':
+            path = hass.states.get(CURR_ENTITIE).state
+            if path.startswith('/dysk-wewnętrzny'):
+                _say_it(hass, "Usuwanie. Naciśnij OK aby usunąć tą pozycję.", None)
+                CURR_ENTITIE_SELECTED_ACTION = ais_global.G_ACTION_DELETE
+            else:
+                _say_it(hass, "Wybrana pozycja nie ma dodatkowych opcji.", None)
         else:
             _say_it(hass, "Wybrana pozycja nie ma dodatkowych opcji.", None)
-
 
 
 def set_on_dpad_up(hass, long_press):

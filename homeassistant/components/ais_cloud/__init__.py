@@ -710,7 +710,6 @@ class AisColudData:
                 self.hass.services.call('ais_ai_service', 'switch_ui', {"mode": 'Radio'})
 
                 #  get list
-                _LOGGER.error(call.data["type"])
                 self.hass.services.call('input_select', 'select_option',
                                         {"entity_id": "input_select.radio_type", "option": call.data["type"]})
 

@@ -7,9 +7,6 @@ homeassistant:
   elevation: 134
   customize: !include customize.yaml
   packages: !include_dir_named ais_packages/
-  customize_glob:
-    fan.*:
-      custom_ui_state_card: state-card-custom-fanspeed
   auth_providers:
   - type: trusted_networks
     trusted_networks:

@@ -93,6 +93,10 @@ def async_setup(hass, config):
         _LOGGER.info("remote_cancel_item")
         data.remote_cancel_item(True)
 
+    def remote_delete_item(call):
+        _LOGGER.info("remote_delete_item")
+        data.remote_delete_item(True)
+
     hass.services.async_register(DOMAIN, 'browse_path', browse_path)
     hass.services.async_register(DOMAIN, 'refresh_files', refresh_files)
     hass.services.async_register(DOMAIN, 'sync_locations', sync_locations)
@@ -102,6 +106,7 @@ def async_setup(hass, config):
     hass.services.async_register(DOMAIN, 'remote_prev_item', remote_prev_item)
     hass.services.async_register(DOMAIN, 'remote_select_item', remote_select_item)
     hass.services.async_register(DOMAIN, 'remote_cancel_item', remote_cancel_item)
+    hass.services.async_register(DOMAIN, 'remote_delete_item', remote_delete_item)
 
     return True
 
@@ -878,6 +883,35 @@ class LocalData:
 
     def remote_cancel_item(self, say):
         self._browse_path('..', say)
+
+    def remote_delete_item(self, say):
+        state = self.hass.states.get('sensor.ais_drives')
+        attr = state.attributes
+        files = attr.get('files', [])
+        if state.state is None or self.selected_item_idx is None:
+            self.say("Brak pozycji do usunięcia")
+        if files[self.selected_item_idx]["path"] == G_LOCAL_FILES_ROOT:
+            self.say("Tej pozycji nie można usunąć")
+        else:
+            # delete file or folder
+            path = files[self.selected_item_idx]["path"]
+            if path.startswith(G_LOCAL_FILES_ROOT) and path != G_LOCAL_FILES_ROOT:
+                if os.path.isdir(path):
+                    # remove dir
+                    import shutil
+                    shutil.rmtree(path)
+                    self.say("Usuwam folder " + files[self.selected_item_idx]['name'])
+                else:
+                    # remove file
+                    os.remove(path)
+                    self.say("Usuwam plik " + files[self.selected_item_idx]['name'])
+                # browse this patch again
+                from pathlib import Path
+                parent_path = str(Path(path).parent)
+                self._browse_path(parent_path, False)
+
+            else:
+                self.say("Tej pozycji nie można usunąć")
 
     @asyncio.coroutine
     def async_load_all(self):
