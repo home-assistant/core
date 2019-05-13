@@ -18,6 +18,7 @@ FLOWS = [
     "gpslogger",
     "hangouts",
     "heos",
+    "homekit_controller",
     "homematicip_cloud",
     "hue",
     "ifttt",
