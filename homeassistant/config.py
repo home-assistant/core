@@ -834,7 +834,7 @@ async def async_process_component_config(
 
 
 @callback
-def config_without_domain(config, domain):
+def config_without_domain(config: Dict, domain: str) -> Dict:
     """Return a config with all configuration for a domain removed."""
     filter_keys = extract_domain_configs(config, domain)
     return {
