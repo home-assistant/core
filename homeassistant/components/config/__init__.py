@@ -92,6 +92,10 @@ class BaseEditConfigView(HomeAssistantView):
         """Set value."""
         raise NotImplementedError
 
+    def _delete_value(self, hass, data, config_key):
+        """Delete value."""
+        raise NotImplementedError
+
     async def get(self, request, config_key):
         """Fetch device specific config."""
         hass = request.app['hass']
@@ -128,7 +132,27 @@ class BaseEditConfigView(HomeAssistantView):
         current = await self.read_config(hass)
         self._write_value(hass, current, config_key, data)
 
-        await hass.async_add_job(_write, path, current)
+        await hass.async_add_executor_job(_write, path, current)
+
+        if self.post_write_hook is not None:
+            hass.async_create_task(self.post_write_hook(hass))
+
+        return self.json({
+            'result': 'ok',
+        })
+
+    async def delete(self, request, config_key):
+        """Remove an entry."""
+        hass = request.app['hass']
+        current = await self.read_config(hass)
+        value = self._get_value(hass, current, config_key)
+        path = hass.config.path(self.path)
+
+        if value is None:
+            return self.json_message('Resource not found', 404)
+
+        self._delete_value(hass, current, config_key)
+        await hass.async_add_executor_job(_write, path, current)
 
         if self.post_write_hook is not None:
             hass.async_create_task(self.post_write_hook(hass))
@@ -161,6 +185,10 @@ class EditKeyBasedConfigView(BaseEditConfigView):
         """Set value."""
         data.setdefault(config_key, {}).update(new_value)
 
+    def _delete_value(self, hass, data, config_key):
+        """Delete value."""
+        return data.pop(config_key)
+
 
 class EditIdBasedConfigView(BaseEditConfigView):
     """Configure key based config entries."""
@@ -183,6 +211,13 @@ class EditIdBasedConfigView(BaseEditConfigView):
             data.append(value)
 
         value.update(new_value)
+
+    def _delete_value(self, hass, data, config_key):
+        """Delete value."""
+        index = next(
+            idx for idx, val in enumerate(data)
+            if val.get(CONF_ID) == config_key)
+        data.pop(index)
 
 
 def _read(path):
