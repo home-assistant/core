@@ -1177,6 +1177,8 @@ class Config:
         self.time_zone = None  # type: Optional[datetime.tzinfo]
         self.units = METRIC_SYSTEM  # type: UnitSystem
 
+        self.config_source = None
+
         # If True, pip install is skipped for requirements on startup
         self.skip_pip = False  # type: bool
 

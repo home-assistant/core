@@ -50,6 +50,9 @@ FILE_MIGRATION = (
     ('ios.conf', '.ios.conf'),
 )
 
+CORE_STORAGE_KEY = 'homeassistant.storage'
+CORE_STORAGE_VERSION = 1
+
 DEFAULT_CORE_CONFIG = (
     # Tuples (attribute, default, auto detect property, description)
     (CONF_NAME, 'Home', None, 'Name of the location where Home Assistant is '
@@ -521,16 +524,35 @@ async def async_process_ha_core_config(
         time_zone = date_util.get_time_zone(time_zone_str)
 
         if time_zone:
+            hac.config_source = 'yaml'
             hac.time_zone = time_zone
             date_util.set_default_time_zone(time_zone)
         else:
             _LOGGER.error("Received invalid time zone %s", time_zone_str)
+
+    store = hass.helpers.storage.Store(CORE_STORAGE_VERSION, CORE_STORAGE_KEY,
+                                       private=True)
+    data = await store.async_load()
+    if data:
+        hac.config_source = 'storage'
+        hac.latitude = data.get('latitude')
+        hac.longitude = data.get('longitude')
+        hac.elevation = data.get('elevation')
+        unit_system = data.get('unit_system')
+        if unit_system:
+            if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+                hac.units = IMPERIAL_SYSTEM
+            else:
+                hac.units = METRIC_SYSTEM
+        hac.location_name = data.get('location_name')
+        set_time_zone(data.get('time_zone'))
 
     for key, attr in ((CONF_LATITUDE, 'latitude'),
                       (CONF_LONGITUDE, 'longitude'),
                       (CONF_NAME, 'location_name'),
                       (CONF_ELEVATION, 'elevation')):
         if key in config:
+            hac.config_source = 'yaml'
             setattr(hac, attr, config[key])
 
     set_time_zone(config.get(CONF_TIME_ZONE))
@@ -566,11 +588,13 @@ async def async_process_ha_core_config(
         EntityValues(cust_exact, cust_domain, cust_glob)
 
     if CONF_UNIT_SYSTEM in config:
+        hac.config_source = 'yaml'
         if config[CONF_UNIT_SYSTEM] == CONF_UNIT_SYSTEM_IMPERIAL:
             hac.units = IMPERIAL_SYSTEM
         else:
             hac.units = METRIC_SYSTEM
     elif CONF_TEMPERATURE_UNIT in config:
+        hac.config_source = 'yaml'
         unit = config[CONF_TEMPERATURE_UNIT]
         if unit == TEMP_CELSIUS:
             hac.units = METRIC_SYSTEM
@@ -591,6 +615,7 @@ async def async_process_ha_core_config(
     # If we miss some of the needed values, auto detect them
     if None in (hac.latitude, hac.longitude, hac.units,
                 hac.time_zone):
+        hac.config_source = 'discovered'
         info = await loc_util.async_detect_location_info(
             hass.helpers.aiohttp_client.async_get_clientsession()
         )
@@ -628,6 +653,27 @@ async def async_process_ha_core_config(
         _LOGGER.warning(
             "Incomplete core configuration. Auto detected %s",
             ", ".join('{}: {}'.format(key, val) for key, val in discovered))
+
+
+async def async_store_ha_core_config(hass: HomeAssistant) -> None:
+    """Store [homeassistant] core config."""
+    hac = hass.config
+    time_zone = date_util.UTC.zone
+    if hac.time_zone and getattr(hac.time_zone, 'zone'):
+        time_zone = getattr(hac.time_zone, 'zone')
+
+    data = {
+        'latitude': hac.latitude,
+        'longitude': hac.longitude,
+        'elevation': hac.elevation,
+        'unit_system': hac.units.name,
+        'location_name': hac.location_name,
+        'time_zone': time_zone,
+    }
+
+    store = hass.helpers.storage.Store(CORE_STORAGE_VERSION, CORE_STORAGE_KEY,
+                                       private=True)
+    await store.async_save(data)
 
 
 def _log_pkg_error(
