@@ -4,6 +4,7 @@ from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.auth.util import generate_secret
 
 CONF_SECRET = 'secret'
+CONF_CLOUDHOOK = 'cloudhook'
 
 
 def supports_encryption():
@@ -49,7 +50,7 @@ class OwnTracksFlow(config_entries.ConfigFlow):
             data={
                 CONF_WEBHOOK_ID: webhook_id,
                 CONF_SECRET: secret,
-                'cloudhook': cloudhook,
+                CONF_CLOUDHOOK: cloudhook,
             },
             description_placeholders={
                 'secret': secret_desc,
