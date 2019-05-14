@@ -74,7 +74,7 @@ class OwnTracksFlow(config_entries.ConfigFlow):
             data={
                 CONF_WEBHOOK_ID: webhook_id,
                 CONF_SECRET: secret,
-                'cloudhook': cloudhook,
+                CONF_CLOUDHOOK: cloudhook,
             }
         )
 
