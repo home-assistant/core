@@ -29,13 +29,26 @@ STATE_ATTR_NEXT_MIDNIGHT = 'next_midnight'
 STATE_ATTR_NEXT_NOON = 'next_noon'
 STATE_ATTR_NEXT_RISING = 'next_rising'
 STATE_ATTR_NEXT_SETTING = 'next_setting'
-STATE_ATTR_PHASE = 'phase'
 
+# The algorithm used here is somewhat complicated. It aims to cut down
+# the number of sensor updates over the day. It's documented best in
+# the PR for the change, see the Discussion section of:
+# https://github.com/home-assistant/home-assistant/pull/23832
+
+
+# As documented in wikipedia: https://en.wikipedia.org/wiki/Twilight
+# sun is:
+# < -18° of horizon - all stars visible
 PHASE_NIGHT = 'night'
+# 18°-12° - some stars not visible
 PHASE_ASTRONOMICAL_TWILIGHT = 'astronomical_twilight'
+# 12°-6° - horizon visible
 PHASE_NAUTICAL_TWILIGHT = 'nautical_twilight'
+# 6°-0° - objects visible
 PHASE_TWILIGHT = 'twilight'
+# 0°-10° above horizon, sun low on horizon
 PHASE_SMALL_DAY = 'small_day'
+# > 10° above horizon
 PHASE_DAY = 'day'
 
 # 4 mins is one degree of arc change of the sun on its circle.
@@ -120,6 +133,8 @@ class Sun(Entity):
         """Update the attributes containing solar events."""
         self._next_change = utc_point_in_time + timedelta(days=400)
 
+        # Work our way around the solar cycle, figure out the next
+        # phase. Some of these are stored.
         self.location.solar_depression = 'astronomical'
         self._check_event(utc_point_in_time, 'dawn', PHASE_NIGHT)
         self.location.solar_depression = 'nautical'
@@ -149,6 +164,9 @@ class Sun(Entity):
         self.next_midnight = self._check_event(
             utc_point_in_time, 'solar_midnight', None)
 
+        # if the event was solar midday or midnight, phase will now
+        # be None. Solar noon doesn't always happen when the sun is
+        # even in the day at the poles, so we can't rely on it.
         # Need to calculate phase if next is noon or midnight
         if self.phase is None:
             elevation = self.location.solar_elevation(self._next_change)
@@ -167,7 +185,7 @@ class Sun(Entity):
 
         self.rising = self.next_noon < self.next_midnight
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "sun phase_update@%s: phase=%s",
             utc_point_in_time.isoformat(),
             self.phase,
@@ -178,7 +196,7 @@ class Sun(Entity):
         async_track_point_in_utc_time(
             self.hass, self.update_events,
             self._next_change)
-        _LOGGER.debug("next time: %s", self._next_change)
+        _LOGGER.debug("next time: %s", self._next_change.isoformat())
 
     @callback
     def update_sun_position(self, utc_point_in_time):
@@ -195,11 +213,12 @@ class Sun(Entity):
         )
         self.async_write_ha_state()
 
-        next_update = utc_point_in_time + _PHASE_UPDATES[self.phase]
-        # if the next update is within 30 seconds of a change
-        # the next change will pick it up.
-        if next_update + timedelta(seconds=30) > self._next_change:
+        # Next update as per the current phase
+        delta = _PHASE_UPDATES[self.phase]
+        # if the next update is within 1.25 of the next
+        # position update just drop it
+        if utc_point_in_time + delta*1.25 > self._next_change:
             return
         async_track_point_in_utc_time(
             self.hass, self.update_sun_position,
-            next_update)
+            utc_point_in_time + delta)
