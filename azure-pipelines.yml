@@ -16,6 +16,7 @@ variables:
     value: '0.3'
   - group: docker
   - group: wheels
+  - group: github
 
 jobs:
 
@@ -141,3 +142,45 @@ jobs:
         -r https://github.com/home-assistant/hassio-homeassistant \
         -t machine --docker-hub homeassistant
     displayName: 'Build Release'
+
+
+- job: 'ReleasePublish'
+  condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded('Release'))
+  dependsOn:
+    - 'Release'
+  pool:
+    vmImage: 'ubuntu-16.04'
+  steps:
+  - script: |
+      sudo apt-get install -y --no-install-recommends \
+        git jq
+
+      git config --global user.name "Pascal Vizeli"
+      git config --global user.email "pvizeli@syshack.ch"
+      git config --global credential.helper store
+
+      echo "https://$(githubToken):x-oauth-basic@github.com > $HOME\.git-credentials
+    displayName: 'Install requirements'
+  - script: |
+      set -e
+
+      version="$(Build.SourceBranchName)"
+
+      git clone https://github.com/home-assistant/hassio-version
+      cd hassio-version
+
+      dev_version="$(jq --raw-output '.homeassistant.default' dev.json)"
+      beta_version="$(jq --raw-output '.homeassistant.default' beta.json)"
+      stable_version="$(jq --raw-output '.homeassistant.default' stable.json)"
+
+      if [[ "$version" =~ b ]]; then
+        sed -i "s|$dev_version|$version|g" dev.json
+        sed -i "s|$beta_version|$version|g" beta.json
+      else
+        sed -i "s|$dev_version|$version|g" dev.json
+        sed -i "s|$beta_version|$version|g" beta.json
+        sed -i "s|$stable_version|$version|g" stable.json
+      fi
+
+      git commit -am "Bump Home Assistant $version"
+      git push
