@@ -1,6 +1,6 @@
 """Support for Genius Hub binary_sensor devices."""
+from datetime import datetime
 import logging
-from time import (localtime, strftime)
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.core import callback
@@ -11,8 +11,6 @@ from . import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 GH_IS_SWITCH = ['Dual Channel Receiver', 'Electric Switch', 'Smart Plug']
-
-GH_STATE_ATTRS = ['measuredTemperature']
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -66,14 +64,11 @@ class GeniusSwitch(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the device state attributes."""
         attrs = {}
-        attrs['location'] = self._device.assignedZones[0]['name']
+        attrs['assignedZone'] = self._device.assignedZones[0]['name']
 
         last_comms = self._device._info_raw['childValues']['lastComms']['val']  # noqa; pylint: disable=protected-access
         if last_comms != 0:
-            last_comms = strftime('%Y-%m-%d %H:%M:%S', localtime(last_comms))
-            attrs['lastCommunication'] = last_comms
+            attrs['lastCommunication'] = datetime.utcfromtimestamp(
+                last_comms).isoformat()
 
-        state = {k: v for k, v in self._device.state.items()
-                 if k in GH_STATE_ATTRS}
-
-        return {**attrs, **state}
+        return {**attrs}

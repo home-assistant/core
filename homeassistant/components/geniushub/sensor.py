@@ -1,8 +1,8 @@
 """Support for Genius Hub sensor devices."""
+from datetime import datetime
 import logging
-from time import (localtime, strftime)
 
-from homeassistant.const import (DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
+from homeassistant.const import DEVICE_CLASS_BATTERY
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -13,9 +13,6 @@ _LOGGER = logging.getLogger(__name__)
 
 GH_HAS_BATTERY = [
     'Room Thermostat', 'Genius Valve', 'Room Sensor', 'Radiator Valve']
-
-GH_STATE_ATTRS = [
-    'setTemperature', 'luminance', 'occupancyTrigger', 'batteryLevel']
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -33,7 +30,7 @@ class GeniusDevice(Entity):
     """Representation of a Genius Hub sensor."""
 
     def __init__(self, client, device):
-        """Initialize the signal strength sensor."""
+        """Initialize the sensor."""
         self._client = client
         self._device = device
 
@@ -55,12 +52,12 @@ class GeniusDevice(Entity):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        return DEVICE_CLASS_TEMPERATURE
+        return DEVICE_CLASS_BATTERY
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of the sensor."""
-        return TEMP_CELSIUS
+        return '%'
 
     @property
     def should_poll(self) -> bool:
@@ -70,19 +67,16 @@ class GeniusDevice(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._device.state.get('measuredTemperature')
+        return self._device.state['batteryLevel']
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        last_comms = self._device._info_raw['childValues']['lastComms']['val']  # noqa; pylint: disable=protected-access
-        last_comms = strftime('%Y-%m-%d %H:%M:%S', localtime(last_comms))
-
         attrs = {}
-        attrs['location'] = self._device.assignedZones[0]['name']
-        attrs['lastCommunication'] = last_comms
+        attrs['assignedZone'] = self._device.assignedZones[0]['name']
 
-        state = {k: v for k, v in self._device.state.items()
-                 if k in GH_STATE_ATTRS}
+        last_comms = self._device._info_raw['childValues']['lastComms']['val']  # noqa; pylint: disable=protected-access
+        attrs['lastCommunication'] = datetime.utcfromtimestamp(
+            last_comms).isoformat()
 
-        return {**attrs, **state}
+        return {**attrs}
