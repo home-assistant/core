@@ -3,8 +3,8 @@
   "name": "Optoma projector",
   "documentation": "https://home-assistant.io/components/switch.optoma_projector/",
   "requirements": [
-    "beautifulsoup4>=4.6.3",
-    "requests>=2.19.1"
+    "beautifulsoup4==4.7.1",
+    "requests==2.21.0"
   ],
   "dependencies": [],
   "codeowners": []
