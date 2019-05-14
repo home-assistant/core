@@ -154,6 +154,9 @@ aioswitcher==2019.3.21
 # homeassistant.components.unifi
 aiounifi==4
 
+# homeassistant.components.zeroconf
+aiozeroconf==0.1.8
+
 # homeassistant.components.aladdin_connect
 aladdin_connect==0.3
 
@@ -1849,9 +1852,6 @@ youtube_dl==2019.05.11
 
 # homeassistant.components.zengge
 zengge==0.2
-
-# homeassistant.components.zeroconf
-zeroconf==0.22.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.12
