@@ -19,11 +19,11 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up Zeroconf and make Home Assistant discoverable."""
-    from zeroconf import Zeroconf, ServiceInfo
+    from aiozeroconf import Zeroconf, ServiceInfo
 
-    zeroconf = Zeroconf()
+    zeroconf = Zeroconf(hass.loop)
 
     zeroconf_name = '{}.{}'.format(hass.config.location_name, ZEROCONF_TYPE)
 
@@ -38,19 +38,22 @@ def setup(hass, config):
 
     try:
         host_ip_pton = socket.inet_pton(socket.AF_INET, host_ip)
+        info = ServiceInfo(ZEROCONF_TYPE, zeroconf_name, address=host_ip_pton,
+                           port=hass.http.server_port, weight=0, priority=0,
+                           properties=params)
     except socket.error:
         host_ip_pton = socket.inet_pton(socket.AF_INET6, host_ip)
+        info = ServiceInfo(ZEROCONF_TYPE, zeroconf_name, address6=host_ip_pton,
+                           port=hass.http.server_port, weight=0, priority=0,
+                           properties=params)
 
-    info = ServiceInfo(ZEROCONF_TYPE, zeroconf_name, host_ip_pton,
-                       hass.http.server_port, 0, 0, params)
+    await zeroconf.register_service(info)
 
-    zeroconf.register_service(info)
-
-    def stop_zeroconf(event):
+    async def stop_zeroconf(event):
         """Stop Zeroconf."""
-        zeroconf.unregister_service(info)
-        zeroconf.close()
+        await zeroconf.unregister_service(info)
+        await zeroconf.close()
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zeroconf)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_zeroconf)
 
     return True
