@@ -134,3 +134,41 @@ async def test_bad_formatted_automations(hass, hass_client):
         'condition': [],
         'action': [],
     }
+
+
+async def test_delete_automation(hass, hass_client):
+    """Test deleting an automation."""
+    with patch.object(config, 'SECTIONS', ['automation']):
+        await async_setup_component(hass, 'config', {})
+
+    client = await hass_client()
+
+    orig_data = [
+        {
+            'id': 'sun',
+        },
+        {
+            'id': 'moon',
+        }
+    ]
+
+    def mock_read(path):
+        """Mock reading data."""
+        return orig_data
+
+    written = []
+
+    def mock_write(path, data):
+        """Mock writing data."""
+        written.append(data)
+
+    with patch('homeassistant.components.config._read', mock_read), \
+            patch('homeassistant.components.config._write', mock_write):
+        resp = await client.delete('/api/config/automation/config/sun')
+
+    assert resp.status == 200
+    result = await resp.json()
+    assert result == {'result': 'ok'}
+
+    assert len(written) == 1
+    assert written[0][0]['id'] == 'moon'
