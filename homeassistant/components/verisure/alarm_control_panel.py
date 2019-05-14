@@ -47,9 +47,11 @@ class VerisureAlarm(alarm.AlarmControlPanel):
         """Return the name of the device."""
         giid = hub.config.get(CONF_GIID)
         if giid is not None:
-            return '{} alarm'.format(
-                    [i['alias'] for i in hub.session.installations if i['giid'] == giid][0]
-                    )
+            d = {i['giid']: i['alias'] for i in hub.session.installations}
+            if giid in d.keys():
+                return '{} alarm'.format(d[giid])
+            else: 
+                _LOGGER.error('Verisure installation giid not found: %s', giid)
 
         return '{} alarm'.format(hub.session.installations[0]['alias'])
 
