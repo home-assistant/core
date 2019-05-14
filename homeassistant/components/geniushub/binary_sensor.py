@@ -64,11 +64,11 @@ class GeniusSwitch(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the device state attributes."""
         attrs = {}
-        attrs['assignedZone'] = self._device.assignedZones[0]['name']
+        attrs['assigned_zone'] = self._device.assignedZones[0]['name']
 
         last_comms = self._device._info_raw['childValues']['lastComms']['val']  # noqa; pylint: disable=protected-access
         if last_comms != 0:
-            attrs['lastCommunication'] = datetime.utcfromtimestamp(
+            attrs['last_comms'] = datetime.utcfromtimestamp(
                 last_comms).isoformat()
 
         return {**attrs}
