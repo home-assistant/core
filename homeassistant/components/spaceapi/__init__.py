@@ -109,7 +109,7 @@ class APISpaceApiView(HomeAssistantView):
 
     @staticmethod
     def get_sensor_data(hass, spaceapi, sensor):
-        """get necessary data from senor""" 
+        """get necessary data from senor"""
         sensor_state = hass.states.get(sensor)
         if not sensor_state:
             return None
@@ -118,12 +118,14 @@ class APISpaceApiView(HomeAssistantView):
             ATTR_VALUE: sensor_state.state
         }
         if ATTR_SENSOR_LOCATION in sensor_state.attributes:
-            sensor_data[ATTR_LOCATION] = sensor_state.attributes[ATTR_SENSOR_LOCATION]
-        else:    
+            sensor_data[ATTR_LOCATION] = \
+                sensor_state.attributes[ATTR_SENSOR_LOCATION]
+        else:
             sensor_data[ATTR_LOCATION] = spaceapi[CONF_SPACE]
         # Some sensors don't have a unit of measurement
         if ATTR_UNIT_OF_MEASUREMENT in sensor_state.attributes:
-            sensor_data[ATTR_UNIT] = sensor_state.attributes[ATTR_UNIT_OF_MEASUREMENT]
+            sensor_data[ATTR_UNIT] = \
+                sensor_state.attributes[ATTR_UNIT_OF_MEASUREMENT]
         return sensor_data
 
     @ha.callback
