@@ -93,7 +93,7 @@ class ProliphixThermostat(ClimateDevice):
     @property
     def current_operation(self):
         """Return the current state of the thermostat."""
-        state = self._pdp.hvac_state
+        state = self._pdp.hvac_mode
         if state in (1, 2):
             return STATE_IDLE
         if state == 3:

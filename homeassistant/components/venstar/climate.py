@@ -20,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_FAN_STATE = 'fan_state'
-ATTR_HVAC_STATE = 'hvac_state'
+ATTR_HVAC_STATE = 'hvac_mode'
 
 CONF_HUMIDIFIER = 'humidifier'
 
@@ -121,7 +121,7 @@ class VenstarThermostat(ClimateDevice):
         return TEMP_CELSIUS
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """Return the list of available fan modes."""
         return VALID_FAN_STATES
 
@@ -152,7 +152,7 @@ class VenstarThermostat(ClimateDevice):
         return STATE_OFF
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         if self._client.fan == self._client.FAN_AUTO:
             return STATE_AUTO

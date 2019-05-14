@@ -116,7 +116,7 @@ class Thermostat(ClimateDevice):
         self._climate_list = self.climate_list
         self._operation_list = ['auto', 'auxHeatOnly', 'cool',
                                 'heat', 'off']
-        self._fan_list = ['auto', 'on']
+        self._fan_modes = ['auto', 'on']
         self.update_without_throttle = False
 
     def update(self):
@@ -183,7 +183,7 @@ class Thermostat(ClimateDevice):
         return STATE_OFF
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         return self.thermostat['runtime']['desiredFanMode']
 
@@ -194,9 +194,9 @@ class Thermostat(ClimateDevice):
         return None if mode == AWAY_MODE else mode
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """Return the available fan modes."""
-        return self._fan_list
+        return self._fan_modes
 
     @property
     def _current_hold_mode(self):
@@ -288,7 +288,7 @@ class Thermostat(ClimateDevice):
         return self._current_hold_mode == AWAY_MODE
 
     @property
-    def is_aux_heat_on(self):
+    def is_aux_heat(self):
         """Return true if aux heater."""
         return 'auxHeat' in self.thermostat['equipmentStatus']
 

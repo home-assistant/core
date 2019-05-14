@@ -69,7 +69,7 @@ class MelissaClimate(ClimateDevice):
         return None
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the current fan mode."""
         if self._cur_settings is not None:
             return self.melissa_fan_to_hass(
@@ -105,7 +105,7 @@ class MelissaClimate(ClimateDevice):
         return OP_MODES
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """List of available fan modes."""
         return FAN_MODES
 

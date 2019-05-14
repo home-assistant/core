@@ -1,6 +1,8 @@
 """Support for XS1 switches."""
 import logging
 
+from xs1_api_client.api_constants import ActuatorType
+
 from homeassistant.helpers.entity import ToggleEntity
 
 from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, XS1DeviceEntity
@@ -8,11 +10,8 @@ from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, XS1DeviceEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the XS1 switch platform."""
-    from xs1_api_client.api_constants import ActuatorType
-
     actuators = hass.data[COMPONENT_DOMAIN][ACTUATORS]
 
     switch_entities = []
@@ -21,7 +20,7 @@ async def async_setup_platform(
                 (actuator.type() == ActuatorType.DIMMER):
             switch_entities.append(XS1SwitchEntity(actuator))
 
-    async_add_entities(switch_entities)
+    add_entities(switch_entities)
 
 
 class XS1SwitchEntity(XS1DeviceEntity, ToggleEntity):

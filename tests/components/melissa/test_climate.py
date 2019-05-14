@@ -161,14 +161,14 @@ async def test_operation_list(hass):
             thermostat.operation_list
 
 
-async def test_fan_list(hass):
+async def test_fan_modes(hass):
     """Test the fan list."""
     with patch('homeassistant.components.melissa'):
         api = melissa_mock()
         device = (await api.async_fetch_devices())[_SERIAL]
         thermostat = MelissaClimate(api, _SERIAL, device)
         assert [STATE_AUTO, SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM] == \
-            thermostat.fan_list
+            thermostat.fan_modes
 
 
 async def test_target_temperature(hass):

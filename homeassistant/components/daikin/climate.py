@@ -232,7 +232,7 @@ class DaikinClimate(ClimateDevice):
         await self._set({ATTR_OPERATION_MODE: operation_mode})
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         return self.get(ATTR_FAN_MODE)
 
@@ -241,7 +241,7 @@ class DaikinClimate(ClimateDevice):
         await self._set({ATTR_FAN_MODE: fan_mode})
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """List of available fan modes."""
         return self._list.get(ATTR_FAN_MODE)
 
@@ -255,7 +255,7 @@ class DaikinClimate(ClimateDevice):
         await self._set({ATTR_SWING_MODE: swing_mode})
 
     @property
-    def swing_list(self):
+    def swing_modes(self):
         """List of available swing modes."""
         return self._list.get(ATTR_SWING_MODE)
 

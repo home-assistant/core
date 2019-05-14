@@ -238,13 +238,13 @@ class DysonTest(unittest.TestCase):
         set_config = device.set_configuration
         set_config.assert_called_with(focus_mode=FocusMode.FOCUS_OFF)
 
-    def test_dyson_fan_list(self):
+    def test_dyson_fan_modes(self):
         """Test get fan list."""
         device = _get_device_heat_on()
         entity = dyson.DysonPureHotCoolLinkDevice(device)
-        assert len(entity.fan_list) == 2
-        assert dyson.STATE_FOCUS in entity.fan_list
-        assert dyson.STATE_DIFFUSE in entity.fan_list
+        assert len(entity.fan_modes) == 2
+        assert dyson.STATE_FOCUS in entity.fan_modes
+        assert dyson.STATE_DIFFUSE in entity.fan_modes
 
     def test_dyson_fan_mode_focus(self):
         """Test fan focus mode."""

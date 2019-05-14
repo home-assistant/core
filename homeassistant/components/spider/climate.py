@@ -131,7 +131,7 @@ class SpiderThermostat(ClimateDevice):
             HA_STATE_TO_SPIDER.get(operation_mode))
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         return self.thermostat.current_fan_speed
 
@@ -140,7 +140,7 @@ class SpiderThermostat(ClimateDevice):
         self.thermostat.set_fan_speed(fan_mode)
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """List of available fan modes."""
         return FAN_LIST
 

@@ -136,7 +136,7 @@ class EphEmberThermostat(ClimateDevice):
         return None
 
     @property
-    def is_aux_heat_on(self):
+    def is_aux_heat(self):
         """Return true if aux heater."""
         return self._zone['isBoostActive']
 
