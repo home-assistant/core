@@ -1,11 +1,12 @@
 """Support for the Google Cloud TTS service."""
 import logging
 import os
-import re
+
 import asyncio
 import async_timeout
 import voluptuous as vol
 from google.cloud import texttospeech
+
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 import homeassistant.helpers.config_validation as cv
 
@@ -67,28 +68,42 @@ SUPPORTED_OPTIONS = [
     CONF_PROFILES,
 ]
 
+GENDER_SCHEMA = vol.All(
+    vol.Upper,
+    vol.In(texttospeech.enums.SsmlVoiceGender.__members__)
+)
+VOICE_SCHEMA = cv.matches_regex(VOICE_REGEX)
+SCHEMA_ENCODING = vol.All(
+    vol.Upper,
+    vol.In(texttospeech.enums.AudioEncoding.__members__)
+)
+SPEED_SCHEMA = vol.All(
+    vol.Coerce(float),
+    vol.Clamp(min=MIN_SPEED, max=MAX_SPEED)
+)
+PITCH_SCHEMA = vol.All(
+    vol.Coerce(float),
+    vol.Clamp(min=MIN_PITCH, max=MAX_PITCH)
+)
+GAIN_SCHEMA = vol.All(
+    vol.Coerce(float),
+    vol.Clamp(min=MIN_GAIN, max=MAX_GAIN)
+)
+PROFILES_SCHEMA = vol.All(
+    cv.ensure_list,
+    [vol.In(SUPPORTED_PROFILES)]
+)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_KEY_FILE): cv.string,
-    vol.Optional(CONF_LANG, default=DEFAULT_LANG):
-        vol.In(SUPPORTED_LANGUAGES),
-    vol.Optional(CONF_GENDER, default=DEFAULT_GENDER):
-        vol.All(vol.Upper, vol.In(
-            texttospeech.enums.SsmlVoiceGender.__members__
-        )),
-    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE):
-        cv.matches_regex(VOICE_REGEX),
-    vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING):
-        vol.All(vol.Upper, vol.In(
-            texttospeech.enums.AudioEncoding.__members__
-        )),
-    vol.Optional(CONF_SPEED, default=DEFAULT_SPEED):
-        vol.All(vol.Coerce(float), vol.Clamp(min=MIN_SPEED, max=MAX_SPEED)),
-    vol.Optional(CONF_PITCH, default=DEFAULT_PITCH):
-        vol.All(vol.Coerce(float), vol.Clamp(min=MIN_PITCH, max=MAX_PITCH)),
-    vol.Optional(CONF_GAIN, default=DEFAULT_GAIN):
-        vol.All(vol.Coerce(float), vol.Clamp(min=MIN_GAIN, max=MAX_GAIN)),
-    vol.Optional(CONF_PROFILES, default=[]):
-        vol.All(cv.ensure_list, [vol.In(SUPPORTED_PROFILES)]),
+    vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORTED_LANGUAGES),
+    vol.Optional(CONF_GENDER, default=DEFAULT_GENDER): GENDER_SCHEMA,
+    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): VOICE_SCHEMA,
+    vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): SCHEMA_ENCODING,
+    vol.Optional(CONF_SPEED, default=DEFAULT_SPEED): SPEED_SCHEMA,
+    vol.Optional(CONF_PITCH, default=DEFAULT_PITCH): PITCH_SCHEMA,
+    vol.Optional(CONF_GAIN, default=DEFAULT_GAIN): GAIN_SCHEMA,
+    vol.Optional(CONF_PROFILES, default=[]): PROFILES_SCHEMA,
 })
 
 
@@ -179,24 +194,22 @@ class GoogleCloudTTSProvider(Provider):
 
     async def async_get_tts_audio(self, message, language, options=None):
         """Load TTS from google."""
-        _gender = options.get(CONF_GENDER).upper()
-        if _gender not in texttospeech.enums.SsmlVoiceGender.__members__:
-            _gender = self._gender
+        options_schema = vol.Schema({
+            vol.Optional(CONF_GENDER, default=self._gender): GENDER_SCHEMA,
+            vol.Optional(CONF_VOICE, default=self._voice): VOICE_SCHEMA,
+            vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING):
+                SCHEMA_ENCODING,
+            vol.Optional(CONF_SPEED, default=self._speed): SPEED_SCHEMA,
+            vol.Optional(CONF_PITCH, default=self._speed): SPEED_SCHEMA,
+            vol.Optional(CONF_GAIN, default=DEFAULT_GAIN): GAIN_SCHEMA,
+            vol.Optional(CONF_PROFILES, default=[]): PROFILES_SCHEMA,
+        })
+        options = options_schema(options)
 
-        _voice = options.get(CONF_VOICE) or self._voice
-        if not re.match(VOICE_REGEX, _voice):
-            _voice = self._voice
+        _encoding = options[CONF_ENCODING]
+        _voice = options[CONF_VOICE]
         if _voice and not _voice.startswith(language):
             language = _voice[:5]
-
-        _encoding = options.get(CONF_ENCODING).upper()
-        if _encoding not in texttospeech.enums.AudioEncoding.__members__:
-            _encoding = self._encoding
-
-        _speed = options.get(CONF_SPEED)
-        _pitch = options.get(CONF_PITCH)
-        _gain = options.get(CONF_GAIN)
-        _profiles = options.get(CONF_PROFILES)
 
         try:
             # pylint: disable=no-member
@@ -206,16 +219,18 @@ class GoogleCloudTTSProvider(Provider):
 
             voice = texttospeech.types.VoiceSelectionParams(
                 language_code=language,
-                ssml_gender=texttospeech.enums.SsmlVoiceGender[_gender],
+                ssml_gender=texttospeech.enums.SsmlVoiceGender[
+                    options[CONF_GENDER]
+                ],
                 name=_voice
             )
 
             audio_config = texttospeech.types.AudioConfig(
                 audio_encoding=texttospeech.enums.AudioEncoding[_encoding],
-                speaking_rate=max(min(_speed, MAX_SPEED), MIN_SPEED),
-                pitch=max(min(_pitch, MAX_PITCH), MIN_PITCH),
-                volume_gain_db=max(min(_gain, MAX_GAIN), MIN_GAIN),
-                effects_profile_id=_profiles or [],
+                speaking_rate=options.get(CONF_SPEED),
+                pitch=options.get(CONF_PITCH),
+                volume_gain_db=options.get(CONF_GAIN),
+                effects_profile_id=options.get(CONF_PROFILES),
             )
             # pylint: enable=no-member
 
@@ -231,6 +246,8 @@ class GoogleCloudTTSProvider(Provider):
         except asyncio.TimeoutError as ex:
             _LOGGER.error("Timeout for Google Cloud TTS call: %s", ex)
         except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.error("Error occured during Google Cloud TTS call: %s", ex)
+            _LOGGER.exception(
+                "Error occured during Google Cloud TTS call: %s", ex
+            )
 
         return None, None
