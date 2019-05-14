@@ -58,7 +58,7 @@ async def handle_webhook(hass, webhook_id, request):
         data = WEBHOOK_SCHEMA(dict(await request.post()))
     except vol.MultipleInvalid as error:
         return web.Response(
-            body=error.error_message,
+            text=error.error_message,
             status=HTTP_UNPROCESSABLE_ENTITY
         )
 
@@ -76,7 +76,7 @@ async def handle_webhook(hass, webhook_id, request):
             location_name
         )
         return web.Response(
-            body='Setting location to {}'.format(location_name),
+            text='Setting location to {}'.format(location_name),
             status=HTTP_OK
         )
 
