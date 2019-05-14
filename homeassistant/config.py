@@ -827,12 +827,20 @@ async def async_process_component_config(
 
     # Create a copy of the configuration with all config for current
     # component removed and add validated config back in.
-    filter_keys = extract_domain_configs(config, domain)
-    config = {key: value for key, value in config.items()
-              if key not in filter_keys}
+    config = config_without_domain(config, domain)
     config[domain] = platforms
 
     return config
+
+
+@callback
+def config_without_domain(config, domain):
+    """Return a config with all configuration for a domain removed."""
+    filter_keys = extract_domain_configs(config, domain)
+    return {
+        key: value for key, value in config.items()
+        if key not in filter_keys
+    }
 
 
 async def async_check_ha_config_file(hass: HomeAssistant) -> Optional[str]:
