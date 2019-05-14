@@ -8,13 +8,12 @@ from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.const import (
     CONF_WEBHOOK_ID, HTTP_OK, HTTP_UNPROCESSABLE_ENTITY,
     TEMP_CELSIUS, TEMP_FAHRENHEIT, VOLUME_GALLONS, VOLUME_LITERS)
-from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'plaato'
 DEPENDENCIES = ['webhook']
 
 PLAATO_DEVICE_SENSORS = 'sensors'
@@ -125,11 +124,3 @@ def _device_id(data):
     """Return name of device sensor."""
     return "{}_{}".format(data.get(ATTR_DEVICE_NAME), data.get(ATTR_DEVICE_ID))
 
-
-config_entry_flow.register_webhook_flow(
-    DOMAIN,
-    'Webhook',
-    {
-        'docs_url': 'https://www.home-assistant.io/components/plaato/'
-    }
-)
