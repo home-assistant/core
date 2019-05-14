@@ -187,13 +187,7 @@ class ClimateDevice(Entity):
     @property
     def state(self):
         """Return the current state."""
-        if self.is_on is False:
-            return STATE_OFF
-        if self.current_operation:
-            return self.current_operation
-        if self.is_on:
-            return STATE_ON
-        return None
+        return self.hvac_state
 
     @property
     def precision(self):
@@ -290,12 +284,12 @@ class ClimateDevice(Entity):
         return None
 
     @property
-    def current_operation(self):
-        """Return current operation ie. heat, cool, idle."""
+    def hvac_state(self):
+        """Return current operation ie. heat, cool."""
         return None
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return None
 
