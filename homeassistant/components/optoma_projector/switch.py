@@ -94,7 +94,8 @@ class OptomaSwitch(SwitchDevice):
         on_command = {
             'btn_powon': 'Power On'
         }
-        self.session.post(parse.urljoin(self.url, '/tgi/control.tgi'), on_command)
+        self.session\
+            .post(parse.urljoin(self.url, '/tgi/control.tgi'), on_command)
         self._state = True
 
     def turn_off(self, **kwargs):
@@ -102,5 +103,6 @@ class OptomaSwitch(SwitchDevice):
         off_command = {
             'btn_powoff': 'Power Off'
         }
-        self.session.post(parse.urljoin(self.url, '/tgi/control.tgi'), off_command)
+        self.session\
+            .post(parse.urljoin(self.url, '/tgi/control.tgi'), off_command)
         self._state = False
