@@ -56,9 +56,14 @@ async def async_setup(hass, hass_config):
 
     async_track_time_interval(hass, data.async_update, SCAN_INTERVAL)
 
-    for platform in ['climate', 'water_heater', 'sensor', 'binary_sensor']:
+    for platform in ['climate', 'water_heater']:
         hass.async_create_task(async_load_platform(
             hass, platform, DOMAIN, {}, hass_config))
+
+    if not data._client._api_v1:
+        for platform in ['sensor', 'binary_sensor']:
+            hass.async_create_task(async_load_platform(
+                hass, platform, DOMAIN, {}, hass_config))
 
     return True
 
