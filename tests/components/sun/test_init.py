@@ -167,11 +167,11 @@ async def test_state_change_count(hass):
     hass.bus.async_listen(EVENT_STATE_CHANGED, state_change_listener)
     await hass.async_block_till_done()
 
-    for _ in range(24*60*6):
-        now += timedelta(seconds=10)
+    for _ in range(24*60*60):
+        now += timedelta(seconds=1)
         hass.bus.async_fire(
             ha.EVENT_TIME_CHANGED,
             {ha.ATTR_NOW: now})
         await hass.async_block_till_done()
 
-    assert len(events) < 600
+    assert len(events) < 721
