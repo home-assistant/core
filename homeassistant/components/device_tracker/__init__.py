@@ -114,7 +114,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     tracker = await legacy.get_tracker(hass, config)
 
     async def setup_entry_helper(entry):
-        """Helper to set up a config entry."""
+        """Set up a config entry."""
         platform = await setup.async_create_platform_type(
             hass, config, entry.domain, entry)
 
