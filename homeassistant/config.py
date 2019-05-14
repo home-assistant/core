@@ -524,7 +524,6 @@ async def async_process_ha_core_config(
         time_zone = date_util.get_time_zone(time_zone_str)
 
         if time_zone:
-            hac.config_source = 'yaml'
             hac.time_zone = time_zone
             date_util.set_default_time_zone(time_zone)
         else:
