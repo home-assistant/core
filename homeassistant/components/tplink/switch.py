@@ -47,14 +47,14 @@ def add_entity(device: SmartPlug, async_add_entities):
     device.get_sysinfo()
     async_add_entities(
         [SmartPlugSwitch(device)],
-        True
+        update_before_add=True
     )
 
 
 class SmartPlugSwitch(SwitchDevice):
     """Representation of a TPLink Smart Plug switch."""
 
-    def __init__(self, smartplug):
+    def __init__(self, smartplug: SmartPlug):
         """Initialize the switch."""
         self.smartplug = smartplug
         self._sysinfo = None
@@ -63,25 +63,29 @@ class SmartPlugSwitch(SwitchDevice):
         # Set up emeter cache
         self._emeter_params = {}
 
+        self._mac = None
+        self._alias = None
+        self._model = None
+
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._sysinfo["mac"]
+        return self._mac
 
     @property
     def name(self):
         """Return the name of the Smart Plug."""
-        return self._sysinfo["alias"]
+        return self._alias
 
     @property
     def device_info(self):
         """Return information about the device."""
         return {
-            "name": self.name,
-            "model": self._sysinfo["model"],
+            "name": self._alias,
+            "model": self._model,
             "manufacturer": 'TP-Link',
             "connections": {
-                (dr.CONNECTION_NETWORK_MAC, self._sysinfo["mac"])
+                (dr.CONNECTION_NETWORK_MAC, self._mac)
             },
             "sw_version": self._sysinfo["sw_ver"],
         }
@@ -114,6 +118,9 @@ class SmartPlugSwitch(SwitchDevice):
         try:
             if not self._sysinfo:
                 self._sysinfo = self.smartplug.sys_info
+                self._mac = self.smartplug.mac
+                self._alias = self.smartplug.alias
+                self._model = self.smartplug.model
 
             self._state = self.smartplug.state == \
                 self.smartplug.SWITCH_STATE_ON

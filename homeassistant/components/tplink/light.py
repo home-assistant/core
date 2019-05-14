@@ -56,7 +56,7 @@ def add_entity(device: SmartBulb, async_add_entities):
     device.get_sysinfo()
     async_add_entities(
         [TPLinkSmartBulb(device)],
-        True
+        update_before_add=True
     )
 
 
@@ -73,11 +73,10 @@ def brightness_from_percentage(percent):
 class TPLinkSmartBulb(Light):
     """Representation of a TPLink Smart Bulb."""
 
-    def __init__(self, smartbulb) -> None:
+    def __init__(self, smartbulb: SmartBulb) -> None:
         """Initialize the bulb."""
         self.smartbulb = smartbulb
         self._sysinfo = None
-        self._mac = None
         self._state = None
         self._available = False
         self._color_temp = None
@@ -88,6 +87,10 @@ class TPLinkSmartBulb(Light):
         self._max_mireds = None
         self._emeter_params = {}
 
+        self._mac = None
+        self._alias = None
+        self._model = None
+
     @property
     def unique_id(self):
         """Return a unique ID."""
@@ -96,14 +99,14 @@ class TPLinkSmartBulb(Light):
     @property
     def name(self):
         """Return the name of the Smart Bulb."""
-        return self._sysinfo["alias"]
+        return self._alias
 
     @property
     def device_info(self):
         """Return information about the device."""
         return {
-            "name": self.name,
-            "model": self._sysinfo["model"],
+            "name": self._alias,
+            "model": self._model,
             "manufacturer": 'TP-Link',
             "connections": {
                 (dr.CONNECTION_NETWORK_MAC, self._mac)
@@ -228,7 +231,9 @@ class TPLinkSmartBulb(Light):
         """Determine all supported features in one go."""
         self._sysinfo = self.smartbulb.sys_info
         self._supported_features = 0
-        self._mac = self._sysinfo.get("mac") or self._sysinfo.get("mic_mac")
+        self._mac = self.smartbulb.mac
+        self._alias = self.smartbulb.alias
+        self._model = self.smartbulb.model
 
         if self.smartbulb.is_dimmable:
             self._supported_features += SUPPORT_BRIGHTNESS
