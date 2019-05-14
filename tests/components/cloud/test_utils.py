@@ -14,7 +14,7 @@ def test_serialize_text():
     }
 
 
-def test_serialize_body():
+def test_serialize_body_str():
     """Test serializing a response with a str as body."""
     response = web.Response(status=201, body='Hello')
     assert utils.aiohttp_serialize_response(response) == {
@@ -24,6 +24,16 @@ def test_serialize_body():
             'Content-Length': '5',
             'Content-Type': 'text/plain; charset=utf-8'
         },
+    }
+
+
+def test_serialize_body_bytes():
+    """Test serializing a response with a str as body."""
+    response = web.Response(status=201, body=b'Hello')
+    assert utils.aiohttp_serialize_response(response) == {
+        'status': 201,
+        'body': 'Hello',
+        'headers': {},
     }
 
 

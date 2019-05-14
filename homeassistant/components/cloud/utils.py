@@ -11,6 +11,8 @@ def aiohttp_serialize_response(response: web.Response) -> Dict[str, Any]:
     if isinstance(body, payload.StringPayload):
         # pylint: disable=protected-access
         body = body._value.decode(body.encoding)
+    elif isinstance(body, bytes):
+        body = body.decode(response.charset or 'utf-8')
     else:
         raise ValueError("Unknown payload encoding")
 
