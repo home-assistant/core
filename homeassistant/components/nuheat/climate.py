@@ -6,8 +6,8 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    DOMAIN, STATE_AUTO, STATE_HEAT, STATE_IDLE, SUPPORT_HOLD_MODE,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
+    DOMAIN, HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_HOLD_MODE,
+    SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
@@ -22,11 +22,11 @@ ICON = "mdi:thermometer"
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 # Hold modes
-MODE_AUTO = STATE_AUTO  # Run device schedule
+MODE_AUTO = HVAC_MODE_AUTO  # Run device schedule
 MODE_HOLD_TEMPERATURE = "temperature"
 MODE_TEMPORARY_HOLD = "temporary_temperature"
 
-OPERATION_LIST = [STATE_HEAT, STATE_IDLE]
+OPERATION_LIST = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
 SCHEDULE_HOLD = 3
 SCHEDULE_RUN = 1
@@ -38,8 +38,7 @@ RESUME_PROGRAM_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
 })
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_HOLD_MODE |
-                 SUPPORT_OPERATION_MODE)
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_HOLD_MODE)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -115,12 +114,12 @@ class NuHeatThermostat(ClimateDevice):
         return self._thermostat.fahrenheit
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation. ie. heat, idle."""
         if self._thermostat.heating:
-            return STATE_HEAT
+            return HVAC_MODE_HEAT
 
-        return STATE_IDLE
+        return HVAC_MODE_OFF
 
     @property
     def min_temp(self):
@@ -162,7 +161,7 @@ class NuHeatThermostat(ClimateDevice):
         return MODE_AUTO
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return list of possible operation modes."""
         return OPERATION_LIST
 

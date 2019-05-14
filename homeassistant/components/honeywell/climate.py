@@ -8,9 +8,9 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    ATTR_FAN_MODE, ATTR_FAN_LIST,
-    ATTR_OPERATION_MODE, ATTR_OPERATION_LIST, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_AWAY_MODE, SUPPORT_OPERATION_MODE)
+    ATTR_FAN_MODE, ATTR_FAN_MODES,
+    ATTR_HVAC_MODE, ATTR_OPERATION_LIST, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_AWAY_MODE)
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_TEMPERATURE, CONF_REGION)
@@ -131,8 +131,6 @@ class RoundThermostat(ClimateDevice):
     def supported_features(self):
         """Return the list of supported features."""
         supported = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE)
-        if hasattr(self.client, ATTR_SYSTEM_MODE):
-            supported |= SUPPORT_OPERATION_MODE
         return supported
 
     @property
@@ -165,7 +163,7 @@ class RoundThermostat(ClimateDevice):
         self.client.set_temperature(self._name, temperature)
 
     @property
-    def current_operation(self) -> str:
+    def hvac_mode(self) -> str:
         """Get the current operation of the system."""
         return getattr(self.client, ATTR_SYSTEM_MODE, None)
 
@@ -174,10 +172,10 @@ class RoundThermostat(ClimateDevice):
         """Return true if away mode is on."""
         return self._away
 
-    def set_operation_mode(self, operation_mode: str) -> None:
+    def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set the HVAC mode for the thermostat."""
         if hasattr(self.client, ATTR_SYSTEM_MODE):
-            self.client.system_mode = operation_mode
+            self.client.system_mode = hvac_mode
 
     def turn_away_mode_on(self):
         """Turn away on.
@@ -247,8 +245,6 @@ class HoneywellUSThermostat(ClimateDevice):
     def supported_features(self):
         """Return the list of supported features."""
         supported = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE)
-        if hasattr(self._device, ATTR_SYSTEM_MODE):
-            supported |= SUPPORT_OPERATION_MODE
         return supported
 
     @property
@@ -285,7 +281,7 @@ class HoneywellUSThermostat(ClimateDevice):
         return self._device.setpoint_heat
 
     @property
-    def current_operation(self) -> str:
+    def hvac_mode(self) -> str:
         """Return current operation ie. heat, cool, idle."""
         oper = getattr(self._device, ATTR_CURRENT_OPERATION, None)
         if oper == "off":
@@ -327,9 +323,9 @@ class HoneywellUSThermostat(ClimateDevice):
         data = {
             ATTR_FAN: (self.is_fan_on and 'running' or 'idle'),
             ATTR_FAN_MODE: self._device.fan_mode,
-            ATTR_OPERATION_MODE: self._device.system_mode,
+            ATTR_HVAC_MODE: self._device.system_mode,
         }
-        data[ATTR_FAN_LIST] = somecomfort.FAN_MODES
+        data[ATTR_FAN_MODES] = somecomfort.FAN_MODES
         data[ATTR_OPERATION_LIST] = somecomfort.SYSTEM_MODES
         return data
 
@@ -378,10 +374,10 @@ class HoneywellUSThermostat(ClimateDevice):
         except somecomfort.SomeComfortError:
             _LOGGER.error('Can not stop hold mode')
 
-    def set_operation_mode(self, operation_mode: str) -> None:
+    def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set the system mode (Cool, Heat, etc)."""
         if hasattr(self._device, ATTR_SYSTEM_MODE):
-            self._device.system_mode = operation_mode
+            self._device.system_mode = hvac_mode
 
     def update(self):
         """Update the state."""

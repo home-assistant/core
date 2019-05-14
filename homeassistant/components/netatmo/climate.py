@@ -8,11 +8,11 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    STATE_HEAT, SUPPORT_ON_OFF, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE, STATE_MANUAL, STATE_AUTO,
-    STATE_ECO, STATE_COOL)
+    HVAC_MODE_HEAT, SUPPORT_ON_OFF, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_AWAY_MODE, STATE_MANUAL, HVAC_MODE_AUTO,
+    STATE_ECO, HVAC_MODE_COOL, HVAC_MODE_OFF)
 from homeassistant.const import (
-    STATE_OFF, TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME)
+    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME)
 from homeassistant.util import Throttle
 
 from .const import DATA_NETATMO_AUTH
@@ -37,28 +37,28 @@ STATE_NETATMO_SCHEDULE = 'schedule'
 STATE_NETATMO_HG = 'hg'
 STATE_NETATMO_MAX = 'max'
 STATE_NETATMO_AWAY = 'away'
-STATE_NETATMO_OFF = STATE_OFF
+STATE_NETATMO_OFF = HVAC_MODE_OFF
 STATE_NETATMO_MANUAL = STATE_MANUAL
 
 DICT_NETATMO_TO_HA = {
-    STATE_NETATMO_SCHEDULE: STATE_AUTO,
-    STATE_NETATMO_HG: STATE_COOL,
-    STATE_NETATMO_MAX: STATE_HEAT,
+    STATE_NETATMO_SCHEDULE: HVAC_MODE_AUTO,
+    STATE_NETATMO_HG: HVAC_MODE_COOL,
+    STATE_NETATMO_MAX: HVAC_MODE_HEAT,
     STATE_NETATMO_AWAY: STATE_ECO,
-    STATE_NETATMO_OFF: STATE_OFF,
+    STATE_NETATMO_OFF: HVAC_MODE_OFF,
     STATE_NETATMO_MANUAL: STATE_MANUAL
 }
 
 DICT_HA_TO_NETATMO = {
-    STATE_AUTO: STATE_NETATMO_SCHEDULE,
-    STATE_COOL: STATE_NETATMO_HG,
-    STATE_HEAT: STATE_NETATMO_MAX,
+    HVAC_MODE_AUTO: STATE_NETATMO_SCHEDULE,
+    HVAC_MODE_COOL: STATE_NETATMO_HG,
+    HVAC_MODE_HEAT: STATE_NETATMO_MAX,
     STATE_ECO: STATE_NETATMO_AWAY,
-    STATE_OFF: STATE_NETATMO_OFF,
+    HVAC_MODE_OFF: STATE_NETATMO_OFF,
     STATE_MANUAL: STATE_NETATMO_MANUAL
 }
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
                  SUPPORT_AWAY_MODE)
 
 NA_THERM = 'NATherm1'
@@ -163,12 +163,12 @@ class NetatmoThermostat(ClimateDevice):
         return self._data.room_status[self._room_id]['target_temperature']
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return the current state of the thermostat."""
         return self._operation_mode
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the operation modes list."""
         return self._operation_list
 
@@ -235,21 +235,21 @@ class NetatmoThermostat(ClimateDevice):
         self.update_without_throttle = True
         self.schedule_update_ha_state()
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
         if not self.is_on:
             self.turn_on()
-        if operation_mode in [DICT_NETATMO_TO_HA[STATE_NETATMO_MAX],
-                              DICT_NETATMO_TO_HA[STATE_NETATMO_OFF]]:
+        if hvac_mode in [DICT_NETATMO_TO_HA[STATE_NETATMO_MAX],
+                         DICT_NETATMO_TO_HA[STATE_NETATMO_OFF]]:
             self._data.homestatus.setroomThermpoint(
                 self._data.homedata.gethomeId(self._data.home),
-                self._room_id, DICT_HA_TO_NETATMO[operation_mode])
-        elif operation_mode in [DICT_NETATMO_TO_HA[STATE_NETATMO_HG],
-                                DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
-                                DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY]]:
+                self._room_id, DICT_HA_TO_NETATMO[hvac_mode])
+        elif hvac_mode in [DICT_NETATMO_TO_HA[STATE_NETATMO_HG],
+                           DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
+                           DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY]]:
             self._data.homestatus.setThermmode(
                 self._data.homedata.gethomeId(self._data.home),
-                DICT_HA_TO_NETATMO[operation_mode])
+                DICT_HA_TO_NETATMO[hvac_mode])
         self.update_without_throttle = True
         self.schedule_update_ha_state()
 

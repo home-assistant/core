@@ -3,10 +3,11 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_OPERATION_MODE,
+    HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF,
+
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_HUMIDITY_HIGH, SUPPORT_TARGET_HUMIDITY_LOW)
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -14,10 +15,10 @@ _LOGGER = logging.getLogger(__name__)
 
 # Map of Homekit operation modes to hass modes
 MODE_HOMEKIT_TO_HASS = {
-    0: STATE_OFF,
-    1: STATE_HEAT,
-    2: STATE_COOL,
-    3: STATE_AUTO,
+    0: HVAC_MODE_OFF,
+    1: HVAC_MODE_HEAT,
+    2: HVAC_MODE_COOL,
+    3: HVAC_MODE_AUTO,
 }
 
 # Map of hass operation modes to homekit modes
@@ -79,8 +80,6 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
         ]
 
     def _setup_heating_cooling_target(self, characteristic):
-        self._features |= SUPPORT_OPERATION_MODE
-
         if 'valid-values' in characteristic:
             valid_values = [
                 val for val in DEFAULT_VALID_MODES
@@ -157,11 +156,11 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
                             'value': humidity}]
         await self._accessory.put_characteristics(characteristics)
 
-    async def async_set_operation_mode(self, operation_mode):
+    async def async_set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
         characteristics = [{'aid': self._aid,
                             'iid': self._chars['heating-cooling.target'],
-                            'value': MODE_HASS_TO_HOMEKIT[operation_mode]}]
+                            'value': MODE_HASS_TO_HOMEKIT[hvac_mode]}]
         await self._accessory.put_characteristics(characteristics)
 
     @property
@@ -169,11 +168,11 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
         """Return the current state."""
         # If the device reports its operating mode as off, it sometimes doesn't
         # report a new state.
-        if self._current_mode == STATE_OFF:
-            return STATE_OFF
+        if self._current_mode == HVAC_MODE_OFF:
+            return HVAC_MODE_OFF
 
-        if self._state == STATE_OFF and self._current_mode != STATE_OFF:
-            return STATE_IDLE
+        if self._state == HVAC_MODE_OFF and self._current_mode != HVAC_MODE_OFF:
+            return HVAC_MODE_OFF
         return self._state
 
     @property
@@ -221,12 +220,12 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
         return self._max_target_humidity
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         return self._current_mode
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return self._valid_modes
 

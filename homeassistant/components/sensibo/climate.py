@@ -9,13 +9,13 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    DOMAIN, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
+    DOMAIN, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_FAN_MODE, SUPPORT_SWING_MODE,
-    SUPPORT_ON_OFF, STATE_HEAT, STATE_COOL, STATE_FAN_ONLY, STATE_DRY,
-    STATE_AUTO)
+    SUPPORT_ON_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_FAN_ONLY, HVAC_MODE_DRY,
+    HVAC_MODE_AUTO, HVAC_MODE_OFF)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_STATE, ATTR_TEMPERATURE, CONF_API_KEY, CONF_ID,
-    STATE_ON, STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    STATE_ON, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -45,18 +45,17 @@ _INITIAL_FETCH_FIELDS = 'id,' + _FETCH_FIELDS
 
 FIELD_TO_FLAG = {
     'fanLevel':  SUPPORT_FAN_MODE,
-    'mode': SUPPORT_OPERATION_MODE,
     'swing': SUPPORT_SWING_MODE,
     'targetTemperature': SUPPORT_TARGET_TEMPERATURE,
     'on': SUPPORT_ON_OFF,
 }
 
 SENSIBO_TO_HA = {
-    "cool": STATE_COOL,
-    "heat": STATE_HEAT,
-    "fan": STATE_FAN_ONLY,
-    "auto": STATE_AUTO,
-    "dry": STATE_DRY
+    "cool": HVAC_MODE_COOL,
+    "heat": HVAC_MODE_HEAT,
+    "fan": HVAC_MODE_FAN_ONLY,
+    "auto": HVAC_MODE_AUTO,
+    "dry": HVAC_MODE_DRY
 }
 
 HA_TO_SENSIBO = {value: key for key, value in SENSIBO_TO_HA.items()}
@@ -189,7 +188,7 @@ class SensiboClimate(ClimateDevice):
         return None
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         return SENSIBO_TO_HA.get(self._ac_states['mode'])
 
@@ -214,27 +213,27 @@ class SensiboClimate(ClimateDevice):
             self.temperature_unit)
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """List of available operation modes."""
         return self._operations
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         return self._ac_states.get('fanLevel')
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """List of available fan modes."""
         return self._current_capabilities.get('fanLevels')
 
     @property
-    def current_swing_mode(self):
+    def swing_mode(self):
         """Return the fan setting."""
         return self._ac_states.get('swing')
 
     @property
-    def swing_list(self):
+    def swing_modes(self):
         """List of available swing modes."""
         return self._current_capabilities.get('swing')
 
@@ -294,11 +293,11 @@ class SensiboClimate(ClimateDevice):
             await self._client.async_set_ac_state_property(
                 self._id, 'fanLevel', fan_mode, self._ac_states)
 
-    async def async_set_operation_mode(self, operation_mode):
+    async def async_set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
         with async_timeout.timeout(TIMEOUT):
             await self._client.async_set_ac_state_property(
-                self._id, 'mode', HA_TO_SENSIBO[operation_mode],
+                self._id, 'mode', HA_TO_SENSIBO[hvac_mode],
                 self._ac_states)
 
     async def async_set_swing_mode(self, swing_mode):
@@ -321,19 +320,19 @@ class SensiboClimate(ClimateDevice):
 
     async def async_assume_state(self, state):
         """Set external state."""
-        change_needed = (state != STATE_OFF and not self.is_on) \
-            or (state == STATE_OFF and self.is_on)
+        change_needed = (state != HVAC_MODE_OFF and not self.is_on) \
+            or (state == HVAC_MODE_OFF and self.is_on)
         if change_needed:
             with async_timeout.timeout(TIMEOUT):
                 await self._client.async_set_ac_state_property(
                     self._id,
                     'on',
-                    state != STATE_OFF,  # value
+                    state != HVAC_MODE_OFF,  # value
                     self._ac_states,
                     True  # assumed_state
                 )
 
-        if state in [STATE_ON, STATE_OFF]:
+        if state in [STATE_ON, HVAC_MODE_OFF]:
             self._external_state = None
         else:
             self._external_state = state

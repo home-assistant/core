@@ -3,10 +3,11 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_ECO, STATE_HEAT, STATE_MANUAL,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_ON_OFF)
+    HVAC_MODE_AUTO, STATE_ECO, HVAC_MODE_HEAT, STATE_MANUAL,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_ON_OFF,
+    HVAC_MODE_OFF)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS)
+    ATTR_TEMPERATURE, TEMP_CELSIUS)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -18,26 +19,25 @@ GH_ZONES = ['radiator']
 
 GH_SUPPORT_FLAGS = \
     SUPPORT_TARGET_TEMPERATURE | \
-    SUPPORT_ON_OFF | \
-    SUPPORT_OPERATION_MODE
+    SUPPORT_ON_OFF
 
 GH_MAX_TEMP = 28.0
 GH_MIN_TEMP = 4.0
 
 # Genius Hub Zones support only Off, Override/Boost, Footprint & Timer modes
 HA_OPMODE_TO_GH = {
-    STATE_OFF: 'off',
-    STATE_AUTO: 'timer',
+    HVAC_MODE_OFF: 'off',
+    HVAC_MODE_AUTO: 'timer',
     STATE_ECO: 'footprint',
     STATE_MANUAL: 'override',
 }
 GH_STATE_TO_HA = {
-    'off': STATE_OFF,
-    'timer': STATE_AUTO,
+    'off': HVAC_MODE_OFF,
+    'timer': HVAC_MODE_AUTO,
     'footprint': STATE_ECO,
     'away': None,
     'override': STATE_MANUAL,
-    'early': STATE_HEAT,
+    'early': HVAC_MODE_HEAT,
     'test': None,
     'linked': None,
     'other': None,
@@ -130,23 +130,23 @@ class GeniusClimateZone(ClimateDevice):
         return self._supported_features
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return self._operation_list
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return the current operation mode."""
         return GH_STATE_TO_HA[self._zone.mode]
 
     @property
     def is_on(self):
         """Return True if the device is on."""
-        return self._zone.mode != HA_OPMODE_TO_GH[STATE_OFF]
+        return self._zone.mode != HA_OPMODE_TO_GH[HVAC_MODE_OFF]
 
-    async def async_set_operation_mode(self, operation_mode):
+    async def async_set_hvac_mode(self, hvac_mode):
         """Set a new operation mode for this zone."""
-        await self._zone.set_mode(HA_OPMODE_TO_GH[operation_mode])
+        await self._zone.set_mode(HA_OPMODE_TO_GH[hvac_mode])
 
     async def async_set_temperature(self, **kwargs):
         """Set a new target temperature for this zone."""
@@ -158,9 +158,9 @@ class GeniusClimateZone(ClimateDevice):
         Set a Zone to Footprint mode if they have a Room sensor, and to Timer
         mode otherwise.
         """
-        mode = STATE_ECO if hasattr(self._zone, 'occupied') else STATE_AUTO
+        mode = STATE_ECO if hasattr(self._zone, 'occupied') else HVAC_MODE_AUTO
         await self._zone.set_mode(HA_OPMODE_TO_GH[mode])
 
     async def async_turn_off(self):
         """Turn off this heating zone (i.e. to frost protect)."""
-        await self._zone.set_mode(HA_OPMODE_TO_GH[STATE_OFF])
+        await self._zone.set_mode(HA_OPMODE_TO_GH[HVAC_MODE_OFF])

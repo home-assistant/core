@@ -9,14 +9,13 @@ from pysmartthings.device import Status
 import pytest
 
 from homeassistant.components.climate.const import (
-    ATTR_CURRENT_HUMIDITY, ATTR_CURRENT_TEMPERATURE, ATTR_FAN_LIST,
+    ATTR_CURRENT_HUMIDITY, ATTR_CURRENT_TEMPERATURE, ATTR_FAN_MODES,
     ATTR_FAN_MODE, ATTR_OPERATION_LIST, ATTR_OPERATION_MODE,
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE, SERVICE_SET_OPERATION_MODE, SERVICE_SET_TEMPERATURE,
     STATE_AUTO, STATE_COOL, STATE_DRY, STATE_ECO, STATE_FAN_ONLY, STATE_HEAT,
-    SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE_HIGH,
-    SUPPORT_TARGET_TEMPERATURE_LOW)
+    SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE_RANGE)
 from homeassistant.components.smartthings import climate
 from homeassistant.components.smartthings.const import DOMAIN
 from homeassistant.const import (
@@ -166,14 +165,14 @@ async def test_legacy_thermostat_entity_state(hass, legacy_thermostat):
     state = hass.states.get('climate.legacy_thermostat')
     assert state.state == STATE_AUTO
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == \
-        SUPPORT_OPERATION_MODE | SUPPORT_FAN_MODE | \
-        SUPPORT_TARGET_TEMPERATURE_HIGH | SUPPORT_TARGET_TEMPERATURE_LOW | \
+        SUPPORT_FAN_MODE | \
+        SUPPORT_TARGET_TEMPERATURE_RANGE | \
         SUPPORT_TARGET_TEMPERATURE
     assert state.attributes[climate.ATTR_OPERATION_STATE] == 'idle'
     assert state.attributes[ATTR_OPERATION_LIST] == {
         STATE_AUTO, STATE_COOL, STATE_ECO, STATE_HEAT, STATE_OFF}
     assert state.attributes[ATTR_FAN_MODE] == 'auto'
-    assert state.attributes[ATTR_FAN_LIST] == ['auto', 'on']
+    assert state.attributes[ATTR_FAN_MODES] == ['auto', 'on']
     assert state.attributes[ATTR_TARGET_TEMP_LOW] == 20  # celsius
     assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 23.3  # celsius
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.1  # celsius
@@ -185,8 +184,7 @@ async def test_basic_thermostat_entity_state(hass, basic_thermostat):
     state = hass.states.get('climate.basic_thermostat')
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == \
-        SUPPORT_OPERATION_MODE | SUPPORT_TARGET_TEMPERATURE_HIGH | \
-        SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_TARGET_TEMPERATURE
+        SUPPORT_TARGET_TEMPERATURE_RANGE | SUPPORT_TARGET_TEMPERATURE
     assert state.attributes[climate.ATTR_OPERATION_STATE] is None
     assert state.attributes[ATTR_OPERATION_LIST] == {
         STATE_OFF, STATE_AUTO, STATE_HEAT, STATE_COOL}
@@ -199,14 +197,14 @@ async def test_thermostat_entity_state(hass, thermostat):
     state = hass.states.get('climate.thermostat')
     assert state.state == STATE_HEAT
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == \
-        SUPPORT_OPERATION_MODE | SUPPORT_FAN_MODE | \
-        SUPPORT_TARGET_TEMPERATURE_HIGH | SUPPORT_TARGET_TEMPERATURE_LOW | \
+        SUPPORT_FAN_MODE | \
+        SUPPORT_TARGET_TEMPERATURE_RANGE | \
         SUPPORT_TARGET_TEMPERATURE
     assert state.attributes[climate.ATTR_OPERATION_STATE] == 'fan only'
     assert state.attributes[ATTR_OPERATION_LIST] == {
         STATE_AUTO, STATE_HEAT, STATE_COOL, STATE_OFF, STATE_ECO}
     assert state.attributes[ATTR_FAN_MODE] == 'on'
-    assert state.attributes[ATTR_FAN_LIST] == ['auto', 'on']
+    assert state.attributes[ATTR_FAN_MODES] == ['auto', 'on']
     assert state.attributes[ATTR_TEMPERATURE] == 20  # celsius
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.1  # celsius
     assert state.attributes[ATTR_CURRENT_HUMIDITY] == 34
@@ -218,7 +216,7 @@ async def test_buggy_thermostat_entity_state(hass, buggy_thermostat):
     state = hass.states.get('climate.buggy_thermostat')
     assert state.state == STATE_UNKNOWN
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == \
-        SUPPORT_OPERATION_MODE | SUPPORT_TARGET_TEMPERATURE_HIGH | \
+        SUPPORT_TARGET_TEMPERATURE_HIGH | \
         SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_TARGET_TEMPERATURE
     assert ATTR_OPERATION_LIST not in state.attributes
     assert state.attributes[ATTR_TEMPERATURE] is None
@@ -241,12 +239,12 @@ async def test_air_conditioner_entity_state(hass, air_conditioner):
     state = hass.states.get('climate.air_conditioner')
     assert state.state == STATE_AUTO
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == \
-        SUPPORT_OPERATION_MODE | SUPPORT_FAN_MODE | \
+        SUPPORT_FAN_MODE | \
         SUPPORT_TARGET_TEMPERATURE | SUPPORT_ON_OFF
     assert sorted(state.attributes[ATTR_OPERATION_LIST]) == [
         STATE_AUTO, STATE_COOL, STATE_DRY, STATE_FAN_ONLY, STATE_HEAT]
     assert state.attributes[ATTR_FAN_MODE] == 'medium'
-    assert sorted(state.attributes[ATTR_FAN_LIST]) == \
+    assert sorted(state.attributes[ATTR_FAN_MODES]) == \
         ['auto', 'high', 'low', 'medium', 'turbo']
     assert state.attributes[ATTR_TEMPERATURE] == 23
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 24

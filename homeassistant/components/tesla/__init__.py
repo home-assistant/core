@@ -100,6 +100,11 @@ class TeslaDevice(Entity):
         return self._name
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self.tesla_id
+
+    @property
     def should_poll(self):
         """Return the polling state."""
         return self.tesla_device.should_poll

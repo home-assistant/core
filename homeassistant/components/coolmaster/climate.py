@@ -6,27 +6,27 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_COOL, STATE_DRY, STATE_FAN_ONLY,
-    STATE_HEAT, SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
+    HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_HEAT, SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_HOST, CONF_PORT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE |
-                 SUPPORT_OPERATION_MODE | SUPPORT_ON_OFF)
+                 SUPPORT_ON_OFF)
 
 DEFAULT_PORT = 10102
 
-AVAILABLE_MODES = [STATE_HEAT, STATE_COOL, STATE_AUTO, STATE_DRY,
-                   STATE_FAN_ONLY]
+AVAILABLE_MODES = [HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_AUTO, HVAC_MODE_DRY,
+                   HVAC_MODE_FAN_ONLY]
 
 CM_TO_HA_STATE = {
-    'heat': STATE_HEAT,
-    'cool': STATE_COOL,
-    'auto': STATE_AUTO,
-    'dry': STATE_DRY,
-    'fan': STATE_FAN_ONLY,
+    'heat': HVAC_MODE_HEAT,
+    'cool': HVAC_MODE_COOL,
+    'auto': HVAC_MODE_AUTO,
+    'dry': HVAC_MODE_DRY,
+    'fan': HVAC_MODE_FAN_ONLY,
 }
 
 HA_STATE_TO_CM = {value: key for key, value in CM_TO_HA_STATE.items()}
@@ -127,12 +127,12 @@ class CoolmasterClimate(ClimateDevice):
         return self._target_temperature
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         return self._current_operation
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return self._operation_list
 
@@ -142,12 +142,12 @@ class CoolmasterClimate(ClimateDevice):
         return self._on
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         return self._current_fan_mode
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """Return the list of available fan modes."""
         return FAN_MODES
 
@@ -165,11 +165,11 @@ class CoolmasterClimate(ClimateDevice):
                       fan_mode)
         self._device.set_fan_speed(fan_mode)
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set new operation mode."""
         _LOGGER.debug("Setting operation mode of %s to %s", self.unique_id,
-                      operation_mode)
-        self._device.set_mode(HA_STATE_TO_CM[operation_mode])
+                      hvac_mode)
+        self._device.set_mode(HA_STATE_TO_CM[hvac_mode])
 
     def turn_on(self):
         """Turn on."""

@@ -1,8 +1,9 @@
 """Support for the Tuya climate devices."""
 from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_COOL, STATE_ECO, STATE_FAN_ONLY, STATE_HEAT,
-    SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
+    HVAC_MODE_AUTO, HVAC_MODE_COOL, STATE_ECO, HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_HEAT,
+    SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
 from homeassistant.const import (
@@ -13,11 +14,11 @@ from . import DATA_TUYA, TuyaDevice
 DEVICE_TYPE = 'climate'
 
 HA_STATE_TO_TUYA = {
-    STATE_AUTO: 'auto',
-    STATE_COOL: 'cold',
+    HVAC_MODE_AUTO: 'auto',
+    HVAC_MODE_COOL: 'cold',
     STATE_ECO: 'eco',
-    STATE_FAN_ONLY: 'wind',
-    STATE_HEAT: 'hot',
+    HVAC_MODE_FAN_ONLY: 'wind',
+    HVAC_MODE_HEAT: 'hot',
 }
 
 TUYA_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_TUYA.items()}
@@ -80,7 +81,7 @@ class TuyaClimateDevice(TuyaDevice, ClimateDevice):
         return TEMP_CELSIUS
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         mode = self.tuya.current_operation()
         if mode is None:
@@ -88,7 +89,7 @@ class TuyaClimateDevice(TuyaDevice, ClimateDevice):
         return TUYA_STATE_TO_HA.get(mode)
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return self.operations
 
@@ -108,14 +109,14 @@ class TuyaClimateDevice(TuyaDevice, ClimateDevice):
         return self.tuya.target_temperature_step()
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         return self.tuya.current_fan_mode()
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """Return the list of available fan modes."""
-        return self.tuya.fan_list()
+        return self.tuya.fan_modes()
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -126,9 +127,9 @@ class TuyaClimateDevice(TuyaDevice, ClimateDevice):
         """Set new target fan mode."""
         self.tuya.set_fan_mode(fan_mode)
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
-        self.tuya.set_operation_mode(HA_STATE_TO_TUYA.get(operation_mode))
+        self.tuya.set_operation_mode(HA_STATE_TO_TUYA.get(hvac_mode))
 
     def turn_on(self):
         """Turn device on."""
@@ -141,11 +142,9 @@ class TuyaClimateDevice(TuyaDevice, ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        supports = SUPPORT_ON_OFF
+        supports = 0
         if self.tuya.support_target_temperature():
             supports = supports | SUPPORT_TARGET_TEMPERATURE
-        if self.tuya.support_mode():
-            supports = supports | SUPPORT_OPERATION_MODE
         if self.tuya.support_wind_speed():
             supports = supports | SUPPORT_FAN_MODE
         return supports

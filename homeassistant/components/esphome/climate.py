@@ -6,13 +6,14 @@ from aioesphomeapi import ClimateInfo, ClimateMode, ClimateState
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_OPERATION_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    STATE_AUTO, STATE_COOL, STATE_HEAT, SUPPORT_AWAY_MODE,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
+    ATTR_HVAC_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
+    HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, SUPPORT_AWAY_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
+    HVAC_MODE_OFF)
 from homeassistant.const import (
     ATTR_TEMPERATURE, PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE,
-    STATE_OFF, TEMP_CELSIUS)
+    TEMP_CELSIUS)
 
 from . import (
     EsphomeEntity, esphome_map_enum, esphome_state_property,
@@ -34,10 +35,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
 @esphome_map_enum
 def _climate_modes():
     return {
-        ClimateMode.OFF: STATE_OFF,
-        ClimateMode.AUTO: STATE_AUTO,
-        ClimateMode.COOL: STATE_COOL,
-        ClimateMode.HEAT: STATE_HEAT,
+        ClimateMode.OFF: HVAC_MODE_OFF,
+        ClimateMode.AUTO: HVAC_MODE_AUTO,
+        ClimateMode.COOL: HVAC_MODE_COOL,
+        ClimateMode.HEAT: HVAC_MODE_HEAT,
     }
 
 
@@ -68,7 +69,7 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
         return TEMP_CELSIUS
 
     @property
-    def operation_list(self) -> List[str]:
+    def hvac_modes(self) -> List[str]:
         """Return the list of available operation modes."""
         return [
             _climate_modes.from_esphome(mode)
@@ -94,10 +95,9 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
     @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
-        features = SUPPORT_OPERATION_MODE
+        features = 0
         if self._static_info.supports_two_point_target_temperature:
-            features |= (SUPPORT_TARGET_TEMPERATURE_LOW |
-                         SUPPORT_TARGET_TEMPERATURE_HIGH)
+            features |= (SUPPORT_TARGET_TEMPERATURE_RANGE)
         else:
             features |= SUPPORT_TARGET_TEMPERATURE
         if self._static_info.supports_away:
@@ -105,7 +105,7 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
         return features
 
     @esphome_state_property
-    def current_operation(self) -> Optional[str]:
+    def hvac_mode(self) -> Optional[str]:
         """Return current operation ie. heat, cool, idle."""
         return _climate_modes.from_esphome(self._state.mode)
 
@@ -137,9 +137,9 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature (and operation mode if set)."""
         data = {'key': self._static_info.key}
-        if ATTR_OPERATION_MODE in kwargs:
+        if ATTR_HVAC_MODE in kwargs:
             data['mode'] = _climate_modes.from_hass(
-                kwargs[ATTR_OPERATION_MODE])
+                kwargs[ATTR_HVAC_MODE])
         if ATTR_TEMPERATURE in kwargs:
             data['target_temperature'] = kwargs[ATTR_TEMPERATURE]
         if ATTR_TARGET_TEMP_LOW in kwargs:

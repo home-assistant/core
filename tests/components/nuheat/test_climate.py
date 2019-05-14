@@ -5,7 +5,6 @@ from tests.common import get_test_home_assistant
 
 from homeassistant.components.climate.const import (
     SUPPORT_HOLD_MODE,
-    SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     STATE_HEAT,
     STATE_IDLE)
@@ -112,8 +111,7 @@ class TestNuHeat(unittest.TestCase):
 
     def test_supported_features(self):
         """Test name property."""
-        features = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_HOLD_MODE |
-                    SUPPORT_OPERATION_MODE)
+        features = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_HOLD_MODE)
         assert self.thermostat.supported_features == features
 
     def test_temperature_unit(self):

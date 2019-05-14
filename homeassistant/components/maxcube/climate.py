@@ -4,7 +4,7 @@ import socket
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_AUTO, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import DATA_KEY
@@ -15,7 +15,7 @@ STATE_MANUAL = 'manual'
 STATE_BOOST = 'boost'
 STATE_VACATION = 'vacation'
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -41,7 +41,7 @@ class MaxCubeClimate(ClimateDevice):
     def __init__(self, handler, name, rf_address):
         """Initialize MAX! Cube ClimateDevice."""
         self._name = name
-        self._operation_list = [STATE_AUTO, STATE_MANUAL, STATE_BOOST,
+        self._operation_list = [HVAC_MODE_AUTO, STATE_MANUAL, STATE_BOOST,
                                 STATE_VACATION]
         self._rf_address = rf_address
         self._cubehandle = handler
@@ -87,13 +87,13 @@ class MaxCubeClimate(ClimateDevice):
         return self.map_temperature_max_hass(device.actual_temperature)
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation (auto, manual, boost, vacation)."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
         return self.map_mode_max_hass(device.mode)
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return self._operation_list
 
@@ -120,10 +120,10 @@ class MaxCubeClimate(ClimateDevice):
                 _LOGGER.error("Setting target temperature failed")
                 return False
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set new operation mode."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
-        mode = self.map_mode_hass_max(operation_mode)
+        mode = self.map_mode_hass_max(hvac_mode)
 
         if mode is None:
             return False
@@ -156,7 +156,7 @@ class MaxCubeClimate(ClimateDevice):
             MAX_DEVICE_MODE_VACATION, \
             MAX_DEVICE_MODE_BOOST
 
-        if operation_mode == STATE_AUTO:
+        if operation_mode == HVAC_MODE_AUTO:
             mode = MAX_DEVICE_MODE_AUTOMATIC
         elif operation_mode == STATE_MANUAL:
             mode = MAX_DEVICE_MODE_MANUAL
@@ -179,7 +179,7 @@ class MaxCubeClimate(ClimateDevice):
             MAX_DEVICE_MODE_BOOST
 
         if mode == MAX_DEVICE_MODE_AUTOMATIC:
-            operation_mode = STATE_AUTO
+            operation_mode = HVAC_MODE_AUTO
         elif mode == MAX_DEVICE_MODE_MANUAL:
             operation_mode = STATE_MANUAL
         elif mode == MAX_DEVICE_MODE_VACATION:

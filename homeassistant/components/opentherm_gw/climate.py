@@ -3,15 +3,14 @@ import logging
 
 from pyotgw import vars as gw_vars
 
-from homeassistant.components.climate import ClimateDevice, ENTITY_ID_FORMAT
+from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE,
     TEMP_CELSIUS)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import async_generate_entity_id
 
 from .const import (
     CONF_FLOOR_TEMP, CONF_PRECISION, DATA_GATEWAYS, DATA_OPENTHERM_GW)
@@ -26,6 +25,7 @@ async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up the opentherm_gw device."""
     gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][discovery_info]
+
     gateway = OpenThermClimate(gw_dev)
     async_add_entities([gateway])
 
@@ -36,12 +36,10 @@ class OpenThermClimate(ClimateDevice):
     def __init__(self, gw_dev):
         """Initialize the device."""
         self._gateway = gw_dev
-        self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, gw_dev.gw_id, hass=gw_dev.hass)
         self.friendly_name = gw_dev.name
         self.floor_temp = gw_dev.climate_config[CONF_FLOOR_TEMP]
         self.temp_precision = gw_dev.climate_config.get(CONF_PRECISION)
-        self._current_operation = STATE_IDLE
+        self._current_operation = HVAC_MODE_OFF
         self._current_temperature = None
         self._new_target_temperature = None
         self._target_temperature = None
@@ -63,13 +61,15 @@ class OpenThermClimate(ClimateDevice):
         flame_on = status.get(gw_vars.DATA_SLAVE_FLAME_ON)
         cooling_active = status.get(gw_vars.DATA_SLAVE_COOLING_ACTIVE)
         if ch_active and flame_on:
-            self._current_operation = STATE_HEAT
+            self._current_operation = HVAC_MODE_HEAT
         elif cooling_active:
-            self._current_operation = STATE_COOL
+            self._current_operation = HVAC_MODE_COOL
         else:
-            self._current_operation = STATE_IDLE
+            self._current_operation = HVAC_MODE_OFF
+
         self._current_temperature = status.get(gw_vars.DATA_ROOM_TEMP)
         temp_upd = status.get(gw_vars.DATA_ROOM_SETPOINT)
+
         if self._target_temperature != temp_upd:
             self._new_target_temperature = None
         self._target_temperature = temp_upd
@@ -104,6 +104,11 @@ class OpenThermClimate(ClimateDevice):
         return self.friendly_name
 
     @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._gateway.gw_id
+
+    @property
     def precision(self):
         """Return the precision of the system."""
         if self.temp_precision is not None:
@@ -123,7 +128,7 @@ class OpenThermClimate(ClimateDevice):
         return TEMP_CELSIUS
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         return self._current_operation
 

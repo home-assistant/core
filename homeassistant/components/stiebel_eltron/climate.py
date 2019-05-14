@@ -3,10 +3,10 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_ECO, STATE_MANUAL, SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_AUTO, STATE_ECO, STATE_MANUAL,
+    SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_OFF)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, STATE_OFF, STATE_ON, TEMP_CELSIUS)
+    ATTR_TEMPERATURE, STATE_ON, TEMP_CELSIUS)
 
 from . import DOMAIN as STE_DOMAIN
 
@@ -15,16 +15,16 @@ DEPENDENCIES = ['stiebel_eltron']
 _LOGGER = logging.getLogger(__name__)
 
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
-OPERATION_MODES = [STATE_AUTO, STATE_MANUAL, STATE_ECO, STATE_OFF]
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
+OPERATION_MODES = [HVAC_MODE_AUTO, STATE_MANUAL, STATE_ECO, HVAC_MODE_OFF]
 
 # Mapping STIEBEL ELTRON states to homeassistant states.
-STE_TO_HA_STATE = {'AUTOMATIC': STATE_AUTO,
+STE_TO_HA_STATE = {'AUTOMATIC': HVAC_MODE_AUTO,
                    'MANUAL MODE': STATE_MANUAL,
                    'STANDBY': STATE_ECO,
                    'DAY MODE': STATE_ON,
                    'SETBACK MODE': STATE_ON,
-                   'DHW': STATE_OFF,
+                   'DHW': HVAC_MODE_OFF,
                    'EMERGENCY OPERATION': STATE_ON}
 
 # Mapping homeassistant states to STIEBEL ELTRON states.
@@ -129,21 +129,20 @@ class StiebelEltron(ClimateDevice):
         """Return the current humidity."""
         return float("{0:.1f}".format(self._current_humidity))
 
-    # Handle SUPPORT_OPERATION_MODE
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """List of the operation modes."""
         return self._operation_modes
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         return STE_TO_HA_STATE.get(self._current_operation)
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set new operation mode."""
-        new_mode = HA_TO_STE_STATE.get(operation_mode)
-        _LOGGER.debug("set_operation_mode: %s -> %s", self._current_operation,
+        new_mode = HA_TO_STE_STATE.get(hvac_mode)
+        _LOGGER.debug("set_hvac_mode: %s -> %s", self._current_operation,
                       new_mode)
         self._ste_data.api.set_operation(new_mode)
         self._force_update = True

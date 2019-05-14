@@ -9,7 +9,7 @@ import somecomfort
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.components.climate.const import (
-    ATTR_FAN_MODE, ATTR_OPERATION_MODE, ATTR_FAN_LIST, ATTR_OPERATION_LIST)
+    ATTR_FAN_MODE, ATTR_OPERATION_MODE, ATTR_FAN_MODES, ATTR_OPERATION_LIST)
 
 import homeassistant.components.honeywell.climate as honeywell
 import pytest
@@ -396,7 +396,7 @@ class TestHoneywellUS(unittest.TestCase):
             honeywell.ATTR_FAN: 'running',
             ATTR_FAN_MODE: 'auto',
             ATTR_OPERATION_MODE: 'heat',
-            ATTR_FAN_LIST: somecomfort.FAN_MODES,
+            ATTR_FAN_MODES: somecomfort.FAN_MODES,
             ATTR_OPERATION_LIST: somecomfort.SYSTEM_MODES,
         }
         assert expected == self.honeywell.device_state_attributes
@@ -412,7 +412,7 @@ class TestHoneywellUS(unittest.TestCase):
             honeywell.ATTR_FAN: 'idle',
             ATTR_FAN_MODE: None,
             ATTR_OPERATION_MODE: 'heat',
-            ATTR_FAN_LIST: somecomfort.FAN_MODES,
+            ATTR_FAN_MODES: somecomfort.FAN_MODES,
             ATTR_OPERATION_LIST: somecomfort.SYSTEM_MODES,
         }
         assert expected == self.honeywell.device_state_attributes

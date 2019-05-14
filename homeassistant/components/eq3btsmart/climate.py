@@ -5,11 +5,11 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    STATE_HEAT, STATE_MANUAL, STATE_ECO,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE,
-    SUPPORT_ON_OFF)
+    HVAC_MODE_HEAT, STATE_MANUAL, STATE_ECO,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_AWAY_MODE,
+    SUPPORT_ON_OFF, HVAC_MODE_OFF)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_MAC, CONF_DEVICES, STATE_ON, STATE_OFF,
+    ATTR_TEMPERATURE, CONF_MAC, CONF_DEVICES, STATE_ON,
     TEMP_CELSIUS, PRECISION_HALVES)
 import homeassistant.helpers.config_validation as cv
 
@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Schema({cv.string: DEVICE_SCHEMA}),
 })
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
                  SUPPORT_AWAY_MODE | SUPPORT_ON_OFF)
 
 
@@ -57,8 +57,8 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
         self.modes = {
             eq3.Mode.Open: STATE_ON,
-            eq3.Mode.Closed: STATE_OFF,
-            eq3.Mode.Auto: STATE_HEAT,
+            eq3.Mode.Closed: HVAC_MODE_OFF,
+            eq3.Mode.Auto: HVAC_MODE_HEAT,
             eq3.Mode.Manual: STATE_MANUAL,
             eq3.Mode.Boost: STATE_BOOST,
             eq3.Mode.Away: STATE_ECO,
@@ -115,25 +115,25 @@ class EQ3BTSmartThermostat(ClimateDevice):
         self._thermostat.target_temperature = temperature
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return the current operation mode."""
         if self._thermostat.mode < 0:
             return None
         return self.modes[self._thermostat.mode]
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return [x for x in self.modes.values()]
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set operation mode."""
-        self._target_mode = operation_mode
-        self._thermostat.mode = self.reverse_modes[operation_mode]
+        self._target_mode = hvac_mode
+        self._thermostat.mode = self.reverse_modes[hvac_mode]
 
     def turn_away_mode_off(self):
         """Away mode off turns to AUTO mode."""
-        self.set_operation_mode(STATE_HEAT)
+        self.set_operation_mode(HVAC_MODE_HEAT)
 
     def turn_away_mode_on(self):
         """Set away mode on."""
@@ -146,11 +146,11 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
     def turn_on(self):
         """Turn device on."""
-        self.set_operation_mode(STATE_HEAT)
+        self.set_operation_mode(HVAC_MODE_HEAT)
 
     def turn_off(self):
         """Turn device off."""
-        self.set_operation_mode(STATE_OFF)
+        self.set_operation_mode(HVAC_MODE_OFF)
 
     @property
     def min_temp(self):

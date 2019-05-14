@@ -8,10 +8,10 @@ import evohomeclient2
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_ECO, STATE_MANUAL, SUPPORT_AWAY_MODE, SUPPORT_ON_OFF,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_AUTO, STATE_ECO, STATE_MANUAL, SUPPORT_AWAY_MODE, SUPPORT_ON_OFF,
+    SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_OFF)
 from homeassistant.const import (
-    CONF_SCAN_INTERVAL, STATE_OFF,)
+    CONF_SCAN_INTERVAL)
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from . import (
@@ -39,18 +39,18 @@ EVO_PERMOVER = 'PermanentOverride'
 # For the Controller. NB: evohome treats Away mode as a mode in/of itself,
 # where HA considers it to 'override' the exising operating mode
 TCS_STATE_TO_HA = {
-    EVO_RESET: STATE_AUTO,
-    EVO_AUTO: STATE_AUTO,
+    EVO_RESET: HVAC_MODE_AUTO,
+    EVO_AUTO: HVAC_MODE_AUTO,
     EVO_AUTOECO: STATE_ECO,
-    EVO_AWAY: STATE_AUTO,
-    EVO_DAYOFF: STATE_AUTO,
-    EVO_CUSTOM: STATE_AUTO,
-    EVO_HEATOFF: STATE_OFF
+    EVO_AWAY: HVAC_MODE_AUTO,
+    EVO_DAYOFF: HVAC_MODE_AUTO,
+    EVO_CUSTOM: HVAC_MODE_AUTO,
+    EVO_HEATOFF: HVAC_MODE_OFF
 }
 HA_STATE_TO_TCS = {
-    STATE_AUTO: EVO_AUTO,
+    HVAC_MODE_AUTO: EVO_AUTO,
     STATE_ECO: EVO_AUTOECO,
-    STATE_OFF: EVO_HEATOFF
+    HVAC_MODE_OFF: EVO_HEATOFF
 }
 TCS_OP_LIST = list(HA_STATE_TO_TCS)
 
@@ -61,12 +61,12 @@ EVO_PERMOVER = 'PermanentOverride'
 
 # for the Zones...
 ZONE_STATE_TO_HA = {
-    EVO_FOLLOW: STATE_AUTO,
+    EVO_FOLLOW: HVAC_MODE_AUTO,
     EVO_TEMPOVER: STATE_MANUAL,
     EVO_PERMOVER: STATE_MANUAL
 }
 HA_STATE_TO_ZONE = {
-    STATE_AUTO: EVO_FOLLOW,
+    HVAC_MODE_AUTO: EVO_FOLLOW,
     STATE_MANUAL: EVO_PERMOVER
 }
 ZONE_OP_LIST = list(HA_STATE_TO_ZONE)
@@ -124,12 +124,12 @@ class EvoZone(EvoDevice, ClimateDevice):
 
         self._operation_list = ZONE_OP_LIST
         self._supported_features = \
-            SUPPORT_OPERATION_MODE | \
+            \
             SUPPORT_TARGET_TEMPERATURE | \
             SUPPORT_ON_OFF
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return the current operating mode of the evohome Zone.
 
         The evohome Zones that are in 'FollowSchedule' mode inherit their
@@ -245,7 +245,7 @@ class EvoZone(EvoDevice, ClimateDevice):
                 operation_mode
             )
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set an operating mode for a Zone.
 
         Currently limited to 'Auto' & 'Manual'. If 'Off' is needed, it can be
@@ -267,7 +267,7 @@ class EvoZone(EvoDevice, ClimateDevice):
         period of time, 'TemporaryOverride', after which they will revert back
         to 'FollowSchedule' mode, or indefinitely, 'PermanentOverride'.
         """
-        self._set_operation_mode(HA_STATE_TO_ZONE.get(operation_mode))
+        self._set_operation_mode(HA_STATE_TO_ZONE.get(hvac_mode))
 
     def update(self):
         """Process the evohome Zone's state data."""
@@ -303,7 +303,7 @@ class EvoController(EvoDevice, ClimateDevice):
 
         self._operation_list = TCS_OP_LIST
         self._supported_features = \
-            SUPPORT_OPERATION_MODE | \
+            \
             SUPPORT_AWAY_MODE
 
     @property
@@ -323,7 +323,7 @@ class EvoController(EvoDevice, ClimateDevice):
         return {'status': status}
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return the current operating mode of the evohome Controller."""
         return TCS_STATE_TO_HA.get(self._status['systemModeStatus']['mode'])
 
@@ -398,13 +398,13 @@ class EvoController(EvoDevice, ClimateDevice):
                 evohomeclient2.AuthenticationError) as err:
             self._handle_exception(err)
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set new target operation mode for the TCS.
 
         Currently limited to 'Auto', 'AutoWithEco' & 'HeatingOff'. If 'Away'
         mode is needed, it can be enabled via turn_away_mode_on method.
         """
-        self._set_operation_mode(HA_STATE_TO_TCS.get(operation_mode))
+        self._set_operation_mode(HA_STATE_TO_TCS.get(hvac_mode))
 
     def turn_away_mode_on(self):
         """Turn away mode on.

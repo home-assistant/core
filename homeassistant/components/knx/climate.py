@@ -3,8 +3,8 @@ import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_DRY, STATE_ECO, STATE_FAN_ONLY, STATE_HEAT, STATE_IDLE, STATE_MANUAL,
-    SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_DRY, STATE_ECO, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, HVAC_MODE_OFF, STATE_MANUAL,
+    SUPPORT_ON_OFF, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -43,12 +43,12 @@ DEFAULT_SETPOINT_SHIFT_MIN = -6
 OPERATION_MODES = {
     # Map DPT 201.100 HVAC operating modes
     "Frost Protection": STATE_MANUAL,
-    "Night": STATE_IDLE,
+    "Night": HVAC_MODE_OFF,
     "Standby": STATE_ECO,
-    "Comfort": STATE_HEAT,
+    "Comfort": HVAC_MODE_HEAT,
     # Map DPT 201.104 HVAC control modes
-    "Fan only": STATE_FAN_ONLY,
-    "Dehumidification": STATE_DRY
+    "Fan only": HVAC_MODE_FAN_ONLY,
+    "Dehumidification": HVAC_MODE_DRY
 }
 
 OPERATION_MODES_INV = dict((
@@ -170,8 +170,6 @@ class KNXClimate(ClimateDevice):
     def supported_features(self):
         """Return the list of supported features."""
         support = SUPPORT_TARGET_TEMPERATURE
-        if self.device.mode.supports_operation_mode:
-            support |= SUPPORT_OPERATION_MODE
         if self.device.supports_on_off:
             support |= SUPPORT_ON_OFF
         return support
@@ -237,25 +235,25 @@ class KNXClimate(ClimateDevice):
         await self.async_update_ha_state()
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         if self.device.mode.supports_operation_mode:
             return OPERATION_MODES.get(self.device.mode.operation_mode.value)
         return None
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return [OPERATION_MODES.get(operation_mode.value) for
                 operation_mode in
                 self.device.mode.operation_modes]
 
-    async def async_set_operation_mode(self, operation_mode):
+    async def async_set_hvac_mode(self, hvac_mode):
         """Set operation mode."""
         if self.device.mode.supports_operation_mode:
             from xknx.knx import HVACOperationMode
             knx_operation_mode = HVACOperationMode(
-                OPERATION_MODES_INV.get(operation_mode))
+                OPERATION_MODES_INV.get(hvac_mode))
             await self.device.mode.set_operation_mode(knx_operation_mode)
             await self.async_update_ha_state()
 
