@@ -26,11 +26,9 @@ def pass_through_formatter(value):
 
 def illuminance_formatter(value):
     """Convert Illimination data."""
-    # should handle Xiaomi and any other non compliant companies
-    if value < 100:
-        return value
-    value = pow(10, ((value - 1) / 10000))
-    return value
+    if value is None:
+        return None
+    return round(pow(10, ((value - 1) / 10000)), 1)
 
 
 def temperature_formatter(value):
