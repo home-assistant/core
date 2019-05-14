@@ -19,7 +19,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devices = []
     for accountname, icloud_account in hass.data[DATA_ICLOUD].items():
         for devicename, icloud_device in icloud_account.devices.items():
-            if hasattr(icloud_device, '_battery_level'):
+            if icloud_device.battery_level is not None:
                 _LOGGER.info("Adding sensors from iCloud device=%s",
                              devicename)
                 devices.append(IcloudDeviceBatterySensor(hass, accountname, devicename))
