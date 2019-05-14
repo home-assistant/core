@@ -140,7 +140,7 @@ class ClimateDevice(Entity):
     @property
     def state(self) -> str:
         """Return the current state."""
-        return self.hvac_mode
+        return self.hvac_state
 
     @property
     def precision(self) -> float:
@@ -224,27 +224,13 @@ class ClimateDevice(Entity):
         return None
 
     @property
-    def hvac_mode(self) -> str:
-        """Return hvac operation ie. heat, cool mode.
-
-        Need to be one of HVAC_MODE_*.
-        """
-        raise NotImplementedError()
+    def hvac_state(self):
+        """Return current operation ie. heat, cool."""
+        return None
 
     @property
-    def hvac_modes(self) -> List[str]:
-        """Return the list of available hvac operation modes.
-
-        Need to be a subset of HVAC_MODES.
-        """
-        raise NotImplementedError()
-
-    @property
-    def hvac_action(self) -> Optional[str]:
-        """Return the current running hvac operation if supported.
-
-        Need to be one of CURRENT_HVAC_*.
-        """
+    def hvac_modes(self):
+        """Return the list of available operation modes."""
         return None
 
     @property
