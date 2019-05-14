@@ -81,7 +81,7 @@ def registration_context(registration: Dict) -> Context:
 
 def empty_okay_response(headers: Dict = None, status: int = 200) -> Response:
     """Return a Response with empty JSON object and a 200."""
-    return Response(body='{}', status=status, content_type='application/json',
+    return Response(text='{}', status=status, content_type='application/json',
                     headers=headers)
 
 
