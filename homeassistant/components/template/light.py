@@ -149,13 +149,17 @@ class LightTemplate(Light):
         if self._entity_picture_template is not None:
             self._entity_picture_template.hass = self.hass
 
-        self._brightness_max = brightness_max
+        self._brightness_max = brightness_max +\
+            (brightness_max // DEFAULT_BRIGHTNESS_MAX)
         self._brightness_min = 0
         if brightness_use_zero:
             self._brightness_min -= 1
 
         self._brightness_div = DEFAULT_BRIGHTNESS_MAX / \
             (self._brightness_max - self._brightness_min)
+
+        self._brightness_min -= \
+            self._brightness_max // DEFAULT_BRIGHTNESS_MAX
 
         _LOGGER.info("Brightness max: " + str(self._brightness_max))
         _LOGGER.info("Brightness div: " + str(self._brightness_div))
