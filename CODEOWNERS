@@ -31,6 +31,7 @@ homeassistant/components/auth/* @home-assistant/core
 homeassistant/components/automatic/* @armills
 homeassistant/components/automation/* @home-assistant/core
 homeassistant/components/aws/* @awarecan @robbiet480
+homeassistant/components/azure_event_hub/* @eavanvalkenburg
 homeassistant/components/axis/* @kane610
 homeassistant/components/bitcoin/* @fabaff
 homeassistant/components/bizkaibus/* @UgaitzEtxebarria
