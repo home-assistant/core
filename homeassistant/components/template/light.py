@@ -44,7 +44,9 @@ LIGHT_SCHEMA = vol.Schema({
     vol.Optional(CONF_LEVEL_BRIGHTNESS_MIN, default=DEFAULT_BRIGHTNESS_MIN):
         vol.All(vol.Coerce(int), vol.Range(min=-1001)),
     vol.Optional(CONF_LEVEL_BRIGHTNESS_MAX, default=DEFAULT_BRIGHTNESS_MAX):
-        vol.All(vol.Coerce(int), vol.Range(min=-1000)),
+        vol.All(vol.Coerce(int), vol.Range(min=-1000))
+    # vol.Optional(CONF_OFFSET_ZERO, default=0):
+    #     vol.All(vol.Coerce(int), vol.Range(min=-1000, max=1000)),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -150,21 +152,19 @@ class LightTemplate(Light):
         if self._entity_picture_template is not None:
             self._entity_picture_template.hass = self.hass
 
+        # Set corrected brightness
+        self._brightness_min = brightness_min
+        self._brightness_max = brightness_max
+        self._use_zero = 0
         # Get interval
-        brightness_interval = abs(brightness_max - brightness_min)
-        # Correct the interval
-        brightness_interval_corr_min = \
-            brightness_interval // DEFAULT_BRIGHTNESS_MAX
-        brightness_interval_corr_max = \
+        brightness_interval = len(range(brightness_min, brightness_max))
+
+        self._brightness_max += \
             (brightness_interval % DEFAULT_BRIGHTNESS_MAX) // \
             DEFAULT_BRIGHTNESS_MAX
 
-        # Set corrected brightness
-        self._brightness_min = brightness_min - brightness_interval_corr_min
-        self._brightness_max = brightness_max + brightness_interval_corr_max
-
         self._brightness_div = DEFAULT_BRIGHTNESS_MAX / \
-            (self._brightness_max - self._brightness_min)
+            (brightness_interval)
 
     @property
     def brightness(self):
@@ -234,17 +234,18 @@ class LightTemplate(Light):
 
         if self._level_template is None and ATTR_BRIGHTNESS in kwargs:
             _LOGGER.info("Optimistically setting brightness to %s",
-                         int(kwargs[ATTR_BRIGHTNESS] / self._brightness_div))
+                         int(kwargs[ATTR_BRIGHTNESS] / self._brightness_div)
+                         + (self._brightness_min))
             self._brightness = \
-                int(int(kwargs[ATTR_BRIGHTNESS] / self._brightness_div) +
-                    self._brightness_min)
+                int(kwargs[ATTR_BRIGHTNESS] / self._brightness_div) +\
+                self._brightness_min
             optimistic_set = True
 
         if ATTR_BRIGHTNESS in kwargs and self._level_script:
             await self._level_script.async_run(
                 {"brightness":
                  int(int(kwargs[ATTR_BRIGHTNESS] / self._brightness_div) +
-                     self._brightness_min)},
+                     (self._brightness_min))},
                 context=self._context)
         else:
             await self._on_script.async_run()
@@ -285,12 +286,14 @@ class LightTemplate(Light):
 
             if self._brightness_min <= int(brightness) <= self._brightness_max:
                 self._brightness = \
-                    int((int(brightness) - self._brightness_min) *
-                        self._brightness_div)
+                    (int(brightness) - self._brightness_min) *\
+                    self._brightness_div
             else:
                 _LOGGER.error(
-                    'Received invalid brightness : %s. Expected: 0-255',
-                    brightness)
+                    'Received invalid brightness : %s. Expected: %s-%s',
+                    brightness,
+                    str(self._brightness_min),
+                    str(self._brightness_max))
                 self._brightness = None
 
         for property_name, template in (
