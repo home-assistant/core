@@ -1,63 +1,35 @@
 """Provides functionality to interact with climate devices."""
 from datetime import timedelta
-import logging
 import functools as ft
+import logging
 
 import voluptuous as vol
 
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_TEMPERATURE, PRECISION_TENTHS, PRECISION_WHOLE,
+    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON, TEMP_CELSIUS)
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA_BASE
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.util.temperature import convert as convert_temperature
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.config_validation import (  # noqa
-    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_TEMPERATURE, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    STATE_ON, STATE_OFF, TEMP_CELSIUS, PRECISION_WHOLE,
-    PRECISION_TENTHS)
 
 from .const import (
-    ATTR_AUX_HEAT,
-    ATTR_AWAY_MODE,
-    ATTR_CURRENT_HUMIDITY,
-    ATTR_CURRENT_TEMPERATURE,
-    ATTR_FAN_LIST,
-    ATTR_FAN_MODE,
-    ATTR_HOLD_MODE,
-    ATTR_HUMIDITY,
-    ATTR_MAX_HUMIDITY,
-    ATTR_MAX_TEMP,
-    ATTR_MIN_HUMIDITY,
-    ATTR_MIN_TEMP,
-    ATTR_OPERATION_LIST,
-    ATTR_OPERATION_MODE,
-    ATTR_SWING_LIST,
-    ATTR_SWING_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
-    ATTR_TARGET_TEMP_STEP,
-    DOMAIN,
-    SERVICE_SET_AUX_HEAT,
-    SERVICE_SET_AWAY_MODE,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HOLD_MODE,
-    SERVICE_SET_HUMIDITY,
-    SERVICE_SET_OPERATION_MODE,
-    SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_HIGH,
-    SUPPORT_TARGET_TEMPERATURE_LOW,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_HUMIDITY_HIGH,
-    SUPPORT_TARGET_HUMIDITY_LOW,
-    SUPPORT_FAN_MODE,
-    SUPPORT_OPERATION_MODE,
-    SUPPORT_HOLD_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_AWAY_MODE,
-    SUPPORT_AUX_HEAT,
-)
+    ATTR_AUX_HEAT, ATTR_AWAY_MODE, ATTR_CURRENT_HUMIDITY,
+    ATTR_CURRENT_TEMPERATURE, ATTR_FAN_LIST, ATTR_FAN_MODE, ATTR_HOLD_MODE,
+    ATTR_HUMIDITY, ATTR_MAX_HUMIDITY, ATTR_MAX_TEMP, ATTR_MIN_HUMIDITY,
+    ATTR_MIN_TEMP, ATTR_OPERATION_LIST, ATTR_OPERATION_MODE, ATTR_SWING_LIST,
+    ATTR_SWING_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
+    ATTR_TARGET_TEMP_STEP, DOMAIN, SERVICE_SET_AUX_HEAT, SERVICE_SET_AWAY_MODE,
+    SERVICE_SET_FAN_MODE, SERVICE_SET_HOLD_MODE, SERVICE_SET_HUMIDITY,
+    SERVICE_SET_OPERATION_MODE, SERVICE_SET_SWING_MODE,
+    SERVICE_SET_TEMPERATURE, SUPPORT_AUX_HEAT, SUPPORT_AWAY_MODE,
+    SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE, SUPPORT_SWING_MODE,
+    SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_HUMIDITY_HIGH,
+    SUPPORT_TARGET_HUMIDITY_LOW, SUPPORT_TARGET_TEMPERATURE_HIGH,
+    SUPPORT_TARGET_TEMPERATURE_LOW, OPERATION_MODES)
 from .reproduce_state import async_reproduce_states  # noqa
 
 DEFAULT_MIN_TEMP = 7
@@ -96,7 +68,7 @@ SET_TEMPERATURE_SCHEMA = vol.Schema(vol.All(
         vol.Inclusive(ATTR_TARGET_TEMP_HIGH, 'temperature'): vol.Coerce(float),
         vol.Inclusive(ATTR_TARGET_TEMP_LOW, 'temperature'): vol.Coerce(float),
         vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-        vol.Optional(ATTR_OPERATION_MODE): cv.string,
+        vol.Optional(ATTR_OPERATION_MODE): vol.In(OPERATION_MODES),
     }
 ))
 SET_FAN_MODE_SCHEMA = vol.Schema({
@@ -109,7 +81,7 @@ SET_HOLD_MODE_SCHEMA = vol.Schema({
 })
 SET_OPERATION_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-    vol.Required(ATTR_OPERATION_MODE): cv.string,
+    vol.Required(ATTR_OPERATION_MODE): vol.In(OPERATION_MODES),
 })
 SET_HUMIDITY_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
@@ -284,12 +256,12 @@ class ClimateDevice(Entity):
         return None
 
     @property
-    def hvac_state(self):
+    def operation_mode(self):
         """Return current operation ie. heat, cool."""
         return None
 
     @property
-    def hvac_modes(self):
+    def operation_list(self):
         """Return the list of available operation modes."""
         return None
 
@@ -414,28 +386,6 @@ class ClimateDevice(Entity):
         """
         return self.hass.async_add_job(self.set_swing_mode, swing_mode)
 
-    def turn_away_mode_on(self):
-        """Turn away mode on."""
-        raise NotImplementedError()
-
-    def async_turn_away_mode_on(self):
-        """Turn away mode on.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.turn_away_mode_on)
-
-    def turn_away_mode_off(self):
-        """Turn away mode off."""
-        raise NotImplementedError()
-
-    def async_turn_away_mode_off(self):
-        """Turn away mode off.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.turn_away_mode_off)
-
     def set_hold_mode(self, hold_mode):
         """Set new target hold mode."""
         raise NotImplementedError()
@@ -517,14 +467,6 @@ class ClimateDevice(Entity):
     def max_humidity(self):
         """Return the maximum humidity."""
         return DEFAULT_MAX_HUMIDITY
-
-
-async def async_service_away_mode(entity, service):
-    """Handle away mode service."""
-    if service.data[ATTR_AWAY_MODE]:
-        await entity.async_turn_away_mode_on()
-    else:
-        await entity.async_turn_away_mode_off()
 
 
 async def async_service_aux_heat(entity, service):

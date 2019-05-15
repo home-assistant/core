@@ -1,5 +1,48 @@
 """Provides the constants needed for component."""
 
+# All activity disabled / Device is off/standby
+OPERATION_MODE_OFF = 'off'
+
+# Heating
+OPERATION_MODE_HEAT = 'heat'
+
+# Cooling
+OPERATION_MODE_COOL = 'cool'
+
+# The device supports heating/cooling to a range
+OPERATION_MODE_HEATCOOL = 'heatcool'
+
+# The temperature is set based on a schedule, learned behavior, AI or some
+# other related mechanism. User is not able to adjust the temperature
+OPERATION_MODE_AUTO = 'auto'
+
+# Device is in Dry/Huminity mode
+OPERATION_MODE_DRY = 'dry'
+
+# Only the fan is on, not fan and another mode like cool
+OPERATION_MODE_FAN_ONLY = 'fan_only'
+
+OPERATION_MODES = [
+    OPERATION_MODE_OFF,
+    OPERATION_MODE_HEAT,
+    OPERATION_MODE_COOL,
+    OPERATION_MODE_HEATCOOL,
+    OPERATION_MODE_AUTO,
+    OPERATION_MODE_DRY,
+    OPERATION_MODE_FAN_ONLY,
+]
+
+
+# Device is running an energy-saving mode
+HOLD_MODE_ECO = 'eco'
+
+# Device is on away mode
+HOLD_MODE_AWAY = 'away'
+
+# Device turn all valve full up
+HOLD_MODE_BOOST = 'boost'
+
+
 ATTR_AUX_HEAT = 'aux_heat'
 ATTR_AWAY_MODE = 'away_mode'
 ATTR_CURRENT_HUMIDITY = 'current_humidity'
@@ -12,9 +55,8 @@ ATTR_MAX_HUMIDITY = 'max_humidity'
 ATTR_MAX_TEMP = 'max_temp'
 ATTR_MIN_HUMIDITY = 'min_humidity'
 ATTR_MIN_TEMP = 'min_temp'
-ATTR_HVAC_MODES = 'hvac_modes'
-ATTR_SWING_LIST = 'swing_list'
-ATTR_SWING_MODE = 'swing_mode'
+ATTR_OPERATION_LIST = 'operation_list'
+ATTR_OPERATION_MODE = 'operation_mode'
 ATTR_TARGET_TEMP_HIGH = 'target_temp_high'
 ATTR_TARGET_TEMP_LOW = 'target_temp_low'
 ATTR_TARGET_TEMP_STEP = 'target_temp_step'
@@ -34,15 +76,6 @@ SERVICE_SET_HUMIDITY = 'set_humidity'
 SERVICE_SET_OPERATION_MODE = 'set_operation_mode'
 SERVICE_SET_SWING_MODE = 'set_swing_mode'
 SERVICE_SET_TEMPERATURE = 'set_temperature'
-
-STATE_OFF = 'off'
-STATE_HEAT = 'heat'
-STATE_COOL = 'cool'
-STATE_HEATCOOL = 'heatcool'
-STATE_AUTO = 'auto'
-STATE_DRY = 'dry'
-STATE_FAN_ONLY = 'fan_only'
-STATE_ECO = 'eco'
 
 SUPPORT_TARGET_TEMPERATURE = 1
 SUPPORT_TARGET_TEMPERATURE_HIGH = 2
