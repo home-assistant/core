@@ -9,6 +9,7 @@ from uvcclient import nvr
 
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component
 from homeassistant.components.uvc import camera as uvc
 from homeassistant.components.camera import (
     SUPPORT_STREAM)
@@ -218,6 +219,7 @@ class TestUVC(unittest.TestCase):
             'model': 'UVC Fake',
             'recordingSettings': {
                 'fullTimeRecordEnabled': True,
+                'motionRecordEnabled': True
             },
             'channels': [
                 {
@@ -229,25 +231,42 @@ class TestUVC(unittest.TestCase):
                     'rtspUris': ['rtsp://host-b:7447/stream_1']
                 }
             ],
+            'controllerHostAddress': 'host-b',
             'host': 'host-a',
             'internalHost': 'host-b',
             'username': 'admin',
         }
+        #self.uvc._caminfo = self.nvr.get_camera.return_value
         self.nvr.server_version = (3, 2, 0)
 
     def test_properties(self):
         """Test the properties."""
-        yield from self.async_added_to_hass()
+        self.uvc.load_camera_info()
         assert self.name == self.uvc.name
         assert self.uvc.is_recording
+        assert self.uvc.motion_detection_enabled
         assert 'Ubiquiti' == self.uvc.brand
         assert 'UVC Fake' == self.uvc.model
+        assert 'rtsp://host-b:7447/stream_1' == self.uvc.stream_source
+        assert SUPPORT_STREAM == self.uvc.supported_features
+
+    def test_load_camera_info(self):
+        """Test loading camera info."""
+        self.uvc.load_camera_info()
+        assert self.uvc._caminfo == self.nvr.get_camera.return_value
+
+    def test_no_rtsp_streams(self):
+        """Test when no RTSP streams are enabled."""
+        self.nvr.get_camera.return_value['channels'] = []
+        self.uvc.load_camera_info()
+        assert 0 == self.uvc.supported_features
+        assert self.uvc.stream_source is None
 
     @mock.patch('uvcclient.store.get_info_store')
     @mock.patch('uvcclient.camera.UVCCameraClientV320')
     def test_login(self, mock_camera, mock_store):
         """Test the login."""
-        yield from self.async_added_to_hass()
+        self.uvc.load_camera_info()
         self.uvc._login()
         assert mock_camera.call_count == 1
         assert mock_camera.call_args == mock.call('host-a', 'admin', 'seekret')
@@ -258,8 +277,8 @@ class TestUVC(unittest.TestCase):
     @mock.patch('uvcclient.camera.UVCCameraClient')
     def test_login_v31x(self, mock_camera, mock_store):
         """Test login with v3.1.x server."""
-        yield from self.async_added_to_hass()
         self.nvr.server_version = (3, 1, 3)
+        self.uvc.load_camera_info()
         self.uvc._login()
         assert mock_camera.call_count == 1
         assert mock_camera.call_args == mock.call('host-a', 'admin', 'seekret')
@@ -270,7 +289,6 @@ class TestUVC(unittest.TestCase):
     @mock.patch('uvcclient.camera.UVCCameraClientV320')
     def test_login_tries_both_addrs_and_caches(self, mock_camera, mock_store):
         """Test the login tries."""
-        yield from self.async_added_to_hass()
         responses = [0]
 
         def mock_login(*a):
@@ -283,11 +301,13 @@ class TestUVC(unittest.TestCase):
 
         mock_store.return_value.get_camera_password.return_value = None
         mock_camera.return_value.login.side_effect = mock_login
+        self.uvc.load_camera_info()
         self.uvc._login()
         assert 2 == mock_camera.call_count
         assert 'host-b' == self.uvc._connect_addr
 
         mock_camera.reset_mock()
+        self.uvc.load_camera_info()
         self.uvc._login()
         assert mock_camera.call_count == 1
         assert mock_camera.call_args == mock.call('host-b', 'admin', 'seekret')
@@ -298,8 +318,8 @@ class TestUVC(unittest.TestCase):
     @mock.patch('uvcclient.camera.UVCCameraClientV320')
     def test_login_fails_both_properly(self, mock_camera, mock_store):
         """Test if login fails properly."""
-        yield from self.async_added_to_hass()
         mock_camera.return_value.login.side_effect = socket.error
+        self.uvc.load_camera_info()
         assert self.uvc._login() is None
         assert self.uvc._connect_addr is None
 
@@ -310,16 +330,6 @@ class TestUVC(unittest.TestCase):
             assert self.uvc.camera_image() is None
             assert mock_login.call_count == 1
             assert mock_login.call_args == mock.call()
-
-    def test_camera_supported_features(self):
-        """Test the camera supported features."""
-        yield from self.async_added_to_hass()
-        assert self.supported_features == SUPPORT_STREAM
-
-    def test_camera_stream_source(self):
-        """Test the cameras RTSP URI."""
-        yield from self.async_added_to_hass()
-        assert self.stream_source == 'rtsp://host-b:7447/stream_1'
 
     def test_camera_image_logged_in(self):
         """Test the login state."""
