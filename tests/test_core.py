@@ -900,6 +900,7 @@ class TestConfig(unittest.TestCase):
             'config_dir': '/tmp/ha-config',
             'whitelist_external_dirs': set(),
             'version': __version__,
+            'config_source': None,
         }
 
         assert expected == self.config.as_dict()
