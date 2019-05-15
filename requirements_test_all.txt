@@ -178,6 +178,9 @@ luftdaten==0.3.4
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
 
+# homeassistant.components.noaaweather
+metar==1.7.0
+
 # homeassistant.components.mfi
 mficlient==0.3.0
 
@@ -245,6 +248,9 @@ pylitejet==0.1
 
 # homeassistant.components.monoprice
 pymonoprice==0.3
+
+# homeassistant.components.noaaweather
+pynws==0.6
 
 # homeassistant.components.nx584
 pynx584==0.4
