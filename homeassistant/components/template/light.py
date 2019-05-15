@@ -152,7 +152,6 @@ class LightTemplate(Light):
 
         self._brightness_min = brightness_min
         self._brightness_max = brightness_max
-        self._use_zero = 0
 
         brightness_interval = len(range(brightness_min, brightness_max))
 
