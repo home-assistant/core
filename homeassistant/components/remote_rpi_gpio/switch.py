@@ -38,13 +38,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devices = []
     for port, name in ports.items():
         try:
-            led = remote_rpi_gpio.setup_output(address,
-                                               port,
-                                               invert_logic)
+            led = remote_rpi_gpio.setup_output(
+                address, port, invert_logic)
         except (ValueError, IndexError, KeyError, IOError):
             return None
         new_switch = RemoteRPiGPIOSwitch(name, led, invert_logic)
         devices.append(new_switch)
+
     add_entities(devices)
 
 
@@ -67,6 +67,11 @@ class RemoteRPiGPIOSwitch(SwitchDevice):
     def should_poll(self):
         """No polling needed."""
         return False
+
+    @property
+    def assumed_state(self):
+        """If unable to access real state of the entity."""
+        return True
 
     @property
     def is_on(self):
