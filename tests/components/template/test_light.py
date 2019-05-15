@@ -720,3 +720,186 @@ class TestTemplateLight:
         state = self.hass.states.get('light.test_template_light')
 
         assert state.attributes['entity_picture'] == '/local/light.png'
+
+    def test_brightness_max(self):
+        """Test setting brightness with optimistic template."""
+        assert setup.setup_component(self.hass, 'light', {
+            'light': {
+                'platform': 'template',
+                'lights': {
+                    'test_template_light': {
+                        'value_template': '{{1 == 1}}',
+                        'turn_on': {
+                            'service': 'light.turn_on',
+                            'entity_id': 'light.test_state'
+                        },
+                        'turn_off': {
+                            'service': 'light.turn_off',
+                            'entity_id': 'light.test_state'
+                        },
+                        'set_level': {
+                            'service': 'test.automation',
+                            'data_template': {
+                                'entity_id': 'test.test_state',
+                                'brightness': '{{brightness}}'
+                            }
+                        },
+                        'brightness_max': 1000
+                    }
+                }
+            }
+        })
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test_template_light')
+        assert state.attributes.get('brightness') is None
+
+        common.turn_on(
+            self.hass, 'light.test_template_light', **{ATTR_BRIGHTNESS: 255})
+        self.hass.block_till_done()
+        assert len(self.calls) == 1
+        assert self.calls[0].data['brightness'] == '1000'
+
+        state = self.hass.states.get('light.test_template_light')
+        _LOGGER.info(str(state.attributes))
+        assert state is not None
+        assert state.attributes.get('brightness') == 1000
+
+    def test_brightness_min(self):
+        """Test setting brightness with optimistic template."""
+        assert setup.setup_component(self.hass, 'light', {
+            'light': {
+                'platform': 'template',
+                'lights': {
+                    'test_template_light': {
+                        'value_template': '{{1 == 1}}',
+                        'turn_on': {
+                            'service': 'light.turn_on',
+                            'entity_id': 'light.test_state'
+                        },
+                        'turn_off': {
+                            'service': 'light.turn_off',
+                            'entity_id': 'light.test_state'
+                        },
+                        'set_level': {
+                            'service': 'test.automation',
+                            'data_template': {
+                                'entity_id': 'test.test_state',
+                                'brightness': '{{brightness}}'
+                            }
+                        },
+                        'brightness_min': 15
+                    }
+                }
+            }
+        })
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test_template_light')
+        assert state.attributes.get('brightness') is None
+
+        common.turn_on(
+            self.hass, 'light.test_template_light', **{ATTR_BRIGHTNESS: 1})
+        self.hass.block_till_done()
+        assert len(self.calls) == 1
+        assert self.calls[0].data['brightness'] == '15'
+
+        state = self.hass.states.get('light.test_template_light')
+        _LOGGER.info(str(state.attributes))
+        assert state is not None
+        assert state.attributes.get('brightness') == 15
+
+    def test_brightness_min_max(self):
+        """Test setting brightness with optimistic template."""
+        assert setup.setup_component(self.hass, 'light', {
+            'light': {
+                'platform': 'template',
+                'lights': {
+                    'test_template_light': {
+                        'value_template': '{{1 == 1}}',
+                        'turn_on': {
+                            'service': 'light.turn_on',
+                            'entity_id': 'light.test_state'
+                        },
+                        'turn_off': {
+                            'service': 'light.turn_off',
+                            'entity_id': 'light.test_state'
+                        },
+                        'set_level': {
+                            'service': 'test.automation',
+                            'data_template': {
+                                'entity_id': 'test.test_state',
+                                'brightness': '{{brightness}}'
+                            }
+                        },
+                        'brightness_min': 100,
+                        'brightness_max': 355
+                    }
+                }
+            }
+        })
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test_template_light')
+        assert state.attributes.get('brightness') is None
+
+        common.turn_on(
+            self.hass, 'light.test_template_light', **{ATTR_BRIGHTNESS: 124})
+        self.hass.block_till_done()
+        assert len(self.calls) == 1
+        assert self.calls[0].data['brightness'] == '224'
+
+        state = self.hass.states.get('light.test_template_light')
+        _LOGGER.info(str(state.attributes))
+        assert state is not None
+        assert state.attributes.get('brightness') == 224
+
+    def test_brightness_min_max_negative(self):
+        """Test setting brightness with optimistic template."""
+        assert setup.setup_component(self.hass, 'light', {
+            'light': {
+                'platform': 'template',
+                'lights': {
+                    'test_template_light': {
+                        'value_template': '{{1 == 1}}',
+                        'turn_on': {
+                            'service': 'light.turn_on',
+                            'entity_id': 'light.test_state'
+                        },
+                        'turn_off': {
+                            'service': 'light.turn_off',
+                            'entity_id': 'light.test_state'
+                        },
+                        'set_level': {
+                            'service': 'test.automation',
+                            'data_template': {
+                                'entity_id': 'test.test_state',
+                                'brightness': '{{brightness}}'
+                            }
+                        },
+                        # 0-255 -> 256 'steps', 256*2 = 512, 255-512=-257
+                        'brightness_min': -257,
+                        'brightness_max': 255
+                    }
+                }
+            }
+        })
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test_template_light')
+        assert state.attributes.get('brightness') is None
+
+        common.turn_on(
+            self.hass, 'light.test_template_light', **{ATTR_BRIGHTNESS: 1})
+        self.hass.block_till_done()
+        assert len(self.calls) == 1
+        assert self.calls[0].data['brightness'] == '-255'
+
+        state = self.hass.states.get('light.test_template_light')
+        _LOGGER.info(str(state.attributes))
+        assert state is not None
+        assert state.attributes.get('brightness') == -255
