@@ -38,7 +38,7 @@ async def gpslogger_client(loop, hass, aiohttp_client):
 
     await hass.async_block_till_done()
 
-    with patch('homeassistant.components.device_tracker.update_config'):
+    with patch('homeassistant.components.device_tracker.legacy.update_config'):
         return await aiohttp_client(hass.http.app)
 
 
