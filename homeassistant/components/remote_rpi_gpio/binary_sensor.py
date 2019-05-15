@@ -56,6 +56,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             return None
         new_sensor = RemoteRPiGPIOBinarySensor(port_name, button, invert_logic)
         devices.append(new_sensor)
+
     add_entities(devices, True)
 
 
@@ -69,6 +70,8 @@ class RemoteRPiGPIOBinarySensor(BinarySensorDevice):
         self._state = False
         self._button = button
 
+    async def async_added_to_hass(self):
+        """Run when entity about to be added to hass."""
         def read_gpio():
             """Read state from GPIO."""
             self._state = remote_rpi_gpio.read_input(self._button)
