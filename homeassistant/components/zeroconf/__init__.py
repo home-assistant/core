@@ -1,10 +1,8 @@
 """Support for exposing Home Assistant via Zeroconf."""
 import logging
-import socket
 
 import voluptuous as vol
 
-from homeassistant import util
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, __version__)
 
 _LOGGER = logging.getLogger(__name__)
