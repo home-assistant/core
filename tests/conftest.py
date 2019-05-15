@@ -102,11 +102,11 @@ def mock_device_tracker_conf():
         devices.append(entity)
 
     with patch(
-        'homeassistant.components.device_tracker'
+        'homeassistant.components.device_tracker.legacy'
         '.DeviceTracker.async_update_config',
             side_effect=mock_update_config
     ), patch(
-        'homeassistant.components.device_tracker.async_load_config',
+        'homeassistant.components.device_tracker.legacy.async_load_config',
             side_effect=lambda *args: mock_coro(devices)
     ):
         yield devices
