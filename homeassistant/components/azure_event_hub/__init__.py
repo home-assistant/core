@@ -15,7 +15,7 @@ from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'azure_eventhub'
+DOMAIN = 'azure_event_hub'
 
 CONF_EVENT_HUB_NAMESPACE = 'event_hub_namespace'
 CONF_EVENT_HUB_INSTANCE_NAME = 'event_hub_instance_name'
