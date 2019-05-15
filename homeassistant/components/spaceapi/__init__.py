@@ -109,7 +109,7 @@ class APISpaceApiView(HomeAssistantView):
 
     @staticmethod
     def get_sensor_data(hass, spaceapi, sensor):
-        """get necessary data from senor"""
+        """Get data from a sensor."""
         sensor_state = hass.states.get(sensor)
         if not sensor_state:
             return None
@@ -175,7 +175,6 @@ class APISpaceApiView(HomeAssistantView):
         if is_sensors is not None:
             sensors = {}
             for sensor_type in is_sensors:
-                sensors[sensor_type] = []
                 sensors[sensor_type] = []
                 for sensor in spaceapi['sensors'][sensor_type]:
                     sensor_data = self.get_sensor_data(hass, spaceapi, sensor)
