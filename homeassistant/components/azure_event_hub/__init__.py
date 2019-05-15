@@ -39,27 +39,24 @@ async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     from azure.eventhub import EventData, EventHubClientAsync
 
     config = yaml_config[DOMAIN]
-    event_hub_sas_policy = config[CONF_EVENT_HUB_SAS_POLICY]
-    event_hub_sas_key = config[CONF_EVENT_HUB_SAS_KEY]
 
-    event_hub_address = f"amqps://{config[CONF_EVENT_HUB_NAMESPACE]}\
-.servicebus.windows.net/{config[CONF_EVENT_HUB_INSTANCE_NAME]}"
-
+    event_hub_address = "amqps://{}.servicebus.windows.net/{}".format(
+        config[CONF_EVENT_HUB_NAMESPACE],
+        config[CONF_EVENT_HUB_INSTANCE_NAME])
     entities_filter = config[CONF_FILTER]
 
     client = EventHubClientAsync(
         event_hub_address,
         debug=True,
-        username=event_hub_sas_policy,
-        password=event_hub_sas_key)
-
+        username=config[CONF_EVENT_HUB_SAS_POLICY],
+        password=config[CONF_EVENT_HUB_SAS_KEY])
     async_sender = client.add_async_sender()
     await client.run_async()
 
     encoder = DateTimeJSONEncoder()
 
-    async def async_send_to_eventhub(event: Event):
-        """Send states to Pub/Sub."""
+    async def async_send_to_event_hub(event: Event):
+        """Send states to Event Hub."""
         state = event.data.get('new_state')
         if (state is None
                 or state.state in (STATE_UNKNOWN, '', STATE_UNAVAILABLE)
@@ -75,10 +72,10 @@ async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
         await async_sender.send(event_data)
 
     async def async_shutdown(event: Event):
-        """Shut down the thread."""
+        """Shut down the client."""
         await client.stop()
 
-    hass.bus.async_listen(EVENT_STATE_CHANGED, async_send_to_eventhub)
+    hass.bus.async_listen(EVENT_STATE_CHANGED, async_send_to_event_hub)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_shutdown)
 
     return True
