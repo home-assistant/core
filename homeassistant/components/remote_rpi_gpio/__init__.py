@@ -1,10 +1,6 @@
 """Support for controlling GPIO pins of a Raspberry Pi."""
 import logging
 
-from homeassistant.core import HomeAssistant
-
-REQUIREMENTS = ['gpiozero==1.4.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BOUNCETIME = 'bouncetime'
@@ -18,7 +14,7 @@ DEFAULT_PULL_MODE = "UP"
 DOMAIN = 'remote_rpi_gpio'
 
 
-def setup(hass: HomeAssistant, config):
+def setup(hass, config):
     """Set up the Raspberry Pi Remote GPIO component."""
     return True
 
