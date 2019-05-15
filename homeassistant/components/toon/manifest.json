@@ -1,6 +1,7 @@
 {
   "domain": "toon",
   "name": "Toon",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/toon",
   "requirements": [
     "toonapilib==3.2.2"

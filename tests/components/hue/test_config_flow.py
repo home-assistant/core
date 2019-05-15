@@ -130,7 +130,7 @@ async def test_flow_timeout_discovery(hass):
     flow = config_flow.HueFlowHandler()
     flow.hass = hass
 
-    with patch('aiohue.discovery.discover_nupnp',
+    with patch('homeassistant.components.hue.config_flow.discover_nupnp',
                side_effect=asyncio.TimeoutError):
         result = await flow.async_step_init()
 

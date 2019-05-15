@@ -744,6 +744,28 @@ class TestServiceRegistry(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(calls)
 
+    def test_async_service_partial(self):
+        """Test registering and calling an wrapped async service."""
+        calls = []
+
+        async def service_handler(call):
+            """Service handler coroutine."""
+            calls.append(call)
+
+        self.services.register(
+            'test_domain', 'register_calls',
+            functools.partial(service_handler))
+        self.hass.block_till_done()
+
+        assert len(self.calls_register) == 1
+        assert self.calls_register[-1].data['domain'] == 'test_domain'
+        assert self.calls_register[-1].data['service'] == 'register_calls'
+
+        assert self.services.call('test_domain', 'REGISTER_CALLS',
+                                  blocking=True)
+        self.hass.block_till_done()
+        assert len(calls) == 1
+
     def test_callback_service(self):
         """Test registering and calling an async service."""
         calls = []

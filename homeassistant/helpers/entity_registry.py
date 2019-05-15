@@ -25,6 +25,7 @@ from .typing import HomeAssistantType
 
 PATH_REGISTRY = 'entity_registry.yaml'
 DATA_REGISTRY = 'entity_registry'
+EVENT_ENTITY_REGISTRY_UPDATED = 'entity_registry_updated'
 SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
 _UNDEF = object()
@@ -150,12 +151,22 @@ class EntityRegistry:
         _LOGGER.info('Registered new %s.%s entity: %s',
                      domain, platform, entity_id)
         self.async_schedule_save()
+
+        self.hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, {
+            'action': 'create',
+            'entity_id': entity_id
+        })
+
         return entity
 
     @callback
     def async_remove(self, entity_id):
         """Remove an entity from registry."""
         self.entities.pop(entity_id)
+        self.hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, {
+            'action': 'remove',
+            'entity_id': entity_id
+        })
         self.async_schedule_save()
 
     @callback
@@ -233,6 +244,11 @@ class EntityRegistry:
             new.update_listeners.remove(ref)
 
         self.async_schedule_save()
+
+        self.hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, {
+            'action': 'update',
+            'entity_id': entity_id
+        })
 
         return new
 

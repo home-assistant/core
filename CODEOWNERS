@@ -33,6 +33,7 @@ homeassistant/components/automation/* @home-assistant/core
 homeassistant/components/aws/* @awarecan @robbiet480
 homeassistant/components/axis/* @kane610
 homeassistant/components/bitcoin/* @fabaff
+homeassistant/components/bizkaibus/* @UgaitzEtxebarria
 homeassistant/components/blink/* @fronzbot
 homeassistant/components/bmw_connected_drive/* @ChristianKuehnel
 homeassistant/components/braviatv/* @robbiet480
@@ -73,6 +74,7 @@ homeassistant/components/epsonworkforce/* @ThaStealth
 homeassistant/components/eq3btsmart/* @rytilahti
 homeassistant/components/esphome/* @OttoWinter
 homeassistant/components/essent/* @TheLastProject
+homeassistant/components/evohome/* @zxdavb
 homeassistant/components/file/* @fabaff
 homeassistant/components/filter/* @dgomes
 homeassistant/components/fitbit/* @robbiet480
@@ -83,6 +85,7 @@ homeassistant/components/foursquare/* @robbiet480
 homeassistant/components/freebox/* @snoof85
 homeassistant/components/frontend/* @home-assistant/core
 homeassistant/components/gearbest/* @HerrHofrat
+homeassistant/components/geniushub/* @zxdavb
 homeassistant/components/gitter/* @fabaff
 homeassistant/components/glances/* @fabaff
 homeassistant/components/gntp/* @robbiet480
@@ -110,6 +113,7 @@ homeassistant/components/huawei_lte/* @scop
 homeassistant/components/huawei_router/* @abmantis
 homeassistant/components/hue/* @balloob
 homeassistant/components/ign_sismologia/* @exxamalte
+homeassistant/components/incomfort/* @zxdavb
 homeassistant/components/influxdb/* @fabaff
 homeassistant/components/input_boolean/* @home-assistant/core
 homeassistant/components/input_datetime/* @home-assistant/core
@@ -142,6 +146,7 @@ homeassistant/components/matrix/* @tinloaf
 homeassistant/components/mediaroom/* @dgomes
 homeassistant/components/melissa/* @kennedyshead
 homeassistant/components/met/* @danielhiversen
+homeassistant/components/meteoalarm/* @rolfberkenbosch
 homeassistant/components/miflora/* @danielhiversen @ChristianKuehnel
 homeassistant/components/mill/* @danielhiversen
 homeassistant/components/min_max/* @fabaff
@@ -200,6 +205,7 @@ homeassistant/components/shiftr/* @fabaff
 homeassistant/components/shodan/* @fabaff
 homeassistant/components/simplisafe/* @bachya
 homeassistant/components/sma/* @kellerza
+homeassistant/components/smarthab/* @outadoc
 homeassistant/components/smartthings/* @andrewsayre
 homeassistant/components/smtp/* @fabaff
 homeassistant/components/solax/* @squishykid
@@ -209,7 +215,7 @@ homeassistant/components/spider/* @peternijssen
 homeassistant/components/sql/* @dgomes
 homeassistant/components/statistics/* @fabaff
 homeassistant/components/stiebel_eltron/* @fucm
-homeassistant/components/sun/* @home-assistant/core
+homeassistant/components/sun/* @Swamp-Ig
 homeassistant/components/supla/* @mwegrzynek
 homeassistant/components/swiss_hydrological_data/* @fabaff
 homeassistant/components/swiss_public_transport/* @fabaff

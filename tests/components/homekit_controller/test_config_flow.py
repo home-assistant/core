@@ -627,12 +627,10 @@ async def test_user_works(hass):
         'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
-        'properties': {
-            'md': 'TestDevice',
-            'id': '00:00:00:00:00:00',
-            'c#': 1,
-            'sf': 1,
-        }
+        'md': 'TestDevice',
+        'id': '00:00:00:00:00:00',
+        'c#': 1,
+        'sf': 1,
     }
 
     pairing = mock.Mock(pairing_data={
@@ -666,7 +664,7 @@ async def test_user_works(hass):
     assert result['step_id'] == 'user'
 
     result = await flow.async_step_user({
-        'device': '00:00:00:00:00:00',
+        'device': 'TestDevice',
     })
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
@@ -701,12 +699,10 @@ async def test_user_no_unpaired_devices(hass):
         'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
-        'properties': {
-            'md': 'TestDevice',
-            'id': '00:00:00:00:00:00',
-            'c#': 1,
-            'sf': 0,
-        }
+        'md': 'TestDevice',
+        'id': '00:00:00:00:00:00',
+        'c#': 1,
+        'sf': 0,
     }
 
     with mock.patch('homekit.Controller') as controller_cls:
