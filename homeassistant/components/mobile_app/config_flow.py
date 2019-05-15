@@ -1,4 +1,6 @@
 """Config flow for Mobile App."""
+from typing import Dict
+
 from homeassistant import config_entries
 from .const import DOMAIN, ATTR_DEVICE_NAME
 
@@ -10,7 +12,7 @@ class MobileAppFlowHandler(config_entries.ConfigFlow):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> Dict:
         """Handle a flow initialized by the user."""
         placeholders = {
             'apps_url':
@@ -20,7 +22,7 @@ class MobileAppFlowHandler(config_entries.ConfigFlow):
         return self.async_abort(reason='install_app',
                                 description_placeholders=placeholders)
 
-    async def async_step_registration(self, user_input=None):
+    async def async_step_registration(self, user_input=None) -> Dict:
         """Handle a flow initialized during registration."""
         return self.async_create_entry(title=user_input[ATTR_DEVICE_NAME],
                                        data=user_input)

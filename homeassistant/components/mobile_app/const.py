@@ -26,6 +26,7 @@ DATA_CONFIG_ENTRIES = 'config_entries'
 DATA_DELETED_IDS = 'deleted_ids'
 DATA_DEVICES = 'devices'
 DATA_SENSOR = 'sensor'
+DATA_SIGNAL_HANDLES = 'signal_handles'
 DATA_STORE = 'store'
 
 ATTR_APP_DATA = 'app_data'

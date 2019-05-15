@@ -9,7 +9,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import (ATTR_SENSOR_STATE,
                     ATTR_SENSOR_TYPE_BINARY_SENSOR as ENTITY_TYPE,
                     ATTR_SENSOR_UNIQUE_ID,
-                    DATA_DEVICES, DOMAIN)
+                    DATA_DEVICES, DATA_SIGNAL_HANDLES, DOMAIN)
 
 from .entity import MobileAppEntity, sensor_id
 
@@ -49,9 +49,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         async_add_entities([MobileAppBinarySensor(data, device, config_entry)])
 
-    async_dispatcher_connect(hass,
-                             '{}_{}_register'.format(DOMAIN, ENTITY_TYPE),
-                             partial(handle_sensor_registration, webhook_id))
+    handles = hass.data[DOMAIN][DATA_SIGNAL_HANDLES][ENTITY_TYPE]
+    handles[webhook_id] = \
+        async_dispatcher_connect(hass,
+                                 '{}_{}_register'.format(DOMAIN, ENTITY_TYPE),
+                                 partial(handle_sensor_registration,
+                                         webhook_id))
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    handles = hass.data[DOMAIN][DATA_SIGNAL_HANDLES][ENTITY_TYPE]
+    webhook_id = entry.data[CONF_WEBHOOK_ID]
+    handles[webhook_id]()
 
 
 class MobileAppBinarySensor(MobileAppEntity, BinarySensorDevice):

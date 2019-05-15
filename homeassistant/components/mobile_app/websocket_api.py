@@ -1,7 +1,6 @@
 """Websocket API for mobile_app."""
 import voluptuous as vol
 
-from homeassistant.components.cloud import async_delete_cloudhook
 from homeassistant.components.websocket_api import (ActiveConnection,
                                                     async_register_command,
                                                     async_response,
@@ -10,17 +9,15 @@ from homeassistant.components.websocket_api import (ActiveConnection,
                                                     websocket_command,
                                                     ws_require_user)
 from homeassistant.components.websocket_api.const import (ERR_INVALID_FORMAT,
-                                                          ERR_NOT_FOUND,
                                                           ERR_UNAUTHORIZED)
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import (CONF_CLOUDHOOK_URL, CONF_USER_ID, DATA_CONFIG_ENTRIES,
-                    DATA_DELETED_IDS, DATA_STORE, DOMAIN)
+from .const import (CONF_USER_ID, DATA_CONFIG_ENTRIES, DOMAIN)
 
-from .helpers import safe_registration, savable_state
+from .helpers import delete_webhook, safe_registration
 
 
 def register_websocket_handlers(hass: HomeAssistantType) -> bool:
@@ -81,31 +78,14 @@ async def websocket_delete_registration(hass: HomeAssistantType,
 
     config_entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
 
-    registration = config_entry.data
-
-    if registration is None:
-        connection.send_error(msg['id'], ERR_NOT_FOUND,
-                              "Webhook ID not found in storage")
-        return
-
-    if registration[CONF_USER_ID] != user.id and not user.is_admin:
+    if config_entry.data[CONF_USER_ID] != user.id and not user.is_admin:
         return error_message(
             msg['id'], ERR_UNAUTHORIZED, 'User is not registration owner')
 
-    await hass.config_entries.async_remove(config_entry.entry_id)
-
-    hass.data[DOMAIN][DATA_DELETED_IDS].append(webhook_id)
-
-    store = hass.data[DOMAIN][DATA_STORE]
-
     try:
-        await store.async_save(savable_state(hass))
+        await delete_webhook(hass, config_entry)
     except HomeAssistantError:
         return error_message(
             msg['id'], 'internal_error', 'Error deleting registration')
-
-    if (CONF_CLOUDHOOK_URL in registration and
-            "cloud" in hass.config.components):
-        await async_delete_cloudhook(hass, webhook_id)
 
     connection.send_message(result_message(msg['id'], 'ok'))

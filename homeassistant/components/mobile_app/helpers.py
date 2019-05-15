@@ -5,6 +5,9 @@ from typing import Callable, Dict, Tuple
 
 from aiohttp.web import json_response, Response
 
+from homeassistant.components.cloud import async_delete_cloudhook
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import Context
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import HomeAssistantType
@@ -12,8 +15,9 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import (ATTR_APP_DATA, ATTR_APP_ID, ATTR_APP_NAME,
                     ATTR_APP_VERSION, ATTR_DEVICE_NAME, ATTR_MANUFACTURER,
                     ATTR_MODEL, ATTR_OS_VERSION, ATTR_SUPPORTS_ENCRYPTION,
-                    CONF_SECRET, CONF_USER_ID, DATA_BINARY_SENSOR,
-                    DATA_DELETED_IDS, DATA_SENSOR, DOMAIN)
+                    CONF_CLOUDHOOK_URL, CONF_SECRET, CONF_USER_ID,
+                    DATA_BINARY_SENSOR, DATA_DELETED_IDS, DATA_SENSOR,
+                    DATA_STORE, DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -148,3 +152,18 @@ def webhook_response(data, *, registration: Dict, status: int = 200,
 
     return Response(text=data, status=status, content_type='application/json',
                     headers=headers)
+
+
+async def delete_webhook(hass: HomeAssistantType, entry: ConfigEntry):
+    """Delete a webhook and registration."""
+    webhook_id = entry.data[CONF_WEBHOOK_ID]
+
+    hass.data[DOMAIN][DATA_DELETED_IDS].append(webhook_id)
+
+    store = hass.data[DOMAIN][DATA_STORE]
+
+    await store.async_save(savable_state(hass))
+
+    if (CONF_CLOUDHOOK_URL in entry.data and
+            "cloud" in hass.config.components):
+        await async_delete_cloudhook(hass, webhook_id)

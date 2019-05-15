@@ -1,15 +1,19 @@
 """Integrates Native Apps to Home Assistant."""
+from asyncio import gather
+
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.components.webhook import async_register as webhook_register
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers import device_registry as dr, discovery
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (ATTR_DEVICE_ID, ATTR_DEVICE_NAME,
                     ATTR_MANUFACTURER, ATTR_MODEL, ATTR_OS_VERSION,
                     DATA_BINARY_SENSOR, DATA_CONFIG_ENTRIES, DATA_DELETED_IDS,
-                    DATA_DEVICES, DATA_SENSOR, DATA_STORE, DOMAIN, STORAGE_KEY,
-                    STORAGE_VERSION)
+                    DATA_DEVICES, DATA_SIGNAL_HANDLES, DATA_SENSOR, DATA_STORE,
+                    DOMAIN, STORAGE_KEY, STORAGE_VERSION)
 
+from .helpers import delete_webhook
 from .http_api import RegistrationsView
 from .webhook import handle_webhook
 from .websocket_api import register_websocket_handlers
@@ -25,7 +29,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
             DATA_CONFIG_ENTRIES: {},
             DATA_DELETED_IDS: [],
             DATA_DEVICES: {},
-            DATA_SENSOR: {}
+            DATA_SENSOR: {},
+            DATA_SIGNAL_HANDLES: {DATA_BINARY_SENSOR: {}, DATA_SENSOR: {}},
         }
 
     hass.data[DOMAIN] = {
@@ -34,6 +39,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         DATA_DELETED_IDS: app_config.get(DATA_DELETED_IDS, []),
         DATA_DEVICES: {},
         DATA_SENSOR: app_config.get(DATA_SENSOR, {}),
+        DATA_SIGNAL_HANDLES: {DATA_BINARY_SENSOR: {}, DATA_SENSOR: {}},
         DATA_STORE: store,
     }
 
@@ -53,7 +59,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistantType,
+                            entry: ConfigEntry) -> bool:
     """Set up a mobile_app entry."""
     registration = entry.data
 
@@ -90,3 +97,16 @@ async def async_setup_entry(hass, entry):
         hass.config_entries.async_forward_entry_setup(entry, DATA_SENSOR))
 
     return True
+
+
+async def async_remove_entry(hass: HomeAssistantType,
+                             entry: ConfigEntry) -> None:
+    """Perform clean-up when entry is being removed."""
+    return await delete_webhook(hass, entry)
+
+
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+    """Unload a config entry."""
+    tasks = [hass.config_entries.async_forward_entry_unload(entry, component)
+             for component in [DATA_BINARY_SENSOR, DATA_SENSOR]]
+    return all(await gather(*tasks))
