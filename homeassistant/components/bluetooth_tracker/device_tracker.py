@@ -5,10 +5,12 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.components.device_tracker import (
-    YAML_DEVICES, CONF_TRACK_NEW, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL,
-    load_config, PLATFORM_SCHEMA, DEFAULT_TRACK_NEW, SOURCE_TYPE_BLUETOOTH,
-    DOMAIN)
+from homeassistant.components.device_tracker.legacy import (
+    YAML_DEVICES, async_load_config
+)
+from homeassistant.components.device_tracker.const import (
+    CONF_TRACK_NEW, CONF_SCAN_INTERVAL, SCAN_INTERVAL, SOURCE_TYPE_BLUETOOTH_LE
+)
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,7 +62,10 @@ def setup_scanner(hass, config, see, discovery_info=None):
     # Load all known devices.
     # We just need the devices so set consider_home and home range
     # to 0
-    for device in load_config(yaml_path, hass, 0):
+    for device in run_coroutine_threadsafe(
+            async_load_config(yaml_path, hass, 0),
+            hass.loop
+    ).result():
         # Check if device is a valid bluetooth device
         if device.mac and device.mac[:3].upper() == BT_PREFIX:
             if device.track:
