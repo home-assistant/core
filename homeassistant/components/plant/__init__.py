@@ -52,6 +52,7 @@ CONF_SENSOR_MOISTURE = READING_MOISTURE
 CONF_SENSOR_CONDUCTIVITY = READING_CONDUCTIVITY
 CONF_SENSOR_TEMPERATURE = READING_TEMPERATURE
 CONF_SENSOR_BRIGHTNESS = READING_BRIGHTNESS
+CONF_DEVICE = 'device'
 
 DEFAULT_MIN_BATTERY_LEVEL = 20
 DEFAULT_MIN_MOISTURE = 20
@@ -69,7 +70,8 @@ SCHEMA_SENSORS = vol.Schema({
 })
 
 PLANT_SCHEMA = vol.Schema({
-    vol.Required(CONF_SENSORS): vol.Schema(SCHEMA_SENSORS),
+    vol.Optional(CONF_SENSORS): vol.Schema(SCHEMA_SENSORS),
+    vol.Optional(CONF_DEVICE): cv.string,
     vol.Optional(CONF_MIN_BATTERY_LEVEL,
                  default=DEFAULT_MIN_BATTERY_LEVEL): cv.positive_int,
     vol.Optional(CONF_MIN_TEMPERATURE): vol.Coerce(float),
@@ -112,8 +114,11 @@ async def async_setup(hass, config):
     entities = []
     for plant_name, plant_config in config[DOMAIN].items():
         _LOGGER.info("Added plant %s", plant_name)
-        entity = Plant(plant_name, plant_config)
-        entities.append(entity)
+        try:
+            entity = Plant(plant_name, plant_config)
+            entities.append(entity)
+        except vol.Invalid as error:
+            _LOGGER.warning("Skipping plant %s: %s", plant_name, error)
 
     await component.async_add_entities(entities)
     return True
@@ -159,9 +164,18 @@ class Plant(Entity):
         self._sensormap = dict()
         self._readingmap = dict()
         self._unit_of_measurement = dict()
-        for reading, entity_id in config['sensors'].items():
-            self._sensormap[entity_id] = reading
-            self._readingmap[reading] = entity_id
+        if CONF_DEVICE in config:
+            device = config[CONF_DEVICE]
+            for reading in self.READINGS:
+                entity_id = 'sensor.' + device + '_' + reading
+                self._sensormap[entity_id] = reading
+                self._readingmap[reading] = entity_id
+        elif CONF_SENSORS in config:
+            for reading, entity_id in config[CONF_SENSORS].items():
+                self._sensormap[entity_id] = reading
+                self._readingmap[reading] = entity_id
+        else:
+            raise vol.Invalid("sensors or device must be defined")
         self._state = None
         self._name = name
         self._battery = None
