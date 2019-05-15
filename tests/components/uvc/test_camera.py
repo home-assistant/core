@@ -240,11 +240,11 @@ class TestUVC(unittest.TestCase):
 
     async def test_async_added_to_hass(self):
         """Test async added to hass."""
-        result = await async_setup_component(hass, 'camera', {
+        result = await async_setup_component(self, 'camera', {
             'camera': {
                 'platform': 'uvc'
             }})
-        await hass.async_block_till_done()
+        await self.async_block_till_done()
         assert result
 
     def test_properties(self):
