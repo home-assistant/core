@@ -236,7 +236,6 @@ class TestUVC(unittest.TestCase):
             'internalHost': 'host-b',
             'username': 'admin',
         }
-        #self.uvc._caminfo = self.nvr.get_camera.return_value
         self.nvr.server_version = (3, 2, 0)
 
     async def test_async_added_to_hass(self):
@@ -246,7 +245,6 @@ class TestUVC(unittest.TestCase):
                 'platform': 'uvc'
             }})
         await hass.async_block_till_done()
-
         assert result
 
     def test_properties(self):
