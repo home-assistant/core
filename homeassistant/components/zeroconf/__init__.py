@@ -23,8 +23,6 @@ async def async_setup(hass, config):
     """Set up Zeroconf and make Home Assistant discoverable."""
     from aiozeroconf import Zeroconf, ServiceInfo
 
-    zeroconf = Zeroconf(hass.loop)
-
     zeroconf_name = '{}.{}'.format(hass.config.location_name, ZEROCONF_TYPE)
 
     params = {
@@ -34,18 +32,10 @@ async def async_setup(hass, config):
         'requires_api_password': True,
     }
 
-    host_ip = util.get_local_ip()
+    info = ServiceInfo(ZEROCONF_TYPE, zeroconf_name,
+                       port=hass.http.server_port, properties=params)
 
-    try:
-        host_ip_pton = socket.inet_pton(socket.AF_INET, host_ip)
-        info = ServiceInfo(ZEROCONF_TYPE, zeroconf_name, address=host_ip_pton,
-                           port=hass.http.server_port, weight=0, priority=0,
-                           properties=params)
-    except socket.error:
-        host_ip_pton = socket.inet_pton(socket.AF_INET6, host_ip)
-        info = ServiceInfo(ZEROCONF_TYPE, zeroconf_name, address6=host_ip_pton,
-                           port=hass.http.server_port, weight=0, priority=0,
-                           properties=params)
+    zeroconf = Zeroconf(hass.loop)
 
     await zeroconf.register_service(info)
 
