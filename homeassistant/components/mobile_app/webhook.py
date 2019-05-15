@@ -38,7 +38,8 @@ from .const import (ATTR_ALTITUDE, ATTR_BATTERY, ATTR_COURSE, ATTR_DEVICE_ID,
                     ERR_ENCRYPTION_REQUIRED, ERR_SENSOR_DUPLICATE_UNIQUE_ID,
                     ERR_SENSOR_NOT_REGISTERED, SIGNAL_SENSOR_UPDATE,
                     WEBHOOK_PAYLOAD_SCHEMA, WEBHOOK_SCHEMAS, WEBHOOK_TYPES,
-                    WEBHOOK_TYPE_CALL_SERVICE, WEBHOOK_TYPE_FIRE_EVENT,
+                    WEBHOOK_TYPE_CALL_SERVICE,
+                    WEBHOOK_TYPE_DELETE_REGISTRATION, WEBHOOK_TYPE_FIRE_EVENT,
                     WEBHOOK_TYPE_GET_CONFIG, WEBHOOK_TYPE_GET_ZONES,
                     WEBHOOK_TYPE_REGISTER_SENSOR, WEBHOOK_TYPE_RENDER_TEMPLATE,
                     WEBHOOK_TYPE_UPDATE_LOCATION,
@@ -46,9 +47,9 @@ from .const import (ATTR_ALTITUDE, ATTR_BATTERY, ATTR_COURSE, ATTR_DEVICE_ID,
                     WEBHOOK_TYPE_UPDATE_SENSOR_STATES)
 
 
-from .helpers import (_decrypt_payload, empty_okay_response, error_response,
-                      registration_context, safe_registration, savable_state,
-                      webhook_response)
+from .helpers import (_decrypt_payload, delete_webhook, empty_okay_response,
+                      error_response, registration_context, safe_registration,
+                      savable_state, webhook_response)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -314,3 +315,8 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
 
         return webhook_response(resp, registration=registration,
                                 headers=headers)
+
+    if webhook_type == WEBHOOK_TYPE_DELETE_REGISTRATION:
+        await delete_webhook(hass, config_entry)
+
+        return Response(status=200)

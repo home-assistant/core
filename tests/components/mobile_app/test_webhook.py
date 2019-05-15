@@ -235,3 +235,14 @@ async def test_webhook_requires_encryption(webhook_client,  # noqa: F811
     assert 'error' in webhook_json
     assert webhook_json['success'] is False
     assert webhook_json['error']['code'] == 'encryption_required'
+
+
+async def test_webhook_handle_delete_registration(create_registrations,  # noqa: E501, F811
+                                                  webhook_client):  # noqa: F401, F811, E501
+    """Test that we can get config properly."""
+    resp = await webhook_client.post(
+        '/api/webhook/{}'.format(create_registrations[1]['webhook_id']),
+        json={'type': 'delete_registration'}
+    )
+
+    assert resp.status == 200
