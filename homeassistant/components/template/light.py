@@ -25,9 +25,10 @@ CONF_ON_ACTION = 'turn_on'
 CONF_OFF_ACTION = 'turn_off'
 CONF_LEVEL_ACTION = 'set_level'
 CONF_LEVEL_TEMPLATE = 'level_template'
+CONF_LEVEL_BRIGHTNESS_MIN = 'brightness_min'
 CONF_LEVEL_BRIGHTNESS_MAX = 'brightness_max'
-CONF_BRIGHTNESS_USE_ZERO = 'brightness_use_zero'
 
+DEFAULT_BRIGHTNESS_MIN = 0
 DEFAULT_BRIGHTNESS_MAX = 255
 
 LIGHT_SCHEMA = vol.Schema({
@@ -40,10 +41,10 @@ LIGHT_SCHEMA = vol.Schema({
     vol.Optional(CONF_LEVEL_TEMPLATE): cv.template,
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
     vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
+    vol.Optional(CONF_LEVEL_BRIGHTNESS_MIN, default=DEFAULT_BRIGHTNESS_MIN):
+        vol.All(vol.Coerce(int), vol.Range(min=-1001)),
     vol.Optional(CONF_LEVEL_BRIGHTNESS_MAX, default=DEFAULT_BRIGHTNESS_MAX):
-        cv.positive_int,
-    vol.Optional(CONF_BRIGHTNESS_USE_ZERO, default=False):
-        cv.boolean,
+        vol.All(vol.Coerce(int), vol.Range(min=-1000)),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -66,8 +67,8 @@ async def async_setup_platform(hass, config, async_add_entities,
         off_action = device_config[CONF_OFF_ACTION]
         level_action = device_config.get(CONF_LEVEL_ACTION)
         level_template = device_config.get(CONF_LEVEL_TEMPLATE)
+        brightness_min = device_config.get(CONF_LEVEL_BRIGHTNESS_MIN)
         brightness_max = device_config.get(CONF_LEVEL_BRIGHTNESS_MAX)
-        brightness_use_zero = device_config.get(CONF_BRIGHTNESS_USE_ZERO)
 
         template_entity_ids = set()
 
@@ -101,7 +102,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                 hass, device, friendly_name, state_template,
                 icon_template, entity_picture_template, on_action,
                 off_action, level_action, level_template, entity_ids,
-                brightness_max, brightness_use_zero)
+                brightness_min, brightness_max)
         )
 
     if not lights:
@@ -118,7 +119,7 @@ class LightTemplate(Light):
     def __init__(self, hass, device_id, friendly_name, state_template,
                  icon_template, entity_picture_template, on_action,
                  off_action, level_action, level_template, entity_ids,
-                 brightness_max, brightness_use_zero):
+                 brightness_min, brightness_max):
         """Initialize the light."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(
@@ -149,20 +150,21 @@ class LightTemplate(Light):
         if self._entity_picture_template is not None:
             self._entity_picture_template.hass = self.hass
 
-        self._brightness_max = brightness_max +\
-            (brightness_max // DEFAULT_BRIGHTNESS_MAX)
-        self._brightness_min = 0
-        if brightness_use_zero:
-            self._brightness_min -= 1
+        # Get interval
+        brightness_interval = abs(brightness_max - brightness_min)
+        # Correct the interval
+        brightness_interval_corr_min = \
+            brightness_interval // DEFAULT_BRIGHTNESS_MAX
+        brightness_interval_corr_max = \
+            (brightness_interval % DEFAULT_BRIGHTNESS_MAX) // \
+            DEFAULT_BRIGHTNESS_MAX
+
+        # Set corrected brightness
+        self._brightness_min = brightness_min - brightness_interval_corr_min
+        self._brightness_max = brightness_max + brightness_interval_corr_max
 
         self._brightness_div = DEFAULT_BRIGHTNESS_MAX / \
             (self._brightness_max - self._brightness_min)
-
-        self._brightness_min -= \
-            self._brightness_max // DEFAULT_BRIGHTNESS_MAX
-
-        _LOGGER.info("Brightness max: " + str(self._brightness_max))
-        _LOGGER.info("Brightness div: " + str(self._brightness_div))
 
     @property
     def brightness(self):
@@ -287,10 +289,8 @@ class LightTemplate(Light):
                         self._brightness_div)
             else:
                 _LOGGER.error(
-                    'Received invalid brightness : %s. Expected: %s-%s',
-                    brightness,
-                    str(self._brightness_min),
-                    str(self._brightness_max))
+                    'Received invalid brightness : %s. Expected: 0-255',
+                    brightness)
                 self._brightness = None
 
         for property_name, template in (
