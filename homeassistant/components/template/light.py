@@ -45,8 +45,6 @@ LIGHT_SCHEMA = vol.Schema({
         vol.All(vol.Coerce(int), vol.Range(min=-1001)),
     vol.Optional(CONF_LEVEL_BRIGHTNESS_MAX, default=DEFAULT_BRIGHTNESS_MAX):
         vol.All(vol.Coerce(int), vol.Range(min=-1000))
-    # vol.Optional(CONF_OFFSET_ZERO, default=0):
-    #     vol.All(vol.Coerce(int), vol.Range(min=-1000, max=1000)),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
