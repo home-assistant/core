@@ -5,6 +5,12 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.fan import DOMAIN as FAN
+from homeassistant.components.light import DOMAIN as LIGHT
+from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.components.switch import DOMAIN as SWITCH
+
 from .const import (
     HUMIDITY,
     TEMPERATURE, ILLUMINANCE, PRESSURE, METERING, ELECTRICAL_MEASUREMENT,
@@ -25,10 +31,17 @@ RADIO_TYPES = {}
 BINARY_SENSOR_TYPES = {}
 CLUSTER_REPORT_CONFIGS = {}
 CUSTOM_CLUSTER_MAPPINGS = {}
-COMPONENT_CLUSTERS = {}
 EVENT_RELAY_CLUSTERS = []
 NO_SENSOR_CLUSTERS = []
 BINDABLE_CLUSTERS = []
+BINARY_SENSOR_CLUSTERS = set()
+LIGHT_CLUSTERS = set()
+SWITCH_CLUSTERS = set()
+COMPONENT_CLUSTERS = {
+    BINARY_SENSOR: BINARY_SENSOR_CLUSTERS,
+    LIGHT: LIGHT_CLUSTERS,
+    SWITCH: SWITCH_CLUSTERS
+}
 
 
 def establish_device_mappings():
@@ -38,7 +51,7 @@ def establish_device_mappings():
     in a function.
     """
     from zigpy import zcl
-    from zigpy.profiles import PROFILES, zha, zll
+    from zigpy.profiles import zha, zll
 
     if zha.PROFILE_ID not in DEVICE_CLASS:
         DEVICE_CLASS[zha.PROFILE_ID] = {}
@@ -97,53 +110,55 @@ def establish_device_mappings():
     BINDABLE_CLUSTERS.append(zcl.clusters.lighting.Color.cluster_id)
 
     DEVICE_CLASS[zha.PROFILE_ID].update({
-        zha.DeviceType.ON_OFF_SWITCH: 'binary_sensor',
-        zha.DeviceType.LEVEL_CONTROL_SWITCH: 'binary_sensor',
-        zha.DeviceType.REMOTE_CONTROL: 'binary_sensor',
-        zha.DeviceType.SMART_PLUG: 'switch',
-        zha.DeviceType.LEVEL_CONTROLLABLE_OUTPUT: 'light',
-        zha.DeviceType.ON_OFF_LIGHT: 'light',
-        zha.DeviceType.DIMMABLE_LIGHT: 'light',
-        zha.DeviceType.COLOR_DIMMABLE_LIGHT: 'light',
-        zha.DeviceType.ON_OFF_LIGHT_SWITCH: 'binary_sensor',
-        zha.DeviceType.DIMMER_SWITCH: 'binary_sensor',
-        zha.DeviceType.COLOR_DIMMER_SWITCH: 'binary_sensor',
+        zha.DeviceType.ON_OFF_SWITCH: BINARY_SENSOR,
+        zha.DeviceType.LEVEL_CONTROL_SWITCH: BINARY_SENSOR,
+        zha.DeviceType.REMOTE_CONTROL: BINARY_SENSOR,
+        zha.DeviceType.SMART_PLUG: SWITCH,
+        zha.DeviceType.LEVEL_CONTROLLABLE_OUTPUT: LIGHT,
+        zha.DeviceType.ON_OFF_LIGHT: LIGHT,
+        zha.DeviceType.DIMMABLE_LIGHT: LIGHT,
+        zha.DeviceType.COLOR_DIMMABLE_LIGHT: LIGHT,
+        zha.DeviceType.ON_OFF_LIGHT_SWITCH: BINARY_SENSOR,
+        zha.DeviceType.DIMMER_SWITCH: BINARY_SENSOR,
+        zha.DeviceType.COLOR_DIMMER_SWITCH: BINARY_SENSOR,
     })
 
     DEVICE_CLASS[zll.PROFILE_ID].update({
-        zll.DeviceType.ON_OFF_LIGHT: 'light',
-        zll.DeviceType.ON_OFF_PLUGIN_UNIT: 'switch',
-        zll.DeviceType.DIMMABLE_LIGHT: 'light',
-        zll.DeviceType.DIMMABLE_PLUGIN_UNIT: 'light',
-        zll.DeviceType.COLOR_LIGHT: 'light',
-        zll.DeviceType.EXTENDED_COLOR_LIGHT: 'light',
-        zll.DeviceType.COLOR_TEMPERATURE_LIGHT: 'light',
-        zll.DeviceType.COLOR_CONTROLLER: 'binary_sensor',
-        zll.DeviceType.COLOR_SCENE_CONTROLLER: 'binary_sensor',
-        zll.DeviceType.CONTROLLER: 'binary_sensor',
-        zll.DeviceType.SCENE_CONTROLLER: 'binary_sensor',
-        zll.DeviceType.ON_OFF_SENSOR: 'binary_sensor',
+        zll.DeviceType.ON_OFF_LIGHT: LIGHT,
+        zll.DeviceType.ON_OFF_PLUGIN_UNIT: SWITCH,
+        zll.DeviceType.DIMMABLE_LIGHT: LIGHT,
+        zll.DeviceType.DIMMABLE_PLUGIN_UNIT: LIGHT,
+        zll.DeviceType.COLOR_LIGHT: LIGHT,
+        zll.DeviceType.EXTENDED_COLOR_LIGHT: LIGHT,
+        zll.DeviceType.COLOR_TEMPERATURE_LIGHT: LIGHT,
+        zll.DeviceType.COLOR_CONTROLLER: BINARY_SENSOR,
+        zll.DeviceType.COLOR_SCENE_CONTROLLER: BINARY_SENSOR,
+        zll.DeviceType.CONTROLLER: BINARY_SENSOR,
+        zll.DeviceType.SCENE_CONTROLLER: BINARY_SENSOR,
+        zll.DeviceType.ON_OFF_SENSOR: BINARY_SENSOR,
     })
 
     SINGLE_INPUT_CLUSTER_DEVICE_CLASS.update({
-        zcl.clusters.general.OnOff: 'switch',
-        zcl.clusters.measurement.RelativeHumidity: 'sensor',
+        zcl.clusters.general.OnOff: SWITCH,
+        zcl.clusters.measurement.RelativeHumidity: SENSOR,
         # this works for now but if we hit conflicts we can break it out to
         # a different dict that is keyed by manufacturer
-        SMARTTHINGS_HUMIDITY_CLUSTER: 'sensor',
-        zcl.clusters.measurement.TemperatureMeasurement: 'sensor',
-        zcl.clusters.measurement.PressureMeasurement: 'sensor',
-        zcl.clusters.measurement.IlluminanceMeasurement: 'sensor',
-        zcl.clusters.smartenergy.Metering: 'sensor',
-        zcl.clusters.homeautomation.ElectricalMeasurement: 'sensor',
-        zcl.clusters.security.IasZone: 'binary_sensor',
-        zcl.clusters.measurement.OccupancySensing: 'binary_sensor',
-        zcl.clusters.hvac.Fan: 'fan',
-        SMARTTHINGS_ACCELERATION_CLUSTER: 'binary_sensor',
+        SMARTTHINGS_HUMIDITY_CLUSTER: SENSOR,
+        zcl.clusters.measurement.TemperatureMeasurement: SENSOR,
+        zcl.clusters.measurement.PressureMeasurement: SENSOR,
+        zcl.clusters.measurement.IlluminanceMeasurement: SENSOR,
+        zcl.clusters.smartenergy.Metering: SENSOR,
+        zcl.clusters.homeautomation.ElectricalMeasurement: SENSOR,
+        zcl.clusters.security.IasZone: BINARY_SENSOR,
+        zcl.clusters.measurement.OccupancySensing: BINARY_SENSOR,
+        zcl.clusters.hvac.Fan: FAN,
+        SMARTTHINGS_ACCELERATION_CLUSTER: BINARY_SENSOR,
+        zcl.clusters.general.MultistateInput.cluster_id: SENSOR,
+        zcl.clusters.general.AnalogInput.cluster_id: SENSOR
     })
 
     SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS.update({
-        zcl.clusters.general.OnOff: 'binary_sensor',
+        zcl.clusters.general.OnOff: BINARY_SENSOR,
     })
 
     SENSOR_TYPES.update({
@@ -269,12 +284,15 @@ def establish_device_mappings():
         }],
     })
 
-    # A map of hass components to all Zigbee clusters it could use
-    for profile_id, classes in DEVICE_CLASS.items():
-        profile = PROFILES[profile_id]
-        for device_type, component in classes.items():
-            if component not in COMPONENT_CLUSTERS:
-                COMPONENT_CLUSTERS[component] = (set(), set())
-            clusters = profile.CLUSTERS[device_type]
-            COMPONENT_CLUSTERS[component][0].update(clusters[0])
-            COMPONENT_CLUSTERS[component][1].update(clusters[1])
+    BINARY_SENSOR_CLUSTERS.add(zcl.clusters.general.OnOff.cluster_id)
+    BINARY_SENSOR_CLUSTERS.add(zcl.clusters.general.LevelControl.cluster_id)
+    BINARY_SENSOR_CLUSTERS.add(zcl.clusters.security.IasZone.cluster_id)
+    BINARY_SENSOR_CLUSTERS.add(
+        zcl.clusters.measurement.OccupancySensing.cluster_id)
+    BINARY_SENSOR_CLUSTERS.add(SMARTTHINGS_ACCELERATION_CLUSTER)
+
+    LIGHT_CLUSTERS.add(zcl.clusters.general.OnOff.cluster_id)
+    LIGHT_CLUSTERS.add(zcl.clusters.general.LevelControl.cluster_id)
+    LIGHT_CLUSTERS.add(zcl.clusters.lighting.Color.cluster_id)
+
+    SWITCH_CLUSTERS.add(zcl.clusters.general.OnOff.cluster_id)

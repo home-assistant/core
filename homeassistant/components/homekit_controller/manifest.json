@@ -3,8 +3,10 @@
   "name": "Homekit controller",
   "documentation": "https://www.home-assistant.io/components/homekit_controller",
   "requirements": [
-    "homekit[IP]==0.13.0"
+    "homekit[IP]==0.14.0"
   ],
   "dependencies": ["configurator"],
-  "codeowners": []
+  "codeowners": [
+    "@Jc2k"
+  ]
 }

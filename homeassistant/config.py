@@ -205,7 +205,8 @@ def get_default_config_dir() -> str:
     return os.path.join(data_dir, CONFIG_DIR_NAME)  # type: ignore
 
 
-def ensure_config_exists(config_dir: str, detect_location: bool = True)\
+async def async_ensure_config_exists(hass: HomeAssistant, config_dir: str,
+                                     detect_location: bool = True)\
         -> Optional[str]:
     """Ensure a configuration file exists in given configuration directory.
 
@@ -217,18 +218,51 @@ def ensure_config_exists(config_dir: str, detect_location: bool = True)\
     if config_path is None:
         print("Unable to find configuration. Creating default one in",
               config_dir)
-        config_path = create_default_config(config_dir, detect_location)
+        config_path = await async_create_default_config(
+            hass, config_dir, detect_location)
 
     return config_path
 
 
-def create_default_config(config_dir: str, detect_location: bool = True)\
-        -> Optional[str]:
+async def async_create_default_config(
+        hass: HomeAssistant, config_dir: str, detect_location: bool = True
+        ) -> Optional[str]:
     """Create a default configuration file in given configuration directory.
 
     Return path to new config file if success, None if failed.
     This method needs to run in an executor.
     """
+    info = {attr: default for attr, default, _, _ in DEFAULT_CORE_CONFIG}
+
+    if detect_location:
+        session = hass.helpers.aiohttp_client.async_get_clientsession()
+        location_info = await loc_util.async_detect_location_info(session)
+    else:
+        location_info = None
+
+    if location_info:
+        if location_info.use_metric:
+            info[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_METRIC
+        else:
+            info[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_IMPERIAL
+
+        for attr, default, prop, _ in DEFAULT_CORE_CONFIG:
+            if prop is None:
+                continue
+            info[attr] = getattr(location_info, prop) or default
+
+        if location_info.latitude and location_info.longitude:
+            info[CONF_ELEVATION] = await loc_util.async_get_elevation(
+                session, location_info.latitude, location_info.longitude)
+
+    return await hass.async_add_executor_job(
+        _write_default_config, config_dir, info
+    )
+
+
+def _write_default_config(config_dir: str, info: Dict)\
+        -> Optional[str]:
+    """Write the default config."""
     from homeassistant.components.config.group import (
         CONFIG_PATH as GROUP_CONFIG_PATH)
     from homeassistant.components.config.automation import (
@@ -245,25 +279,6 @@ def create_default_config(config_dir: str, detect_location: bool = True)\
     automation_yaml_path = os.path.join(config_dir, AUTOMATION_CONFIG_PATH)
     script_yaml_path = os.path.join(config_dir, SCRIPT_CONFIG_PATH)
     customize_yaml_path = os.path.join(config_dir, CUSTOMIZE_CONFIG_PATH)
-
-    info = {attr: default for attr, default, _, _ in DEFAULT_CORE_CONFIG}
-
-    location_info = detect_location and loc_util.detect_location_info()
-
-    if location_info:
-        if location_info.use_metric:
-            info[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_METRIC
-        else:
-            info[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_IMPERIAL
-
-        for attr, default, prop, _ in DEFAULT_CORE_CONFIG:
-            if prop is None:
-                continue
-            info[attr] = getattr(location_info, prop) or default
-
-        if location_info.latitude and location_info.longitude:
-            info[CONF_ELEVATION] = loc_util.elevation(
-                location_info.latitude, location_info.longitude)
 
     # Writing files with YAML does not create the most human readable results
     # So we're hard coding a YAML template.
@@ -576,8 +591,9 @@ async def async_process_ha_core_config(
     # If we miss some of the needed values, auto detect them
     if None in (hac.latitude, hac.longitude, hac.units,
                 hac.time_zone):
-        info = await hass.async_add_executor_job(
-            loc_util.detect_location_info)
+        info = await loc_util.async_detect_location_info(
+            hass.helpers.aiohttp_client.async_get_clientsession()
+        )
 
         if info is None:
             _LOGGER.error("Could not detect location information")
@@ -602,8 +618,9 @@ async def async_process_ha_core_config(
 
     if hac.elevation is None and hac.latitude is not None and \
        hac.longitude is not None:
-        elevation = await hass.async_add_executor_job(
-            loc_util.elevation, hac.latitude, hac.longitude)
+        elevation = await loc_util.async_get_elevation(
+            hass.helpers.aiohttp_client.async_get_clientsession(),
+            hac.latitude, hac.longitude)
         hac.elevation = elevation
         discovered.append(('elevation', elevation))
 

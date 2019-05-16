@@ -120,15 +120,20 @@ class Sun(Entity):
         """Run when the state of the sun has changed."""
         self.update_sun_position(now)
         self.update_as_of(now)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
+        _LOGGER.debug("sun point_in_time_listener@%s: %s, %s",
+                      now, self.state, self.state_attributes)
 
         # Schedule next update at next_change+1 second so sun state has changed
         async_track_point_in_utc_time(
             self.hass, self.point_in_time_listener,
             self.next_change + timedelta(seconds=1))
+        _LOGGER.debug("next time: %s", self.next_change + timedelta(seconds=1))
 
     @callback
     def timer_update(self, time):
         """Needed to update solar elevation and azimuth."""
         self.update_sun_position(time)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
+        _LOGGER.debug("sun timer_update@%s: %s, %s",
+                      time, self.state, self.state_attributes)

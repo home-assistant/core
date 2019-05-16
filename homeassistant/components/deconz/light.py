@@ -165,6 +165,8 @@ class DeconzLight(DeconzDevice, Light):
         """Return the device state attributes."""
         attributes = {}
         attributes['is_deconz_group'] = self._device.type == 'LightGroup'
+
         if self._device.type == 'LightGroup':
             attributes['all_on'] = self._device.all_on
+
         return attributes

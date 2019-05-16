@@ -17,3 +17,10 @@ dismiss:
     notification_id:
       description: Target ID of the notification, which should be removed. [Required]
       example: 1234
+      
+mark_read:
+  description: Mark a notification read.
+  fields:
+    notification_id:
+      description: Target ID of the notification, which should be mark read. [Required]
+      example: 1234

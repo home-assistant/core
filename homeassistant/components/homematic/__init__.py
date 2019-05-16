@@ -2,7 +2,6 @@
 from datetime import timedelta
 from functools import partial
 import logging
-import socket
 
 import voluptuous as vol
 
@@ -263,7 +262,7 @@ def setup(hass, config):
     # Create hosts-dictionary for pyhomematic
     for rname, rconfig in conf[CONF_INTERFACES].items():
         remotes[rname] = {
-            'ip': socket.gethostbyname(rconfig.get(CONF_HOST)),
+            'ip': rconfig.get(CONF_HOST),
             'port': rconfig.get(CONF_PORT),
             'path': rconfig.get(CONF_PATH),
             'resolvenames': rconfig.get(CONF_RESOLVENAMES),
@@ -279,7 +278,7 @@ def setup(hass, config):
 
     for sname, sconfig in conf[CONF_HOSTS].items():
         remotes[sname] = {
-            'ip': socket.gethostbyname(sconfig.get(CONF_HOST)),
+            'ip': sconfig.get(CONF_HOST),
             'port': DEFAULT_PORT,
             'username': sconfig.get(CONF_USERNAME),
             'password': sconfig.get(CONF_PASSWORD),

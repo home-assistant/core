@@ -9,7 +9,8 @@ from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util.dt import as_local
 
 from .const import (
-    ATTRIBUTION, DOMAIN as LOGI_CIRCLE_DOMAIN, LOGI_SENSORS as SENSOR_TYPES)
+    ATTRIBUTION, DEVICE_BRAND, DOMAIN as LOGI_CIRCLE_DOMAIN,
+    LOGI_SENSORS as SENSOR_TYPES)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,6 +66,19 @@ class LogiSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def device_info(self):
+        """Return information about the device."""
+        return {
+            'name': self._camera.name,
+            'identifiers': {
+                (LOGI_CIRCLE_DOMAIN, self._camera.id)
+            },
+            'model': self._camera.model_name,
+            'sw_version': self._camera.firmware,
+            'manufacturer': DEVICE_BRAND
+        }
 
     @property
     def device_state_attributes(self):

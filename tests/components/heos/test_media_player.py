@@ -1,19 +1,21 @@
 """Tests for the Heos Media Player platform."""
 import asyncio
 
-from pyheos import const, CommandError
+from pyheos import CommandError, const
 
 from homeassistant.components.heos import media_player
 from homeassistant.components.heos.const import (
-    DATA_SOURCE_MANAGER, DOMAIN, SIGNAL_HEOS_SOURCES_UPDATED)
+    DATA_SOURCE_MANAGER, DOMAIN, SIGNAL_HEOS_UPDATED)
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE, ATTR_INPUT_SOURCE_LIST, ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ARTIST, ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_DURATION, ATTR_MEDIA_POSITION, ATTR_MEDIA_POSITION_UPDATED_AT,
-    ATTR_MEDIA_SHUFFLE, ATTR_MEDIA_TITLE, ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED, DOMAIN as MEDIA_PLAYER_DOMAIN, MEDIA_TYPE_MUSIC,
-    SERVICE_CLEAR_PLAYLIST, SERVICE_SELECT_SOURCE, SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP)
+    ATTR_MEDIA_DURATION, ATTR_MEDIA_ENQUEUE, ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_POSITION_UPDATED_AT, ATTR_MEDIA_SHUFFLE, ATTR_MEDIA_TITLE,
+    ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED,
+    DOMAIN as MEDIA_PLAYER_DOMAIN, MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST,
+    MEDIA_TYPE_URL, SERVICE_CLEAR_PLAYLIST, SERVICE_PLAY_MEDIA,
+    SERVICE_SELECT_SOURCE, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_SUPPORTED_FEATURES,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
@@ -64,7 +66,7 @@ async def test_state_attributes(hass, config_entry, config, controller):
         hass.data[DOMAIN][DATA_SOURCE_MANAGER].source_list
 
 
-async def test_updates_start_from_signals(
+async def test_updates_from_signals(
         hass, config_entry, config, controller, favorites):
     """Tests dispatched signals update player."""
     await setup_platform(hass, config_entry, config)
@@ -100,48 +102,53 @@ async def test_updates_start_from_signals(
     assert state.attributes[ATTR_MEDIA_DURATION] == 360
     assert state.attributes[ATTR_MEDIA_POSITION] == 1
 
-    # Test controller player change updates
-    player.available = False
-    player.heos.dispatcher.send(
-        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_PLAYERS_CHANGED, {})
-    await hass.async_block_till_done()
-    state = hass.states.get('media_player.test_player')
-    assert state.state == STATE_UNAVAILABLE
-
 
 async def test_updates_from_connection_event(
-        hass, config_entry, config, controller, input_sources, caplog):
+        hass, config_entry, config, controller, caplog):
     """Tests player updates from connection event after connection failure."""
-    # Connected
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
+    event = asyncio.Event()
+
+    async def set_signal():
+        event.set()
+    hass.helpers.dispatcher.async_dispatcher_connect(
+        SIGNAL_HEOS_UPDATED, set_signal)
+
+    # Connected
     player.available = True
     player.heos.dispatcher.send(
         const.SIGNAL_HEOS_EVENT, const.EVENT_CONNECTED)
-    await hass.async_block_till_done()
+    await event.wait()
     state = hass.states.get('media_player.test_player')
     assert state.state == STATE_IDLE
-    assert player.refresh.call_count == 1
-
-    # Connected handles refresh failure
-    player.reset_mock()
-    player.refresh.side_effect = CommandError(None, "Failure", 1)
-    player.heos.dispatcher.send(
-        const.SIGNAL_HEOS_EVENT, const.EVENT_CONNECTED)
-    await hass.async_block_till_done()
-    state = hass.states.get('media_player.test_player')
-    assert player.refresh.call_count == 1
-    assert "Unable to refresh player" in caplog.text
+    assert controller.load_players.call_count == 1
 
     # Disconnected
+    event.clear()
     player.reset_mock()
+    controller.load_players.reset_mock()
     player.available = False
     player.heos.dispatcher.send(
         const.SIGNAL_HEOS_EVENT, const.EVENT_DISCONNECTED)
-    await hass.async_block_till_done()
+    await event.wait()
     state = hass.states.get('media_player.test_player')
     assert state.state == STATE_UNAVAILABLE
-    assert player.refresh.call_count == 0
+    assert controller.load_players.call_count == 0
+
+    # Connected handles refresh failure
+    event.clear()
+    player.reset_mock()
+    controller.load_players.reset_mock()
+    controller.load_players.side_effect = CommandError(None, "Failure", 1)
+    player.available = True
+    player.heos.dispatcher.send(
+        const.SIGNAL_HEOS_EVENT, const.EVENT_CONNECTED)
+    await event.wait()
+    state = hass.states.get('media_player.test_player')
+    assert state.state == STATE_IDLE
+    assert controller.load_players.call_count == 1
+    assert "Unable to refresh players" in caplog.text
 
 
 async def test_updates_from_sources_updated(
@@ -154,7 +161,7 @@ async def test_updates_from_sources_updated(
     async def set_signal():
         event.set()
     hass.helpers.dispatcher.async_dispatcher_connect(
-        SIGNAL_HEOS_SOURCES_UPDATED, set_signal)
+        SIGNAL_HEOS_UPDATED, set_signal)
 
     input_sources.clear()
     player.heos.dispatcher.send(
@@ -164,6 +171,65 @@ async def test_updates_from_sources_updated(
     assert len(source_list) == 2
     state = hass.states.get('media_player.test_player')
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == source_list
+
+
+async def test_updates_from_players_changed(
+        hass, config_entry, config, controller, change_data,
+        caplog):
+    """Test player updates from changes to available players."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    event = asyncio.Event()
+
+    async def set_signal():
+        event.set()
+    hass.helpers.dispatcher.async_dispatcher_connect(
+        SIGNAL_HEOS_UPDATED, set_signal)
+
+    assert hass.states.get('media_player.test_player').state == STATE_IDLE
+    player.state = const.PLAY_STATE_PLAY
+    player.heos.dispatcher.send(
+        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_PLAYERS_CHANGED,
+        change_data)
+    await event.wait()
+    assert hass.states.get('media_player.test_player').state == STATE_PLAYING
+
+
+async def test_updates_from_players_changed_new_ids(
+        hass, config_entry, config, controller, change_data_mapped_ids,
+        caplog):
+    """Test player updates from changes to available players."""
+    await setup_platform(hass, config_entry, config)
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    player = controller.players[1]
+    event = asyncio.Event()
+
+    # Assert device registry matches current id
+    assert device_registry.async_get_device(
+        {(DOMAIN, 1)}, [])
+    # Assert entity registry matches current id
+    assert entity_registry.async_get_entity_id(
+        MEDIA_PLAYER_DOMAIN, DOMAIN, '1') == "media_player.test_player"
+
+    # Trigger update
+    async def set_signal():
+        event.set()
+    hass.helpers.dispatcher.async_dispatcher_connect(
+        SIGNAL_HEOS_UPDATED, set_signal)
+    player.heos.dispatcher.send(
+        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_PLAYERS_CHANGED,
+        change_data_mapped_ids)
+    await event.wait()
+
+    # Assert device registry identifiers were updated
+    assert len(device_registry.devices) == 1
+    assert device_registry.async_get_device(
+        {(DOMAIN, 101)}, [])
+    # Assert entity registry unique id was updated
+    assert len(entity_registry.entities) == 1
+    assert entity_registry.async_get_entity_id(
+        MEDIA_PLAYER_DOMAIN, DOMAIN, '101') == "media_player.test_player"
 
 
 async def test_updates_from_user_changed(
@@ -176,7 +242,7 @@ async def test_updates_from_user_changed(
     async def set_signal():
         event.set()
     hass.helpers.dispatcher.async_dispatcher_connect(
-        SIGNAL_HEOS_SOURCES_UPDATED, set_signal)
+        SIGNAL_HEOS_UPDATED, set_signal)
 
     controller.is_signed_in = False
     controller.signed_in_username = None
@@ -442,3 +508,140 @@ async def test_unload_config_entry(hass, config_entry, config, controller):
     await setup_platform(hass, config_entry, config)
     await config_entry.async_unload(hass)
     assert not hass.states.get('media_player.test_player')
+
+
+async def test_play_media_url(hass, config_entry, config, controller, caplog):
+    """Test the play media service with type url."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    url = "http://news/podcast.mp3"
+    # First pass completes successfully, second pass raises command error
+    for _ in range(2):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA,
+            {ATTR_ENTITY_ID: 'media_player.test_player',
+             ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_URL,
+             ATTR_MEDIA_CONTENT_ID: url}, blocking=True)
+        player.play_url.assert_called_once_with(url)
+        player.play_url.reset_mock()
+        player.play_url.side_effect = CommandError(None, "Failure", 1)
+    assert "Unable to play media: Failure (1)" in caplog.text
+
+
+async def test_play_media_quick_select(
+        hass, config_entry, config, controller, caplog, quick_selects):
+    """Test the play media service with type quick_select."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    quick_select = list(quick_selects.items())[0]
+    index = quick_select[0]
+    name = quick_select[1]
+    # Play by index
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_MEDIA_CONTENT_TYPE: 'quick_select',
+         ATTR_MEDIA_CONTENT_ID: str(index)}, blocking=True)
+    player.play_quick_select.assert_called_once_with(index)
+    # Play by name
+    player.play_quick_select.reset_mock()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_MEDIA_CONTENT_TYPE: 'quick_select',
+         ATTR_MEDIA_CONTENT_ID: name}, blocking=True)
+    player.play_quick_select.assert_called_once_with(index)
+    # Invalid name
+    player.play_quick_select.reset_mock()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_MEDIA_CONTENT_TYPE: 'quick_select',
+         ATTR_MEDIA_CONTENT_ID: "Invalid"}, blocking=True)
+    assert player.play_quick_select.call_count == 0
+    assert "Unable to play media: Invalid quick select 'Invalid'" \
+        in caplog.text
+
+
+async def test_play_media_playlist(
+        hass, config_entry, config, controller, caplog, playlists):
+    """Test the play media service with type playlist."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    playlist = playlists[0]
+    # Play without enqueing
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_PLAYLIST,
+         ATTR_MEDIA_CONTENT_ID: playlist.name}, blocking=True)
+    player.add_to_queue.assert_called_once_with(
+        playlist, const.ADD_QUEUE_REPLACE_AND_PLAY)
+    # Play with enqueing
+    player.add_to_queue.reset_mock()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_PLAYLIST,
+         ATTR_MEDIA_CONTENT_ID: playlist.name,
+         ATTR_MEDIA_ENQUEUE: True}, blocking=True)
+    player.add_to_queue.assert_called_once_with(
+        playlist, const.ADD_QUEUE_ADD_TO_END)
+    # Invalid name
+    player.add_to_queue.reset_mock()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_PLAYLIST,
+         ATTR_MEDIA_CONTENT_ID: 'Invalid'}, blocking=True)
+    assert player.add_to_queue.call_count == 0
+    assert "Unable to play media: Invalid playlist 'Invalid'" \
+        in caplog.text
+
+
+async def test_play_media_favorite(
+        hass, config_entry, config, controller, caplog, favorites):
+    """Test the play media service with type favorite."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    quick_select = list(favorites.items())[0]
+    index = quick_select[0]
+    name = quick_select[1].name
+    # Play by index
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_MEDIA_CONTENT_TYPE: 'favorite',
+         ATTR_MEDIA_CONTENT_ID: str(index)}, blocking=True)
+    player.play_favorite.assert_called_once_with(index)
+    # Play by name
+    player.play_favorite.reset_mock()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_MEDIA_CONTENT_TYPE: 'favorite',
+         ATTR_MEDIA_CONTENT_ID: name}, blocking=True)
+    player.play_favorite.assert_called_once_with(index)
+    # Invalid name
+    player.play_favorite.reset_mock()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_MEDIA_CONTENT_TYPE: 'favorite',
+         ATTR_MEDIA_CONTENT_ID: "Invalid"}, blocking=True)
+    assert player.play_favorite.call_count == 0
+    assert "Unable to play media: Invalid favorite 'Invalid'" \
+        in caplog.text
+
+
+async def test_play_media_invalid_type(
+        hass, config_entry, config, controller, caplog):
+    """Test the play media service with an invalid type."""
+    await setup_platform(hass, config_entry, config)
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_MEDIA_CONTENT_TYPE: "Other",
+         ATTR_MEDIA_CONTENT_ID: ""}, blocking=True)
+    assert "Unable to play media: Unsupported media type 'Other'" \
+        in caplog.text
