@@ -13,14 +13,25 @@ from tests.components.homekit_controller.common import (
 )
 
 
-ERROR_MAPPING_FORM_FIXTURE = [
-    (homekit.MaxPeersError, 'max_peers_error'),
+PAIRING_START_FORM_ERRORS = [
     (homekit.BusyError, 'busy_error'),
     (homekit.MaxTriesError, 'max_tries_error'),
     (KeyError, 'pairing_failed'),
 ]
 
-ERROR_MAPPING_ABORT_FIXTURE = [
+PAIRING_START_ABORT_ERRORS = [
+    (homekit.AccessoryNotFoundError, 'accessory_not_found_error'),
+    (homekit.UnavailableError, 'already_paired'),
+]
+
+PAIRING_FINISH_FORM_ERRORS = [
+    (homekit.MaxPeersError, 'max_peers_error'),
+    (homekit.AuthenticationError, 'authentication_error'),
+    (homekit.UnknownError, 'unknown_error'),
+    (KeyError, 'pairing_failed'),
+]
+
+PAIRING_FINISH_ABORT_ERRORS = [
     (homekit.AccessoryNotFoundError, 'accessory_not_found_error'),
 ]
 
@@ -29,6 +40,10 @@ def _setup_flow_handler(hass):
     flow = config_flow.HomekitControllerFlowHandler()
     flow.hass = hass
     flow.context = {}
+
+    flow.controller = mock.Mock()
+    flow.controller.pairings = {}
+
     return flow
 
 
@@ -48,10 +63,17 @@ async def test_discovery_works(hass):
 
     flow = _setup_flow_handler(hass)
 
+    # Device is discovered
     result = await flow.async_step_discovery(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
     assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+
+    # User initiates pairing - device enters pairing mode and displays code
+    result = await flow.async_step_pair({})
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'pair'
+    assert flow.controller.start_pairing.call_count == 1
 
     pairing = mock.Mock(pairing_data={
         'AccessoryPairingID': '00:00:00:00:00:00',
@@ -68,17 +90,13 @@ async def test_discovery_works(hass):
         }]
     }]
 
-    controller = mock.Mock()
-    controller.pairings = {
+    # Pairing doesn't error error and pairing results
+    flow.controller.pairings = {
         '00:00:00:00:00:00': pairing,
     }
-
-    with mock.patch('homekit.Controller') as controller_cls:
-        controller_cls.return_value = controller
-        result = await flow.async_step_pair({
-            'pairing_code': '111-22-33',
-        })
-
+    result = await flow.async_step_pair({
+        'pairing_code': '111-22-33',
+    })
     assert result['type'] == 'create_entry'
     assert result['title'] == 'Koogeek-LS1-20833F'
     assert result['data'] == pairing.pairing_data
@@ -100,10 +118,17 @@ async def test_discovery_works_upper_case(hass):
 
     flow = _setup_flow_handler(hass)
 
+    # Device is discovered
     result = await flow.async_step_discovery(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
     assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+
+    # User initiates pairing - device enters pairing mode and displays code
+    result = await flow.async_step_pair({})
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'pair'
+    assert flow.controller.start_pairing.call_count == 1
 
     pairing = mock.Mock(pairing_data={
         'AccessoryPairingID': '00:00:00:00:00:00',
@@ -120,17 +145,12 @@ async def test_discovery_works_upper_case(hass):
         }]
     }]
 
-    controller = mock.Mock()
-    controller.pairings = {
+    flow.controller.pairings = {
         '00:00:00:00:00:00': pairing,
     }
-
-    with mock.patch('homekit.Controller') as controller_cls:
-        controller_cls.return_value = controller
-        result = await flow.async_step_pair({
-            'pairing_code': '111-22-33',
-        })
-
+    result = await flow.async_step_pair({
+        'pairing_code': '111-22-33',
+    })
     assert result['type'] == 'create_entry'
     assert result['title'] == 'Koogeek-LS1-20833F'
     assert result['data'] == pairing.pairing_data
@@ -151,10 +171,17 @@ async def test_discovery_works_missing_csharp(hass):
 
     flow = _setup_flow_handler(hass)
 
+    # Device is discovered
     result = await flow.async_step_discovery(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
     assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+
+    # User initiates pairing - device enters pairing mode and displays code
+    result = await flow.async_step_pair({})
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'pair'
+    assert flow.controller.start_pairing.call_count == 1
 
     pairing = mock.Mock(pairing_data={
         'AccessoryPairingID': '00:00:00:00:00:00',
@@ -171,17 +198,13 @@ async def test_discovery_works_missing_csharp(hass):
         }]
     }]
 
-    controller = mock.Mock()
-    controller.pairings = {
+    flow.controller.pairings = {
         '00:00:00:00:00:00': pairing,
     }
 
-    with mock.patch('homekit.Controller') as controller_cls:
-        controller_cls.return_value = controller
-        result = await flow.async_step_pair({
-            'pairing_code': '111-22-33',
-        })
-
+    result = await flow.async_step_pair({
+        'pairing_code': '111-22-33',
+    })
     assert result['type'] == 'create_entry'
     assert result['title'] == 'Koogeek-LS1-20833F'
     assert result['data'] == pairing.pairing_data
@@ -342,26 +365,28 @@ async def test_pair_unable_to_pair(hass):
 
     flow = _setup_flow_handler(hass)
 
+    # Device is discovered
     result = await flow.async_step_discovery(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
     assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
 
-    controller = mock.Mock()
-    controller.pairings = {}
+    # User initiates pairing - device enters pairing mode and displays code
+    result = await flow.async_step_pair({})
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'pair'
+    assert flow.controller.start_pairing.call_count == 1
 
-    with mock.patch('homekit.Controller') as controller_cls:
-        controller_cls.return_value = controller
-        result = await flow.async_step_pair({
-            'pairing_code': '111-22-33',
-        })
-
+    # Pairing doesn't error but no pairing object is generated
+    result = await flow.async_step_pair({
+        'pairing_code': '111-22-33',
+    })
     assert result['type'] == 'form'
     assert result['errors']['pairing_code'] == 'unable_to_pair'
 
 
-@pytest.mark.parametrize("exception,expected", ERROR_MAPPING_ABORT_FIXTURE)
-async def test_pair_abort_errors(hass, exception, expected):
+@pytest.mark.parametrize("exception,expected", PAIRING_START_ABORT_ERRORS)
+async def test_pair_abort_errors_on_start(hass, exception, expected):
     """Test various pairing errors."""
     discovery_info = {
         'name': 'TestDevice',
@@ -377,28 +402,24 @@ async def test_pair_abort_errors(hass, exception, expected):
 
     flow = _setup_flow_handler(hass)
 
+    # Device is discovered
     result = await flow.async_step_discovery(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
     assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
 
-    controller = mock.Mock()
-    controller.pairings = {}
-
-    with mock.patch('homekit.Controller') as controller_cls:
-        controller_cls.return_value = controller
-        controller.perform_pairing.side_effect = exception('error')
-        result = await flow.async_step_pair({
-            'pairing_code': '111-22-33',
-        })
+    # User initiates pairing - device refuses to enter pairing mode
+    with mock.patch.object(flow.controller, 'start_pairing') as start_pairing:
+        start_pairing.side_effect = exception('error')
+        result = await flow.async_step_pair({})
 
     assert result['type'] == 'abort'
     assert result['reason'] == expected
     assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
 
 
-@pytest.mark.parametrize("exception,expected", ERROR_MAPPING_FORM_FIXTURE)
-async def test_pair_form_errors(hass, exception, expected):
+@pytest.mark.parametrize("exception,expected", PAIRING_START_FORM_ERRORS)
+async def test_pair_form_errors_on_start(hass, exception, expected):
     """Test various pairing errors."""
     discovery_info = {
         'name': 'TestDevice',
@@ -414,28 +435,25 @@ async def test_pair_form_errors(hass, exception, expected):
 
     flow = _setup_flow_handler(hass)
 
+    # Device is discovered
     result = await flow.async_step_discovery(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
     assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
 
-    controller = mock.Mock()
-    controller.pairings = {}
-
-    with mock.patch('homekit.Controller') as controller_cls:
-        controller_cls.return_value = controller
-        controller.perform_pairing.side_effect = exception('error')
-        result = await flow.async_step_pair({
-            'pairing_code': '111-22-33',
-        })
+    # User initiates pairing - device refuses to enter pairing mode
+    with mock.patch.object(flow.controller, 'start_pairing') as start_pairing:
+        start_pairing.side_effect = exception('error')
+        result = await flow.async_step_pair({})
 
     assert result['type'] == 'form'
     assert result['errors']['pairing_code'] == expected
     assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
 
 
-async def test_pair_authentication_error(hass):
-    """Pairing code is incorrect."""
+@pytest.mark.parametrize("exception,expected", PAIRING_FINISH_ABORT_ERRORS)
+async def test_pair_abort_errors_on_finish(hass, exception, expected):
+    """Test various pairing errors."""
     discovery_info = {
         'name': 'TestDevice',
         'host': '127.0.0.1',
@@ -450,96 +468,65 @@ async def test_pair_authentication_error(hass):
 
     flow = _setup_flow_handler(hass)
 
+    # Device is discovered
     result = await flow.async_step_discovery(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
     assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
 
-    controller = mock.Mock()
-    controller.pairings = {}
-
-    with mock.patch('homekit.Controller') as controller_cls:
-        controller_cls.return_value = controller
-        exc = homekit.AuthenticationError('Invalid pairing code')
-        controller.perform_pairing.side_effect = exc
-        result = await flow.async_step_pair({
-            'pairing_code': '111-22-33',
-        })
-
-    assert result['type'] == 'form'
-    assert result['errors']['pairing_code'] == 'authentication_error'
-
-
-async def test_pair_unknown_error(hass):
-    """Pairing failed for an unknown rason."""
-    discovery_info = {
-        'name': 'TestDevice',
-        'host': '127.0.0.1',
-        'port': 8080,
-        'properties': {
-            'md': 'TestDevice',
-            'id': '00:00:00:00:00:00',
-            'c#': 1,
-            'sf': 1,
-        }
-    }
-
-    flow = _setup_flow_handler(hass)
-
-    result = await flow.async_step_discovery(discovery_info)
+    # User initiates pairing - device enters pairing mode and displays code
+    result = await flow.async_step_pair({})
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
-    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+    assert flow.controller.start_pairing.call_count == 1
 
-    controller = mock.Mock()
-    controller.pairings = {}
-
-    with mock.patch('homekit.Controller') as controller_cls:
-        controller_cls.return_value = controller
-        exc = homekit.UnknownError('Unknown error')
-        controller.perform_pairing.side_effect = exc
-        result = await flow.async_step_pair({
-            'pairing_code': '111-22-33',
-        })
-
-    assert result['type'] == 'form'
-    assert result['errors']['pairing_code'] == 'unknown_error'
-
-
-async def test_pair_already_paired(hass):
-    """Device is already paired."""
-    discovery_info = {
-        'name': 'TestDevice',
-        'host': '127.0.0.1',
-        'port': 8080,
-        'properties': {
-            'md': 'TestDevice',
-            'id': '00:00:00:00:00:00',
-            'c#': 1,
-            'sf': 1,
-        }
-    }
-
-    flow = _setup_flow_handler(hass)
-
-    result = await flow.async_step_discovery(discovery_info)
-    assert result['type'] == 'form'
-    assert result['step_id'] == 'pair'
-    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
-
-    controller = mock.Mock()
-    controller.pairings = {}
-
-    with mock.patch('homekit.Controller') as controller_cls:
-        controller_cls.return_value = controller
-        exc = homekit.UnavailableError('Unavailable error')
-        controller.perform_pairing.side_effect = exc
-        result = await flow.async_step_pair({
-            'pairing_code': '111-22-33',
-        })
-
+    # User submits code - pairing fails but can be retried
+    flow.finish_pairing.side_effect = exception('error')
+    result = await flow.async_step_pair({
+        'pairing_code': '111-22-33',
+    })
     assert result['type'] == 'abort'
-    assert result['reason'] == 'already_paired'
+    assert result['reason'] == expected
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+
+
+@pytest.mark.parametrize("exception,expected", PAIRING_FINISH_FORM_ERRORS)
+async def test_pair_form_errors_on_finish(hass, exception, expected):
+    """Test various pairing errors."""
+    discovery_info = {
+        'name': 'TestDevice',
+        'host': '127.0.0.1',
+        'port': 8080,
+        'properties': {
+            'md': 'TestDevice',
+            'id': '00:00:00:00:00:00',
+            'c#': 1,
+            'sf': 1,
+        }
+    }
+
+    flow = _setup_flow_handler(hass)
+
+    # Device is discovered
+    result = await flow.async_step_discovery(discovery_info)
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'pair'
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+
+    # User initiates pairing - device enters pairing mode and displays code
+    result = await flow.async_step_pair({})
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'pair'
+    assert flow.controller.start_pairing.call_count == 1
+
+    # User submits code - pairing fails but can be retried
+    flow.finish_pairing.side_effect = exception('error')
+    result = await flow.async_step_pair({
+        'pairing_code': '111-22-33',
+    })
+    assert result['type'] == 'form'
+    assert result['errors']['pairing_code'] == expected
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
 
 
 async def test_import_works(hass):
@@ -647,19 +634,16 @@ async def test_user_works(hass):
         }]
     }]
 
-    controller = mock.Mock()
-    controller.pairings = {
+    flow = _setup_flow_handler(hass)
+
+    flow.controller.pairings = {
         '00:00:00:00:00:00': pairing,
     }
-    controller.discover.return_value = [
+    flow.controller.discover.return_value = [
         discovery_info,
     ]
 
-    flow = _setup_flow_handler(hass)
-
-    with mock.patch('homekit.Controller') as controller_cls:
-        controller_cls.return_value = controller
-        result = await flow.async_step_user()
+    result = await flow.async_step_user()
     assert result['type'] == 'form'
     assert result['step_id'] == 'user'
 
@@ -669,11 +653,9 @@ async def test_user_works(hass):
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
 
-    with mock.patch('homekit.Controller') as controller_cls:
-        controller_cls.return_value = controller
-        result = await flow.async_step_pair({
-            'pairing_code': '111-22-33',
-        })
+    result = await flow.async_step_pair({
+        'pairing_code': '111-22-33',
+    })
     assert result['type'] == 'create_entry'
     assert result['title'] == 'Koogeek-LS1-20833F'
     assert result['data'] == pairing.pairing_data
@@ -683,9 +665,8 @@ async def test_user_no_devices(hass):
     """Test user initiated pairing where no devices discovered."""
     flow = _setup_flow_handler(hass)
 
-    with mock.patch('homekit.Controller') as controller_cls:
-        controller_cls.return_value.discover.return_value = []
-        result = await flow.async_step_user()
+    flow.controller.discover.return_value = []
+    result = await flow.async_step_user()
 
     assert result['type'] == 'abort'
     assert result['reason'] == 'no_devices'
@@ -705,11 +686,10 @@ async def test_user_no_unpaired_devices(hass):
         'sf': 0,
     }
 
-    with mock.patch('homekit.Controller') as controller_cls:
-        controller_cls.return_value.discover.return_value = [
-            discovery_info,
-        ]
-        result = await flow.async_step_user()
+    flow.controller.discover.return_value = [
+        discovery_info,
+    ]
+    result = await flow.async_step_user()
 
     assert result['type'] == 'abort'
     assert result['reason'] == 'no_devices'
