@@ -10,7 +10,7 @@ OPERATION_MODE_HEAT = 'heat'
 OPERATION_MODE_COOL = 'cool'
 
 # The device supports heating/cooling to a range
-OPERATION_MODE_HEATCOOL = 'heatcool'
+OPERATION_MODE_HEAT_COOL = 'heat_cool'
 
 # The temperature is set based on a schedule, learned behavior, AI or some
 # other related mechanism. User is not able to adjust the temperature
@@ -26,7 +26,7 @@ OPERATION_MODES = [
     OPERATION_MODE_OFF,
     OPERATION_MODE_HEAT,
     OPERATION_MODE_COOL,
-    OPERATION_MODE_HEATCOOL,
+    OPERATION_MODE_HEAT_COOL,
     OPERATION_MODE_AUTO,
     OPERATION_MODE_DRY,
     OPERATION_MODE_FAN_ONLY,
@@ -47,17 +47,18 @@ HOLD_MODE_COMFORT = 'comfort'
 
 
 # This are support current states of HVAC
-OPERATION_CURRENT_OFF = 'off'
-OPERATION_CURRENT_HEAT = 'heat'
-OPERATION_CURRENT_COOL = 'cool'
-OPERATION_CURRENT_DRY = 'dry'
-OPERATION_CURRENT_IDLE = 'idle'
-OPERATION_CURRENT_FAN_ONLY = 'fan_only'
+CURRENT_OPERATION_OFF = 'off'
+CURRENT_OPERATION_HEAT = 'heating'
+CURRENT_OPERATION_COOL = 'cooling'
+CURRENT_OPERATION_DRY = 'drying'
+CURRENT_OPERATION_IDLE = 'idle'
+CURRENT_OPERATION_FAN = 'fan'
 
 
 ATTR_AUX_HEAT = 'aux_heat'
 ATTR_CURRENT_HUMIDITY = 'current_humidity'
 ATTR_CURRENT_TEMPERATURE = 'current_temperature'
+ATTR_CURRENT_OPERATION = 'current_operation'
 ATTR_FAN_LIST = 'fan_list'
 ATTR_FAN_MODE = 'fan_mode'
 ATTR_HOLD_MODE = 'hold_mode'
@@ -69,7 +70,6 @@ ATTR_MAX_TEMP = 'max_temp'
 ATTR_MIN_TEMP = 'min_temp'
 ATTR_OPERATION_LIST = 'operation_list'
 ATTR_OPERATION_MODE = 'operation_mode'
-ATTR_OPERATION_CURRENT = 'operation_current'
 ATTR_SWING_LIST = 'swing_list'
 ATTR_SWING_MODE = 'swing_mode'
 ATTR_TARGET_TEMP_HIGH = 'target_temp_high'
