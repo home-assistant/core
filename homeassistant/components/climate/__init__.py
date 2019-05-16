@@ -17,17 +17,17 @@ from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import (
-    ATTR_AUX_HEAT, ATTR_CURRENT_HUMIDITY, ATTR_CURRENT_TEMPERATURE,
-    ATTR_FAN_LIST, ATTR_FAN_MODE, ATTR_HOLD_LIST, ATTR_HOLD_MODE,
-    ATTR_HUMIDITY, ATTR_MAX_HUMIDITY, ATTR_MAX_TEMP, ATTR_MIN_HUMIDITY,
-    ATTR_MIN_TEMP, ATTR_CURRENT_OPERATION, ATTR_OPERATION_LIST,
-    ATTR_OPERATION_MODE, ATTR_SWING_LIST, ATTR_SWING_MODE,
-    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_STEP, DOMAIN,
-    OPERATION_MODES, SERVICE_SET_AUX_HEAT, SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HOLD_MODE, SERVICE_SET_HUMIDITY, SERVICE_SET_OPERATION_MODE,
-    SERVICE_SET_SWING_MODE, SERVICE_SET_TEMPERATURE, SUPPORT_AUX_HEAT,
-    SUPPORT_CURRENT_OPERATION, SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE,
-    SUPPORT_SWING_MODE, SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_HUMIDITY_HIGH,
+    ATTR_AUX_HEAT, ATTR_CURRENT_HUMIDITY, ATTR_CURRENT_OPERATION,
+    ATTR_CURRENT_TEMPERATURE, ATTR_FAN_LIST, ATTR_FAN_MODE, ATTR_HOLD_LIST,
+    ATTR_HOLD_MODE, ATTR_HUMIDITY, ATTR_HVAC_MODE, ATTR_HVAC_MODES,
+    ATTR_MAX_HUMIDITY, ATTR_MAX_TEMP, ATTR_MIN_HUMIDITY, ATTR_MIN_TEMP,
+    ATTR_SWING_LIST, ATTR_SWING_MODE, ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_STEP, DOMAIN, HVAC_MODES,
+    SERVICE_SET_AUX_HEAT, SERVICE_SET_FAN_MODE, SERVICE_SET_HOLD_MODE,
+    SERVICE_SET_HUMIDITY, SERVICE_SET_HVAC_MODE, SERVICE_SET_SWING_MODE,
+    SERVICE_SET_TEMPERATURE, SUPPORT_AUX_HEAT, SUPPORT_CURRENT_OPERATION,
+    SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE, SUPPORT_SWING_MODE,
+    SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_HUMIDITY_HIGH,
     SUPPORT_TARGET_HUMIDITY_LOW, SUPPORT_TARGET_TEMPERATURE_HIGH,
     SUPPORT_TARGET_TEMPERATURE_LOW)
 from .reproduce_state import async_reproduce_states  # noqa
@@ -63,7 +63,7 @@ SET_TEMPERATURE_SCHEMA = vol.Schema(vol.All(
         vol.Inclusive(ATTR_TARGET_TEMP_HIGH, 'temperature'): vol.Coerce(float),
         vol.Inclusive(ATTR_TARGET_TEMP_LOW, 'temperature'): vol.Coerce(float),
         vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-        vol.Optional(ATTR_OPERATION_MODE): vol.In(OPERATION_MODES),
+        vol.Optional(ATTR_HVAC_MODE): vol.In(HVAC_MODES),
     }
 ))
 SET_FAN_MODE_SCHEMA = vol.Schema({
@@ -74,9 +74,9 @@ SET_HOLD_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_HOLD_MODE): cv.string,
 })
-SET_OPERATION_MODE_SCHEMA = vol.Schema({
+SET_HVAC_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-    vol.Required(ATTR_OPERATION_MODE): vol.In(OPERATION_MODES),
+    vol.Required(ATTR_HVAC_MODE): vol.In(HVAC_MODES),
 })
 SET_HUMIDITY_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
@@ -115,8 +115,8 @@ async def async_setup(hass, config):
         'async_set_fan_mode'
     )
     component.async_register_entity_service(
-        SERVICE_SET_OPERATION_MODE, SET_OPERATION_MODE_SCHEMA,
-        'async_set_operation_mode'
+        SERVICE_SET_HVAC_MODE, SET_HVAC_MODE_SCHEMA,
+        'async_set_hvac_mode'
     )
     component.async_register_entity_service(
         SERVICE_SET_SWING_MODE, SET_SWING_MODE_SCHEMA,
@@ -150,7 +150,7 @@ class ClimateDevice(Entity):
     @property
     def state(self):
         """Return the current state."""
-        return self.operation_mode
+        return self.hvac_state
 
     @property
     def precision(self):
@@ -179,8 +179,8 @@ class ClimateDevice(Entity):
         }
 
         # Supported HVAC modes
-        if self.operation_list:
-            data[ATTR_OPERATION_LIST] = self.operation_list
+        if self.hvac_modes:
+            data[ATTR_HVAC_MODES] = self.hvac_modes
 
         if self.target_temperature_step:
             data[ATTR_TARGET_TEMP_STEP] = self.target_temperature_step
@@ -247,18 +247,18 @@ class ClimateDevice(Entity):
         return None
 
     @property
-    def operation_mode(self):
-        """Return current operation ie. heat, cool."""
+    def hvac_state(self):
+        """Return current hvac operation ie. heat, cool mode"""
         return None
 
     @property
-    def operation_list(self):
-        """Return the list of available operation modes."""
+    def hvac_modes(self):
+        """Return the list of available hvac operation modes."""
         return None
 
     @property
     def current_operation(self):
-        """Return the current action that is running."""
+        """Return the current running hvac action."""
         return None
 
     @property
@@ -360,16 +360,16 @@ class ClimateDevice(Entity):
         """
         return self.hass.async_add_job(self.set_fan_mode, fan_mode)
 
-    def set_operation_mode(self, operation_mode):
-        """Set new target operation mode."""
+    def set_hvac_mode(self, hvac_mode):
+        """Set new target hvac mode."""
         raise NotImplementedError()
 
-    def async_set_operation_mode(self, operation_mode):
-        """Set new target operation mode.
+    def async_set_hvac_mode(self, hvac_mode):
+        """Set new target hvac mode.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(self.set_operation_mode, operation_mode)
+        return self.hass.async_add_job(self.set_hvac_mode, hvac_mode)
 
     def set_swing_mode(self, swing_mode):
         """Set new target swing operation."""
