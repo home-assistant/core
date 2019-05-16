@@ -147,7 +147,7 @@ class HomeKitEntity(Entity):
 
         device_info = {
             'identifiers': {
-                (DOMAIN, accessory_serial),
+                (DOMAIN, 'serial-number', accessory_serial),
             },
             'name': self._accessory_info['name'],
             'manufacturer': self._accessory_info.get('manufacturer', ''),
@@ -159,7 +159,7 @@ class HomeKitEntity(Entity):
         # otherwise it would be self referential.
         bridge_serial = self._accessory.connection_info['serial-number']
         if accessory_serial != bridge_serial:
-            device_info['via_hub'] = (DOMAIN, bridge_serial)
+            device_info['via_hub'] = (DOMAIN, 'serial-number', bridge_serial)
 
         return device_info
 
@@ -182,11 +182,9 @@ async def async_setup_entry(hass, entry):
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={
-            (dr.CONNECTION_NETWORK_MAC, conn.unique_id),
-        },
         identifiers={
-            (DOMAIN, conn_info['serial-number']),
+            (DOMAIN, 'serial-number', conn_info['serial-number']),
+            (DOMAIN, 'accessory-id', conn.unique_id),
         },
         name=conn.name,
         manufacturer=conn_info.get('manufacturer'),
