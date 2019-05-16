@@ -125,11 +125,6 @@ def get_doorstation_by_token(hass, token):
             return doorstation
 
 
-def handle_event(event):
-    """Handle dummy events."""
-    return None
-
-
 class ConfiguredDoorBird():
     """Attach additional information to pass along with configured device."""
 
@@ -174,9 +169,6 @@ class ConfiguredDoorBird():
             event = self._get_event_name(event)
 
             self._register_event(hass_url, event)
-
-            # Register a dummy listener so event is listed in GUI
-            hass.bus.listen('{}_{}'.format(DOMAIN, event), handle_event)
 
             _LOGGER.info('Successfully registered URL for %s on %s.',
                          event, self.name)
