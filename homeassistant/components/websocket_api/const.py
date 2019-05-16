@@ -1,6 +1,9 @@
 """Websocket constants."""
 import asyncio
 from concurrent import futures
+from functools import partial
+import json
+from homeassistant.helpers.json import JSONEncoder
 
 DOMAIN = 'websocket_api'
 URL = '/api/websocket'
@@ -27,3 +30,5 @@ SIGNAL_WEBSOCKET_DISCONNECTED = 'websocket_disconnected'
 
 # Data used to store the current connection list
 DATA_CONNECTIONS = DOMAIN + '.connections'
+
+JSON_DUMP = partial(json.dumps, cls=JSONEncoder, allow_nan=False)

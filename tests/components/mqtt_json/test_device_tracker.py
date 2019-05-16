@@ -1,12 +1,13 @@
 """The tests for the JSON MQTT device tracker platform."""
 import json
-from asynctest import patch
 import logging
 import os
+from asynctest import patch
 import pytest
 
 from homeassistant.setup import async_setup_component
-from homeassistant.components import device_tracker
+from homeassistant.components.device_tracker.legacy import (
+    YAML_DEVICES, ENTITY_ID_FORMAT, DOMAIN as DT_DOMAIN)
 from homeassistant.const import CONF_PLATFORM
 
 from tests.common import async_mock_mqtt_component, async_fire_mqtt_message
@@ -27,7 +28,7 @@ LOCATION_MESSAGE_INCOMPLETE = {
 def setup_comp(hass):
     """Initialize components."""
     hass.loop.run_until_complete(async_mock_mqtt_component(hass))
-    yaml_devices = hass.config.path(device_tracker.YAML_DEVICES)
+    yaml_devices = hass.config.path(YAML_DEVICES)
     yield
     if os.path.isfile(yaml_devices):
         os.remove(yaml_devices)
@@ -45,8 +46,8 @@ async def test_ensure_device_tracker_platform_validation(hass):
 
         dev_id = 'paulus'
         topic = 'location/paulus'
-        assert await async_setup_component(hass, device_tracker.DOMAIN, {
-            device_tracker.DOMAIN: {
+        assert await async_setup_component(hass, DT_DOMAIN, {
+            DT_DOMAIN: {
                 CONF_PLATFORM: 'mqtt_json',
                 'devices': {dev_id: topic}
             }
@@ -60,8 +61,8 @@ async def test_json_message(hass):
     topic = 'location/zanzito'
     location = json.dumps(LOCATION_MESSAGE)
 
-    assert await async_setup_component(hass, device_tracker.DOMAIN, {
-        device_tracker.DOMAIN: {
+    assert await async_setup_component(hass, DT_DOMAIN, {
+        DT_DOMAIN: {
             CONF_PLATFORM: 'mqtt_json',
             'devices': {dev_id: topic}
         }
@@ -79,8 +80,8 @@ async def test_non_json_message(hass, caplog):
     topic = 'location/zanzito'
     location = 'home'
 
-    assert await async_setup_component(hass, device_tracker.DOMAIN, {
-        device_tracker.DOMAIN: {
+    assert await async_setup_component(hass, DT_DOMAIN, {
+        DT_DOMAIN: {
             CONF_PLATFORM: 'mqtt_json',
             'devices': {dev_id: topic}
         }
@@ -100,8 +101,8 @@ async def test_incomplete_message(hass, caplog):
     topic = 'location/zanzito'
     location = json.dumps(LOCATION_MESSAGE_INCOMPLETE)
 
-    assert await async_setup_component(hass, device_tracker.DOMAIN, {
-        device_tracker.DOMAIN: {
+    assert await async_setup_component(hass, DT_DOMAIN, {
+        DT_DOMAIN: {
             CONF_PLATFORM: 'mqtt_json',
             'devices': {dev_id: topic}
         }
@@ -123,8 +124,8 @@ async def test_single_level_wildcard_topic(hass):
     topic = 'location/room/zanzito'
     location = json.dumps(LOCATION_MESSAGE)
 
-    assert await async_setup_component(hass, device_tracker.DOMAIN, {
-        device_tracker.DOMAIN: {
+    assert await async_setup_component(hass, DT_DOMAIN, {
+        DT_DOMAIN: {
             CONF_PLATFORM: 'mqtt_json',
             'devices': {dev_id: subscription}
         }
@@ -143,8 +144,8 @@ async def test_multi_level_wildcard_topic(hass):
     topic = 'location/zanzito'
     location = json.dumps(LOCATION_MESSAGE)
 
-    assert await async_setup_component(hass, device_tracker.DOMAIN, {
-        device_tracker.DOMAIN: {
+    assert await async_setup_component(hass, DT_DOMAIN, {
+        DT_DOMAIN: {
             CONF_PLATFORM: 'mqtt_json',
             'devices': {dev_id: subscription}
         }
@@ -159,13 +160,13 @@ async def test_multi_level_wildcard_topic(hass):
 async def test_single_level_wildcard_topic_not_matching(hass):
     """Test not matching single level wildcard topic."""
     dev_id = 'zanzito'
-    entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = ENTITY_ID_FORMAT.format(dev_id)
     subscription = 'location/+/zanzito'
     topic = 'location/zanzito'
     location = json.dumps(LOCATION_MESSAGE)
 
-    assert await async_setup_component(hass, device_tracker.DOMAIN, {
-        device_tracker.DOMAIN: {
+    assert await async_setup_component(hass, DT_DOMAIN, {
+        DT_DOMAIN: {
             CONF_PLATFORM: 'mqtt_json',
             'devices': {dev_id: subscription}
         }
@@ -178,13 +179,13 @@ async def test_single_level_wildcard_topic_not_matching(hass):
 async def test_multi_level_wildcard_topic_not_matching(hass):
     """Test not matching multi level wildcard topic."""
     dev_id = 'zanzito'
-    entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = ENTITY_ID_FORMAT.format(dev_id)
     subscription = 'location/#'
     topic = 'somewhere/zanzito'
     location = json.dumps(LOCATION_MESSAGE)
 
-    assert await async_setup_component(hass, device_tracker.DOMAIN, {
-        device_tracker.DOMAIN: {
+    assert await async_setup_component(hass, DT_DOMAIN, {
+        DT_DOMAIN: {
             CONF_PLATFORM: 'mqtt_json',
             'devices': {dev_id: subscription}
         }

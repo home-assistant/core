@@ -869,8 +869,8 @@ async def websocket_handle_thumbnail(hass, connection, msg):
             'Failed to fetch thumbnail'))
         return
 
-    connection.send_message(websocket_api.result_message(
+    await connection.send_big_result(
         msg['id'], {
             'content_type': content_type,
             'content': base64.b64encode(data).decode('utf-8')
-        }))
+        })

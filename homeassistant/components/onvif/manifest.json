@@ -3,7 +3,7 @@
   "name": "Onvif",
   "documentation": "https://www.home-assistant.io/components/onvif",
   "requirements": [
-    "onvif-zeep-async==0.1.2"
+    "onvif-zeep-async==0.2.0"
   ],
   "dependencies": [
     "ffmpeg"

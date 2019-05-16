@@ -43,9 +43,18 @@ def get_astral_event_next(
         utc_point_in_time: Optional[datetime.datetime] = None,
         offset: Optional[datetime.timedelta] = None) -> datetime.datetime:
     """Calculate the next specified solar event."""
-    from astral import AstralError
-
     location = get_astral_location(hass)
+    return get_location_astral_event_next(
+        location, event, utc_point_in_time, offset)
+
+
+@callback
+def get_location_astral_event_next(
+        location: 'astral.Location', event: str,
+        utc_point_in_time: Optional[datetime.datetime] = None,
+        offset: Optional[datetime.timedelta] = None) -> datetime.datetime:
+    """Calculate the next specified solar event."""
+    from astral import AstralError
 
     if offset is None:
         offset = datetime.timedelta()
