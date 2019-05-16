@@ -1,11 +1,9 @@
-"""Support for (EMEA/EU-based) Honeywell evohome systems.
-
-Glossary:
-TCS - temperature control system (a.k.a. Controller, Parent), which can have up
-to 13 Children:
-- 0-12 Heating zones (a.k.a. Zone), Climate devices, and
-- 0-1 DHW controller (a.k.a. Boiler), a WaterHeater device
-"""
+"""Support for (EMEA/EU-based) Honeywell evohome systems."""
+# Glossary:
+#   TCS - temperature control system (a.k.a. Controller, Parent), which can
+#   have up to 13 Children:
+#     0-12 Heating zones (a.k.a. Zone), Climate devices, and
+#     0-1 DHW controller, (a.k.a. Boiler), a WaterHeater device
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Awaitable, Dict, Optional, List
@@ -37,19 +35,17 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF,
 
     CONF_SCAN_INTERVAL, CONF_USERNAME, CONF_PASSWORD,
-    EVENT_HOMEASSISTANT_START,
     HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS,
     PRECISION_HALVES, TEMP_CELSIUS,
     CONF_ACCESS_TOKEN, CONF_ACCESS_TOKEN_EXPIRES, CONF_REFRESH_TOKEN)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, async_dispatcher_send)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import (
-    DOMAIN, DATA_EVOHOME, STORAGE_VERSION, STORAGE_KEY, GWS, TCS)
+    DOMAIN, DATA_EVOHOME, GWS, TCS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,8 +68,11 @@ CONF_SECRETS = [
 ]  # CONF_USERNAME,  # TODO: fixme
 
 
-async def async_setup(hass, hass_config):
-    """Create a (EMEA/EU-based) Honeywell evohome system."""
+def setup(hass, hass_config):
+    """Create a (EMEA/EU-based) Honeywell evohome system.
+
+    Currently, only the Controller and the Zones are implemented here.
+    """
     evo_data = hass.data[DATA_EVOHOME] = {}
     evo_data['timers'] = {}
 
@@ -175,20 +174,12 @@ async def async_setup(hass, hass_config):
         tmp_loc = dict(evo_data['config'])
         tmp_loc['locationInfo']['postcode'] = 'REDACTED'
 
-        _LOGGER.debug("evo_data['config']=%s", tmp_loc)
+        _LOGGER.debug("setup(): evo_data['config']=%s", tmp_loc)
 
     load_platform(hass, 'climate', DOMAIN, {}, hass_config)
 
-    # if 'dhw' in evo_data['config'][GWS][0][TCS][0]:
-    #     load_platform(hass, 'water_heater', DOMAIN, {}, hass_config)
-
-    @callback
-    def _first_update(event):
-        """When HA has started, the hub knows to retrieve it's first update."""
-        async_dispatcher_send(hass, DOMAIN, {'signal': 'first_update'})
-        # _LOGGER.warn("_first_update(): fired")                                   # TODO: remove me
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _first_update)
+    if 'dhw' in evo_data['config'][GWS][0][TCS][0]:
+        load_platform(hass, 'water_heater', DOMAIN, {}, hass_config)
 
     return True
 
@@ -217,12 +208,6 @@ class EvoDevice(Entity):
         self._status = {}
 
         self._available = False  # should become True after first update()
-
-    @callback
-    def _refresh(self, packet):
-        if packet['signal'] == 'refresh':
-            self.async_schedule_update_ha_state(force_refresh=True)
-            # _LOGGER.warn("_refresh(EvoDevice): refresh")                         # TODO: delete me
 
     def _handle_exception(self, err):
         try:
@@ -261,16 +246,9 @@ class EvoDevice(Entity):
             else:
                 raise  # we don't expect/handle any other HTTPErrors
 
-
-# These properties, methods are from the Entity class
-    @property  # Entity
-    def should_poll(self) -> bool:
-        """Only the Evohome Controller should be polled."""
-        return False
-
-    @property  # Entity
-    def name(self) -> str:  # not Optional[str]  # TODO: DHW name
-        """Return the name of the Evohome entity."""
+    @property
+    def name(self) -> str:
+        """Return the name to use in the frontend UI."""
         return self._name
 
     @property  # Entity
@@ -311,66 +289,23 @@ class EvoDevice(Entity):
         return TEMP_CELSIUS
 
     @property
-    def state_attributes(self) -> Dict[str, Any]:
-        """Return the optional state attributes."""
-        supported_features = self.supported_features
-        data = {
-            ATTR_HVAC_MODES: self.hvac_modes,
-            ATTR_CURRENT_TEMPERATURE: show_temp(
-                self.hass, self.current_temperature, self.temperature_unit,
-                self.precision),
-            ATTR_MIN_TEMP: show_temp(
-                self.hass, self.min_temp, self.temperature_unit,
-                self.precision),
-            ATTR_MAX_TEMP: show_temp(
-                self.hass, self.max_temp, self.temperature_unit,
-                self.precision),
-            ATTR_TEMPERATURE: show_temp(
-                self.hass, self.target_temperature, self.temperature_unit,
-                self.precision),
-        }
+    def operation_list(self):
+        """Return the list of available operations."""
+        return self._operation_list
 
-        if self.target_temperature_step:
-            data[ATTR_TARGET_TEMP_STEP] = self.target_temperature_step
 
-        if supported_features & SUPPORT_TARGET_TEMPERATURE_RANGE:
-            data[ATTR_TARGET_TEMP_HIGH] = show_temp(
-                self.hass, self.target_temperature_high, self.temperature_unit,
-                self.precision)
-            data[ATTR_TARGET_TEMP_LOW] = show_temp(
-                self.hass, self.target_temperature_low, self.temperature_unit,
-                self.precision)
+class EvoChildDevice(Entity):
+    """Base for Honeywell evohome child devices (i.e. not the controller)."""
 
-        if self.current_humidity is not None:
-            data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
+    async def async_added_to_hass(self):
+        """Run when entity about to be added."""
+        async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
 
-        if supported_features & SUPPORT_TARGET_HUMIDITY:
-            data[ATTR_HUMIDITY] = self.target_humidity
+    @callback
+    def _refresh(self, packet):
+        self.async_schedule_update_ha_state(force_refresh=True)
 
-            if supported_features & SUPPORT_TARGET_HUMIDITY_RANGE:
-                data[ATTR_MIN_HUMIDITY] = self.min_humidity
-                data[ATTR_MAX_HUMIDITY] = self.max_humidity
-
-        if supported_features & SUPPORT_FAN_MODE:
-            data[ATTR_FAN_MODE] = self.fan_mode
-            if self.fan_list:
-                data[ATTR_FAN_LIST] = self.fan_list
-
-        if supported_features & SUPPORT_CURRENT_HVAC:
-            data[ATTR_CURRENT_HVAC] = self.current_hvac
-
-        if supported_features & SUPPORT_PRESET_MODE:
-            data[ATTR_PRESET_MODE] = self.preset_mode
-            if self.preset_list:
-                data[ATTR_PRESET_LIST] = self.preset_list
-
-        if supported_features & SUPPORT_SWING_MODE:
-            data[ATTR_SWING_MODE] = self.swing_mode
-            if self.swing_list:
-                data[ATTR_SWING_LIST] = self.swing_list
-
-        if supported_features & SUPPORT_AUX_HEAT:
-            data[ATTR_AUX_HEAT] = STATE_ON if self.is_aux_heat else STATE_OFF
-
-        _LOGGER.warn("state_attributes(%s) = %s", self._id, data)
-        return data
+    @property
+    def should_poll(self) -> bool:
+        """Only the Controller should be polled."""
+        return False

@@ -20,17 +20,24 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from . import (
-    EvoDevice,
+    EvoDevice, EvoChildDevice,
     CONF_LOCATION_IDX)
 from .const import (
-    DATA_EVOHOME, DOMAIN,
-    EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER, EVO_RESET, EVO_AUTO, EVO_AUTOECO,
-    EVO_AWAY, EVO_DAYOFF, EVO_CUSTOM, EVO_HEATOFF,
-    GWS, TCS)
+    DATA_EVOHOME, DOMAIN, GWS, TCS)
 
 _LOGGER = logging.getLogger(__name__)
 
-# For the Controller
+# The Controller's opmode/state and the zone's (inherited) state
+EVO_RESET = 'AutoWithReset'
+EVO_AUTO = 'Auto'
+EVO_AUTOECO = 'AutoWithEco'
+EVO_AWAY = 'Away'
+EVO_DAYOFF = 'DayOff'
+EVO_CUSTOM = 'Custom'
+EVO_HEATOFF = 'HeatingOff'
+
+# For the Controller. NB: evohome treats Away mode as a mode in/of itself,
+# where HA considers it to 'override' the exising operating mode
 TCS_STATE_TO_HA = {
     EVO_RESET: HVAC_MODE_AUTO,
     EVO_AUTO: HVAC_MODE_AUTO,
@@ -104,7 +111,7 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     async_add_entities(entities, update_before_add=False)
 
 
-class EvoZone(EvoDevice, ClimateDevice):
+class EvoZone(EvoChildDevice, EvoDevice, ClimateDevice):
     """Base for a Honeywell evohome Zone device."""
 
     def __init__(self, evo_data, client, evo_zone_ref):
@@ -500,19 +507,6 @@ class EvoController(EvoDevice, ClimateDevice):
         # _LOGGER.warn("max_temp(TCS=%s): %s", self._id, 35)
         return 35
 
-
-
-
-    @property
-    def XXX_current_operation(self):
-        """Return the current operating mode of the evohome Controller."""
-        return TCS_STATE_TO_HA.get(self._status['systemModeStatus']['mode'])
-
-    @property
-    def XXX_is_away_mode_on(self) -> bool:
-        """Return True if away mode is on."""
-        return self._status['systemModeStatus']['mode'] == EVO_AWAY
-
     def _set_operation_mode(self, operation_mode):
         try:
             self._evo_device._set_status(operation_mode)  # noqa: E501; pylint: disable=protected-access
@@ -543,3 +537,36 @@ class EvoController(EvoDevice, ClimateDevice):
         Controller's mode back to Auto.
         """
         self._set_operation_mode(EVO_AUTO)
+
+    def update(self):
+        """Get the latest state data of the entire evohome Location.
+
+        This includes state data for the Controller and all its child devices,
+        such as the operating mode of the Controller and the current temp of
+        its children (e.g. Zones, DHW controller).
+        """
+        # should the latest evohome state data be retreived this cycle?
+        timeout = datetime.now() + timedelta(seconds=55)
+        expired = timeout > self._timers['statusUpdated'] + \
+            self._params[CONF_SCAN_INTERVAL]
+
+        if not expired:
+            return
+
+        # Retrieve the latest state data via the client API
+        loc_idx = self._params[CONF_LOCATION_IDX]
+
+        try:
+            self._status.update(
+                self._client.locations[loc_idx].status()[GWS][0][TCS][0])
+        except (requests.exceptions.RequestException,
+                evohomeclient2.AuthenticationError) as err:
+            self._handle_exception(err)
+        else:
+            self._timers['statusUpdated'] = datetime.now()
+            self._available = True
+
+        _LOGGER.debug("Status = %s", self._status)
+
+        # inform the child devices that state data has been updated
+        dispatcher_send(self.hass, DOMAIN)
