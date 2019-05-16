@@ -5,6 +5,7 @@ from unittest.mock import patch
 import asynctest
 import pytest
 
+from homeassistant.core import callback
 from homeassistant.helpers import device_registry
 from tests.common import mock_device_registry, flush_store
 
@@ -15,7 +16,22 @@ def registry(hass):
     return mock_device_registry(hass)
 
 
-async def test_get_or_create_returns_same_entry(registry):
+@pytest.fixture
+def update_events(hass):
+    """Capture update events."""
+    events = []
+
+    @callback
+    def async_capture(event):
+        events.append(event.data)
+
+    hass.bus.async_listen(device_registry.EVENT_DEVICE_REGISTRY_UPDATED,
+                          async_capture)
+
+    return events
+
+
+async def test_get_or_create_returns_same_entry(hass, registry, update_events):
     """Make sure we do not duplicate entries."""
     entry = registry.async_get_or_create(
         config_entry_id='1234',
@@ -50,6 +66,15 @@ async def test_get_or_create_returns_same_entry(registry):
     assert entry3.model == 'model'
     assert entry3.name == 'name'
     assert entry3.sw_version == 'sw-version'
+
+    await hass.async_block_till_done()
+
+    # Only 2 update events. The third entry did not generate any changes.
+    assert len(update_events) == 2
+    assert update_events[0]['action'] == 'create'
+    assert update_events[0]['device_id'] == entry.id
+    assert update_events[1]['action'] == 'update'
+    assert update_events[1]['device_id'] == entry.id
 
 
 async def test_requirement_for_identifier_or_connection(registry):
@@ -155,7 +180,7 @@ async def test_loading_from_storage(hass, hass_storage):
     assert isinstance(entry.config_entries, set)
 
 
-async def test_removing_config_entries(registry):
+async def test_removing_config_entries(hass, registry, update_events):
     """Make sure we do not get duplicate entries."""
     entry = registry.async_get_or_create(
         config_entry_id='123',
@@ -190,6 +215,20 @@ async def test_removing_config_entries(registry):
 
     assert entry.config_entries == {'456'}
     assert entry3.config_entries == set()
+
+    await hass.async_block_till_done()
+
+    assert len(update_events) == 5
+    assert update_events[0]['action'] == 'create'
+    assert update_events[0]['device_id'] == entry.id
+    assert update_events[1]['action'] == 'update'
+    assert update_events[1]['device_id'] == entry2.id
+    assert update_events[2]['action'] == 'create'
+    assert update_events[2]['device_id'] == entry3.id
+    assert update_events[3]['action'] == 'update'
+    assert update_events[3]['device_id'] == entry.id
+    assert update_events[4]['action'] == 'update'
+    assert update_events[4]['device_id'] == entry3.id
 
 
 async def test_removing_area_id(registry):
@@ -361,17 +400,25 @@ async def test_update(registry):
         config_entry_id='1234',
         connections={
             (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:AB:CD:EF')
-        })
-
+        },
+        identifiers={('hue', '456'), ('bla', '123')})
+    new_identifiers = {
+        ('hue', '654'),
+        ('bla', '321')
+    }
     assert not entry.area_id
     assert not entry.name_by_user
 
-    updated_entry = registry.async_update_device(
-        entry.id, area_id='12345A', name_by_user='Test Friendly Name')
+    with patch.object(registry, 'async_schedule_save') as mock_save:
+        updated_entry = registry.async_update_device(
+            entry.id, area_id='12345A', name_by_user='Test Friendly Name',
+            new_identifiers=new_identifiers)
 
+    assert mock_save.call_count == 1
     assert updated_entry != entry
     assert updated_entry.area_id == '12345A'
     assert updated_entry.name_by_user == 'Test Friendly Name'
+    assert updated_entry.identifiers == new_identifiers
 
 
 async def test_loading_race_condition(hass):

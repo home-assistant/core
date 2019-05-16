@@ -3,7 +3,7 @@
   "name": "Home Assistant Frontend",
   "documentation": "https://www.home-assistant.io/components/frontend",
   "requirements": [
-    "home-assistant-frontend==20190427.0"
+    "home-assistant-frontend==20190514.0"
   ],
   "dependencies": [
     "api",

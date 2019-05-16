@@ -3,6 +3,7 @@ import json
 from unittest import mock
 
 import homekit
+import pytest
 
 from homeassistant.components.homekit_controller import config_flow
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
@@ -12,9 +13,29 @@ from tests.components.homekit_controller.common import (
 )
 
 
+ERROR_MAPPING_FORM_FIXTURE = [
+    (homekit.MaxPeersError, 'max_peers_error'),
+    (homekit.BusyError, 'busy_error'),
+    (homekit.MaxTriesError, 'max_tries_error'),
+    (KeyError, 'pairing_failed'),
+]
+
+ERROR_MAPPING_ABORT_FIXTURE = [
+    (homekit.AccessoryNotFoundError, 'accessory_not_found_error'),
+]
+
+
+def _setup_flow_handler(hass):
+    flow = config_flow.HomekitControllerFlowHandler()
+    flow.hass = hass
+    flow.context = {}
+    return flow
+
+
 async def test_discovery_works(hass):
     """Test a device being discovered."""
     discovery_info = {
+        'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
@@ -25,12 +46,12 @@ async def test_discovery_works(hass):
         }
     }
 
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
 
     result = await flow.async_step_discovery(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
 
     pairing = mock.Mock(pairing_data={
         'AccessoryPairingID': '00:00:00:00:00:00',
@@ -66,6 +87,7 @@ async def test_discovery_works(hass):
 async def test_discovery_works_upper_case(hass):
     """Test a device being discovered."""
     discovery_info = {
+        'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
@@ -76,12 +98,12 @@ async def test_discovery_works_upper_case(hass):
         }
     }
 
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
 
     result = await flow.async_step_discovery(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
 
     pairing = mock.Mock(pairing_data={
         'AccessoryPairingID': '00:00:00:00:00:00',
@@ -117,6 +139,7 @@ async def test_discovery_works_upper_case(hass):
 async def test_discovery_works_missing_csharp(hass):
     """Test a device being discovered that has missing mdns attrs."""
     discovery_info = {
+        'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
@@ -126,12 +149,12 @@ async def test_discovery_works_missing_csharp(hass):
         }
     }
 
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
 
     result = await flow.async_step_discovery(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
 
     pairing = mock.Mock(pairing_data={
         'AccessoryPairingID': '00:00:00:00:00:00',
@@ -167,6 +190,7 @@ async def test_discovery_works_missing_csharp(hass):
 async def test_pair_already_paired_1(hass):
     """Already paired."""
     discovery_info = {
+        'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
@@ -177,17 +201,18 @@ async def test_pair_already_paired_1(hass):
         }
     }
 
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
 
     result = await flow.async_step_discovery(discovery_info)
     assert result['type'] == 'abort'
     assert result['reason'] == 'already_paired'
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
 
 
 async def test_discovery_ignored_model(hass):
     """Already paired."""
     discovery_info = {
+        'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
@@ -198,12 +223,12 @@ async def test_discovery_ignored_model(hass):
         }
     }
 
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
 
     result = await flow.async_step_discovery(discovery_info)
     assert result['type'] == 'abort'
     assert result['reason'] == 'ignored_model'
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
 
 
 async def test_discovery_invalid_config_entry(hass):
@@ -216,6 +241,7 @@ async def test_discovery_invalid_config_entry(hass):
     assert len(hass.config_entries.async_entries()) == 1
 
     discovery_info = {
+        'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
@@ -226,12 +252,12 @@ async def test_discovery_invalid_config_entry(hass):
         }
     }
 
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
 
     result = await flow.async_step_discovery(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
 
     # Discovery of a HKID that is in a pairable state but for which there is
     # already a config entry - in that case the stale config entry is
@@ -243,6 +269,7 @@ async def test_discovery_invalid_config_entry(hass):
 async def test_discovery_already_configured(hass):
     """Already configured."""
     discovery_info = {
+        'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
@@ -259,12 +286,12 @@ async def test_discovery_already_configured(hass):
     conn.config_num = 1
     hass.data[KNOWN_DEVICES]['00:00:00:00:00:00'] = conn
 
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
 
     result = await flow.async_step_discovery(discovery_info)
     assert result['type'] == 'abort'
     assert result['reason'] == 'already_configured'
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
 
     assert conn.async_config_num_changed.call_count == 0
 
@@ -272,6 +299,7 @@ async def test_discovery_already_configured(hass):
 async def test_discovery_already_configured_config_change(hass):
     """Already configured."""
     discovery_info = {
+        'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
@@ -288,19 +316,20 @@ async def test_discovery_already_configured_config_change(hass):
     conn.config_num = 1
     hass.data[KNOWN_DEVICES]['00:00:00:00:00:00'] = conn
 
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
 
     result = await flow.async_step_discovery(discovery_info)
     assert result['type'] == 'abort'
     assert result['reason'] == 'already_configured'
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
 
-    assert conn.async_config_num_changed.call_args == mock.call(2)
+    assert conn.async_refresh_entity_map.call_args == mock.call(2)
 
 
 async def test_pair_unable_to_pair(hass):
     """Pairing completed without exception, but didn't create a pairing."""
     discovery_info = {
+        'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
@@ -311,12 +340,12 @@ async def test_pair_unable_to_pair(hass):
         }
     }
 
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
 
     result = await flow.async_step_discovery(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
 
     controller = mock.Mock()
     controller.pairings = {}
@@ -331,9 +360,11 @@ async def test_pair_unable_to_pair(hass):
     assert result['errors']['pairing_code'] == 'unable_to_pair'
 
 
-async def test_pair_authentication_error(hass):
-    """Pairing code is incorrect."""
+@pytest.mark.parametrize("exception,expected", ERROR_MAPPING_ABORT_FIXTURE)
+async def test_pair_abort_errors(hass, exception, expected):
+    """Test various pairing errors."""
     discovery_info = {
+        'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
@@ -344,12 +375,85 @@ async def test_pair_authentication_error(hass):
         }
     }
 
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
 
     result = await flow.async_step_discovery(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+
+    controller = mock.Mock()
+    controller.pairings = {}
+
+    with mock.patch('homekit.Controller') as controller_cls:
+        controller_cls.return_value = controller
+        controller.perform_pairing.side_effect = exception('error')
+        result = await flow.async_step_pair({
+            'pairing_code': '111-22-33',
+        })
+
+    assert result['type'] == 'abort'
+    assert result['reason'] == expected
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+
+
+@pytest.mark.parametrize("exception,expected", ERROR_MAPPING_FORM_FIXTURE)
+async def test_pair_form_errors(hass, exception, expected):
+    """Test various pairing errors."""
+    discovery_info = {
+        'name': 'TestDevice',
+        'host': '127.0.0.1',
+        'port': 8080,
+        'properties': {
+            'md': 'TestDevice',
+            'id': '00:00:00:00:00:00',
+            'c#': 1,
+            'sf': 1,
+        }
+    }
+
+    flow = _setup_flow_handler(hass)
+
+    result = await flow.async_step_discovery(discovery_info)
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'pair'
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+
+    controller = mock.Mock()
+    controller.pairings = {}
+
+    with mock.patch('homekit.Controller') as controller_cls:
+        controller_cls.return_value = controller
+        controller.perform_pairing.side_effect = exception('error')
+        result = await flow.async_step_pair({
+            'pairing_code': '111-22-33',
+        })
+
+    assert result['type'] == 'form'
+    assert result['errors']['pairing_code'] == expected
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+
+
+async def test_pair_authentication_error(hass):
+    """Pairing code is incorrect."""
+    discovery_info = {
+        'name': 'TestDevice',
+        'host': '127.0.0.1',
+        'port': 8080,
+        'properties': {
+            'md': 'TestDevice',
+            'id': '00:00:00:00:00:00',
+            'c#': 1,
+            'sf': 1,
+        }
+    }
+
+    flow = _setup_flow_handler(hass)
+
+    result = await flow.async_step_discovery(discovery_info)
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'pair'
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
 
     controller = mock.Mock()
     controller.pairings = {}
@@ -369,6 +473,7 @@ async def test_pair_authentication_error(hass):
 async def test_pair_unknown_error(hass):
     """Pairing failed for an unknown rason."""
     discovery_info = {
+        'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
@@ -379,12 +484,12 @@ async def test_pair_unknown_error(hass):
         }
     }
 
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
 
     result = await flow.async_step_discovery(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
 
     controller = mock.Mock()
     controller.pairings = {}
@@ -404,6 +509,7 @@ async def test_pair_unknown_error(hass):
 async def test_pair_already_paired(hass):
     """Device is already paired."""
     discovery_info = {
+        'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
@@ -414,12 +520,12 @@ async def test_pair_already_paired(hass):
         }
     }
 
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
 
     result = await flow.async_step_discovery(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
 
     controller = mock.Mock()
     controller.pairings = {}
@@ -439,6 +545,7 @@ async def test_pair_already_paired(hass):
 async def test_import_works(hass):
     """Test a device being discovered."""
     discovery_info = {
+        'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
@@ -468,8 +575,7 @@ async def test_import_works(hass):
         }]
     }]
 
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
 
     pairing_cls_imp = "homekit.controller.ip_implementation.IpPairing"
 
@@ -486,6 +592,7 @@ async def test_import_works(hass):
 async def test_import_already_configured(hass):
     """Test importing a device from .homekit that is already a ConfigEntry."""
     discovery_info = {
+        'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
@@ -502,12 +609,11 @@ async def test_import_already_configured(hass):
 
     config_entry = MockConfigEntry(
         domain='homekit_controller',
-        data=import_info
+        data=import_info,
     )
     config_entry.add_to_hass(hass)
 
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
 
     result = await flow.async_import_legacy_pairing(
         discovery_info['properties'], import_info)
@@ -518,6 +624,7 @@ async def test_import_already_configured(hass):
 async def test_user_works(hass):
     """Test user initiated disovers devices."""
     discovery_info = {
+        'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
@@ -550,8 +657,7 @@ async def test_user_works(hass):
         discovery_info,
     ]
 
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
 
     with mock.patch('homekit.Controller') as controller_cls:
         controller_cls.return_value = controller
@@ -577,8 +683,7 @@ async def test_user_works(hass):
 
 async def test_user_no_devices(hass):
     """Test user initiated pairing where no devices discovered."""
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
 
     with mock.patch('homekit.Controller') as controller_cls:
         controller_cls.return_value.discover.return_value = []
@@ -590,10 +695,10 @@ async def test_user_no_devices(hass):
 
 async def test_user_no_unpaired_devices(hass):
     """Test user initiated pairing where no unpaired devices discovered."""
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
 
     discovery_info = {
+        'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
@@ -638,6 +743,7 @@ async def test_parse_new_homekit_json(hass):
     mock_open = mock.mock_open(read_data=json.dumps(read_data))
 
     discovery_info = {
+        'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
@@ -648,8 +754,7 @@ async def test_parse_new_homekit_json(hass):
         }
     }
 
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
 
     pairing_cls_imp = "homekit.controller.ip_implementation.IpPairing"
 
@@ -662,6 +767,7 @@ async def test_parse_new_homekit_json(hass):
     assert result['type'] == 'create_entry'
     assert result['title'] == 'TestDevice'
     assert result['data']['AccessoryPairingID'] == '00:00:00:00:00:00'
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
 
 
 async def test_parse_old_homekit_json(hass):
@@ -694,6 +800,7 @@ async def test_parse_old_homekit_json(hass):
     mock_open = mock.mock_open(read_data=json.dumps(read_data))
 
     discovery_info = {
+        'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
@@ -704,8 +811,7 @@ async def test_parse_old_homekit_json(hass):
         }
     }
 
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
 
     pairing_cls_imp = "homekit.controller.ip_implementation.IpPairing"
 
@@ -719,6 +825,7 @@ async def test_parse_old_homekit_json(hass):
     assert result['type'] == 'create_entry'
     assert result['title'] == 'TestDevice'
     assert result['data']['AccessoryPairingID'] == '00:00:00:00:00:00'
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
 
 
 async def test_parse_overlapping_homekit_json(hass):
@@ -762,6 +869,7 @@ async def test_parse_overlapping_homekit_json(hass):
     side_effects = [mock_open_1.return_value, mock_open_2.return_value]
 
     discovery_info = {
+        'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
@@ -772,8 +880,7 @@ async def test_parse_overlapping_homekit_json(hass):
         }
     }
 
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
 
     pairing_cls_imp = "homekit.controller.ip_implementation.IpPairing"
 
@@ -789,3 +896,4 @@ async def test_parse_overlapping_homekit_json(hass):
     assert result['type'] == 'create_entry'
     assert result['title'] == 'TestDevice'
     assert result['data']['AccessoryPairingID'] == '00:00:00:00:00:00'
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}

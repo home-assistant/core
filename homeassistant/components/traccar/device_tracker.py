@@ -25,6 +25,7 @@ ATTR_MOTION = 'motion'
 ATTR_SPEED = 'speed'
 ATTR_TRACKER = 'tracker'
 ATTR_TRACCAR_ID = 'traccar_id'
+ATTR_STATUS = 'status'
 
 EVENT_DEVICE_MOVING = 'device_moving'
 EVENT_COMMAND_RESULT = 'command_result'
@@ -108,53 +109,74 @@ class TraccarScanner:
         self._scan_interval = scan_interval
         self._async_see = async_see
         self._api = api
+        self.connected = False
         self._hass = hass
 
     async def async_init(self):
         """Further initialize connection to Traccar."""
         await self._api.test_connection()
-        if self._api.authenticated:
-            await self._async_update()
-            async_track_time_interval(self._hass,
-                                      self._async_update,
-                                      self._scan_interval)
+        if self._api.connected and not self._api.authenticated:
+            _LOGGER.error("Authentication for Traccar failed")
+            return False
 
-        return self._api.authenticated
+        await self._async_update()
+        async_track_time_interval(self._hass,
+                                  self._async_update,
+                                  self._scan_interval)
+        return True
 
     async def _async_update(self, now=None):
         """Update info from Traccar."""
-        _LOGGER.debug('Updating device data.')
+        if not self.connected:
+            _LOGGER.debug('Testing connection to Traccar')
+            await self._api.test_connection()
+            self.connected = self._api.connected
+            if self.connected:
+                _LOGGER.info("Connection to Traccar restored")
+            else:
+                return
+        _LOGGER.debug('Updating device data')
         await self._api.get_device_info(self._custom_attributes)
         self._hass.async_create_task(self.import_device_data())
         if self._event_types:
             self._hass.async_create_task(self.import_events())
+        self.connected = self._api.connected
 
     async def import_device_data(self):
         """Import device data from Traccar."""
-        for devicename in self._api.device_info:
-            device = self._api.device_info[devicename]
+        for device_unique_id in self._api.device_info:
+            device_info = self._api.device_info[device_unique_id]
+            device = None
             attr = {}
             attr[ATTR_TRACKER] = 'traccar'
-            if device.get('address') is not None:
-                attr[ATTR_ADDRESS] = device['address']
-            if device.get('geofence') is not None:
-                attr[ATTR_GEOFENCE] = device['geofence']
-            if device.get('category') is not None:
-                attr[ATTR_CATEGORY] = device['category']
-            if device.get('speed') is not None:
-                attr[ATTR_SPEED] = device['speed']
-            if device.get('battery') is not None:
-                attr[ATTR_BATTERY_LEVEL] = device['battery']
-            if device.get('motion') is not None:
-                attr[ATTR_MOTION] = device['motion']
-            if device.get('traccar_id') is not None:
-                attr[ATTR_TRACCAR_ID] = device['traccar_id']
+            if device_info.get('address') is not None:
+                attr[ATTR_ADDRESS] = device_info['address']
+            if device_info.get('geofence') is not None:
+                attr[ATTR_GEOFENCE] = device_info['geofence']
+            if device_info.get('category') is not None:
+                attr[ATTR_CATEGORY] = device_info['category']
+            if device_info.get('speed') is not None:
+                attr[ATTR_SPEED] = device_info['speed']
+            if device_info.get('battery') is not None:
+                attr[ATTR_BATTERY_LEVEL] = device_info['battery']
+            if device_info.get('motion') is not None:
+                attr[ATTR_MOTION] = device_info['motion']
+            if device_info.get('traccar_id') is not None:
+                attr[ATTR_TRACCAR_ID] = device_info['traccar_id']
+                for dev in self._api.devices:
+                    if dev['id'] == device_info['traccar_id']:
+                        device = dev
+                        break
+            if device is not None and device.get('status') is not None:
+                attr[ATTR_STATUS] = device['status']
             for custom_attr in self._custom_attributes:
-                if device.get(custom_attr) is not None:
-                    attr[custom_attr] = device[custom_attr]
+                if device_info.get(custom_attr) is not None:
+                    attr[custom_attr] = device_info[custom_attr]
             await self._async_see(
-                dev_id=slugify(device['device_id']),
-                gps=(device.get('latitude'), device.get('longitude')),
+                dev_id=slugify(device_info['device_id']),
+                gps=(device_info.get('latitude'),
+                     device_info.get('longitude')),
+                gps_accuracy=(device_info.get('accuracy')),
                 attributes=attr)
 
     async def import_events(self):

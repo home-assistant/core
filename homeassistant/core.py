@@ -828,8 +828,8 @@ class StateMachine:
         """
         return self._states.get(entity_id.lower())
 
-    def is_state(self, entity_id: str, state: State) -> bool:
-        """Test if entity exists and is specified state.
+    def is_state(self, entity_id: str, state: str) -> bool:
+        """Test if entity exists and is in specified state.
 
         Async friendly.
         """
@@ -907,7 +907,7 @@ class StateMachine:
         else:
             same_state = (old_state.state == new_state and
                           not force_update)
-            same_attr = old_state.attributes == attributes
+            same_attr = old_state.attributes == MappingProxyType(attributes)
             last_changed = old_state.last_changed if same_state else None
 
         if same_state and same_attr:
@@ -936,6 +936,9 @@ class Service:
         """Initialize a service."""
         self.func = func
         self.schema = schema
+        # Properly detect wrapped functions
+        while isinstance(func, functools.partial):
+            func = func.func
         self.is_callback = is_callback(func)
         self.is_coroutinefunction = asyncio.iscoroutinefunction(func)
 

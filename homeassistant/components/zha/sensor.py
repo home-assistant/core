@@ -14,6 +14,7 @@ from .core.const import (
     SIGNAL_ATTR_UPDATED, SIGNAL_STATE_ATTR)
 from .entity import ZhaEntity
 
+PARALLEL_UPDATES = 5
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -21,6 +22,13 @@ _LOGGER = logging.getLogger(__name__)
 def pass_through_formatter(value):
     """No op update function."""
     return value
+
+
+def illuminance_formatter(value):
+    """Convert Illimination data."""
+    if value is None:
+        return None
+    return round(pow(10, ((value - 1) / 10000)), 1)
 
 
 def temperature_formatter(value):
@@ -57,6 +65,7 @@ FORMATTER_FUNC_REGISTRY = {
     TEMPERATURE: temperature_formatter,
     PRESSURE: pressure_formatter,
     ELECTRICAL_MEASUREMENT: active_power_formatter,
+    ILLUMINANCE: illuminance_formatter,
     GENERIC: pass_through_formatter,
 }
 

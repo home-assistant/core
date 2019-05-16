@@ -67,6 +67,16 @@ ENTITY_IMAGE_CACHE = {
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
+DEVICE_CLASS_TV = 'tv'
+DEVICE_CLASS_SPEAKER = 'speaker'
+
+DEVICE_CLASSES = [
+    DEVICE_CLASS_TV,
+    DEVICE_CLASS_SPEAKER,
+]
+
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
+
 # Service call validation schemas
 MEDIA_PLAYER_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.comp_entity_ids,
@@ -324,6 +334,11 @@ class MediaPlayerDevice(Entity):
     def media_image_url(self):
         """Image url of current playing media."""
         return None
+
+    @property
+    def media_image_remotely_accessible(self) -> bool:
+        """If the image url is remotely accessible."""
+        return False
 
     @property
     def media_image_hash(self):
@@ -725,6 +740,9 @@ class MediaPlayerDevice(Entity):
         if self.state == STATE_OFF:
             return None
 
+        if self.media_image_remotely_accessible:
+            return self.media_image_url
+
         image_hash = self.media_image_hash
 
         if image_hash is None:
@@ -810,6 +828,14 @@ class MediaPlayerImageView(HomeAssistantView):
 
         if not authenticated:
             return web.Response(status=401)
+
+        if player.media_image_remotely_accessible:
+            url = player.media_image_url
+            if url is not None:
+                return web.Response(status=302, headers={
+                    'location': url
+                })
+            return web.Response(status=500)
 
         data, content_type = await player.async_get_media_image()
 

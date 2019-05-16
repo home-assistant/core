@@ -130,6 +130,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         status_flags = int(properties['sf'])
         paired = not status_flags & 0x01
 
+        # pylint: disable=unsupported-assignment-operation
+        self.context['title_placeholders'] = {
+            'name': discovery_info['name'],
+        }
+
         # The configuration number increases every time the characteristic map
         # needs updating. Some devices use a slightly off-spec name so handle
         # both cases.
@@ -152,7 +157,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
                         "HomeKit info %s: c# incremented, refreshing entities",
                         hkid)
                     self.hass.async_create_task(
-                        conn.async_config_num_changed(config_num))
+                        conn.async_refresh_entity_map(config_num))
                 return self.async_abort(reason='already_configured')
 
             old_pairings = await self.hass.async_add_executor_job(
@@ -232,8 +237,21 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
                 errors['pairing_code'] = 'authentication_error'
             except homekit.UnknownError:
                 errors['pairing_code'] = 'unknown_error'
+            except homekit.MaxTriesError:
+                errors['pairing_code'] = 'max_tries_error'
+            except homekit.BusyError:
+                errors['pairing_code'] = 'busy_error'
+            except homekit.MaxPeersError:
+                errors['pairing_code'] = 'max_peers_error'
+            except homekit.AccessoryNotFoundError:
+                return self.async_abort(reason='accessory_not_found_error')
             except homekit.UnavailableError:
                 return self.async_abort(reason='already_paired')
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception(
+                    "Pairing attempt failed with an unhandled exception"
+                )
+                errors['pairing_code'] = 'pairing_failed'
 
         return self.async_show_form(
             step_id='pair',
