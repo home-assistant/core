@@ -50,6 +50,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
     def __init__(self, home: AsyncHome, device) -> None:
         """Initialize heating group."""
         device.modelType = 'Group-Heating'
+        self._simple_heating = None
         if device.actualTemperature is None:
             self._simple_heating = _get_first_heating_thermostat(device)
         super().__init__(home, device)
@@ -72,7 +73,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
     @property
     def current_temperature(self) -> float:
         """Return the current temperature."""
-        if hasattr(self, '_simple_heating') and self._simple_heating:
+        if self._simple_heating:
             return self._simple_heating.valveActualTemperature
         return self._device.actualTemperature
 
@@ -110,3 +111,4 @@ def _get_first_heating_thermostat(heating_group: AsyncHeatingGroup):
         if isinstance(device, (AsyncHeatingThermostat,
                                AsyncHeatingThermostatCompact)):
             return device
+    return None
