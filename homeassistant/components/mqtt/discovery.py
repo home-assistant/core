@@ -94,6 +94,7 @@ ABBREVIATIONS = {
     'cln_tpl': 'cleaning_template',
     'cmd_t': 'command_topic',
     'curr_temp_t': 'current_temperature_topic',
+    'curr_temp_tpl': 'current_temperature_template',
     'dev': 'device',
     'dev_cla': 'device_class',
     'dock_t': 'docked_topic',
@@ -157,6 +158,7 @@ ABBREVIATIONS = {
     'send_if_off': 'send_if_off',
     'set_pos_tpl': 'set_position_template',
     'set_pos_t': 'set_position_topic',
+    'pos_t': 'position_topic',
     'spd_cmd_t': 'speed_command_topic',
     'spd_stat_t': 'speed_state_topic',
     'spd_val_tpl': 'speed_value_template',
@@ -210,6 +212,12 @@ def clear_discovery_hash(hass, discovery_hash):
     del hass.data[ALREADY_DISCOVERED][discovery_hash]
 
 
+class MQTTConfig(dict):
+    """Dummy class to allow adding attributes."""
+
+    pass
+
+
 async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                       config_entry=None) -> bool:
     """Initialize of MQTT Discovery."""
@@ -236,7 +244,7 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                                 object_id, payload)
                 return
 
-        payload = dict(payload)
+        payload = MQTTConfig(payload)
 
         for key in list(payload.keys()):
             abbreviated_key = key
@@ -264,6 +272,10 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
         discovery_hash = (component, discovery_id)
 
         if payload:
+            # Attach MQTT topic to the payload, used for debug prints
+            setattr(payload, '__configuration_source__',
+                    "MQTT (topic: '{}')".format(topic))
+
             if CONF_PLATFORM in payload and 'schema' not in payload:
                 platform = payload[CONF_PLATFORM]
                 if (component in DEPRECATED_PLATFORM_TO_SCHEMA and

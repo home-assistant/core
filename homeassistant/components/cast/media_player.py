@@ -24,6 +24,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, dispatcher_send)
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
+from homeassistant.util.logging import async_create_catching_coro
 
 from . import DOMAIN as CAST_DOMAIN
 
@@ -522,8 +523,8 @@ class CastDevice(MediaPlayerDevice):
             if _is_matching_dynamic_group(self._cast_info, discover):
                 _LOGGER.debug("Discovered matching dynamic group: %s",
                               discover)
-                self.hass.async_create_task(
-                    self.async_set_dynamic_group(discover))
+                self.hass.async_create_task(async_create_catching_coro(
+                    self.async_set_dynamic_group(discover)))
                 return
 
             if self._cast_info.uuid != discover.uuid:
@@ -536,7 +537,8 @@ class CastDevice(MediaPlayerDevice):
                     self._cast_info.host, self._cast_info.port)
                 return
             _LOGGER.debug("Discovered chromecast with same UUID: %s", discover)
-            self.hass.async_create_task(self.async_set_cast_info(discover))
+            self.hass.async_create_task(async_create_catching_coro(
+                self.async_set_cast_info(discover)))
 
         def async_cast_removed(discover: ChromecastInfo):
             """Handle removal of Chromecast."""
@@ -546,13 +548,15 @@ class CastDevice(MediaPlayerDevice):
             if (self._dynamic_group_cast_info is not None and
                     self._dynamic_group_cast_info.uuid == discover.uuid):
                 _LOGGER.debug("Removed matching dynamic group: %s", discover)
-                self.hass.async_create_task(self.async_del_dynamic_group())
+                self.hass.async_create_task(async_create_catching_coro(
+                    self.async_del_dynamic_group()))
                 return
             if self._cast_info.uuid != discover.uuid:
                 # Removed is not our device.
                 return
             _LOGGER.debug("Removed chromecast with same UUID: %s", discover)
-            self.hass.async_create_task(self.async_del_cast_info(discover))
+            self.hass.async_create_task(async_create_catching_coro(
+                self.async_del_cast_info(discover)))
 
         async def async_stop(event):
             """Disconnect socket on Home Assistant stop."""
@@ -565,14 +569,15 @@ class CastDevice(MediaPlayerDevice):
             self.hass, SIGNAL_CAST_REMOVED,
             async_cast_removed)
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop)
-        self.hass.async_create_task(self.async_set_cast_info(self._cast_info))
+        self.hass.async_create_task(async_create_catching_coro(
+            self.async_set_cast_info(self._cast_info)))
         for info in self.hass.data[KNOWN_CHROMECAST_INFO_KEY]:
             if _is_matching_dynamic_group(self._cast_info, info):
                 _LOGGER.debug("[%s %s (%s:%s)] Found dynamic group: %s",
                               self.entity_id, self._cast_info.friendly_name,
                               self._cast_info.host, self._cast_info.port, info)
-                self.hass.async_create_task(
-                    self.async_set_dynamic_group(info))
+                self.hass.async_create_task(async_create_catching_coro(
+                    self.async_set_dynamic_group(info)))
                 break
 
     async def async_will_remove_from_hass(self) -> None:
@@ -1045,6 +1050,11 @@ class CastDevice(MediaPlayerDevice):
         images = media_status.images
 
         return images[0].url if images and images[0].url else None
+
+    @property
+    def media_image_remotely_accessible(self) -> bool:
+        """If the image url is remotely accessible."""
+        return True
 
     @property
     def media_title(self):

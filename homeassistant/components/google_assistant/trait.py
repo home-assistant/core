@@ -60,6 +60,7 @@ TRAIT_LOCKUNLOCK = PREFIX_TRAITS + 'LockUnlock'
 TRAIT_FANSPEED = PREFIX_TRAITS + 'FanSpeed'
 TRAIT_MODES = PREFIX_TRAITS + 'Modes'
 TRAIT_OPENCLOSE = PREFIX_TRAITS + 'OpenClose'
+TRAIT_VOLUME = PREFIX_TRAITS + 'Volume'
 
 PREFIX_COMMANDS = 'action.devices.commands.'
 COMMAND_ONOFF = PREFIX_COMMANDS + 'OnOff'
@@ -79,6 +80,8 @@ COMMAND_LOCKUNLOCK = PREFIX_COMMANDS + 'LockUnlock'
 COMMAND_FANSPEED = PREFIX_COMMANDS + 'SetFanSpeed'
 COMMAND_MODES = PREFIX_COMMANDS + 'SetModes'
 COMMAND_OPENCLOSE = PREFIX_COMMANDS + 'OpenClose'
+COMMAND_SET_VOLUME = PREFIX_COMMANDS + 'setVolume'
+COMMAND_VOLUME_RELATIVE = PREFIX_COMMANDS + 'volumeRelative'
 
 TRAITS = []
 
@@ -141,8 +144,6 @@ class BrightnessTrait(_Trait):
         """Test if state is supported."""
         if domain == light.DOMAIN:
             return features & light.SUPPORT_BRIGHTNESS
-        if domain == media_player.DOMAIN:
-            return features & media_player.SUPPORT_VOLUME_SET
 
         return False
 
@@ -160,13 +161,6 @@ class BrightnessTrait(_Trait):
             if brightness is not None:
                 response['brightness'] = int(100 * (brightness / 255))
 
-        elif domain == media_player.DOMAIN:
-            level = self.state.attributes.get(
-                media_player.ATTR_MEDIA_VOLUME_LEVEL)
-            if level is not None:
-                # Convert 0.0-1.0 to 0-255
-                response['brightness'] = int(level * 100)
-
         return response
 
     async def execute(self, command, data, params, challenge):
@@ -178,13 +172,6 @@ class BrightnessTrait(_Trait):
                 light.DOMAIN, light.SERVICE_TURN_ON, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     light.ATTR_BRIGHTNESS_PCT: params['brightness']
-                }, blocking=True, context=data.context)
-        elif domain == media_player.DOMAIN:
-            await self.hass.services.async_call(
-                media_player.DOMAIN, media_player.SERVICE_VOLUME_SET, {
-                    ATTR_ENTITY_ID: self.state.entity_id,
-                    media_player.ATTR_MEDIA_VOLUME_LEVEL:
-                    params['brightness'] / 100
                 }, blocking=True, context=data.context)
 
 
@@ -755,11 +742,10 @@ class LockUnlockTrait(_Trait):
 
     async def execute(self, command, data, params, challenge):
         """Execute an LockUnlock command."""
-        _verify_pin_challenge(data, challenge)
-
         if params['lock']:
             service = lock.SERVICE_LOCK
         else:
+            _verify_pin_challenge(data, challenge)
             service = lock.SERVICE_UNLOCK
 
         await self.hass.services.async_call(lock.DOMAIN, service, {
@@ -1040,6 +1026,8 @@ class OpenCloseTrait(_Trait):
         COMMAND_OPENCLOSE
     ]
 
+    override_position = None
+
     @staticmethod
     def supported(domain, features, device_class):
         """Test if state is supported."""
@@ -1056,20 +1044,22 @@ class OpenCloseTrait(_Trait):
 
     def sync_attributes(self):
         """Return opening direction."""
-        attrs = {}
+        response = {}
         if self.state.domain == binary_sensor.DOMAIN:
-            attrs['queryOnlyOpenClose'] = True
-        return attrs
+            response['queryOnlyOpenClose'] = True
+        return response
 
     def query_attributes(self):
         """Return state query attributes."""
         domain = self.state.domain
         response = {}
 
-        if domain == cover.DOMAIN:
-            # When it's an assumed state, we will always report it as 50%
-            # Google will not issue an open command if the assumed state is
-            # open, even if that is currently incorrect.
+        if self.override_position is not None:
+            response['openPercent'] = self.override_position
+
+        elif domain == cover.DOMAIN:
+            # When it's an assumed state, we will return that querying state
+            # is not supported.
             if self.state.attributes.get(ATTR_ASSUMED_STATE):
                 raise SmartHomeError(
                     ERR_NOT_SUPPORTED,
@@ -1080,7 +1070,7 @@ class OpenCloseTrait(_Trait):
                     ERR_NOT_SUPPORTED,
                     'Querying state is not supported')
 
-            position = self.state.attributes.get(
+            position = self.override_position or self.state.attributes.get(
                 cover.ATTR_CURRENT_POSITION
             )
 
@@ -1104,32 +1094,112 @@ class OpenCloseTrait(_Trait):
         domain = self.state.domain
 
         if domain == cover.DOMAIN:
-            if self.state.attributes.get(ATTR_DEVICE_CLASS) in (
-                    cover.DEVICE_CLASS_DOOR, cover.DEVICE_CLASS_GARAGE
-            ):
-                _verify_pin_challenge(data, challenge)
+            svc_params = {ATTR_ENTITY_ID: self.state.entity_id}
 
-            position = self.state.attributes.get(cover.ATTR_CURRENT_POSITION)
             if params['openPercent'] == 0:
-                await self.hass.services.async_call(
-                    cover.DOMAIN, cover.SERVICE_CLOSE_COVER, {
-                        ATTR_ENTITY_ID: self.state.entity_id
-                    }, blocking=True, context=data.context)
+                service = cover.SERVICE_CLOSE_COVER
+                should_verify = False
             elif params['openPercent'] == 100:
-                await self.hass.services.async_call(
-                    cover.DOMAIN, cover.SERVICE_OPEN_COVER, {
-                        ATTR_ENTITY_ID: self.state.entity_id
-                    }, blocking=True, context=data.context)
-            elif position is not None:
-                await self.hass.services.async_call(
-                    cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION, {
-                        ATTR_ENTITY_ID: self.state.entity_id,
-                        cover.ATTR_POSITION: params['openPercent']
-                    }, blocking=True, context=data.context)
+                service = cover.SERVICE_OPEN_COVER
+                should_verify = True
+            elif (self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) &
+                  cover.SUPPORT_SET_POSITION):
+                service = cover.SERVICE_SET_COVER_POSITION
+                should_verify = True
+                svc_params[cover.ATTR_POSITION] = params['openPercent']
             else:
                 raise SmartHomeError(
                     ERR_FUNCTION_NOT_SUPPORTED,
                     'Setting a position is not supported')
+
+            if (should_verify and
+                    self.state.attributes.get(ATTR_DEVICE_CLASS)
+                    in (cover.DEVICE_CLASS_DOOR,
+                        cover.DEVICE_CLASS_GARAGE)):
+                _verify_pin_challenge(data, challenge)
+
+            await self.hass.services.async_call(
+                cover.DOMAIN, service, svc_params,
+                blocking=True, context=data.context)
+
+            if (self.state.attributes.get(ATTR_ASSUMED_STATE) or
+                    self.state.state == STATE_UNKNOWN):
+                self.override_position = params['openPercent']
+
+
+@register_trait
+class VolumeTrait(_Trait):
+    """Trait to control brightness of a device.
+
+    https://developers.google.com/actions/smarthome/traits/volume
+    """
+
+    name = TRAIT_VOLUME
+    commands = [
+        COMMAND_SET_VOLUME,
+        COMMAND_VOLUME_RELATIVE,
+    ]
+
+    @staticmethod
+    def supported(domain, features, device_class):
+        """Test if state is supported."""
+        if domain == media_player.DOMAIN:
+            return features & media_player.SUPPORT_VOLUME_SET
+
+        return False
+
+    def sync_attributes(self):
+        """Return brightness attributes for a sync request."""
+        return {}
+
+    def query_attributes(self):
+        """Return brightness query attributes."""
+        response = {}
+
+        level = self.state.attributes.get(
+            media_player.ATTR_MEDIA_VOLUME_LEVEL)
+        muted = self.state.attributes.get(
+            media_player.ATTR_MEDIA_VOLUME_MUTED)
+        if level is not None:
+            # Convert 0.0-1.0 to 0-100
+            response['currentVolume'] = int(level * 100)
+            response['isMuted'] = bool(muted)
+
+        return response
+
+    async def _execute_set_volume(self, data, params):
+        level = params['volumeLevel']
+
+        await self.hass.services.async_call(
+            media_player.DOMAIN,
+            media_player.SERVICE_VOLUME_SET, {
+                ATTR_ENTITY_ID: self.state.entity_id,
+                media_player.ATTR_MEDIA_VOLUME_LEVEL:
+                level / 100
+            }, blocking=True, context=data.context)
+
+    async def _execute_volume_relative(self, data, params):
+        # This could also support up/down commands using relativeSteps
+        relative = params['volumeRelativeLevel']
+        current = self.state.attributes.get(
+            media_player.ATTR_MEDIA_VOLUME_LEVEL)
+
+        await self.hass.services.async_call(
+            media_player.DOMAIN, media_player.SERVICE_VOLUME_SET, {
+                ATTR_ENTITY_ID: self.state.entity_id,
+                media_player.ATTR_MEDIA_VOLUME_LEVEL:
+                current + relative / 100
+            }, blocking=True, context=data.context)
+
+    async def execute(self, command, data, params, challenge):
+        """Execute a brightness command."""
+        if command == COMMAND_SET_VOLUME:
+            await self._execute_set_volume(data, params)
+        elif command == COMMAND_VOLUME_RELATIVE:
+            await self._execute_volume_relative(data, params)
+        else:
+            raise SmartHomeError(
+                ERR_NOT_SUPPORTED, 'Command not supported')
 
 
 def _verify_pin_challenge(data, challenge):

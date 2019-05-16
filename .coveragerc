@@ -22,6 +22,7 @@ omit =
     homeassistant/components/alarmdotcom/alarm_control_panel.py
     homeassistant/components/alpha_vantage/sensor.py
     homeassistant/components/amazon_polly/tts.py
+    homeassistant/components/ambiclimate/climate.py
     homeassistant/components/ambient_station/*
     homeassistant/components/amcrest/*
     homeassistant/components/ampio/*
@@ -52,6 +53,7 @@ omit =
     homeassistant/components/bbox/sensor.py
     homeassistant/components/bh1750/sensor.py
     homeassistant/components/bitcoin/sensor.py
+    homeassistant/components/bizkaibus/sensor.py
     homeassistant/components/blink/*
     homeassistant/components/blinksticklight/light.py
     homeassistant/components/blinkt/light.py
@@ -173,6 +175,7 @@ omit =
     homeassistant/components/esphome/light.py
     homeassistant/components/esphome/sensor.py
     homeassistant/components/esphome/switch.py
+    homeassistant/components/essent/sensor.py
     homeassistant/components/etherscan/sensor.py
     homeassistant/components/eufy/*
     homeassistant/components/everlights/light.py
@@ -275,9 +278,11 @@ omit =
     homeassistant/components/imap_email_content/sensor.py
     homeassistant/components/influxdb/sensor.py
     homeassistant/components/insteon/*
+    homeassistant/components/incomfort/*
     homeassistant/components/ios/*
     homeassistant/components/iota/*
     homeassistant/components/iperf3/*
+    homeassistant/components/iqvia/*
     homeassistant/components/irish_rail_transport/sensor.py
     homeassistant/components/iss/binary_sensor.py
     homeassistant/components/isy994/*
@@ -344,6 +349,7 @@ omit =
     homeassistant/components/message_bird/notify.py
     homeassistant/components/met/weather.py
     homeassistant/components/meteo_france/*
+    homeassistant/components/meteoalarm/*
     homeassistant/components/metoffice/sensor.py
     homeassistant/components/metoffice/weather.py
     homeassistant/components/microsoft/tts.py
@@ -418,6 +424,7 @@ omit =
     homeassistant/components/openweathermap/sensor.py
     homeassistant/components/openweathermap/weather.py
     homeassistant/components/opple/light.py
+    homeassistant/components/orangepi_gpio/*
     homeassistant/components/orvibo/switch.py
     homeassistant/components/osramlightify/light.py
     homeassistant/components/otp/sensor.py
@@ -440,7 +447,6 @@ omit =
     homeassistant/components/plum_lightpad/*
     homeassistant/components/pocketcasts/sensor.py
     homeassistant/components/point/*
-    homeassistant/components/pollen/sensor.py
     homeassistant/components/postnl/sensor.py
     homeassistant/components/prezzibenzina/sensor.py
     homeassistant/components/proliphix/climate.py
@@ -449,6 +455,7 @@ omit =
     homeassistant/components/proxy/camera.py
     homeassistant/components/ps4/__init__.py
     homeassistant/components/ps4/media_player.py
+    homeassistant/components/ptvsd/*
     homeassistant/components/pulseaudio_loopback/switch.py
     homeassistant/components/pushbullet/notify.py
     homeassistant/components/pushbullet/sensor.py
@@ -534,9 +541,7 @@ omit =
     homeassistant/components/smappee/*
     homeassistant/components/smtp/notify.py
     homeassistant/components/snapcast/media_player.py
-    homeassistant/components/snmp/device_tracker.py
-    homeassistant/components/snmp/sensor.py
-    homeassistant/components/snmp/switch.py
+    homeassistant/components/snmp/*
     homeassistant/components/sochain/sensor.py
     homeassistant/components/socialblade/sensor.py
     homeassistant/components/solaredge/sensor.py
@@ -561,6 +566,7 @@ omit =
     homeassistant/components/swiss_public_transport/sensor.py
     homeassistant/components/swisscom/device_tracker.py
     homeassistant/components/switchbot/switch.py
+    homeassistant/components/switcher_kis/switch.py
     homeassistant/components/switchmate/switch.py
     homeassistant/components/syncthru/sensor.py
     homeassistant/components/synology/camera.py

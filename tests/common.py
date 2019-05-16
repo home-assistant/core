@@ -269,6 +269,15 @@ def fire_service_discovered(hass, service, info):
     })
 
 
+@ha.callback
+def async_fire_service_discovered(hass, service, info):
+    """Fire the MQTT message."""
+    hass.bus.async_fire(EVENT_PLATFORM_DISCOVERED, {
+        ATTR_SERVICE: service,
+        ATTR_DISCOVERED: info
+    })
+
+
 def load_fixture(filename):
     """Load a fixture."""
     path = os.path.join(os.path.dirname(__file__), 'fixtures', filename)

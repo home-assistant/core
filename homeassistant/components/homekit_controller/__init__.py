@@ -8,9 +8,10 @@ from homeassistant.helpers.entity import Entity
 from .config_flow import load_old_pairings
 from .connection import get_accessory_information, HKDevice
 from .const import (
-    CONTROLLER, KNOWN_DEVICES
+    CONTROLLER, ENTITY_MAP, KNOWN_DEVICES
 )
 from .const import DOMAIN   # noqa: pylint: disable=unused-import
+from .storage import EntityMapStorage
 
 HOMEKIT_IGNORE = [
     'BSB002',
@@ -44,7 +45,7 @@ class HomeKitEntity(Entity):
         # pylint: disable=import-error
         from homekit.model.characteristics import CharacteristicsTypes
 
-        pairing_data = self._accessory.pairing.pairing_data
+        accessories = self._accessory.accessories
 
         get_uuid = CharacteristicsTypes.get_uuid
         characteristic_types = [
@@ -55,7 +56,7 @@ class HomeKitEntity(Entity):
         self._chars = {}
         self._char_names = {}
 
-        for accessory in pairing_data.get('accessories', []):
+        for accessory in accessories:
             if accessory['aid'] != self._aid:
                 continue
             self._accessory_info = get_accessory_information(accessory)
@@ -149,15 +150,22 @@ class HomeKitEntity(Entity):
         raise NotImplementedError
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up for Homekit devices."""
     # pylint: disable=import-error
     import homekit
     from homekit.controller.ip_implementation import IpPairing
 
+    map_storage = hass.data[ENTITY_MAP] = EntityMapStorage(hass)
+    await map_storage.async_initialize()
+
     hass.data[CONTROLLER] = controller = homekit.Controller()
 
-    for hkid, pairing_data in load_old_pairings(hass).items():
+    old_pairings = await hass.async_add_executor_job(
+        load_old_pairings,
+        hass
+    )
+    for hkid, pairing_data in old_pairings.items():
         controller.pairings[hkid] = IpPairing(pairing_data)
 
     def discovery_dispatch(service, discovery_info):
@@ -185,12 +193,22 @@ def setup(hass, config):
             device = hass.data[KNOWN_DEVICES][hkid]
             if config_num > device.config_num and \
                device.pairing is not None:
-                device.accessory_setup()
+                device.refresh_entity_map(config_num)
             return
 
         _LOGGER.debug('Discovered unique device %s', hkid)
-        HKDevice(hass, host, port, model, hkid, config_num, config)
+        device = HKDevice(hass, host, port, model, hkid, config_num, config)
+        device.setup()
 
     hass.data[KNOWN_DEVICES] = {}
-    discovery.listen(hass, SERVICE_HOMEKIT, discovery_dispatch)
+
+    await hass.async_add_executor_job(
+        discovery.listen, hass, SERVICE_HOMEKIT, discovery_dispatch)
+
     return True
+
+
+async def async_remove_entry(hass, entry):
+    """Cleanup caches before removing config entry."""
+    hkid = entry.data['AccessoryPairingID']
+    hass.data[ENTITY_MAP].async_delete_map(hkid)

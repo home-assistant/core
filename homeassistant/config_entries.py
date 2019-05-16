@@ -146,6 +146,7 @@ FLOWS = [
     'ais_drives_service',
     'ais_spotify_service',
     'ais_host',
+    'ambiclimate',
     'ambient_station',
     'axis',
     'cast',

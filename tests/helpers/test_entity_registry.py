@@ -5,7 +5,7 @@ from unittest.mock import patch
 import asynctest
 import pytest
 
-from homeassistant.core import valid_entity_id
+from homeassistant.core import valid_entity_id, callback
 from homeassistant.helpers import entity_registry
 
 from tests.common import mock_registry, flush_store
@@ -20,14 +20,34 @@ def registry(hass):
     return mock_registry(hass)
 
 
-def test_get_or_create_returns_same_entry(registry):
+@pytest.fixture
+def update_events(hass):
+    """Capture update events."""
+    events = []
+
+    @callback
+    def async_capture(event):
+        events.append(event.data)
+
+    hass.bus.async_listen(entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+                          async_capture)
+
+    return events
+
+
+async def test_get_or_create_returns_same_entry(hass, registry, update_events):
     """Make sure we do not duplicate entries."""
     entry = registry.async_get_or_create('light', 'hue', '1234')
     entry2 = registry.async_get_or_create('light', 'hue', '1234')
 
+    await hass.async_block_till_done()
+
     assert len(registry.entities) == 1
     assert entry is entry2
     assert entry.entity_id == 'light.hue_1234'
+    assert len(update_events) == 1
+    assert update_events[0]['action'] == 'create'
+    assert update_events[0]['entity_id'] == entry.entity_id
 
 
 def test_get_or_create_suggested_object_id(registry):
@@ -168,7 +188,7 @@ def test_async_get_entity_id(registry):
     assert registry.async_get_entity_id('light', 'hue', '123') is None
 
 
-def test_updating_config_entry_id(registry):
+async def test_updating_config_entry_id(hass, registry, update_events):
     """Test that we update config entry id in registry."""
     entry = registry.async_get_or_create(
         'light', 'hue', '5678', config_entry_id='mock-id-1')
@@ -177,8 +197,16 @@ def test_updating_config_entry_id(registry):
     assert entry.entity_id == entry2.entity_id
     assert entry2.config_entry_id == 'mock-id-2'
 
+    await hass.async_block_till_done()
 
-def test_removing_config_entry_id(registry):
+    assert len(update_events) == 2
+    assert update_events[0]['action'] == 'create'
+    assert update_events[0]['entity_id'] == entry.entity_id
+    assert update_events[1]['action'] == 'update'
+    assert update_events[1]['entity_id'] == entry.entity_id
+
+
+async def test_removing_config_entry_id(hass, registry, update_events):
     """Test that we update config entry id in registry."""
     entry = registry.async_get_or_create(
         'light', 'hue', '5678', config_entry_id='mock-id-1')
@@ -187,6 +215,14 @@ def test_removing_config_entry_id(registry):
 
     entry = registry.entities[entry.entity_id]
     assert entry.config_entry_id is None
+
+    await hass.async_block_till_done()
+
+    assert len(update_events) == 2
+    assert update_events[0]['action'] == 'create'
+    assert update_events[0]['entity_id'] == entry.entity_id
+    assert update_events[1]['action'] == 'update'
+    assert update_events[1]['entity_id'] == entry.entity_id
 
 
 async def test_migration(hass):
@@ -271,3 +307,29 @@ async def test_loading_race_condition(hass):
 
         mock_load.assert_called_once_with()
         assert results[0] == results[1]
+
+
+async def test_update_entity_unique_id(registry):
+    """Test entity's unique_id is updated."""
+    entry = registry.async_get_or_create(
+        'light', 'hue', '5678', config_entry_id='mock-id-1')
+    new_unique_id = '1234'
+    with patch.object(registry, 'async_schedule_save') as mock_schedule_save:
+        updated_entry = registry.async_update_entity(
+            entry.entity_id, new_unique_id=new_unique_id)
+    assert updated_entry != entry
+    assert updated_entry.unique_id == new_unique_id
+    assert mock_schedule_save.call_count == 1
+
+
+async def test_update_entity_unique_id_conflict(registry):
+    """Test migration raises when unique_id already in use."""
+    entry = registry.async_get_or_create(
+        'light', 'hue', '5678', config_entry_id='mock-id-1')
+    entry2 = registry.async_get_or_create(
+        'light', 'hue', '1234', config_entry_id='mock-id-1')
+    with patch.object(registry, 'async_schedule_save') as mock_schedule_save, \
+            pytest.raises(ValueError):
+        registry.async_update_entity(
+            entry.entity_id, new_unique_id=entry2.unique_id)
+    assert mock_schedule_save.call_count == 0

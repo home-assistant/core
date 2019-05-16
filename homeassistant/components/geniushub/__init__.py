@@ -57,4 +57,7 @@ async def async_setup(hass, hass_config):
     hass.async_create_task(async_load_platform(
         hass, 'climate', DOMAIN, {}, hass_config))
 
+    hass.async_create_task(async_load_platform(
+        hass, 'water_heater', DOMAIN, {}, hass_config))
+
     return True

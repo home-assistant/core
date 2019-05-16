@@ -9,7 +9,8 @@
         "step": {
             "user": {
                 "data": {
-                    "access_token": "Host"
+                    "access_token": "Host",
+                    "host": "Host"
                 },
                 "description": "Wprowad\u017a nazw\u0119 hosta lub adres IP urz\u0105dzenia Heos (preferowane po\u0142\u0105czenie kablowe, nie WiFi).",
                 "title": "Po\u0142\u0105cz si\u0119 z Heos"
