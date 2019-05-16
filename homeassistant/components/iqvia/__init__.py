@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
@@ -82,9 +83,13 @@ async def async_setup_entry(hass, config_entry):
             Client(config_entry.data[CONF_ZIP_CODE], websession),
             config_entry.data.get(CONF_MONITORED_CONDITIONS, list(SENSORS)))
         await iqvia.async_update()
+    except InvalidZipError:
+        _LOGGER.error(
+            'Invalid ZIP code provided: %s', config_entry.data[CONF_ZIP_CODE])
+        return False
     except IQVIAError as err:
         _LOGGER.error('Unable to set up IQVIA: %s', err)
-        return False
+        raise ConfigEntryNotReady
 
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = iqvia
 
@@ -162,11 +167,6 @@ class IQVIAData:
         #   1. If `InvalidZipError` is thrown, quit everything immediately.
         #   2. If a single request throws any other error, try the others.
         for key, result in zip(tasks, results):
-            if isinstance(result, InvalidZipError):
-                _LOGGER.error("No data for ZIP: %s", self._client.zip_code)
-                self.data = {}
-                return
-
             if isinstance(result, IQVIAError):
                 _LOGGER.error('Unable to get %s data: %s', key, result)
                 self.data[key] = {}
