@@ -155,11 +155,10 @@ async def async_load_ip_bans_config(hass: HomeAssistant, path: str):
     """Load list of banned IPs from config file."""
     ip_list = []
 
-    if not os.path.isfile(path):
-        return ip_list
-
     try:
         list_ = await hass.async_add_executor_job(load_yaml_config_file, path)
+    except FileNotFoundError:
+        return ip_list
     except HomeAssistantError as err:
         _LOGGER.error('Unable to load %s: %s', path, str(err))
         return ip_list
