@@ -170,7 +170,7 @@ class ConfiguredDoorBird():
 
             self._register_event(hass_url, event)
 
-            _LOGGER.info('Successfully registered URL for %s on %s.',
+            _LOGGER.info('Successfully registered URL for %s on %s',
                          event, self.name)
 
     @property
@@ -194,7 +194,7 @@ class ConfiguredDoorBird():
 
         if not fav_id:
             _LOGGER.warning('Could not find favorite for URL "%s". '
-                            'Skipping sensor "%s".', url, event)
+                            'Skipping sensor "%s"', url, event)
             return
 
     def webhook_is_registered(self, url, favs=None) -> bool:
