@@ -523,9 +523,9 @@ class NetatmoData:
             _LOGGER.debug("%s detected!", str(self.data_class.__name__))
             return station_data
         except NoDevice:
-            _LOGGER.warning("No Weather or HomeCoach devices found for %s", str(
-                self.station
-                ))
+            _LOGGER.warning("No Weather or HomeCoach devices found for %s",
+                            str(self.station)
+                            )
             raise
 
     def update(self):
