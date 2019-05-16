@@ -56,7 +56,7 @@ class IQVIAFlowHandler(config_entries.ConfigFlow):
         websession = aiohttp_client.async_get_clientsession(self.hass)
 
         try:
-            client = Client(user_input[CONF_ZIP_CODE], websession)
+            Client(user_input[CONF_ZIP_CODE], websession)
         except InvalidZipError:
             return await self._show_form({CONF_ZIP_CODE: 'invalid_zip_code'})
 

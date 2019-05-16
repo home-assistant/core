@@ -1,11 +1,10 @@
 """Define tests for the IQVIA config flow."""
-from pyiqvia.errors import IQVIAError
 import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.iqvia import CONF_ZIP_CODE, DOMAIN, config_flow
 
-from tests.common import MockConfigEntry, MockDependency, mock_coro
+from tests.common import MockConfigEntry, MockDependency
 
 
 @pytest.fixture
