@@ -1130,7 +1130,7 @@ pyicloud==0.9.1
 pyipma==1.2.1
 
 # homeassistant.components.iqvia
-pyiqvia==0.2.0
+pyiqvia==0.2.1
 
 # homeassistant.components.irish_rail_transport
 pyirishrail==0.0.2

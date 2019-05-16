@@ -235,7 +235,7 @@ pyheos==0.5.2
 pyhomematic==0.1.58
 
 # homeassistant.components.iqvia
-pyiqvia==0.2.0
+pyiqvia==0.2.1
 
 # homeassistant.components.litejet
 pylitejet==0.1
