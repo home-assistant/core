@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
@@ -87,9 +86,6 @@ async def async_setup_entry(hass, config_entry):
         _LOGGER.error(
             'Invalid ZIP code provided: %s', config_entry.data[CONF_ZIP_CODE])
         return False
-    except IQVIAError as err:
-        _LOGGER.error('Unable to set up IQVIA: %s', err)
-        raise ConfigEntryNotReady
 
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = iqvia
 
