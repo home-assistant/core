@@ -1,5 +1,6 @@
 """Integrates Native Apps to Home Assistant."""
 from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
 from homeassistant.components.webhook import async_register as webhook_register
 from homeassistant.helpers import device_registry as dr, discovery
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -86,6 +87,9 @@ async def async_setup_entry(hass, entry):
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry,
                                                       DATA_BINARY_SENSOR))
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry,
+                                                      MP_DOMAIN))
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, DATA_SENSOR))
 

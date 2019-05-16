@@ -47,6 +47,7 @@ ATTR_PUSH_RATE_LIMITS_MAXIMUM = 'maximum'
 ATTR_PUSH_RATE_LIMITS_RESETS_AT = 'resetsAt'
 ATTR_PUSH_RATE_LIMITS_SUCCESSFUL = 'successful'
 ATTR_SUPPORTS_ENCRYPTION = 'supports_encryption'
+ATTR_SUPPORTS_MEDIA_PLAYER = 'supports_media_player'
 
 ATTR_EVENT_DATA = 'event_data'
 ATTR_EVENT_TYPE = 'event_type'
@@ -97,6 +98,7 @@ REGISTRATION_SCHEMA = vol.Schema({
     vol.Required(ATTR_OS_NAME): cv.string,
     vol.Optional(ATTR_OS_VERSION): cv.string,
     vol.Required(ATTR_SUPPORTS_ENCRYPTION, default=False): cv.boolean,
+    vol.Required(ATTR_SUPPORTS_MEDIA_PLAYER, default=False): cv.boolean,
 })
 
 UPDATE_REGISTRATION_SCHEMA = vol.Schema({
@@ -106,6 +108,7 @@ UPDATE_REGISTRATION_SCHEMA = vol.Schema({
     vol.Required(ATTR_MANUFACTURER): cv.string,
     vol.Required(ATTR_MODEL): cv.string,
     vol.Optional(ATTR_OS_VERSION): cv.string,
+    vol.Optional(ATTR_SUPPORTS_MEDIA_PLAYER, default=False): cv.boolean,
 })
 
 WEBHOOK_PAYLOAD_SCHEMA = vol.Schema({

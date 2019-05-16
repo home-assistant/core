@@ -12,8 +12,8 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import (ATTR_APP_DATA, ATTR_APP_ID, ATTR_APP_NAME,
                     ATTR_APP_VERSION, ATTR_DEVICE_NAME, ATTR_MANUFACTURER,
                     ATTR_MODEL, ATTR_OS_VERSION, ATTR_SUPPORTS_ENCRYPTION,
-                    CONF_SECRET, CONF_USER_ID, DATA_BINARY_SENSOR,
-                    DATA_DELETED_IDS, DATA_SENSOR, DOMAIN)
+                    ATTR_SUPPORTS_MEDIA_PLAYER, CONF_SECRET, CONF_USER_ID,
+                    DATA_BINARY_SENSOR, DATA_DELETED_IDS, DATA_SENSOR, DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -119,6 +119,7 @@ def safe_registration(registration: Dict) -> Dict:
         ATTR_MODEL: registration[ATTR_MODEL],
         ATTR_OS_VERSION: registration[ATTR_OS_VERSION],
         ATTR_SUPPORTS_ENCRYPTION: registration[ATTR_SUPPORTS_ENCRYPTION],
+        ATTR_SUPPORTS_MEDIA_PLAYER: registration[ATTR_SUPPORTS_MEDIA_PLAYER],
     }
 
 
