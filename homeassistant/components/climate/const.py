@@ -16,7 +16,7 @@ OPERATION_MODE_HEATCOOL = 'heatcool'
 # other related mechanism. User is not able to adjust the temperature
 OPERATION_MODE_AUTO = 'auto'
 
-# Device is in Dry/Huminity mode
+# Device is in Dry/Humidity mode
 OPERATION_MODE_DRY = 'dry'
 
 # Only the fan is on, not fan and another mode like cool
