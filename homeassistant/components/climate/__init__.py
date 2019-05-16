@@ -17,19 +17,19 @@ from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import (
-    ATTR_AUX_HEAT, ATTR_AWAY_MODE, ATTR_CURRENT_HUMIDITY,
-    ATTR_CURRENT_TEMPERATURE, ATTR_FAN_LIST, ATTR_FAN_MODE, ATTR_HOLD_MODE,
+    ATTR_AUX_HEAT, ATTR_CURRENT_HUMIDITY, ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_LIST, ATTR_FAN_MODE, ATTR_HOLD_LIST, ATTR_HOLD_MODE,
     ATTR_HUMIDITY, ATTR_MAX_HUMIDITY, ATTR_MAX_TEMP, ATTR_MIN_HUMIDITY,
-    ATTR_MIN_TEMP, ATTR_OPERATION_LIST, ATTR_OPERATION_MODE, ATTR_SWING_LIST,
-    ATTR_SWING_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    ATTR_TARGET_TEMP_STEP, DOMAIN, SERVICE_SET_AUX_HEAT, SERVICE_SET_AWAY_MODE,
-    SERVICE_SET_FAN_MODE, SERVICE_SET_HOLD_MODE, SERVICE_SET_HUMIDITY,
-    SERVICE_SET_OPERATION_MODE, SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE, SUPPORT_AUX_HEAT, SUPPORT_AWAY_MODE,
-    SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE, SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_HUMIDITY_HIGH,
+    ATTR_MIN_TEMP, ATTR_OPERATION_CURRENT, ATTR_OPERATION_LIST,
+    ATTR_OPERATION_MODE, ATTR_SWING_LIST, ATTR_SWING_MODE,
+    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_STEP, DOMAIN,
+    OPERATION_MODES, SERVICE_SET_AUX_HEAT, SERVICE_SET_FAN_MODE,
+    SERVICE_SET_HOLD_MODE, SERVICE_SET_HUMIDITY, SERVICE_SET_OPERATION_MODE,
+    SERVICE_SET_SWING_MODE, SERVICE_SET_TEMPERATURE, SUPPORT_AUX_HEAT,
+    SUPPORT_CURRENT_OPERATION, SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE,
+    SUPPORT_SWING_MODE, SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_HUMIDITY_HIGH,
     SUPPORT_TARGET_HUMIDITY_LOW, SUPPORT_TARGET_TEMPERATURE_HIGH,
-    SUPPORT_TARGET_TEMPERATURE_LOW, OPERATION_MODES)
+    SUPPORT_TARGET_TEMPERATURE_LOW)
 from .reproduce_state import async_reproduce_states  # noqa
 
 DEFAULT_MIN_TEMP = 7
@@ -50,11 +50,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ON_OFF_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-})
-
-SET_AWAY_MODE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-    vol.Required(ATTR_AWAY_MODE): cv.boolean,
 })
 SET_AUX_HEAT_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
@@ -99,10 +94,6 @@ async def async_setup(hass, config):
         EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     await component.async_setup(config)
 
-    component.async_register_entity_service(
-        SERVICE_SET_AWAY_MODE, SET_AWAY_MODE_SCHEMA,
-        async_service_away_mode
-    )
     component.async_register_entity_service(
         SERVICE_SET_HOLD_MODE, SET_HOLD_MODE_SCHEMA,
         'async_set_hold_mode'
@@ -171,6 +162,7 @@ class ClimateDevice(Entity):
     @property
     def state_attributes(self):
         """Return the optional state attributes."""
+        supported_features = self.supported_features
         data = {
             ATTR_CURRENT_TEMPERATURE: show_temp(
                 self.hass, self.current_temperature, self.temperature_unit,
@@ -186,8 +178,11 @@ class ClimateDevice(Entity):
                 self.precision),
         }
 
-        supported_features = self.supported_features
-        if self.target_temperature_step is not None:
+        # Supported HVAC modes
+        if self.operation_list:
+            data[ATTR_OPERATION_LIST] = self.operation_list
+
+        if self.target_temperature_step:
             data[ATTR_TARGET_TEMP_STEP] = self.target_temperature_step
 
         if supported_features & SUPPORT_TARGET_TEMPERATURE_HIGH:
@@ -217,22 +212,18 @@ class ClimateDevice(Entity):
             if self.fan_list:
                 data[ATTR_FAN_LIST] = self.fan_list
 
-        if supported_features & SUPPORT_OPERATION_MODE:
-            data[ATTR_OPERATION_MODE] = self.current_operation
-            if self.operation_list:
-                data[ATTR_OPERATION_LIST] = self.operation_list
+        if supported_features & SUPPORT_CURRENT_OPERATION:
+            data[ATTR_OPERATION_CURRENT] = self.current_operation
 
         if supported_features & SUPPORT_HOLD_MODE:
             data[ATTR_HOLD_MODE] = self.current_hold_mode
+            if self.hold_list:
+                data[ATTR_HOLD_LIST] = self.hold_list
 
         if supported_features & SUPPORT_SWING_MODE:
             data[ATTR_SWING_MODE] = self.current_swing_mode
             if self.swing_list:
                 data[ATTR_SWING_LIST] = self.swing_list
-
-        if supported_features & SUPPORT_AWAY_MODE:
-            is_away = self.is_away_mode_on
-            data[ATTR_AWAY_MODE] = STATE_ON if is_away else STATE_OFF
 
         if supported_features & SUPPORT_AUX_HEAT:
             is_aux_heat = self.is_aux_heat_on
@@ -266,6 +257,11 @@ class ClimateDevice(Entity):
         return None
 
     @property
+    def current_operation(self):
+        """Return the current action they is running."""
+        return None
+
+    @property
     def current_temperature(self):
         """Return the current temperature."""
         return None
@@ -291,13 +287,13 @@ class ClimateDevice(Entity):
         return None
 
     @property
-    def is_away_mode_on(self):
-        """Return true if away mode is on."""
+    def current_hold_mode(self):
+        """Return the current hold mode, e.g., home, away, temp."""
         return None
 
     @property
-    def current_hold_mode(self):
-        """Return the current hold mode, e.g., home, away, temp."""
+    def hold_list(self):
+        """Return a list of available hold modes."""
         return None
 
     @property
