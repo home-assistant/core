@@ -523,9 +523,9 @@ class NetatmoData:
             _LOGGER.debug("%s detected!", str(self.data_class.__name__))
             return station_data
         except NoDevice:
-            _LOGGER.error("No Weather or HomeCoach devices found for %s", str(
-                self.station
-                ))
+            _LOGGER.warning("No Weather or HomeCoach devices found for %s",
+                            str(self.station)
+                            )
             raise
 
     def update(self):
@@ -547,10 +547,14 @@ class NetatmoData:
 
         try:
             if self.station is not None:
-                self.data = self.station_data.lastData(
+                data = self.station_data.lastData(
                     station=self.station, exclude=3600)
             else:
-                self.data = self.station_data.lastData(exclude=3600)
+                data = self.station_data.lastData(exclude=3600)
+            if not data:
+                self._next_update = time() + NETATMO_UPDATE_INTERVAL
+                return
+            self.data = data
 
             newinterval = 0
             try:
