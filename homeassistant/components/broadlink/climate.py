@@ -150,7 +150,8 @@ def setup_platform(hass, config, async_add_entities,
         advance_conf['adj'] = service.data.get(ATTR_ADJ)
         advance_conf['fre'] = service.data.get(ATTR_FRE)
         advance_conf['pon'] = service.data.get(ATTR_PON)
-        target_thermostats.set_advanced_config(advance_conf)
+        for thermostat in target_thermostats:
+            thermostat.set_advanced_conf(advance_conf)
 
     hass.services.register(DOMAIN, SERVICE_SET_ADVANCED_CONF,
                            set_advanced_conf, schema=SET_SCHEDULE_SCHEMA)
