@@ -66,14 +66,16 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
     def __init__(self):
         """Initialize the homekit_controller flow."""
+        import homekit  # pylint: disable=import-error
+
         self.model = None
         self.hkid = None
         self.devices = {}
+        self.controller = homekit.Controller()
+        self.finish_pairing = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
-        import homekit
-
         errors = {}
 
         if user_input is not None:
@@ -82,9 +84,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             self.model = self.devices[key]['md']
             return await self.async_step_pair()
 
-        controller = homekit.Controller()
         all_hosts = await self.hass.async_add_executor_job(
-            controller.discover, 5
+            self.controller.discover, 5
         )
 
         self.devices = {}
@@ -189,7 +190,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
         self.model = model
         self.hkid = hkid
-        return await self.async_step_pair()
+
+        # We want to show the pairing form - but don't call async_step_pair
+        # directly as it has side effects (will ask the device to show a
+        # pairing code)
+        return self._async_step_pair_show_form()
 
     async def async_import_legacy_pairing(self, discovery_props, pairing_data):
         """Migrate a legacy pairing to config entries."""
@@ -216,45 +221,91 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         """Pair with a new HomeKit accessory."""
         import homekit  # pylint: disable=import-error
 
+        # If async_step_pair is called with no pairing code then we do the M1
+        # phase of pairing. If this is successful the device enters pairing
+        # mode.
+
+        # If it doesn't have a screen then the pin is static.
+
+        # If it has a display it will display a pin on that display. In
+        # this case the code is random. So we have to call the start_pairing
+        # API before the user can enter a pin. But equally we don't want to
+        # call start_pairing when the device is discovered, only when they
+        # click on 'Configure' in the UI.
+
+        # start_pairing will make the device show its pin and return a
+        # callable. We call the callable with the pin that the user has typed
+        # in.
+
         errors = {}
 
         if pair_info:
             code = pair_info['pairing_code']
-            controller = homekit.Controller()
             try:
                 await self.hass.async_add_executor_job(
-                    controller.perform_pairing, self.hkid, self.hkid, code
+                    self.finish_pairing, code
                 )
 
-                pairing = controller.pairings.get(self.hkid)
+                pairing = self.controller.pairings.get(self.hkid)
                 if pairing:
                     return await self._entry_from_accessory(
                         pairing)
 
                 errors['pairing_code'] = 'unable_to_pair'
             except homekit.AuthenticationError:
+                # PairSetup M4 - SRP proof failed
+                # PairSetup M6 - Ed25519 signature verification failed
+                # PairVerify M4 - Decryption failed
+                # PairVerify M4 - Device not recognised
+                # PairVerify M4 - Ed25519 signature verification failed
                 errors['pairing_code'] = 'authentication_error'
             except homekit.UnknownError:
+                # An error occured on the device whilst performing this
+                # operation.
                 errors['pairing_code'] = 'unknown_error'
-            except homekit.MaxTriesError:
-                errors['pairing_code'] = 'max_tries_error'
-            except homekit.BusyError:
-                errors['pairing_code'] = 'busy_error'
             except homekit.MaxPeersError:
+                # The device can't pair with any more accessories.
                 errors['pairing_code'] = 'max_peers_error'
             except homekit.AccessoryNotFoundError:
+                # Can no longer find the device on the network
                 return self.async_abort(reason='accessory_not_found_error')
-            except homekit.UnavailableError:
-                return self.async_abort(reason='already_paired')
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception(
                     "Pairing attempt failed with an unhandled exception"
                 )
                 errors['pairing_code'] = 'pairing_failed'
 
+        start_pairing = self.controller.start_pairing
+        try:
+            self.finish_pairing = await self.hass.async_add_executor_job(
+                start_pairing, self.hkid, self.hkid
+            )
+        except homekit.BusyError:
+            # Already performing a pair setup operation with a different
+            # controller
+            errors['pairing_code'] = 'busy_error'
+        except homekit.MaxTriesError:
+            # The accessory has received more than 100 unsuccessful auth
+            # attempts.
+            errors['pairing_code'] = 'max_tries_error'
+        except homekit.UnavailableError:
+            # The accessory is already paired - cannot try to pair again.
+            return self.async_abort(reason='already_paired')
+        except homekit.AccessoryNotFoundError:
+            # Can no longer find the device on the network
+            return self.async_abort(reason='accessory_not_found_error')
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception(
+                "Pairing attempt failed with an unhandled exception"
+            )
+            errors['pairing_code'] = 'pairing_failed'
+
+        return self._async_step_pair_show_form(errors)
+
+    def _async_step_pair_show_form(self, errors=None):
         return self.async_show_form(
             step_id='pair',
-            errors=errors,
+            errors=errors or {},
             data_schema=vol.Schema({
                 vol.Required('pairing_code'):  vol.All(str, vol.Strip),
             })
