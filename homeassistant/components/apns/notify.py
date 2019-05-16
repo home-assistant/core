@@ -1,6 +1,5 @@
 """APNS Notification platform."""
 import logging
-import os
 
 import voluptuous as vol
 

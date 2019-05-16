@@ -3,7 +3,6 @@ from collections import defaultdict
 from datetime import datetime
 from ipaddress import ip_address
 import logging
-import os
 
 from aiohttp.web import middleware
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
