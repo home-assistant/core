@@ -258,7 +258,7 @@ class ClimateDevice(Entity):
 
     @property
     def current_operation(self):
-        """Return the current action they is running."""
+        """Return the current action that is running."""
         return None
 
     @property
