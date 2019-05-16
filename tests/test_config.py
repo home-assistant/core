@@ -414,6 +414,65 @@ def test_migrate_no_file_on_upgrade(mock_os, mock_shutil, hass):
     assert mock_os.rename.call_count == 0
 
 
+async def test_loading_configuration_from_storage(hass, hass_storage):
+    """Test loading core config onto hass object."""
+    hass.config = mock.Mock()
+    hass_storage["homeassistant.core_config"] = {
+    'data': {
+        'elevation': 10,
+        'latitude': 55,
+        'location_name': 'Home',
+        'longitude': 13,
+        'time_zone': 'Europe/Copenhagen',
+        'unit_system': 'metric'
+        },
+    'key': 'homeassistant.core_config',
+    'version': 1
+    }
+    await config_util.async_process_ha_core_config(hass, {'whitelist_external_dirs': '/tmp'})
+
+    assert hass.config.latitude == 55
+    assert hass.config.longitude == 13
+    assert hass.config.elevation == 10
+    assert hass.config.location_name == 'Home'
+    assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
+    assert hass.config.time_zone.zone == 'Europe/Copenhagen'
+    assert len(hass.config.whitelist_external_dirs) == 2
+    assert '/tmp' in hass.config.whitelist_external_dirs
+    assert hass.config.config_source == config_util.SOURCE_STORAGE
+
+
+async def test_override_stored_configuration(hass, hass_storage):
+    """Test loading core config onto hass object."""
+    hass.config = mock.Mock()
+    hass_storage["homeassistant.core_config"] = {
+    'data': {
+        'elevation': 10,
+        'latitude': 55,
+        'location_name': 'Home',
+        'longitude': 13,
+        'time_zone': 'Europe/Copenhagen',
+        'unit_system': 'metric'
+        },
+    'key': 'homeassistant.core_config',
+    'version': 1
+    }
+    await config_util.async_process_ha_core_config(hass, {
+        'latitude': 60,
+        'whitelist_external_dirs': '/tmp',
+    })
+
+    assert hass.config.latitude == 60
+    assert hass.config.longitude == 13
+    assert hass.config.elevation == 10
+    assert hass.config.location_name == 'Home'
+    assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
+    assert hass.config.time_zone.zone == 'Europe/Copenhagen'
+    assert len(hass.config.whitelist_external_dirs) == 2
+    assert '/tmp' in hass.config.whitelist_external_dirs
+    assert hass.config.config_source == config_util.SOURCE_YAML
+
+
 async def test_loading_configuration(hass):
     """Test loading core config onto hass object."""
     hass.config = mock.Mock()
@@ -436,6 +495,7 @@ async def test_loading_configuration(hass):
     assert hass.config.time_zone.zone == 'America/New_York'
     assert len(hass.config.whitelist_external_dirs) == 2
     assert '/tmp' in hass.config.whitelist_external_dirs
+    assert hass.config.config_source == config_util.SOURCE_YAML
 
 
 async def test_loading_configuration_temperature_unit(hass):
@@ -457,6 +517,7 @@ async def test_loading_configuration_temperature_unit(hass):
     assert hass.config.location_name == 'Huis'
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
     assert hass.config.time_zone.zone == 'America/New_York'
+    assert hass.config.config_source == config_util.SOURCE_YAML
 
 
 async def test_loading_configuration_from_packages(hass):
@@ -515,6 +576,7 @@ async def test_discovering_configuration(mock_detect, mock_elevation, hass):
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
     assert hass.config.units.is_metric
     assert hass.config.time_zone.zone == 'America/Los_Angeles'
+    assert hass.config.config_source == config_util.SOURCE_DISCOVERED
 
 
 @asynctest.mock.patch('homeassistant.util.location.async_detect_location_info',
@@ -539,6 +601,7 @@ async def test_discovering_configuration_auto_detect_fails(mock_detect,
     assert hass.config.time_zone == blankConfig.time_zone
     assert len(hass.config.whitelist_external_dirs) == 1
     assert "/test/config/www" in hass.config.whitelist_external_dirs
+    assert hass.config.config_source == config_util.SOURCE_DISCOVERED
 
 
 @asynctest.mock.patch(
