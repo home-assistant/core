@@ -57,8 +57,7 @@ class DoorBirdCamera(Camera):
         self._last_update = datetime.datetime.min
         super().__init__()
 
-    @property
-    def stream_source(self):
+    async def stream_source(self):
         """Return the stream source."""
         return self._stream_url
 

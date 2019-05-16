@@ -339,8 +339,7 @@ class ONVIFHassCamera(Camera):
             return SUPPORT_STREAM
         return 0
 
-    @property
-    def stream_source(self):
+    async def stream_source(self):
         """Return the stream source."""
         return self._input
 
