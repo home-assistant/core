@@ -625,12 +625,8 @@ async def async_setup_platform(hass, config, async_add_entities,
     # Did we find a valid station?
     #
     if stationcode is None:
-        if confstationcode is None:
-            _LOGGER.error("No stations returned for location %s,%s",
-                          latitude, longitude)
-        else:
-            _LOGGER.error("Station %s not found in list for location %s,%s",
-                          confstationcode, latitude, longitude)
+        _LOGGER.error("Station %s not found in list for location %s,%s",
+                      confstationcode, latitude, longitude)
         raise ConfigEntryNotReady
     #
     # Set station code in nws object for future calls
