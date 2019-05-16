@@ -3,9 +3,9 @@ from homeassistant.const import TEMP_CELSIUS
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
-HUMIDITY_ICON = 'mdi-water-percent'
-TEMP_C_ICON = "mdi-temperature-celsius"
-BRIGHTNESS_ICON = "mdi-brightness-6"
+HUMIDITY_ICON = 'mdi:water-percent'
+TEMP_C_ICON = "mdi:thermometer"
+BRIGHTNESS_ICON = "mdi:brightness-6"
 
 UNIT_PERCENT = "%"
 UNIT_LUX = "lux"
