@@ -34,16 +34,16 @@ HVAC_MODES = [
 
 
 # Device is running an energy-saving mode
-HOLD_MODE_ECO = 'eco'
+PRESET_ECO = 'eco'
 
 # Device is on away mode
-HOLD_MODE_AWAY = 'away'
+PRESET_AWAY = 'away'
 
 # Device turn all valve full up
-HOLD_MODE_BOOST = 'boost'
+PRESET_BOOST = 'boost'
 
 # Device have a comfort mode
-HOLD_MODE_COMFORT = 'comfort'
+PRESET_COMFORT = 'comfort'
 
 
 # This are support current states of HVAC
@@ -61,8 +61,8 @@ ATTR_CURRENT_TEMPERATURE = 'current_temperature'
 ATTR_CURRENT_OPERATION = 'current_operation'
 ATTR_FAN_LIST = 'fan_list'
 ATTR_FAN_MODE = 'fan_mode'
-ATTR_HOLD_MODE = 'hold_mode'
-ATTR_HOLD_LIST = 'hold_list'
+ATTR_PRESET_MODE = 'preset_mode'
+ATTR_PRESET_LIST = 'preset_list'
 ATTR_HUMIDITY = 'humidity'
 ATTR_MAX_HUMIDITY = 'max_humidity'
 ATTR_MIN_HUMIDITY = 'min_humidity'
@@ -98,7 +98,7 @@ SUPPORT_TARGET_HUMIDITY = 8
 SUPPORT_TARGET_HUMIDITY_HIGH = 16
 SUPPORT_TARGET_HUMIDITY_LOW = 32
 SUPPORT_FAN_MODE = 64
-SUPPORT_HOLD_MODE = 128
+SUPPORT_PRESET_MODE = 128
 SUPPORT_SWING_MODE = 256
 SUPPORT_AUX_HEAT = 512
 SUPPORT_ON_OFF = 1024
