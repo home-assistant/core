@@ -1,5 +1,4 @@
 """Support for Azure Event Hubs."""
-import datetime
 import json
 import logging
 from typing import Any, Dict
