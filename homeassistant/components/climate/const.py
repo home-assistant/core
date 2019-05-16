@@ -43,13 +43,22 @@ HOLD_MODE_AWAY = 'away'
 HOLD_MODE_BOOST = 'boost'
 
 
+# This are support current states of HVAC
+OPERATION_CURRENT_OFF = 'off'
+OPERATION_CURRENT_HEAT = 'heat'
+OPERATION_CURRENT_COOL = 'cool'
+OPERATION_CURRENT_DRY = 'dry'
+OPERATION_CURRENT_IDLE = 'idle'
+OPERATION_CURRENT_FAN_ONLY = 'fan_only'
+
+
 ATTR_AUX_HEAT = 'aux_heat'
 ATTR_CURRENT_HUMIDITY = 'current_humidity'
 ATTR_CURRENT_TEMPERATURE = 'current_temperature'
 ATTR_FAN_MODES = 'fan_modes'
 ATTR_FAN_MODE = 'fan_mode'
-ATTR_PRESET_MODE = 'preset_mode'
-ATTR_PRESET_MODES = 'preset_modes'
+ATTR_HOLD_MODE = 'hold_mode'
+ATTR_HOLD_LIST = 'hold_list'
 ATTR_HUMIDITY = 'humidity'
 ATTR_MAX_HUMIDITY = 'max_humidity'
 ATTR_MIN_HUMIDITY = 'min_humidity'
@@ -57,6 +66,9 @@ ATTR_MAX_TEMP = 'max_temp'
 ATTR_MIN_TEMP = 'min_temp'
 ATTR_OPERATION_LIST = 'operation_list'
 ATTR_OPERATION_MODE = 'operation_mode'
+ATTR_OPERATION_CURRENT = 'operation_current'
+ATTR_SWING_LIST = 'swing_list'
+ATTR_SWING_MODE = 'swing_mode'
 ATTR_TARGET_TEMP_HIGH = 'target_temp_high'
 ATTR_TARGET_TEMP_LOW = 'target_temp_low'
 ATTR_TARGET_TEMP_STEP = 'target_temp_step'
@@ -85,6 +97,6 @@ SUPPORT_TARGET_HUMIDITY_LOW = 32
 SUPPORT_FAN_MODE = 64
 SUPPORT_HOLD_MODE = 128
 SUPPORT_SWING_MODE = 256
-SUPPORT_AWAY_MODE = 512
-SUPPORT_AUX_HEAT = 1024
-SUPPORT_ON_OFF = 2048
+SUPPORT_AUX_HEAT = 512
+SUPPORT_ON_OFF = 1024
+SUPPORT_CURRENT_OPERATION = 2048
