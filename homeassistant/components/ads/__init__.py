@@ -31,9 +31,11 @@ CONF_ADS_TYPE = 'adstype'
 CONF_ADS_VALUE = 'value'
 CONF_ADS_VAR = 'adsvar'
 CONF_ADS_VAR_BRIGHTNESS = 'adsvar_brightness'
+CONF_ADS_VAR_POSITION = 'adsvar_position'
 
 STATE_KEY_STATE = 'state'
 STATE_KEY_BRIGHTNESS = 'brightness'
+STATE_KEY_POSITION = 'position'
 
 DOMAIN = 'ads'
 

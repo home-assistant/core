@@ -5,23 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
 
-import types
-
-
-def apply_cluster_listener_patch():
-    """Apply patches to ZHA objects."""
-    # patch zigpy listener to prevent flooding logs with warnings due to
-    # how zigpy implemented its listeners
-    from zigpy.appdb import ClusterPersistingListener
-
-    def zha_send_event(self, cluster, command, args):
-        pass
-
-    ClusterPersistingListener.zha_send_event = types.MethodType(
-        zha_send_event,
-        ClusterPersistingListener
-    )
-
 
 def apply_application_controller_patch(zha_gateway):
     """Apply patches to ZHA objects."""

@@ -1,5 +1,9 @@
 """Generic device for the HomematicIP Cloud component."""
 import logging
+from typing import Optional
+
+from homematicip.aio.device import AsyncDevice
+from homematicip.aio.home import AsyncHome
 
 from homeassistant.components import homematicip_cloud
 from homeassistant.helpers.entity import Entity
@@ -19,7 +23,8 @@ ATTR_GROUP_MEMBER_UNREACHABLE = 'group_member_unreachable'
 class HomematicipGenericDevice(Entity):
     """Representation of an HomematicIP generic device."""
 
-    def __init__(self, home, device, post=None):
+    def __init__(self, home: AsyncHome, device,
+                 post: Optional[str] = None) -> None:
         """Initialize the generic device."""
         self._home = home
         self._device = device
@@ -29,7 +34,6 @@ class HomematicipGenericDevice(Entity):
     @property
     def device_info(self):
         """Return device specific attributes."""
-        from homematicip.aio.device import AsyncDevice
         # Only physical devices should be HA devices.
         if isinstance(self._device, AsyncDevice):
             return {
@@ -47,15 +51,15 @@ class HomematicipGenericDevice(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self._device.on_update(self._device_changed)
+        self._device.on_update(self._async_device_changed)
 
-    def _device_changed(self, *args, **kwargs):
+    def _async_device_changed(self, *args, **kwargs):
         """Handle device state changes."""
         _LOGGER.debug("Event %s (%s)", self.name, self._device.modelType)
         self.async_schedule_update_ha_state()
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the generic device."""
         name = self._device.label
         if self._home.name is not None and self._home.name != '':
@@ -65,22 +69,22 @@ class HomematicipGenericDevice(Entity):
         return name
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """No polling needed."""
         return False
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Device available."""
         return not self._device.unreach
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique ID."""
         return "{}_{}".format(self.__class__.__name__, self._device.id)
 
     @property
-    def icon(self):
+    def icon(self) -> Optional[str]:
         """Return the icon."""
         if hasattr(self._device, 'lowBat') and self._device.lowBat:
             return 'mdi:battery-outline'

@@ -14,7 +14,7 @@
                 "data": {
                     "pairing_code": "Koppelingscode"
                 },
-                "title": "Koppel met {{model}}"
+                "title": "Koppel met HomeKit accessoire"
             },
             "user": {
                 "data": {

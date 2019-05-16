@@ -57,7 +57,7 @@ commands:
             <<# parameters.all >>pip install -q --progress-bar off -r requirements_all.txt -c homeassistant/package_constraints.txt<</ parameters.all>>
             <<# parameters.test >>pip install -q --progress-bar off -r requirements_test.txt -c homeassistant/package_constraints.txt<</ parameters.test>>
             <<# parameters.test_all >>pip install -q --progress-bar off -r requirements_test_all.txt -c homeassistant/package_constraints.txt<</ parameters.test_all>>
-          no_output_timeout: 15m  
+          no_output_timeout: 15m
       - save_cache:
           paths:
             - ./venv
@@ -90,7 +90,7 @@ jobs:
           name: run static check
           command: |
             . venv/bin/activate
-            flake8
+            flake8 homeassistant tests script
 
       - run:
           name: run static type check

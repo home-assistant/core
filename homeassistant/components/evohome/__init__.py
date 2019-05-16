@@ -5,25 +5,30 @@
 #     0-12 Heating zones (a.k.a. Zone), and
 #     0-1 DHW controller, (a.k.a. Boiler)
 # The TCS & Zones are implemented as Climate devices, Boiler as a WaterHeater
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 import requests.exceptions
 import voluptuous as vol
 
+import evohomeclient2
+
 from homeassistant.const import (
     CONF_SCAN_INTERVAL, CONF_USERNAME, CONF_PASSWORD,
-    EVENT_HOMEASSISTANT_START)
+    EVENT_HOMEASSISTANT_START,
+    HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS,
+    PRECISION_HALVES, TEMP_CELSIUS)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, async_dispatcher_send)
+from homeassistant.helpers.entity import Entity
+
+from .const import (
+    DOMAIN, DATA_EVOHOME, DISPATCHER_EVOHOME, GWS, TCS)
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = 'evohome'
-DATA_EVOHOME = 'data_' + DOMAIN
-DISPATCHER_EVOHOME = 'dispatcher_' + DOMAIN
 
 CONF_LOCATION_IDX = 'location_idx'
 SCAN_INTERVAL_DEFAULT = timedelta(seconds=300)
@@ -43,10 +48,6 @@ CONF_SECRETS = [
     CONF_USERNAME, CONF_PASSWORD,
 ]
 
-# These are used to help prevent E501 (line too long) violations.
-GWS = 'gateways'
-TCS = 'temperatureControlSystems'
-
 # bit masks for dispatcher packets
 EVO_PARENT = 0x01
 EVO_CHILD = 0x02
@@ -65,8 +66,6 @@ def setup(hass, hass_config):
     scan_interval = evo_data['params'][CONF_SCAN_INTERVAL]
     scan_interval = timedelta(
         minutes=(scan_interval.total_seconds() + 59) // 60)
-
-    import evohomeclient2
 
     try:
         client = evo_data['client'] = evohomeclient2.EvohomeClient(
@@ -145,3 +144,129 @@ def setup(hass, hass_config):
     hass.bus.listen(EVENT_HOMEASSISTANT_START, _first_update)
 
     return True
+
+
+class EvoDevice(Entity):
+    """Base for any Honeywell evohome device.
+
+    Such devices include the Controller, (up to 12) Heating Zones and
+    (optionally) a DHW controller.
+    """
+
+    def __init__(self, evo_data, client, obj_ref):
+        """Initialize the evohome entity."""
+        self._client = client
+        self._obj = obj_ref
+
+        self._name = None
+        self._icon = None
+        self._type = None
+
+        self._supported_features = None
+        self._operation_list = None
+
+        self._params = evo_data['params']
+        self._timers = evo_data['timers']
+        self._status = {}
+
+        self._available = False  # should become True after first update()
+
+    @callback
+    def _connect(self, packet):
+        if packet['to'] & self._type and packet['signal'] == 'refresh':
+            self.async_schedule_update_ha_state(force_refresh=True)
+
+    def _handle_exception(self, err):
+        try:
+            raise err
+
+        except evohomeclient2.AuthenticationError:
+            _LOGGER.error(
+                "Failed to (re)authenticate with the vendor's server. "
+                "This may be a temporary error. Message is: %s",
+                err
+            )
+
+        except requests.exceptions.ConnectionError:
+            # this appears to be common with Honeywell's servers
+            _LOGGER.warning(
+                "Unable to connect with the vendor's server. "
+                "Check your network and the vendor's status page."
+            )
+
+        except requests.exceptions.HTTPError:
+            if err.response.status_code == HTTP_SERVICE_UNAVAILABLE:
+                _LOGGER.warning(
+                    "Vendor says their server is currently unavailable. "
+                    "This may be temporary; check the vendor's status page."
+                )
+
+            elif err.response.status_code == HTTP_TOO_MANY_REQUESTS:
+                _LOGGER.warning(
+                    "The vendor's API rate limit has been exceeded. "
+                    "So will cease polling, and will resume after %s seconds.",
+                    (self._params[CONF_SCAN_INTERVAL] * 3).total_seconds()
+                )
+                self._timers['statusUpdated'] = datetime.now() + \
+                    self._params[CONF_SCAN_INTERVAL] * 3
+
+            else:
+                raise  # we don't expect/handle any other HTTPErrors
+
+    # These properties, methods are from the Entity class
+    async def async_added_to_hass(self):
+        """Run when entity about to be added."""
+        async_dispatcher_connect(self.hass, DISPATCHER_EVOHOME, self._connect)
+
+    @property
+    def should_poll(self) -> bool:
+        """Most evohome devices push their state to HA.
+
+        Only the Controller should be polled.
+        """
+        return False
+
+    @property
+    def name(self) -> str:
+        """Return the name to use in the frontend UI."""
+        return self._name
+
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes of the evohome device.
+
+        This is state data that is not available otherwise, due to the
+        restrictions placed upon ClimateDevice properties, etc. by HA.
+        """
+        return {'status': self._status}
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend UI."""
+        return self._icon
+
+    @property
+    def available(self) -> bool:
+        """Return True if the device is currently available."""
+        return self._available
+
+    @property
+    def supported_features(self):
+        """Get the list of supported features of the device."""
+        return self._supported_features
+
+    # These properties are common to ClimateDevice, WaterHeaterDevice classes
+    @property
+    def precision(self):
+        """Return the temperature precision to use in the frontend UI."""
+        return PRECISION_HALVES
+
+    @property
+    def temperature_unit(self):
+        """Return the temperature unit to use in the frontend UI."""
+        return TEMP_CELSIUS
+
+    @property
+    def operation_list(self):
+        """Return the list of available operations."""
+        return self._operation_list

@@ -59,7 +59,7 @@ def validate_services(integration: Integration):
     """Validate services."""
     # Find if integration uses services
     has_services = grep_dir(integration.path, "**/*.py",
-                            r"hass\.(services|async_register)")
+                            r"hass\.services\.(register|async_register)")
 
     if not has_services:
         return
@@ -91,11 +91,3 @@ def validate(integrations: Dict[str, Integration], config):
             continue
 
         validate_services(integration)
-
-        # check that all referenced dependencies exist
-        for dep in integration.manifest['dependencies']:
-            if dep not in integrations:
-                integration.add_error(
-                    'dependencies',
-                    "Dependency {} does not exist"
-                )

@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components.calendar import (
     PLATFORM_SCHEMA, CalendarEventDevice, get_date)
 from homeassistant.const import (
-    CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME)
+    CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle, dt
 
@@ -36,7 +36,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                 vol.Required(CONF_NAME): cv.string,
                 vol.Required(CONF_SEARCH): cv.string,
             })
-        ]))
+        ])),
+    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean
 })
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
@@ -50,7 +51,8 @@ def setup_platform(hass, config, add_entities, disc_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    client = caldav.DAVClient(url, None, username, password)
+    client = caldav.DAVClient(url, None, username, password,
+                              ssl_verify_cert=config.get(CONF_VERIFY_SSL))
 
     calendars = client.principal().calendars()
 
