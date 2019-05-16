@@ -416,7 +416,6 @@ def test_migrate_no_file_on_upgrade(mock_os, mock_shutil, hass):
 
 async def test_loading_configuration_from_storage(hass, hass_storage):
     """Test loading core config onto hass object."""
-    hass.config = mock.Mock()
     hass_storage["homeassistant.core_config"] = {
         'data': {
             'elevation': 10,
@@ -444,8 +443,7 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
 
 
 async def test_override_stored_configuration(hass, hass_storage):
-    """Test loading core config onto hass object."""
-    hass.config = mock.Mock()
+    """Test loading core and YAML config onto hass object."""
     hass_storage["homeassistant.core_config"] = {
         'data': {
             'elevation': 10,

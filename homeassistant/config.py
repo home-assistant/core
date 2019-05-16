@@ -499,19 +499,21 @@ async def async_load_ha_core_config(hass: HomeAssistant) -> None:
     store = hass.helpers.storage.Store(CORE_STORAGE_VERSION, CORE_STORAGE_KEY,
                                        private=True)
     data = await store.async_load()
-    if data:
-        hac = hass.config
-        hac.config_source = SOURCE_STORAGE
-        hac.latitude = data['latitude']
-        hac.longitude = data['longitude']
-        hac.elevation = data['elevation']
-        unit_system = data['unit_system']
-        if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
-            hac.units = IMPERIAL_SYSTEM
-        else:
-            hac.units = METRIC_SYSTEM
-        hac.location_name = data['location_name']
-        _set_time_zone(hass, data['time_zone'])
+    if not data:
+        return
+
+    hac = hass.config
+    hac.config_source = SOURCE_STORAGE
+    hac.latitude = data['latitude']
+    hac.longitude = data['longitude']
+    hac.elevation = data['elevation']
+    unit_system = data['unit_system']
+    if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+        hac.units = IMPERIAL_SYSTEM
+    else:
+        hac.units = METRIC_SYSTEM
+    hac.location_name = data['location_name']
+    _set_time_zone(hass, data['time_zone'])
 
 
 async def async_process_ha_core_config(
