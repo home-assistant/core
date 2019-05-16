@@ -42,6 +42,9 @@ HOLD_MODE_AWAY = 'away'
 # Device turn all valve full up
 HOLD_MODE_BOOST = 'boost'
 
+# Device have a comfort mode
+HOLD_MODE_COMFORT = 'comfort'
+
 
 # This are support current states of HVAC
 OPERATION_CURRENT_OFF = 'off'
