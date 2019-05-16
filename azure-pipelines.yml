@@ -1,0 +1,186 @@
+# https://dev.azure.com/home-assistant
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - dev
+  tags:
+    include:
+    - '*'
+
+variables:
+  - name: versionBuilder
+    value: '3.2'
+  - name: versionWheels
+    value: '0.3'
+  - group: docker
+  - group: wheels
+  - group: github
+
+jobs:
+
+- job: 'Wheels'
+  condition: eq(variables['Build.SourceBranchName'], 'dev')
+  timeoutInMinutes: 360
+  pool:
+    vmImage: 'ubuntu-16.04'
+  strategy:
+    maxParallel: 3
+    matrix:
+      amd64:
+        buildArch: 'amd64'
+      i386:
+        buildArch: 'i386'
+      armhf:
+        buildArch: 'armhf'
+      armv7:
+        buildArch: 'armv7'
+      aarch64:
+        buildArch: 'aarch64'
+  steps:
+  - script: |
+      sudo apt-get install -y --no-install-recommends \
+        qemu-user-static \
+        binfmt-support
+      
+      sudo mount binfmt_misc -t binfmt_misc /proc/sys/fs/binfmt_misc
+      sudo update-binfmts --enable qemu-arm
+      sudo update-binfmts --enable qemu-aarch64
+    displayName: 'Initial cross build'
+  - script: |
+      mkdir -p .ssh
+      echo -e "-----BEGIN RSA PRIVATE KEY-----\n$(wheelsSSH)\n-----END RSA PRIVATE KEY-----" >> .ssh/id_rsa
+      ssh-keyscan -H $(wheelsHost) >> .ssh/known_hosts
+      chmod 600 .ssh/*
+    displayName: 'Install ssh key'
+  - script: sudo docker pull homeassistant/$(buildArch)-wheels:$(versionWheels)
+    displayName: 'Install wheels builder'
+  - script: |
+      cp requirements_all.txt requirements_hassio.txt
+
+      # Enable because we can build it
+      sed -i "s|# pytradfri|pytradfri|g" requirements_hassio.txt
+      sed -i "s|# pybluez|pybluez|g" requirements_hassio.txt
+      sed -i "s|# bluepy|bluepy|g" requirements_hassio.txt
+      sed -i "s|# beacontools|beacontools|g" requirements_hassio.txt
+      sed -i "s|# RPi.GPIO|RPi.GPIO|g" requirements_hassio.txt
+      sed -i "s|# raspihats|raspihats|g" requirements_hassio.txt
+      sed -i "s|# rpi-rf|rpi-rf|g" requirements_hassio.txt
+      sed -i "s|# blinkt|blinkt|g" requirements_hassio.txt
+      sed -i "s|# fritzconnection|fritzconnection|g" requirements_hassio.txt
+      sed -i "s|# pyuserinput|pyuserinput|g" requirements_hassio.txt
+      sed -i "s|# evdev|evdev|g" requirements_hassio.txt
+      sed -i "s|# smbus-cffi|smbus-cffi|g" requirements_hassio.txt
+      sed -i "s|# i2csense|i2csense|g" requirements_hassio.txt
+      sed -i "s|# python-eq3bt|python-eq3bt|g" requirements_hassio.txt
+      sed -i "s|# pycups|pycups|g" requirements_hassio.txt
+      sed -i "s|# homekit|homekit|g" requirements_hassio.txt
+      sed -i "s|# decora_wifi|decora_wifi|g" requirements_hassio.txt
+      sed -i "s|# decora|decora|g" requirements_hassio.txt
+      sed -i "s|# PySwitchbot|PySwitchbot|g" requirements_hassio.txt
+      sed -i "s|# pySwitchmate|pySwitchmate|g" requirements_hassio.txt
+
+      # Disable because of error
+      sed -i "s|insteonplm|# insteonplm|g" requirements_hassio.txt
+    displayName: 'Prepare requirements files for Hass.io'
+  - script: |
+      sudo docker run --rm -v $(pwd):/data:ro -v $(pwd)/.ssh:/root/.ssh:rw \
+        homeassistant/$(buildArch)-wheels:$(versionWheels) \
+        --apk "build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;linux-headers;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev" \
+        --index https://wheels.hass.io \
+        --requirement requirements_hassio.txt \
+        --upload rsync \
+        --remote wheels@$(wheelsHost):/opt/wheels
+    displayName: 'Run wheels build'
+
+
+- job: 'Release'
+  condition: startsWith(variables['Build.SourceBranch'], 'refs/tags')
+  timeoutInMinutes: 120
+  pool:
+    vmImage: 'ubuntu-16.04'
+  strategy:
+    maxParallel: 5
+    matrix:
+      amd64:
+        buildArch: 'amd64'
+        buildMachine: 'qemux86-64,intel-nuc'
+      i386:
+        buildArch: 'i386'
+        buildMachine: 'qemux86'
+      armhf:
+        buildArch: 'armhf'
+        buildMachine: 'qemuarm,raspberrypi'
+      armv7:
+        buildArch: 'armv7'
+        buildMachine: 'raspberrypi2,raspberrypi3,odroid-xu,tinker'
+      aarch64:
+        buildArch: 'aarch64'
+        buildMachine: 'qemuarm-64,raspberrypi3-64,odroid-c2,orangepi-prime'
+  steps:
+  - script: sudo docker login -u $(dockerUser) -p $(dockerPassword)
+    displayName: 'Docker hub login'
+  - script: sudo docker pull homeassistant/amd64-builder:$(versionBuilder)
+    displayName: 'Install Builder'
+  - script: |
+      set -e
+
+      sudo docker run --rm --privileged \
+        -v ~/.docker:/root/.docker \
+        -v /run/docker.sock:/run/docker.sock:rw \
+        homeassistant/amd64-builder:$(versionBuilder) \
+        --homeassistant $(Build.SourceBranchName) "--$(buildArch)" \
+        -r https://github.com/home-assistant/hassio-homeassistant \
+        -t generic --docker-hub homeassistant
+
+      sudo docker run --rm --privileged \
+        -v ~/.docker:/root/.docker \
+        -v /run/docker.sock:/run/docker.sock:rw \
+        homeassistant/amd64-builder:$(versionBuilder) \
+        --homeassistant-machine "$(Build.SourceBranchName)=$(buildMachine)" \
+        -r https://github.com/home-assistant/hassio-homeassistant \
+        -t machine --docker-hub homeassistant
+    displayName: 'Build Release'
+
+
+- job: 'ReleasePublish'
+  condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded('Release'))
+  dependsOn:
+    - 'Release'
+  pool:
+    vmImage: 'ubuntu-16.04'
+  steps:
+  - script: |
+      sudo apt-get install -y --no-install-recommends \
+        git jq
+
+      git config --global user.name "Pascal Vizeli"
+      git config --global user.email "pvizeli@syshack.ch"
+      git config --global credential.helper store
+
+      echo "https://$(githubToken):x-oauth-basic@github.com > $HOME\.git-credentials
+    displayName: 'Install requirements'
+  - script: |
+      set -e
+
+      version="$(Build.SourceBranchName)"
+
+      git clone https://github.com/home-assistant/hassio-version
+      cd hassio-version
+
+      dev_version="$(jq --raw-output '.homeassistant.default' dev.json)"
+      beta_version="$(jq --raw-output '.homeassistant.default' beta.json)"
+      stable_version="$(jq --raw-output '.homeassistant.default' stable.json)"
+
+      if [[ "$version" =~ b ]]; then
+        sed -i "s|$dev_version|$version|g" dev.json
+        sed -i "s|$beta_version|$version|g" beta.json
+      else
+        sed -i "s|$dev_version|$version|g" dev.json
+        sed -i "s|$beta_version|$version|g" beta.json
+        sed -i "s|$stable_version|$version|g" stable.json
+      fi
+
+      git commit -am "Bump Home Assistant $version"
+      git push

@@ -51,6 +51,9 @@ TYPE_GARAGE = PREFIX_TYPES + 'GARAGE'
 TYPE_OUTLET = PREFIX_TYPES + 'OUTLET'
 TYPE_SENSOR = PREFIX_TYPES + 'SENSOR'
 TYPE_DOOR = PREFIX_TYPES + 'DOOR'
+TYPE_TV = PREFIX_TYPES + 'TV'
+TYPE_SPEAKER = PREFIX_TYPES + 'SPEAKER'
+TYPE_MEDIA = PREFIX_TYPES + 'MEDIA'
 
 SERVICE_REQUEST_SYNC = 'request_sync'
 HOMEGRAPH_URL = 'https://homegraph.googleapis.com/'
@@ -86,7 +89,7 @@ DOMAIN_TO_GOOGLE_TYPES = {
     input_boolean.DOMAIN: TYPE_SWITCH,
     light.DOMAIN: TYPE_LIGHT,
     lock.DOMAIN: TYPE_LOCK,
-    media_player.DOMAIN: TYPE_SWITCH,
+    media_player.DOMAIN: TYPE_MEDIA,
     scene.DOMAIN: TYPE_SCENE,
     script.DOMAIN: TYPE_SCENE,
     switch.DOMAIN: TYPE_SWITCH,
@@ -100,10 +103,12 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (switch.DOMAIN, switch.DEVICE_CLASS_OUTLET): TYPE_OUTLET,
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_DOOR): TYPE_DOOR,
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_GARAGE_DOOR):
-    TYPE_SENSOR,
+    TYPE_GARAGE,
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_LOCK): TYPE_SENSOR,
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_OPENING): TYPE_SENSOR,
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_WINDOW): TYPE_SENSOR,
+    (media_player.DOMAIN, media_player.DEVICE_CLASS_TV): TYPE_TV,
+    (media_player.DOMAIN, media_player.DEVICE_CLASS_SPEAKER): TYPE_SPEAKER,
 }
 
 CHALLENGE_ACK_NEEDED = 'ackNeeded'

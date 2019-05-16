@@ -1,5 +1,6 @@
 """Helpers for config validation using voluptuous."""
 import inspect
+import json
 import logging
 import os
 import re
@@ -15,14 +16,13 @@ from pkg_resources import parse_version
 
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
-    CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
-    CONF_CONDITION, CONF_BELOW, CONF_ABOVE, CONF_TIMEOUT, SUN_EVENT_SUNSET,
-    SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC,
-    ENTITY_MATCH_ALL, CONF_ENTITY_NAMESPACE, __version__)
+    CONF_ABOVE, CONF_ALIAS, CONF_BELOW, CONF_CONDITION, CONF_ENTITY_ID,
+    CONF_ENTITY_NAMESPACE, CONF_NAME, CONF_PLATFORM, CONF_SCAN_INTERVAL,
+    CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC, CONF_VALUE_TEMPLATE,
+    CONF_TIMEOUT, ENTITY_MATCH_ALL, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, WEEKDAYS, __version__)
 from homeassistant.core import valid_entity_id, split_entity_id
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template as template_helper
 from homeassistant.helpers.logging import KeywordStyleAdapter
 from homeassistant.util import slugify as util_slugify
 
@@ -444,6 +444,8 @@ unit_system = vol.All(vol.Lower, vol.Any(CONF_UNIT_SYSTEM_METRIC,
 
 def template(value):
     """Validate a jinja2 template."""
+    from homeassistant.helpers import template as template_helper
+
     if value is None:
         raise vol.Invalid('template value is None')
     if isinstance(value, (list, dict, template_helper.Template)):
@@ -677,25 +679,52 @@ class HASchema(vol.Schema):
                 self.extra = vol.PREVENT_EXTRA
 
             # This is a legacy config, print warning
-            extra_key_errs = [err for err in orig_err.errors
+            extra_key_errs = [err.path[-1] for err in orig_err.errors
                               if err.error_message == 'extra keys not allowed']
-            if extra_key_errs:
-                msg = "Your configuration contains extra keys " \
-                      "that the platform does not support.\n" \
-                      "Please remove "
-                submsg = ', '.join('[{}]'.format(err.path[-1]) for err in
-                                   extra_key_errs)
-                submsg += '. '
-                if hasattr(data, '__config_file__'):
-                    submsg += " (See {}, line {}). ".format(
-                        data.__config_file__, data.__line__)
-                msg += submsg
-                logging.getLogger(__name__).warning(msg)
-                INVALID_EXTRA_KEYS_FOUND.append(submsg)
-            else:
+
+            if not extra_key_errs:
                 # This should not happen (all errors should be extra key
                 # errors). Let's raise the original error anyway.
                 raise orig_err
+
+            WHITELIST = [
+                re.compile(CONF_NAME),
+                re.compile(CONF_PLATFORM),
+                re.compile('.*_topic'),
+                ]
+
+            msg = "Your configuration contains extra keys " \
+                  "that the platform does not support.\n" \
+                  "Please remove "
+            submsg = ', '.join('[{}]'.format(err) for err in
+                               extra_key_errs)
+            submsg += '. '
+
+            # Add file+line information, if available
+            if hasattr(data, '__config_file__'):
+                submsg += " (See {}, line {}). ".format(
+                    data.__config_file__, data.__line__)
+
+            # Add configuration source information, if available
+            if hasattr(data, '__configuration_source__'):
+                submsg += "\nConfiguration source: {}. ".format(
+                    data.__configuration_source__)
+            redacted_data = {}
+
+            # Print configuration causing the error, but filter any potentially
+            # sensitive data
+            for k, v in data.items():
+                if (any(regex.match(k) for regex in WHITELIST) or
+                        k in extra_key_errs):
+                    redacted_data[k] = v
+                else:
+                    redacted_data[k] = '<redacted>'
+            submsg += "\nOffending data: {}".format(
+                json.dumps(redacted_data))
+
+            msg += submsg
+            logging.getLogger(__name__).warning(msg)
+            INVALID_EXTRA_KEYS_FOUND.append(submsg)
 
             # Return legacy validated config
             return validated

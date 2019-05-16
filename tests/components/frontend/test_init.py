@@ -89,10 +89,6 @@ def test_frontend_and_static(mock_http_client, mock_onboarded):
 @asyncio.coroutine
 def test_dont_cache_service_worker(mock_http_client):
     """Test that we don't cache the service worker."""
-    resp = yield from mock_http_client.get('/service_worker_es5.js')
-    assert resp.status == 200
-    assert 'cache-control' not in resp.headers
-
     resp = yield from mock_http_client.get('/service_worker.js')
     assert resp.status == 200
     assert 'cache-control' not in resp.headers
@@ -233,16 +229,7 @@ def test_extra_urls(mock_http_client_with_urls, mock_onboarded):
     resp = yield from mock_http_client_with_urls.get('/states?latest')
     assert resp.status == 200
     text = yield from resp.text()
-    assert text.find("href='https://domain.com/my_extra_url.html'") >= 0
-
-
-@asyncio.coroutine
-def test_extra_urls_es5(mock_http_client_with_urls, mock_onboarded):
-    """Test that es5 extra urls are loaded."""
-    resp = yield from mock_http_client_with_urls.get('/states?es5')
-    assert resp.status == 200
-    text = yield from resp.text()
-    assert text.find("href='https://domain.com/my_extra_url_es5.html'") >= 0
+    assert text.find('href="https://domain.com/my_extra_url.html"') >= 0
 
 
 async def test_get_panels(hass, hass_ws_client):
@@ -330,15 +317,17 @@ async def test_auth_authorize(mock_http_client):
     resp = await mock_http_client.get(
         '/auth/authorize?response_type=code&client_id=https://localhost/&'
         'redirect_uri=https://localhost/&state=123%23456')
+    assert resp.status == 200
+    # No caching of auth page.
+    assert 'cache-control' not in resp.headers
 
-    assert str(resp.url.relative()) == (
-        '/frontend_es5/authorize.html?response_type=code&client_id='
-        'https://localhost/&redirect_uri=https://localhost/&state=123%23456')
+    text = await resp.text()
 
-    resp = await mock_http_client.get(
-        '/auth/authorize?latest&response_type=code&client_id='
-        'https://localhost/&redirect_uri=https://localhost/&state=123%23456')
+    # Test we can retrieve authorize.js
+    authorizejs = re.search(
+        r'(?P<app>\/frontend_latest\/authorize.[A-Za-z0-9]{8}.js)', text)
 
-    assert str(resp.url.relative()) == (
-        '/frontend_latest/authorize.html?latest&response_type=code&client_id='
-        'https://localhost/&redirect_uri=https://localhost/&state=123%23456')
+    assert authorizejs is not None, text
+    resp = await mock_http_client.get(authorizejs.groups(0)[0])
+    assert resp.status == 200
+    assert 'public' in resp.headers.get('cache-control')

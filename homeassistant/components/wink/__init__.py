@@ -329,8 +329,10 @@ def setup(hass, config):
             return True
 
     pywink.set_user_agent(USER_AGENT)
+    sub_details = pywink.get_subscription_details()
     hass.data[DOMAIN]['pubnub'] = PubNubSubscriptionHandler(
-        pywink.get_subscription_key())
+        sub_details[0],
+        origin=sub_details[1])
 
     def _subscribe():
         hass.data[DOMAIN]['pubnub'].subscribe()

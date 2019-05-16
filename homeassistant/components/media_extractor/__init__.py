@@ -8,8 +8,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA)
-from homeassistant.const import (
-    ATTR_ENTITY_ID)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)

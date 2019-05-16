@@ -4,11 +4,10 @@ import logging
 import os
 
 from homeassistant.helpers import discovery
-from homeassistant.helpers.event import call_later
 
 from .const import (
     CONTROLLER, DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, KNOWN_DEVICES,
-    PAIRING_FILE, HOMEKIT_DIR
+    PAIRING_FILE, HOMEKIT_DIR, ENTITY_MAP
 )
 
 
@@ -67,7 +66,7 @@ class HKDevice():
         self.config_num = config_num
         self.config = config
         self.configurator = hass.components.configurator
-        self._connection_warning_logged = False
+        self.accessories = {}
 
         # This just tracks aid/iid pairs so we know if a HK service has been
         # mapped to a HA entity.
@@ -79,27 +78,78 @@ class HKDevice():
 
         hass.data[KNOWN_DEVICES][hkid] = self
 
-        if self.pairing is not None:
-            self.accessory_setup()
-        else:
+    def setup(self):
+        """Prepare to use a paired HomeKit device in homeassistant."""
+        if self.pairing is None:
             self.configure()
-
-    def accessory_setup(self):
-        """Handle setup of a HomeKit accessory."""
-        # pylint: disable=import-error
-        from homekit.model.services import ServicesTypes
-        from homekit.exceptions import AccessoryDisconnectedError
+            return
 
         self.pairing.pairing_data['AccessoryIP'] = self.host
         self.pairing.pairing_data['AccessoryPort'] = self.port
 
+        cache = self.hass.data[ENTITY_MAP].get_map(self.unique_id)
+        if not cache or cache['config_num'] < self.config_num:
+            return self.refresh_entity_map(self.config_num)
+
+        self.accessories = cache['accessories']
+
+        # Ensure the Pairing object has access to the latest version of the
+        # entity map.
+        self.pairing.pairing_data['accessories'] = self.accessories
+
+        self.add_entities()
+
+        return True
+
+    def refresh_entity_map(self, config_num):
+        """
+        Handle setup of a HomeKit accessory.
+
+        The sync version will be removed when homekit_controller migrates to
+        config flow.
+        """
+        self.hass.add_job(
+            self.async_refresh_entity_map,
+            config_num,
+        )
+
+    async def async_refresh_entity_map(self, config_num):
+        """Handle setup of a HomeKit accessory."""
+        # pylint: disable=import-error
+        from homekit.exceptions import AccessoryDisconnectedError
+
         try:
-            data = self.pairing.list_accessories_and_characteristics()
+            self.accessories = await self.hass.async_add_executor_job(
+                self.pairing.list_accessories_and_characteristics,
+            )
         except AccessoryDisconnectedError:
-            call_later(
-                self.hass, RETRY_INTERVAL, lambda _: self.accessory_setup())
+            # If we fail to refresh this data then we will naturally retry
+            # later when Bonjour spots c# is still not up to date.
             return
-        for accessory in data:
+
+        self.hass.data[ENTITY_MAP].async_create_or_update_map(
+            self.unique_id,
+            config_num,
+            self.accessories,
+        )
+
+        self.config_num = config_num
+
+        # For BLE, the Pairing instance relies on the entity map to map
+        # aid/iid to GATT characteristics. So push it to there as well.
+        self.pairing.pairing_data['accessories'] = self.accessories
+
+        # Register add new entities that are available
+        await self.hass.async_add_executor_job(self.add_entities)
+
+        return True
+
+    def add_entities(self):
+        """Process the entity map and create HA entities."""
+        # pylint: disable=import-error
+        from homekit.model.services import ServicesTypes
+
+        for accessory in self.accessories:
             aid = accessory['aid']
             for service in accessory['services']:
                 iid = service['iid']
@@ -118,6 +168,7 @@ class HKDevice():
                 if component is not None:
                     discovery.load_platform(self.hass, component, DOMAIN,
                                             service_info, self.config)
+                    self.entities.append((aid, iid))
 
     def device_config_callback(self, callback_data):
         """Handle initial pairing."""
@@ -158,7 +209,7 @@ class HKDevice():
             self.controller.save_data(pairing_file)
             _configurator = self.hass.data[DOMAIN+self.hkid]
             self.configurator.request_done(_configurator)
-            self.accessory_setup()
+            self.setup()
         else:
             error_msg = "Unable to pair, please try again"
             _configurator = self.hass.data[DOMAIN+self.hkid]
@@ -202,3 +253,12 @@ class HKDevice():
                 self.pairing.put_characteristics,
                 chars
             )
+
+    @property
+    def unique_id(self):
+        """
+        Return a unique id for this accessory or bridge.
+
+        This id is random and will change if a device undergoes a hard reset.
+        """
+        return self.hkid

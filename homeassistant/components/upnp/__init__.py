@@ -1,5 +1,6 @@
 """Open ports in your router for Home Assistant and provide statistics."""
 from ipaddress import ip_address
+from operator import itemgetter
 
 import voluptuous as vol
 
@@ -88,6 +89,8 @@ async def async_discover_and_construct(hass, udn=None) -> Device:
             _LOGGER.warning('Wanted UPnP/IGD device with UDN "%s" not found, '
                             'aborting', udn)
             return None
+        # ensure we're always taking the latest
+        filtered = sorted(filtered, key=itemgetter('st'), reverse=True)
         discovery_info = filtered[0]
     else:
         # get the first/any

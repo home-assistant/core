@@ -46,6 +46,13 @@ class Integration:
             if fil.is_file() or fil.name == '__pycache__':
                 continue
 
+            init = fil / '__init__.py'
+            if not init.exists():
+                print("Warning: {} missing, skipping directory. "
+                      "If this is your development environment, "
+                      "you can safely delete this folder.".format(init))
+                continue
+
             integration = cls(fil)
             integration.load_manifest()
             integrations[integration.domain] = integration

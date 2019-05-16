@@ -35,10 +35,9 @@ def main():
     integrations = Integration.load_dir(
         pathlib.Path('homeassistant/components')
     )
-    manifest.validate(integrations, config)
-    dependencies.validate(integrations, config)
-    codeowners.validate(integrations, config)
-    services.validate(integrations, config)
+
+    for plugin in PLUGINS:
+        plugin.validate(integrations, config)
 
     # When we generate, all errors that are fixable will be ignored,
     # as generating them will be fixed.
@@ -59,7 +58,10 @@ def main():
     print("Invalid integrations:", len(invalid_itg))
 
     if not invalid_itg and not general_errors:
-        codeowners.generate(integrations, config)
+        for plugin in PLUGINS:
+            if hasattr(plugin, 'generate'):
+                plugin.generate(integrations, config)
+
         return 0
 
     print()

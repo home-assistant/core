@@ -51,7 +51,7 @@ class AbstractDemoPlayer(MediaPlayerDevice):
 
     # We only implement the methods that we support
 
-    def __init__(self, name):
+    def __init__(self, name, device_class=None):
         """Initialize the demo device."""
         self._name = name
         self._player_state = STATE_PLAYING
@@ -60,6 +60,7 @@ class AbstractDemoPlayer(MediaPlayerDevice):
         self._shuffle = False
         self._sound_mode_list = SOUND_MODE_LIST
         self._sound_mode = DEFAULT_SOUND_MODE
+        self._device_class = device_class
 
     @property
     def should_poll(self):
@@ -100,6 +101,11 @@ class AbstractDemoPlayer(MediaPlayerDevice):
     def sound_mode_list(self):
         """Return a list of available sound modes."""
         return self._sound_mode_list
+
+    @property
+    def device_class(self):
+        """Return the device class of the media player."""
+        return self._device_class
 
     def turn_on(self):
         """Turn the media player on."""
