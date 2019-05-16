@@ -169,6 +169,7 @@ def test_setup_with_config(hass, aioclient_mock):
         yield from async_setup_component(
             hass, 'sensor', VALID_CONFIG_KJFK_MINIMAL)
 
+
 @asyncio.coroutine
 def test_setup_minimal(hass, aioclient_mock):
     """Test for minimal weather sensor config.
@@ -266,6 +267,7 @@ def test_setup_badconflocation(hass, aioclient_mock):
         yield from noaaweather.async_setup_platform(
             hass, BAD_CONF_LOCATION['sensor'], lambda _: None)
 
+
 @asyncio.coroutine
 def test_setup_badconfresponse(hass, aioclient_mock):
     """Test for configuration with bad response from web server."""
@@ -347,6 +349,7 @@ def test_setup_badobs(hass, aioclient_mock):
     state = hass.states.get('sensor.noaa_weather_klga_temperature')
     assert state is None
 
+
 @asyncio.coroutine
 def test_setup_badtextdesc(hass, aioclient_mock):
     """Test for no valid text in textDescription response.
@@ -363,11 +366,13 @@ def test_setup_badtextdesc(hass, aioclient_mock):
         params={'limit': 5})
 
     with assert_setup_component(1, 'sensor'):
-        yield from async_setup_component(hass, 'sensor', VALID_CONFIG_KJFK_TEXT)
+        yield from async_setup_component(hass, 'sensor',
+                                         VALID_CONFIG_KJFK_TEXT)
 
     state = hass.states.get('sensor.noaa_weather_kjfk_textdescription')
     assert state is not None
     assert state.state == 'Strange Description'
+
 
 @asyncio.coroutine
 def test_setup_badtextdesc2(hass, aioclient_mock):
@@ -385,11 +390,13 @@ def test_setup_badtextdesc2(hass, aioclient_mock):
         params={'limit': 5})
 
     with assert_setup_component(1, 'sensor'):
-        yield from async_setup_component(hass, 'sensor', VALID_CONFIG_KJFK_TEXT)
+        yield from async_setup_component(hass, 'sensor',
+                                         VALID_CONFIG_KJFK_TEXT)
 
     state = hass.states.get('sensor.noaa_weather_kjfk_textdescription')
     assert state is not None
     assert state.state == 'lightning'
+
 
 @asyncio.coroutine
 def test_setup_badunits(hass, aioclient_mock):
@@ -410,7 +417,8 @@ def test_setup_badunits(hass, aioclient_mock):
         params={'limit': 5})
 
     with assert_setup_component(1, 'sensor'):
-        yield from async_setup_component(hass, 'sensor', VALID_CONFIG_KJFK_FULL)
+        yield from async_setup_component(hass, 'sensor',
+                                         VALID_CONFIG_KJFK_FULL)
 
     state = hass.states.get('sensor.noaa_weather_kjfk_temperature')
     assert state is not None
@@ -423,6 +431,7 @@ def test_setup_badunits(hass, aioclient_mock):
     state = hass.states.get('sensor.noaa_weather_kjfk_heatindex')
     assert state is not None
     assert state.state == '32.8'
+
 
 @asyncio.coroutine
 def test_setup_full(hass, aioclient_mock):
@@ -442,7 +451,6 @@ def test_setup_full(hass, aioclient_mock):
     with assert_setup_component(1, 'sensor'):
         yield from async_setup_component(
             hass, 'sensor', VALID_CONFIG_KJFK_FULL)
-
 
     state = hass.states.get('sensor.noaa_weather_kjfk_temperature')
     assert state is not None
