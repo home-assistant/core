@@ -18,15 +18,15 @@ from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import (
     ATTR_AUX_HEAT, ATTR_CURRENT_HUMIDITY, ATTR_CURRENT_OPERATION,
-    ATTR_CURRENT_TEMPERATURE, ATTR_FAN_LIST, ATTR_FAN_MODE, ATTR_HOLD_LIST,
-    ATTR_HOLD_MODE, ATTR_HUMIDITY, ATTR_HVAC_MODE, ATTR_HVAC_MODES,
-    ATTR_MAX_HUMIDITY, ATTR_MAX_TEMP, ATTR_MIN_HUMIDITY, ATTR_MIN_TEMP,
+    ATTR_CURRENT_TEMPERATURE, ATTR_FAN_LIST, ATTR_FAN_MODE, ATTR_HUMIDITY,
+    ATTR_HVAC_MODE, ATTR_HVAC_MODES, ATTR_MAX_HUMIDITY, ATTR_MAX_TEMP,
+    ATTR_MIN_HUMIDITY, ATTR_MIN_TEMP, ATTR_PRESET_LIST, ATTR_PRESET_MODE,
     ATTR_SWING_LIST, ATTR_SWING_MODE, ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_STEP, DOMAIN, HVAC_MODES,
-    SERVICE_SET_AUX_HEAT, SERVICE_SET_FAN_MODE, SERVICE_SET_HOLD_MODE,
+    SERVICE_SET_AUX_HEAT, SERVICE_SET_FAN_MODE, SERVICE_SET_PRESET_MODE,
     SERVICE_SET_HUMIDITY, SERVICE_SET_HVAC_MODE, SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE, SUPPORT_AUX_HEAT, SUPPORT_CURRENT_OPERATION,
-    SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE, SUPPORT_SWING_MODE,
+    SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE, SUPPORT_SWING_MODE,
     SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_HUMIDITY_HIGH,
     SUPPORT_TARGET_HUMIDITY_LOW, SUPPORT_TARGET_TEMPERATURE_HIGH,
     SUPPORT_TARGET_TEMPERATURE_LOW)
@@ -70,9 +70,9 @@ SET_FAN_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_FAN_MODE): cv.string,
 })
-SET_HOLD_MODE_SCHEMA = vol.Schema({
+SET_PRESET_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-    vol.Required(ATTR_HOLD_MODE): cv.string,
+    vol.Required(ATTR_PRESET_MODE): cv.string,
 })
 SET_HVAC_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
@@ -95,8 +95,8 @@ async def async_setup(hass, config):
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_SET_HOLD_MODE, SET_HOLD_MODE_SCHEMA,
-        'async_set_hold_mode'
+        SERVICE_SET_PRESET_MODE, SET_PRESET_MODE_SCHEMA,
+        'async_set_preset_mode'
     )
     component.async_register_entity_service(
         SERVICE_SET_AUX_HEAT, SET_AUX_HEAT_SCHEMA,
@@ -215,10 +215,10 @@ class ClimateDevice(Entity):
         if supported_features & SUPPORT_CURRENT_OPERATION:
             data[ATTR_CURRENT_OPERATION] = self.current_operation
 
-        if supported_features & SUPPORT_HOLD_MODE:
-            data[ATTR_HOLD_MODE] = self.current_hold_mode
-            if self.hold_list:
-                data[ATTR_HOLD_LIST] = self.hold_list
+        if supported_features & SUPPORT_PRESET_MODE:
+            data[ATTR_PRESET_MODE] = self.preset_mode
+            if self.preset_list:
+                data[ATTR_PRESET_LIST] = self.preset_list
 
         if supported_features & SUPPORT_SWING_MODE:
             data[ATTR_SWING_MODE] = self.current_swing_mode
@@ -287,13 +287,13 @@ class ClimateDevice(Entity):
         return None
 
     @property
-    def current_hold_mode(self):
-        """Return the current hold mode, e.g., home, away, temp."""
+    def preset_mode(self):
+        """Return the current preset mode, e.g., home, away, temp."""
         return None
 
     @property
-    def hold_list(self):
-        """Return a list of available hold modes."""
+    def preset_list(self):
+        """Return a list of available preset modes."""
         return None
 
     @property
@@ -382,16 +382,16 @@ class ClimateDevice(Entity):
         """
         return self.hass.async_add_job(self.set_swing_mode, swing_mode)
 
-    def set_hold_mode(self, hold_mode):
-        """Set new target hold mode."""
+    def set_preset_mode(self, preset_mode):
+        """Set new preset mode."""
         raise NotImplementedError()
 
-    def async_set_hold_mode(self, hold_mode):
-        """Set new target hold mode.
+    def async_set_preset_mode(self, preset_mode):
+        """Set new preset mode.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(self.set_hold_mode, hold_mode)
+        return self.hass.async_add_job(self.set_preset_mode, preset_mode)
 
     def turn_aux_heat_on(self):
         """Turn auxiliary heater on."""
