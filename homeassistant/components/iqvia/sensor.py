@@ -106,8 +106,8 @@ class ForecastSensor(IQVIAEntity):
         if not self._iqvia.data:
             return
 
-        data = self._iqvia.data[self._type].get('Location')
-        if not data:
+        data = self._iqvia.data[self._type]['Location']
+        if not data.get('periods'):
             return
 
         indices = [p['Index'] for p in data['periods']]
