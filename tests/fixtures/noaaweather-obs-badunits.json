@@ -1,0 +1,174 @@
+{
+    "@context": [
+        "https://raw.githubusercontent.com/geojson/geojson-ld/master/contexts/geojson-base.jsonld",
+        {
+            "wx": "https://api.weather.gov/ontology#",
+            "s": "https://schema.org/",
+            "geo": "http://www.opengis.net/ont/geosparql#",
+            "unit": "http://codes.wmo.int/common/unit/",
+            "@vocab": "https://api.weather.gov/ontology#",
+            "geometry": {
+                "@id": "s:GeoCoordinates",
+                "@type": "geo:wktLiteral"
+            },
+            "city": "s:addressLocality",
+            "state": "s:addressRegion",
+            "distance": {
+                "@id": "s:Distance",
+                "@type": "s:QuantitativeValue"
+            },
+            "bearing": {
+                "@type": "s:QuantitativeValue"
+            },
+            "value": {
+                "@id": "s:value"
+            },
+            "unitCode": {
+                "@id": "s:unitCode",
+                "@type": "@id"
+            },
+            "forecastOffice": {
+                "@type": "@id"
+            },
+            "forecastGridData": {
+                "@type": "@id"
+            },
+            "publicZone": {
+                "@type": "@id"
+            },
+            "county": {
+                "@type": "@id"
+            }
+        }
+    ],
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "id": "https://api.weather.gov/stations/KJFK/observations/2035-03-30T18:51:00+00:00",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -73.780000000000001,
+                    40.649999999999999
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KJFK/observations/2035-03-30T18:51:00+00:00",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 7,
+                    "unitCode": "unit:m"
+                },
+                "station": "https://api.weather.gov/stations/KJFK",
+                "timestamp": "2035-03-30T18:51:00+00:00",
+                "rawMessage": "KJFK 301851Z 16019KT 10SM FEW130 SCT200 BKN250 13/07 A2998 RMK AO2 PK WND 17027/1829 SLP153 T01280072",
+                "textDescription": "Mostly Cloudy and Windy",
+                "icon": "https://api.weather.gov/icons/land/day/wind_bkn?size=medium",
+                "presentWeather": [{"weather": "rain", "intensity": "light", "rawString": "-RA", "modifier": null}],
+                "temperature": {
+                    "value": 11.700000000000011,
+                    "unitCode": "unit:degK",
+                    "qualityControl": "qc:V"
+                },
+                "dewpoint": {
+                    "value": -1.5000000000000455,
+                    "qualityControl": "qc:V"
+                },
+                "windDirection": {
+                    "value": 200,
+                    "unitCode": "unit:degree_(angle)",
+                    "qualityControl": "qc:V"
+                },
+                "windSpeed": {
+                    "value": 4.6000000000000007,
+                    "unitCode": "unit:m_s-1",
+                    "qualityControl": "qc:V"
+                },
+                "windGust": {
+                    "value": 9.30555,
+                    "unitCode": "unit:m_s-1",
+                    "qualityControl": "qc:V"
+                },
+                "barometricPressure": {
+                    "value": 101690,
+                    "unitCode": "unit:Pa",
+                    "qualityControl": "qc:V"
+                },
+                "seaLevelPressure": {
+                    "value": 101680,
+                    "unitCode": "unit:Pa",
+                    "qualityControl": "qc:V"
+                },
+                "visibility": {
+                    "value": 16090,
+                    "unitCode": "unit:m",
+                    "qualityControl": "qc:C"
+                },
+                "maxTemperatureLast24Hours": {
+                    "value": null,
+                    "unitCode": "unit:degC",
+                    "qualityControl": null
+                },
+                "minTemperatureLast24Hours": {
+                    "value": null,
+                    "unitCode": "unit:degC",
+                    "qualityControl": null
+                },
+                "precipitationLastHour": {
+                    "value": 0.010,
+                    "unitCode": "unit:m",
+                    "qualityControl": "qc:C"
+                },
+                "precipitationLast3Hours": {
+                    "value": 0.011,
+                    "unitCode": "unit:m",
+                    "qualityControl": "qc:C"
+                },
+                "precipitationLast6Hours": {
+                    "value": 0.015,
+                    "unitCode": "unit:m",
+                    "qualityControl": "qc:C"
+                },
+                "relativeHumidity": {
+                    "value": 63.000000000000002,
+                    "unitCode": "unit:percent",
+                    "qualityControl": "qc:C"
+                },
+                "windChill": {
+                    "value": 4.4,
+                    "unitCode": "unit:degC",
+                    "qualityControl": "qc:V"
+                },
+                "heatIndex": {
+                    "value": 91.1,
+                    "unitCode": "unit:degF",
+                    "qualityControl": "qc:V"
+                },
+                "cloudLayers": [
+                    {
+                        "base": {
+                            "value": 3960,
+                            "unitCode": "unit:m"
+                        },
+                        "amount": "FEW"
+                    },
+                    {
+                        "base": {
+                            "value": 6100,
+                            "unitCode": "unit:m"
+                        },
+                        "amount": "SCT"
+                    },
+                    {
+                        "base": {
+                            "value": 7620,
+                            "unitCode": "unit:m"
+                        },
+                        "amount": "BKN"
+                    }
+                ]
+            }
+        }
+    ]
+}

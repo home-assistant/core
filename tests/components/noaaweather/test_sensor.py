@@ -11,7 +11,7 @@ from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT,
                                  LENGTH_KILOMETERS, LENGTH_MILES,
                                  LENGTH_INCHES)
 from homeassistant.util.unit_system import (IMPERIAL_SYSTEM)
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import (ConfigEntryNotReady, PlatformNotReady)
 
 from tests.common import (load_fixture, assert_setup_component)
 
@@ -169,7 +169,6 @@ def test_setup_with_config(hass, aioclient_mock):
         yield from async_setup_component(
             hass, 'sensor', VALID_CONFIG_KJFK_MINIMAL)
 
-
 @asyncio.coroutine
 def test_setup_minimal(hass, aioclient_mock):
     """Test for minimal weather sensor config.
@@ -267,6 +266,22 @@ def test_setup_badconflocation(hass, aioclient_mock):
         yield from noaaweather.async_setup_platform(
             hass, BAD_CONF_LOCATION['sensor'], lambda _: None)
 
+@asyncio.coroutine
+def test_setup_badconfresponse(hass, aioclient_mock):
+    """Test for configuration with bad response from web server."""
+    aioclient_mock.get(
+        STAURL.format(BAD_CONF_LOCATION['sensor']['latitude'],
+                      BAD_CONF_LOCATION['sensor']['longitude']),
+        status=505)
+    aioclient_mock.get(
+        OBSURL.format("KJFK"),
+        text=load_fixture('noaaweather-obs-valid.json'),
+        params={'limit': 5})
+
+    with raises(PlatformNotReady):
+        yield from noaaweather.async_setup_platform(
+            hass, BAD_CONF_LOCATION['sensor'], lambda _: None)
+
 
 @asyncio.coroutine
 def test_setup_bad_conf_station(hass, aioclient_mock):
@@ -332,6 +347,82 @@ def test_setup_badobs(hass, aioclient_mock):
     state = hass.states.get('sensor.noaa_weather_klga_temperature')
     assert state is None
 
+@asyncio.coroutine
+def test_setup_badtextdesc(hass, aioclient_mock):
+    """Test for no valid text in textDescription response.
+
+    In this we should get back the unrecognized text for the description.
+    """
+    aioclient_mock.get(
+        STAURL.format(VALID_CONFIG_KJFK_TEXT['sensor']['latitude'],
+                      VALID_CONFIG_KJFK_TEXT['sensor']['longitude']),
+        text=load_fixture('noaaweather-sta-valid.json'))
+    aioclient_mock.get(
+        OBSURL.format("KJFK"),
+        text=load_fixture('noaaweather-obs-badtext.json'),
+        params={'limit': 5})
+
+    with assert_setup_component(1, 'sensor'):
+        yield from async_setup_component(hass, 'sensor', VALID_CONFIG_KJFK_TEXT)
+
+    state = hass.states.get('sensor.noaa_weather_kjfk_textdescription')
+    assert state is not None
+    assert state.state == 'Strange Description'
+
+@asyncio.coroutine
+def test_setup_badtextdesc2(hass, aioclient_mock):
+    """Test for no valid text in textDescription response.
+
+    In this we should get back the unrecognized text for the description.
+    """
+    aioclient_mock.get(
+        STAURL.format(VALID_CONFIG_KJFK_TEXT['sensor']['latitude'],
+                      VALID_CONFIG_KJFK_TEXT['sensor']['longitude']),
+        text=load_fixture('noaaweather-sta-valid.json'))
+    aioclient_mock.get(
+        OBSURL.format("KJFK"),
+        text=load_fixture('noaaweather-obs-badtext2.json'),
+        params={'limit': 5})
+
+    with assert_setup_component(1, 'sensor'):
+        yield from async_setup_component(hass, 'sensor', VALID_CONFIG_KJFK_TEXT)
+
+    state = hass.states.get('sensor.noaa_weather_kjfk_textdescription')
+    assert state is not None
+    assert state.state == 'lightning'
+
+@asyncio.coroutine
+def test_setup_badunits(hass, aioclient_mock):
+    """Test for unknown unitCode value or missing value.
+
+    The data has a temperature value set with an unknown unit code (degK
+    instead of degC or degF), degF set for heatIndex, and
+    no unit code for dewpoint.
+
+    """
+    aioclient_mock.get(
+        STAURL.format(VALID_CONFIG_KJFK_FULL['sensor']['latitude'],
+                      VALID_CONFIG_KJFK_FULL['sensor']['longitude']),
+        text=load_fixture('noaaweather-sta-valid.json'))
+    aioclient_mock.get(
+        OBSURL.format("KJFK"),
+        text=load_fixture('noaaweather-obs-badunits.json'),
+        params={'limit': 5})
+
+    with assert_setup_component(1, 'sensor'):
+        yield from async_setup_component(hass, 'sensor', VALID_CONFIG_KJFK_FULL)
+
+    state = hass.states.get('sensor.noaa_weather_kjfk_temperature')
+    assert state is not None
+    assert state.state == 'unknown'
+
+    state = hass.states.get('sensor.noaa_weather_kjfk_dewpoint')
+    assert state is not None
+    assert state.state == 'unknown'
+
+    state = hass.states.get('sensor.noaa_weather_kjfk_heatindex')
+    assert state is not None
+    assert state.state == '32.8'
 
 @asyncio.coroutine
 def test_setup_full(hass, aioclient_mock):
@@ -351,6 +442,7 @@ def test_setup_full(hass, aioclient_mock):
     with assert_setup_component(1, 'sensor'):
         yield from async_setup_component(
             hass, 'sensor', VALID_CONFIG_KJFK_FULL)
+
 
     state = hass.states.get('sensor.noaa_weather_kjfk_temperature')
     assert state is not None
