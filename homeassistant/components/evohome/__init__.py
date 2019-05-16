@@ -1,9 +1,11 @@
-"""Support for (EMEA/EU-based) Honeywell evohome systems."""
-# Glossary:
-#   TCS - temperature control system (a.k.a. Controller, Parent), which can
-#   have up to 13 Children:
-#     0-12 Heating zones (a.k.a. Zone), Climate devices, and
-#     0-1 DHW controller, (a.k.a. Boiler), a WaterHeater device
+"""Support for (EMEA/EU-based) Honeywell evohome systems.
+
+    Glossary:
+    TCS - temperature control system (a.k.a. Controller, Parent), which can
+    have up to 13 Children:
+        0-12 Heating zones (a.k.a. Zone), Climate devices, and
+        0-1 DHW controller, (a.k.a. Boiler), a WaterHeater device
+"""
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Awaitable, Dict, Optional, List
@@ -36,12 +38,13 @@ from homeassistant.const import (
 
     CONF_SCAN_INTERVAL, CONF_USERNAME, CONF_PASSWORD,
     HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS,
-    PRECISION_HALVES, TEMP_CELSIUS,
-    CONF_ACCESS_TOKEN, CONF_ACCESS_TOKEN_EXPIRES, CONF_REFRESH_TOKEN)
+    EVENT_HOMEASSISTANT_START,
+    PRECISION_HALVES, TEMP_CELSIUS)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
 
 from .const import (
@@ -101,6 +104,8 @@ def setup(hass, hass_config):
     _LOGGER.warn("refresh_token %s", refresh_token)                              # TODO: for testing only
     _LOGGER.warn("access_token %s", access_token)                                # TODO: for testing only
     _LOGGER.warn("access_token_expires %s", access_token_expires)                # TODO: for testing only
+
+    scan_interval = timedelta(seconds=30)
 
     try:
         client = evo_data['client'] = await hass.async_add_executor_job(
@@ -181,6 +186,13 @@ def setup(hass, hass_config):
     if 'dhw' in evo_data['config'][GWS][0][TCS][0]:
         load_platform(hass, 'water_heater', DOMAIN, {}, hass_config)
 
+    @callback
+    def _first_update(event):
+        """When HA has started, the hub knows to retrieve it's first update."""
+        async_dispatcher_send(hass, DOMAIN, {'signal': 'first_update'})
+
+    hass.bus.listen(EVENT_HOMEASSISTANT_START, _first_update)
+
     return True
 
 
@@ -208,6 +220,15 @@ class EvoDevice(Entity):
         self._status = {}
 
         self._available = False  # should become True after first update()
+
+    async def async_added_to_hass(self):
+        """Run when entity about to be added."""
+        async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
+
+    @callback
+    def _refresh(self, packet):
+        if packet['signal'] == 'refresh':
+            self.async_schedule_update_ha_state(force_refresh=True)
 
     def _handle_exception(self, err):
         try:
@@ -261,7 +282,13 @@ class EvoDevice(Entity):
         """Return the icon to use in the frontend UI."""
         return self._icon
 
-    @property  # Entity
+    @property
+    def should_poll(self) -> bool:
+        """Only the Controller should be polled."""
+        _LOGGER.warn("should_poll(%s)=%s", self._id, False)
+        return False
+
+    @property
     def available(self) -> bool:
         """Return True if the device is currently available."""
         return self._available
@@ -292,20 +319,3 @@ class EvoDevice(Entity):
     def operation_list(self):
         """Return the list of available operations."""
         return self._operation_list
-
-
-class EvoChildDevice(Entity):
-    """Base for Honeywell evohome child devices (i.e. not the controller)."""
-
-    async def async_added_to_hass(self):
-        """Run when entity about to be added."""
-        async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
-
-    @callback
-    def _refresh(self, packet):
-        self.async_schedule_update_ha_state(force_refresh=True)
-
-    @property
-    def should_poll(self) -> bool:
-        """Only the Controller should be polled."""
-        return False
