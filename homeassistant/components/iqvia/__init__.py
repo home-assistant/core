@@ -158,10 +158,6 @@ class IQVIAData:
 
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
 
-        # IQVIA sites require a bit more complicated error handling, given that
-        # they sometimes have parts (but not the whole thing) go down:
-        #   1. If `InvalidZipError` is thrown, quit everything immediately.
-        #   2. If a single request throws any other error, try the others.
         for key, result in zip(tasks, results):
             if isinstance(result, IQVIAError):
                 _LOGGER.error('Unable to get %s data: %s', key, result)
