@@ -15,10 +15,10 @@ from homeassistant.const import (
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from . import (
-    EvoDevice,
-    CONF_LOCATION_IDX, EVO_CHILD, EVO_PARENT)
+    EvoDevice, EvoChildDevice,
+    CONF_LOCATION_IDX)
 from .const import (
-    DATA_EVOHOME, DISPATCHER_EVOHOME, GWS, TCS)
+    DATA_EVOHOME, DOMAIN, GWS, TCS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,11 +30,6 @@ EVO_AWAY = 'Away'
 EVO_DAYOFF = 'DayOff'
 EVO_CUSTOM = 'Custom'
 EVO_HEATOFF = 'HeatingOff'
-
-# These are for Zones' opmode, and state
-EVO_FOLLOW = 'FollowSchedule'
-EVO_TEMPOVER = 'TemporaryOverride'
-EVO_PERMOVER = 'PermanentOverride'
 
 # For the Controller. NB: evohome treats Away mode as a mode in/of itself,
 # where HA considers it to 'override' the exising operating mode
@@ -104,7 +99,7 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     async_add_entities(entities, update_before_add=False)
 
 
-class EvoZone(EvoDevice, ClimateDevice):
+class EvoZone(EvoChildDevice, EvoDevice, ClimateDevice):
     """Base for a Honeywell evohome Zone device."""
 
     def __init__(self, evo_data, client, obj_ref):
@@ -114,13 +109,11 @@ class EvoZone(EvoDevice, ClimateDevice):
         self._id = obj_ref.zoneId
         self._name = obj_ref.name
         self._icon = "mdi:radiator"
-        self._type = EVO_CHILD
 
         for _zone in evo_data['config'][GWS][0][TCS][0]['zones']:
             if _zone['zoneId'] == self._id:
                 self._config = _zone
                 break
-        self._status = {}
 
         self._operation_list = ZONE_OP_LIST
         self._supported_features = \
@@ -295,7 +288,6 @@ class EvoController(EvoDevice, ClimateDevice):
         self._id = obj_ref.systemId
         self._name = '_{}'.format(obj_ref.location.name)
         self._icon = "mdi:thermostat"
-        self._type = EVO_PARENT
 
         self._config = evo_data['config'][GWS][0][TCS][0]
         self._status = evo_data['status']
@@ -386,11 +378,6 @@ class EvoController(EvoDevice, ClimateDevice):
         """
         return 35
 
-    @property
-    def should_poll(self) -> bool:
-        """Return True as the evohome Controller should always be polled."""
-        return True
-
     def _set_operation_mode(self, operation_mode):
         try:
             self._obj._set_status(operation_mode)  # noqa: E501; pylint: disable=protected-access
@@ -453,5 +440,4 @@ class EvoController(EvoDevice, ClimateDevice):
         _LOGGER.debug("Status = %s", self._status)
 
         # inform the child devices that state data has been updated
-        pkt = {'sender': 'controller', 'signal': 'refresh', 'to': EVO_CHILD}
-        dispatcher_send(self.hass, DISPATCHER_EVOHOME, pkt)
+        dispatcher_send(self.hass, DOMAIN)

@@ -2,9 +2,8 @@
 # Glossary:
 #   TCS - temperature control system (a.k.a. Controller, Parent), which can
 #   have up to 13 Children:
-#     0-12 Heating zones (a.k.a. Zone), and
-#     0-1 DHW controller, (a.k.a. Boiler)
-# The TCS & Zones are implemented as Climate devices, Boiler as a WaterHeater
+#     0-12 Heating zones (a.k.a. Zone), Climate devices, and
+#     0-1 DHW controller, (a.k.a. Boiler), a WaterHeater device
 from datetime import datetime, timedelta
 import logging
 
@@ -15,18 +14,16 @@ import evohomeclient2
 
 from homeassistant.const import (
     CONF_SCAN_INTERVAL, CONF_USERNAME, CONF_PASSWORD,
-    EVENT_HOMEASSISTANT_START,
     HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS,
     PRECISION_HALVES, TEMP_CELSIUS)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, async_dispatcher_send)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import (
-    DOMAIN, DATA_EVOHOME, DISPATCHER_EVOHOME, GWS, TCS)
+    DOMAIN, DATA_EVOHOME, GWS, TCS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,10 +44,6 @@ CONFIG_SCHEMA = vol.Schema({
 CONF_SECRETS = [
     CONF_USERNAME, CONF_PASSWORD,
 ]
-
-# bit masks for dispatcher packets
-EVO_PARENT = 0x01
-EVO_CHILD = 0x02
 
 
 def setup(hass, hass_config):
@@ -123,25 +116,12 @@ def setup(hass, hass_config):
         tmp_loc = dict(evo_data['config'])
         tmp_loc['locationInfo']['postcode'] = 'REDACTED'
 
-        if 'dhw' in tmp_loc[GWS][0][TCS][0]:  # if this location has DHW...
-            tmp_loc[GWS][0][TCS][0]['dhw'] = '...'
-
         _LOGGER.debug("setup(): evo_data['config']=%s", tmp_loc)
 
     load_platform(hass, 'climate', DOMAIN, {}, hass_config)
 
     if 'dhw' in evo_data['config'][GWS][0][TCS][0]:
-        _LOGGER.warning(
-            "setup(): DHW found, but this component doesn't support DHW."
-        )
-
-    @callback
-    def _first_update(event):
-        """When HA has started, the hub knows to retrieve it's first update."""
-        pkt = {'sender': 'setup()', 'signal': 'refresh', 'to': EVO_PARENT}
-        async_dispatcher_send(hass, DISPATCHER_EVOHOME, pkt)
-
-    hass.bus.listen(EVENT_HOMEASSISTANT_START, _first_update)
+        load_platform(hass, 'water_heater', DOMAIN, {}, hass_config)
 
     return True
 
@@ -160,7 +140,6 @@ class EvoDevice(Entity):
 
         self._name = None
         self._icon = None
-        self._type = None
 
         self._supported_features = None
         self._operation_list = None
@@ -170,11 +149,6 @@ class EvoDevice(Entity):
         self._status = {}
 
         self._available = False  # should become True after first update()
-
-    @callback
-    def _connect(self, packet):
-        if packet['to'] & self._type and packet['signal'] == 'refresh':
-            self.async_schedule_update_ha_state(force_refresh=True)
 
     def _handle_exception(self, err):
         try:
@@ -212,19 +186,6 @@ class EvoDevice(Entity):
 
             else:
                 raise  # we don't expect/handle any other HTTPErrors
-
-    # These properties, methods are from the Entity class
-    async def async_added_to_hass(self):
-        """Run when entity about to be added."""
-        async_dispatcher_connect(self.hass, DISPATCHER_EVOHOME, self._connect)
-
-    @property
-    def should_poll(self) -> bool:
-        """Most evohome devices push their state to HA.
-
-        Only the Controller should be polled.
-        """
-        return False
 
     @property
     def name(self) -> str:
@@ -270,3 +231,20 @@ class EvoDevice(Entity):
     def operation_list(self):
         """Return the list of available operations."""
         return self._operation_list
+
+
+class EvoChildDevice(Entity):
+    """Base for Honeywell evohome child devices (i.e. not the controller)."""
+
+    async def async_added_to_hass(self):
+        """Run when entity about to be added."""
+        async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
+
+    @callback
+    def _refresh(self, packet):
+        self.async_schedule_update_ha_state(force_refresh=True)
+
+    @property
+    def should_poll(self) -> bool:
+        """Only the Controller should be polled."""
+        return False
