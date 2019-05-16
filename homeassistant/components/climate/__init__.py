@@ -150,7 +150,7 @@ class ClimateDevice(Entity):
     @property
     def state(self):
         """Return the current state."""
-        return self.hvac_state
+        return self.operation_mode
 
     @property
     def precision(self):
