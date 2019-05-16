@@ -265,8 +265,8 @@ SENSOR_TYPES_SET = set(SENSOR_TYPES)
 # a more general value.
 #
 CONDITION_XLATE = [
-        ['lighting', ['Thunderstorm'], ['Vicinity']],
-        ['lighting-rainy', ['Thunderstorm'], [None]],
+        ['lightning', ['Thunderstorm'], ['Vicinity']],
+        ['lightning-rainy', ['Thunderstorm'], [None]],
         ['snowy-rainy', ['Snow', 'Freezing', 'Ice'], ['Rain', 'Drizzle']],
         ['snowy', ['Snow', 'Ice Pellets'], ['Rain', 'Drizzle']],
         ['pouring', ['Heavy Rain'], [None]],
