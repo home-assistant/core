@@ -5,7 +5,8 @@ import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION, ATTR_FORECAST_TEMP, ATTR_FORECAST_TEMP_LOW,
-    ATTR_FORECAST_TIME, PLATFORM_SCHEMA, WeatherEntity)
+    ATTR_FORECAST_TIME, PLATFORM_SCHEMA, WeatherEntity,
+    ATTR_FORECAST_PRECIPITATION)
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS)
 from homeassistant.helpers import config_validation as cv
@@ -149,7 +150,7 @@ class BrWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        from buienradar.buienradar import (CONDITION, CONDCODE, DATETIME,
+        from buienradar.buienradar import (CONDITION, CONDCODE, RAIN, DATETIME,
                                            MIN_TEMP, MAX_TEMP)
 
         if self._forecast:
@@ -166,6 +167,7 @@ class BrWeather(WeatherEntity):
                     data_out[ATTR_FORECAST_CONDITION] = cond[condcode]
                     data_out[ATTR_FORECAST_TEMP_LOW] = data_in.get(MIN_TEMP)
                     data_out[ATTR_FORECAST_TEMP] = data_in.get(MAX_TEMP)
+                    data_out[ATTR_FORECAST_PRECIPITATION] = data_in.get(RAIN)
 
                     fcdata_out.append(data_out)
 
