@@ -11,20 +11,27 @@ from homeassistant.const import (
     STATE_OFF, STATE_ON)
 
 from . import (
-    EvoDevice, EvoChildDevice,
+    EvoDevice,
     CONF_LOCATION_IDX,
 )
 from .climate import (
-    EVO_FOLLOW, EVO_TEMPOVER,
-    ZONE_OP_LIST,
+    EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER
 )
 from .const import (
     DATA_EVOHOME, GWS, TCS
 )
 
-DHW_STATES = {STATE_ON: 'On', STATE_OFF: 'Off'}
-
 _LOGGER = logging.getLogger(__name__)
+
+EVO_STATE_TO_HA = {'On': STATE_ON, 'Off': STATE_OFF}
+HA_STATE_TO_EVO = {v: k for k, v in EVO_STATE_TO_HA}
+
+EVO_OPMODE_TO_HA = {
+    EVO_FOLLOW: STATE_ON,
+    EVO_TEMPOVER: STATE_ON,
+    EVO_PERMOVER: STATE_ON
+}
+HA_OPMODE_TO_EVO = {STATE_ON: EVO_FOLLOW, STATE_OFF: EVO_PERMOVER}
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
@@ -48,7 +55,7 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     async_add_entities([dhw], update_before_add=False)
 
 
-class EvoDHW(EvoChildDevice, EvoDevice, WaterHeaterDevice):
+class EvoDHW(EvoDevice, WaterHeaterDevice):
     """Base for a Honeywell evohome DHW controller (aka boiler)."""
 
     def __init__(self, evo_data, client, obj_ref):
@@ -57,97 +64,57 @@ class EvoDHW(EvoChildDevice, EvoDevice, WaterHeaterDevice):
 
         self._id = obj_ref.dhwId
         self._name = "DHW controller"
-        self._icon = "oil-temperature"
+        self._icon = "mdi:oil-temperature"
 
         self._config = evo_data['config'][GWS][0][TCS][0]['dhw']
 
-        self._operation_list = ZONE_OP_LIST
         self._supported_features = SUPPORT_OPERATION_MODE
+        self._operation_list = list(HA_OPMODE_TO_EVO)
 
     @property
-    def target_temperature(self):
-        """Return the target temperature.
-
-        Note that the API does not expose the target temperature, so a
-        configured value is used here.
-        """
-        # A workaround, since water_heaters don't have a current temperature!
-        # temp = self._params[CONF_DHW_TEMP]
-        if self._status['temperatureStatus']['isAvailable']:
-            temp = self._status['temperatureStatus']['temperature']
-        else:
-            temp = None
-
-        return temp
-
-    def _set_dhw_state(self, state=None, mode=None, until=None):
-        """Set the new state of a DHW controller.
-
-        Turn the DHW on/off for an hour, until next setpoint, or indefinitely.
-        The setpoint feature requires 'use_schedules' = True.
-
-        Keyword arguments can be:
-          - state  = "On" | "Off" (no default)
-          - mode  = "TemporaryOverride" (default) | "PermanentOverride"
-          - until.strftime('%Y-%m-%dT%H:%M:%SZ') is:
-            - +1h for TemporaryOverride if not using schedules
-            - next setpoint for TemporaryOverride if using schedules
-            - ignored for PermanentOverride
-        """
-
-        if state is None:
-            state = self._status['stateStatus']['state']
-        if mode is None:
-            mode = EVO_TEMPOVER
-
-        if mode != EVO_TEMPOVER:
-            until = None
-        else:
-            if until is None:
-                until = datetime.now() + timedelta(hours=1)
-
-        if until is not None:
-            until = until.strftime('%Y-%m-%dT%H:%M:%SZ')
-
-        data = {'State': state, 'Mode': mode, 'UntilTime': until}
-
-        try:
-            self._obj._set_dhw(data)  # pylint: disable=protected-access
-
-        except requests.exceptions.HTTPError as err:
-            if not self._handle_exception(err):
-                raise
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._available
 
     @property
-    def is_on(self):
-        """Return True if DHW is on (albeit regulated by thermostat)."""
-        return self.state == DHW_STATES[STATE_ON]
+    def current_operation(self) -> str:
+        """Return the current operating mode (On, or Off)."""
+        return EVO_STATE_TO_HA[self._status['stateStatus']['state']]
 
-    def turn_on(self):
-        """Turn DHW on for an hour, until next setpoint, or indefinitely."""
-        mode = EVO_TEMPOVER
-        until = None
-
-        self._set_dhw_state(DHW_STATES[STATE_ON], mode, until)
-
-    def turn_off(self):
-        """Turn DHW off for an hour, until next setpoint, or indefinitely."""
-        mode = EVO_TEMPOVER
-        until = None
-
-        self._set_dhw_state(DHW_STATES[STATE_OFF], mode, until)
+    @property
+    def current_temperature(self) -> float:
+        """Return the current temperature."""
+        return self._status['temperatureStatus']['temperature']
 
     def set_operation_mode(self, operation_mode):
         """Set new operation mode for a DHW controller."""
-        if operation_mode == EVO_FOLLOW:
+        op_mode = HA_OPMODE_TO_EVO[operation_mode]
+
+        if op_mode == EVO_FOLLOW:
             state = ''
         else:
             state = self._status['stateStatus']['state']
 
-        if operation_mode == EVO_TEMPOVER:
+        if op_mode == EVO_TEMPOVER:
             until = datetime.now() + timedelta(hours=1)
             until = until.strftime('%Y-%m-%dT%H:%M:%SZ')
         else:
             until = None
 
-        self._set_dhw_state(state, operation_mode, until)
+        data = {'State': state, 'Mode': op_mode, 'UntilTime': until}
+
+        try:
+            self._obj._set_dhw(data)  # pylint: disable=protected-access
+        except requests.exceptions.HTTPError as err:
+            if not self._handle_exception(err):
+                raise
+
+    async def async_update(self):
+        """Process the evohome Zone's state data."""
+        _LOGGER.debug("update(%s)", self._id)
+
+        evo_data = self.hass.data[DATA_EVOHOME]
+
+        self._status = evo_data['status']['dhw']
+
+        self._available = self._status['temperatureStatus']['isAvailable']

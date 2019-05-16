@@ -12,10 +12,11 @@ from homeassistant.components.climate.const import (
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     CONF_SCAN_INTERVAL, STATE_OFF,)
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from . import (
-    EvoDevice, EvoChildDevice,
+    EvoDevice,
     CONF_LOCATION_IDX)
 from .const import (
     DATA_EVOHOME, DOMAIN, GWS, TCS)
@@ -47,7 +48,6 @@ HA_STATE_TO_TCS = {
     STATE_ECO: EVO_AUTOECO,
     STATE_OFF: EVO_HEATOFF
 }
-TCS_OP_LIST = list(HA_STATE_TO_TCS)
 
 # the Zones' opmode; their state is usually 'inherited' from the TCS
 EVO_FOLLOW = 'FollowSchedule'
@@ -64,7 +64,6 @@ HA_STATE_TO_ZONE = {
     STATE_AUTO: EVO_FOLLOW,
     STATE_MANUAL: EVO_PERMOVER
 }
-ZONE_OP_LIST = list(HA_STATE_TO_ZONE)
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
@@ -99,7 +98,7 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     async_add_entities(entities, update_before_add=False)
 
 
-class EvoZone(EvoChildDevice, EvoDevice, ClimateDevice):
+class EvoZone(EvoDevice, ClimateDevice):
     """Base for a Honeywell evohome Zone device."""
 
     def __init__(self, evo_data, client, obj_ref):
@@ -115,7 +114,7 @@ class EvoZone(EvoChildDevice, EvoDevice, ClimateDevice):
                 self._config = _zone
                 break
 
-        self._operation_list = ZONE_OP_LIST
+        self._operation_list = list(HA_STATE_TO_ZONE)
         self._supported_features = \
             SUPPORT_OPERATION_MODE | \
             SUPPORT_TARGET_TEMPERATURE | \
@@ -260,10 +259,12 @@ class EvoZone(EvoChildDevice, EvoDevice, ClimateDevice):
         period of time, 'TemporaryOverride', after which they will revert back
         to 'FollowSchedule' mode, or indefinitely, 'PermanentOverride'.
         """
-        self._set_operation_mode(HA_STATE_TO_ZONE.get(operation_mode))
+        self._set_operation_mode(HA_STATE_TO_ZONE[operation_mode])
 
-    def update(self):
+    async def async_update(self):
         """Process the evohome Zone's state data."""
+        _LOGGER.debug("update(%s)", self._id)
+
         evo_data = self.hass.data[DATA_EVOHOME]
 
         for _zone in evo_data['status']['zones']:
@@ -293,10 +294,21 @@ class EvoController(EvoDevice, ClimateDevice):
         self._status = evo_data['status']
         self._timers['statusUpdated'] = datetime.min
 
-        self._operation_list = TCS_OP_LIST
+        self._operation_list = list(HA_STATE_TO_TCS)
         self._supported_features = \
             SUPPORT_OPERATION_MODE | \
             SUPPORT_AWAY_MODE
+
+    @callback
+    def _refresh(self, packet):
+        if packet['signal'] == 'first_update':
+            self.schedule_update_ha_state(force_refresh=True)
+
+    @property
+    def should_poll(self) -> bool:
+        """Only the Controller should be polled."""
+        _LOGGER.warn("should_poll(%s)=%s", self._id, True)
+        return True
 
     @property
     def device_state_attributes(self):
@@ -417,6 +429,8 @@ class EvoController(EvoDevice, ClimateDevice):
         its children (e.g. Zones, DHW controller).
         """
         # should the latest evohome state data be retreived this cycle?
+        _LOGGER.debug("update(%s)", self._id)
+
         timeout = datetime.now() + timedelta(seconds=55)
         expired = timeout > self._timers['statusUpdated'] + \
             self._params[CONF_SCAN_INTERVAL]
@@ -440,4 +454,4 @@ class EvoController(EvoDevice, ClimateDevice):
         _LOGGER.debug("Status = %s", self._status)
 
         # inform the child devices that state data has been updated
-        dispatcher_send(self.hass, DOMAIN)
+        dispatcher_send(self.hass, DOMAIN, {'signal': 'refresh'})

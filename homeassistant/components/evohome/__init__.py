@@ -1,9 +1,11 @@
-"""Support for (EMEA/EU-based) Honeywell evohome systems."""
-# Glossary:
-#   TCS - temperature control system (a.k.a. Controller, Parent), which can
-#   have up to 13 Children:
-#     0-12 Heating zones (a.k.a. Zone), Climate devices, and
-#     0-1 DHW controller, (a.k.a. Boiler), a WaterHeater device
+"""Support for (EMEA/EU-based) Honeywell evohome systems.
+
+    Glossary:
+    TCS - temperature control system (a.k.a. Controller, Parent), which can
+    have up to 13 Children:
+        0-12 Heating zones (a.k.a. Zone), Climate devices, and
+        0-1 DHW controller, (a.k.a. Boiler), a WaterHeater device
+"""
 from datetime import datetime, timedelta
 import logging
 
@@ -15,11 +17,13 @@ import evohomeclient2
 from homeassistant.const import (
     CONF_SCAN_INTERVAL, CONF_USERNAME, CONF_PASSWORD,
     HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS,
+    EVENT_HOMEASSISTANT_START,
     PRECISION_HALVES, TEMP_CELSIUS)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
 
 from .const import (
@@ -59,6 +63,8 @@ def setup(hass, hass_config):
     scan_interval = evo_data['params'][CONF_SCAN_INTERVAL]
     scan_interval = timedelta(
         minutes=(scan_interval.total_seconds() + 59) // 60)
+
+    scan_interval = timedelta(seconds=30)
 
     try:
         client = evo_data['client'] = evohomeclient2.EvohomeClient(
@@ -123,6 +129,13 @@ def setup(hass, hass_config):
     if 'dhw' in evo_data['config'][GWS][0][TCS][0]:
         load_platform(hass, 'water_heater', DOMAIN, {}, hass_config)
 
+    @callback
+    def _first_update(event):
+        """When HA has started, the hub knows to retrieve it's first update."""
+        async_dispatcher_send(hass, DOMAIN, {'signal': 'first_update'})
+
+    hass.bus.listen(EVENT_HOMEASSISTANT_START, _first_update)
+
     return True
 
 
@@ -138,6 +151,7 @@ class EvoDevice(Entity):
         self._client = client
         self._obj = obj_ref
 
+        self._id = None
         self._name = None
         self._icon = None
 
@@ -149,6 +163,15 @@ class EvoDevice(Entity):
         self._status = {}
 
         self._available = False  # should become True after first update()
+
+    async def async_added_to_hass(self):
+        """Run when entity about to be added."""
+        async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
+
+    @callback
+    def _refresh(self, packet):
+        if packet['signal'] == 'refresh':
+            self.async_schedule_update_ha_state(force_refresh=True)
 
     def _handle_exception(self, err):
         try:
@@ -207,6 +230,12 @@ class EvoDevice(Entity):
         return self._icon
 
     @property
+    def should_poll(self) -> bool:
+        """Only the Controller should be polled."""
+        _LOGGER.warn("should_poll(%s)=%s", self._id, False)
+        return False
+
+    @property
     def available(self) -> bool:
         """Return True if the device is currently available."""
         return self._available
@@ -231,20 +260,3 @@ class EvoDevice(Entity):
     def operation_list(self):
         """Return the list of available operations."""
         return self._operation_list
-
-
-class EvoChildDevice(Entity):
-    """Base for Honeywell evohome child devices (i.e. not the controller)."""
-
-    async def async_added_to_hass(self):
-        """Run when entity about to be added."""
-        async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
-
-    @callback
-    def _refresh(self, packet):
-        self.async_schedule_update_ha_state(force_refresh=True)
-
-    @property
-    def should_poll(self) -> bool:
-        """Only the Controller should be polled."""
-        return False
