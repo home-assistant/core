@@ -154,7 +154,7 @@ def setup_platform(hass, config, async_add_entities,
             thermostat.set_advanced_conf(advance_conf)
 
     hass.services.register(DOMAIN, SERVICE_SET_ADVANCED_CONF,
-                           set_advanced_conf, schema=SET_SCHEDULE_SCHEMA)
+                           set_advanced_conf, schema=SET_ADVANCED_CONF_SCHEMA)
 
 
 class BroadlinkThermostat(ClimateDevice):
