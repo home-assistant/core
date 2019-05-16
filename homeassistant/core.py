@@ -28,8 +28,8 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_DOMAIN, ATTR_FRIENDLY_NAME, ATTR_NOW, ATTR_SERVICE,
-    ATTR_SERVICE_DATA, ATTR_SECONDS, EVENT_CALL_SERVICE,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    ATTR_SERVICE_DATA, ATTR_SECONDS, CONF_UNIT_SYSTEM_IMPERIAL,
+    EVENT_CALL_SERVICE, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_HOMEASSISTANT_CLOSE, EVENT_SERVICE_REMOVED,
     EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED, EVENT_TIMER_OUT_OF_SYNC, MATCH_ALL, __version__)
@@ -43,7 +43,8 @@ from homeassistant.util.async_ import (
 from homeassistant import util
 import homeassistant.util.dt as dt_util
 from homeassistant.util import location, slugify
-from homeassistant.util.unit_system import UnitSystem, METRIC_SYSTEM  # NOQA
+from homeassistant.util.unit_system import (  # NOQA
+    UnitSystem, IMPERIAL_SYSTEM, METRIC_SYSTEM)
 
 # Typing imports that create a circular dependency
 # pylint: disable=using-constant-test
@@ -56,7 +57,12 @@ CALLABLE_T = TypeVar('CALLABLE_T', bound=Callable)
 CALLBACK_TYPE = Callable[[], None]
 # pylint: enable=invalid-name
 
+CORE_STORAGE_KEY = 'homeassistant.core_config'
+CORE_STORAGE_VERSION = 1
+
 DOMAIN = 'homeassistant'
+
+EVENT_CORE_CONFIG_UPDATE = 'core_config_updated'
 
 # How long we wait for the result of a service call
 SERVICE_CALL_LIMIT = 10  # seconds
@@ -144,7 +150,7 @@ class HomeAssistant:
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
-        self.config = Config()  # type: Config
+        self.config = Config(self)  # type: Config
         self.components = loader.Components(self)
         self.helpers = loader.Helpers(self)
         # This is a dictionary that any component can store any data on.
@@ -1168,8 +1174,10 @@ class ServiceRegistry:
 class Config:
     """Configuration settings for Home Assistant."""
 
-    def __init__(self) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new config object."""
+        self.hass = hass
+
         self.latitude = None  # type: Optional[float]
         self.longitude = None  # type: Optional[float]
         self.elevation = None  # type: Optional[int]
@@ -1235,7 +1243,7 @@ class Config:
         return False
 
     def as_dict(self) -> Dict:
-        """Create a dictionary representation of this dict.
+        """Create a dictionary representation of the configuration.
 
         Async friendly.
         """
@@ -1256,6 +1264,65 @@ class Config:
             'version': __version__,
             'config_source': self.config_source
         }
+
+    def _update(self, values: Dict, source: str) -> None:
+        """Update the configuration from a dictionary.
+
+        Async friendly.
+        """
+        from homeassistant.config import _set_time_zone
+        self.config_source = source
+        self.latitude = values['latitude']
+        self.longitude = values['longitude']
+        self.elevation = values['elevation']
+        unit_system = values['unit_system']
+        if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+            self.units = IMPERIAL_SYSTEM
+        else:
+            self.units = METRIC_SYSTEM
+        self.location_name = values['location_name']
+        _set_time_zone(self.hass, values['time_zone'])
+
+    async def update(self, values: Dict) -> None:
+        """Update the configuration from a dictionary.
+
+        Async friendly.
+        """
+        from homeassistant.config import SOURCE_STORAGE
+        self._update(values, SOURCE_STORAGE)
+        self.store()
+        self.hass.bus.async_fire(
+            EVENT_CORE_CONFIG_UPDATE,
+            values
+        )
+
+    async def load(self) -> None:
+        """Load [homeassistant] core config."""
+        from homeassistant.config import SOURCE_STORAGE
+        store = self.hass.helpers.storage.Store(
+            CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True)
+        data = await store.async_load()
+        if not data:
+            return
+
+        self._update(data, SOURCE_STORAGE)
+
+    async def store(self) -> None:
+        """Store [homeassistant] core config."""
+        config = self.as_dict()
+
+        data = {
+            'latitude': config['latitude'],
+            'longitude': config['longitude'],
+            'elevation': config['elevation'],
+            'unit_system': self.units.name,
+            'location_name': config['location_name'],
+            'time_zone': config['time_zone'],
+        }
+
+        store = self.hass.helpers.storage.Store(
+            CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True)
+        await store.async_save(data)
 
 
 def _async_create_timer(hass: HomeAssistant) -> None:

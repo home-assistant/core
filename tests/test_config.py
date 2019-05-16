@@ -475,6 +475,8 @@ async def test_override_stored_configuration(hass, hass_storage):
 async def test_loading_configuration(hass):
     """Test loading core config onto hass object."""
     hass.config = mock.Mock()
+    hass.config.load.return_value = asyncio.Future()
+    hass.config.load.return_value.set_result(None)
 
     await config_util.async_process_ha_core_config(hass, {
         'latitude': 60,
@@ -500,6 +502,8 @@ async def test_loading_configuration(hass):
 async def test_loading_configuration_temperature_unit(hass):
     """Test backward compatibility when loading core config."""
     hass.config = mock.Mock()
+    hass.config.load.return_value = asyncio.Future()
+    hass.config.load.return_value.set_result(None)
 
     await config_util.async_process_ha_core_config(hass, {
         'latitude': 60,
@@ -522,6 +526,8 @@ async def test_loading_configuration_temperature_unit(hass):
 async def test_loading_configuration_from_packages(hass):
     """Test loading packages config onto hass object config."""
     hass.config = mock.Mock()
+    hass.config.load.return_value = asyncio.Future()
+    hass.config.load.return_value.set_result(None)
 
     await config_util.async_process_ha_core_config(hass, {
         'latitude': 39,
@@ -586,12 +592,12 @@ async def test_discovering_configuration_auto_detect_fails(mock_detect,
                                                            mock_elevation,
                                                            hass):
     """Test config remains unchanged if discovery fails."""
-    hass.config = Config()
+    hass.config = Config(hass)
     hass.config.config_dir = "/test/config"
 
     await config_util.async_process_ha_core_config(hass, {})
 
-    blankConfig = Config()
+    blankConfig = Config(hass)
     assert hass.config.latitude == blankConfig.latitude
     assert hass.config.longitude == blankConfig.longitude
     assert hass.config.elevation == blankConfig.elevation

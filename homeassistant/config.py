@@ -50,9 +50,6 @@ FILE_MIGRATION = (
     ('ios.conf', '.ios.conf'),
 )
 
-CORE_STORAGE_KEY = 'homeassistant.core_config'
-CORE_STORAGE_VERSION = 1
-
 SOURCE_DISCOVERED = 'discovered'
 SOURCE_STORAGE = 'storage'
 SOURCE_YAML = 'yaml'
@@ -494,28 +491,6 @@ def _set_time_zone(hass: HomeAssistant, time_zone_str: Optional[str]) -> None:
         _LOGGER.error("Received invalid time zone %s", time_zone_str)
 
 
-async def async_load_ha_core_config(hass: HomeAssistant) -> None:
-    """Store [homeassistant] core config."""
-    store = hass.helpers.storage.Store(CORE_STORAGE_VERSION, CORE_STORAGE_KEY,
-                                       private=True)
-    data = await store.async_load()
-    if not data:
-        return
-
-    hac = hass.config
-    hac.config_source = SOURCE_STORAGE
-    hac.latitude = data['latitude']
-    hac.longitude = data['longitude']
-    hac.elevation = data['elevation']
-    unit_system = data['unit_system']
-    if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
-        hac.units = IMPERIAL_SYSTEM
-    else:
-        hac.units = METRIC_SYSTEM
-    hac.location_name = data['location_name']
-    _set_time_zone(hass, data['time_zone'])
-
-
 async def async_process_ha_core_config(
         hass: HomeAssistant, config: Dict,
         api_password: Optional[str] = None,
@@ -554,7 +529,7 @@ async def async_process_ha_core_config(
             auth_conf,
             mfa_conf))
 
-    await async_load_ha_core_config(hass)
+    await hass.config.load()
 
     hac = hass.config
 
@@ -666,24 +641,6 @@ async def async_process_ha_core_config(
         _LOGGER.warning(
             "Incomplete core configuration. Auto detected %s",
             ", ".join('{}: {}'.format(key, val) for key, val in discovered))
-
-
-async def async_store_ha_core_config(hass: HomeAssistant) -> None:
-    """Store [homeassistant] core config."""
-    config = hass.config.as_dict()
-
-    data = {
-        'latitude': config['latitude'],
-        'longitude': config['longitude'],
-        'elevation': config['elevation'],
-        'unit_system': hass.config.units.name,
-        'location_name': config['location_name'],
-        'time_zone': config['time_zone'],
-    }
-
-    store = hass.helpers.storage.Store(CORE_STORAGE_VERSION, CORE_STORAGE_KEY,
-                                       private=True)
-    await store.async_save(data)
 
 
 def _log_pkg_error(
