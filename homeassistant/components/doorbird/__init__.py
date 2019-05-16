@@ -6,8 +6,8 @@ import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
-    CONF_DEVICES, CONF_HOST, CONF_MONITORED_CONDITIONS, CONF_NAME,
-    CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME)
+    CONF_DEVICES, CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_TOKEN,
+    CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util, slugify
 
@@ -158,9 +158,11 @@ class ConfiguredDoorBird():
 
     @property
     def token(self):
+        """Get token for device."""
         return self._token
 
     def register_events(self, hass):
+        """Register events on device."""
         # Get the URL of this server
         hass_url = hass.config.api.base_url
 
@@ -181,6 +183,7 @@ class ConfiguredDoorBird():
 
     @property
     def slug(self):
+        """Get device slug."""
         return slugify(self._name)
 
     def _get_event_name(self, event):
@@ -188,7 +191,6 @@ class ConfiguredDoorBird():
 
     def _register_event(self, hass_url, event):
         """Add a schedule entry in the device for a sensor."""
-
         url = '{}{}/{}?token={}'.format(hass_url, API_URL, event, self._token)
 
         # Register HA URL as webhook if not already, then get the ID
