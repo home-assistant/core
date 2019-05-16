@@ -25,6 +25,7 @@ FLOWS = [
     "ios",
     "ipma",
     "iqvia",
+    "leafspy",
     "lifx",
     "locative",
     "logi_circle",
