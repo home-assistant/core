@@ -26,6 +26,7 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_TOKEN): cv.string,
     vol.Optional(CONF_EVENTS, default=[]): vol.All(
         cv.ensure_list, [cv.string]),
     vol.Optional(CONF_CUSTOM_URL): cv.string,
@@ -34,7 +35,6 @@ DEVICE_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_TOKEN): cv.string,
         vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [DEVICE_SCHEMA])
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -44,13 +44,8 @@ def setup(hass, config):
     """Set up the DoorBird component."""
     from doorbirdpy import DoorBird
 
-    token = config[DOMAIN].get(CONF_TOKEN)
-
     # Provide an endpoint for the doorstations to call to trigger events
-    hass.http.register_view(DoorBirdRequestView(token))
-
-    # Provide an endpoint for the user to call to clear device changes
-    hass.http.register_view(DoorBirdCleanupView(token))
+    hass.http.register_view(DoorBirdRequestView)
 
     doorstations = []
 
@@ -60,6 +55,7 @@ def setup(hass, config):
         password = doorstation_config.get(CONF_PASSWORD)
         custom_url = doorstation_config.get(CONF_CUSTOM_URL)
         events = doorstation_config.get(CONF_EVENTS)
+        token = doorstation_config.get(CONF_TOKEN)
         name = (doorstation_config.get(CONF_NAME)
                 or 'DoorBird {}'.format(index + 1))
 
@@ -182,6 +178,7 @@ class ConfiguredDoorBird():
 
             _LOGGER.info('Successfully registered URL for %s on %s.',
                          event, self.name)
+
     @property
     def slug(self):
         return slugify(self._name)
@@ -255,70 +252,31 @@ class DoorBirdRequestView(HomeAssistantView):
     name = API_URL[1:].replace('/', ':')
     extra_urls = [API_URL + '/{event}']
 
-    def __init__(self, token):
-        """Initialize view."""
-        HomeAssistantView.__init__(self)
-        self._token = token
-
     # pylint: disable=no-self-use
     async def get(self, request, event):
         """Respond to requests from the device."""
         from aiohttp import web
         hass = request.app['hass']
 
-        request_token = request.query.get('token')
+        token = request.query.get('token')
 
-        authenticated = request_token == self._token
+        device = get_doorstation_by_token(hass, token)
 
-        if request_token == '' or not authenticated:
-            return web.Response(status=401, text='Unauthorized')
+        if device is None:
+            return web.Response(status=401, text='Invalid token provided.')
 
-        doorstation = get_doorstation_by_token(hass, request_token)
-
-        if doorstation:
-            event_data = doorstation.get_event_data()
+        if device:
+            event_data = device.get_event_data()
         else:
             event_data = {}
+
+        if event == 'clear':
+            hass.bus.async_fire(RESET_DEVICE_FAVORITES,
+                                {'token': token})
+
+            message = 'HTTP Favorites cleared for {}'.format(device.slug)
+            return web.Response(status=200, text=message)
 
         hass.bus.async_fire('{}_{}'.format(DOMAIN, event), event_data)
 
         return web.Response(status=200, text='OK')
-
-
-class DoorBirdCleanupView(HomeAssistantView):
-    """Provide a URL to call to delete ALL webhooks/schedules."""
-
-    requires_auth = False
-    url = API_URL + '/clear/{token}'
-    name = 'DoorBird Cleanup'
-
-    def __init__(self, token):
-        """Initialize view."""
-        HomeAssistantView.__init__(self)
-        self._token = token
-
-    # pylint: disable=no-self-use
-    async def get(self, request, token):
-        """Act on requests."""
-        from aiohttp import web
-        hass = request.app['hass']
-
-        request_token = request.query.get('token')
-
-        authenticated = request_token == self._token
-
-        if request_token == '' or not authenticated:
-            return web.Response(status=401, text='Unauthorized')
-
-        device = get_doorstation_by_token(hass, request_token)
-
-        # No matching device
-        if device is None:
-            return web.Response(status=404,
-                                text='Device not found for provided token.')
-
-        hass.bus.async_fire(RESET_DEVICE_FAVORITES,
-                            {'token': token})
-
-        message = 'Clearing schedule for {}'.format(device.slug)
-        return web.Response(status=200, text=message)
