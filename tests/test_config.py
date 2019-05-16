@@ -418,18 +418,19 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
     """Test loading core config onto hass object."""
     hass.config = mock.Mock()
     hass_storage["homeassistant.core_config"] = {
-    'data': {
-        'elevation': 10,
-        'latitude': 55,
-        'location_name': 'Home',
-        'longitude': 13,
-        'time_zone': 'Europe/Copenhagen',
-        'unit_system': 'metric'
-        },
-    'key': 'homeassistant.core_config',
-    'version': 1
+        'data': {
+            'elevation': 10,
+            'latitude': 55,
+            'location_name': 'Home',
+            'longitude': 13,
+            'time_zone': 'Europe/Copenhagen',
+            'unit_system': 'metric'
+            },
+        'key': 'homeassistant.core_config',
+        'version': 1
     }
-    await config_util.async_process_ha_core_config(hass, {'whitelist_external_dirs': '/tmp'})
+    await config_util.async_process_ha_core_config(
+        hass, {'whitelist_external_dirs': '/tmp'})
 
     assert hass.config.latitude == 55
     assert hass.config.longitude == 13
@@ -446,16 +447,16 @@ async def test_override_stored_configuration(hass, hass_storage):
     """Test loading core config onto hass object."""
     hass.config = mock.Mock()
     hass_storage["homeassistant.core_config"] = {
-    'data': {
-        'elevation': 10,
-        'latitude': 55,
-        'location_name': 'Home',
-        'longitude': 13,
-        'time_zone': 'Europe/Copenhagen',
-        'unit_system': 'metric'
-        },
-    'key': 'homeassistant.core_config',
-    'version': 1
+        'data': {
+            'elevation': 10,
+            'latitude': 55,
+            'location_name': 'Home',
+            'longitude': 13,
+            'time_zone': 'Europe/Copenhagen',
+            'unit_system': 'metric'
+            },
+        'key': 'homeassistant.core_config',
+        'version': 1
     }
     await config_util.async_process_ha_core_config(hass, {
         'latitude': 60,
