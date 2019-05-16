@@ -1,0 +1,10 @@
+{
+  "domain": "orange_funbox",
+  "name": "Orange Funbox",
+  "documentation": "",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@janekbaraniewski"
+  ]
+}
