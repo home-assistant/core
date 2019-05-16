@@ -5,6 +5,7 @@ import logging
 from typing import Any, Dict
 
 import voluptuous as vol
+from azure.eventhub import EventData, EventHubClientAsync
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED, STATE_UNAVAILABLE,
@@ -36,8 +37,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     """Activate Azure EH component."""
-    from azure.eventhub import EventData, EventHubClientAsync
-
     config = yaml_config[DOMAIN]
 
     event_hub_address = "amqps://{}.servicebus.windows.net/{}".format(
@@ -73,7 +72,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
 
     async def async_shutdown(event: Event):
         """Shut down the client."""
-        await client.stop()
+        await client.stop_async()
 
     hass.bus.async_listen(EVENT_STATE_CHANGED, async_send_to_event_hub)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_shutdown)
@@ -82,7 +81,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
 
 
 class DateTimeJSONEncoder(json.JSONEncoder):
-    """Encode python objects.
+    """Encode datetime objects.
 
     Additionally add encoding for datetime objects as isoformat.
     """
