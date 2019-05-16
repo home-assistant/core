@@ -1,5 +1,6 @@
 ais:
   primary-color: "#FF9800"
+  accent-color: "#ff572259"
   light-primary-color: "#ffc947"
   dark-primary-color: "#c66900"
   text-primary-color: "#ffffff"
