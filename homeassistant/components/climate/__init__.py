@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, PRECISION_TENTHS, PRECISION_WHOLE,
-    TEMP_CELSIUS)
+    TEMP_CELSIUS, STATE_ON, STATE_OFF)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA_BASE
@@ -189,7 +189,8 @@ class ClimateDevice(Entity):
 
         if supported_features & SUPPORT_FAN_MODE:
             data[ATTR_FAN_MODE] = self.fan_mode
-            data[ATTR_FAN_MODES] = self.fan_modes
+            if self.fan_list:
+                data[ATTR_FAN_LIST] = self.fan_list
 
         if supported_features & SUPPORT_CURRENT_OPERATION:
             data[ATTR_CURRENT_OPERATION] = self.current_operation
@@ -200,7 +201,7 @@ class ClimateDevice(Entity):
                 data[ATTR_PRESET_LIST] = self.preset_list
 
         if supported_features & SUPPORT_SWING_MODE:
-            data[ATTR_SWING_MODE] = self.current_swing_mode
+            data[ATTR_SWING_MODE] = self.swing_mode
             if self.swing_list:
                 data[ATTR_SWING_LIST] = self.swing_list
 
@@ -273,17 +274,14 @@ class ClimateDevice(Entity):
         return None
 
     @property
-    def is_aux_heat_on(self):
+    def is_aux_heat(self):
         """Return true if aux heater."""
         return None
 
     @property
-    def fan_mode(self) -> Optional[str]:
-        """Return the fan setting.
-
-        Requires SUPPORT_FAN_MODE.
-        """
-        raise NotImplementedError
+    def fan_mode(self):
+        """Return the fan setting."""
+        return None
 
     @property
     def fan_modes(self) -> Optional[List[str]]:
@@ -294,12 +292,9 @@ class ClimateDevice(Entity):
         raise NotImplementedError
 
     @property
-    def swing_mode(self) -> Optional[str]:
-        """Return the swing setting.
-
-        Requires SUPPORT_SWING_MODE.
-        """
-        raise NotImplementedError
+    def swing_mode(self):
+        """Return the fan setting."""
+        return None
 
     @property
     def swing_modes(self) -> Optional[List[str]]:
