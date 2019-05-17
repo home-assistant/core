@@ -4,7 +4,7 @@ import logging
 import ipaddress
 import voluptuous as vol
 
-from homeassistant import config_entries, util
+from homeassistant import config_entries
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, __version__)
 from homeassistant.generated import zeroconf as manifest
 
@@ -15,9 +15,7 @@ DOMAIN = 'zeroconf'
 ATTR_HOST = 'host'
 ATTR_PORT = 'port'
 ATTR_HOSTNAME = 'hostname'
-ATTR_MODEL_NUMBER = 'model_number'
 ATTR_PROPERTIES = 'properties'
-ATTR_MAC_ADDRESS = 'mac_address'
 
 ZEROCONF_TYPE = '_home-assistant._tcp.local.'
 
@@ -47,25 +45,21 @@ async def async_setup(hass, config):
     await zeroconf.register_service(info)
 
     async def new_service(service_type, name):
-        """"""
+        """Signal new service discovered."""
         service_info = await zeroconf.get_service_info(service_type, name)
         info = info_from_service(service_info)
-        print(info)
+        print(name, info)
 
         for domain in manifest.SERVICE_TYPES[service_type]:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
-                    domain,
-                    context={'source': config_entries.SOURCE_DISCOVERY},
-                    data=info
+                    domain, context={'source': DOMAIN}, data=info
                 )
             )
 
     def service_update(_, service_type, name, state_change):
-        """"""
+        """Service state changed."""
         from aiozeroconf import ServiceStateChange
-        print("Service %s of type %s state changed: %s" % (
-            name, service_type, state_change))
 
         if state_change is ServiceStateChange.Added:
             hass.async_create_task(new_service(service_type, name))
@@ -73,7 +67,7 @@ async def async_setup(hass, config):
     for service in manifest.SERVICE_TYPES:
         ServiceBrowser(zeroconf, service, handlers=[service_update])
 
-    async def stop_zeroconf(event):
+    async def stop_zeroconf(_):
         """Stop Zeroconf."""
         await zeroconf.unregister_service(info)
         await zeroconf.close()
@@ -84,7 +78,7 @@ async def async_setup(hass, config):
 
 
 def info_from_service(service):
-    """Return most important info from mDNS entries."""
+    """Return prepared info from mDNS entries."""
     properties = {}
 
     for key, value in service.properties.items():
@@ -100,8 +94,5 @@ def info_from_service(service):
         ATTR_HOSTNAME: service.server,
         ATTR_PROPERTIES: properties,
     }
-
-    if "mac" in properties:
-        info[ATTR_MAC_ADDRESS] = properties["mac"]
 
     return info
