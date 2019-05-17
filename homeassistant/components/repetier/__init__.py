@@ -142,7 +142,6 @@ def setup(hass, config):
     import pyrepetier
 
     hass.data[REPETIER_API] = {}
-    sensor_info = []
 
     for repetier in config[DOMAIN]:
         _LOGGER.debug("Repetier server config %s", repetier[CONF_HOST])
@@ -161,44 +160,13 @@ def setup(hass, config):
         if not printers:
             return False
 
-        api = PrinterAPI(hass, client, printers)
+        sensors = repetier[CONF_SENSORS][CONF_MONITORED_CONDITIONS]
+        api = PrinterAPI(hass, client, printers, sensors,
+                         repetier[CONF_NAME], config)
         api.update()
         track_time_interval(hass, api.update, SCAN_INTERVAL)
 
         hass.data[REPETIER_API][repetier[CONF_NAME]] = api
-
-        sensors = repetier[CONF_SENSORS][CONF_MONITORED_CONDITIONS]
-        for pidx, printer in enumerate(printers):
-            for sensor_type in sensors:
-                info = {}
-                info['sensor_type'] = sensor_type
-                info['printer_id'] = pidx
-                info['name'] = printer.slug
-                info['printer_name'] = repetier[CONF_NAME]
-
-                if sensor_type == 'bed_temperature':
-                    if printer.heatedbeds is None:
-                        continue
-                    for idx, _ in enumerate(printer.heatedbeds):
-                        info['temp_id'] = idx
-                        sensor_info.append(info)
-                elif sensor_type == 'extruder_temperature':
-                    if printer.extruder is None:
-                        continue
-                    for idx, _ in enumerate(printer.extruder):
-                        info['temp_id'] = idx
-                        sensor_info.append(info)
-                elif sensor_type == 'chamber_temperature':
-                    if printer.heatedchambers is None:
-                        continue
-                    for idx, _ in enumerate(printer.heatedchambers):
-                        info['temp_id'] = idx
-                        sensor_info.append(info)
-                else:
-                    info['temp_id'] = None
-                    sensor_info.append(info)
-
-    load_platform(hass, 'sensor', DOMAIN, sensor_info, config)
 
     return True
 
@@ -206,11 +174,15 @@ def setup(hass, config):
 class PrinterAPI:
     """Handle the printer API."""
 
-    def __init__(self, hass, client, printers):
+    def __init__(self, hass, client, printers, sensors, conf_name, config):
         """Set up instance."""
         self._hass = hass
         self._client = client
         self.printers = printers
+        self.sensors = sensors
+        self.conf_name = conf_name
+        self.config = config
+        self._known_entities = []
 
     def get_data(self, printer_id, sensor_type, temp_id):
         """Get data from the state cache."""
@@ -235,6 +207,56 @@ class PrinterAPI:
 
     def update(self, now=None):
         """Update the state cache from the printer API."""
+        self._load_entities()
         for printer in self.printers:
             printer.get_data()
         dispatcher_send(self._hass, UPDATE_SIGNAL)
+
+    def _load_entities(self):
+        sensor_info = []
+        for pidx, printer in enumerate(self.printers):
+            for sensor_type in self.sensors:
+                info = {}
+                info['sensor_type'] = sensor_type
+                info['printer_id'] = pidx
+                info['name'] = printer.slug
+                info['printer_name'] = self.conf_name
+                known = '{}-{}'.format(printer.slug, sensor_type)
+
+                if sensor_type == 'bed_temperature':
+                    if printer.heatedbeds is None:
+                        continue
+                    if any(known in s for s in self._known_entities):
+                        continue
+                    for idx, _ in enumerate(printer.heatedbeds):
+                        info['temp_id'] = idx
+                        sensor_info.append(info)
+                    self._known_entities.append(known)
+                elif sensor_type == 'extruder_temperature':
+                    if printer.extruder is None:
+                        continue
+                    if any(known in s for s in self._known_entities):
+                        continue
+                    for idx, _ in enumerate(printer.extruder):
+                        info['temp_id'] = idx
+                        sensor_info.append(info)
+                    self._known_entities.append(known)
+                elif sensor_type == 'chamber_temperature':
+                    if printer.heatedchambers is None:
+                        continue
+                    if any(known in s for s in self._known_entities):
+                        continue
+                    for idx, _ in enumerate(printer.heatedchambers):
+                        info['temp_id'] = idx
+                        sensor_info.append(info)
+                    self._known_entities.append(known)
+                else:
+                    if any(known in s for s in self._known_entities):
+                        continue
+                    info['temp_id'] = None
+                    self._known_entities.append(known)
+                    sensor_info.append(info)
+
+        if not sensor_info:
+            return
+        load_platform(self._hass, 'sensor', DOMAIN, sensor_info, self.config)
