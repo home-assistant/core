@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, PRECISION_TENTHS, PRECISION_WHOLE,
-    TEMP_CELSIUS)
+    TEMP_CELSIUS, STATE_ON, STATE_OFF)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA_BASE
@@ -194,7 +194,7 @@ class ClimateDevice(Entity):
                 data[ATTR_MAX_HUMIDITY] = self.max_humidity
 
         if supported_features & SUPPORT_FAN_MODE:
-            data[ATTR_FAN_MODE] = self.current_fan_mode
+            data[ATTR_FAN_MODE] = self.fan_mode
             if self.fan_list:
                 data[ATTR_FAN_LIST] = self.fan_list
 
@@ -207,13 +207,12 @@ class ClimateDevice(Entity):
                 data[ATTR_PRESET_LIST] = self.preset_list
 
         if supported_features & SUPPORT_SWING_MODE:
-            data[ATTR_SWING_MODE] = self.current_swing_mode
+            data[ATTR_SWING_MODE] = self.swing_mode
             if self.swing_list:
                 data[ATTR_SWING_LIST] = self.swing_list
 
         if supported_features & SUPPORT_AUX_HEAT:
-            is_aux_heat = self.is_aux_heat_on
-            data[ATTR_AUX_HEAT] = STATE_ON if is_aux_heat else STATE_OFF
+            data[ATTR_AUX_HEAT] = STATE_ON if self.is_aux_heat else STATE_OFF
 
         return data
 
@@ -283,12 +282,12 @@ class ClimateDevice(Entity):
         return None
 
     @property
-    def is_aux_heat_on(self):
+    def is_aux_heat(self):
         """Return true if aux heater."""
         return None
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         return None
 
@@ -298,7 +297,7 @@ class ClimateDevice(Entity):
         return None
 
     @property
-    def current_swing_mode(self):
+    def swing_mode(self):
         """Return the fan setting."""
         return None
 
