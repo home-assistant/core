@@ -164,6 +164,7 @@ class ClimateDevice(Entity):
         """Return the optional state attributes."""
         supported_features = self.supported_features
         data = {
+            ATTR_HVAC_MODES: self.hvac_modes,
             ATTR_CURRENT_TEMPERATURE: show_temp(
                 self.hass, self.current_temperature, self.temperature_unit,
                 self.precision),
@@ -177,10 +178,6 @@ class ClimateDevice(Entity):
                 self.hass, self.target_temperature, self.temperature_unit,
                 self.precision),
         }
-
-        # Supported HVAC modes
-        if self.hvac_modes:
-            data[ATTR_HVAC_MODES] = self.hvac_modes
 
         if self.target_temperature_step:
             data[ATTR_TARGET_TEMP_STEP] = self.target_temperature_step
@@ -248,7 +245,7 @@ class ClimateDevice(Entity):
 
     @property
     def hvac_state(self):
-        """Return current hvac operation ie. heat, cool mode"""
+        """Return hvac operation ie. heat, cool mode"""
         return None
 
     @property
@@ -258,7 +255,7 @@ class ClimateDevice(Entity):
 
     @property
     def current_operation(self):
-        """Return the current running hvac action."""
+        """Return the current running (hvac) operation if supported."""
         return None
 
     @property
