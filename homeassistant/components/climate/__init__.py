@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, PRECISION_TENTHS, PRECISION_WHOLE,
-    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON, TEMP_CELSIUS)
+    TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA_BASE
@@ -48,9 +48,6 @@ CONVERTIBLE_ATTRIBUTE = [
 
 _LOGGER = logging.getLogger(__name__)
 
-ON_OFF_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-})
 SET_AUX_HEAT_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_AUX_HEAT): cv.boolean,
@@ -121,14 +118,6 @@ async def async_setup(hass, config):
     component.async_register_entity_service(
         SERVICE_SET_SWING_MODE, SET_SWING_MODE_SCHEMA,
         'async_set_swing_mode'
-    )
-    component.async_register_entity_service(
-        SERVICE_TURN_OFF, ON_OFF_SERVICE_SCHEMA,
-        'async_turn_off'
-    )
-    component.async_register_entity_service(
-        SERVICE_TURN_ON, ON_OFF_SERVICE_SCHEMA,
-        'async_turn_on'
     )
 
     return True
@@ -291,11 +280,6 @@ class ClimateDevice(Entity):
     @property
     def preset_list(self):
         """Return a list of available preset modes."""
-        return None
-
-    @property
-    def is_on(self):
-        """Return true if on."""
         return None
 
     @property
