@@ -9,7 +9,8 @@ from homeassistant.const import CONF_ADDRESS
 from . import LcnDevice
 from .const import (
     CONF_CONNECTIONS, CONF_DIMMABLE, CONF_OUTPUT, CONF_TRANSITION, DATA_LCN,
-    OUTPUT_PORTS, get_connection)
+    OUTPUT_PORTS)
+from .helpers import get_connection
 
 
 async def async_setup_platform(

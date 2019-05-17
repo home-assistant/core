@@ -1,19 +1,12 @@
 # coding: utf-8
 """Constants for the LCN component."""
 from itertools import product
-import re
 
-import voluptuous as vol
-
-from homeassistant.const import CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 DOMAIN = 'lcn'
 DATA_LCN = 'lcn'
 DEFAULT_NAME = 'pchk'
-
-# Regex for address validation
-PATTERN_ADDRESS = re.compile('^((?P<conn_id>\\w+)\\.)?s?(?P<seg_id>\\d+)'
-                             '\\.(?P<type>m|g)?(?P<id>\\d+)$')
 
 CONF_CONNECTIONS = 'connections'
 CONF_SK_NUM_TRIES = 'sk_num_tries'
@@ -77,58 +70,3 @@ VAR_UNITS = ['', 'LCN', 'NATIVE',
              'VOLT', 'V',
              'AMPERE', 'AMP', 'A',
              'DEGREE', '°']
-
-
-def get_connection(connections, connection_id=None):
-    """Return the connection object from list."""
-    if connection_id is None:
-        connection = connections[0]
-    else:
-        for connection in connections:
-            if connection.connection_id == connection_id:
-                break
-        else:
-            raise ValueError('Unknown connection_id.')
-    return connection
-
-
-def has_unique_connection_names(connections):
-    """Validate that all connection names are unique.
-
-    Use 'pchk' as default connection_name (or add a numeric suffix if
-    pchk' is already in use.
-    """
-    for suffix, connection in enumerate(connections):
-        connection_name = connection.get(CONF_NAME)
-        if connection_name is None:
-            if suffix == 0:
-                connection[CONF_NAME] = DEFAULT_NAME
-            else:
-                connection[CONF_NAME] = '{}{:d}'.format(DEFAULT_NAME, suffix)
-
-    schema = vol.Schema(vol.Unique())
-    schema([connection.get(CONF_NAME) for connection in connections])
-    return connections
-
-
-def is_address(value):
-    """Validate the given address string.
-
-    Examples for S000M005 at myhome:
-        myhome.s000.m005
-        myhome.s0.m5
-        myhome.0.5    ("m" is implicit if missing)
-
-    Examples for s000g011
-        myhome.0.g11
-        myhome.s0.g11
-    """
-    matcher = PATTERN_ADDRESS.match(value)
-    if matcher:
-        is_group = (matcher.group('type') == 'g')
-        addr = (int(matcher.group('seg_id')),
-                int(matcher.group('id')),
-                is_group)
-        conn_id = matcher.group('conn_id')
-        return addr, conn_id
-    raise vol.error.Invalid('Not a valid address string.')

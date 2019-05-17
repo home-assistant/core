@@ -6,7 +6,8 @@ from homeassistant.const import CONF_ADDRESS, CONF_UNIT_OF_MEASUREMENT
 from . import LcnDevice
 from .const import (
     CONF_CONNECTIONS, CONF_SOURCE, DATA_LCN, LED_PORTS, S0_INPUTS, SETPOINTS,
-    THRESHOLDS, VARIABLES, get_connection)
+    THRESHOLDS, VARIABLES)
+from .helpers import get_connection
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,

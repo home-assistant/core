@@ -6,8 +6,8 @@ from homeassistant.const import CONF_ADDRESS
 
 from . import LcnDevice
 from .const import (
-    BINSENSOR_PORTS, CONF_CONNECTIONS, CONF_SOURCE, DATA_LCN, SETPOINTS,
-    get_connection)
+    BINSENSOR_PORTS, CONF_CONNECTIONS, CONF_SOURCE, DATA_LCN, SETPOINTS)
+from .helpers import get_connection
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,

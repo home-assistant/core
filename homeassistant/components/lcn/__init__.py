@@ -19,8 +19,8 @@ from .const import (
     CONF_OUTPUT, CONF_SETPOINT, CONF_SK_NUM_TRIES, CONF_SOURCE,
     CONF_TRANSITION, DATA_LCN, DIM_MODES, DOMAIN, KEYS, LED_PORTS,
     LOGICOP_PORTS, MOTOR_PORTS, OUTPUT_PORTS, RELAY_PORTS, S0_INPUTS,
-    SETPOINTS, THRESHOLDS, VAR_UNITS, VARIABLES, has_unique_connection_names,
-    is_address)
+    SETPOINTS, THRESHOLDS, VAR_UNITS, VARIABLES)
+from .helpers import has_unique_connection_names, is_address
 
 _LOGGER = logging.getLogger(__name__)
 

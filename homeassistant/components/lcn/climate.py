@@ -8,7 +8,8 @@ from homeassistant.const import (
 from . import LcnDevice
 from .const import (
     CONF_CONNECTIONS, CONF_LOCKABLE, CONF_MAX_TEMP, CONF_MIN_TEMP,
-    CONF_SETPOINT, CONF_SOURCE, DATA_LCN, get_connection)
+    CONF_SETPOINT, CONF_SOURCE, DATA_LCN)
+from .helpers import get_connection
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
