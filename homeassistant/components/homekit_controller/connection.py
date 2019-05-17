@@ -218,3 +218,13 @@ class HKDevice():
         This id is random and will change if a device undergoes a hard reset.
         """
         return self.pairing_data['AccessoryPairingID']
+
+    @property
+    def connection_info(self):
+        """Return accessory information for the main accessory."""
+        return get_bridge_information(self.accessories)
+
+    @property
+    def name(self):
+        """Name of the bridge accessory."""
+        return get_accessory_name(self.connection_info) or self.unique_id

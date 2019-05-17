@@ -39,3 +39,16 @@ async def test_aqara_gateway_setup(hass):
     assert light_state.attributes['supported_features'] == (
         SUPPORT_BRIGHTNESS | SUPPORT_COLOR
     )
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+
+    # All the entities are services of the same accessory
+    # So it looks at the protocol like a single physical device
+    assert alarm.device_id == light.device_id
+
+    device = device_registry.async_get(light.device_id)
+    assert device.manufacturer == 'Aqara'
+    assert device.name == 'Aqara Hub-1563'
+    assert device.model == 'ZHWA11LM'
+    assert device.sw_version == '1.4.7'
+    assert device.hub_device_id is None
