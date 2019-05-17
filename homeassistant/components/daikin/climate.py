@@ -81,7 +81,7 @@ class DaikinClimate(ClimateDevice):
         self._api = api
         self._list = {
             ATTR_OPERATION_MODE: list(HA_STATE_TO_DAIKIN),
-            ATTR_FAN_MODE: self._api.device.fan_modes,
+            ATTR_FAN_MODE: self._api.device.fan_rate,
             ATTR_SWING_MODE: list(
                 map(
                     str.title,
@@ -97,7 +97,7 @@ class DaikinClimate(ClimateDevice):
         if self._api.device.support_away_mode:
             self._supported_features |= SUPPORT_AWAY_MODE
 
-        if self._api.device.support_fan_mode:
+        if self._api.device.support_fan_rate:
             self._supported_features |= SUPPORT_FAN_MODE
 
         if self._api.device.support_swing_mode:
