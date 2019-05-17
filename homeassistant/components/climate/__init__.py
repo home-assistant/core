@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, PRECISION_TENTHS, PRECISION_WHOLE,
-    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON, TEMP_CELSIUS)
+    TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA_BASE
@@ -48,9 +48,6 @@ CONVERTIBLE_ATTRIBUTE = [
 
 _LOGGER = logging.getLogger(__name__)
 
-ON_OFF_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-})
 SET_AUX_HEAT_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_AUX_HEAT): cv.boolean,
@@ -278,12 +275,7 @@ class ClimateDevice(Entity):
         return None
 
     @property
-    def preset_modes(self) -> Optional[List[str]]:
-        """Return a list of available preset modes."""
-        return None
-
-    @property
-    def is_aux_heat(self) -> Optional[str]:
+    def is_aux_heat_on(self):
         """Return true if aux heater."""
         return None
 

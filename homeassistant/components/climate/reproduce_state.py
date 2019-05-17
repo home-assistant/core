@@ -15,7 +15,6 @@ from .const import (
     ATTR_HVAC_MODE,
     ATTR_SWING_MODE,
     ATTR_HUMIDITY,
-    HVAC_MODES,
     SERVICE_SET_AUX_HEAT,
     SERVICE_SET_TEMPERATURE,
     SERVICE_SET_PRESET_MODE,
@@ -42,9 +41,8 @@ async def _async_reproduce_states(hass: HomeAssistantType,
             DOMAIN, service, data,
             blocking=True, context=context)
 
-    if state.state in HVAC_MODES:
-        await call_service(
-            SERVICE_SET_HVAC_MODE, [], {ATTR_HVAC_MODE: state.state})
+    await call_service(
+        SERVICE_SET_HVAC_MODE, [], {ATTR_HVAC_MODE: state.state})
 
     if ATTR_AUX_HEAT in state.attributes:
         await call_service(SERVICE_SET_AUX_HEAT, [ATTR_AUX_HEAT])
