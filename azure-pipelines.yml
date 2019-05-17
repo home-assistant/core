@@ -44,7 +44,7 @@ jobs:
       sudo apt-get install -y --no-install-recommends \
         qemu-user-static \
         binfmt-support
-      
+
       sudo mount binfmt_misc -t binfmt_misc /proc/sys/fs/binfmt_misc
       sudo update-binfmts --enable qemu-arm
       sudo update-binfmts --enable qemu-aarch64
