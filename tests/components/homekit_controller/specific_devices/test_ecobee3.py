@@ -67,6 +67,24 @@ async def test_ecobee3_setup(hass):
     occ3 = entity_registry.async_get('binary_sensor.basement')
     assert occ3.unique_id == 'homekit-AB3C-56'
 
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+
+    climate_device = device_registry.async_get(climate.device_id)
+    assert climate_device.manufacturer == 'ecobee Inc.'
+    assert climate_device.name == 'HomeW'
+    assert climate_device.model == 'ecobee3'
+    assert climate_device.sw_version == '4.2.394'
+    assert climate_device.hub_device_id is None
+
+    # Check that an attached sensor has its own device entity that
+    # is linked to the bridge
+    sensor_device = device_registry.async_get(occ1.device_id)
+    assert sensor_device.manufacturer == 'ecobee Inc.'
+    assert sensor_device.name == 'Kitchen'
+    assert sensor_device.model == 'REMOTE SENSOR'
+    assert sensor_device.sw_version == '1.0.0'
+    assert sensor_device.hub_device_id == climate_device.id
+
 
 async def test_ecobee3_setup_from_cache(hass, hass_storage):
     """Test that Ecbobee can be correctly setup from its cached entity map."""
