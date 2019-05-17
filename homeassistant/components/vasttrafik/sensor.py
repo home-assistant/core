@@ -107,7 +107,7 @@ class VasttrafikDepartureSensor(Entity):
             self._departureboard = self._planner.departureboard(
                 self._departure['id'],
                 direction=self._heading['id'] if self._heading else None,
-                date=now(self.hass.config.time_zone)+self._delay)
+                date=now()+self._delay)
         except self._vasttrafik.Error:
             _LOGGER.debug("Unable to read departure board, updating token")
             self._planner.update_token()
