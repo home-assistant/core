@@ -217,7 +217,7 @@ async def test_zeroconf_flow_known_device(hass):
 
 
 async def test_zeroconf_flow_already_configured(hass):
-    """Test that zeroconf discovery doesn't setup already configured devices."""
+    """Test that zeroconf doesn't setup already configured devices."""
     entry = MockConfigEntry(
         domain=axis.DOMAIN,
         data={axis.CONF_DEVICE: {axis.config_flow.CONF_HOST: '1.2.3.4'},
@@ -243,7 +243,7 @@ async def test_zeroconf_flow_already_configured(hass):
 
 
 async def test_zeroconf_flow_ignore_link_local_address(hass):
-    """Test that zeroconf discovery doesn't setup devices with link local addresses."""
+    """Test that zeroconf doesn't setup devices with link local addresses."""
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         data={config_flow.CONF_HOST: '169.254.3.4'},

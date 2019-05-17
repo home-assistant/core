@@ -4,7 +4,6 @@ import logging
 import ipaddress
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, __version__)
 from homeassistant.generated import zeroconf as manifest
 
