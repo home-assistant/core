@@ -8,6 +8,7 @@ https://home-assistant.io/components/zha/
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
+from homeassistant.components.lock import DOMAIN as LOCK
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
 
@@ -154,7 +155,8 @@ def establish_device_mappings():
         zcl.clusters.hvac.Fan: FAN,
         SMARTTHINGS_ACCELERATION_CLUSTER: BINARY_SENSOR,
         zcl.clusters.general.MultistateInput.cluster_id: SENSOR,
-        zcl.clusters.general.AnalogInput.cluster_id: SENSOR
+        zcl.clusters.general.AnalogInput.cluster_id: SENSOR,
+        zcl.clusters.closures.DoorLock: LOCK
     })
 
     SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS.update({
@@ -281,6 +283,10 @@ def establish_device_mappings():
         zcl.clusters.hvac.Fan.cluster_id: [{
             'attr': 'fan_mode',
             'config': REPORT_CONFIG_OP
+        }],
+        zcl.clusters.closures.DoorLock.cluster_id: [{
+            'attr': 'lock_state',
+            'config': REPORT_CONFIG_DEFAULT
         }],
     })
 
