@@ -29,6 +29,8 @@ async def test_minio_event_stream_iterator(hass):
     stream_mock.__next__.side_effect = [
         '',
         '',
+        bytearray(json.dumps(TEST_EVENT), 'utf-8'),
+        '',
         bytearray(json.dumps(TEST_EVENT), 'utf-8')
     ]
 
@@ -38,3 +40,8 @@ async def test_minio_event_stream_iterator(hass):
 
     assert json.dumps(TEST_EVENT, sort_keys=True) == \
         json.dumps(event, sort_keys=True)
+
+    another_event = next(event_it)
+
+    assert json.dumps(TEST_EVENT, sort_keys=True) == \
+        json.dumps(another_event, sort_keys=True)

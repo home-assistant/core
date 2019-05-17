@@ -10,6 +10,7 @@ from typing import Iterator, List
 from urllib.parse import unquote
 
 from minio import Minio
+from urllib3.exceptions import HTTPError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -147,14 +148,16 @@ class MinioEventThread(threading.Thread):
                 break
 
             _LOGGER.info('Connecting to minio event stream')
-            response = get_minio_notification_response(
-                minio_client,
-                self._bucket_name,
-                self._prefix,
-                self._suffix,
-                self._events
-            )
+            response = None
             try:
+                response = get_minio_notification_response(
+                    minio_client,
+                    self._bucket_name,
+                    self._prefix,
+                    self._suffix,
+                    self._events
+                )
+
                 self._event_stream_it = MinioEventStreamIterator(response)
 
                 self._iterate_event_stream(
@@ -162,7 +165,10 @@ class MinioEventThread(threading.Thread):
                     minio_client
                 )
             except json.JSONDecodeError:
-                response.close()
+                if response:
+                    response.close()
+            except HTTPError as error:
+                _LOGGER.error('Failed to connect to Minio endpoint: %s', error)
             except AttributeError:
                 # When response is closed, iterator will fail to access
                 # the underlying socket descriptor.
