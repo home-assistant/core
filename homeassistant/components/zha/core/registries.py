@@ -286,7 +286,7 @@ def establish_device_mappings():
         }],
         zcl.clusters.closures.DoorLock.cluster_id: [{
             'attr': 'lock_state',
-            'config': REPORT_CONFIG_DEFAULT
+            'config': REPORT_CONFIG_IMMEDIATE
         }],
     })
 
