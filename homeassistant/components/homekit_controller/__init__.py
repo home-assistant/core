@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
 # We need an import from .config_flow, without it .config_flow is never loaded.
 from .config_flow import HomekitControllerFlowHandler  # noqa: F401
@@ -139,6 +140,29 @@ class HomeKitEntity(Entity):
         """Return True if entity is available."""
         return self._available
 
+    @property
+    def device_info(self):
+        """Return the device info."""
+        accessory_serial = self._accessory_info['serial-number']
+
+        device_info = {
+            'identifiers': {
+                (DOMAIN, 'serial-number', accessory_serial),
+            },
+            'name': self._accessory_info['name'],
+            'manufacturer': self._accessory_info.get('manufacturer', ''),
+            'model': self._accessory_info.get('model', ''),
+            'sw_version': self._accessory_info.get('firmware.revision', ''),
+        }
+
+        # Some devices only have a single accessory - we don't add a via_hub
+        # otherwise it would be self referential.
+        bridge_serial = self._accessory.connection_info['serial-number']
+        if accessory_serial != bridge_serial:
+            device_info['via_hub'] = (DOMAIN, 'serial-number', bridge_serial)
+
+        return device_info
+
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
         raise NotImplementedError
@@ -152,6 +176,21 @@ async def async_setup_entry(hass, entry):
     if not await conn.async_setup():
         del hass.data[KNOWN_DEVICES][conn.unique_id]
         raise ConfigEntryNotReady
+
+    conn_info = conn.connection_info
+
+    device_registry = await dr.async_get_registry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={
+            (DOMAIN, 'serial-number', conn_info['serial-number']),
+            (DOMAIN, 'accessory-id', conn.unique_id),
+        },
+        name=conn.name,
+        manufacturer=conn_info.get('manufacturer'),
+        model=conn_info.get('model'),
+        sw_version=conn_info.get('firmware.revision'),
+    )
 
     return True
 
