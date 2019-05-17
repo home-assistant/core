@@ -57,8 +57,7 @@ def get_minio_notification_response(
         'suffix': suffix,
         'events': events,
     }
-    # noinspection PyProtectedMember
-    # pylint: disable=W0212
+    # pylint: disable=protected-access
     return minio_client._url_open(
         'GET',
         bucket_name=bucket_name,
@@ -165,6 +164,8 @@ class MinioEventThread(threading.Thread):
             except json.JSONDecodeError:
                 response.close()
             except AttributeError:
+                # When response is closed, iterator will fail to access
+                # the underlying socket descriptor.
                 break
 
             # Wait before attempting to connect again.
@@ -180,7 +181,7 @@ class MinioEventThread(threading.Thread):
                     )
                 # Fail gracefully. If for whatever reason this stops working,
                 # it shouldn't prevent it from firing events.
-                # pylint: disable=W0703
+                # pylint: disable=broad-except
                 except Exception as error:
                     _LOGGER.error(
                         'Failed to generate presigned url: %s',

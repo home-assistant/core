@@ -26,13 +26,14 @@ def minio_client_fixture():
         yield minio_client_mock
 
 
-@pytest.fixture(name="minio_event_response")
-def minio_event_response_fixture():
+@pytest.fixture(name="minio_client_event")
+def minio_client_event_fixture():
     """Patch helper function for minio notification stream."""
     with patch(
-        'homeassistant.components.minio'
-        '.minio_helper.get_minio_notification_response'
-    ) as get_notification_response_mock:
+            'homeassistant.components.minio.minio_helper.Minio'
+    ) as minio_mock:
+        minio_client_mock = minio_mock.return_value
+
         response_mock = MagicMock()
         stream_mock = MagicMock()
 
@@ -43,9 +44,9 @@ def minio_event_response_fixture():
         ]
 
         response_mock.stream.return_value = stream_mock
-        get_notification_response_mock.return_value = response_mock
+        minio_client_mock._url_open.return_value = response_mock
 
-        yield get_notification_response_mock
+        yield minio_client_mock
 
 
 async def test_minio_services(hass, caplog, minio_client):
@@ -117,9 +118,9 @@ async def test_minio_services(hass, caplog, minio_client):
     minio_client.reset_mock()
 
 
-async def test_minio_listen(hass, caplog, minio_client, minio_event_response):
+async def test_minio_listen(hass, caplog, minio_client_event):
     """Test minio listen on notifications."""
-    minio_client.presigned_get_object.return_value = 'http://url'
+    minio_client_event.presigned_get_object.return_value = 'http://url'
 
     events = []
 

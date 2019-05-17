@@ -8,7 +8,7 @@ from typing import List
 import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, \
-    EVENT_HOMEASSISTANT_STOP
+    EVENT_HOMEASSISTANT_STOP, CONF_FILE_PATH
 import homeassistant.helpers.config_validation as cv
 
 from .minio_helper import create_minio_client, MinioEventThread
@@ -26,6 +26,9 @@ CONF_LISTEN_BUCKET = 'bucket'
 CONF_LISTEN_PREFIX = 'prefix'
 CONF_LISTEN_SUFFIX = 'suffix'
 CONF_LISTEN_EVENTS = 'events'
+
+CONF_BUCKET = 'bucket'
+CONF_KEY = 'key'
 
 DEFAULT_LISTEN_PREFIX = ''
 DEFAULT_LISTEN_SUFFIX = '.*'
@@ -60,12 +63,12 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 BUCKET_KEY_SCHEMA = vol.Schema({
-    vol.Required('bucket'): cv.template,
-    vol.Required('key'): cv.template,
+    vol.Required(CONF_BUCKET): cv.template,
+    vol.Required(CONF_KEY): cv.template,
 })
 
 BUCKET_KEY_FILE_SCHEMA = BUCKET_KEY_SCHEMA.extend({
-    vol.Required('file_path'): cv.template,
+    vol.Required(CONF_FILE_PATH): cv.template,
 })
 
 
@@ -135,9 +138,9 @@ def setup(hass, config):
 
     def put_file(service):
         """Upload file service."""
-        bucket = _render_service_value(service, 'bucket')
-        key = _render_service_value(service, 'key')
-        file_path = _render_service_value(service, 'file_path')
+        bucket = _render_service_value(service, CONF_BUCKET)
+        key = _render_service_value(service, CONF_KEY)
+        file_path = _render_service_value(service, CONF_FILE_PATH)
 
         if not hass.config.is_allowed_path(file_path):
             _LOGGER.error('Invalid file_path %s', file_path)
@@ -147,9 +150,9 @@ def setup(hass, config):
 
     def get_file(service):
         """Download file service."""
-        bucket = _render_service_value(service, 'bucket')
-        key = _render_service_value(service, 'key')
-        file_path = _render_service_value(service, 'file_path')
+        bucket = _render_service_value(service, CONF_BUCKET)
+        key = _render_service_value(service, CONF_KEY)
+        file_path = _render_service_value(service, CONF_FILE_PATH)
 
         if not hass.config.is_allowed_path(file_path):
             _LOGGER.error('Invalid file_path %s', file_path)
@@ -159,8 +162,8 @@ def setup(hass, config):
 
     def remove_file(service):
         """Delete file service."""
-        bucket = _render_service_value(service, 'bucket')
-        key = _render_service_value(service, 'key')
+        bucket = _render_service_value(service, CONF_BUCKET)
+        key = _render_service_value(service, CONF_KEY)
 
         minio_client.remove_object(bucket, key)
 
@@ -199,13 +202,13 @@ class QueueListener(threading.Thread):
             if event is None:
                 break
 
-            _, file_name = os.path.split(event['key'])
+            _, file_name = os.path.split(event[CONF_KEY])
 
             _LOGGER.debug(
                 'Sending event %s, %s, %s',
                 event['event_name'],
-                event['bucket'],
-                event['key']
+                event[CONF_BUCKET],
+                event[CONF_KEY]
             )
             self._hass.bus.fire(DOMAIN, {
                 'file_name': file_name,
