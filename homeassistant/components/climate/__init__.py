@@ -92,6 +92,10 @@ async def async_setup(hass, config):
     await component.async_setup(config)
 
     component.async_register_entity_service(
+        SERVICE_SET_HVAC_MODE, SET_HVAC_MODE_SCHEMA,
+        'async_set_hvac_mode'
+    )
+    component.async_register_entity_service(
         SERVICE_SET_PRESET_MODE, SET_PRESET_MODE_SCHEMA,
         'async_set_preset_mode'
     )
@@ -110,10 +114,6 @@ async def async_setup(hass, config):
     component.async_register_entity_service(
         SERVICE_SET_FAN_MODE, SET_FAN_MODE_SCHEMA,
         'async_set_fan_mode'
-    )
-    component.async_register_entity_service(
-        SERVICE_SET_HVAC_MODE, SET_HVAC_MODE_SCHEMA,
-        'async_set_hvac_mode'
     )
     component.async_register_entity_service(
         SERVICE_SET_SWING_MODE, SET_SWING_MODE_SCHEMA,
