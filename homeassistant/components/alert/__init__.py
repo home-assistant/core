@@ -290,3 +290,4 @@ class Alert(ToggleEntity):
         if self._ack:
             return await self.async_turn_on()
         return await self.async_turn_off()
+        
