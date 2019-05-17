@@ -160,7 +160,7 @@ jobs:
       git config --global user.email "pvizeli@syshack.ch"
       git config --global credential.helper store
 
-      echo "https://$(githubToken):x-oauth-basic@github.com" > $HOME\.git-credentials
+      echo "https://$(githubToken):x-oauth-basic@github.com" > $HOME/.git-credentials
     displayName: 'Install requirements'
   - script: |
       set -e
