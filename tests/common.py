@@ -90,6 +90,8 @@ def get_test_home_assistant():
     hass = loop.run_until_complete(async_test_home_assistant(loop))
 
     stop_event = threading.Event()
+    ctx_storage = mock_storage()
+    ctx_storage.__enter__()
 
     def run_loop():
         """Run event loop."""
@@ -108,6 +110,7 @@ def get_test_home_assistant():
         """Stop hass."""
         orig_stop()
         stop_event.wait()
+        ctx_storage.__exit__(None, None, None)
         loop.close()
 
     hass.start = start_hass
