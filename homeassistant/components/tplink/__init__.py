@@ -30,12 +30,18 @@ TPLINK_HOST_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_LIGHT, default=[]): vol.All(cv.ensure_list,
-                                                   [TPLINK_HOST_SCHEMA]),
-        vol.Optional(CONF_SWITCH, default=[]): vol.All(cv.ensure_list,
-                                                    [TPLINK_HOST_SCHEMA]),
-        vol.Optional(CONF_DIMMER, default=[]): vol.All(cv.ensure_list,
-                                                    [TPLINK_HOST_SCHEMA]),
+        vol.Optional(CONF_LIGHT, default=[]): vol.All(
+            cv.ensure_list,
+            [TPLINK_HOST_SCHEMA]
+        ),
+        vol.Optional(CONF_SWITCH, default=[]): vol.All(
+            cv.ensure_list,
+            [TPLINK_HOST_SCHEMA]
+        ),
+        vol.Optional(CONF_DIMMER, default=[]): vol.All(
+            cv.ensure_list,
+            [TPLINK_HOST_SCHEMA]
+        ),
         vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
