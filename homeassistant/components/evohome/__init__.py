@@ -37,11 +37,11 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF,
 
     CONF_SCAN_INTERVAL, CONF_USERNAME, CONF_PASSWORD,
-    HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS,
     EVENT_HOMEASSISTANT_START,
+    HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS,
     PRECISION_HALVES, TEMP_CELSIUS)
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+ort homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
@@ -104,8 +104,6 @@ def setup(hass, hass_config):
     _LOGGER.warn("refresh_token %s", refresh_token)                              # TODO: for testing only
     _LOGGER.warn("access_token %s", access_token)                                # TODO: for testing only
     _LOGGER.warn("access_token_expires %s", access_token_expires)                # TODO: for testing only
-
-    scan_interval = timedelta(seconds=30)
 
     try:
         client = evo_data['client'] = await hass.async_add_executor_job(
