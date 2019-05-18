@@ -5,44 +5,20 @@ import functools as ft
 from timeit import default_timer as timer
 from typing import Optional, List, Iterable
 
-import voluptuous as vol
-
 from homeassistant.const import (
     ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
     STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES,
-    ATTR_DEVICE_CLASS)
+    ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES, ATTR_DEVICE_CLASS)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util import dt as dt_util
-import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.event as evt
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
-
-ATTR_REWRITE = "rewrite"
-ATTR_DELAY = "delay"
-
-ENTITY_SAVE_STATE_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.comp_entity_ids,
-    ATTR_REWRITE: cv.boolean,
-})
-
-ENTITY_RESTORE_STATE_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.comp_entity_ids,
-    ATTR_DELAY: vol.All(cv.time_period, cv.positive_timedelta),
-})
-
-ENTITY_CANCEL_RESTORE_STATE_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.comp_entity_ids,
-})
-
-SAVED_STATE_ID_FORMAT = "saved_{}"
 
 
 def generate_entity_id(entity_id_format: str, name: Optional[str],
@@ -472,8 +448,6 @@ class Entity:
 class ToggleEntity(Entity):
     """An abstract class for entities that can be turned on and off."""
 
-    _restore_state_listener = None
-
     @property
     def state(self) -> str:
         """Return the state."""
@@ -483,11 +457,6 @@ class ToggleEntity(Entity):
     def is_on(self) -> bool:
         """Return True if entity is on."""
         raise NotImplementedError()
-
-    @property
-    def saved_state_id(self):
-        """Return the id of state to save"""
-        return SAVED_STATE_ID_FORMAT.format(self.entity_id)
 
     def turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
@@ -528,45 +497,3 @@ class ToggleEntity(Entity):
         if self.is_on:
             return self.async_turn_off(**kwargs)
         return self.async_turn_on(**kwargs)
-
-    async def async_cancel_restore_state(self):
-        """Cancel scheduled entity state restore."""
-        if self._restore_state_listener:
-            self._restore_state_listener()
-        self._restore_state_listener = None
-
-    async def async_save_state(self, rewrite=False):
-        """Save entity state."""
-        if rewrite:
-            await self.async_cancel_restore_state()
-
-        if rewrite or not self.hass.states.get(self.saved_state_id):
-            self.hass.states.async_set(
-                self.saved_state_id,
-                self.state,
-                self.hass.states.get(self.entity_id).attributes
-            )
-
-    @callback
-    async def async_restore_state_listener(self, *args):
-        """Restore entity state after a delay."""
-        await self.async_cancel_restore_state()
-        saved_state = self.hass.states.get(self.saved_state_id)
-        if saved_state:
-            if saved_state.state == STATE_ON:
-                await self.async_turn_on(**saved_state.attributes)
-            else:
-                await self.async_turn_off()
-        self.hass.states.async_remove(self.saved_state_id)
-
-    async def async_restore_state(self, delay=None):
-        """Restore previously saved entity state."""
-        if delay:
-            await self.async_cancel_restore_state()
-            self._restore_state_listener = evt.async_call_later(
-                self.hass,
-                delay.total_seconds(),
-                self.async_restore_state_listener()
-            )
-        else:
-            await self.async_restore_state_listener()

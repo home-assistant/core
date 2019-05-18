@@ -6,15 +6,12 @@ import voluptuous as vol
 
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity import (
-    ToggleEntity, ENTITY_SAVE_STATE_SCHEMA,
-    ENTITY_RESTORE_STATE_SCHEMA, ENTITY_CANCEL_RESTORE_STATE_SCHEMA)
+from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.config_validation import (  # noqa
     PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    STATE_ON, SERVICE_CANCEL_RESTORE_STATE, SERVICE_RESTORE_STATE,
-    SERVICE_SAVE_STATE, SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
     ATTR_ENTITY_ID)
 from homeassistant.components import group
 
@@ -83,22 +80,6 @@ async def async_setup(hass, config):
         SERVICE_TOGGLE, SWITCH_SERVICE_SCHEMA,
         'async_toggle'
     )
-
-    component.async_register_entity_service(
-        SERVICE_SAVE_STATE, ENTITY_SAVE_STATE_SCHEMA,
-        'async_save_state'
-    )
-
-    component.async_register_entity_service(
-        SERVICE_RESTORE_STATE, ENTITY_RESTORE_STATE_SCHEMA,
-        'async_restore_state'
-    )
-
-    component.async_register_entity_service(
-        SERVICE_CANCEL_RESTORE_STATE, ENTITY_CANCEL_RESTORE_STATE_SCHEMA,
-        'async_cancel_restore_state'
-    )
-
 
     return True
 
