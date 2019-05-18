@@ -48,6 +48,8 @@ class HueLightLevel(GenericHueGaugeSensorEntity):
         """Return the device state attributes."""
         attributes = super().device_state_attributes
         attributes.update({
+            "threshold_dark": self.sensor.tholddark,
+            "threshold_offset": self.sensor.tholdoffset,
             "dark": self.sensor.dark,
             "daylight": self.sensor.daylight,
         })
