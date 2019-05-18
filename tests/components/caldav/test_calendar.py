@@ -10,6 +10,8 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
+from homeassistant.components.caldav.calendar import WebDavCalendarData
+
 # pylint: disable=redefined-outer-name
 
 DEVICE_DATA = {
@@ -55,6 +57,20 @@ DTSTAMP:20171125T000000Z
 DTSTART:20171127
 DTEND:20171128
 SUMMARY:This is an all day event
+LOCATION:Hamburg
+DESCRIPTION:What a beautiful day
+END:VEVENT
+END:VCALENDAR
+""",
+    """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Global Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:8
+DTSTAMP:20171125T000000Z
+DTSTART:20171129
+DTEND:20171130
+SUMMARY:This is an all day event tomorrow
 LOCATION:Hamburg
 DESCRIPTION:What a beautiful day
 END:VEVENT
@@ -151,9 +167,9 @@ def mock_private_cal():
         yield _calendar
 
 
-def _local_datetime(hours, minutes):
+def _local_datetime(hours, minutes, days=0):
     """Build a datetime object for testing in the correct timezone."""
-    return dt.as_local(datetime.datetime(2017, 11, 27, hours, minutes, 0))
+    return dt.as_local(datetime.datetime(2017, 11, 27 + days, hours, minutes, 0))
 
 
 def _mocked_dav_client(*names, calendars=None):
@@ -173,8 +189,21 @@ def _mock_calendar(name):
     for idx, event in enumerate(EVENTS):
         events.append(Event(None, "%d.ics" % idx, event, None, str(idx)))
 
+    def date_search(start, end):
+        result = []
+        start_dt = WebDavCalendarData.to_datetime(start)
+        end_dt = WebDavCalendarData.to_datetime(end)
+        for e in events:
+            e_start = WebDavCalendarData.to_datetime(e.instance.vevent.dtstart.value)
+            e_end = WebDavCalendarData.get_end_date(e.instance.vevent)
+            e_end = WebDavCalendarData.to_datetime(e_end)
+            if e_end <= start_dt or e_start >= end_dt:
+                continue
+            result.append(e)
+        return result
+
     calendar = Mock()
-    calendar.date_search = MagicMock(return_value=events)
+    calendar.date_search = date_search
     calendar.name = name
     return calendar
 
@@ -444,6 +473,35 @@ async def test_all_day_event_returned(mock_now, hass, calendar):
         "offset_reached": False,
         "start_time": "2017-11-27 00:00:00",
         "end_time": "2017-11-28 00:00:00",
+        "location": "Hamburg",
+        "description": "What a beautiful day",
+    }
+
+
+@patch('homeassistant.util.dt.now', return_value=_local_datetime(12, 00, days=1))
+async def test_all_day_event_tomorrow(mock_now, hass, calendar):
+    """Test that the event lasting tomorrow's whole day is returned."""
+    config = dict(CALDAV_CONFIG)
+    config['custom_calendars'] = [{
+        'name': 'Private',
+        'calendar': 'Private',
+        'search': '.*',
+    }]
+
+    assert await async_setup_component(
+        hass, 'calendar', {'calendar': config})
+    await hass.async_block_till_done()
+
+    state = hass.states.get('calendar.private_private')
+    assert state.name == calendar.name
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        "friendly_name": "Private",
+        "message": "This is an all day event tomorrow",
+        "all_day": True,
+        "offset_reached": False,
+        "start_time": "2017-11-29 00:00:00",
+        "end_time": "2017-11-30 00:00:00",
         "location": "Hamburg",
         "description": "What a beautiful day",
     }

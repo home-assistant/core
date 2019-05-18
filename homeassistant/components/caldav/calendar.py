@@ -173,7 +173,7 @@ class WebDavCalendarData:
         # won't return events that have already started
         results = self.calendar.date_search(
             dt.start_of_local_day(),
-            dt.start_of_local_day() + timedelta(days=1)
+            dt.start_of_local_day() + timedelta(days=2)
         )
 
         # dtstart can be a date or datetime depending if the event lasts a
@@ -265,6 +265,6 @@ class WebDavCalendarData:
             enddate = obj.dtstart.value + obj.duration.value
 
         else:
-            enddate = obj.dtstart.value + timedelta(days=2)
+            enddate = obj.dtstart.value + timedelta(days=1)
 
         return enddate
