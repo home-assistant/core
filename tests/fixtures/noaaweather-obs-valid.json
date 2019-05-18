@@ -528,7 +528,7 @@
             }
         },
         {
-            "id": "https://api.weather.gov/stations/KJFK/observations/2035-03-30T14:51:00+00:00",
+            "id": "https://api.weather.gov/stations/KJFK/observations/2035-03-29T06:51:00+00:00",
             "type": "Feature",
             "geometry": {
                 "type": "Point",
@@ -538,16 +538,16 @@
                 ]
             },
             "properties": {
-                "@id": "https://api.weather.gov/stations/KJFK/observations/2035-03-30T14:51:00+00:00",
+                "@id": "https://api.weather.gov/stations/KJFK/observations/2035-03-29T06:51:00+00:00",
                 "@type": "wx:ObservationStation",
                 "elevation": {
                     "value": 7,
                     "unitCode": "unit:m"
                 },
                 "station": "https://api.weather.gov/stations/KJFK",
-                "timestamp": "2035-03-30T14:51:00+00:00",
-                "rawMessage": "KJFK 301451Z 14013KT 10SM SCT100 BKN250 12/08 A3008 RMK AO2 SLP187 T01220078 58005",
-                "textDescription": "Mostly Cloudy",
+                "timestamp": "2035-03-29T06:51:00+00:00",
+                "rawMessage": null,
+                "textDescription": "Clear",
                 "icon": "https://api.weather.gov/icons/land/day/bkn?size=medium",
                 "presentWeather": [],
                 "temperature": {
@@ -566,14 +566,14 @@
                     "qualityControl": "qc:V"
                 },
                 "windSpeed": {
-                    "value": 6.7000000000000002,
+                    "value": null,
                     "unitCode": "unit:m_s-1",
-                    "qualityControl": "qc:V"
+                    "qualityControl": "qc:Z"
                 },
                 "windGust": {
-                    "value": 9.30555,
+                    "value": null,
                     "unitCode": "unit:m_s-1",
-                    "qualityControl": "qc:V"
+                    "qualityControl": "qc:Z"
                 },
                 "barometricPressure": {
                     "value": 101860,

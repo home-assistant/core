@@ -191,7 +191,7 @@
                 "station": "https://api.weather.gov/stations/KJFK",
                 "timestamp": "2035-03-30T17:51:00+00:00",
                 "rawMessage": "KJFK 301751Z 17018G24KT 10SM BKN250 13/08 A3001 RMK AO2 PK WND 18026/1713 SLP162 T01330078 10139 20089 58024",
-                "textDescription": "Mostly Cloudy and Windy",
+                "textDescription": "Thunderstorm and Snow",
                 "icon": "https://api.weather.gov/icons/land/day/wind_bkn?size=medium",
                 "presentWeather": [],
                 "temperature": {
