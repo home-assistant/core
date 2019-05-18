@@ -11,13 +11,16 @@ from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.components.group import \
     ENTITY_ID_FORMAT as GROUP_ENTITY_ID_FORMAT
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    ATTR_ENTITY_ID, SERVICE_CANCEL_RESTORE_STATE, SERVICE_RESTORE_STATE,
+    SERVICE_SAVE_STATE, SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     STATE_ON)
 from homeassistant.exceptions import UnknownUser, Unauthorized
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa
     PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import (
+    ToggleEntity, ENTITY_SAVE_STATE_SCHEMA, ENTITY_RESTORE_STATE_SCHEMA,
+    ENTITY_CANCEL_RESTORE_STATE_SCHEMA)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers import intent
 from homeassistant.loader import bind_hass
@@ -318,6 +321,21 @@ async def async_setup(hass, config):
     component.async_register_entity_service(
         SERVICE_TOGGLE, LIGHT_TOGGLE_SCHEMA,
         'async_toggle'
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SAVE_STATE, ENTITY_SAVE_STATE_SCHEMA,
+        'async_save_state'
+    )
+
+    component.async_register_entity_service(
+        SERVICE_RESTORE_STATE, ENTITY_RESTORE_STATE_SCHEMA,
+        'async_restore_state'
+    )
+
+    component.async_register_entity_service(
+        SERVICE_CANCEL_RESTORE_STATE, ENTITY_CANCEL_RESTORE_STATE_SCHEMA,
+        'async_cancel_restore_state'
     )
 
     hass.helpers.intent.async_register(SetIntentHandler())
