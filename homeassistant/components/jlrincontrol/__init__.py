@@ -16,6 +16,8 @@ __LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'jlrincontrol'
 
+SIGNAL_STATE_UPDATED = '{}.updated'.format(DOMAIN)
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
@@ -23,10 +25,8 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-SIGNAL_STATE_UPDATED = '{}.UPDATED'.format(DOMAIN)
 
-
-def setup(hass, config):
+async def async_setup(hass, config):
     """Setup the jlrpy component"""
     import jlrpy
 
@@ -47,29 +47,27 @@ def setup(hass, config):
         info = vehicle.get_status()
         vehicle_status = format_nicely(info.get('vehicleStatus'))
 
-        hass.states.set('jlrtest.fuel_level', vehicle_status.get('FUEL_LEVEL_PERC'))
+        hass.states.async_set('jlrtest.fuel_level', vehicle_status.get('FUEL_LEVEL_PERC'))
 
-    def update(now):
+    async def update(now):
         """Update status from the online service"""
         try:
-            __LOGGER.info("aaaaaaa")
             if not connection.vehicles[0].get_status:
                 __LOGGER.warning("Could not get data from service")
                 return False
-            __LOGGER.info("bbbbbbb")
+
             vehicle = connection.vehicles[0]  # TODO: make this looped for multiple vehicles
             get_info(vehicle)
-            __LOGGER.info("dddddddd")
             async_dispatcher_send(hass, SIGNAL_STATE_UPDATED)
 
             return True
         finally:
             async_track_point_in_utc_time(hass, update,
-                                          utcnow() + timedelta(minutes=1))  # TODO: replace 60 with scan interval
+                                          utcnow() + timedelta(minutes=5))  # TODO: replace 60 with scan interval
 
     __LOGGER.info("Logging into InControl")
-    return update(utcnow())
-    # return True
+
+    return await update(utcnow())
 
 # class JLRData:
 #     """Hold component state"""
