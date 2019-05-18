@@ -268,7 +268,7 @@ CONDITION_XLATE = [
         ['lightning', ['Thunderstorm'], ['Vicinity']],
         ['lightning-rainy', ['Thunderstorm'], [None]],
         ['snowy-rainy', ['Snow', 'Freezing', 'Ice'], ['Rain', 'Drizzle']],
-        ['snowy', ['Snow', 'Ice Pellets'], ['Rain', 'Drizzle']],
+        ['snowy', ['Snow', 'Ice Pellets'], [None]],
         ['pouring', ['Heavy Rain'], [None]],
         ['rainy', ['Rain', 'Drizzle', 'Showers'], [None]],
         ['windy-variant', ['Windy'], ['Clouds', 'Cloudy', 'Overcast'], [None]],
