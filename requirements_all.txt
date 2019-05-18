@@ -261,7 +261,7 @@ boto3==1.9.16
 braviarc-homeassistant==0.3.7.dev0
 
 # homeassistant.components.broadlink
-broadlink==0.9.0
+broadlink==0.10.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
