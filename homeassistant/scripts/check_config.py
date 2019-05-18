@@ -338,17 +338,17 @@ async def check_ha_config_file(hass):
             result.add_error("Integration not found: {}".format(domain))
             continue
 
-        try:
-            component = integration.get_component()
-        except ImportError:
-            result.add_error("Component not found: {}".format(domain))
-            continue
-
         if (not hass.config.skip_pip and integration.requirements and
                 not await requirements.async_process_requirements(
                     hass, integration.domain, integration.requirements)):
             result.add_error("Unable to install all requirements: {}".format(
                 ', '.join(integration.requirements)))
+            continue
+
+        try:
+            component = integration.get_component()
+        except ImportError:
+            result.add_error("Component not found: {}".format(domain))
             continue
 
         if hasattr(component, 'CONFIG_SCHEMA'):
