@@ -274,6 +274,7 @@ CONDITION_XLATE = [
         ['windy-variant', ['Windy'], ['Clouds', 'Cloudy', 'Overcast'], [None]],
         ['windy', ['Windy', 'Breeze'], [None]],
         ['fog', ['Fog', 'Haze'], [None]],
+        ['hail', ['Hail', 'Ice Pellets', 'Ice Crystals'], [None]],
         ['partlycloudy', ['Partly Cloudy'], [None]],
         ['cloudy', ['Cloudy', 'Overcast'], [None]],
         ['sunny', ['Fair', 'Clear', 'Few Clouds'], [None]],
@@ -800,7 +801,6 @@ class NOAACurrentSensor(Entity):
         # ensure we have some data
         #
         if self._condition in self._noaadata.data:
-            condvalue = self._noaadata.data[self._condition]
             #
             # Now check for type of value for this attribute
             # Only measurements have units
@@ -810,12 +810,6 @@ class NOAACurrentSensor(Entity):
                 if self._desiredunit is not None:
                     return self._desiredunit
 
-                if 'unitCode' in condvalue:
-                    # run it through our mapping table.  If it
-                    # doesn't have a map, return the value we recevied.
-                    if condvalue['unitCode'] in UNIT_MAPPING:
-                        return UNIT_MAPPING[condvalue['unitCode']][0]
-                    return condvalue['unitCode']
         return None
 
     #
@@ -931,7 +925,7 @@ class NOAACurrentData(Entity):
         """
         if 'timestamp' in obs:
             return obs['timestamp']
-        return 0
+        return '0000-00-00T00:00:00+00:00'
 
     def _process_obs(self, obsprop) -> None:
         from metar import Metar
