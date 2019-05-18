@@ -79,25 +79,28 @@ async def async_discover_devices(
     lights = []
     switches = []
 
-    for dev in devices.values():
-        # If this device already exists, ignore dynamic setup.
-        if existing_devices.has_device_with_host(dev.host):
-            continue
+    def process_devices():
+        for dev in devices.values():
+            # If this device already exists, ignore dynamic setup.
+            if existing_devices.has_device_with_host(dev.host):
+                continue
 
-        if isinstance(dev, SmartPlug):
-            try:
-                if dev.is_dimmable:  # Dimmers act as lights
-                    lights.append(dev)
-                else:
-                    switches.append(dev)
-            except SmartDeviceException as ex:
-                _LOGGER.error("Unable to connect to device %s: %s",
-                              dev.host, ex)
+            if isinstance(dev, SmartPlug):
+                try:
+                    if dev.is_dimmable:  # Dimmers act as lights
+                        lights.append(dev)
+                    else:
+                        switches.append(dev)
+                except SmartDeviceException as ex:
+                    _LOGGER.error("Unable to connect to device %s: %s",
+                                  dev.host, ex)
 
-        elif isinstance(dev, SmartBulb):
-            lights.append(dev)
-        else:
-            _LOGGER.error("Unknown smart device type: %s", type(dev))
+            elif isinstance(dev, SmartBulb):
+                lights.append(dev)
+            else:
+                _LOGGER.error("Unknown smart device type: %s", type(dev))
+
+    await hass.async_add_executor_job(process_devices)
 
     return SmartDevices(lights, switches)
 
