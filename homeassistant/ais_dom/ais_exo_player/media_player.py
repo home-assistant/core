@@ -5,10 +5,7 @@ Support to interact with a ExoPlayer on Android via HTTO and MQTT.
 import asyncio
 import logging
 import json
-import os
 import homeassistant.util.dt as dt_util
-from homeassistant.core import callback
-import homeassistant.components.mqtt as mqtt
 import homeassistant.ais_dom.ais_global as ais_global
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
@@ -29,7 +26,6 @@ SUPPORT_EXO = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_STOP | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_VOLUME_STEP | SUPPORT_SEEK | SUPPORT_SELECT_SOURCE | SUPPORT_SELECT_SOUND_MODE
 
-SUBSCTRIBE_TOPIC = 'ais/player_status'
 DEFAULT_NAME = 'AIS Dom Odtwarzacz'
 
 
@@ -107,48 +103,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Subscribe MQTT events."""
-        @callback
-        def message_received(topic, payload, qos):
-            """Handle new MQTT messages."""
-            _LOGGER.info("payload: " + str(payload))
-            self._media_status_received_time = dt_util.utcnow()
-            try:
-                message = json.loads(payload.decode('utf8').replace("'", '"'))
-            except Exception as e:
-                _LOGGER.error("problem to json.loads: " + str(e))
-                message = json.loads(payload)
-            try:
-                self._volume_level = message.get("currentVolume", 0) / 100
-            except Exception as e:
-                _LOGGER.warning("no currentVolume info: " + str(e))
-            self._status = message.get("currentStatus", 0)
-            self._playing = message.get("playing", False)
-            self._media_position = message.get("currentPosition", 0)
-            if "duration" in message:
-                self._duration = message.get("duration", 0)
-            temp_stream_image = message.get("media_stream_image", None)
-            if temp_stream_image is not None:
-                if temp_stream_image.startswith("spotify:image:"):
-                    temp_stream_image = temp_stream_image.replace("spotify:image:", "")
-                    self._stream_image = "https://i.scdn.co/image/" + temp_stream_image
-                else:
-                    self._stream_image = temp_stream_image
-            self._media_title = message.get("currentMedia", "AI-Speaker")
-            self._media_source = message.get("media_source", self._media_source)
-            self._album_name = message.get("media_album_name", "AI-Speaker")
-            _LOGGER.debug(str.format("message_received: {0}", message))
-            if "giveMeNextOne" in message:
-                play_next = message.get("giveMeNextOne", False)
-                if play_next is True:
-                    self.hass.async_add_job(
-                        self.hass.services.async_call(
-                            'media_player',
-                            'media_next_track', {
-                                "entity_id": "media_player.wbudowany_glosnik"})
-                            )
-        return mqtt.async_subscribe(
-            self.hass, SUBSCTRIBE_TOPIC, message_received, self._qos, None)
+       pass
 
     def _fetch_status(self):
         """Fetch status from ExoPlayer."""
@@ -514,6 +469,42 @@ class ExoPlayerDevice(MediaPlayerDevice):
                                      old_state.attributes, force_update=True)
                 self.hass.services.call('ais_ai_service', 'process_command_from_frame',
                                         {"topic": 'ais/go_to_player', "payload": ""})
+
+        elif media_type == 'exo_info':
+            self._media_status_received_time = dt_util.utcnow()
+            try:
+                message = json.loads(media_content_id.decode('utf8').replace("'", '"'))
+            except Exception as e:
+                message = json.loads(media_content_id)
+            try:
+                self._volume_level = message.get("currentVolume", 0) / 100
+            except Exception as e:
+                _LOGGER.warning("no currentVolume info: " + str(e))
+            self._status = message.get("currentStatus", 0)
+            self._playing = message.get("playing", False)
+            self._media_position = message.get("currentPosition", 0)
+            if "duration" in message:
+                self._duration = message.get("duration", 0)
+            temp_stream_image = message.get("media_stream_image", None)
+            if temp_stream_image is not None:
+                if temp_stream_image.startswith("spotify:image:"):
+                    temp_stream_image = temp_stream_image.replace("spotify:image:", "")
+                    self._stream_image = "https://i.scdn.co/image/" + temp_stream_image
+                else:
+                    self._stream_image = temp_stream_image
+            self._media_title = message.get("currentMedia", "AI-Speaker")
+            self._media_source = message.get("media_source", self._media_source)
+            self._album_name = message.get("media_album_name", "AI-Speaker")
+            _LOGGER.debug(str.format("message_received: {0}", message))
+            if "giveMeNextOne" in message:
+                play_next = message.get("giveMeNextOne", False)
+                if play_next is True:
+                    self.hass.async_add_job(
+                        self.hass.services.async_call(
+                            'media_player',
+                            'media_next_track', {
+                                "entity_id": "media_player.wbudowany_glosnik"})
+                    )
         else:
             # play only - old way - TODO delete this part soon...
             self._media_content_id = media_content_id
@@ -527,5 +518,6 @@ class ExoPlayerDevice(MediaPlayerDevice):
                     "ip": self._device_ip
                     }
                 )
+
 
 

@@ -195,11 +195,11 @@ class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 _LOGGER.info("Error: " + str(e))
             self.async_schedule_update_ha_state()
 
-        self._sub_state = await subscription.async_subscribe_topics(
-            self.hass, self._sub_state,
-            {'state_topic': {'topic': self._config.get(CONF_STATE_TOPIC),
-                             'msg_callback': message_received,
-                             'qos': self._config.get(CONF_QOS)}})
+        # self._sub_state = await subscription.async_subscribe_topics(
+        #     self.hass, self._sub_state,
+        #     {'state_topic': {'topic': self._config.get(CONF_STATE_TOPIC),
+        #                      'msg_callback': message_received,
+        #                      'qos': self._config.get(CONF_QOS)}})
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""

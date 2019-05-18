@@ -2010,6 +2010,12 @@ def _process_command_from_frame(hass, service):
         ais_global.set_global_my_ip(pl["ip"])
         hass.states.async_set("sensor.internal_ip_address", pl["ip"],
                               {"friendly_name": "Lokalny adres IP", "icon": "mdi:access-point-network"})
+    elif service.data["topic"] == 'ais/player_status':
+        hass.services.call('media_player', 'play_media',
+                           {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+                            "media_content_type": "exo_info",
+                            "media_content_id": service.data["payload"]})
+
     else:
         # TODO process this without mqtt
         # player_status and speech_status
