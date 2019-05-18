@@ -10,8 +10,9 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .common import (
     async_discover_devices,
-    async_get_static_devices,
+    get_static_devices,
     ATTR_CONFIG,
+    CONF_DIMMER,
     CONF_DISCOVERY,
     CONF_LIGHT,
     CONF_SWITCH,
@@ -29,11 +30,13 @@ TPLINK_HOST_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional('light', default=[]): vol.All(cv.ensure_list,
+        vol.Optional(CONF_LIGHT, default=[]): vol.All(cv.ensure_list,
                                                    [TPLINK_HOST_SCHEMA]),
-        vol.Optional('switch', default=[]): vol.All(cv.ensure_list,
+        vol.Optional(CONF_SWITCH, default=[]): vol.All(cv.ensure_list,
                                                     [TPLINK_HOST_SCHEMA]),
-        vol.Optional('discovery', default=True): cv.boolean,
+        vol.Optional(CONF_DIMMER, default=[]): vol.All(cv.ensure_list,
+                                                    [TPLINK_HOST_SCHEMA]),
+        vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -63,27 +66,19 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigType):
     # Add static devices
     static_devices = SmartDevices()
     if config_data is not None:
-        static_devices = async_get_static_devices(
+        static_devices = get_static_devices(
             config_data,
         )
 
-        for light in static_devices.lights:
-            lights.append(light)
-
-        for switch in static_devices.switches:
-            switches.append(switch)
+        lights.extend(static_devices.lights)
+        switches.extend(static_devices.switches)
 
     # Add discovered devices
     if config_data is None or config_data[CONF_DISCOVERY]:
         discovered_devices = await async_discover_devices(hass, static_devices)
 
-        for light in discovered_devices.lights:
-            if not static_devices.has_device_with_host(light.host):
-                lights.append(light)
-
-        for switch in discovered_devices.switches:
-            if not static_devices.has_device_with_host(switch.host):
-                switches.append(switch)
+        lights.extend(discovered_devices.lights)
+        switches.extend(discovered_devices.switches)
 
     forward_setup = hass.config_entries.async_forward_entry_setup
     if lights:

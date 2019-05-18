@@ -18,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 ATTR_CONFIG = 'config'
+CONF_DIMMER = 'dimmer'
 CONF_DISCOVERY = 'discovery'
 CONF_LIGHT = 'light'
 CONF_SWITCH = 'switch'
@@ -66,7 +67,7 @@ async def async_get_discoverable_devices(hass):
 
 async def async_discover_devices(
         hass: HomeAssistantType,
-        exclude_devices: SmartDevices
+        existing_devices: SmartDevices
 ) -> SmartDevices:
     """Get devices through discovery."""
     _LOGGER.debug("Discovering devices")
@@ -80,8 +81,8 @@ async def async_discover_devices(
     switches = []
 
     for dev in devices.values():
-        # If this device is configured statically, ignore dynamic setup.
-        if exclude_devices.has_device_with_host(dev.host):
+        # If this device already exists, ignore dynamic setup.
+        if existing_devices.has_device_with_host(dev.host):
             continue
 
         if isinstance(dev, SmartPlug):
@@ -102,7 +103,7 @@ async def async_discover_devices(
     return SmartDevices(lights, switches)
 
 
-def async_get_static_devices(config_data) -> SmartDevices:
+def get_static_devices(config_data) -> SmartDevices:
     """Get statically defined devices in the config."""
     _LOGGER.debug("Getting static devices")
     lights = []
@@ -116,6 +117,9 @@ def async_get_static_devices(config_data) -> SmartDevices:
                 lights.append(SmartBulb(host))
             elif type_ == CONF_SWITCH:
                 switches.append(SmartPlug(host))
+            # Dimmers need to be defined as smart bulbs to work correctly.
+            elif type_ == CONF_DIMMER:
+                lights.append(SmartBulb(host))
 
     return SmartDevices(
         lights,
@@ -150,10 +154,8 @@ def async_add_entities_retry(
         pass
 
     def process_objects(*args):
-        success_indexes = []
-
         # Process each object.
-        for i, add_object in enumerate(add_objects):
+        for add_object in list(add_objects):
             # Call the individual item callback.
             try:
                 _LOGGER.debug(
@@ -169,13 +171,9 @@ def async_add_entities_retry(
 
             if result is True or result is None:
                 _LOGGER.debug("Added object.")
-                success_indexes.append(i)
+                add_objects.remove(add_object)
             else:
                 _LOGGER.debug("Failed to add object, will try again later")
-
-        # Remove successful objects from list for next run.
-        for success_index in reversed(success_indexes):
-            del add_objects[success_index]
 
         # No more objects to process. Cancel the interval.
         if not add_objects:
