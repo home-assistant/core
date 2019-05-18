@@ -8,6 +8,7 @@ from homeassistant.components.switch import (
     ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH, SwitchDevice)
 from homeassistant.const import ATTR_VOLTAGE
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.typing import HomeAssistantType
 
 from . import CONF_SWITCH, DOMAIN as TPLINK_DOMAIN
 from .common import async_add_entities_retry
@@ -30,9 +31,13 @@ async def async_setup_platform(hass, config, add_entities,
                     'convert to use the tplink component.')
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up discovered switches."""
-    async_add_entities_retry(
+async def async_setup_entry(
+        hass: HomeAssistantType,
+        config_entry,
+        async_add_entities
+):
+    """Set up switches."""
+    await async_add_entities_retry(
         hass,
         async_add_entities,
         hass.data[TPLINK_DOMAIN][CONF_SWITCH],

@@ -40,8 +40,8 @@ async def async_setup_entry(
         config_entry,
         async_add_entities
 ):
-    """Set up discovered switches."""
-    async_add_entities_retry(
+    """Set up switches."""
+    await async_add_entities_retry(
         hass,
         async_add_entities,
         hass.data[TPLINK_DOMAIN][CONF_LIGHT],

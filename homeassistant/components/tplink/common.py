@@ -1,5 +1,5 @@
 """Common code for tplink."""
-
+import asyncio
 import logging
 from datetime import timedelta
 from typing import Any, Callable, List
@@ -11,7 +11,6 @@ from pyHS100 import (
     SmartDeviceException
 )
 
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,7 +108,7 @@ def get_static_devices(config_data) -> SmartDevices:
     lights = []
     switches = []
 
-    for type_ in [CONF_LIGHT, CONF_SWITCH]:
+    for type_ in [CONF_LIGHT, CONF_SWITCH, CONF_DIMMER]:
         for entry in config_data[type_]:
             host = entry['host']
 
@@ -127,7 +126,7 @@ def get_static_devices(config_data) -> SmartDevices:
     )
 
 
-def async_add_entities_retry(
+async def async_add_entities_retry(
         hass: HomeAssistantType,
         async_add_entities: Callable[[List[Any], bool], None],
         objects: List[Any],
@@ -150,10 +149,26 @@ def async_add_entities_retry(
     """
     add_objects = objects.copy()
 
-    def dummy_cancel():
-        pass
+    is_cancelled = False
 
-    def process_objects(*args):
+    def cancel_interval_callback():
+        nonlocal is_cancelled
+        is_cancelled = True
+
+    async def process_objects_loop(delay: int):
+        if is_cancelled:
+            return
+
+        await process_objects()
+
+        if not add_objects:
+            return
+
+        await asyncio.sleep(delay)
+
+        hass.async_create_task(process_objects_loop(delay))
+
+    async def process_objects(*args):
         # Process each object.
         for add_object in list(add_objects):
             # Call the individual item callback.
@@ -162,7 +177,7 @@ def async_add_entities_retry(
                     "Attempting to add object of type %s",
                     type(add_object)
                 )
-                result = callback(add_object, async_add_entities)
+                result = await hass.async_add_job(callback, add_object, async_add_entities)
             except SmartDeviceException as ex:
                 _LOGGER.debug(
                     str(ex)
@@ -175,26 +190,6 @@ def async_add_entities_retry(
             else:
                 _LOGGER.debug("Failed to add object, will try again later")
 
-        # No more objects to process. Cancel the interval.
-        if not add_objects:
-            _LOGGER.debug("Cancelling interval.")
-            cancel_interval_callback()
+    await process_objects_loop(interval.seconds)
 
-    # Attempt to add immediately.
-    cancel_interval_callback = dummy_cancel
-    process_objects()
-
-    # Start interval to add again and return a cancel callback.
-    if add_objects:
-        _LOGGER.debug("Setting interval to retry adding entities %s", interval)
-        cancel_interval_callback = async_track_time_interval(
-            hass,
-            process_objects,
-            interval
-        )
-
-        return cancel_interval_callback
-
-    # All items are processed. Return a callback that does nothing.
-    _LOGGER.debug("All entities were added in the first attempt.")
-    return dummy_cancel
+    return cancel_interval_callback

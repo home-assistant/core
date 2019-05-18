@@ -7,6 +7,13 @@ from pyHS100 import SmartPlug, SmartBulb, SmartDevice, SmartDeviceException
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import tplink
+from homeassistant.components.tplink.common import (
+    CONF_DISCOVERY,
+    CONF_DIMMER,
+    CONF_LIGHT,
+    CONF_SWITCH,
+)
+from homeassistant.const import CONF_HOST
 from homeassistant.setup import async_setup_component
 from tests.common import MockDependency, MockConfigEntry, mock_coro
 
@@ -42,7 +49,7 @@ async def test_configuring_tplink_causes_discovery(hass):
     """Test that specifying empty config does discovery."""
     with MOCK_PYHS100, patch("pyHS100.Discover.discover") as discover:
         discover.return_value = {"host": 1234}
-        await async_setup_component(hass, tplink.DOMAIN, {"tplink": {}})
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
     assert len(discover.mock_calls) == 1
@@ -66,7 +73,7 @@ async def test_configuring_device_types(hass, name, cls, platform, count):
             for c in range(count)
         }
         discover.return_value = discovery_data
-        await async_setup_component(hass, tplink.DOMAIN, {"tplink": {}})
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
     assert len(discover.mock_calls) == 1
@@ -117,23 +124,26 @@ async def test_configuring_devices_from_multiple_sources(hass):
             "123.123.123.4": SmartPlug("123.123.123.4"),
             "123.123.123.123": discover_device_fail,
             "123.123.123.124": UnknownSmartDevice("123.123.123.124")
-
         }
+
         await async_setup_component(hass, tplink.DOMAIN, {
-            "tplink": {
-                "light": [
-                    {"host": "123.123.123.1"},
+            tplink.DOMAIN: {
+                CONF_LIGHT: [
+                    {CONF_HOST: "123.123.123.1"},
                 ],
-                "switch": [
-                    {"host": "123.123.123.2"},
+                CONF_SWITCH: [
+                    {CONF_HOST: "123.123.123.2"},
+                ],
+                CONF_DIMMER: [
+                    {CONF_HOST: "123.123.123.22"},
                 ],
             }
         })
         await hass.async_block_till_done()
 
         assert len(discover.mock_calls) == 1
-        assert len(hass.data[tplink.DOMAIN]["light"]) == 2
-        assert len(hass.data[tplink.DOMAIN]["switch"]) == 2
+        assert len(hass.data[tplink.DOMAIN][CONF_LIGHT]) == 3
+        assert len(hass.data[tplink.DOMAIN][CONF_SWITCH]) == 2
 
 
 async def test_is_dimmable(hass):
@@ -147,13 +157,13 @@ async def test_is_dimmable(hass):
         dimmable_switch = SmartPlug("123.123.123.123")
         discover.return_value = {"host": dimmable_switch}
 
-        await async_setup_component(hass, tplink.DOMAIN, {"tplink": {}})
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
     assert len(discover.mock_calls) == 1
     assert len(setup.mock_calls) == 1
-    assert len(hass.data[tplink.DOMAIN]["light"]) == 1
-    assert len(hass.data[tplink.DOMAIN]["switch"]) == 0
+    assert len(hass.data[tplink.DOMAIN][CONF_LIGHT]) == 1
+    assert len(hass.data[tplink.DOMAIN][CONF_SWITCH]) == 0
 
 
 async def test_configuring_discovery_disabled(hass):
@@ -178,10 +188,10 @@ async def test_configuring_discovery_disabled(hass):
 async def test_platforms_are_initialized(hass):
     """Test that platforms are initialized per configuration array."""
     config = {
-        "tplink": {
-            "discovery": False,
-            "light": [{"host": "123.123.123.123"}],
-            "switch": [{"host": "321.321.321.321"}],
+        tplink.DOMAIN: {
+            CONF_DISCOVERY: False,
+            CONF_LIGHT: [{CONF_HOST: "123.123.123.123"}],
+            CONF_SWITCH: [{CONF_HOST: "321.321.321.321"}],
         }
     }
 
@@ -230,9 +240,9 @@ async def test_unload(hass, platform):
         return_value=mock_coro(True),
     ) as light_setup:
         config = {
-            "tplink": {
-                platform: [{"host": "123.123.123.123"}],
-                "discovery": False,
+            tplink.DOMAIN: {
+                platform: [{CONF_HOST: "123.123.123.123"}],
+                CONF_DISCOVERY: False,
             }
         }
         assert await async_setup_component(hass, tplink.DOMAIN, config)
