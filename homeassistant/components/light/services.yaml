@@ -71,6 +71,33 @@ toggle:
     '...':
       description: All turn_on parameters can be used.
 
+save_state:
+  description: Saves a state of the entity.
+  fields:
+    entity_id:
+      description: Name(s) of entities to save state of.
+      example: 'light.attic'
+    rewrite:
+      description: Should it rewrite already saved state fo the entity (default False).
+      example: True
+
+restore_state:
+  description: Restores a state of the entity.
+  fields:
+    entity_id:
+      description: Name(s) of entities to restore state of.
+      example: 'light.attic'
+    delay:
+      description: Time period before restore.
+      example: "5, '0:05', {'minutes': 5}"
+
+cancel_restore_state:
+  description: Cancels scheduled state restore of the entity.
+  fields:
+    entity_id:
+      description: Name(s) of entities to cancel restoring state of.
+      example: 'light.attic'
+
 lifx_set_state:
   description: Set a color/brightness and possibliy turn the light on/off.
   fields:
