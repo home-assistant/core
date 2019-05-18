@@ -285,7 +285,6 @@ class EvoDevice(Entity):
     @property
     def should_poll(self) -> bool:
         """Only the Controller should be polled."""
-        _LOGGER.warn("should_poll(%s)=%s", self._id, False)
         return False
 
     @property

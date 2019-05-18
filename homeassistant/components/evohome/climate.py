@@ -15,7 +15,7 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_OFF, CURRENT_HVAC_HEAT,
 )
 from homeassistant.const import (
-    CONF_SCAN_INTERVAL, STATE_OFF,)
+    CONF_SCAN_INTERVAL, STATE_OFF)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import dispatcher_send
 
@@ -322,16 +322,11 @@ class EvoZone(EvoDevice, ClimateDevice):
 
     async def async_update(self):
         """Process the evohome Zone's state data."""
-        _LOGGER.debug("update(%s)", self._id)
-
-        evo_data = self.hass.data[DATA_EVOHOME]
-
-        for _zone in evo_data['status']['zones']:
+        for _zone in self.hass.data[DATA_EVOHOME]['status']['zones']:
             if _zone['zoneId'] == self._id:
                 self._status = _zone
                 break
-
-        self._available = True
+        self._available = self._status['temperatureStatus']['isAvailable']
 
 
 class EvoController(EvoDevice, ClimateDevice):
@@ -366,7 +361,6 @@ class EvoController(EvoDevice, ClimateDevice):
     @property
     def should_poll(self) -> bool:
         """Only the Controller should be polled."""
-        _LOGGER.warn("should_poll(%s)=%s", self._id, True)
         return True
 
     @property
@@ -557,8 +551,6 @@ class EvoController(EvoDevice, ClimateDevice):
         its children (e.g. Zones, DHW controller).
         """
         # should the latest evohome state data be retreived this cycle?
-        _LOGGER.debug("update(%s)", self._id)
-
         timeout = datetime.now() + timedelta(seconds=55)
         expired = timeout > self._timers['statusUpdated'] + \
             self._params[CONF_SCAN_INTERVAL]

@@ -12,25 +12,17 @@ from homeassistant.const import (
 
 from . import (
     EvoDevice,
-    CONF_LOCATION_IDX,
-)
+    CONF_LOCATION_IDX)
 from .climate import (
-    EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER
-)
+    EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER)
 from .const import (
-    DATA_EVOHOME, GWS, TCS
-)
+    DATA_EVOHOME, GWS, TCS)
 
 _LOGGER = logging.getLogger(__name__)
 
 EVO_STATE_TO_HA = {'On': STATE_ON, 'Off': STATE_OFF}
-HA_STATE_TO_EVO = {v: k for k, v in EVO_STATE_TO_HA}
+HA_STATE_TO_EVO = {v: k for k, v in EVO_STATE_TO_HA.items()}
 
-EVO_OPMODE_TO_HA = {
-    EVO_FOLLOW: STATE_ON,
-    EVO_TEMPOVER: STATE_ON,
-    EVO_PERMOVER: STATE_ON
-}
 HA_OPMODE_TO_EVO = {STATE_ON: EVO_FOLLOW, STATE_OFF: EVO_PERMOVER}
 
 
@@ -93,7 +85,7 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         if op_mode == EVO_FOLLOW:
             state = ''
         else:
-            state = self._status['stateStatus']['state']
+            state = HA_STATE_TO_EVO[STATE_OFF]
 
         if op_mode == EVO_TEMPOVER:
             until = datetime.now() + timedelta(hours=1)
@@ -101,7 +93,7 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         else:
             until = None
 
-        data = {'State': state, 'Mode': op_mode, 'UntilTime': until}
+        data = {'Mode': op_mode, 'State': state, 'UntilTime': until}
 
         try:
             self._obj._set_dhw(data)  # pylint: disable=protected-access
@@ -111,10 +103,5 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
 
     async def async_update(self):
         """Process the evohome Zone's state data."""
-        _LOGGER.debug("update(%s)", self._id)
-
-        evo_data = self.hass.data[DATA_EVOHOME]
-
-        self._status = evo_data['status']['dhw']
-
+        self._status = self.hass.data[DATA_EVOHOME]['status']['dhw']
         self._available = self._status['temperatureStatus']['isAvailable']
