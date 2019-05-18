@@ -16,11 +16,11 @@ import evohomeclient2
 
 from homeassistant.const import (
     CONF_SCAN_INTERVAL, CONF_USERNAME, CONF_PASSWORD,
-    HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS,
     EVENT_HOMEASSISTANT_START,
+    HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS,
     PRECISION_HALVES, TEMP_CELSIUS)
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+ort homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
@@ -63,8 +63,6 @@ def setup(hass, hass_config):
     scan_interval = evo_data['params'][CONF_SCAN_INTERVAL]
     scan_interval = timedelta(
         minutes=(scan_interval.total_seconds() + 59) // 60)
-
-    scan_interval = timedelta(seconds=30)
 
     try:
         client = evo_data['client'] = evohomeclient2.EvohomeClient(
