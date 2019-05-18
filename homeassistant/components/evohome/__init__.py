@@ -1,10 +1,10 @@
 """Support for (EMEA/EU-based) Honeywell evohome systems.
 
     Glossary:
-    TCS - temperature control system (a.k.a. Controller, Parent), which can
-    have up to 13 Children:
-        0-12 Heating zones (a.k.a. Zone), Climate devices, and
-        0-1 DHW controller, (a.k.a. Boiler), a WaterHeater device
+    TCS - temperature control system (a.k.a. Controller, Parent), which can have up
+    to 13 Children:
+    - 0-12 Heating zones (a.k.a. Zone), Climate devices, and
+    - 0-1 DHW controller, (a.k.a. Boiler), a WaterHeater device
 """
 from datetime import datetime, timedelta
 import logging
