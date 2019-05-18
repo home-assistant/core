@@ -5,7 +5,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_NAME
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send
 )
@@ -15,6 +15,7 @@ from homeassistant.util.dt import utcnow
 __LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'jlrincontrol'
+DATA_KEY = DOMAIN
 
 SIGNAL_STATE_UPDATED = '{}.updated'.format(DOMAIN)
 
@@ -30,10 +31,12 @@ async def async_setup(hass, config):
     """Setup the jlrpy component"""
     import jlrpy
 
-    __LOGGER.info(config[DOMAIN].get(CONF_USERNAME))
-    __LOGGER.info(config[DOMAIN].get(CONF_PASSWORD))
+    username = config[DOMAIN].get(CONF_USERNAME)
+    password = config[DOMAIN].get(CONF_PASSWORD)
 
-    connection = jlrpy.Connection(config[DOMAIN].get(CONF_USERNAME), config[DOMAIN].get(CONF_PASSWORD))
+    data = hass.data[DATA_KEY] = JLRData(config)
+
+    connection = jlrpy.Connection(username, password)
 
     def format_nicely(raw_data):
         dict_only = {}
@@ -49,15 +52,22 @@ async def async_setup(hass, config):
 
         hass.states.async_set('jlrtest.fuel_level', vehicle_status.get('FUEL_LEVEL_PERC'))
 
+    def discover_vehicle(vehicle):
+        data.vehicles.add(vehicle.vin)
+        get_info(vehicle)
+
+
     async def update(now):
         """Update status from the online service"""
         try:
-            if not connection.vehicles[0].get_status:
+            if not connection.get_user_info():
                 __LOGGER.warning("Could not get data from service")
                 return False
 
-            vehicle = connection.vehicles[0]  # TODO: make this looped for multiple vehicles
-            get_info(vehicle)
+            for vehicle in connection.vehicles:
+                if vehicle.vin not in data.vehicles:
+                    discover_vehicle(vehicle)
+
             async_dispatcher_send(hass, SIGNAL_STATE_UPDATED)
 
             return True
@@ -69,19 +79,37 @@ async def async_setup(hass, config):
 
     return await update(utcnow())
 
-# class JLRData:
-#     """Hold component state"""
 
-#     def __init__(self, config):
-#         """Initialize the component state"""
-#         self.vehicles = set()
-#         self.config = config[DOMAIN]
+class JLRData:
+    """Hold component state."""
 
-#     def vehicle_name(self, vehicle):
-#         """Provide a friendly name for a vehicle."""
-#         if (vehicle)
+    def __init__(self, config):
+        """Initialize the component state."""
+        self.vehicles = set()
+        self.instruments = set()
+        self.config = config[DOMAIN]
+        self.names = self.config.get(CONF_NAME)
 
-# class MyEntity(Entity):
-#     async def async_update(self):
-#         """Latest STate"""
-#         self._state = await async_add_executor_job()
+    def instrument(self, vin, component, attr):
+        """Return corresponding instrument."""
+        return next((instrument
+                     for instrument in self.instruments
+                     if instrument.vehicle.vin == vin and
+                     instrument.component == component and
+                     instrument.attr == attr), None)
+
+    def vehicle_name(self, vehicle):
+        """Provide a friendly name for a vehicle."""
+        if (self._registration_number(vehicle) and
+            self._registration_number(vehicle).lower()) in self.names:
+            return self.names[self._registration_number(vehicle).lower()]
+        if vehicle.vin and vehicle.vin.lower() in self.names:
+            return self.names[vehicle.vin.lower()]
+        if self._registration_number(vehicle):
+            return self._registration_number(vehicle)
+        if vehicle.vin:
+            return vehicle.vin
+        return ''
+
+    def _registration_number(self, vehicle):
+        return vehicle.get_attributes().get('registrationNumber')
