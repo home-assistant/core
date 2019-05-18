@@ -63,7 +63,7 @@
                 "station": "https://api.weather.gov/stations/KJFK",
                 "timestamp": "2035-03-30T18:51:00+00:00",
                 "rawMessage": "KJFK 301851Z 16019KT 10SM FEW130 SCT200 BKN250 13/07 A2998 RMK AO2 PK WND 17027/1829 SLP153 T01280072",
-                "textDescription": "Thunderstorm and Strange Description",
+                "textDescription": "Fog and Strange Description",
                 "icon": "https://api.weather.gov/icons/land/day/wind_bkn?size=medium",
                 "presentWeather": [{"weather": "rain", "intensity": "light", "rawString": "-RA", "modifier": null}],
                 "temperature": {
@@ -190,7 +190,7 @@
                 },
                 "station": "https://api.weather.gov/stations/KJFK",
                 "timestamp": "2035-03-30T17:51:00+00:00",
-                "rawMessage": "KJFK 301751Z 17018G24KT 10SM BKN250 13/08 A3001 RMK AO2 PK WND 18026/1713 SLP162 T01330078 10139 20089 58024",
+                "rawMessage": "KJFKXXXXXXXXX17018G24KT 10SM BKN250 13/08 A3001 RMK AO2 PK WND 18026/1713 SLP162 T01330078 10139 20089 58024",
                 "textDescription": "Mostly Cloudy and Windy",
                 "icon": "https://api.weather.gov/icons/land/day/wind_bkn?size=medium",
                 "presentWeather": [],
@@ -210,9 +210,9 @@
                     "qualityControl": "qc:V"
                 },
                 "windSpeed": {
-                    "value": 9.3000000000000007,
+                    "value": null,
                     "unitCode": "unit:m_s-1",
-                    "qualityControl": "qc:V"
+                    "qualityControl": "qc:Z"
                 },
                 "windGust": {
                     "value": null,
@@ -424,7 +424,6 @@
                     "unitCode": "unit:m"
                 },
                 "station": "https://api.weather.gov/stations/KJFK",
-                "timestamp": "2035-03-30T15:51:00+00:00",
                 "rawMessage": "KJFK 301551Z 16014KT 10SM SCT130 BKN250 13/08 A3007 RMK AO2 SLP183 T01280078",
                 "textDescription": "Mostly Cloudy",
                 "icon": "https://api.weather.gov/icons/land/day/bkn?size=medium",

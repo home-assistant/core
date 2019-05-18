@@ -9,7 +9,8 @@ import homeassistant.components.noaaweather.sensor as noaaweather
 from homeassistant.setup import (async_setup_component)
 from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT,
                                  LENGTH_KILOMETERS, LENGTH_MILES,
-                                 LENGTH_INCHES)
+                                 LENGTH_INCHES, CONF_LATITUDE,
+                                 CONF_LONGITUDE)
 from homeassistant.util.unit_system import (IMPERIAL_SYSTEM)
 from homeassistant.exceptions import (ConfigEntryNotReady, PlatformNotReady)
 
@@ -148,6 +149,17 @@ BAD_CONF_STATION = {
         ],
     }
 }
+#
+# Configuration with no location information.
+#
+BAD_CONF_NOLOCATION = {
+    'sensor': {
+        'platform': 'noaaweather',
+        'monitored_conditions': [
+            'temperature',
+        ],
+    }
+}
 
 STAURL = "https://api.weather.gov/points/{},{}/stations"
 OBSURL = "https://api.weather.gov/stations/{}/observations/"
@@ -274,7 +286,7 @@ def test_setup_badconfresponse(hass, aioclient_mock):
     aioclient_mock.get(
         STAURL.format(BAD_CONF_LOCATION['sensor']['latitude'],
                       BAD_CONF_LOCATION['sensor']['longitude']),
-        status=505)
+        status=503)
     aioclient_mock.get(
         OBSURL.format("KJFK"),
         text=load_fixture('noaaweather-obs-valid.json'),
@@ -283,6 +295,21 @@ def test_setup_badconfresponse(hass, aioclient_mock):
     with raises(PlatformNotReady):
         yield from noaaweather.async_setup_platform(
             hass, BAD_CONF_LOCATION['sensor'], lambda _: None)
+
+
+@asyncio.coroutine
+def test_setup_badconfnoloc(hass, aioclient_mock):
+    """Test for configuration with no location provided.
+
+    This tests getting a correct ConfigEntryNotReady exception
+    when no latitude and longitude values are configured.
+    """
+    setattr(hass.config, CONF_LATITUDE, None)
+    setattr(hass.config, CONF_LONGITUDE, None)
+
+    with raises(ConfigEntryNotReady):
+        yield from noaaweather.async_setup_platform(
+            hass, BAD_CONF_NOLOCATION['sensor'], lambda _: None)
 
 
 @asyncio.coroutine
@@ -395,7 +422,7 @@ def test_setup_badtextdesc2(hass, aioclient_mock):
 
     state = hass.states.get('sensor.noaa_weather_kjfk_textdescription')
     assert state is not None
-    assert state.state == 'lightning'
+    assert state.state == 'fog'
 
 
 @asyncio.coroutine

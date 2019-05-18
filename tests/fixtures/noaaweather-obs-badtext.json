@@ -546,7 +546,7 @@
                 },
                 "station": "https://api.weather.gov/stations/KJFK",
                 "timestamp": "2035-03-30T14:51:00+00:00",
-                "rawMessage": "KJFK 301451Z 14013KT 10SM SCT100 BKN250 12/08 A3008 RMK AO2 SLP187 T01220078 58005",
+                "rawMessage": null,
                 "textDescription": "Mostly Cloudy",
                 "icon": "https://api.weather.gov/icons/land/day/bkn?size=medium",
                 "presentWeather": [],
