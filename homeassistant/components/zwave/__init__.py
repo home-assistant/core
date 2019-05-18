@@ -388,12 +388,11 @@ async def async_setup_entry(hass, config_entry):
             entity = hass.data[DATA_DEVICES][key]
             _LOGGER.info('Removing Entity - value: %s - entity_id: %s',
                          key, entity.entity_id)
-            asyncio.run_coroutine_threadsafe(entity.node_removed(),
-                                             hass.loop)
+            hass.add_job(entity.node_removed())
             del hass.data[DATA_DEVICES][key]
 
         entity = hass.data[DATA_DEVICES][node_key]
-        asyncio.run_coroutine_threadsafe(entity.node_removed(), hass.loop)
+        hass.add_job(entity.node_removed())
         del hass.data[DATA_DEVICES][node_key]
 
     def network_ready():
