@@ -307,6 +307,7 @@ omit =
     homeassistant/components/itach/remote.py
     homeassistant/components/itunes/media_player.py
     homeassistant/components/joaoapps_join/*
+    homeassistant/components/jlrinctrol/*
     homeassistant/components/juicenet/*
     homeassistant/components/kankun/switch.py
     homeassistant/components/keenetic_ndms2/device_tracker.py
