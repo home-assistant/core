@@ -20,7 +20,7 @@ from homeassistant.const import (
     HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS,
     PRECISION_HALVES, TEMP_CELSIUS)
 from homeassistant.core import callback
-ort homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
