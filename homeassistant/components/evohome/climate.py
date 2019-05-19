@@ -356,7 +356,7 @@ class EvoController(EvoDevice, ClimateDevice):
     @callback
     def _refresh(self, packet):
         if packet['signal'] == 'first_update':
-            self.schedule_update_ha_state(force_refresh=True)
+            self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
     def should_poll(self) -> bool:
