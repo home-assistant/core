@@ -73,7 +73,7 @@ def setup(hass, hass_config):
 
     except evohomeclient2.AuthenticationError as err:
         _LOGGER.error(
-            "setup(): Failed to authenticate with the vendor's server. "
+            "Failed to authenticate with the vendor's server. "
             "Check your username and password are correct. "
             "Resolve any errors and restart HA. Message is: %s",
             err
@@ -82,7 +82,7 @@ def setup(hass, hass_config):
 
     except requests.exceptions.ConnectionError:
         _LOGGER.error(
-            "setup(): Unable to connect with the vendor's server. "
+            "Unable to connect with the vendor's server. "
             "Check your network and the vendor's status page. "
             "Resolve any errors and restart HA."
         )
@@ -110,7 +110,7 @@ def setup(hass, hass_config):
 
     except IndexError:
         _LOGGER.error(
-            "setup(): config error, '%s' = %s, but its valid range is 0-%s. "
+            "Config error: '%s' = %s, but its valid range is 0-%s. "
             "Unable to continue. Fix any configuration errors and restart HA.",
             CONF_LOCATION_IDX, loc_idx, len(client.installation_info) - 1
         )
@@ -120,7 +120,7 @@ def setup(hass, hass_config):
         tmp_loc = dict(evo_data['config'])
         tmp_loc['locationInfo']['postcode'] = 'REDACTED'
 
-        _LOGGER.debug("setup(): evo_data['config']=%s", tmp_loc)
+        _LOGGER.debug("evo_data['config']=%s", tmp_loc)
 
     load_platform(hass, 'climate', DOMAIN, {}, hass_config)
 
