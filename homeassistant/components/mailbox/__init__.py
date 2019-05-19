@@ -241,7 +241,6 @@ class MailboxMediaView(MailboxView):
         """Retrieve media."""
         mailbox = self.get_mailbox(platform)
 
-        hass = request.app['hass']
         with suppress(asyncio.CancelledError, asyncio.TimeoutError):
             with async_timeout.timeout(10):
                 try:

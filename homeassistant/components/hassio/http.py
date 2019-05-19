@@ -71,8 +71,6 @@ class HassIOView(HomeAssistantView):
         This method is a coroutine.
         """
         read_timeout = _get_timeout(path)
-        hass = request.app['hass']
-
         data = None
         headers = _init_header(request)
 
