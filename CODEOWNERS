@@ -215,7 +215,6 @@ homeassistant/components/sma/* @kellerza
 homeassistant/components/smarthab/* @outadoc
 homeassistant/components/smartthings/* @andrewsayre
 homeassistant/components/smtp/* @fabaff
-homeassistant/components/solax/* @squishykid
 homeassistant/components/solaredge_local/* @drobtravels
 homeassistant/components/sonos/* @amelchio
 homeassistant/components/spaceapi/* @fabaff
