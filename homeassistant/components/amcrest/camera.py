@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from amcrest import AmcrestError
 import voluptuous as vol
 
 from homeassistant.components.camera import (
@@ -94,19 +95,20 @@ class AmcrestCam(Camera):
         self._stream_source = device.stream_source
         self._resolution = device.resolution
         self._token = self._auth = device.authentication
+        self._control_light = device.control_light
         self._is_recording = False
         self._motion_detection_enabled = None
+        self._brand = None
         self._model = None
         self._audio_enabled = None
         self._motion_recording_enabled = None
         self._color_bw = None
+        self._rtsp_url = None
         self._snapshot_lock = asyncio.Lock()
         self._unsub_dispatcher = []
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-        from amcrest import AmcrestError
-
         if not self.is_on:
             _LOGGER.error(
                 'Attempt to take snaphot when %s camera is off', self.name)
@@ -143,7 +145,7 @@ class AmcrestCam(Camera):
         # streaming via ffmpeg
         from haffmpeg.camera import CameraMjpeg
 
-        streaming_url = self._api.rtsp_url(typeno=self._resolution)
+        streaming_url = self._rtsp_url
         stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
         await stream.open_camera(
             streaming_url, extra_cmd=self._ffmpeg_arguments)
@@ -191,7 +193,7 @@ class AmcrestCam(Camera):
     @property
     def brand(self):
         """Return the camera brand."""
-        return 'Amcrest'
+        return self._brand
 
     @property
     def motion_detection_enabled(self):
@@ -206,7 +208,7 @@ class AmcrestCam(Camera):
     @property
     def stream_source(self):
         """Return the source of the stream."""
-        return self._api.rtsp_url(typeno=self._resolution)
+        return self._rtsp_url
 
     @property
     def is_on(self):
@@ -232,9 +234,19 @@ class AmcrestCam(Camera):
 
     def update(self):
         """Update entity status."""
-        from amcrest import AmcrestError
-
         _LOGGER.debug('Pulling data from %s camera', self.name)
+        if self._brand is None:
+            try:
+                resp = self._api.vendor_information.strip()
+                if resp.startswith('vendor='):
+                    self._brand = resp.split('=')[-1]
+                else:
+                    self._brand = 'unknown'
+            except AmcrestError as error:
+                _LOGGER.error(
+                    'Could not get %s camera brand due to error: %s',
+                    self.name, error)
+                self._brand = 'unknwown'
         if self._model is None:
             try:
                 self._model = self._api.device_type.split('=')[-1].strip()
@@ -242,7 +254,7 @@ class AmcrestCam(Camera):
                 _LOGGER.error(
                     'Could not get %s camera model due to error: %s',
                     self.name, error)
-                self._model = ''
+                self._model = 'unknown'
         try:
             self.is_streaming = self._api.video_enabled
             self._is_recording = self._api.record_mode == 'Manual'
@@ -252,6 +264,7 @@ class AmcrestCam(Camera):
             self._motion_recording_enabled = (
                 self._api.is_record_on_motion_detection())
             self._color_bw = _CBW[self._api.day_night_color]
+            self._rtsp_url = self._api.rtsp_url(typeno=self._resolution)
         except AmcrestError as error:
             _LOGGER.error(
                 'Could not get %s camera attributes due to error: %s',
@@ -323,8 +336,6 @@ class AmcrestCam(Camera):
 
     def _enable_video_stream(self, enable):
         """Enable or disable camera video stream."""
-        from amcrest import AmcrestError
-
         # Given the way the camera's state is determined by
         # is_streaming and is_recording, we can't leave
         # recording on if video stream is being turned off.
@@ -339,11 +350,11 @@ class AmcrestCam(Camera):
         else:
             self.is_streaming = enable
             self.schedule_update_ha_state()
+        if self._control_light:
+            self._enable_light(self._audio_enabled or self.is_streaming)
 
     def _enable_recording(self, enable):
         """Turn recording on or off."""
-        from amcrest import AmcrestError
-
         # Given the way the camera's state is determined by
         # is_streaming and is_recording, we can't leave
         # video stream off if recording is being turned on.
@@ -363,8 +374,6 @@ class AmcrestCam(Camera):
 
     def _enable_motion_detection(self, enable):
         """Enable or disable motion detection."""
-        from amcrest import AmcrestError
-
         try:
             self._api.motion_detection = str(enable).lower()
         except AmcrestError as error:
@@ -377,8 +386,6 @@ class AmcrestCam(Camera):
 
     def _enable_audio(self, enable):
         """Enable or disable audio stream."""
-        from amcrest import AmcrestError
-
         try:
             self._api.audio_enabled = enable
         except AmcrestError as error:
@@ -388,11 +395,22 @@ class AmcrestCam(Camera):
         else:
             self._audio_enabled = enable
             self.schedule_update_ha_state()
+        if self._control_light:
+            self._enable_light(self._audio_enabled or self.is_streaming)
+
+    def _enable_light(self, enable):
+        """Enable or disable indicator light."""
+        try:
+            self._api.command(
+                'configManager.cgi?action=setConfig&LightGlobal[0].Enable={}'
+                .format(str(enable).lower()))
+        except AmcrestError as error:
+            _LOGGER.error(
+                'Could not %s %s camera indicator light due to error: %s',
+                'enable' if enable else 'disable', self.name, error)
 
     def _enable_motion_recording(self, enable):
         """Enable or disable motion recording."""
-        from amcrest import AmcrestError
-
         try:
             self._api.motion_recording = str(enable).lower()
         except AmcrestError as error:
@@ -405,8 +423,6 @@ class AmcrestCam(Camera):
 
     def _goto_preset(self, preset):
         """Move camera position and zoom to preset."""
-        from amcrest import AmcrestError
-
         try:
             self._api.go_to_preset(
                 action='start', preset_point_number=preset)
@@ -417,8 +433,6 @@ class AmcrestCam(Camera):
 
     def _set_color_bw(self, cbw):
         """Set camera color mode."""
-        from amcrest import AmcrestError
-
         try:
             self._api.day_night_color = _CBW.index(cbw)
         except AmcrestError as error:
@@ -431,8 +445,6 @@ class AmcrestCam(Camera):
 
     def _start_tour(self, start):
         """Start camera tour."""
-        from amcrest import AmcrestError
-
         try:
             self._api.tour(start=start)
         except AmcrestError as error:
