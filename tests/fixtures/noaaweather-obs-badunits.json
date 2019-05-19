@@ -146,27 +146,6 @@
                     "qualityControl": "qc:V"
                 },
                 "cloudLayers": [
-                    {
-                        "base": {
-                            "value": 3960,
-                            "unitCode": "unit:m"
-                        },
-                        "amount": "FEW"
-                    },
-                    {
-                        "base": {
-                            "value": 6100,
-                            "unitCode": "unit:m"
-                        },
-                        "amount": "SCT"
-                    },
-                    {
-                        "base": {
-                            "value": 7620,
-                            "unitCode": "unit:m"
-                        },
-                        "amount": "BKN"
-                    }
                 ]
             }
         }

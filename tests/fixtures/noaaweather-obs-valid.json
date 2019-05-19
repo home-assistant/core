@@ -553,7 +553,7 @@
                 "temperature": {
                     "value": 12.200000000000045,
                     "unitCode": "unit:degC",
-                    "qualityControl": "qc:V"
+                    "qualityControl": "qc:bad"
                 },
                 "dewpoint": {
                     "value": 7.8000000000000114,

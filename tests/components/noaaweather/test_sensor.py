@@ -278,7 +278,7 @@ def test_setup_mintext(hass, aioclient_mock):
         text=load_fixture('noaaweather-sta-valid.json'))
     aioclient_mock.get(
         OBSURL.format("KJFK"),
-        text=load_fixture('noaaweather-obs-valid.json'),
+        text=load_fixture('noaaweather-obs-valid-night.json'),
         params={'limit': 5})
 
     with assert_setup_component(1, 'sensor'):
@@ -287,7 +287,7 @@ def test_setup_mintext(hass, aioclient_mock):
 
     state = hass.states.get('sensor.noaa_weather_kjfk_textdescription')
     assert state is not None
-    assert state.state == 'windy-variant'
+    assert state.state == 'clear-night'
     assert state.attributes.get('friendly_name') == \
         "NOAA Weather Weather"
 
