@@ -8,7 +8,7 @@ from homematicip.aio.home import AsyncHome
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_MANUAL, SUPPORT_TARGET_TEMPERATURE)
+    STATE_AUTO, STATE_MANUAL, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
@@ -17,9 +17,12 @@ from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
 _LOGGER = logging.getLogger(__name__)
 
+STATE_BOOST = 'Boost'
+
 HA_STATE_TO_HMIP = {
-    STATE_AUTO: 'AUTOMATIC',
-    STATE_MANUAL: 'MANUAL',
+    STATE_AUTO: ClimateControlMode.AUTOMATIC,
+    STATE_MANUAL: ClimateControlMode.MANUAL,
+    STATE_BOOST: None
 }
 
 HMIP_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_HMIP.items()}
@@ -63,7 +66,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
     @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
+        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
     @property
     def target_temperature(self) -> float:
@@ -84,8 +87,15 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
 
     @property
     def current_operation(self) -> str:
-        """Return current operation ie. automatic or manual."""
+        """Return current operation ie. boost, automatic or manual."""
+        if self._device.boostMode:
+            return STATE_BOOST
         return HMIP_STATE_TO_HA.get(self._device.controlMode)
+
+    @property
+    def operation_list(self):
+        """Return the list of available operation modes."""
+        return [x for x in HMIP_STATE_TO_HA.values()]
 
     @property
     def min_temp(self) -> float:
@@ -103,7 +113,16 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         if temperature is None:
             return
         await self._device.set_point_temperature(temperature)
-
+        
+     async def async_set_operation_mode(self, operation_mode):
+        """Set operation mode."""
+        _LOGGER.error("KAROL: %s", operation_mode)
+        if operation_mode == STATE_BOOST:
+            await self._device.set_boost()
+        else:
+            await self._device.set_boost(False)
+            await self._device.set_control_mode(HA_STATE_TO_HMIP[operation_mode])
+        self.schedule_update_ha_state()
 
 def _get_first_heating_thermostat(heating_group: AsyncHeatingGroup):
     """Return the first HeatingThermostat from a HeatingGroup."""
