@@ -7,10 +7,10 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_NAME
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send
+    dispatcher_send
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
 __LOGGER = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass, config):
+def setup(hass, config):
     """Setup the jlrpy component"""
     import jlrpy
 
@@ -47,19 +47,26 @@ async def async_setup(hass, config):
     state = hass.data[DATA_KEY] = JLRData(config)
 
     connection = jlrpy.Connection(username, password)
+    vehicles = connection.vehicles
+
+    # vehicles = []
+    # for vehicle in connection.vehicles:
+    #     __LOGGER.info("Populating vehicle info")
+    #     vehicle.info = vehicle.get_status()
+    #     vehicles.append(vehicle)
 
     def discover_vehicle(vehicle):
         state.entities[vehicle.vin] = []
 
         for attr, (component, *_) in RESOURCES.items():
-            hass.async_create_task(
-                hass.helpers.discovery.async_load_platform(
-                    'sensor', DOMAIN, (vehicle.vin, attr), config
-                )
+            hass.helpers.discovery.load_platform(
+                'sensor', DOMAIN, (vehicle.vin, attr), config
             )
 
-    async def update_vehicle(vehicle):
+    def update_vehicle(vehicle):
         """Update information on vehicle"""
+        __LOGGER.info("Pulling info from JLR")
+        vehicle.info = vehicle.get_status()
         state.vehicles[vehicle.vin] = vehicle
         if vehicle.vin not in state.entities:
             discover_vehicle(vehicle)
@@ -67,27 +74,27 @@ async def async_setup(hass, config):
         for entity in state.entities[vehicle.vin]:
             entity.schedule_update_ha_state()
 
-        async_dispatcher_send(hass, SIGNAL_VEHICLE_SEEN, vehicle)
+        dispatcher_send(hass, SIGNAL_VEHICLE_SEEN, vehicle)
 
-
-    async def update(now):
+    def update(now):
         """Update status from the online service"""
+        __LOGGER.info("Update method in INIT")
         try:
-            if not connection.get_user_info():
+            if not connection:
                 __LOGGER.warning("Could not get data from service")
                 return False
 
-            for vehicle in connection.vehicles:
-                await update_vehicle(vehicle)
+            for vehicle in vehicles:
+                update_vehicle(vehicle)
 
             return True
         finally:
-            async_track_point_in_utc_time(hass, update,
-                                          utcnow() + timedelta(minutes=5))  # TODO: replace 60 with scan interval
+            track_point_in_utc_time(hass, update,
+                                    now + timedelta(minutes=1))  # TODO: replace 60 with scan interval
 
     __LOGGER.info("Logging into InControl")
 
-    return await update(utcnow())
+    return update(utcnow())
 
 
 class JLRData:
@@ -102,7 +109,7 @@ class JLRData:
 
     def vehicle_name(self, vehicle):
         """Provide a friendly name for a vehicle."""
-        if (vehicle.vin and vehicle.vin.lower() in self.names):
+        if vehicle.vin and vehicle.vin.lower() in self.names:
             return self.names[vehicle.vin.lower()]
         elif vehicle.vin:
             return vehicle.vin
@@ -119,7 +126,6 @@ class JLREntity(Entity):
         self._vin = vin
         self._attribute = attribute
         self._state.entities[self._vin].append(self)
-        self._val = self._get_vehicle_status(self.vehicle)
 
     def _get_vehicle_status(self, vehicle):
         dict_only = {}

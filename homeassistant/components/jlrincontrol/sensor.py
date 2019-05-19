@@ -6,11 +6,11 @@ from . import JLREntity, RESOURCES
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Volkswagen sensors."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the JLR sensors."""
     if discovery_info is None:
         return
-    async_add_entities([JLRSensor(hass, *discovery_info)])
+    add_entities([JLRSensor(hass, *discovery_info)])
 
 
 class JLRSensor(JLREntity):
@@ -21,9 +21,14 @@ class JLRSensor(JLREntity):
         """Return the state of the sensor."""
         _LOGGER.info('Getting state of %s sensor' % self._attribute)
 
-        val = self._val[self._attribute]
+        val = self._get_vehicle_status(self.vehicle.info.get('vehicleStatus'))
         if val is None:
             return val
+        if val:
+            val = val[self._attribute]
+        else:
+            return None
+
         if self._attribute in ['last_connected', 'service_inspection', 'oil_inspection']:
             return str(val)
         else:
@@ -31,7 +36,7 @@ class JLRSensor(JLREntity):
 
     def _get_vehicle_status(self, vehicle):
         dict_only = {}
-        for el in vehicle.get_status().get('vehicleStatus'):
+        for el in vehicle:
             dict_only[el.get('key')] = el.get('value')
         return dict_only
 
@@ -50,5 +55,9 @@ class JLRSensor(JLREntity):
         """Return True if entity is available."""
         return True
 
-    async def async_update(self):
-        self._val = self._get_vehicle_status(self.vehicle)
+    # def update(self):
+    #     _LOGGER.info("UPDATING")
+    #     vehicle_status = self.vehicle.get_status().get('vehicleStatus')
+    #     if vehicle_status:
+    #         response = self._get_vehicle_status(vehicle_status)
+    #         self.vehicle.info = response
