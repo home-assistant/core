@@ -20,6 +20,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# For the DHW Controller
 EVO_STATE_TO_HA = {'On': STATE_ON, 'Off': STATE_OFF}
 HA_STATE_TO_EVO = {v: k for k, v in EVO_STATE_TO_HA.items()}
 

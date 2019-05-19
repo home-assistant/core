@@ -20,22 +20,13 @@ from . import (
     CONF_LOCATION_IDX)
 from .const import (
     DATA_EVOHOME, DOMAIN,
-    EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER,
+    EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER, EVO_RESET, EVO_AUTO, EVO_AUTOECO,
+    EVO_AWAY, EVO_DAYOFF, EVO_CUSTOM, EVO_HEATOFF,
     GWS, TCS)
 
 _LOGGER = logging.getLogger(__name__)
 
-# The Controller's opmode/state and the zone's (inherited) state
-EVO_RESET = 'AutoWithReset'
-EVO_AUTO = 'Auto'
-EVO_AUTOECO = 'AutoWithEco'
-EVO_AWAY = 'Away'
-EVO_DAYOFF = 'DayOff'
-EVO_CUSTOM = 'Custom'
-EVO_HEATOFF = 'HeatingOff'
-
-# For the Controller. NB: evohome treats Away mode as a mode in/of itself,
-# where HA considers it to 'override' the exising operating mode
+# For the Controller
 TCS_STATE_TO_HA = {
     EVO_RESET: STATE_AUTO,
     EVO_AUTO: STATE_AUTO,
@@ -51,7 +42,7 @@ HA_STATE_TO_TCS = {
     STATE_OFF: EVO_HEATOFF
 }
 
-# for the Zones...
+# for the Zones
 ZONE_STATE_TO_HA = {
     EVO_FOLLOW: STATE_AUTO,
     EVO_TEMPOVER: STATE_MANUAL,
