@@ -1,1 +1,1 @@
-""" The SolarEdge Local Integration """
+"""The SolarEdge Local Integration."""
