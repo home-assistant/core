@@ -22,7 +22,11 @@ CONF_MUTABLE = 'mutable'
 
 RESOURCES = {
     'FUEL_LEVEL_PERC': ('sensor', 'Fuel level', 'mdi:fuel', '%'),
-    'DISTANCE_TO_EMPTY_FUEL': ('sensor', 'Range', 'mdi:road', 'km')
+    'DISTANCE_TO_EMPTY_FUEL': ('sensor', 'Range', 'mdi:road', 'km'),
+    'EXT_KILOMETERS_TO_SERVICE': ('sensor', 'Distance to next service', 'mdi:road', 'km'),
+    'ODOMETER_METER': ('sensor', 'Odometer', 'mdi:car', 'km')
+
+
 }
 
 SIGNAL_STATE_UPDATED = '{}.updated'.format(DOMAIN)
@@ -49,6 +53,8 @@ def setup(hass, config):
     connection = jlrpy.Connection(username, password)
     vehicles = connection.vehicles
 
+    vehicles[0].info = vehicles[0].get_status()  # TODO: Remove this and reactivate below
+
     # vehicles = []
     # for vehicle in connection.vehicles:
     #     __LOGGER.info("Populating vehicle info")
@@ -66,7 +72,11 @@ def setup(hass, config):
     def update_vehicle(vehicle):
         """Update information on vehicle"""
         __LOGGER.info("Pulling info from JLR")
+
+        perc = vehicle.info['vehicleStatus'][63]['value']  # TODO: Remove this block
         vehicle.info = vehicle.get_status()
+        vehicle.info['vehicleStatus'][63]['value'] = int(perc) + 1
+
         state.vehicles[vehicle.vin] = vehicle
         if vehicle.vin not in state.entities:
             discover_vehicle(vehicle)
