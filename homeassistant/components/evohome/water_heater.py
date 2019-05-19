@@ -39,7 +39,7 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     tcs_obj_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]  # noqa: E501; pylint: disable=protected-access
 
     _LOGGER.info(
-        "setup(): Found DHW device, id: %s [%s]",
+        "Found DHW device, id: %s [%s]",
         tcs_obj_ref.hotwater.zoneId, tcs_obj_ref.hotwater.zone_type)
 
     dhw = EvoDHW(evo_data, client, tcs_obj_ref.hotwater)

@@ -177,7 +177,7 @@ def setup(hass, hass_config):
         tmp_loc = dict(evo_data['config'])
         tmp_loc['locationInfo']['postcode'] = 'REDACTED'
 
-        _LOGGER.debug("setup(): evo_data['config']=%s", tmp_loc)
+        _LOGGER.debug("evo_data['config']=%s", tmp_loc)
 
     load_platform(hass, 'climate', DOMAIN, {}, hass_config)
 
