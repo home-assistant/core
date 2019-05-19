@@ -156,8 +156,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for target_device in target_devices:
             output = target_device.adb_command(cmd)
 
-            # log the output if there is any
-            if output.strip():
+            # log the output, if there is any
+            if output:
                 _LOGGER.info("Output of command '%s' from '%s': %s",
                              cmd, target_device.entity_id, output)
 
@@ -311,15 +311,19 @@ class ADBDevice(MediaPlayerDevice):
         key = self._keys.get(cmd)
         if key:
             self.aftv.adb_shell('input keyevent {}'.format(key))
-            self._adb_response = ''
-            return self._adb_response
+            self._adb_response = None
+            return
 
         if cmd == 'GET_PROPERTIES':
             self._adb_response = str(self.aftv.get_properties_dict())
             return self._adb_response
 
         response = self.aftv.adb_shell(cmd)
-        self._adb_response = str(response) if response else ''
+        if isinstance(response, str) and response.strip():
+            self._adb_response = response.strip()
+        else:
+            self._adb_response = None
+
         return self._adb_response
 
 
