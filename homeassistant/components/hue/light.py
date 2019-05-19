@@ -219,6 +219,7 @@ class HueLight(Light):
             self.gamut = None
         else:
             self.is_osram = light.manufacturername == 'OSRAM'
+            self.is_innr = light.manufacturername == 'innr'
             self.is_philips = light.manufacturername == 'Philips'
             self.gamut_typ = self.light.colorgamuttype
             self.gamut = self.light.colorgamut
@@ -358,30 +359,31 @@ class HueLight(Light):
         elif ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
             command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
-
+   
         if ATTR_BRIGHTNESS in kwargs:
             command['bri'] = kwargs[ATTR_BRIGHTNESS]
+        
+        if not self.is_innr:
+            flash = kwargs.get(ATTR_FLASH)
 
-        flash = kwargs.get(ATTR_FLASH)
-
-        if flash == FLASH_LONG:
-            command['alert'] = 'lselect'
-            del command['on']
-        elif flash == FLASH_SHORT:
-            command['alert'] = 'select'
-            del command['on']
-        else:
-            command['alert'] = 'none'
-
-        if ATTR_EFFECT in kwargs:
-            effect = kwargs[ATTR_EFFECT]
-            if effect == EFFECT_COLORLOOP:
-                command['effect'] = 'colorloop'
-            elif effect == EFFECT_RANDOM:
-                command['hue'] = random.randrange(0, 65535)
-                command['sat'] = random.randrange(150, 254)
+            if flash == FLASH_LONG:
+                command['alert'] = 'lselect'
+                del command['on']
+            elif flash == FLASH_SHORT:
+                command['alert'] = 'select'
+                del command['on']
             else:
-                command['effect'] = 'none'
+                command['alert'] = 'none'
+
+            if ATTR_EFFECT in kwargs:
+                effect = kwargs[ATTR_EFFECT]
+                if effect == EFFECT_COLORLOOP:
+                    command['effect'] = 'colorloop'
+                elif effect == EFFECT_RANDOM:
+                    command['hue'] = random.randrange(0, 65535)
+                    command['sat'] = random.randrange(150, 254)
+                else:
+                    command['effect'] = 'none'
 
         if self.is_group:
             await self.light.set_action(**command)
@@ -395,16 +397,17 @@ class HueLight(Light):
         if ATTR_TRANSITION in kwargs:
             command['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
 
-        flash = kwargs.get(ATTR_FLASH)
+        if not self.is_innr:    
+            flash = kwargs.get(ATTR_FLASH)
 
-        if flash == FLASH_LONG:
-            command['alert'] = 'lselect'
-            del command['on']
-        elif flash == FLASH_SHORT:
-            command['alert'] = 'select'
-            del command['on']
-        else:
-            command['alert'] = 'none'
+            if flash == FLASH_LONG:
+                command['alert'] = 'lselect'
+                del command['on']
+            elif flash == FLASH_SHORT:
+                command['alert'] = 'select'
+                del command['on']
+            else:
+                command['alert'] = 'none'
 
         if self.is_group:
             await self.light.set_action(**command)
