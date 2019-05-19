@@ -51,7 +51,7 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
         self.unsub_dispatcher.append(async_dispatcher_connect(
             self.hass, self.device.event_new_address, self._new_address))
 
-        await AxisEntityBase.async_added_to_hass(self)
+        await super().async_added_to_hass()
 
     @property
     def supported_features(self):

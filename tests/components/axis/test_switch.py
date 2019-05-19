@@ -1,6 +1,6 @@
 """Axis switch platform tests."""
 
-from unittest.mock import Mock
+from unittest.mock import call as mock_call, Mock
 
 from homeassistant import config_entries
 from homeassistant.components import axis
@@ -73,7 +73,7 @@ async def test_platform_manually_configured(hass):
         'switch': {
             'platform': axis.DOMAIN
         }
-    }) is True
+    })
 
     assert axis.DOMAIN not in hass.data
 
@@ -82,7 +82,7 @@ async def test_no_switches(hass):
     """Test that no output events in Axis results in no switch entities."""
     await setup_device(hass)
 
-    assert len(hass.states.async_all()) == 0
+    assert not hass.states.async_entity_ids('switch')
 
 
 async def test_switches(hass):
@@ -111,9 +111,10 @@ async def test_switches(hass):
     await hass.services.async_call('switch', 'turn_on', {
         'entity_id': 'switch.model_0_doorbell'
     }, blocking=True)
-    device.api.vapix.ports['0'].action.assert_called_with('/')
 
     await hass.services.async_call('switch', 'turn_off', {
         'entity_id': 'switch.model_0_doorbell'
     }, blocking=True)
-    device.api.vapix.ports['0'].action.assert_called_with('\\')
+
+    assert device.api.vapix.ports['0'].action.call_args_list == \
+        [mock_call('/'), mock_call('\\')]

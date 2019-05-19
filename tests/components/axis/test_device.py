@@ -125,7 +125,7 @@ async def test_device_reset(hass):
     await axis_device.async_reset()
 
     assert len(api.stop.mock_calls) == 1
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all()) == 0
     assert len(axis_device.listeners) == 0
 
 

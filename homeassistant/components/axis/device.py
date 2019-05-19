@@ -176,7 +176,7 @@ class AxisNetworkDevice:
                 for platform in ['binary_sensor', 'switch']
             ]
 
-        asyncio.gather(*platform_tasks)
+        await asyncio.gather(*platform_tasks)
 
         for unsub_dispatcher in self.listeners:
             unsub_dispatcher()
