@@ -183,6 +183,23 @@ def test_setup_with_config(hass, aioclient_mock):
 
 
 @asyncio.coroutine
+def test_setup_with_nostation(hass, aioclient_mock):
+    """Test with the configuration."""
+    aioclient_mock.get(
+        STAURL.format(VALID_CONFIG_KJFK_MINIMAL['sensor']['latitude'],
+                      VALID_CONFIG_KJFK_MINIMAL['sensor']['longitude']),
+        text=load_fixture('noaaweather-sta-nosta.json'))
+    aioclient_mock.get(
+        OBSURL.format("KJFK"),
+        text=load_fixture('noaaweather-obs-valid.json'),
+        params={'limit': 5})
+
+    with raises(ConfigEntryNotReady):
+        yield from noaaweather.async_setup_platform(
+            hass, VALID_CONFIG_KJFK_MINIMAL['sensor'], lambda _: None)
+
+
+@asyncio.coroutine
 def test_setup_minimal(hass, aioclient_mock):
     """Test for minimal weather sensor config.
 
@@ -207,6 +224,46 @@ def test_setup_minimal(hass, aioclient_mock):
     assert state.attributes.get('unit_of_measurement') == TEMP_CELSIUS
     assert state.attributes.get('friendly_name') == \
         "NOAA Weather Temperature"
+
+
+@asyncio.coroutine
+def test_sta_badjson(hass, aioclient_mock):
+    """Test for minimal weather sensor config.
+
+    This test case uses a station response with bad JSON syntax.
+    """
+    aioclient_mock.get(
+        STAURL.format(VALID_CONFIG_KJFK_MINIMAL['sensor']['latitude'],
+                      VALID_CONFIG_KJFK_MINIMAL['sensor']['longitude']),
+        text=load_fixture('noaaweather-sta-badjson.json'))
+    aioclient_mock.get(
+        OBSURL.format("KJFK"),
+        text=load_fixture('noaaweather-obs-valid.json'),
+        params={'limit': 5})
+
+    with raises(PlatformNotReady):
+        yield from noaaweather.async_setup_platform(
+            hass, VALID_CONFIG_KJFK_MINIMAL['sensor'], lambda _: None)
+
+
+@asyncio.coroutine
+def test_obs_badjson(hass, aioclient_mock):
+    """Test for minimal weather sensor config.
+
+    This test case uses a observation response with bad JSON syntax.
+    """
+    aioclient_mock.get(
+        STAURL.format(VALID_CONFIG_KJFK_MINIMAL['sensor']['latitude'],
+                      VALID_CONFIG_KJFK_MINIMAL['sensor']['longitude']),
+        text=load_fixture('noaaweather-sta-valid.json'))
+    aioclient_mock.get(
+        OBSURL.format("KJFK"),
+        text=load_fixture('noaaweather-obs-badjson.json'),
+        params={'limit': 5})
+
+    with raises(PlatformNotReady):
+        yield from noaaweather.async_setup_platform(
+            hass, VALID_CONFIG_KJFK_MINIMAL['sensor'], lambda _: None)
 
 
 @asyncio.coroutine

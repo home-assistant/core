@@ -1,0 +1,973 @@
+{
+    "@context": [
+        "https://raw.githubusercontent.com/geojson/geojson-ld/master/contexts/geojson-base.jsonld",
+        {
+            "wx": "https://api.weather.gov/ontology#",
+            "s": "https://schema.org/",
+            "geo": "http://www.opengis.net/ont/geosparql#",
+            "unit": "http://codes.wmo.int/common/unit/",
+            "@vocab": "https://api.weather.gov/ontology#",
+            "geometry": {
+                "@id": "s:GeoCoordinates",
+                "@type": "geo:wktLiteral"
+            },
+            "city": "s:addressLocality",
+            "state": "s:addressRegion",
+            "distance": {
+                "@id": "s:Distance",
+                "@type": "s:QuantitativeValue"
+            },
+            "bearing": {
+                "@type": "s:QuantitativeValue"
+            },
+            "value": {
+                "@id": "s:value"
+            },
+            "unitCode": {
+                "@id": "s:unitCode",
+                "@type": "@id"
+            },
+            "forecastOffice": {
+                "@type": "@id"
+            },
+            "forecastGridData": {
+                "@type": "@id"
+            },
+            "publicZone": {
+                "@type": "@id"
+            },
+            "county": {
+                "@type": "@id"
+            },
+            "observationStations": {
+                "@container": "@list",
+                "@type": "@id"
+            }
+        }
+    ],
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "id": "https://api.weather.gov/stations/KJFK",
+            "type": "Feature"
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -73.763930000000002,
+                    40.639150000000001
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KJFK",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 3.048,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KJFK",
+                "name": "New York, Kennedy International Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KLGA",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -73.879999999999995,
+                    40.779170000000001
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KLGA",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 6.0960000000000001,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KLGA",
+                "name": "New York, La Guardia Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KNYC",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -73.966669899999999,
+                    40.783329999999999
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KNYC",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 46.9392,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KNYC",
+                "name": "New York City, Central Park",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KFRG",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -73.416390000000007,
+                    40.734430000000003
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KFRG",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 21.945600000000002,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KFRG",
+                "name": "Farmingdale - Republic Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KEWR",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.169439999999994,
+                    40.682499999999997
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KEWR",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 4.8768000000000002,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KEWR",
+                "name": "Newark, Newark International Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KTEB",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.056669999999997,
+                    40.858890000000002
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KTEB",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 2.1335999999999999,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KTEB",
+                "name": "Teterboro, Teterboro Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KHPN",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -73.704560000000001,
+                    41.062370000000001
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KHPN",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 111.86160000000001,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KHPN",
+                "name": "White Plains - Westchester County Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KCDW",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.283060000000006,
+                    40.876390000000001
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KCDW",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 52.120800000000003,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KCDW",
+                "name": "Caldwell, Essex County Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KMMU",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.416669999999996,
+                    40.799999999999997
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KMMU",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 56.997600000000006,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KMMU",
+                "name": "Morristown Municipal",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KISP",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -73.101669999999999,
+                    40.793889999999998
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KISP",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 29.8704,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KISP",
+                "name": "Islip, Long Island Mac Arthur Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KBLM",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.133330000000001,
+                    40.183329999999998
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KBLM",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 47.8536,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KBLM",
+                "name": "Belmar-Farmingdale",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KSMQ",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.668980000000005,
+                    40.624049900000003
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KSMQ",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 32.004000000000005,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KSMQ",
+                "name": "Somerville, Somerset Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KHWV",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -72.868889899999999,
+                    40.821669999999997
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KHWV",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 24.993600000000001,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KHWV",
+                "name": "Shirley, Brookhaven Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KBDR",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -73.126630000000006,
+                    41.164209999999997
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KBDR",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 0.9144000000000001,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KBDR",
+                "name": "Bridgeport, Sikorsky Memorial Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KNEL",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.352509999999995,
+                    40.036610000000003
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KNEL",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 25.908000000000001,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KNEL",
+                "name": "Lakehurst Naval Air Station",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KDXR",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -73.484440000000006,
+                    41.371670000000002
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KDXR",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 138.9888,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KDXR",
+                "name": "Danbury, Danbury Municipal Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KMJX",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.292000000000002,
+                    39.927
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KMJX",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 24.993600000000001,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KMJX",
+                "name": "Miller Air Park",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/K12N",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.7362799,
+                    41.009279900000003
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/K12N",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 178.00320000000002,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "K12N",
+                "name": "Andover, Aeroflex-Andover Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KFWN",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.62594,
+                    41.199249999999999
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KFWN",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 124.968,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KFWN",
+                "name": "Sussex, Sussex Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KTTN",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.816389999999998,
+                    40.276389999999999
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KTTN",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 64.00800000000001,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KTTN",
+                "name": "Trenton, Mercer County Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KWRI",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.599999999999994,
+                    40.016669999999998
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KWRI",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 41.148000000000003,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KWRI",
+                "name": "Mcguire Air Force Base",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KFOK",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -72.61927,
+                    40.850529999999999
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KFOK",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 10.058400000000001,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KFOK",
+                "name": "The Gabreski Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KSWF",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.099999999999994,
+                    41.5
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KSWF",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 149.9616,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KSWF",
+                "name": "Newburgh / Stewart",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KHVN",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -72.887219999999999,
+                    41.263890000000004
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KHVN",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 3.9624000000000001,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KHVN",
+                "name": "New Haven, Tweed-New Haven Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KMGJ",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.265000000000001,
+                    41.509169999999997
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KMGJ",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 110.94720000000001,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KMGJ",
+                "name": "Montgomery, Orange County Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KOXC",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -73.133330000000001,
+                    41.483330000000002
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KOXC",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 220.98000000000002,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KOXC",
+                "name": "Oxford, Waterbury-Oxford Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KPOU",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -73.884169999999997,
+                    41.626669999999997
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KPOU",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 49.987200000000001,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KPOU",
+                "name": "Poughkeepsie, Dutchess County Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KPNE",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -75.01361,
+                    40.078890000000001
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KPNE",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 35.9664,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KPNE",
+                "name": "Philadelphia, Northeast Philadelphia Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KMMK",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -72.827780000000004,
+                    41.509720000000002
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KMMK",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 31.089600000000001,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KMMK",
+                "name": "Meriden, Meriden Markham Municipal Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KMSV",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.799999999999997,
+                    41.700000000000003
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KMSV",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 427.93920000000003,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KMSV",
+                "name": "Monticello, Sullivan County International Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KHFD",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -72.651669999999996,
+                    41.734999999999999
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KHFD",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 4.8768000000000002,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KHFD",
+                "name": "Hartford, Hartford-Brainard Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KMTP",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -71.923330000000007,
+                    41.073059999999998
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KMTP",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 2.1335999999999999,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KMTP",
+                "name": "Montauk, Montauk Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KGON",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -72.049440000000004,
+                    41.327500000000001
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KGON",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 3.048,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KGON",
+                "name": "Groton / New London, Groton / New London Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KBDL",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -72.682500000000005,
+                    41.93806
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KBDL",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 53.035200000000003,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KBDL",
+                "name": "Windsor Locks, Bradley International Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KIJD",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -72.183610000000002,
+                    41.74194
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KIJD",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 74.980800000000002,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KIJD",
+                "name": "Willimantic, Windham Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KWST",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -71.79889,
+                    41.349719999999998
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KWST",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 24.0792,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KWST",
+                "name": "Westerly, Westerly State Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KBAF",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -72.712779999999995,
+                    42.15972
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KBAF",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 81.991200000000006,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KBAF",
+                "name": "Westfield, Barnes Municipal Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KBID",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -71.578729899999999,
+                    41.169469900000003
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KBID",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 31.089600000000001,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KBID",
+                "name": "Block Island State Airport",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KCEF",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -72.533330000000007,
+                    42.200000000000003
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KCEF",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 74.980800000000002,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KCEF",
+                "name": "Chicopee Falls / Westover Air Force Base",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KORH",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -71.873059999999995,
+                    42.270560000000003
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KORH",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 306.93360000000001,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "KORH",
+                "name": "Worcester, Worcester Regional Airport",
+                "timeZone": "America/New_York"
+            }
+        }
+    ],
+    "observationStations": [
+        "https://api.weather.gov/stations/KJFK",
+        "https://api.weather.gov/stations/KLGA",
+        "https://api.weather.gov/stations/KNYC",
+        "https://api.weather.gov/stations/KFRG",
+        "https://api.weather.gov/stations/KEWR",
+        "https://api.weather.gov/stations/KTEB",
+        "https://api.weather.gov/stations/KHPN",
+        "https://api.weather.gov/stations/KCDW",
+        "https://api.weather.gov/stations/KMMU",
+        "https://api.weather.gov/stations/KISP",
+        "https://api.weather.gov/stations/KBLM",
+        "https://api.weather.gov/stations/KSMQ",
+        "https://api.weather.gov/stations/KHWV",
+        "https://api.weather.gov/stations/KBDR",
+        "https://api.weather.gov/stations/KNEL",
+        "https://api.weather.gov/stations/KDXR",
+        "https://api.weather.gov/stations/KMJX",
+        "https://api.weather.gov/stations/K12N",
+        "https://api.weather.gov/stations/KFWN",
+        "https://api.weather.gov/stations/KTTN",
+        "https://api.weather.gov/stations/KWRI",
+        "https://api.weather.gov/stations/KFOK",
+        "https://api.weather.gov/stations/KSWF",
+        "https://api.weather.gov/stations/KHVN",
+        "https://api.weather.gov/stations/KMGJ",
+        "https://api.weather.gov/stations/KOXC",
+        "https://api.weather.gov/stations/KPOU",
+        "https://api.weather.gov/stations/KPNE",
+        "https://api.weather.gov/stations/KMMK",
+        "https://api.weather.gov/stations/KMSV",
+        "https://api.weather.gov/stations/KHFD",
+        "https://api.weather.gov/stations/KMTP",
+        "https://api.weather.gov/stations/KGON",
+        "https://api.weather.gov/stations/KBDL",
+        "https://api.weather.gov/stations/KIJD",
+        "https://api.weather.gov/stations/KWST",
+        "https://api.weather.gov/stations/KBAF",
+        "https://api.weather.gov/stations/KBID",
+        "https://api.weather.gov/stations/KCEF",
+        "https://api.weather.gov/stations/KORH"
+    ]
+}

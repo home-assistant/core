@@ -1,0 +1,93 @@
+{
+    "@context": [
+        "https://raw.githubusercontent.com/geojson/geojson-ld/master/contexts/geojson-base.jsonld",
+        {
+            "wx": "https://api.weather.gov/ontology#",
+            "s": "https://schema.org/",
+            "geo": "http://www.opengis.net/ont/geosparql#",
+            "unit": "http://codes.wmo.int/common/unit/",
+            "@vocab": "https://api.weather.gov/ontology#",
+            "geometry": {
+                "@id": "s:GeoCoordinates",
+                "@type": "geo:wktLiteral"
+            },
+            "city": "s:addressLocality",
+            "state": "s:addressRegion",
+            "distance": {
+                "@id": "s:Distance",
+                "@type": "s:QuantitativeValue"
+            },
+            "bearing": {
+                "@type": "s:QuantitativeValue"
+            },
+            "value": {
+                "@id": "s:value"
+            },
+            "unitCode": {
+                "@id": "s:unitCode",
+                "@type": "@id"
+            },
+            "forecastOffice": {
+                "@type": "@id"
+            },
+            "forecastGridData": {
+                "@type": "@id"
+            },
+            "publicZone": {
+                "@type": "@id"
+            },
+            "county": {
+                "@type": "@id"
+            },
+            "observationStations": {
+                "@container": "@list",
+                "@type": "@id"
+            }
+        }
+    ],
+    "type": "FeatureCollection",
+    "features": [
+    ],
+    "observationStations": [
+        "https://api.weather.gov/stations/KJFK",
+        "https://api.weather.gov/stations/KLGA",
+        "https://api.weather.gov/stations/KNYC",
+        "https://api.weather.gov/stations/KFRG",
+        "https://api.weather.gov/stations/KEWR",
+        "https://api.weather.gov/stations/KTEB",
+        "https://api.weather.gov/stations/KHPN",
+        "https://api.weather.gov/stations/KCDW",
+        "https://api.weather.gov/stations/KMMU",
+        "https://api.weather.gov/stations/KISP",
+        "https://api.weather.gov/stations/KBLM",
+        "https://api.weather.gov/stations/KSMQ",
+        "https://api.weather.gov/stations/KHWV",
+        "https://api.weather.gov/stations/KBDR",
+        "https://api.weather.gov/stations/KNEL",
+        "https://api.weather.gov/stations/KDXR",
+        "https://api.weather.gov/stations/KMJX",
+        "https://api.weather.gov/stations/K12N",
+        "https://api.weather.gov/stations/KFWN",
+        "https://api.weather.gov/stations/KTTN",
+        "https://api.weather.gov/stations/KWRI",
+        "https://api.weather.gov/stations/KFOK",
+        "https://api.weather.gov/stations/KSWF",
+        "https://api.weather.gov/stations/KHVN",
+        "https://api.weather.gov/stations/KMGJ",
+        "https://api.weather.gov/stations/KOXC",
+        "https://api.weather.gov/stations/KPOU",
+        "https://api.weather.gov/stations/KPNE",
+        "https://api.weather.gov/stations/KMMK",
+        "https://api.weather.gov/stations/KMSV",
+        "https://api.weather.gov/stations/KHFD",
+        "https://api.weather.gov/stations/KMTP",
+        "https://api.weather.gov/stations/KGON",
+        "https://api.weather.gov/stations/KBDL",
+        "https://api.weather.gov/stations/KIJD",
+        "https://api.weather.gov/stations/KWST",
+        "https://api.weather.gov/stations/KBAF",
+        "https://api.weather.gov/stations/KBID",
+        "https://api.weather.gov/stations/KCEF",
+        "https://api.weather.gov/stations/KORH"
+    ]
+}
