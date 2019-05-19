@@ -23,7 +23,9 @@ from homeassistant.const import (
     __version__, CONF_CUSTOMIZE, CONF_CUSTOMIZE_DOMAIN, CONF_CUSTOMIZE_GLOB,
     CONF_WHITELIST_EXTERNAL_DIRS, CONF_AUTH_PROVIDERS, CONF_AUTH_MFA_MODULES,
     CONF_TYPE, CONF_ID)
-from homeassistant.core import callback, DOMAIN as CONF_CORE, HomeAssistant
+from homeassistant.core import (
+    DOMAIN as CONF_CORE, SOURCE_DISCOVERED, SOURCE_YAML, HomeAssistant,
+    callback)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import (
     Integration, async_get_integration, IntegrationNotFound
@@ -49,10 +51,6 @@ DATA_CUSTOMIZE = 'hass_customize'
 FILE_MIGRATION = (
     ('ios.conf', '.ios.conf'),
 )
-
-SOURCE_DISCOVERED = 'discovered'
-SOURCE_STORAGE = 'storage'
-SOURCE_YAML = 'yaml'
 
 DEFAULT_CORE_CONFIG = (
     # Tuples (attribute, default, auto detect property, description)
@@ -531,7 +529,8 @@ async def async_process_ha_core_config(
         if key in config:
             setattr(hac, attr, config[key])
 
-    hac.set_time_zone(config.get(CONF_TIME_ZONE))
+    if CONF_TIME_ZONE in config:
+        hac.set_time_zone(config[CONF_TIME_ZONE])
 
     # Init whitelist external dir
     hac.whitelist_external_dirs = {hass.config.path('www')}

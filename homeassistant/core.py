@@ -27,12 +27,12 @@ import attr
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_DOMAIN, ATTR_FRIENDLY_NAME, ATTR_NOW, ATTR_SERVICE,
-    ATTR_SERVICE_DATA, ATTR_SECONDS, CONF_UNIT_SYSTEM_IMPERIAL,
-    EVENT_CALL_SERVICE, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_CLOSE, EVENT_SERVICE_REMOVED,
-    EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED, EVENT_TIMER_OUT_OF_SYNC, MATCH_ALL, __version__)
+    ATTR_DOMAIN, ATTR_FRIENDLY_NAME, ATTR_NOW, ATTR_SERVICE, ATTR_SERVICE_DATA,
+    ATTR_SECONDS, CONF_UNIT_SYSTEM_IMPERIAL, EVENT_CALL_SERVICE,
+    EVENT_CORE_CONFIG_UPDATE, EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_CLOSE, EVENT_SERVICE_REMOVED,
+    EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED,
+    EVENT_TIMER_OUT_OF_SYNC, MATCH_ALL, __version__)
 from homeassistant import loader
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError, InvalidStateError,
@@ -62,10 +62,13 @@ CORE_STORAGE_VERSION = 1
 
 DOMAIN = 'homeassistant'
 
-EVENT_CORE_CONFIG_UPDATE = 'core_config_updated'
-
 # How long we wait for the result of a service call
 SERVICE_CALL_LIMIT = 10  # seconds
+
+# Source of core configuration
+SOURCE_DISCOVERED = 'discovered'
+SOURCE_STORAGE = 'storage'
+SOURCE_YAML = 'yaml'
 
 # How long to wait till things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
@@ -1265,21 +1268,19 @@ class Config:
             'config_source': self.config_source
         }
 
-    def set_time_zone(self, time_zone_str: Optional[str]) -> None:
+    def set_time_zone(self, time_zone_str: str) -> None:
         """Help to set the time zone."""
-        if time_zone_str is None:
-            return
-
         time_zone = dt_util.get_time_zone(time_zone_str)
 
         if time_zone:
             self.time_zone = time_zone
             dt_util.set_default_time_zone(time_zone)
         else:
-            _LOGGER.error("Received invalid time zone %s", time_zone_str)
+            raise ValueError(
+                "Received invalid time zone {}".format(time_zone_str))
 
     @callback
-    def _update(self,
+    def _update(self, *,
                 source: str,
                 latitude: Optional[float] = None,
                 longitude: Optional[float] = None,
@@ -1308,37 +1309,26 @@ class Config:
         if time_zone is not None:
             self.set_time_zone(time_zone)
 
-    async def update(self,
-                     latitude: Optional[float] = None,
-                     longitude: Optional[float] = None,
-                     elevation: Optional[int] = None,
-                     unit_system: Optional[str] = None,
-                     location_name: Optional[str] = None,
-                     time_zone: Optional[str] = None) -> None:
+    async def update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary.
 
         Async friendly.
         """
-        from homeassistant.config import SOURCE_STORAGE
-        self._update(SOURCE_STORAGE, latitude, longitude, elevation,
-                     unit_system, location_name, time_zone)
+        self._update(source=SOURCE_STORAGE, **kwargs)
         await self.store()
         self.hass.bus.async_fire(
-            EVENT_CORE_CONFIG_UPDATE
+            EVENT_CORE_CONFIG_UPDATE, kwargs
         )
 
     async def load(self) -> None:
         """Load [homeassistant] core config."""
-        from homeassistant.config import SOURCE_STORAGE
         store = self.hass.helpers.storage.Store(
             CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True)
         data = await store.async_load()
         if not data:
             return
 
-        self._update(SOURCE_STORAGE, data['latitude'], data['longitude'],
-                     data['elevation'], data['unit_system'],
-                     data['location_name'], data['time_zone'])
+        self._update(source=SOURCE_STORAGE, **data)
 
     async def store(self) -> None:
         """Store [homeassistant] core config."""

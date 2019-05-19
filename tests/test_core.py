@@ -23,7 +23,8 @@ from homeassistant.const import (
     __version__, EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, CONF_UNIT_SYSTEM,
     ATTR_NOW, EVENT_TIME_CHANGED, EVENT_TIMER_OUT_OF_SYNC, ATTR_SECONDS,
     EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_CLOSE,
-    EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED, EVENT_CALL_SERVICE)
+    EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED, EVENT_CALL_SERVICE,
+    EVENT_CORE_CONFIG_UPDATE)
 
 from tests.common import get_test_home_assistant, async_mock_service
 
@@ -946,6 +947,32 @@ class TestConfig(unittest.TestCase):
 
             with pytest.raises(AssertionError):
                 self.config.is_allowed_path(None)
+
+    def test_event_on_update(self):
+        """Test that event is fired on update."""
+        events = []
+
+        @ha.callback
+        def callback(event):
+            events.append(event)
+
+        self.hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, callback)
+
+        assert self.config.latitude != 12
+
+        run_coroutine_threadsafe(
+            self.config.update(latitude=12), self.hass.loop).result()
+        self.hass.block_till_done()
+
+        assert self.config.latitude == 12
+        assert len(events) == 1
+        assert events[0].data == {'latitude': 12}
+
+
+def test_bad_timezone_raises_value_error(hass):
+    """Test bad timezone raises ValueError."""
+    with pytest.raises(ValueError):
+        hass.config.set_time_zone('not_a_timezone')
 
 
 @patch('homeassistant.core.monotonic')
