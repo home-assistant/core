@@ -82,7 +82,7 @@ class DeviceTracker:
             else defaults.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
         self.defaults = defaults
         self.group = None
-        self._is_updating = asyncio.Lock(loop=hass.loop)
+        self._is_updating = asyncio.Lock()
 
         for dev in devices:
             if self.devices[dev.dev_id] is not dev:
@@ -229,7 +229,7 @@ class DeviceTracker:
                     async_init_single_device(device)))
 
         if tasks:
-            await asyncio.wait(tasks, loop=self.hass.loop)
+            await asyncio.wait(tasks)
 
 
 class Device(RestoreEntity):

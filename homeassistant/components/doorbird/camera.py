@@ -81,7 +81,7 @@ class DoorBirdCamera(Camera):
 
         try:
             websession = async_get_clientsession(self.hass)
-            with async_timeout.timeout(_TIMEOUT, loop=self.hass.loop):
+            with async_timeout.timeout(_TIMEOUT):
                 response = await websession.get(self._url)
 
             self._last_image = await response.read()

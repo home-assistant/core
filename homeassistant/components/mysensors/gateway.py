@@ -124,7 +124,7 @@ async def _get_gateway(hass, config, gateway_conf, persistence_file):
                 await hass.async_add_job(is_socket_address, device)
                 # valid ip address
                 gateway = mysensors.AsyncTCPGateway(
-                    device, port=tcp_port, loop=hass.loop, event_callback=None,
+                    device, port=tcp_port, event_callback=None, loop=hass.loop,
                     persistence=persistence, persistence_file=persistence_file,
                     protocol_version=version)
             except vol.Invalid:
@@ -151,9 +151,9 @@ async def finish_setup(hass, hass_config, gateways):
         start_tasks.append(_gw_start(hass, gateway))
     if discover_tasks:
         # Make sure all devices and platforms are loaded before gateway start.
-        await asyncio.wait(discover_tasks, loop=hass.loop)
+        await asyncio.wait(discover_tasks)
     if start_tasks:
-        await asyncio.wait(start_tasks, loop=hass.loop)
+        await asyncio.wait(start_tasks)
 
 
 async def _discover_persistent_devices(hass, hass_config, gateway):
@@ -172,7 +172,7 @@ async def _discover_persistent_devices(hass, hass_config, gateway):
         tasks.append(discover_mysensors_platform(
             hass, hass_config, platform, dev_ids))
     if tasks:
-        await asyncio.wait(tasks, loop=hass.loop)
+        await asyncio.wait(tasks)
 
 
 async def _gw_start(hass, gateway):
@@ -196,7 +196,7 @@ async def _gw_start(hass, gateway):
     hass.data[gateway_ready_key] = gateway_ready
 
     try:
-        with async_timeout.timeout(GATEWAY_READY_TIMEOUT, loop=hass.loop):
+        with async_timeout.timeout(GATEWAY_READY_TIMEOUT):
             await gateway_ready
     except asyncio.TimeoutError:
         _LOGGER.warning(

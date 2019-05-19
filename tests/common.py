@@ -102,7 +102,7 @@ def get_test_home_assistant():
 
     def start_hass(*mocks):
         """Start hass."""
-        run_coroutine_threadsafe(hass.async_start(), loop=hass.loop).result()
+        run_coroutine_threadsafe(hass.async_start()).result()
 
     def stop_hass():
         """Stop hass."""

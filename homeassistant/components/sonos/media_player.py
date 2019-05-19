@@ -63,7 +63,7 @@ class SonosData:
     def __init__(self, hass):
         """Initialize the data."""
         self.entities = []
-        self.topology_condition = asyncio.Condition(loop=hass.loop)
+        self.topology_condition = asyncio.Condition()
 
 
 async def async_setup_platform(hass,

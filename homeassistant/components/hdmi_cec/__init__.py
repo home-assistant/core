@@ -172,7 +172,7 @@ def setup(hass: HomeAssistant, base_config):
         adapter = TcpAdapter(host, name=display_name, activate_source=False)
     else:
         adapter = CecAdapter(name=display_name[:12], activate_source=False)
-    hdmi_network = HDMINetwork(adapter, loop=loop)
+    hdmi_network = HDMINetwork(adapter, loop)
 
     def _volume(call):
         """Increase/decrease volume and mute/unmute system."""

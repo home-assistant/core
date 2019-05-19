@@ -190,7 +190,7 @@ async def get_device(hass, config):
     import axis
 
     device = axis.AxisDevice(
-        loop=hass.loop, host=config[CONF_HOST],
+        host=config[CONF_HOST],
         username=config[CONF_USERNAME],
         password=config[CONF_PASSWORD],
         port=config[CONF_PORT], web_proto='http')

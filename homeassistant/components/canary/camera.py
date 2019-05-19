@@ -79,7 +79,7 @@ class CanaryCamera(Camera):
         image = await asyncio.shield(ffmpeg.get_image(
             self._live_stream_session.live_stream_url,
             output_format=IMAGE_JPEG,
-            extra_cmd=self._ffmpeg_arguments), loop=self.hass.loop)
+            extra_cmd=self._ffmpeg_arguments))
         return image
 
     async def handle_async_mjpeg_stream(self, request):
@@ -88,7 +88,7 @@ class CanaryCamera(Camera):
             return
 
         from haffmpeg.camera import CameraMjpeg
-        stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
+        stream = CameraMjpeg(self._ffmpeg.binary)
         await stream.open_camera(
             self._live_stream_session.live_stream_url,
             extra_cmd=self._ffmpeg_arguments)

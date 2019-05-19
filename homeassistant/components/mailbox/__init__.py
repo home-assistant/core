@@ -82,7 +82,7 @@ async def async_setup(hass, config):
                    in config_per_platform(config, DOMAIN)]
 
     if setup_tasks:
-        await asyncio.wait(setup_tasks, loop=hass.loop)
+        await asyncio.wait(setup_tasks)
 
     async def async_platform_discovered(platform, info):
         """Handle for discovered platform."""
@@ -243,7 +243,7 @@ class MailboxMediaView(MailboxView):
 
         hass = request.app['hass']
         with suppress(asyncio.CancelledError, asyncio.TimeoutError):
-            with async_timeout.timeout(10, loop=hass.loop):
+            with async_timeout.timeout(10):
                 try:
                     stream = await mailbox.async_get_media(msgid)
                 except StreamError as err:

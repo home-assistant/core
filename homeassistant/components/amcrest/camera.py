@@ -144,7 +144,7 @@ class AmcrestCam(Camera):
         from haffmpeg.camera import CameraMjpeg
 
         streaming_url = self._api.rtsp_url(typeno=self._resolution)
-        stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
+        stream = CameraMjpeg(self._ffmpeg.binary)
         await stream.open_camera(
             streaming_url, extra_cmd=self._ffmpeg_arguments)
 
