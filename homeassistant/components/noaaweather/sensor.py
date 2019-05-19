@@ -323,7 +323,7 @@ async def get_obs_station_list(nws) -> List[str]:
         _LOGGER.error("Error getting station list for %s: %s",
                       nws.latlon, status)
         raise PlatformNotReady
-    except aiohttp.ClientResponseError as status:
+    except aiohttp.ClientError as status:
         #
         # Check if the response error is a 404 (not found) or something
         # else. A 404 indicates the location is outside the NOAA/NWS
@@ -338,15 +338,6 @@ async def get_obs_station_list(nws) -> List[str]:
         # ready.
         #
         _LOGGER.error("Error getting station list for %s: %s",
-                      nws.latlon, status)
-        raise PlatformNotReady
-    except aiohttp.ClientError as status:
-        #
-        # Here with some type of error that is not due
-        # to an HTTP response.  This most likely is due to some intermittent
-        # issue with either the API server or the Internet connection to it,
-        # so try again later
-        _LOGGER.error("Error accessing API for %s: %s",
                       nws.latlon, status)
         raise PlatformNotReady
     #
@@ -474,12 +465,6 @@ def unit_convert(variable, desiredunit) -> float:
     from unit it is supplied in to the standard metric or imperial
     value used for the measurement.
     """
-    #
-    # No conversion needed if no value
-    #
-    if variable['value'] is None:
-        return None
-
     result = variable['value']
     #
     # We check if a unit is supplied, and if so we try to covert
@@ -801,12 +786,12 @@ class NOAACurrentSensor(Entity):
     @property
     def device_state_attributes(self) -> Any:
         """Return the state attributes of the device."""
-        if self._condition not in self._noaadata.data:
-            return None
-        attr = {}
-        attr[ATTR_ATTRIBUTION] = ATTRIBUTION
-        attr[ATTR_LAST_UPDATE] = self._noaadata.datatime[self._condition]
-        attr[ATTR_SITE_ID] = self._noaadata.stationcode
+        attr = None
+        if self._condition in self._noaadata.data:
+            attr = {}
+            attr[ATTR_ATTRIBUTION] = ATTRIBUTION
+            attr[ATTR_LAST_UPDATE] = self._noaadata.datatime[self._condition]
+            attr[ATTR_SITE_ID] = self._noaadata.stationcode
         return attr
 
     @property
@@ -984,10 +969,9 @@ class NOAACurrentData(Entity):
         # for some of the measurements that are not returned in the
         # individual measurement item.
         #
+        metar = None
         if 'rawMessage' in obsprop:
-            if obsprop['rawMessage'] is None:
-                metar = None
-            else:
+            if obsprop['rawMessage'] is not None:
                 #
                 # parse the METAR message so that we can use the values
                 # if not in individual measurement item.
@@ -995,7 +979,7 @@ class NOAACurrentData(Entity):
                 try:
                     metar = Metar.Metar(obsprop['rawMessage'])
                 except Metar.ParserError:
-                    metar = None
+                    pass
 
         #
         # Now loop through all observation values returned and set the
@@ -1069,8 +1053,6 @@ class NOAACurrentData(Entity):
                     # value for windSpeed.
                     #
                     if 'windSpeed' not in obsprop:
-                        continue
-                    if 'qualityControl' not in obsprop[condition]:
                         continue
                     if obsprop['windSpeed']['qualityControl'] == 'qc:Z' and \
                             get_metar_value(metar, 'windSpeed') is None:
