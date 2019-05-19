@@ -22,7 +22,7 @@ CONF_MUTABLE = 'mutable'
 
 RESOURCES = {
     'FUEL_LEVEL_PERC': ('sensor', 'Fuel level', 'mdi:fuel', '%'),
-    'DISTANCE_TO_EMPTY_FUEL': ('sensor', 'Range', 'mdi:car', 'km')
+    'DISTANCE_TO_EMPTY_FUEL': ('sensor', 'Range', 'mdi:road', 'km')
 }
 
 SIGNAL_STATE_UPDATED = '{}.updated'.format(DOMAIN)
@@ -133,6 +133,13 @@ class JLREntity(Entity):
         self._vin = vin
         self._attribute = attribute
         self._state.entities[self._vin].append(self)
+        self._val = self._get_vehicle_status(self.vehicle)
+
+    def _get_vehicle_status(self, vehicle):
+        dict_only = {}
+        for el in vehicle.get_status().get('vehicleStatus'):
+            dict_only[el.get('key')] = el.get('value')
+        return dict_only
 
     @property
     def _state(self):

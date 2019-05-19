@@ -19,9 +19,9 @@ class JLRSensor(JLREntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        _LOGGER.debug('Getting state of %s sensor' % self._attribute)
+        _LOGGER.info('Getting state of %s sensor' % self._attribute)
 
-        val = self._get_vehicle_status(self.vehicle)[self._attribute]
+        val = self._val[self._attribute]
         if val is None:
             return val
         if self._attribute in ['last_connected', 'service_inspection', 'oil_inspection']:
@@ -49,3 +49,6 @@ class JLRSensor(JLREntity):
     def available(self):
         """Return True if entity is available."""
         return True
+
+    async def async_update(self):
+        self._val = self._get_vehicle_status(self.vehicle)
