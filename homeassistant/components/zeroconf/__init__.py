@@ -4,6 +4,9 @@ import logging
 import ipaddress
 import voluptuous as vol
 
+from aiozeroconf import (
+    ServiceBrowser, ServiceInfo, ServiceStateChange, Zeroconf)
+
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, __version__)
 from homeassistant.generated import zeroconf as manifest
 
@@ -25,8 +28,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up Zeroconf and make Home Assistant discoverable."""
-    from aiozeroconf import Zeroconf, ServiceBrowser, ServiceInfo
-
     zeroconf_name = '{}.{}'.format(hass.config.location_name, ZEROCONF_TYPE)
 
     params = {
@@ -58,8 +59,6 @@ async def async_setup(hass, config):
 
     def service_update(_, service_type, name, state_change):
         """Service state changed."""
-        from aiozeroconf import ServiceStateChange
-
         if state_change is ServiceStateChange.Added:
             hass.async_create_task(new_service(service_type, name))
 
