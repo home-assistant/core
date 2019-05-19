@@ -346,7 +346,7 @@ class HomeAssistant:
     def block_till_done(self) -> None:
         """Block till all pending work is done."""
         run_coroutine_threadsafe(
-            self.async_block_till_done()).result()
+            self.async_block_till_done(), self.loop).result()
 
     async def async_block_till_done(self) -> None:
         """Block till all pending work is done."""
