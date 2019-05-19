@@ -6,7 +6,7 @@ from . import JLREntity, RESOURCES
 _LOGGER = logging.getLogger(__name__)
 
 
-def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Volkswagen sensors."""
     if discovery_info is None:
         return

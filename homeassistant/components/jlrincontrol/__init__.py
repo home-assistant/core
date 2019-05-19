@@ -48,20 +48,6 @@ async def async_setup(hass, config):
 
     connection = jlrpy.Connection(username, password)
 
-    def format_nicely(raw_data):
-        dict_only = {}
-        for el in raw_data:
-            dict_only[el.get('key')] = el.get('value')
-        return dict_only
-
-    def get_info(vehicle):
-        """Load vehicle"""
-        __LOGGER.info("cccccccc")
-        info = vehicle.get_status()
-        vehicle_status = format_nicely(info.get('vehicleStatus'))
-
-        # hass.states.async_set('jlrtest.fuel_level', vehicle_status.get('FUEL_LEVEL_PERC'))
-
     def discover_vehicle(vehicle):
         state.entities[vehicle.vin] = []
 
