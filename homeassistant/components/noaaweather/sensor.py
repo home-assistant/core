@@ -80,6 +80,8 @@ from datetime import timedelta
 import logging
 from typing import Dict, List, Union, Any
 
+from json import JSONDecodeError
+
 import aiohttp
 from astral import Location
 import voluptuous as vol
@@ -312,6 +314,15 @@ async def get_obs_station_list(nws) -> List[str]:
         _LOGGER.error("Error getting station list for %s: %s",
                       nws.latlon, status)
         return None
+    except JSONDecodeError as status:
+        # Here when response could not be decoded as valid JSON.
+        # Likely the web server connection failed before all
+        # data was received, or some other issue with the
+        # web server.  We treat this as something to
+        # retry
+        _LOGGER.error("Error getting station list for %s: %s",
+                      nws.latlon, status)
+        raise PlatformNotReady
     except aiohttp.ClientResponseError as status:
         #
         # Check if the response error is a 404 (not found) or something
@@ -355,6 +366,10 @@ async def get_obs_for_station(nws, errorstate) -> Dict:
     try:
         res = await nws.observations()
     except pynws.NwsError as status:
+        if not errorstate:
+            _LOGGER.error("Error getting observations for station %s - %s",
+                          nws.station, status)
+    except JSONDecodeError as status:
         if not errorstate:
             _LOGGER.error("Error getting observations for station %s - %s",
                           nws.station, status)
