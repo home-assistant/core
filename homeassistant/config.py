@@ -30,7 +30,7 @@ from homeassistant.loader import (
 )
 from homeassistant.util.yaml import load_yaml, SECRET_YAML
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import dt as date_util, location as loc_util
+from homeassistant.util import location as loc_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers import config_per_platform, extract_domain_configs
@@ -477,20 +477,6 @@ def _format_config_error(ex: vol.Invalid, domain: str, config: Dict) -> str:
     return message
 
 
-def _set_time_zone(hass: HomeAssistant, time_zone_str: Optional[str]) -> None:
-    """Help to set the time zone."""
-    if time_zone_str is None:
-        return
-
-    time_zone = date_util.get_time_zone(time_zone_str)
-
-    if time_zone:
-        hass.config.time_zone = time_zone
-        date_util.set_default_time_zone(time_zone)
-    else:
-        _LOGGER.error("Received invalid time zone %s", time_zone_str)
-
-
 async def async_process_ha_core_config(
         hass: HomeAssistant, config: Dict,
         api_password: Optional[str] = None,
@@ -545,7 +531,7 @@ async def async_process_ha_core_config(
         if key in config:
             setattr(hac, attr, config[key])
 
-    _set_time_zone(hass, config.get(CONF_TIME_ZONE))
+    hac.set_time_zone(config.get(CONF_TIME_ZONE))
 
     # Init whitelist external dir
     hac.whitelist_external_dirs = {hass.config.path('www')}
@@ -626,7 +612,7 @@ async def async_process_ha_core_config(
             discovered.append(('name', info.city))
 
         if hac.time_zone is None:
-            _set_time_zone(hass, info.time_zone)
+            hac.set_time_zone(info.time_zone)
             discovered.append(('time_zone', info.time_zone))
 
     if hac.elevation is None and hac.latitude is not None and \

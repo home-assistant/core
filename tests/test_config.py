@@ -474,10 +474,6 @@ async def test_override_stored_configuration(hass, hass_storage):
 
 async def test_loading_configuration(hass):
     """Test loading core config onto hass object."""
-    hass.config = mock.Mock()
-    hass.config.load.return_value = asyncio.Future()
-    hass.config.load.return_value.set_result(None)
-
     await config_util.async_process_ha_core_config(hass, {
         'latitude': 60,
         'longitude': 50,
@@ -501,10 +497,6 @@ async def test_loading_configuration(hass):
 
 async def test_loading_configuration_temperature_unit(hass):
     """Test backward compatibility when loading core config."""
-    hass.config = mock.Mock()
-    hass.config.load.return_value = asyncio.Future()
-    hass.config.load.return_value.set_result(None)
-
     await config_util.async_process_ha_core_config(hass, {
         'latitude': 60,
         'longitude': 50,

@@ -1265,35 +1265,66 @@ class Config:
             'config_source': self.config_source
         }
 
-    def _update(self, values: Dict, source: str) -> None:
+    def set_time_zone(self, time_zone_str: Optional[str]) -> None:
+        """Help to set the time zone."""
+        if time_zone_str is None:
+            return
+
+        time_zone = dt_util.get_time_zone(time_zone_str)
+
+        if time_zone:
+            self.time_zone = time_zone
+            dt_util.set_default_time_zone(time_zone)
+        else:
+            _LOGGER.error("Received invalid time zone %s", time_zone_str)
+
+    @callback
+    def _update(self,
+                source: str,
+                latitude: Optional[float] = None,
+                longitude: Optional[float] = None,
+                elevation: Optional[int] = None,
+                unit_system: Optional[str] = None,
+                location_name: Optional[str] = None,
+                time_zone: Optional[str] = None) -> None:
         """Update the configuration from a dictionary.
 
         Async friendly.
         """
-        from homeassistant.config import _set_time_zone
         self.config_source = source
-        self.latitude = values['latitude']
-        self.longitude = values['longitude']
-        self.elevation = values['elevation']
-        unit_system = values['unit_system']
-        if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
-            self.units = IMPERIAL_SYSTEM
-        else:
-            self.units = METRIC_SYSTEM
-        self.location_name = values['location_name']
-        _set_time_zone(self.hass, values['time_zone'])
+        if latitude is not None:
+            self.latitude = latitude
+        if longitude is not None:
+            self.longitude = longitude
+        if elevation is not None:
+            self.elevation = elevation
+        if unit_system is not None:
+            if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+                self.units = IMPERIAL_SYSTEM
+            else:
+                self.units = METRIC_SYSTEM
+        if location_name is not None:
+            self.location_name = location_name
+        if time_zone is not None:
+            self.set_time_zone(time_zone)
 
-    async def update(self, values: Dict) -> None:
+    async def update(self,
+                     latitude: Optional[float] = None,
+                     longitude: Optional[float] = None,
+                     elevation: Optional[int] = None,
+                     unit_system: Optional[str] = None,
+                     location_name: Optional[str] = None,
+                     time_zone: Optional[str] = None) -> None:
         """Update the configuration from a dictionary.
 
         Async friendly.
         """
         from homeassistant.config import SOURCE_STORAGE
-        self._update(values, SOURCE_STORAGE)
-        self.store()
+        self._update(SOURCE_STORAGE, latitude, longitude, elevation,
+                     unit_system, location_name, time_zone)
+        await self.store()
         self.hass.bus.async_fire(
-            EVENT_CORE_CONFIG_UPDATE,
-            values
+            EVENT_CORE_CONFIG_UPDATE
         )
 
     async def load(self) -> None:
@@ -1305,19 +1336,23 @@ class Config:
         if not data:
             return
 
-        self._update(data, SOURCE_STORAGE)
+        self._update(SOURCE_STORAGE, data['latitude'], data['longitude'],
+                     data['elevation'], data['unit_system'],
+                     data['location_name'], data['time_zone'])
 
     async def store(self) -> None:
         """Store [homeassistant] core config."""
-        config = self.as_dict()
+        time_zone = dt_util.UTC.zone
+        if self.time_zone and getattr(self.time_zone, 'zone'):
+            time_zone = getattr(self.time_zone, 'zone')
 
         data = {
-            'latitude': config['latitude'],
-            'longitude': config['longitude'],
-            'elevation': config['elevation'],
+            'latitude': self.latitude,
+            'longitude': self.longitude,
+            'elevation': self.elevation,
             'unit_system': self.units.name,
-            'location_name': config['location_name'],
-            'time_zone': config['time_zone'],
+            'location_name': self.location_name,
+            'time_zone': time_zone,
         }
 
         store = self.hass.helpers.storage.Store(
