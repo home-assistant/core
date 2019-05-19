@@ -13,10 +13,10 @@ from homeassistant.const import (
 from . import (
     EvoDevice,
     CONF_LOCATION_IDX)
-from .climate import (
-    EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER)
 from .const import (
-    DATA_EVOHOME, GWS, TCS)
+    DATA_EVOHOME,
+    EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER,
+    GWS, TCS)
 
 _LOGGER = logging.getLogger(__name__)
 

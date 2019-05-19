@@ -19,7 +19,9 @@ from . import (
     EvoDevice,
     CONF_LOCATION_IDX)
 from .const import (
-    DATA_EVOHOME, DOMAIN, GWS, TCS)
+    DATA_EVOHOME, DOMAIN,
+    EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER,
+    GWS, TCS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,11 +50,6 @@ HA_STATE_TO_TCS = {
     STATE_ECO: EVO_AUTOECO,
     STATE_OFF: EVO_HEATOFF
 }
-
-# the Zones' opmode; their state is usually 'inherited' from the TCS
-EVO_FOLLOW = 'FollowSchedule'
-EVO_TEMPOVER = 'TemporaryOverride'
-EVO_PERMOVER = 'PermanentOverride'
 
 # for the Zones...
 ZONE_STATE_TO_HA = {
