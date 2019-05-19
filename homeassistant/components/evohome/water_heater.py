@@ -38,7 +38,7 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     # (i.e. loc_idx > 0) other than using a protected member, such as below
     tcs_obj_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]  # noqa: E501; pylint: disable=protected-access
 
-    _LOGGER.info(
+    _LOGGER.debug(
         "Found DHW device, id: %s [%s]",
         tcs_obj_ref.hotwater.zoneId, tcs_obj_ref.hotwater.zone_type)
 
