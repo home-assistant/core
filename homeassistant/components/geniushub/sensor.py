@@ -127,7 +127,7 @@ class GeniusIssue(Entity):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        return {self._level + '_list': self._issues}
+        return {'{}_list'.format(self._level): self._issues}
 
     async def async_update(self):
         """Process the sensor's state data."""
