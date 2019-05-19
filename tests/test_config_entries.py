@@ -261,9 +261,9 @@ async def test_remove_entry(hass, manager):
     # Just Group all_lights
     assert len(hass.states.async_all()) == 1
 
-    # Check that entity registry entry no longer references config_entry_id
-    entity_entry = list(ent_reg.entities.values())[0]
-    assert entity_entry.config_entry_id is None
+    # Check that entity registry entry has been removed
+    entity_entry_list = list(ent_reg.entities.values())
+    assert not entity_entry_list
 
 
 async def test_remove_entry_handles_callback_error(hass, manager):
