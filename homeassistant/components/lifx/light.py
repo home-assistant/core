@@ -202,7 +202,7 @@ class LIFXManager:
         self.entities = {}
         self.hass = hass
         self.async_add_entities = async_add_entities
-        self.effects_conductor = aiolifx_effects().Conductor()
+        self.effects_conductor = aiolifx_effects().Conductor(hass.loop)
         self.discoveries = []
         self.cleanup_unsub = self.hass.bus.async_listen(
             EVENT_HOMEASSISTANT_STOP,

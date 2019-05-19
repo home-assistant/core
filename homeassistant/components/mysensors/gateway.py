@@ -124,7 +124,7 @@ async def _get_gateway(hass, config, gateway_conf, persistence_file):
                 await hass.async_add_job(is_socket_address, device)
                 # valid ip address
                 gateway = mysensors.AsyncTCPGateway(
-                    device, port=tcp_port, event_callback=None, loop=hass.loop,
+                    device, port=tcp_port, loop=hass.loop, event_callback=None,
                     persistence=persistence, persistence_file=persistence_file,
                     protocol_version=version)
             except vol.Invalid:
