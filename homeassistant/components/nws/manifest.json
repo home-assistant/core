@@ -4,5 +4,8 @@
     "documentation": "https://www.home-assistant.io/components/nws",
     "dependencies": [],
     "codeowners": ["@MatthewFlamm"],
-    "requirements": ["pynws==0.6"]
+    "requirements": [
+	"pynws==0.6",
+	"metar==1.7.0"
+    ]
 }

@@ -40,6 +40,21 @@ OBS = [{
     'textDescription': 'Sunny'
 }]
 
+METAR_MSG = ("PHNG 182257Z 06012KT 10SM FEW020 SCT026 SCT035 "
+             "28/22 A3007 RMK AO2 SLP177 T02780217")
+
+OBS_METAR = [{
+    "rawMessage": METAR_MSG,
+    "textDescription": "Partly Cloudy",
+    "icon": "https://api.weather.gov/icons/land/day/sct?size=medium",
+    "temperature": {"value": None, "qualityControl": "qc:Z"},
+    "windDirection": {"value": None, "qualityControl": "qc:Z"},
+    "windSpeed": {"value": None, "qualityControl": "qc:Z"},
+    "seaLevelPressure": {"value": None, "qualityControl": "qc:Z"},
+    "visibility": {"value": None, "qualityControl": "qc:Z"},
+    "relativeHumidity": {"value": None, "qualityControl": "qc:Z"},
+}]
+
 FORE = [{
     'endTime': '2018-12-21T18:00:00-05:00',
     'windSpeed': '8 to 10 mph',
@@ -306,3 +321,74 @@ class TestNwsMetric(unittest.TestCase):
         assert forecast[0].get(ATTR_FORECAST_WIND_BEARING) == 180
         assert forecast[0].get(ATTR_FORECAST_WIND_SPEED) == round(
             convert_distance(9, LENGTH_MILES, LENGTH_KILOMETERS))
+
+
+class MockNws_Metar():
+    """Mock Station from pynws."""
+
+    def __init__(self, websession, latlon, userid):
+        """Init mock nws."""
+        pass
+
+    async def observations(self):
+        """Mock Observation."""
+        return OBS_METAR
+
+    async def forecast(self):
+        """Mock Forecast."""
+        return FORE
+
+    async def forecast_hourly(self):
+        """Mock Hourly Forecast."""
+        return HOURLY_FORE
+
+    async def stations(self):
+        """Mock stations."""
+        return [STN]
+
+
+class TestNWS_Metar(unittest.TestCase):
+    """Test the NWS weather component."""
+
+    def setUp(self):
+        """Set up things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+        self.hass.config.units = IMPERIAL_SYSTEM
+        self.lat = self.hass.config.latitude = 40.00
+        self.lon = self.hass.config.longitude = -8.00
+
+    def tearDown(self):
+        """Stop down everything that was started."""
+        self.hass.stop()
+
+    @MockDependency("pynws")
+    @patch("pynws.Nws", new=MockNws_Metar)
+    def test_metar(self, mock_pynws):
+        """Test for successfully setting up the NWS platform with name."""
+        assert setup_component(self.hass, weather.DOMAIN, {
+            'weather': {
+                'name': 'HomeWeather',
+                'platform': 'nws',
+                'api_key': 'test_email',
+            }
+        })
+
+        from metar import Metar
+        truth = Metar.Metar(METAR_MSG)
+        state = self.hass.states.get('weather.homeweather')
+        data = state.attributes
+
+        temp_f = convert_temperature(truth.temp.value(), TEMP_CELSIUS,
+                                     TEMP_FAHRENHEIT)
+        assert data.get(ATTR_WEATHER_TEMPERATURE) == \
+            display_temp(self.hass, temp_f, TEMP_FAHRENHEIT, PRECISION_WHOLE)
+        assert data.get(ATTR_WEATHER_HUMIDITY) is None
+        assert data.get(ATTR_WEATHER_PRESSURE) == round(
+            convert_pressure(truth.press.value(units='HPA'), PRESSURE_HPA,
+                             PRESSURE_INHG),
+            2)
+        assert data.get(ATTR_WEATHER_WIND_SPEED) == round(
+            truth.wind_speed.value(units='MPH'))
+        assert data.get(ATTR_WEATHER_WIND_BEARING) == truth.wind_dir.value()
+        assert data.get(ATTR_WEATHER_VISIBILITY) == round(
+            truth.vis.value(units='MI'))

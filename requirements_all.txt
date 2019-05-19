@@ -765,6 +765,9 @@ mbddns==0.1.2
 # homeassistant.components.message_bird
 messagebird==1.2.0
 
+# homeassistant.components.nws
+metar==1.7.0
+
 # homeassistant.components.meteoalarm
 meteoalertapi==0.1.5
 
