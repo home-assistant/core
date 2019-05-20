@@ -5,6 +5,7 @@ from unittest.mock import patch
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.const import CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL
 from tests.common import mock_coro
 
 
@@ -43,11 +44,23 @@ async def test_websocket_core_update(hass, hass_ws_client):
     with patch.object(config, 'SECTIONS', ['core']):
         await async_setup_component(hass, 'config', {})
 
+    assert hass.config.latitude != 60
+    assert hass.config.longitude != 50
+    assert hass.config.elevation != 25
+    assert hass.config.location_name != 'Huis'
+    assert hass.config.units.name != CONF_UNIT_SYSTEM_IMPERIAL
+    assert hass.config.time_zone.zone != 'America/New_York'
+
     client = await hass_ws_client(hass)
     await client.send_json({
         'id': 5,
         'type': 'config/core/update',
-        'latitude': 123,
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'location_name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'America/New_York',
     })
 
     msg = await client.receive_json()
@@ -55,6 +68,12 @@ async def test_websocket_core_update(hass, hass_ws_client):
     assert msg['id'] == 5
     assert msg['type'] == TYPE_RESULT
     assert msg['success']
+    assert hass.config.latitude == 60
+    assert hass.config.longitude == 50
+    assert hass.config.elevation == 25
+    assert hass.config.location_name == 'Huis'
+    assert hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL
+    assert hass.config.time_zone.zone == 'America/New_York'
 
 
 async def test_websocket_core_update_not_admin(
