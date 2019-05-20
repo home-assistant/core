@@ -71,18 +71,18 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
 
     # evohomeclient has exposed no means of accessing non-default location
     # (i.e. loc_idx > 0) other than using a protected member, such as below
-    evo_tcs = client.locations[loc_idx]._gateways[0]._control_systems[0]  # noqa: E501; pylint: disable=protected-access
+    evo_tcs_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]  # noqa: E501; pylint: disable=protected-access
 
     _LOGGER.debug(
         "Found Controller, id=%s [%s], name=%s (location_idx=%s)",
-        evo_tcs.systemId, evo_tcs.modelType, evo_tcs.location.name,
+        evo_tcs_ref.systemId, evo_tcs_ref.modelType, evo_tcs_ref.location.name,
         loc_idx)
 
-    controller = EvoController(evo_data, client, evo_tcs)
+    controller = EvoController(evo_data, client, evo_tcs_ref)
     zones = []
 
-    for zone_idx in evo_tcs.zones:
-        evo_zone_ref = evo_tcs.zones[zone_idx]
+    for zone_idx in evo_tcs_ref.zones:
+        evo_zone_ref = evo_tcs_ref.zones[zone_idx]
         _LOGGER.debug(
             "Found Zone, id=%s [%s], name=%s",
             evo_zone_ref.zoneId, evo_zone_ref.zone_type, evo_zone_ref.name)
@@ -324,12 +324,12 @@ class EvoController(EvoDevice, ClimateDevice):
     the child (CH/DHW) devices.  It is also a Climate device.
     """
 
-    def __init__(self, evo_data, client, evo_tcs):
+    def __init__(self, evo_data, client, evo_tcs_ref):
         """Initialize the evohome Controller (hub)."""
-        super().__init__(evo_data, client, evo_tcs)
+        super().__init__(evo_data, client, evo_tcs_ref)
 
-        self._id = evo_tcs.systemId
-        self._name = '_{}'.format(evo_tcs.location.name)
+        self._id = evo_tcs_ref.systemId
+        self._name = '_{}'.format(evo_tcs_ref.location.name)
         self._icon = "mdi:thermostat"
 
         self._config = evo_data['config'][GWS][0][TCS][0]
