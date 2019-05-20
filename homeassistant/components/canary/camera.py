@@ -88,7 +88,7 @@ class CanaryCamera(Camera):
             return
 
         from haffmpeg.camera import CameraMjpeg
-        stream = CameraMjpeg(self._ffmpeg.binary)
+        stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
         await stream.open_camera(
             self._live_stream_session.live_stream_url,
             extra_cmd=self._ffmpeg_arguments)
