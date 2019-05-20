@@ -48,7 +48,7 @@ async def async_setup(hass, config):
         """Signal new service discovered."""
         service_info = await zeroconf.get_service_info(service_type, name)
         info = info_from_service(service_info)
-        print(name, info)
+        _LOGGER.debug("Discovered new device %s %s", name, info)
 
         for domain in manifest.SERVICE_TYPES[service_type]:
             hass.async_create_task(
@@ -80,9 +80,12 @@ def info_from_service(service):
     properties = {}
 
     for key, value in service.properties.items():
-        if isinstance(value, bytes):
-            value = value.decode('utf-8')
-        properties[key.decode('utf-8')] = value
+        try:
+            if isinstance(value, bytes):
+                value = value.decode('utf-8')
+            properties[key.decode('utf-8')] = value
+        except UnicodeDecodeError:
+            _LOGGER.warning("Unicode decode error on %s: %s", key, value)
 
     address = service.address or service.address6
 
