@@ -948,25 +948,25 @@ class TestConfig(unittest.TestCase):
             with pytest.raises(AssertionError):
                 self.config.is_allowed_path(None)
 
-    def test_event_on_update(self):
-        """Test that event is fired on update."""
-        events = []
 
-        @ha.callback
-        def callback(event):
-            events.append(event)
+async def test_event_on_update(hass, hass_storage):
+    """Test that event is fired on update."""
+    events = []
 
-        self.hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, callback)
+    @ha.callback
+    def callback(event):
+        events.append(event)
 
-        assert self.config.latitude != 12
+    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, callback)
 
-        run_coroutine_threadsafe(
-            self.config.update(latitude=12), self.hass.loop).result()
-        self.hass.block_till_done()
+    assert hass.config.latitude != 12
 
-        assert self.config.latitude == 12
-        assert len(events) == 1
-        assert events[0].data == {'latitude': 12}
+    await hass.config.update(latitude=12)
+    await hass.async_block_till_done()
+
+    assert hass.config.latitude == 12
+    assert len(events) == 1
+    assert events[0].data == {'latitude': 12}
 
 
 def test_bad_timezone_raises_value_error(hass):
