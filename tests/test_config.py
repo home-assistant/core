@@ -1,6 +1,7 @@
 """Test config utils."""
 # pylint: disable=protected-access
 import asyncio
+import copy
 import os
 import unittest.mock as mock
 from collections import OrderedDict
@@ -462,7 +463,7 @@ async def test_updating_configuration(hass, hass_storage):
         hass, {'whitelist_external_dirs': '/tmp'})
     await hass.config.update(latitude=50)
 
-    new_core_data = dict(core_data)
+    new_core_data = copy.deepcopy(core_data)
     new_core_data['data']['latitude'] = 50
     assert hass_storage["homeassistant.core_config"] == new_core_data
     assert hass.config.latitude == 50
@@ -543,10 +544,6 @@ async def test_loading_configuration_temperature_unit(hass):
 
 async def test_loading_configuration_from_packages(hass):
     """Test loading packages config onto hass object config."""
-    hass.config = mock.Mock()
-    hass.config.load.return_value = asyncio.Future()
-    hass.config.load.return_value.set_result(None)
-
     await config_util.async_process_ha_core_config(hass, {
         'latitude': 39,
         'longitude': -1,

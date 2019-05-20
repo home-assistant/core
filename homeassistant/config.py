@@ -513,7 +513,7 @@ async def async_process_ha_core_config(
             auth_conf,
             mfa_conf))
 
-    await hass.config.load()
+    await hass.config.async_load()
 
     hac = hass.config
 

@@ -1315,12 +1315,12 @@ class Config:
         Async friendly.
         """
         self._update(source=SOURCE_STORAGE, **kwargs)
-        await self.store()
+        await self.async_store()
         self.hass.bus.async_fire(
             EVENT_CORE_CONFIG_UPDATE, kwargs
         )
 
-    async def load(self) -> None:
+    async def async_load(self) -> None:
         """Load [homeassistant] core config."""
         store = self.hass.helpers.storage.Store(
             CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True)
@@ -1330,7 +1330,7 @@ class Config:
 
         self._update(source=SOURCE_STORAGE, **data)
 
-    async def store(self) -> None:
+    async def async_store(self) -> None:
         """Store [homeassistant] core config."""
         time_zone = dt_util.UTC.zone
         if self.time_zone and getattr(self.time_zone, 'zone'):

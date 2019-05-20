@@ -872,14 +872,8 @@ class TestConfig(unittest.TestCase):
     # pylint: disable=invalid-name
     def setUp(self):
         """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.config = ha.Config(self.hass)
+        self.config = ha.Config(None)
         assert self.config.config_dir is None
-
-    # pylint: disable=invalid-name
-    def tearDown(self):
-        """Stop down stuff we started."""
-        self.hass.stop()
 
     def test_path_with_file(self):
         """Test get_config_path method."""
