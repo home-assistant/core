@@ -97,7 +97,7 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         data = {'Mode': op_mode, 'State': state, 'UntilTime': until}
 
         try:
-            self._obj._set_dhw(data)  # pylint: disable=protected-access
+            self._evo_ref._set_dhw(data)  # pylint: disable=protected-access
         except requests.exceptions.HTTPError as err:
             if not self._handle_exception(err):
                 raise

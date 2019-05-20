@@ -201,10 +201,10 @@ class EvoDevice(Entity):
     (optionally) a DHW controller.
     """
 
-    def __init__(self, evo_data, client, evo_device):
+    def __init__(self, evo_data, client, evo_device_ref):
         """Initialize the evohome entity."""
         self._client = client
-        self._evo_device = evo_device
+        self._evo_ref = evo_device_ref
 
         self._id = None
         self._name = None

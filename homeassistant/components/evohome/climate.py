@@ -252,7 +252,7 @@ class EvoZone(EvoDevice, ClimateDevice):
           - None for PermanentOverride (i.e. indefinitely)
         """
         try:
-            self._evo_device.set_temperature(temperature, until)
+            self._evo_ref.set_temperature(temperature, until)
         except (requests.exceptions.RequestException,
                 evohomeclient2.AuthenticationError) as err:
             self._handle_exception(err)
@@ -264,7 +264,7 @@ class EvoZone(EvoDevice, ClimateDevice):
     def _set_operation_mode(self, operation_mode):
         if operation_mode == EVO_FOLLOW:
             try:
-                self._evo_device.cancel_temp_override()
+                self._evo_ref.cancel_temp_override()
             except (requests.exceptions.RequestException,
                     evohomeclient2.AuthenticationError) as err:
                 self._handle_exception(err)
@@ -502,7 +502,7 @@ class EvoController(EvoDevice, ClimateDevice):
 
     def _set_operation_mode(self, operation_mode):
         try:
-            self._evo_device._set_status(operation_mode)  # noqa: E501; pylint: disable=protected-access
+            self._evo_ref._set_status(operation_mode)  # noqa: E501; pylint: disable=protected-access
         except (requests.exceptions.RequestException,
                 evohomeclient2.AuthenticationError) as err:
             self._handle_exception(err)
