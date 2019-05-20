@@ -487,6 +487,9 @@ georss_generic_client==0.2
 # homeassistant.components.ign_sismologia
 georss_ign_sismologia_client==0.2
 
+# homeassistant.components.elkm1
+getmac==0.8.1
+
 # homeassistant.components.gitter
 gitterpy==0.1.7
 
