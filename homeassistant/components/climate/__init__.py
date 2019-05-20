@@ -17,7 +17,7 @@ from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import (
-    ATTR_AUX_HEAT, ATTR_CURRENT_HUMIDITY, ATTR_CURRENT_OPERATION,
+    ATTR_AUX_HEAT, ATTR_CURRENT_HUMIDITY, ATTR_CURRENT_HVAC,
     ATTR_CURRENT_TEMPERATURE, ATTR_FAN_LIST, ATTR_FAN_MODE, ATTR_HUMIDITY,
     ATTR_HVAC_MODE, ATTR_HVAC_MODES, ATTR_MAX_HUMIDITY, ATTR_MAX_TEMP,
     ATTR_MIN_HUMIDITY, ATTR_MIN_TEMP, ATTR_PRESET_LIST, ATTR_PRESET_MODE,
@@ -25,7 +25,7 @@ from .const import (
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_STEP, DOMAIN, HVAC_MODES,
     SERVICE_SET_AUX_HEAT, SERVICE_SET_FAN_MODE, SERVICE_SET_PRESET_MODE,
     SERVICE_SET_HUMIDITY, SERVICE_SET_HVAC_MODE, SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE, SUPPORT_AUX_HEAT, SUPPORT_CURRENT_OPERATION,
+    SERVICE_SET_TEMPERATURE, SUPPORT_AUX_HEAT, SUPPORT_CURRENT_HVAC,
     SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE, SUPPORT_SWING_MODE,
     SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_HUMIDITY_HIGH,
     SUPPORT_TARGET_HUMIDITY_LOW, SUPPORT_TARGET_TEMPERATURE_HIGH,
@@ -198,8 +198,8 @@ class ClimateDevice(Entity):
             if self.fan_list:
                 data[ATTR_FAN_LIST] = self.fan_list
 
-        if supported_features & SUPPORT_CURRENT_OPERATION:
-            data[ATTR_CURRENT_OPERATION] = self.current_operation
+        if supported_features & SUPPORT_CURRENT_HVAC:
+            data[ATTR_CURRENT_HVAC] = self.current_hvac
 
         if supported_features & SUPPORT_PRESET_MODE:
             data[ATTR_PRESET_MODE] = self.preset_mode
@@ -242,8 +242,8 @@ class ClimateDevice(Entity):
         return None
 
     @property
-    def current_operation(self):
-        """Return the current running (hvac) operation if supported."""
+    def current_hvac(self):
+        """Return the current running hvac operation if supported."""
         return None
 
     @property
