@@ -169,7 +169,8 @@ def mock_private_cal():
 
 def _local_datetime(hours, minutes, days=0):
     """Build a datetime object for testing in the correct timezone."""
-    return dt.as_local(datetime.datetime(2017, 11, 27 + days, hours, minutes, 0))
+    return dt.as_local(datetime.datetime(2017, 11, 27 + days,
+                                         hours, minutes, 0))
 
 
 def _mocked_dav_client(*names, calendars=None):
@@ -194,8 +195,9 @@ def _mock_calendar(name):
         start_dt = WebDavCalendarData.to_datetime(start)
         end_dt = WebDavCalendarData.to_datetime(end)
         for e in events:
-            e_start = WebDavCalendarData.to_datetime(e.instance.vevent.dtstart.value)
-            e_end = WebDavCalendarData.get_end_date(e.instance.vevent)
+            event = e.instance.vevent
+            e_start = WebDavCalendarData.to_datetime(event.dtstart.value)
+            e_end = WebDavCalendarData.get_end_date(event)
             e_end = WebDavCalendarData.to_datetime(e_end)
             if e_end <= start_dt or e_start >= end_dt:
                 continue
@@ -478,7 +480,8 @@ async def test_all_day_event_returned(mock_now, hass, calendar):
     }
 
 
-@patch('homeassistant.util.dt.now', return_value=_local_datetime(12, 00, days=1))
+@patch('homeassistant.util.dt.now', return_value=_local_datetime(12, 00,
+                                                                 days=1))
 async def test_all_day_event_tomorrow(mock_now, hass, calendar):
     """Test that the event lasting tomorrow's whole day is returned."""
     config = dict(CALDAV_CONFIG)
