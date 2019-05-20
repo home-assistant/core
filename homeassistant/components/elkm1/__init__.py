@@ -11,6 +11,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType  # noqa
+from getmac import get_mac_address
 
 DOMAIN = 'elkm1'
 
@@ -102,6 +103,23 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
+def _get_mac_for(elk_host):
+    hostname_pattern = re.compile(r"^elks?://([^:]+)")
+    digits_pattern = re.compile(r"^[0-9.]+$")
+    m = hostname_pattern.search(elk_host)
+    if m:
+        ip_host = m.group(1)
+        m = digits_pattern.match(ip_host)
+        if m:
+            mac_addr = get_mac_address(ip=ip_host)
+        else:
+            mac_addr = get_mac_address(host=ip_host)
+        _LOGGER.info("elkm1 at %s (%s) has mac %s",
+                     elk_host, ip_host, mac_addr)
+        return mac_addr
+    else:
+        return None
+
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Elk M1 platform."""
     from elkm1_lib.const import Max
@@ -148,23 +166,17 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
 
         prefix = conf[CONF_PREFIX]
         device = devices.get(prefix)
-        if device is not None:
-            if prefix == "":
-                _LOGGER.error("At most one elk m1 configuration may skip "
-                              "the prefix; more than one did.")
-            else:
-                _LOGGER.error("Duplicate prefix on elk m1, prefix: %s", prefix)
-        else:
-            elk = elkm1.Elk({'url': conf[CONF_HOST], 'userid':
-                             conf[CONF_USERNAME],
-                             'password': conf[CONF_PASSWORD]})
-            elk.connect()
+        elk = elkm1.Elk({'url': conf[CONF_HOST], 'userid':
+                         conf[CONF_USERNAME],
+                         'password': conf[CONF_PASSWORD]})
+        elk.connect()
+        elk._mac_address = _get_mac_for(conf[CONF_HOST])
 
-            devices[prefix] = elk
-            elk_datas[prefix] = {'elk': elk,
-                                 'prefix': prefix,
-                                 'config': config,
-                                 'keypads': {}}
+        devices[prefix] = elk
+        elk_datas[prefix] = {'elk': elk,
+                             'prefix': prefix,
+                             'config': config,
+                             'keypads': {}}
 
     _create_elk_services(hass, devices)
 
@@ -224,7 +236,8 @@ class ElkEntity(Entity):
         self._prefix = elk_data['prefix']
         self._temperature_unit = elk_data['config']['temperature_unit']
         self._unique_id = 'elkm1_{}'.format(
-            self._prefix + self._element.default_name('_').lower())
+            self._mac_address.lower() + '_' +
+            self._element.default_name('_').lower())
 
     @property
     def name(self):
