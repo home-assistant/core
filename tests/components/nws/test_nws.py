@@ -150,9 +150,10 @@ class TestNWS(unittest.TestCase):
         """Stop down everything that was started."""
         self.hass.stop()
 
+    @MockDependency("metar")
     @MockDependency("pynws")
     @patch("pynws.Nws", new=MockNws)
-    def test_w_name(self, mock_pynws):
+    def test_w_name(self, mock_metar, mock_pynws):
         """Test for successfully setting up the NWS platform with name."""
         assert setup_component(self.hass, weather.DOMAIN, {
             'weather': {
@@ -187,9 +188,10 @@ class TestNWS(unittest.TestCase):
         assert forecast[0].get(ATTR_FORECAST_WIND_BEARING) == 180
         assert forecast[0].get(ATTR_FORECAST_WIND_SPEED) == 9
 
+    @MockDependency("metar")
     @MockDependency("pynws")
     @patch("pynws.Nws", new=MockNws)
-    def test_w_station(self, mock_pynws):
+    def test_w_station(self, mock_metar, mock_pynws):
         """Test for successfully setting up the NWS platform with station."""
         assert setup_component(self.hass, weather.DOMAIN, {
             'weather': {
@@ -201,9 +203,10 @@ class TestNWS(unittest.TestCase):
 
         assert self.hass.states.get('weather.stnb')
 
+    @MockDependency("metar")
     @MockDependency("pynws")
     @patch("pynws.Nws", new=MockNws)
-    def test_w_no_name(self, mock_pynws):
+    def test_w_no_name(self, mock_metar, mock_pynws):
         """Test for successfully setting up the NWS platform w no name."""
         assert setup_component(self.hass, weather.DOMAIN, {
             'weather': {
@@ -214,9 +217,10 @@ class TestNWS(unittest.TestCase):
 
         assert self.hass.states.get('weather.' + STN)
 
+    @MockDependency("metar")
     @MockDependency("pynws")
     @patch("pynws.Nws", new=MockNws)
-    def test__hourly(self, mock_pynws):
+    def test__hourly(self, mock_metar, mock_pynws):
         """Test for successfully setting up hourly forecast."""
         assert setup_component(self.hass, weather.DOMAIN, {
             'weather': {
@@ -239,9 +243,10 @@ class TestNWS(unittest.TestCase):
         assert forecast[0].get(ATTR_FORECAST_WIND_BEARING) == 0
         assert forecast[0].get(ATTR_FORECAST_WIND_SPEED) == 4
 
+    @MockDependency("metar")
     @MockDependency("pynws")
     @patch("pynws.Nws", new=MockNws)
-    def test_daynight(self, mock_pynws):
+    def test_daynight(self, mock_metar, mock_pynws):
         """Test for successfully setting up daynight forecast."""
         assert setup_component(self.hass, weather.DOMAIN, {
             'weather': {
@@ -252,10 +257,11 @@ class TestNWS(unittest.TestCase):
         })
         assert self.hass.states.get('weather.' + STN)
 
+    @MockDependency("metar")
     @MockDependency("pynws")
     @patch("pynws.Nws", new=MockNws)
-    def test_latlon(self, mock_pynws):
-        """Test for successfully setting up the NWS platform with lat/lon."""
+    def test_latlon(self, mock_metar, mock_pynws):
+        """Test for successsfully setting up the NWS platform with lat/lon."""
         assert setup_component(self.hass, weather.DOMAIN, {
             'weather': {
                 'platform': 'nws',
@@ -266,9 +272,10 @@ class TestNWS(unittest.TestCase):
         })
         assert self.hass.states.get('weather.' + STN)
 
+    @MockDependency("metar")
     @MockDependency("pynws")
     @patch("pynws.Nws", new=MockNws)
-    def test_setup_failure_mode(self, mock_pynws):
+    def test_setup_failure_mode(self, mock_metar, mock_pynws):
         """Test for unsuccessfully setting up incorrect mode."""
         assert setup_component(self.hass, weather.DOMAIN, {
             'weather': {
@@ -279,9 +286,10 @@ class TestNWS(unittest.TestCase):
         })
         assert self.hass.states.get('weather.' + STN) is None
 
+    @MockDependency("metar")
     @MockDependency("pynws")
     @patch("pynws.Nws", new=MockNws)
-    def test_setup_failure_no_apikey(self, mock_pynws):
+    def test_setup_failure_no_apikey(self, mock_metar, mock_pynws):
         """Test for unsuccessfully setting up without api_key."""
         assert setup_component(self.hass, weather.DOMAIN, {
             'weather': {
@@ -306,9 +314,10 @@ class TestNwsMetric(unittest.TestCase):
         """Stop down everything that was started."""
         self.hass.stop()
 
+    @MockDependency("metar")
     @MockDependency("pynws")
     @patch("pynws.Nws", new=MockNws)
-    def test_metric(self, mock_pynws):
+    def test_metric(self, mock_metar, mock_pynws):
         """Test for successfully setting up the NWS platform with name."""
         assert setup_component(self.hass, weather.DOMAIN, {
             'weather': {
@@ -385,10 +394,11 @@ class TestNWS_Metar(unittest.TestCase):
         """Stop down everything that was started."""
         self.hass.stop()
 
+    @MockDependency("metar")
     @MockDependency("pynws")
     @patch("pynws.Nws", new=MockNws_Metar)
     @patch("metar.Metar.Metar", new=MockMetar)
-    def test_metar(self, mock_pynws):
+    def test_metar(self, mock_metar, mock_pynws):
         """Test for successfully setting up the NWS platform with name."""
         assert setup_component(self.hass, weather.DOMAIN, {
             'weather': {
