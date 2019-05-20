@@ -64,22 +64,22 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
 
     # evohomeclient has exposed no means of accessing non-default location
     # (i.e. loc_idx > 0) other than using a protected member, such as below
-    tcs_obj_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]  # noqa: E501; pylint: disable=protected-access
+    evo_tcs_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]  # noqa: E501; pylint: disable=protected-access
 
     _LOGGER.debug(
         "Found Controller, id=%s [%s], name=%s (location_idx=%s)",
-        tcs_obj_ref.systemId, tcs_obj_ref.modelType, tcs_obj_ref.location.name,
+        evo_tcs_ref.systemId, evo_tcs_ref.modelType, evo_tcs_ref.location.name,
         loc_idx)
 
-    controller = EvoController(evo_data, client, tcs_obj_ref)
+    controller = EvoController(evo_data, client, evo_tcs_ref)
     zones = []
 
-    for zone_idx in tcs_obj_ref.zones:
-        zone_obj_ref = tcs_obj_ref.zones[zone_idx]
+    for zone_idx in evo_tcs_ref.zones:
+        evo_zone_ref = evo_tcs_ref.zones[zone_idx]
         _LOGGER.debug(
             "Found Zone, id=%s [%s], name=%s",
-            zone_obj_ref.zoneId, zone_obj_ref.zone_type, zone_obj_ref.name)
-        zones.append(EvoZone(evo_data, client, zone_obj_ref))
+            evo_zone_ref.zoneId, evo_zone_ref.zone_type, evo_zone_ref.name)
+        zones.append(EvoZone(evo_data, client, evo_zone_ref))
 
     entities = [controller] + zones
 
@@ -89,12 +89,12 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
 class EvoZone(EvoDevice, ClimateDevice):
     """Base for a Honeywell evohome Zone device."""
 
-    def __init__(self, evo_data, client, obj_ref):
+    def __init__(self, evo_data, client, evo_zone_ref):
         """Initialize the evohome Zone."""
-        super().__init__(evo_data, client, obj_ref)
+        super().__init__(evo_data, client, evo_zone_ref)
 
-        self._id = obj_ref.zoneId
-        self._name = obj_ref.name
+        self._id = evo_zone_ref.zoneId
+        self._name = evo_zone_ref.name
         self._icon = "mdi:radiator"
 
         for _zone in evo_data['config'][GWS][0][TCS][0]['zones']:
@@ -265,12 +265,12 @@ class EvoController(EvoDevice, ClimateDevice):
     the child (CH/DHW) devices.  It is also a Climate device.
     """
 
-    def __init__(self, evo_data, client, obj_ref):
+    def __init__(self, evo_data, client, evo_tcs_ref):
         """Initialize the evohome Controller (hub)."""
-        super().__init__(evo_data, client, obj_ref)
+        super().__init__(evo_data, client, evo_tcs_ref)
 
-        self._id = obj_ref.systemId
-        self._name = '_{}'.format(obj_ref.location.name)
+        self._id = evo_tcs_ref.systemId
+        self._name = '_{}'.format(evo_tcs_ref.location.name)
         self._icon = "mdi:thermostat"
 
         self._config = evo_data['config'][GWS][0][TCS][0]

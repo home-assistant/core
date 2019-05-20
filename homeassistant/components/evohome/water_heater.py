@@ -37,13 +37,13 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
 
     # evohomeclient has exposed no means of accessing non-default location
     # (i.e. loc_idx > 0) other than using a protected member, such as below
-    tcs_obj_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]  # noqa: E501; pylint: disable=protected-access
+    evo_tcs_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]  # noqa: E501; pylint: disable=protected-access
 
     _LOGGER.debug(
         "Found DHW device, id: %s [%s]",
-        tcs_obj_ref.hotwater.zoneId, tcs_obj_ref.hotwater.zone_type)
+        evo_tcs_ref.hotwater.zoneId, evo_tcs_ref.hotwater.zone_type)
 
-    dhw = EvoDHW(evo_data, client, tcs_obj_ref.hotwater)
+    dhw = EvoDHW(evo_data, client, evo_tcs_ref.hotwater)
 
     async_add_entities([dhw], update_before_add=False)
 
@@ -51,11 +51,11 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
 class EvoDHW(EvoDevice, WaterHeaterDevice):
     """Base for a Honeywell evohome DHW controller (aka boiler)."""
 
-    def __init__(self, evo_data, client, obj_ref):
+    def __init__(self, evo_data, client, evo_dhw_ref):
         """Initialize the evohome DHW controller."""
-        super().__init__(evo_data, client, obj_ref)
+        super().__init__(evo_data, client, evo_dhw_ref)
 
-        self._id = obj_ref.dhwId
+        self._id = evo_dhw_ref.dhwId
         self._name = "DHW controller"
         self._icon = "mdi:oil-temperature"
 
