@@ -1,16 +1,14 @@
 """Demo platform that offers a fake climate device."""
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
-
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, SUPPORT_AUX_HEAT,
-    SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE,
-    SUPPORT_CURRENT_HVAC, SUPPORT_SWING_MODE, SUPPORT_TARGET_HUMIDITY,
+    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, CURRENT_HVAC_COOL,
+    CURRENT_HVAC_HEAT, HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT_COOL,
+    HVAC_MODES, SUPPORT_AUX_HEAT, SUPPORT_CURRENT_HVAC, SUPPORT_FAN_MODE,
+    SUPPORT_PRESET_MODE, SUPPORT_SWING_MODE, SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_HUMIDITY_HIGH, SUPPORT_TARGET_HUMIDITY_LOW,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE_HIGH,
-    SUPPORT_TARGET_TEMPERATURE_LOW, CURRENT_HVAC_HEAT,
-    HVAC_MODES, CURRENT_HVAC_COOL, HVAC_MODE_AUTO, HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_COOL)
+    SUPPORT_TARGET_TEMPERATURE_LOW)
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 SUPPORT_FLAGS = SUPPORT_TARGET_HUMIDITY_LOW | SUPPORT_TARGET_HUMIDITY_HIGH
 
@@ -120,6 +118,11 @@ class DemoClimate(ClimateDevice):
     def target_temperature_low(self):
         """Return the lowbound target temperature we try to reach."""
         return self._target_temperature_low
+
+    @property
+    def target_temperature_step(self):
+        """Return the supported step of target temperature."""
+        return 5
 
     @property
     def current_humidity(self):
