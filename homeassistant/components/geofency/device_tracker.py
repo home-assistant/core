@@ -55,14 +55,6 @@ class GeofencyEntity(DeviceTrackerEntity):
         return self._gps
 
     @property
-    def location_accuracy(self):
-        """Accuracy of the location data.
-
-        Value in meters.
-        """
-        return 0
-
-    @property
     def location_name(self):
         """Return a location name for the current location of the device."""
         return self._location_name

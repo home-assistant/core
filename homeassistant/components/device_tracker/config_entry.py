@@ -56,7 +56,7 @@ class DeviceTrackerEntity(Entity):
 
         Value in meters.
         """
-        raise NotImplementedError
+        return 0
 
     @property
     def location_name(self) -> str:
