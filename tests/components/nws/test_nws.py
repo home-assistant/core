@@ -114,19 +114,27 @@ class MockNws():
 
 class Prop:
     """Property data class for metar.  Initialize with desired return value."""
+
     def __init__(self, value_return):
+        """Initialize with desired return."""
         self.value_return = value_return
+
     def value(self, units=''):
+        """Return provided value."""
         return self.value_return
-    
+
+
 class MockMetar:
-    """Mock Metar parser"""
+    """Mock Metar parser."""
+
     def __init__(self, code):
+        """Set up mocked return values."""
         self.temp = Prop(27)
         self.press = Prop(1111)
         self.wind_speed = Prop(27)
         self.wind_dir = Prop(175)
         self.vis = Prop(5000)
+
 
 class TestNWS(unittest.TestCase):
     """Test the NWS weather component."""
@@ -404,11 +412,10 @@ class TestNWS_Metar(unittest.TestCase):
             convert_pressure(truth.press.value(), PRESSURE_HPA, PRESSURE_INHG),
             2)
 
-        wind_speed_mi_s = convert_distance(truth.wind_speed.value(), LENGTH_METERS,
-                                      LENGTH_MILES)
+        wind_speed_mi_s = convert_distance(
+            truth.wind_speed.value(), LENGTH_METERS, LENGTH_MILES)
         assert data.get(ATTR_WEATHER_WIND_SPEED) == round(
             wind_speed_mi_s * 3600)
         assert data.get(ATTR_WEATHER_WIND_BEARING) == truth.wind_dir.value()
         vis = convert_distance(truth.vis.value(), LENGTH_METERS, LENGTH_MILES)
         assert data.get(ATTR_WEATHER_VISIBILITY) == round(vis)
-            
