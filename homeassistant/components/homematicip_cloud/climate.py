@@ -118,7 +118,6 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
 
     async def async_set_operation_mode(self, operation_mode):
         """Set operation mode."""
-        _LOGGER.error("KAROL: %s", operation_mode)
         if operation_mode == STATE_BOOST:
             await self._device.set_boost()
         else:
