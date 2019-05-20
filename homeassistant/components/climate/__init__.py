@@ -233,17 +233,26 @@ class ClimateDevice(Entity):
 
     @property
     def hvac_state(self):
-        """Return hvac operation ie. heat, cool mode"""
+        """Return hvac operation ie. heat, cool mode
+
+        Need to be one of HVAC_MODE_*.
+        """
         return None
 
     @property
     def hvac_modes(self):
-        """Return the list of available hvac operation modes."""
+        """Return the list of available hvac operation modes.
+
+        Need to be a subset of HVAC_MODES.
+        """
         return None
 
     @property
     def current_hvac(self):
-        """Return the current running hvac operation if supported."""
+        """Return the current running hvac operation if supported.
+
+        Need to be one of CURRENT_HVAC_*.
+        """
         return None
 
     @property
