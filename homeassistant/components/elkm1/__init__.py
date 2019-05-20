@@ -121,7 +121,7 @@ def _get_mac_for(elk_host):
     else:
         return None
 
-    
+
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Elk M1 platform."""
     from elkm1_lib.const import Max
