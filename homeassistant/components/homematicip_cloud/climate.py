@@ -8,7 +8,8 @@ from homematicip.aio.home import AsyncHome
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_MANUAL, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
+    STATE_AUTO, STATE_MANUAL, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_OPERATION_MODE)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
@@ -113,7 +114,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         if temperature is None:
             return
         await self._device.set_point_temperature(temperature)
-        
+
      async def async_set_operation_mode(self, operation_mode):
         """Set operation mode."""
         _LOGGER.error("KAROL: %s", operation_mode)
