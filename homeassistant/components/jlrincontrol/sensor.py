@@ -24,7 +24,7 @@ class JLRSensor(JLREntity):
         val = self._get_vehicle_status(self.vehicle.info.get('vehicleStatus'))
         if val is None:
             return val
-        if val:
+        elif val:
             val = val[self._attribute]
         else:
             return None

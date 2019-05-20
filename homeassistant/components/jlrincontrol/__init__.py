@@ -24,7 +24,8 @@ RESOURCES = {
     'FUEL_LEVEL_PERC': ('sensor', 'Fuel level', 'mdi:fuel', '%'),
     'DISTANCE_TO_EMPTY_FUEL': ('sensor', 'Range', 'mdi:road', 'km'),
     'EXT_KILOMETERS_TO_SERVICE': ('sensor', 'Distance to next service', 'mdi:road', 'km'),
-    'ODOMETER_METER': ('sensor', 'Odometer', 'mdi:car', 'km')
+    'ODOMETER_METER': ('sensor', 'Odometer', 'mdi:car', 'km'),
+    'DOOR_IS_ALL_DOORS_LOCKED': ('binary_sensor', 'All Doors Locked', 'mdi:lock', 'lock')
 
 
 }
@@ -66,7 +67,7 @@ def setup(hass, config):
 
         for attr, (component, *_) in RESOURCES.items():
             hass.helpers.discovery.load_platform(
-                'sensor', DOMAIN, (vehicle.vin, attr), config
+                component, DOMAIN, (vehicle.vin, attr), config
             )
 
     def update_vehicle(vehicle):
