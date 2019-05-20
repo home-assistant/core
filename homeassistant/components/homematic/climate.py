@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT, PRESET_AWAY, PRESET_BOOST, PRESET_COMFORT)
+    HVAC_MODE_HEAT, PRESET_AWAY, PRESET_BOOST, PRESET_COMFORT, PRESET_ECO)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import ATTR_DISCOVER_DEVICES, HM_ATTRIBUTE_SUPPORT, HMDevice
@@ -24,7 +24,7 @@ HM_HUMI_MAP = [
 HM_PRESET_MAP = {
     "BOOST_MODE": PRESET_BOOST,
     "COMFORT_MODE": PRESET_COMFORT,
-    "LOWERING_MODE": "lowering"
+    "LOWERING_MODE": PRESET_ECO,
 }
 
 HM_CONTROL_MODE = 'CONTROL_MODE'
@@ -66,7 +66,7 @@ class HMThermostat(HMDevice, ClimateDevice):
 
         Need to be one of HVAC_MODE_*.
         """
-        if self._hm_controll_mode == self._hmdevice.AUTO_MANU:
+        if self._hm_controll_mode == self._hmdevice.AUTO_MODE:
             return HVAC_MODE_HEAT
         return HVAC_MODE_AUTO
 
