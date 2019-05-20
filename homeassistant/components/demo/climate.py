@@ -2,12 +2,12 @@
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT, HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT_COOL,
-    HVAC_MODES, SUPPORT_AUX_HEAT, SUPPORT_CURRENT_HVAC, SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE, SUPPORT_SWING_MODE, SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_HUMIDITY_HIGH, SUPPORT_TARGET_HUMIDITY_LOW,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE_HIGH,
-    SUPPORT_TARGET_TEMPERATURE_LOW)
+    CURRENT_HVAC_HEAT, HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL, HVAC_MODE_OFF, HVAC_MODES, SUPPORT_AUX_HEAT,
+    SUPPORT_CURRENT_HVAC, SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE,
+    SUPPORT_SWING_MODE, SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_HUMIDITY_HIGH,
+    SUPPORT_TARGET_HUMIDITY_LOW, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 SUPPORT_FLAGS = SUPPORT_TARGET_HUMIDITY_LOW | SUPPORT_TARGET_HUMIDITY_HIGH
@@ -18,13 +18,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([
         DemoClimate('HeatPump', 68, TEMP_FAHRENHEIT, None, 77,
                     None, None, None, None, HVAC_MODE_AUTO,
-                    CURRENT_HVAC_HEAT, None, None, None),
+                    CURRENT_HVAC_HEAT, None, None, None,
+                    [HVAC_MODE_HEAT, HVAC_MODE_OFF]),
         DemoClimate('Hvac', 21, TEMP_CELSIUS, None, 22, 'On High',
                     67, 54, 'Off', HVAC_MODE_COOL, CURRENT_HVAC_COOL,
-                    False, None, None),
+                    False, None, None, HVAC_MODES),
         DemoClimate('Ecobee', None, TEMP_CELSIUS, 'home', 23, 'Auto Low',
                     None, None, 'Auto', HVAC_MODE_HEAT_COOL, None, None, 24,
-                    21)
+                    21, [HVAC_MODE_AUTO, HVAC_MODE_HEAT_COOL, HVAC_MODE_COOL,
+                         HVAC_MODE_HEAT])
     ])
 
 
@@ -34,7 +36,7 @@ class DemoClimate(ClimateDevice):
     def __init__(self, name, target_temperature, unit_of_measurement, preset,
                  current_temperature, fan_mode, target_humidity,
                  current_humidity, swing_mode, hvac_state, current_hvac,
-                 aux, target_temp_high, target_temp_low,
+                 aux, target_temp_high, target_temp_low, hvac_modes
                 ):
         """Initialize the climate device."""
         self._name = name
@@ -74,7 +76,7 @@ class DemoClimate(ClimateDevice):
         self._aux = aux
         self._current_swing_mode = swing_mode
         self._fan_list = ['On Low', 'On High', 'Auto Low', 'Auto High', 'Off']
-        self._hvac_list = HVAC_MODES
+        self._hvac_modes = hvac_modes
         self._swing_list = ['Auto', '1', '2', '3', 'Off']
         self._target_temperature_high = target_temp_high
         self._target_temperature_low = target_temp_low
@@ -145,9 +147,9 @@ class DemoClimate(ClimateDevice):
         return self._hvac_state
 
     @property
-    def hvac_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
-        return self._hvac_list
+        return self._hvac_modes
 
     @property
     def preset_mode(self):
