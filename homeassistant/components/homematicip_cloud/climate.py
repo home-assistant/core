@@ -5,6 +5,7 @@ from homematicip.aio.device import (
     AsyncHeatingThermostat, AsyncHeatingThermostatCompact)
 from homematicip.aio.group import AsyncHeatingGroup
 from homematicip.aio.home import AsyncHome
+from homematicip.base.enums import ClimateControlMode
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -122,8 +123,10 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
             await self._device.set_boost()
         else:
             await self._device.set_boost(False)
-            await self._device.set_control_mode(HA_STATE_TO_HMIP[operation_mode])
+            await self._device.set_control_mode(
+                HA_STATE_TO_HMIP[operation_mode])
         self.schedule_update_ha_state()
+
 
 def _get_first_heating_thermostat(heating_group: AsyncHeatingGroup):
     """Return the first HeatingThermostat from a HeatingGroup."""
