@@ -21,7 +21,8 @@ DATA_KEY = 'snapcast'
 SERVICE_SNAPSHOT = 'snapcast_snapshot'
 SERVICE_RESTORE = 'snapcast_restore'
 
-SUPPORT_SNAPCAST_CLIENT = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
+SUPPORT_SNAPCAST_CLIENT = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET |\
+        SUPPORT_SELECT_SOURCE
 SUPPORT_SNAPCAST_GROUP = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET |\
     SUPPORT_SELECT_SOURCE
 
@@ -200,6 +201,11 @@ class SnapcastClientDevice(MediaPlayerDevice):
         return '{}{}'.format(CLIENT_PREFIX, self._client.identifier)
 
     @property
+    def source(self):
+        """Return the current input source."""
+        return self._client.group.stream
+
+    @property
     def volume_level(self):
         """Return the volume level."""
         return self._client.volume / 100
@@ -213,6 +219,11 @@ class SnapcastClientDevice(MediaPlayerDevice):
     def supported_features(self):
         """Flag media player features that are supported."""
         return SUPPORT_SNAPCAST_CLIENT
+
+    @property
+    def source_list(self):
+        """List of available input sources."""
+        return list(self._client.group.streams_by_name().keys())
 
     @property
     def state(self):
@@ -233,6 +244,13 @@ class SnapcastClientDevice(MediaPlayerDevice):
     def should_poll(self):
         """Do not poll for state."""
         return False
+
+    async def async_select_source(self, source):
+        """Set input source."""
+        streams = self._client.group.streams_by_name()
+        if source in streams:
+            await self._client.group.set_stream(streams[source].identifier)
+            self.async_schedule_update_ha_state()
 
     async def async_mute_volume(self, mute):
         """Send the mute command."""
