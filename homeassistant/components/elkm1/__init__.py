@@ -109,7 +109,7 @@ def _get_mac_for(elk_host):
     digits_pattern = re.compile(r"^[0-9.]+$")
     hp_m = hostname_pattern.search(elk_host)
     if hp_m:
-        ip_host = m.group(1)
+        ip_host = hp_m.group(1)
         dp_m = digits_pattern.match(ip_host)
         if dp_m:
             mac_addr = get_mac_address(ip=ip_host)
