@@ -10,7 +10,7 @@ from homeassistant.components import zone
 from homeassistant.components.group import (
     ATTR_ADD_ENTITIES, ATTR_ENTITIES, ATTR_OBJECT_ID, ATTR_VISIBLE,
     DOMAIN as DOMAIN_GROUP, SERVICE_SET)
-from homeassistant.components.zone.zone import async_active_zone
+from homeassistant.components.zone import async_active_zone
 from homeassistant.config import load_yaml_config_file, async_log_exception
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
