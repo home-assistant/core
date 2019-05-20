@@ -1,6 +1,7 @@
 """Test config utils."""
 # pylint: disable=protected-access
 import asyncio
+import copy
 import os
 import unittest.mock as mock
 from collections import OrderedDict
@@ -11,7 +12,8 @@ import pytest
 from voluptuous import MultipleInvalid, Invalid
 import yaml
 
-from homeassistant.core import DOMAIN, HomeAssistantError, Config
+from homeassistant.core import (
+    DOMAIN, SOURCE_STORAGE, Config, HomeAssistantError)
 import homeassistant.config as config_util
 from homeassistant.loader import async_get_integration
 from homeassistant.const import (
@@ -439,7 +441,32 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
     assert hass.config.time_zone.zone == 'Europe/Copenhagen'
     assert len(hass.config.whitelist_external_dirs) == 2
     assert '/tmp' in hass.config.whitelist_external_dirs
-    assert hass.config.config_source == config_util.SOURCE_STORAGE
+    assert hass.config.config_source == SOURCE_STORAGE
+
+
+async def test_updating_configuration(hass, hass_storage):
+    """Test updating configuration stores the new configuration."""
+    core_data = {
+        'data': {
+            'elevation': 10,
+            'latitude': 55,
+            'location_name': 'Home',
+            'longitude': 13,
+            'time_zone': 'Europe/Copenhagen',
+            'unit_system': 'metric'
+            },
+        'key': 'homeassistant.core_config',
+        'version': 1
+    }
+    hass_storage["homeassistant.core_config"] = dict(core_data)
+    await config_util.async_process_ha_core_config(
+        hass, {'whitelist_external_dirs': '/tmp'})
+    await hass.config.update(latitude=50)
+
+    new_core_data = copy.deepcopy(core_data)
+    new_core_data['data']['latitude'] = 50
+    assert hass_storage["homeassistant.core_config"] == new_core_data
+    assert hass.config.latitude == 50
 
 
 async def test_override_stored_configuration(hass, hass_storage):
@@ -474,8 +501,6 @@ async def test_override_stored_configuration(hass, hass_storage):
 
 async def test_loading_configuration(hass):
     """Test loading core config onto hass object."""
-    hass.config = mock.Mock()
-
     await config_util.async_process_ha_core_config(hass, {
         'latitude': 60,
         'longitude': 50,
@@ -499,8 +524,6 @@ async def test_loading_configuration(hass):
 
 async def test_loading_configuration_temperature_unit(hass):
     """Test backward compatibility when loading core config."""
-    hass.config = mock.Mock()
-
     await config_util.async_process_ha_core_config(hass, {
         'latitude': 60,
         'longitude': 50,
@@ -521,8 +544,6 @@ async def test_loading_configuration_temperature_unit(hass):
 
 async def test_loading_configuration_from_packages(hass):
     """Test loading packages config onto hass object config."""
-    hass.config = mock.Mock()
-
     await config_util.async_process_ha_core_config(hass, {
         'latitude': 39,
         'longitude': -1,
@@ -586,12 +607,12 @@ async def test_discovering_configuration_auto_detect_fails(mock_detect,
                                                            mock_elevation,
                                                            hass):
     """Test config remains unchanged if discovery fails."""
-    hass.config = Config()
+    hass.config = Config(hass)
     hass.config.config_dir = "/test/config"
 
     await config_util.async_process_ha_core_config(hass, {})
 
-    blankConfig = Config()
+    blankConfig = Config(hass)
     assert hass.config.latitude == blankConfig.latitude
     assert hass.config.longitude == blankConfig.longitude
     assert hass.config.elevation == blankConfig.elevation

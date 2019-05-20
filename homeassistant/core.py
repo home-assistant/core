@@ -27,12 +27,12 @@ import attr
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_DOMAIN, ATTR_FRIENDLY_NAME, ATTR_NOW, ATTR_SERVICE,
-    ATTR_SERVICE_DATA, ATTR_SECONDS, EVENT_CALL_SERVICE,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_CLOSE, EVENT_SERVICE_REMOVED,
-    EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED, EVENT_TIMER_OUT_OF_SYNC, MATCH_ALL, __version__)
+    ATTR_DOMAIN, ATTR_FRIENDLY_NAME, ATTR_NOW, ATTR_SERVICE, ATTR_SERVICE_DATA,
+    ATTR_SECONDS, CONF_UNIT_SYSTEM_IMPERIAL, EVENT_CALL_SERVICE,
+    EVENT_CORE_CONFIG_UPDATE, EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_CLOSE, EVENT_SERVICE_REMOVED,
+    EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED,
+    EVENT_TIMER_OUT_OF_SYNC, MATCH_ALL, __version__)
 from homeassistant import loader
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError, InvalidStateError,
@@ -43,7 +43,8 @@ from homeassistant.util.async_ import (
 from homeassistant import util
 import homeassistant.util.dt as dt_util
 from homeassistant.util import location, slugify
-from homeassistant.util.unit_system import UnitSystem, METRIC_SYSTEM  # NOQA
+from homeassistant.util.unit_system import (  # NOQA
+    UnitSystem, IMPERIAL_SYSTEM, METRIC_SYSTEM)
 
 # Typing imports that create a circular dependency
 # pylint: disable=using-constant-test
@@ -56,10 +57,18 @@ CALLABLE_T = TypeVar('CALLABLE_T', bound=Callable)
 CALLBACK_TYPE = Callable[[], None]
 # pylint: enable=invalid-name
 
+CORE_STORAGE_KEY = 'homeassistant.core_config'
+CORE_STORAGE_VERSION = 1
+
 DOMAIN = 'homeassistant'
 
 # How long we wait for the result of a service call
 SERVICE_CALL_LIMIT = 10  # seconds
+
+# Source of core configuration
+SOURCE_DISCOVERED = 'discovered'
+SOURCE_STORAGE = 'storage'
+SOURCE_YAML = 'yaml'
 
 # How long to wait till things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
@@ -144,7 +153,7 @@ class HomeAssistant:
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
-        self.config = Config()  # type: Config
+        self.config = Config(self)  # type: Config
         self.components = loader.Components(self)
         self.helpers = loader.Helpers(self)
         # This is a dictionary that any component can store any data on.
@@ -1168,8 +1177,10 @@ class ServiceRegistry:
 class Config:
     """Configuration settings for Home Assistant."""
 
-    def __init__(self) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new config object."""
+        self.hass = hass
+
         self.latitude = None  # type: Optional[float]
         self.longitude = None  # type: Optional[float]
         self.elevation = None  # type: Optional[int]
@@ -1235,7 +1246,7 @@ class Config:
         return False
 
     def as_dict(self) -> Dict:
-        """Create a dictionary representation of this dict.
+        """Create a dictionary representation of the configuration.
 
         Async friendly.
         """
@@ -1256,6 +1267,87 @@ class Config:
             'version': __version__,
             'config_source': self.config_source
         }
+
+    def set_time_zone(self, time_zone_str: str) -> None:
+        """Help to set the time zone."""
+        time_zone = dt_util.get_time_zone(time_zone_str)
+
+        if time_zone:
+            self.time_zone = time_zone
+            dt_util.set_default_time_zone(time_zone)
+        else:
+            raise ValueError(
+                "Received invalid time zone {}".format(time_zone_str))
+
+    @callback
+    def _update(self, *,
+                source: str,
+                latitude: Optional[float] = None,
+                longitude: Optional[float] = None,
+                elevation: Optional[int] = None,
+                unit_system: Optional[str] = None,
+                location_name: Optional[str] = None,
+                time_zone: Optional[str] = None) -> None:
+        """Update the configuration from a dictionary.
+
+        Async friendly.
+        """
+        self.config_source = source
+        if latitude is not None:
+            self.latitude = latitude
+        if longitude is not None:
+            self.longitude = longitude
+        if elevation is not None:
+            self.elevation = elevation
+        if unit_system is not None:
+            if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+                self.units = IMPERIAL_SYSTEM
+            else:
+                self.units = METRIC_SYSTEM
+        if location_name is not None:
+            self.location_name = location_name
+        if time_zone is not None:
+            self.set_time_zone(time_zone)
+
+    async def update(self, **kwargs: Any) -> None:
+        """Update the configuration from a dictionary.
+
+        Async friendly.
+        """
+        self._update(source=SOURCE_STORAGE, **kwargs)
+        await self.async_store()
+        self.hass.bus.async_fire(
+            EVENT_CORE_CONFIG_UPDATE, kwargs
+        )
+
+    async def async_load(self) -> None:
+        """Load [homeassistant] core config."""
+        store = self.hass.helpers.storage.Store(
+            CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True)
+        data = await store.async_load()
+        if not data:
+            return
+
+        self._update(source=SOURCE_STORAGE, **data)
+
+    async def async_store(self) -> None:
+        """Store [homeassistant] core config."""
+        time_zone = dt_util.UTC.zone
+        if self.time_zone and getattr(self.time_zone, 'zone'):
+            time_zone = getattr(self.time_zone, 'zone')
+
+        data = {
+            'latitude': self.latitude,
+            'longitude': self.longitude,
+            'elevation': self.elevation,
+            'unit_system': self.units.name,
+            'location_name': self.location_name,
+            'time_zone': time_zone,
+        }
+
+        store = self.hass.helpers.storage.Store(
+            CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True)
+        await store.async_save(data)
 
 
 def _async_create_timer(hass: HomeAssistant) -> None:
