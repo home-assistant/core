@@ -66,7 +66,7 @@ async def async_setup(hass, hass_config):
     hass.data[DOMAIN] = {
         'beacons': [slugify(beacon) for beacon in mobile_beacons],
         'devices': set(),
-        'unsub_device_tracker': []
+        'unsub_device_tracker': {}
     }
     return True
 
@@ -132,8 +132,7 @@ async def async_setup_entry(hass, entry):
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
-    while hass.data[DOMAIN]['unsub_device_tracker']:
-        hass.data[DOMAIN]['unsub_device_tracker'].pop()()
+    hass.data[DOMAIN]['unsub_device_tracker'].pop(entry.entry_id)()
     await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
     return True
 

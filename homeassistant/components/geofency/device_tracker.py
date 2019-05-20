@@ -8,7 +8,7 @@ from homeassistant.components.device_tracker.config_entry import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DOMAIN as GEOFENCY_DOMAIN, TRACKER_UPDATE
+from . import DOMAIN as GF_DOMAIN, TRACKER_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,18 +18,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     @callback
     def _receive_data(device, gps, location_name, attributes):
         """Fire HA event to set location."""
-        if device in hass.data[GEOFENCY_DOMAIN]['devices']:
+        if device in hass.data[GF_DOMAIN]['devices']:
             return
 
-        hass.data[GEOFENCY_DOMAIN]['devices'].add(device)
+        hass.data[GF_DOMAIN]['devices'].add(device)
 
         async_add_entities([GeofencyEntity(
             device, gps, location_name, attributes
         )])
 
-    hass.data[GEOFENCY_DOMAIN]['unsub_device_tracker'].append(
+    hass.data[GF_DOMAIN]['unsub_device_tracker'][config_entry.entry_id] = \
         async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
-    )
 
     return True
 

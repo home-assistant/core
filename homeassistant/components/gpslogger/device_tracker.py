@@ -9,7 +9,7 @@ from homeassistant.components.device_tracker.config_entry import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DOMAIN as GPSLOGGER_DOMAIN, TRACKER_UPDATE
+from . import DOMAIN as GPL_DOMAIN, TRACKER_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,18 +20,17 @@ async def async_setup_entry(hass: HomeAssistantType, entry,
     @callback
     def _receive_data(device, gps, battery, accuracy, attrs):
         """Receive set location."""
-        if device in hass.data[GPSLOGGER_DOMAIN]['devices']:
+        if device in hass.data[GPL_DOMAIN]['devices']:
             return
 
-        hass.data[GPSLOGGER_DOMAIN]['devices'].add(device)
+        hass.data[GPL_DOMAIN]['devices'].add(device)
 
         async_add_entities([GPSLoggerEntity(
             device, gps, battery, accuracy, attrs
         )])
 
-    hass.data[GPSLOGGER_DOMAIN]['unsub_device_tracker'].append(
+    hass.data[GPL_DOMAIN]['unsub_device_tracker'][entry.entry_id] = \
         async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
-    )
 
 
 class GPSLoggerEntity(DeviceTrackerEntity):
