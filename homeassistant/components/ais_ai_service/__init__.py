@@ -631,6 +631,12 @@ def say_curr_entity(hass):
     elif entity_id == 'input_select.ais_bookmark_last_played':
         _say_it(hass, info_name + " " + info_data.replace("Local;", ""), None)
         return
+    elif entity_id == 'sensor.ais_android_wifi_current_network_info':
+        state = hass.states.get('sensor.ais_android_wifi_current_network_info')
+        attr = state.attributes
+        info = attr.get('description', 'brak informacji o połączeniu')
+        _say_it(hass, info, None)
+        return
     elif entity_id.startswith('script.'):
         _say_it(hass, info_name + " Naciśnij OK/WYKONAJ by uruchomić.", None)
         return
@@ -1693,8 +1699,9 @@ async def async_setup(hass, config):
     # initial status of the player
     hass.states.async_set("sensor.ais_player_mode", 'ais_favorites')
 
-    # sensor
+    # sensors
     hass.states.async_set("sensor.aisknowledgeanswer", "", {"text": ""})
+    hass.states.async_set("sensor.ais_android_wifi_current_network_info", 0, {"friendly_name": "Połączenie Wifi"})
 
     return True
 
@@ -1936,23 +1943,30 @@ def _process_command_from_frame(hass, service):
     elif service.data["topic"] == 'ais/wifi_connection_info':
         # current connection info
         cci = json.loads(service.data["payload"])
-        info = " "
+        attr = {"friendly_name": "Połączenie Wifi"}
+        desc = ""
+        speed = 0
         if "pass" in cci:
             ais_global.set_my_wifi_pass(cci["pass"])
         if "ssid" in cci:
             ais_global.set_my_ssid(cci["ssid"])
+            attr["ssid"] = cci["ssid"]
             if cci["ssid"] == "<unknown ssid>":
-                info += "brak połączenia"
+                desc += "brak połączenia"
             else:
-                info += cci["ssid"]
+                desc += cci["ssid"]
                 if "link_speed_mbps" in cci:
-                    info += "; prędkość: " + str(cci["link_speed_mbps"]) + " megabitów na sekundę"
+                    desc += "; prędkość: " + str(cci["link_speed_mbps"]) + " megabitów na sekundę"
+                    attr["link_speed_mbps"] = cci["link_speed_mbps"]
+                    speed = cci["link_speed_mbps"]
                 if "rssi" in cci:
-                    info += "; " + _wifi_rssi_to_info(cci["rssi"])
+                    desc += "; " + _wifi_rssi_to_info(cci["rssi"])
+                    attr["rssi"] = cci["rssi"]
                 if "frequency_mhz" in cci:
-                    info += "; " + _wifi_frequency_info(cci["frequency_mhz"])
-        hass.states.async_set(
-            'sensor.ais_android_wifi_current_network_info', info, {"friendly_name": "Połączenie Wifi"})
+                    desc += "; " + _wifi_frequency_info(cci["frequency_mhz"])
+                    attr["frequency_mhz"] = cci["frequency_mhz"]
+        attr["description"] = desc
+        hass.states.async_set("sensor.ais_android_wifi_current_network_info", speed, attr)
         return
     elif service.data["topic"] == 'ais/wifi_state_change_info':
         # current connection info

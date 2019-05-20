@@ -118,8 +118,6 @@ input_text.buttons_ais_remote:
 sensor.internal_ip_address:
   friendly_name: Adres IP
   icon: mdi:access-point-network
-sensor.ais_android_wifi_current_network_info:
-  friendly_name: Połączenie Wifi
 sensor.local_host_name:
   friendly_name: Lokalna nazwa hosta
   icon: mdi:dns

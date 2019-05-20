@@ -26,7 +26,7 @@ process_command_from_frame:
   fields:
     data:
       description: Przykładowy komunikat o zmianie adresu IP.
-      example: '{"topic": ""ais/ip_state_change_info", "payload": "{\"ip\": \"192.168.1.1\"}"}'
+      example: '{"topic": "ais/ip_state_change_info", "payload": "{\"ip\": \"192.168.1.1\"}"}'
 
 publish_command_to_frame:
   description: Publikowanie komendy do aplikacji android.

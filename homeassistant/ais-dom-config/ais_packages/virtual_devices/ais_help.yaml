@@ -4,9 +4,6 @@ sensor:
       ais_connect_iot_device_info:
         value_template: "Podłącz urządzenie do prądu. Upewnij się, że urządzenie znajduje się w zasięgu routera WiFi oraz bramki AIS dom.
                          Żeby uruchomić tryb parowania naciśnij szybko 4 razy przycisk na urządzeniu i poczkaj aż jego dioda zacznie mrugać."
-      ais_android_wifi_current_network_info:
-        value_template: "Brak informacji o połączeniu WiFi"
-
   - platform: mqtt
     name: local_host_name
     state_topic: ais/local_host_name/sensor

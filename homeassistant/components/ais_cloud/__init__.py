@@ -58,8 +58,6 @@ def async_setup(hass, config):
     hass.states.async_set("sensor.aisrsshelptext", "", {"text": ""})
     hass.states.async_set("sensor.aisknowledgeanswer", "", {"text": ""})
 
-
-
     def get_radio_types(call):
         _LOGGER.info("get_radio_types")
         data.get_radio_types(call)

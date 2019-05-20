@@ -119,7 +119,12 @@ async def async_setup(hass, config):
                 }
             )
             # say info about update
+            # import homeassistant.components.ais_ai_service as ais_ai
+            # if ais_ai.CURR_ENTITIE == 'script.ais_update_system' and ais_ai.CURR_BUTTON_CODE == 23:
             await hass.services.async_call('ais_ai_service', 'say_it', {"text": info})
+            # else:
+            #     await hass.services.async_call(
+            #         'ais_ai_service', 'say_it', {"text": info.replace("Naciśnij OK/URUCHOM aby zainstalować.", "")})
 
         else:
 
