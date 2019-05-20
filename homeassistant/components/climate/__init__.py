@@ -88,7 +88,7 @@ SET_SWING_MODE_SCHEMA = vol.Schema({
 })
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType):
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up climate devices."""
     component = hass.data[DOMAIN] = \
         EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
@@ -126,12 +126,12 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistantType, entry):
     """Set up a config entry."""
     return await hass.data[DOMAIN].async_setup_entry(entry)
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistantType, entry):
     """Unload a config entry."""
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
@@ -435,7 +435,9 @@ class ClimateDevice(Entity):
         return DEFAULT_MAX_HUMIDITY
 
 
-async def async_service_aux_heat(entity, service: ServiceDataType) -> None:
+async def async_service_aux_heat(
+        entity: ClimateDevice, service: ServiceDataType
+) -> None:
     """Handle aux heat service."""
     if service.data[ATTR_AUX_HEAT]:
         await entity.async_turn_aux_heat_on()
@@ -444,7 +446,7 @@ async def async_service_aux_heat(entity, service: ServiceDataType) -> None:
 
 
 async def async_service_temperature_set(
-        entity, service: ServiceDataType
+        entity: ClimateDevice, service: ServiceDataType
 ) -> None:
     """Handle set temperature service."""
     hass = entity.hass
