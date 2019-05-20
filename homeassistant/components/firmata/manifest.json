@@ -1,0 +1,14 @@
+{
+  "domain": "firmata",
+  "name": "Firmata",
+  "documentation": "https://www.home-assistant.io/components/firmata",
+  "requirements": [
+    "pymata-aio==2.30"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@DaAwesomeP",
+    "@balloob",
+    "@kane610"
+  ]
+}
