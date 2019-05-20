@@ -95,7 +95,7 @@ class MockNws():
         """Init mock nws."""
         pass
 
-    async def observations(self):
+    async def observations(self, limit):
         """Mock Observation."""
         return OBS
 
@@ -330,7 +330,7 @@ class MockNws_Metar():
         """Init mock nws."""
         pass
 
-    async def observations(self):
+    async def observations(self, limit):
         """Mock Observation."""
         return OBS_METAR
 

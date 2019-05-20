@@ -180,12 +180,14 @@ class NWSWeather(WeatherEntity):
         with async_timeout.timeout(10, loop=self.hass.loop):
             _LOGGER.debug("Updating station observations %s",
                           self._nws.station)
-            self._observation = await self._nws.observations()
-            self._metar_obs = [
-                self._metar(obs['rawMessage'])
-                for obs in self._observation
-                if 'rawMessage' in obs.keys()
-            ]
+
+            obs = await self._nws.observations(limit=1)
+            self._observation = obs[0]
+            if 'rawMessage' in self._observation.keys():
+                self._metar_obs = self._metar(self._observation['rawMessage'])
+            else:
+                self._metar_obs = None
+
             _LOGGER.debug("Updating forecast")
             if self._mode == 'daynight':
                 self._forecast = await self._nws.forecast()
@@ -207,9 +209,9 @@ class NWSWeather(WeatherEntity):
     @property
     def temperature(self):
         """Return the current temperature."""
-        temp_c = self._observation[0]['temperature']['value']
+        temp_c = self._observation['temperature']['value']
         if temp_c is None and self._metar_obs:
-            temp_c = self._metar_obs[0].temp.value(units='C')
+            temp_c = self._metar_obs.temp.value(units='C')
         if temp_c is not None:
             return convert_temperature(temp_c, TEMP_CELSIUS, TEMP_FAHRENHEIT)
         return None
@@ -217,10 +219,10 @@ class NWSWeather(WeatherEntity):
     @property
     def pressure(self):
         """Return the current pressure."""
-        pressure_pa = self._observation[0]['seaLevelPressure']['value']
+        pressure_pa = self._observation['seaLevelPressure']['value']
 
         if pressure_pa is None and self._metar_obs:
-            pressure_hpa = self._metar_obs[0].press.value(units='HPA')
+            pressure_hpa = self._metar_obs.press.value(units='HPA')
             if pressure_hpa is None:
                 return None
             pressure_pa = convert_pressure(pressure_hpa, PRESSURE_HPA,
@@ -238,14 +240,14 @@ class NWSWeather(WeatherEntity):
     @property
     def humidity(self):
         """Return the name of the sensor."""
-        return self._observation[0]['relativeHumidity']['value']
+        return self._observation['relativeHumidity']['value']
 
     @property
     def wind_speed(self):
         """Return the current windspeed."""
-        wind_m_s = self._observation[0]['windSpeed']['value']
+        wind_m_s = self._observation['windSpeed']['value']
         if wind_m_s is None and self._metar_obs:
-            wind_m_s = self._metar_obs[0].wind_speed.value(units='MPS')
+            wind_m_s = self._metar_obs.wind_speed.value(units='MPS')
             print(wind_m_s)
         if wind_m_s is None:
             return None
@@ -261,9 +263,9 @@ class NWSWeather(WeatherEntity):
     @property
     def wind_bearing(self):
         """Return the current wind bearing (degrees)."""
-        wind_bearing = self._observation[0]['windDirection']['value']
+        wind_bearing = self._observation['windDirection']['value']
         if wind_bearing is None and self._metar_obs:
-            wind_bearing = self._metar_obs[0].wind_dir.value()
+            wind_bearing = self._metar_obs.wind_dir.value()
         return wind_bearing
 
     @property
@@ -274,16 +276,16 @@ class NWSWeather(WeatherEntity):
     @property
     def condition(self):
         """Return current condition."""
-        time, weather = parse_icon(self._observation[0]['icon'])
+        time, weather = parse_icon(self._observation['icon'])
         cond, _ = convert_condition(time, weather)
         return cond
 
     @property
     def visibility(self):
         """Return visibility."""
-        vis_m = self._observation[0]['visibility']['value']
+        vis_m = self._observation['visibility']['value']
         if vis_m is None and self._metar_obs:
-            vis_m = self._metar_obs[0].vis.value(units='M')
+            vis_m = self._metar_obs.vis.value(units='M')
         if vis_m is None:
             return None
 
