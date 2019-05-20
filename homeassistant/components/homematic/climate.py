@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT, PRESET_AWAY, PRESET_BOOST, PRESET_COMFORT)
+    HVAC_MODE_HEAT, PRESET_AWAY, PRESET_BOOST, PRESET_COMFORT, PRESET_ECO)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import ATTR_DISCOVER_DEVICES, HM_ATTRIBUTE_SUPPORT, HMDevice
@@ -24,7 +24,7 @@ HM_HUMI_MAP = [
 HM_PRESET_MAP = {
     "BOOST_MODE": PRESET_BOOST,
     "COMFORT_MODE": PRESET_COMFORT,
-    "LOWERING_MODE": "lowering"
+    "LOWERING_MODE": PRESET_ECO,
 }
 
 HM_CONTROL_MODE = 'CONTROL_MODE'
@@ -66,7 +66,7 @@ class HMThermostat(HMDevice, ClimateDevice):
 
         Need to be one of HVAC_MODE_*.
         """
-        if self._hm_controll_mode == self._hmdevice.AUTO_MANU:
+        if self._hm_controll_mode == self._hmdevice.AUTO_MODE:
             return HVAC_MODE_HEAT
         return HVAC_MODE_AUTO
 
@@ -134,13 +134,21 @@ class HMThermostat(HMDevice, ClimateDevice):
 
         self._hmdevice.writeNodeData(self._state, float(temperature))
 
-    def set_operation_mode(self, operation_mode):
-        """Set new target operation mode."""
-        for mode, state in HM_STATE_MAP.items():
-            if state == operation_mode:
-                code = getattr(self._hmdevice, mode, 0)
-                self._hmdevice.MODE = code
-                return
+    def set_hvac_mode(self, hvac_mode):
+        """Set new target hvac mode."""
+        if hvac_mode == HVAC_MODE_AUTO:
+            self._hmdevice.MODE = self._hmdevice.AUTO_MODE
+        else:
+            self._hmdevice.MODE = self._hmdevice.MANU_MODE
+
+    def set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        if preset_mode == PRESET_BOOST:
+            self._hmdevice.MODE = self._hmdevice.BOOST_MODE
+        elif preset_mode == PRESET_COMFORT:
+            self._hmdevice.MODE = self._hmdevice.COMFORT_MODE
+        elif preset_mode == PRESET_ECO:
+            self._hmdevice.MODE = self._hmdevice.LOWERING_MODE
 
     @property
     def min_temp(self):
