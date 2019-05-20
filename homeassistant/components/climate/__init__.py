@@ -2,6 +2,7 @@
 from datetime import timedelta
 import functools as ft
 import logging
+from typing import Any, Awaitable, Dict, Optional, List
 
 import voluptuous as vol
 
@@ -9,6 +10,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, PRECISION_TENTHS, PRECISION_WHOLE,
     TEMP_CELSIUS, STATE_ON, STATE_OFF)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import (
+    ServiceDataType, HomeAssistantType, ConfigType)
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA_BASE
 from homeassistant.helpers.entity import Entity
@@ -85,7 +88,7 @@ SET_SWING_MODE_SCHEMA = vol.Schema({
 })
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up climate devices."""
     component = hass.data[DOMAIN] = \
         EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
@@ -226,23 +229,23 @@ class ClimateDevice(Entity):
         return None
 
     @property
-    def hvac_state(self):
+    def hvac_state(self) -> str:
         """Return hvac operation ie. heat, cool mode
 
         Need to be one of HVAC_MODE_*.
         """
-        return None
+        raise NotImplementedError()
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> List[str]:
         """Return the list of available hvac operation modes.
 
         Need to be a subset of HVAC_MODES.
         """
-        return None
+        raise NotImplementedError()
 
     @property
-    def current_hvac(self):
+    def current_hvac(self) -> Optional[str]:
         """Return the current running hvac operation if supported.
 
         Need to be one of CURRENT_HVAC_*.
@@ -250,7 +253,7 @@ class ClimateDevice(Entity):
         return None
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
         return None
 
@@ -266,52 +269,48 @@ class ClimateDevice(Entity):
 
     @property
     def target_temperature_high(self) -> Optional[float]:
-        """Return the highbound target temperature we try to reach.
-
-        Requires SUPPORT_TARGET_TEMPERATURE_RANGE.
-        """
-        raise NotImplementedError
+        """Return the highbound target temperature we try to reach."""
+        return None
 
     @property
-    def preset_mode(self):
+    def target_temperature_low(self) -> Optional[float]:
+        """Return the lowbound target temperature we try to reach."""
+        return None
+
+    @property
+    def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
         return None
 
     @property
-    def preset_list(self):
+    def preset_list(self) -> Optional[List[str]]:
         """Return a list of available preset modes."""
         return None
 
     @property
-    def is_aux_heat(self):
+    def is_aux_heat(self) -> Optional[str]:
         """Return true if aux heater."""
         return None
 
     @property
-    def fan_mode(self):
+    def fan_mode(self) -> Optional[str]:
         """Return the fan setting."""
         return None
 
     @property
-    def fan_modes(self) -> Optional[List[str]]:
-        """Return the list of available fan modes.
-
-        Requires SUPPORT_FAN_MODE.
-        """
-        raise NotImplementedError
+    def fan_list(self) -> Optional[List[str]]:
+        """Return the list of available fan modes."""
+        return None
 
     @property
-    def swing_mode(self):
+    def swing_mode(self) -> Optional[str]:
         """Return the fan setting."""
         return None
 
     @property
-    def swing_modes(self) -> Optional[List[str]]:
-        """Return the list of available swing modes.
-
-        Requires SUPPORT_SWING_MODE.
-        """
-        raise NotImplementedError
+    def swing_list(self) -> Optional[List[str]]:
+        """Return the list of available swing modes."""
+        return None
 
     def set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
@@ -347,11 +346,11 @@ class ClimateDevice(Entity):
         """
         return self.hass.async_add_job(self.set_fan_mode, fan_mode)
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
         raise NotImplementedError()
 
-    def async_set_hvac_mode(self, hvac_mode):
+    def async_set_hvac_mode(self, hvac_mode: str) -> Awaitable[None]:
         """Set new target hvac mode.
 
         This method must be run in the event loop and returns a coroutine.
@@ -369,18 +368,18 @@ class ClimateDevice(Entity):
         """
         return self.hass.async_add_job(self.set_swing_mode, swing_mode)
 
-    def set_preset_mode(self, preset_mode):
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         raise NotImplementedError()
 
-    def async_set_preset_mode(self, preset_mode):
+    def async_set_preset_mode(self, preset_mode: str) -> Awaitable[None]:
         """Set new preset mode.
 
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.async_add_job(self.set_preset_mode, preset_mode)
 
-    def turn_aux_heat_on(self):
+    def turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
         raise NotImplementedError()
 
@@ -430,7 +429,7 @@ class ClimateDevice(Entity):
         return DEFAULT_MAX_HUMIDITY
 
 
-async def async_service_aux_heat(entity, service):
+async def async_service_aux_heat(entity, service: ServiceDataType) -> None:
     """Handle aux heat service."""
     if service.data[ATTR_AUX_HEAT]:
         await entity.async_turn_aux_heat_on()
@@ -439,7 +438,7 @@ async def async_service_aux_heat(entity, service):
 
 
 async def async_service_temperature_set(
-        entity: ClimateDevice, service: ServiceDataType
+        entity, service: ServiceDataType
 ) -> None:
     """Handle set temperature service."""
     hass = entity.hass
