@@ -87,7 +87,8 @@ class DeviceTrackerEntity(Entity):
 
         location = self.location
 
-        if self.location is not None and self.source_type == SOURCE_TYPE_GPS:
+        if location is not None:
+            print(location)
             zone_state = zone.async_active_zone(
                 self.hass, location[0], location[1], self.location_accuracy)
             if zone_state is None:
@@ -97,6 +98,8 @@ class DeviceTrackerEntity(Entity):
             else:
                 state = zone_state.name
             return state
+
+        return None
 
     @property
     def state_attributes(self):
