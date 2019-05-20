@@ -3,6 +3,7 @@ import logging
 import re
 
 import voluptuous as vol
+from getmac import get_mac_address
 from homeassistant.const import (
     CONF_EXCLUDE, CONF_HOST, CONF_INCLUDE, CONF_PASSWORD,
     CONF_TEMPERATURE_UNIT, CONF_USERNAME)
@@ -11,7 +12,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType  # noqa
-from getmac import get_mac_address
 
 DOMAIN = 'elkm1'
 
@@ -107,19 +107,18 @@ CONFIG_SCHEMA = vol.Schema({
 def _get_mac_for(elk_host):
     hostname_pattern = re.compile(r"^elks?://([^:]+)")
     digits_pattern = re.compile(r"^[0-9.]+$")
-    m = hostname_pattern.search(elk_host)
-    if m:
+    hp_m = hostname_pattern.search(elk_host)
+    if hp_m:
         ip_host = m.group(1)
-        m = digits_pattern.match(ip_host)
-        if m:
+        dp_m = digits_pattern.match(ip_host)
+        if dp_m:
             mac_addr = get_mac_address(ip=ip_host)
         else:
-            mac_addr = get_mac_address(host=ip_host)
+            mac_addr = get_mac_address(hostname=ip_host)
         _LOGGER.info("elkm1 at %s (%s) has mac %s",
                      elk_host, ip_host, mac_addr)
         return mac_addr
-    else:
-        return None
+    return None
 
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
@@ -171,7 +170,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
                          conf[CONF_USERNAME],
                          'password': conf[CONF_PASSWORD]})
         elk.connect()
-        elk._mac_address = _get_mac_for(conf[CONF_HOST])
+        elk.mac_address = _get_mac_for(conf[CONF_HOST])
 
         devices[prefix] = elk
         elk_datas[prefix] = {'elk': elk,
@@ -237,7 +236,7 @@ class ElkEntity(Entity):
         self._prefix = elk_data['prefix']
         self._temperature_unit = elk_data['config']['temperature_unit']
         self._unique_id = 'elkm1_{}'.format(
-            self._mac_address.lower() + '_' +
+            elk.mac_address.lower() + '_' +
             self._element.default_name('_').lower())
 
     @property
