@@ -112,6 +112,22 @@ class MockNws():
         return [STN]
 
 
+class Prop:
+    """Property data class for metar.  Initialize with desired return value."""
+    def __init__(self, value_return):
+        self.value_return = value_return
+    def value(self, units=''):
+        return self.value_return
+    
+class MockMetar:
+    """Mock Metar parser"""
+    def __init__(self, code):
+        self.temp = Prop(27)
+        self.press = Prop(1111)
+        self.wind_speed = Prop(27)
+        self.wind_dir = Prop(175)
+        self.vis = Prop(5000)
+
 class TestNWS(unittest.TestCase):
     """Test the NWS weather component."""
 
@@ -348,7 +364,7 @@ class MockNws_Metar():
 
 
 class TestNWS_Metar(unittest.TestCase):
-    """Test the NWS weather component."""
+    """Test the NWS weather component with metar code."""
 
     def setUp(self):
         """Set up things to be run when tests are started."""
@@ -363,6 +379,7 @@ class TestNWS_Metar(unittest.TestCase):
 
     @MockDependency("pynws")
     @patch("pynws.Nws", new=MockNws_Metar)
+    @patch("metar.Metar.Metar", new=MockMetar)
     def test_metar(self, mock_pynws):
         """Test for successfully setting up the NWS platform with name."""
         assert setup_component(self.hass, weather.DOMAIN, {
@@ -384,11 +401,14 @@ class TestNWS_Metar(unittest.TestCase):
             display_temp(self.hass, temp_f, TEMP_FAHRENHEIT, PRECISION_WHOLE)
         assert data.get(ATTR_WEATHER_HUMIDITY) is None
         assert data.get(ATTR_WEATHER_PRESSURE) == round(
-            convert_pressure(truth.press.value(units='HPA'), PRESSURE_HPA,
-                             PRESSURE_INHG),
+            convert_pressure(truth.press.value(), PRESSURE_HPA, PRESSURE_INHG),
             2)
+
+        wind_speed_mi_s = convert_distance(truth.wind_speed.value(), LENGTH_METERS,
+                                      LENGTH_MILES)
         assert data.get(ATTR_WEATHER_WIND_SPEED) == round(
-            truth.wind_speed.value(units='MPH'))
+            wind_speed_mi_s * 3600)
         assert data.get(ATTR_WEATHER_WIND_BEARING) == truth.wind_dir.value()
-        assert data.get(ATTR_WEATHER_VISIBILITY) == round(
-            truth.vis.value(units='MI'))
+        vis = convert_distance(truth.vis.value(), LENGTH_METERS, LENGTH_MILES)
+        assert data.get(ATTR_WEATHER_VISIBILITY) == round(vis)
+            
