@@ -207,7 +207,7 @@ av==6.1.2
 # avion==0.10
 
 # homeassistant.components.axis
-axis==22
+axis==23
 
 # homeassistant.components.baidu
 baidu-aip==1.6.6
