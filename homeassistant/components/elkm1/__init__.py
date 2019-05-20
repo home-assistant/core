@@ -65,9 +65,10 @@ def _elk_range_validator(rng):
     end = start if len(vals) == 1 else _elk_value(vals[1])
     return (start, end)
 
+
 def _has_all_unique_prefixes(value):
     """Validate that each m1 configured has a unique prefix."""
-    prefixes = [ device.get(CONF_PREFIX) for device in value]
+    prefixes = [device.get(CONF_PREFIX) for device in value]
     schema = vol.Schema(vol.Unique())
     schema(prefixes)
     return value
