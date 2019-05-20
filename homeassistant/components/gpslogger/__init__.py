@@ -50,6 +50,10 @@ WEBHOOK_SCHEMA = vol.Schema({
 
 async def async_setup(hass, hass_config):
     """Set up the GPSLogger component."""
+    hass.data[DOMAIN] = {
+        'devices': set(),
+        'unsub_device_tracker': [],
+    }
     return True
 
 
@@ -98,7 +102,8 @@ async def async_setup_entry(hass, entry):
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
-
+    while hass.data[DOMAIN]['unsub_device_tracker']:
+        hass.data[DOMAIN]['unsub_device_tracker'].pop()()
     await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
     return True
 

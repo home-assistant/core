@@ -90,8 +90,7 @@ class GeofencyEntity(DeviceTrackerEntity):
 
     async def async_will_remove_from_hass(self):
         """Clean up after entity before removal."""
-        self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass, TRACKER_UPDATE, self._async_receive_data)
+        self._unsub_dispatcher()
 
     @callback
     def _async_receive_data(self, device, gps, location_name, attributes):
