@@ -7,13 +7,16 @@ from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import callback
 
-from .const import DOMAIN, STEP_USER, STEPS, DEFAULT_AREAS, STEP_INTEGRATION
+from .const import (
+    DOMAIN, STEP_USER, STEPS, DEFAULT_AREAS, STEP_INTEGRATION,
+    STEP_CORE_CONFIG)
 
 
 async def async_setup(hass, data, store):
     """Set up the onboarding view."""
     hass.http.register_view(OnboardingView(data, store))
     hass.http.register_view(UserOnboardingView(data, store))
+    hass.http.register_view(CoreConfigOnboardingView(data, store))
     hass.http.register_view(IntegrationOnboardingView(data, store))
 
 
@@ -128,6 +131,26 @@ class UserOnboardingView(_BaseOnboardingView):
             })
 
 
+class CoreConfigOnboardingView(_BaseOnboardingView):
+    """View to finish core config onboarding step."""
+
+    url = '/api/onboarding/core_config'
+    name = 'api:onboarding:core_config'
+    step = STEP_CORE_CONFIG
+
+    async def post(self, request):
+        """Handle finishing core config step."""
+        hass = request.app['hass']
+
+        async with self._lock:
+            if self._async_is_done():
+                return self.json_message('Core config step already done', 403)
+
+            await self._async_mark_done(hass)
+
+            return self.json({})
+
+
 class IntegrationOnboardingView(_BaseOnboardingView):
     """View to finish integration onboarding step."""
 
@@ -139,7 +162,7 @@ class IntegrationOnboardingView(_BaseOnboardingView):
         vol.Required('client_id'): str,
     }))
     async def post(self, request, data):
-        """Handle user creation, area creation."""
+        """Handle token creation."""
         hass = request.app['hass']
         user = request['hass_user']
 
