@@ -1,5 +1,6 @@
 """Support for monitoring a Sense energy sensor."""
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -51,7 +52,7 @@ async def async_setup(hass, config):
     hass.async_create_task(
         async_load_platform(hass, 'binary_sensor', DOMAIN, {}, config))
 
-    async def async_sense_update():
+    async def async_sense_update(now):
         """Retrieve latest state."""
         try:
             await hass.data[SENSE_DATA].update_realtime()
@@ -59,5 +60,6 @@ async def async_setup(hass, config):
         except SenseAPITimeoutException:
             _LOGGER.error("Timeout retrieving data")
 
-    async_track_time_interval(hass, async_sense_update, ACTIVE_UPDATE_RATE)
+    async_track_time_interval(hass, async_sense_update, 
+                              timedelta(seconds=ACTIVE_UPDATE_RATE))
     return True

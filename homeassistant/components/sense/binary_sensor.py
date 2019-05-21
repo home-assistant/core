@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.core import callback
 
 from . import SENSE_DATA, SENSE_DEVICE_UPDATE
 
@@ -114,5 +115,4 @@ class SenseDevice(BinarySensorDevice):
             """Update the state."""
             self.async_schedule_update_ha_state(True)
 
-        self._dispatcher_handlers.append(async_dispatcher_connect(
-            self.hass, SENSE_DEVICE_UPDATE, update))
+        async_dispatcher_connect(self.hass, SENSE_DEVICE_UPDATE, update)
