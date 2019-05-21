@@ -1,8 +1,5 @@
 """
 Support for PCA 301 smart switch.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.pca/
 """
 import logging
 
@@ -31,15 +28,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     import pypca
     from serial import SerialException
 
-    name = config.get(CONF_NAME)
-    usb_device = config.get(CONF_DEVICE)
+    name = config[CONF_NAME]
+    usb_device = config[CONF_DEVICE]
 
     try:
         pca = pypca.PCA(usb_device)
         pca.open()
-        entities = []
-        for device in pca.get_devices():
-            entities.append(SmartPlugSwitch(pca, device, name))
+        entities = [SmartPlugSwitch(pca, device, name) for device in pca.get_devices()]
         add_entities(entities, True)
 
     except SerialException as exc:
@@ -58,7 +53,6 @@ class SmartPlugSwitch(SwitchDevice):
         """Initialize the switch."""
         self._device_id = device_id
         self._name = name
-        self._state = pca.get_state(self._device_id)
         self._available = True
         self._emeter_params = {}
         self._pca = pca
