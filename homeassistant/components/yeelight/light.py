@@ -21,6 +21,8 @@ from . import (
     YEELIGHT_SERVICE_SCHEMA, DOMAIN, ATTR_TRANSITIONS,
     YEELIGHT_FLOW_TRANSITION_SCHEMA, ACTION_RECOVER, CONF_FLOW_PARAMS,
     ATTR_ACTION, ATTR_COUNT)
+from yeelight import (RGBTransition, SleepTransition, Flow, BulbException)
+from yeelight.enums import PowerMode, LightType, BulbType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,8 +94,6 @@ def _transitions_config_parser(transitions):
 
 
 def _parse_custom_effects(effects_config):
-    from yeelight import Flow
-
     effects = {}
     for config in effects_config:
         params = config[CONF_FLOW_PARAMS]
@@ -113,7 +113,6 @@ def _parse_custom_effects(effects_config):
 def _cmd(func):
     """Define a wrapper to catch exceptions from the bulb."""
     def _wrap(self, *args, **kwargs):
-        from yeelight import BulbException
         try:
             _LOGGER.debug("Calling %s with %s %s", func, args, kwargs)
             return func(self, *args, **kwargs)
@@ -125,8 +124,6 @@ def _cmd(func):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yeelight bulbs."""
-    from yeelight.enums import PowerMode
-
     data_key = '{}_lights'.format(DATA_YEELIGHT)
 
     if not discovery_info:
@@ -187,8 +184,6 @@ class YeelightLight(Light):
 
     def __init__(self, device, custom_effects=None):
         """Initialize the Yeelight light."""
-        from yeelight.enums import LightType
-
         self.config = device.config
         self._device = device
 
@@ -347,12 +342,11 @@ class YeelightLight(Light):
 
     def update(self) -> None:
         """Update properties from the bulb."""
-        from yeelight import BulbType, enums
         bulb_type = self._bulb.bulb_type
 
         if bulb_type == BulbType.Color:
             self._supported_features = SUPPORT_YEELIGHT_RGB
-        elif self.light_type == enums.LightType.Ambient:
+        elif self.light_type == LightType.Ambient:
             self._supported_features = SUPPORT_YEELIGHT_RGB
         elif bulb_type in (BulbType.WhiteTemp, BulbType.WhiteTempMood):
             if self._is_nightlight_enabled:
@@ -423,8 +417,6 @@ class YeelightLight(Light):
     def set_flash(self, flash) -> None:
         """Activate flash."""
         if flash:
-            from yeelight import (RGBTransition, SleepTransition, Flow,
-                                  BulbException)
             if self._bulb.last_properties["color_mode"] != 1:
                 _LOGGER.error("Flash supported currently only in RGB mode.")
                 return
@@ -458,7 +450,6 @@ class YeelightLight(Light):
     def set_effect(self, effect) -> None:
         """Activate effect."""
         if effect:
-            from yeelight import (Flow, BulbException)
             from yeelight.transitions import (disco, temp, strobe, pulse,
                                               strobe_color, alarm, police,
                                               police2, christmas, rgb,
@@ -502,7 +493,6 @@ class YeelightLight(Light):
 
     def turn_on(self, **kwargs) -> None:
         """Turn the bulb on."""
-        from yeelight import BulbException
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         colortemp = kwargs.get(ATTR_COLOR_TEMP)
         hs_color = kwargs.get(ATTR_HS_COLOR)
@@ -556,9 +546,6 @@ class YeelightLight(Light):
 
     def set_mode(self, mode: str):
         """Set a power mode."""
-        from yeelight.enums import PowerMode
-        from yeelight import BulbException
-
         try:
             self._bulb.set_power_mode(PowerMode[mode.upper()])
             self.device.update()
@@ -567,8 +554,6 @@ class YeelightLight(Light):
 
     def start_flow(self, transitions, count=0, action=ACTION_RECOVER):
         """Start flow."""
-        from yeelight import (Flow, BulbException)
-
         try:
             flow = Flow(
                 count=count,
@@ -591,8 +576,6 @@ class YeelightAmbientLight(YeelightLight):
 
     def __init__(self, *args, **kwargs):
         """Initialize the Yeelight Ambient light."""
-        from yeelight.enums import LightType
-
         super().__init__(*args, **kwargs)
         self._min_mireds = kelvin_to_mired(6500)
         self._max_mireds = kelvin_to_mired(1700)
