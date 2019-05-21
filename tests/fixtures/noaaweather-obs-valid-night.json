@@ -407,7 +407,7 @@
             }
         },
         {
-            "id": "https://api.weather.gov/stations/KJFK/observations/2035-03-29T05:51:00+00:00",
+            "id": "https://api.weather.gov/stations/KJFK/observations/2035-03-30T05:51:00+00:00",
             "type": "Feature",
             "geometry": {
                 "type": "Point",
@@ -417,15 +417,15 @@
                 ]
             },
             "properties": {
-                "@id": "https://api.weather.gov/stations/KJFK/observations/2035-03-29T05:51:00+00:00",
+                "@id": "https://api.weather.gov/stations/KJFK/observations/2035-03-30T05:51:00+00:00",
                 "@type": "wx:ObservationStation",
                 "elevation": {
                     "value": 7,
                     "unitCode": "unit:m"
                 },
                 "station": "https://api.weather.gov/stations/KJFK",
-                "timestamp": "2035-03-29T05:51:00+00:00",
-                "rawMessage": "KJFK 290351Z 16014KT 10SM SCT130 BKN250 13/08 A3007 RMK AO2 SLP183 T01280078",
+                "timestamp": "2035-03-30T05:51:00+00:00",
+                "rawMessage": "KJFK 300351Z 16014KT 10SM SCT130 BKN250 13/08 A3007 RMK AO2 SLP183 T01280078",
                 "textDescription": "Clear",
                 "icon": "https://api.weather.gov/icons/land/day/bkn?size=medium",
                 "presentWeather": [],
