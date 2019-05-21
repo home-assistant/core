@@ -174,6 +174,33 @@ async def test_templates_invalid_values(hass, calls):
 
     _verify(hass, STATE_UNKNOWN, None)
 
+
+async def test_invalid_templates(hass, calls):
+    """Test invalid templates."""
+    with assert_setup_component(1, 'vacuum'):
+        assert await setup.async_setup_component(hass, 'vacuum', {
+            'vacuum': {
+                'platform': 'template',
+                'vacuums': {
+                    'test_vacuum': {
+                        'value_template': "{{ this_function_does_not_exist() }}",
+                        'battery_level_template':
+                            "{{ this_function_does_not_exist() }}",
+                        'fan_speed_template':
+                            "{{ this_function_does_not_exist() }}",
+                        'start': {
+                            'service': 'script.vacuum_start'
+                        }
+                    }
+                }
+            }
+        })
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    _verify(hass, STATE_UNKNOWN, None)
+
 # End of template tests #
 
 

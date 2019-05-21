@@ -335,11 +335,11 @@ class TemplateVacuum(StateVacuumDevice):
                 battery_level = None
 
             # Validate battery level
-            if 0 <= int(battery_level) <= 100:
+            if battery_level and 0 <= int(battery_level) <= 100:
                 self._battery_level = int(battery_level)
             else:
                 _LOGGER.error(
-                    'Received invalid battery level : %s. Expected: 0-100',
+                    'Received invalid battery level: %s. Expected: 0-100',
                     battery_level)
                 self._battery_level = None
 
