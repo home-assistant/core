@@ -2,6 +2,8 @@
 import logging
 
 import voluptuous as vol
+from yeelight import (RGBTransition, SleepTransition, Flow, BulbException)
+from yeelight.enums import PowerMode, LightType, BulbType
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service import extract_entity_ids
 from homeassistant.util.color import (
@@ -21,8 +23,6 @@ from . import (
     YEELIGHT_SERVICE_SCHEMA, DOMAIN, ATTR_TRANSITIONS,
     YEELIGHT_FLOW_TRANSITION_SCHEMA, ACTION_RECOVER, CONF_FLOW_PARAMS,
     ATTR_ACTION, ATTR_COUNT)
-from yeelight import (RGBTransition, SleepTransition, Flow, BulbException)
-from yeelight.enums import PowerMode, LightType, BulbType
 
 _LOGGER = logging.getLogger(__name__)
 

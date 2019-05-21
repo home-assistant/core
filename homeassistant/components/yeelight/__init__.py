@@ -4,6 +4,7 @@ import logging
 from datetime import timedelta
 
 import voluptuous as vol
+from yeelight import Bulb, BulbException
 from homeassistant.components.discovery import SERVICE_YEELIGHT
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_SCAN_INTERVAL, \
     CONF_HOST, ATTR_ENTITY_ID
@@ -15,7 +16,6 @@ from homeassistant.helpers.discovery import load_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
-from yeelight import Bulb, BulbException
 
 _LOGGER = logging.getLogger(__name__)
 
