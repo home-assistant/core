@@ -38,7 +38,6 @@ VALID_CONFIG_KJFK_TEXT = {
         'platform': 'noaaweather',
         'latitude': 40.6391,
         'longitude': -73.7639,
-        'usehaweathercond': True,
         'monitored_conditions': ['textDescription'],
     }
 }
@@ -268,9 +267,11 @@ def test_obs_badjson(hass, aioclient_mock):
 
 @asyncio.coroutine
 def test_setup_mintext(hass, aioclient_mock):
-    """Test for minimal weather sensor config.
+    """Test for minimal weather sensor config, getting text description.
 
     This test case is with default (metric) units.
+    The test data for this case has multiple observations with
+    the same timestamp.
     """
     aioclient_mock.get(
         STAURL.format(VALID_CONFIG_KJFK_TEXT['sensor']['latitude'],
@@ -287,7 +288,7 @@ def test_setup_mintext(hass, aioclient_mock):
 
     state = hass.states.get('sensor.noaa_weather_kjfk_textdescription')
     assert state is not None
-    assert state.state == 'clear-night'
+    assert state.state == 'Clear'
     assert state.attributes.get('friendly_name') == \
         "NOAA Weather Weather"
 
@@ -456,30 +457,6 @@ def test_setup_badtextdesc(hass, aioclient_mock):
     state = hass.states.get('sensor.noaa_weather_kjfk_textdescription')
     assert state is not None
     assert state.state == 'Strange Description'
-
-
-@asyncio.coroutine
-def test_setup_badtextdesc2(hass, aioclient_mock):
-    """Test for no valid text in textDescription response.
-
-    In this we should get back the unrecognized text for the description.
-    """
-    aioclient_mock.get(
-        STAURL.format(VALID_CONFIG_KJFK_TEXT['sensor']['latitude'],
-                      VALID_CONFIG_KJFK_TEXT['sensor']['longitude']),
-        text=load_fixture('noaaweather-sta-valid.json'))
-    aioclient_mock.get(
-        OBSURL.format("KJFK"),
-        text=load_fixture('noaaweather-obs-badtext2.json'),
-        params={'limit': 5})
-
-    with assert_setup_component(1, 'sensor'):
-        yield from async_setup_component(hass, 'sensor',
-                                         VALID_CONFIG_KJFK_TEXT)
-
-    state = hass.states.get('sensor.noaa_weather_kjfk_textdescription')
-    assert state is not None
-    assert state.state == 'fog'
 
 
 @asyncio.coroutine

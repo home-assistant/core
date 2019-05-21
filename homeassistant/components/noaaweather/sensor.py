@@ -31,10 +31,6 @@ Configuration:
                             # part of the URL for each location shown:
                             # the uppercase letters just before the .html
                             # suffix are the station codes.
-    usehaweathercond = <boolean>
-                            # If true, use the Home Assistant values
-                            # for weather conditions instead of
-                            # the native values from textDescription.
     monitored_conditions:   # list of conditions to get.  At least one is
                             # required. The complete condition list is:
         - temperature       # temperature in degrees Celsius or Fahrenheit
@@ -83,7 +79,6 @@ from typing import Dict, List, Union, Any
 from json import JSONDecodeError
 
 import aiohttp
-from astral import Location
 import voluptuous as vol
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
@@ -125,7 +120,6 @@ ATTR_SENSOR_ID = 'sensor_id'
 ATTR_SITE_ID = 'site_id'
 CONF_STATIONCODE = 'stationcode'
 CONF_USERAGENT = 'useragent'
-CONF_USEHAWEATHER = 'usehaweathercond'
 
 ATTRIBUTION = "Data from NOAA/NWS"
 
@@ -261,30 +255,6 @@ SENSOR_TYPES = {
 
 SENSOR_TYPES_SET = set(SENSOR_TYPES)
 
-#
-# Translation from NOAA/NWS weather descriptions to Home Assistant
-# values.  Each row has three values: the HA condition text, an array
-# of words, of of which must match, and a second array of words, one of which
-# must match if one of the first words match (second array might be empty).
-# The table must be ordered such that the more specific values before
-# a more general value.
-#
-CONDITION_XLATE = [
-        ['lightning', ['Thunderstorm'], ['Vicinity']],
-        ['lightning-rainy', ['Thunderstorm'], [None]],
-        ['snowy-rainy', ['Snow', 'Freezing', 'Ice'], ['Rain', 'Drizzle']],
-        ['snowy', ['Snow', 'Ice Pellets'], [None]],
-        ['pouring', ['Heavy Rain'], [None]],
-        ['rainy', ['Rain', 'Drizzle', 'Showers'], [None]],
-        ['windy-variant', ['Windy'], ['Clouds', 'Cloudy', 'Overcast'], [None]],
-        ['windy', ['Windy', 'Breeze'], [None]],
-        ['fog', ['Fog', 'Haze'], [None]],
-        ['hail', ['Hail', 'Ice Pellets', 'Ice Crystals'], [None]],
-        ['partlycloudy', ['Partly Cloudy'], [None]],
-        ['cloudy', ['Cloudy', 'Overcast'], [None]],
-        ['sunny', ['Fair', 'Clear', 'Few Clouds'], [None]],
-]
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
@@ -294,7 +264,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Inclusive(CONF_LONGITUDE, 'coordinates',
                   'Latitude and longitude must exist together'): cv.longitude,
     vol.Optional(CONF_STATIONCODE): cv.string,
-    vol.Optional(CONF_USEHAWEATHER, default=False): cv.boolean,
     vol.Optional(CONF_USERAGENT, default='ha-noaaweather'): cv.string,
 })
 
@@ -428,40 +397,6 @@ def get_metar_value(metar, variable) -> Dict:
     res['qualityControl'] = 'qc:S'
     _LOGGER.debug("get_metar_value returning %s", res)
     return res
-
-
-def textdesctoweather(description) -> str:
-    """Convert the values in the textDescription field to HA standard values.
-
-    Home Assistant has some standard text values for current weather
-    conditions, which do not have a one to one mapping to the
-    weather descriptions used by NOAA/NWS.  This routing will
-    convert the text descriptions to the Home Assistant standard text values.
-    If no value matches, the original text will be returned.
-    """
-    _LOGGER.debug("Converting textDescription=%s", description)
-    for entry in CONDITION_XLATE:
-        for firstword in entry[1]:
-            if firstword in description:
-                if None in entry[2]:
-                    _LOGGER.debug("Found firstword=%s in entry %s",
-                                  firstword, str(entry))
-                    _LOGGER.debug("Returning %s", entry[0])
-                    return entry[0]
-                for secondword in entry[2]:
-                    if secondword in description:
-                        _LOGGER.debug(
-                            "Found firstword=%s, secondword=%s in entry %s",
-                            firstword, secondword,
-                            str(entry))
-                        _LOGGER.debug("Returning %s", entry[0])
-                        return entry[0]
-                _LOGGER.debug("Found firstword=%s in entry %s",
-                              firstword, str(entry))
-                _LOGGER.debug("Returning %s", entry[0])
-                return entry[0]
-    _LOGGER.debug("No matching condition found for %s", description)
-    return description
 
 
 def unit_convert(variable, desiredunit) -> float:
@@ -658,7 +593,6 @@ async def async_setup_platform(hass, config, async_add_entities,
             hass=hass)
         sensors.append(
             NOAACurrentSensor(noaadata, variable, name, entity_id,
-                              config.get(CONF_USEHAWEATHER),
                               hass.config.units.is_metric))
     #
     # Add all the sensors
@@ -680,7 +614,7 @@ class NOAACurrentSensor(Entity):
     """
 
     def __init__(self, noaadata, condition, name, entity_id,
-                 usehaweather, metricunits) -> None:
+                 metricunits) -> None:
         """Initialize the sensor object."""
         _LOGGER.debug("Initializing sensor %s, condition %s, sensor_type: %s",
                       name, condition, SENSOR_TYPES[condition])
@@ -688,7 +622,6 @@ class NOAACurrentSensor(Entity):
         self._noaadata = noaadata
         self._name = name
         self.entity_id = entity_id
-        self._usehaweather = usehaweather
         #
         # Set whether desired units are metric (default) or
         # imperial.
@@ -735,11 +668,6 @@ class NOAACurrentSensor(Entity):
                 # attribute itself is the value for single value items
                 _LOGGER.debug("Condition %s is single value='%s'",
                               self._condition, condvalue)
-                if self._condition == "textDescription" and self._usehaweather:
-                    res = textdesctoweather(condvalue)
-                    if res == 'sunny' and self._noaadata.isnight:
-                        res = 'clear-night'
-                    return res
                 return condvalue
             if SENSOR_TYPES[self._condition][STI_VALTYPE] == VAL_MEASUREMENT:
                 # value attribute of condvalue for measurements
@@ -853,26 +781,6 @@ class NOAACurrentData(Entity):
         self._name = name
         self.nws = nws
         #
-        # Set up astral location object for this location.
-        # Note that since astral calculates the times for a current
-        # date, we need to have an idea of what offset from GMT the location
-        # has.  To get this, we will get the solar noon for both the
-        # actual location and for the location at 0,0.  The difference
-        # of these gives a good idea of the offset (note, this is not the
-        # timezone, but the solar time difference.
-        #
-        self.astlocation = Location()
-        self.astlocation.name = stationcode
-        self.astlocation.region = 'US'
-        self.astlocation.timezone = 'UTC'
-        self.astlocation.latitude = 0
-        self.astlocation.longitude = 0
-        zerozeronoon = self.astlocation.solar_noon(local=False)
-        self.astlocation.latitude = latitude
-        self.astlocation.longitude = longitude
-        self._timeoffset = zerozeronoon - \
-            self.astlocation.solar_noon(local=False)
-        #
         # Set time of last update to two hours ago.  This
         # should ensure that when we get the first set of observations
         # and process those after this time, we will have at least
@@ -880,10 +788,6 @@ class NOAACurrentData(Entity):
         #
         self.lastupdate = datetime.datetime.now(datetime.timezone.utc) -\
             timedelta(hours=2)
-        self.nightstart, self.nightend = self.astlocation.night(
-            date=self.lastupdate + self._timeoffset)
-        self.isnight = self.lastupdate >= self.nightstart and \
-            self.lastupdate <= self.nightend
         self.data = dict()
         self.datatime = dict()
         self._errorstate = False
@@ -957,15 +861,6 @@ class NOAACurrentData(Entity):
         # Remember time this update was from
         #
         self.lastupdate = thisupdate
-        #
-        # Check if moving beyond last night end time
-        #
-        if self.lastupdate > self.nightend:
-            self.nightstart, self.nightend = self.astlocation.night(
-                date=self.lastupdate + self._timeoffset,
-                local=False, use_elevation=False)
-        self.isnight = self.lastupdate >= self.nightstart and \
-            self.lastupdate <= self.nightend
         #
         # Check if observation has a "rawMessage" attribute.  This contains
         # the METAR format record, and may have valid information
