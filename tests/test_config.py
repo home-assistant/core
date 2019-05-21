@@ -12,17 +12,16 @@ import pytest
 from voluptuous import MultipleInvalid, Invalid
 import yaml
 
-from homeassistant.core import (
-    DOMAIN, SOURCE_STORAGE, Config, HomeAssistantError)
+from homeassistant.core import SOURCE_STORAGE, HomeAssistantError
 import homeassistant.config as config_util
 from homeassistant.loader import async_get_integration
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ASSUMED_STATE,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_UNIT_SYSTEM, CONF_NAME,
-    CONF_TIME_ZONE, CONF_ELEVATION, CONF_CUSTOMIZE, __version__,
+    CONF_CUSTOMIZE, __version__,
     CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT,
     CONF_AUTH_PROVIDERS, CONF_AUTH_MFA_MODULES)
-from homeassistant.util import location as location_util, dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import SECRET_YAML
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.config.group import (
@@ -31,8 +30,6 @@ from homeassistant.components.config.automation import (
     CONFIG_PATH as AUTOMATIONS_CONFIG_PATH)
 from homeassistant.components.config.script import (
     CONFIG_PATH as SCRIPTS_CONFIG_PATH)
-from homeassistant.components.config.customize import (
-    CONFIG_PATH as CUSTOMIZE_CONFIG_PATH)
 import homeassistant.scripts.check_config as check_config
 
 from tests.common import (
