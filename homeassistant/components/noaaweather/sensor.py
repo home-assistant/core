@@ -96,6 +96,9 @@ from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.util.unit_system import (TEMPERATURE_UNITS, PRESSURE_UNITS)
+from homeassistant.util import temperature as temperature_util
+from homeassistant.util import pressure as pressure_util
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['pynws==0.6', 'metar==1.7.0']
@@ -493,19 +496,17 @@ def unit_convert(variable, desiredunit) -> float:
     if srcunit == desiredunit:
         return result
 
-    # need to conver units, identify conversion required
+    # need to convert units, identify conversion required
     #
-    # Do we have temperature in Celsius and need Fahrenheit?
+    # Do we have temperature units?
     #
-    if srcunit == TEMP_CELSIUS and desiredunit == TEMP_FAHRENHEIT:
-        return result * 9 / 5 + 32
-    #
-    # Do we have Fahrenheit and need Celsius
-    #
-    if srcunit == TEMP_FAHRENHEIT and desiredunit == TEMP_CELSIUS:
-        return (result - 32) * 5 / 9
+    if srcunit in TEMPERATURE_UNITS and desiredunit in TEMPERATURE_UNITS:
+        return temperature_util.convert(result, srcunit, desiredunit)
     #
     # Do we have a length in meters?
+    # util.distance not used due to lack of inches and millimeters in those
+    # units.  After those are added this could be changed to use the
+    # conversion in that module.
     #
     if srcunit == LENGTH_METERS:
         # Is the target miles? (Used for visibility)
@@ -526,11 +527,11 @@ def unit_convert(variable, desiredunit) -> float:
     #
     # Do we have pressure in Pascals?
     #
-    if srcunit == PRESSURE_PA and desiredunit == PRESSURE_MBAR:
-        return result / 100
+    if srcunit in PRESSURE_UNITS and desiredunit in PRESSURE_UNITS:
+        return pressure_util.convert(result, srcunit, desiredunit)
     #
     # Do we have a speed in meters/second (wind speed and gusts)
-    #
+    # 
     if srcunit == SPEED_METERS_PER_SECOND and \
             desiredunit == SPEED_MILES_PER_HOUR:
         return result * 2.236936292
