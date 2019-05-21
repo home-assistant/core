@@ -146,7 +146,7 @@ class AxisFlowHandler(config_entries.ConfigFlow):
         entry.data[CONF_DEVICE][CONF_HOST] = host
         self.hass.config_entries.async_update_entry(entry)
 
-    async def async_step_discovery(self, discovery_info):
+    async def async_step_zeroconf(self, discovery_info):
         """Prepare configuration for a discovered Axis device.
 
         This flow is triggered by the discovery component.
