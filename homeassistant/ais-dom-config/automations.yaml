@@ -72,54 +72,6 @@
    - delay: '300'
    - service: ais_updater.check_version
 
-- id: '201807081853002'
-  alias: 'Keyboard Command Received'
-  initial_state: True
-  hide_entity: true
-  trigger:
-    platform: event
-    event_type: keyboard_remote_command_received
-  action:
-    - service: ais_ai_service.process_code
-      data_template:
-        code: '{{ trigger.event.data[''code''] }}'
-
-- id: '201807081853003'
-  alias: 'Command Message Received'
-  initial_state: True
-  hide_entity: true
-  trigger:
-    platform: event
-    event_type: speech_text_received
-  action:
-    - service: ais_ai_service.process
-      data_template:
-        text: '{{ trigger.event.data[''text''] }}'
-
-- id: '201807081853004'
-  alias: 'Command Message Received MQTT'
-  initial_state: True
-  hide_entity: true
-  trigger:
-    platform: mqtt
-    topic: ais/speech_command
-  action:
-    - service: ais_ai_service.process
-      data_template:
-        text: '{{ trigger.payload }}'
-
-- id: '201807081853005'
-  alias: 'Button Event Received MQTT'
-  initial_state: True
-  hide_entity: true
-  trigger:
-    platform: mqtt
-    topic: ais/key_command
-  action:
-    - service: ais_ai_service.process_code
-      data_template:
-        text: '{{ trigger.payload }}'
-
 - id: '201807081858006'
   alias: 'Get RSS Help Items For Selected Topic'
   initial_state: True
@@ -131,42 +83,6 @@
     - service: ais_cloud.select_rss_help_item
       data_template:
         rss_help_topic: "{{ states('input_select.ais_rss_help_topic') }}"
-
-- id: '201807081858007'
-  alias: 'Get Books'
-  initial_state: True
-  hide_entity: True
-  trigger:
-    platform: state
-    entity_id: input_select.book_autor
-  action:
-    - service: ais_gm_service.get_books
-      data_template:
-        author: "{{ states('input_select.book_autor') }}"
-
-- id: '201807081858008'
-  alias: 'Get Chapters'
-  initial_state: True
-  hide_entity: True
-  trigger:
-    platform: state
-    entity_id: input_select.book_name
-  action:
-    - service: ais_gm_service.get_chapters
-      data_template:
-        book: "{{ states('input_select.book_name') }}"
-
-- id: '201807081858009'
-  alias: 'Select Book Chapter'
-  initial_state: True
-  hide_entity: True
-  trigger:
-    platform: state
-    entity_id: input_select.book_chapter
-  action:
-      service: ais_gm_service.select_chapter
-      data_template:
-        book_chapter: "{{ states('input_select.book_chapter') }}"
 
 - id: '201807081905011'
   alias: 'Ask The Question'
@@ -320,19 +236,6 @@
   action:
     - service: ais_shell_command.flush_logs
 
-- id: '201809061229123'
-  alias: 'Add a bookmark'
-  initial_state: True
-  hide_entity: true
-  trigger:
-    platform: event
-    event_type: add_a_bookmark
-  action:
-    - delay: '1'
-    - service: mqtt.publish
-      data:
-        payload: 0
-        topic: cmnd/dom/status
 
 - id: '20181205122942123'
   alias: 'Execute process command web hook'
@@ -394,5 +297,5 @@
   action:
     - service: ais_ai_service.publish_command_to_frame
       data:
-        key: "WifiConnectionInfo"
-        val: 1
+        key: WifiConnectionInfo
+        val: true

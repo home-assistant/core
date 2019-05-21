@@ -635,7 +635,7 @@ def say_curr_entity(hass):
         state = hass.states.get('sensor.ais_android_wifi_current_network_info')
         attr = state.attributes
         info = attr.get('description', 'brak informacji o połączeniu')
-        _say_it(hass, info, None)
+        _say_it(hass, "Połączenie WiFi " + info, None)
         return
     elif entity_id.startswith('script.'):
         _say_it(hass, info_name + " Naciśnij OK/WYKONAJ by uruchomić.", None)
@@ -1701,7 +1701,9 @@ async def async_setup(hass, config):
 
     # sensors
     hass.states.async_set("sensor.aisknowledgeanswer", "", {"text": ""})
-    hass.states.async_set("sensor.ais_android_wifi_current_network_info", 0, {"friendly_name": "Połączenie Wifi"})
+    hass.states.async_set(
+        "sensor.ais_android_wifi_current_network_info",
+        0, {"friendly_name": "Połączenie Wifi", "unit_of_measurement": "MB"})
 
     return True
 
@@ -1943,7 +1945,7 @@ def _process_command_from_frame(hass, service):
     elif service.data["topic"] == 'ais/wifi_connection_info':
         # current connection info
         cci = json.loads(service.data["payload"])
-        attr = {"friendly_name": "Połączenie Wifi"}
+        attr = {"friendly_name": "Połączenie Wifi", "unit_of_measurement": "MB"}
         desc = ""
         speed = 0
         if "pass" in cci:
@@ -2038,7 +2040,7 @@ def _process_command_from_frame(hass, service):
     return
 
 
-def _post_message(message, hosts):
+def _post_message(message, hass):
     """Post the message to TTS service."""
     message = message.replace("°C", "stopni Celsjusza")
     # replace emoticons
@@ -2068,16 +2070,10 @@ def _post_message(message, hosts):
             "rate": ais_global.GLOBAL_TTS_RATE,
             "voice": ais_global.GLOBAL_TTS_VOICE
             }
-    for h in hosts:
-        _LOGGER.info("sending text_to_speech to: " + str(h))
-        try:
-            requests.post(
-                G_HTTP_REST_SERVICE_BASE_URL.format(h) + '/text_to_speech',
-                json=j_data,
-                timeout=1
-            )
-        except Exception as e:
-            _LOGGER.info("problem to send the text to speech via http: " + str(e))
+    try:
+        requests.post(G_HTTP_REST_SERVICE_BASE_URL.format('127.0.0.1') + '/text_to_speech', json=j_data, timeout=1)
+    except Exception as e:
+        _LOGGER.info("problem to send the text to speech via http: " + str(e))
 
 
 def _beep_it(hass, tone):
@@ -2094,28 +2090,7 @@ def _beep_it(hass, tone):
 
 def _say_it(hass, message, caller_ip=None, img=None):
     # sent the tts message to the panel via http api
-    global GLOBAL_TTS_TEXT
-    l_hosts = ['localhost']
-
-    # check if we should inform other speaker
-    player_name = hass.states.get('input_select.tts_player').state
-    device_ip = None
-    if player_name is not None:
-        device = ais_cloud.get_player_data(player_name)
-        if device is not None:
-            device_ip = device["device_ip"]
-            if device_ip not in ['localhost', '127.0.0.1']:
-                l_hosts.append(device_ip)
-
-    # check if we should inform back the caller speaker
-    # the local caller has ip like 192.168.1.45
-    if ais_global.GLOBAL_MY_IP is None:
-        ais_global.set_global_my_ip(None)
-    if caller_ip is not None:
-        if caller_ip not in ['localhost', '127.0.0.1', device_ip, ais_global.GLOBAL_MY_IP]:
-            l_hosts.append(caller_ip)
-
-    _post_message(message, l_hosts)
+    _post_message(message, hass)
 
     if len(message) > 1999:
         tts_text = message[0: 1999] + '...'
