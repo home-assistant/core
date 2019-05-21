@@ -52,6 +52,7 @@ class SmartPlugSwitch(SwitchDevice):
         """Initialize the switch."""
         self._device_id = device_id
         self._name = name
+        self._state = None
         self._available = True
         self._emeter_params = {}
         self._pca = pca
