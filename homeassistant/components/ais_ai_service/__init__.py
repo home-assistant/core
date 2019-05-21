@@ -1421,6 +1421,10 @@ async def async_setup(hass, config):
             img = None
         _say_it(hass, text, None, img)
 
+    def say_in_browser(service):
+        """Info to the via browser"""
+        pass
+
     def welcome_home(service):
         """Welcome message."""
         text = "Witaj w Domu. Powiedz proszę w czym mogę Ci pomóc?"
@@ -1543,6 +1547,7 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, 'process', process)
     hass.services.async_register(DOMAIN, 'process_code', process_code)
     hass.services.async_register(DOMAIN, 'say_it', say_it)
+    hass.services.async_register(DOMAIN, 'say_in_browser', say_in_browser)
     hass.services.async_register(DOMAIN, 'welcome_home', welcome_home)
     hass.services.async_register(DOMAIN, 'publish_command_to_frame', publish_command_to_frame)
     hass.services.async_register(DOMAIN, 'process_command_from_frame', process_command_from_frame)
@@ -2070,6 +2075,16 @@ def _post_message(message, hass):
             "rate": ais_global.GLOBAL_TTS_RATE,
             "voice": ais_global.GLOBAL_TTS_VOICE
             }
+
+    tts_browser_text = message
+    if len(tts_browser_text) > 50:
+        space_position = tts_browser_text.find["", 50]
+        if space_position > 50:
+            tts_browser_text = tts_browser_text[0:space_position]
+        else:
+            tts_browser_text = tts_browser_text[0:50]
+
+    hass.async_add_job(hass.services.async_call('ais_ai_service', 'say_in_browser', {"text": tts_browser_text}))
     try:
         requests.post(G_HTTP_REST_SERVICE_BASE_URL.format('127.0.0.1') + '/text_to_speech', json=j_data, timeout=1)
     except Exception as e:

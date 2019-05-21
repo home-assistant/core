@@ -145,7 +145,7 @@ hdate==0.8.7
 holidays==0.9.10
 
 # homeassistant.components.frontend
-ais-dom-frontend==20190514.0
+ais-dom-frontend==20190514.2
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.14.0
