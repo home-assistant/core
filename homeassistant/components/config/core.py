@@ -94,8 +94,4 @@ async def websocket_detect_config(hass, connection, msg):
     if location_info.time_zone:
         info['time_zone'] = location_info.time_zone
 
-    if location_info.latitude and location_info.longitude:
-        info['elevation'] = await location.async_get_elevation(
-            session, location_info.latitude, location_info.longitude)
-
     connection.send_result(msg['id'], info)

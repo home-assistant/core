@@ -891,11 +891,11 @@ class TestConfig(unittest.TestCase):
         """Test as dict."""
         self.config.config_dir = '/tmp/ha-config'
         expected = {
-            'latitude': None,
-            'longitude': None,
-            'elevation': None,
+            'latitude': 0,
+            'longitude': 0,
+            'elevation': 0,
             CONF_UNIT_SYSTEM: METRIC_SYSTEM.as_dict(),
-            'location_name': None,
+            'location_name': "Home",
             'time_zone': 'UTC',
             'components': set(),
             'config_dir': '/tmp/ha-config',
