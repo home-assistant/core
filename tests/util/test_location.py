@@ -117,7 +117,7 @@ async def test_detect_location_info_ip_api(aioclient_mock, session):
 async def test_detect_location_info_both_queries_fail(session):
     """Ensure we return None if both queries fail."""
     with patch('homeassistant.util.location._get_ipapi',
-              return_value=mock_coro(None)), \
+               return_value=mock_coro(None)), \
         patch('homeassistant.util.location._get_ip_api',
               return_value=mock_coro(None)):
         info = await location_util.async_detect_location_info(
@@ -135,4 +135,3 @@ async def test_ip_api_query_raises(raising_session):
     """Test ip api query when the request to API fails."""
     info = await location_util._get_ip_api(raising_session)
     assert info is None
-
