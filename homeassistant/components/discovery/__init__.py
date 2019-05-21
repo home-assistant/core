@@ -24,7 +24,6 @@ DOMAIN = 'discovery'
 
 SCAN_INTERVAL = timedelta(seconds=300)
 SERVICE_APPLE_TV = 'apple_tv'
-SERVICE_AXIS = 'axis'
 SERVICE_DAIKIN = 'daikin'
 SERVICE_DECONZ = 'deconz'
 SERVICE_DLNA_DMR = 'dlna_dmr'
@@ -51,7 +50,6 @@ SERVICE_WINK = 'wink'
 SERVICE_XIAOMI_GW = 'xiaomi_gw'
 
 CONFIG_ENTRY_HANDLERS = {
-    SERVICE_AXIS: 'axis',
     SERVICE_DAIKIN: 'daikin',
     SERVICE_DECONZ: 'deconz',
     'esphome': 'esphome',
