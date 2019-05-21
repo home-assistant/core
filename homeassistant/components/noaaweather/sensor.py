@@ -531,7 +531,7 @@ def unit_convert(variable, desiredunit) -> float:
         return pressure_util.convert(result, srcunit, desiredunit)
     #
     # Do we have a speed in meters/second (wind speed and gusts)
-    # 
+    #
     if srcunit == SPEED_METERS_PER_SECOND and \
             desiredunit == SPEED_MILES_PER_HOUR:
         return result * 2.236936292
