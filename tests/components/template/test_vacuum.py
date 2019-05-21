@@ -183,7 +183,8 @@ async def test_invalid_templates(hass, calls):
                 'platform': 'template',
                 'vacuums': {
                     'test_vacuum': {
-                        'value_template': "{{ this_function_does_not_exist() }}",
+                        'value_template':
+                            "{{ this_function_does_not_exist() }}",
                         'battery_level_template':
                             "{{ this_function_does_not_exist() }}",
                         'fan_speed_template':
