@@ -6,7 +6,10 @@ from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL
+import homeassistant.util.dt as dt_util
 from tests.common import mock_coro
+
+ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
 
 
 async def test_validate_config_ok(hass, hass_client):
@@ -74,6 +77,8 @@ async def test_websocket_core_update(hass, hass_ws_client):
     assert hass.config.location_name == 'Huis'
     assert hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL
     assert hass.config.time_zone.zone == 'America/New_York'
+
+    dt_util.set_default_time_zone(ORIG_TIME_ZONE)
 
 
 async def test_websocket_core_update_not_admin(
