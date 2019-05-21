@@ -8,7 +8,7 @@ from aiozeroconf import (
     ServiceBrowser, ServiceInfo, ServiceStateChange, Zeroconf)
 
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, __version__)
-from homeassistant.generated import zeroconf as manifest
+from homeassistant.generated import zeroconf as zeroconf_manifest
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ async def async_setup(hass, config):
         info = info_from_service(service_info)
         _LOGGER.debug("Discovered new device %s %s", name, info)
 
-        for domain in manifest.SERVICE_TYPES[service_type]:
+        for domain in zeroconf_manifest.SERVICE_TYPES[service_type]:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     domain, context={'source': DOMAIN}, data=info
@@ -62,7 +62,7 @@ async def async_setup(hass, config):
         if state_change is ServiceStateChange.Added:
             hass.async_create_task(new_service(service_type, name))
 
-    for service in manifest.SERVICE_TYPES:
+    for service in zeroconf_manifest.SERVICE_TYPES:
         ServiceBrowser(zeroconf, service, handlers=[service_update])
 
     async def stop_zeroconf(_):
