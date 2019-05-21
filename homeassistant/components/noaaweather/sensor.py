@@ -383,6 +383,9 @@ def get_metar_value(metar, variable) -> Dict:
     """
     _LOGGER.debug("Checking for METAR value for %s in %s", variable, metar)
 
+    if metar is None:
+        return None
+
     metaritem = SENSOR_TYPES[variable][STI_MNAME]
     if metaritem is None:
         return None
@@ -1034,8 +1037,6 @@ class NOAACurrentData(Entity):
                 if qcval == 'qc:Z':
                     # No update of value in individual entry
                     # check if we have a metar value
-                    if metar is None:
-                        continue
                     res = get_metar_value(metar, condition)
                     if res is not None:
                         _LOGGER.debug(
