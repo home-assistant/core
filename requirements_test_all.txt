@@ -57,6 +57,9 @@ aioswitcher==2019.3.21
 # homeassistant.components.unifi
 aiounifi==4
 
+# homeassistant.components.zeroconf
+aiozeroconf==0.1.8
+
 # homeassistant.components.ambiclimate
 ambiclimate==0.1.1
 
