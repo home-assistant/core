@@ -1,6 +1,4 @@
-"""
-Support for PCA 301 smart switch.
-"""
+"""Support for PCA 301 smart switch."""
 import logging
 
 import voluptuous as vol
@@ -34,7 +32,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         pca = pypca.PCA(usb_device)
         pca.open()
-        entities = [SmartPlugSwitch(pca, device, name) for device in pca.get_devices()]
+        entities = [SmartPlugSwitch(pca, device, name) \
+            for device in pca.get_devices()]
         add_entities(entities, True)
 
     except SerialException as exc:
