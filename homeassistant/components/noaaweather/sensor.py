@@ -355,7 +355,7 @@ async def get_obs_for_station(nws, errorstate) -> Dict:
     """
     import pynws
     try:
-        res = await nws.observations()
+        res = await nws.observations(limit=5)
     except pynws.NwsError as status:
         if not errorstate:
             _LOGGER.error("Error getting observations for station %s - %s",
@@ -594,7 +594,6 @@ async def async_setup_platform(hass, config, async_add_entities,
     #
     nws = pynws.Nws(session, latlon=(latitude, longitude))
     nws.userid = config.get(CONF_USERAGENT)
-    nws.limit = 5
     #
     # Get the list of observation stations for the location.
     # This checks that the location is within the NWS coverage area.
