@@ -50,6 +50,7 @@ TEST_REQUIREMENTS = (
     'aiohue',
     'aiounifi',
     'aioswitcher',
+    'aiozeroconf',
     'apns2',
     'av',
     'axis',
