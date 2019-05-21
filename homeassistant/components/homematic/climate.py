@@ -31,7 +31,6 @@ HM_CONTROL_MODE = 'CONTROL_MODE'
 HMIP_CONTROL_MODE = 'SET_POINT_MODE'
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-SUPPORT_HVAC_MODES = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -66,7 +65,7 @@ class HMThermostat(HMDevice, ClimateDevice):
 
         Need to be one of HVAC_MODE_*.
         """
-        if self._hm_controll_mode == self._hmdevice.AUTO_MODE:
+        if self._hm_controll_mode == self._hmdevice.MANU_MODE:
             return HVAC_MODE_HEAT
         return HVAC_MODE_AUTO
 
@@ -76,7 +75,9 @@ class HMThermostat(HMDevice, ClimateDevice):
 
         Need to be a subset of HVAC_MODES.
         """
-        return SUPPORT_HVAC_MODES
+        if "AUTO_MODE" in self._hmdevice.ACTIONNODE:
+            return [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
+        return [HVAC_MODE_HEAT]
 
     @property
     def preset_mode(self):
@@ -85,27 +86,22 @@ class HMThermostat(HMDevice, ClimateDevice):
             return 'boost'
 
         # Get the name of the mode
-        name = HM_ATTRIBUTE_SUPPORT[HM_CONTROL_MODE][1][self._hm_controll_mode]
-        name = name.lower()
+        mode = HM_ATTRIBUTE_SUPPORT[HM_CONTROL_MODE][1][self._hm_controll_mode]
+        mode = mode.lower()
 
         # Filter HVAC states
-        if name not in (HVAC_MODE_AUTO, HVAC_MODE_HEAT):
+        if mode not in (HVAC_MODE_AUTO, HVAC_MODE_HEAT):
             return None
-        return name
+        return mode
 
     @property
     def preset_list(self):
         """Return a list of available preset modes."""
-        # HMIP use set_point_mode for operation
-        if HMIP_CONTROL_MODE in self._data:
-            return [PRESET_BOOST]
-
-        # HM
-        op_list = []
+        preset_list = []
         for mode in self._hmdevice.ACTIONNODE:
             if mode in HM_PRESET_MAP:
-                op_list.append(HM_PRESET_MAP[mode])
-        return op_list
+                preset_list.append(HM_PRESET_MAP[mode])
+        return preset_list
 
     @property
     def current_humidity(self):
