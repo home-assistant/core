@@ -2,9 +2,7 @@
 import asyncio
 from typing import Iterable, Optional
 
-from homeassistant.const import (
-    ATTR_TEMPERATURE, SERVICE_TURN_OFF,
-    SERVICE_TURN_ON, STATE_OFF, STATE_ON)
+from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import Context, State
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass

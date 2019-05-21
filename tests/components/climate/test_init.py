@@ -1,5 +1,4 @@
 """The tests for the climate component."""
-import asyncio
 
 import pytest
 import voluptuous as vol

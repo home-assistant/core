@@ -1,5 +1,4 @@
 """The tests for the demo climate component."""
-import unittest
 
 import pytest
 import voluptuous as vol
@@ -24,7 +23,7 @@ ENTITY_HEATPUMP = 'climate.heatpump'
 
 @pytest.fixture(autouse=True)
 async def setup_demo_climate(hass):
-    """Setup demo climate."""
+    """Initialize setup demo climate."""
     hass.config.units = METRIC_SYSTEM
     assert await async_setup_component(hass, DOMAIN, {
         'climate': {
@@ -45,7 +44,7 @@ def test_setup_params(hass):
     assert "Off" == state.attributes.get(ATTR_SWING_MODE)
     assert STATE_OFF == state.attributes.get(ATTR_AUX_HEAT)
     assert 5 == state.attributes.get(ATTR_TARGET_TEMP_STEP)
-    assert state.attributes.get(ATTR_HVAC_MODES) ==HVAC_MODES
+    assert state.attributes.get(ATTR_HVAC_MODES) == HVAC_MODES
 
 
 def test_default_setup_params(hass):

@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT, PRESET_AWAY, PRESET_BOOST, PRESET_COMFORT, PRESET_ECO)
+    HVAC_MODE_HEAT, PRESET_BOOST, PRESET_COMFORT, PRESET_ECO)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import ATTR_DISCOVER_DEVICES, HM_ATTRIBUTE_SUPPORT, HMDevice
@@ -62,7 +62,7 @@ class HMThermostat(HMDevice, ClimateDevice):
 
     @property
     def hvac_state(self):
-        """Return hvac operation ie. heat, cool mode
+        """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
         """
@@ -169,10 +169,9 @@ class HMThermostat(HMDevice, ClimateDevice):
     def _hm_controll_mode(self):
         """Return Control mode."""
         if HMIP_CONTROL_MODE in self._data:
-            code = self._data[HMIP_CONTROL_MODE]
-        # Other devices use the control_mode
-        else:
-            code = self._data['CONTROL_MODE']
+            return self._data[HMIP_CONTROL_MODE]
+        else:  # Homematic
+            return self._data['CONTROL_MODE']
 
     def _init_data_struct(self):
         """Generate a data dict (self._data) from the Homematic metadata."""

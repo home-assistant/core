@@ -32,11 +32,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class DemoClimate(ClimateDevice):
     """Representation of a demo climate device."""
 
-    def __init__(self, name, target_temperature, unit_of_measurement, preset,
-                 current_temperature, fan_mode, target_humidity,
-                 current_humidity, swing_mode, hvac_state, current_hvac,
-                 aux, target_temp_high, target_temp_low, hvac_modes
-                ):
+    def __init__(
+            self, name, target_temperature, unit_of_measurement, preset,
+            current_temperature, fan_mode, target_humidity, current_humidity,
+            swing_mode, hvac_state, current_hvac, aux, target_temp_high,
+            target_temp_low, hvac_modes
+    ):
         """Initialize the climate device."""
         self._name = name
         self._support_flags = SUPPORT_FLAGS

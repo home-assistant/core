@@ -12,8 +12,8 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import (
     ServiceDataType, HomeAssistantType, ConfigType)
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA_BASE
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
@@ -231,7 +231,7 @@ class ClimateDevice(Entity):
 
     @property
     def hvac_state(self) -> str:
-        """Return hvac operation ie. heat, cool mode
+        """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
         """
