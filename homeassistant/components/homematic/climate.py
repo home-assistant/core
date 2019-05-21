@@ -65,9 +65,15 @@ class HMThermostat(HMDevice, ClimateDevice):
 
         Need to be one of HVAC_MODE_*.
         """
-        if self._hm_controll_mode == self._hmdevice.MANU_MODE:
-            return HVAC_MODE_HEAT
-        return HVAC_MODE_AUTO
+        if "MANU_MODE" in self._hmdevice.ACTIONNODE:
+            if self._hm_controll_mode == self._hmdevice.MANU_MODE:
+                return HVAC_MODE_HEAT
+            return HVAC_MODE_AUTO
+
+        # Simple devices
+        if self._data.get("BOOST_MODE"):
+            return HVAC_MODE_AUTO
+        return HVAC_MODE_HEAT
 
     @property
     def hvac_modes(self):
