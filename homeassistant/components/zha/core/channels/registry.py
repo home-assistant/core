@@ -9,7 +9,7 @@ from .general import (
     OnOffChannel, LevelControlChannel, PowerConfigurationChannel, BasicChannel
 )
 from .homeautomation import ElectricalMeasurementChannel
-from .hvac import FanChannel
+from .hvac import ThermostatChannel, FanChannel
 from .lighting import ColorChannel
 from .security import IASZoneChannel
 
@@ -43,5 +43,6 @@ def populate_channel_registry():
         zcl.clusters.general.Basic.cluster_id: BasicChannel,
         zcl.clusters.security.IasZone.cluster_id: IASZoneChannel,
         zcl.clusters.hvac.Fan.cluster_id: FanChannel,
+        zcl.clusters.hvac.Thermostat.cluster_id: ThermostatChannel,
         zcl.clusters.lightlink.LightLink.cluster_id: ZigbeeChannel,
     })

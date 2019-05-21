@@ -3,6 +3,7 @@ import enum
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.climate import DOMAIN as CLIMATE
 from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.sensor import DOMAIN as SENSOR
@@ -25,6 +26,7 @@ ZHA_DISCOVERY_NEW = 'zha_discovery_new_{}'
 
 COMPONENTS = (
     BINARY_SENSOR,
+    CLIMATE,
     FAN,
     LIGHT,
     SENSOR,
@@ -87,6 +89,7 @@ ATTRIBUTE_CHANNEL = 'attribute'
 BASIC_CHANNEL = 'basic'
 COLOR_CHANNEL = 'light_color'
 FAN_CHANNEL = 'fan'
+THERMOSTAT_CHANNEL = 'thermostat'
 LEVEL_CHANNEL = ATTR_LEVEL
 ZONE_CHANNEL = ZONE = 'ias_zone'
 ELECTRICAL_MEASUREMENT_CHANNEL = 'electrical_measurement'
@@ -96,6 +99,7 @@ EVENT_RELAY_CHANNEL = 'event_relay'
 SIGNAL_ATTR_UPDATED = 'attribute_updated'
 SIGNAL_MOVE_LEVEL = "move_level"
 SIGNAL_SET_LEVEL = "set_level"
+SIGNAL_SET_FAN = "set_fan"
 SIGNAL_STATE_ATTR = "update_state_attribute"
 SIGNAL_AVAILABLE = 'available'
 SIGNAL_REMOVE = 'remove'

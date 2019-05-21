@@ -6,6 +6,7 @@ https://home-assistant.io/components/zha/
 """
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.climate import DOMAIN as CLIMATE
 from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.sensor import DOMAIN as SENSOR
@@ -35,10 +36,12 @@ EVENT_RELAY_CLUSTERS = []
 NO_SENSOR_CLUSTERS = []
 BINDABLE_CLUSTERS = []
 BINARY_SENSOR_CLUSTERS = set()
+CLIMATE_CLUSTERS = set()
 LIGHT_CLUSTERS = set()
 SWITCH_CLUSTERS = set()
 COMPONENT_CLUSTERS = {
     BINARY_SENSOR: BINARY_SENSOR_CLUSTERS,
+    CLIMATE: CLIMATE_CLUSTERS,
     LIGHT: LIGHT_CLUSTERS,
     SWITCH: SWITCH_CLUSTERS
 }
@@ -121,6 +124,7 @@ def establish_device_mappings():
         zha.DeviceType.ON_OFF_LIGHT_SWITCH: BINARY_SENSOR,
         zha.DeviceType.DIMMER_SWITCH: BINARY_SENSOR,
         zha.DeviceType.COLOR_DIMMER_SWITCH: BINARY_SENSOR,
+        zha.DeviceType.THERMOSTAT: CLIMATE,
     })
 
     DEVICE_CLASS[zll.PROFILE_ID].update({
@@ -278,6 +282,25 @@ def establish_device_mappings():
             'attr': 'occupancy',
             'config': REPORT_CONFIG_IMMEDIATE
         }],
+        zcl.clusters.hvac.Thermostat.cluster_id: [{
+            'attr': 'local_temp',
+            'config': REPORT_CONFIG_DEFAULT
+        }, {
+            'attr': 'occupied_cooling_setpoint',
+            'config': REPORT_CONFIG_IMMEDIATE
+        }, {
+            'attr': 'occupied_heating_setpoint',
+            'config': REPORT_CONFIG_IMMEDIATE
+        }, {
+            'attr': 'system_mode',
+            'config': REPORT_CONFIG_IMMEDIATE
+        }, {
+            'attr': 'running_state',
+            'config': REPORT_CONFIG_IMMEDIATE
+        }, {
+            'attr': 'temp_setpoint_hold',
+            'config': REPORT_CONFIG_IMMEDIATE
+        }],
         zcl.clusters.hvac.Fan.cluster_id: [{
             'attr': 'fan_mode',
             'config': REPORT_CONFIG_OP
@@ -290,6 +313,9 @@ def establish_device_mappings():
     BINARY_SENSOR_CLUSTERS.add(
         zcl.clusters.measurement.OccupancySensing.cluster_id)
     BINARY_SENSOR_CLUSTERS.add(SMARTTHINGS_ACCELERATION_CLUSTER)
+
+    CLIMATE_CLUSTERS.add(zcl.clusters.hvac.Thermostat.cluster_id)
+    CLIMATE_CLUSTERS.add(zcl.clusters.hvac.Fan.cluster_id)
 
     LIGHT_CLUSTERS.add(zcl.clusters.general.OnOff.cluster_id)
     LIGHT_CLUSTERS.add(zcl.clusters.general.LevelControl.cluster_id)
