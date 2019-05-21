@@ -17,6 +17,8 @@ DOMAIN = 'zeroconf'
 ATTR_HOST = 'host'
 ATTR_PORT = 'port'
 ATTR_HOSTNAME = 'hostname'
+ATTR_TYPE = 'type'
+ATTR_NAME = 'name'
 ATTR_PROPERTIES = 'properties'
 
 ZEROCONF_TYPE = '_home-assistant._tcp.local.'
@@ -93,6 +95,8 @@ def info_from_service(service):
         ATTR_HOST: str(ipaddress.ip_address(address)),
         ATTR_PORT: service.port,
         ATTR_HOSTNAME: service.server,
+        ATTR_TYPE: service.type,
+        ATTR_NAME: service.name,
         ATTR_PROPERTIES: properties,
     }
 
