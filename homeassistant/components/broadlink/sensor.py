@@ -1,7 +1,6 @@
 """Support for the Broadlink RM2 Pro (only temperature) and A1 devices."""
 import binascii
 import logging
-import socket
 from datetime import timedelta
 
 import voluptuous as vol
