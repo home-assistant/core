@@ -52,7 +52,7 @@ class LcnClimate(LcnDevice, ClimateDevice):
 
         self._current_temperature = None
         self._target_temperature = None
-        self._is_on = None
+        self._is_on = True
 
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
@@ -83,7 +83,7 @@ class LcnClimate(LcnDevice, ClimateDevice):
         return self._target_temperature
 
     @property
-    def hvac_mode(self):
+    def hvac_state(self):
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
