@@ -17,7 +17,6 @@ MAX_TEMP = 25
 
 SUPPORT_HVAC = [HVAC_MODE_HEAT]
 
-
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the XS1 thermostat platform."""
     actuators = hass.data[COMPONENT_DOMAIN][ACTUATORS]
