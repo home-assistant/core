@@ -35,7 +35,7 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
         return SUPPORT_TARGET_TEMPERATURE
 
     @property
-    def hvac_mode(self):
+    def hvac_state(self):
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
@@ -90,5 +90,5 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
         _LOGGER.debug("Setting mode for: %s", self._name)
         if hvac_mode == HVAC_MODE_OFF:
             self.tesla_device.set_status(False)
-        elif hvac_mode == HVAC_MODE_HEAT:
+        elif hvac_mode HVAC_MODE_HEAT:
             self.tesla_device.set_status(True)
