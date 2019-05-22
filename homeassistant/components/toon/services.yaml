@@ -1,6 +1,3 @@
-clear:
-  description: Clear all log entries.
-
 update:
   description: Update all entities with fresh data from Toon
   fields:
