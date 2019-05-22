@@ -69,8 +69,8 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
             description_placeholders={'name': self._name},
         )
 
-    async def async_step_discovery(self, user_input: ConfigType):
-        """Handle discovery."""
+    async def async_step_zeroconf(self, user_input: ConfigType):
+        """Handle zeroconf discovery."""
         address = user_input['properties'].get(
             'address', user_input['hostname'][:-1])
         for entry in self._async_current_entries():

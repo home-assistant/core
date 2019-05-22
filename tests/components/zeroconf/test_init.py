@@ -36,5 +36,5 @@ async def test_setup(hass):
             hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    assert len(MockServiceBrowser.mock_calls) == 1
-    assert len(mock_config_flow.mock_calls) == 1
+    assert len(MockServiceBrowser.mock_calls) == 2
+    assert len(mock_config_flow.mock_calls) == 2
