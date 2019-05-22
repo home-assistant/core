@@ -1,6 +1,8 @@
 """Support for XS1 sensors."""
 import logging
 
+from xs1_api_client.api_constants import ActuatorType
+
 from homeassistant.helpers.entity import Entity
 
 from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS, XS1DeviceEntity
@@ -8,11 +10,8 @@ from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS, XS1DeviceEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the XS1 sensor platform."""
-    from xs1_api_client.api_constants import ActuatorType
-
     sensors = hass.data[COMPONENT_DOMAIN][SENSORS]
     actuators = hass.data[COMPONENT_DOMAIN][ACTUATORS]
 
@@ -28,7 +27,7 @@ async def async_setup_platform(
         if not belongs_to_climate_actuator:
             sensor_entities.append(XS1Sensor(sensor))
 
-    async_add_entities(sensor_entities)
+    add_entities(sensor_entities)
 
 
 class XS1Sensor(XS1DeviceEntity, Entity):
