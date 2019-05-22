@@ -94,6 +94,10 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateDevice):
         if self.sensor is not None:
             self.schedule_update_ha_state()
 
+    def set_hvac_mode(self, hvac_mode):
+        """Set new target hvac mode."""
+        pass
+
     async def async_update(self):
         """Also update the sensor when available."""
         await super().async_update()
