@@ -7,7 +7,7 @@ from homeassistant.helpers import entity_registry
 from homeassistant.util import location
 
 from .config_flow import PlayStation4FlowHandler  # noqa: pylint: disable=unused-import
-from .const import DOMAIN  # noqa: pylint: disable=unused-import
+from .const import DOMAIN, PS4_DATA  # noqa: pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
