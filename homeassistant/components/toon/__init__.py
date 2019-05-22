@@ -214,7 +214,6 @@ class ToonEntity(Entity):
             self.async_schedule_update_ha_state(True)
 
 
-
 class ToonDisplayDeviceEntity(ToonEntity):
     """Defines a Toon display device entity."""
 
