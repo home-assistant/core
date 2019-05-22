@@ -91,6 +91,24 @@ async def async_setup_entry(hass, entry):
     return True
 
 
+async def async_unload_entry(hass, entry):
+    """Unload an OwnTracks config entry."""
+    hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
+    await hass.config_entries.async_forward_entry_unload(
+        entry, 'device_tracker')
+    return True
+
+
+async def async_remove_entry(hass, entry):
+    """Remove an OwnTracks config entry."""
+    if (not entry.data.get('cloudhook') or
+            'cloud' not in hass.config.components):
+        return
+
+    await hass.components.cloud.async_delete_cloudhook(
+        entry.data[CONF_WEBHOOK_ID])
+
+
 async def async_connect_mqtt(hass, component):
     """Subscribe to MQTT topic."""
     context = hass.data[DOMAIN]['context']

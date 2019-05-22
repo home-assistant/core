@@ -23,7 +23,8 @@ from homeassistant.const import (
     __version__, EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, CONF_UNIT_SYSTEM,
     ATTR_NOW, EVENT_TIME_CHANGED, EVENT_TIMER_OUT_OF_SYNC, ATTR_SECONDS,
     EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_CLOSE,
-    EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED, EVENT_CALL_SERVICE)
+    EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED, EVENT_CALL_SERVICE,
+    EVENT_CORE_CONFIG_UPDATE)
 
 from tests.common import get_test_home_assistant, async_mock_service
 
@@ -744,6 +745,28 @@ class TestServiceRegistry(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(calls)
 
+    def test_async_service_partial(self):
+        """Test registering and calling an wrapped async service."""
+        calls = []
+
+        async def service_handler(call):
+            """Service handler coroutine."""
+            calls.append(call)
+
+        self.services.register(
+            'test_domain', 'register_calls',
+            functools.partial(service_handler))
+        self.hass.block_till_done()
+
+        assert len(self.calls_register) == 1
+        assert self.calls_register[-1].data['domain'] == 'test_domain'
+        assert self.calls_register[-1].data['service'] == 'register_calls'
+
+        assert self.services.call('test_domain', 'REGISTER_CALLS',
+                                  blocking=True)
+        self.hass.block_till_done()
+        assert len(calls) == 1
+
     def test_callback_service(self):
         """Test registering and calling an async service."""
         calls = []
@@ -849,7 +872,7 @@ class TestConfig(unittest.TestCase):
     # pylint: disable=invalid-name
     def setUp(self):
         """Set up things to be run when tests are started."""
-        self.config = ha.Config()
+        self.config = ha.Config(None)
         assert self.config.config_dir is None
 
     def test_path_with_file(self):
@@ -878,6 +901,7 @@ class TestConfig(unittest.TestCase):
             'config_dir': '/tmp/ha-config',
             'whitelist_external_dirs': set(),
             'version': __version__,
+            'config_source': None,
         }
 
         assert expected == self.config.as_dict()
@@ -917,6 +941,32 @@ class TestConfig(unittest.TestCase):
 
             with pytest.raises(AssertionError):
                 self.config.is_allowed_path(None)
+
+
+async def test_event_on_update(hass, hass_storage):
+    """Test that event is fired on update."""
+    events = []
+
+    @ha.callback
+    def callback(event):
+        events.append(event)
+
+    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, callback)
+
+    assert hass.config.latitude != 12
+
+    await hass.config.update(latitude=12)
+    await hass.async_block_till_done()
+
+    assert hass.config.latitude == 12
+    assert len(events) == 1
+    assert events[0].data == {'latitude': 12}
+
+
+def test_bad_timezone_raises_value_error(hass):
+    """Test bad timezone raises ValueError."""
+    with pytest.raises(ValueError):
+        hass.config.set_time_zone('not_a_timezone')
 
 
 @patch('homeassistant.core.monotonic')

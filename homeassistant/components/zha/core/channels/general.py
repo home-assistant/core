@@ -27,6 +27,7 @@ class OnOffChannel(ZigbeeChannel):
         """Initialize OnOffChannel."""
         super().__init__(cluster, device)
         self._state = None
+        self._off_listener = None
 
     @callback
     def cluster_command(self, tsn, command_id, args):
@@ -48,9 +49,12 @@ class OnOffChannel(ZigbeeChannel):
             on_time = args[1]
             # 0 is always accept 1 is only accept when already on
             if should_accept == 0 or (should_accept == 1 and self._state):
+                if self._off_listener is not None:
+                    self._off_listener()
+                    self._off_listener = None
                 self.attribute_updated(self.ON_OFF, True)
                 if on_time > 0:
-                    async_call_later(
+                    self._off_listener = async_call_later(
                         self.device.hass,
                         (on_time / 10),  # value is in 10ths of a second
                         self.set_to_off
@@ -61,6 +65,7 @@ class OnOffChannel(ZigbeeChannel):
     @callback
     def set_to_off(self, *_):
         """Set the state to off."""
+        self._off_listener = None
         self.attribute_updated(self.ON_OFF, False)
 
     @callback

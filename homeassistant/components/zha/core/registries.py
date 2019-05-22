@@ -153,6 +153,8 @@ def establish_device_mappings():
         zcl.clusters.measurement.OccupancySensing: BINARY_SENSOR,
         zcl.clusters.hvac.Fan: FAN,
         SMARTTHINGS_ACCELERATION_CLUSTER: BINARY_SENSOR,
+        zcl.clusters.general.MultistateInput.cluster_id: SENSOR,
+        zcl.clusters.general.AnalogInput.cluster_id: SENSOR
     })
 
     SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS.update({

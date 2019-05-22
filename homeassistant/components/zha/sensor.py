@@ -24,6 +24,13 @@ def pass_through_formatter(value):
     return value
 
 
+def illuminance_formatter(value):
+    """Convert Illimination data."""
+    if value is None:
+        return None
+    return round(pow(10, ((value - 1) / 10000)), 1)
+
+
 def temperature_formatter(value):
     """Convert temperature data."""
     if value is None:
@@ -58,6 +65,7 @@ FORMATTER_FUNC_REGISTRY = {
     TEMPERATURE: temperature_formatter,
     PRESSURE: pressure_formatter,
     ELECTRICAL_MEASUREMENT: active_power_formatter,
+    ILLUMINANCE: illuminance_formatter,
     GENERIC: pass_through_formatter,
 }
 

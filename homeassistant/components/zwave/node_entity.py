@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.core import callback
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_WAKEUP, ATTR_ENTITY_ID
+from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.entity import Entity
 
 from .const import (
@@ -73,6 +74,16 @@ class ZWaveBaseEntity(Entity):
             await self.platform.async_add_entities([self])
         if self.hass and self.platform:
             self.hass.add_job(_async_remove_and_add)
+
+    async def node_removed(self):
+        """Call when a node is removed from the Z-Wave network."""
+        await self.async_remove()
+
+        registry = await async_get_registry(self.hass)
+        if self.entity_id not in registry.entities:
+            return
+
+        registry.async_remove(self.entity_id)
 
 
 class ZWaveNodeEntity(ZWaveBaseEntity):

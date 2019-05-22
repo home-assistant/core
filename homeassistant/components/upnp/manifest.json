@@ -1,6 +1,7 @@
 {
   "domain": "upnp",
   "name": "Upnp",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/upnp",
   "requirements": [
     "async-upnp-client==0.14.7"

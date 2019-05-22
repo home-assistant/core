@@ -48,7 +48,9 @@ async def async_migrate_entry(hass, entry):
 
     # Migrate Version 1 -> Version 2: New region codes.
     if version == 1:
-        loc = await hass.async_add_executor_job(location.detect_location_info)
+        loc = await location.async_detect_location_info(
+            hass.helpers.aiohttp_client.async_get_clientsession()
+        )
         if loc:
             country = loc.country_name
             if country in COUNTRIES:
@@ -71,7 +73,6 @@ async def async_migrate_entry(hass, entry):
 
                 # Remove old entity entry.
                 registry.async_remove(entity_id)
-                await hass.async_block_till_done()
 
                 # Format old unique_id.
                 unique_id = format_unique_id(entry.data[CONF_TOKEN], unique_id)
