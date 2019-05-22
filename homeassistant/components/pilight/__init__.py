@@ -55,7 +55,8 @@ def setup(hass, config):
         hass, config[DOMAIN][CONF_SEND_DELAY])
 
     try:
-        pilight_client = pilight.Client(host=host, port=port)
+        pilight_client = pilight.Client(host=host, port=port
+                                        , recv_codes_only=False)
     except (socket.error, socket.timeout) as err:
         _LOGGER.error(
             "Unable to connect to %s on port %s: %s", host, port, err)
