@@ -14,6 +14,9 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass, config):
     """Set up the PS4 Component."""
+    from pyps4_homeassistant.client import PS4Client
+    hass.data[PS4_DATA] = PS4Data()
+    hass.data[PS4_DATA].handler = PS4Client()
     return True
 
 
