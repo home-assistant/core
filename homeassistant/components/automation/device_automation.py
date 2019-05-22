@@ -70,4 +70,4 @@ async def websocket_device_automation_list_triggers(hass, connection, msg):
     """Handle request for device triggers."""
     device_id = msg['device_id']
     triggers = await async_get_device_automation_triggers(hass, device_id)
-    connection.send_result(msg['id'], {'triggers':triggers})
+    connection.send_result(msg['id'], {'triggers': triggers})
