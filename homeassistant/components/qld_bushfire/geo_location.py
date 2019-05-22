@@ -1,4 +1,4 @@
-"""Support for Queensland Fire and Emergency Services Bushfire Alert Feeds."""
+"""Support for Queensland Bushfire Alert Feeds."""
 from datetime import timedelta
 import logging
 from typing import Optional
@@ -31,10 +31,10 @@ DEFAULT_UNIT_OF_MEASUREMENT = 'km'
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-SIGNAL_DELETE_ENTITY = 'qfes_bushfire_delete_{}'
-SIGNAL_UPDATE_ENTITY = 'qfes_bushfire_update_{}'
+SIGNAL_DELETE_ENTITY = 'qld_bushfire_delete_{}'
+SIGNAL_UPDATE_ENTITY = 'qld_bushfire_update_{}'
 
-SOURCE = 'qfes_bushfire'
+SOURCE = 'qld_bushfire'
 
 VALID_CATEGORIES = [
     'Emergency Warning',
@@ -53,14 +53,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the QFES Bushfire Alert Feed platform."""
+    """Set up the Queensland Bushfire Alert Feed platform."""
     scan_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     coordinates = (config.get(CONF_LATITUDE, hass.config.latitude),
                    config.get(CONF_LONGITUDE, hass.config.longitude))
     radius_in_km = config[CONF_RADIUS]
     categories = config[CONF_CATEGORIES]
     # Initialize the entity manager.
-    feed = QfesBushfireFeedEntityManager(
+    feed = QldBushfireFeedEntityManager(
         hass, add_entities, scan_interval, coordinates, radius_in_km,
         categories)
 
@@ -71,17 +71,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_feed_manager)
 
 
-class QfesBushfireFeedEntityManager:
-    """Feed Entity Manager for QFES Bushfire Alert GeoRSS feed."""
+class QldBushfireFeedEntityManager:
+    """Feed Entity Manager for Qld Bushfire Alert GeoRSS feed."""
 
     def __init__(self, hass, add_entities, scan_interval, coordinates,
                  radius_in_km, categories):
         """Initialize the Feed Entity Manager."""
-        from georss_qfes_bushfire_alert_client import \
-            QfesBushfireAlertFeedManager
+        from georss_qld_bushfire_alert_client import \
+            QldBushfireAlertFeedManager
 
         self._hass = hass
-        self._feed_manager = QfesBushfireAlertFeedManager(
+        self._feed_manager = QldBushfireAlertFeedManager(
             self._generate_entity, self._update_entity, self._remove_entity,
             coordinates, filter_radius=radius_in_km,
             filter_categories=categories)
@@ -105,7 +105,7 @@ class QfesBushfireFeedEntityManager:
 
     def _generate_entity(self, external_id):
         """Generate new entity."""
-        new_entity = QfesBushfireLocationEvent(self, external_id)
+        new_entity = QldBushfireLocationEvent(self, external_id)
         # Add new entities to HA.
         self._add_entities([new_entity], True)
 
@@ -118,8 +118,8 @@ class QfesBushfireFeedEntityManager:
         dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
 
 
-class QfesBushfireLocationEvent(GeolocationEvent):
-    """This represents an external event with QFES Bushfire feed data."""
+class QldBushfireLocationEvent(GeolocationEvent):
+    """This represents an external event with Qld Bushfire feed data."""
 
     def __init__(self, feed_manager, external_id):
         """Initialize entity with data from feed entry."""
@@ -160,7 +160,7 @@ class QfesBushfireLocationEvent(GeolocationEvent):
 
     @property
     def should_poll(self):
-        """No polling needed for QFES Bushfire Alert feed location events."""
+        """No polling needed for Qld Bushfire Alert feed location events."""
         return False
 
     async def async_update(self):

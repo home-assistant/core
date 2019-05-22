@@ -1,10 +1,10 @@
-"""The tests for the QFES Bushfire Alert Feed platform."""
+"""The tests for the Queensland Bushfire Alert Feed platform."""
 import datetime
 from unittest.mock import patch, MagicMock, call
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
-from homeassistant.components.qfes_bushfire.geo_location import (
+from homeassistant.components.qld_bushfire.geo_location import (
     ATTR_EXTERNAL_ID, SCAN_INTERVAL, ATTR_CATEGORY,
     ATTR_STATUS, ATTR_PUBLICATION_DATE, ATTR_UPDATED_DATE)
 from homeassistant.const import EVENT_HOMEASSISTANT_START, \
@@ -17,7 +17,7 @@ import homeassistant.util.dt as dt_util
 CONFIG = {
     geo_location.DOMAIN: [
         {
-            'platform': 'qfes_bushfire',
+            'platform': 'qld_bushfire',
             CONF_RADIUS: 200
         }
     ]
@@ -26,7 +26,7 @@ CONFIG = {
 CONFIG_WITH_CUSTOM_LOCATION = {
     geo_location.DOMAIN: [
         {
-            'platform': 'qfes_bushfire',
+            'platform': 'qld_bushfire',
             CONF_RADIUS: 200,
             CONF_LATITUDE: 40.4,
             CONF_LONGITUDE: -3.7
@@ -74,8 +74,8 @@ async def test_setup(hass):
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
     with patch('homeassistant.util.dt.utcnow', return_value=utcnow), \
-        patch('georss_qfes_bushfire_client.'
-              'QfesBushfireFeed') as mock_feed:
+        patch('georss_qld_bushfire_alert_client.'
+              'QldBushfireAlertFeed') as mock_feed:
         mock_feed.return_value.update.return_value = 'OK', [mock_entry_1,
                                                             mock_entry_2,
                                                             mock_entry_3]
@@ -108,7 +108,7 @@ async def test_setup(hass):
                         2018, 9, 22, 8, 10, tzinfo=datetime.timezone.utc),
                 ATTR_STATUS: 'Status 1',
                 ATTR_UNIT_OF_MEASUREMENT: "km",
-                ATTR_SOURCE: 'qfes_bushfire'}
+                ATTR_SOURCE: 'qld_bushfire'}
             assert float(state.state) == 15.5
 
             state = hass.states.get("geo_location.title_2")
@@ -120,7 +120,7 @@ async def test_setup(hass):
                 ATTR_LONGITUDE: -3.1,
                 ATTR_FRIENDLY_NAME: "Title 2",
                 ATTR_UNIT_OF_MEASUREMENT: "km",
-                ATTR_SOURCE: 'qfes_bushfire'}
+                ATTR_SOURCE: 'qld_bushfire'}
             assert float(state.state) == 20.5
 
             state = hass.states.get("geo_location.title_3")
@@ -132,7 +132,7 @@ async def test_setup(hass):
                 ATTR_LONGITUDE: -3.2,
                 ATTR_FRIENDLY_NAME: "Title 3",
                 ATTR_UNIT_OF_MEASUREMENT: "km",
-                ATTR_SOURCE: 'qfes_bushfire'}
+                ATTR_SOURCE: 'qld_bushfire'}
             assert float(state.state) == 25.5
 
             # Simulate an update - one existing, one new entry,
@@ -169,8 +169,8 @@ async def test_setup_with_custom_location(hass):
     mock_entry_1 = _generate_mock_feed_entry(
         '1234', 'Title 1', 20.5, (38.1, -3.1), category="Category 1")
 
-    with patch('georss_qfes_bushfire_client.'
-               'QfesBushfireFeed') as mock_feed:
+    with patch('georss_qld_bushfire_alert_client.'
+               'QldBushfireAlertFeed') as mock_feed:
         mock_feed.return_value.update.return_value = 'OK', [mock_entry_1]
 
         with assert_setup_component(1, geo_location.DOMAIN):
@@ -186,5 +186,4 @@ async def test_setup_with_custom_location(hass):
             assert len(all_states) == 1
 
             assert mock_feed.call_args == call(
-                (40.4, -3.7), filter_category="Category 1",
-                filter_radius=200.0)
+                (40.4, -3.7), filter_categories=[], filter_radius=200.0)
