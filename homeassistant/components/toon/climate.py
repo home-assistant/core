@@ -6,8 +6,8 @@ from typing import Any, Dict, List
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_COOL, STATE_ECO, STATE_HEAT, SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_HEAT, PRESET_AWAY, PRESET_COMFORT, PRESET_HOME, PRESET_SLEEP,
+    SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
@@ -17,19 +17,11 @@ from .const import DATA_TOON_CLIENT, DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+SUPPORT_PRESET = [PRESET_AWAY, PRESET_COMFORT, PRESET_HOME, PRESET_SLEEP]
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 SCAN_INTERVAL = timedelta(seconds=300)
-
-HA_TOON = {
-    STATE_AUTO: 'Comfort',
-    STATE_HEAT: 'Home',
-    STATE_ECO: 'Away',
-    STATE_COOL: 'Sleep',
-}
-
-TOON_HA = {value: key for key, value in HA_TOON.items()}
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,
@@ -65,19 +57,35 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
         return SUPPORT_FLAGS
 
     @property
+    def hvac_state(self) -> str:
+        """Return hvac operation ie. heat, cool mode.
+
+        Need to be one of HVAC_MODE_*.
+        """
+        return HVAC_MODE_HEAT
+
+    @property
+    def hvac_modes(self) -> List[str]:
+        """Return the list of available hvac operation modes.
+
+        Need to be a subset of HVAC_MODES.
+        """
+        return [HVAC_MODE_HEAT]
+
+    @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return TEMP_CELSIUS
 
     @property
-    def current_operation(self) -> str:
-        """Return current operation i.e. comfort, home, away."""
-        return TOON_HA.get(self._state)
+    def preset_mode(self) -> str:
+        """Return the current preset mode, e.g., home, away, temp."""
+        return self._state.lower()
 
     @property
-    def operation_list(self) -> List[str]:
-        """Return a list of available operation modes."""
-        return list(HA_TOON.keys())
+    def preset_list(self) -> List[str]:
+        """Return a list of available preset modes."""
+        return SUPPORT_PRESET
 
     @property
     def current_temperature(self) -> float:
@@ -111,9 +119,13 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         self.toon.thermostat = temperature
 
-    def set_operation_mode(self, operation_mode: str) -> None:
-        """Set new operation mode."""
-        self.toon.thermostat_state = HA_TOON[operation_mode]
+    def set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        self.toon.thermostat_state = preset_mode
+
+    def set_hvac_mode(self, hvac_mode: str) -> None:
+        """Set new target hvac mode."""
+        pass
 
     def update(self) -> None:
         """Update local state."""

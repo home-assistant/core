@@ -45,6 +45,12 @@ PRESET_BOOST = 'boost'
 # Device have a comfort mode
 PRESET_COMFORT = 'comfort'
 
+# Device is on home mode
+PRESET_HOME = 'home'
+
+# Device is prepared for sleep
+PRESET_SLEEP = 'sleep'
+
 
 # This are support current states of HVAC
 CURRENT_HVAC_OFF = 'off'
