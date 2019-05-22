@@ -1057,13 +1057,20 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
     @property
     def device_info(self):
         """Return device information."""
+        ident = self.node_id
+        name = node_name(self.node)
+        if self.values.primary.instance > 1:
+            ident = '{}_{}'.format(
+                self.node_id, self.values.primary.instance)
+            name = '{} ({})'.format(
+                name, self.values.primary.instance)
         return {
             'identifiers': {
-                (DOMAIN, self.node_id)
+                (DOMAIN, ident)
             },
             'manufacturer': self.node.manufacturer_name,
             'model': self.node.product_name,
-            'name': node_name(self.node),
+            'name': name,
         }
 
     @property
