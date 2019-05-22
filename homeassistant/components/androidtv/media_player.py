@@ -224,7 +224,7 @@ class ADBDevice(MediaPlayerDevice):
             self.exceptions = (ConnectionResetError, RuntimeError)
 
         # Property attributes
-        self._adb_response = ''
+        self._adb_response = None
         self._available = self.aftv.available
         self._current_app = None
         self._state = None
