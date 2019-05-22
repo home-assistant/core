@@ -107,7 +107,7 @@ async def async_setup_entry(
             ]
         )
 
-    async_add_entities(sensors)
+    async_add_entities(sensors, True)
 
 
 class ToonBinarySensor(ToonEntity, BinarySensorDevice):

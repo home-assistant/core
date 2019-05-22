@@ -185,7 +185,6 @@ class ToonEntity(Entity):
         self._state = None
         self._icon = icon
         self.toon = toon
-        self.update()
 
     @property
     def name(self) -> str:
@@ -214,9 +213,6 @@ class ToonEntity(Entity):
         if display_name == self.toon.display_name:
             self.async_schedule_update_ha_state(True)
 
-    def update(self) -> None:
-        """Update entity."""
-        raise NotImplementedError
 
 
 class ToonDisplayDeviceEntity(ToonEntity):
