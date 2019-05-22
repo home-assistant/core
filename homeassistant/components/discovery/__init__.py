@@ -31,7 +31,6 @@ SERVICE_ENIGMA2 = 'enigma2'
 SERVICE_FREEBOX = 'freebox'
 SERVICE_HASS_IOS_APP = 'hass_ios'
 SERVICE_HASSIO = 'hassio'
-SERVICE_HOMEKIT = 'homekit'
 SERVICE_HEOS = 'heos'
 SERVICE_HUE = 'philips_hue'
 SERVICE_IGD = 'igd'
@@ -59,7 +58,6 @@ CONFIG_ENTRY_HANDLERS = {
     SERVICE_IKEA_TRADFRI: 'tradfri',
     'sonos': 'sonos',
     SERVICE_IGD: 'upnp',
-    SERVICE_HOMEKIT: 'homekit_controller',
 }
 
 SERVICE_HANDLERS = {

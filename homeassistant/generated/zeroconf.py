@@ -10,5 +10,8 @@ SERVICE_TYPES = {
     ],
     "_esphomelib._tcp.local.": [
         "esphome"
+    ],
+    "_hap._tcp.local.": [
+        "homekit_controller"
     ]
 }
