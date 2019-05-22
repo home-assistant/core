@@ -25,6 +25,10 @@ async def async_setup_platform(
 SUPPORT_HVAC = HVAC_MODE_HEAT | HVAC_MODE_OFF
 
 
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
+SUPPORT_HVAC = HVAC_MODE_HEAT | HVAC_MODE_OFF
+
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ climate devices.
 
@@ -66,7 +70,7 @@ class DeconzThermostat(DeconzDevice, ClimateDevice):
         return SUPPORT_TARGET_TEMPERATURE
 
     @property
-    def hvac_mode(self):
+    def hvac_state(self) -> str:
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
@@ -76,7 +80,7 @@ class DeconzThermostat(DeconzDevice, ClimateDevice):
         return HVAC_MODE_OFF
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> List[str]:
         """Return the list of available hvac operation modes.
 
         Need to be a subset of HVAC_MODES.
@@ -102,7 +106,7 @@ class DeconzThermostat(DeconzDevice, ClimateDevice):
 
         await self._device.async_set_config(data)
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_HEAT:
             data = {'mode': 'auto'}
