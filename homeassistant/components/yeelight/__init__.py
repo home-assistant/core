@@ -4,6 +4,7 @@ import logging
 from datetime import timedelta
 
 import voluptuous as vol
+from yeelight import Bulb, BulbException
 from homeassistant.components.discovery import SERVICE_YEELIGHT
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_SCAN_INTERVAL, \
     CONF_HOST, ATTR_ENTITY_ID
@@ -184,7 +185,6 @@ class YeelightDevice:
     def bulb(self):
         """Return bulb device."""
         if self._bulb_device is None:
-            from yeelight import Bulb, BulbException
             try:
                 self._bulb_device = Bulb(self._ipaddr, model=self._model)
                 # force init for type
@@ -238,8 +238,6 @@ class YeelightDevice:
 
     def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None):
         """Turn on device."""
-        from yeelight import BulbException
-
         try:
             self.bulb.turn_on(duration=duration, light_type=light_type)
         except BulbException as ex:
@@ -248,8 +246,6 @@ class YeelightDevice:
 
     def turn_off(self, duration=DEFAULT_TRANSITION, light_type=None):
         """Turn off device."""
-        from yeelight import BulbException
-
         try:
             self.bulb.turn_off(duration=duration, light_type=light_type)
         except BulbException as ex:
@@ -258,8 +254,6 @@ class YeelightDevice:
 
     def update(self):
         """Read new properties from the device."""
-        from yeelight import BulbException
-
         if not self.bulb:
             return
 
