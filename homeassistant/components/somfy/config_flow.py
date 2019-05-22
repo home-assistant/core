@@ -7,7 +7,7 @@ import async_timeout
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import callback
-from .const import CLIENT_ID, CLIENT_SECRET, DOMAIN
+from .const import CLIENT_ID, CLIENT_SECRET, DOMAIN, CODE
 
 AUTH_CALLBACK_PATH = '/auth/somfy/callback'
 AUTH_CALLBACK_NAME = 'auth:somfy:callback'
@@ -40,9 +40,6 @@ class SomfyFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
-        if DOMAIN not in self.hass.data:
-            return self.async_abort(reason='no_flows')
-
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason='already_setup')
 
@@ -50,13 +47,10 @@ class SomfyFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_auth(self, user_input=None):
         """Create an entry for auth."""
-        if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason='external_setup')
 
-        errors = {}
-
-        if user_input is not None:
-            errors['base'] = 'follow_link'
+        # Flow has been triggered from Somfy website
+        if user_input:
+            return await self.async_step_code(user_input)
 
         try:
             with async_timeout.timeout(10):
@@ -67,10 +61,9 @@ class SomfyFlowHandler(config_entries.ConfigFlow):
             _LOGGER.exception("Unexpected error generating auth url")
             return self.async_abort(reason='authorize_url_fail')
 
-        return self.async_show_form(
+        return self.async_external_step(
             step_id='auth',
-            description_placeholders={'authorization_url': url},
-            errors=errors,
+            url=url
         )
 
     async def _get_authorization_url(self):
@@ -84,32 +77,26 @@ class SomfyFlowHandler(config_entries.ConfigFlow):
 
         self.hass.http.register_view(SomfyAuthCallbackView())
         return await self.hass.async_add_executor_job(
-            api.get_authorization_url)
+            api.get_authorization_url, self.flow_id)
 
-    async def async_step_code(self, code=None):
+    async def async_step_code(self, code):
         """Received code for authentication."""
-        if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason='already_setup')
+        self.hass.data[DOMAIN][CODE] = code
+        return self.async_external_step_done(
+            next_step_id="creation"
+        )
 
-        if code is None:
-            return self.async_abort(reason='no_code')
-
-        _LOGGER.debug("Should close all flows below %s",
-                      self.hass.config_entries.flow.async_progress())
-
-        return await self._async_create_session(code)
-
-    async def _async_create_session(self, code):
+    async def async_step_creation(self, user_input=None):
         """Create Somfy api and entries."""
         client_id = self.hass.data[DOMAIN][CLIENT_ID]
         client_secret = self.hass.data[DOMAIN][CLIENT_SECRET]
+        code = self.hass.data[DOMAIN][CODE]
         from pymfy.api.somfy_api import SomfyApi
         redirect_uri = '{}{}'.format(
             self.hass.config.api.base_url, AUTH_CALLBACK_PATH)
         api = SomfyApi(client_id, client_secret, redirect_uri)
         token = await self.hass.async_add_executor_job(api.request_token, None,
                                                        code)
-        _LOGGER.debug("Got new token")
         _LOGGER.info('Successfully authenticated Somfy')
         return self.async_create_entry(
             title='',
@@ -137,9 +124,14 @@ class SomfyAuthCallbackView(HomeAssistantView):
         hass = request.app['hass']
         if 'code' in request.query:
             hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={'source': 'code'},
-                    data=request.query['code'],
+                hass.config_entries.flow.async_configure(
+                    flow_id=request.query['state'],
+                    user_input=request.query['code'],
                 ))
-        return web.HTTPFound('/')
+
+        response_message = """Somfy has been successfully authorized!
+                 You can close this window now! """
+        html_response = """<html><head><title>Somfy Auth</title></head>
+                        <body><h1>{}</h1></body></html>"""
+        return web.Response(text=html_response.format(response_message),
+                            content_type='text/html')

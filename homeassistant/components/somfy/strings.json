@@ -10,15 +10,6 @@
         "create_entry": {
             "default": "Successfully authenticated with Somfy."
         },
-        "error": {
-            "follow_link": "Please follow the link and authenticate before pressing Submit"
-        },
-        "step": {
-            "auth": {
-                "description": "Please follow this [Link]({authorization_url}) and **Accept** access to your Somfy account, then come back and press **Submit** below",
-                "title": "Authenticate Somfy"
-            }
-        },
         "title": "Somfy"
     }
 }
