@@ -275,17 +275,9 @@ async def get_obs_station_list(nws) -> List[str]:
     closest to the given point (latitude, longitude).
 
     """
-    import pynws
     res = None
     try:
         res = await nws.stations()
-    except pynws.NwsError as status:
-        #
-        # This is some type of configuration error
-        #
-        _LOGGER.error("Error getting station list for %s: %s",
-                      nws.latlon, status)
-        return None
     except JSONDecodeError as status:
         # Here when response could not be decoded as valid JSON.
         # Likely the web server connection failed before all
@@ -325,13 +317,8 @@ async def get_obs_for_station(nws, errorstate) -> Dict:
     measurements from the given weather station. The return value
     is the sequence of dictionaries under the JSON 'properties' item.
     """
-    import pynws
     try:
         res = await nws.observations(limit=5)
-    except pynws.NwsError as status:
-        if not errorstate:
-            _LOGGER.error("Error getting observations for station %s - %s",
-                          nws.station, status)
     except JSONDecodeError as status:
         if not errorstate:
             _LOGGER.error("Error getting observations for station %s - %s",
