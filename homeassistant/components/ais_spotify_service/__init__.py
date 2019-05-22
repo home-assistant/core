@@ -270,15 +270,15 @@ class SpotifyData:
         self.hass.states.async_set("sensor.spotifylist", 0, items_info)
 
         # from remote
-        import homeassistant.components.ais_ai_service as ais_ai
-        if ais_ai.CURR_ENTITIE == 'sensor.spotifysearchlist' and ais_ai.CURR_BUTTON_CODE == 23:
-            ais_ai.set_curr_entity(self.hass, 'sensor.spotifylist')
-            ais_ai.CURR_ENTITIE_ENTERED = True
-            text = "Mamy %s utworów, wybierz który mam włączyć" % (str(len(items_info)))
-            yield from self.hass.services.async_call('ais_ai_service', 'say_it', {"text": text})
-        else:
-            # play the first one
-            yield from self.hass.services.async_call('ais_spotify_service', 'select_track_uri', {"id": 0})
+        # import homeassistant.components.ais_ai_service as ais_ai
+        # if ais_ai.CURR_ENTITIE == 'sensor.spotifysearchlist' and ais_ai.CURR_BUTTON_CODE == 23:
+        #     ais_ai.set_curr_entity(self.hass, 'sensor.spotifylist')
+        #     ais_ai.CURR_ENTITIE_ENTERED = True
+        #     text = "Mamy %s utworów na liście, wybierz który mam włączyć" % (str(len(items_info)))
+        #     yield from self.hass.services.async_call('ais_ai_service', 'say_it', {"text": text})
+        # else:
+        #     # play the first one
+        #     yield from self.hass.services.async_call('ais_spotify_service', 'select_track_uri', {"id": 0})
 
     @asyncio.coroutine
     def process_search_async(self, call):
@@ -330,12 +330,24 @@ class SpotifyData:
 
     def select_search_uri(self, call):
         _LOGGER.info("select_search_uri")
+        import json
         call_id = call.data["id"]
         state = self.hass.states.get('sensor.spotifysearchlist')
         attr = state.attributes
         track = attr.get(int(call_id))
         # update search list
         self.hass.states.async_set("sensor.spotifysearchlist", call_id, attr)
+
+        # play the uri
+        _audio_info = json.dumps(
+            {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": ais_global.G_AN_SPOTIFY,
+             "media_content_id": track["uri"]})
+        self.hass.services.call('media_player', 'play_media', {
+            "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+            "media_content_type": "ais_content_info",
+            "media_content_id": _audio_info
+        })
+
         # get track list
         return run_coroutine_threadsafe(
             self.get_tracks_list_async(

@@ -496,6 +496,17 @@ class ExoPlayerDevice(MediaPlayerDevice):
             self._media_source = message.get("media_source", self._media_source)
             self._album_name = message.get("media_album_name", "AI-Speaker")
             _LOGGER.debug(str.format("message_received: {0}", message))
+
+            # select track on spotify list
+            if self._media_source == ais_global.G_AN_SPOTIFY:
+                state = self.hass.states.get('sensor.spotifylist')
+                attr = state.attributes
+                for i in range(len(attr)):
+                    track = attr.get(i)
+                    if track["uri"] == message.get("media_content_id", ""):
+                        self.hass.states.async_set("sensor.spotifylist",  i, attr)
+                        break
+
             if "giveMeNextOne" in message:
                 play_next = message.get("giveMeNextOne", False)
                 if play_next is True:

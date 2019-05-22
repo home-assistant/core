@@ -631,11 +631,11 @@ def say_curr_entity(hass):
     elif entity_id == 'input_select.ais_bookmark_last_played':
         _say_it(hass, info_name + " " + info_data.replace("Local;", ""), None)
         return
-    elif entity_id == 'sensor.ais_android_wifi_current_network_info':
-        state = hass.states.get('sensor.ais_android_wifi_current_network_info')
+    elif entity_id == 'sensor.ais_android_current_network_info':
+        state = hass.states.get('sensor.ais_android_current_network_info')
         attr = state.attributes
         info = attr.get('description', 'brak informacji o połączeniu')
-        _say_it(hass, "Połączenie WiFi " + info, None)
+        _say_it(hass, "Prędkość połączenia " + info, None)
         return
     elif entity_id.startswith('script.'):
         _say_it(hass, info_name + " Naciśnij OK/WYKONAJ by uruchomić.", None)
@@ -1707,8 +1707,8 @@ async def async_setup(hass, config):
     # sensors
     hass.states.async_set("sensor.aisknowledgeanswer", "", {"text": ""})
     hass.states.async_set(
-        "sensor.ais_android_wifi_current_network_info",
-        0, {"friendly_name": "Połączenie Wifi", "unit_of_measurement": "MB"})
+        "sensor.ais_android_current_network_info",
+        0, {"friendly_name": "Prędkość połączenia", "unit_of_measurement": "MB", "icon": "mdi:speedometer"})
 
     return True
 
@@ -1950,7 +1950,7 @@ def _process_command_from_frame(hass, service):
     elif service.data["topic"] == 'ais/wifi_connection_info':
         # current connection info
         cci = json.loads(service.data["payload"])
-        attr = {"friendly_name": "Połączenie Wifi", "unit_of_measurement": "MB"}
+        attr = {"friendly_name": "Prędkość połączenia", "unit_of_measurement": "MB", "icon": "mdi:speedometer"}
         desc = ""
         speed = 0
         if "pass" in cci:
@@ -1959,7 +1959,7 @@ def _process_command_from_frame(hass, service):
             ais_global.set_my_ssid(cci["ssid"])
             attr["ssid"] = cci["ssid"]
             if cci["ssid"] == "<unknown ssid>":
-                desc += "brak połączenia"
+                desc += "brak informacji o połączeniu"
             else:
                 desc += cci["ssid"]
                 if "link_speed_mbps" in cci:
@@ -1973,7 +1973,7 @@ def _process_command_from_frame(hass, service):
                     desc += "; " + _wifi_frequency_info(cci["frequency_mhz"])
                     attr["frequency_mhz"] = cci["frequency_mhz"]
         attr["description"] = desc
-        hass.states.async_set("sensor.ais_android_wifi_current_network_info", speed, attr)
+        hass.states.async_set("sensor.ais_android_current_network_info", speed, attr)
         return
     elif service.data["topic"] == 'ais/wifi_state_change_info':
         # current connection info
@@ -2029,8 +2029,25 @@ def _process_command_from_frame(hass, service):
     elif service.data["topic"] == 'ais/ip_state_change_info':
         pl = json.loads(service.data["payload"])
         ais_global.set_global_my_ip(pl["ip"])
+        icon = "mdi:access-point-network"
+        friendly_name = "Lokalny adres IP"
+        if "type" in pl:
+            # see android ConnectivityManager
+            if type == "-1":
+                # TYPE_NONE
+                icon = "mdi:lan-disconnect"
+                friendly_name = "Lokalny adres IP - "
+            elif type == "9":
+                # TYPE_ETHERNET
+                icon = "mdi:ethernet"
+                friendly_name = "Lokalny adres IP (ethernet)"
+            elif type == "1":
+                # TYPE_WIFI
+                icon = "mdi:wifi-strength-4-lock"
+                friendly_name = "Lokalny adres IP (wifi)"
+
         hass.states.async_set("sensor.internal_ip_address", pl["ip"],
-                              {"friendly_name": "Lokalny adres IP", "icon": "mdi:access-point-network"})
+                              {"friendly_name": friendly_name, "icon": icon})
     elif service.data["topic"] == 'ais/player_status':
         hass.services.call('media_player', 'play_media',
                            {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
