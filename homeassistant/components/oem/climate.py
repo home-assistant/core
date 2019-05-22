@@ -8,7 +8,8 @@ import voluptuous as vol
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, CURRENT_HVAC_OFF, HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_CURRENT_HVAC,
+    SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT,
     CONF_USERNAME, TEMP_CELSIUS)
@@ -25,9 +26,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
 })
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_CURRENT_HVAC
 SUPPORT_HVAC = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the oemthermostat platform."""
@@ -66,7 +66,7 @@ class ThermostatDevice(ClimateDevice):
         return SUPPORT_FLAGS
 
     @property
-    def hvac_mode(self):
+    def hvac_state(self):
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
@@ -96,7 +96,7 @@ class ThermostatDevice(ClimateDevice):
         return TEMP_CELSIUS
 
     @property
-    def hvac_action(self):
+    def current_hvac(self):
         """Return current hvac i.e. heat, cool, idle."""
         if not self._mode:
             return CURRENT_HVAC_OFF
