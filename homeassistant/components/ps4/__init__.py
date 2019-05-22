@@ -18,6 +18,7 @@ class PS4Data():
     def __init__(self):
         """Init Class."""
         self.devices = []
+        self.handler = None
 
 
 async def async_setup(hass, config):
