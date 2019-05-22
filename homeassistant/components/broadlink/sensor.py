@@ -128,7 +128,7 @@ class BroadlinkData:
             if data is not None:
                 self.data = self._schema(data)
                 return
-        except (socket.timeout, OSError) as error:
+        except OSError as error:
             if retry < 1:
                 self.data = None
                 _LOGGER.error(error)
@@ -141,7 +141,7 @@ class BroadlinkData:
     def _auth(self, retry=3):
         try:
             auth = self._device.auth()
-        except (socket.timeout, OSError):
+        except OSError:
             auth = False
         if not auth and retry > 0:
             self._connect()

@@ -110,7 +110,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     broadlink_device.timeout = config.get(CONF_TIMEOUT)
     try:
         broadlink_device.auth()
-    except (socket.timeout, OSError):
+    except OSError:
         _LOGGER.error("Failed to connect to device")
 
     add_entities(switches)
@@ -180,7 +180,7 @@ class BroadlinkRMSwitch(SwitchDevice, RestoreEntity):
             return True
         try:
             self._device.send_data(packet)
-        except (socket.timeout, ValueError, OSError) as error:
+        except (ValueError, OSError) as error:
             if retry < 1:
                 _LOGGER.error("Error during sending a packet: %s", error)
                 return False
@@ -192,7 +192,7 @@ class BroadlinkRMSwitch(SwitchDevice, RestoreEntity):
     def _auth(self, retry=2):
         try:
             auth = self._device.auth()
-        except (socket.timeout, OSError):
+        except OSError:
             auth = False
             if retry < 1:
                 _LOGGER.error("Timeout during authorization")
@@ -348,7 +348,7 @@ class BroadlinkMP1Switch:
         """Authenticate the device."""
         try:
             auth = self._device.auth()
-        except (socket.timeout, OSError):
+        except OSError:
             auth = False
         if not auth and retry > 0:
             return self._auth(retry-1)
