@@ -12,6 +12,14 @@ from .const import DOMAIN  # noqa: pylint: disable=unused-import
 _LOGGER = logging.getLogger(__name__)
 
 
+class PS4Data():
+    """Init Data Class."""
+
+    def __init__(self):
+        """Init Class."""
+        self.devices = []
+
+
 async def async_setup(hass, config):
     """Set up the PS4 Component."""
     from pyps4_homeassistant.client import PS4Client
