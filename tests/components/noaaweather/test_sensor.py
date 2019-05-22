@@ -166,7 +166,10 @@ OBSURL = "https://api.weather.gov/stations/{}/observations/"
 
 @asyncio.coroutine
 def test_setup_with_config(hass, aioclient_mock):
-    """Test with the configuration."""
+    """Test with the minimal configuration.
+
+    This just tests that the setup works correctly.
+    """
     aioclient_mock.get(
         STAURL.format(VALID_CONFIG_KJFK_MINIMAL['sensor']['latitude'],
                       VALID_CONFIG_KJFK_MINIMAL['sensor']['longitude']),
@@ -183,7 +186,11 @@ def test_setup_with_config(hass, aioclient_mock):
 
 @asyncio.coroutine
 def test_setup_with_nostation(hass, aioclient_mock):
-    """Test with the configuration."""
+    """Test with the minimal configuration.
+
+    The data file used does not result in a valid station, so this
+    indicates a configuration issue.
+    """
     aioclient_mock.get(
         STAURL.format(VALID_CONFIG_KJFK_MINIMAL['sensor']['latitude'],
                       VALID_CONFIG_KJFK_MINIMAL['sensor']['longitude']),
@@ -202,6 +209,7 @@ def test_setup_with_nostation(hass, aioclient_mock):
 def test_setup_minimal(hass, aioclient_mock):
     """Test for minimal weather sensor config.
 
+    Only temperature is requested in the configuration.
     This test case is with default (metric) units.
     """
     aioclient_mock.get(
@@ -227,7 +235,7 @@ def test_setup_minimal(hass, aioclient_mock):
 
 @asyncio.coroutine
 def test_sta_badjson(hass, aioclient_mock):
-    """Test for minimal weather sensor config.
+    """Test for error handling with bad station data.
 
     This test case uses a station response with bad JSON syntax.
     """
@@ -247,7 +255,7 @@ def test_sta_badjson(hass, aioclient_mock):
 
 @asyncio.coroutine
 def test_obs_badjson(hass, aioclient_mock):
-    """Test for minimal weather sensor config.
+    """Test for error handling with bad observation data..
 
     This test case uses a observation response with bad JSON syntax.
     """
@@ -323,7 +331,11 @@ def test_setup_minimal_imperial(hass, aioclient_mock):
 
 @asyncio.coroutine
 def test_setup_badconflocation(hass, aioclient_mock):
-    """Test for configuration with bad location."""
+    """Test for configuration with bad location.
+
+    The API calls return a 404 error (not found) when asked for
+    information about a point that is not within the covered area.
+    """
     aioclient_mock.get(
         STAURL.format(BAD_CONF_LOCATION['sensor']['latitude'],
                       BAD_CONF_LOCATION['sensor']['longitude']),
@@ -340,7 +352,10 @@ def test_setup_badconflocation(hass, aioclient_mock):
 
 @asyncio.coroutine
 def test_setup_badconfresponse(hass, aioclient_mock):
-    """Test for configuration with bad response from web server."""
+    """Test for configuration with bad response from web server.
+
+    The bad response is for the request for the station list.
+    """
     aioclient_mock.get(
         STAURL.format(BAD_CONF_LOCATION['sensor']['latitude'],
                       BAD_CONF_LOCATION['sensor']['longitude']),
@@ -372,12 +387,11 @@ def test_setup_badconfnoloc(hass, aioclient_mock):
 
 @asyncio.coroutine
 def test_setup_bad_conf_station(hass, aioclient_mock):
-    """Test for case where the web server returns an error (other than 404).
+    """Test for case with bad station in configuration.
 
-    This is the case where the configuration is valid, but
-    retrieving observation data failed.  This should
-    be a transient error, so the sensor will still exist. However,
-    without any data being received, no conditions are available.
+    The configuration includes a station name that is not in the list
+    of stations for the location. This is a configuration error that
+    results in raising an exception.
     """
     aioclient_mock.get(
         STAURL.format(BAD_CONF_STATION['sensor']['latitude'],
@@ -390,7 +404,7 @@ def test_setup_bad_conf_station(hass, aioclient_mock):
 
 
 @asyncio.coroutine
-def test_setup_http505response(hass, aioclient_mock):
+def test_setup_http503response(hass, aioclient_mock):
     """Test for case where the web server returns an error (other than 404).
 
     This is the case where the configuration is valid, but
@@ -402,7 +416,7 @@ def test_setup_http505response(hass, aioclient_mock):
         STAURL.format(CONF_STATION_KLGA['sensor']['latitude'],
                       CONF_STATION_KLGA['sensor']['longitude']),
         text=load_fixture('noaaweather-sta-valid.json'))
-    aioclient_mock.get(OBSURL.format("KLGA"), status=505)
+    aioclient_mock.get(OBSURL.format("KLGA"), status=503)
 
     with assert_setup_component(1, 'sensor'):
         yield from async_setup_component(hass, 'sensor', CONF_STATION_KLGA)
