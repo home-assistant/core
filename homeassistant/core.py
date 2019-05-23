@@ -57,7 +57,7 @@ CALLABLE_T = TypeVar('CALLABLE_T', bound=Callable)
 CALLBACK_TYPE = Callable[[], None]
 # pylint: enable=invalid-name
 
-CORE_STORAGE_KEY = 'homeassistant.core_config'
+CORE_STORAGE_KEY = 'core.config'
 CORE_STORAGE_VERSION = 1
 
 DOMAIN = 'homeassistant'
@@ -1181,14 +1181,14 @@ class Config:
         """Initialize a new config object."""
         self.hass = hass
 
-        self.latitude = None  # type: Optional[float]
-        self.longitude = None  # type: Optional[float]
-        self.elevation = None  # type: Optional[int]
-        self.location_name = None  # type: Optional[str]
-        self.time_zone = None  # type: Optional[datetime.tzinfo]
+        self.latitude = 0  # type: float
+        self.longitude = 0  # type: float
+        self.elevation = 0  # type: int
+        self.location_name = "Home"  # type: str
+        self.time_zone = dt_util.UTC  # type: datetime.tzinfo
         self.units = METRIC_SYSTEM  # type: UnitSystem
 
-        self.config_source = None  # type: Optional[str]
+        self.config_source = "default"  # type: str
 
         # If True, pip install is skipped for requirements on startup
         self.skip_pip = False  # type: bool

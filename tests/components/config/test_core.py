@@ -1,23 +1,30 @@
 """Test hassbian config."""
-import asyncio
 from unittest.mock import patch
+
+import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, location
 from tests.common import mock_coro
 
 ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
+
+
+@pytest.fixture
+async def client(hass, hass_ws_client):
+    """Fixture that can interact with the config manager API."""
+    with patch.object(config, 'SECTIONS', ['core']):
+        assert await async_setup_component(hass, 'config', {})
+    return await hass_ws_client(hass)
 
 
 async def test_validate_config_ok(hass, hass_client):
     """Test checking config."""
     with patch.object(config, 'SECTIONS', ['core']):
         await async_setup_component(hass, 'config', {})
-
-    await asyncio.sleep(0.1, loop=hass.loop)
 
     client = await hass_client()
 
@@ -42,11 +49,8 @@ async def test_validate_config_ok(hass, hass_client):
     assert result['errors'] == 'beer'
 
 
-async def test_websocket_core_update(hass, hass_ws_client):
+async def test_websocket_core_update(hass, client):
     """Test core config update websocket command."""
-    with patch.object(config, 'SECTIONS', ['core']):
-        await async_setup_component(hass, 'config', {})
-
     assert hass.config.latitude != 60
     assert hass.config.longitude != 50
     assert hass.config.elevation != 25
@@ -54,7 +58,6 @@ async def test_websocket_core_update(hass, hass_ws_client):
     assert hass.config.units.name != CONF_UNIT_SYSTEM_IMPERIAL
     assert hass.config.time_zone.zone != 'America/New_York'
 
-    client = await hass_ws_client(hass)
     await client.send_json({
         'id': 5,
         'type': 'config/core/update',
@@ -92,7 +95,7 @@ async def test_websocket_core_update_not_admin(
     await client.send_json({
         'id': 6,
         'type': 'config/core/update',
-        'latitude': 123,
+        'latitude': 23,
     })
 
     msg = await client.receive_json()
@@ -103,16 +106,12 @@ async def test_websocket_core_update_not_admin(
     assert msg['error']['code'] == 'unauthorized'
 
 
-async def test_websocket_bad_core_update(hass, hass_ws_client):
+async def test_websocket_bad_core_update(hass, client):
     """Test core config update fails with bad parameters."""
-    with patch.object(config, 'SECTIONS', ['core']):
-        await async_setup_component(hass, 'config', {})
-
-    client = await hass_ws_client(hass)
     await client.send_json({
         'id': 7,
         'type': 'config/core/update',
-        'latituude': 123,
+        'latituude': 23,
     })
 
     msg = await client.receive_json()
@@ -121,3 +120,48 @@ async def test_websocket_bad_core_update(hass, hass_ws_client):
     assert msg['type'] == TYPE_RESULT
     assert not msg['success']
     assert msg['error']['code'] == 'invalid_format'
+
+
+async def test_detect_config(hass, client):
+    """Test detect config."""
+    with patch('homeassistant.util.location.async_detect_location_info',
+               return_value=mock_coro(None)):
+        await client.send_json({
+            'id': 1,
+            'type': 'config/core/detect',
+        })
+
+        msg = await client.receive_json()
+
+    assert msg['success'] is True
+    assert msg['result'] == {}
+
+
+async def test_detect_config_fail(hass, client):
+    """Test detect config."""
+    with patch('homeassistant.util.location.async_detect_location_info',
+               return_value=mock_coro(location.LocationInfo(
+                   ip=None,
+                   country_code=None,
+                   country_name=None,
+                   region_code=None,
+                   region_name=None,
+                   city=None,
+                   zip_code=None,
+                   latitude=None,
+                   longitude=None,
+                   use_metric=True,
+                   time_zone='Europe/Amsterdam',
+               ))):
+        await client.send_json({
+            'id': 1,
+            'type': 'config/core/detect',
+        })
+
+        msg = await client.receive_json()
+
+    assert msg['success'] is True
+    assert msg['result'] == {
+        'unit_system': 'metric',
+        'time_zone': 'Europe/Amsterdam',
+    }
