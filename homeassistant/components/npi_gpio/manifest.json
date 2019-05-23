@@ -5,6 +5,6 @@
     "requirements": [
         "NPi.GPIO==0.5.8.2"
     ],
-    "dependencies": [ "npi_gpio" ],
+    "dependencies": [],
     "codeowners": []
 }
