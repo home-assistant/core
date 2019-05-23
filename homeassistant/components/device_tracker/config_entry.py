@@ -18,7 +18,6 @@ from .const import (
     ATTR_SOURCE_TYPE,
     DOMAIN,
     LOGGER,
-    SOURCE_TYPE_GPS,
 )
 
 

@@ -80,8 +80,6 @@ class LocativeEntity(DeviceTrackerEntity):
     @callback
     def _async_receive_data(self, device, location, location_name):
         """Update device data."""
-
         self._location_name = location_name
         self._location = location
-
         self.async_write_ha_state()

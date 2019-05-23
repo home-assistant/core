@@ -3,10 +3,8 @@ import asyncio
 
 import voluptuous as vol
 
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import bind_hass
 from homeassistant.components import group
-from homeassistant.config import config_without_domain
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
@@ -38,9 +36,7 @@ from .const import (
     DEFAULT_CONSIDER_HOME,
     DEFAULT_TRACK_NEW,
     DOMAIN,
-    LOGGER,
     PLATFORM_TYPE_LEGACY,
-    SCAN_INTERVAL,
     SOURCE_TYPE_BLUETOOTH_LE,
     SOURCE_TYPE_BLUETOOTH,
     SOURCE_TYPE_GPS,
