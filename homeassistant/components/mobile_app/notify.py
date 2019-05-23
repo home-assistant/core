@@ -115,7 +115,7 @@ class MobileAppNotificationService(BaseNotificationService):
             data['registration_info'] = reg_info
 
             try:
-                with async_timeout.timeout(10, loop=self.hass.loop):
+                with async_timeout.timeout(10):
                     response = await self._session.post(push_url, json=data)
                     result = await response.json()
 

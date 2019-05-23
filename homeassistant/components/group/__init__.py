@@ -306,7 +306,7 @@ async def async_setup(hass, config):
             tasks.append(group.async_update_ha_state())
 
         if tasks:
-            await asyncio.wait(tasks, loop=hass.loop)
+            await asyncio.wait(tasks)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_VISIBILITY, visibility_service_handler,

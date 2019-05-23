@@ -40,7 +40,7 @@ class WebSocketHandler:
         self.hass = hass
         self.request = request
         self.wsock = None
-        self._to_write = asyncio.Queue(maxsize=MAX_PENDING_MSG, loop=hass.loop)
+        self._to_write = asyncio.Queue(maxsize=MAX_PENDING_MSG)
         self._handle_task = None
         self._writer_task = None
         self._logger = logging.getLogger(
@@ -101,7 +101,7 @@ class WebSocketHandler:
             # pylint: disable=no-member
             self._handle_task = asyncio.current_task()
         else:
-            self._handle_task = asyncio.Task.current_task(loop=self.hass.loop)
+            self._handle_task = asyncio.Task.current_task()
 
         @callback
         def handle_hass_stop(event):

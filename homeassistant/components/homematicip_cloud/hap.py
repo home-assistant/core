@@ -180,7 +180,7 @@ class HomematicipHAP:
 
             try:
                 self._retry_task = self.hass.async_create_task(asyncio.sleep(
-                    retry_delay, loop=self.hass.loop))
+                    retry_delay))
                 await self._retry_task
             except asyncio.CancelledError:
                 break

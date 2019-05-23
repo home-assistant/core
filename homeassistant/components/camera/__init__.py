@@ -121,7 +121,7 @@ async def async_get_image(hass, entity_id, timeout=10):
     camera = _get_camera_from_entity_id(hass, entity_id)
 
     with suppress(asyncio.CancelledError, asyncio.TimeoutError):
-        with async_timeout.timeout(timeout, loop=hass.loop):
+        with async_timeout.timeout(timeout):
             image = await camera.async_camera_image()
 
             if image:
@@ -481,7 +481,7 @@ class CameraImageView(CameraView):
     async def handle(self, request, camera):
         """Serve camera image."""
         with suppress(asyncio.CancelledError, asyncio.TimeoutError):
-            with async_timeout.timeout(10, loop=request.app['hass'].loop):
+            with async_timeout.timeout(10):
                 image = await camera.async_camera_image()
 
             if image:

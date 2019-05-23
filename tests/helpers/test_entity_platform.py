@@ -209,7 +209,7 @@ async def test_platform_error_slow_setup(hass, caplog):
 
         async def setup_platform(*args):
             called.append(1)
-            await asyncio.sleep(1, loop=hass.loop)
+            await asyncio.sleep(1)
 
         platform = MockPlatform(async_setup_platform=setup_platform)
         component = EntityComponent(_LOGGER, DOMAIN, hass)

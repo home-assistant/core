@@ -144,7 +144,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         }))
 
     if setup_tasks:
-        await asyncio.wait(setup_tasks, loop=hass.loop)
+        await asyncio.wait(setup_tasks)
 
     tracker.async_setup_group()
 

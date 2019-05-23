@@ -147,7 +147,7 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
     This method must be run in the event loop.
     """
     interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
-    update_lock = asyncio.Lock(loop=hass.loop)
+    update_lock = asyncio.Lock()
     scanner.hass = hass
 
     # Initial scan of each mac we also tell about host name for config

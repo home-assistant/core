@@ -184,7 +184,7 @@ class TestHomeAssistant(unittest.TestCase):
             self.hass.add_job(test_coro())
 
         run_coroutine_threadsafe(
-            asyncio.wait(self.hass._pending_tasks, loop=self.hass.loop),
+            asyncio.wait(self.hass._pending_tasks),
             loop=self.hass.loop
         ).result()
 
@@ -206,8 +206,8 @@ class TestHomeAssistant(unittest.TestCase):
         @asyncio.coroutine
         def wait_finish_callback():
             """Wait until all stuff is scheduled."""
-            yield from asyncio.sleep(0, loop=self.hass.loop)
-            yield from asyncio.sleep(0, loop=self.hass.loop)
+            yield from asyncio.sleep(0)
+            yield from asyncio.sleep(0)
 
         run_coroutine_threadsafe(
             wait_finish_callback(), self.hass.loop).result()
@@ -227,8 +227,8 @@ class TestHomeAssistant(unittest.TestCase):
         @asyncio.coroutine
         def wait_finish_callback():
             """Wait until all stuff is scheduled."""
-            yield from asyncio.sleep(0, loop=self.hass.loop)
-            yield from asyncio.sleep(0, loop=self.hass.loop)
+            yield from asyncio.sleep(0)
+            yield from asyncio.sleep(0)
 
         for _ in range(2):
             self.hass.add_job(test_executor)
@@ -252,8 +252,8 @@ class TestHomeAssistant(unittest.TestCase):
         @asyncio.coroutine
         def wait_finish_callback():
             """Wait until all stuff is scheduled."""
-            yield from asyncio.sleep(0, loop=self.hass.loop)
-            yield from asyncio.sleep(0, loop=self.hass.loop)
+            yield from asyncio.sleep(0)
+            yield from asyncio.sleep(0)
 
         for _ in range(2):
             self.hass.add_job(test_callback)
