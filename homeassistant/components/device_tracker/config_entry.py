@@ -1,7 +1,6 @@
 """Code to set up a device tracker platform using a config entry."""
 from typing import Optional
 
-from homeassistant.helpers.typing import GPSType
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.const import (
@@ -85,7 +84,8 @@ class DeviceTrackerEntity(Entity):
 
         if self.latitude is not None:
             zone_state = zone.async_active_zone(
-                self.hass, self.latitude, self.longitude, self.location_accuracy)
+                self.hass, self.latitude, self.longitude,
+                self.location_accuracy)
             if zone_state is None:
                 state = STATE_NOT_HOME
             elif zone_state.entity_id == zone.ENTITY_ID_HOME:
