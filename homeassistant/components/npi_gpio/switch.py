@@ -16,6 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_PORTS = 'ports'
 CONF_INVERT_LOGIC = 'invert_logic'
 CONF_INITIAL = 'initial'
+DEFAULT_INITIAL = False
 
 DEFAULT_INVERT_LOGIC = False
 
@@ -25,31 +26,32 @@ _SWITCHES_SCHEMA = vol.Schema({
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PORTS): _SWITCHES_SCHEMA,
-    vol.Optional(CONF_INITIAL, default=False): cv.boolean,
+    vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): cv.boolean,
     vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
 })
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Raspberry PI GPIO devices."""
+    """Set up the Nano PI GPIO devices."""
+    initial = conf.get(CONF_INITIAL)
     invert_logic = config.get(CONF_INVERT_LOGIC)
 
     switches = []
     ports = config.get(CONF_PORTS)
     for port, name in ports.items():
-        switches.append(NPiGPIOSwitch(name, port, invert_logic))
+        switches.append(NPiGPIOSwitch(name, port, initial, invert_logic))
     add_entities(switches)
 
 
 class NPiGPIOSwitch(ToggleEntity):
     """Representation of a NanoPi NEO GPIO."""
 
-    def __init__(self, name, port, invert_logic):
+    def __init__(self, name, port, initial, invert_logic):
         """Initialize the pin."""
         self._name = name or DEVICE_DEFAULT_NAME
         self._port = port
         self._invert_logic = invert_logic
-        self._state = params.get(CONF_INITIAL)
+        self._state = initial
         npi_gpio.setup_output(self._port)
         npi_gpio.write_output(self._port, 1 if self._invert_logic else 0)
 
