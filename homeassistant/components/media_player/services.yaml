@@ -185,6 +185,23 @@ snapcast_restore:
       description: Name(s) of entities that will be restored. Platform dependent.
       example: 'media_player.living_room'
 
+snapcast_join:
+  description: Group players together.
+  fields:
+    master:
+      description: Entity ID of the player to synchronize to.
+      example: 'media_player.living_room'
+    entity_id:
+      description: Entity ID of the players to join to the "master".
+      example: 'media_player.bedroom'
+
+snapcast_unjoin:
+  description: Unjoin the player from a group.
+  fields:
+    entity_id:
+      decription: Entity ID of the player to unjoin.
+      example: 'media_player.living_room'
+
 channels_seek_forward:
   description: Seek forward by a set number of seconds.
   fields:

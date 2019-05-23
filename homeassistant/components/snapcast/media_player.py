@@ -20,8 +20,13 @@ DATA_KEY = 'snapcast'
 
 SERVICE_SNAPSHOT = 'snapcast_snapshot'
 SERVICE_RESTORE = 'snapcast_restore'
+SERVICE_JOIN = 'snapcast_join'
+SERVICE_UNJOIN = 'snapcast_unjoin'
 
-SUPPORT_SNAPCAST_CLIENT = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
+ATTR_MASTER = 'master'
+
+SUPPORT_SNAPCAST_CLIENT = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET |\
+        SUPPORT_SELECT_SOURCE
 SUPPORT_SNAPCAST_GROUP = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET |\
     SUPPORT_SELECT_SOURCE
 
@@ -31,8 +36,12 @@ CLIENT_PREFIX = 'snapcast_client_'
 CLIENT_SUFFIX = 'Snapcast Client'
 
 SERVICE_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
 })
+
+JOIN_SERVICE_SCHEMA = SERVICE_SCHEMA.extend({
+    vol.Required(ATTR_MASTER): cv.entity_id,
+    })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -58,11 +67,24 @@ async def async_setup_platform(hass, config, async_add_entities,
                 device.snapshot()
             elif service.service == SERVICE_RESTORE:
                 await device.async_restore()
+            elif service.service == SERVICE_JOIN:
+                if isinstance(device, SnapcastClientDevice):
+                    master = [e for e in hass.data[DATA_KEY]
+                              if e.entity_id == service.data[ATTR_MASTER]]
+                    if isinstance(master[0], SnapcastClientDevice):
+                        await device.async_join(master[0])
+            elif service.service == SERVICE_UNJOIN:
+                if isinstance(device, SnapcastClientDevice):
+                    await device.async_unjoin()
 
     hass.services.async_register(
         DOMAIN, SERVICE_SNAPSHOT, _handle_service, schema=SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_RESTORE, _handle_service, schema=SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_JOIN, _handle_service, schema=JOIN_SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_UNJOIN, _handle_service, schema=SERVICE_SCHEMA)
 
     try:
         server = await snapcast.control.create_server(
@@ -195,9 +217,19 @@ class SnapcastClientDevice(MediaPlayerDevice):
         return self._uid
 
     @property
+    def identifier(self):
+        """Return the snapcast identifier."""
+        return self._client.identifier
+
+    @property
     def name(self):
         """Return the name of the device."""
         return '{}{}'.format(CLIENT_PREFIX, self._client.identifier)
+
+    @property
+    def source(self):
+        """Return the current input source."""
+        return self._client.group.stream
 
     @property
     def volume_level(self):
@@ -213,6 +245,11 @@ class SnapcastClientDevice(MediaPlayerDevice):
     def supported_features(self):
         """Flag media player features that are supported."""
         return SUPPORT_SNAPCAST_CLIENT
+
+    @property
+    def source_list(self):
+        """List of available input sources."""
+        return list(self._client.group.streams_by_name().keys())
 
     @property
     def state(self):
@@ -234,6 +271,13 @@ class SnapcastClientDevice(MediaPlayerDevice):
         """Do not poll for state."""
         return False
 
+    async def async_select_source(self, source):
+        """Set input source."""
+        streams = self._client.group.streams_by_name()
+        if source in streams:
+            await self._client.group.set_stream(streams[source].identifier)
+            self.async_schedule_update_ha_state()
+
     async def async_mute_volume(self, mute):
         """Send the mute command."""
         await self._client.set_muted(mute)
@@ -242,6 +286,18 @@ class SnapcastClientDevice(MediaPlayerDevice):
     async def async_set_volume_level(self, volume):
         """Set the volume level."""
         await self._client.set_volume(round(volume * 100))
+        self.async_schedule_update_ha_state()
+
+    async def async_join(self, master):
+        """Join the group of the master player."""
+        master_group = [group for group in self._client.groups_available()
+                        if master.identifier in group.clients]
+        await master_group[0].add_client(self._client.identifier)
+        self.async_schedule_update_ha_state()
+
+    async def async_unjoin(self):
+        """Unjoin the group the player is currently in."""
+        await self._client.group.remove_client(self._client.identifier)
         self.async_schedule_update_ha_state()
 
     def snapshot(self):
