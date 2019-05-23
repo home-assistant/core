@@ -42,7 +42,7 @@ class VeraThermostat(VeraDevice, ClimateDevice):
         return SUPPORT_FLAGS
 
     @property
-    def hvac_mode(self):
+    def hvac_state(self):
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.

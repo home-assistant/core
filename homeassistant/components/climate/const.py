@@ -52,6 +52,12 @@ PRESET_HOME = 'home'
 PRESET_SLEEP = 'sleep'
 
 
+# Possible fan state
+FAN_ON = "on"
+FAN_OFF = "off"
+FAN_AUTO = "auto"
+
+
 # This are support current states of HVAC
 CURRENT_HVAC_OFF = 'off'
 CURRENT_HVAC_HEAT = 'heating'
