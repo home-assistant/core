@@ -48,7 +48,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 
 from .const import (
-    DOMAIN, DATA_EVOHOME, GWS, TCS)
+    DOMAIN, DATA_EVOHOME, STORAGE_VERSION, STORAGE_KEY, GWS, TCS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,12 +70,13 @@ CONF_SECRETS = [
     CONF_PASSWORD,
 ]  # CONF_USERNAME,  # TODO: fixme
 
+REFRESH_TOKEN = 'refresh_token'
+ACCESS_TOKEN = 'access_token'
+ACCESS_TOKEN_EXPIRES = 'access_token_expires'
 
-def setup(hass, hass_config):
-    """Create a (EMEA/EU-based) Honeywell evohome system.
 
-    Currently, only the Controller and the Zones are implemented here.
-    """
+async def async_setup(hass, hass_config):
+    """Create a (EMEA/EU-based) Honeywell evohome system."""
     evo_data = hass.data[DATA_EVOHOME] = {}
     evo_data['timers'] = {}
 
@@ -88,21 +89,14 @@ def setup(hass, hass_config):
 
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
     app_storage = await store.async_load()
+    access_token_expires = app_storage.get(ACCESS_TOKEN_EXPIRES)
 
-    if app_storage.get(CONF_USERNAME) == evo_data['params'][CONF_USERNAME]:
-        refresh_token = app_storage.get(CONF_REFRESH_TOKEN)
-        access_token = app_storage.get(CONF_ACCESS_TOKEN)
-        access_token_expires = app_storage.get(CONF_ACCESS_TOKEN_EXPIRES)
-        if access_token_expires:
-            access_token_expires = datetime.strptime(
-                access_token_expires, '%Y-%m-%d %H:%M:%S')
-    else:
-        refresh_token = access_token = access_token_expires = None
-        _LOGGER.warn("account switch, old=%s, new=%s", app_storage.get(
-            CONF_USERNAME), evo_data['params'][CONF_USERNAME])
+    if access_token_expires:
+        access_token_expires = datetime.strptime(
+            access_token_expires, '%Y-%m-%d %H:%M:%S')
 
-    _LOGGER.warn("refresh_token %s", refresh_token)                              # TODO: for testing only
-    _LOGGER.warn("access_token %s", access_token)                                # TODO: for testing only
+    _LOGGER.warn("refresh_token %s", app_storage.get(REFRESH_TOKEN))             # TODO: for testing only
+    _LOGGER.warn("access_token %s", app_storage.get(ACCESS_TOKEN))               # TODO: for testing only
     _LOGGER.warn("access_token_expires %s", access_token_expires)                # TODO: for testing only
 
     try:
@@ -111,8 +105,8 @@ def setup(hass, hass_config):
             evo_data['params'][CONF_USERNAME],
             evo_data['params'][CONF_PASSWORD],
             False,
-            refresh_token,
-            access_token,
+            app_storage.get(REFRESH_TOKEN),
+            app_storage.get(ACCESS_TOKEN),
             access_token_expires
         )                                                                        # TODO: partial() from functools
 
@@ -143,10 +137,9 @@ def setup(hass, hass_config):
     _LOGGER.warn("access_token_expires %s",
                  client.access_token_expires.strftime('%Y-%m-%d %H:%M:%S'))      # TODO: for testing only
 
-    app_storage[CONF_USERNAME] = evo_data['params'][CONF_USERNAME]
-    app_storage[CONF_REFRESH_TOKEN] = client.refresh_token
-    app_storage[CONF_ACCESS_TOKEN] = client.access_token
-    app_storage[CONF_ACCESS_TOKEN_EXPIRES] = client.access_token_expires.strftime(
+    app_storage[REFRESH_TOKEN] = client.refresh_token
+    app_storage[ACCESS_TOKEN] = client.access_token
+    app_storage[ACCESS_TOKEN_EXPIRES] = client.access_token_expires.strftime(
         '%Y-%m-%d %H:%M:%S')
     await store.async_save(app_storage)
 
@@ -188,8 +181,9 @@ def setup(hass, hass_config):
     def _first_update(event):
         """When HA has started, the hub knows to retrieve it's first update."""
         async_dispatcher_send(hass, DOMAIN, {'signal': 'first_update'})
+        _LOGGER.debug("_first_update(): fired")                                  # TODO: remove me
 
-    hass.bus.listen(EVENT_HOMEASSISTANT_START, _first_update)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _first_update)
 
     return True
 

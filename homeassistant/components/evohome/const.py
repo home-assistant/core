@@ -3,6 +3,9 @@
 DOMAIN = 'evohome'
 DATA_EVOHOME = 'data_' + DOMAIN
 
+STORAGE_VERSION = 1
+STORAGE_KEY = DOMAIN
+
 # The Parent's (i.e. TCS, Controller's) operating mode is one of:
 EVO_RESET = 'AutoWithReset'
 EVO_AUTO = 'Auto'
