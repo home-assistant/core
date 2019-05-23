@@ -44,9 +44,14 @@ class LocativeEntity(DeviceTrackerEntity):
         self._unsub_dispatcher = None
 
     @property
-    def location(self):
-        """Return location value of the device."""
-        return self._location
+    def latitude(self):
+        """Return latitude value of the device."""
+        return self._location[0]
+
+    @property
+    def longitude(self):
+        """Return longitude value of the device."""
+        return self._location[1]
 
     @property
     def location_name(self):

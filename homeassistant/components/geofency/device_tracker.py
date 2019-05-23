@@ -50,9 +50,14 @@ class GeofencyEntity(DeviceTrackerEntity):
         return self._attributes
 
     @property
-    def location(self):
+    def latitude(self):
         """Return latitude value of the device."""
-        return self._gps
+        return self._gps[0]
+
+    @property
+    def longitude(self):
+        """Return longitude value of the device."""
+        return self._gps[1]
 
     @property
     def location_name(self):

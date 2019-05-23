@@ -57,9 +57,15 @@ class GPSLoggerEntity(DeviceTrackerEntity):
         return self._attributes
 
     @property
-    def location(self):
+    def latitude(self):
         """Return latitude value of the device."""
-        return self._location
+        return self._location[0]
+
+    @property
+    def longitude(self):
+        """Return longitude value of the device."""
+        return self._location[1]
+
 
     @property
     def location_accuracy(self):

@@ -63,15 +63,14 @@ class DeviceTrackerEntity(Entity):
         return None
 
     @property
-    def location(self) -> GPSType:
-        """Return location value of the device."""
-        # For MVP, we will only support location based devices.
+    def latitude(self) -> float:
+        """Return latitude value of the device."""
         return NotImplementedError
 
     @property
-    def mac_address(self):
-        """Return the mac address of the device."""
-        return None
+    def longitude(self) -> float:
+        """Return longitude value of the device."""
+        return NotImplementedError
 
     @property
     def source_type(self):
@@ -84,12 +83,9 @@ class DeviceTrackerEntity(Entity):
         if self.location_name:
             return self.location_name
 
-        location = self.location
-
-        if location is not None:
-            print(location)
+        if self.latitude is not None:
             zone_state = zone.async_active_zone(
-                self.hass, location[0], location[1], self.location_accuracy)
+                self.hass, self.latitude, self.longitude, self.location_accuracy)
             if zone_state is None:
                 state = STATE_NOT_HOME
             elif zone_state.entity_id == zone.ENTITY_ID_HOME:
@@ -107,19 +103,12 @@ class DeviceTrackerEntity(Entity):
             ATTR_SOURCE_TYPE: self.source_type
         }
 
-        location = self.location
-
-        if location is not None:
-            attr[ATTR_LATITUDE] = self.location[0]
-            attr[ATTR_LONGITUDE] = self.location[1]
+        if self.latitude is not None:
+            attr[ATTR_LATITUDE] = self.latitude
+            attr[ATTR_LONGITUDE] = self.longitude
             attr[ATTR_GPS_ACCURACY] = self.location_accuracy
 
         if self.battery_level:
             attr[ATTR_BATTERY_LEVEL] = self.battery_level
 
         return attr
-
-    @property
-    def unique_id(self):
-        """Return a unique ID for the device."""
-        return self.mac_address
