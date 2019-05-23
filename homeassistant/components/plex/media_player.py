@@ -129,7 +129,8 @@ def setup_plexserver(
 
     plex_clients = hass.data[PLEX_DATA]
     plex_sessions = {}
-    track_utc_time_change(hass, lambda now: update_devices(), second=range(0, 60, 10))
+    track_utc_time_change(
+            hass, lambda now: update_devices(), second=range(0, 60, 10))
 
     def update_devices():
         """Update the devices objects."""
