@@ -154,7 +154,7 @@ def setup_plexserver(
 
             if device.machineIdentifier not in plex_clients:
                 new_client = PlexClient(
-                    config, device, None, plex_sessions)
+                    config, device, None, plex_sessions, update_devices)
                 plex_clients[device.machineIdentifier] = new_client
                 _LOGGER.debug("New device: %s", device.machineIdentifier)
                 new_plex_clients.append(new_client)
@@ -189,7 +189,7 @@ def setup_plexserver(
             if (machine_identifier not in plex_clients
                     and machine_identifier is not None):
                 new_client = PlexClient(
-                    config, player, session, plex_sessions)
+                    config, player, session, plex_sessions, update_devices)
                 plex_clients[machine_identifier] = new_client
                 _LOGGER.debug("New session: %s", machine_identifier)
                 new_plex_clients.append(new_client)
@@ -270,7 +270,8 @@ def request_configuration(host, hass, config, add_entities_callback):
 class PlexClient(MediaPlayerDevice):
     """Representation of a Plex device."""
 
-    def __init__(self, config, device, session, plex_sessions):
+    def __init__(self, config, device, session, plex_sessions,
+                 update_devices):
         """Initialize the Plex device."""
         self._app_name = ''
         self._device = None
@@ -293,6 +294,7 @@ class PlexClient(MediaPlayerDevice):
         self._volume_muted = False  # since we can't retrieve remotely
         self.config = config
         self.plex_sessions = plex_sessions
+        self.update_devices = update_devices
         # General
         self._media_content_id = None
         self._media_content_rating = None
@@ -702,6 +704,7 @@ class PlexClient(MediaPlayerDevice):
             self.device.setVolume(
                 int(volume * 100), self._active_media_plexapi_type)
             self._volume_level = volume  # store since we can't retrieve
+            self.update_devices()
 
     @property
     def volume_level(self):
@@ -738,16 +741,19 @@ class PlexClient(MediaPlayerDevice):
         """Send play command."""
         if self.device and 'playback' in self._device_protocol_capabilities:
             self.device.play(self._active_media_plexapi_type)
+            self.update_devices()
 
     def media_pause(self):
         """Send pause command."""
         if self.device and 'playback' in self._device_protocol_capabilities:
             self.device.pause(self._active_media_plexapi_type)
+            self.update_devices()
 
     def media_stop(self):
         """Send stop command."""
         if self.device and 'playback' in self._device_protocol_capabilities:
             self.device.stop(self._active_media_plexapi_type)
+            self.update_devices()
 
     def turn_off(self):
         """Turn the client off."""
@@ -758,11 +764,13 @@ class PlexClient(MediaPlayerDevice):
         """Send next track command."""
         if self.device and 'playback' in self._device_protocol_capabilities:
             self.device.skipNext(self._active_media_plexapi_type)
+            self.update_devices()
 
     def media_previous_track(self):
         """Send previous track command."""
         if self.device and 'playback' in self._device_protocol_capabilities:
             self.device.skipPrevious(self._active_media_plexapi_type)
+            self.update_devices()
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
@@ -866,6 +874,7 @@ class PlexClient(MediaPlayerDevice):
                 '/playQueues/{}?window=100&own=1'.format(
                     playqueue.playQueueID),
         }, **params))
+        self.update_devices()
 
     @property
     def device_state_attributes(self):
