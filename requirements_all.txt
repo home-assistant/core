@@ -535,6 +535,9 @@ habitipy==0.2.0
 # homeassistant.components.hangouts
 hangups==0.4.9
 
+# homeassistant.components.hasl
+hasl==2.2.0
+
 # homeassistant.components.cloud
 hass-nabucasa==0.12
 

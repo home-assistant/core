@@ -96,6 +96,7 @@ homeassistant/components/gpsd/* @fabaff
 homeassistant/components/group/* @home-assistant/core
 homeassistant/components/gtfs/* @robbiet480
 homeassistant/components/harmony/* @ehendrix23
+homeassistant/components/hasl/* @DSorlov
 homeassistant/components/hassio/* @home-assistant/hass-io
 homeassistant/components/heos/* @andrewsayre
 homeassistant/components/hikvision/* @mezz64

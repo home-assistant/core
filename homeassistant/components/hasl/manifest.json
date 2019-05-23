@@ -1,0 +1,8 @@
+{
+  "domain": "hasl",
+  "name": "SL",
+  "documentation": "https://www.home-assistant.io/components/hasl/",
+  "dependencies": [],
+  "codeowners": ["@DSorlov"],
+  "requirements": ["hasl==2.2.0"]
+} 

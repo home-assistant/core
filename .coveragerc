@@ -241,6 +241,7 @@ omit =
     homeassistant/components/hangouts/hangups_utils.py
     homeassistant/components/harman_kardon_avr/media_player.py
     homeassistant/components/harmony/remote.py
+    homeassistant/components/hasl/*
     homeassistant/components/haveibeenpwned/sensor.py
     homeassistant/components/hdmi_cec/*
     homeassistant/components/heatmiser/climate.py

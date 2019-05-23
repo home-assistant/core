@@ -1,0 +1,4 @@
+# Describes the format for available hasl services
+
+clear_cache:
+  description: Clears all cached data and forces API data retreival on next sensor refresh
