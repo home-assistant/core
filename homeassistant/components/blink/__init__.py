@@ -8,7 +8,7 @@ from homeassistant.helpers import (
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, CONF_NAME, CONF_SCAN_INTERVAL,
     CONF_BINARY_SENSORS, CONF_SENSORS, CONF_FILENAME,
-    CONF_MONITORED_CONDITIONS, TEMP_FAHRENHEIT)
+    CONF_MONITORED_CONDITIONS, CONF_MODE, CONF_OFFSET, TEMP_FAHRENHEIT)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,6 +75,8 @@ CONFIG_SCHEMA = vol.Schema(
             vol.Optional(CONF_BINARY_SENSORS, default={}):
                 BINARY_SENSOR_SCHEMA,
             vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+            vol.Optional(CONF_MODE, default=''): cv.string,
+            vol.Optional(CONF_OFFSET, default=1): int,
         })
     },
     extra=vol.ALLOW_EXTRA)
@@ -87,8 +89,12 @@ def setup(hass, config):
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
     scan_interval = conf[CONF_SCAN_INTERVAL]
+    legacy_mode = True if conf[CONF_MODE] == 'legacy' else False
+    motion_offset = conf[CONF_OFFSET]
     hass.data[BLINK_DATA] = blinkpy.Blink(username=username,
-                                          password=password)
+                                          password=password,
+                                          legacy_subdomain=legacy_mode,
+                                          motion_interval=motion_offset)
     hass.data[BLINK_DATA].refresh_rate = scan_interval.total_seconds()
     hass.data[BLINK_DATA].start()
 
