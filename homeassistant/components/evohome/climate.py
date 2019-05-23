@@ -57,6 +57,8 @@ HA_STATE_TO_ZONE = {
 async def async_setup_platform(hass, hass_config, async_add_entities,
                                discovery_info=None):
     """Create the evohome Controller, and its Zones, if any."""
+    _LOGGER.warn("setup_platform(CLIMATE): started")                             # TODO: delete me
+
     evo_data = hass.data[DATA_EVOHOME]
 
     client = evo_data['client']

@@ -46,8 +46,8 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 CONF_SECRETS = [
-    CONF_USERNAME, CONF_PASSWORD,
-]
+    CONF_PASSWORD,
+]  # CONF_USERNAME,
 
 REFRESH_TOKEN = 'refresh_token'
 ACCESS_TOKEN = 'access_token'
@@ -68,14 +68,21 @@ async def async_setup(hass, hass_config):
 
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
     app_storage = await store.async_load()
-    access_token_expires = app_storage.get(ACCESS_TOKEN_EXPIRES)
 
-    if access_token_expires:
-        access_token_expires = datetime.strptime(
-            access_token_expires, '%Y-%m-%d %H:%M:%S')
+    if app_storage.get(CONF_USERNAME) == evo_data['params'][CONF_USERNAME]:
+        refresh_token = app_storage.get(REFRESH_TOKEN)
+        access_token = app_storage.get(ACCESS_TOKEN)
+        access_token_expires = app_storage.get(ACCESS_TOKEN_EXPIRES)
+        if access_token_expires:
+            access_token_expires = datetime.strptime(
+                access_token_expires, '%Y-%m-%d %H:%M:%S')
+    else:
+        refresh_token = access_token = access_token_expires = None
+        _LOGGER.warn("account switch, old=%s, new=%s", app_storage.get(
+            CONF_USERNAME), evo_data['params'][CONF_USERNAME])
 
-    _LOGGER.warn("refresh_token %s", app_storage.get(REFRESH_TOKEN))             # TODO: for testing only
-    _LOGGER.warn("access_token %s", app_storage.get(ACCESS_TOKEN))               # TODO: for testing only
+    _LOGGER.warn("refresh_token %s", refresh_token)                              # TODO: for testing only
+    _LOGGER.warn("access_token %s", access_token)                                # TODO: for testing only
     _LOGGER.warn("access_token_expires %s", access_token_expires)                # TODO: for testing only
 
     try:
@@ -84,8 +91,8 @@ async def async_setup(hass, hass_config):
             evo_data['params'][CONF_USERNAME],
             evo_data['params'][CONF_PASSWORD],
             False,
-            app_storage.get(REFRESH_TOKEN),
-            app_storage.get(ACCESS_TOKEN),
+            refresh_token,
+            access_token,
             access_token_expires
         )                                                                        # TODO: partial() from functools
 
@@ -116,6 +123,7 @@ async def async_setup(hass, hass_config):
     _LOGGER.warn("access_token_expires %s",
                  client.access_token_expires.strftime('%Y-%m-%d %H:%M:%S'))      # TODO: for testing only
 
+    app_storage[CONF_USERNAME] = evo_data['params'][CONF_USERNAME]
     app_storage[REFRESH_TOKEN] = client.refresh_token
     app_storage[ACCESS_TOKEN] = client.access_token
     app_storage[ACCESS_TOKEN_EXPIRES] = client.access_token_expires.strftime(
@@ -160,7 +168,7 @@ async def async_setup(hass, hass_config):
     def _first_update(event):
         """When HA has started, the hub knows to retrieve it's first update."""
         async_dispatcher_send(hass, DOMAIN, {'signal': 'first_update'})
-        _LOGGER.debug("_first_update(): fired")                                  # TODO: remove me
+        _LOGGER.warn("_first_update(): fired")                                   # TODO: remove me
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _first_update)
 
