@@ -64,6 +64,11 @@ class OwnTracksEntity(DeviceTrackerEntity):
         self.entity_id = ENTITY_ID_FORMAT.format(dev_id)
 
     @property
+    def unique_id(self):
+        """Return the unique ID."""
+        return self._dev_id
+
+    @property
     def battery_level(self):
         """Return the battery level of the device."""
         return self._battery
@@ -88,7 +93,6 @@ class OwnTracksEntity(DeviceTrackerEntity):
         """Return longitude value of the device."""
         return self._gps[1]
 
-
     @property
     def location_name(self):
         """Return a location name for the current location of the device."""
@@ -108,6 +112,14 @@ class OwnTracksEntity(DeviceTrackerEntity):
     def source_type(self):
         """Return the source type, eg gps or router, of the device."""
         return self._source_type
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            'name': self._host_name,
+            'identifiers': {(OT_DOMAIN, self._dev_id)},
+        }
 
     @callback
     def update_data(self, host_name, gps, attributes, gps_accuracy,
