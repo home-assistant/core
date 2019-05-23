@@ -18,7 +18,8 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL, CONF_USERNAME, CONF_PASSWORD,
     EVENT_HOMEASSISTANT_START,
     HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS,
-    PRECISION_HALVES, TEMP_CELSIUS)
+    PRECISION_HALVES, TEMP_CELSIUS,
+    CONF_ACCESS_TOKEN, CONF_ACCESS_TOKEN_EXPIRES, CONF_REFRESH_TOKEN)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -47,11 +48,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 CONF_SECRETS = [
     CONF_PASSWORD,
-]  # CONF_USERNAME,
-
-REFRESH_TOKEN = 'refresh_token'
-ACCESS_TOKEN = 'access_token'
-ACCESS_TOKEN_EXPIRES = 'access_token_expires'
+]  # CONF_USERNAME,  # TODO: fixme
 
 
 async def async_setup(hass, hass_config):
@@ -70,9 +67,9 @@ async def async_setup(hass, hass_config):
     app_storage = await store.async_load()
 
     if app_storage.get(CONF_USERNAME) == evo_data['params'][CONF_USERNAME]:
-        refresh_token = app_storage.get(REFRESH_TOKEN)
-        access_token = app_storage.get(ACCESS_TOKEN)
-        access_token_expires = app_storage.get(ACCESS_TOKEN_EXPIRES)
+        refresh_token = app_storage.get(CONF_REFRESH_TOKEN)
+        access_token = app_storage.get(CONF_ACCESS_TOKEN)
+        access_token_expires = app_storage.get(CONF_ACCESS_TOKEN_EXPIRES)
         if access_token_expires:
             access_token_expires = datetime.strptime(
                 access_token_expires, '%Y-%m-%d %H:%M:%S')
@@ -124,9 +121,9 @@ async def async_setup(hass, hass_config):
                  client.access_token_expires.strftime('%Y-%m-%d %H:%M:%S'))      # TODO: for testing only
 
     app_storage[CONF_USERNAME] = evo_data['params'][CONF_USERNAME]
-    app_storage[REFRESH_TOKEN] = client.refresh_token
-    app_storage[ACCESS_TOKEN] = client.access_token
-    app_storage[ACCESS_TOKEN_EXPIRES] = client.access_token_expires.strftime(
+    app_storage[CONF_REFRESH_TOKEN] = client.refresh_token
+    app_storage[CONF_ACCESS_TOKEN] = client.access_token
+    app_storage[CONF_ACCESS_TOKEN_EXPIRES] = client.access_token_expires.strftime(
         '%Y-%m-%d %H:%M:%S')
     await store.async_save(app_storage)
 
