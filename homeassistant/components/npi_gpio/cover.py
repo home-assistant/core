@@ -20,6 +20,7 @@ CONF_INITIAL = 'initial'
 CONF_INVERT_STATE = 'invert_state'
 CONF_INVERT_RELAY = 'invert_relay'
 
+DEFAULT_INITIAL = False
 DEFAULT_RELAY_TIME = .2
 DEFAULT_STATE_PULL_MODE = 'UP'
 DEFAULT_INVERT_STATE = False
@@ -38,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATE_PULL_MODE, default=DEFAULT_STATE_PULL_MODE):
         cv.string,
     vol.Optional(CONF_RELAY_TIME, default=DEFAULT_RELAY_TIME): cv.positive_int,
-    vol.Optional(CONF_INITIAL, default=False): cv.boolean,
+    vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): cv.boolean,
     vol.Optional(CONF_INVERT_STATE, default=DEFAULT_INVERT_STATE): cv.boolean,
     vol.Optional(CONF_INVERT_RELAY, default=DEFAULT_INVERT_RELAY): cv.boolean,  
 })
@@ -46,6 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NPi cover platform."""
+    initial = config.get(CONF_INITIAL)
     relay_time = config.get(CONF_RELAY_TIME)
     state_pull_mode = config.get(CONF_STATE_PULL_MODE)
     invert_state = config.get(CONF_INVERT_STATE)
@@ -55,7 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for cover in covers_conf:
         covers.append(NPiGPIOCover(cover[CONF_NAME], cover[CONF_RELAY_PORT], cover[CONF_STATE_PORT],
-            state_pull_mode, relay_time, invert_state, invert_relay))
+            state_pull_mode, relay_time, initial, invert_state, invert_relay))
     add_entities(covers)
 
 
@@ -66,7 +68,7 @@ class NPiGPIOCover(CoverDevice):
                  relay_time, invert_state, invert_relay):
         """Initialize the cover."""
         self._name = name
-        self._state = params.get(CONF_INITIAL)
+        self._state = initial
         self._relay_port = relay_port
         self._state_port = state_port
         self._state_pull_mode = state_pull_mode
