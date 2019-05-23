@@ -6,7 +6,7 @@ from homeassistant.components.climate.const import (
     FAN_AUTO, FAN_ON, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF, SUPPORT_FAN_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, STATE_OFF, STATE_ON, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.util import convert
 
 from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
