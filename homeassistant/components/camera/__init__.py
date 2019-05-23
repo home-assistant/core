@@ -107,7 +107,7 @@ async def async_request_stream(hass, entity_id, fmt):
     camera = _get_camera_from_entity_id(hass, entity_id)
     camera_prefs = hass.data[DATA_CAMERA_PREFS].get(entity_id)
 
-    with async_timeout.timeout(10):
+    async with async_timeout.timeout(10):
         source = await camera.stream_source()
 
     if not source:
@@ -124,7 +124,7 @@ async def async_get_image(hass, entity_id, timeout=10):
     camera = _get_camera_from_entity_id(hass, entity_id)
 
     with suppress(asyncio.CancelledError, asyncio.TimeoutError):
-        with async_timeout.timeout(timeout):
+        async with async_timeout.timeout(timeout):
             image = await camera.async_camera_image()
 
             if image:
@@ -227,7 +227,7 @@ async def async_setup(hass, config):
             if not camera_prefs.preload_stream:
                 continue
 
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 source = await camera.stream_source()
 
             if not source:
@@ -491,7 +491,7 @@ class CameraImageView(CameraView):
     async def handle(self, request, camera):
         """Serve camera image."""
         with suppress(asyncio.CancelledError, asyncio.TimeoutError):
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 image = await camera.async_camera_image()
 
             if image:
@@ -557,7 +557,7 @@ async def ws_camera_stream(hass, connection, msg):
         camera = _get_camera_from_entity_id(hass, entity_id)
         camera_prefs = hass.data[DATA_CAMERA_PREFS].get(entity_id)
 
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             source = await camera.stream_source()
 
         if not source:
@@ -639,7 +639,7 @@ async def async_handle_snapshot_service(camera, service):
 
 async def async_handle_play_stream_service(camera, service_call):
     """Handle play stream services calls."""
-    with async_timeout.timeout(10):
+    async with async_timeout.timeout(10):
         source = await camera.stream_source()
 
     if not source:
@@ -666,7 +666,7 @@ async def async_handle_play_stream_service(camera, service_call):
 
 async def async_handle_record_service(camera, call):
     """Handle stream recording service calls."""
-    with async_timeout.timeout(10):
+    async with async_timeout.timeout(10):
         source = await camera.stream_source()
 
     if not source:
