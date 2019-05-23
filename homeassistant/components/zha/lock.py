@@ -10,6 +10,7 @@ from .core.const import (
     SIGNAL_ATTR_UPDATED
 )
 from .entity import ZhaEntity
+from zigpy.zcl.foundation import Status
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,11 +94,9 @@ class ZhaDoorLock(ZhaEntity, LockDevice):
         """Lock the lock.
         This method must be run in the event loop and returns a coroutine.
         """
-        success = await self._doorlock_channel.lock_door()
-        t_log = {}
-        t_log['lock'] = success
-        if not success:
-            self.debug("locked: %s", t_log)
+        result = await self._doorlock_channel.lock_door()
+        if not isinstance(result, list) or result[0] is not Status.SUCCESS:
+            _LOGGER.error("Error with lock_door: %s", result)
             return
         self.async_schedule_update_ha_state()
 
@@ -105,11 +104,9 @@ class ZhaDoorLock(ZhaEntity, LockDevice):
         """Lock the lock.
         This method must be run in the event loop and returns a coroutine.
         """
-        success = await self._doorlock_channel.unlock_door()
-        t_log = {}
-        t_log['unlock'] = success
-        if not success:
-            self.debug("unlocked: %s", t_log)
+        result = await self._doorlock_channel.unlock_door()
+        if not isinstance(result, list) or result[0] is not Status.SUCCESS:
+            _LOGGER.error("Error with unlock_door: %s", result)
             return
         self.async_schedule_update_ha_state()
 

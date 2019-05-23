@@ -10,6 +10,7 @@ from .core.const import (
     SIGNAL_ATTR_UPDATED
 )
 from .entity import ZhaEntity
+from zigpy.zcl.foundation import Status
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,16 +67,16 @@ class Switch(ZhaEntity, SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        success = await self._on_off_channel.on()
-        if not success:
+        result = await self._on_off_channel.on()
+        if not isinstance(result, list) or result[1] is not Status.SUCCESS:
             return
         self._state = True
         self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        success = await self._on_off_channel.off()
-        if not success:
+        result = await self._on_off_channel.off()
+        if not isinstance(result, list) or result[1] is not Status.SUCCESS:
             return
         self._state = False
         self.async_schedule_update_ha_state()
