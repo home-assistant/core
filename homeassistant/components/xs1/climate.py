@@ -17,6 +17,7 @@ MAX_TEMP = 25
 
 SUPPORT_HVAC = [HVAC_MODE_HEAT]
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the XS1 thermostat platform."""
     actuators = hass.data[COMPONENT_DOMAIN][ACTUATORS]
@@ -59,7 +60,7 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateDevice):
         return SUPPORT_TARGET_TEMPERATURE
 
     @property
-    def hvac_mode(self):
+    def hvac_state(self):
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
