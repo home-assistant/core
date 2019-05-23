@@ -110,7 +110,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     broadlink_device.timeout = config.get(CONF_TIMEOUT)
     try:
         broadlink_device.auth()
-    except socket.timeout:
+    except OSError:
         _LOGGER.error("Failed to connect to device")
 
     add_entities(switches)
@@ -127,6 +127,7 @@ class BroadlinkRMSwitch(SwitchDevice, RestoreEntity):
         self._command_on = command_on
         self._command_off = command_off
         self._device = device
+        self._is_available = False
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to hass."""
@@ -144,6 +145,11 @@ class BroadlinkRMSwitch(SwitchDevice, RestoreEntity):
     def assumed_state(self):
         """Return true if unable to access real state of entity."""
         return True
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return not self.should_poll or self._is_available
 
     @property
     def should_poll(self):
@@ -174,7 +180,7 @@ class BroadlinkRMSwitch(SwitchDevice, RestoreEntity):
             return True
         try:
             self._device.send_data(packet)
-        except (socket.timeout, ValueError) as error:
+        except (ValueError, OSError) as error:
             if retry < 1:
                 _LOGGER.error("Error during sending a packet: %s", error)
                 return False
@@ -186,7 +192,7 @@ class BroadlinkRMSwitch(SwitchDevice, RestoreEntity):
     def _auth(self, retry=2):
         try:
             auth = self._device.auth()
-        except socket.timeout:
+        except OSError:
             auth = False
             if retry < 1:
                 _LOGGER.error("Timeout during authorization")
@@ -252,6 +258,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
         except (socket.timeout, ValueError) as error:
             if retry < 1:
                 _LOGGER.error("Error during updating the state: %s", error)
+                self._is_available = False
                 return
             if not self._auth():
                 return
@@ -260,6 +267,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
             return self._update(retry-1)
         self._state = state
         self._load_power = load_power
+        self._is_available = True
 
 
 class BroadlinkMP1Slot(BroadlinkRMSwitch):
@@ -285,10 +293,12 @@ class BroadlinkMP1Slot(BroadlinkRMSwitch):
         except (socket.timeout, ValueError) as error:
             if retry < 1:
                 _LOGGER.error("Error during sending a packet: %s", error)
+                self._is_available = False
                 return False
             if not self._auth():
                 return False
             return self._sendpacket(packet, max(0, retry-1))
+        self._is_available = True
         return True
 
     @property
@@ -338,7 +348,7 @@ class BroadlinkMP1Switch:
         """Authenticate the device."""
         try:
             auth = self._device.auth()
-        except socket.timeout:
+        except OSError:
             auth = False
         if not auth and retry > 0:
             return self._auth(retry-1)
