@@ -1,4 +1,6 @@
 """Support for deCONZ climate devices."""
+from pydeconz.sensor import Thermostat
+
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     SUPPORT_ON_OFF, SUPPORT_TARGET_TEMPERATURE)
@@ -22,7 +24,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     @callback
     def async_add_climate(sensors):
         """Add climate devices from deCONZ."""
-        from pydeconz.sensor import Thermostat
         entities = []
 
         for sensor in sensors:
