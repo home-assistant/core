@@ -30,8 +30,7 @@ from .const import (
     SERVICE_SET_HUMIDITY, SERVICE_SET_HVAC_MODE, SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE, SUPPORT_AUX_HEAT, SUPPORT_CURRENT_HVAC,
     SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE, SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_HUMIDITY_RANGE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE)
+    SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_TEMPERATURE_RANGE)
 from .reproduce_state import async_reproduce_states  # noqa
 
 DEFAULT_MIN_TEMP = 7
@@ -186,10 +185,8 @@ class ClimateDevice(Entity):
 
         if supported_features & SUPPORT_TARGET_HUMIDITY:
             data[ATTR_HUMIDITY] = self.target_humidity
-
-            if supported_features & SUPPORT_TARGET_HUMIDITY_RANGE:
-                data[ATTR_MIN_HUMIDITY] = self.min_humidity
-                data[ATTR_MAX_HUMIDITY] = self.max_humidity
+            data[ATTR_MIN_HUMIDITY] = self.min_humidity
+            data[ATTR_MAX_HUMIDITY] = self.max_humidity
 
         if supported_features & SUPPORT_FAN_MODE:
             data[ATTR_FAN_MODE] = self.fan_mode
