@@ -86,12 +86,18 @@ class OwnTracksEntity(DeviceTrackerEntity):
     @property
     def latitude(self):
         """Return latitude value of the device."""
-        return self._gps[0]
+        if self._gps is not None:
+            return self._gps[0]
+
+        return None
 
     @property
     def longitude(self):
         """Return longitude value of the device."""
-        return self._gps[1]
+        if self._gps is not None:
+            return self._gps[1]
+
+        return None
 
     @property
     def location_name(self):
