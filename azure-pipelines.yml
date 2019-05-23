@@ -185,3 +185,4 @@ jobs:
 
       git commit -am "Bump Home Assistant $version"
       git push
+    displayName: 'Update version files'
