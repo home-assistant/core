@@ -75,7 +75,7 @@ class MaryTTSProvider(Provider):
         actual_language = re.sub('-', '_', language)
 
         try:
-            with async_timeout.timeout(10, loop=self.hass.loop):
+            with async_timeout.timeout(10):
                 url = 'http://{}:{}/process?'.format(self._host, self._port)
 
                 audio = self._codec.upper()

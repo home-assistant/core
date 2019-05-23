@@ -715,7 +715,7 @@ async def async_setup_entry(hass, config_entry):
                         network.state_str)
                     break
                 else:
-                    await asyncio.sleep(1, loop=hass.loop)
+                    await asyncio.sleep(1)
 
             hass.async_add_job(_finalize_start)
 

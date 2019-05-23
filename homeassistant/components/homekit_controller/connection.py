@@ -79,7 +79,7 @@ class HKDevice():
 
         # There are multiple entities sharing a single connection - only
         # allow one entity to use pairing at once.
-        self.pairing_lock = asyncio.Lock(loop=hass.loop)
+        self.pairing_lock = asyncio.Lock()
 
     async def async_setup(self):
         """Prepare to use a paired HomeKit device in homeassistant."""

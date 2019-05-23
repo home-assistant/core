@@ -38,7 +38,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     try:
         httpsession = async_get_clientsession(hass)
-        with async_timeout.timeout(timeout, loop=hass.loop):
+        with async_timeout.timeout(timeout):
             scenes_resp = await httpsession.get(url, headers=headers)
 
     except (asyncio.TimeoutError, aiohttp.ClientError):
@@ -83,7 +83,7 @@ class LifxCloudScene(Scene):
 
         try:
             httpsession = async_get_clientsession(self.hass)
-            with async_timeout.timeout(self._timeout, loop=self.hass.loop):
+            with async_timeout.timeout(self._timeout):
                 await httpsession.put(url, headers=self._headers)
 
         except (asyncio.TimeoutError, aiohttp.ClientError):

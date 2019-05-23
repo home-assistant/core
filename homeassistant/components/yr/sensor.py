@@ -160,7 +160,7 @@ class YrData:
             async_call_later(self.hass, minutes*60, self.fetching_data)
         try:
             websession = async_get_clientsession(self.hass)
-            with async_timeout.timeout(10, loop=self.hass.loop):
+            with async_timeout.timeout(10):
                 resp = await websession.get(
                     self._url, params=self._urlparams)
             if resp.status != 200:
@@ -247,4 +247,4 @@ class YrData:
                     tasks.append(dev.async_update_ha_state())
 
         if tasks:
-            await asyncio.wait(tasks, loop=self.hass.loop)
+            await asyncio.wait(tasks)
