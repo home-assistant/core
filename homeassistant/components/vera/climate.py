@@ -132,11 +132,3 @@ class VeraThermostat(VeraDevice, ClimateDevice):
             self.vera_device.turn_cool_on()
         elif hvac_mode == HVAC_MODE_HEAT:
             self.vera_device.turn_heat_on()
-
-    def turn_fan_on(self):
-        """Turn fan on."""
-        self.vera_device.fan_on()
-
-    def turn_fan_off(self):
-        """Turn fan off."""
-        self.vera_device.fan_auto()
