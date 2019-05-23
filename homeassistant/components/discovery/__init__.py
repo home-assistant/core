@@ -52,7 +52,6 @@ SERVICE_XIAOMI_GW = 'xiaomi_gw'
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_DAIKIN: 'daikin',
     SERVICE_DECONZ: 'deconz',
-    'esphome': 'esphome',
     'google_cast': 'cast',
     SERVICE_HEOS: 'heos',
     SERVICE_HUE: 'hue',

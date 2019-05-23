@@ -202,7 +202,7 @@ async def test_discovery_initiation(hass, mock_client):
     mock_client.device_info.return_value = mock_coro(
         MockDeviceInfo(False, "test8266"))
 
-    result = await flow.async_step_discovery(user_input=service_info)
+    result = await flow.async_step_zeroconf(user_input=service_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'discovery_confirm'
     assert result['description_placeholders']['name'] == 'test8266'
@@ -229,7 +229,7 @@ async def test_discovery_already_configured_hostname(hass, mock_client):
         'hostname': 'test8266.local.',
         'properties': {}
     }
-    result = await flow.async_step_discovery(user_input=service_info)
+    result = await flow.async_step_zeroconf(user_input=service_info)
     assert result['type'] == 'abort'
     assert result['reason'] == 'already_configured'
 
@@ -251,6 +251,6 @@ async def test_discovery_already_configured_ip(hass, mock_client):
             "address": "192.168.43.183"
         }
     }
-    result = await flow.async_step_discovery(user_input=service_info)
+    result = await flow.async_step_zeroconf(user_input=service_info)
     assert result['type'] == 'abort'
     assert result['reason'] == 'already_configured'
