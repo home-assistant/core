@@ -15,7 +15,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.helpers.event import track_time_interval
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import load_json, save_json
 
@@ -128,8 +128,8 @@ def setup_plexserver(
 
     plex_clients = hass.data[PLEX_DATA]
     plex_sessions = {}
-    track_utc_time_change(
-            hass, lambda now: update_devices(), second=range(0, 60, 10))
+    track_time_interval(
+            hass, lambda now: update_devices(), timedelta(seconds=10))
 
     def update_devices():
         """Update the devices objects."""
