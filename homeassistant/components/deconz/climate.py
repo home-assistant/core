@@ -93,7 +93,7 @@ class DeconzThermostat(DeconzDevice, ClimateDevice):
 
         await self._device.async_set_config(data)
 
-    def set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_HEAT:
             data = {'mode': 'auto'}

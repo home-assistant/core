@@ -59,7 +59,6 @@ class RangeSwitch(TeslaDevice, SwitchDevice):
         """Initialise of the switch."""
         self._state = None
         super().__init__(tesla_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.tesla_id)
 
     def turn_on(self, **kwargs):
         """Send the on command."""

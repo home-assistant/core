@@ -15,6 +15,8 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TEMP = 8
 MAX_TEMP = 25
 
+SUPPORT_HVAC = [HVAC_MODE_HEAT]
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the XS1 thermostat platform."""
@@ -56,6 +58,22 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateDevice):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_TARGET_TEMPERATURE
+
+    @property
+    def hvac_state(self):
+        """Return hvac operation ie. heat, cool mode.
+
+        Need to be one of HVAC_MODE_*.
+        """
+        return HVAC_MODE_HEAT
+
+    @property
+    def hvac_modes(self):
+        """Return the list of available hvac operation modes.
+
+        Need to be a subset of HVAC_MODES.
+        """
+        return SUPPORT_HVAC
 
     @property
     def current_temperature(self):

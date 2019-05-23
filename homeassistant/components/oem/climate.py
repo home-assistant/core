@@ -1,12 +1,4 @@
-"""
-OpenEnergyMonitor Thermostat Support.
-
-This provides a climate component for the ESP8266 based thermostat sold by
-OpenEnergyMonitor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.oem/
-"""
+"""OpenEnergyMonitor Thermostat Support."""
 import logging
 
 from oemthermostat import Thermostat
@@ -36,6 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_CURRENT_HVAC
 SUPPORT_HVAC = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the oemthermostat platform."""
