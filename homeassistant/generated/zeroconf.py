@@ -8,10 +8,10 @@ SERVICE_TYPES = {
     "_axis-video._tcp.local.": [
         "axis"
     ],
-    "_coap._udp.local.": [
-        "tradfri"
-    ],
     "_esphomelib._tcp.local.": [
         "esphome"
+    ],
+    "_coap._udp.local.": [
+        "tradfri"
     ]
 }
