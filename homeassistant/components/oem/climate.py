@@ -29,6 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_CURRENT_HVAC
 SUPPORT_HVAC = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the oemthermostat platform."""
     name = config.get(CONF_NAME)

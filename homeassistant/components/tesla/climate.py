@@ -90,5 +90,5 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
         _LOGGER.debug("Setting mode for: %s", self._name)
         if hvac_mode == HVAC_MODE_OFF:
             self.tesla_device.set_status(False)
-        elif hvac_mode HVAC_MODE_HEAT:
+        elif hvac_mode == HVAC_MODE_HEAT:
             self.tesla_device.set_status(True)
