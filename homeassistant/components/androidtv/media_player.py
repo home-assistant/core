@@ -312,10 +312,12 @@ class ADBDevice(MediaPlayerDevice):
         if key:
             self.aftv.adb_shell('input keyevent {}'.format(key))
             self._adb_response = None
+            self.schedule_update_ha_state()
             return
 
         if cmd == 'GET_PROPERTIES':
             self._adb_response = str(self.aftv.get_properties_dict())
+            self.schedule_update_ha_state()
             return self._adb_response
 
         response = self.aftv.adb_shell(cmd)
@@ -324,6 +326,7 @@ class ADBDevice(MediaPlayerDevice):
         else:
             self._adb_response = None
 
+        self.schedule_update_ha_state()
         return self._adb_response
 
 
