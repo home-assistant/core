@@ -23,9 +23,6 @@ from homeassistant.util.json import load_json, save_json
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
-
 PLEX_CONFIG_FILE = 'plex.conf'
 PLEX_DATA = 'plex'
 
@@ -132,9 +129,8 @@ def setup_plexserver(
 
     plex_clients = hass.data[PLEX_DATA]
     plex_sessions = {}
-    track_utc_time_change(hass, lambda now: update_devices(), second=30)
+    track_utc_time_change(hass, lambda now: update_devices(), second=range(0, 60, 10))
 
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_devices():
         """Update the devices objects."""
         try:
@@ -158,7 +154,7 @@ def setup_plexserver(
 
             if device.machineIdentifier not in plex_clients:
                 new_client = PlexClient(
-                    config, device, None, plex_sessions, update_devices)
+                    config, device, None, plex_sessions)
                 plex_clients[device.machineIdentifier] = new_client
                 _LOGGER.debug("New device: %s", device.machineIdentifier)
                 new_plex_clients.append(new_client)
@@ -193,7 +189,7 @@ def setup_plexserver(
             if (machine_identifier not in plex_clients
                     and machine_identifier is not None):
                 new_client = PlexClient(
-                    config, player, session, plex_sessions, update_devices)
+                    config, player, session, plex_sessions)
                 plex_clients[machine_identifier] = new_client
                 _LOGGER.debug("New session: %s", machine_identifier)
                 new_plex_clients.append(new_client)
@@ -212,6 +208,9 @@ def setup_plexserver(
                                     or client.machine_identifier
                                     in plex_sessions)
 
+            if client not in new_plex_clients:
+                client.schedule_update_ha_state()
+
             if not config.get(CONF_REMOVE_UNAVAILABLE_CLIENTS) \
                     or client.available:
                 continue
@@ -226,8 +225,6 @@ def setup_plexserver(
 
         if new_plex_clients:
             add_entities_callback(new_plex_clients)
-
-    update_devices()
 
 
 def request_configuration(host, hass, config, add_entities_callback):
@@ -273,8 +270,7 @@ def request_configuration(host, hass, config, add_entities_callback):
 class PlexClient(MediaPlayerDevice):
     """Representation of a Plex device."""
 
-    def __init__(self, config, device, session, plex_sessions,
-                 update_devices):
+    def __init__(self, config, device, session, plex_sessions):
         """Initialize the Plex device."""
         self._app_name = ''
         self._device = None
@@ -297,7 +293,6 @@ class PlexClient(MediaPlayerDevice):
         self._volume_muted = False  # since we can't retrieve remotely
         self.config = config
         self.plex_sessions = plex_sessions
-        self.update_devices = update_devices
         # General
         self._media_content_id = None
         self._media_content_rating = None
@@ -516,6 +511,11 @@ class PlexClient(MediaPlayerDevice):
         self._clear_media_details()
 
     @property
+    def should_poll(self):
+        """Return True if entity has to be polled for state."""
+        return False
+
+    @property
     def unique_id(self):
         """Return the id of this plex client."""
         return self.machine_identifier
@@ -559,10 +559,6 @@ class PlexClient(MediaPlayerDevice):
     def state(self):
         """Return the state of the device."""
         return self._state
-
-    def update(self):
-        """Get the latest details."""
-        self.update_devices(no_throttle=True)
 
     @property
     def _active_media_plexapi_type(self):
