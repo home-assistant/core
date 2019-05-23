@@ -2,7 +2,7 @@
 from pydeconz.sensor import Presence, Vibration
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.const import ATTR_BATTERY_LEVEL
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -75,6 +75,9 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorDevice):
 
         if self._device.on is not None:
             attr[ATTR_ON] = self._device.on
+
+        if self._device.secondary_temperature is not None:
+            attr[ATTR_TEMPERATURE] = self._device.secondary_temperature
 
         if self._device.type in Presence.ZHATYPE and \
                 self._device.dark is not None:

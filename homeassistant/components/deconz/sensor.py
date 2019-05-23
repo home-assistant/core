@@ -2,7 +2,7 @@
 from pydeconz.sensor import LightLevel, Switch
 
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY)
+    ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import slugify
@@ -86,6 +86,9 @@ class DeconzSensor(DeconzDevice):
 
         if self._device.on is not None:
             attr[ATTR_ON] = self._device.on
+
+        if self._device.secondary_temperature is not None:
+            attr[ATTR_TEMPERATURE] = self._device.secondary_temperature
 
         if self._device.type in LightLevel.ZHATYPE and \
                 self._device.dark is not None:
