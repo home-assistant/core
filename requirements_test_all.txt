@@ -61,7 +61,7 @@ aiounifi==4
 aiozeroconf==0.1.8
 
 # homeassistant.components.ambiclimate
-ambiclimate==0.1.1
+ambiclimate==0.1.2
 
 # homeassistant.components.apns
 apns2==0.3.0
