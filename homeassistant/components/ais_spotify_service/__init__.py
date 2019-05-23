@@ -188,7 +188,6 @@ class SpotifyData:
             title_prefix = 'Playlista: '
             icon = "mdi:playlist-music"
         list_idx = len(list_info)
-        cur_idx = 0
         for item in items:
             try:
                 if audio_type == 'playlist':
@@ -208,9 +207,6 @@ class SpotifyData:
                                            "item_owner_id": item_owner_id, "thumbnail": thumbnail,
                                            "icon": icon, "audio_type": ais_global.G_AN_SPOTIFY_SEARCH}
                     list_idx = list_idx + 1
-                    cur_idx = cur_idx + 1
-                    if cur_idx > 2:
-                        return list_info
             except Exception as e:
                 _LOGGER.error('get_list_from_results ' + str(item) + ' ERROR: ' + str(e))
 
@@ -301,13 +297,13 @@ class SpotifyData:
 
         list_info = {}
         # artist
-        results = self._spotify.search(q='artist:' + search_text, type='artist')
+        results = self._spotify.search(q='artist:' + search_text, type='artist', limit=6)
         list_info = self.get_list_from_results(results, 'artist', list_info)
         # album
-        results = self._spotify.search(q='album:' + search_text, type='album')
+        results = self._spotify.search(q='album:' + search_text, type='album', limit=6)
         list_info = self.get_list_from_results(results, 'album', list_info)
         # playlist
-        results = self._spotify.search(q='playlist:' + search_text, type='playlist')
+        results = self._spotify.search(q='playlist:' + search_text, type='playlist', limit=6)
         list_info = self.get_list_from_results(results, 'playlist', list_info)
 
         # update lists
@@ -315,15 +311,8 @@ class SpotifyData:
         self.hass.states.async_set("sensor.spotifylist", -1, {})
 
         if len(list_info) > 0:
-            # from remote
-            import homeassistant.components.ais_ai_service as ais_ai
-            if ais_ai.CURR_ENTITIE == 'input_text.ais_spotify_query' and ais_ai.CURR_BUTTON_CODE == 4:
-                ais_ai.set_curr_entity(self.hass, 'sensor.spotifysearchlist')
-                ais_ai.CURR_ENTITIE_ENTERED = True
-                text = "Znaleziono: %s, wybierz pozycję którą mam włączyć" % (str(len(list_info)))
-            else:
-                text = "Znaleziono: %s, włączam utwory %s" % (str(len(list_info)), list_info[0]["title"])
-                yield from self.hass.services.async_call('ais_spotify_service', 'select_search_uri', {"id": 0})
+            text = "Znaleziono: %s, włączam utwory %s" % (str(len(list_info)), list_info[0]["title"])
+            yield from self.hass.services.async_call('ais_spotify_service', 'select_search_uri', {"id": 0})
         else:
             text = "Brak wyników na Spotify dla zapytania %s" % search_text
         yield from self.hass.services.async_call('ais_ai_service', 'say_it', {"text": text})

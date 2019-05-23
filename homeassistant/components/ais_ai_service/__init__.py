@@ -2095,7 +2095,7 @@ def _post_message(message, hass):
 
     tts_browser_text = message
     if len(tts_browser_text) > 50:
-        space_position = tts_browser_text.find["", 50]
+        space_position = tts_browser_text.find(" ", 50)
         if space_position > 50:
             tts_browser_text = tts_browser_text[0:space_position]
         else:

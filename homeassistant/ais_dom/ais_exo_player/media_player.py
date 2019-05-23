@@ -10,8 +10,8 @@ import homeassistant.ais_dom.ais_global as ais_global
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP, SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA, MediaPlayerDevice, SUPPORT_SEEK,
-    SUPPORT_SELECT_SOURCE, ATTR_MEDIA_DURATION, ATTR_MEDIA_SEEK_POSITION, SUPPORT_SELECT_SOUND_MODE)
+    SUPPORT_PLAY_MEDIA, MediaPlayerDevice, SUPPORT_SEEK, SUPPORT_SHUFFLE_SET,
+    SUPPORT_SELECT_SOURCE, SUPPORT_SELECT_SOUND_MODE)
 from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
 from typing import Optional
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_EXO = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_STOP | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_VOLUME_STEP | SUPPORT_SEEK | SUPPORT_SELECT_SOURCE | SUPPORT_SELECT_SOUND_MODE
+    SUPPORT_VOLUME_STEP | SUPPORT_SEEK | SUPPORT_SELECT_SOURCE | SUPPORT_SELECT_SOUND_MODE | SUPPORT_SHUFFLE_SET
 
 DEFAULT_NAME = 'AIS Dom Odtwarzacz'
 
@@ -100,6 +100,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
         self._duration = 0
         self._media_content_id = None
         self._volume_level = 0.5
+        self._shuffle = False
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -135,6 +136,17 @@ class ExoPlayerDevice(MediaPlayerDevice):
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
         return int(float(self._duration))
+
+    @property
+    def shuffle(self):
+        """Boolean if shuffle is enabled."""
+        return self._shuffle
+
+    def set_shuffle(self, shuffle):
+        """Enable/disable shuffle mode."""
+        self._shuffle = shuffle
+        self.hass.services.call('ais_ai_service', 'publish_command_to_frame',
+                                {"key": 'setPlayerShuffle', "val": self._shuffle})
 
     def media_seek(self, position):
         """Seek the media to a specific location."""
@@ -208,17 +220,6 @@ class ExoPlayerDevice(MediaPlayerDevice):
     def sound_mode_list(self):
         """Return a list of available sound modes."""
         return ["NORMAL", "BOOST", "TREBLE", "POP", "ROCK", "CLASSIC", "JAZZ", "DANCE", "R&P"]
-
-    @property
-    def shuffle(self):
-        """Boolean if shuffle is enabled."""
-        # TODO
-        return True
-
-    def set_shuffle(self, shuffle):
-        """Enable/disable shuffle mode."""
-        # TODO
-        pass
 
     @property
     def available(self):
@@ -395,7 +396,8 @@ class ExoPlayerDevice(MediaPlayerDevice):
             self._media_status_received_time = dt_util.utcnow()
             # TODO one call to frame
             self.hass.services.call('ais_ai_service', 'publish_command_to_frame', {
-                    "key": 'playAudio', "val": self._media_content_id, "ip": self._device_ip})
+                    "key": 'playAudio', "val": self._media_content_id,
+                    "ip": self._device_ip, "setPlayerShuffle": self._shuffle})
 
             if "IMAGE_URL" not in j_info:
                 self._stream_image = "/static/icons/tile-win-310x150.png"
@@ -495,10 +497,12 @@ class ExoPlayerDevice(MediaPlayerDevice):
             self._media_title = message.get("currentMedia", "AI-Speaker")
             self._media_source = message.get("media_source", self._media_source)
             self._album_name = message.get("media_album_name", "AI-Speaker")
-            _LOGGER.debug(str.format("message_received: {0}", message))
 
-            # select track on spotify list
+            # spotify info
             if self._media_source == ais_global.G_AN_SPOTIFY:
+                # shuffle
+                self._shuffle = message.get("isShuffling", False)
+                # mark track on Spotify list
                 state = self.hass.states.get('sensor.spotifylist')
                 attr = state.attributes
                 for i in range(len(attr)):
