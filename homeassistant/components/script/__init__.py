@@ -82,7 +82,7 @@ async def async_setup(hass, config):
         await asyncio.wait([
             script.async_turn_off() for script
             in await component.async_extract_from_service(service)
-        ], loop=hass.loop)
+        ])
 
     async def toggle_service(service):
         """Toggle a script."""

@@ -87,6 +87,7 @@ def get_test_home_assistant():
     else:
         loop = asyncio.new_event_loop()
 
+    asyncio.set_event_loop(loop)
     hass = loop.run_until_complete(async_test_home_assistant(loop))
 
     stop_event = threading.Event()
@@ -102,7 +103,7 @@ def get_test_home_assistant():
 
     def start_hass(*mocks):
         """Start hass."""
-        run_coroutine_threadsafe(hass.async_start(), loop=hass.loop).result()
+        run_coroutine_threadsafe(hass.async_start(), loop).result()
 
     def stop_hass():
         """Stop hass."""

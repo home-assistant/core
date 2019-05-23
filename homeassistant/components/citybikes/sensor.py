@@ -106,7 +106,7 @@ async def async_citybikes_request(hass, uri, schema):
     try:
         session = async_get_clientsession(hass)
 
-        with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
+        with async_timeout.timeout(REQUEST_TIMEOUT):
             req = await session.get(DEFAULT_ENDPOINT.format(uri=uri))
 
         json_response = await req.json()
@@ -181,7 +181,7 @@ class CityBikesNetworks:
         """Initialize the networks instance."""
         self.hass = hass
         self.networks = None
-        self.networks_loading = asyncio.Condition(loop=hass.loop)
+        self.networks_loading = asyncio.Condition()
 
     async def get_closest_network_id(self, latitude, longitude):
         """Return the id of the network closest to provided location."""
@@ -217,7 +217,7 @@ class CityBikesNetwork:
         self.hass = hass
         self.network_id = network_id
         self.stations = []
-        self.ready = asyncio.Event(loop=hass.loop)
+        self.ready = asyncio.Event()
 
     async def async_refresh(self, now=None):
         """Refresh the state of the network."""

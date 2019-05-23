@@ -777,7 +777,7 @@ async def _async_fetch_image(hass, url):
         url = hass.config.api.base_url + url
 
     if url not in cache_images:
-        cache_images[url] = {CACHE_LOCK: asyncio.Lock(loop=hass.loop)}
+        cache_images[url] = {CACHE_LOCK: asyncio.Lock()}
 
     async with cache_images[url][CACHE_LOCK]:
         if CACHE_CONTENT in cache_images[url]:
@@ -786,7 +786,7 @@ async def _async_fetch_image(hass, url):
         content, content_type = (None, None)
         websession = async_get_clientsession(hass)
         try:
-            with async_timeout.timeout(10, loop=hass.loop):
+            with async_timeout.timeout(10):
                 response = await websession.get(url)
 
                 if response.status == 200:

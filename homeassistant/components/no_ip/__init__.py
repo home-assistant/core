@@ -89,7 +89,7 @@ async def _update_no_ip(hass, session, domain, auth_str, timeout):
     }
 
     try:
-        with async_timeout.timeout(timeout, loop=hass.loop):
+        with async_timeout.timeout(timeout):
             resp = await session.get(url, params=params, headers=headers)
             body = await resp.text()
 
