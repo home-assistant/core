@@ -125,7 +125,7 @@ class QldBushfireLocationEvent(GeolocationEvent):
         """Initialize entity with data from feed entry."""
         self._feed_manager = feed_manager
         self._external_id = external_id
-        self._title = None
+        self._name = None
         self._distance = None
         self._latitude = None
         self._longitude = None
