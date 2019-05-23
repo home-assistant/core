@@ -30,6 +30,8 @@ HA_OPMODE_TO_EVO = {STATE_ON: EVO_FOLLOW, STATE_OFF: EVO_PERMOVER}
 async def async_setup_platform(hass, hass_config, async_add_entities,
                                discovery_info=None):
     """Create the DHW controller."""
+    _LOGGER.warn("setup_platform(HEATER): started")                              # TODO: delete me
+
     evo_data = hass.data[DATA_EVOHOME]
 
     client = evo_data['client']
