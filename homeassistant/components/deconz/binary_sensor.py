@@ -13,12 +13,6 @@ ATTR_TILTANGLE = 'tiltangle'
 ATTR_VIBRATIONSTRENGTH = 'vibrationstrength'
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up deCONZ binary sensors."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ binary sensor."""
     gateway = get_gateway_from_config_entry(hass, config_entry)

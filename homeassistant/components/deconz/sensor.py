@@ -1,4 +1,6 @@
 """Support for deCONZ sensors."""
+from pydeconz.sensor import LightLevel, Switch
+
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY)
 from homeassistant.core import callback
@@ -14,12 +16,6 @@ ATTR_DAYLIGHT = 'daylight'
 ATTR_EVENT_ID = 'event_id'
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up deCONZ sensors."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ sensors."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
@@ -27,7 +23,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     @callback
     def async_add_sensor(sensors):
         """Add sensors from deCONZ."""
-        from pydeconz.sensor import Switch
         entities = []
 
         for sensor in sensors:
@@ -89,8 +84,6 @@ class DeconzSensor(DeconzDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        from pydeconz.sensor import LightLevel
-
         attr = {}
         if self._device.battery:
             attr[ATTR_BATTERY_LEVEL] = self._device.battery
@@ -125,8 +118,8 @@ class DeconzBattery(DeconzDevice):
     @callback
     def async_update_callback(self, force_update=False):
         """Update the battery's state, if needed."""
-        reason = self._device.changed_keys
-        if force_update or 'reachable' in reason or 'battery' in reason:
+        changed = self._device.changed_keys
+        if force_update or 'reachable' in changed or 'battery' in changed:
             self.async_schedule_update_ha_state()
 
     @property

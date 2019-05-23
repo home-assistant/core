@@ -2,6 +2,9 @@
 import asyncio
 import async_timeout
 
+from pydeconz import DeconzSession, errors
+from pydeconz.sensor import Switch
+
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.const import CONF_EVENT, CONF_HOST, CONF_ID
 from homeassistant.core import EventOrigin, callback
@@ -144,8 +147,6 @@ class DeconzGateway:
     @callback
     def async_add_remote(self, sensors):
         """Set up remote from deCONZ."""
-        from pydeconz.sensor import Switch
-
         for sensor in sensors:
             if sensor.type in Switch.ZHATYPE and \
                not (not self.allow_clip_sensor and
@@ -187,8 +188,6 @@ class DeconzGateway:
 async def get_gateway(hass, config, async_add_device_callback,
                       async_connection_status_callback):
     """Create a gateway object and verify configuration."""
-    from pydeconz import DeconzSession, errors
-
     session = aiohttp_client.async_get_clientsession(hass)
 
     deconz = DeconzSession(hass.loop, session, **config,

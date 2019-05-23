@@ -4,6 +4,10 @@ import asyncio
 import async_timeout
 import voluptuous as vol
 
+from pydeconz.errors import ResponseError, RequestError
+from pydeconz.utils import (
+    async_discovery, async_get_api_key, async_get_bridgeid)
+
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
@@ -54,8 +58,6 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
         If more than one bridge is found let user choose bridge to link.
         If no bridge is found allow user to manually input configuration.
         """
-        from pydeconz.utils import async_discovery
-
         if user_input is not None:
             for bridge in self.bridges:
                 if bridge[CONF_HOST] == user_input[CONF_HOST]:
@@ -101,8 +103,6 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_link(self, user_input=None):
         """Attempt to link with the deCONZ bridge."""
-        from pydeconz.errors import ResponseError, RequestError
-        from pydeconz.utils import async_get_api_key
         errors = {}
 
         if user_input is not None:
@@ -127,8 +127,6 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
 
     async def _create_entry(self):
         """Create entry for gateway."""
-        from pydeconz.utils import async_get_bridgeid
-
         if CONF_BRIDGEID not in self.deconz_config:
             session = aiohttp_client.async_get_clientsession(self.hass)
 
