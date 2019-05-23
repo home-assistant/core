@@ -1,4 +1,6 @@
 """Support for deCONZ binary sensors."""
+from pydeconz.sensor import Presence, Vibration
+
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import callback
@@ -67,8 +69,6 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        from pydeconz.sensor import Presence, Vibration
-
         attr = {}
         if self._device.battery:
             attr[ATTR_BATTERY_LEVEL] = self._device.battery
@@ -79,6 +79,7 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorDevice):
         if self._device.type in Presence.ZHATYPE and \
                 self._device.dark is not None:
             attr[ATTR_DARK] = self._device.dark
+
         elif self._device.type in Vibration.ZHATYPE:
             attr[ATTR_ORIENTATION] = self._device.orientation
             attr[ATTR_TILTANGLE] = self._device.tiltangle
