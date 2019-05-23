@@ -9,6 +9,14 @@
             "no_key": "Impossible d'obtenir une cl\u00e9 d'API"
         },
         "step": {
+            "hassio_confirm": {
+                "data": {
+                    "allow_clip_sensor": "Autoriser l'importation de capteurs virtuels",
+                    "allow_deconz_groups": "Autoriser l'importation des groupes deCONZ"
+                },
+                "description": "Voulez-vous configurer Home Assistant pour qu'il se connecte \u00e0 la passerelle deCONZ fournie par l'add-on hass.io {addon} ?",
+                "title": "Passerelle deCONZ Zigbee via l'add-on Hass.io"
+            },
             "init": {
                 "data": {
                     "host": "H\u00f4te",
