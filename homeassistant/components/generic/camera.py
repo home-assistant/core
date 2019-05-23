@@ -146,7 +146,6 @@ class GenericCamera(Camera):
         """Return the name of this device."""
         return self._name
 
-    @property
-    def stream_source(self):
+    async def stream_source(self):
         """Return the source of the stream."""
         return self._stream_source
