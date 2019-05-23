@@ -129,7 +129,7 @@ def setup_plexserver(
     plex_clients = hass.data[PLEX_DATA]
     plex_sessions = {}
     track_time_interval(
-            hass, lambda now: update_devices(), timedelta(seconds=10))
+        hass, lambda now: update_devices(), timedelta(seconds=10))
 
     def update_devices():
         """Update the devices objects."""
