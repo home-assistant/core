@@ -5,7 +5,7 @@
             "authorize_url_fail": "Nieznany b\u0142\u0105d podczas generowania url autoryzacji.",
             "authorize_url_timeout": "Min\u0105\u0142 limit czasu generowania url autoryzacji.",
             "external_setup": "Punkt pomy\u015blnie skonfigurowany.",
-            "no_flows": "Musisz skonfigurowa\u0107 Point, zanim b\u0119dziesz m\u00f3g\u0142 si\u0119 z nim uwierzytelni\u0107. [Przeczytaj instrukcje](https://www.home-assistant.io/components/point/)."
+            "no_flows": "Musisz skonfigurowa\u0107 Point, zanim b\u0119dziesz m\u00f3g\u0142 si\u0119 z nim uwierzytelni\u0107. [Przeczytaj instrukcj\u0119](https://www.home-assistant.io/components/point/)."
         },
         "create_entry": {
             "default": "Pomy\u015blnie uwierzytelniono przy u\u017cyciu Minut dla urz\u0105dze\u0144 Point"

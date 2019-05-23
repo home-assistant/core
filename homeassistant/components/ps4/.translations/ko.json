@@ -15,7 +15,7 @@
         },
         "step": {
             "creds": {
-                "description": "\uc790\uaca9 \uc99d\uba85\uc774 \ud544\uc694\ud569\ub2c8\ub2e4. 'Submit' \uc744 \ub204\ub978 \ub2e4\uc74c PS4 Second Screen \uc571\uc5d0\uc11c \uae30\uae30\ub97c \uc0c8\ub85c \uace0\uce68\ud558\uace0 'Home-Assistant' \uae30\uae30\ub97c \uc120\ud0dd\ud574\uc8fc\uc138\uc694.",
+                "description": "\uc790\uaca9 \uc99d\uba85\uc774 \ud544\uc694\ud569\ub2c8\ub2e4. 'Submit' \uc744 \ub204\ub978 \ub2e4\uc74c PS4 \uc138\ucee8\ub4dc \uc2a4\ud06c\ub9b0 \uc571\uc5d0\uc11c \uae30\uae30\ub97c \uc0c8\ub85c \uace0\uce68\ud558\uace0 'Home-Assistant' \uae30\uae30\ub97c \uc120\ud0dd\ud574\uc8fc\uc138\uc694.",
                 "title": "PlayStation 4"
             },
             "link": {
