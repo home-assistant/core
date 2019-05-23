@@ -41,7 +41,7 @@ BINARY_SENSORS = {
 
 SENSORS = {
     TYPE_TEMPERATURE: ['Temperature', TEMP_FAHRENHEIT, 'mdi:thermometer'],
-    TYPE_BATTERY: ['Battery', '%', 'mdi:battery-80'],
+    TYPE_BATTERY: ['Battery', '', 'mdi:battery-80'],
     TYPE_WIFI_STRENGTH: ['Wifi Signal', 'dBm', 'mdi:wifi-strength-2'],
 }
 
