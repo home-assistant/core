@@ -58,12 +58,14 @@ class FlowManager:
                          context: Optional[Dict] = None,
                          data: Any = None) -> Any:
         """Start a configuration flow."""
+        if context is None:
+            context = {}
         flow = await self._async_create_flow(
             handler, context=context, data=data)
         flow.hass = self.hass
         flow.handler = handler
         flow.flow_id = uuid.uuid4().hex
-        flow.context = context or {}
+        flow.context = context
         self._progress[flow.flow_id] = flow
 
         return await self._async_handle_step(flow, flow.init_step, data)
