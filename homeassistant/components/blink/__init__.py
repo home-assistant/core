@@ -89,7 +89,7 @@ def setup(hass, config):
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
     scan_interval = conf[CONF_SCAN_INTERVAL]
-    legacy_mode = True if conf[CONF_MODE] == 'legacy' else False
+    legacy_mode = bool(conf[CONF_MODE] == 'legacy')
     motion_offset = conf[CONF_OFFSET]
     hass.data[BLINK_DATA] = blinkpy.Blink(username=username,
                                           password=password,
