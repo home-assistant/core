@@ -3,9 +3,7 @@
         "abort": {
             "already_setup": "You can only configure one Somfy account.",
             "authorize_url_fail": "Unknown error generating an authorize url.",
-            "authorize_url_timeout": "Timeout generating authorize url.",
-            "external_setup": "Somfy successfully configured from another flow.",
-            "no_flows": "You need to configure Somfy before being able to authenticate with it. [Please read the instructions](https://www.home-assistant.io/components/somfy/)."
+            "authorize_url_timeout": "Timeout generating authorize url."
         },
         "create_entry": {
             "default": "Successfully authenticated with Somfy."
