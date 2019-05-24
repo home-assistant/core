@@ -12,6 +12,7 @@ from ..const import SIGNAL_ATTR_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class DoorLockChannel(ZigbeeChannel):
     """Door lock channel."""
 

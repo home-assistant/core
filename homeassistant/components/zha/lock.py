@@ -1,6 +1,7 @@
 """Locks on Zigbee Home Automation networks."""
 import logging
 
+from zigpy.zcl.foundation import Status
 from homeassistant.core import callback
 from homeassistant.components.lock import (
     DOMAIN, STATE_UNLOCKED, STATE_LOCKED, LockDevice)
@@ -10,7 +11,6 @@ from .core.const import (
     SIGNAL_ATTR_UPDATED
 )
 from .entity import ZhaEntity
-from zigpy.zcl.foundation import Status
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,6 +23,7 @@ STATE_LIST = [
 ]
 
 VALUE_TO_STATE = {i: state for i, state in enumerate(STATE_LIST)}
+
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
@@ -91,9 +92,7 @@ class ZhaDoorLock(ZhaEntity, LockDevice):
         return self.state_attributes
 
     async def async_lock(self, **kwargs):
-        """Lock the lock.
-        This method must be run in the event loop and returns a coroutine.
-        """
+        """Lock the lock."""
         result = await self._doorlock_channel.lock_door()
         if not isinstance(result, list) or result[0] is not Status.SUCCESS:
             _LOGGER.error("Error with lock_door: %s", result)
@@ -101,9 +100,7 @@ class ZhaDoorLock(ZhaEntity, LockDevice):
         self.async_schedule_update_ha_state()
 
     async def async_unlock(self, **kwargs):
-        """Lock the lock.
-        This method must be run in the event loop and returns a coroutine.
-        """
+        """Unlock the lock."""
         result = await self._doorlock_channel.unlock_door()
         if not isinstance(result, list) or result[0] is not Status.SUCCESS:
             _LOGGER.error("Error with unlock_door: %s", result)
@@ -123,7 +120,8 @@ class ZhaDoorLock(ZhaEntity, LockDevice):
     async def async_get_state(self, from_cache=True):
         """Attempt to retrieve state from the lock."""
         if self._doorlock_channel:
-            state = await self._doorlock_channel.get_attribute_value('lock_state', from_cache=from_cache)
+            state = await self._doorlock_channel.get_attribute_value(
+                'lock_state', from_cache=from_cache)
             if state is not None:
                 self._state = VALUE_TO_STATE.get(state, self._state)
 
@@ -134,4 +132,3 @@ class ZhaDoorLock(ZhaEntity, LockDevice):
     def debug(self, msg, *args):
         """Log debug message."""
         _LOGGER.debug('%s: ' + msg, self.entity_id, *args)
-

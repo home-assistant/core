@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from zigpy.zcl.foundation import Status
 from homeassistant.components import light
 from homeassistant.const import STATE_ON
 from homeassistant.core import callback
@@ -13,7 +14,6 @@ from .const import (
     ON_OFF_CHANNEL, LEVEL_CHANNEL, SIGNAL_ATTR_UPDATED, SIGNAL_SET_LEVEL
     )
 from .entity import ZhaEntity
-from zigpy.zcl.foundation import Status
 
 _LOGGER = logging.getLogger(__name__)
 
