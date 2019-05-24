@@ -25,6 +25,12 @@ async def async_setup(hass, config):
     """Set up the PS4 Component."""
     from pyps4_homeassistant.client import PS4Client
     hass.data[PS4_DATA] = PS4Data()
+    
+    """Initialize PS4 Handler.
+    Handler is a thread which queues synchronous network IO
+    with low-level sockets, such as status updates over UDP,
+    as well as manages TCP connections and tasks.
+    """
     hass.data[PS4_DATA].handler = PS4Client()
     return True
 
