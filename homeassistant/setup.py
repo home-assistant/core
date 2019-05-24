@@ -226,8 +226,8 @@ async def async_prepare_setup_platform(hass: core.HomeAssistant,
 
     try:
         platform = integration.get_platform(domain)
-    except ImportError:
-        log_error("Platform not found.")
+    except ImportError as exc:
+        log_error("Platform not found ({}).".format(exc))
         return None
 
     # Already loaded
@@ -239,8 +239,8 @@ async def async_prepare_setup_platform(hass: core.HomeAssistant,
     if integration.domain not in hass.config.components:
         try:
             component = integration.get_component()
-        except ImportError:
-            log_error("Unable to import the component")
+        except ImportError as exc:
+            log_error("Unable to import the component ({}).".format(exc))
             return None
 
         if (hasattr(component, 'setup')
