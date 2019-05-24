@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import npi_gpio 
+from homeassistant.components import npi_gpio
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.const import DEVICE_DEFAULT_NAME
@@ -19,7 +19,6 @@ CONF_PULL_MODE = 'pull_mode'
 DEFAULT_BOUNCETIME = 50
 DEFAULT_INVERT_LOGIC = False
 DEFAULT_PULL_MODE = 'UP'
-
 
 
 _SENSORS_SCHEMA = vol.Schema({
@@ -43,7 +42,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     binary_sensors = []
     ports = config.get('ports')
     for port_num, port_name in ports.items():
-        binary_sensors.append(NPiGPIOBinarySensor(port_name, port_num, pull_mode, bouncetime, invert_logic))
+        binary_sensors.append(NPiGPIOBinarySensor(port_name, port_num, pull_mode,
+                                                  bouncetime, invert_logic))
     add_entities(binary_sensors, True)
 
 
