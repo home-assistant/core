@@ -317,6 +317,8 @@ class PlexClient(MediaPlayerDevice):
 
         self.refresh(device, session)
 
+        self.entity_id = "{}.{}_{}".format('media_player', 'plex', self.name)
+
     def _clear_media_details(self):
         """Set all Media Items to None."""
         # General
