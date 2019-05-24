@@ -190,21 +190,18 @@ class ClimateDevice(Entity):
 
         if supported_features & SUPPORT_FAN_MODE:
             data[ATTR_FAN_MODE] = self.fan_mode
-            if self.fan_list:
-                data[ATTR_FAN_LIST] = self.fan_list
+            data[ATTR_FAN_LIST] = self.fan_list
 
         if supported_features & SUPPORT_CURRENT_HVAC:
             data[ATTR_CURRENT_HVAC] = self.current_hvac
 
         if supported_features & SUPPORT_PRESET_MODE:
             data[ATTR_PRESET_MODE] = self.preset_mode
-            if self.preset_list:
-                data[ATTR_PRESET_LIST] = self.preset_list
+            data[ATTR_PRESET_LIST] = self.preset_list
 
         if supported_features & SUPPORT_SWING_MODE:
             data[ATTR_SWING_MODE] = self.swing_mode
-            if self.swing_list:
-                data[ATTR_SWING_LIST] = self.swing_list
+            data[ATTR_SWING_LIST] = self.swing_list
 
         if supported_features & SUPPORT_AUX_HEAT:
             data[ATTR_AUX_HEAT] = STATE_ON if self.is_aux_heat else STATE_OFF
