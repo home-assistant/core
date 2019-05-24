@@ -1,6 +1,7 @@
 """Switches on Zigbee Home Automation networks."""
 import logging
 
+from zigpy.zcl.foundation import Status
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import STATE_ON
 from homeassistant.core import callback
@@ -10,7 +11,6 @@ from .core.const import (
     SIGNAL_ATTR_UPDATED
 )
 from .entity import ZhaEntity
-from zigpy.zcl.foundation import Status
 
 _LOGGER = logging.getLogger(__name__)
 
