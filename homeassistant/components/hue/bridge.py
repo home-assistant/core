@@ -153,7 +153,7 @@ async def get_bridge(hass, host, username=None):
     )
 
     try:
-        with async_timeout.timeout(5):
+        with async_timeout.timeout(10):
             # Create username if we don't have one
             if not username:
                 await bridge.create_user('home-assistant')
