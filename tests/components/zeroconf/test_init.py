@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from aiozeroconf import ServiceInfo, ServiceStateChange
 
+from homeassistant.generated import zeroconf
 from homeassistant.setup import async_setup_component
 from homeassistant.components import zeroconf
 
@@ -36,5 +37,5 @@ async def test_setup(hass):
             hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    assert len(MockServiceBrowser.mock_calls) == 2
+    assert len(MockServiceBrowser.mock_calls) == len(zeroconf.SERVICE_TYPES)
     assert len(mock_config_flow.mock_calls) == 2
