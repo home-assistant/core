@@ -54,7 +54,7 @@ async def test_switch(hass, config_entry, zha_gateway):
     # turn on from HA
     with patch(
             'zigpy.zcl.Cluster.request',
-            return_value=mock_coro([Status.SUCCESS, Status.SUCCESS])):
+            return_value=mock_coro([0x00, Status.SUCCESS])):
         # turn on via UI
         await hass.services.async_call(DOMAIN, 'turn_on', {
             'entity_id': entity_id
@@ -66,7 +66,7 @@ async def test_switch(hass, config_entry, zha_gateway):
     # turn off from HA
     with patch(
             'zigpy.zcl.Cluster.request',
-            return_value=mock_coro([Status.SUCCESS, Status.SUCCESS])):
+            return_value=mock_coro([0x01, Status.SUCCESS])):
         # turn off via UI
         await hass.services.async_call(DOMAIN, 'turn_off', {
             'entity_id': entity_id

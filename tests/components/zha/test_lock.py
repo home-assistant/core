@@ -1,24 +1,21 @@
 """Test zha lock."""
 from unittest.mock import call, patch
-from homeassistant.components import lock
 from homeassistant.const import (
     STATE_LOCKED, STATE_UNLOCKED, STATE_UNAVAILABLE)
 from homeassistant.components.lock import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
 from tests.common import mock_coro
 from .common import (
     async_init_zigpy_device, make_attribute, make_entity_id,
-    async_test_device_join, async_enable_traffic
-)
+    async_enable_traffic)
 
 LOCK_DOOR = 0
 UNLOCK_DOOR = 1
+
 
 async def test_lock(hass, config_entry, zha_gateway):
     """Test zha lock platform."""
     from zigpy.zcl.clusters.closures import DoorLock
     from zigpy.zcl.clusters.general import Basic
-    from zigpy.zcl.foundation import Status
 
     # create zigpy device
     zigpy_device = await async_init_zigpy_device(
@@ -66,7 +63,7 @@ async def async_lock(hass, cluster, entity_id):
     from zigpy.zcl.foundation import Status
     with patch(
             'zigpy.zcl.Cluster.request',
-            return_value=mock_coro([Status.SUCCESS, Status.SUCCESS])):
+            return_value=mock_coro([Status.SUCCESS, ])):
         # lock via UI
         await hass.services.async_call(DOMAIN, 'lock', {
             'entity_id': entity_id
@@ -75,12 +72,13 @@ async def async_lock(hass, cluster, entity_id):
         assert cluster.request.call_args == call(
             False, LOCK_DOOR, (), expect_reply=True, manufacturer=None)
 
+
 async def async_unlock(hass, cluster, entity_id):
     """Test lock functionality from hass."""
     from zigpy.zcl.foundation import Status
     with patch(
             'zigpy.zcl.Cluster.request',
-            return_value=mock_coro([Status.SUCCESS, Status.SUCCESS])):
+            return_value=mock_coro([Status.SUCCESS, ])):
         # lock via UI
         await hass.services.async_call(DOMAIN, 'unlock', {
             'entity_id': entity_id
