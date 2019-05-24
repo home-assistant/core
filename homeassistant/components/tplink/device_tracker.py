@@ -2,8 +2,10 @@
 import base64
 from datetime import datetime
 import hashlib
+import json
 import logging
 import re
+from urllib.parse import urlparse
 
 from aiohttp.hdrs import (
     ACCEPT, COOKIE, PRAGMA, REFERER, CONNECTION, KEEP_ALIVE, USER_AGENT,
@@ -43,7 +45,8 @@ def get_scanner(hass, config):
     """
     for cls in [
             TplinkDeviceScanner, Tplink5DeviceScanner, Tplink4DeviceScanner,
-            Tplink3DeviceScanner, Tplink2DeviceScanner, Tplink1DeviceScanner
+            Tplink3DeviceScanner, Tplink2DeviceScanner, Tplink1DeviceScanner,
+            TplinkOmadaDeviceScanner,
     ]:
         scanner = cls(config[DOMAIN])
         if scanner.success_init:
@@ -465,6 +468,82 @@ class Tplink5DeviceScanner(Tplink1DeviceScanner):
                 device['MAC'].replace('-', ':'): device['DeviceName']
                 for device in list_of_devices['data']
                 }
+            return True
+
+        return False
+
+
+class TplinkOmadaDeviceScanner(Tplink1DeviceScanner):
+    """This class queries a TP-Link Omada Controller."""
+
+    def scan_devices(self):
+        """Scan for new devices and return a list with found MAC IDs."""
+        self._update_info()
+        return list(self.last_results.keys())
+
+    def get_device_name(self, device):
+        """Get firmware doesn't save the name of the wireless device."""
+        return self.last_results.get(device)
+
+    def _update_info(self):
+        """Ensure the information from the TP-Link AP is up to date.
+
+        Return boolean if scanning successful.
+        """
+        _LOGGER.info("Loading wireless clients from Omada Controller...")
+
+        login_path = "/api/user/login?ajax"
+        clients_path = "/web/v1/controller?userStore&token="
+        current_page_size = 10
+        ssl_verify = False
+
+        requests.packages.urllib3.disable_warnings()
+        session = requests.Session()
+        # Get SessionID
+        # host variable should includes scheme and port (if not standard)
+        # ie https://192.168.1.2:8043
+        res = session.get(self.host, verify=ssl_verify)
+        # Get actual URL
+        actual_location = urlparse(res.history[-1].headers['location'])
+        base_url = actual_location.scheme + "://" + actual_location.netloc
+        # Login
+        login_data = {"method": "login",
+                      "params": {"name": self.username,
+                                 "password": self.password
+                                 }
+                      }
+        res = session.post(base_url + login_path,
+                           data=json.dumps(login_data),
+                           verify=False)
+        if res.json().get('msg') != 'Log in successfully.':
+            _LOGGER.error("AP didn't respond with JSON. "
+                          "Check if credentials are correct")
+            return False
+
+        # Get token
+        token = res.json()['result']['token']
+        current_page = 1
+        total_rows = current_page_size + 1
+        list_of_devices = {}
+        while current_page * current_page_size <= total_rows:
+            clients_data = {"method": "getGridActiveClients",
+                            "params": {"sortOrder": "asc",
+                                       "currentPage": current_page,
+                                       "currentPageSize": current_page_size,
+                                       "filters": {"type": "all"}
+                                       }
+                            }
+            res = session.post(base_url + clients_path + token,
+                               data=json.dumps(clients_data),
+                               verify=ssl_verify)
+            results = res.json()['result']
+            total_rows = results['totalRows']
+            list_of_devices.update({data['mac'].replace('-', ':'): data['name']
+                                    for data in results['data']})
+            current_page += 1
+
+        if list_of_devices:
+            self.last_results = list_of_devices
             return True
 
         return False
