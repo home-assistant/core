@@ -66,7 +66,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Somfy from a config entry."""
-
     def token_saver(token):
         _LOGGER.debug('Saving updated token')
         entry.data[CONF_TOKEN] = token
@@ -92,7 +91,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload a config entry."""
-
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
 

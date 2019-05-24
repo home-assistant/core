@@ -18,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def register_flow_implementation(hass, client_id, client_secret):
     """Register a flow implementation.
+
     client_id: Client id.
     client_secret: Client secret.
     """
@@ -33,6 +34,7 @@ class SomfyFlowHandler(config_entries.ConfigFlow):
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
+        """Instantiate config flow."""
         self.code = None
 
     async def async_step_import(self, user_input=None):
@@ -50,7 +52,6 @@ class SomfyFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_auth(self, user_input=None):
         """Create an entry for auth."""
-
         # Flow has been triggered from Somfy website
         if user_input:
             return await self.async_step_code(user_input)
