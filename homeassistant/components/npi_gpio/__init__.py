@@ -5,7 +5,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
 
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'npi_gpio'
@@ -57,6 +56,6 @@ def edge_detect(port, event_callback, bounce):
     """Add detection for RISING and FALLING events."""
     from NPi import GPIO  # pylint: disable=import-error
     GPIO.add_event_detect(port,
-        GPIO.BOTH,
-        callback=event_callback,
-        bouncetime=bounce)
+                          GPIO.BOTH,
+                          callback=event_callback,
+                          bouncetime=bounce)
