@@ -17,7 +17,10 @@ CONF_PULL_MODE = 'pull_mode'
 
 DEFAULT_INVERT_LOGIC = False
 DEFAULT_I2C_ADDRESS = 0x20
-DEFAULT_PULL_MODE = 'UP'
+MODE_UP = 'UP'
+MODE_DOWN = 'DOWN'
+
+DEFAULT_PULL_MODE = MODE_UP
 
 _SENSORS_SCHEMA = vol.Schema({
     cv.positive_int: cv.string,
@@ -26,15 +29,14 @@ _SENSORS_SCHEMA = vol.Schema({
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PINS): _SENSORS_SCHEMA,
     vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
-    vol.Optional(CONF_PULL_MODE, default=DEFAULT_PULL_MODE): vol.In(['UP',
-                                                                     'DOWN']),
+    vol.Optional(CONF_PULL_MODE, default=DEFAULT_PULL_MODE):
+        vol.All(vol.Upper, vol.In([MODE_UP, MODE_DOWN])),
     vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS):
     vol.Coerce(int),
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices,
-                               discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the MCP23017 binary sensors."""
     import board
     import busio
@@ -55,7 +57,7 @@ async def async_setup_platform(hass, config, async_add_devices,
         binary_sensors.append(MCP23017BinarySensor(
             pin_name, pin, pull_mode, invert_logic))
 
-    async_add_devices(binary_sensors, True)
+    add_devices(binary_sensors, True)
 
 
 class MCP23017BinarySensor(BinarySensorDevice):
