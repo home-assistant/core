@@ -384,18 +384,18 @@ def setup(hass, config):
         channel = service.data.get(ATTR_CHANNEL)
         param = service.data.get(ATTR_PARAM)
         value = service.data.get(ATTR_VALUE)
-        valueType = service.data.get(ATTR_VALUE_TYPE)
+        value_type = service.data.get(ATTR_VALUE_TYPE)
 
         # Convert value into correct XML-RPC Type.
         # https://docs.python.org/3/library/xmlrpc.client.html#xmlrpc.client.ServerProxy
-        if valueType:
-            if valueType == 'int':
+        if value_type:
+            if value_type == 'int':
                 value = int(value)
-            elif valueType == 'double':
+            elif value_type == 'double':
                 value = float(value)
-            elif valueType == 'boolean':
+            elif value_type == 'boolean':
                 value = bool(value)
-            elif valueType == 'dateTime.iso8601':
+            elif value_type == 'dateTime.iso8601':
                 value = datetime.strptime(value, '%Y%m%dT%H:%M:%S')
             else:
                 # Default is 'string'
