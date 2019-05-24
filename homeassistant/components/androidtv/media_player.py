@@ -157,10 +157,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for target_device in target_devices:
             output = target_device.adb_command(cmd)
 
-            # log the output if there is any
-            if output and (not isinstance(output, str) or output.strip()):
+            # log the output, if there is any
+            if output:
                 _LOGGER.info("Output of command '%s' from '%s': %s",
-                             cmd, target_device.entity_id, repr(output))
+                             cmd, target_device.entity_id, output)
 
     hass.services.register(ANDROIDTV_DOMAIN, SERVICE_ADB_COMMAND,
                            service_adb_command,
@@ -225,6 +225,7 @@ class ADBDevice(MediaPlayerDevice):
             self.exceptions = (ConnectionResetError, RuntimeError)
 
         # Property attributes
+        self._adb_response = None
         self._available = self.aftv.available
         self._current_app = None
         self._state = None
@@ -243,6 +244,11 @@ class ADBDevice(MediaPlayerDevice):
     def available(self):
         """Return whether or not the ADB connection is valid."""
         return self._available
+
+    @property
+    def device_state_attributes(self):
+        """Provide the last ADB command's response as an attribute."""
+        return {'adb_response': self._adb_response}
 
     @property
     def name(self):
@@ -305,12 +311,24 @@ class ADBDevice(MediaPlayerDevice):
         """Send an ADB command to an Android TV / Fire TV device."""
         key = self._keys.get(cmd)
         if key:
-            return self.aftv.adb_shell('input keyevent {}'.format(key))
+            self.aftv.adb_shell('input keyevent {}'.format(key))
+            self._adb_response = None
+            self.schedule_update_ha_state()
+            return
 
         if cmd == 'GET_PROPERTIES':
-            return self.aftv.get_properties_dict()
+            self._adb_response = str(self.aftv.get_properties_dict())
+            self.schedule_update_ha_state()
+            return self._adb_response
 
-        return self.aftv.adb_shell(cmd)
+        response = self.aftv.adb_shell(cmd)
+        if isinstance(response, str) and response.strip():
+            self._adb_response = response.strip()
+        else:
+            self._adb_response = None
+
+        self.schedule_update_ha_state()
+        return self._adb_response
 
 
 class AndroidTVDevice(ADBDevice):
