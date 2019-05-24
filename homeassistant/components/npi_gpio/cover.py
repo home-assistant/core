@@ -29,10 +29,10 @@ DEFAULT_INVERT_RELAY = False
 
 _COVERS_SCHEMA = vol.All(cv.ensure_list,
     [vol.Schema({
-            CONF_NAME: cv.string,
-            CONF_RELAY_PORT: cv.positive_int,
-            CONF_STATE_PORT: cv.positive_int,
-        })])
+        CONF_NAME: cv.string,
+        CONF_RELAY_PORT: cv.positive_int,
+        CONF_STATE_PORT: cv.positive_int,
+})])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COVERS): _COVERS_SCHEMA,
@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_RELAY_TIME, default=DEFAULT_RELAY_TIME): cv.positive_int,
     vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): cv.boolean,
     vol.Optional(CONF_INVERT_STATE, default=DEFAULT_INVERT_STATE): cv.boolean,
-    vol.Optional(CONF_INVERT_RELAY, default=DEFAULT_INVERT_RELAY): cv.boolean,  
+    vol.Optional(CONF_INVERT_RELAY, default=DEFAULT_INVERT_RELAY): cv.boolean,
 })
 
 
@@ -56,8 +56,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     covers_conf = config.get(CONF_COVERS)
 
     for cover in covers_conf:
-        covers.append(NPiGPIOCover(cover[CONF_NAME], cover[CONF_RELAY_PORT], cover[CONF_STATE_PORT],
-            state_pull_mode, relay_time, initial, invert_state, invert_relay))
+        covers.append(NPiGPIOCover(cover[CONF_NAME], 
+                                   cover[CONF_RELAY_PORT], 
+                                   cover[CONF_STATE_PORT],
+                                   state_pull_mode, 
+                                   relay_time, initial, 
+                                   invert_state, 
+                                   invert_relay))
     add_entities(covers)
 
 
