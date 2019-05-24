@@ -13,8 +13,6 @@ from .. import remote_rpi_gpio
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['remote_rpi_gpio']
-
 CONF_PORTS = 'ports'
 
 _SENSORS_SCHEMA = vol.Schema({
@@ -41,7 +39,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             led = remote_rpi_gpio.setup_output(
                 address, port, invert_logic)
         except (ValueError, IndexError, KeyError, IOError):
-            return None
+            return
         new_switch = RemoteRPiGPIOSwitch(name, led, invert_logic)
         devices.append(new_switch)
 

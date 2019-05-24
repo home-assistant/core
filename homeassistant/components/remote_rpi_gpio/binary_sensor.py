@@ -17,8 +17,6 @@ from .. import remote_rpi_gpio
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['remote_rpi_gpio']
-
 CONF_PORTS = 'ports'
 
 _SENSORS_SCHEMA = vol.Schema({
@@ -53,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                                                  pull_mode,
                                                  bouncetime)
         except (ValueError, IndexError, KeyError, IOError):
-            return None
+            return
         new_sensor = RemoteRPiGPIOBinarySensor(port_name, button, invert_logic)
         devices.append(new_sensor)
 
@@ -98,7 +96,7 @@ class RemoteRPiGPIOBinarySensor(BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of this sensor, from DEVICE_CLASSES."""
-        return None
+        return
 
     def update(self):
         """Update the GPIO state."""
