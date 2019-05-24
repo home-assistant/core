@@ -10,7 +10,11 @@ from aiounifi.devices import Devices
 
 from homeassistant import config_entries
 from homeassistant.components import unifi
+from homeassistant.components.unifi.const import (
+    CONF_POE_CONTROL, CONF_CONTROLLER, CONF_SITE_ID)
 from homeassistant.setup import async_setup_component
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL)
 
 import homeassistant.components.switch as switch
 
@@ -167,17 +171,17 @@ DEVICE_1 = {
 }
 
 CONTROLLER_DATA = {
-    unifi.CONF_HOST: 'mock-host',
-    unifi.CONF_USERNAME: 'mock-user',
-    unifi.CONF_PASSWORD: 'mock-pswd',
-    unifi.CONF_PORT: 1234,
-    unifi.CONF_SITE_ID: 'mock-site',
-    unifi.CONF_VERIFY_SSL: True
+    CONF_HOST: 'mock-host',
+    CONF_USERNAME: 'mock-user',
+    CONF_PASSWORD: 'mock-pswd',
+    CONF_PORT: 1234,
+    CONF_SITE_ID: 'mock-site',
+    CONF_VERIFY_SSL: True
 }
 
 ENTRY_CONFIG = {
-    unifi.CONF_CONTROLLER: CONTROLLER_DATA,
-    unifi.CONF_POE_CONTROL: True
+    CONF_CONTROLLER: CONTROLLER_DATA,
+    CONF_POE_CONTROL: True
 }
 
 CONTROLLER_ID = unifi.CONTROLLER_ID.format(host='mock-host', site='mock-site')

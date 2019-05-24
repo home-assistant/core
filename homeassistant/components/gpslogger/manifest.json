@@ -1,6 +1,7 @@
 {
   "domain": "gpslogger",
   "name": "Gpslogger",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/gpslogger",
   "requirements": [],
   "dependencies": [

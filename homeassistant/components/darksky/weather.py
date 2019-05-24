@@ -103,6 +103,8 @@ class DarkSkyWeather(WeatherEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
+        if self._dark_sky.units is None:
+            return None
         return TEMP_FAHRENHEIT if 'us' in self._dark_sky.units \
             else TEMP_CELSIUS
 

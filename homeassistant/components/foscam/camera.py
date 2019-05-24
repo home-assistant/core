@@ -77,8 +77,7 @@ class FoscamCam(Camera):
             return SUPPORT_STREAM
         return 0
 
-    @property
-    def stream_source(self):
+    async def stream_source(self):
         """Return the stream source."""
         if self._rtsp_port:
             return 'rtsp://{}:{}@{}:{}/videoMain'.format(

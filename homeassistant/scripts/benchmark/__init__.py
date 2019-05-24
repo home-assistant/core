@@ -54,7 +54,7 @@ async def async_million_events(hass):
     """Run a million events."""
     count = 0
     event_name = 'benchmark_event'
-    event = asyncio.Event(loop=hass.loop)
+    event = asyncio.Event()
 
     @core.callback
     def listener(_):
@@ -81,7 +81,7 @@ async def async_million_events(hass):
 async def async_million_time_changed_helper(hass):
     """Run a million events through time changed helper."""
     count = 0
-    event = asyncio.Event(loop=hass.loop)
+    event = asyncio.Event()
 
     @core.callback
     def listener(_):
@@ -112,7 +112,7 @@ async def async_million_state_changed_helper(hass):
     """Run a million events through state changed helper."""
     count = 0
     entity_id = 'light.kitchen'
-    event = asyncio.Event(loop=hass.loop)
+    event = asyncio.Event()
 
     @core.callback
     def listener(*args):

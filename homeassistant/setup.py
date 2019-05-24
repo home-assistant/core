@@ -27,7 +27,7 @@ def setup_component(hass: core.HomeAssistant, domain: str,
                     config: Dict) -> bool:
     """Set up a component and all its dependencies."""
     return run_coroutine_threadsafe(  # type: ignore
-        async_setup_component(hass, domain, config), loop=hass.loop).result()
+        async_setup_component(hass, domain, config), hass.loop).result()
 
 
 async def async_setup_component(hass: core.HomeAssistant, domain: str,
@@ -69,7 +69,7 @@ async def _async_process_dependencies(
     if not tasks:
         return True
 
-    results = await asyncio.gather(*tasks, loop=hass.loop)
+    results = await asyncio.gather(*tasks)
 
     failed = [dependencies[idx] for idx, res
               in enumerate(results) if not res]

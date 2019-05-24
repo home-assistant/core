@@ -161,8 +161,8 @@ async def test_flow_create_entry_more_entries(hass):
     assert result['data'][config_flow.CONF_NAME] == 'model 2'
 
 
-async def test_discovery_flow(hass):
-    """Test that discovery for new devices work."""
+async def test_zeroconf_flow(hass):
+    """Test that zeroconf discovery for new devices work."""
     with patch.object(axis, 'get_device', return_value=mock_coro(Mock())):
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
@@ -171,15 +171,15 @@ async def test_discovery_flow(hass):
                 config_flow.CONF_PORT: 80,
                 'properties': {'macaddress': '1234'}
             },
-            context={'source': 'discovery'}
+            context={'source': 'zeroconf'}
         )
 
     assert result['type'] == 'form'
     assert result['step_id'] == 'user'
 
 
-async def test_discovery_flow_known_device(hass):
-    """Test that discovery for known devices work.
+async def test_zeroconf_flow_known_device(hass):
+    """Test that zeroconf discovery for known devices work.
 
     This is legacy support from devices registered with configurator.
     """
@@ -210,14 +210,14 @@ async def test_discovery_flow_known_device(hass):
                 'hostname': 'name',
                 'properties': {'macaddress': '1234ABCD'}
             },
-            context={'source': 'discovery'}
+            context={'source': 'zeroconf'}
         )
 
     assert result['type'] == 'create_entry'
 
 
-async def test_discovery_flow_already_configured(hass):
-    """Test that discovery doesn't setup already configured devices."""
+async def test_zeroconf_flow_already_configured(hass):
+    """Test that zeroconf doesn't setup already configured devices."""
     entry = MockConfigEntry(
         domain=axis.DOMAIN,
         data={axis.CONF_DEVICE: {axis.config_flow.CONF_HOST: '1.2.3.4'},
@@ -235,27 +235,27 @@ async def test_discovery_flow_already_configured(hass):
             'hostname': 'name',
             'properties': {'macaddress': '1234ABCD'}
         },
-        context={'source': 'discovery'}
+        context={'source': 'zeroconf'}
     )
 
     assert result['type'] == 'abort'
     assert result['reason'] == 'already_configured'
 
 
-async def test_discovery_flow_ignore_link_local_address(hass):
-    """Test that discovery doesn't setup devices with link local addresses."""
+async def test_zeroconf_flow_ignore_link_local_address(hass):
+    """Test that zeroconf doesn't setup devices with link local addresses."""
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         data={config_flow.CONF_HOST: '169.254.3.4'},
-        context={'source': 'discovery'}
+        context={'source': 'zeroconf'}
     )
 
     assert result['type'] == 'abort'
     assert result['reason'] == 'link_local_address'
 
 
-async def test_discovery_flow_bad_config_file(hass):
-    """Test that discovery with bad config files abort."""
+async def test_zeroconf_flow_bad_config_file(hass):
+    """Test that zeroconf discovery with bad config files abort."""
     with patch('homeassistant.components.axis.config_flow.load_json',
                return_value={'1234ABCD': {
                    config_flow.CONF_HOST: '2.3.4.5',
@@ -270,7 +270,7 @@ async def test_discovery_flow_bad_config_file(hass):
                 config_flow.CONF_HOST: '1.2.3.4',
                 'properties': {'macaddress': '1234ABCD'}
             },
-            context={'source': 'discovery'}
+            context={'source': 'zeroconf'}
         )
 
     assert result['type'] == 'abort'

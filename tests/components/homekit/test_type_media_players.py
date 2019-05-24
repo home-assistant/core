@@ -311,4 +311,4 @@ async def test_media_player_television_basic(hass, hk_driver, events, caplog):
     await hass.async_block_till_done()
     assert acc.char_active.value == 1
 
-    assert 'Error' not in caplog.messages[-1]
+    assert not caplog.messages or 'Error' not in caplog.messages[-1]

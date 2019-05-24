@@ -176,18 +176,19 @@ def handle_yaml_errors(func):
         error = None
         try:
             result = await func(hass, connection, msg)
-            message = websocket_api.result_message(
-                msg['id'], result
-            )
         except ConfigNotFound:
             error = 'config_not_found', 'No config found.'
         except HomeAssistantError as err:
             error = 'error', str(err)
 
         if error is not None:
-            message = websocket_api.error_message(msg['id'], *error)
+            connection.send_error(msg['id'], *error)
+            return
 
-        connection.send_message(message)
+        if msg is not None:
+            await connection.send_big_result(msg['id'], result)
+        else:
+            connection.send_result(msg['id'], result)
 
     return send_with_error_handling
 
