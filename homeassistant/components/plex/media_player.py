@@ -30,14 +30,12 @@ PLEX_CONFIG_FILE = 'plex.conf'
 PLEX_DATA = 'plex'
 
 CONF_USE_EPISODE_ART = 'use_episode_art'
-CONF_USE_CUSTOM_ENTITY_IDS = 'use_custom_entity_ids'
 CONF_SHOW_ALL_CONTROLS = 'show_all_controls'
 CONF_REMOVE_UNAVAILABLE_CLIENTS = 'remove_unavailable_clients'
 CONF_CLIENT_REMOVE_INTERVAL = 'client_remove_interval'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_USE_EPISODE_ART, default=False): cv.boolean,
-    vol.Optional(CONF_USE_CUSTOM_ENTITY_IDS, default=False): cv.boolean,
     vol.Optional(CONF_SHOW_ALL_CONTROLS, default=False): cv.boolean,
     vol.Optional(CONF_REMOVE_UNAVAILABLE_CLIENTS, default=True): cv.boolean,
     vol.Optional(CONF_CLIENT_REMOVE_INTERVAL, default=timedelta(seconds=600)):
@@ -318,24 +316,6 @@ class PlexClient(MediaPlayerDevice):
         self._media_series_title = None
 
         self.refresh(device, session)
-
-        # Assign custom entity ID if desired
-        if self.config.get(CONF_USE_CUSTOM_ENTITY_IDS):
-            prefix = ''
-            # allow for namespace prefixing when using custom entity names
-            if config.get("entity_namespace"):
-                prefix = config.get("entity_namespace") + '_'
-
-            # rename the entity id
-            if self.machine_identifier:
-                self.entity_id = "%s.%s%s" % (
-                    'media_player', prefix,
-                    self.machine_identifier.lower().replace('-', '_'))
-            else:
-                if self.name:
-                    self.entity_id = "%s.%s%s" % (
-                        'media_player', prefix,
-                        self.name.lower().replace('-', '_'))
 
     def _clear_media_details(self):
         """Set all Media Items to None."""
