@@ -478,29 +478,27 @@ async def async_load_config(path: str, hass: HomeAssistantType,
         vol.Optional(CONF_CONSIDER_HOME, default=consider_home): vol.All(
             cv.time_period, cv.positive_timedelta),
     })
+    result = []
     try:
-        result = []
-        try:
-            devices = await hass.async_add_job(
-                load_yaml_config_file, path)
-        except HomeAssistantError as err:
-            LOGGER.error("Unable to load %s: %s", path, str(err))
-            return []
-
-        for dev_id, device in devices.items():
-            # Deprecated option. We just ignore it to avoid breaking change
-            device.pop('vendor', None)
-            try:
-                device = dev_schema(device)
-                device['dev_id'] = cv.slugify(dev_id)
-            except vol.Invalid as exp:
-                async_log_exception(exp, dev_id, devices, hass)
-            else:
-                result.append(Device(hass, **device))
-        return result
-    except (HomeAssistantError, FileNotFoundError):
-        # When YAML file could not be loaded/did not contain a dict
+        devices = await hass.async_add_job(
+            load_yaml_config_file, path)
+    except HomeAssistantError as err:
+        LOGGER.error("Unable to load %s: %s", path, str(err))
         return []
+    except FileNotFoundError:
+        return []
+
+    for dev_id, device in devices.items():
+        # Deprecated option. We just ignore it to avoid breaking change
+        device.pop('vendor', None)
+        try:
+            device = dev_schema(device)
+            device['dev_id'] = cv.slugify(dev_id)
+        except vol.Invalid as exp:
+            async_log_exception(exp, dev_id, devices, hass)
+        else:
+            result.append(Device(hass, **device))
+    return result
 
 
 def update_config(path: str, dev_id: str, device: Device):
