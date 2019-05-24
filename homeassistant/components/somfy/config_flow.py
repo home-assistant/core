@@ -7,7 +7,7 @@ import async_timeout
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import callback
-from .const import CLIENT_ID, CLIENT_SECRET, DOMAIN, CODE
+from .const import CLIENT_ID, CLIENT_SECRET, DOMAIN
 
 AUTH_CALLBACK_PATH = '/auth/somfy/callback'
 AUTH_CALLBACK_NAME = 'auth:somfy:callback'
@@ -79,15 +79,15 @@ class SomfyFlowHandler(config_entries.ConfigFlow):
         api = SomfyApi(client_id, client_secret, redirect_uri)
 
         self.hass.http.register_view(SomfyAuthCallbackView())
+        # Thanks to the state, we can forward the flow id to Somfy that will
+        # add it in the callback.
         return await self.hass.async_add_executor_job(
             api.get_authorization_url, self.flow_id)
 
     async def async_step_code(self, code):
         """Received code for authentication."""
         self.code = code
-        return self.async_external_step_done(
-            next_step_id="creation"
-        )
+        return self.async_external_step_done(next_step_id="creation")
 
     async def async_step_creation(self, user_input=None):
         """Create Somfy api and entries."""
@@ -124,13 +124,18 @@ class SomfyAuthCallbackView(HomeAssistantView):
     async def get(request):
         """Receive authorization code."""
         from aiohttp import web_response
+
+        if 'code' not in request.query or 'state' not in request.query:
+            return web_response.Response(
+                text="Missing code or state parameter in " + request.url
+            )
+
         hass = request.app['hass']
-        if 'code' in request.query:
-            hass.async_create_task(
-                hass.config_entries.flow.async_configure(
-                    flow_id=request.query['state'],
-                    user_input=request.query['code'],
-                ))
+        hass.async_create_task(
+            hass.config_entries.flow.async_configure(
+                flow_id=request.query['state'],
+                user_input=request.query['code'],
+            ))
 
         return web_response.Response(
             headers={
