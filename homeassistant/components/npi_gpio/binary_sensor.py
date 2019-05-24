@@ -42,8 +42,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     binary_sensors = []
     ports = config.get('ports')
     for port_num, port_name in ports.items():
-        binary_sensors.append(NPiGPIOBinarySensor(port_name, port_num, pull_mode,
-                                                  bouncetime, invert_logic))
+        binary_sensors.append(NPiGPIOBinarySensor(port_name, port_num, 
+                                                  pull_mode, bouncetime,
+                                                  invert_logic))
     add_entities(binary_sensors, True)
 
 
