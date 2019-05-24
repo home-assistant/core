@@ -777,7 +777,7 @@ async def _async_fetch_image(hass, url):
         url = hass.config.api.base_url + url
 
     if url not in cache_images:
-        cache_images[url] = {CACHE_LOCK: asyncio.Lock(loop=hass.loop)}
+        cache_images[url] = {CACHE_LOCK: asyncio.Lock()}
 
     async with cache_images[url][CACHE_LOCK]:
         if CACHE_CONTENT in cache_images[url]:
@@ -786,7 +786,7 @@ async def _async_fetch_image(hass, url):
         content, content_type = (None, None)
         websession = async_get_clientsession(hass)
         try:
-            with async_timeout.timeout(10, loop=hass.loop):
+            with async_timeout.timeout(10):
                 response = await websession.get(url)
 
                 if response.status == 200:
@@ -869,8 +869,8 @@ async def websocket_handle_thumbnail(hass, connection, msg):
             'Failed to fetch thumbnail'))
         return
 
-    connection.send_message(websocket_api.result_message(
+    await connection.send_big_result(
         msg['id'], {
             'content_type': content_type,
             'content': base64.b64encode(data).decode('utf-8')
-        }))
+        })

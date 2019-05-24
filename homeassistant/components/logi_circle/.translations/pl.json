@@ -4,7 +4,7 @@
             "already_setup": "Mo\u017cesz skonfigurowa\u0107 tylko jedno konto Logi Circle.",
             "external_error": "Wyst\u0105pi\u0142 wyj\u0105tek zewn\u0119trzny.",
             "external_setup": "Logi Circle pomy\u015blnie skonfigurowano.",
-            "no_flows": "Musisz skonfigurowa\u0107 Logi Circle, zanim b\u0119dziesz m\u00f3g\u0142 si\u0119 z nim uwierzytelni\u0107. [Przeczytaj instrukcje](https://www.home-assistant.io/components/logi_circle/)."
+            "no_flows": "Musisz skonfigurowa\u0107 Logi Circle, zanim b\u0119dziesz m\u00f3g\u0142 si\u0119 z nim uwierzytelni\u0107. [Przeczytaj instrukcj\u0119](https://www.home-assistant.io/components/logi_circle/)."
         },
         "create_entry": {
             "default": "Pomy\u015blnie uwierzytelniono z Logi Circle."

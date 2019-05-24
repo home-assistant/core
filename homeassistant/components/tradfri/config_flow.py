@@ -143,7 +143,7 @@ async def authenticate(hass, host, security_code):
 
     identity = uuid4().hex
 
-    api_factory = APIFactory(host, psk_id=identity, loop=hass.loop)
+    api_factory = APIFactory(host, psk_id=identity)
 
     try:
         with async_timeout.timeout(5):

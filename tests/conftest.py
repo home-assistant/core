@@ -44,8 +44,6 @@ def check_real(func):
 # Guard a few functions that would make network connections
 location.async_detect_location_info = \
     check_real(location.async_detect_location_info)
-location.async_get_elevation = \
-    check_real(location.async_get_elevation)
 util.get_local_ip = lambda: '127.0.0.1'
 
 
@@ -102,11 +100,11 @@ def mock_device_tracker_conf():
         devices.append(entity)
 
     with patch(
-        'homeassistant.components.device_tracker'
+        'homeassistant.components.device_tracker.legacy'
         '.DeviceTracker.async_update_config',
             side_effect=mock_update_config
     ), patch(
-        'homeassistant.components.device_tracker.async_load_config',
+        'homeassistant.components.device_tracker.legacy.async_load_config',
             side_effect=lambda *args: mock_coro(devices)
     ):
         yield devices

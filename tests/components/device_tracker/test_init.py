@@ -10,9 +10,11 @@ import pytest
 
 from homeassistant.components import zone
 import homeassistant.components.device_tracker as device_tracker
+from homeassistant.components.device_tracker import const, legacy
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN,
-    ATTR_ICON, CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME)
+    ATTR_ICON, CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME,
+    ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_GPS_ACCURACY)
 from homeassistant.core import State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
@@ -33,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 @pytest.fixture(name='yaml_devices')
 def mock_yaml_devices(hass):
     """Get a path for storing yaml devices."""
-    yaml_devices = hass.config.path(device_tracker.YAML_DEVICES)
+    yaml_devices = hass.config.path(legacy.YAML_DEVICES)
     if os.path.isfile(yaml_devices):
         os.remove(yaml_devices)
     yield yaml_devices
@@ -43,7 +45,7 @@ def mock_yaml_devices(hass):
 
 async def test_is_on(hass):
     """Test is_on method."""
-    entity_id = device_tracker.ENTITY_ID_FORMAT.format('test')
+    entity_id = const.ENTITY_ID_FORMAT.format('test')
 
     hass.states.async_set(entity_id, STATE_HOME)
 
@@ -65,21 +67,21 @@ async def test_reading_broken_yaml_config(hass):
                              'bad_device:\n  nme: Device')}
     args = {'hass': hass, 'consider_home': timedelta(seconds=60)}
     with patch_yaml_files(files):
-        assert await device_tracker.async_load_config(
+        assert await legacy.async_load_config(
             'empty.yaml', **args) == []
-        assert await device_tracker.async_load_config(
+        assert await legacy.async_load_config(
             'nodict.yaml', **args) == []
-        assert await device_tracker.async_load_config(
+        assert await legacy.async_load_config(
             'noname.yaml', **args) == []
-        assert await device_tracker.async_load_config(
+        assert await legacy.async_load_config(
             'badkey.yaml', **args) == []
 
-        res = await device_tracker.async_load_config('allok.yaml', **args)
+        res = await legacy.async_load_config('allok.yaml', **args)
         assert len(res) == 1
         assert res[0].name == 'Device'
         assert res[0].dev_id == 'my_device'
 
-        res = await device_tracker.async_load_config('oneok.yaml', **args)
+        res = await legacy.async_load_config('oneok.yaml', **args)
         assert len(res) == 1
         assert res[0].name == 'Device'
         assert res[0].dev_id == 'my_device'
@@ -88,17 +90,16 @@ async def test_reading_broken_yaml_config(hass):
 async def test_reading_yaml_config(hass, yaml_devices):
     """Test the rendering of the YAML configuration."""
     dev_id = 'test'
-    device = device_tracker.Device(
+    device = legacy.Device(
         hass, timedelta(seconds=180), True, dev_id,
         'AB:CD:EF:GH:IJ', 'Test name', picture='http://test.picture',
         hide_if_away=True, icon='mdi:kettle')
     await hass.async_add_executor_job(
-        device_tracker.update_config, yaml_devices, dev_id, device)
-    with assert_setup_component(1, device_tracker.DOMAIN):
-        assert await async_setup_component(hass, device_tracker.DOMAIN,
-                                           TEST_PLATFORM)
-    config = (await device_tracker.async_load_config(yaml_devices, hass,
-                                                     device.consider_home))[0]
+        legacy.update_config, yaml_devices, dev_id, device)
+    assert await async_setup_component(hass, device_tracker.DOMAIN,
+                                       TEST_PLATFORM)
+    config = (await legacy.async_load_config(yaml_devices, hass,
+                                             device.consider_home))[0]
     assert device.dev_id == config.dev_id
     assert device.track == config.track
     assert device.mac == config.mac
@@ -108,15 +109,15 @@ async def test_reading_yaml_config(hass, yaml_devices):
     assert device.icon == config.icon
 
 
-@patch('homeassistant.components.device_tracker._LOGGER.warning')
+@patch('homeassistant.components.device_tracker.const.LOGGER.warning')
 async def test_duplicate_mac_dev_id(mock_warning, hass):
     """Test adding duplicate MACs or device IDs to DeviceTracker."""
     devices = [
-        device_tracker.Device(hass, True, True, 'my_device', 'AB:01',
-                              'My device', None, None, False),
-        device_tracker.Device(hass, True, True, 'your_device',
-                              'AB:01', 'Your device', None, None, False)]
-    device_tracker.DeviceTracker(hass, False, True, {}, devices)
+        legacy.Device(hass, True, True, 'my_device', 'AB:01',
+                      'My device', None, None, False),
+        legacy.Device(hass, True, True, 'your_device',
+                      'AB:01', 'Your device', None, None, False)]
+    legacy.DeviceTracker(hass, False, True, {}, devices)
     _LOGGER.debug(mock_warning.call_args_list)
     assert mock_warning.call_count == 1, \
         "The only warning call should be duplicates (check DEBUG)"
@@ -126,11 +127,11 @@ async def test_duplicate_mac_dev_id(mock_warning, hass):
 
     mock_warning.reset_mock()
     devices = [
-        device_tracker.Device(hass, True, True, 'my_device',
-                              'AB:01', 'My device', None, None, False),
-        device_tracker.Device(hass, True, True, 'my_device',
-                              None, 'Your device', None, None, False)]
-    device_tracker.DeviceTracker(hass, False, True, {}, devices)
+        legacy.Device(hass, True, True, 'my_device',
+                      'AB:01', 'My device', None, None, False),
+        legacy.Device(hass, True, True, 'my_device',
+                      None, 'Your device', None, None, False)]
+    legacy.DeviceTracker(hass, False, True, {}, devices)
 
     _LOGGER.debug(mock_warning.call_args_list)
     assert mock_warning.call_count == 1, \
@@ -150,7 +151,7 @@ async def test_setup_without_yaml_file(hass):
 async def test_gravatar(hass):
     """Test the Gravatar generation."""
     dev_id = 'test'
-    device = device_tracker.Device(
+    device = legacy.Device(
         hass, timedelta(seconds=180), True, dev_id,
         'AB:CD:EF:GH:IJ', 'Test name', gravatar='test@example.com')
     gravatar_url = ("https://www.gravatar.com/avatar/"
@@ -161,7 +162,7 @@ async def test_gravatar(hass):
 async def test_gravatar_and_picture(hass):
     """Test that Gravatar overrides picture."""
     dev_id = 'test'
-    device = device_tracker.Device(
+    device = legacy.Device(
         hass, timedelta(seconds=180), True, dev_id,
         'AB:CD:EF:GH:IJ', 'Test name', picture='http://test.picture',
         gravatar='test@example.com')
@@ -171,7 +172,7 @@ async def test_gravatar_and_picture(hass):
 
 
 @patch(
-    'homeassistant.components.device_tracker.DeviceTracker.see')
+    'homeassistant.components.device_tracker.legacy.DeviceTracker.see')
 @patch(
     'homeassistant.components.demo.device_tracker.setup_scanner',
     autospec=True)
@@ -196,7 +197,7 @@ async def test_update_stale(hass, mock_device_tracker_conf):
     register_time = datetime(2015, 9, 15, 23, tzinfo=dt_util.UTC)
     scan_time = datetime(2015, 9, 15, 23, 1, tzinfo=dt_util.UTC)
 
-    with patch('homeassistant.components.device_tracker.dt_util.utcnow',
+    with patch('homeassistant.components.device_tracker.legacy.dt_util.utcnow',
                return_value=register_time):
         with assert_setup_component(1, device_tracker.DOMAIN):
             assert await async_setup_component(hass, device_tracker.DOMAIN, {
@@ -211,7 +212,7 @@ async def test_update_stale(hass, mock_device_tracker_conf):
 
     scanner.leave_home('DEV1')
 
-    with patch('homeassistant.components.device_tracker.dt_util.utcnow',
+    with patch('homeassistant.components.device_tracker.legacy.dt_util.utcnow',
                return_value=scan_time):
         async_fire_time_changed(hass, scan_time)
         await hass.async_block_till_done()
@@ -224,12 +225,12 @@ async def test_entity_attributes(hass, mock_device_tracker_conf):
     """Test the entity attributes."""
     devices = mock_device_tracker_conf
     dev_id = 'test_entity'
-    entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = const.ENTITY_ID_FORMAT.format(dev_id)
     friendly_name = 'Paulus'
     picture = 'http://placehold.it/200x200'
     icon = 'mdi:kettle'
 
-    device = device_tracker.Device(
+    device = legacy.Device(
         hass, timedelta(seconds=180), True, dev_id, None,
         friendly_name, picture, hide_if_away=True, icon=icon)
     devices.append(device)
@@ -249,8 +250,8 @@ async def test_device_hidden(hass, mock_device_tracker_conf):
     """Test hidden devices."""
     devices = mock_device_tracker_conf
     dev_id = 'test_entity'
-    entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
-    device = device_tracker.Device(
+    entity_id = const.ENTITY_ID_FORMAT.format(dev_id)
+    device = legacy.Device(
         hass, timedelta(seconds=180), True, dev_id, None,
         hide_if_away=True)
     devices.append(device)
@@ -269,8 +270,8 @@ async def test_group_all_devices(hass, mock_device_tracker_conf):
     """Test grouping of devices."""
     devices = mock_device_tracker_conf
     dev_id = 'test_entity'
-    entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
-    device = device_tracker.Device(
+    entity_id = const.ENTITY_ID_FORMAT.format(dev_id)
+    device = legacy.Device(
         hass, timedelta(seconds=180), True, dev_id, None,
         hide_if_away=True)
     devices.append(device)
@@ -288,7 +289,8 @@ async def test_group_all_devices(hass, mock_device_tracker_conf):
     assert (entity_id,) == state.attributes.get(ATTR_ENTITY_ID)
 
 
-@patch('homeassistant.components.device_tracker.DeviceTracker.async_see')
+@patch('homeassistant.components.device_tracker.legacy.'
+       'DeviceTracker.async_see')
 async def test_see_service(mock_see, hass):
     """Test the see service with a unicode dev_id and NO MAC."""
     with assert_setup_component(1, device_tracker.DOMAIN):
@@ -401,8 +403,8 @@ async def test_see_state(hass, yaml_devices):
     common.async_see(hass, **params)
     await hass.async_block_till_done()
 
-    config = await device_tracker.async_load_config(yaml_devices, hass,
-                                                    timedelta(seconds=0))
+    config = await legacy.async_load_config(
+        yaml_devices, hass, timedelta(seconds=0))
     assert len(config) == 1
 
     state = hass.states.get('device_tracker.example_com')
@@ -442,7 +444,7 @@ async def test_see_passive_zone_state(hass, mock_device_tracker_conf):
     scanner.reset()
     scanner.come_home('dev1')
 
-    with patch('homeassistant.components.device_tracker.dt_util.utcnow',
+    with patch('homeassistant.components.device_tracker.legacy.dt_util.utcnow',
                return_value=register_time):
         with assert_setup_component(1, device_tracker.DOMAIN):
             assert await async_setup_component(hass, device_tracker.DOMAIN, {
@@ -466,7 +468,7 @@ async def test_see_passive_zone_state(hass, mock_device_tracker_conf):
 
     scanner.leave_home('dev1')
 
-    with patch('homeassistant.components.device_tracker.dt_util.utcnow',
+    with patch('homeassistant.components.device_tracker.legacy.dt_util.utcnow',
                return_value=scan_time):
         async_fire_time_changed(hass, scan_time)
         await hass.async_block_till_done()
@@ -484,11 +486,11 @@ async def test_see_passive_zone_state(hass, mock_device_tracker_conf):
         device_tracker.SOURCE_TYPE_ROUTER
 
 
-@patch('homeassistant.components.device_tracker._LOGGER.warning')
+@patch('homeassistant.components.device_tracker.const.LOGGER.warning')
 async def test_see_failures(mock_warning, hass, mock_device_tracker_conf):
     """Test that the device tracker see failures."""
     devices = mock_device_tracker_conf
-    tracker = device_tracker.DeviceTracker(
+    tracker = legacy.DeviceTracker(
         hass, timedelta(seconds=60), 0, {}, [])
 
     # MAC is not a string (but added)
@@ -512,16 +514,15 @@ async def test_see_failures(mock_warning, hass, mock_device_tracker_conf):
 async def test_async_added_to_hass(hass):
     """Test restoring state."""
     attr = {
-        device_tracker.ATTR_LONGITUDE: 18,
-        device_tracker.ATTR_LATITUDE: -33,
-        device_tracker.ATTR_LATITUDE: -33,
-        device_tracker.ATTR_SOURCE_TYPE: 'gps',
-        device_tracker.ATTR_GPS_ACCURACY: 2,
-        device_tracker.ATTR_BATTERY: 100
+        ATTR_LONGITUDE: 18,
+        ATTR_LATITUDE: -33,
+        const.ATTR_SOURCE_TYPE: 'gps',
+        ATTR_GPS_ACCURACY: 2,
+        const.ATTR_BATTERY: 100
     }
     mock_restore_cache(hass, [State('device_tracker.jk', 'home', attr)])
 
-    path = hass.config.path(device_tracker.YAML_DEVICES)
+    path = hass.config.path(legacy.YAML_DEVICES)
 
     files = {
         path: 'jk:\n  name: JK Phone\n  track: True',
@@ -570,7 +571,7 @@ async def test_adding_unknown_device_to_config(mock_device_tracker_conf, hass):
 async def test_picture_and_icon_on_see_discovery(mock_device_tracker_conf,
                                                  hass):
     """Test that picture and icon are set in initial see."""
-    tracker = device_tracker.DeviceTracker(
+    tracker = legacy.DeviceTracker(
         hass, timedelta(seconds=60), False, {}, [])
     await tracker.async_see(dev_id=11, picture='pic_url', icon='mdi:icon')
     await hass.async_block_till_done()
@@ -581,7 +582,7 @@ async def test_picture_and_icon_on_see_discovery(mock_device_tracker_conf,
 
 async def test_default_hide_if_away_is_used(mock_device_tracker_conf, hass):
     """Test that default track_new is used."""
-    tracker = device_tracker.DeviceTracker(
+    tracker = legacy.DeviceTracker(
         hass, timedelta(seconds=60), False,
         {device_tracker.CONF_AWAY_HIDE: True}, [])
     await tracker.async_see(dev_id=12)
@@ -593,7 +594,7 @@ async def test_default_hide_if_away_is_used(mock_device_tracker_conf, hass):
 async def test_backward_compatibility_for_track_new(mock_device_tracker_conf,
                                                     hass):
     """Test backward compatibility for track new."""
-    tracker = device_tracker.DeviceTracker(
+    tracker = legacy.DeviceTracker(
         hass, timedelta(seconds=60), False,
         {device_tracker.CONF_TRACK_NEW: True}, [])
     await tracker.async_see(dev_id=13)
@@ -604,7 +605,7 @@ async def test_backward_compatibility_for_track_new(mock_device_tracker_conf,
 
 async def test_old_style_track_new_is_skipped(mock_device_tracker_conf, hass):
     """Test old style config is skipped."""
-    tracker = device_tracker.DeviceTracker(
+    tracker = legacy.DeviceTracker(
         hass, timedelta(seconds=60), None,
         {device_tracker.CONF_TRACK_NEW: False}, [])
     await tracker.async_see(dev_id=14)

@@ -90,20 +90,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if CONF_ADB_SERVER_IP not in config:
         # Use "python-adb" (Python ADB implementation)
+        adb_log = "using Python ADB implementation "
         if CONF_ADBKEY in config:
             aftv = setup(host, config[CONF_ADBKEY],
                          device_class=config[CONF_DEVICE_CLASS])
-            adb_log = " using adbkey='{0}'".format(config[CONF_ADBKEY])
+            adb_log += "with adbkey='{0}'".format(config[CONF_ADBKEY])
 
         else:
             aftv = setup(host, device_class=config[CONF_DEVICE_CLASS])
-            adb_log = ""
+            adb_log += "without adbkey authentication"
     else:
         # Use "pure-python-adb" (communicate with ADB server)
         aftv = setup(host, adb_server_ip=config[CONF_ADB_SERVER_IP],
                      adb_server_port=config[CONF_ADB_SERVER_PORT],
                      device_class=config[CONF_DEVICE_CLASS])
-        adb_log = " using ADB server at {0}:{1}".format(
+        adb_log = "using ADB server at {0}:{1}".format(
             config[CONF_ADB_SERVER_IP], config[CONF_ADB_SERVER_PORT])
 
     if not aftv.available:
@@ -117,7 +118,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         else:
             device_name = 'Android TV / Fire TV device'
 
-        _LOGGER.warning("Could not connect to %s at %s%s",
+        _LOGGER.warning("Could not connect to %s at %s %s",
                         device_name, host, adb_log)
         raise PlatformNotReady
 

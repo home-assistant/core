@@ -164,10 +164,10 @@ class GoogleActionsSyncView(HomeAssistantView):
         cloud = hass.data[DOMAIN]
         websession = hass.helpers.aiohttp_client.async_get_clientsession()
 
-        with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
+        with async_timeout.timeout(REQUEST_TIMEOUT):
             await hass.async_add_job(cloud.auth.check_token)
 
-        with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
+        with async_timeout.timeout(REQUEST_TIMEOUT):
             req = await websession.post(
                 cloud.google_actions_sync_url, headers={
                     'authorization': cloud.id_token
@@ -192,7 +192,7 @@ class CloudLoginView(HomeAssistantView):
         hass = request.app['hass']
         cloud = hass.data[DOMAIN]
 
-        with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
+        with async_timeout.timeout(REQUEST_TIMEOUT):
             await hass.async_add_job(cloud.auth.login, data['email'],
                                      data['password'])
 
@@ -212,7 +212,7 @@ class CloudLogoutView(HomeAssistantView):
         hass = request.app['hass']
         cloud = hass.data[DOMAIN]
 
-        with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
+        with async_timeout.timeout(REQUEST_TIMEOUT):
             await cloud.logout()
 
         return self.json_message('ok')
@@ -234,7 +234,7 @@ class CloudRegisterView(HomeAssistantView):
         hass = request.app['hass']
         cloud = hass.data[DOMAIN]
 
-        with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
+        with async_timeout.timeout(REQUEST_TIMEOUT):
             await hass.async_add_job(
                 cloud.auth.register, data['email'], data['password'])
 
@@ -256,7 +256,7 @@ class CloudResendConfirmView(HomeAssistantView):
         hass = request.app['hass']
         cloud = hass.data[DOMAIN]
 
-        with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
+        with async_timeout.timeout(REQUEST_TIMEOUT):
             await hass.async_add_job(
                 cloud.auth.resend_email_confirm, data['email'])
 
@@ -278,7 +278,7 @@ class CloudForgotPasswordView(HomeAssistantView):
         hass = request.app['hass']
         cloud = hass.data[DOMAIN]
 
-        with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
+        with async_timeout.timeout(REQUEST_TIMEOUT):
             await hass.async_add_job(
                 cloud.auth.forgot_password, data['email'])
 
@@ -320,7 +320,7 @@ async def websocket_subscription(hass, connection, msg):
     from hass_nabucasa.const import STATE_DISCONNECTED
     cloud = hass.data[DOMAIN]
 
-    with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
+    with async_timeout.timeout(REQUEST_TIMEOUT):
         response = await cloud.fetch_subscription_info()
 
     if response.status != 200:

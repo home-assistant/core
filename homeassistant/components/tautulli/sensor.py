@@ -120,6 +120,11 @@ class TautulliSensor(Entity):
         return 'mdi:plex'
 
     @property
+    def unit_of_measurement(self):
+        """Return the unit this state is expressed in."""
+        return "Watching"
+
+    @property
     def device_state_attributes(self):
         """Return attributes for the sensor."""
         return self._attributes

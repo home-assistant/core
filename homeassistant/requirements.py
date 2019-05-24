@@ -26,7 +26,7 @@ async def async_process_requirements(hass: HomeAssistant, name: str,
     """
     pip_lock = hass.data.get(DATA_PIP_LOCK)
     if pip_lock is None:
-        pip_lock = hass.data[DATA_PIP_LOCK] = asyncio.Lock(loop=hass.loop)
+        pip_lock = hass.data[DATA_PIP_LOCK] = asyncio.Lock()
 
     pkg_cache = hass.data.get(DATA_PKG_CACHE)
     if pkg_cache is None:
