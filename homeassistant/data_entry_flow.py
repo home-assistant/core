@@ -63,7 +63,7 @@ class FlowManager:
         flow.hass = self.hass
         flow.handler = handler
         flow.flow_id = uuid.uuid4().hex
-        flow.context = context
+        flow.context = context or {}
         self._progress[flow.flow_id] = flow
 
         return await self._async_handle_step(flow, flow.init_step, data)
