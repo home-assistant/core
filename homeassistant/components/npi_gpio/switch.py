@@ -12,7 +12,6 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 
-
 CONF_PORTS = 'ports'
 CONF_INVERT_LOGIC = 'invert_logic'
 CONF_INITIAL = 'initial'
@@ -33,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nano PI GPIO devices."""
-    initial = conf.get(CONF_INITIAL)
+    initial = config.get(CONF_INITIAL)
     invert_logic = config.get(CONF_INVERT_LOGIC)
 
     switches = []
