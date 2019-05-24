@@ -61,8 +61,7 @@ DATA_TYPES = OrderedDict([
     ('Voltage', ''),
     ('Current', ''),
     ('Battery numeric', ''),
-    ('Rssi numeric', '')]
-)
+    ('Rssi numeric', '')])
 
 RECEIVED_EVT_SUBSCRIBERS = []
 RFX_DEVICES = {}
