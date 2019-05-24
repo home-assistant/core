@@ -11,7 +11,7 @@ from unittest.mock import patch
 import attr
 import voluptuous as vol
 
-from homeassistant import bootstrap, core, loader
+from homeassistant import bootstrap, core, loader, requirements
 from homeassistant.config import (
     get_default_config_dir, CONF_CORE, CORE_CONFIG_SCHEMA,
     CONF_PACKAGES, merge_packages_config, _format_config_error,
@@ -336,6 +336,13 @@ async def check_ha_config_file(hass):
             integration = await loader.async_get_integration(hass, domain)
         except loader.IntegrationNotFound:
             result.add_error("Integration not found: {}".format(domain))
+            continue
+
+        if (not hass.config.skip_pip and integration.requirements and
+                not await requirements.async_process_requirements(
+                    hass, integration.domain, integration.requirements)):
+            result.add_error("Unable to install all requirements: {}".format(
+                ', '.join(integration.requirements)))
             continue
 
         try:

@@ -7,21 +7,23 @@ from typing import Sequence
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
-    DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
-    SUPPORT_SHUFFLE_SET, SUPPORT_STOP, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP)
+    ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST,
+    MEDIA_TYPE_URL, SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_STOP,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
 
 from .const import (
-    DATA_SOURCE_MANAGER, DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_SOURCES_UPDATED)
+    DATA_SOURCE_MANAGER, DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_UPDATED)
 
 BASE_SUPPORTED_FEATURES = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
                           SUPPORT_VOLUME_STEP | SUPPORT_CLEAR_PLAYLIST | \
-                          SUPPORT_SHUFFLE_SET | SUPPORT_SELECT_SOURCE
+                          SUPPORT_SHUFFLE_SET | SUPPORT_SELECT_SOURCE | \
+                          SUPPORT_PLAY_MEDIA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +50,8 @@ def log_command_error(command: str):
             from pyheos import CommandError
             try:
                 await func(*args, **kwargs)
-            except (CommandError, asyncio.TimeoutError, ConnectionError) as ex:
+            except (CommandError, asyncio.TimeoutError, ConnectionError,
+                    ValueError) as ex:
                 _LOGGER.error("Unable to %s: %s", command, ex)
         return wrapper
     return decorator
@@ -78,23 +81,6 @@ class HeosMediaPlayer(MediaPlayerDevice):
             const.CONTROL_PLAY_NEXT: SUPPORT_NEXT_TRACK
         }
 
-    async def _controller_event(self, event, data):
-        """Handle controller event."""
-        from pyheos import const
-        if event == const.EVENT_PLAYERS_CHANGED:
-            await self.async_update_ha_state(True)
-
-    async def _heos_event(self, event):
-        """Handle connection event."""
-        from pyheos import CommandError, const
-        if event == const.EVENT_CONNECTED:
-            try:
-                await self._player.refresh()
-            except (CommandError, asyncio.TimeoutError, ConnectionError) as ex:
-                _LOGGER.error("Unable to refresh player %s: %s",
-                              self._player, ex)
-        await self.async_update_ha_state(True)
-
     async def _player_update(self, player_id, event):
         """Handle player attribute updated."""
         from pyheos import const
@@ -104,7 +90,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
             self._media_position_updated_at = utcnow()
         await self.async_update_ha_state(True)
 
-    async def _sources_updated(self):
+    async def _heos_updated(self):
         """Handle sources changed."""
         await self.async_update_ha_state(True)
 
@@ -115,16 +101,10 @@ class HeosMediaPlayer(MediaPlayerDevice):
         # Update state when attributes of the player change
         self._signals.append(self._player.heos.dispatcher.connect(
             const.SIGNAL_PLAYER_EVENT, self._player_update))
-        # Update state when available players change
-        self._signals.append(self._player.heos.dispatcher.connect(
-            const.SIGNAL_CONTROLLER_EVENT, self._controller_event))
-        # Update state upon connect/disconnects
-        self._signals.append(self._player.heos.dispatcher.connect(
-            const.SIGNAL_HEOS_EVENT, self._heos_event))
-        # Update state when sources change
+        # Update state when heos changes
         self._signals.append(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_HEOS_SOURCES_UPDATED, self._sources_updated))
+                SIGNAL_HEOS_UPDATED, self._heos_updated))
 
     @log_command_error("clear playlist")
     async def async_clear_playlist(self):
@@ -160,6 +140,55 @@ class HeosMediaPlayer(MediaPlayerDevice):
     async def async_mute_volume(self, mute):
         """Mute the volume."""
         await self._player.set_mute(mute)
+
+    @log_command_error("play media")
+    async def async_play_media(self, media_type, media_id, **kwargs):
+        """Play a piece of media."""
+        if media_type == MEDIA_TYPE_URL:
+            await self._player.play_url(media_id)
+            return
+
+        if media_type == "quick_select":
+            # media_id may be an int or a str
+            selects = await self._player.get_quick_selects()
+            try:
+                index = int(media_id)
+            except ValueError:
+                # Try finding index by name
+                index = next((index for index, select in selects.items()
+                              if select == media_id), None)
+            if index is None:
+                raise ValueError("Invalid quick select '{}'".format(media_id))
+            await self._player.play_quick_select(index)
+            return
+
+        if media_type == MEDIA_TYPE_PLAYLIST:
+            from pyheos import const
+            playlists = await self._player.heos.get_playlists()
+            playlist = next((p for p in playlists if p.name == media_id), None)
+            if not playlist:
+                raise ValueError("Invalid playlist '{}'".format(media_id))
+            add_queue_option = const.ADD_QUEUE_ADD_TO_END \
+                if kwargs.get(ATTR_MEDIA_ENQUEUE) \
+                else const.ADD_QUEUE_REPLACE_AND_PLAY
+            await self._player.add_to_queue(playlist, add_queue_option)
+            return
+
+        if media_type == "favorite":
+            # media_id may be an int or str
+            try:
+                index = int(media_id)
+            except ValueError:
+                # Try finding index by name
+                index = next((index for index, favorite
+                              in self._source_manager.favorites.items()
+                              if favorite.name == media_id), None)
+            if index is None:
+                raise ValueError("Invalid favorite '{}'".format(media_id))
+            await self._player.play_favorite(index)
+            return
+
+        raise ValueError("Unsupported media type '{}'".format(media_type))
 
     @log_command_error("select source")
     async def async_select_source(self, source):
@@ -200,7 +229,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
         """Get attributes about the device."""
         return {
             'identifiers': {
-                (DOMAIN, self._player.player_id)
+                (HEOS_DOMAIN, self._player.player_id)
             },
             'name': self._player.name,
             'model': self._player.model,
@@ -267,6 +296,11 @@ class HeosMediaPlayer(MediaPlayerDevice):
         if not self._player.now_playing_media.duration:
             return None
         return self._media_position_updated_at
+
+    @property
+    def media_image_remotely_accessible(self) -> bool:
+        """If the image url is remotely accessible."""
+        return True
 
     @property
     def media_image_url(self) -> str:

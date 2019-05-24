@@ -6,9 +6,10 @@ import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_CURRENT_TEMPERATURE, ATTR_FAN_MODE, ATTR_OPERATION_MODE,
-    ATTR_SWING_MODE, STATE_AUTO, STATE_COOL, STATE_DRY, STATE_FAN_ONLY,
-    STATE_HEAT, SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE,
+    ATTR_AWAY_MODE, ATTR_CURRENT_TEMPERATURE, ATTR_FAN_MODE,
+    ATTR_OPERATION_MODE, ATTR_SWING_MODE, STATE_AUTO, STATE_COOL, STATE_DRY,
+    STATE_FAN_ONLY, STATE_HEAT, SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE,
+    SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, STATE_OFF, TEMP_CELSIUS)
@@ -44,6 +45,7 @@ DAIKIN_TO_HA_STATE = {
 }
 
 HA_ATTR_TO_DAIKIN = {
+    ATTR_AWAY_MODE: 'en_hol',
     ATTR_OPERATION_MODE: 'mode',
     ATTR_FAN_MODE: 'f_rate',
     ATTR_SWING_MODE: 'f_dir',
@@ -93,8 +95,9 @@ class DaikinClimate(ClimateDevice):
             ),
         }
 
-        self._supported_features = SUPPORT_TARGET_TEMPERATURE \
-            | SUPPORT_OPERATION_MODE
+        self._supported_features = (SUPPORT_AWAY_MODE | SUPPORT_ON_OFF
+                                    | SUPPORT_OPERATION_MODE
+                                    | SUPPORT_TARGET_TEMPERATURE)
 
         if self._api.device.support_fan_mode:
             self._supported_features |= SUPPORT_FAN_MODE
@@ -266,3 +269,36 @@ class DaikinClimate(ClimateDevice):
     def device_info(self):
         """Return a device description for device registry."""
         return self._api.device_info
+
+    @property
+    def is_on(self):
+        """Return true if on."""
+        return self._api.device.represent(
+            HA_ATTR_TO_DAIKIN[ATTR_OPERATION_MODE]
+        )[1] != HA_STATE_TO_DAIKIN[STATE_OFF]
+
+    async def async_turn_on(self):
+        """Turn device on."""
+        await self._api.device.set({})
+
+    async def async_turn_off(self):
+        """Turn device off."""
+        await self._api.device.set({
+            HA_ATTR_TO_DAIKIN[ATTR_OPERATION_MODE]:
+            HA_STATE_TO_DAIKIN[STATE_OFF]
+        })
+
+    @property
+    def is_away_mode_on(self):
+        """Return true if away mode is on."""
+        return self._api.device.represent(
+            HA_ATTR_TO_DAIKIN[ATTR_AWAY_MODE]
+        )[1] != HA_STATE_TO_DAIKIN[STATE_OFF]
+
+    async def async_turn_away_mode_on(self):
+        """Turn away mode on."""
+        await self._api.device.set({HA_ATTR_TO_DAIKIN[ATTR_AWAY_MODE]: '1'})
+
+    async def async_turn_away_mode_off(self):
+        """Turn away mode off."""
+        await self._api.device.set({HA_ATTR_TO_DAIKIN[ATTR_AWAY_MODE]: '0'})

@@ -19,6 +19,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
          ReadCommand.boost,
          UpdateCommand.boost_activate,
          UpdateCommand.boost_deactivate],
+        ["Danfoss Air Bypass",
+         ReadCommand.bypass,
+         UpdateCommand.bypass_activate,
+         UpdateCommand.bypass_deactivate],
+        ["Danfoss Air Automatic Bypass",
+         ReadCommand.automatic_bypass,
+         UpdateCommand.bypass_activate,
+         UpdateCommand.bypass_deactivate],
     ]
 
     dev = []
@@ -59,7 +67,7 @@ class DanfossAir(SwitchDevice):
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        _LOGGER.debug("Turning of switch with command %s", self._off_command)
+        _LOGGER.debug("Turning off switch with command %s", self._off_command)
         self._data.update_state(self._off_command, self._state_command)
 
     def update(self):
