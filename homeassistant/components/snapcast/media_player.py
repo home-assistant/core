@@ -7,23 +7,21 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.components.media_player.const import (
-    DOMAIN, SUPPORT_SELECT_SOURCE, SUPPORT_VOLUME_MUTE,
+    SUPPORT_SELECT_SOURCE, SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, STATE_IDLE, STATE_OFF, STATE_ON,
     STATE_PLAYING, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import (
+        DOMAIN, SERVICE_SNAPSHOT, SERVICE_RESTORE, SERVICE_JOIN,
+        SERVICE_UNJOIN, ATTR_MASTER, DATA_SERVICE_EVENT)
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_KEY = 'snapcast'
-
-SERVICE_SNAPSHOT = 'snapcast_snapshot'
-SERVICE_RESTORE = 'snapcast_restore'
-SERVICE_JOIN = 'snapcast_join'
-SERVICE_UNJOIN = 'snapcast_unjoin'
-
-ATTR_MASTER = 'master'
 
 SUPPORT_SNAPCAST_CLIENT = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET |\
         SUPPORT_SELECT_SOURCE
@@ -34,14 +32,6 @@ GROUP_PREFIX = 'snapcast_group_'
 GROUP_SUFFIX = 'Snapcast Group'
 CLIENT_PREFIX = 'snapcast_client_'
 CLIENT_SUFFIX = 'Snapcast Client'
-
-SERVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-})
-
-JOIN_SERVICE_SCHEMA = SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_MASTER): cv.entity_id,
-    })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -57,34 +47,29 @@ async def async_setup_platform(hass, config, async_add_entities,
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT, CONTROL_PORT)
 
-    async def _handle_service(service):
-        """Handle services."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
+    async def async_service_handle(service, data):
+        """Handle dispatched services."""
+        entity_ids = data.get(ATTR_ENTITY_ID)
         devices = [device for device in hass.data[DATA_KEY]
                    if device.entity_id in entity_ids]
         for device in devices:
-            if service.service == SERVICE_SNAPSHOT:
+            if service == SERVICE_SNAPSHOT:
                 device.snapshot()
-            elif service.service == SERVICE_RESTORE:
+            elif service == SERVICE_RESTORE:
                 await device.async_restore()
-            elif service.service == SERVICE_JOIN:
+            elif service == SERVICE_JOIN:
                 if isinstance(device, SnapcastClientDevice):
                     master = [e for e in hass.data[DATA_KEY]
-                              if e.entity_id == service.data[ATTR_MASTER]]
+                              if e.entity_id == data[ATTR_MASTER]]
                     if isinstance(master[0], SnapcastClientDevice):
                         await device.async_join(master[0])
-            elif service.service == SERVICE_UNJOIN:
+            elif service == SERVICE_UNJOIN:
                 if isinstance(device, SnapcastClientDevice):
                     await device.async_unjoin()
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_SNAPSHOT, _handle_service, schema=SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_RESTORE, _handle_service, schema=SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_JOIN, _handle_service, schema=JOIN_SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_UNJOIN, _handle_service, schema=SERVICE_SCHEMA)
+        hass.data[DATA_SERVICE_EVENT].set()
+
+    async_dispatcher_connect(hass, DOMAIN, async_service_handle)
 
     try:
         server = await snapcast.control.create_server(
