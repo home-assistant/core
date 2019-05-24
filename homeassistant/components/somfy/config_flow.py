@@ -32,6 +32,9 @@ class SomfyFlowHandler(config_entries.ConfigFlow):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
+    def __init__(self):
+        self.code = None
+
     async def async_step_import(self, user_input=None):
         """Handle external yaml configuration."""
         if self.hass.config_entries.async_entries(DOMAIN):
@@ -81,7 +84,7 @@ class SomfyFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_code(self, code):
         """Received code for authentication."""
-        self.hass.data[DOMAIN][CODE] = code
+        self.code = code
         return self.async_external_step_done(
             next_step_id="creation"
         )
@@ -90,7 +93,7 @@ class SomfyFlowHandler(config_entries.ConfigFlow):
         """Create Somfy api and entries."""
         client_id = self.hass.data[DOMAIN][CLIENT_ID]
         client_secret = self.hass.data[DOMAIN][CLIENT_SECRET]
-        code = self.hass.data[DOMAIN][CODE]
+        code = self.code
         from pymfy.api.somfy_api import SomfyApi
         redirect_uri = '{}{}'.format(
             self.hass.config.api.base_url, AUTH_CALLBACK_PATH)
@@ -99,7 +102,7 @@ class SomfyFlowHandler(config_entries.ConfigFlow):
                                                        code)
         _LOGGER.info('Successfully authenticated Somfy')
         return self.async_create_entry(
-            title='',
+            title='Somfy',
             data={
                 'token': token,
                 'refresh_args': {
@@ -120,7 +123,7 @@ class SomfyAuthCallbackView(HomeAssistantView):
     @staticmethod
     async def get(request):
         """Receive authorization code."""
-        from aiohttp import web
+        from aiohttp import web_response
         hass = request.app['hass']
         if 'code' in request.query:
             hass.async_create_task(
@@ -129,9 +132,9 @@ class SomfyAuthCallbackView(HomeAssistantView):
                     user_input=request.query['code'],
                 ))
 
-        response_message = """Somfy has been successfully authorized!
-                 You can close this window now! """
-        html_response = """<html><head><title>Somfy Auth</title></head>
-                        <body><h1>{}</h1></body></html>"""
-        return web.Response(text=html_response.format(response_message),
-                            content_type='text/html')
+        return web_response.Response(
+            headers={
+                'content-type': 'text/html'
+            },
+            text="<script>window.close()</script>"
+        )
