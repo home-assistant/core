@@ -1,4 +1,5 @@
 """Generate zeroconf file."""
+from collections import OrderedDict
 import json
 from typing import Dict
 
@@ -37,7 +38,10 @@ def generate_and_validate(integrations: Dict[str, Integration]):
 
             service_type_dict[service_type].append(domain)
 
-    return BASE.format(json.dumps(service_type_dict, indent=4))
+    data = OrderedDict((key, service_type_dict[key])
+                       for key in sorted(service_type_dict))
+
+    return BASE.format(json.dumps(data, indent=4))
 
 
 def validate(integrations: Dict[str, Integration], config: Config):
