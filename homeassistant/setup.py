@@ -207,7 +207,7 @@ async def async_prepare_setup_platform(hass: core.HomeAssistant,
     def log_error(msg: str) -> None:
         """Log helper."""
         _LOGGER.error("Unable to prepare setup for platform %s: %s",
-                      platform_name, msg)
+                      platform_path, msg)
         async_notify_setup_error(hass, platform_path)
 
     try:
