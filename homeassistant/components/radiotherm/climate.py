@@ -118,6 +118,7 @@ class RadioThermostat(ClimateDevice):
         self._target_temperature = None
         self._current_temperature = None
         self._current_operation = STATE_IDLE
+        self._current_humidity = None
         self._name = None
         self._fmode = None
         self._fstate = None
@@ -177,6 +178,13 @@ class RadioThermostat(ClimateDevice):
         if self._is_model_ct80:
             return CT80_FAN_OPERATION_LIST
         return CT30_FAN_OPERATION_LIST
+
+#Attempt to get humidity posting
+    @property
+    def current_humidity(self):
+        """Return current measured humidity"""
+        if self._is_model_ct80:
+            return self._current_humidity
 
     @property
     def current_fan_mode(self):
@@ -242,6 +250,13 @@ class RadioThermostat(ClimateDevice):
             _LOGGER.warning('%s (%s) was busy (invalid value returned)',
                             self._name, self.device.host)
             return
+        
+        try:
+            humidityData = self.device.humidity['raw']
+        except radiotherm.validate.RadiothermTstatError:
+            _LOGGER.warning('%s (%s) was busy (invalid value returned)',
+                            self._name, self.device.host)
+            return
 
         current_temp = data['temp']
 
@@ -251,6 +266,7 @@ class RadioThermostat(ClimateDevice):
         self._fstate = CODE_TO_FAN_STATE[data['fstate']]
         self._tmode = CODE_TO_TEMP_MODE[data['tmode']]
         self._tstate = CODE_TO_TEMP_STATE[data['tstate']]
+        self._current_humidity = humidityData
 
         self._current_operation = self._tmode
         if self._tmode == STATE_COOL:
@@ -337,3 +353,5 @@ class RadioThermostat(ClimateDevice):
         """Turn away off."""
         self._away = False
         self.set_temperature(temperature=self._prev_temp, hold_changed=True)
+
+
