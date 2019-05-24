@@ -6,5 +6,5 @@
         "NPi.GPIO==0.5.8.2"
     ],
     "dependencies": [],
-    "codeowners": []
+    "codeowners": ["@Tungsteno74"]
 }
