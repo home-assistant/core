@@ -1427,6 +1427,11 @@ async def async_setup(hass, config):
 
     def welcome_home(service):
         """Welcome message."""
+
+        # display favorites from Spotify only if Spotify is available
+        if hass.services.has_service('ais_spotify_service', 'search'):
+            hass.services.call('ais_spotify_service', 'search')
+
         text = "Witaj w Domu. Powiedz proszę w czym mogę Ci pomóc?"
         if ais_global.G_OFFLINE_MODE:
             text = "Uwaga, uruchomienie bez dostępu do sieci, część usług może nie działać poprawnie." \
