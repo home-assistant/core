@@ -39,15 +39,15 @@ async def async_setup_platform(hass, config, async_add_devices,
     import busio
     import adafruit_mcp230xx
 
-    pull_mode = config.get(CONF_PULL_MODE)
-    invert_logic = config.get(CONF_INVERT_LOGIC)
-    i2c_address = config.get(CONF_I2C_ADDRESS)
+    pull_mode = config[CONF_PULL_MODE]
+    invert_logic = config[CONF_INVERT_LOGIC]
+    i2c_address = config[CONF_I2C_ADDRESS]
 
     i2c = busio.I2C(board.SCL, board.SDA)
     mcp = adafruit_mcp230xx.MCP23017(i2c, address=i2c_address)
 
     binary_sensors = []
-    pins = config.get(CONF_PINS)
+    pins = config[CONF_PINS]
 
     for pin_num, pin_name in pins.items():
         pin = mcp.get_pin(pin_num)
@@ -72,11 +72,6 @@ class MCP23017BinarySensor(BinarySensorDevice):
         self._pin.pull = digitalio.Pull.UP
 
     @property
-    def should_poll(self):
-        """Return True if polling is needed."""
-        return True
-
-    @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
@@ -86,6 +81,6 @@ class MCP23017BinarySensor(BinarySensorDevice):
         """Return the state of the entity."""
         return self._state != self._invert_logic
 
-    async def async_update(self):
+    def update(self):
         """Update the GPIO state."""
         self._state = self._pin.value

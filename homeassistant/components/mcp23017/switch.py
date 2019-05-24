@@ -30,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the MCP23017 devices."""
     import board
     import busio
@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for pin_num, pin_name in pins.items():
         pin = mcp.get_pin(pin_num)
         switches.append(MCP23017Switch(pin_name, pin, invert_logic))
-    add_entities(switches)
+    async_add_entities(switches)
 
 
 class MCP23017Switch(ToggleEntity):
