@@ -236,7 +236,10 @@ SCHEMA_SERVICE_SET_DEVICE_VALUE = vol.Schema({
     vol.Required(ATTR_CHANNEL): vol.Coerce(int),
     vol.Required(ATTR_PARAM): vol.All(cv.string, vol.Upper),
     vol.Required(ATTR_VALUE): cv.match_all,
-    vol.Optional(ATTR_VALUE_TYPE): vol.In(['boolean', 'dateTime.iso8601', 'double', 'int', 'string']),
+    vol.Optional(ATTR_VALUE_TYPE): vol.In([
+        'boolean', 'dateTime.iso8601',
+        'double', 'int', 'string'
+    ]),
     vol.Optional(ATTR_INTERFACE): cv.string,
 })
 
@@ -384,7 +387,7 @@ def setup(hass, config):
         valueType = service.data.get(ATTR_VALUE_TYPE)
 
         # Convert value into correct XML-RPC Type.
-        # https://docs.python.org/3/library/xmlrpc.client.html#xmlrpc.client.ServerProxy - XML-RPC type 
+        # https://docs.python.org/3/library/xmlrpc.client.html#xmlrpc.client.ServerProxy
         if valueType:
             if valueType == 'int':
                 value = int(value)
