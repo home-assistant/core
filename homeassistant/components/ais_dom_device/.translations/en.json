@@ -11,7 +11,7 @@
           "title": "Connect the device to the power supply."
         },
         "two": {
-          "description": "![AIS logo](https://sviete.github.io/AIS-docs/img/en/iot/ais_s20_2.gif)\n\nThe pairing mode is signaled by the blinking of the LED on the device.\nTo start the pairing mode, press the button on the device 4 times quickly and wait for its LED to blink.\n\nThen start searching for the device by pressing **SUBMIT**",
+          "description": "![AIS logo](https://www.ai-speaker.com/images/ais_s20_2.gif)\n\nThe pairing mode is signaled by the blinking of the LED on the device.\nTo start the pairing mode, press the button on the device 4 times quickly and wait for its LED to blink.\n\nThen start searching for the device by pressing **SUBMIT**",
           "title": "Start the pairing mode"
         },
         "search_iot": {
