@@ -56,9 +56,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     covers_conf = config.get(CONF_COVERS)
 
     for cover in covers_conf:
-        covers.append(NPiGPIOCover(cover[CONF_NAME], cover[CONF_RELAY_PORT], 
-                                   cover[CONF_STATE_PORT], state_pull_mode, 
-                                   relay_time, initial, invert_state, 
+        covers.append(NPiGPIOCover(cover[CONF_NAME], cover[CONF_RELAY_PORT],
+                                   cover[CONF_STATE_PORT], state_pull_mode,
+                                   relay_time, initial, invert_state,
                                    invert_relay))
     add_entities(covers)
 
