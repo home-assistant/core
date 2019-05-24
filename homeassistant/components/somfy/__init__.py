@@ -131,6 +131,8 @@ class SomfyEntity(Entity):
             'name': self.name,
             'model': self.device.type,
             'via_hub': (DOMAIN, self.device.site_id),
+            # For the moment, Somfy only returns their own device.
+            'manufacturer': 'Somfy'
         }
 
     async def async_update(self):
