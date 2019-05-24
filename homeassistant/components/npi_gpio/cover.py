@@ -28,11 +28,11 @@ DEFAULT_INVERT_RELAY = False
 
 
 _COVERS_SCHEMA = vol.All(cv.ensure_list,
-    [vol.Schema({
-        CONF_NAME: cv.string,
-        CONF_RELAY_PORT: cv.positive_int,
-        CONF_STATE_PORT: cv.positive_int,
-})])
+                         [vol.Schema({
+                             CONF_NAME: cv.string,
+                             CONF_RELAY_PORT: cv.positive_int,
+                             CONF_STATE_PORT: cv.positive_int,
+                         })])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COVERS): _COVERS_SCHEMA,
@@ -56,13 +56,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     covers_conf = config.get(CONF_COVERS)
 
     for cover in covers_conf:
-        covers.append(NPiGPIOCover(cover[CONF_NAME], 
-                                   cover[CONF_RELAY_PORT], 
-                                   cover[CONF_STATE_PORT],
-                                   state_pull_mode, 
-                                   relay_time, initial, 
-                                   invert_state, 
-                                   invert_relay))
+        covers.append(NPiGPIOCover(cover[CONF_NAME],cover[CONF_RELAY_PORT],cover[CONF_STATE_PORT],
+                                   state_pull_mode,relay_time, initial,invert_state,invert_relay))
     add_entities(covers)
 
 
@@ -70,7 +65,7 @@ class NPiGPIOCover(CoverDevice):
     """Representation of a Nano Pi GPIO cover."""
 
     def __init__(self, name, relay_port, state_port, state_pull_mode,
-                 relay_time, invert_state, invert_relay):
+                 relay_time, initial, invert_state, invert_relay):
         """Initialize the cover."""
         self._name = name
         self._state = initial
