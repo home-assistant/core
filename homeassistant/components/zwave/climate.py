@@ -187,7 +187,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             self._fan_state = self.values.fan_state.data
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan speed set."""
         return self._current_fan_mode
 

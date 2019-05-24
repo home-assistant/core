@@ -152,7 +152,7 @@ class VenstarThermostat(ClimateDevice):
         return STATE_OFF
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         if self._client.fan == self._client.FAN_AUTO:
             return STATE_AUTO

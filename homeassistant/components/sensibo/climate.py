@@ -219,7 +219,7 @@ class SensiboClimate(ClimateDevice):
         return self._operations
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         return self._ac_states.get('fanLevel')
 

@@ -108,7 +108,7 @@ class TuyaClimateDevice(TuyaDevice, ClimateDevice):
         return self.tuya.target_temperature_step()
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         return self.tuya.current_fan_mode()
 

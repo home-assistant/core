@@ -232,7 +232,7 @@ class DaikinClimate(ClimateDevice):
         await self._set({ATTR_OPERATION_MODE: operation_mode})
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         return self.get(ATTR_FAN_MODE)
 

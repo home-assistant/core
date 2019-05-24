@@ -179,7 +179,7 @@ class RadioThermostat(ClimateDevice):
         return CT30_FAN_OPERATION_LIST
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return whether the fan is on."""
         return self._fmode
 

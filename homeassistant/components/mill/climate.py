@@ -136,7 +136,7 @@ class MillHeater(ClimateDevice):
         return self._heater.current_temp
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         return STATE_ON if self._heater.fan_status == 1 else STATE_OFF
 

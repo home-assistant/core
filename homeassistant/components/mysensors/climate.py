@@ -112,7 +112,7 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateDevice):
         return OPERATION_LIST
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         return self._values.get(self.gateway.const.SetReq.V_HVAC_SPEED)
 

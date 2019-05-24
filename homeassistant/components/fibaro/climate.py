@@ -201,7 +201,7 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
         return list(self._fan_state_to_mode)
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         if self._fan_mode_device is None:
             return None

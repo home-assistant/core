@@ -168,7 +168,7 @@ class TadoClimate(ClimateDevice):
         return list(OPERATION_LIST.values())
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         if self.ac_mode:
             return FAN_MODES_LIST.get(self._current_fan)

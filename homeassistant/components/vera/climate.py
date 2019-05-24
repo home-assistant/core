@@ -65,7 +65,7 @@ class VeraThermostat(VeraDevice, ClimateDevice):
         return SUPPORT_HVAC
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         mode = self.vera_device.get_fan_mode()
         if mode == "ContinuousOn":

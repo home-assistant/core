@@ -238,7 +238,7 @@ class NestThermostat(ClimateDevice):
         self.structure.away = False
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return whether the fan is on."""
         if self._has_fan:
             # Return whether the fan is on

@@ -116,7 +116,7 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
         return OPERATION_LIST
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         from libpurecool.const import FocusMode
         if self._device.state.focus_mode == FocusMode.FOCUS_ON.value:

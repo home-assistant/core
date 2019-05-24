@@ -525,12 +525,12 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         return self._hold
 
     @property
-    def is_aux_heat_on(self):
+    def is_aux_heat(self):
         """Return true if away mode is on."""
         return self._aux
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         return self._current_fan_mode
 

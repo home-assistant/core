@@ -167,7 +167,7 @@ class ZhongHongClimate(ClimateDevice):
         return self._device.is_on
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         return self._current_fan_mode
 

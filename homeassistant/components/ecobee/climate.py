@@ -183,7 +183,7 @@ class Thermostat(ClimateDevice):
         return STATE_OFF
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         return self.thermostat['runtime']['desiredFanMode']
 
@@ -288,7 +288,7 @@ class Thermostat(ClimateDevice):
         return self._current_hold_mode == AWAY_MODE
 
     @property
-    def is_aux_heat_on(self):
+    def is_aux_heat(self):
         """Return true if aux heater."""
         return 'auxHeat' in self.thermostat['equipmentStatus']
 

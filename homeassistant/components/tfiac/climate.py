@@ -136,7 +136,7 @@ class TfiacClimate(ClimateDevice):
         return sorted(OPERATION_MAP)
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         return self._client.status['fan_mode']
 

@@ -93,7 +93,7 @@ class ElkThermostat(ElkEntity, ClimateDevice):
         return PRECISION_WHOLE
 
     @property
-    def is_aux_heat_on(self):
+    def is_aux_heat(self):
         """Return if aux heater is on."""
         from elkm1_lib.const import ThermostatMode
         return self._element.mode == ThermostatMode.EMERGENCY_HEAT.value
@@ -109,7 +109,7 @@ class ElkThermostat(ElkEntity, ClimateDevice):
         return 99
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         from elkm1_lib.const import ThermostatFan
         if self._element.fan == ThermostatFan.AUTO.value:
