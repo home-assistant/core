@@ -982,7 +982,7 @@ pyalarmdotcom==0.3.2
 pyarlo==0.2.3
 
 # homeassistant.components.netatmo
-pyatmo==1.11
+pyatmo==1.12
 
 # homeassistant.components.apple_tv
 pyatv==0.3.12
