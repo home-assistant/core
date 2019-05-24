@@ -1,5 +1,5 @@
 """Support for HomeMatic devices."""
-from datetime import timedelta
+from datetime import timedelta, datetime
 from functools import partial
 import logging
 
@@ -34,6 +34,7 @@ ATTR_PARAM = 'param'
 ATTR_CHANNEL = 'channel'
 ATTR_ADDRESS = 'address'
 ATTR_VALUE = 'value'
+ATTR_VALUE_TYPE = 'value_type'
 ATTR_INTERFACE = 'interface'
 ATTR_ERRORCODE = 'error'
 ATTR_MESSAGE = 'message'
@@ -235,6 +236,10 @@ SCHEMA_SERVICE_SET_DEVICE_VALUE = vol.Schema({
     vol.Required(ATTR_CHANNEL): vol.Coerce(int),
     vol.Required(ATTR_PARAM): vol.All(cv.string, vol.Upper),
     vol.Required(ATTR_VALUE): cv.match_all,
+    vol.Optional(ATTR_VALUE_TYPE): vol.In([
+        'boolean', 'dateTime.iso8601',
+        'double', 'int', 'string'
+    ]),
     vol.Optional(ATTR_INTERFACE): cv.string,
 })
 
@@ -379,6 +384,22 @@ def setup(hass, config):
         channel = service.data.get(ATTR_CHANNEL)
         param = service.data.get(ATTR_PARAM)
         value = service.data.get(ATTR_VALUE)
+        value_type = service.data.get(ATTR_VALUE_TYPE)
+
+        # Convert value into correct XML-RPC Type.
+        # https://docs.python.org/3/library/xmlrpc.client.html#xmlrpc.client.ServerProxy
+        if value_type:
+            if value_type == 'int':
+                value = int(value)
+            elif value_type == 'double':
+                value = float(value)
+            elif value_type == 'boolean':
+                value = bool(value)
+            elif value_type == 'dateTime.iso8601':
+                value = datetime.strptime(value, '%Y%m%dT%H:%M:%S')
+            else:
+                # Default is 'string'
+                value = str(value)
 
         # Device not found
         hmdevice = _device_from_servicecall(hass, service)
