@@ -61,7 +61,7 @@ def generate_and_validate(integrations: Dict[str, Integration]):
             for value in ssdp[key]:
                 data[key][value].append(domain)
 
-    data = {key: sort_dict(value) for key, value in data.items()}
+    data = sort_dict({key: sort_dict(value) for key, value in data.items()})
     return BASE.format(json.dumps(data, indent=4))
 
 

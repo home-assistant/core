@@ -5,11 +5,11 @@ To update, run python3 -m hassfest
 
 
 SSDP = {
-    "st": {},
+    "device_type": {},
     "manufacturer": {
         "Royal Philips Electronics": [
             "hue"
         ]
     },
-    "device_type": {}
+    "st": {}
 }
