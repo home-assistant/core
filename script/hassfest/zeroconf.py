@@ -58,12 +58,6 @@ def validate(integrations: Dict[str, Integration], config: Config):
                 "Run python3 -m script.hassfest",
                 fixable=True
             )
-        print("Zeroconf Expected:")
-        print(content)
-        print()
-        print("Zeroconf Current:")
-        print(current)
-        print()
         return
 
 
