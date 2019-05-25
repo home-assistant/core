@@ -3,7 +3,7 @@
   "name": "Blink",
   "documentation": "https://www.home-assistant.io/components/blink",
   "requirements": [
-    "blinkpy==0.13.1"
+    "blinkpy==0.14.0"
   ],
   "dependencies": [],
   "codeowners": [
