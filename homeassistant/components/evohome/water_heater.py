@@ -39,13 +39,13 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
 
     # evohomeclient has exposed no means of accessing non-default location
     # (i.e. loc_idx > 0) other than using a protected member, such as below
-    evo_tcs_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]  # noqa: E501; pylint: disable=protected-access
+    evo_tcs = client.locations[loc_idx]._gateways[0]._control_systems[0]  # noqa: E501; pylint: disable=protected-access
 
     _LOGGER.debug(
         "Found DHW device, id: %s [%s]",
-        evo_tcs_ref.hotwater.zoneId, evo_tcs_ref.hotwater.zone_type)
+        evo_tcs.hotwater.zoneId, evo_tcs.hotwater.zone_type)
 
-    dhw = EvoDHW(evo_data, client, evo_tcs_ref.hotwater)
+    dhw = EvoDHW(evo_data, client, evo_tcs.hotwater)
 
     async_add_entities([dhw], update_before_add=False)
 
@@ -66,11 +66,14 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         self._supported_features = SUPPORT_OPERATION_MODE
         self._operation_list = list(HA_OPMODE_TO_EVO)
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
+    async def async_update(self):
+        """Process the evohome Zone's state data."""
+        _LOGGER.warn("async_update(DHW=%s)", self._id)
+        self._status = self.hass.data[DATA_EVOHOME]['status']['dhw']
+        self._available = self._status['temperatureStatus']['isAvailable']
 
+
+# These properties, methods are from the WaterHeater class
     @property
     def current_operation(self) -> str:
         """Return the current operating mode (On, or Off)."""
@@ -99,12 +102,7 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         data = {'Mode': op_mode, 'State': state, 'UntilTime': until}
 
         try:
-            self._evo_ref._set_dhw(data)  # pylint: disable=protected-access
+            self._evo_device._set_dhw(data)  # pylint: disable=protected-access
         except requests.exceptions.HTTPError as err:
             if not self._handle_exception(err):
                 raise
-
-    async def async_update(self):
-        """Process the evohome Zone's state data."""
-        self._status = self.hass.data[DATA_EVOHOME]['status']['dhw']
-        self._available = self._status['temperatureStatus']['isAvailable']

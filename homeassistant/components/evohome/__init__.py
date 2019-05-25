@@ -200,10 +200,10 @@ class EvoDevice(Entity):
     (optionally) a DHW controller.
     """
 
-    def __init__(self, evo_data, client, evo_device_ref):
+    def __init__(self, evo_data, client, evo_device):
         """Initialize the evohome entity."""
         self._client = client
-        self._evo_ref = evo_device_ref
+        self._evo_device = evo_device
 
         self._id = None
         self._name = None
@@ -218,14 +218,11 @@ class EvoDevice(Entity):
 
         self._available = False  # should become True after first update()
 
-    async def async_added_to_hass(self):
-        """Run when entity about to be added."""
-        async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
-
     @callback
     def _refresh(self, packet):
         if packet['signal'] == 'refresh':
             self.async_schedule_update_ha_state(force_refresh=True)
+            _LOGGER.warn("_refresh(EvoDevice): refresh")                         # TODO: delete me
 
     def _handle_exception(self, err):
         try:
@@ -264,9 +261,16 @@ class EvoDevice(Entity):
             else:
                 raise  # we don't expect/handle any other HTTPErrors
 
-    @property
-    def name(self) -> str:
-        """Return the name to use in the frontend UI."""
+
+# These properties, methods are from the Entity class
+    @property  # Entity
+    def should_poll(self) -> bool:
+        """Only the Evohome Controller should be polled."""
+        return False
+
+    @property  # Entity
+    def name(self) -> str:  # not Optional[str]  # TODO: DHW name
+        """Return the name of the Evohome entity."""
         return self._name
 
     @property  # Entity
@@ -279,12 +283,7 @@ class EvoDevice(Entity):
         """Return the icon to use in the frontend UI."""
         return self._icon
 
-    @property
-    def should_poll(self) -> bool:
-        """Only the Controller should be polled."""
-        return False
-
-    @property
+    @property  # Entity
     def available(self) -> bool:
         """Return True if the device is currently available."""
         return self._available
@@ -292,8 +291,7 @@ class EvoDevice(Entity):
     @property  # Entity
     def supported_features(self) -> int:
         """Get the flag of supported features of the device."""
-        _LOGGER.warn("supported_features(%s) = %s", self._id, self._supported_features)
-        return 2**16-1  # self._supported_features  # 2**16-1
+        return self._supported_features
 
     async def async_added_to_hass(self) -> None:  # Entity
         """Run when entity about to be added to hass."""
@@ -310,8 +308,3 @@ class EvoDevice(Entity):
     def temperature_unit(self) -> str:
         """Return the temperature unit to use in the frontend UI."""
         return TEMP_CELSIUS
-
-    @property
-    def operation_list(self):
-        """Return the list of available operations."""
-        return self._operation_list
