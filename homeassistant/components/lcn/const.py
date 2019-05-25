@@ -15,9 +15,20 @@ CONF_DIM_MODE = 'dim_mode'
 CONF_DIMMABLE = 'dimmable'
 CONF_TRANSITION = 'transition'
 CONF_MOTOR = 'motor'
+CONF_LOCKABLE = 'lockable'
+CONF_VARIABLE = 'variable'
+CONF_VALUE = 'value'
+CONF_RELVARREF = 'value_reference'
 CONF_SOURCE = 'source'
 CONF_SETPOINT = 'setpoint'
-CONF_LOCKABLE = 'lockable'
+CONF_LED = 'led'
+CONF_KEYS = 'keys'
+CONF_TIME = 'time'
+CONF_TIME_UNIT = 'time_unit'
+CONF_TABLE = 'table'
+CONF_ROW = 'row'
+CONF_TEXT = 'text'
+CONF_PCK = 'pck'
 CONF_CLIMATES = 'climates'
 CONF_MAX_TEMP = 'max_temp'
 CONF_MIN_TEMP = 'min_temp'
@@ -35,6 +46,8 @@ MOTOR_PORTS = ['MOTOR1', 'MOTOR2', 'MOTOR3', 'MOTOR4']
 
 LED_PORTS = ['LED1', 'LED2', 'LED3', 'LED4', 'LED5', 'LED6',
              'LED7', 'LED8', 'LED9', 'LED10', 'LED11', 'LED12']
+
+LED_STATUS = ['OFF', 'ON', 'BLINK', 'FLICKER']
 
 LOGICOP_PORTS = ['LOGICOP1', 'LOGICOP2', 'LOGICOP3', 'LOGICOP4']
 
@@ -70,3 +83,12 @@ VAR_UNITS = ['', 'LCN', 'NATIVE',
              'VOLT', 'V',
              'AMPERE', 'AMP', 'A',
              'DEGREE', '°']
+
+RELVARREF = ['CURRENT', 'PROG']
+
+SENDKEYCOMMANDS = ['HIT', 'MAKE', 'BREAK', 'DONTSEND']
+
+TIME_UNITS = ['SECONDS', 'SECOND', 'SEC', 'S',
+              'MINUTES', 'MINUTE', 'MIN', 'M',
+              'HOURS', 'HOUR', 'H',
+              'DAYS', 'DAY', 'D']
