@@ -181,6 +181,10 @@ mbddns==0.1.2
 # homeassistant.components.mfi
 mficlient==0.3.0
 
+# homeassistant.components.discovery
+# homeassistant.components.ssdp
+netdisco==2.6.0
+
 # homeassistant.components.iqvia
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
