@@ -186,9 +186,9 @@ async def test_reproduce_bad_state(hass):
 async def test_as_number_states(hass):
     """Test state_as_number with states."""
     zero_states = (STATE_OFF, STATE_CLOSED, STATE_UNLOCKED,
-                   STATE_BELOW_HORIZON, STATE_NOT_HOME)
+                   STATE_BELOW_HORIZON, STATE_NOT_HOME, "False")
     one_states = (STATE_ON, STATE_OPEN, STATE_LOCKED, STATE_ABOVE_HORIZON,
-                  STATE_HOME)
+                  STATE_HOME, "True")
     for _state in zero_states:
         assert state.state_as_number(ha.State('domain.test', _state, {})) == 0
     for _state in one_states:

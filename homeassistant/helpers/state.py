@@ -222,11 +222,11 @@ def state_as_number(state: State) -> float:
         STATE_HEAT, STATE_COOL, STATE_IDLE)
 
     if state.state in (STATE_ON, STATE_LOCKED, STATE_ABOVE_HORIZON,
-                       STATE_OPEN, STATE_HOME, STATE_HEAT, STATE_COOL):
+                       STATE_OPEN, STATE_HOME, STATE_HEAT, STATE_COOL, "True"):
         return 1
     if state.state in (STATE_OFF, STATE_UNLOCKED, STATE_UNKNOWN,
                        STATE_BELOW_HORIZON, STATE_CLOSED, STATE_NOT_HOME,
-                       STATE_IDLE):
+                       STATE_IDLE, "False"):
         return 0
 
     return float(state.state)
