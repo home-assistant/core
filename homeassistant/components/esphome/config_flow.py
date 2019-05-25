@@ -50,6 +50,10 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
         if error is not None:
             return await self.async_step_user(error=error)
         self._name = device_info.name
+        self.context['title_placeholders'] = {
+            'name': self._name
+        }
+
         # Only show authentication step if device uses password
         if device_info.uses_password:
             return await self.async_step_authenticate()
