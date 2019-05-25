@@ -5,10 +5,11 @@ from homeassistant.components.climate import ClimateDevice, const
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_ADDRESS, CONF_UNIT_OF_MEASUREMENT)
 
-from . import LcnDevice, get_connection
+from . import LcnDevice
 from .const import (
     CONF_CONNECTIONS, CONF_LOCKABLE, CONF_MAX_TEMP, CONF_MIN_TEMP,
     CONF_SETPOINT, CONF_SOURCE, DATA_LCN)
+from .helpers import get_connection
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
@@ -37,13 +38,13 @@ class LcnClimate(LcnDevice, ClimateDevice):
         """Initialize of a LCN climate device."""
         super().__init__(config, address_connection)
 
-        self.variable = self.pypck.lcn_defs.Var[config[CONF_SOURCE]]
-        self.setpoint = self.pypck.lcn_defs.Var[config[CONF_SETPOINT]]
-        self.unit = self.pypck.lcn_defs.VarUnit.parse(
+        self.variable = pypck.lcn_defs.Var[config[CONF_SOURCE]]
+        self.setpoint = pypck.lcn_defs.Var[config[CONF_SETPOINT]]
+        self.unit = pypck.lcn_defs.VarUnit.parse(
             config[CONF_UNIT_OF_MEASUREMENT])
 
         self.regulator_id = \
-            self.pypck.lcn_defs.Var.to_set_point_id(self.setpoint)
+            pypck.lcn_defs.Var.to_set_point_id(self.setpoint)
         self.is_lockable = config[CONF_LOCKABLE]
         self._max_temp = config[CONF_MAX_TEMP]
         self._min_temp = config[CONF_MIN_TEMP]
@@ -125,7 +126,7 @@ class LcnClimate(LcnDevice, ClimateDevice):
 
     def input_received(self, input_obj):
         """Set temperature value when LCN input object is received."""
-        if not isinstance(input_obj, self.pypck.inputs.ModStatusVar):
+        if not isinstance(input_obj, pypck.inputs.ModStatusVar):
             return
 
         if input_obj.get_var() == self.variable:

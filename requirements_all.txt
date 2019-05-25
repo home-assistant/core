@@ -1259,7 +1259,7 @@ pyowlet==1.0.2
 pyowm==2.10.0
 
 # homeassistant.components.lcn
-pypck==0.5.9
+pypck==0.6.0
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.0
