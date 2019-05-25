@@ -33,16 +33,19 @@ API_PRINTER_METHODS = {
         'offline': {'heatedbeds': None, 'state': 'off'},
         'state': {'heatedbeds': 'temp_data'},
         'temp_data': TEMP_DATA,
+        'attribute': 'heatedbeds',
     },
     'extruder_temperature': {
         'offline': {'extruder': None, 'state': 'off'},
         'state': {'extruder': 'temp_data'},
         'temp_data': TEMP_DATA,
+        'attribute': 'extruder',
     },
     'chamber_temperature': {
         'offline': {'heatedchambers': None, 'state': 'off'},
         'state': {'heatedchambers': 'temp_data'},
         'temp_data': TEMP_DATA,
+        'attribute': 'heatedchambers',
     },
     'current_state': {
         'offline': {'state': None},
@@ -182,7 +185,7 @@ class PrinterAPI:
         self.sensors = sensors
         self.conf_name = conf_name
         self.config = config
-        self._known_entities = []
+        self._known_entities = set()
 
     def get_data(self, printer_id, sensor_type, temp_id):
         """Get data from the state cache."""
@@ -207,9 +210,9 @@ class PrinterAPI:
 
     def update(self, now=None):
         """Update the state cache from the printer API."""
-        self._load_entities()
         for printer in self.printers:
             printer.get_data()
+        self._load_entities()
         dispatcher_send(self._hass, UPDATE_SIGNAL)
 
     def _load_entities(self):
@@ -221,41 +224,24 @@ class PrinterAPI:
                 info['printer_id'] = pidx
                 info['name'] = printer.slug
                 info['printer_name'] = self.conf_name
-                known = '{}-{}'.format(printer.slug, sensor_type)
 
-                if sensor_type == 'bed_temperature':
-                    if printer.heatedbeds is None:
+                known = '{}-{}'.format(printer.slug, sensor_type)
+                if known in self._known_entities:
+                    continue
+                
+                methods = API_PRINTER_METHODS[sensor_type]
+                if any('temp_data' in s for s in methods['state'].items()):
+                    prop_data = getattr(printer, methods['attribute'])
+                    if prop_data is None:
                         continue
-                    if any(known in s for s in self._known_entities):
-                        continue
-                    for idx, _ in enumerate(printer.heatedbeds):
+                    for idx, _ in enumerate(prop_data):
                         info['temp_id'] = idx
                         sensor_info.append(info)
-                    self._known_entities.append(known)
-                elif sensor_type == 'extruder_temperature':
-                    if printer.extruder is None:
-                        continue
-                    if any(known in s for s in self._known_entities):
-                        continue
-                    for idx, _ in enumerate(printer.extruder):
-                        info['temp_id'] = idx
-                        sensor_info.append(info)
-                    self._known_entities.append(known)
-                elif sensor_type == 'chamber_temperature':
-                    if printer.heatedchambers is None:
-                        continue
-                    if any(known in s for s in self._known_entities):
-                        continue
-                    for idx, _ in enumerate(printer.heatedchambers):
-                        info['temp_id'] = idx
-                        sensor_info.append(info)
-                    self._known_entities.append(known)
                 else:
-                    if any(known in s for s in self._known_entities):
-                        continue
                     info['temp_id'] = None
-                    self._known_entities.append(known)
                     sensor_info.append(info)
+
+                self._known_entities.add(known)
 
         if not sensor_info:
             return
