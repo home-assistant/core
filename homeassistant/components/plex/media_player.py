@@ -26,6 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
+NAME_FORMAT = 'Plex {}'
 PLEX_CONFIG_FILE = 'plex.conf'
 PLEX_DATA = 'plex'
 
@@ -358,8 +359,8 @@ class PlexClient(MediaPlayerDevice):
                 self._device.proxyThroughServer()
             self._session = None
             self._machine_identifier = self._device.machineIdentifier
-            self._name = '{} {}'.format('Plex', self._device.title or
-                                        DEVICE_DEFAULT_NAME)
+            self._name = NAME_FORMAT.format(self._device.title or
+                                            DEVICE_DEFAULT_NAME)
             self._device_protocol_capabilities = (
                 self._device.protocolCapabilities)
 
@@ -376,7 +377,7 @@ class PlexClient(MediaPlayerDevice):
                 self._player = [p for p in self._session.players
                                 if p.machineIdentifier ==
                                 self._device.machineIdentifier][0]
-                self._name = '{} {}'.format('Plex', self._player.title)
+                self._name = NAME_FORMAT.format(self._player.title)
                 self._player_state = self._player.state
                 self._session_username = self._session.usernames[0]
                 self._make = self._player.device
