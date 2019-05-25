@@ -1,4 +1,5 @@
 """Time-based One Time Password auth module."""
+import asyncio
 import logging
 from io import BytesIO
 from typing import Any, Dict, Optional, Tuple  # noqa: F401
@@ -11,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from . import MultiFactorAuthModule, MULTI_FACTOR_AUTH_MODULES, \
     MULTI_FACTOR_AUTH_MODULE_SCHEMA, SetupFlow
 
-REQUIREMENTS = ['pyotp==2.2.6', 'PyQRCode==1.2.1']
+REQUIREMENTS = ['pyotp==2.2.7', 'PyQRCode==1.2.1']
 
 CONFIG_SCHEMA = MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend({
 }, extra=vol.PREVENT_EXTRA)
@@ -68,6 +69,7 @@ class TotpAuthModule(MultiFactorAuthModule):
         self._users = None  # type: Optional[Dict[str, str]]
         self._user_store = hass.helpers.storage.Store(
             STORAGE_VERSION, STORAGE_KEY, private=True)
+        self._init_lock = asyncio.Lock()
 
     @property
     def input_schema(self) -> vol.Schema:
@@ -76,12 +78,16 @@ class TotpAuthModule(MultiFactorAuthModule):
 
     async def _async_load(self) -> None:
         """Load stored data."""
-        data = await self._user_store.async_load()
+        async with self._init_lock:
+            if self._users is not None:
+                return
 
-        if data is None:
-            data = {STORAGE_USERS: {}}
+            data = await self._user_store.async_load()
 
-        self._users = data.get(STORAGE_USERS, {})
+            if data is None:
+                data = {STORAGE_USERS: {}}
+
+            self._users = data.get(STORAGE_USERS, {})
 
     async def _async_save(self) -> None:
         """Save data."""

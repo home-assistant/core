@@ -1,26 +1,17 @@
-"""
-Support for deCONZ devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/deconz/
-"""
+"""Support for deCONZ devices."""
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 # Loading the config flow file will register the flow
-from .config_flow import configured_hosts
-from .const import DEFAULT_PORT, DOMAIN, _LOGGER
+from .config_flow import get_master_gateway
+from .const import (
+    CONF_ALLOW_CLIP_SENSOR, CONF_ALLOW_DECONZ_GROUPS, CONF_BRIDGEID,
+    CONF_MASTER_GATEWAY, DEFAULT_PORT, DOMAIN, _LOGGER)
 from .gateway import DeconzGateway
-
-REQUIREMENTS = ['pydeconz==47']
-
-SUPPORTED_PLATFORMS = ['binary_sensor', 'cover',
-                       'light', 'scene', 'sensor', 'switch']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -40,9 +31,14 @@ SERVICE_SCHEMA = vol.All(vol.Schema({
     vol.Optional(SERVICE_ENTITY): cv.entity_id,
     vol.Optional(SERVICE_FIELD): cv.matches_regex('/.*'),
     vol.Required(SERVICE_DATA): dict,
+    vol.Optional(CONF_BRIDGEID): str
 }), cv.has_at_least_one_key(SERVICE_ENTITY, SERVICE_FIELD))
 
 SERVICE_DEVICE_REFRESH = 'device_refresh'
+
+SERVICE_DEVICE_REFRESCH_SCHEMA = vol.All(vol.Schema({
+    vol.Optional(CONF_BRIDGEID): str
+}))
 
 
 async def async_setup(hass, config):
@@ -50,16 +46,12 @@ async def async_setup(hass, config):
 
     Discovery has loaded the component if DOMAIN is not present in config.
     """
-    if DOMAIN in config:
-        deconz_config = None
-        if CONF_HOST in config[DOMAIN]:
-            deconz_config = config[DOMAIN]
-        if deconz_config and not configured_hosts(hass):
-            hass.async_add_job(hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={'source': config_entries.SOURCE_IMPORT},
-                data=deconz_config
-            ))
+    if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
+        deconz_config = config[DOMAIN]
+        hass.async_create_task(hass.config_entries.flow.async_init(
+            DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
+            data=deconz_config
+        ))
     return True
 
 
@@ -69,26 +61,20 @@ async def async_setup_entry(hass, config_entry):
     Load config, group, light and sensor data for server information.
     Start websocket for push notification of state changes from deCONZ.
     """
-    if DOMAIN in hass.data:
-        _LOGGER.error(
-            "Config entry failed since one deCONZ instance already exists")
-        return False
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+
+    if not config_entry.options:
+        await async_populate_options(hass, config_entry)
 
     gateway = DeconzGateway(hass, config_entry)
-
-    hass.data[DOMAIN] = gateway
 
     if not await gateway.async_setup():
         return False
 
-    device_registry = await \
-        hass.helpers.device_registry.async_get_registry()
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(CONNECTION_NETWORK_MAC, gateway.api.config.mac)},
-        identifiers={(DOMAIN, gateway.api.config.bridgeid)},
-        manufacturer='Dresden Elektronik', model=gateway.api.config.modelid,
-        name=gateway.api.config.name, sw_version=gateway.api.config.swversion)
+    hass.data[DOMAIN][gateway.bridgeid] = gateway
+
+    await gateway.async_update_device_registry()
 
     async def async_configure(call):
         """Set attribute of device in deCONZ.
@@ -108,8 +94,11 @@ async def async_setup_entry(hass, config_entry):
         """
         field = call.data.get(SERVICE_FIELD, '')
         entity_id = call.data.get(SERVICE_ENTITY)
-        data = call.data.get(SERVICE_DATA)
-        gateway = hass.data[DOMAIN]
+        data = call.data[SERVICE_DATA]
+
+        gateway = get_master_gateway(hass)
+        if CONF_BRIDGEID in call.data:
+            gateway = hass.data[DOMAIN][call.data[CONF_BRIDGEID]]
 
         if entity_id:
             try:
@@ -125,15 +114,16 @@ async def async_setup_entry(hass, config_entry):
 
     async def async_refresh_devices(call):
         """Refresh available devices from deCONZ."""
-        gateway = hass.data[DOMAIN]
+        gateway = get_master_gateway(hass)
+        if CONF_BRIDGEID in call.data:
+            gateway = hass.data[DOMAIN][call.data[CONF_BRIDGEID]]
 
         groups = set(gateway.api.groups.keys())
         lights = set(gateway.api.lights.keys())
         scenes = set(gateway.api.scenes.keys())
         sensors = set(gateway.api.sensors.keys())
 
-        if not await gateway.api.async_load_parameters():
-            return
+        await gateway.api.async_load_parameters()
 
         gateway.async_add_device_callback(
             'group', [group
@@ -160,7 +150,8 @@ async def async_setup_entry(hass, config_entry):
         )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_DEVICE_REFRESH, async_refresh_devices)
+        DOMAIN, SERVICE_DEVICE_REFRESH, async_refresh_devices,
+        schema=SERVICE_DEVICE_REFRESCH_SCHEMA)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, gateway.shutdown)
     return True
@@ -168,7 +159,33 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload deCONZ config entry."""
-    gateway = hass.data.pop(DOMAIN)
-    hass.services.async_remove(DOMAIN, SERVICE_DECONZ)
-    hass.services.async_remove(DOMAIN, SERVICE_DEVICE_REFRESH)
+    gateway = hass.data[DOMAIN].pop(config_entry.data[CONF_BRIDGEID])
+
+    if not hass.data[DOMAIN]:
+        hass.services.async_remove(DOMAIN, SERVICE_DECONZ)
+        hass.services.async_remove(DOMAIN, SERVICE_DEVICE_REFRESH)
+    elif gateway.master:
+        await async_populate_options(hass, config_entry)
+        new_master_gateway = next(iter(hass.data[DOMAIN].values()))
+        await async_populate_options(hass, new_master_gateway.config_entry)
+
     return await gateway.async_reset()
+
+
+async def async_populate_options(hass, config_entry):
+    """Populate default options for gateway.
+
+    Called by setup_entry and unload_entry.
+    Makes sure there is always one master available.
+    """
+    master = not get_master_gateway(hass)
+
+    options = {
+        CONF_MASTER_GATEWAY: master,
+        CONF_ALLOW_CLIP_SENSOR: config_entry.data.get(
+            CONF_ALLOW_CLIP_SENSOR, False),
+        CONF_ALLOW_DECONZ_GROUPS: config_entry.data.get(
+            CONF_ALLOW_DECONZ_GROUPS, True)
+    }
+
+    hass.config_entries.async_update_entry(config_entry, options=options)

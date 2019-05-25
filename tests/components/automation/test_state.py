@@ -51,11 +51,12 @@ async def test_if_fires_on_entity_change(hass, calls):
             }
         }
     })
+    await hass.async_block_till_done()
 
     hass.states.async_set('test.entity', 'world', context=context)
     await hass.async_block_till_done()
     assert 1 == len(calls)
-    assert calls[0].context is context
+    assert calls[0].context.parent_id == context.id
     assert 'state - test.entity - hello - world - None' == \
         calls[0].data['some']
 
@@ -80,6 +81,7 @@ async def test_if_fires_on_entity_change_with_from_filter(hass, calls):
             }
         }
     })
+    await hass.async_block_till_done()
 
     hass.states.async_set('test.entity', 'world')
     await hass.async_block_till_done()
@@ -100,6 +102,7 @@ async def test_if_fires_on_entity_change_with_to_filter(hass, calls):
             }
         }
     })
+    await hass.async_block_till_done()
 
     hass.states.async_set('test.entity', 'world')
     await hass.async_block_till_done()
@@ -120,6 +123,7 @@ async def test_if_fires_on_attribute_change_with_to_filter(hass, calls):
             }
         }
     })
+    await hass.async_block_till_done()
 
     hass.states.async_set('test.entity', 'world', {'test_attribute': 11})
     hass.states.async_set('test.entity', 'world', {'test_attribute': 12})
@@ -142,6 +146,7 @@ async def test_if_fires_on_entity_change_with_both_filters(hass, calls):
             }
         }
     })
+    await hass.async_block_till_done()
 
     hass.states.async_set('test.entity', 'world')
     await hass.async_block_till_done()
@@ -163,6 +168,7 @@ async def test_if_not_fires_if_to_filter_not_match(hass, calls):
             }
         }
     })
+    await hass.async_block_till_done()
 
     hass.states.async_set('test.entity', 'moon')
     await hass.async_block_till_done()
@@ -186,6 +192,7 @@ async def test_if_not_fires_if_from_filter_not_match(hass, calls):
             }
         }
     })
+    await hass.async_block_till_done()
 
     hass.states.async_set('test.entity', 'world')
     await hass.async_block_till_done()
@@ -205,6 +212,7 @@ async def test_if_not_fires_if_entity_not_match(hass, calls):
             }
         }
     })
+    await hass.async_block_till_done()
 
     hass.states.async_set('test.entity', 'world')
     await hass.async_block_till_done()
@@ -231,6 +239,7 @@ async def test_if_action(hass, calls):
             }
         }
     })
+    await hass.async_block_till_done()
 
     hass.states.async_set(entity_id, test_state)
     hass.bus.async_fire('test_event')
@@ -247,7 +256,7 @@ async def test_if_action(hass, calls):
 
 async def test_if_fails_setup_if_to_boolean_value(hass, calls):
     """Test for setup failure for boolean to."""
-    with assert_setup_component(0):
+    with assert_setup_component(0, automation.DOMAIN):
         assert await async_setup_component(hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
@@ -263,7 +272,7 @@ async def test_if_fails_setup_if_to_boolean_value(hass, calls):
 
 async def test_if_fails_setup_if_from_boolean_value(hass, calls):
     """Test for setup failure for boolean from."""
-    with assert_setup_component(0):
+    with assert_setup_component(0, automation.DOMAIN):
         assert await async_setup_component(hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
@@ -279,7 +288,7 @@ async def test_if_fails_setup_if_from_boolean_value(hass, calls):
 
 async def test_if_fails_setup_bad_for(hass, calls):
     """Test for setup failure for bad for."""
-    with assert_setup_component(0):
+    with assert_setup_component(0, automation.DOMAIN):
         assert await async_setup_component(hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
@@ -298,7 +307,7 @@ async def test_if_fails_setup_bad_for(hass, calls):
 
 async def test_if_fails_setup_for_without_to(hass, calls):
     """Test for setup failures for missing to."""
-    with assert_setup_component(0):
+    with assert_setup_component(0, automation.DOMAIN):
         assert await async_setup_component(hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
@@ -331,6 +340,7 @@ async def test_if_not_fires_on_entity_change_with_for(hass, calls):
             }
         }
     })
+    await hass.async_block_till_done()
 
     hass.states.async_set('test.entity', 'world')
     await hass.async_block_till_done()
@@ -362,6 +372,7 @@ async def test_if_not_fires_on_entities_change_with_for_after_stop(hass,
             }
         }
     })
+    await hass.async_block_till_done()
 
     hass.states.async_set('test.entity_1', 'world')
     hass.states.async_set('test.entity_2', 'world')
@@ -402,6 +413,7 @@ async def test_if_fires_on_entity_change_with_for_attribute_change(hass,
             }
         }
     })
+    await hass.async_block_till_done()
 
     utcnow = dt_util.utcnow()
     with patch('homeassistant.core.dt_util.utcnow') as mock_utcnow:
@@ -438,6 +450,7 @@ async def test_if_fires_on_entity_change_with_for_multiple_force_update(hass,
             }
         }
     })
+    await hass.async_block_till_done()
 
     utcnow = dt_util.utcnow()
     with patch('homeassistant.core.dt_util.utcnow') as mock_utcnow:
@@ -473,6 +486,7 @@ async def test_if_fires_on_entity_change_with_for(hass, calls):
             }
         }
     })
+    await hass.async_block_till_done()
 
     hass.states.async_set('test.entity', 'world')
     await hass.async_block_till_done()
@@ -505,6 +519,7 @@ async def test_if_fires_on_for_condition(hass, calls):
                 'action': {'service': 'test.automation'},
             }
         })
+        await hass.async_block_till_done()
 
         # not enough time has passed
         hass.bus.async_fire('test_event')
@@ -543,6 +558,7 @@ async def test_if_fires_on_for_condition_attribute_change(hass, calls):
                 'action': {'service': 'test.automation'},
             }
         })
+        await hass.async_block_till_done()
 
         # not enough time has passed
         hass.bus.async_fire('test_event')
@@ -566,7 +582,7 @@ async def test_if_fires_on_for_condition_attribute_change(hass, calls):
 
 async def test_if_fails_setup_for_without_time(hass, calls):
     """Test for setup failure if no time is provided."""
-    with assert_setup_component(0):
+    with assert_setup_component(0, automation.DOMAIN):
         assert await async_setup_component(hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
@@ -585,7 +601,7 @@ async def test_if_fails_setup_for_without_time(hass, calls):
 
 async def test_if_fails_setup_for_without_entity(hass, calls):
     """Test for setup failure if no entity is provided."""
-    with assert_setup_component(0):
+    with assert_setup_component(0, automation.DOMAIN):
         assert await async_setup_component(hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {'event_type': 'bla'},

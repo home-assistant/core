@@ -1,0 +1,12 @@
+toggle:
+  description: Toggles an input boolean.
+  fields:
+    entity_id: {description: Entity id of the input boolean to toggle., example: input_boolean.notify_alerts}
+turn_off:
+  description: Turns off an input boolean
+  fields:
+    entity_id: {description: Entity id of the input boolean to turn off., example: input_boolean.notify_alerts}
+turn_on:
+  description: Turns on an input boolean.
+  fields:
+    entity_id: {description: Entity id of the input boolean to turn on., example: input_boolean.notify_alerts}

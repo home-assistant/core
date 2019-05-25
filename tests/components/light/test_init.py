@@ -7,7 +7,7 @@ from io import StringIO
 
 import pytest
 
-from homeassistant import core, loader
+from homeassistant import core
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import (
@@ -121,7 +121,7 @@ class TestLight(unittest.TestCase):
 
     def test_services(self):
         """Test the provided services."""
-        platform = loader.get_component(self.hass, 'light.test')
+        platform = getattr(self.hass.components, 'test.light')
 
         platform.init()
         assert setup_component(self.hass, light.DOMAIN,
@@ -154,6 +154,19 @@ class TestLight(unittest.TestCase):
 
         # turn off all lights
         common.turn_off(self.hass)
+
+        self.hass.block_till_done()
+
+        assert not light.is_on(self.hass, dev1.entity_id)
+        assert not light.is_on(self.hass, dev2.entity_id)
+        assert not light.is_on(self.hass, dev3.entity_id)
+
+        # turn off all lights by setting brightness to 0
+        common.turn_on(self.hass)
+
+        self.hass.block_till_done()
+
+        common.turn_on(self.hass, brightness=0)
 
         self.hass.block_till_done()
 
@@ -206,6 +219,32 @@ class TestLight(unittest.TestCase):
         assert {
             light.ATTR_HS_COLOR: (71.059, 100),
         } == data
+
+        # Ensure attributes are filtered when light is turned off
+        common.turn_on(self.hass, dev1.entity_id,
+                       transition=10, brightness=0, color_name='blue')
+        common.turn_on(
+            self.hass, dev2.entity_id, brightness=0, rgb_color=(255, 255, 255),
+            white_value=0)
+        common.turn_on(self.hass, dev3.entity_id, brightness=0,
+                       xy_color=(.4, .6))
+
+        self.hass.block_till_done()
+
+        assert not light.is_on(self.hass, dev1.entity_id)
+        assert not light.is_on(self.hass, dev2.entity_id)
+        assert not light.is_on(self.hass, dev3.entity_id)
+
+        _, data = dev1.last_call('turn_off')
+        assert {
+            light.ATTR_TRANSITION: 10,
+        } == data
+
+        _, data = dev2.last_call('turn_off')
+        assert {} == data
+
+        _, data = dev3.last_call('turn_off')
+        assert {} == data
 
         # One of the light profiles
         prof_name, prof_h, prof_s, prof_bri = 'relax', 35.932, 69.412, 144
@@ -269,7 +308,7 @@ class TestLight(unittest.TestCase):
 
     def test_broken_light_profiles(self):
         """Test light profiles."""
-        platform = loader.get_component(self.hass, 'light.test')
+        platform = getattr(self.hass.components, 'test.light')
         platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
@@ -284,7 +323,7 @@ class TestLight(unittest.TestCase):
 
     def test_light_profiles(self):
         """Test light profiles."""
-        platform = loader.get_component(self.hass, 'light.test')
+        platform = getattr(self.hass.components, 'test.light')
         platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
@@ -292,6 +331,7 @@ class TestLight(unittest.TestCase):
         with open(user_light_file, 'w') as user_file:
             user_file.write('id,x,y,brightness\n')
             user_file.write('test,.4,.6,100\n')
+            user_file.write('test_off,0,0,0\n')
 
         assert setup_component(
             self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: 'test'}}
@@ -305,14 +345,24 @@ class TestLight(unittest.TestCase):
 
         _, data = dev1.last_call('turn_on')
 
+        assert light.is_on(self.hass, dev1.entity_id)
         assert {
             light.ATTR_HS_COLOR: (71.059, 100),
             light.ATTR_BRIGHTNESS: 100
         } == data
 
+        common.turn_on(self.hass, dev1.entity_id, profile='test_off')
+
+        self.hass.block_till_done()
+
+        _, data = dev1.last_call('turn_off')
+
+        assert not light.is_on(self.hass, dev1.entity_id)
+        assert {} == data
+
     def test_default_profiles_group(self):
         """Test default turn-on light profile for all lights."""
-        platform = loader.get_component(self.hass, 'light.test')
+        platform = getattr(self.hass.components, 'test.light')
         platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
@@ -324,10 +374,10 @@ class TestLight(unittest.TestCase):
                 return True
             return real_isfile(path)
 
-        def _mock_open(path):
+        def _mock_open(path, *args, **kwargs):
             if path == user_light_file:
                 return StringIO(profile_data)
-            return real_open(path)
+            return real_open(path, *args, **kwargs)
 
         profile_data = "id,x,y,brightness\n" +\
                        "group.all_lights.default,.4,.6,99\n"
@@ -350,7 +400,7 @@ class TestLight(unittest.TestCase):
 
     def test_default_profiles_light(self):
         """Test default turn-on light profile for a specific light."""
-        platform = loader.get_component(self.hass, 'light.test')
+        platform = getattr(self.hass.components, 'test.light')
         platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
@@ -362,10 +412,10 @@ class TestLight(unittest.TestCase):
                 return True
             return real_isfile(path)
 
-        def _mock_open(path):
+        def _mock_open(path, *args, **kwargs):
             if path == user_light_file:
                 return StringIO(profile_data)
-            return real_open(path)
+            return real_open(path, *args, **kwargs)
 
         profile_data = "id,x,y,brightness\n" +\
                        "group.all_lights.default,.3,.5,200\n" +\

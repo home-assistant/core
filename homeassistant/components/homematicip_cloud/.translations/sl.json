@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dostopna to\u010dka je \u017ee konfigurirana",
+            "already_configured": "Dostopna to\u010dka je \u017ee nastavljena",
             "connection_aborted": "Povezava s stre\u017enikom HMIP ni bila mogo\u010da",
             "unknown": "Pri\u0161lo je do neznane napake"
         },
@@ -21,8 +21,8 @@
                 "title": "Izberite dostopno to\u010dko HomematicIP"
             },
             "link": {
-                "description": "Pritisnite modro tipko na dostopni to\u010dko in gumb po\u0161lji, da registrirate homematicIP s Home Assistentom. \n\n![Location of button on bridge](/static/images/config_flows/config_homematicip_cloud.png)",
-                "title": "Pove\u017eite dostopno to\u010dno"
+                "description": "Pritisnite modro tipko na dostopni to\u010dko in gumb po\u0161lji, da registrirate homematicIP s Home Assistantom. \n\n![Location of button on bridge](/static/images/config_flows/config_homematicip_cloud.png)",
+                "title": "Pove\u017eite dostopno to\u010dko"
             }
         },
         "title": "HomematicIP Cloud"

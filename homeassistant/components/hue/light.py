@@ -1,15 +1,11 @@
-"""
-This component provides light support for the Philips Hue system.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.hue/
-"""
+"""Support for the Philips Hue lights."""
 import asyncio
 from datetime import timedelta
 import logging
 from time import monotonic
 import random
 
+import aiohue
 import async_timeout
 
 from homeassistant.components import hue
@@ -21,7 +17,6 @@ from homeassistant.components.light import (
     Light)
 from homeassistant.util import color
 
-DEPENDENCIES = ['hue']
 SCAN_INTERVAL = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,10 +32,11 @@ SUPPORT_HUE = {
     'Color light': SUPPORT_HUE_COLOR,
     'Dimmable light': SUPPORT_HUE_DIMMABLE,
     'On/Off plug-in unit': SUPPORT_HUE_ON_OFF,
-    'Color temperature light': SUPPORT_HUE_COLOR_TEMP
-    }
+    'Color temperature light': SUPPORT_HUE_COLOR_TEMP,
+}
 
 ATTR_IS_HUE_GROUP = 'is_hue_group'
+GAMUT_TYPE_UNAVAILABLE = 'None'
 # Minimum Hue Bridge API version to support groups
 # 1.4.0 introduced extended group info
 # 1.12 introduced the state object for groups
@@ -48,8 +44,8 @@ ATTR_IS_HUE_GROUP = 'is_hue_group'
 GROUP_MIN_API_VERSION = (1, 13, 0)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up Hue lights.
 
     Can only be called when a user accidentally mentions hue platform in their
@@ -157,8 +153,6 @@ async def async_update_items(hass, bridge, async_add_entities,
                              request_bridge_update, is_group, current,
                              progress_waiting):
     """Update either groups or lights from the bridge."""
-    import aiohue
-
     if is_group:
         api_type = 'group'
         api = bridge.api.groups
@@ -221,7 +215,7 @@ class HueLight(Light):
         if is_group:
             self.is_osram = False
             self.is_philips = False
-            self.gamut_typ = 'None'
+            self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
             self.gamut = None
         else:
             self.is_osram = light.manufacturername == 'OSRAM'
@@ -229,6 +223,21 @@ class HueLight(Light):
             self.gamut_typ = self.light.colorgamuttype
             self.gamut = self.light.colorgamut
             _LOGGER.debug("Color gamut of %s: %s", self.name, str(self.gamut))
+            if self.light.swupdatestate == "readytoinstall":
+                err = (
+                    "Please check for software updates of the %s "
+                    "bulb in the Philips Hue App."
+                )
+                _LOGGER.warning(err, self.name)
+            if self.gamut:
+                if not color.check_valid_gamut(self.gamut):
+                    err = (
+                        "Color gamut of %s: %s, not valid, "
+                        "setting gamut to None."
+                    )
+                    _LOGGER.warning(err, self.name, str(self.gamut))
+                    self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
+                    self.gamut = None
 
     @property
     def unique_id(self):
@@ -303,6 +312,8 @@ class HueLight(Light):
     @property
     def effect_list(self):
         """Return the list of supported effects."""
+        if self.is_osram:
+            return [EFFECT_RANDOM]
         return [EFFECT_COLORLOOP, EFFECT_RANDOM]
 
     @property
@@ -362,15 +373,15 @@ class HueLight(Light):
         else:
             command['alert'] = 'none'
 
-        effect = kwargs.get(ATTR_EFFECT)
-
-        if effect == EFFECT_COLORLOOP:
-            command['effect'] = 'colorloop'
-        elif effect == EFFECT_RANDOM:
-            command['hue'] = random.randrange(0, 65535)
-            command['sat'] = random.randrange(150, 254)
-        elif self.is_philips:
-            command['effect'] = 'none'
+        if ATTR_EFFECT in kwargs:
+            effect = kwargs[ATTR_EFFECT]
+            if effect == EFFECT_COLORLOOP:
+                command['effect'] = 'colorloop'
+            elif effect == EFFECT_RANDOM:
+                command['hue'] = random.randrange(0, 65535)
+                command['sat'] = random.randrange(150, 254)
+            else:
+                command['effect'] = 'none'
 
         if self.is_group:
             await self.light.set_action(**command)

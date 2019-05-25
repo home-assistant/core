@@ -1,6 +1,7 @@
 """Test the entity helper."""
 # pylint: disable=protected-access
 import asyncio
+import threading
 from datetime import timedelta
 from unittest.mock import MagicMock, patch, PropertyMock
 
@@ -225,11 +226,10 @@ def test_async_schedule_update_ha_state(hass):
     assert update_call is True
 
 
-@asyncio.coroutine
-def test_async_parallel_updates_with_zero(hass):
+async def test_async_parallel_updates_with_zero(hass):
     """Test parallel updates with 0 (disabled)."""
     updates = []
-    test_lock = asyncio.Event(loop=hass.loop)
+    test_lock = asyncio.Event()
 
     class AsyncEntity(entity.Entity):
 
@@ -239,37 +239,73 @@ def test_async_parallel_updates_with_zero(hass):
             self.hass = hass
             self._count = count
 
-        @asyncio.coroutine
-        def async_update(self):
+        async def async_update(self):
             """Test update."""
             updates.append(self._count)
-            yield from test_lock.wait()
+            await test_lock.wait()
 
     ent_1 = AsyncEntity("sensor.test_1", 1)
     ent_2 = AsyncEntity("sensor.test_2", 2)
 
-    ent_1.async_schedule_update_ha_state(True)
-    ent_2.async_schedule_update_ha_state(True)
+    try:
+        ent_1.async_schedule_update_ha_state(True)
+        ent_2.async_schedule_update_ha_state(True)
 
-    while True:
-        if len(updates) == 2:
-            break
-        yield from asyncio.sleep(0, loop=hass.loop)
+        while True:
+            if len(updates) >= 2:
+                break
+            await asyncio.sleep(0)
 
-    assert len(updates) == 2
-    assert updates == [1, 2]
+        assert len(updates) == 2
+        assert updates == [1, 2]
+    finally:
+        test_lock.set()
 
-    test_lock.set()
+
+async def test_async_parallel_updates_with_zero_on_sync_update(hass):
+    """Test parallel updates with 0 (disabled)."""
+    updates = []
+    test_lock = threading.Event()
+
+    class AsyncEntity(entity.Entity):
+
+        def __init__(self, entity_id, count):
+            """Initialize Async test entity."""
+            self.entity_id = entity_id
+            self.hass = hass
+            self._count = count
+
+        def update(self):
+            """Test update."""
+            updates.append(self._count)
+            if not test_lock.wait(timeout=1):
+                # if timeout populate more data to fail the test
+                updates.append(self._count)
+
+    ent_1 = AsyncEntity("sensor.test_1", 1)
+    ent_2 = AsyncEntity("sensor.test_2", 2)
+
+    try:
+        ent_1.async_schedule_update_ha_state(True)
+        ent_2.async_schedule_update_ha_state(True)
+
+        while True:
+            if len(updates) >= 2:
+                break
+            await asyncio.sleep(0)
+
+        assert len(updates) == 2
+        assert updates == [1, 2]
+    finally:
+        test_lock.set()
+        await asyncio.sleep(0)
 
 
-@asyncio.coroutine
-def test_async_parallel_updates_with_one(hass):
+async def test_async_parallel_updates_with_one(hass):
     """Test parallel updates with 1 (sequential)."""
     updates = []
-    test_lock = asyncio.Lock(loop=hass.loop)
-    test_semaphore = asyncio.Semaphore(1, loop=hass.loop)
-
-    yield from test_lock.acquire()
+    test_lock = asyncio.Lock()
+    test_semaphore = asyncio.Semaphore(1)
 
     class AsyncEntity(entity.Entity):
 
@@ -280,59 +316,71 @@ def test_async_parallel_updates_with_one(hass):
             self._count = count
             self.parallel_updates = test_semaphore
 
-        @asyncio.coroutine
-        def async_update(self):
+        async def async_update(self):
             """Test update."""
             updates.append(self._count)
-            yield from test_lock.acquire()
+            await test_lock.acquire()
 
     ent_1 = AsyncEntity("sensor.test_1", 1)
     ent_2 = AsyncEntity("sensor.test_2", 2)
     ent_3 = AsyncEntity("sensor.test_3", 3)
 
-    ent_1.async_schedule_update_ha_state(True)
-    ent_2.async_schedule_update_ha_state(True)
-    ent_3.async_schedule_update_ha_state(True)
+    await test_lock.acquire()
 
-    while True:
-        if len(updates) == 1:
-            break
-        yield from asyncio.sleep(0, loop=hass.loop)
+    try:
+        ent_1.async_schedule_update_ha_state(True)
+        ent_2.async_schedule_update_ha_state(True)
+        ent_3.async_schedule_update_ha_state(True)
 
-    assert len(updates) == 1
-    assert updates == [1]
+        while True:
+            if len(updates) >= 1:
+                break
+            await asyncio.sleep(0)
 
-    test_lock.release()
+        assert len(updates) == 1
+        assert updates == [1]
 
-    while True:
-        if len(updates) == 2:
-            break
-        yield from asyncio.sleep(0, loop=hass.loop)
+        updates.clear()
+        test_lock.release()
+        await asyncio.sleep(0)
 
-    assert len(updates) == 2
-    assert updates == [1, 2]
+        while True:
+            if len(updates) >= 1:
+                break
+            await asyncio.sleep(0)
 
-    test_lock.release()
+        assert len(updates) == 1
+        assert updates == [2]
 
-    while True:
-        if len(updates) == 3:
-            break
-        yield from asyncio.sleep(0, loop=hass.loop)
+        updates.clear()
+        test_lock.release()
+        await asyncio.sleep(0)
 
-    assert len(updates) == 3
-    assert updates == [1, 2, 3]
+        while True:
+            if len(updates) >= 1:
+                break
+            await asyncio.sleep(0)
 
-    test_lock.release()
+        assert len(updates) == 1
+        assert updates == [3]
+
+        updates.clear()
+        test_lock.release()
+        await asyncio.sleep(0)
+
+    finally:
+        # we may have more than one lock need to release in case test failed
+        for _ in updates:
+            test_lock.release()
+            await asyncio.sleep(0)
+        test_lock.release()
 
 
-@asyncio.coroutine
-def test_async_parallel_updates_with_two(hass):
+async def test_async_parallel_updates_with_two(hass):
     """Test parallel updates with 2 (parallel)."""
     updates = []
-    test_lock = asyncio.Lock(loop=hass.loop)
-    test_semaphore = asyncio.Semaphore(2, loop=hass.loop)
-
-    yield from test_lock.acquire()
+    test_lock = asyncio.Lock()
+    test_semaphore = asyncio.Semaphore(2)
 
     class AsyncEntity(entity.Entity):
 
@@ -354,34 +402,48 @@ def test_async_parallel_updates_with_two(hass):
     ent_3 = AsyncEntity("sensor.test_3", 3)
     ent_4 = AsyncEntity("sensor.test_4", 4)
 
-    ent_1.async_schedule_update_ha_state(True)
-    ent_2.async_schedule_update_ha_state(True)
-    ent_3.async_schedule_update_ha_state(True)
-    ent_4.async_schedule_update_ha_state(True)
+    await test_lock.acquire()
 
-    while True:
-        if len(updates) == 2:
-            break
-        yield from asyncio.sleep(0, loop=hass.loop)
+    try:
 
-    assert len(updates) == 2
-    assert updates == [1, 2]
+        ent_1.async_schedule_update_ha_state(True)
+        ent_2.async_schedule_update_ha_state(True)
+        ent_3.async_schedule_update_ha_state(True)
+        ent_4.async_schedule_update_ha_state(True)
 
-    test_lock.release()
-    yield from asyncio.sleep(0, loop=hass.loop)
-    test_lock.release()
+        while True:
+            if len(updates) >= 2:
+                break
+            await asyncio.sleep(0)
 
-    while True:
-        if len(updates) == 4:
-            break
-        yield from asyncio.sleep(0, loop=hass.loop)
+        assert len(updates) == 2
+        assert updates == [1, 2]
 
-    assert len(updates) == 4
-    assert updates == [1, 2, 3, 4]
+        updates.clear()
+        test_lock.release()
+        await asyncio.sleep(0)
+        test_lock.release()
+        await asyncio.sleep(0)
 
-    test_lock.release()
-    yield from asyncio.sleep(0, loop=hass.loop)
-    test_lock.release()
+        while True:
+            if len(updates) >= 2:
+                break
+            await asyncio.sleep(0)
+
+        assert len(updates) == 2
+        assert updates == [3, 4]
+
+        updates.clear()
+        test_lock.release()
+        await asyncio.sleep(0)
+        test_lock.release()
+        await asyncio.sleep(0)
+    finally:
+        # we may have more than one lock need to release in case test failed
+        for _ in updates:
+            test_lock.release()
+            await asyncio.sleep(0)
+        test_lock.release()
 
 
 @asyncio.coroutine

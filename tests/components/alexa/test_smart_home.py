@@ -574,6 +574,32 @@ async def test_media_player(hass):
         payload={'volumeSteps': -20})
 
 
+async def test_media_player_power(hass):
+    """Test media player discovery with mapped on/off."""
+    device = (
+        'media_player.test',
+        'off', {
+            'friendly_name': "Test media player",
+            'supported_features': 0xfa3f,
+            'volume_level': 0.75
+        }
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance['endpointId'] == 'media_player#test'
+    assert appliance['displayCategories'][0] == "TV"
+    assert appliance['friendlyName'] == "Test media player"
+
+    assert_endpoint_capabilities(
+        appliance,
+        'Alexa.InputController',
+        'Alexa.Speaker',
+        'Alexa.StepSpeaker',
+        'Alexa.PlaybackController',
+        'Alexa.EndpointHealth',
+    )
+
+
 async def test_alert(hass):
     """Test alert discovery."""
     device = ('alert.test', 'off', {'friendly_name': "Test alert"})
@@ -1488,6 +1514,63 @@ async def test_report_colored_temp_light_state(hass):
     properties = await reported_properties(hass, 'light.test_off')
     properties.assert_equal('Alexa.ColorTemperatureController',
                             'colorTemperatureInKelvin', 0)
+
+
+async def test_report_fan_speed_state(hass):
+    """Test PercentageController reports fan speed correctly."""
+    hass.states.async_set(
+        'fan.off', 'off', {'friendly_name': "Off fan",
+                           'speed': "off",
+                           'supported_features': 1})
+    hass.states.async_set(
+        'fan.low_speed', 'on', {'friendly_name': "Low speed fan",
+                                'speed': "low",
+                                'supported_features': 1})
+    hass.states.async_set(
+        'fan.medium_speed', 'on', {'friendly_name': "Medium speed fan",
+                                   'speed': "medium",
+                                   'supported_features': 1})
+    hass.states.async_set(
+        'fan.high_speed', 'on', {'friendly_name': "High speed fan",
+                                 'speed': "high",
+                                 'supported_features': 1})
+
+    properties = await reported_properties(hass, 'fan.off')
+    properties.assert_equal('Alexa.PercentageController', 'percentage', 0)
+
+    properties = await reported_properties(hass, 'fan.low_speed')
+    properties.assert_equal('Alexa.PercentageController', 'percentage', 33)
+
+    properties = await reported_properties(hass, 'fan.medium_speed')
+    properties.assert_equal('Alexa.PercentageController', 'percentage', 66)
+
+    properties = await reported_properties(hass, 'fan.high_speed')
+    properties.assert_equal('Alexa.PercentageController', 'percentage', 100)
+
+
+async def test_report_cover_percentage_state(hass):
+    """Test PercentageController reports cover percentage correctly."""
+    hass.states.async_set(
+        'cover.fully_open', 'open', {'friendly_name': "Fully open cover",
+                                     'current_position': 100,
+                                     'supported_features': 15})
+    hass.states.async_set(
+        'cover.half_open', 'open', {'friendly_name': "Half open cover",
+                                    'current_position': 50,
+                                    'supported_features': 15})
+    hass.states.async_set(
+        'cover.closed', 'closed', {'friendly_name': "Closed cover",
+                                   'current_position': 0,
+                                   'supported_features': 15})
+
+    properties = await reported_properties(hass, 'cover.fully_open')
+    properties.assert_equal('Alexa.PercentageController', 'percentage', 100)
+
+    properties = await reported_properties(hass, 'cover.half_open')
+    properties.assert_equal('Alexa.PercentageController', 'percentage', 50)
+
+    properties = await reported_properties(hass, 'cover.closed')
+    properties.assert_equal('Alexa.PercentageController', 'percentage', 0)
 
 
 async def reported_properties(hass, endpoint):

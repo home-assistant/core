@@ -1,21 +1,14 @@
-"""
-Support for the GPSLogger platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.gpslogger/
-"""
+"""Support for the GPSLogger device tracking."""
 import logging
 
-from homeassistant.components.device_tracker import DOMAIN as \
-    DEVICE_TRACKER_DOMAIN
-from homeassistant.components.gpslogger import DOMAIN as GPSLOGGER_DOMAIN, \
-    TRACKER_UPDATE
+from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
-_LOGGER = logging.getLogger(__name__)
+from . import DOMAIN as GPSLOGGER_DOMAIN, TRACKER_UPDATE
 
-DEPENDENCIES = ['gpslogger']
+_LOGGER = logging.getLogger(__name__)
 
 DATA_KEY = '{}.{}'.format(GPSLOGGER_DOMAIN, DEVICE_TRACKER_DOMAIN)
 

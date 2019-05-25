@@ -1,4 +1,5 @@
 config/*
+config2/*
 
 tests/testing_config/deps
 tests/testing_config/home-assistant.log
@@ -55,6 +56,7 @@ pip-log.txt
 .tox
 nosetests.xml
 htmlcov/
+test-reports/
 
 # Translations
 *.mo
@@ -83,7 +85,7 @@ Scripts/
 # vimmy stuff
 *.swp
 *.swo
-
+tags
 ctags.tmp
 
 # vagrant stuff

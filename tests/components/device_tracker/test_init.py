@@ -1,39 +1,37 @@
 """The tests for the device tracker component."""
-# pylint: disable=protected-access
-import asyncio
+from datetime import datetime, timedelta
 import json
 import logging
-from unittest.mock import call
-from datetime import datetime, timedelta
 import os
+from unittest.mock import call
+
 from asynctest import patch
 import pytest
 
 from homeassistant.components import zone
-from homeassistant.core import callback, State
-from homeassistant.setup import async_setup_component
-from homeassistant.helpers import discovery
-from homeassistant.loader import get_component
-import homeassistant.util.dt as dt_util
+import homeassistant.components.device_tracker as device_tracker
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN,
-    STATE_HOME, STATE_NOT_HOME, CONF_PLATFORM, ATTR_ICON)
-import homeassistant.components.device_tracker as device_tracker
-from tests.components.device_tracker import common
+    ATTR_ICON, CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME)
+from homeassistant.core import State, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import discovery
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 
 from tests.common import (
-    async_fire_time_changed, patch_yaml_files, assert_setup_component,
-    mock_restore_cache)
+    assert_setup_component, async_fire_time_changed, mock_restore_cache,
+    patch_yaml_files)
+from tests.components.device_tracker import common
 
 TEST_PLATFORM = {device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}}
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@pytest.fixture
-def yaml_devices(hass):
+@pytest.fixture(name='yaml_devices')
+def mock_yaml_devices(hass):
     """Get a path for storing yaml devices."""
     yaml_devices = hass.config.path(device_tracker.YAML_DEVICES)
     if os.path.isfile(yaml_devices):
@@ -94,7 +92,8 @@ async def test_reading_yaml_config(hass, yaml_devices):
         hass, timedelta(seconds=180), True, dev_id,
         'AB:CD:EF:GH:IJ', 'Test name', picture='http://test.picture',
         hide_if_away=True, icon='mdi:kettle')
-    device_tracker.update_config(yaml_devices, dev_id, device)
+    await hass.async_add_executor_job(
+        device_tracker.update_config, yaml_devices, dev_id, device)
     with assert_setup_component(1, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN,
                                            TEST_PLATFORM)
@@ -109,9 +108,8 @@ async def test_reading_yaml_config(hass, yaml_devices):
     assert device.icon == config.icon
 
 
-# pylint: disable=invalid-name
 @patch('homeassistant.components.device_tracker._LOGGER.warning')
-async def test_track_with_duplicate_mac_dev_id(mock_warning, hass):
+async def test_duplicate_mac_dev_id(mock_warning, hass):
     """Test adding duplicate MACs or device IDs to DeviceTracker."""
     devices = [
         device_tracker.Device(hass, True, True, 'my_device', 'AB:01',
@@ -175,14 +173,13 @@ async def test_gravatar_and_picture(hass):
 @patch(
     'homeassistant.components.device_tracker.DeviceTracker.see')
 @patch(
-    'homeassistant.components.device_tracker.demo.setup_scanner',
+    'homeassistant.components.demo.device_tracker.setup_scanner',
     autospec=True)
 async def test_discover_platform(mock_demo_setup_scanner, mock_see, hass):
     """Test discovery of device_tracker demo platform."""
-    assert device_tracker.DOMAIN not in hass.config.components
     await discovery.async_load_platform(
         hass, device_tracker.DOMAIN, 'demo', {'test_key': 'test_val'},
-        {'demo': {}})
+        {'bla': {}})
     await hass.async_block_till_done()
     assert device_tracker.DOMAIN in hass.config.components
     assert mock_demo_setup_scanner.called
@@ -190,9 +187,9 @@ async def test_discover_platform(mock_demo_setup_scanner, mock_see, hass):
         hass, {}, mock_see, {'test_key': 'test_val'})
 
 
-async def test_update_stale(hass):
+async def test_update_stale(hass, mock_device_tracker_conf):
     """Test stalled update."""
-    scanner = get_component(hass, 'device_tracker.test').SCANNER
+    scanner = getattr(hass.components, 'test.device_tracker').SCANNER
     scanner.reset()
     scanner.come_home('DEV1')
 
@@ -223,8 +220,9 @@ async def test_update_stale(hass):
         hass.states.get('device_tracker.dev1').state
 
 
-async def test_entity_attributes(hass, yaml_devices):
+async def test_entity_attributes(hass, mock_device_tracker_conf):
     """Test the entity attributes."""
+    devices = mock_device_tracker_conf
     dev_id = 'test_entity'
     entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
     friendly_name = 'Paulus'
@@ -234,7 +232,7 @@ async def test_entity_attributes(hass, yaml_devices):
     device = device_tracker.Device(
         hass, timedelta(seconds=180), True, dev_id, None,
         friendly_name, picture, hide_if_away=True, icon=icon)
-    device_tracker.update_config(yaml_devices, dev_id, device)
+    devices.append(device)
 
     with assert_setup_component(1, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN,
@@ -247,16 +245,17 @@ async def test_entity_attributes(hass, yaml_devices):
     assert picture == attrs.get(ATTR_ENTITY_PICTURE)
 
 
-async def test_device_hidden(hass, yaml_devices):
+async def test_device_hidden(hass, mock_device_tracker_conf):
     """Test hidden devices."""
+    devices = mock_device_tracker_conf
     dev_id = 'test_entity'
     entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
     device = device_tracker.Device(
         hass, timedelta(seconds=180), True, dev_id, None,
         hide_if_away=True)
-    device_tracker.update_config(yaml_devices, dev_id, device)
+    devices.append(device)
 
-    scanner = get_component(hass, 'device_tracker.test').SCANNER
+    scanner = getattr(hass.components, 'test.device_tracker').SCANNER
     scanner.reset()
 
     with assert_setup_component(1, device_tracker.DOMAIN):
@@ -266,16 +265,16 @@ async def test_device_hidden(hass, yaml_devices):
     assert hass.states.get(entity_id).attributes.get(ATTR_HIDDEN)
 
 
-async def test_group_all_devices(hass, yaml_devices):
+async def test_group_all_devices(hass, mock_device_tracker_conf):
     """Test grouping of devices."""
+    devices = mock_device_tracker_conf
     dev_id = 'test_entity'
     entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
     device = device_tracker.Device(
         hass, timedelta(seconds=180), True, dev_id, None,
         hide_if_away=True)
-    device_tracker.update_config(yaml_devices, dev_id, device)
-
-    scanner = get_component(hass, 'device_tracker.test').SCANNER
+    devices.append(device)
+    scanner = getattr(hass.components, 'test.device_tracker').SCANNER
     scanner.reset()
 
     with assert_setup_component(1, device_tracker.DOMAIN):
@@ -320,7 +319,7 @@ async def test_see_service(mock_see, hass):
     assert mock_see.call_args == call(**params)
 
 
-async def test_new_device_event_fired(hass):
+async def test_new_device_event_fired(hass, mock_device_tracker_conf):
     """Test that the device tracker will fire an event."""
     with assert_setup_component(1, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN,
@@ -351,9 +350,9 @@ async def test_new_device_event_fired(hass):
     }
 
 
-# pylint: disable=invalid-name
-async def test_not_write_duplicate_yaml_keys(hass, yaml_devices):
+async def test_duplicate_yaml_keys(hass, mock_device_tracker_conf):
     """Test that the device tracker will not generate invalid YAML."""
+    devices = mock_device_tracker_conf
     with assert_setup_component(1, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN,
                                            TEST_PLATFORM)
@@ -363,23 +362,21 @@ async def test_not_write_duplicate_yaml_keys(hass, yaml_devices):
 
     await hass.async_block_till_done()
 
-    config = await device_tracker.async_load_config(yaml_devices, hass,
-                                                    timedelta(seconds=0))
-    assert len(config) == 2
+    assert len(devices) == 2
+    assert devices[0].dev_id != devices[1].dev_id
 
 
-# pylint: disable=invalid-name
-async def test_not_allow_invalid_dev_id(hass, yaml_devices):
+async def test_invalid_dev_id(hass, mock_device_tracker_conf):
     """Test that the device tracker will not allow invalid dev ids."""
+    devices = mock_device_tracker_conf
     with assert_setup_component(1, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN,
                                            TEST_PLATFORM)
 
     common.async_see(hass, dev_id='hello-world')
+    await hass.async_block_till_done()
 
-    config = await device_tracker.async_load_config(yaml_devices, hass,
-                                                    timedelta(seconds=0))
-    assert len(config) == 0
+    assert not devices
 
 
 async def test_see_state(hass, yaml_devices):
@@ -423,7 +420,7 @@ async def test_see_state(hass, yaml_devices):
     assert attrs['number'] == 1
 
 
-async def test_see_passive_zone_state(hass):
+async def test_see_passive_zone_state(hass, mock_device_tracker_conf):
     """Test that the device tracker sets gps for passive trackers."""
     register_time = datetime(2015, 9, 15, 23, tzinfo=dt_util.UTC)
     scan_time = datetime(2015, 9, 15, 23, 1, tzinfo=dt_util.UTC)
@@ -441,7 +438,7 @@ async def test_see_passive_zone_state(hass):
             'zone': zone_info
         })
 
-    scanner = get_component(hass, 'device_tracker.test').SCANNER
+    scanner = getattr(hass.components, 'test.device_tracker').SCANNER
     scanner.reset()
     scanner.come_home('dev1')
 
@@ -488,8 +485,9 @@ async def test_see_passive_zone_state(hass):
 
 
 @patch('homeassistant.components.device_tracker._LOGGER.warning')
-async def test_see_failures(mock_warning, hass, yaml_devices):
+async def test_see_failures(mock_warning, hass, mock_device_tracker_conf):
     """Test that the device tracker see failures."""
+    devices = mock_device_tracker_conf
     tracker = device_tracker.DeviceTracker(
         hass, timedelta(seconds=60), 0, {}, [])
 
@@ -506,15 +504,12 @@ async def test_see_failures(mock_warning, hass, yaml_devices):
     await tracker.async_see(mac='mac_2_bad_gps', gps=[1])
     await tracker.async_see(mac='mac_3_bad_gps', gps='gps')
     await hass.async_block_till_done()
-    config = await device_tracker.async_load_config(yaml_devices, hass,
-                                                    timedelta(seconds=0))
+
     assert mock_warning.call_count == 3
+    assert len(devices) == 4
 
-    assert len(config) == 4
 
-
-@asyncio.coroutine
-def test_async_added_to_hass(hass):
+async def test_async_added_to_hass(hass):
     """Test restoring state."""
     attr = {
         device_tracker.ATTR_LONGITUDE: 18,
@@ -532,7 +527,7 @@ def test_async_added_to_hass(hass):
         path: 'jk:\n  name: JK Phone\n  track: True',
     }
     with patch_yaml_files(files):
-        yield from device_tracker.async_setup(hass, {})
+        assert await async_setup_component(hass, device_tracker.DOMAIN, {})
 
     state = hass.states.get('device_tracker.jk')
     assert state
@@ -543,8 +538,7 @@ def test_async_added_to_hass(hass):
         assert atr == val, "{}={} expected: {}".format(key, atr, val)
 
 
-@asyncio.coroutine
-def test_bad_platform(hass):
+async def test_bad_platform(hass):
     """Test bad platform."""
     config = {
         'device_tracker': [{
@@ -552,17 +546,18 @@ def test_bad_platform(hass):
         }]
     }
     with assert_setup_component(0, device_tracker.DOMAIN):
-        assert (yield from device_tracker.async_setup(hass, config))
+        assert await async_setup_component(hass, device_tracker.DOMAIN, config)
 
 
 async def test_adding_unknown_device_to_config(mock_device_tracker_conf, hass):
     """Test the adding of unknown devices to configuration file."""
-    scanner = get_component(hass, 'device_tracker.test').SCANNER
+    scanner = getattr(hass.components, 'test.device_tracker').SCANNER
     scanner.reset()
     scanner.come_home('DEV1')
 
-    await async_setup_component(hass, device_tracker.DOMAIN, {
-            device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}})
+    await async_setup_component(
+        hass, device_tracker.DOMAIN,
+        {device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}})
 
     await hass.async_block_till_done()
 
@@ -626,7 +621,7 @@ def test_see_schema_allowing_ios_calls():
     device_tracker.SERVICE_SEE_PAYLOAD_SCHEMA({
         'dev_id': 'Test',
         "battery": 35,
-        "battery_status": 'Unplugged',
+        "battery_status": 'Not Charging',
         "gps": [10.0, 10.0],
         "gps_accuracy": 300,
         "hostname": 'beer',

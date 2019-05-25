@@ -31,10 +31,10 @@ turn_on:
       description: Number between 0..255 indicating level of white.
       example: '250'
     brightness:
-      description: Number between 0..255 indicating brightness.
+      description: Number between 0..255 indicating brightness, where 0 turns the light off, 1 is the minimum brightness and 255 is the maximum brightness supported by the light.
       example: 120
     brightness_pct:
-      description: Number between 0..100 indicating percentage of full brightness.
+      description: Number between 0..100 indicating percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness and 100 is the maximum brightness supported by the light.
       example: 47
     profile:
       description: Name of a light profile to use.
@@ -68,22 +68,8 @@ turn_off:
 toggle:
   description: Toggles a light.
   fields:
-    entity_id:
-      description: Name(s) of entities to toggle.
-      example: 'light.kitchen'
-    transition:
-      description: Duration in seconds it takes to get to next state.
-      example: 60
-
-hue_activate_scene:
-  description: Activate a hue scene stored in the hue hub.
-  fields:
-    group_name:
-      description: Name of hue group/room from the hue app.
-      example: "Living Room"
-    scene_name:
-      description: Name of hue scene from the hue app.
-      example: "Energize"
+    '...':
+      description: All turn_on parameters can be used.
 
 lifx_set_state:
   description: Set a color/brightness and possibliy turn the light on/off.
@@ -182,26 +168,3 @@ xiaomi_miio_set_delayed_turn_off:
     time_period:
       description: Time period for the delayed turn off.
       example: "5, '0:05', {'minutes': 5}"
-
-yeelight_set_mode:
-  description: Set a operation mode.
-  fields:
-    entity_id:
-      description: Name of the light entity.
-      example: 'light.yeelight'
-    mode:
-      description: Operation mode. Valid values are 'last', 'normal', 'rgb', 'hsv', 'color_flow', 'moonlight'.
-      example: 'moonlight'
-
-yeelight_start_flow:
-  description: Start a custom flow, using transitions from https://yeelight.readthedocs.io/en/stable/yeelight.html#flow-objects
-  fields:
-    entity_id:
-      description: Name of the light entity.
-      example: 'light.yeelight'
-    count:
-      description: The number of times to run this flow (0 to run forever).
-      example: 0
-    transitions:
-      description: Array of transitions, for desired effect. Examples https://yeelight.readthedocs.io/en/stable/flow.html
-      example: '[{ "TemperatureTransition": [1900, 1000, 80] }, { "TemperatureTransition": [1900, 1000, 10] }]'

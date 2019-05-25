@@ -2,9 +2,13 @@
     "config": {
         "abort": {
             "all_configured": "TelldusLive ist bereits konfiguriert",
+            "already_setup": "TelldusLive ist bereits konfiguriert",
             "authorize_url_fail": "Unbekannter Fehler beim Erstellen der Authorisierungs-URL",
             "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
             "unknown": "Unbekannter Fehler ist aufgetreten"
+        },
+        "error": {
+            "auth_error": "Authentifizierungsfehler, bitte versuchen Sie es erneut"
         },
         "step": {
             "auth": {
@@ -15,6 +19,7 @@
                 "data": {
                     "host": "Host"
                 },
+                "description": "Leer",
                 "title": "Endpunkt ausw\u00e4hlen."
             }
         },

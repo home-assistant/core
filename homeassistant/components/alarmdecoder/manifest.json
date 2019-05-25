@@ -1,0 +1,10 @@
+{
+  "domain": "alarmdecoder",
+  "name": "Alarmdecoder",
+  "documentation": "https://www.home-assistant.io/components/alarmdecoder",
+  "requirements": [
+    "alarmdecoder==1.13.2"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

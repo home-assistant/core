@@ -1,6 +1,9 @@
 """Test UniFi Controller."""
 from unittest.mock import Mock, patch
 
+import pytest
+
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.components import unifi
 from homeassistant.components.unifi import controller, errors
 
@@ -103,13 +106,10 @@ async def test_controller_not_accessible():
 
     unifi_controller = controller.UniFiController(hass, entry)
 
-    with patch.object(controller, 'get_controller',
-                      side_effect=errors.CannotConnect):
-        assert await unifi_controller.async_setup() is False
-
-    assert len(hass.helpers.event.async_call_later.mock_calls) == 1
-    # Assert we are going to wait 2 seconds
-    assert hass.helpers.event.async_call_later.mock_calls[0][1][0] == 2
+    with patch.object(
+            controller, 'get_controller', side_effect=errors.CannotConnect
+    ), pytest.raises(ConfigEntryNotReady):
+        await unifi_controller.async_setup()
 
 
 async def test_controller_unknown_error():
@@ -126,28 +126,6 @@ async def test_controller_unknown_error():
         assert await unifi_controller.async_setup() is False
 
     assert not hass.helpers.event.async_call_later.mock_calls
-
-
-async def test_reset_cancels_retry_setup():
-    """Resetting a controller while we're waiting to retry setup."""
-    hass = Mock()
-    entry = Mock()
-    entry.data = ENTRY_CONFIG
-
-    unifi_controller = controller.UniFiController(hass, entry)
-
-    with patch.object(controller, 'get_controller',
-                      side_effect=errors.CannotConnect):
-        assert await unifi_controller.async_setup() is False
-
-    mock_call_later = hass.helpers.event.async_call_later
-
-    assert len(mock_call_later.mock_calls) == 1
-
-    assert await unifi_controller.async_reset()
-
-    assert len(mock_call_later.mock_calls) == 2
-    assert len(mock_call_later.return_value.mock_calls) == 1
 
 
 async def test_reset_if_entry_had_wrong_auth():

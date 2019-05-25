@@ -1,0 +1,10 @@
+{
+  "domain": "season",
+  "name": "Season",
+  "documentation": "https://www.home-assistant.io/components/season",
+  "requirements": [
+    "ephem==3.7.6.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

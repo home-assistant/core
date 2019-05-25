@@ -1,18 +1,11 @@
-"""
-Support for Homekit lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.homekit_controller/
-"""
+"""Support for Homekit lights."""
 import logging
 
-from homeassistant.components.homekit_controller import (
-    HomeKitEntity, KNOWN_ACCESSORIES)
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_COLOR_TEMP, SUPPORT_BRIGHTNESS,
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR, SUPPORT_COLOR_TEMP, Light)
 
-DEPENDENCIES = ['homekit_controller']
+from . import KNOWN_DEVICES, HomeKitEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Homekit lighting."""
     if discovery_info is not None:
-        accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
+        accessory = hass.data[KNOWN_DEVICES][discovery_info['serial']]
         add_entities([HomeKitLight(accessory, discovery_info)], True)
 
 
@@ -30,39 +23,50 @@ class HomeKitLight(HomeKitEntity, Light):
     def __init__(self, *args):
         """Initialise the light."""
         super().__init__(*args)
-        self._on = None
-        self._brightness = None
-        self._color_temperature = None
-        self._hue = None
-        self._saturation = None
+        self._on = False
+        self._brightness = 0
+        self._color_temperature = 0
+        self._hue = 0
+        self._saturation = 0
 
-    def update_characteristics(self, characteristics):
-        """Synchronise light state with Home Assistant."""
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity cares about."""
         # pylint: disable=import-error
         from homekit.model.characteristics import CharacteristicsTypes
+        return [
+            CharacteristicsTypes.ON,
+            CharacteristicsTypes.BRIGHTNESS,
+            CharacteristicsTypes.COLOR_TEMPERATURE,
+            CharacteristicsTypes.HUE,
+            CharacteristicsTypes.SATURATION,
+        ]
 
-        for characteristic in characteristics:
-            ctype = characteristic['type']
-            ctype = CharacteristicsTypes.get_short(ctype)
-            if ctype == "on":
-                self._chars['on'] = characteristic['iid']
-                self._on = characteristic['value']
-            elif ctype == 'brightness':
-                self._chars['brightness'] = characteristic['iid']
-                self._features |= SUPPORT_BRIGHTNESS
-                self._brightness = characteristic['value']
-            elif ctype == 'color-temperature':
-                self._chars['color-temperature'] = characteristic['iid']
-                self._features |= SUPPORT_COLOR_TEMP
-                self._color_temperature = characteristic['value']
-            elif ctype == "hue":
-                self._chars['hue'] = characteristic['iid']
-                self._features |= SUPPORT_COLOR
-                self._hue = characteristic['value']
-            elif ctype == "saturation":
-                self._chars['saturation'] = characteristic['iid']
-                self._features |= SUPPORT_COLOR
-                self._saturation = characteristic['value']
+    def _setup_brightness(self, char):
+        self._features |= SUPPORT_BRIGHTNESS
+
+    def _setup_color_temperature(self, char):
+        self._features |= SUPPORT_COLOR_TEMP
+
+    def _setup_hue(self, char):
+        self._features |= SUPPORT_COLOR
+
+    def _setup_saturation(self, char):
+        self._features |= SUPPORT_COLOR
+
+    def _update_on(self, value):
+        self._on = value
+
+    def _update_brightness(self, value):
+        self._brightness = value
+
+    def _update_color_temperature(self, value):
+        self._color_temperature = value
+
+    def _update_hue(self, value):
+        self._hue = value
+
+    def _update_saturation(self, value):
+        self._saturation = value
 
     @property
     def is_on(self):
@@ -72,30 +76,24 @@ class HomeKitLight(HomeKitEntity, Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        if self._features & SUPPORT_BRIGHTNESS:
-            return self._brightness * 255 / 100
-        return None
+        return self._brightness * 255 / 100
 
     @property
     def hs_color(self):
         """Return the color property."""
-        if self._features & SUPPORT_COLOR:
-            return (self._hue, self._saturation)
-        return None
+        return (self._hue, self._saturation)
 
     @property
     def color_temp(self):
         """Return the color temperature."""
-        if self._features & SUPPORT_COLOR_TEMP:
-            return self._color_temperature
-        return None
+        return self._color_temperature
 
     @property
     def supported_features(self):
         """Flag supported features."""
         return self._features
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the specified light on."""
         hs_color = kwargs.get(ATTR_HS_COLOR)
         temperature = kwargs.get(ATTR_COLOR_TEMP)
@@ -121,11 +119,11 @@ class HomeKitLight(HomeKitEntity, Light):
         characteristics.append({'aid': self._aid,
                                 'iid': self._chars['on'],
                                 'value': True})
-        self.put_characteristics(characteristics)
+        await self._accessory.put_characteristics(characteristics)
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the specified light off."""
         characteristics = [{'aid': self._aid,
                             'iid': self._chars['on'],
                             'value': False}]
-        self.put_characteristics(characteristics)
+        await self._accessory.put_characteristics(characteristics)

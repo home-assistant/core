@@ -1,21 +1,21 @@
 """Template helper methods for rendering strings with Home Assistant data."""
-from datetime import datetime
+import base64
 import json
 import logging
 import math
 import random
-import base64
 import re
+from datetime import datetime
 
 import jinja2
 from jinja2 import contextfilter
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 
-from homeassistant.const import (
-    ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_UNIT_OF_MEASUREMENT, MATCH_ALL,
-    STATE_UNKNOWN)
-from homeassistant.core import State, valid_entity_id
+from homeassistant.const import (ATTR_LATITUDE, ATTR_LONGITUDE, MATCH_ALL,
+                                 ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN)
+from homeassistant.core import (
+    State, callback, valid_entity_id, split_entity_id)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
 from homeassistant.helpers.typing import TemplateVarsType
@@ -28,6 +28,8 @@ from homeassistant.util.async_ import run_callback_threadsafe
 _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+_RENDER_INFO = 'template.render_info'
 
 _RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
 _RE_GET_ENTITIES = re.compile(
@@ -89,6 +91,54 @@ def extract_entities(template, variables=None):
     return MATCH_ALL
 
 
+def _true(arg) -> bool:
+    return True
+
+
+class RenderInfo:
+    """Holds information about a template render."""
+
+    def __init__(self, template):
+        """Initialise."""
+        self.template = template
+        # Will be set sensibly once frozen.
+        self.filter_lifecycle = _true
+        self._result = None
+        self._exception = None
+        self._all_states = False
+        self._domains = []
+        self._entities = []
+
+    def filter(self, entity_id: str) -> bool:
+        """Template should re-render if the state changes."""
+        return entity_id in self._entities
+
+    def _filter_lifecycle(self, entity_id: str) -> bool:
+        """Template should re-render if the state changes."""
+        return (
+            split_entity_id(entity_id)[0] in self._domains
+            or entity_id in self._entities)
+
+    @property
+    def result(self) -> str:
+        """Results of the template computation."""
+        if self._exception is not None:
+            raise self._exception  # pylint: disable=raising-bad-type
+        return self._result
+
+    def _freeze(self) -> None:
+        self._entities = frozenset(self._entities)
+        if self._all_states:
+            # Leave lifecycle_filter as True
+            del self._domains
+        elif not self._domains:
+            del self._domains
+            self.filter_lifecycle = self.filter
+        else:
+            self._domains = frozenset(self._domains)
+            self.filter_lifecycle = self._filter_lifecycle
+
+
 class Template:
     """Class to hold a template and manage caching and rendering."""
 
@@ -124,6 +174,7 @@ class Template:
         return run_callback_threadsafe(
             self.hass.loop, self.async_render, kwargs).result()
 
+    @callback
     def async_render(self, variables: TemplateVarsType = None,
                      **kwargs) -> str:
         """Render given template.
@@ -141,6 +192,23 @@ class Template:
         except jinja2.TemplateError as err:
             raise TemplateError(err)
 
+    @callback
+    def async_render_to_info(
+            self, variables: TemplateVarsType = None,
+            **kwargs) -> RenderInfo:
+        """Render the template and collect an entity filter."""
+        assert self.hass and _RENDER_INFO not in self.hass.data
+        render_info = self.hass.data[_RENDER_INFO] = RenderInfo(self)
+        # pylint: disable=protected-access
+        try:
+            render_info._result = self.async_render(variables, **kwargs)
+        except TemplateError as ex:
+            render_info._exception = ex
+        finally:
+            del self.hass.data[_RENDER_INFO]
+            render_info._freeze()
+        return render_info
+
     def render_with_possible_json_value(self, value, error_value=_SENTINEL):
         """Render template with value exposed.
 
@@ -150,6 +218,7 @@ class Template:
             self.hass.loop, self.async_render_with_possible_json_value, value,
             error_value).result()
 
+    @callback
     def async_render_with_possible_json_value(self, value,
                                               error_value=_SENTINEL,
                                               variables=None):
@@ -190,7 +259,7 @@ class Template:
         global_vars = ENV.make_globals({
             'closest': template_methods.closest,
             'distance': template_methods.distance,
-            'is_state': self.hass.states.is_state,
+            'is_state': template_methods.is_state,
             'is_state_attr': template_methods.is_state_attr,
             'state_attr': template_methods.state_attr,
             'states': AllStates(self.hass),
@@ -207,6 +276,14 @@ class Template:
                 self.template == other.template and
                 self.hass == other.hass)
 
+    def __hash__(self):
+        """Hash code for template."""
+        return hash(self.template)
+
+    def __repr__(self):
+        """Representation of Template."""
+        return 'Template(\"' + self.template + '\")'
+
 
 class AllStates:
     """Class to expose all HA states as attributes."""
@@ -217,23 +294,41 @@ class AllStates:
 
     def __getattr__(self, name):
         """Return the domain state."""
+        if '.' in name:
+            if not valid_entity_id(name):
+                raise TemplateError("Invalid entity ID '{}'".format(name))
+            return _get_state(self._hass, name)
+        if not valid_entity_id(name + '.entity'):
+            raise TemplateError("Invalid domain name '{}'".format(name))
         return DomainStates(self._hass, name)
+
+    def _collect_all(self):
+        render_info = self._hass.data.get(_RENDER_INFO)
+        if render_info is not None:
+            # pylint: disable=protected-access
+            render_info._all_states = True
 
     def __iter__(self):
         """Return all states."""
+        self._collect_all()
         return iter(
-            _wrap_state(state) for state in
+            _wrap_state(self._hass, state) for state in
             sorted(self._hass.states.async_all(),
                    key=lambda state: state.entity_id))
 
     def __len__(self):
         """Return number of states."""
+        self._collect_all()
         return len(self._hass.states.async_entity_ids())
 
     def __call__(self, entity_id):
         """Return the states."""
-        state = self._hass.states.get(entity_id)
+        state = _get_state(self._hass, entity_id)
         return STATE_UNKNOWN if state is None else state.state
+
+    def __repr__(self):
+        """Representation of All States."""
+        return '<template AllStates>'
 
 
 class DomainStates:
@@ -246,19 +341,34 @@ class DomainStates:
 
     def __getattr__(self, name):
         """Return the states."""
-        return _wrap_state(
-            self._hass.states.get('{}.{}'.format(self._domain, name)))
+        entity_id = '{}.{}'.format(self._domain, name)
+        if not valid_entity_id(entity_id):
+            raise TemplateError("Invalid entity ID '{}'".format(entity_id))
+        return _get_state(self._hass, entity_id)
+
+    def _collect_domain(self):
+        entity_collect = self._hass.data.get(_RENDER_INFO)
+        if entity_collect is not None:
+            # pylint: disable=protected-access
+            entity_collect._domains.append(self._domain)
 
     def __iter__(self):
         """Return the iteration over all the states."""
+        self._collect_domain()
         return iter(sorted(
-            (_wrap_state(state) for state in self._hass.states.async_all()
+            (_wrap_state(self._hass, state)
+             for state in self._hass.states.async_all()
              if state.domain == self._domain),
             key=lambda state: state.entity_id))
 
     def __len__(self):
         """Return number of states."""
+        self._collect_domain()
         return len(self._hass.states.async_entity_ids(self._domain))
+
+    def __repr__(self):
+        """Representation of Domain States."""
+        return '<template DomainStates(\'{}\')>'.format(self._domain)
 
 
 class TemplateState(State):
@@ -266,14 +376,21 @@ class TemplateState(State):
 
     # Inheritance is done so functions that check against State keep working
     # pylint: disable=super-init-not-called
-    def __init__(self, state):
+    def __init__(self, hass, state):
         """Initialize template state."""
+        self._hass = hass
         self._state = state
+
+    def _access_state(self):
+        state = object.__getattribute__(self, '_state')
+        hass = object.__getattribute__(self, '_hass')
+        _collect_state(hass, state.entity_id)
+        return state
 
     @property
     def state_with_unit(self):
         """Return the state concatenated with the unit if available."""
-        state = object.__getattribute__(self, '_state')
+        state = object.__getattribute__(self, '_access_state')()
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         if unit is None:
             return state.state
@@ -281,19 +398,44 @@ class TemplateState(State):
 
     def __getattribute__(self, name):
         """Return an attribute of the state."""
+        # This one doesn't count as an access of the state
+        # since we either found it by looking direct for the ID
+        # or got it off an iterator.
+        if name == 'entity_id' or name in object.__dict__:
+            state = object.__getattribute__(self, '_state')
+            return getattr(state, name)
         if name in TemplateState.__dict__:
             return object.__getattribute__(self, name)
-        return getattr(object.__getattribute__(self, '_state'), name)
+        state = object.__getattribute__(self, '_access_state')()
+        return getattr(state, name)
 
     def __repr__(self):
         """Representation of Template State."""
-        rep = object.__getattribute__(self, '_state').__repr__()
+        state = object.__getattribute__(self, '_access_state')()
+        rep = state.__repr__()
         return '<template ' + rep[1:]
 
 
-def _wrap_state(state):
+def _collect_state(hass, entity_id):
+    entity_collect = hass.data.get(_RENDER_INFO)
+    if entity_collect is not None:
+        # pylint: disable=protected-access
+        entity_collect._entities.append(entity_id)
+
+
+def _wrap_state(hass, state):
     """Wrap a state."""
-    return None if state is None else TemplateState(state)
+    return None if state is None else TemplateState(hass, state)
+
+
+def _get_state(hass, entity_id):
+    state = hass.states.get(entity_id)
+    if state is None:
+        # Only need to collect if none, if not none collect first actuall
+        # access to the state properties in the state wrapper.
+        _collect_state(hass, entity_id)
+        return None
+    return _wrap_state(hass, state)
 
 
 class TemplateMethods:
@@ -359,12 +501,14 @@ class TemplateMethods:
             else:
                 gr_entity_id = str(entities)
 
-            group = self._hass.components.group
+            _collect_state(self._hass, gr_entity_id)
 
-            states = [self._hass.states.get(entity_id) for entity_id
+            group = self._hass.components.group
+            states = [_get_state(self._hass, entity_id) for entity_id
                       in group.expand_entity_ids([gr_entity_id])]
 
-        return _wrap_state(loc_helper.closest(latitude, longitude, states))
+        # state will already be wrapped here
+        return loc_helper.closest(latitude, longitude, states)
 
     def distance(self, *args):
         """Calculate distance.
@@ -407,12 +551,6 @@ class TemplateMethods:
                 latitude = point_state.attributes.get(ATTR_LATITUDE)
                 longitude = point_state.attributes.get(ATTR_LONGITUDE)
 
-                if latitude is None or longitude is None:
-                    _LOGGER.warning(
-                        "Distance:State does not contains a location: %s",
-                        value)
-                    return None
-
             locations.append((latitude, longitude))
 
         if len(locations) == 1:
@@ -421,14 +559,19 @@ class TemplateMethods:
         return self._hass.config.units.length(
             loc_util.distance(*locations[0] + locations[1]), 'm')
 
+    def is_state(self, entity_id: str, state: State) -> bool:
+        """Test if a state is a specific value."""
+        state_obj = _get_state(self._hass, entity_id)
+        return state_obj is not None and state_obj.state == state
+
     def is_state_attr(self, entity_id, name, value):
-        """Test if a state is a specific attribute."""
+        """Test if a state's attribute is a specific value."""
         state_attr = self.state_attr(entity_id, name)
         return state_attr is not None and state_attr == value
 
     def state_attr(self, entity_id, name):
         """Get a specific attribute from a state."""
-        state_obj = self._hass.states.get(entity_id)
+        state_obj = _get_state(self._hass, entity_id)
         if state_obj is not None:
             return state_obj.attributes.get(name)
         return None
@@ -438,14 +581,22 @@ class TemplateMethods:
         if isinstance(entity_id_or_state, State):
             return entity_id_or_state
         if isinstance(entity_id_or_state, str):
-            return self._hass.states.get(entity_id_or_state)
+            return _get_state(self._hass, entity_id_or_state)
         return None
 
 
-def forgiving_round(value, precision=0):
+def forgiving_round(value, precision=0, method="common"):
     """Round accepted strings."""
     try:
-        value = round(float(value), precision)
+        # support rounding methods like jinja
+        multiplier = float(10 ** precision)
+        if method == "ceil":
+            value = math.ceil(float(value) * multiplier) / multiplier
+        elif method == "floor":
+            value = math.floor(float(value) * multiplier) / multiplier
+        else:
+            # if method is common or something else, use common rounding
+            value = round(float(value), precision)
         return int(value) if precision == 0 else value
     except (ValueError, TypeError):
         # If value can't be converted to float
@@ -657,6 +808,7 @@ ENV.filters['sin'] = sine
 ENV.filters['cos'] = cosine
 ENV.filters['tan'] = tangent
 ENV.filters['sqrt'] = square_root
+ENV.filters['as_timestamp'] = forgiving_as_timestamp
 ENV.filters['timestamp_custom'] = timestamp_custom
 ENV.filters['timestamp_local'] = timestamp_local
 ENV.filters['timestamp_utc'] = timestamp_utc

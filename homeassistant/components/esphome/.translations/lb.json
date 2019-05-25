@@ -16,6 +16,10 @@
                 "description": "Gitt d'Passwuert vun \u00e4rer Konfiguratioun an.",
                 "title": "Passwuert aginn"
             },
+            "discovery_confirm": {
+                "description": "W\u00ebllt dir den ESPHome Provider `{name}` am 'Home Assistant dob\u00e4isetzen?",
+                "title": "Entdeckten ESPHome Provider"
+            },
             "user": {
                 "data": {
                     "host": "Apparat",

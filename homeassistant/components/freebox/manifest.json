@@ -1,0 +1,12 @@
+{
+  "domain": "freebox",
+  "name": "Freebox",
+  "documentation": "https://www.home-assistant.io/components/freebox",
+  "requirements": [
+    "aiofreepybox==0.0.8"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@snoof85"
+  ]
+}

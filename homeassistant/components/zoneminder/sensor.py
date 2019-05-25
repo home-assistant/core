@@ -1,22 +1,16 @@
-"""
-Support for ZoneMinder Sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.zoneminder/
-"""
+"""Support for ZoneMinder sensors."""
 import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.components.zoneminder import DOMAIN as ZONEMINDER_DOMAIN
 from homeassistant.const import CONF_MONITORED_CONDITIONS
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-_LOGGER = logging.getLogger(__name__)
+from . import DOMAIN as ZONEMINDER_DOMAIN
 
-DEPENDENCIES = ['zoneminder']
+_LOGGER = logging.getLogger(__name__)
 
 CONF_INCLUDE_ARCHIVED = "include_archived"
 

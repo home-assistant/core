@@ -1,14 +1,10 @@
-"""
-Component for handling Air Quality data for your location.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/air_quality/
-"""
+"""Component for handling Air Quality data for your location."""
 from datetime import timedelta
 import logging
 
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)

@@ -1,0 +1,10 @@
+{
+  "domain": "wirelesstag",
+  "name": "Wirelesstag",
+  "documentation": "https://www.home-assistant.io/components/wirelesstag",
+  "requirements": [
+    "wirelesstagpy==0.4.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

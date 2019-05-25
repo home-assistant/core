@@ -1,17 +1,11 @@
-"""
-Allow users to set and activate scenes.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/scene/
-"""
+"""Allow users to set and activate scenes."""
 import asyncio
 import importlib
 import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_PLATFORM, SERVICE_TURN_ON)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, SERVICE_TURN_ON
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -25,8 +19,7 @@ STATES = 'states'
 def _hass_domain_validator(config):
     """Validate platform in config for homeassistant domain."""
     if CONF_PLATFORM not in config:
-        config = {
-            CONF_PLATFORM: HASS_DOMAIN, STATES: config}
+        config = {CONF_PLATFORM: HASS_DOMAIN, STATES: config}
 
     return config
 
@@ -34,11 +27,15 @@ def _hass_domain_validator(config):
 def _platform_validator(config):
     """Validate it is a valid  platform."""
     try:
-        platform = importlib.import_module(
-            'homeassistant.components.scene.{}'.format(
-                config[CONF_PLATFORM]))
+        platform = importlib.import_module('.{}'.format(config[CONF_PLATFORM]),
+                                           __name__)
     except ImportError:
-        raise vol.Invalid('Invalid platform specified') from None
+        try:
+            platform = importlib.import_module(
+                'homeassistant.components.{}.scene'.format(
+                    config[CONF_PLATFORM]))
+        except ImportError:
+            raise vol.Invalid('Invalid platform specified') from None
 
     if not hasattr(platform, 'PLATFORM_SCHEMA'):
         return config
@@ -69,7 +66,7 @@ async def async_setup(hass, config):
 
     async def async_handle_scene_service(service):
         """Handle calls to the switch services."""
-        target_scenes = component.async_extract_from_service(service)
+        target_scenes = await component.async_extract_from_service(service)
 
         tasks = [scene.async_activate() for scene in target_scenes]
         if tasks:

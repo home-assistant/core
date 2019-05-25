@@ -1,0 +1,272 @@
+# Python CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-python/ for more details
+#
+version: 2.1
+
+executors:
+
+  python:
+    parameters:
+      tag:
+        type: string
+        default: latest
+    docker:
+      - image: circleci/python:<< parameters.tag >>
+      - image: circleci/buildpack-deps:stretch
+    working_directory: ~/repo
+
+commands:
+
+  docker-prereqs:
+    description: Set up docker prerequisite requirement
+    steps:
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends
+          libudev-dev libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev
+          libswscale-dev libswresample-dev libavfilter-dev
+
+  install-requirements:
+    description: Set up venv and install requirements python packages with cache support
+    parameters:
+      python:
+        type: string
+        default: latest
+      all:
+        description: pip install -r requirements_all.txt
+        type: boolean
+        default: false
+      test:
+        description: pip install -r requirements_test.txt
+        type: boolean
+        default: false
+      test_all:
+        description: pip install -r requirements_test_all.txt
+        type: boolean
+        default: false
+    steps:
+      - restore_cache:
+          keys:
+            - v1-<< parameters.python >>-{{ checksum "homeassistant/package_constraints.txt" }}-<<# parameters.all >>{{ checksum "requirements_all.txt" }}<</ parameters.all>>-<<# parameters.test >>{{ checksum "requirements_test.txt" }}<</ parameters.test>>-<<# parameters.test_all >>{{ checksum "requirements_test_all.txt" }}<</ parameters.test_all>>
+      - run:
+          name: install dependencies
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -q -U pip
+            pip install -q -U setuptools
+            <<# parameters.all >>pip install -q --progress-bar off -r requirements_all.txt -c homeassistant/package_constraints.txt<</ parameters.all>>
+            <<# parameters.test >>pip install -q --progress-bar off -r requirements_test.txt -c homeassistant/package_constraints.txt<</ parameters.test>>
+            <<# parameters.test_all >>pip install -q --progress-bar off -r requirements_test_all.txt -c homeassistant/package_constraints.txt<</ parameters.test_all>>
+          no_output_timeout: 15m
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-<< parameters.python >>-{{ checksum "homeassistant/package_constraints.txt" }}-<<# parameters.all >>{{ checksum "requirements_all.txt" }}<</ parameters.all>>-<<# parameters.test >>{{ checksum "requirements_test.txt" }}<</ parameters.test>>-<<# parameters.test_all >>{{ checksum "requirements_test_all.txt" }}<</ parameters.test_all>>
+
+  install:
+    description: Install Home Assistant
+    steps:
+      - run:
+          name: install
+          command: |
+            . venv/bin/activate
+            pip install -q --progress-bar off -e .
+
+jobs:
+
+  static-check:
+    executor:
+      name: python
+      tag: 3.5.5-stretch
+
+    steps:
+      - checkout
+      - docker-prereqs
+      - install-requirements:
+          python: 3.5.5-stretch
+          test: true
+
+      - run:
+          name: run static check
+          command: |
+            . venv/bin/activate
+            flake8 homeassistant tests script
+
+      - run:
+          name: run static type check
+          command: |
+            . venv/bin/activate
+            TYPING_FILES=$(cat mypyrc)
+            mypy $TYPING_FILES
+
+      - install
+
+      - run:
+          name: validate manifests
+          command: |
+            . venv/bin/activate
+            python -m script.hassfest validate
+
+      - run:
+          name: run gen_requirements_all
+          command: |
+            . venv/bin/activate
+            python script/gen_requirements_all.py validate
+
+  pre-install-all-requirements:
+    executor:
+      name: python
+      tag: 3.5.5-stretch
+
+    steps:
+      - checkout
+      - docker-prereqs
+      - install-requirements:
+          python: 3.5.5-stretch
+          all: true
+          test: true
+
+  pylint:
+    executor:
+      name: python
+      tag: 3.5.5-stretch
+    parallelism: 2
+
+    steps:
+      - checkout
+      - docker-prereqs
+      - install-requirements:
+          python: 3.5.5-stretch
+          all: true
+          test: true
+      - install
+
+      - run:
+          name: run pylint
+          command: |
+            . venv/bin/activate
+            PYFILES=$(circleci tests glob "homeassistant/**/*.py" | circleci tests split)
+            pylint ${PYFILES}
+          no_output_timeout: 15m
+
+  pre-test:
+    parameters:
+      python:
+        type: string
+    executor:
+      name: python
+      tag: << parameters.python >>
+
+    steps:
+      - checkout
+      - docker-prereqs
+      - install-requirements:
+          python: << parameters.python >>
+          test_all: true
+
+  test:
+    parameters:
+      python:
+        type: string
+    executor:
+      name: python
+      tag: << parameters.python >>
+    parallelism: 2
+
+    steps:
+      - checkout
+      - docker-prereqs
+      - install-requirements:
+          python: << parameters.python >>
+          test_all: true
+      - install
+
+      - run:
+          name: run tests with code coverage
+          command: |
+            . venv/bin/activate
+            CC_SWITCH="--cov --cov-report="
+            TESTFILES=$(circleci tests glob "tests/**/test_*.py" | circleci tests split --split-by=timings)
+            pytest --timeout=9 --durations=10 --junitxml=test-reports/homeassistant/results.xml -qq -o junit_family=xunit2 -o junit_suite_name=homeassistant -o console_output_style=count -p no:sugar $CC_SWITCH -- ${TESTFILES}
+            script/check_dirty
+            codecov
+
+      - store_test_results:
+          path: test-reports
+
+      - store_artifacts:
+          path: htmlcov
+          destination: cov-reports
+
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports
+
+  # This job use machine executor, e.g. classic CircleCI VM because we need both lokalise-cli and a Python runtime.
+  # Classic CircleCI included python 2.7.12 and python 3.5.2 managed by pyenv, the Python version may need change if
+  # CircleCI changed its VM in future.
+  upload-translations:
+    machine: true
+
+    steps:
+      - checkout
+
+      - run:
+          name: upload english translations
+          command: |
+            pyenv versions
+            pyenv global 3.5.2
+            docker pull lokalise/lokalise-cli@sha256:2198814ebddfda56ee041a4b427521757dd57f75415ea9693696a64c550cef21
+            script/translations_upload
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - static-check
+      - pre-install-all-requirements:
+          requires:
+            - static-check
+      - pylint:
+          requires:
+            - pre-install-all-requirements
+      - pre-test:
+          name: pre-test 3.5.5
+          requires:
+            - static-check
+          python: 3.5.5-stretch
+      - pre-test:
+          name: pre-test 3.6
+          requires:
+            - static-check
+          python: 3.6-stretch
+      - pre-test:
+          name: pre-test 3.7
+          requires:
+            - static-check
+          python: 3.7-stretch
+      - test:
+          name: test 3.5.5
+          requires:
+            - pre-test 3.5.5
+          python: 3.5.5-stretch
+      - test:
+          name: test 3.6
+          requires:
+            - pre-test 3.6
+          python: 3.6-stretch
+      - test:
+          name: test 3.7
+          requires:
+            - pre-test 3.7
+          python: 3.7-stretch
+      # CircleCI does not allow failure yet
+      # - test:
+      #     name: test 3.8
+      #     python: 3.8-rc-stretch
+      - upload-translations:
+          requires:
+            - static-check
+          filters:
+            branches:
+              only: dev

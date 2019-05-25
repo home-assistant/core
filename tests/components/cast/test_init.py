@@ -10,7 +10,7 @@ from tests.common import MockDependency, mock_coro
 
 async def test_creating_entry_sets_up_media_player(hass):
     """Test setting up Cast loads the media player."""
-    with patch('homeassistant.components.media_player.cast.async_setup_entry',
+    with patch('homeassistant.components.cast.media_player.async_setup_entry',
                return_value=mock_coro(True)) as mock_setup, \
             MockDependency('pychromecast', 'discovery'), \
             patch('pychromecast.discovery.discover_chromecasts',

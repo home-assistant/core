@@ -4,7 +4,7 @@ import logging
 from pyhap.const import CATEGORY_SENSOR
 
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS, ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_HOME,
+    ATTR_DEVICE_CLASS, ATTR_UNIT_OF_MEASUREMENT, STATE_HOME, STATE_ON,
     TEMP_CELSIUS)
 
 from . import TYPES
@@ -26,7 +26,7 @@ from .const import (
     SERV_LIGHT_SENSOR, SERV_MOTION_SENSOR, SERV_OCCUPANCY_SENSOR,
     SERV_SMOKE_SENSOR, SERV_TEMPERATURE_SENSOR, THRESHOLD_CO, THRESHOLD_CO2)
 from .util import (
-    convert_to_float, temperature_to_homekit, density_to_air_quality)
+    convert_to_float, density_to_air_quality, temperature_to_homekit)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +42,8 @@ BINARY_SENSOR_SERVICE_MAP = {
     DEVICE_CLASS_OCCUPANCY: (SERV_OCCUPANCY_SENSOR, CHAR_OCCUPANCY_DETECTED),
     DEVICE_CLASS_OPENING: (SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE),
     DEVICE_CLASS_SMOKE: (SERV_SMOKE_SENSOR, CHAR_SMOKE_DETECTED),
-    DEVICE_CLASS_WINDOW: (SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE)}
+    DEVICE_CLASS_WINDOW: (SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE),
+}
 
 
 @TYPES.register('TemperatureSensor')

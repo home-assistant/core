@@ -13,13 +13,19 @@ from .const import CHAR_LOCK_CURRENT_STATE, CHAR_LOCK_TARGET_STATE, SERV_LOCK
 
 _LOGGER = logging.getLogger(__name__)
 
-HASS_TO_HOMEKIT = {STATE_UNLOCKED: 0,
-                   STATE_LOCKED: 1,
-                   # value 2 is Jammed which hass doesn't have a state for
-                   STATE_UNKNOWN: 3}
+HASS_TO_HOMEKIT = {
+    STATE_UNLOCKED: 0,
+    STATE_LOCKED: 1,
+    # Value 2 is Jammed which hass doesn't have a state for
+    STATE_UNKNOWN: 3,
+}
+
 HOMEKIT_TO_HASS = {c: s for s, c in HASS_TO_HOMEKIT.items()}
-STATE_TO_SERVICE = {STATE_LOCKED: 'lock',
-                    STATE_UNLOCKED: 'unlock'}
+
+STATE_TO_SERVICE = {
+    STATE_LOCKED: 'lock',
+    STATE_UNLOCKED: 'unlock',
+}
 
 
 @TYPES.register('Lock')
@@ -45,7 +51,7 @@ class Lock(HomeAccessory):
 
     def set_state(self, value):
         """Set lock state to value if call came from HomeKit."""
-        _LOGGER.debug('%s: Set state to %d', self.entity_id, value)
+        _LOGGER.debug("%s: Set state to %d", self.entity_id, value)
         self._flag_state = True
 
         hass_value = HOMEKIT_TO_HASS.get(value)
@@ -62,7 +68,7 @@ class Lock(HomeAccessory):
         if hass_state in HASS_TO_HOMEKIT:
             current_lock_state = HASS_TO_HOMEKIT[hass_state]
             self.char_current_state.set_value(current_lock_state)
-            _LOGGER.debug('%s: Updated current state to %s (%d)',
+            _LOGGER.debug("%s: Updated current state to %s (%d)",
                           self.entity_id, hass_state, current_lock_state)
 
             # LockTargetState only supports locked and unlocked

@@ -1,0 +1,28 @@
+{
+    "config": {
+        "error": {
+            "app_not_installed": "Please ensure you have installed and authorized the Home Assistant SmartApp and try again.",
+            "app_setup_error": "Unable to setup the SmartApp.  Please try again.",
+            "base_url_not_https": "The `base_url` for the `http` component must be configured and start with `https://`.",
+            "token_already_setup": "The token has already been setup.",
+            "token_forbidden": "The token does not have the required OAuth scopes.",
+            "token_invalid_format": "The token must be in the UID/GUID format",
+            "token_unauthorized": "The token is invalid or no longer authorized.",
+            "webhook_error": "SmartThings could not validate the endpoint configured in `base_url`. Please review the component requirements."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Access Token"
+                },
+                "description": "Please enter a SmartThings [Personal Access Token]({token_url}) that has been created per the [instructions]({component_url}).",
+                "title": "Enter Personal Access Token"
+            },
+            "wait_install": {
+                "description": "Please install the Home Assistant SmartApp in at least one location and click submit.",
+                "title": "Install SmartApp"
+            }
+        },
+        "title": "SmartThings"
+    }
+}

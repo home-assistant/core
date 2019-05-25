@@ -640,7 +640,6 @@ async def test_light_turn_on_service(hass, mock_bridge):
         'bri': 100,
         'on': True,
         'ct': 300,
-        'effect': 'none',
         'alert': 'none',
     }
 
@@ -661,7 +660,6 @@ async def test_light_turn_on_service(hass, mock_bridge):
     assert mock_bridge.mock_requests[3]['json'] == {
         'on': True,
         'xy': (0.138, 0.08),
-        'effect': 'none',
         'alert': 'none',
     }
 
@@ -701,7 +699,9 @@ def test_available():
     """Test available property."""
     light = hue_light.HueLight(
         light=Mock(state={'reachable': False},
-                   raw=LIGHT_RAW),
+                   raw=LIGHT_RAW,
+                   colorgamuttype=LIGHT_GAMUT_TYPE,
+                   colorgamut=LIGHT_GAMUT),
         request_bridge_update=None,
         bridge=Mock(allow_unreachable=False),
         is_group=False,
@@ -711,7 +711,9 @@ def test_available():
 
     light = hue_light.HueLight(
         light=Mock(state={'reachable': False},
-                   raw=LIGHT_RAW),
+                   raw=LIGHT_RAW,
+                   colorgamuttype=LIGHT_GAMUT_TYPE,
+                   colorgamut=LIGHT_GAMUT),
         request_bridge_update=None,
         bridge=Mock(allow_unreachable=True),
         is_group=False,
@@ -721,7 +723,9 @@ def test_available():
 
     light = hue_light.HueLight(
         light=Mock(state={'reachable': False},
-                   raw=LIGHT_RAW),
+                   raw=LIGHT_RAW,
+                   colorgamuttype=LIGHT_GAMUT_TYPE,
+                   colorgamut=LIGHT_GAMUT),
         request_bridge_update=None,
         bridge=Mock(allow_unreachable=False),
         is_group=True,

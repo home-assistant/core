@@ -1,9 +1,4 @@
-"""
-Connect to a MySensors gateway via pymysensors API.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mysensors/
-"""
+"""Connect to a MySensors gateway via pymysensors API."""
 import logging
 
 import voluptuous as vol
@@ -21,8 +16,6 @@ from .const import (
     DOMAIN, MYSENSORS_GATEWAYS)
 from .device import get_mysensors_devices
 from .gateway import get_mysensors_gateway, setup_gateways, finish_setup
-
-REQUIREMENTS = ['pymysensors==0.18.0']
 
 _LOGGER = logging.getLogger(__name__)
 

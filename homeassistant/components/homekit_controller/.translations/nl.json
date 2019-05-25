@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "invalid_config_entry": "Dit apparaat geeft aan dat het gereed is om te koppelen, maar er is al een conflicterend configuratie-item voor in de Home Assistant dat eerst moet worden verwijderd.",
+            "no_devices": "Er zijn geen gekoppelde apparaten gevonden"
+        },
+        "error": {
+            "authentication_error": "Onjuiste HomeKit-code. Controleer het en probeer het opnieuw.",
+            "unable_to_pair": "Kan niet koppelen, probeer het opnieuw.",
+            "unknown_error": "Apparaat meldde een onbekende fout. Koppelen mislukt."
+        },
+        "step": {
+            "pair": {
+                "data": {
+                    "pairing_code": "Koppelingscode"
+                },
+                "title": "Koppel met HomeKit accessoire"
+            },
+            "user": {
+                "data": {
+                    "device": "Apparaat"
+                },
+                "description": "Selecteer het apparaat waarmee u wilt koppelen",
+                "title": "Koppel met HomeKit accessoire"
+            }
+        },
+        "title": "HomeKit Accessoires"
+    }
+}

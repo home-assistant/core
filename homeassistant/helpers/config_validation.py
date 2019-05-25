@@ -1,27 +1,30 @@
 """Helpers for config validation using voluptuous."""
-from datetime import (timedelta, datetime as datetime_sys,
-                      time as time_sys, date as date_sys)
+import inspect
+import json
+import logging
 import os
 import re
-from urllib.parse import urlparse
+from datetime import (timedelta, datetime as datetime_sys,
+                      time as time_sys, date as date_sys)
 from socket import _GLOBAL_DEFAULT_TIMEOUT
-import logging
-import inspect
-from typing import Any, Union, TypeVar, Callable, Sequence, Dict
+from typing import Any, Union, TypeVar, Callable, Sequence, Dict, Optional
+from urllib.parse import urlparse
+from uuid import UUID
 
 import voluptuous as vol
+from pkg_resources import parse_version
 
+import homeassistant.util.dt as dt_util
 from homeassistant.const import (
-    CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
-    CONF_CONDITION, CONF_BELOW, CONF_ABOVE, CONF_TIMEOUT, SUN_EVENT_SUNSET,
-    SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC,
-    ENTITY_MATCH_ALL)
+    CONF_ABOVE, CONF_ALIAS, CONF_BELOW, CONF_CONDITION, CONF_ENTITY_ID,
+    CONF_ENTITY_NAMESPACE, CONF_NAME, CONF_PLATFORM, CONF_SCAN_INTERVAL,
+    CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC, CONF_VALUE_TEMPLATE,
+    CONF_TIMEOUT, ENTITY_MATCH_ALL, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, WEEKDAYS, __version__)
 from homeassistant.core import valid_entity_id, split_entity_id
 from homeassistant.exceptions import TemplateError
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.logging import KeywordStyleAdapter
 from homeassistant.util import slugify as util_slugify
-from homeassistant.helpers import template as template_helper
 
 # pylint: disable=invalid-name
 
@@ -32,6 +35,7 @@ OLD_ENTITY_ID_VALIDATION = r"^(\w+)\.(\w+)$"
 # persistent notification. Rare temporary exception to use a global.
 INVALID_SLUGS_FOUND = {}
 INVALID_ENTITY_IDS_FOUND = {}
+INVALID_EXTRA_KEYS_FOUND = []
 
 
 # Home Assistant types
@@ -63,6 +67,22 @@ def has_at_least_one_key(*keys: str) -> Callable:
             if k in keys:
                 return obj
         raise vol.Invalid('must contain one of {}.'.format(', '.join(keys)))
+
+    return validate
+
+
+def has_at_most_one_key(*keys: str) -> Callable:
+    """Validate that zero keys exist or one key exists."""
+    def validate(obj: Dict) -> Dict:
+        """Test zero keys exist or one key exists in dict."""
+        if not isinstance(obj, dict):
+            raise vol.Invalid('expected dictionary')
+
+        if len(set(keys) & set(obj)) > 1:
+            raise vol.Invalid(
+                'must contain at most one of {}.'.format(', '.join(keys))
+            )
+        return obj
 
     return validate
 
@@ -274,7 +294,7 @@ def time_period_str(value: str) -> timedelta:
     """Validate and transform time offset."""
     if isinstance(value, int):
         raise vol.Invalid('Make sure you wrap time values in quotes')
-    elif not isinstance(value, str):
+    if not isinstance(value, str):
         raise vol.Invalid(TIME_PERIOD_ERROR.format(value))
 
     negative_offset = False
@@ -327,6 +347,11 @@ def positive_timedelta(value: timedelta) -> timedelta:
     if value < timedelta(0):
         raise vol.Invalid('Time period should be positive')
     return value
+
+
+def remove_falsy(value: Sequence[T]) -> Sequence[T]:
+    """Remove falsy values from a list."""
+    return [v for v in value if v]
 
 
 def service(value):
@@ -419,9 +444,11 @@ unit_system = vol.All(vol.Lower, vol.Any(CONF_UNIT_SYSTEM_METRIC,
 
 def template(value):
     """Validate a jinja2 template."""
+    from homeassistant.helpers import template as template_helper
+
     if value is None:
         raise vol.Invalid('template value is None')
-    elif isinstance(value, (list, dict, template_helper.Template)):
+    if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid('template value should be a string')
 
     value = template_helper.Template(str(value))
@@ -436,13 +463,15 @@ def template(value):
 def template_complex(value):
     """Validate a complex jinja2 template."""
     if isinstance(value, list):
-        for idx, element in enumerate(value):
-            value[idx] = template_complex(element)
-        return value
+        return_value = value.copy()
+        for idx, element in enumerate(return_value):
+            return_value[idx] = template_complex(element)
+        return return_value
     if isinstance(value, dict):
-        for key, element in value.items():
-            value[key] = template_complex(element)
-        return value
+        return_value = value.copy()
+        for key, element in return_value.items():
+            return_value[key] = template_complex(element)
+        return return_value
 
     return template(value)
 
@@ -511,6 +540,20 @@ def x10_address(value):
     return str(value).lower()
 
 
+def uuid4_hex(value):
+    """Validate a v4 UUID in hex format."""
+    try:
+        result = UUID(value, version=4)
+    except (ValueError, AttributeError, TypeError) as error:
+        raise vol.Invalid('Invalid Version4 UUID', error_message=str(error))
+
+    if result.hex != value.lower():
+        # UUID() will create a uuid4 if input is invalid
+        raise vol.Invalid('Invalid Version4 UUID')
+
+    return result.hex
+
+
 def ensure_list_csv(value: Any) -> Sequence:
     """Ensure that input is a list or make one from comma-separated string."""
     if isinstance(value, str):
@@ -518,18 +561,80 @@ def ensure_list_csv(value: Any) -> Sequence:
     return ensure_list(value)
 
 
-def deprecated(key):
-    """Log key as deprecated."""
+def deprecated(key: str,
+               replacement_key: Optional[str] = None,
+               invalidation_version: Optional[str] = None,
+               default: Optional[Any] = None):
+    """
+    Log key as deprecated and provide a replacement (if exists).
+
+    Expected behavior:
+        - Outputs the appropriate deprecation warning if key is detected
+        - Processes schema moving the value from key to replacement_key
+        - Processes schema changing nothing if only replacement_key provided
+        - No warning if only replacement_key provided
+        - No warning if neither key nor replacement_key are provided
+            - Adds replacement_key with default value in this case
+        - Once the invalidation_version is crossed, raises vol.Invalid if key
+        is detected
+    """
     module_name = inspect.getmodule(inspect.stack()[1][0]).__name__
 
-    def validator(config):
+    if replacement_key and invalidation_version:
+        warning = ("The '{key}' option (with value '{value}') is"
+                   " deprecated, please replace it with '{replacement_key}'."
+                   " This option will become invalid in version"
+                   " {invalidation_version}")
+    elif replacement_key:
+        warning = ("The '{key}' option (with value '{value}') is"
+                   " deprecated, please replace it with '{replacement_key}'")
+    elif invalidation_version:
+        warning = ("The '{key}' option (with value '{value}') is"
+                   " deprecated, please remove it from your configuration."
+                   " This option will become invalid in version"
+                   " {invalidation_version}")
+    else:
+        warning = ("The '{key}' option (with value '{value}') is"
+                   " deprecated, please remove it from your configuration")
+
+    def check_for_invalid_version(value: Optional[Any]):
+        """Raise error if current version has reached invalidation."""
+        if not invalidation_version:
+            return
+
+        if parse_version(__version__) >= parse_version(invalidation_version):
+            raise vol.Invalid(
+                warning.format(
+                    key=key,
+                    value=value,
+                    replacement_key=replacement_key,
+                    invalidation_version=invalidation_version
+                )
+            )
+
+    def validator(config: Dict):
         """Check if key is in config and log warning."""
         if key in config:
-            logging.getLogger(module_name).warning(
-                "The '%s' option (with value '%s') is deprecated, please "
-                "remove it from your configuration.", key, config[key])
+            value = config[key]
+            check_for_invalid_version(value)
+            KeywordStyleAdapter(logging.getLogger(module_name)).warning(
+                warning,
+                key=key,
+                value=value,
+                replacement_key=replacement_key,
+                invalidation_version=invalidation_version
+            )
+            if replacement_key:
+                config.pop(key)
+        else:
+            value = default
+        if (replacement_key
+                and (replacement_key not in config
+                     or default == config.get(replacement_key))
+                and value is not None):
+            config[replacement_key] = value
 
-        return config
+        return has_at_most_one_key(key, replacement_key)(config)
 
     return validator
 
@@ -551,10 +656,94 @@ def key_dependency(key, dependency):
 
 
 # Schemas
+class HASchema(vol.Schema):
+    """Schema class that allows us to mark PREVENT_EXTRA errors as warnings."""
 
-PLATFORM_SCHEMA = vol.Schema({
+    def __call__(self, data):
+        """Override __call__ to mark PREVENT_EXTRA as warning."""
+        try:
+            return super().__call__(data)
+        except vol.Invalid as orig_err:
+            if self.extra != vol.PREVENT_EXTRA:
+                raise
+
+            # orig_error is of type vol.MultipleInvalid (see super __call__)
+            assert isinstance(orig_err, vol.MultipleInvalid)
+            # pylint: disable=no-member
+            # If it fails with PREVENT_EXTRA, try with ALLOW_EXTRA
+            self.extra = vol.ALLOW_EXTRA
+            # In case it still fails the following will raise
+            try:
+                validated = super().__call__(data)
+            finally:
+                self.extra = vol.PREVENT_EXTRA
+
+            # This is a legacy config, print warning
+            extra_key_errs = [err.path[-1] for err in orig_err.errors
+                              if err.error_message == 'extra keys not allowed']
+
+            if not extra_key_errs:
+                # This should not happen (all errors should be extra key
+                # errors). Let's raise the original error anyway.
+                raise orig_err
+
+            WHITELIST = [
+                re.compile(CONF_NAME),
+                re.compile(CONF_PLATFORM),
+                re.compile('.*_topic'),
+                ]
+
+            msg = "Your configuration contains extra keys " \
+                  "that the platform does not support.\n" \
+                  "Please remove "
+            submsg = ', '.join('[{}]'.format(err) for err in
+                               extra_key_errs)
+            submsg += '. '
+
+            # Add file+line information, if available
+            if hasattr(data, '__config_file__'):
+                submsg += " (See {}, line {}). ".format(
+                    data.__config_file__, data.__line__)
+
+            # Add configuration source information, if available
+            if hasattr(data, '__configuration_source__'):
+                submsg += "\nConfiguration source: {}. ".format(
+                    data.__configuration_source__)
+            redacted_data = {}
+
+            # Print configuration causing the error, but filter any potentially
+            # sensitive data
+            for k, v in data.items():
+                if (any(regex.match(k) for regex in WHITELIST) or
+                        k in extra_key_errs):
+                    redacted_data[k] = v
+                else:
+                    redacted_data[k] = '<redacted>'
+            submsg += "\nOffending data: {}".format(
+                json.dumps(redacted_data))
+
+            msg += submsg
+            logging.getLogger(__name__).warning(msg)
+            INVALID_EXTRA_KEYS_FOUND.append(submsg)
+
+            # Return legacy validated config
+            return validated
+
+    def extend(self, schema, required=None, extra=None):
+        """Extend this schema and convert it to HASchema if necessary."""
+        ret = super().extend(schema, required=required, extra=extra)
+        if extra is not None:
+            return ret
+        return HASchema(ret.schema, required=required, extra=self.extra)
+
+
+PLATFORM_SCHEMA = HASchema({
     vol.Required(CONF_PLATFORM): string,
+    vol.Optional(CONF_ENTITY_NAMESPACE): string,
     vol.Optional(CONF_SCAN_INTERVAL): time_period
+})
+
+PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({
 }, extra=vol.ALLOW_EXTRA)
 
 EVENT_SCHEMA = vol.Schema({

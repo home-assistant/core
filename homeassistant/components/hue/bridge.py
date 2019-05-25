@@ -1,10 +1,12 @@
 """Code to handle a Hue bridge."""
 import asyncio
 
+import aiohue
 import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import DOMAIN, LOGGER
@@ -30,7 +32,6 @@ class HueBridge:
         self.allow_groups = allow_groups
         self.available = True
         self.api = None
-        self._cancel_retry_setup = None
 
     @property
     def host(self):
@@ -46,7 +47,7 @@ class HueBridge:
             self.api = await get_bridge(
                 hass, host, self.config_entry.data['username'])
         except AuthenticationRequired:
-            # usernames can become invalid if hub is reset or user removed.
+            # Usernames can become invalid if hub is reset or user removed.
             # We are going to fail the config entry setup and initiate a new
             # linking procedure. When linking succeeds, it will remove the
             # old config entry.
@@ -59,20 +60,7 @@ class HueBridge:
             return False
 
         except CannotConnect:
-            retry_delay = 2 ** (tries + 1)
-            LOGGER.error("Error connecting to the Hue bridge at %s. Retrying "
-                         "in %d seconds", host, retry_delay)
-
-            async def retry_setup(_now):
-                """Retry setup."""
-                if await self.async_setup(tries + 1):
-                    # This feels hacky, we should find a better way to do this
-                    self.config_entry.state = config_entries.ENTRY_STATE_LOADED
-
-            self._cancel_retry_setup = hass.helpers.event.async_call_later(
-                retry_delay, retry_setup)
-
-            return False
+            raise ConfigEntryNotReady
 
         except Exception:  # pylint: disable=broad-except
             LOGGER.exception('Unknown error connecting with Hue bridge at %s',
@@ -81,6 +69,10 @@ class HueBridge:
 
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             self.config_entry, 'light'))
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
+            self.config_entry, 'binary_sensor'))
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
+            self.config_entry, 'sensor'))
 
         hass.services.async_register(
             DOMAIN, SERVICE_HUE_SCENE, self.hue_activate_scene,
@@ -97,13 +89,6 @@ class HueBridge:
         # The bridge can be in 3 states:
         #  - Setup was successful, self.api is not None
         #  - Authentication was wrong, self.api is None, not retrying setup.
-        #  - Host was down. self.api is None, we're retrying setup
-
-        # If we have a retry scheduled, we were never setup.
-        if self._cancel_retry_setup is not None:
-            self._cancel_retry_setup()
-            self._cancel_retry_setup = None
-            return True
 
         # If the authentication was wrong.
         if self.api is None:
@@ -113,8 +98,16 @@ class HueBridge:
 
         # If setup was successful, we set api variable, forwarded entry and
         # register service
-        return await self.hass.config_entries.async_forward_entry_unload(
-            self.config_entry, 'light')
+        results = await asyncio.gather(
+            self.hass.config_entries.async_forward_entry_unload(
+                self.config_entry, 'light'),
+            self.hass.config_entries.async_forward_entry_unload(
+                self.config_entry, 'binary_sensor'),
+            self.hass.config_entries.async_forward_entry_unload(
+                self.config_entry, 'sensor')
+            )
+        # None and True are OK
+        return False not in results
 
     async def hue_activate_scene(self, call, updated=False):
         """Service to call directly into bridge to set scenes."""
@@ -153,8 +146,6 @@ class HueBridge:
 
 async def get_bridge(hass, host, username=None):
     """Create a bridge object and verify authentication."""
-    import aiohue
-
     bridge = aiohue.Bridge(
         host, username=username,
         websession=aiohttp_client.async_get_clientsession(hass)

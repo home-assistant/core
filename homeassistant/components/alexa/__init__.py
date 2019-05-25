@@ -1,9 +1,4 @@
-"""
-Support for Alexa skill service end point.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/alexa/
-"""
+"""Support for Alexa skill service end point."""
 import logging
 
 import voluptuous as vol
@@ -21,8 +16,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_FLASH_BRIEFINGS = 'flash_briefings'
 CONF_SMART_HOME = 'smart_home'
-
-DEPENDENCIES = ['http']
 
 ALEXA_ENTITY_SCHEMA = vol.Schema({
     vol.Optional(smart_home.CONF_DESCRIPTION): cv.string,
@@ -57,7 +50,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 async def async_setup(hass, config):
-    """Activate Alexa component."""
+    """Activate the Alexa component."""
     config = config.get(DOMAIN, {})
     flash_briefings_config = config.get(CONF_FLASH_BRIEFINGS)
 

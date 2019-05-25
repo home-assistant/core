@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "network_key": "Klucz sieciowy (pozostaw pusty by generowa\u0107 automatycznie)",
+                    "network_key": "Klucz sieciowy (pozostaw pusty, by generowa\u0107 automatycznie)",
                     "usb_path": "\u015acie\u017cka do kontrolera Z-Wave USB"
                 },
                 "description": "Zobacz https://www.home-assistant.io/docs/z-wave/installation/, aby uzyska\u0107 informacje na temat zmiennych konfiguracyjnych",

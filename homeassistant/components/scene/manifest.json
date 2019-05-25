@@ -1,0 +1,10 @@
+{
+  "domain": "scene",
+  "name": "Scene",
+  "documentation": "https://www.home-assistant.io/components/scene",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

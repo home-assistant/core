@@ -257,7 +257,7 @@ async def test_if_fires_on_change_with_template_advanced(hass, calls):
     hass.states.async_set('test.entity', 'world', context=context)
     await hass.async_block_till_done()
     assert 1 == len(calls)
-    assert calls[0].context is context
+    assert calls[0].context.parent_id == context.id
     assert 'template - test.entity - hello - world' == \
         calls[0].data['some']
 
@@ -369,7 +369,7 @@ async def test_if_action(hass, calls):
 
 async def test_if_fires_on_change_with_bad_template(hass, calls):
     """Test for firing on change with bad template."""
-    with assert_setup_component(0):
+    with assert_setup_component(0, automation.DOMAIN):
         assert await async_setup_component(hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {

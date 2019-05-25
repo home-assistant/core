@@ -1,9 +1,4 @@
-"""
-Provides functionality to interact with fans.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/fan/
-"""
+"""Provides functionality to interact with fans."""
 from datetime import timedelta
 import functools as ft
 import logging
@@ -16,13 +11,13 @@ from homeassistant.const import (SERVICE_TURN_ON, SERVICE_TOGGLE,
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'fan'
-DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=30)
 
 GROUP_NAME_ALL_FANS = 'all fans'

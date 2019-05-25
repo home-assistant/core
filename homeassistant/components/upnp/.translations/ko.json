@@ -8,9 +8,6 @@
             "no_sensors_or_port_mapping": "\ucd5c\uc18c\ud55c \uc13c\uc11c \ud639\uc740 \ud3ec\ud2b8 \ub9e4\ud551\uc744 \ud65c\uc131\ud654 \ud574\uc57c \ud569\ub2c8\ub2e4",
             "single_instance_allowed": "\ud558\ub098\uc758 UPnP/IGD \ub9cc \uad6c\uc131 \ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
         },
-        "error": {
-            "other": "\ub2e4\ub978"
-        },
         "step": {
             "confirm": {
                 "description": "UPnP/IGD \ub97c \uc124\uc815 \ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",

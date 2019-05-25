@@ -1,20 +1,14 @@
-"""
-Support for the Locative platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.locative/
-"""
+"""Support for the Locative platform."""
 import logging
 
-from homeassistant.components.device_tracker import \
-    DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.components.locative import DOMAIN as LOCATIVE_DOMAIN
-from homeassistant.components.locative import TRACKER_UPDATE
+from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util import slugify
+
+from . import DOMAIN as LOCATIVE_DOMAIN, TRACKER_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['locative']
 
 DATA_KEY = '{}.{}'.format(LOCATIVE_DOMAIN, DEVICE_TRACKER_DOMAIN)
 
@@ -24,7 +18,7 @@ async def async_setup_entry(hass, entry, async_see):
     async def _set_location(device, gps_location, location_name):
         """Fire HA event to set location."""
         await async_see(
-            dev_id=device,
+            dev_id=slugify(device),
             gps=gps_location,
             location_name=location_name
         )

@@ -1,7 +1,8 @@
 """Support for esphome devices."""
 import asyncio
 import logging
-from typing import Any, Dict, List, Optional, TYPE_CHECKING, Callable
+import math
+from typing import Any, Dict, List, Optional, TYPE_CHECKING, Callable, Tuple
 
 import attr
 import voluptuous as vol
@@ -13,6 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, \
 from homeassistant.core import callback, Event, State
 import homeassistant.helpers.device_registry as dr
 from homeassistant.exceptions import TemplateError
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, \
     async_dispatcher_send
@@ -28,11 +30,10 @@ from .config_flow import EsphomeFlowHandler  # noqa
 
 if TYPE_CHECKING:
     from aioesphomeapi import APIClient, EntityInfo, EntityState, DeviceInfo, \
-        ServiceCall
+        ServiceCall, UserService
 
 DOMAIN = 'esphome'
-REQUIREMENTS = ['aioesphomeapi==1.4.2']
-
+_LOGGER = logging.getLogger(__name__)
 
 DISPATCHER_UPDATE_ENTITY = 'esphome_{entry_id}_update_{component_key}_{key}'
 DISPATCHER_REMOVE_ENTITY = 'esphome_{entry_id}_remove_{component_key}_{key}'
@@ -46,14 +47,14 @@ STORAGE_VERSION = 1
 # The HA component types this integration supports
 HA_COMPONENTS = [
     'binary_sensor',
+    'camera',
+    'climate',
     'cover',
     'fan',
     'light',
     'sensor',
     'switch',
 ]
-
-_LOGGER = logging.getLogger(__name__)
 
 # No config schema - only configuration entry
 CONFIG_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
@@ -69,6 +70,7 @@ class RuntimeEntryData:
     reconnect_task = attr.ib(type=Optional[asyncio.Task], default=None)
     state = attr.ib(type=Dict[str, Dict[str, Any]], factory=dict)
     info = attr.ib(type=Dict[str, Dict[str, Any]], factory=dict)
+    services = attr.ib(type=Dict[int, 'UserService'], factory=dict)
     available = attr.ib(type=bool, default=False)
     device_info = attr.ib(type='DeviceInfo', default=None)
     cleanup_callbacks = attr.ib(type=List[Callable[[], None]], factory=list)
@@ -105,14 +107,16 @@ class RuntimeEntryData:
         signal = DISPATCHER_ON_DEVICE_UPDATE.format(entry_id=self.entry_id)
         async_dispatcher_send(hass, signal)
 
-    async def async_load_from_store(self) -> List['EntityInfo']:
+    async def async_load_from_store(self) -> Tuple[List['EntityInfo'],
+                                                   List['UserService']]:
         """Load the retained data from store and return de-serialized data."""
         # pylint: disable= redefined-outer-name
-        from aioesphomeapi import COMPONENT_TYPE_TO_INFO, DeviceInfo
+        from aioesphomeapi import COMPONENT_TYPE_TO_INFO, DeviceInfo, \
+            UserService
 
         restored = await self.store.async_load()
         if restored is None:
-            return []
+            return [], []
 
         self.device_info = _attr_obj_from_dict(DeviceInfo,
                                                **restored.pop('device_info'))
@@ -123,23 +127,30 @@ class RuntimeEntryData:
             for info in restored_infos:
                 cls = COMPONENT_TYPE_TO_INFO[comp_type]
                 infos.append(_attr_obj_from_dict(cls, **info))
-        return infos
+        services = []
+        for service in restored.get('services', []):
+            services.append(UserService.from_dict(service))
+        return infos, services
 
     async def async_save_to_store(self) -> None:
         """Generate dynamic data to store and save it to the filesystem."""
         store_data = {
-            'device_info': attr.asdict(self.device_info)
+            'device_info': attr.asdict(self.device_info),
+            'services': []
         }
 
         for comp_type, infos in self.info.items():
             store_data[comp_type] = [attr.asdict(info)
                                      for info in infos.values()]
+        for service in self.services.values():
+            store_data['services'].append(service.to_dict())
 
         await self.store.async_save(store_data)
 
 
 def _attr_obj_from_dict(cls, **kwargs):
-    return cls(**{key: kwargs[key] for key in attr.fields_dict(cls)})
+    return cls(**{key: kwargs[key] for key in attr.fields_dict(cls)
+                  if key in kwargs})
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
@@ -233,8 +244,9 @@ async def async_setup_entry(hass: HomeAssistantType,
                                                entry_data.device_info)
             entry_data.async_update_device_state(hass)
 
-            entity_infos = await cli.list_entities()
+            entity_infos, services = await cli.list_entities_services()
             entry_data.async_update_static_infos(hass, entity_infos)
+            await _setup_services(hass, entry_data, services)
             await cli.subscribe_states(async_on_state)
             await cli.subscribe_service_calls(async_on_service_call)
             await cli.subscribe_home_assistant_states(
@@ -277,8 +289,9 @@ async def async_setup_entry(hass: HomeAssistantType,
                 entry, component))
         await asyncio.wait(tasks)
 
-        infos = await entry_data.async_load_from_store()
+        infos, services = await entry_data.async_load_from_store()
         entry_data.async_update_static_infos(hass, infos)
+        await _setup_services(hass, entry_data, services)
 
         # If first connect fails, the next re-connect will be scheduled
         # outside of _pending_task, in order not to delay HA startup
@@ -325,6 +338,7 @@ async def _setup_auto_reconnect_logic(hass: HomeAssistantType,
             # In the future another API will be set up so that the ESP can
             # notify HA of connectivity directly, but for new we'll use a
             # really short reconnect interval.
+            tries = min(tries, 10)  # prevent OverflowError
             wait_time = int(round(min(1.8**tries, 60.0)))
             _LOGGER.info("Trying to reconnect in %s seconds", wait_time)
             await asyncio.sleep(wait_time)
@@ -363,6 +377,59 @@ async def _async_setup_device_registry(hass: HomeAssistantType,
         model=device_info.model,
         sw_version=sw_version,
     )
+
+
+async def _register_service(hass: HomeAssistantType,
+                            entry_data: RuntimeEntryData,
+                            service: 'UserService'):
+    from aioesphomeapi import UserServiceArgType
+    service_name = '{}_{}'.format(entry_data.device_info.name, service.name)
+    schema = {}
+    for arg in service.args:
+        schema[vol.Required(arg.name)] = {
+            UserServiceArgType.BOOL: cv.boolean,
+            UserServiceArgType.INT: vol.Coerce(int),
+            UserServiceArgType.FLOAT: vol.Coerce(float),
+            UserServiceArgType.STRING: cv.string,
+        }[arg.type_]
+
+    async def execute_service(call):
+        await entry_data.client.execute_service(service, call.data)
+
+    hass.services.async_register(DOMAIN, service_name, execute_service,
+                                 vol.Schema(schema))
+
+
+async def _setup_services(hass: HomeAssistantType,
+                          entry_data: RuntimeEntryData,
+                          services: List['UserService']):
+    old_services = entry_data.services.copy()
+    to_unregister = []
+    to_register = []
+    for service in services:
+        if service.key in old_services:
+            # Already exists
+            matching = old_services.pop(service.key)
+            if matching != service:
+                # Need to re-register
+                to_unregister.append(matching)
+                to_register.append(service)
+        else:
+            # New service
+            to_register.append(service)
+
+    for service in old_services.values():
+        to_unregister.append(service)
+
+    entry_data.services = {serv.key: serv for serv in services}
+
+    for service in to_unregister:
+        service_name = '{}_{}'.format(entry_data.device_info.name,
+                                      service.name)
+        hass.services.async_remove(DOMAIN, service_name)
+
+    for service in to_register:
+        await _register_service(hass, entry_data, service)
 
 
 async def _cleanup_instance(hass: HomeAssistantType,
@@ -455,6 +522,51 @@ async def platform_async_setup_entry(hass: HomeAssistantType,
     )
 
 
+def esphome_state_property(func):
+    """Wrap a state property of an esphome entity.
+
+    This checks if the state object in the entity is set, and
+    prevents writing NAN values to the Home Assistant state machine.
+    """
+    @property
+    def _wrapper(self):
+        if self._state is None:
+            return None
+        val = func(self)
+        if isinstance(val, float) and math.isnan(val):
+            # Home Assistant doesn't use NAN values in state machine
+            # (not JSON serializable)
+            return None
+        return val
+    return _wrapper
+
+
+class EsphomeEnumMapper:
+    """Helper class to convert between hass and esphome enum values."""
+
+    def __init__(self, func: Callable[[], Dict[int, str]]):
+        """Construct a EsphomeEnumMapper."""
+        self._func = func
+
+    def from_esphome(self, value: int) -> str:
+        """Convert from an esphome int representation to a hass string."""
+        return self._func()[value]
+
+    def from_hass(self, value: str) -> int:
+        """Convert from a hass string to a esphome int representation."""
+        inverse = {v: k for k, v in self._func().items()}
+        return inverse[value]
+
+
+def esphome_map_enum(func: Callable[[], Dict[int, str]]):
+    """Map esphome int enum values to hass string constants.
+
+    This class has to be used as a decorator. This ensures the aioesphomeapi
+    import is only happening at runtime.
+    """
+    return EsphomeEnumMapper(func)
+
+
 class EsphomeEntity(Entity):
     """Define a generic esphome entity."""
 
@@ -475,7 +587,7 @@ class EsphomeEntity(Entity):
         self._remove_callbacks.append(
             async_dispatcher_connect(self.hass,
                                      DISPATCHER_UPDATE_ENTITY.format(**kwargs),
-                                     self.async_schedule_update_ha_state)
+                                     self._on_update)
         )
 
         self._remove_callbacks.append(
@@ -490,7 +602,11 @@ class EsphomeEntity(Entity):
                 self.async_schedule_update_ha_state)
         )
 
-    async def async_will_remove_from_hass(self):
+    async def _on_update(self) -> None:
+        """Update the entity state when state or static info changed."""
+        self.async_schedule_update_ha_state()
+
+    async def async_will_remove_from_hass(self) -> None:
         """Unregister callbacks."""
         for remove_callback in self._remove_callbacks:
             remove_callback()
@@ -539,7 +655,7 @@ class EsphomeEntity(Entity):
         return self._static_info.unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> Dict[str, Any]:
         """Return device registry information for this entity."""
         return {
             'connections': {(dr.CONNECTION_NETWORK_MAC,

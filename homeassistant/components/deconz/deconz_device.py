@@ -4,7 +4,7 @@ from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DECONZ_REACHABLE, DOMAIN as DECONZ_DOMAIN
+from .const import DOMAIN as DECONZ_DOMAIN
 
 
 class DeconzDevice(Entity):
@@ -21,14 +21,14 @@ class DeconzDevice(Entity):
         self._device.register_async_callback(self.async_update_callback)
         self.gateway.deconz_ids[self.entity_id] = self._device.deconz_id
         self.unsub_dispatcher = async_dispatcher_connect(
-            self.hass, DECONZ_REACHABLE, self.async_update_callback)
+            self.hass, self.gateway.event_reachable,
+            self.async_update_callback)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
-        if self.unsub_dispatcher is not None:
-            self.unsub_dispatcher()
         self._device.remove_callback(self.async_update_callback)
-        self._device = None
+        del self.gateway.deconz_ids[self.entity_id]
+        self.unsub_dispatcher()
 
     @callback
     def async_update_callback(self, reason):
@@ -61,8 +61,10 @@ class DeconzDevice(Entity):
         if (self._device.uniqueid is None or
                 self._device.uniqueid.count(':') != 7):
             return None
+
         serial = self._device.uniqueid.split('-', 1)[0]
         bridgeid = self.gateway.api.config.bridgeid
+
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},

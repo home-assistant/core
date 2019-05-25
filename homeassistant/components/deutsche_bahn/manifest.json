@@ -1,0 +1,10 @@
+{
+  "domain": "deutsche_bahn",
+  "name": "Deutsche bahn",
+  "documentation": "https://www.home-assistant.io/components/deutsche_bahn",
+  "requirements": [
+    "schiene==0.23"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

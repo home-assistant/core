@@ -1,9 +1,4 @@
-"""
-Support for Locative.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/locative/
-"""
+"""Support for Locative."""
 import logging
 from typing import Dict
 
@@ -21,8 +16,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'locative'
-DEPENDENCIES = ['webhook']
-
 TRACKER_UPDATE = '{}_tracker_update'.format(DOMAIN)
 
 
@@ -48,8 +41,8 @@ WEBHOOK_SCHEMA = vol.All(
         vol.Required(ATTR_LONGITUDE): cv.longitude,
         vol.Required(ATTR_DEVICE_ID): cv.string,
         vol.Required(ATTR_TRIGGER): cv.string,
-        vol.Optional(ATTR_ID): vol.All(cv.string, _id)
-    }),
+        vol.Optional(ATTR_ID): vol.All(cv.string, _id),
+    }, extra=vol.ALLOW_EXTRA),
     _validate_test_mode
 )
 
@@ -65,7 +58,7 @@ async def handle_webhook(hass, webhook_id, request):
         data = WEBHOOK_SCHEMA(dict(await request.post()))
     except vol.MultipleInvalid as error:
         return web.Response(
-            body=error.error_message,
+            text=error.error_message,
             status=HTTP_UNPROCESSABLE_ENTITY
         )
 
@@ -83,7 +76,7 @@ async def handle_webhook(hass, webhook_id, request):
             location_name
         )
         return web.Response(
-            body='Setting location to {}'.format(location_name),
+            text='Setting location to {}'.format(location_name),
             status=HTTP_OK
         )
 
@@ -101,7 +94,7 @@ async def handle_webhook(hass, webhook_id, request):
                 location_name
             )
             return web.Response(
-                body='Setting location to not home',
+                text='Setting location to not home',
                 status=HTTP_OK
             )
 
@@ -110,7 +103,7 @@ async def handle_webhook(hass, webhook_id, request):
         # before the previous zone was exited. The enter message will
         # be sent first, then the exit message will be sent second.
         return web.Response(
-            body='Ignoring exit from {} (already in {})'.format(
+            text='Ignoring exit from {} (already in {})'.format(
                 location_name, current_state
             ),
             status=HTTP_OK
@@ -120,14 +113,14 @@ async def handle_webhook(hass, webhook_id, request):
         # In the app, a test message can be sent. Just return something to
         # the user to let them know that it works.
         return web.Response(
-            body='Received test message.',
+            text='Received test message.',
             status=HTTP_OK
         )
 
     _LOGGER.error('Received unidentified message from Locative: %s',
                   direction)
     return web.Response(
-        body='Received unidentified message: {}'.format(direction),
+        text='Received unidentified message: {}'.format(direction),
         status=HTTP_UNPROCESSABLE_ENTITY
     )
 
@@ -146,9 +139,13 @@ async def async_setup_entry(hass, entry):
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
-
     await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
     return True
+
+
+# pylint: disable=invalid-name
+async_remove_entry = config_entry_flow.webhook_async_remove_entry
+
 
 config_entry_flow.register_webhook_flow(
     DOMAIN,

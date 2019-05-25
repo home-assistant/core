@@ -12,8 +12,8 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
-from homeassistant.helpers.service import extract_entity_ids
-from homeassistant.loader import bind_hass
+from homeassistant.helpers.service import async_extract_entity_ids
+from homeassistant.loader import bind_hass, async_get_integration
 from homeassistant.util import slugify
 from .entity_platform import EntityPlatform
 
@@ -124,7 +124,11 @@ class EntityComponent:
         """Set up a config entry."""
         platform_type = config_entry.domain
         platform = await async_prepare_setup_platform(
-            self.hass, self.config, self.domain, platform_type)
+            self.hass,
+            # In future PR we should make hass_config part of the constructor
+            # params.
+            self.config or {},
+            self.domain, platform_type)
 
         if platform is None:
             return False
@@ -153,8 +157,7 @@ class EntityComponent:
         await platform.async_reset()
         return True
 
-    @callback
-    def async_extract_from_service(self, service, expand_group=True):
+    async def async_extract_from_service(self, service, expand_group=True):
         """Extract all known and available entities from a service call.
 
         Will return all entities if no entities specified in call.
@@ -174,18 +177,21 @@ class EntityComponent:
 
             return [entity for entity in self.entities if entity.available]
 
-        entity_ids = set(extract_entity_ids(self.hass, service, expand_group))
+        entity_ids = await async_extract_entity_ids(
+            self.hass, service, expand_group)
         return [entity for entity in self.entities
                 if entity.available and entity.entity_id in entity_ids]
 
     @callback
-    def async_register_entity_service(self, name, schema, func):
+    def async_register_entity_service(self, name, schema, func,
+                                      required_features=None):
         """Register an entity service."""
         async def handle_service(call):
             """Handle the service."""
             service_name = "{}.{}".format(self.domain, name)
             await self.hass.helpers.service.entity_service_call(
-                self._platforms.values(), func, call, service_name
+                self._platforms.values(), func, call, service_name,
+                required_features
             )
 
         self.hass.services.async_register(
@@ -274,8 +280,10 @@ class EntityComponent:
             self.logger.error(err)
             return None
 
-        conf = conf_util.async_process_component_config(
-            self.hass, conf, self.domain)
+        integration = await async_get_integration(self.hass, self.domain)
+
+        conf = await conf_util.async_process_component_config(
+            self.hass, conf, integration)
 
         if conf is None:
             return None

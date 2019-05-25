@@ -34,16 +34,20 @@ class Events(Base):  # type: ignore
     created = Column(DateTime(timezone=True), default=datetime.utcnow)
     context_id = Column(String(36), index=True)
     context_user_id = Column(String(36), index=True)
+    # context_parent_id = Column(String(36), index=True)
 
     @staticmethod
     def from_event(event):
         """Create an event database object from a native event."""
-        return Events(event_type=event.event_type,
-                      event_data=json.dumps(event.data, cls=JSONEncoder),
-                      origin=str(event.origin),
-                      time_fired=event.time_fired,
-                      context_id=event.context.id,
-                      context_user_id=event.context.user_id)
+        return Events(
+            event_type=event.event_type,
+            event_data=json.dumps(event.data, cls=JSONEncoder),
+            origin=str(event.origin),
+            time_fired=event.time_fired,
+            context_id=event.context.id,
+            context_user_id=event.context.user_id,
+            # context_parent_id=event.context.parent_id,
+        )
 
     def to_native(self):
         """Convert to a natve HA Event."""
@@ -81,6 +85,7 @@ class States(Base):   # type: ignore
     created = Column(DateTime(timezone=True), default=datetime.utcnow)
     context_id = Column(String(36), index=True)
     context_user_id = Column(String(36), index=True)
+    # context_parent_id = Column(String(36), index=True)
 
     __table_args__ = (
         # Used for fetching the state of entities at a specific time
@@ -99,6 +104,7 @@ class States(Base):   # type: ignore
             entity_id=entity_id,
             context_id=event.context.id,
             context_user_id=event.context.user_id,
+            # context_parent_id=event.context.parent_id,
         )
 
         # State got deleted

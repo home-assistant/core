@@ -20,6 +20,7 @@ GROUP = {
             "id": "1",
             "name": "Scene 1"
         }],
+        "lights": [],
     }
 }
 
@@ -46,7 +47,7 @@ async def setup_gateway(hass, data):
     gateway = deconz.DeconzGateway(hass, config_entry)
     gateway.api = DeconzSession(loop, session, **config_entry.data)
     gateway.api.config = Mock()
-    hass.data[deconz.DOMAIN] = gateway
+    hass.data[deconz.DOMAIN] = {gateway.bridgeid: gateway}
 
     with patch('pydeconz.DeconzSession.async_get_state',
                return_value=mock_coro(data)):
@@ -55,6 +56,7 @@ async def setup_gateway(hass, data):
     await hass.config_entries.async_forward_entry_setup(config_entry, 'scene')
     # To flush out the service call to update the group
     await hass.async_block_till_done()
+    return gateway
 
 
 async def test_platform_manually_configured(hass):
@@ -69,8 +71,8 @@ async def test_platform_manually_configured(hass):
 
 async def test_no_scenes(hass):
     """Test that scenes can be loaded without scenes being available."""
-    await setup_gateway(hass, {})
-    assert len(hass.data[deconz.DOMAIN].deconz_ids) == 0
+    gateway = await setup_gateway(hass, {})
+    assert not hass.data[deconz.DOMAIN][gateway.bridgeid].deconz_ids
     assert len(hass.states.async_all()) == 0
 
 
@@ -78,8 +80,8 @@ async def test_scenes(hass):
     """Test that scenes works."""
     with patch('pydeconz.DeconzSession.async_put_state',
                return_value=mock_coro(True)):
-        await setup_gateway(hass, {"groups": GROUP})
-    assert "scene.group_1_name_scene_1" in hass.data[deconz.DOMAIN].deconz_ids
+        gateway = await setup_gateway(hass, {"groups": GROUP})
+    assert "scene.group_1_name_scene_1" in gateway.deconz_ids
     assert len(hass.states.async_all()) == 1
 
     await hass.services.async_call('scene', 'turn_on', {
@@ -89,8 +91,8 @@ async def test_scenes(hass):
 
 async def test_unload_scene(hass):
     """Test that it works to unload scene entities."""
-    await setup_gateway(hass, {"groups": GROUP})
+    gateway = await setup_gateway(hass, {"groups": GROUP})
 
-    await hass.data[deconz.DOMAIN].async_reset()
+    await gateway.async_reset()
 
     assert len(hass.states.async_all()) == 0

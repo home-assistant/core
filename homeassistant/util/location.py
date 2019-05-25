@@ -3,13 +3,14 @@ Module with location helpers.
 
 detect_location_info and elevation are mocked by default during tests.
 """
+import asyncio
 import collections
 import math
 from typing import Any, Optional, Tuple, Dict
 
-import requests
+import aiohttp
 
-ELEVATION_URL = 'http://maps.googleapis.com/maps/api/elevation/json'
+ELEVATION_URL = 'https://api.open-elevation.com/api/v1/lookup'
 IP_API = 'http://ip-api.com/json'
 IPAPI = 'https://ipapi.co/json/'
 
@@ -33,12 +34,13 @@ LocationInfo = collections.namedtuple(
      'use_metric'])
 
 
-def detect_location_info() -> Optional[LocationInfo]:
+async def async_detect_location_info(session: aiohttp.ClientSession) \
+        -> Optional[LocationInfo]:
     """Detect location information."""
-    data = _get_ipapi()
+    data = await _get_ipapi(session)
 
     if data is None:
-        data = _get_ip_api()
+        data = await _get_ip_api(session)
 
     if data is None:
         return None
@@ -63,24 +65,26 @@ def distance(lat1: Optional[float], lon1: Optional[float],
     return result * 1000
 
 
-def elevation(latitude: float, longitude: float) -> int:
+async def async_get_elevation(session: aiohttp.ClientSession, latitude: float,
+                              longitude: float) -> int:
     """Return elevation for given latitude and longitude."""
     try:
-        req = requests.get(
-            ELEVATION_URL,
-            params={
-                'locations': '{},{}'.format(latitude, longitude),
-                'sensor': 'false',
-            },
-            timeout=10)
-    except requests.RequestException:
+        resp = await session.get(ELEVATION_URL, params={
+            'locations': '{},{}'.format(latitude, longitude),
+        }, timeout=5)
+    except (aiohttp.ClientError, asyncio.TimeoutError):
         return 0
 
-    if req.status_code != 200:
+    if resp.status != 200:
         return 0
 
     try:
-        return int(float(req.json()['results'][0]['elevation']))
+        raw_info = await resp.json()
+    except (aiohttp.ClientError, ValueError):
+        return 0
+
+    try:
+        return int(float(raw_info['results'][0]['elevation']))
     except (ValueError, KeyError, IndexError):
         return 0
 
@@ -118,7 +122,7 @@ def vincenty(point1: Tuple[float, float], point2: Tuple[float, float],
         cosLambda = math.cos(Lambda)
         sinSigma = math.sqrt((cosU2 * sinLambda) ** 2 +
                              (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda) ** 2)
-        if sinSigma == 0:
+        if sinSigma == 0.0:
             return 0.0  # coincident points
         cosSigma = sinU1 * sinU2 + cosU1 * cosU2 * cosLambda
         sigma = math.atan2(sinSigma, cosSigma)
@@ -159,11 +163,17 @@ def vincenty(point1: Tuple[float, float], point2: Tuple[float, float],
     return round(s, 6)
 
 
-def _get_ipapi() -> Optional[Dict[str, Any]]:
+async def _get_ipapi(session: aiohttp.ClientSession) \
+        -> Optional[Dict[str, Any]]:
     """Query ipapi.co for location data."""
     try:
-        raw_info = requests.get(IPAPI, timeout=5).json()
-    except (requests.RequestException, ValueError):
+        resp = await session.get(IPAPI, timeout=5)
+    except (aiohttp.ClientError, asyncio.TimeoutError):
+        return None
+
+    try:
+        raw_info = await resp.json()
+    except (aiohttp.ClientError, ValueError):
         return None
 
     return {
@@ -180,13 +190,18 @@ def _get_ipapi() -> Optional[Dict[str, Any]]:
     }
 
 
-def _get_ip_api() -> Optional[Dict[str, Any]]:
+async def _get_ip_api(session: aiohttp.ClientSession) \
+        -> Optional[Dict[str, Any]]:
     """Query ip-api.com for location data."""
     try:
-        raw_info = requests.get(IP_API, timeout=5).json()
-    except (requests.RequestException, ValueError):
+        resp = await session.get(IP_API, timeout=5)
+    except (aiohttp.ClientError, asyncio.TimeoutError):
         return None
 
+    try:
+        raw_info = await resp.json()
+    except (aiohttp.ClientError, ValueError):
+        return None
     return {
         'ip': raw_info.get('query'),
         'country_code': raw_info.get('countryCode'),

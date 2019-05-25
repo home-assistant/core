@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "credential_error": "Error fetching credentials.",
+            "devices_configured": "All devices found are already configured.",
+            "no_devices_found": "No PlayStation 4 devices found on the network.",
+            "port_987_bind_error": "Could not bind to port 987. Refer to the [documentation](https://www.home-assistant.io/components/ps4/) for additional info.",
+            "port_997_bind_error": "Could not bind to port 997. Refer to the [documentation](https://www.home-assistant.io/components/ps4/) for additional info."
+        },
+        "error": {
+            "credential_timeout": "Credential service timed out. Press submit to restart.",
+            "login_failed": "Failed to pair to PlayStation 4. Verify PIN is correct.",
+            "no_ipaddress": "Enter the IP Address of the PlayStation 4 you would like to configure.",
+            "not_ready": "PlayStation 4 is not on or connected to network."
+        },
+        "step": {
+            "creds": {
+                "description": "Credentials needed. Press 'Submit' and then in the PS4 2nd Screen App, refresh devices and select the 'Home-Assistant' device to continue.",
+                "title": "PlayStation 4"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN",
+                    "ip_address": "IP Address",
+                    "name": "Name",
+                    "region": "Region"
+                },
+                "description": "Enter your PlayStation 4 information. For 'PIN', navigate to 'Settings' on your PlayStation 4 console. Then navigate to 'Mobile App Connection Settings' and select 'Add Device'. Enter the PIN that is displayed. Refer to the [documentation](https://www.home-assistant.io/components/ps4/) for additional info.",
+                "title": "PlayStation 4"
+            },
+            "mode": {
+                "data": {
+                    "ip_address": "IP Address (Leave empty if using Auto Discovery).",
+                    "mode": "Config Mode"
+                },
+                "description": "Select mode for configuration. The IP Address field can be left blank if selecting Auto Discovery, as devices will be automatically discovered.",
+                "title": "PlayStation 4"
+            }
+        },
+        "title": "PlayStation 4"
+    }
+}
