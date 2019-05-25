@@ -3,7 +3,9 @@
   "name": "Fitbit",
   "documentation": "https://www.home-assistant.io/components/fitbit",
   "requirements": [
-    "fitbit==0.3.0"
+    "fitbit==0.3.0",
+    "requests-oauthlib==1.1.0",
+    "oauthlib==2.1.0"
   ],
   "dependencies": [
     "configurator",
