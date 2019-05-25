@@ -317,8 +317,6 @@ class PlexClient(MediaPlayerDevice):
 
         self.refresh(device, session)
 
-        self.entity_id = "{}.{}_{}".format('media_player', 'plex', self.name)
-
     def _clear_media_details(self):
         """Set all Media Items to None."""
         # General
@@ -360,7 +358,8 @@ class PlexClient(MediaPlayerDevice):
                 self._device.proxyThroughServer()
             self._session = None
             self._machine_identifier = self._device.machineIdentifier
-            self._name = self._device.title or DEVICE_DEFAULT_NAME
+            self._name = '{} {}'.format('Plex', self._device.title or \
+                    DEVICE_DEFAULT_NAME)
             self._device_protocol_capabilities = (
                 self._device.protocolCapabilities)
 
@@ -377,7 +376,7 @@ class PlexClient(MediaPlayerDevice):
                 self._player = [p for p in self._session.players
                                 if p.machineIdentifier ==
                                 self._device.machineIdentifier][0]
-                self._name = self._player.title
+                self._name = '{} {}'.format('Plex', self._player.title)
                 self._player_state = self._player.state
                 self._session_username = self._session.usernames[0]
                 self._make = self._player.device
