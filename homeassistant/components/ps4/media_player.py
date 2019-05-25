@@ -8,12 +8,13 @@ from homeassistant.components.media_player import (
     ENTITY_IMAGE_URL, MediaPlayerDevice)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_GAME, MEDIA_TYPE_APP, SUPPORT_SELECT_SOURCE,
-    SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
+    SUPPORT_PAUSE, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
 from homeassistant.components.ps4 import format_unique_id
 from homeassistant.const import (
     ATTR_COMMAND, ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_REGION,
     CONF_TOKEN, STATE_IDLE, STATE_OFF, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.util.json import load_json, save_json
 
 from .const import (DOMAIN as PS4_DOMAIN, PS4_DATA,
@@ -22,7 +23,7 @@ from .const import (DOMAIN as PS4_DOMAIN, PS4_DATA,
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_PS4 = SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
-    SUPPORT_STOP | SUPPORT_SELECT_SOURCE
+    SUPPORT_PAUSE | SUPPORT_STOP | SUPPORT_SELECT_SOURCE
 
 ICON = 'mdi:playstation'
 GAMES_FILE = '.ps4-games.json'
@@ -125,7 +126,6 @@ class PS4Device(MediaPlayerDevice):
     def add_to_handler(self):
         """Add entity and callback to status handler."""
         self._handler = self.hass.data[PS4_DATA].handler
-        self._handler.add_ps4(self._ps4)
         self._handler.add_callback(self._ps4, self.status_callback)
 
     @callback
@@ -162,7 +162,7 @@ class PS4Device(MediaPlayerDevice):
 
         if self._info is None:
             # Add entity to registry.
-            self.get_device_info(status)
+            await self.async_get_device_info(status)
 
         if status is not None:
             self._games = self.load_games()
@@ -194,8 +194,7 @@ class PS4Device(MediaPlayerDevice):
                     self._state = STATE_PLAYING
                     if self._media_content_id != title_id:
                         self._media_content_id = title_id
-                        await self.hass.async_add_executor_job(
-                            self.get_title_data, title_id, name)
+                        await self.async_get_title_data(title_id, name)
                 else:
                     self.idle()
             else:
@@ -231,29 +230,34 @@ class PS4Device(MediaPlayerDevice):
         self._media_type = None
         self._source = None
 
-    def get_title_data(self, title_id, name):
+    async def async_get_title_data(self, title_id, name):
         """Get PS Store Data."""
         from pyps4_homeassistant.errors import PSDataIncomplete
         app_name = None
         art = None
         try:
-            title = self._ps4.get_ps_store_data(
+            title = await self._ps4.async_get_ps_store_data(
                 name, title_id, self._region)
         except PSDataIncomplete:
-            _LOGGER.error(
-                "Could not find data in region: %s for PS ID: %s",
-                self._region, title_id)
+            title = None
         else:
-            app_name = title.name
-            art = title.cover_art
+            if title is not None:
+                app_name = title.name
+                art = title.cover_art
+            else:
+                _LOGGER.error(
+                    "Could not find data in region: %s for PS ID: %s",
+                    self._region, title_id)
         finally:
             self._media_title = app_name or name
             self._source = self._media_title
-            self._media_image = art
-            if title.game_type == 'App':
-                self._media_type = MEDIA_TYPE_APP
-            else:
+            self._media_image = art or None
+
+            # Assume media type is game if search fails.
+            if title.game_type != 'App' or title is None:
                 self._media_type = MEDIA_TYPE_GAME
+            else:
+                self._media_type = MEDIA_TYPE_APP
             self.update_list()
 
     def update_list(self):
@@ -299,12 +303,12 @@ class PS4Device(MediaPlayerDevice):
             games.update(game)
             self.save_games(games)
 
-    def get_device_info(self, status):
+    async def async_get_device_info(self, status):
         """Set device info for registry."""
         # If cannot get status on startup, assume info from registry.
         if status is None:
-            e_registry = self.hass.data['entity_registry']
-            d_registry = self.hass.data['device_registry']
+            e_registry = await entity_registry.async_get_registry()
+            d_registry = await device_registry.async_get_registry()
             for entity_id, entry in e_registry.entities.items():
                 if entry.config_entry_id == self._entry_id:
                     self._unique_id = entry.unique_id
@@ -339,9 +343,10 @@ class PS4Device(MediaPlayerDevice):
 
     async def async_will_remove_from_hass(self):
         """Remove Entity from Hass."""
-        # Close TCP Socket
+        # Close TCP Socket, Stop listener.
         if self._ps4.connected:
             await self.hass.async_add_executor_job(self._ps4.close)
+        self._handler.remove_listener(self._ps4)
         self.hass.data[PS4_DATA].devices.remove(self)
 
     @property
