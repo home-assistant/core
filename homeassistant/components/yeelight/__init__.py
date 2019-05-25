@@ -178,14 +178,12 @@ class YeelightDevice:
 
     def __init__(self, hass, ipaddr, config):
         """Initialize device."""
-        import yeelight
-
         self._hass = hass
         self._config = config
         self._ipaddr = ipaddr
         self._name = config.get(CONF_NAME)
         self._model = config.get(CONF_MODEL)
-        self._bulb_device = yeelight.Bulb(self.ipaddr, model=self._model)
+        self._bulb_device = Bulb(self.ipaddr, model=self._model)
         self._device_type = None
         self._available = False
         self._initialized = False
