@@ -2,8 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "UPnP/IGD jest ju\u017c skonfigurowane",
+            "incomplete_device": "Ignorowanie niekompletnego urz\u0105dzenia UPnP",
             "no_devices_discovered": "Nie wykryto urz\u0105dze\u0144 UPnP/IGD",
-            "no_sensors_or_port_mapping": "W\u0142\u0105cz przynajmniej sensory lub mapowanie port\u00f3w"
+            "no_devices_found": "Nie znaleziono w sieci urz\u0105dze\u0144 UPnP/IGD.",
+            "no_sensors_or_port_mapping": "W\u0142\u0105cz przynajmniej sensory lub mapowanie port\u00f3w",
+            "single_instance_allowed": "Wymagana jest tylko jedna konfiguracja UPnP/IGD."
         },
         "error": {
             "few": "kilka",
@@ -12,6 +15,10 @@
             "other": "inne"
         },
         "step": {
+            "confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 UPnP/IGD?",
+                "title": "UPnP/IGD"
+            },
             "init": {
                 "title": "UPnP/IGD"
             },

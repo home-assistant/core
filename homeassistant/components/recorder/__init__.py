@@ -1,12 +1,4 @@
-"""
-Support for recording details.
-
-Component that records all events and state changes. Allows other components
-to query this database.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/recorder/
-"""
+"""Support for recording details."""
 import asyncio
 from collections import namedtuple
 import concurrent.futures
@@ -28,13 +20,10 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
-from homeassistant.loader import bind_hass
 
 from . import migration, purge
 from .const import DATA_INSTANCE
 from .util import session_scope
-
-REQUIREMENTS = ['sqlalchemy==1.2.11']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,12 +70,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_DB_URL): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
-
-
-@bind_hass
-async def wait_connection_ready(hass):
-    """Wait till the connection is ready."""
-    return await hass.data[DATA_INSTANCE].async_db_ready
 
 
 def run_information(hass, point_in_time: Optional[datetime] = None):
@@ -307,14 +290,24 @@ class Recorder(threading.Thread):
                     time.sleep(CONNECT_RETRY_WAIT)
                 try:
                     with session_scope(session=self.get_session()) as session:
-                        dbevent = Events.from_event(event)
-                        session.add(dbevent)
-                        session.flush()
+                        try:
+                            dbevent = Events.from_event(event)
+                            session.add(dbevent)
+                            session.flush()
+                        except (TypeError, ValueError):
+                            _LOGGER.warning(
+                                "Event is not JSON serializable: %s", event)
 
                         if event.event_type == EVENT_STATE_CHANGED:
-                            dbstate = States.from_event(event)
-                            dbstate.event_id = dbevent.event_id
-                            session.add(dbstate)
+                            try:
+                                dbstate = States.from_event(event)
+                                dbstate.event_id = dbevent.event_id
+                                session.add(dbstate)
+                            except (TypeError, ValueError):
+                                _LOGGER.warning(
+                                    "State is not JSON serializable: %s",
+                                    event.data.get('new_state'))
+
                     updated = True
 
                 except exc.OperationalError as err:
@@ -322,6 +315,10 @@ class Recorder(threading.Thread):
                                   "(retrying in %s seconds)", err,
                                   CONNECT_RETRY_WAIT)
                     tries += 1
+
+                except exc.SQLAlchemyError:
+                    updated = True
+                    _LOGGER.exception("Error saving event: %s", event)
 
             if not updated:
                 _LOGGER.error("Error in database update. Could not save "

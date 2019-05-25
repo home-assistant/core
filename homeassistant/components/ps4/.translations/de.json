@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "credential_error": "Fehler beim Abrufen der Anmeldeinformationen.",
+            "devices_configured": "Alle gefundenen Ger\u00e4te sind bereits konfiguriert.",
+            "no_devices_found": "Es wurden keine PlayStation 4 im Netzwerk gefunden.",
+            "port_987_bind_error": "Bind to Port 987 nicht m\u00f6glich.",
+            "port_997_bind_error": "Bind to Port 997 nicht m\u00f6glich."
+        },
+        "error": {
+            "credential_timeout": "Zeit\u00fcberschreitung beim Warten auf den Anmeldedienst. Klicken zum Neustarten auf Senden.",
+            "login_failed": "Fehler beim Koppeln mit PlayStation 4. \u00dcberpr\u00fcfe, ob die PIN korrekt ist.",
+            "no_ipaddress": "Gib die IP-Adresse der PlayStation 4 ein, die konfiguriert werden soll.",
+            "not_ready": "PlayStation 4 ist nicht eingeschaltet oder mit dem Netzwerk verbunden."
+        },
+        "step": {
+            "creds": {
+                "description": "Anmeldeinformationen ben\u00f6tigt. Klicke auf \"Senden\" und dann in der PS4 Second Screen app, aktualisiere die Ger\u00e4te und w\u00e4hle das \"Home-Assistant\"-Ger\u00e4t aus, um fortzufahren.",
+                "title": "PlayStation 4"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN",
+                    "ip_address": "IP-Adresse",
+                    "name": "Name",
+                    "region": "Region"
+                },
+                "description": "Geben Sie Ihre PlayStation 4-Informationen ein. Navigiere f\u00fcr \"PIN\" auf der PlayStation 4-Konsole zu \"Einstellungen\". Navigiere dann zu \"Mobile App-Verbindungseinstellungen\" und w\u00e4hle \"Ger\u00e4t hinzuf\u00fcgen\" aus. Gib die angezeigte PIN ein.",
+                "title": "PlayStation 4"
+            },
+            "mode": {
+                "data": {
+                    "ip_address": "IP-Adresse (Leer lassen, wenn automatische Erkennung verwendet wird).",
+                    "mode": "Konfigurationsmodus"
+                },
+                "description": "W\u00e4hlen Sie den Modus f\u00fcr die Konfiguration aus. Das Feld IP-Adresse kann leer bleiben, wenn die automatische Erkennung ausgew\u00e4hlt wird, da Ger\u00e4te automatisch erkannt werden.",
+                "title": "PlayStation 4"
+            }
+        },
+        "title": "PlayStation 4"
+    }
+}

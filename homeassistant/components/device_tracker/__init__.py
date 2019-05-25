@@ -1,9 +1,4 @@
-"""
-Provide functionality to keep track of devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/device_tracker/
-"""
+"""Provide functionality to keep track of devices."""
 import asyncio
 from datetime import timedelta
 import logging
@@ -22,11 +17,10 @@ from homeassistant.components.zone.zone import async_active_zone
 from homeassistant.config import load_yaml_config_file, async_log_exception
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.restore_state import async_get_last_state
-from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
 from homeassistant import util
 from homeassistant.util.async_ import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
@@ -41,8 +35,6 @@ from homeassistant.const import (
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'device_tracker'
-DEPENDENCIES = ['zone', 'group']
-
 GROUP_NAME_ALL_DEVICES = 'all devices'
 ENTITY_ID_ALL_DEVICES = group.ENTITY_ID_FORMAT.format('all_devices')
 
@@ -97,6 +89,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NEW_DEVICE_DEFAULTS,
                  default={}): NEW_DEVICE_DEFAULTS_SCHEMA
 })
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
 SERVICE_SEE_PAYLOAD_SCHEMA = vol.Schema(vol.All(
     cv.has_at_least_one_key(ATTR_MAC, ATTR_DEV_ID), {
         ATTR_MAC: cv.string,
@@ -182,6 +175,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
                 setup = await hass.async_add_job(
                     platform.setup_scanner, hass, p_config, tracker.see,
                     disc_info)
+            elif hasattr(platform, 'async_setup_entry'):
+                setup = await platform.async_setup_entry(
+                    hass, p_config, tracker.async_see)
             else:
                 raise HomeAssistantError("Invalid device_tracker platform.")
 
@@ -196,6 +192,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Error setting up platform %s", p_type)
+
+    hass.data[DOMAIN] = async_setup_platform
 
     setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
                    in config_per_platform(config, DOMAIN)]
@@ -227,6 +225,12 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     # restore
     await tracker.async_setup_tracked_device()
+    return True
+
+
+async def async_setup_entry(hass, entry):
+    """Set up an entry."""
+    await hass.data[DOMAIN](entry.domain, entry)
     return True
 
 
@@ -280,7 +284,7 @@ class DeviceTracker:
         """
         if mac is None and dev_id is None:
             raise HomeAssistantError('Neither mac or device id passed in')
-        elif mac is not None:
+        if mac is not None:
             mac = str(mac).upper()
             device = self.mac_to_dev.get(mac)
             if not device:
@@ -395,7 +399,7 @@ class DeviceTracker:
             await asyncio.wait(tasks, loop=self.hass.loop)
 
 
-class Device(Entity):
+class Device(RestoreEntity):
     """Represent a tracked device."""
 
     host_name = None  # type: str
@@ -528,8 +532,14 @@ class Device(Entity):
 
         Async friendly.
         """
-        return self.last_seen and \
+        return self.last_seen is None or \
             (now or dt_util.utcnow()) - self.last_seen > self.consider_home
+
+    def mark_stale(self):
+        """Mark the device state as stale."""
+        self._state = STATE_NOT_HOME
+        self.gps = None
+        self.last_update_home = False
 
     async def async_update(self):
         """Update state of entity.
@@ -550,19 +560,20 @@ class Device(Entity):
             else:
                 self._state = zone_state.name
         elif self.stale():
-            self._state = STATE_NOT_HOME
-            self.gps = None
-            self.last_update_home = False
+            self.mark_stale()
         else:
             self._state = STATE_HOME
             self.last_update_home = True
 
     async def async_added_to_hass(self):
         """Add an entity."""
-        state = await async_get_last_state(self.hass, self.entity_id)
+        await super().async_added_to_hass()
+        state = await self.async_get_last_state()
         if not state:
             return
         self._state = state.state
+        self.last_update_home = (state.state == STATE_HOME)
+        self.last_seen = dt_util.utcnow()
 
         for attr, var in (
                 (ATTR_SOURCE_TYPE, 'source_type'),
@@ -699,8 +710,8 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
                 seen.add(mac)
 
             try:
-                extra_attributes = (await
-                                    scanner.async_get_extra_attributes(mac))
+                extra_attributes = \
+                    await scanner.async_get_extra_attributes(mac)
             except NotImplementedError:
                 extra_attributes = dict()
 

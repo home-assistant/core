@@ -19,6 +19,11 @@ def migrate_schema(instance):
             SchemaChanges.change_id.desc()).first()
         current_version = getattr(res, 'schema_version', None)
 
+        if current_version is None:
+            current_version = _inspect_schema_version(instance.engine, session)
+            _LOGGER.debug("No schema version found. Inspected version: %s",
+                          current_version)
+
         if current_version == SCHEMA_VERSION:
             # Clean up if old migration left file
             if os.path.isfile(progress_path):
@@ -29,13 +34,8 @@ def migrate_schema(instance):
         with open(progress_path, 'w'):
             pass
 
-        _LOGGER.warning("Database requires upgrade. Schema version: %s",
+        _LOGGER.warning("Database is about to upgrade. Schema version: %s",
                         current_version)
-
-        if current_version is None:
-            current_version = _inspect_schema_version(instance.engine, session)
-            _LOGGER.debug("No schema version found. Inspected version: %s",
-                          current_version)
 
         try:
             for version in range(current_version, SCHEMA_VERSION):
@@ -74,7 +74,7 @@ def _create_index(engine, table_name, index_name):
         if 'already exists' not in str(err).lower():
             raise
 
-        _LOGGER.warning('Index %s already exists on %s, continueing',
+        _LOGGER.warning('Index %s already exists on %s, continuing',
                         index_name, table_name)
 
     _LOGGER.debug("Finished creating %s", index_name)
@@ -157,7 +157,7 @@ def _add_columns(engine, table_name, columns_def):
         return
     except OperationalError:
         # Some engines support adding all columns at once,
-        # this error is when they dont'
+        # this error is when they don't
         _LOGGER.info('Unable to use quick column add. Adding 1 by 1.')
 
     for column_def in columns_def:
@@ -218,6 +218,17 @@ def _apply_update(engine, new_version, old_version):
         ])
         _create_index(engine, "states", "ix_states_context_id")
         _create_index(engine, "states", "ix_states_context_user_id")
+    elif new_version == 7:
+        _create_index(engine, "states", "ix_states_entity_id")
+    elif new_version == 8:
+        # Pending migration, want to group a few.
+        pass
+        # _add_columns(engine, "events", [
+        #     'context_parent_id CHARACTER(36)',
+        # ])
+        # _add_columns(engine, "states", [
+        #     'context_parent_id CHARACTER(36)',
+        # ])
     else:
         raise ValueError("No schema migration defined for version {}"
                          .format(new_version))

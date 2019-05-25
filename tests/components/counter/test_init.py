@@ -1,164 +1,153 @@
 """The tests for the counter component."""
 # pylint: disable=protected-access
 import asyncio
-import unittest
 import logging
 
-from homeassistant.core import CoreState, State, Context
-from homeassistant.setup import setup_component, async_setup_component
-from homeassistant.components.counter import (
-    DOMAIN, CONF_INITIAL, CONF_RESTORE, CONF_STEP, CONF_NAME, CONF_ICON)
-from homeassistant.const import (ATTR_ICON, ATTR_FRIENDLY_NAME)
-
-from tests.common import (get_test_home_assistant, mock_restore_cache)
-from tests.components.counter.common import decrement, increment, reset
+from homeassistant.components.counter import (CONF_ICON, CONF_INITIAL,
+                                              CONF_NAME, CONF_RESTORE,
+                                              CONF_STEP, DOMAIN)
+from homeassistant.const import (ATTR_FRIENDLY_NAME, ATTR_ICON)
+from homeassistant.core import Context, CoreState, State
+from homeassistant.setup import async_setup_component
+from tests.common import (mock_restore_cache)
+from tests.components.counter.common import (
+    async_decrement, async_increment, async_reset)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class TestCounter(unittest.TestCase):
-    """Test the counter component."""
+async def test_config(hass):
+    """Test config."""
+    invalid_configs = [
+        None,
+        1,
+        {},
+        {'name with space': None},
+    ]
 
-    # pylint: disable=invalid-name
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
+    for cfg in invalid_configs:
+        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
 
-    # pylint: disable=invalid-name
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
 
-    def test_config(self):
-        """Test config."""
-        invalid_configs = [
-            None,
-            1,
-            {},
-            {'name with space': None},
-        ]
+async def test_config_options(hass):
+    """Test configuration options."""
+    count_start = len(hass.states.async_entity_ids())
 
-        for cfg in invalid_configs:
-            self.assertFalse(
-                setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
+    _LOGGER.debug('ENTITIES @ start: %s', hass.states.async_entity_ids())
 
-    def test_config_options(self):
-        """Test configuration options."""
-        count_start = len(self.hass.states.entity_ids())
-
-        _LOGGER.debug('ENTITIES @ start: %s', self.hass.states.entity_ids())
-
-        config = {
-            DOMAIN: {
-                'test_1': {},
-                'test_2': {
-                    CONF_NAME: 'Hello World',
-                    CONF_ICON: 'mdi:work',
-                    CONF_INITIAL: 10,
-                    CONF_RESTORE: False,
-                    CONF_STEP: 5,
-                }
+    config = {
+        DOMAIN: {
+            'test_1': {},
+            'test_2': {
+                CONF_NAME: 'Hello World',
+                CONF_ICON: 'mdi:work',
+                CONF_INITIAL: 10,
+                CONF_RESTORE: False,
+                CONF_STEP: 5,
             }
         }
+    }
 
-        assert setup_component(self.hass, 'counter', config)
-        self.hass.block_till_done()
+    assert await async_setup_component(hass, 'counter', config)
+    await hass.async_block_till_done()
 
-        _LOGGER.debug('ENTITIES: %s', self.hass.states.entity_ids())
+    _LOGGER.debug('ENTITIES: %s', hass.states.async_entity_ids())
 
-        self.assertEqual(count_start + 2, len(self.hass.states.entity_ids()))
-        self.hass.block_till_done()
+    assert count_start + 2 == len(hass.states.async_entity_ids())
+    await hass.async_block_till_done()
 
-        state_1 = self.hass.states.get('counter.test_1')
-        state_2 = self.hass.states.get('counter.test_2')
+    state_1 = hass.states.get('counter.test_1')
+    state_2 = hass.states.get('counter.test_2')
 
-        self.assertIsNotNone(state_1)
-        self.assertIsNotNone(state_2)
+    assert state_1 is not None
+    assert state_2 is not None
 
-        self.assertEqual(0, int(state_1.state))
-        self.assertNotIn(ATTR_ICON, state_1.attributes)
-        self.assertNotIn(ATTR_FRIENDLY_NAME, state_1.attributes)
+    assert 0 == int(state_1.state)
+    assert ATTR_ICON not in state_1.attributes
+    assert ATTR_FRIENDLY_NAME not in state_1.attributes
 
-        self.assertEqual(10, int(state_2.state))
-        self.assertEqual('Hello World',
-                         state_2.attributes.get(ATTR_FRIENDLY_NAME))
-        self.assertEqual('mdi:work', state_2.attributes.get(ATTR_ICON))
+    assert 10 == int(state_2.state)
+    assert 'Hello World' == \
+        state_2.attributes.get(ATTR_FRIENDLY_NAME)
+    assert 'mdi:work' == state_2.attributes.get(ATTR_ICON)
 
-    def test_methods(self):
-        """Test increment, decrement, and reset methods."""
-        config = {
-            DOMAIN: {
-                'test_1': {},
+
+async def test_methods(hass):
+    """Test increment, decrement, and reset methods."""
+    config = {
+        DOMAIN: {
+            'test_1': {},
+        }
+    }
+
+    assert await async_setup_component(hass, 'counter', config)
+
+    entity_id = 'counter.test_1'
+
+    state = hass.states.get(entity_id)
+    assert 0 == int(state.state)
+
+    async_increment(hass, entity_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert 1 == int(state.state)
+
+    async_increment(hass, entity_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert 2 == int(state.state)
+
+    async_decrement(hass, entity_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert 1 == int(state.state)
+
+    async_reset(hass, entity_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert 0 == int(state.state)
+
+
+async def test_methods_with_config(hass):
+    """Test increment, decrement, and reset methods with configuration."""
+    config = {
+        DOMAIN: {
+            'test': {
+                CONF_NAME: 'Hello World',
+                CONF_INITIAL: 10,
+                CONF_STEP: 5,
             }
         }
+    }
 
-        assert setup_component(self.hass, 'counter', config)
+    assert await async_setup_component(hass, 'counter', config)
 
-        entity_id = 'counter.test_1'
+    entity_id = 'counter.test'
 
-        state = self.hass.states.get(entity_id)
-        self.assertEqual(0, int(state.state))
+    state = hass.states.get(entity_id)
+    assert 10 == int(state.state)
 
-        increment(self.hass, entity_id)
-        self.hass.block_till_done()
+    async_increment(hass, entity_id)
+    await hass.async_block_till_done()
 
-        state = self.hass.states.get(entity_id)
-        self.assertEqual(1, int(state.state))
+    state = hass.states.get(entity_id)
+    assert 15 == int(state.state)
 
-        increment(self.hass, entity_id)
-        self.hass.block_till_done()
+    async_increment(hass, entity_id)
+    await hass.async_block_till_done()
 
-        state = self.hass.states.get(entity_id)
-        self.assertEqual(2, int(state.state))
+    state = hass.states.get(entity_id)
+    assert 20 == int(state.state)
 
-        decrement(self.hass, entity_id)
-        self.hass.block_till_done()
+    async_decrement(hass, entity_id)
+    await hass.async_block_till_done()
 
-        state = self.hass.states.get(entity_id)
-        self.assertEqual(1, int(state.state))
-
-        reset(self.hass, entity_id)
-        self.hass.block_till_done()
-
-        state = self.hass.states.get(entity_id)
-        self.assertEqual(0, int(state.state))
-
-    def test_methods_with_config(self):
-        """Test increment, decrement, and reset methods with configuration."""
-        config = {
-            DOMAIN: {
-                'test': {
-                    CONF_NAME: 'Hello World',
-                    CONF_INITIAL: 10,
-                    CONF_STEP: 5,
-                }
-            }
-        }
-
-        assert setup_component(self.hass, 'counter', config)
-
-        entity_id = 'counter.test'
-
-        state = self.hass.states.get(entity_id)
-        self.assertEqual(10, int(state.state))
-
-        increment(self.hass, entity_id)
-        self.hass.block_till_done()
-
-        state = self.hass.states.get(entity_id)
-        self.assertEqual(15, int(state.state))
-
-        increment(self.hass, entity_id)
-        self.hass.block_till_done()
-
-        state = self.hass.states.get(entity_id)
-        self.assertEqual(20, int(state.state))
-
-        decrement(self.hass, entity_id)
-        self.hass.block_till_done()
-
-        state = self.hass.states.get(entity_id)
-        self.assertEqual(15, int(state.state))
+    state = hass.states.get(entity_id)
+    assert 15 == int(state.state)
 
 
 @asyncio.coroutine
@@ -235,7 +224,7 @@ def test_no_initial_state_and_no_restore_state(hass):
     assert int(state.state) == 0
 
 
-async def test_counter_context(hass):
+async def test_counter_context(hass, hass_admin_user):
     """Test that counter context works."""
     assert await async_setup_component(hass, 'counter', {
         'counter': {
@@ -248,9 +237,162 @@ async def test_counter_context(hass):
 
     await hass.services.async_call('counter', 'increment', {
         'entity_id': state.entity_id,
-    }, True, Context(user_id='abcd'))
+    }, True, Context(user_id=hass_admin_user.id))
 
     state2 = hass.states.get('counter.test')
     assert state2 is not None
     assert state.state != state2.state
-    assert state2.context.user_id == 'abcd'
+    assert state2.context.user_id == hass_admin_user.id
+
+
+async def test_counter_min(hass, hass_admin_user):
+    """Test that min works."""
+    assert await async_setup_component(hass, 'counter', {
+        'counter': {
+            'test': {
+                'minimum': '0',
+                'initial': '0'
+            }
+        }
+    })
+
+    state = hass.states.get('counter.test')
+    assert state is not None
+    assert state.state == '0'
+
+    await hass.services.async_call('counter', 'decrement', {
+        'entity_id': state.entity_id,
+    }, True, Context(user_id=hass_admin_user.id))
+
+    state2 = hass.states.get('counter.test')
+    assert state2 is not None
+    assert state2.state == '0'
+
+    await hass.services.async_call('counter', 'increment', {
+        'entity_id': state.entity_id,
+    }, True, Context(user_id=hass_admin_user.id))
+
+    state2 = hass.states.get('counter.test')
+    assert state2 is not None
+    assert state2.state == '1'
+
+
+async def test_counter_max(hass, hass_admin_user):
+    """Test that max works."""
+    assert await async_setup_component(hass, 'counter', {
+        'counter': {
+            'test': {
+                'maximum': '0',
+                'initial': '0'
+            }
+        }
+    })
+
+    state = hass.states.get('counter.test')
+    assert state is not None
+    assert state.state == '0'
+
+    await hass.services.async_call('counter', 'increment', {
+        'entity_id': state.entity_id,
+    }, True, Context(user_id=hass_admin_user.id))
+
+    state2 = hass.states.get('counter.test')
+    assert state2 is not None
+    assert state2.state == '0'
+
+    await hass.services.async_call('counter', 'decrement', {
+        'entity_id': state.entity_id,
+    }, True, Context(user_id=hass_admin_user.id))
+
+    state2 = hass.states.get('counter.test')
+    assert state2 is not None
+    assert state2.state == '-1'
+
+
+async def test_configure(hass, hass_admin_user):
+    """Test that setting values through configure works."""
+    assert await async_setup_component(hass, 'counter', {
+        'counter': {
+            'test': {
+                'maximum': '10',
+                'initial': '10'
+            }
+        }
+    })
+
+    state = hass.states.get('counter.test')
+    assert state is not None
+    assert state.state == '10'
+    assert 10 == state.attributes.get('maximum')
+
+    # update max
+    await hass.services.async_call('counter', 'configure', {
+        'entity_id': state.entity_id,
+        'maximum': 0,
+    }, True, Context(user_id=hass_admin_user.id))
+
+    state = hass.states.get('counter.test')
+    assert state is not None
+    assert state.state == '0'
+    assert 0 == state.attributes.get('maximum')
+
+    # disable max
+    await hass.services.async_call('counter', 'configure', {
+        'entity_id': state.entity_id,
+        'maximum': None,
+    }, True, Context(user_id=hass_admin_user.id))
+
+    state = hass.states.get('counter.test')
+    assert state is not None
+    assert state.state == '0'
+    assert state.attributes.get('maximum') is None
+
+    # update min
+    assert state.attributes.get('minimum') is None
+    await hass.services.async_call('counter', 'configure', {
+        'entity_id': state.entity_id,
+        'minimum': 5,
+    }, True, Context(user_id=hass_admin_user.id))
+
+    state = hass.states.get('counter.test')
+    assert state is not None
+    assert state.state == '5'
+    assert 5 == state.attributes.get('minimum')
+
+    # disable min
+    await hass.services.async_call('counter', 'configure', {
+        'entity_id': state.entity_id,
+        'minimum': None,
+    }, True, Context(user_id=hass_admin_user.id))
+
+    state = hass.states.get('counter.test')
+    assert state is not None
+    assert state.state == '5'
+    assert state.attributes.get('minimum') is None
+
+    # update step
+    assert 1 == state.attributes.get('step')
+    await hass.services.async_call('counter', 'configure', {
+        'entity_id': state.entity_id,
+        'step': 3,
+    }, True, Context(user_id=hass_admin_user.id))
+
+    state = hass.states.get('counter.test')
+    assert state is not None
+    assert state.state == '5'
+    assert 3 == state.attributes.get('step')
+
+    # update all
+    await hass.services.async_call('counter', 'configure', {
+        'entity_id': state.entity_id,
+        'step': 5,
+        'minimum': 0,
+        'maximum': 9,
+    }, True, Context(user_id=hass_admin_user.id))
+
+    state = hass.states.get('counter.test')
+    assert state is not None
+    assert state.state == '5'
+    assert 5 == state.attributes.get('step')
+    assert 0 == state.attributes.get('minimum')
+    assert 9 == state.attributes.get('maximum')

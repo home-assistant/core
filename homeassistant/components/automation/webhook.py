@@ -1,9 +1,4 @@
-"""
-Offer webhook triggered automation rules.
-
-For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/docs/automation/trigger/#webhook-trigger
-"""
+"""Offer webhook triggered automation rules."""
 from functools import partial
 import logging
 
@@ -11,13 +6,14 @@ from aiohttp import hdrs
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.const import CONF_PLATFORM, CONF_WEBHOOK_ID
 import homeassistant.helpers.config_validation as cv
+
+from . import DOMAIN as AUTOMATION_DOMAIN
 
 DEPENDENCIES = ('webhook',)
 
 _LOGGER = logging.getLogger(__name__)
-CONF_WEBHOOK_ID = 'webhook_id'
 
 TRIGGER_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'webhook',
@@ -37,13 +33,15 @@ async def _handle_webhook(action, hass, webhook_id, request):
     else:
         result['data'] = await request.post()
 
+    result['query'] = request.query
     hass.async_run_job(action, {'trigger': result})
 
 
-async def async_trigger(hass, config, action):
+async def async_trigger(hass, config, action, automation_info):
     """Trigger based on incoming webhooks."""
     webhook_id = config.get(CONF_WEBHOOK_ID)
     hass.components.webhook.async_register(
+        AUTOMATION_DOMAIN, automation_info['name'],
         webhook_id, partial(_handle_webhook, action))
 
     @callback

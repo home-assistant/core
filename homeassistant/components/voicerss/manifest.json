@@ -1,0 +1,8 @@
+{
+  "domain": "voicerss",
+  "name": "Voicerss",
+  "documentation": "https://www.home-assistant.io/components/voicerss",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

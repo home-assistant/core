@@ -1,0 +1,26 @@
+{
+    "config": {
+        "title": "UniFi Controller",
+        "step": {
+            "user": {
+                "title": "Set up UniFi Controller",
+                "data": {
+                    "host": "Host",
+                    "username": "User name",
+                    "password": "Password",
+                    "port": "Port",
+                    "site": "Site ID",
+                    "verify_ssl": "Controller using proper certificate"
+                }
+            }
+        },
+        "error": {
+            "faulty_credentials": "Bad user credentials",
+            "service_unavailable": "No service available"
+        },
+        "abort": {
+            "already_configured": "Controller site is already configured",
+            "user_privilege": "User needs to be administrator"
+        }
+    }
+}

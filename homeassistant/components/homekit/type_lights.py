@@ -5,17 +5,17 @@ from pyhap.const import CATEGORY_LIGHTBULB
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_TEMP, ATTR_HS_COLOR,
-    ATTR_MAX_MIREDS, ATTR_MIN_MIREDS, DOMAIN,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP)
+    ATTR_MAX_MIREDS, ATTR_MIN_MIREDS, DOMAIN, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR, SUPPORT_COLOR_TEMP)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_TURN_ON,
-    SERVICE_TURN_OFF, STATE_OFF, STATE_ON)
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    STATE_OFF, STATE_ON)
 
 from . import TYPES
-from .accessories import debounce, HomeAccessory
+from .accessories import HomeAccessory, debounce
 from .const import (
     CHAR_BRIGHTNESS, CHAR_COLOR_TEMPERATURE, CHAR_HUE, CHAR_ON,
-    CHAR_SATURATION, SERV_LIGHTBULB, PROP_MAX_VALUE, PROP_MIN_VALUE)
+    CHAR_SATURATION, PROP_MAX_VALUE, PROP_MIN_VALUE, SERV_LIGHTBULB)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,7 +83,7 @@ class Light(HomeAccessory):
         self._flag[CHAR_ON] = True
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value == 1 else SERVICE_TURN_OFF
-        self.hass.services.call(DOMAIN, service, params)
+        self.call_service(DOMAIN, service, params)
 
     @debounce
     def set_brightness(self, value):
@@ -94,14 +94,16 @@ class Light(HomeAccessory):
             self.set_state(0)  # Turn off light
             return
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_BRIGHTNESS_PCT: value}
-        self.hass.services.call(DOMAIN, SERVICE_TURN_ON, params)
+        self.call_service(DOMAIN, SERVICE_TURN_ON, params,
+                          'brightness at {}%'.format(value))
 
     def set_color_temperature(self, value):
         """Set color temperature if call came from HomeKit."""
         _LOGGER.debug('%s: Set color temp to %s', self.entity_id, value)
         self._flag[CHAR_COLOR_TEMPERATURE] = True
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_COLOR_TEMP: value}
-        self.hass.services.call(DOMAIN, SERVICE_TURN_ON, params)
+        self.call_service(DOMAIN, SERVICE_TURN_ON, params,
+                          'color temperature at {}'.format(value))
 
     def set_saturation(self, value):
         """Set saturation if call came from HomeKit."""
@@ -126,7 +128,8 @@ class Light(HomeAccessory):
             self._flag.update({
                 CHAR_HUE: False, CHAR_SATURATION: False, RGB_COLOR: True})
             params = {ATTR_ENTITY_ID: self.entity_id, ATTR_HS_COLOR: color}
-            self.hass.services.call(DOMAIN, SERVICE_TURN_ON, params)
+            self.call_service(DOMAIN, SERVICE_TURN_ON, params,
+                              'set color at {}'.format(color))
 
     def update_state(self, new_state):
         """Update light after state change."""

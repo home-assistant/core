@@ -1,0 +1,8 @@
+{
+  "domain": "openalpr_local",
+  "name": "Openalpr local",
+  "documentation": "https://www.home-assistant.io/components/openalpr_local",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

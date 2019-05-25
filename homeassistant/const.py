@@ -1,17 +1,20 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 80
-PATCH_VERSION = '1'
+MINOR_VERSION = 93
+PATCH_VERSION = '2'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 5, 3)
 
-# Format for platforms
-PLATFORM_FORMAT = '{}.{}'
+# Format for platform files
+PLATFORM_FORMAT = '{platform}.{domain}'
 
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL = '*'
+
+# Entity target all constant
+ENTITY_MATCH_ALL = 'all'
 
 # If no name is specified
 DEVICE_DEFAULT_NAME = 'Unnamed Device'
@@ -82,6 +85,7 @@ CONF_FRIENDLY_NAME_TEMPLATE = 'friendly_name_template'
 CONF_HEADERS = 'headers'
 CONF_HOST = 'host'
 CONF_HOSTS = 'hosts'
+CONF_HS = 'hs'
 CONF_ICON = 'icon'
 CONF_ICON_TEMPLATE = 'icon_template'
 CONF_INCLUDE = 'include'
@@ -128,6 +132,7 @@ CONF_SENSOR_TYPE = 'sensor_type'
 CONF_SENSORS = 'sensors'
 CONF_SHOW_ON_MAP = 'show_on_map'
 CONF_SLAVE = 'slave'
+CONF_SOURCE = 'source'
 CONF_SSL = 'ssl'
 CONF_STATE = 'state'
 CONF_STATE_TEMPLATE = 'state_template'
@@ -138,6 +143,7 @@ CONF_TIME_ZONE = 'time_zone'
 CONF_TIMEOUT = 'timeout'
 CONF_TOKEN = 'token'
 CONF_TRIGGER_TIME = 'trigger_time'
+CONF_TTL = 'ttl'
 CONF_TYPE = 'type'
 CONF_UNIT_OF_MEASUREMENT = 'unit_of_measurement'
 CONF_UNIT_SYSTEM = 'unit_system'
@@ -145,6 +151,7 @@ CONF_URL = 'url'
 CONF_USERNAME = 'username'
 CONF_VALUE_TEMPLATE = 'value_template'
 CONF_VERIFY_SSL = 'verify_ssl'
+CONF_WEBHOOK_ID = 'webhook_id'
 CONF_WEEKDAY = 'weekday'
 CONF_WHITELIST = 'whitelist'
 CONF_WHITELIST_EXTERNAL_DIRS = 'whitelist_external_dirs'
@@ -159,20 +166,25 @@ EVENT_HOMEASSISTANT_CLOSE = 'homeassistant_close'
 EVENT_STATE_CHANGED = 'state_changed'
 EVENT_TIME_CHANGED = 'time_changed'
 EVENT_CALL_SERVICE = 'call_service'
-EVENT_SERVICE_EXECUTED = 'service_executed'
 EVENT_PLATFORM_DISCOVERED = 'platform_discovered'
 EVENT_COMPONENT_LOADED = 'component_loaded'
 EVENT_SERVICE_REGISTERED = 'service_registered'
 EVENT_SERVICE_REMOVED = 'service_removed'
 EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 EVENT_THEMES_UPDATED = 'themes_updated'
+EVENT_TIMER_OUT_OF_SYNC = 'timer_out_of_sync'
+EVENT_AUTOMATION_TRIGGERED = 'automation_triggered'
+EVENT_SCRIPT_STARTED = 'script_started'
 
 # #### DEVICE CLASSES ####
 DEVICE_CLASS_BATTERY = 'battery'
 DEVICE_CLASS_HUMIDITY = 'humidity'
 DEVICE_CLASS_ILLUMINANCE = 'illuminance'
+DEVICE_CLASS_SIGNAL_STRENGTH = 'signal_strength'
 DEVICE_CLASS_TEMPERATURE = 'temperature'
+DEVICE_CLASS_TIMESTAMP = 'timestamp'
 DEVICE_CLASS_PRESSURE = 'pressure'
+DEVICE_CLASS_POWER = 'power'
 
 # #### STATES ####
 STATE_ON = 'on'
@@ -214,6 +226,7 @@ ATTR_CREDENTIALS = 'credentials'
 ATTR_NOW = 'now'
 ATTR_DATE = 'date'
 ATTR_TIME = 'time'
+ATTR_SECONDS = 'seconds'
 
 # Contains domain, service for a SERVICE_CALL event
 ATTR_DOMAIN = 'domain'
@@ -226,11 +239,11 @@ ATTR_ID = 'id'
 # Name
 ATTR_NAME = 'name'
 
-# Data for a SERVICE_EXECUTED event
-ATTR_SERVICE_CALL_ID = 'service_call_id'
-
 # Contains one string or a list of strings, each being an entity id
 ATTR_ENTITY_ID = 'entity_id'
+
+# Contains one string or a list of strings, each being an area id
+ATTR_AREA_ID = 'area_id'
 
 # String with a friendly name for the entity
 ATTR_FRIENDLY_NAME = 'friendly_name'
@@ -306,6 +319,13 @@ ATTR_DEVICE_CLASS = 'device_class'
 ATTR_TEMPERATURE = 'temperature'
 
 # #### UNITS OF MEASUREMENT ####
+# Power units
+POWER_WATT = 'W'
+
+# Energy units
+ENERGY_KILO_WATT_HOUR = 'kWh'
+ENERGY_WATT_HOUR = 'Wh'
+
 # Temperature units
 TEMP_CELSIUS = '°C'
 TEMP_FAHRENHEIT = '°F'
@@ -319,6 +339,13 @@ LENGTH_INCHES = 'in'  # type: str
 LENGTH_FEET = 'ft'  # type: str
 LENGTH_YARD = 'yd'  # type: str
 LENGTH_MILES = 'mi'  # type: str
+
+# Pressure units
+PRESSURE_PA = 'Pa'  # type: str
+PRESSURE_HPA = 'hPa'  # type: str
+PRESSURE_MBAR = 'mbar'  # type: str
+PRESSURE_INHG = 'inHg'  # type: str
+PRESSURE_PSI = 'psi'  # type: str
 
 # Volume units
 VOLUME_LITERS = 'L'  # type: str
@@ -432,6 +459,7 @@ UNIT_NOT_RECOGNIZED_TEMPLATE = '{} is not a recognized {} unit.'  # type: str
 
 LENGTH = 'length'  # type: str
 MASS = 'mass'  # type: str
+PRESSURE = 'pressure'  # type: str
 VOLUME = 'volume'  # type: str
 TEMPERATURE = 'temperature'  # type: str
 SPEED_MS = 'speed_ms'  # type: str
@@ -443,3 +471,7 @@ WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 PRECISION_WHOLE = 1
 PRECISION_HALVES = 0.5
 PRECISION_TENTHS = 0.1
+
+# Static list of entities that will never be exposed to
+# cloud, alexa, or google_home components
+CLOUD_NEVER_EXPOSED_ENTITIES = ['group.all_locks']

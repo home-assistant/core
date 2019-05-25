@@ -1,8 +1,4 @@
-"""Support for Apple HomeKit.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/homekit/
-"""
+"""Support for Apple HomeKit."""
 import ipaddress
 import logging
 from zlib import adler32
@@ -10,26 +6,26 @@ from zlib import adler32
 import voluptuous as vol
 
 from homeassistant.components import cover
+from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.const import (
     ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
     CONF_IP_ADDRESS, CONF_NAME, CONF_PORT, CONF_TYPE, DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS,
+    TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.util import get_local_ip
 from homeassistant.util.decorator import Registry
+
 from .const import (
     BRIDGE_NAME, CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FEATURE_LIST,
-    CONF_FILTER, DEFAULT_AUTO_START, DEFAULT_PORT, DEVICE_CLASS_CO,
-    DEVICE_CLASS_CO2, DEVICE_CLASS_PM25, DOMAIN, HOMEKIT_FILE,
-    SERVICE_HOMEKIT_START, TYPE_FAUCET, TYPE_OUTLET, TYPE_SHOWER,
-    TYPE_SPRINKLER, TYPE_SWITCH, TYPE_VALVE)
+    CONF_FILTER, CONF_SAFE_MODE, DEFAULT_AUTO_START, DEFAULT_PORT,
+    DEFAULT_SAFE_MODE, DEVICE_CLASS_CO, DEVICE_CLASS_CO2, DEVICE_CLASS_PM25,
+    DOMAIN, HOMEKIT_FILE, SERVICE_HOMEKIT_START, TYPE_FAUCET, TYPE_OUTLET,
+    TYPE_SHOWER, TYPE_SPRINKLER, TYPE_SWITCH, TYPE_VALVE)
 from .util import (
     show_setup_message, validate_entity_config, validate_media_player_features)
-
-REQUIREMENTS = ['HAP-python==2.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,6 +54,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_IP_ADDRESS):
             vol.All(ipaddress.ip_address, cv.string),
         vol.Optional(CONF_AUTO_START, default=DEFAULT_AUTO_START): cv.boolean,
+        vol.Optional(CONF_SAFE_MODE, default=DEFAULT_SAFE_MODE): cv.boolean,
         vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
         vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
     })
@@ -73,12 +70,13 @@ async def async_setup(hass, config):
     port = conf[CONF_PORT]
     ip_address = conf.get(CONF_IP_ADDRESS)
     auto_start = conf[CONF_AUTO_START]
+    safe_mode = conf[CONF_SAFE_MODE]
     entity_filter = conf[CONF_FILTER]
     entity_config = conf[CONF_ENTITY_CONFIG]
 
     homekit = HomeKit(hass, name, port, ip_address, entity_filter,
-                      entity_config)
-    await hass.async_add_job(homekit.setup)
+                      entity_config, safe_mode)
+    await hass.async_add_executor_job(homekit.setup)
 
     if auto_start:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, homekit.start)
@@ -102,7 +100,7 @@ async def async_setup(hass, config):
 def get_accessory(hass, driver, state, aid, config):
     """Take state and return an accessory object if supported."""
     if not aid:
-        _LOGGER.warning('The entitiy "%s" is not supported, since it '
+        _LOGGER.warning('The entity "%s" is not supported, since it '
                         'generates an invalid aid, please change it.',
                         state.entity_id)
         return None
@@ -113,7 +111,7 @@ def get_accessory(hass, driver, state, aid, config):
     if state.domain == 'alarm_control_panel':
         a_type = 'SecuritySystem'
 
-    elif state.domain == 'binary_sensor' or state.domain == 'device_tracker':
+    elif state.domain in ('binary_sensor', 'device_tracker', 'person'):
         a_type = 'BinarySensor'
 
     elif state.domain == 'climate':
@@ -141,10 +139,15 @@ def get_accessory(hass, driver, state, aid, config):
         a_type = 'Lock'
 
     elif state.domain == 'media_player':
+        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         feature_list = config.get(CONF_FEATURE_LIST)
-        if feature_list and \
-                validate_media_player_features(state, feature_list):
-            a_type = 'MediaPlayer'
+
+        if device_class == DEVICE_CLASS_TV:
+            a_type = 'TelevisionMediaPlayer'
+        else:
+            if feature_list and \
+                    validate_media_player_features(state, feature_list):
+                a_type = 'MediaPlayer'
 
     elif state.domain == 'sensor':
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
@@ -170,8 +173,12 @@ def get_accessory(hass, driver, state, aid, config):
         switch_type = config.get(CONF_TYPE, TYPE_SWITCH)
         a_type = SWITCH_TYPES[switch_type]
 
-    elif state.domain in ('automation', 'input_boolean', 'remote', 'script'):
+    elif state.domain in ('automation', 'input_boolean', 'remote', 'scene',
+                          'script'):
         a_type = 'Switch'
+
+    elif state.domain == 'water_heater':
+        a_type = 'WaterHeater'
 
     if a_type is None:
         return None
@@ -192,7 +199,7 @@ class HomeKit():
     """Class to handle all actions between HomeKit and Home Assistant."""
 
     def __init__(self, hass, name, port, ip_address, entity_filter,
-                 entity_config):
+                 entity_config, safe_mode):
         """Initialize a HomeKit object."""
         self.hass = hass
         self._name = name
@@ -200,6 +207,7 @@ class HomeKit():
         self._ip_address = ip_address
         self._filter = entity_filter
         self._config = entity_config
+        self._safe_mode = safe_mode
         self.status = STATUS_READY
 
         self.bridge = None
@@ -217,6 +225,9 @@ class HomeKit():
         self.driver = HomeDriver(self.hass, address=ip_addr,
                                  port=self._port, persist_file=path)
         self.bridge = HomeBridge(self.hass, self.driver, self._name)
+        if self._safe_mode:
+            _LOGGER.debug('Safe_mode selected')
+            self.driver.safe_mode = True
 
     def add_bridge_accessory(self, state):
         """Try adding accessory to bridge if configured beforehand."""
@@ -234,7 +245,7 @@ class HomeKit():
             return
         self.status = STATUS_WAIT
 
-        # pylint: disable=unused-variable
+        # pylint: disable=unused-import
         from . import (  # noqa F401
             type_covers, type_fans, type_lights, type_locks,
             type_media_players, type_security_systems, type_sensors,

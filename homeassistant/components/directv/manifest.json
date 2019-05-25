@@ -1,0 +1,10 @@
+{
+  "domain": "directv",
+  "name": "Directv",
+  "documentation": "https://www.home-assistant.io/components/directv",
+  "requirements": [
+    "directpy==0.5"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

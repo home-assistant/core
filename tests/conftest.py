@@ -3,19 +3,20 @@ import asyncio
 import functools
 import logging
 import os
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 import requests_mock as _requests_mock
 
 from homeassistant import util
 from homeassistant.util import location
+from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
+from homeassistant.auth.providers import legacy_api_password, homeassistant
 
 from tests.common import (
-    async_test_home_assistant, INSTANCES, async_mock_mqtt_component, mock_coro,
-    mock_storage as mock_storage)
+    async_test_home_assistant, INSTANCES, mock_coro,
+    mock_storage as mock_storage, MockUser, CLIENT_ID)
 from tests.test_util.aiohttp import mock_aiohttp_client
-from tests.mock.zwave import MockNetwork, MockOption
 
 if os.environ.get('UVLOOP') == '1':
     import uvloop
@@ -41,8 +42,10 @@ def check_real(func):
 
 
 # Guard a few functions that would make network connections
-location.detect_location_info = check_real(location.detect_location_info)
-location.elevation = check_real(location.elevation)
+location.async_detect_location_info = \
+    check_real(location.async_detect_location_info)
+location.async_get_elevation = \
+    check_real(location.async_get_elevation)
 util.get_local_ip = lambda: '127.0.0.1'
 
 
@@ -91,32 +94,6 @@ def aioclient_mock():
 
 
 @pytest.fixture
-def mqtt_mock(loop, hass):
-    """Fixture to mock MQTT."""
-    client = loop.run_until_complete(async_mock_mqtt_component(hass))
-    client.reset_mock()
-    return client
-
-
-@pytest.fixture
-def mock_openzwave():
-    """Mock out Open Z-Wave."""
-    base_mock = MagicMock()
-    libopenzwave = base_mock.libopenzwave
-    libopenzwave.__file__ = 'test'
-    base_mock.network.ZWaveNetwork = MockNetwork
-    base_mock.option.ZWaveOption = MockOption
-
-    with patch.dict('sys.modules', {
-        'libopenzwave': libopenzwave,
-        'openzwave.option': base_mock.option,
-        'openzwave.network': base_mock.network,
-        'openzwave.group': base_mock.group,
-    }):
-        yield base_mock
-
-
-@pytest.fixture
 def mock_device_tracker_conf():
     """Prevent device tracker from reading/writing data."""
     devices = []
@@ -133,3 +110,78 @@ def mock_device_tracker_conf():
             side_effect=lambda *args: mock_coro(devices)
     ):
         yield devices
+
+
+@pytest.fixture
+def hass_access_token(hass, hass_admin_user):
+    """Return an access token to access Home Assistant."""
+    refresh_token = hass.loop.run_until_complete(
+        hass.auth.async_create_refresh_token(hass_admin_user, CLIENT_ID))
+    return hass.auth.async_create_access_token(refresh_token)
+
+
+@pytest.fixture
+def hass_owner_user(hass, local_auth):
+    """Return a Home Assistant admin user."""
+    return MockUser(is_owner=True).add_to_hass(hass)
+
+
+@pytest.fixture
+def hass_admin_user(hass, local_auth):
+    """Return a Home Assistant admin user."""
+    admin_group = hass.loop.run_until_complete(hass.auth.async_get_group(
+        GROUP_ID_ADMIN))
+    return MockUser(groups=[admin_group]).add_to_hass(hass)
+
+
+@pytest.fixture
+def hass_read_only_user(hass, local_auth):
+    """Return a Home Assistant read only user."""
+    read_only_group = hass.loop.run_until_complete(hass.auth.async_get_group(
+        GROUP_ID_READ_ONLY))
+    return MockUser(groups=[read_only_group]).add_to_hass(hass)
+
+
+@pytest.fixture
+def hass_read_only_access_token(hass, hass_read_only_user):
+    """Return a Home Assistant read only user."""
+    refresh_token = hass.loop.run_until_complete(
+        hass.auth.async_create_refresh_token(hass_read_only_user, CLIENT_ID))
+    return hass.auth.async_create_access_token(refresh_token)
+
+
+@pytest.fixture
+def legacy_auth(hass):
+    """Load legacy API password provider."""
+    prv = legacy_api_password.LegacyApiPasswordAuthProvider(
+        hass, hass.auth._store, {
+            'type': 'legacy_api_password',
+            'api_password': 'test-password',
+        }
+    )
+    hass.auth._providers[(prv.type, prv.id)] = prv
+    return prv
+
+
+@pytest.fixture
+def local_auth(hass):
+    """Load local auth provider."""
+    prv = homeassistant.HassAuthProvider(
+        hass, hass.auth._store, {
+            'type': 'homeassistant'
+        }
+    )
+    hass.auth._providers[(prv.type, prv.id)] = prv
+    return prv
+
+
+@pytest.fixture
+def hass_client(hass, aiohttp_client, hass_access_token):
+    """Return an authenticated HTTP client."""
+    async def auth_client():
+        """Return an authenticated client."""
+        return await aiohttp_client(hass.http.app, headers={
+            'Authorization': "Bearer {}".format(hass_access_token)
+        })
+
+    return auth_client

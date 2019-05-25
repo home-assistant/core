@@ -1,0 +1,10 @@
+{
+  "domain": "threshold",
+  "name": "Threshold",
+  "documentation": "https://www.home-assistant.io/components/threshold",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

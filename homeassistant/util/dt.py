@@ -1,10 +1,14 @@
 """Helper methods to handle the time in Home Assistant."""
 import datetime as dt
 import re
-from typing import Any, Dict, Union, Optional, Tuple  # noqa pylint: disable=unused-import
+from typing import (Any, Union, Optional,  # noqa pylint: disable=unused-import
+                    Tuple, List, cast, Dict)
 
 import pytz
 import pytz.exceptions as pytzexceptions
+import pytz.tzinfo as pytzinfo  # noqa pylint: disable=unused-import
+
+from homeassistant.const import MATCH_ALL
 
 DATE_STR_FORMAT = "%Y-%m-%d"
 UTC = pytz.utc
@@ -209,3 +213,162 @@ def get_age(date: dt.datetime) -> str:
         return formatn(minute, 'minute')
 
     return formatn(second, 'second')
+
+
+def parse_time_expression(parameter: Any, min_value: int, max_value: int) \
+        -> List[int]:
+    """Parse the time expression part and return a list of times to match."""
+    if parameter is None or parameter == MATCH_ALL:
+        res = [x for x in range(min_value, max_value + 1)]
+    elif isinstance(parameter, str) and parameter.startswith('/'):
+        parameter = float(parameter[1:])
+        res = [x for x in range(min_value, max_value + 1)
+               if x % parameter == 0]
+    elif not hasattr(parameter, '__iter__'):
+        res = [int(parameter)]
+    else:
+        res = list(sorted(int(x) for x in parameter))
+
+    for val in res:
+        if val < min_value or val > max_value:
+            raise ValueError(
+                "Time expression '{}': parameter {} out of range ({} to {})"
+                "".format(parameter, val, min_value, max_value)
+            )
+
+    return res
+
+
+# pylint: disable=redefined-outer-name
+def find_next_time_expression_time(now: dt.datetime,
+                                   seconds: List[int], minutes: List[int],
+                                   hours: List[int]) -> dt.datetime:
+    """Find the next datetime from now for which the time expression matches.
+
+    The algorithm looks at each time unit separately and tries to find the
+    next one that matches for each. If any of them would roll over, all
+    time units below that are reset to the first matching value.
+
+    Timezones are also handled (the tzinfo of the now object is used),
+    including daylight saving time.
+    """
+    if not seconds or not minutes or not hours:
+        raise ValueError("Cannot find a next time: Time expression never "
+                         "matches!")
+
+    def _lower_bound(arr: List[int], cmp: int) -> Optional[int]:
+        """Return the first value in arr greater or equal to cmp.
+
+        Return None if no such value exists.
+        """
+        left = 0
+        right = len(arr)
+        while left < right:
+            mid = (left + right) // 2
+            if arr[mid] < cmp:
+                left = mid + 1
+            else:
+                right = mid
+
+        if left == len(arr):
+            return None
+        return arr[left]
+
+    result = now.replace(microsecond=0)
+
+    # Match next second
+    next_second = _lower_bound(seconds, result.second)
+    if next_second is None:
+        # No second to match in this minute. Roll-over to next minute.
+        next_second = seconds[0]
+        result += dt.timedelta(minutes=1)
+
+    result = result.replace(second=next_second)
+
+    # Match next minute
+    next_minute = _lower_bound(minutes, result.minute)
+    if next_minute != result.minute:
+        # We're in the next minute. Seconds needs to be reset.
+        result = result.replace(second=seconds[0])
+
+    if next_minute is None:
+        # No minute to match in this hour. Roll-over to next hour.
+        next_minute = minutes[0]
+        result += dt.timedelta(hours=1)
+
+    result = result.replace(minute=next_minute)
+
+    # Match next hour
+    next_hour = _lower_bound(hours, result.hour)
+    if next_hour != result.hour:
+        # We're in the next hour. Seconds+minutes needs to be reset.
+        result.replace(second=seconds[0], minute=minutes[0])
+
+    if next_hour is None:
+        # No minute to match in this day. Roll-over to next day.
+        next_hour = hours[0]
+        result += dt.timedelta(days=1)
+
+    result = result.replace(hour=next_hour)
+
+    if result.tzinfo is None:
+        return result
+
+    # Now we need to handle timezones. We will make this datetime object
+    # "naive" first and then re-convert it to the target timezone.
+    # This is so that we can call pytz's localize and handle DST changes.
+    tzinfo = result.tzinfo  # type: pytzinfo.DstTzInfo
+    result = result.replace(tzinfo=None)
+
+    try:
+        result = tzinfo.localize(result, is_dst=None)
+    except pytzexceptions.AmbiguousTimeError:
+        # This happens when we're leaving daylight saving time and local
+        # clocks are rolled back. In this case, we want to trigger
+        # on both the DST and non-DST time. So when "now" is in the DST
+        # use the DST-on time, and if not, use the DST-off time.
+        use_dst = bool(now.dst())
+        result = tzinfo.localize(result, is_dst=use_dst)
+    except pytzexceptions.NonExistentTimeError:
+        # This happens when we're entering daylight saving time and local
+        # clocks are rolled forward, thus there are local times that do
+        # not exist. In this case, we want to trigger on the next time
+        # that *does* exist.
+        # In the worst case, this will run through all the seconds in the
+        # time shift, but that's max 3600 operations for once per year
+        result = result.replace(tzinfo=tzinfo) + dt.timedelta(seconds=1)
+        return find_next_time_expression_time(result, seconds, minutes, hours)
+
+    result_dst = cast(dt.timedelta, result.dst())
+    now_dst = cast(dt.timedelta, now.dst())
+    if result_dst >= now_dst:
+        return result
+
+    # Another edge-case when leaving DST:
+    # When now is in DST and ambiguous *and* the next trigger time we *should*
+    # trigger is ambiguous and outside DST, the excepts above won't catch it.
+    # For example: if triggering on 2:30 and now is 28.10.2018 2:30 (in DST)
+    # we should trigger next on 28.10.2018 2:30 (out of DST), but our
+    # algorithm above would produce 29.10.2018 2:30 (out of DST)
+
+    # Step 1: Check if now is ambiguous
+    try:
+        tzinfo.localize(now.replace(tzinfo=None), is_dst=None)
+        return result
+    except pytzexceptions.AmbiguousTimeError:
+        pass
+
+    # Step 2: Check if result of (now - DST) is ambiguous.
+    check = now - now_dst
+    check_result = find_next_time_expression_time(
+        check, seconds, minutes, hours)
+    try:
+        tzinfo.localize(check_result.replace(tzinfo=None), is_dst=None)
+        return result
+    except pytzexceptions.AmbiguousTimeError:
+        pass
+
+    # OK, edge case does apply. We must override the DST to DST-off
+    check_result = tzinfo.localize(check_result.replace(tzinfo=None),
+                                   is_dst=False)
+    return check_result

@@ -74,17 +74,6 @@ async def test_api_homeassistant_restart(hassio_handler, aioclient_mock):
     assert aioclient_mock.call_count == 1
 
 
-async def test_api_homeassistant_config(hassio_handler, aioclient_mock):
-    """Test setup with API HomeAssistant config."""
-    aioclient_mock.post(
-        "http://127.0.0.1/homeassistant/check", json={
-            'result': 'ok', 'data': {'test': 'bla'}})
-
-    data = await hassio_handler.check_homeassistant_config()
-    assert data['data']['test'] == 'bla'
-    assert aioclient_mock.call_count == 1
-
-
 async def test_api_addon_info(hassio_handler, aioclient_mock):
     """Test setup with API Add-on info."""
     aioclient_mock.get(
@@ -116,3 +105,23 @@ async def test_api_retrieve_discovery(hassio_handler, aioclient_mock):
     data = await hassio_handler.retrieve_discovery_messages()
     assert data['discovery'][-1]['service'] == "mqtt"
     assert aioclient_mock.call_count == 1
+
+
+async def test_api_ingress_panels(hassio_handler, aioclient_mock):
+    """Test setup with API Ingress panels."""
+    aioclient_mock.get(
+        "http://127.0.0.1/ingress/panels", json={'result': 'ok', 'data': {
+            "panels": {
+                "slug": {
+                    "enable": True,
+                    "title": "Test",
+                    "icon": "mdi:test",
+                    "admin": False
+                }
+            }
+        }})
+
+    data = await hassio_handler.get_ingress_panels()
+    assert aioclient_mock.call_count == 1
+    assert data['panels']
+    assert "slug" in data['panels']

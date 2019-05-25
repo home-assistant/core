@@ -1,7 +1,6 @@
 """Helper methods for various modules."""
 import asyncio
 from datetime import datetime, timedelta
-from itertools import chain
 import threading
 import re
 import enum
@@ -10,9 +9,10 @@ import random
 import string
 from functools import wraps
 from types import MappingProxyType
-from unicodedata import normalize
 from typing import (Any, Optional, TypeVar, Callable, KeysView, Union,  # noqa
                     Iterable, List, Dict, Iterator, Coroutine, MutableSet)
+
+import slugify as unicode_slug
 
 from .dt import as_local, utcnow
 
@@ -24,10 +24,6 @@ ENUM_T = TypeVar('ENUM_T', bound=enum.Enum)
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
-RE_SLUGIFY = re.compile(r'[^a-z0-9_]+')
-TBL_SLUGIFY = {
-    ord('ß'): 'ss'
-}
 
 
 def sanitize_filename(filename: str) -> str:
@@ -42,13 +38,7 @@ def sanitize_path(path: str) -> str:
 
 def slugify(text: str) -> str:
     """Slugify a given text."""
-    text = normalize('NFKD', text)
-    text = text.lower()
-    text = text.replace(" ", "_")
-    text = text.translate(TBL_SLUGIFY)
-    text = RE_SLUGIFY.sub("", text)
-
-    return text
+    return unicode_slug.slugify(text, separator='_')  # type: ignore
 
 
 def repr_helper(inp: Any) -> str:
@@ -148,96 +138,6 @@ class OrderedEnum(enum.Enum):
         if self.__class__ is other.__class__:
             return bool(self.value < other.value)
         return NotImplemented
-
-
-class OrderedSet(MutableSet[T]):
-    """Ordered set taken from http://code.activestate.com/recipes/576694/."""
-
-    def __init__(self, iterable: Optional[Iterable[T]] = None) -> None:
-        """Initialize the set."""
-        self.end = end = []  # type: List[Any]
-        end += [None, end, end]  # sentinel node for doubly linked list
-        self.map = {}  # type: Dict[T, List] # key --> [key, prev, next]
-        if iterable is not None:
-            self |= iterable  # type: ignore
-
-    def __len__(self) -> int:
-        """Return the length of the set."""
-        return len(self.map)
-
-    def __contains__(self, key: T) -> bool:  # type: ignore
-        """Check if key is in set."""
-        return key in self.map
-
-    # pylint: disable=arguments-differ
-    def add(self, key: T) -> None:
-        """Add an element to the end of the set."""
-        if key not in self.map:
-            end = self.end
-            curr = end[1]
-            curr[2] = end[1] = self.map[key] = [key, curr, end]
-
-    def promote(self, key: T) -> None:
-        """Promote element to beginning of the set, add if not there."""
-        if key in self.map:
-            self.discard(key)
-
-        begin = self.end[2]
-        curr = begin[1]
-        curr[2] = begin[1] = self.map[key] = [key, curr, begin]
-
-    # pylint: disable=arguments-differ
-    def discard(self, key: T) -> None:
-        """Discard an element from the set."""
-        if key in self.map:
-            key, prev_item, next_item = self.map.pop(key)
-            prev_item[2] = next_item
-            next_item[1] = prev_item
-
-    def __iter__(self) -> Iterator[T]:
-        """Iterate of the set."""
-        end = self.end
-        curr = end[2]
-        while curr is not end:
-            yield curr[0]
-            curr = curr[2]
-
-    def __reversed__(self) -> Iterator[T]:
-        """Reverse the ordering."""
-        end = self.end
-        curr = end[1]
-        while curr is not end:
-            yield curr[0]
-            curr = curr[1]
-
-    # pylint: disable=arguments-differ
-    def pop(self, last: bool = True) -> T:
-        """Pop element of the end of the set.
-
-        Set last=False to pop from the beginning.
-        """
-        if not self:
-            raise KeyError('set is empty')
-        key = self.end[1][0] if last else self.end[2][0]
-        self.discard(key)
-        return key  # type: ignore
-
-    def update(self, *args: Any) -> None:
-        """Add elements from args to the set."""
-        for item in chain(*args):
-            self.add(item)
-
-    def __repr__(self) -> str:
-        """Return the representation."""
-        if not self:
-            return '%s()' % (self.__class__.__name__,)
-        return '%s(%r)' % (self.__class__.__name__, list(self))
-
-    def __eq__(self, other: Any) -> bool:
-        """Return the comparison."""
-        if isinstance(other, OrderedSet):
-            return len(self) == len(other) and list(self) == list(other)
-        return set(self) == set(other)
 
 
 class Throttle:

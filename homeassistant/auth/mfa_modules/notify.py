@@ -2,21 +2,23 @@
 
 Sending HOTP through notify service
 """
+import asyncio
 import logging
 from collections import OrderedDict
-from typing import Any, Dict, Optional, Tuple, List  # noqa: F401
+from typing import Any, Dict, Optional, List
 
 import attr
 import voluptuous as vol
 
 from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceNotFound
 from homeassistant.helpers import config_validation as cv
 
 from . import MultiFactorAuthModule, MULTI_FACTOR_AUTH_MODULES, \
     MULTI_FACTOR_AUTH_MODULE_SCHEMA, SetupFlow
 
-REQUIREMENTS = ['pyotp==2.2.6']
+REQUIREMENTS = ['pyotp==2.2.7']
 
 CONF_MESSAGE = 'message'
 
@@ -89,6 +91,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         self._include = config.get(CONF_INCLUDE, [])
         self._exclude = config.get(CONF_EXCLUDE, [])
         self._message_template = config[CONF_MESSAGE]
+        self._init_lock = asyncio.Lock()
 
     @property
     def input_schema(self) -> vol.Schema:
@@ -97,15 +100,19 @@ class NotifyAuthModule(MultiFactorAuthModule):
 
     async def _async_load(self) -> None:
         """Load stored data."""
-        data = await self._user_store.async_load()
+        async with self._init_lock:
+            if self._user_settings is not None:
+                return
 
-        if data is None:
-            data = {STORAGE_USERS: {}}
+            data = await self._user_store.async_load()
 
-        self._user_settings = {
-            user_id: NotifySetting(**setting)
-            for user_id, setting in data.get(STORAGE_USERS, {}).items()
-        }
+            if data is None:
+                data = {STORAGE_USERS: {}}
+
+            self._user_settings = {
+                user_id: NotifySetting(**setting)
+                for user_id, setting in data.get(STORAGE_USERS, {}).items()
+            }
 
     async def _async_save(self) -> None:
         """Save data."""
@@ -314,8 +321,11 @@ class NotifySetupFlow(SetupFlow):
             _generate_otp, self._secret, self._count)
 
         assert self._notify_service
-        await self._auth_module.async_notify(
-            code, self._notify_service, self._target)
+        try:
+            await self._auth_module.async_notify(
+                code, self._notify_service, self._target)
+        except ServiceNotFound:
+            return self.async_abort(reason='notify_service_not_exist')
 
         return self.async_show_form(
             step_id='setup',

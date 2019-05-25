@@ -1,0 +1,10 @@
+{
+  "domain": "litejet",
+  "name": "Litejet",
+  "documentation": "https://www.home-assistant.io/components/litejet",
+  "requirements": [
+    "pylitejet==0.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

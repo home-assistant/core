@@ -1,9 +1,4 @@
-"""
-Support for Actions on Google Assistant Smart Home Control.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/google_assistant/
-"""
+"""Support for Actions on Google Assistant Smart Home Control."""
 import asyncio
 import logging
 from typing import Dict, Any
@@ -24,32 +19,36 @@ from .const import (
     DOMAIN, CONF_PROJECT_ID, CONF_EXPOSE_BY_DEFAULT, DEFAULT_EXPOSE_BY_DEFAULT,
     CONF_EXPOSED_DOMAINS, DEFAULT_EXPOSED_DOMAINS, CONF_API_KEY,
     SERVICE_REQUEST_SYNC, REQUEST_SYNC_BASE_URL, CONF_ENTITY_CONFIG,
-    CONF_EXPOSE, CONF_ALIASES, CONF_ROOM_HINT
+    CONF_EXPOSE, CONF_ALIASES, CONF_ROOM_HINT, CONF_ALLOW_UNLOCK,
+    CONF_SECURE_DEVICES_PIN
 )
+from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401
+from .const import EVENT_QUERY_RECEIVED  # noqa: F401
 from .http import async_register_http
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['http']
-
-DEFAULT_AGENT_USER_ID = 'home-assistant'
 
 ENTITY_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_EXPOSE): cv.boolean,
     vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_ROOM_HINT): cv.string
+    vol.Optional(CONF_ROOM_HINT): cv.string,
 })
 
-GOOGLE_ASSISTANT_SCHEMA = vol.Schema({
-    vol.Required(CONF_PROJECT_ID): cv.string,
-    vol.Optional(CONF_EXPOSE_BY_DEFAULT,
-                 default=DEFAULT_EXPOSE_BY_DEFAULT): cv.boolean,
-    vol.Optional(CONF_EXPOSED_DOMAINS,
-                 default=DEFAULT_EXPOSED_DOMAINS): cv.ensure_list,
-    vol.Optional(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA}
-}, extra=vol.PREVENT_EXTRA)
+GOOGLE_ASSISTANT_SCHEMA = vol.All(
+    cv.deprecated(CONF_ALLOW_UNLOCK, invalidation_version='0.95'),
+    vol.Schema({
+        vol.Required(CONF_PROJECT_ID): cv.string,
+        vol.Optional(CONF_EXPOSE_BY_DEFAULT,
+                     default=DEFAULT_EXPOSE_BY_DEFAULT): cv.boolean,
+        vol.Optional(CONF_EXPOSED_DOMAINS,
+                     default=DEFAULT_EXPOSED_DOMAINS): cv.ensure_list,
+        vol.Optional(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA},
+        vol.Optional(CONF_ALLOW_UNLOCK): cv.boolean,
+        # str on purpose, makes sure it is configured correctly.
+        vol.Optional(CONF_SECURE_DEVICES_PIN): str,
+    }, extra=vol.PREVENT_EXTRA))
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: GOOGLE_ASSISTANT_SCHEMA
@@ -66,11 +65,13 @@ async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
         """Handle request sync service calls."""
         websession = async_get_clientsession(hass)
         try:
-            with async_timeout.timeout(5, loop=hass.loop):
+            with async_timeout.timeout(15, loop=hass.loop):
+                agent_user_id = call.data.get('agent_user_id') or \
+                                call.context.user_id
                 res = await websession.post(
                     REQUEST_SYNC_BASE_URL,
                     params={'key': api_key},
-                    json={'agent_user_id': call.context.user_id})
+                    json={'agent_user_id': agent_user_id})
                 _LOGGER.info("Submitted request_sync request to Google")
                 res.raise_for_status()
         except aiohttp.ClientResponseError:

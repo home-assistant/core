@@ -1,0 +1,10 @@
+{
+  "domain": "ubee",
+  "name": "Ubee",
+  "documentation": "https://www.home-assistant.io/components/ubee",
+  "requirements": [
+    "pyubee==0.6"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Uw Home Assistant instantie moet toegankelijk zijn vanaf het internet om Mailgun-berichten te ontvangen.",
+            "one_instance_allowed": "Slechts \u00e9\u00e9n enkele instantie is nodig."
+        },
+        "step": {
+            "user": {
+                "description": "Weet u zeker dat u Mailgun wilt instellen?",
+                "title": "Stel de Mailgun Webhook in"
+            }
+        },
+        "title": "Mailgun"
+    }
+}

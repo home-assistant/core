@@ -1,0 +1,21 @@
+{
+  "config": {
+    "title": "ZHA",
+    "step": {
+      "user": {
+        "title": "ZHA",
+        "description": "",
+        "data": {
+          "usb_path": "USB Device Path",
+          "radio_type": "Radio Type"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Only a single configuration of ZHA is allowed."
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to ZHA device."
+    }
+  }
+}

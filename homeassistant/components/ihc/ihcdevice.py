@@ -1,5 +1,4 @@
 """Implementation of a base class for all IHC devices."""
-
 from homeassistant.helpers.entity import Entity
 
 
@@ -51,7 +50,7 @@ class IHCDevice(Entity):
             'ihc_id': self.ihc_id,
             'ihc_name': self.ihc_name,
             'ihc_note': self.ihc_note,
-            'ihc_position': self.ihc_position
+            'ihc_position': self.ihc_position,
         }
 
     def on_ihc_change(self, ihc_id, value):

@@ -8,10 +8,10 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import datetime
 import enum
+import functools
 import logging
 import os
 import pathlib
-import re
 import sys
 import threading
 from time import monotonic
@@ -25,24 +25,24 @@ from typing import (  # noqa: F401 pylint: disable=unused-import
 from async_timeout import timeout
 import attr
 import voluptuous as vol
-from voluptuous.humanize import humanize_error
 
 from homeassistant.const import (
     ATTR_DOMAIN, ATTR_FRIENDLY_NAME, ATTR_NOW, ATTR_SERVICE,
-    ATTR_SERVICE_CALL_ID, ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
+    ATTR_SERVICE_DATA, ATTR_SECONDS, EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED, MATCH_ALL, EVENT_HOMEASSISTANT_CLOSE,
-    EVENT_SERVICE_REMOVED, __version__)
+    EVENT_HOMEASSISTANT_CLOSE, EVENT_SERVICE_REMOVED,
+    EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
+    EVENT_TIME_CHANGED, EVENT_TIMER_OUT_OF_SYNC, MATCH_ALL, __version__)
 from homeassistant import loader
 from homeassistant.exceptions import (
-    HomeAssistantError, InvalidEntityFormatError, InvalidStateError)
+    HomeAssistantError, InvalidEntityFormatError, InvalidStateError,
+    Unauthorized, ServiceNotFound)
 from homeassistant.util.async_ import (
     run_coroutine_threadsafe, run_callback_threadsafe,
     fire_coroutine_threadsafe)
 from homeassistant import util
 import homeassistant.util.dt as dt_util
-from homeassistant.util import location
+from homeassistant.util import location, slugify
 from homeassistant.util.unit_system import UnitSystem, METRIC_SYSTEM  # NOQA
 
 # Typing imports that create a circular dependency
@@ -61,9 +61,6 @@ DOMAIN = 'homeassistant'
 # How long we wait for the result of a service call
 SERVICE_CALL_LIMIT = 10  # seconds
 
-# Pattern for validating entity IDs (format: <domain>.<entity>)
-ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
-
 # How long to wait till things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
 
@@ -76,8 +73,12 @@ def split_entity_id(entity_id: str) -> List[str]:
 
 
 def valid_entity_id(entity_id: str) -> bool:
-    """Test if an entity ID is a valid format."""
-    return ENTITY_ID_PATTERN.match(entity_id) is not None
+    """Test if an entity ID is a valid format.
+
+    Format: <domain>.<entity> where both are slugs.
+    """
+    return ('.' in entity_id and
+            slugify(entity_id) == entity_id.replace('.', '_', 1))
 
 
 def valid_state(state: str) -> bool:
@@ -258,11 +259,16 @@ class HomeAssistant:
         """
         task = None
 
-        if asyncio.iscoroutine(target):
+        # Check for partials to properly determine if coroutine function
+        check_target = target
+        while isinstance(check_target, functools.partial):
+            check_target = check_target.func
+
+        if asyncio.iscoroutine(check_target):
             task = self.loop.create_task(target)  # type: ignore
-        elif is_callback(target):
+        elif is_callback(check_target):
             self.loop.call_soon(target, *args)
-        elif asyncio.iscoroutinefunction(target):
+        elif asyncio.iscoroutinefunction(check_target):
             task = self.loop.create_task(target(*args))
         else:
             task = self.loop.run_in_executor(  # type: ignore
@@ -403,6 +409,10 @@ class Context:
         type=str,
         default=None,
     )
+    parent_id = attr.ib(
+        type=Optional[str],
+        default=None
+    )
     id = attr.ib(
         type=str,
         default=attr.Factory(lambda: uuid.uuid4().hex),
@@ -412,6 +422,7 @@ class Context:
         """Return a dictionary representation of the context."""
         return {
             'id': self.id,
+            'parent_id': self.parent_id,
             'user_id': self.user_id,
         }
 
@@ -658,11 +669,14 @@ class State:
                  attributes: Optional[Dict] = None,
                  last_changed: Optional[datetime.datetime] = None,
                  last_updated: Optional[datetime.datetime] = None,
-                 context: Optional[Context] = None) -> None:
+                 context: Optional[Context] = None,
+                 # Temp, because database can still store invalid entity IDs
+                 # Remove with 1.0 or in 2020.
+                 temp_invalid_id_bypass: Optional[bool] = False) -> None:
         """Initialize a new state."""
         state = str(state)
 
-        if not valid_entity_id(entity_id):
+        if not valid_entity_id(entity_id) and not temp_invalid_id_bypass:
             raise InvalidEntityFormatError((
                 "Invalid entity id encountered: {}. "
                 "Format should be <domain>.<object_id>").format(entity_id))
@@ -673,7 +687,7 @@ class State:
                 "State max length is 255 characters.").format(entity_id))
 
         self.entity_id = entity_id.lower()
-        self.state = state
+        self.state = state  # type: str
         self.attributes = MappingProxyType(attributes or {})
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
@@ -735,7 +749,10 @@ class State:
 
         context = json_dict.get('context')
         if context:
-            context = Context(**context)
+            context = Context(
+                id=context.get('id'),
+                user_id=context.get('user_id'),
+            )
 
         return cls(json_dict['entity_id'], json_dict['state'],
                    json_dict.get('attributes'), last_changed, last_updated,
@@ -769,7 +786,7 @@ class StateMachine:
         self._bus = bus
         self._loop = loop
 
-    def entity_ids(self, domain_filter: Optional[str] = None)-> List[str]:
+    def entity_ids(self, domain_filter: Optional[str] = None) -> List[str]:
         """List of entity ids that are being tracked."""
         future = run_callback_threadsafe(
             self._loop, self.async_entity_ids, domain_filter
@@ -791,13 +808,13 @@ class StateMachine:
         return [state.entity_id for state in self._states.values()
                 if state.domain == domain_filter]
 
-    def all(self)-> List[State]:
+    def all(self) -> List[State]:
         """Create a list of all states."""
         return run_callback_threadsafe(  # type: ignore
             self._loop, self.async_all).result()
 
     @callback
-    def async_all(self)-> List[State]:
+    def async_all(self) -> List[State]:
         """Create a list of all states.
 
         This method must be run in the event loop.
@@ -811,8 +828,8 @@ class StateMachine:
         """
         return self._states.get(entity_id.lower())
 
-    def is_state(self, entity_id: str, state: State) -> bool:
-        """Test if entity exists and is specified state.
+    def is_state(self, entity_id: str, state: str) -> bool:
+        """Test if entity exists and is in specified state.
 
         Async friendly.
         """
@@ -890,7 +907,7 @@ class StateMachine:
         else:
             same_state = (old_state.state == new_state and
                           not force_update)
-            same_attr = old_state.attributes == attributes
+            same_attr = old_state.attributes == MappingProxyType(attributes)
             last_changed = old_state.last_changed if same_state else None
 
         if same_state and same_attr:
@@ -919,6 +936,9 @@ class Service:
         """Initialize a service."""
         self.func = func
         self.schema = schema
+        # Properly detect wrapped functions
+        while isinstance(func, functools.partial):
+            func = func.func
         self.is_callback = is_callback(func)
         self.is_coroutinefunction = asyncio.iscoroutinefunction(func)
 
@@ -954,7 +974,6 @@ class ServiceRegistry:
         """Initialize a service registry."""
         self._services = {}  # type: Dict[str, Dict[str, Service]]
         self._hass = hass
-        self._async_unsub_call_event = None  # type: Optional[CALLBACK_TYPE]
 
     @property
     def services(self) -> Dict[str, Dict[str, Service]]:
@@ -1009,10 +1028,6 @@ class ServiceRegistry:
             self._services[domain][service] = service_obj
         else:
             self._services[domain] = {service: service_obj}
-
-        if self._async_unsub_call_event is None:
-            self._async_unsub_call_event = self._hass.bus.async_listen(
-                EVENT_CALL_SERVICE, self._event_to_service_call)
 
         self._hass.bus.async_fire(
             EVENT_SERVICE_REGISTERED,
@@ -1092,99 +1107,62 @@ class ServiceRegistry:
 
         This method is a coroutine.
         """
+        domain = domain.lower()
+        service = service.lower()
         context = context or Context()
-        call_id = uuid.uuid4().hex
-        event_data = {
+        service_data = service_data or {}
+
+        try:
+            handler = self._services[domain][service]
+        except KeyError:
+            raise ServiceNotFound(domain, service) from None
+
+        if handler.schema:
+            processed_data = handler.schema(service_data)
+        else:
+            processed_data = service_data
+
+        service_call = ServiceCall(domain, service, processed_data, context)
+
+        self._hass.bus.async_fire(EVENT_CALL_SERVICE, {
             ATTR_DOMAIN: domain.lower(),
             ATTR_SERVICE: service.lower(),
             ATTR_SERVICE_DATA: service_data,
-            ATTR_SERVICE_CALL_ID: call_id,
-        }
+        }, context=context)
 
         if not blocking:
-            self._hass.bus.async_fire(
-                EVENT_CALL_SERVICE, event_data, EventOrigin.local, context)
+            self._hass.async_create_task(
+                self._safe_execute(handler, service_call))
             return None
 
-        fut = asyncio.Future()  # type: asyncio.Future
-
-        @callback
-        def service_executed(event: Event) -> None:
-            """Handle an executed service."""
-            if event.data[ATTR_SERVICE_CALL_ID] == call_id:
-                fut.set_result(True)
-                unsub()
-
-        unsub = self._hass.bus.async_listen(
-            EVENT_SERVICE_EXECUTED, service_executed)
-
-        self._hass.bus.async_fire(EVENT_CALL_SERVICE, event_data,
-                                  EventOrigin.local, context)
-
-        done, _ = await asyncio.wait([fut], timeout=SERVICE_CALL_LIMIT)
-        success = bool(done)
-        if not success:
-            unsub()
-        return success
-
-    async def _event_to_service_call(self, event: Event) -> None:
-        """Handle the SERVICE_CALLED events from the EventBus."""
-        service_data = event.data.get(ATTR_SERVICE_DATA) or {}
-        domain = event.data.get(ATTR_DOMAIN).lower()  # type: ignore
-        service = event.data.get(ATTR_SERVICE).lower()  # type: ignore
-        call_id = event.data.get(ATTR_SERVICE_CALL_ID)
-
-        if not self.has_service(domain, service):
-            if event.origin == EventOrigin.local:
-                _LOGGER.warning("Unable to find service %s/%s",
-                                domain, service)
-            return
-
-        service_handler = self._services[domain][service]
-
-        def fire_service_executed() -> None:
-            """Fire service executed event."""
-            if not call_id:
-                return
-
-            data = {ATTR_SERVICE_CALL_ID: call_id}
-
-            if (service_handler.is_coroutinefunction or
-                    service_handler.is_callback):
-                self._hass.bus.async_fire(EVENT_SERVICE_EXECUTED, data,
-                                          EventOrigin.local, event.context)
-            else:
-                self._hass.bus.fire(EVENT_SERVICE_EXECUTED, data,
-                                    EventOrigin.local, event.context)
-
         try:
-            if service_handler.schema:
-                service_data = service_handler.schema(service_data)
-        except vol.Invalid as ex:
-            _LOGGER.error("Invalid service data for %s.%s: %s",
-                          domain, service, humanize_error(service_data, ex))
-            fire_service_executed()
-            return
+            with timeout(SERVICE_CALL_LIMIT):
+                await asyncio.shield(
+                    self._execute_service(handler, service_call))
+            return True
+        except asyncio.TimeoutError:
+            return False
 
-        service_call = ServiceCall(
-            domain, service, service_data, event.context)
-
+    async def _safe_execute(self, handler: Service,
+                            service_call: ServiceCall) -> None:
+        """Execute a service and catch exceptions."""
         try:
-            if service_handler.is_callback:
-                service_handler.func(service_call)
-                fire_service_executed()
-            elif service_handler.is_coroutinefunction:
-                await service_handler.func(service_call)
-                fire_service_executed()
-            else:
-                def execute_service() -> None:
-                    """Execute a service and fires a SERVICE_EXECUTED event."""
-                    service_handler.func(service_call)
-                    fire_service_executed()
-
-                await self._hass.async_add_executor_job(execute_service)
+            await self._execute_service(handler, service_call)
+        except Unauthorized:
+            _LOGGER.warning('Unauthorized service called %s/%s',
+                            service_call.domain, service_call.service)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error executing service %s', service_call)
+
+    async def _execute_service(self, handler: Service,
+                               service_call: ServiceCall) -> None:
+        """Execute a service."""
+        if handler.is_callback:
+            handler.func(service_call)
+        elif handler.is_coroutinefunction:
+            await handler.func(service_call)
+        else:
+            await self._hass.async_add_executor_job(handler.func, service_call)
 
 
 class Config:
@@ -1205,7 +1183,7 @@ class Config:
         # List of loaded components
         self.components = set()  # type: set
 
-        # API (HTTP) server configuration
+        # API (HTTP) server configuration, see components.http.ApiConfig
         self.api = None  # type: Optional[Any]
 
         # Directory that holds the configuration
@@ -1297,8 +1275,11 @@ def _async_create_timer(hass: HomeAssistant) -> None:
         hass.bus.async_fire(EVENT_TIME_CHANGED,
                             {ATTR_NOW: now})
 
-        if monotonic() > target + 1:
-            _LOGGER.error('Timer got out of sync. Resetting')
+        # If we are more than a second late, a tick was missed
+        late = monotonic() - target
+        if late > 1:
+            hass.bus.async_fire(EVENT_TIMER_OUT_OF_SYNC,
+                                {ATTR_SECONDS: late})
 
         schedule_tick(now)
 

@@ -1,20 +1,21 @@
 """Implement the auth feature from Hass.io for Add-ons."""
 import logging
-from ipaddress import ip_address
 import os
+from ipaddress import ip_address
 
+import voluptuous as vol
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPForbidden, HTTPNotFound
-import voluptuous as vol
 
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.const import KEY_REAL_IP
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import ATTR_USERNAME, ATTR_PASSWORD, ATTR_ADDON
+from .const import ATTR_ADDON, ATTR_PASSWORD, ATTR_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ SCHEMA_API_AUTH = vol.Schema({
 
 
 @callback
-def async_setup_auth(hass):
+def async_setup_auth_view(hass: HomeAssistantType):
     """Auth setup."""
     hassio_auth = HassIOAuth(hass)
     hass.http.register_view(hassio_auth)
@@ -57,9 +58,9 @@ class HassIOAuth(HomeAssistantView):
 
     def _get_provider(self):
         """Return Homeassistant auth provider."""
-        for prv in self.hass.auth.auth_providers:
-            if prv.type == 'homeassistant':
-                return prv
+        prv = self.hass.auth.get_auth_provider('homeassistant', None)
+        if prv is not None:
+            return prv
 
         _LOGGER.error("Can't find Home Assistant auth.")
         raise HTTPNotFound()

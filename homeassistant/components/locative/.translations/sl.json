@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Va\u0161 Home Assistant mora biti dostopek prek interneta, da boste lahko prejemali Geofency sporo\u010dila.",
+            "one_instance_allowed": "Potrebna je samo ena instanca."
+        },
+        "create_entry": {
+            "default": "Za po\u0161iljanje lokacij v Home Assistant, morate namestiti funkcijo webhook v aplikaciji Locative. \n\n Izpolnite naslednje podatke: \n\n - URL: ` {webhook_url} ` \n - Metoda: POST \n\n Za ve\u010d podrobnosti si oglejte [dokumentacijo] ( {docs_url} )."
+        },
+        "step": {
+            "user": {
+                "description": "Ali ste prepri\u010dani, da \u017eelite nastaviti Locative Webhook?",
+                "title": "Nastavite Locative Webhook"
+            }
+        },
+        "title": "Locative Webhook"
+    }
+}

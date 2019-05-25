@@ -1,24 +1,17 @@
-"""
-Support for HomeMatic devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/homematic/
-"""
+"""Support for HomeMatic devices."""
 from datetime import timedelta
 from functools import partial
 import logging
-import socket
 
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_NAME, CONF_HOST, CONF_HOSTS, CONF_PASSWORD,
-    CONF_PLATFORM, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
+    CONF_PLATFORM, CONF_SSL, CONF_USERNAME, CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['pyhomematic==0.1.50']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,8 +57,9 @@ HM_DEVICE_TYPES = {
     DISCOVER_SWITCHES: [
         'Switch', 'SwitchPowermeter', 'IOSwitch', 'IPSwitch', 'RFSiren',
         'IPSwitchPowermeter', 'HMWIOSwitch', 'Rain', 'EcoLogic',
-        'IPKeySwitchPowermeter'],
-    DISCOVER_LIGHTS: ['Dimmer', 'KeyDimmer', 'IPKeyDimmer'],
+        'IPKeySwitchPowermeter', 'IPGarage', 'IPKeySwitch', 'IPMultiIO'],
+    DISCOVER_LIGHTS: ['Dimmer', 'KeyDimmer', 'IPKeyDimmer', 'IPDimmer',
+                      'ColorEffectLight'],
     DISCOVER_SENSORS: [
         'SwitchPowermeter', 'Motion', 'MotionV2', 'RemoteMotion', 'MotionIP',
         'ThermostatWall', 'AreaThermostat', 'RotaryHandleSensor',
@@ -76,17 +70,19 @@ HM_DEVICE_TYPES = {
         'IPSmoke', 'RFSiren', 'PresenceIP', 'IPAreaThermostat',
         'IPWeatherSensor', 'RotaryHandleSensorIP', 'IPPassageSensor',
         'IPKeySwitchPowermeter', 'IPThermostatWall230V', 'IPWeatherSensorPlus',
-        'IPWeatherSensorBasic'],
+        'IPWeatherSensorBasic', 'IPBrightnessSensor', 'IPGarage',
+        'UniversalSensor', 'MotionIPV2', 'IPMultiIO', 'IPThermostatWall2'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
         'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall',
-        'ThermostatGroup', 'IPThermostatWall230V'],
+        'ThermostatGroup', 'IPThermostatWall230V', 'IPThermostatWall2'],
     DISCOVER_BINARY_SENSORS: [
         'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2',
         'MotionIP', 'RemoteMotion', 'WeatherSensor', 'TiltSensor',
         'IPShutterContact', 'HMWIOSwitch', 'MaxShutterContact', 'Rain',
         'WiredSensor', 'PresenceIP', 'IPWeatherSensor', 'IPPassageSensor',
-        'SmartwareMotion', 'IPWeatherSensorPlus'],
+        'SmartwareMotion', 'IPWeatherSensorPlus', 'MotionIPV2', 'WaterIP',
+        'IPMultiIO', 'TiltIP', 'IPShutterContactSabotage'],
     DISCOVER_COVER: ['Blind', 'KeyBlind', 'IPKeyBlind', 'IPKeyBlindTilt'],
     DISCOVER_LOCKS: ['KeyMatic']
 }
@@ -97,17 +93,22 @@ HM_IGNORE_DISCOVERY_NODE = [
 ]
 
 HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS = {
-    'ACTUAL_TEMPERATURE': ['IPAreaThermostat', 'IPWeatherSensor'],
+    'ACTUAL_TEMPERATURE': [
+        'IPAreaThermostat', 'IPWeatherSensor',
+        'IPWeatherSensorPlus', 'IPWeatherSensorBasic',
+        'IPThermostatWall', 'IPThermostatWall2'],
 }
 
 HM_ATTRIBUTE_SUPPORT = {
     'LOWBAT': ['battery', {0: 'High', 1: 'Low'}],
     'LOW_BAT': ['battery', {0: 'High', 1: 'Low'}],
-    'ERROR': ['sabotage', {0: 'No', 1: 'Yes'}],
+    'ERROR': ['error', {0: 'No'}],
+    'ERROR_SABOTAGE': ['sabotage', {0: 'No', 1: 'Yes'}],
     'SABOTAGE': ['sabotage', {0: 'No', 1: 'Yes'}],
-    'RSSI_PEER': ['rssi', {}],
-    'RSSI_DEVICE': ['rssi', {}],
+    'RSSI_PEER': ['rssi_peer', {}],
+    'RSSI_DEVICE': ['rssi_device', {}],
     'VALVE_STATE': ['valve', {}],
+    'LEVEL': ['level', {}],
     'BATTERY_STATE': ['battery', {}],
     'CONTROL_MODE': ['mode', {
         0: 'Auto',
@@ -121,7 +122,8 @@ HM_ATTRIBUTE_SUPPORT = {
     'CURRENT': ['current', {}],
     'VOLTAGE': ['voltage', {}],
     'OPERATING_VOLTAGE': ['voltage', {}],
-    'WORKING': ['working', {0: 'No', 1: 'Yes'}]
+    'WORKING': ['working', {0: 'No', 1: 'Yes'}],
+    'STATE_UNCERTAIN': ['state_uncertain', {}]
 }
 
 HM_PRESS_EVENTS = [
@@ -168,6 +170,9 @@ DEFAULT_PORT = 2001
 DEFAULT_PATH = ''
 DEFAULT_USERNAME = 'Admin'
 DEFAULT_PASSWORD = ''
+DEFAULT_SSL = False
+DEFAULT_VERIFY_SSL = False
+DEFAULT_CHANNEL = 1
 
 
 DEVICE_SCHEMA = vol.Schema({
@@ -175,7 +180,7 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
     vol.Required(ATTR_ADDRESS): cv.string,
     vol.Required(ATTR_INTERFACE): cv.string,
-    vol.Optional(ATTR_CHANNEL, default=1): vol.Coerce(int),
+    vol.Optional(ATTR_CHANNEL, default=DEFAULT_CHANNEL): vol.Coerce(int),
     vol.Optional(ATTR_PARAM): cv.string,
     vol.Optional(ATTR_UNIQUE_ID): cv.string,
 })
@@ -193,6 +198,9 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
             vol.Optional(CONF_CALLBACK_IP): cv.string,
             vol.Optional(CONF_CALLBACK_PORT): cv.port,
+            vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+            vol.Optional(
+                CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         }},
         vol.Optional(CONF_HOSTS, default={}): {cv.match_all: {
             vol.Required(CONF_HOST): cv.string,
@@ -254,7 +262,7 @@ def setup(hass, config):
     # Create hosts-dictionary for pyhomematic
     for rname, rconfig in conf[CONF_INTERFACES].items():
         remotes[rname] = {
-            'ip': socket.gethostbyname(rconfig.get(CONF_HOST)),
+            'ip': rconfig.get(CONF_HOST),
             'port': rconfig.get(CONF_PORT),
             'path': rconfig.get(CONF_PATH),
             'resolvenames': rconfig.get(CONF_RESOLVENAMES),
@@ -263,12 +271,14 @@ def setup(hass, config):
             'password': rconfig.get(CONF_PASSWORD),
             'callbackip': rconfig.get(CONF_CALLBACK_IP),
             'callbackport': rconfig.get(CONF_CALLBACK_PORT),
+            'ssl': rconfig.get(CONF_SSL),
+            'verify_ssl': rconfig.get(CONF_VERIFY_SSL),
             'connect': True,
         }
 
     for sname, sconfig in conf[CONF_HOSTS].items():
         remotes[sname] = {
-            'ip': socket.gethostbyname(sconfig.get(CONF_HOST)),
+            'ip': sconfig.get(CONF_HOST),
             'port': DEFAULT_PORT,
             'username': sconfig.get(CONF_USERNAME),
             'password': sconfig.get(CONF_PASSWORD),
@@ -775,8 +785,7 @@ class HMDevice(Entity):
             # Link events from pyhomematic
             self._subscribe_homematic_events()
             self._available = not self._hmdevice.UNREACH
-        # pylint: disable=broad-except
-        except Exception as err:
+        except Exception as err:  # pylint: disable=broad-except
             self._connected = False
             _LOGGER.error("Exception while linking %s: %s",
                           self._address, str(err))
@@ -795,11 +804,8 @@ class HMDevice(Entity):
                 has_changed = True
 
         # Availability has changed
-        if attribute == 'UNREACH':
-            self._available = not bool(value)
-            has_changed = True
-        elif not self.available:
-            self._available = False
+        if self.available != (not self._hmdevice.UNREACH):
+            self._available = not self._hmdevice.UNREACH
             has_changed = True
 
         # If it has changed data point, update HASS
@@ -809,7 +815,6 @@ class HMDevice(Entity):
     def _subscribe_homematic_events(self):
         """Subscribe all required events to handle job."""
         channels_to_sub = set()
-        channels_to_sub.add(0)  # Add channel 0 for UNREACH
 
         # Push data to channels_to_sub from hmdevice metadata
         for metadata in (self._hmdevice.SENSORNODE, self._hmdevice.BINARYNODE,

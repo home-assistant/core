@@ -36,10 +36,11 @@ async def async_setup(hass):
         WS_TYPE_CREATE, websocket_create,
         SCHEMA_WS_CREATE
     )
+    hass.components.websocket_api.async_register_command(websocket_update)
     return True
 
 
-@websocket_api.require_owner
+@websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_list(hass, connection, msg):
     """Return a list of users."""
@@ -49,7 +50,7 @@ async def websocket_list(hass, connection, msg):
         websocket_api.result_message(msg['id'], result))
 
 
-@websocket_api.require_owner
+@websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_delete(hass, connection, msg):
     """Delete a user."""
@@ -72,7 +73,7 @@ async def websocket_delete(hass, connection, msg):
         websocket_api.result_message(msg['id']))
 
 
-@websocket_api.require_owner
+@websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_create(hass, connection, msg):
     """Create a user."""
@@ -84,6 +85,40 @@ async def websocket_create(hass, connection, msg):
         }))
 
 
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command({
+    vol.Required('type'): 'config/auth/update',
+    vol.Required('user_id'): str,
+    vol.Optional('name'): str,
+    vol.Optional('group_ids'): [str]
+})
+async def websocket_update(hass, connection, msg):
+    """Update a user."""
+    user = await hass.auth.async_get_user(msg.pop('user_id'))
+
+    if not user:
+        connection.send_message(websocket_api.error_message(
+            msg['id'], websocket_api.const.ERR_NOT_FOUND, 'User not found'))
+        return
+
+    if user.system_generated:
+        connection.send_message(websocket_api.error_message(
+            msg['id'], 'cannot_modify_system_generated',
+            'Unable to update system generated users.'))
+        return
+
+    msg.pop('type')
+    msg_id = msg.pop('id')
+
+    await hass.auth.async_update_user(user, **msg)
+
+    connection.send_message(
+        websocket_api.result_message(msg_id, {
+            'user': _user_info(user),
+        }))
+
+
 def _user_info(user):
     """Format a user."""
     return {
@@ -92,6 +127,7 @@ def _user_info(user):
         'is_owner': user.is_owner,
         'is_active': user.is_active,
         'system_generated': user.system_generated,
+        'group_ids': [group.id for group in user.groups],
         'credentials': [
             {
                 'type': c.auth_provider_type,

@@ -1,9 +1,4 @@
-"""
-Offer template automation rules.
-
-For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/docs/automation/trigger/#template-trigger
-"""
+"""Offer template automation rules."""
 import logging
 
 import voluptuous as vol
@@ -13,7 +8,6 @@ from homeassistant.const import CONF_VALUE_TEMPLATE, CONF_PLATFORM
 from homeassistant.helpers.event import async_track_template
 import homeassistant.helpers.config_validation as cv
 
-
 _LOGGER = logging.getLogger(__name__)
 
 TRIGGER_SCHEMA = IF_ACTION_SCHEMA = vol.Schema({
@@ -22,7 +16,7 @@ TRIGGER_SCHEMA = IF_ACTION_SCHEMA = vol.Schema({
 })
 
 
-async def async_trigger(hass, config, action):
+async def async_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     value_template = config.get(CONF_VALUE_TEMPLATE)
     value_template.hass = hass
@@ -37,6 +31,6 @@ async def async_trigger(hass, config, action):
                 'from_state': from_s,
                 'to_state': to_s,
             },
-        }, context=to_s.context))
+        }, context=(to_s.context if to_s else None)))
 
     return async_track_template(hass, value_template, template_listener)

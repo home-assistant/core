@@ -1,0 +1,13 @@
+{
+  "domain": "lifx",
+  "name": "Lifx",
+  "documentation": "https://www.home-assistant.io/components/lifx",
+  "requirements": [
+    "aiolifx==0.6.7",
+    "aiolifx_effects==0.2.2"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@amelchio"
+  ]
+}

@@ -1,5 +1,5 @@
 """Test the init file of IFTTT."""
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.core import callback
@@ -36,13 +36,3 @@ async def test_config_flow_registers_webhook(hass, aiohttp_client):
     assert len(ifttt_events) == 1
     assert ifttt_events[0].data['webhook_id'] == webhook_id
     assert ifttt_events[0].data['hello'] == 'ifttt'
-
-
-async def test_config_flow_aborts_external_url(hass, aiohttp_client):
-    """Test setting up IFTTT and sending webhook."""
-    hass.config.api = Mock(base_url='http://192.168.1.10')
-    result = await hass.config_entries.flow.async_init('ifttt', context={
-        'source': 'user'
-    })
-    assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result['reason'] == 'not_internet_accessible'

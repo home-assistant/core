@@ -1,9 +1,4 @@
-"""
-Support for Blink Home Camera System.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/blink/
-"""
+"""Support for Blink Home Camera System."""
 import logging
 from datetime import timedelta
 import voluptuous as vol
@@ -14,8 +9,6 @@ from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, CONF_NAME, CONF_SCAN_INTERVAL,
     CONF_BINARY_SENSORS, CONF_SENSORS, CONF_FILENAME,
     CONF_MONITORED_CONDITIONS, TEMP_FAHRENHEIT)
-
-REQUIREMENTS = ['blinkpy==0.9.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,14 +22,13 @@ DEFAULT_BRAND = 'Blink'
 DEFAULT_ATTRIBUTION = "Data provided by immedia-semi.com"
 SIGNAL_UPDATE_BLINK = "blink_update"
 
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=300)
 
 TYPE_CAMERA_ARMED = 'motion_enabled'
 TYPE_MOTION_DETECTED = 'motion_detected'
 TYPE_TEMPERATURE = 'temperature'
 TYPE_BATTERY = 'battery'
 TYPE_WIFI_STRENGTH = 'wifi_strength'
-TYPE_STATUS = 'status'
 
 SERVICE_REFRESH = 'blink_update'
 SERVICE_TRIGGER = 'trigger_camera'
@@ -51,7 +43,6 @@ SENSORS = {
     TYPE_TEMPERATURE: ['Temperature', TEMP_FAHRENHEIT, 'mdi:thermometer'],
     TYPE_BATTERY: ['Battery', '%', 'mdi:battery-80'],
     TYPE_WIFI_STRENGTH: ['Wifi Signal', 'dBm', 'mdi:wifi-strength-2'],
-    TYPE_STATUS: ['Status', '', 'mdi:bell']
 }
 
 BINARY_SENSOR_SCHEMA = vol.Schema({
@@ -113,7 +104,7 @@ def setup(hass, config):
 
     def trigger_camera(call):
         """Trigger a camera."""
-        cameras = hass.data[BLINK_DATA].sync.cameras
+        cameras = hass.data[BLINK_DATA].cameras
         name = call.data[CONF_NAME]
         if name in cameras:
             cameras[name].snap_picture()
@@ -150,7 +141,7 @@ async def async_handle_save_video_service(hass, call):
 
     def _write_video(camera_name, video_path):
         """Call video write."""
-        all_cameras = hass.data[BLINK_DATA].sync.cameras
+        all_cameras = hass.data[BLINK_DATA].cameras
         if camera_name in all_cameras:
             all_cameras[camera_name].video_to_file(video_path)
 

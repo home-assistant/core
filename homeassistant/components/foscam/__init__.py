@@ -1,0 +1,1 @@
+"""The foscam component."""

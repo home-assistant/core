@@ -1,0 +1,11 @@
+{
+  "domain": "wink",
+  "name": "Wink",
+  "documentation": "https://www.home-assistant.io/components/wink",
+  "requirements": [
+    "pubnubsub-handler==1.0.4",
+    "python-wink==1.10.5"
+  ],
+  "dependencies": ["configurator"],
+  "codeowners": []
+}

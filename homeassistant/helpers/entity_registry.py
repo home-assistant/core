@@ -7,9 +7,11 @@ The Entity Registry will persist itself 10 seconds after a new entity is
 registered. Registering a new entity while a timer is in progress resets the
 timer.
 """
+from asyncio import Event
 from collections import OrderedDict
 from itertools import chain
 import logging
+from typing import List, Optional, cast
 import weakref
 
 import attr
@@ -19,8 +21,11 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.yaml import load_yaml
 
+from .typing import HomeAssistantType
+
 PATH_REGISTRY = 'entity_registry.yaml'
 DATA_REGISTRY = 'entity_registry'
+EVENT_ENTITY_REGISTRY_UPDATED = 'entity_registry_updated'
 SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
 _UNDEF = object()
@@ -86,6 +91,11 @@ class EntityRegistry:
         return entity_id in self.entities
 
     @callback
+    def async_get(self, entity_id: str) -> Optional[RegistryEntry]:
+        """Get EntityEntry for an entity_id."""
+        return self.entities.get(entity_id)
+
+    @callback
     def async_get_entity_id(self, domain: str, platform: str, unique_id: str):
         """Check if an entity_id is currently registered."""
         for entity in self.entities.values():
@@ -95,7 +105,8 @@ class EntityRegistry:
         return None
 
     @callback
-    def async_generate_entity_id(self, domain, suggested_object_id):
+    def async_generate_entity_id(self, domain, suggested_object_id,
+                                 known_object_ids=None):
         """Generate an entity ID that does not conflict.
 
         Conflicts checked against registered and currently existing entities.
@@ -103,22 +114,31 @@ class EntityRegistry:
         return ensure_unique_string(
             '{}.{}'.format(domain, slugify(suggested_object_id)),
             chain(self.entities.keys(),
-                  self.hass.states.async_entity_ids(domain))
+                  self.hass.states.async_entity_ids(domain),
+                  known_object_ids if known_object_ids else [])
         )
 
     @callback
     def async_get_or_create(self, domain, platform, unique_id, *,
                             suggested_object_id=None, config_entry_id=None,
-                            device_id=None):
+                            device_id=None, known_object_ids=None):
         """Get entity. Create if it doesn't exist."""
         entity_id = self.async_get_entity_id(domain, platform, unique_id)
         if entity_id:
             return self._async_update_entity(
-                entity_id, config_entry_id=config_entry_id,
-                device_id=device_id)
+                entity_id,
+                config_entry_id=config_entry_id,
+                device_id=device_id,
+                # When we changed our slugify algorithm, we invalidated some
+                # stored entity IDs with either a __ or ending in _.
+                # Fix introduced in 0.86 (Jan 23, 2019). Next line can be
+                # removed when we release 1.0 or in 2020.
+                new_entity_id='.'.join(slugify(part) for part
+                                       in entity_id.split('.', 1)))
 
         entity_id = self.async_generate_entity_id(
-            domain, suggested_object_id or '{}_{}'.format(platform, unique_id))
+            domain, suggested_object_id or '{}_{}'.format(platform, unique_id),
+            known_object_ids)
 
         entity = RegistryEntry(
             entity_id=entity_id,
@@ -131,22 +151,39 @@ class EntityRegistry:
         _LOGGER.info('Registered new %s.%s entity: %s',
                      domain, platform, entity_id)
         self.async_schedule_save()
+
+        self.hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, {
+            'action': 'create',
+            'entity_id': entity_id
+        })
+
         return entity
 
     @callback
+    def async_remove(self, entity_id):
+        """Remove an entity from registry."""
+        self.entities.pop(entity_id)
+        self.hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, {
+            'action': 'remove',
+            'entity_id': entity_id
+        })
+        self.async_schedule_save()
+
+    @callback
     def async_update_entity(self, entity_id, *, name=_UNDEF,
-                            new_entity_id=_UNDEF):
+                            new_entity_id=_UNDEF, new_unique_id=_UNDEF):
         """Update properties of an entity."""
         return self._async_update_entity(
             entity_id,
             name=name,
-            new_entity_id=new_entity_id
+            new_entity_id=new_entity_id,
+            new_unique_id=new_unique_id
         )
 
     @callback
     def _async_update_entity(self, entity_id, *, name=_UNDEF,
                              config_entry_id=_UNDEF, new_entity_id=_UNDEF,
-                             device_id=_UNDEF):
+                             device_id=_UNDEF, new_unique_id=_UNDEF):
         """Private facing update properties method."""
         old = self.entities[entity_id]
 
@@ -176,6 +213,17 @@ class EntityRegistry:
             self.entities.pop(entity_id)
             entity_id = changes['entity_id'] = new_entity_id
 
+        if new_unique_id is not _UNDEF:
+            conflict = next((entity for entity in self.entities.values()
+                             if entity.unique_id == new_unique_id
+                             and entity.domain == old.domain
+                             and entity.platform == old.platform), None)
+            if conflict:
+                raise ValueError(
+                    "Unique id '{}' is already in use by '{}'".format(
+                        new_unique_id, conflict.entity_id))
+            changes['unique_id'] = new_unique_id
+
         if not changes:
             return old
 
@@ -185,7 +233,7 @@ class EntityRegistry:
         for listener_ref in new.update_listeners:
             listener = listener_ref()
             if listener is None:
-                to_remove.append(listener)
+                to_remove.append(listener_ref)
             else:
                 try:
                     listener.async_registry_updated(old, new)
@@ -196,6 +244,11 @@ class EntityRegistry:
             new.update_listeners.remove(ref)
 
         self.async_schedule_save()
+
+        self.hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, {
+            'action': 'update',
+            'entity_id': entity_id
+        })
 
         return new
 
@@ -255,19 +308,34 @@ class EntityRegistry:
 
 
 @bind_hass
-async def async_get_registry(hass) -> EntityRegistry:
+async def async_get_registry(hass: HomeAssistantType) -> EntityRegistry:
     """Return entity registry instance."""
-    task = hass.data.get(DATA_REGISTRY)
+    reg_or_evt = hass.data.get(DATA_REGISTRY)
 
-    if task is None:
-        async def _load_reg():
-            registry = EntityRegistry(hass)
-            await registry.async_load()
-            return registry
+    if not reg_or_evt:
+        evt = hass.data[DATA_REGISTRY] = Event()
 
-        task = hass.data[DATA_REGISTRY] = hass.async_create_task(_load_reg())
+        reg = EntityRegistry(hass)
+        await reg.async_load()
 
-    return await task
+        hass.data[DATA_REGISTRY] = reg
+        evt.set()
+        return reg
+
+    if isinstance(reg_or_evt, Event):
+        evt = reg_or_evt
+        await evt.wait()
+        return cast(EntityRegistry, hass.data.get(DATA_REGISTRY))
+
+    return cast(EntityRegistry, reg_or_evt)
+
+
+@callback
+def async_entries_for_device(registry: EntityRegistry, device_id: str) \
+        -> List[RegistryEntry]:
+    """Return entries that match a device."""
+    return [entry for entry in registry.entities.values()
+            if entry.device_id == device_id]
 
 
 async def _async_migrate(entities):

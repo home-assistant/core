@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "credential_error": "Errore nel recupero delle credenziali.",
+            "devices_configured": "Tutti i dispositivi trovati sono gi\u00e0 configurati.",
+            "no_devices_found": "Nessun dispositivo PlayStation 4 trovato in rete.",
+            "port_987_bind_error": "Impossibile connettersi alla porta 987.",
+            "port_997_bind_error": "Impossibile connettersi alla porta 997."
+        },
+        "error": {
+            "login_failed": "Accoppiamento alla PlayStation 4 fallito. Verifica che il PIN sia corretto.",
+            "no_ipaddress": "Inserisci l'indirizzo IP della PlayStation 4 che desideri configurare.",
+            "not_ready": "La PlayStation 4 non \u00e8 accesa o non \u00e8 collegata alla rete."
+        },
+        "step": {
+            "creds": {
+                "description": "Credenziali necessarie. Premi 'Invia' e poi, nella seconda schermata della App PS4, aggiorna i dispositivi e seleziona il dispositivo 'Home-Assistant' per continuare.",
+                "title": "PlayStation 4"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN",
+                    "ip_address": "Indirizzo IP",
+                    "name": "Nome",
+                    "region": "Area geografica"
+                },
+                "description": "Inserisci le informazioni  della tua PlayStation 4. Per il \"PIN\", vai su \"Impostazioni\" sulla tua console PlayStation 4. Quindi accedi a \"Impostazioni connessione app mobile\" e seleziona \"Aggiungi dispositivo\". Inserisci il PIN che viene visualizzato.",
+                "title": "PlayStation 4"
+            },
+            "mode": {
+                "data": {
+                    "mode": "Modalit\u00e0 di configurazione"
+                },
+                "title": "PlayStation 4"
+            }
+        },
+        "title": "PlayStation 4"
+    }
+}

@@ -1,9 +1,4 @@
-"""
-Offer state listening automation rules.
-
-For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/docs/automation/trigger/#state-trigger
-"""
+"""Offer state listening automation rules."""
 import voluptuous as vol
 
 from homeassistant.core import callback
@@ -26,7 +21,7 @@ TRIGGER_SCHEMA = vol.All(vol.Schema({
 }), cv.key_dependency(CONF_FOR, CONF_TO))
 
 
-async def async_trigger(hass, config, action):
+async def async_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
     from_state = config.get(CONF_FROM, MATCH_ALL)

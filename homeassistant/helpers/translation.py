@@ -1,17 +1,18 @@
 """Translation string lookup helpers."""
 import logging
-from os import path
+from typing import Any, Dict, Iterable, Optional
 
 from homeassistant import config_entries
-from homeassistant.loader import get_component, bind_hass
+from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.json import load_json
+from .typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
 TRANSLATION_STRING_CACHE = 'translation_string_cache'
 
 
-def recursive_flatten(prefix, data):
+def recursive_flatten(prefix: Any, data: Dict) -> Dict[str, Any]:
     """Return a flattened representation of dict data."""
     output = {}
     for key, value in data.items():
@@ -23,44 +24,60 @@ def recursive_flatten(prefix, data):
     return output
 
 
-def flatten(data):
+def flatten(data: Dict) -> Dict[str, Any]:
     """Return a flattened representation of dict data."""
     return recursive_flatten('', data)
 
 
-def component_translation_file(hass, component, language):
-    """Return the translation json file location for a component."""
-    if '.' in component:
-        name = component.split('.', 1)[1]
-    else:
-        name = component
+async def component_translation_file(hass: HomeAssistantType, component: str,
+                                     language: str) -> Optional[str]:
+    """Return the translation json file location for a component.
 
-    module = get_component(hass, component)
-    component_path = path.dirname(module.__file__)
+    For component:
+     - components/hue/.translations/nl.json
 
-    # If loading translations for the package root, (__init__.py), the
-    # prefix should be skipped.
-    if module.__name__ == module.__package__:
-        filename = '{}.json'.format(language)
-    else:
-        filename = '{}.{}.json'.format(name, language)
+    For platform:
+     - components/hue/.translations/light.nl.json
 
-    return path.join(component_path, '.translations', filename)
+    If component is just a single file, will return None.
+    """
+    parts = component.split('.')
+    domain = parts[-1]
+    is_platform = len(parts) == 2
+
+    integration = await async_get_integration(hass, domain)
+    assert integration is not None, domain
+
+    if is_platform:
+        filename = "{}.{}.json".format(parts[0], language)
+        return str(integration.file_path / '.translations' / filename)
+
+    # If it's a component that is just one file, we don't support translations
+    # Example custom_components/my_component.py
+    if integration.file_path.name != domain:
+        return None
+
+    filename = '{}.json'.format(language)
+    return str(integration.file_path / '.translations' / filename)
 
 
-def load_translations_files(translation_files):
+def load_translations_files(translation_files: Dict[str, str]) \
+        -> Dict[str, Dict[str, Any]]:
     """Load and parse translation.json files."""
     loaded = {}
     for component, translation_file in translation_files.items():
-        loaded[component] = load_json(translation_file)
+        loaded_json = load_json(translation_file)
+        assert isinstance(loaded_json, dict)
+        loaded[component] = loaded_json
 
     return loaded
 
 
-def build_resources(translation_cache, components):
+def build_resources(translation_cache: Dict[str, Dict[str, Any]],
+                    components: Iterable[str]) -> Dict[str, Dict[str, Any]]:
     """Build the resources response for the given components."""
     # Build response
-    resources = {}
+    resources = {}  # type: Dict[str, Dict[str, Any]]
     for component in components:
         if '.' not in component:
             domain = component
@@ -79,7 +96,8 @@ def build_resources(translation_cache, components):
 
 
 @bind_hass
-async def async_get_component_resources(hass, language):
+async def async_get_component_resources(hass: HomeAssistantType,
+                                        language: str) -> Dict[str, Any]:
     """Return translation resources for all components."""
     if TRANSLATION_STRING_CACHE not in hass.data:
         hass.data[TRANSLATION_STRING_CACHE] = {}
@@ -94,17 +112,22 @@ async def async_get_component_resources(hass, language):
     missing_components = components - set(translation_cache)
     missing_files = {}
     for component in missing_components:
-        missing_files[component] = component_translation_file(
-            hass, component, language)
+        path = await component_translation_file(hass, component, language)
+        # No translation available
+        if path is None:
+            translation_cache[component] = {}
+        else:
+            missing_files[component] = path
 
     # Load missing files
     if missing_files:
-        loaded_translations = await hass.async_add_job(
+        load_translations_job = hass.async_add_job(
             load_translations_files, missing_files)
+        assert load_translations_job is not None
+        loaded_translations = await load_translations_job
 
         # Update cache
-        for component, translation_data in loaded_translations.items():
-            translation_cache[component] = translation_data
+        translation_cache.update(loaded_translations)
 
     resources = build_resources(translation_cache, components)
 
@@ -114,7 +137,8 @@ async def async_get_component_resources(hass, language):
 
 
 @bind_hass
-async def async_get_translations(hass, language):
+async def async_get_translations(hass: HomeAssistantType,
+                                 language: str) -> Dict[str, Any]:
     """Return all backend translations."""
     resources = await async_get_component_resources(hass, language)
     if language != 'en':

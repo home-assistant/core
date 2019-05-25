@@ -1,9 +1,8 @@
 """Middleware to fetch real IP."""
-
 from ipaddress import ip_address
 
-from aiohttp.web import middleware
 from aiohttp.hdrs import X_FORWARDED_FOR
+from aiohttp.web import middleware
 
 from homeassistant.core import callback
 
@@ -33,8 +32,4 @@ def setup_real_ip(app, use_x_forwarded_for, trusted_proxies):
 
         return await handler(request)
 
-    async def app_startup(app):
-        """Initialize bans when app starts up."""
-        app.middlewares.append(real_ip_middleware)
-
-    app.on_startup.append(app_startup)
+    app.middlewares.append(real_ip_middleware)
