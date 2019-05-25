@@ -136,7 +136,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry):
 
 class ClimateDevice(Entity):
     """Representation of a climate device."""
-
+# done
     @property
     def state(self) -> str:
         """Return the current state."""
@@ -222,7 +222,7 @@ class ClimateDevice(Entity):
     def target_humidity(self) -> Optional[int]:
         """Return the humidity we try to reach."""
         return None
-
+# to do
     @property
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode.
@@ -306,7 +306,7 @@ class ClimateDevice(Entity):
     def swing_modes(self) -> Optional[List[str]]:
         """Return the list of available swing modes."""
         return None
-
+# todo 2
     def set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         raise NotImplementedError()
