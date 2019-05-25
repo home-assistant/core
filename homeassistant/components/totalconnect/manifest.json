@@ -3,7 +3,7 @@
   "name": "Totalconnect",
   "documentation": "https://www.home-assistant.io/components/totalconnect",
   "requirements": [
-    "total_connect_client==0.25"
+    "total_connect_client==0.27"
   ],
   "dependencies": [],
   "codeowners": []

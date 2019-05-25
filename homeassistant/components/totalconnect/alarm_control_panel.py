@@ -9,10 +9,8 @@ from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED,
-    STATE_ALARM_ARMING, STATE_ALARM_DISARMING, STATE_ALARM_TRIGGERED, 
-    STATE_ALARM_TRIGGERED_FIRE_SMOKE, STATE_ALARM_TRIGGERED_CARBON_MONOXIDE,
+    STATE_ALARM_ARMING, STATE_ALARM_DISARMING, STATE_ALARM_TRIGGERED,
     CONF_NAME, STATE_ALARM_ARMED_CUSTOM_BYPASS)
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +45,7 @@ class TotalConnect(alarm.AlarmControlPanel):
         self._username = username
         self._password = password
         self._state = None
+        self._state_attributes = {}
         self._client = TotalConnectClient.TotalConnectClient(
             username, password)
 
@@ -60,9 +59,15 @@ class TotalConnect(alarm.AlarmControlPanel):
         """Return the state of the device."""
         return self._state
 
+    @property
+    def state_attributes(self):
+        """Return the state attributes of the device."""
+        return self._state_attributes
+
     def update(self):
         """Return the state of the device."""
         status = self._client.get_armed_status()
+        attr = {'triggered_source': None, 'triggered_zone': None}
 
         if status == self._client.DISARMED:
             state = STATE_ALARM_DISARMED
@@ -80,15 +85,20 @@ class TotalConnect(alarm.AlarmControlPanel):
             state = STATE_ALARM_DISARMING
         elif status == self._client.ALARMING:
             state = STATE_ALARM_TRIGGERED
+            attr['triggered_source'] = 'Police/Medical'
         elif status == self._client.ALARMING_FIRE_SMOKE:
-            state = STATE_ALARM_TRIGGERED_FIRE_SMOKE
+            state = STATE_ALARM_TRIGGERED
+            attr['triggered_source'] = 'Fire/Smoke'
         elif status == self._client.ALARMING_CARBON_MONOXIDE:
-            state = STATE_ALARM_TRIGGERED_CARBON_MONOXIDE        
+            state = STATE_ALARM_TRIGGERED
+            attr['triggered_source'] = 'Carbon Monoxide'
         else:
-            logging.info("Total Connect Client returned unknown status code: " + str(status))
+            logging.info("Total Connect Client returned unknown "
+                         "status code: %s", status)
             state = None
 
         self._state = state
+        self._state_attributes = attr
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
