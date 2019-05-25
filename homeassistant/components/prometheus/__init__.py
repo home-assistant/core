@@ -8,11 +8,13 @@ from homeassistant import core as hacore
 from homeassistant.components.climate.const import ATTR_CURRENT_TEMPERATURE
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
-    ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT, CONTENT_TYPE_TEXT_PLAIN,
-    EVENT_STATE_CHANGED, TEMP_FAHRENHEIT)
+    ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT, ATTR_DEVICE_CLASS,
+    CONTENT_TYPE_TEXT_PLAIN, EVENT_STATE_CHANGED,
+    TEMP_FAHRENHEIT, TEMP_CELSIUS)
 from homeassistant.helpers import entityfilter, state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.temperature import fahrenheit_to_celsius
+from homeassistant.helpers.entity_values import EntityValues
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,11 +23,27 @@ API_ENDPOINT = '/api/prometheus'
 DOMAIN = 'prometheus'
 CONF_FILTER = 'filter'
 CONF_PROM_NAMESPACE = 'namespace'
+CONF_COMPONENT_CONFIG = 'component_config'
+CONF_COMPONENT_CONFIG_GLOB = 'component_config_glob'
+CONF_COMPONENT_CONFIG_DOMAIN = 'component_config_domain'
+CONF_DEFAULT_METRIC = 'default_metric'
+CONF_OVERRIDE_METRIC = 'override_metric'
+COMPONENT_CONFIG_SCHEMA_ENTRY = vol.Schema({
+    vol.Optional(CONF_OVERRIDE_METRIC): cv.string,
+})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All({
         vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
         vol.Optional(CONF_PROM_NAMESPACE): cv.string,
+        vol.Optional(CONF_DEFAULT_METRIC): cv.string,
+        vol.Optional(CONF_OVERRIDE_METRIC): cv.string,
+        vol.Optional(CONF_COMPONENT_CONFIG, default={}):
+            vol.Schema({cv.entity_id: COMPONENT_CONFIG_SCHEMA_ENTRY}),
+        vol.Optional(CONF_COMPONENT_CONFIG_GLOB, default={}):
+            vol.Schema({cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}),
+        vol.Optional(CONF_COMPONENT_CONFIG_DOMAIN, default={}):
+            vol.Schema({cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}),
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -40,8 +58,16 @@ def setup(hass, config):
     entity_filter = conf[CONF_FILTER]
     namespace = conf.get(CONF_PROM_NAMESPACE)
     climate_units = hass.config.units.temperature_unit
+    override_metric = conf.get(CONF_OVERRIDE_METRIC)
+    default_metric = conf.get(CONF_DEFAULT_METRIC)
+    component_config = EntityValues(
+        conf[CONF_COMPONENT_CONFIG],
+        conf[CONF_COMPONENT_CONFIG_DOMAIN],
+        conf[CONF_COMPONENT_CONFIG_GLOB])
+
     metrics = PrometheusMetrics(prometheus_client, entity_filter, namespace,
-                                climate_units)
+                                climate_units, component_config,
+                                override_metric, default_metric)
 
     hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_event)
     return True
@@ -51,9 +77,13 @@ class PrometheusMetrics:
     """Model all of the metrics which should be exposed to Prometheus."""
 
     def __init__(self, prometheus_client, entity_filter, namespace,
-                 climate_units):
+                 climate_units, component_config,
+                 override_metric, default_metric):
         """Initialize Prometheus Metrics."""
         self.prometheus_client = prometheus_client
+        self._component_config = component_config
+        self._override_metric = override_metric
+        self._default_metric = default_metric
         self._filter = entity_filter
         if namespace:
             self.metrics_prefix = "{}_".format(namespace)
@@ -221,31 +251,58 @@ class PrometheusMetrics:
             pass
 
     def _handle_sensor(self, state):
-
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        metric = state.entity_id.split(".")[1]
+        metric = self._component_config.get(state.entity_id).get(
+            CONF_OVERRIDE_METRIC)
+        if metric in (None, ''):
+            if self._override_metric:
+                metric = self._override_metric
+            else:
+                metric = state.attributes.get(ATTR_DEVICE_CLASS)
+                if metric in (None, ''):
+                    if self._default_metric:
+                        metric = self._default_metric
+                    else:
+                        if unit in (None, ''):
+                            _LOGGER.debug(
+                                "Unsupported sensor: %s",
+                                state.entity_id)
+                            metric = None
+                        else:
+                            metric = "{}_{}".format("sensor_unit",
+                                                    self._unit_string(unit))
+                else:
+                    metric = "{}_{}".format(metric,
+                                            self._unit_string(unit))
 
-        if '_' not in str(metric):
-            metric = state.entity_id.replace('.', '_')
+        if metric is not None:
+            _metric = self._metric(metric, self.prometheus_client.Gauge,
+                                   "Sensor data measured in {}".format(unit))
 
-        try:
-            int(metric.split("_")[-1])
-            metric = "_".join(metric.split("_")[:-1])
-        except ValueError:
-            pass
-
-        _metric = self._metric(metric, self.prometheus_client.Gauge,
-                               state.entity_id)
-
-        try:
-            value = self.state_as_number(state)
-            if unit == TEMP_FAHRENHEIT:
-                value = fahrenheit_to_celsius(value)
-            _metric.labels(**self._labels(state)).set(value)
-        except ValueError:
-            pass
+            try:
+                value = self.state_as_number(state)
+                if unit == TEMP_FAHRENHEIT:
+                    value = fahrenheit_to_celsius(value)
+                _metric.labels(**self._labels(state)).set(value)
+            except ValueError:
+                pass
 
         self._battery(state)
+
+    @staticmethod
+    def _unit_string(unit):
+        """Get a formatted string of the unit."""
+        if unit is None:
+            return
+
+        units = {
+            TEMP_CELSIUS: "c",
+            TEMP_FAHRENHEIT: "c",  # F should go into C metric
+            "%": "percent"
+        }
+        default = unit.replace("/", "_per_")
+        default = default.lower()
+        return units.get(unit, default)
 
     def _handle_switch(self, state):
         metric = self._metric(
