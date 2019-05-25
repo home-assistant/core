@@ -304,7 +304,7 @@
                 },
                 "station": "https://api.weather.gov/stations/KJFK",
                 "timestamp": "2035-03-30T16:51:00+00:00",
-                "rawMessage": "KJFK 301651Z 17017KT 10SM SCT150 BKN250 14/08 A3004 RMK AO2 SLP173 T01390078",
+                "rawMessage": "KJFK 301651Z VRB17KT 10SM SCT150 BKN250 14/08 A3004 RMK AO2 SLP173 T01390078",
                 "textDescription": "Mostly Cloudy and Windy",
                 "icon": "https://api.weather.gov/icons/land/day/wind_bkn?size=medium",
                 "presentWeather": [],
@@ -319,9 +319,9 @@
                     "qualityControl": "qc:V"
                 },
                 "windDirection": {
-                    "value": 170,
+                    "value": null,
                     "unitCode": "unit:degree_(angle)",
-                    "qualityControl": "qc:V"
+                    "qualityControl": "qc:Z"
                 },
                 "windSpeed": {
                     "value": 8.8000000000000007,
@@ -381,7 +381,7 @@
                 "windChill": {
                     "value": null,
                     "unitCode": "unit:degC",
-                    "qualityControl": "qc:V"
+                    "qualityControl": "qc:Z"
                 },
                 "heatIndex": {
                     "value": null,
