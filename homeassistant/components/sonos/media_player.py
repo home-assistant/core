@@ -10,20 +10,21 @@ import async_timeout
 import requests
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA, MediaPlayerDevice)
+from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_SELECT_SOURCE,
     SUPPORT_SHUFFLE_SET, SUPPORT_STOP, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_TIME, CONF_HOSTS, STATE_IDLE, STATE_OFF, STATE_PAUSED,
+    ATTR_ENTITY_ID, ATTR_TIME, STATE_IDLE, STATE_OFF, STATE_PAUSED,
     STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
-from . import DOMAIN as SONOS_DOMAIN
+from . import (
+    CONF_ADVERTISE_ADDR, CONF_HOSTS, CONF_INTERFACE_ADDR,
+    DOMAIN as SONOS_DOMAIN)
 
 DEPENDENCIES = ('sonos',)
 
@@ -54,9 +55,6 @@ DATA_SONOS = 'sonos_media_player'
 SOURCE_LINEIN = 'Line-in'
 SOURCE_TV = 'TV'
 
-CONF_ADVERTISE_ADDR = 'advertise_addr'
-CONF_INTERFACE_ADDR = 'interface_addr'
-
 # Service call validation schemas
 ATTR_SLEEP_TIME = 'sleep_time'
 ATTR_ALARM_ID = 'alarm_id'
@@ -71,12 +69,6 @@ ATTR_SPEECH_ENHANCE = 'speech_enhance'
 ATTR_SONOS_GROUP = 'sonos_group'
 
 UPNP_ERRORS_TO_IGNORE = ['701', '711', '712']
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ADVERTISE_ADDR): cv.string,
-    vol.Optional(CONF_INTERFACE_ADDR): cv.string,
-    vol.Optional(CONF_HOSTS): vol.All(cv.ensure_list, [cv.string]),
-})
 
 SONOS_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -119,57 +111,34 @@ class SonosData:
         self.topology_condition = asyncio.Condition(loop=hass.loop)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Sonos platform.
-
-    Deprecated.
-    """
-    _LOGGER.warning('Loading Sonos via platform config is deprecated.')
-    _setup_platform(hass, config, add_entities, discovery_info)
+async def async_setup_platform(hass,
+                               config,
+                               async_add_entities,
+                               discovery_info=None):
+    """Set up the Sonos platform. Obsolete."""
+    _LOGGER.error(
+        'Loading Sonos by media_player platform config is no longer supported')
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Sonos from a config entry."""
-    def add_entities(entities, update_before_add=False):
-        """Sync version of async add entities."""
-        hass.add_job(async_add_entities, entities, update_before_add)
-
-    hass.async_add_executor_job(
-        _setup_platform, hass, hass.data[SONOS_DOMAIN].get('media_player', {}),
-        add_entities, None)
-
-
-def _setup_platform(hass, config, add_entities, discovery_info):
-    """Set up the Sonos platform."""
     import pysonos
 
     if DATA_SONOS not in hass.data:
         hass.data[DATA_SONOS] = SonosData(hass)
 
+    config = hass.data[SONOS_DOMAIN].get('media_player', {})
+
     advertise_addr = config.get(CONF_ADVERTISE_ADDR)
     if advertise_addr:
         pysonos.config.EVENT_ADVERTISE_IP = advertise_addr
 
-    players = []
-    if discovery_info:
-        player = pysonos.SoCo(discovery_info.get('host'))
-
-        # If host already exists by config
-        if player.uid in hass.data[DATA_SONOS].uids:
-            return
-
-        # If invisible, such as a stereo slave
-        if not player.is_visible:
-            return
-
-        players.append(player)
-    else:
+    def _create_sonos_entities():
+        """Discover players and return a list of SonosEntity objects."""
+        players = []
         hosts = config.get(CONF_HOSTS)
+
         if hosts:
-            # Support retro compatibility with comma separated list of hosts
-            # from config
-            hosts = hosts[0] if len(hosts) == 1 else hosts
-            hosts = hosts.split(',') if isinstance(hosts, str) else hosts
             for host in hosts:
                 try:
                     players.append(pysonos.SoCo(socket.gethostbyname(host)))
@@ -182,11 +151,14 @@ def _setup_platform(hass, config, add_entities, discovery_info):
 
         if not players:
             _LOGGER.warning("No Sonos speakers found")
-            return
 
-    hass.data[DATA_SONOS].uids.update(p.uid for p in players)
-    add_entities(SonosEntity(p) for p in players)
-    _LOGGER.debug("Added %s Sonos speakers", len(players))
+        return [SonosEntity(p) for p in players]
+
+    entities = await hass.async_add_executor_job(_create_sonos_entities)
+    hass.data[DATA_SONOS].uids.update(e.unique_id for e in entities)
+
+    async_add_entities(entities)
+    _LOGGER.debug("Added %s Sonos speakers", len(entities))
 
     def _service_to_entities(service):
         """Extract and return entities from service call."""
@@ -216,19 +188,19 @@ def _setup_platform(hass, config, add_entities, discovery_info):
             await SonosEntity.restore_multi(
                 hass, entities, service.data[ATTR_WITH_GROUP])
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_JOIN, async_service_handle,
         schema=SONOS_JOIN_SCHEMA)
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_UNJOIN, async_service_handle,
         schema=SONOS_SCHEMA)
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_SNAPSHOT, async_service_handle,
         schema=SONOS_STATES_SCHEMA)
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_RESTORE, async_service_handle,
         schema=SONOS_STATES_SCHEMA)
 
@@ -244,19 +216,19 @@ def _setup_platform(hass, config, add_entities, discovery_info):
             elif service.service == SERVICE_SET_OPTION:
                 entity.set_option(**service.data)
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_SET_TIMER, service_handle,
         schema=SONOS_SET_TIMER_SCHEMA)
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_CLEAR_TIMER, service_handle,
         schema=SONOS_SCHEMA)
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_UPDATE_ALARM, service_handle,
         schema=SONOS_UPDATE_ALARM_SCHEMA)
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_SET_OPTION, service_handle,
         schema=SONOS_SET_OPTION_SCHEMA)
 

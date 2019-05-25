@@ -4,6 +4,8 @@ import pytest
 from asynctest import mock
 import pytz
 
+import voluptuous as vol
+
 import homeassistant.core as ha
 from homeassistant.core import (
     callback, DOMAIN as HASS_DOMAIN, CoreState, State)
@@ -88,8 +90,7 @@ async def test_heater_input_boolean(hass, setup_comp_1):
 
     _setup_sensor(hass, 18)
     await hass.async_block_till_done()
-    common.async_set_temperature(hass, 23)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 23)
 
     assert STATE_ON == \
         hass.states.get(heater_switch).state
@@ -116,8 +117,7 @@ async def test_heater_switch(hass, setup_comp_1):
         hass.states.get(heater_switch).state
 
     _setup_sensor(hass, 18)
-    await hass.async_block_till_done()
-    common.async_set_temperature(hass, 23)
+    await common.async_set_temperature(hass, 23)
     await hass.async_block_till_done()
 
     assert STATE_ON == \
@@ -167,22 +167,19 @@ async def test_get_operation_modes(hass, setup_comp_2):
 
 async def test_set_target_temp(hass, setup_comp_2):
     """Test the setting of the target temperature."""
-    common.async_set_temperature(hass, 30)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 30)
     state = hass.states.get(ENTITY)
     assert 30.0 == state.attributes.get('temperature')
-    common.async_set_temperature(hass, None)
-    await hass.async_block_till_done()
+    with pytest.raises(vol.Invalid):
+        await common.async_set_temperature(hass, None)
     state = hass.states.get(ENTITY)
     assert 30.0 == state.attributes.get('temperature')
 
 
 async def test_set_away_mode(hass, setup_comp_2):
     """Test the setting away mode."""
-    common.async_set_temperature(hass, 23)
-    await hass.async_block_till_done()
-    common.async_set_away_mode(hass, True)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 23)
+    await common.async_set_away_mode(hass, True)
     state = hass.states.get(ENTITY)
     assert 16 == state.attributes.get('temperature')
 
@@ -192,14 +189,11 @@ async def test_set_away_mode_and_restore_prev_temp(hass, setup_comp_2):
 
     Verify original temperature is restored.
     """
-    common.async_set_temperature(hass, 23)
-    await hass.async_block_till_done()
-    common.async_set_away_mode(hass, True)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 23)
+    await common.async_set_away_mode(hass, True)
     state = hass.states.get(ENTITY)
     assert 16 == state.attributes.get('temperature')
-    common.async_set_away_mode(hass, False)
-    await hass.async_block_till_done()
+    await common.async_set_away_mode(hass, False)
     state = hass.states.get(ENTITY)
     assert 23 == state.attributes.get('temperature')
 
@@ -209,16 +203,12 @@ async def test_set_away_mode_twice_and_restore_prev_temp(hass, setup_comp_2):
 
     Verify original temperature is restored.
     """
-    common.async_set_temperature(hass, 23)
-    await hass.async_block_till_done()
-    common.async_set_away_mode(hass, True)
-    await hass.async_block_till_done()
-    common.async_set_away_mode(hass, True)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 23)
+    await common.async_set_away_mode(hass, True)
+    await common.async_set_away_mode(hass, True)
     state = hass.states.get(ENTITY)
     assert 16 == state.attributes.get('temperature')
-    common.async_set_away_mode(hass, False)
-    await hass.async_block_till_done()
+    await common.async_set_away_mode(hass, False)
     state = hass.states.get(ENTITY)
     assert 23 == state.attributes.get('temperature')
 
@@ -240,8 +230,7 @@ async def test_set_target_temp_heater_on(hass, setup_comp_2):
     calls = _setup_switch(hass, False)
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
-    common.async_set_temperature(hass, 30)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 30)
     assert 1 == len(calls)
     call = calls[0]
     assert HASS_DOMAIN == call.domain
@@ -254,8 +243,7 @@ async def test_set_target_temp_heater_off(hass, setup_comp_2):
     calls = _setup_switch(hass, True)
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
-    common.async_set_temperature(hass, 25)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
     assert 2 == len(calls)
     call = calls[0]
     assert HASS_DOMAIN == call.domain
@@ -266,8 +254,7 @@ async def test_set_target_temp_heater_off(hass, setup_comp_2):
 async def test_temp_change_heater_on_within_tolerance(hass, setup_comp_2):
     """Test if temperature change doesn't turn on within tolerance."""
     calls = _setup_switch(hass, False)
-    common.async_set_temperature(hass, 30)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 30)
     _setup_sensor(hass, 29)
     await hass.async_block_till_done()
     assert 0 == len(calls)
@@ -276,8 +263,7 @@ async def test_temp_change_heater_on_within_tolerance(hass, setup_comp_2):
 async def test_temp_change_heater_on_outside_tolerance(hass, setup_comp_2):
     """Test if temperature change turn heater on outside cold tolerance."""
     calls = _setup_switch(hass, False)
-    common.async_set_temperature(hass, 30)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 30)
     _setup_sensor(hass, 27)
     await hass.async_block_till_done()
     assert 1 == len(calls)
@@ -290,8 +276,7 @@ async def test_temp_change_heater_on_outside_tolerance(hass, setup_comp_2):
 async def test_temp_change_heater_off_within_tolerance(hass, setup_comp_2):
     """Test if temperature change doesn't turn off within tolerance."""
     calls = _setup_switch(hass, True)
-    common.async_set_temperature(hass, 30)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 30)
     _setup_sensor(hass, 33)
     await hass.async_block_till_done()
     assert 0 == len(calls)
@@ -300,8 +285,7 @@ async def test_temp_change_heater_off_within_tolerance(hass, setup_comp_2):
 async def test_temp_change_heater_off_outside_tolerance(hass, setup_comp_2):
     """Test if temperature change turn heater off outside hot tolerance."""
     calls = _setup_switch(hass, True)
-    common.async_set_temperature(hass, 30)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 30)
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
     assert 1 == len(calls)
@@ -314,10 +298,8 @@ async def test_temp_change_heater_off_outside_tolerance(hass, setup_comp_2):
 async def test_running_when_operating_mode_is_off(hass, setup_comp_2):
     """Test that the switch turns off when enabled is set False."""
     calls = _setup_switch(hass, True)
-    common.async_set_temperature(hass, 30)
-    await hass.async_block_till_done()
-    common.async_set_operation_mode(hass, STATE_OFF)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 30)
+    await common.async_set_operation_mode(hass, STATE_OFF)
     assert 1 == len(calls)
     call = calls[0]
     assert HASS_DOMAIN == call.domain
@@ -328,10 +310,8 @@ async def test_running_when_operating_mode_is_off(hass, setup_comp_2):
 async def test_no_state_change_when_operation_mode_off(hass, setup_comp_2):
     """Test that the switch doesn't turn on when enabled is False."""
     calls = _setup_switch(hass, False)
-    common.async_set_temperature(hass, 30)
-    await hass.async_block_till_done()
-    common.async_set_operation_mode(hass, STATE_OFF)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 30)
+    await common.async_set_operation_mode(hass, STATE_OFF)
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     assert 0 == len(calls)
@@ -340,8 +320,7 @@ async def test_no_state_change_when_operation_mode_off(hass, setup_comp_2):
 @mock.patch('logging.Logger.error')
 async def test_invalid_operating_mode(log_mock, hass, setup_comp_2):
     """Test error handling for invalid operation mode."""
-    common.async_set_operation_mode(hass, 'invalid mode')
-    await hass.async_block_till_done()
+    await common.async_set_operation_mode(hass, 'invalid mode')
     assert log_mock.call_count == 1
 
 
@@ -350,13 +329,12 @@ async def test_operating_mode_heat(hass, setup_comp_2):
 
     Switch turns on when temp below setpoint and mode changes.
     """
-    common.async_set_operation_mode(hass, STATE_OFF)
-    common.async_set_temperature(hass, 30)
+    await common.async_set_operation_mode(hass, STATE_OFF)
+    await common.async_set_temperature(hass, 30)
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     calls = _setup_switch(hass, False)
-    common.async_set_operation_mode(hass, STATE_HEAT)
-    await hass.async_block_till_done()
+    await common.async_set_operation_mode(hass, STATE_HEAT)
     assert 1 == len(calls)
     call = calls[0]
     assert HASS_DOMAIN == call.domain
@@ -402,8 +380,7 @@ async def test_set_target_temp_ac_off(hass, setup_comp_3):
     calls = _setup_switch(hass, True)
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
-    common.async_set_temperature(hass, 30)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 30)
     assert 2 == len(calls)
     call = calls[0]
     assert HASS_DOMAIN == call.domain
@@ -413,12 +390,11 @@ async def test_set_target_temp_ac_off(hass, setup_comp_3):
 
 async def test_turn_away_mode_on_cooling(hass, setup_comp_3):
     """Test the setting away mode when cooling."""
+    _setup_switch(hass, True)
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
-    common.async_set_temperature(hass, 19)
-    await hass.async_block_till_done()
-    common.async_set_away_mode(hass, True)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 19)
+    await common.async_set_away_mode(hass, True)
     state = hass.states.get(ENTITY)
     assert 30 == state.attributes.get('temperature')
 
@@ -428,13 +404,12 @@ async def test_operating_mode_cool(hass, setup_comp_3):
 
     Switch turns on when temp below setpoint and mode changes.
     """
-    common.async_set_operation_mode(hass, STATE_OFF)
-    common.async_set_temperature(hass, 25)
+    await common.async_set_operation_mode(hass, STATE_OFF)
+    await common.async_set_temperature(hass, 25)
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     calls = _setup_switch(hass, False)
-    common.async_set_operation_mode(hass, STATE_COOL)
-    await hass.async_block_till_done()
+    await common.async_set_operation_mode(hass, STATE_COOL)
     assert 1 == len(calls)
     call = calls[0]
     assert HASS_DOMAIN == call.domain
@@ -447,8 +422,7 @@ async def test_set_target_temp_ac_on(hass, setup_comp_3):
     calls = _setup_switch(hass, False)
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
-    common.async_set_temperature(hass, 25)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
     assert 1 == len(calls)
     call = calls[0]
     assert HASS_DOMAIN == call.domain
@@ -459,8 +433,7 @@ async def test_set_target_temp_ac_on(hass, setup_comp_3):
 async def test_temp_change_ac_off_within_tolerance(hass, setup_comp_3):
     """Test if temperature change doesn't turn ac off within tolerance."""
     calls = _setup_switch(hass, True)
-    common.async_set_temperature(hass, 30)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 30)
     _setup_sensor(hass, 29.8)
     await hass.async_block_till_done()
     assert 0 == len(calls)
@@ -469,8 +442,7 @@ async def test_temp_change_ac_off_within_tolerance(hass, setup_comp_3):
 async def test_set_temp_change_ac_off_outside_tolerance(hass, setup_comp_3):
     """Test if temperature change turn ac off."""
     calls = _setup_switch(hass, True)
-    common.async_set_temperature(hass, 30)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 30)
     _setup_sensor(hass, 27)
     await hass.async_block_till_done()
     assert 1 == len(calls)
@@ -483,8 +455,7 @@ async def test_set_temp_change_ac_off_outside_tolerance(hass, setup_comp_3):
 async def test_temp_change_ac_on_within_tolerance(hass, setup_comp_3):
     """Test if temperature change doesn't turn ac on within tolerance."""
     calls = _setup_switch(hass, False)
-    common.async_set_temperature(hass, 25)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
     _setup_sensor(hass, 25.2)
     await hass.async_block_till_done()
     assert 0 == len(calls)
@@ -493,8 +464,7 @@ async def test_temp_change_ac_on_within_tolerance(hass, setup_comp_3):
 async def test_temp_change_ac_on_outside_tolerance(hass, setup_comp_3):
     """Test if temperature change turn ac on."""
     calls = _setup_switch(hass, False)
-    common.async_set_temperature(hass, 25)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     assert 1 == len(calls)
@@ -507,10 +477,8 @@ async def test_temp_change_ac_on_outside_tolerance(hass, setup_comp_3):
 async def test_running_when_operating_mode_is_off_2(hass, setup_comp_3):
     """Test that the switch turns off when enabled is set False."""
     calls = _setup_switch(hass, True)
-    common.async_set_temperature(hass, 30)
-    await hass.async_block_till_done()
-    common.async_set_operation_mode(hass, STATE_OFF)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 30)
+    await common.async_set_operation_mode(hass, STATE_OFF)
     assert 1 == len(calls)
     call = calls[0]
     assert HASS_DOMAIN == call.domain
@@ -521,10 +489,8 @@ async def test_running_when_operating_mode_is_off_2(hass, setup_comp_3):
 async def test_no_state_change_when_operation_mode_off_2(hass, setup_comp_3):
     """Test that the switch doesn't turn on when enabled is False."""
     calls = _setup_switch(hass, False)
-    common.async_set_temperature(hass, 30)
-    await hass.async_block_till_done()
-    common.async_set_operation_mode(hass, STATE_OFF)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 30)
+    await common.async_set_operation_mode(hass, STATE_OFF)
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
     assert 0 == len(calls)
@@ -550,8 +516,7 @@ def setup_comp_4(hass):
 async def test_temp_change_ac_trigger_on_not_long_enough(hass, setup_comp_4):
     """Test if temperature change turn ac on."""
     calls = _setup_switch(hass, False)
-    common.async_set_temperature(hass, 25)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     assert 0 == len(calls)
@@ -564,8 +529,7 @@ async def test_temp_change_ac_trigger_on_long_enough(hass, setup_comp_4):
     with mock.patch('homeassistant.helpers.condition.dt_util.utcnow',
                     return_value=fake_changed):
         calls = _setup_switch(hass, False)
-    common.async_set_temperature(hass, 25)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     assert 1 == len(calls)
@@ -578,8 +542,7 @@ async def test_temp_change_ac_trigger_on_long_enough(hass, setup_comp_4):
 async def test_temp_change_ac_trigger_off_not_long_enough(hass, setup_comp_4):
     """Test if temperature change turn ac on."""
     calls = _setup_switch(hass, True)
-    common.async_set_temperature(hass, 30)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 30)
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     assert 0 == len(calls)
@@ -592,8 +555,7 @@ async def test_temp_change_ac_trigger_off_long_enough(hass, setup_comp_4):
     with mock.patch('homeassistant.helpers.condition.dt_util.utcnow',
                     return_value=fake_changed):
         calls = _setup_switch(hass, True)
-    common.async_set_temperature(hass, 30)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 30)
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     assert 1 == len(calls)
@@ -606,13 +568,11 @@ async def test_temp_change_ac_trigger_off_long_enough(hass, setup_comp_4):
 async def test_mode_change_ac_trigger_off_not_long_enough(hass, setup_comp_4):
     """Test if mode change turns ac off despite minimum cycle."""
     calls = _setup_switch(hass, True)
-    common.async_set_temperature(hass, 30)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 30)
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    common.async_set_operation_mode(hass, STATE_OFF)
-    await hass.async_block_till_done()
+    await common.async_set_operation_mode(hass, STATE_OFF)
     assert 1 == len(calls)
     call = calls[0]
     assert 'homeassistant' == call.domain
@@ -623,13 +583,11 @@ async def test_mode_change_ac_trigger_off_not_long_enough(hass, setup_comp_4):
 async def test_mode_change_ac_trigger_on_not_long_enough(hass, setup_comp_4):
     """Test if mode change turns ac on despite minimum cycle."""
     calls = _setup_switch(hass, False)
-    common.async_set_temperature(hass, 25)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    common.async_set_operation_mode(hass, STATE_HEAT)
-    await hass.async_block_till_done()
+    await common.async_set_operation_mode(hass, STATE_HEAT)
     assert 1 == len(calls)
     call = calls[0]
     assert 'homeassistant' == call.domain
@@ -657,8 +615,7 @@ def setup_comp_5(hass):
 async def test_temp_change_ac_trigger_on_not_long_enough_2(hass, setup_comp_5):
     """Test if temperature change turn ac on."""
     calls = _setup_switch(hass, False)
-    common.async_set_temperature(hass, 25)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     assert 0 == len(calls)
@@ -671,8 +628,7 @@ async def test_temp_change_ac_trigger_on_long_enough_2(hass, setup_comp_5):
     with mock.patch('homeassistant.helpers.condition.dt_util.utcnow',
                     return_value=fake_changed):
         calls = _setup_switch(hass, False)
-    common.async_set_temperature(hass, 25)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     assert 1 == len(calls)
@@ -686,8 +642,7 @@ async def test_temp_change_ac_trigger_off_not_long_enough_2(
         hass, setup_comp_5):
     """Test if temperature change turn ac on."""
     calls = _setup_switch(hass, True)
-    common.async_set_temperature(hass, 30)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 30)
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     assert 0 == len(calls)
@@ -700,8 +655,7 @@ async def test_temp_change_ac_trigger_off_long_enough_2(hass, setup_comp_5):
     with mock.patch('homeassistant.helpers.condition.dt_util.utcnow',
                     return_value=fake_changed):
         calls = _setup_switch(hass, True)
-    common.async_set_temperature(hass, 30)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 30)
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     assert 1 == len(calls)
@@ -715,13 +669,11 @@ async def test_mode_change_ac_trigger_off_not_long_enough_2(
         hass, setup_comp_5):
     """Test if mode change turns ac off despite minimum cycle."""
     calls = _setup_switch(hass, True)
-    common.async_set_temperature(hass, 30)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 30)
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    common.async_set_operation_mode(hass, STATE_OFF)
-    await hass.async_block_till_done()
+    await common.async_set_operation_mode(hass, STATE_OFF)
     assert 1 == len(calls)
     call = calls[0]
     assert 'homeassistant' == call.domain
@@ -732,13 +684,11 @@ async def test_mode_change_ac_trigger_off_not_long_enough_2(
 async def test_mode_change_ac_trigger_on_not_long_enough_2(hass, setup_comp_5):
     """Test if mode change turns ac on despite minimum cycle."""
     calls = _setup_switch(hass, False)
-    common.async_set_temperature(hass, 25)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    common.async_set_operation_mode(hass, STATE_HEAT)
-    await hass.async_block_till_done()
+    await common.async_set_operation_mode(hass, STATE_HEAT)
     assert 1 == len(calls)
     call = calls[0]
     assert 'homeassistant' == call.domain
@@ -766,8 +716,7 @@ async def test_temp_change_heater_trigger_off_not_long_enough(
         hass, setup_comp_6):
     """Test if temp change doesn't turn heater off because of time."""
     calls = _setup_switch(hass, True)
-    common.async_set_temperature(hass, 25)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     assert 0 == len(calls)
@@ -777,8 +726,7 @@ async def test_temp_change_heater_trigger_on_not_long_enough(
         hass, setup_comp_6):
     """Test if temp change doesn't turn heater on because of time."""
     calls = _setup_switch(hass, False)
-    common.async_set_temperature(hass, 30)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 30)
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     assert 0 == len(calls)
@@ -791,8 +739,7 @@ async def test_temp_change_heater_trigger_on_long_enough(hass, setup_comp_6):
     with mock.patch('homeassistant.helpers.condition.dt_util.utcnow',
                     return_value=fake_changed):
         calls = _setup_switch(hass, False)
-    common.async_set_temperature(hass, 30)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 30)
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     assert 1 == len(calls)
@@ -809,8 +756,7 @@ async def test_temp_change_heater_trigger_off_long_enough(hass, setup_comp_6):
     with mock.patch('homeassistant.helpers.condition.dt_util.utcnow',
                     return_value=fake_changed):
         calls = _setup_switch(hass, True)
-    common.async_set_temperature(hass, 25)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     assert 1 == len(calls)
@@ -824,13 +770,11 @@ async def test_mode_change_heater_trigger_off_not_long_enough(
         hass, setup_comp_6):
     """Test if mode change turns heater off despite minimum cycle."""
     calls = _setup_switch(hass, True)
-    common.async_set_temperature(hass, 25)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    common.async_set_operation_mode(hass, STATE_OFF)
-    await hass.async_block_till_done()
+    await common.async_set_operation_mode(hass, STATE_OFF)
     assert 1 == len(calls)
     call = calls[0]
     assert 'homeassistant' == call.domain
@@ -842,13 +786,11 @@ async def test_mode_change_heater_trigger_on_not_long_enough(
         hass, setup_comp_6):
     """Test if mode change turns heater on despite minimum cycle."""
     calls = _setup_switch(hass, False)
-    common.async_set_temperature(hass, 30)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 30)
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    common.async_set_operation_mode(hass, STATE_HEAT)
-    await hass.async_block_till_done()
+    await common.async_set_operation_mode(hass, STATE_HEAT)
     assert 1 == len(calls)
     call = calls[0]
     assert 'homeassistant' == call.domain
@@ -881,8 +823,7 @@ async def test_temp_change_ac_trigger_on_long_enough_3(hass, setup_comp_7):
     await hass.async_block_till_done()
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
-    common.async_set_temperature(hass, 25)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
     test_time = datetime.datetime.now(pytz.UTC)
     _send_time_changed(hass, test_time)
     await hass.async_block_till_done()
@@ -905,8 +846,7 @@ async def test_temp_change_ac_trigger_off_long_enough_3(hass, setup_comp_7):
     await hass.async_block_till_done()
     _setup_sensor(hass, 20)
     await hass.async_block_till_done()
-    common.async_set_temperature(hass, 25)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
     test_time = datetime.datetime.now(pytz.UTC)
     _send_time_changed(hass, test_time)
     await hass.async_block_till_done()
@@ -952,8 +892,7 @@ async def test_temp_change_heater_trigger_on_long_enough_2(hass, setup_comp_8):
     await hass.async_block_till_done()
     _setup_sensor(hass, 20)
     await hass.async_block_till_done()
-    common.async_set_temperature(hass, 25)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
     test_time = datetime.datetime.now(pytz.UTC)
     _send_time_changed(hass, test_time)
     await hass.async_block_till_done()
@@ -977,8 +916,7 @@ async def test_temp_change_heater_trigger_off_long_enough_2(
     await hass.async_block_till_done()
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
-    common.async_set_temperature(hass, 25)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
     test_time = datetime.datetime.now(pytz.UTC)
     _send_time_changed(hass, test_time)
     await hass.async_block_till_done()
@@ -1019,8 +957,7 @@ def setup_comp_9(hass):
 
 async def test_turn_on_when_off(hass, setup_comp_9):
     """Test if climate.turn_on turns on a turned off device."""
-    common.async_set_operation_mode(hass, STATE_OFF)
-    await hass.async_block_till_done()
+    await common.async_set_operation_mode(hass, STATE_OFF)
     await hass.services.async_call('climate', SERVICE_TURN_ON)
     await hass.async_block_till_done()
     state_heat = hass.states.get(HEAT_ENTITY)
@@ -1033,9 +970,8 @@ async def test_turn_on_when_off(hass, setup_comp_9):
 
 async def test_turn_on_when_on(hass, setup_comp_9):
     """Test if climate.turn_on does nothing to a turned on device."""
-    common.async_set_operation_mode(hass, STATE_HEAT, HEAT_ENTITY)
-    common.async_set_operation_mode(hass, STATE_COOL, COOL_ENTITY)
-    await hass.async_block_till_done()
+    await common.async_set_operation_mode(hass, STATE_HEAT, HEAT_ENTITY)
+    await common.async_set_operation_mode(hass, STATE_COOL, COOL_ENTITY)
     await hass.services.async_call('climate', SERVICE_TURN_ON)
     await hass.async_block_till_done()
     state_heat = hass.states.get(HEAT_ENTITY)
@@ -1048,9 +984,8 @@ async def test_turn_on_when_on(hass, setup_comp_9):
 
 async def test_turn_off_when_on(hass, setup_comp_9):
     """Test if climate.turn_off turns off a turned on device."""
-    common.async_set_operation_mode(hass, STATE_HEAT, HEAT_ENTITY)
-    common.async_set_operation_mode(hass, STATE_COOL, COOL_ENTITY)
-    await hass.async_block_till_done()
+    await common.async_set_operation_mode(hass, STATE_HEAT, HEAT_ENTITY)
+    await common.async_set_operation_mode(hass, STATE_COOL, COOL_ENTITY)
     await hass.services.async_call('climate', SERVICE_TURN_OFF)
     await hass.async_block_till_done()
     state_heat = hass.states.get(HEAT_ENTITY)
@@ -1063,8 +998,7 @@ async def test_turn_off_when_on(hass, setup_comp_9):
 
 async def test_turn_off_when_off(hass, setup_comp_9):
     """Test if climate.turn_off does nothing to a turned off device."""
-    common.async_set_operation_mode(hass, STATE_OFF)
-    await hass.async_block_till_done()
+    await common.async_set_operation_mode(hass, STATE_OFF)
     await hass.services.async_call('climate', SERVICE_TURN_OFF)
     await hass.async_block_till_done()
     state_heat = hass.states.get(HEAT_ENTITY)
@@ -1096,12 +1030,10 @@ def setup_comp_10(hass):
 
 async def test_precision(hass, setup_comp_10):
     """Test that setting precision to tenths works as intended."""
-    common.async_set_operation_mode(hass, STATE_OFF)
-    await hass.async_block_till_done()
+    await common.async_set_operation_mode(hass, STATE_OFF)
     await hass.services.async_call('climate', SERVICE_TURN_OFF)
     await hass.async_block_till_done()
-    common.async_set_temperature(hass, 23.27)
-    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 23.27)
     state = hass.states.get(ENTITY)
     assert 23.3 == state.attributes.get('temperature')
 

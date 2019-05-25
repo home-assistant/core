@@ -12,6 +12,8 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
+from .const import DOMAIN, DATA_NETATMO_AUTH
+
 _LOGGER = logging.getLogger(__name__)
 
 DATA_PERSONS = 'netatmo_persons'
@@ -19,8 +21,6 @@ DATA_WEBHOOK_URL = 'netatmo_webhook_url'
 
 CONF_SECRET_KEY = 'secret_key'
 CONF_WEBHOOKS = 'webhooks'
-
-DOMAIN = 'netatmo'
 
 SERVICE_ADDWEBHOOK = 'addwebhook'
 SERVICE_DROPWEBHOOK = 'dropwebhook'
@@ -58,8 +58,8 @@ ATTR_FACE_URL = 'face_url'
 ATTR_SNAPSHOT_URL = 'snapshot_url'
 ATTR_VIGNETTE_URL = 'vignette_url'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
-MIN_TIME_BETWEEN_EVENT_UPDATES = timedelta(seconds=10)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
+MIN_TIME_BETWEEN_EVENT_UPDATES = timedelta(seconds=5)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -83,10 +83,9 @@ def setup(hass, config):
     """Set up the Netatmo devices."""
     import pyatmo
 
-    global NETATMO_AUTH
     hass.data[DATA_PERSONS] = {}
     try:
-        NETATMO_AUTH = pyatmo.ClientAuth(
+        auth = pyatmo.ClientAuth(
             config[DOMAIN][CONF_API_KEY], config[DOMAIN][CONF_SECRET_KEY],
             config[DOMAIN][CONF_USERNAME], config[DOMAIN][CONF_PASSWORD],
             'read_station read_camera access_camera '
@@ -95,6 +94,9 @@ def setup(hass, config):
     except HTTPError:
         _LOGGER.error("Unable to connect to Netatmo API")
         return False
+
+    # Store config to be used during entry setup
+    hass.data[DATA_NETATMO_AUTH] = auth
 
     if config[DOMAIN][CONF_DISCOVERY]:
         for component in 'camera', 'sensor', 'binary_sensor', 'climate':
@@ -107,7 +109,7 @@ def setup(hass, config):
                 webhook_id)
         hass.components.webhook.async_register(
             DOMAIN, 'Netatmo', webhook_id, handle_webhook)
-        NETATMO_AUTH.addwebhook(hass.data[DATA_WEBHOOK_URL])
+        auth.addwebhook(hass.data[DATA_WEBHOOK_URL])
         hass.bus.listen_once(
             EVENT_HOMEASSISTANT_STOP, dropwebhook)
 
@@ -117,7 +119,7 @@ def setup(hass, config):
         if url is None:
             url = hass.data[DATA_WEBHOOK_URL]
         _LOGGER.info("Adding webhook for URL: %s", url)
-        NETATMO_AUTH.addwebhook(url)
+        auth.addwebhook(url)
 
     hass.services.register(
         DOMAIN, SERVICE_ADDWEBHOOK, _service_addwebhook,
@@ -126,7 +128,7 @@ def setup(hass, config):
     def _service_dropwebhook(service):
         """Service to drop webhooks during runtime."""
         _LOGGER.info("Dropping webhook")
-        NETATMO_AUTH.dropwebhook()
+        auth.dropwebhook()
 
     hass.services.register(
         DOMAIN, SERVICE_DROPWEBHOOK, _service_dropwebhook,
@@ -137,7 +139,8 @@ def setup(hass, config):
 
 def dropwebhook(hass):
     """Drop the webhook subscription."""
-    NETATMO_AUTH.dropwebhook()
+    auth = hass.data[DATA_NETATMO_AUTH]
+    auth.dropwebhook()
 
 
 async def handle_webhook(hass, webhook_id, request):
