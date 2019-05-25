@@ -50,6 +50,7 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
         if error is not None:
             return await self.async_step_user(error=error)
         self._name = device_info.name
+        # pylint: disable=unsupported-assignment-operation
         self.context['title_placeholders'] = {
             'name': self._name
         }
