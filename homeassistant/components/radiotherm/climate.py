@@ -251,7 +251,7 @@ class RadioThermostat(ClimateDevice):
             return
 
         try:
-            humidityData = self.device.humidity['raw']
+            humidity_data = self.device.humidity['raw']
         except radiotherm.validate.RadiothermTstatError:
             _LOGGER.warning('%s (%s) was busy (invalid value returned)',
                             self._name, self.device.host)
@@ -265,7 +265,7 @@ class RadioThermostat(ClimateDevice):
         self._fstate = CODE_TO_FAN_STATE[data['fstate']]
         self._tmode = CODE_TO_TEMP_MODE[data['tmode']]
         self._tstate = CODE_TO_TEMP_STATE[data['tstate']]
-        self._current_humidity = humidityData
+        self._current_humidity = humidity_data
 
         self._current_operation = self._tmode
         if self._tmode == STATE_COOL:
