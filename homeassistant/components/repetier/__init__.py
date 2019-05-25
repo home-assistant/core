@@ -228,9 +228,9 @@ class PrinterAPI:
                 known = '{}-{}'.format(printer.slug, sensor_type)
                 if known in self._known_entities:
                     continue
-                
+
                 methods = API_PRINTER_METHODS[sensor_type]
-                if any('temp_data' in s for s in methods['state'].items()):
+                if 'temp_data' in methods['state'].values():
                     prop_data = getattr(printer, methods['attribute'])
                     if prop_data is None:
                         continue
