@@ -111,8 +111,6 @@ async def async_setup(hass, config):
     """Set up the automation."""
     component = EntityComponent(_LOGGER, DOMAIN, hass,
                                 group_name=GROUP_NAME_ALL_AUTOMATIONS)
-    device_automation = importlib.import_module('.device_automation', __name__)
-    await device_automation.async_setup(hass)
 
     await _async_process_config(hass, config, component)
 
