@@ -63,7 +63,11 @@ async def async_setup(hass, hass_config):
     """Set up the Geofency component."""
     config = hass_config.get(DOMAIN, {})
     mobile_beacons = config.get(CONF_MOBILE_BEACONS, [])
-    hass.data[DOMAIN] = [slugify(beacon) for beacon in mobile_beacons]
+    hass.data[DOMAIN] = {
+        'beacons': [slugify(beacon) for beacon in mobile_beacons],
+        'devices': set(),
+        'unsub_device_tracker': {}
+    }
     return True
 
 
@@ -77,7 +81,7 @@ async def handle_webhook(hass, webhook_id, request):
             status=HTTP_UNPROCESSABLE_ENTITY
         )
 
-    if _is_mobile_beacon(data, hass.data[DOMAIN]):
+    if _is_mobile_beacon(data, hass.data[DOMAIN]['beacons']):
         return _set_location(hass, data, None)
     if data['entry'] == LOCATION_ENTRY:
         location_name = data['name']
@@ -128,7 +132,7 @@ async def async_setup_entry(hass, entry):
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
-
+    hass.data[DOMAIN]['unsub_device_tracker'].pop(entry.entry_id)()
     await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
     return True
 
