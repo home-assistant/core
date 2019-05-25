@@ -219,7 +219,7 @@ def create_elk_entities(elk_data, elk_elements, element_type,
     """Create the ElkM1 devices of a particular class."""
     if elk_data['config'][element_type]['enabled']:
         elk = elk_data['elk']
-        _LOGGER.debug("create_elk_entities for %s", elk)
+        _LOGGER.debug("Creating elk entities for %s", elk)
         for element in elk_elements:
             if elk_data['config'][element_type]['included'][element.index]:
                 entities.append(class_(element, elk, elk_data))
@@ -235,14 +235,14 @@ class ElkEntity(Entity):
         self._element = element
         self._prefix = elk_data['prefix']
         self._temperature_unit = elk_data['config']['temperature_unit']
-        self._unique_id = 'elkm1_{}'.format(
-            elk.mac_address.lower() + '_' +
-            self._element.default_name('_').lower())
+        self._unique_id = 'elkm1_{mac}_{name}'.format(
+            mac = elk.mac_address,
+            name = self._element.default_name('_')).lower()
 
     @property
     def name(self):
         """Name of the element."""
-        return self._prefix + self._element.name
+        return "{p}{n}".format(p=self._prefix,n=self._element.name)
 
     @property
     def unique_id(self):
