@@ -358,8 +358,8 @@ class PlexClient(MediaPlayerDevice):
                 self._device.proxyThroughServer()
             self._session = None
             self._machine_identifier = self._device.machineIdentifier
-            self._name = '{} {}'.format('Plex', self._device.title or \
-                    DEVICE_DEFAULT_NAME)
+            self._name = '{} {}'.format('Plex', self._device.title or
+                                        DEVICE_DEFAULT_NAME)
             self._device_protocol_capabilities = (
                 self._device.protocolCapabilities)
 
