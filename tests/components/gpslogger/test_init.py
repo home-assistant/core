@@ -165,7 +165,7 @@ async def test_enter_with_attrs(hass, gpslogger_client, webhook_id):
                                            data['device']))
     assert state.state == STATE_NOT_HOME
     assert state.attributes['gps_accuracy'] == 10.5
-    assert state.attributes['battery'] == 10.0
+    assert state.attributes['battery_level'] == 10.0
     assert state.attributes['speed'] == 100.0
     assert state.attributes['direction'] == 105.32
     assert state.attributes['altitude'] == 102.0

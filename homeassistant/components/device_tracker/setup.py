@@ -20,7 +20,6 @@ from homeassistant.const import (
 
 from .const import (
     DOMAIN,
-    PLATFORM_TYPE_ENTITY,
     PLATFORM_TYPE_LEGACY,
     CONF_SCAN_INTERVAL,
     SCAN_INTERVAL,
@@ -38,14 +37,7 @@ class DeviceTrackerPlatform:
         'get_scanner',
         'async_setup_scanner',
         'setup_scanner',
-        # Small steps, initially just legacy setup supported.
-        'async_setup_entry'
     )
-    # ENTITY_PLATFORM_SETUP = (
-    #     'setup_platform',
-    #     'async_setup_platform',
-    #     'async_setup_entry'
-    # )
 
     name = attr.ib(type=str)
     platform = attr.ib(type=ModuleType)
@@ -56,7 +48,6 @@ class DeviceTrackerPlatform:
         """Return platform type."""
         for methods, platform_type in (
                 (self.LEGACY_SETUP, PLATFORM_TYPE_LEGACY),
-                # (self.ENTITY_PLATFORM_SETUP, PLATFORM_TYPE_ENTITY),
         ):
             for meth in methods:
                 if hasattr(self.platform, meth):
@@ -83,9 +74,6 @@ class DeviceTrackerPlatform:
                 setup = await hass.async_add_job(
                     self.platform.setup_scanner, hass, self.config,
                     tracker.see, discovery_info)
-            elif hasattr(self.platform, 'async_setup_entry'):
-                setup = await self.platform.async_setup_entry(
-                    hass, self.config, tracker.async_see)
             else:
                 raise HomeAssistantError(
                     "Invalid legacy device_tracker platform.")
@@ -106,7 +94,6 @@ class DeviceTrackerPlatform:
 async def async_extract_config(hass, config):
     """Extract device tracker config and split between legacy and modern."""
     legacy = []
-    entity_platform = []
 
     for platform in await asyncio.gather(*[
             async_create_platform_type(hass, config, p_type, p_config)
@@ -115,15 +102,13 @@ async def async_extract_config(hass, config):
         if platform is None:
             continue
 
-        if platform.type == PLATFORM_TYPE_ENTITY:
-            entity_platform.append(platform)
-        elif platform.type == PLATFORM_TYPE_LEGACY:
+        if platform.type == PLATFORM_TYPE_LEGACY:
             legacy.append(platform)
         else:
             raise ValueError("Unable to determine type for {}: {}".format(
                 platform.name, platform.type))
 
-    return (legacy, entity_platform)
+    return legacy
 
 
 async def async_create_platform_type(hass, config, p_type, p_config) \

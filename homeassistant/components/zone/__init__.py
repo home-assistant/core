@@ -3,15 +3,19 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_ICON, CONF_RADIUS)
 from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.util import slugify
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.util.location import distance
+
 
 from .config_flow import configured_zones
-from .const import CONF_PASSIVE, DOMAIN, HOME_ZONE
+from .const import CONF_PASSIVE, DOMAIN, HOME_ZONE, ATTR_PASSIVE, ATTR_RADIUS
 from .zone import Zone
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,6 +39,40 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_PASSIVE, default=DEFAULT_PASSIVE): cv.boolean,
     vol.Optional(CONF_ICON): cv.icon,
 }, extra=vol.ALLOW_EXTRA)
+
+
+@bind_hass
+def async_active_zone(hass, latitude, longitude, radius=0):
+    """Find the active zone for given latitude, longitude.
+
+    This method must be run in the event loop.
+    """
+    # Sort entity IDs so that we are deterministic if equal distance to 2 zones
+    zones = (hass.states.get(entity_id) for entity_id
+             in sorted(hass.states.async_entity_ids(DOMAIN)))
+
+    min_dist = None
+    closest = None
+
+    for zone in zones:
+        if zone.attributes.get(ATTR_PASSIVE):
+            continue
+
+        zone_dist = distance(
+            latitude, longitude,
+            zone.attributes[ATTR_LATITUDE], zone.attributes[ATTR_LONGITUDE])
+
+        within_zone = zone_dist - radius < zone.attributes[ATTR_RADIUS]
+        closer_zone = closest is None or zone_dist < min_dist
+        smaller_zone = (zone_dist == min_dist and
+                        zone.attributes[ATTR_RADIUS] <
+                        closest.attributes[ATTR_RADIUS])
+
+        if within_zone and (closer_zone or smaller_zone):
+            min_dist = zone_dist
+            closest = zone
+
+    return closest
 
 
 async def async_setup(hass, config):

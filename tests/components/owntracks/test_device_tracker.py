@@ -861,10 +861,9 @@ async def test_event_beacon_unknown_zone_no_location(hass, context):
     # the Device during test case setup.
     assert_location_state(hass, 'None')
 
-    # home is the state of a Device constructed through
-    # the normal code path on it's first observation with
-    # the conditions I pass along.
-    assert_mobile_tracker_state(hass, 'home', 'unknown')
+    # We have had no location yet, so the beacon status
+    # set to unknown.
+    assert_mobile_tracker_state(hass, 'unknown', 'unknown')
 
 
 async def test_event_beacon_unknown_zone(hass, context):
@@ -1276,7 +1275,7 @@ async def test_single_waypoint_import(hass, context):
 async def test_not_implemented_message(hass, context):
     """Handle not implemented message type."""
     patch_handler = patch('homeassistant.components.owntracks.'
-                          'device_tracker.async_handle_not_impl_msg',
+                          'messages.async_handle_not_impl_msg',
                           return_value=mock_coro(False))
     patch_handler.start()
     assert not await send_message(hass, LWT_TOPIC, LWT_MESSAGE)
@@ -1286,7 +1285,7 @@ async def test_not_implemented_message(hass, context):
 async def test_unsupported_message(hass, context):
     """Handle not implemented message type."""
     patch_handler = patch('homeassistant.components.owntracks.'
-                          'device_tracker.async_handle_unsupported_msg',
+                          'messages.async_handle_unsupported_msg',
                           return_value=mock_coro(False))
     patch_handler.start()
     assert not await send_message(hass, BAD_TOPIC, BAD_MESSAGE)
@@ -1374,7 +1373,7 @@ def config_context(hass, setup_comp):
     patch_save.stop()
 
 
-@patch('homeassistant.components.owntracks.device_tracker.get_cipher',
+@patch('homeassistant.components.owntracks.messages.get_cipher',
        mock_cipher)
 async def test_encrypted_payload(hass, setup_comp):
     """Test encrypted payload."""
@@ -1385,7 +1384,7 @@ async def test_encrypted_payload(hass, setup_comp):
     assert_location_latitude(hass, LOCATION_MESSAGE['lat'])
 
 
-@patch('homeassistant.components.owntracks.device_tracker.get_cipher',
+@patch('homeassistant.components.owntracks.messages.get_cipher',
        mock_cipher)
 async def test_encrypted_payload_topic_key(hass, setup_comp):
     """Test encrypted payload with a topic key."""
@@ -1398,7 +1397,7 @@ async def test_encrypted_payload_topic_key(hass, setup_comp):
     assert_location_latitude(hass, LOCATION_MESSAGE['lat'])
 
 
-@patch('homeassistant.components.owntracks.device_tracker.get_cipher',
+@patch('homeassistant.components.owntracks.messages.get_cipher',
        mock_cipher)
 async def test_encrypted_payload_no_key(hass, setup_comp):
     """Test encrypted payload with no key, ."""
@@ -1411,7 +1410,7 @@ async def test_encrypted_payload_no_key(hass, setup_comp):
     assert hass.states.get(DEVICE_TRACKER_STATE) is None
 
 
-@patch('homeassistant.components.owntracks.device_tracker.get_cipher',
+@patch('homeassistant.components.owntracks.messages.get_cipher',
        mock_cipher)
 async def test_encrypted_payload_wrong_key(hass, setup_comp):
     """Test encrypted payload with wrong key."""
@@ -1422,7 +1421,7 @@ async def test_encrypted_payload_wrong_key(hass, setup_comp):
     assert hass.states.get(DEVICE_TRACKER_STATE) is None
 
 
-@patch('homeassistant.components.owntracks.device_tracker.get_cipher',
+@patch('homeassistant.components.owntracks.messages.get_cipher',
        mock_cipher)
 async def test_encrypted_payload_wrong_topic_key(hass, setup_comp):
     """Test encrypted payload with wrong  topic key."""
@@ -1435,7 +1434,7 @@ async def test_encrypted_payload_wrong_topic_key(hass, setup_comp):
     assert hass.states.get(DEVICE_TRACKER_STATE) is None
 
 
-@patch('homeassistant.components.owntracks.device_tracker.get_cipher',
+@patch('homeassistant.components.owntracks.messages.get_cipher',
        mock_cipher)
 async def test_encrypted_payload_no_topic_key(hass, setup_comp):
     """Test encrypted payload with no topic key."""

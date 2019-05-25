@@ -3,10 +3,8 @@ import asyncio
 
 import voluptuous as vol
 
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import bind_hass
 from homeassistant.components import group
-from homeassistant.config import config_without_domain
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
@@ -15,6 +13,9 @@ from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.const import ATTR_GPS_ACCURACY, STATE_HOME
 
 from . import legacy, setup
+from .config_entry import (  # noqa  # pylint: disable=unused-import
+    async_setup_entry, async_unload_entry
+)
 from .legacy import DeviceScanner  # noqa  # pylint: disable=unused-import
 from .const import (
     ATTR_ATTRIBUTES,
@@ -35,9 +36,7 @@ from .const import (
     DEFAULT_CONSIDER_HOME,
     DEFAULT_TRACK_NEW,
     DOMAIN,
-    LOGGER,
     PLATFORM_TYPE_LEGACY,
-    SCAN_INTERVAL,
     SOURCE_TYPE_BLUETOOTH_LE,
     SOURCE_TYPE_BLUETOOTH,
     SOURCE_TYPE_GPS,
@@ -113,35 +112,12 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up the device tracker."""
     tracker = await legacy.get_tracker(hass, config)
 
-    async def setup_entry_helper(entry):
-        """Set up a config entry."""
-        platform = await setup.async_create_platform_type(
-            hass, config, entry.domain, entry)
-
-        if platform is None:
-            return False
-
-        await platform.async_setup_legacy(hass, tracker)
-
-        return True
-
-    hass.data[DOMAIN] = setup_entry_helper
-    component = EntityComponent(
-        LOGGER, DOMAIN, hass, SCAN_INTERVAL)
-
-    legacy_platforms, entity_platforms = \
-        await setup.async_extract_config(hass, config)
+    legacy_platforms = await setup.async_extract_config(hass, config)
 
     setup_tasks = [
         legacy_platform.async_setup_legacy(hass, tracker)
         for legacy_platform in legacy_platforms
     ]
-
-    if entity_platforms:
-        setup_tasks.append(component.async_setup({
-            **config_without_domain(config, DOMAIN),
-            DOMAIN: [platform.config for platform in entity_platforms]
-        }))
 
     if setup_tasks:
         await asyncio.wait(setup_tasks)
@@ -178,8 +154,3 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     # restore
     await tracker.async_setup_tracked_device()
     return True
-
-
-async def async_setup_entry(hass, entry):
-    """Set up an entry."""
-    return await hass.data[DOMAIN](entry)
