@@ -343,6 +343,7 @@ omit =
     homeassistant/components/mastodon/notify.py
     homeassistant/components/matrix/*
     homeassistant/components/maxcube/*
+    homeassistant/components/mcp23017/*
     homeassistant/components/media_extractor/*
     homeassistant/components/mediaroom/media_player.py
     homeassistant/components/message_bird/notify.py
