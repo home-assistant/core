@@ -89,11 +89,11 @@ def setup(hass, config):
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
     scan_interval = conf[CONF_SCAN_INTERVAL]
-    legacy_mode = bool(conf[CONF_MODE] == 'legacy')
+    is_legacy = bool(conf[CONF_MODE] == 'legacy')
     motion_offset = conf[CONF_OFFSET]
     hass.data[BLINK_DATA] = blinkpy.Blink(username=username,
                                           password=password,
-                                          legacy_subdomain=legacy_mode,
+                                          legacy_subdomain=is_legacy,
                                           motion_interval=motion_offset)
     hass.data[BLINK_DATA].refresh_rate = scan_interval.total_seconds()
     hass.data[BLINK_DATA].start()
