@@ -65,8 +65,9 @@ class EssentBase():
         essent = PyEssent(self._username, self._password)
         self._meters = essent.get_EANs()
         for meter in self._meters:
-            self._meter_data[meter] = essent.read_meter(
-                meter, only_last_meter_reading=True)
+            meter_data = essent.read_meter(meter, only_last_meter_reading=True)
+            if meter_data:
+                self._meter_data[meter] = meter_data
 
 
 class EssentMeter(Entity):
