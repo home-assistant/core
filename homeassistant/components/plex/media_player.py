@@ -26,18 +26,17 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
+NAME_FORMAT = 'Plex {}'
 PLEX_CONFIG_FILE = 'plex.conf'
 PLEX_DATA = 'plex'
 
 CONF_USE_EPISODE_ART = 'use_episode_art'
-CONF_USE_CUSTOM_ENTITY_IDS = 'use_custom_entity_ids'
 CONF_SHOW_ALL_CONTROLS = 'show_all_controls'
 CONF_REMOVE_UNAVAILABLE_CLIENTS = 'remove_unavailable_clients'
 CONF_CLIENT_REMOVE_INTERVAL = 'client_remove_interval'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_USE_EPISODE_ART, default=False): cv.boolean,
-    vol.Optional(CONF_USE_CUSTOM_ENTITY_IDS, default=False): cv.boolean,
     vol.Optional(CONF_SHOW_ALL_CONTROLS, default=False): cv.boolean,
     vol.Optional(CONF_REMOVE_UNAVAILABLE_CLIENTS, default=True): cv.boolean,
     vol.Optional(CONF_CLIENT_REMOVE_INTERVAL, default=timedelta(seconds=600)):
@@ -319,24 +318,6 @@ class PlexClient(MediaPlayerDevice):
 
         self.refresh(device, session)
 
-        # Assign custom entity ID if desired
-        if self.config.get(CONF_USE_CUSTOM_ENTITY_IDS):
-            prefix = ''
-            # allow for namespace prefixing when using custom entity names
-            if config.get("entity_namespace"):
-                prefix = config.get("entity_namespace") + '_'
-
-            # rename the entity id
-            if self.machine_identifier:
-                self.entity_id = "%s.%s%s" % (
-                    'media_player', prefix,
-                    self.machine_identifier.lower().replace('-', '_'))
-            else:
-                if self.name:
-                    self.entity_id = "%s.%s%s" % (
-                        'media_player', prefix,
-                        self.name.lower().replace('-', '_'))
-
     def _clear_media_details(self):
         """Set all Media Items to None."""
         # General
@@ -378,7 +359,8 @@ class PlexClient(MediaPlayerDevice):
                 self._device.proxyThroughServer()
             self._session = None
             self._machine_identifier = self._device.machineIdentifier
-            self._name = self._device.title or DEVICE_DEFAULT_NAME
+            self._name = NAME_FORMAT.format(self._device.title or
+                                            DEVICE_DEFAULT_NAME)
             self._device_protocol_capabilities = (
                 self._device.protocolCapabilities)
 
@@ -395,7 +377,7 @@ class PlexClient(MediaPlayerDevice):
                 self._player = [p for p in self._session.players
                                 if p.machineIdentifier ==
                                 self._device.machineIdentifier][0]
-                self._name = self._player.title
+                self._name = NAME_FORMAT.format(self._player.title)
                 self._player_state = self._player.state
                 self._session_username = self._session.usernames[0]
                 self._make = self._player.device
