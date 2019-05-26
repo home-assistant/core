@@ -7,7 +7,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_NAME, CONF_DOMAIN, CONF_ID, CONF_PLATFORM,
+    ATTR_ENTITY_ID, ATTR_NAME, CONF_ID, CONF_PLATFORM,
     EVENT_AUTOMATION_TRIGGERED, EVENT_HOMEASSISTANT_START, SERVICE_RELOAD,
     SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON)
 from homeassistant.core import Context, CoreState
@@ -49,20 +49,13 @@ SERVICE_TRIGGER = 'trigger'
 _LOGGER = logging.getLogger(__name__)
 
 
-def _domain_platform_validator(config):
-    """Validate it is a valid  domain or platform."""
-    if CONF_PLATFORM in config:
-        try:
-            platform = importlib.import_module(
-                '.{}'.format(config[CONF_PLATFORM]), __name__)
-        except ImportError:
-            raise vol.Invalid('Invalid platform specified') from None
-    else:
-        try:
-            platform = importlib.import_module(
-                '..{}.device_automation'.format(config[CONF_DOMAIN]), __name__)
-        except ImportError:
-            raise vol.Invalid('Invalid platform specified') from None
+def _platform_validator(config):
+    """Validate it is a valid platform."""
+    try:
+        platform = importlib.import_module(
+            '.{}'.format(config[CONF_PLATFORM]), __name__)
+    except ImportError:
+        raise vol.Invalid('Invalid platform specified') from None
 
     return platform.TRIGGER_SCHEMA(config)
 
@@ -72,9 +65,9 @@ _TRIGGER_SCHEMA = vol.All(
     [
         vol.All(
             vol.Schema({
-                vol.Exclusive(CONF_DOMAIN, CONF_PLATFORM): str
+                vol.Required(CONF_PLATFORM): str
             }, extra=vol.ALLOW_EXTRA),
-            _domain_platform_validator
+            _platform_validator
         ),
     ]
 )
@@ -421,17 +414,10 @@ async def _async_process_trigger(hass, config, trigger_configs, name, action):
     }
 
     for conf in trigger_configs:
-        remove = None
-        if CONF_PLATFORM in conf:
-            platform = importlib.import_module(
-                '.{}'.format(conf[CONF_PLATFORM]), __name__)
+        platform = importlib.import_module(
+            '.{}'.format(conf[CONF_PLATFORM]), __name__)
 
-            remove = await platform.async_trigger(hass, conf, action, info)
-        else:
-            domain = importlib.import_module(
-                '..{}.device_automation'.format(conf[CONF_DOMAIN]), __name__)
-
-            remove = await domain.async_trigger(hass, conf, action, info)
+        remove = await platform.async_trigger(hass, conf, action, info)
 
         if not remove:
             _LOGGER.error("Error setting up trigger %s", name)

@@ -3,7 +3,8 @@ import voluptuous as vol
 
 import homeassistant.components.automation.state as state
 from homeassistant.core import split_entity_id
-from homeassistant.const import CONF_DOMAIN, CONF_ENTITY_ID, CONF_TYPE
+from homeassistant.const import (
+    CONF_DOMAIN, CONF_PLATFORM, CONF_ENTITY_ID, CONF_TYPE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from . import DOMAIN
@@ -11,17 +12,20 @@ from . import DOMAIN
 ENTITY_TRIGGERS = [
     {
         # Trigger when light is turned on
+        CONF_PLATFORM: 'device',
         CONF_DOMAIN: DOMAIN,
         CONF_TYPE: 'turn_on',
     },
     {
         # Trigger when light is turned off
+        CONF_PLATFORM: 'device',
         CONF_DOMAIN: DOMAIN,
         CONF_TYPE: 'turn_off',
     },
 ]
 
 TRIGGER_SCHEMA = vol.All(vol.Schema({
+    vol.Required(CONF_PLATFORM): 'device',
     vol.Required(CONF_DOMAIN): DOMAIN,
     vol.Required(CONF_ENTITY_ID): cv.entity_ids,
     vol.Required(CONF_TYPE): str,
