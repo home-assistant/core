@@ -126,7 +126,7 @@ class EvoZone(EvoDevice, ClimateDevice):
 
     async def async_update(self):
         """Process the evohome Zone's state data."""
-        _LOGGER.warn("async_update(Zone=%s)", self._id)
+        # _LOGGER.warn("async_update(Zone=%s)", self._id)
         for _zone in self.hass.data[DATA_EVOHOME]['status']['zones']:
             if _zone['zoneId'] == self._id:
                 self._status = _zone
@@ -145,7 +145,7 @@ class EvoZone(EvoDevice, ClimateDevice):
         is_off = \
             self.target_temperature == self.min_temp and \
             self._status['setpointStatus']['setpointMode'] == EVO_PERMOVER
-        _LOGGER.warn("is_on(%s): %s", self._id, not is_off)
+        # _LOGGER.warn("is_on(%s): %s", self._id, not is_off)
         return not is_off
 
     def XXX_turn_on(self):
@@ -153,7 +153,7 @@ class EvoZone(EvoDevice, ClimateDevice):
 
         This is achieved by setting the Zone to its 'FollowSchedule' mode.
         """
-        _LOGGER.warn("is_on(%s)", self._id)
+        # _LOGGER.warn("is_on(%s)", self._id)
         self._set_operation_mode(EVO_FOLLOW)
 
     def XXX_turn_off(self):
@@ -162,7 +162,7 @@ class EvoZone(EvoDevice, ClimateDevice):
         This is achieved by setting the Zone to its minimum temperature,
         indefinitely (i.e. 'PermanentOverride' mode).
         """
-        _LOGGER.warn("turn_off(%s)", self._id)
+        # _LOGGER.warn("turn_off(%s)", self._id)
         self._set_temperature(self.min_temp, until=None)
 
 
@@ -173,7 +173,7 @@ class EvoZone(EvoDevice, ClimateDevice):
 
         Need to be one of HVAC_MODE_*.
         """
-        _LOGGER.warn("hvac_state(%s): %s", self._id, HVAC_MODE_AUTO)
+        # _LOGGER.warn("hvac_state(%s): %s", self._id, HVAC_MODE_AUTO)
         return HVAC_MODE_AUTO
 
     @property  # ClimateDevice
@@ -182,7 +182,7 @@ class EvoZone(EvoDevice, ClimateDevice):
 
         Need to be a subset of HVAC_MODES.
         """
-        _LOGGER.warn("hvac_modes(%s): %s", self._id, HA_MODES_FOR_ZONE)
+        # _LOGGER.warn("hvac_modes(%s): %s", self._id, HA_MODES_FOR_ZONE)
         return HA_MODES_FOR_ZONE
 
     @property  # ClimateDevice
@@ -191,30 +191,32 @@ class EvoZone(EvoDevice, ClimateDevice):
 
         Need to be one of CURRENT_HVAC_*.
         """
+        # _LOGGER.warn("current_hvac(%s): %s", self._id, HVAC_MODE_AUTO)
         return HVAC_MODE_AUTO
 
     @property
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature of the evohome Zone."""
-        _LOGGER.warn("current_temperature(%s): XX", self._id)
+        # _LOGGER.warn("current_temperature(%s): XX", self._id)
         return (self._status['temperatureStatus']['temperature']
                 if self._status['temperatureStatus']['isAvailable'] else None)
 
     @property
     def target_temperature(self) -> Optional[float]:
         """Return the target temperature of the evohome Zone."""
-        _LOGGER.warn("target_temperature(%s): XX", self._id)
+        # _LOGGER.warn("target_temperature(%s): XX", self._id)
         return self._status['setpointStatus']['targetHeatTemperature']
 
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        return None
+        _LOGGER.warn("preset_mode(%s): %s", self._id, 'auto')
+        return 'auto'
 
     @property  # ClimateDevice
     def preset_list(self) -> Optional[List[str]]:
         """Return a list of available preset modes."""
-        _LOGGER.warn("hvac_state(%s): %s", self._id, HA_PRESETS_FOR_ZONE)
+        _LOGGER.warn("preset_list(%s): %s", self._id, HA_PRESETS_FOR_ZONE)
         return HA_PRESETS_FOR_ZONE
 
     @property  # ClimateDevice
@@ -223,7 +225,7 @@ class EvoZone(EvoDevice, ClimateDevice):
 
         The default is 5, but it is configurable within 5-35 (in Celsius).
         """
-        _LOGGER.warn("min_temp(%s): XX", self._id)
+        # _LOGGER.warn("min_temp(%s): XX", self._id)
         return self._config['setpointCapabilities']['minHeatSetpoint']
 
     @property  # ClimateDevice
@@ -232,7 +234,7 @@ class EvoZone(EvoDevice, ClimateDevice):
 
         The default is 35, but it is configurable within 5-35 (in Celsius).
         """
-        _LOGGER.warn("max_temp(%s): XX", self._id)
+        # _LOGGER.warn("max_temp(%s): XX", self._id)
         return self._config['setpointCapabilities']['maxHeatSetpoint']
 
 
@@ -351,7 +353,7 @@ class EvoController(EvoDevice, ClimateDevice):
     def _refresh(self, packet):
         if packet['signal'] == 'first_update':
             self.async_schedule_update_ha_state(force_refresh=True)
-            _LOGGER.warn("_refresh(EvoTCS): first_update")                       # TODO: delete me
+            # _LOGGER.warn("_refresh(EvoTCS): first_update")                       # TODO: delete me
 
     def update(self):
         """Get the latest state data of the entire evohome Location.
@@ -404,7 +406,7 @@ class EvoController(EvoDevice, ClimateDevice):
         if 'dhw' in status:
             del status['dhw']
 
-        _LOGGER.warn("device_state_attributes(TCS=%s): %s", self._id, {'status': status})
+        # _LOGGER.warn("device_state_attributes(TCS=%s): %s", self._id, {'status': status})
         return {'status': status}
 
 
@@ -463,18 +465,19 @@ class EvoController(EvoDevice, ClimateDevice):
         temps = [zone['temperatureStatus']['temperature'] for zone in tmp_list]
 
         avg_temp = round(sum(temps) / len(temps), 1) if temps else None
-        _LOGGER.warn("current_temperature(TCS=%s): %s", self._id, avg_temp)
+        # _LOGGER.warn("current_temperature(TCS=%s): %s", self._id, avg_temp)
         return avg_temp
 
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        return None
+        _LOGGER.warn("preset_mode(TCS=%s): %s", self._id, PRESET_ECO)
+        return PRESET_ECO
 
     @property  # ClimateDevice
     def preset_list(self) -> Optional[List[str]]:
         """Return a list of available preset modes."""
-        _LOGGER.warn("hvac_state(TCS=%s): %s", self._id, HA_PRESETS_FOR_TCS)
+        _LOGGER.warn("preset_list(TCS=%s): %s", self._id, HA_PRESETS_FOR_TCS)
         return HA_PRESETS_FOR_TCS
 
     @property  # ClimateDevice
@@ -484,7 +487,7 @@ class EvoController(EvoDevice, ClimateDevice):
         Although evohome Controllers do not have a minimum target temp, one is
         expected by the HA schema; the default for an evohome HR92 is used.
         """
-        _LOGGER.warn("min_temp(TCS=%s): %s", self._id, 5)
+        # _LOGGER.warn("min_temp(TCS=%s): %s", self._id, 5)
         return 5
 
     @property  # ClimateDevice
@@ -494,7 +497,7 @@ class EvoController(EvoDevice, ClimateDevice):
         Although evohome Controllers do not have a maximum target temp, one is
         expected by the HA schema; the default for an evohome HR92 is used.
         """
-        _LOGGER.warn("max_temp(TCS=%s): %s", self._id, 35)
+        # _LOGGER.warn("max_temp(TCS=%s): %s", self._id, 35)
         return 35
 
 
