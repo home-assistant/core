@@ -6,6 +6,7 @@ https://home-assistant.io/components/somfy/
 """
 import logging
 from datetime import timedelta
+from functools import partial
 
 import voluptuous as vol
 
@@ -69,7 +70,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     def token_saver(token):
         _LOGGER.debug('Saving updated token')
         entry.data[CONF_TOKEN] = token
-        hass.config_entries.async_update_entry(entry, data={**entry.data})
+        update_entry = partial(
+            hass.config_entries.async_update_entry,
+            data={**entry.data}
+        )
+        hass.add_job(update_entry, entry)
 
     # Force token update.
     from pymfy.api.somfy_api import SomfyApi
