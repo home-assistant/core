@@ -433,6 +433,9 @@ class SonosEntity(MediaPlayerDevice):
 
         self._shuffle = self.soco.shuffle
 
+        update_position = (new_status != self._status)
+        self._status = new_status
+
         if self.soco.is_playing_tv:
             self.update_media_linein(SOURCE_TV)
         elif self.soco.is_playing_line_in:
@@ -444,10 +447,7 @@ class SonosEntity(MediaPlayerDevice):
                 variables = event and event.variables
                 self.update_media_radio(variables, track_info)
             else:
-                update_position = (new_status != self._status)
                 self.update_media_music(update_position, track_info)
-
-        self._status = new_status
 
         self.schedule_update_ha_state()
 
@@ -550,7 +550,9 @@ class SonosEntity(MediaPlayerDevice):
             self._media_position is None
 
         # position jumped?
-        if rel_time is not None and self._media_position is not None:
+        if (self.state == STATE_PLAYING
+                and rel_time is not None
+                and self._media_position is not None):
             time_diff = utcnow() - self._media_position_updated_at
             time_diff = time_diff.total_seconds()
 
