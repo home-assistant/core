@@ -158,6 +158,7 @@ homeassistant/components/monoprice/* @etsinko
 homeassistant/components/moon/* @fabaff
 homeassistant/components/mpd/* @fabaff
 homeassistant/components/mqtt/* @home-assistant/core
+homeassistant/components/myfitnesspal/* @phillprice
 homeassistant/components/mystrom/* @fabaff
 homeassistant/components/nello/* @pschmitt
 homeassistant/components/ness_alarm/* @nickw444

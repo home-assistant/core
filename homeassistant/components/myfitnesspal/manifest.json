@@ -1,0 +1,12 @@
+{
+  "domain": "myfitnesspal",
+  "name": "myfitnesspal",
+  "documentation": "https://www.home-assistant.io/components/myfitnesspal",
+  "requirements": [
+    "myfitnesspal==1.13.3"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@phillprice"
+  ]
+}
