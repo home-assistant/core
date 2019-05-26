@@ -2,7 +2,7 @@
 from typing import Dict, Sequence
 
 from asynctest.mock import Mock, patch as patch
-from pyheos import Dispatcher, HeosPlayer, HeosSource, InputSource, const
+from pyheos import Dispatcher, Heos, HeosPlayer, HeosSource, InputSource, const
 import pytest
 
 from homeassistant.components.heos import DOMAIN
@@ -22,20 +22,23 @@ def config_entry_fixture():
 def controller_fixture(
         players, favorites, input_sources, playlists, change_data, dispatcher):
     """Create a mock Heos controller fixture."""
-    with patch("pyheos.Heos", autospec=True) as mock:
-        mock_heos = mock.return_value
-        for player in players.values():
-            player.heos = mock_heos
-        mock_heos.dispatcher = dispatcher
-        mock_heos.get_players.return_value = players
-        mock_heos.players = players
-        mock_heos.get_favorites.return_value = favorites
-        mock_heos.get_input_sources.return_value = input_sources
-        mock_heos.get_playlists.return_value = playlists
-        mock_heos.load_players.return_value = change_data
-        mock_heos.is_signed_in = True
-        mock_heos.signed_in_username = "user@user.com"
-        mock_heos.connection_state = const.STATE_CONNECTED
+    mock_heos = Mock(Heos)
+    for player in players.values():
+        player.heos = mock_heos
+    mock_heos.dispatcher = dispatcher
+    mock_heos.get_players.return_value = players
+    mock_heos.players = players
+    mock_heos.get_favorites.return_value = favorites
+    mock_heos.get_input_sources.return_value = input_sources
+    mock_heos.get_playlists.return_value = playlists
+    mock_heos.load_players.return_value = change_data
+    mock_heos.is_signed_in = True
+    mock_heos.signed_in_username = "user@user.com"
+    mock_heos.connection_state = const.STATE_CONNECTED
+    mock = Mock(return_value=mock_heos)
+
+    with patch("homeassistant.components.heos.Heos", new=mock), \
+            patch("homeassistant.components.heos.config_flow.Heos", new=mock):
         yield mock_heos
 
 
