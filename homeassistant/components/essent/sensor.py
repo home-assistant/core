@@ -36,6 +36,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 tariff,
                 data['values']['LVR'][tariff]['unit']))
 
+    if not meters:
+        raise Exception(
+            "Couldn't find any meter readings. ",
+            "Please ensure VerbruiksManager is enabled in Mijn Essent ",
+            "and at least one reading has been logged to Meterstanden.")
+
     add_devices(meters, True)
 
 
@@ -63,10 +69,14 @@ class EssentBase():
     def update(self):
         """Retrieve the latest meter data from Essent."""
         essent = PyEssent(self._username, self._password)
-        self._meters = essent.get_EANs()
-        for meter in self._meters:
-            self._meter_data[meter] = essent.read_meter(
-                meter, only_last_meter_reading=True)
+        EANs = essent.get_EANs()
+        for possible_meter in EANs:
+            meter_data = essent.read_meter(
+                possible_meter, only_last_meter_reading=True)
+            if meter_data:
+                if possible_meter not in self._meters:
+                    self._meters.append(possible_meter)
+                self._meter_data[possible_meter] = meter_data
 
 
 class EssentMeter(Entity):
