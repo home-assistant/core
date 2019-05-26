@@ -518,6 +518,9 @@ googledevices==1.0.2
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
 
+# homeassistant.components.remote_rpi_gpio
+gpiozero==1.4.1
+
 # homeassistant.components.gpsd
 gps3==0.33.3
 
