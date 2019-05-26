@@ -79,6 +79,11 @@ class MCP23017Switch(ToggleEntity):
         """Return true if device is on."""
         return self._state
 
+    @property
+    def assumed_state(self):
+        """Return true if optimistic updates are used."""
+        return True
+
     def turn_on(self, **kwargs):
         """Turn the device on."""
         self._pin.value = not self._invert_logic
