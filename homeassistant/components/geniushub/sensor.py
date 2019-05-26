@@ -76,7 +76,8 @@ class GeniusDevice(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._device.state['batteryLevel']
+        level = self._device.state['batteryLevel']
+        return level if level != 255 else 0
 
     @property
     def device_state_attributes(self):
