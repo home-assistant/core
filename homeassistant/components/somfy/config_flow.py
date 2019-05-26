@@ -61,9 +61,6 @@ class SomfyFlowHandler(config_entries.ConfigFlow):
                 url, _ = await self._get_authorization_url()
         except asyncio.TimeoutError:
             return self.async_abort(reason='authorize_url_timeout')
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected error generating auth url")
-            return self.async_abort(reason='authorize_url_fail')
 
         return self.async_external_step(
             step_id='auth',

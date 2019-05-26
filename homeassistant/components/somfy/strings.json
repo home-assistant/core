@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_setup": "You can only configure one Somfy account.",
-            "authorize_url_fail": "Unknown error generating an authorize url.",
             "authorize_url_timeout": "Timeout generating authorize url."
         },
         "create_entry": {
