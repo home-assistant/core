@@ -4,7 +4,7 @@ Glossary:
 TCS - temperature control system (a.k.a. Controller, Parent), which can have up
 to 13 Children:
 - 0-12 Heating zones (a.k.a. Zone), Climate devices, and
-- 0-1 DHW controller, (a.k.a. Boiler), a WaterHeater device
+- 0-1 DHW controller (a.k.a. Boiler), a WaterHeater device
 """
 from datetime import datetime, timedelta
 import logging
@@ -179,14 +179,14 @@ async def async_setup(hass, hass_config):
 
     load_platform(hass, 'climate', DOMAIN, {}, hass_config)
 
-    if 'dhw' in evo_data['config'][GWS][0][TCS][0]:
-        load_platform(hass, 'water_heater', DOMAIN, {}, hass_config)
+    # if 'dhw' in evo_data['config'][GWS][0][TCS][0]:
+    #     load_platform(hass, 'water_heater', DOMAIN, {}, hass_config)
 
     @callback
     def _first_update(event):
         """When HA has started, the hub knows to retrieve it's first update."""
         async_dispatcher_send(hass, DOMAIN, {'signal': 'first_update'})
-        _LOGGER.warn("_first_update(): fired")                                   # TODO: remove me
+        # _LOGGER.warn("_first_update(): fired")                                   # TODO: remove me
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _first_update)
 
@@ -222,7 +222,7 @@ class EvoDevice(Entity):
     def _refresh(self, packet):
         if packet['signal'] == 'refresh':
             self.async_schedule_update_ha_state(force_refresh=True)
-            _LOGGER.warn("_refresh(EvoDevice): refresh")                         # TODO: delete me
+            # _LOGGER.warn("_refresh(EvoDevice): refresh")                         # TODO: delete me
 
     def _handle_exception(self, err):
         try:
@@ -291,7 +291,8 @@ class EvoDevice(Entity):
     @property  # Entity
     def supported_features(self) -> int:
         """Get the flag of supported features of the device."""
-        return self._supported_features
+        _LOGGER.warn("supported_features(%s) = %s", self._id, self._supported_features)
+        return 2**16-1  # self._supported_features  # 2**16-1
 
     async def async_added_to_hass(self) -> None:  # Entity
         """Run when entity about to be added to hass."""
@@ -308,3 +309,68 @@ class EvoDevice(Entity):
     def temperature_unit(self) -> str:
         """Return the temperature unit to use in the frontend UI."""
         return TEMP_CELSIUS
+
+    @property
+    def state_attributes(self) -> Dict[str, Any]:
+        """Return the optional state attributes."""
+        supported_features = self.supported_features
+        data = {
+            ATTR_HVAC_MODES: self.hvac_modes,
+            ATTR_CURRENT_TEMPERATURE: show_temp(
+                self.hass, self.current_temperature, self.temperature_unit,
+                self.precision),
+            ATTR_MIN_TEMP: show_temp(
+                self.hass, self.min_temp, self.temperature_unit,
+                self.precision),
+            ATTR_MAX_TEMP: show_temp(
+                self.hass, self.max_temp, self.temperature_unit,
+                self.precision),
+            ATTR_TEMPERATURE: show_temp(
+                self.hass, self.target_temperature, self.temperature_unit,
+                self.precision),
+        }
+
+        if self.target_temperature_step:
+            data[ATTR_TARGET_TEMP_STEP] = self.target_temperature_step
+
+        if supported_features & SUPPORT_TARGET_TEMPERATURE_RANGE:
+            data[ATTR_TARGET_TEMP_HIGH] = show_temp(
+                self.hass, self.target_temperature_high, self.temperature_unit,
+                self.precision)
+            data[ATTR_TARGET_TEMP_LOW] = show_temp(
+                self.hass, self.target_temperature_low, self.temperature_unit,
+                self.precision)
+
+        if self.current_humidity is not None:
+            data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
+
+        if supported_features & SUPPORT_TARGET_HUMIDITY:
+            data[ATTR_HUMIDITY] = self.target_humidity
+
+            if supported_features & SUPPORT_TARGET_HUMIDITY_RANGE:
+                data[ATTR_MIN_HUMIDITY] = self.min_humidity
+                data[ATTR_MAX_HUMIDITY] = self.max_humidity
+
+        if supported_features & SUPPORT_FAN_MODE:
+            data[ATTR_FAN_MODE] = self.fan_mode
+            if self.fan_list:
+                data[ATTR_FAN_LIST] = self.fan_list
+
+        if supported_features & SUPPORT_CURRENT_HVAC:
+            data[ATTR_CURRENT_HVAC] = self.current_hvac
+
+        if supported_features & SUPPORT_PRESET_MODE:
+            data[ATTR_PRESET_MODE] = self.preset_mode
+            if self.preset_list:
+                data[ATTR_PRESET_LIST] = self.preset_list
+
+        if supported_features & SUPPORT_SWING_MODE:
+            data[ATTR_SWING_MODE] = self.swing_mode
+            if self.swing_list:
+                data[ATTR_SWING_LIST] = self.swing_list
+
+        if supported_features & SUPPORT_AUX_HEAT:
+            data[ATTR_AUX_HEAT] = STATE_ON if self.is_aux_heat else STATE_OFF
+
+        _LOGGER.warn("state_attributes(%s) = %s", self._id, data)
+        return data
