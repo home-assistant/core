@@ -5,6 +5,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_DOMAIN, CONF_PLATFORM
 from homeassistant.loader import async_get_integration
 
+
 def _domain_validator(config):
     """Validate it is a valid  domain or platform."""
     try:
