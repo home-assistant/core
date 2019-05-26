@@ -117,7 +117,7 @@ class LovelaceStorage:
         self._data['config'] = config
         await self._store.async_save(self._data)
 
-        self._hass.bus.async_fire(EVENT_LOVELACE_UPDATED, {})
+        self._hass.bus.async_fire(EVENT_LOVELACE_UPDATED)
 
     async def _load(self):
         """Load the config."""
