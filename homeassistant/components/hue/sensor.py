@@ -1,6 +1,6 @@
 """Hue sensor entities."""
 from homeassistant.const import (
-    DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, DEVICE_CLASS_SWITCH)
+    DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.hue.sensor_base import (
     GenericZLLSensor, async_setup_entry as shared_async_setup_entry)
@@ -72,8 +72,6 @@ class HueTemperature(GenericHueGaugeSensorEntity):
 
 class HueSwitch(GenericHueGaugeSensorEntity):
     """The dimmer sensor entity for a Hue sensor device."""
-
-    device_class = DEVICE_CLASS_SWITCH
 
     @property
     def state(self):

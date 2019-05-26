@@ -55,8 +55,9 @@ class SensorManager:
         import aiohue
         from .binary_sensor import HuePresence, PRESENCE_NAME_FORMAT
         from .sensor import (
-            HueLightLevel, HueTemperature, HueSwitch, LIGHT_LEVEL_NAME_FORMAT,
-            TEMPERATURE_NAME_FORMAT, BUTTON_EVENT_NAME_FORMAT)
+            HueLightLevel, HueTemperature, LIGHT_LEVEL_NAME_FORMAT,
+            TEMPERATURE_NAME_FORMAT)
+        from .switch import HueTemperature, BUTTON_EVENT_NAME_FORMAT
 
         self.hass = hass
         self.bridge = bridge
