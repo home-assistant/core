@@ -2,17 +2,22 @@
 import logging
 
 LOGGER = logging.getLogger('.')
-DOMAIN = "firmata"
-PLATFORM_NAME = DOMAIN
-SWITCH_DEFAULT_NAME = "DigitalOut"
-CONF_NAME = "name"
-CONF_PORT = "port"
-CONF_HANDSHAKE = "handshake"
-CONF_SERIAL_PORT = "serialport"
 
-CONF_PINS = "pins"
-CONF_PIN = "pin"
-CONF_TYPE = "type"
-CONF_DIGITAL_PULLUP = "pullup"
-CONF_INITIAL_STATE = "initial"
-CONF_NEGATE_STATE = "negate"
+CONF_ARDUINO_WAIT = 'arduino_wait'
+CONF_BOARDS = 'boards'
+CONF_DIGITAL_PULLUP = 'pullup'
+CONF_HANDSHAKE = 'handshake'
+CONF_INITIAL_STATE = 'initial'
+CONF_NAME = 'name'
+CONF_NEGATE_STATE = 'negate'
+CONF_PIN = 'pin'
+CONF_PINS = 'pins'
+CONF_PORT = 'port'
+CONF_REMOTE = 'remote'
+CONF_SERIAL_PORT = 'serialport'
+CONF_SLEEP_TUNE = 'sleep_tune'
+CONF_SWITCHES = 'switches'
+CONF_TYPE = 'type'
+CONF_TYPE_ANALOG = 'analog'
+CONF_TYPE_DIGITAL = 'digital'
+DOMAIN = 'firmata'

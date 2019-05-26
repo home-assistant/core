@@ -1,71 +1,75 @@
-"""Support for Firmata output."""
-import asyncio
+"""Support for Firmata switch output."""
 
-#from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
-from homeassistant.components.switch import SwitchDevice
-
-import voluptuous as vol
 import logging
-from homeassistant.helpers import (config_validation as cv, device_registry as dr)
 
-from pymata_aio.constants import PymataConstants
+from homeassistant.components.switch import SwitchDevice
+from pymata_aio.constants import Constants as PymataConstants
 
-from .const import DOMAIN, SWITCH_DEFAULT_NAME, CONF_PINS, CONF_INITIAL_STATE, CONF_NEGATE_STATE
 from .board import FirmataBoardPin
+from .const import (CONF_INITIAL_STATE, CONF_NEGATE_STATE, CONF_TYPE,
+                    CONF_TYPE_ANALOG, DOMAIN)
 
-DEFAULT_NAME = SWITCH_DEFAULT_NAME
 _LOGGER = logging.getLogger(__name__)
 
-#SWITCH_SCHEMA = vol.Schema({
-#    vol.Required(CONF_TYPE): cv.string,
-#    vol.Required(CONF_PIN): cv.positive_int,
-#    vol.Required(CONF_NAME): cv.string
-#})
 
-#PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-#    vol.Required(CONF_PINS): vol.Schema([SWITCH_SCHEMA])
-#})
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
+    """Set up the Firmata switches."""
+    _LOGGER.debug("Setting up firmata switches")
 
-# See if this file is running
-_LOGGER.fatal('OOOH LOOK A SWITCH!')
-print('TESTESTTEST')
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    _LOGGER.fatal('OOOH LOOK A SWITCH!')
-    switches = config.get(CONF_PINS)
-    _LOGGER.info(switches.items())
+    new_entities = []
+
+    boards = hass.data[DOMAIN]
+    for board_name in boards:
+        board = boards[board_name]
+        for switch_name in board.switches:
+            switch = board.switches[switch_name]
+            switch_entity = FirmataDigitalOut(hass, switch_name, board_name,
+                                              **switch)
+            await switch_entity.setup_pin()
+            new_entities.append(switch_entity)
+
+    async_add_entities(new_entities)
 
 
 class FirmataDigitalOut(FirmataBoardPin, SwitchDevice):
     """Representation of a Firmata Digital Output Pin."""
 
     async def setup_pin(self):
-        self._mode = PymataConstants.OUTPUT
-        #if CONF_DIGITAL_PULLUP is in self._kwargs:
-        #    if self._kwargs[CONF_DIGITAL_PULLUP]:
-        #        self._mode = PymataConstants.PULLUP
-        self.initial = False
-        if CONF_INITIAL_STATE in self._kwargs:
-            self.initial = self._kwargs[CONF_INITIAL_STATE]
-        self.negate = False
-        if CONF_NEGATE_STATE in self._kwargs:
-            self.negate = self._kwargs[CONF_NEGATE_STATE]
-        await self._board.api.set_pin_mode(self._pin, self._mode)
-        await self._board.api.digital_pin_write(self._pin, self.intial)
-        self._state = self.initial
+        """Set up a digital output pin."""
+        _LOGGER.debug("Setting up switch pin %s for board %s", self._name,
+                      self._board_name)
+        self._conf['pin_mode'] = 'OUTPUT'
+        self._conf['firmata_pin_mode'] = PymataConstants.OUTPUT
+        self._conf['firmata_pin'] = self._pin
+        if self._conf[CONF_TYPE] == CONF_TYPE_ANALOG:
+            self._conf['firmata_pin'] += self._board.api.first_analog_pin
+        self._attributes.update(self._conf)
+        await self._board.api.set_pin_mode(self._conf['firmata_pin'],
+                                           self._conf['firmata_pin_mode'])
+        if self._conf[CONF_INITIAL_STATE]:
+            await self.async_turn_on()
+        else:
+            await self.async_turn_off()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if switch is on."""
+        _LOGGER.info('state is %s', self._state)
         return self._state
 
     async def async_turn_on(self, **kwargs):
         """Turn on switch."""
-        new_pin_state = True and not self.negate
-        await self._board.api.digital_pin_write(self._pin, new_pin_state)
+        _LOGGER.debug("Turning switch %s on", self._name)
+        new_pin_state = True and not self._conf[CONF_NEGATE_STATE]
         self._state = True
+        await self._board.api.digital_pin_write(self._conf['firmata_pin'],
+                                                new_pin_state)
 
     async def async_turn_off(self, **kwargs):
         """Turn off switch."""
-        new_pin_state = False or self.negate
-        await self._board.api.digital_pin_write(self._pin, new_pin_state)
+        _LOGGER.debug("Turning switch %s off", self._name)
+        new_pin_state = False or self._conf[CONF_NEGATE_STATE]
         self._state = False
+        await self._board.api.digital_pin_write(self._conf['firmata_pin'],
+                                                new_pin_state)

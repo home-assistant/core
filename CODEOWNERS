@@ -76,6 +76,7 @@ homeassistant/components/essent/* @TheLastProject
 homeassistant/components/evohome/* @zxdavb
 homeassistant/components/file/* @fabaff
 homeassistant/components/filter/* @dgomes
+homeassistant/components/firmata/* @DaAwesomeP @balloob @kane610 @andrewsayre
 homeassistant/components/fitbit/* @robbiet480
 homeassistant/components/fixer/* @fabaff
 homeassistant/components/flock/* @fabaff
