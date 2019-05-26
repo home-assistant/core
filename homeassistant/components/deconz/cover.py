@@ -12,6 +12,12 @@ from .gateway import get_gateway_from_config_entry
 ZIGBEE_SPEC = ['lumi.curtain']
 
 
+async def async_setup_platform(
+         hass, config, async_add_entities, discovery_info=None):
+     """Old way of setting up deCONZ platforms."""
+     pass
+
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up covers for deCONZ component.
 
