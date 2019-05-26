@@ -96,12 +96,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload a config entry."""
-    if not hass.data[DOMAIN]:
-        hass.data.pop(DOMAIN)
-
-    for component in SOMFY_COMPONENTS:
-        await hass.config_entries.async_forward_entry_unload(entry, component)
-
+    hass.data[DOMAIN].pop(API, None)
     return True
 
 
