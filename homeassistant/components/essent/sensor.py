@@ -52,14 +52,13 @@ class EssentBase():
         """Initialize the Essent API."""
         self._username = username
         self._password = password
-        self._meters = []
         self._meter_data = {}
 
         self.update()
 
     def retrieve_meters(self):
         """Retrieve the list of meters."""
-        return self._meters
+        return self._meter_data.keys()
 
     def retrieve_meter_data(self, meter):
         """Retrieve the data for this meter."""
@@ -74,8 +73,6 @@ class EssentBase():
             meter_data = essent.read_meter(
                 possible_meter, only_last_meter_reading=True)
             if meter_data:
-                if possible_meter not in self._meters:
-                    self._meters.append(possible_meter)
                 self._meter_data[possible_meter] = meter_data
 
 
