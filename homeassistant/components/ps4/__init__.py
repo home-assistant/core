@@ -27,7 +27,7 @@ async def async_setup(hass, config):
     hass.data[PS4_DATA] = PS4Data()
 
     """Initialize PS4 Handler.
-    Handler manages listeners which are threads 
+    Handler manages listeners which are threads
     which queues synchronous network IO
     with low-level sockets, such as status updates over UDP,
     as well as manages TCP connections and tasks/commands.
