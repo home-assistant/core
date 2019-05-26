@@ -42,6 +42,7 @@ COMMENT_REQUIREMENTS = (
 )
 
 TEST_REQUIREMENTS = (
+    'ambiclimate',
     'aioambient',
     'aioautomatic',
     'aiobotocore',
@@ -49,6 +50,7 @@ TEST_REQUIREMENTS = (
     'aiohue',
     'aiounifi',
     'aioswitcher',
+    'aiozeroconf',
     'apns2',
     'av',
     'axis',
@@ -102,6 +104,7 @@ TEST_REQUIREMENTS = (
     'pydispatcher',
     'pyheos',
     'pyhomematic',
+    'pyiqvia',
     'pylitejet',
     'pymonoprice',
     'pynx584',

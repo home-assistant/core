@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Postcode reeds geregistreerd",
+            "invalid_zip_code": "Postcode is ongeldig"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "zip_code": "Postcode"
+                },
+                "title": "IQVIA"
+            }
+        },
+        "title": "IQVIA"
+    }
+}

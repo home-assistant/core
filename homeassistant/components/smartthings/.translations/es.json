@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "app_not_installed": "Por favor aseg\u00farese de haber instalado y autorizado Home Assistant SmartApp y vuelva a intentarlo.",
+            "app_not_installed": "Aseg\u00farate de haber instalado y autorizado la SmartApp de Home Assistant y vuelve a intentarlo.",
             "app_setup_error": "No se pudo configurar el SmartApp.  Por favor, int\u00e9ntelo de nuevo.",
             "base_url_not_https": "La 'base_url' del componente 'http' debe empezar por 'https://'.",
             "token_already_setup": "El token ya ha sido configurado.",

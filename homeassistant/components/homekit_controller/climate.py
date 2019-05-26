@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_OPERATION_MODE,
+    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_HUMIDITY_HIGH, SUPPORT_TARGET_HUMIDITY_LOW)
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS
@@ -17,6 +17,7 @@ MODE_HOMEKIT_TO_HASS = {
     0: STATE_OFF,
     1: STATE_HEAT,
     2: STATE_COOL,
+    3: STATE_AUTO,
 }
 
 # Map of hass operation modes to homekit modes
@@ -25,11 +26,25 @@ MODE_HASS_TO_HOMEKIT = {v: k for k, v in MODE_HOMEKIT_TO_HASS.items()}
 DEFAULT_VALID_MODES = list(MODE_HOMEKIT_TO_HASS)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Legacy set up platform."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Homekit climate."""
-    if discovery_info is not None:
-        accessory = hass.data[KNOWN_DEVICES][discovery_info['serial']]
-        add_entities([HomeKitClimateDevice(accessory, discovery_info)], True)
+    hkid = config_entry.data['AccessoryPairingID']
+    conn = hass.data[KNOWN_DEVICES][hkid]
+
+    def async_add_service(aid, service):
+        if service['stype'] != 'thermostat':
+            return False
+        info = {'aid': aid, 'iid': service['iid']}
+        async_add_entities([HomeKitClimateDevice(conn, info)], True)
+        return True
+
+    conn.add_listener(async_add_service)
 
 
 class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):

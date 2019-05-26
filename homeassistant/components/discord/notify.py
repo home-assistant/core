@@ -1,5 +1,6 @@
 """Discord platform for notify component."""
 import logging
+import os.path
 
 import voluptuous as vol
 
@@ -33,30 +34,39 @@ class DiscordNotificationService(BaseNotificationService):
         self.token = token
         self.hass = hass
 
+    def file_exists(self, filename):
+        """Check if a file exists on disk and is in authorized path."""
+        if not self.hass.config.is_allowed_path(filename):
+            return False
+
+        return os.path.isfile(filename)
+
     async def async_send_message(self, message, **kwargs):
         """Login to Discord, send message to channel(s) and log out."""
         import discord
 
         discord.VoiceClient.warn_nacl = False
-        discord_bot = discord.Client(loop=self.hass.loop)
+        discord_bot = discord.Client()
         images = None
 
         if ATTR_TARGET not in kwargs:
             _LOGGER.error("No target specified")
             return None
 
-        if ATTR_DATA in kwargs:
-            data = kwargs.get(ATTR_DATA)
+        data = kwargs.get(ATTR_DATA) or {}
 
-            if ATTR_IMAGES in data:
-                import os.path
-                images = list()
+        if ATTR_IMAGES in data:
+            images = list()
 
-                for image in data.get(ATTR_IMAGES):
-                    if os.path.isfile(image):
-                        images.append(image)
-                    else:
-                        _LOGGER.warning("Image not found: %s", image)
+            for image in data.get(ATTR_IMAGES):
+                image_exists = await self.hass.async_add_executor_job(
+                    self.file_exists,
+                    image)
+
+                if image_exists:
+                    images.append(image)
+                else:
+                    _LOGGER.warning("Image not found: %s", image)
 
         # pylint: disable=unused-variable
         @discord_bot.event

@@ -54,8 +54,13 @@ TREND_SUBSIDING = 'Subsiding'
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
-    """Configure the platform and add the sensors."""
-    iqvia = hass.data[DOMAIN][DATA_CLIENT]
+    """Set up IQVIA sensors based on the old way."""
+    pass
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up IQVIA sensors based on a config entry."""
+    iqvia = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
 
     sensor_class_mapping = {
         TYPE_ALLERGY_FORECAST: ForecastSensor,
@@ -102,7 +107,7 @@ class ForecastSensor(IQVIAEntity):
             return
 
         data = self._iqvia.data[self._type].get('Location')
-        if not data:
+        if not data or not data.get('periods'):
             return
 
         indices = [p['Index'] for p in data['periods']]

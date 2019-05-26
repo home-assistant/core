@@ -3,6 +3,8 @@
 import unittest
 from unittest.mock import patch, Mock
 
+import pytest
+
 from homeassistant.components import script
 from homeassistant.components.script import DOMAIN
 from homeassistant.const import (
@@ -11,6 +13,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, callback, split_entity_id
 from homeassistant.loader import bind_hass
 from homeassistant.setup import setup_component, async_setup_component
+from homeassistant.exceptions import ServiceNotFound
 
 from tests.common import get_test_home_assistant
 
@@ -300,3 +303,22 @@ async def test_shared_context(hass):
     state = hass.states.get('script.test')
     assert state is not None
     assert state.context == context
+
+
+async def test_logging_script_error(hass, caplog):
+    """Test logging script error."""
+    assert await async_setup_component(hass, 'script', {
+        'script': {
+            'hello': {
+                'sequence': [
+                    {'service': 'non.existing'}
+                ]
+            }
+        }
+    })
+    with pytest.raises(ServiceNotFound) as err:
+        await hass.services.async_call('script', 'hello', blocking=True)
+
+    assert err.value.domain == 'non'
+    assert err.value.service == 'existing'
+    assert 'Error executing script' in caplog.text

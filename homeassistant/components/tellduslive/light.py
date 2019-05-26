@@ -67,6 +67,11 @@ class TelldusLiveLight(TelldusLiveEntity, Light):
     def turn_on(self, **kwargs):
         """Turn the light on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS, self._last_brightness)
+        if brightness == 0:
+            fallback_brightness = 100
+            _LOGGER.info("Setting brightness to %d%%, because it was 0",
+                         fallback_brightness)
+            brightness = int(fallback_brightness*255/100)
         self.device.dim(level=brightness)
         self.changed()
 

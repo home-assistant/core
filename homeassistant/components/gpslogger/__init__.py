@@ -11,10 +11,10 @@ from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY, \
 from homeassistant.helpers import config_entry_flow
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'gpslogger'
 TRACKER_UPDATE = '{}_tracker_update'.format(DOMAIN)
 
 ATTR_ALTITUDE = 'altitude'
@@ -50,6 +50,10 @@ WEBHOOK_SCHEMA = vol.Schema({
 
 async def async_setup(hass, hass_config):
     """Set up the GPSLogger component."""
+    hass.data[DOMAIN] = {
+        'devices': set(),
+        'unsub_device_tracker': {},
+    }
     return True
 
 
@@ -98,19 +102,10 @@ async def async_setup_entry(hass, entry):
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
-
+    hass.data[DOMAIN]['unsub_device_tracker'].pop(entry.entry_id)()
     await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
     return True
 
 
 # pylint: disable=invalid-name
 async_remove_entry = config_entry_flow.webhook_async_remove_entry
-
-
-config_entry_flow.register_webhook_flow(
-    DOMAIN,
-    'GPSLogger Webhook',
-    {
-        'docs_url': 'https://www.home-assistant.io/components/gpslogger/'
-    }
-)

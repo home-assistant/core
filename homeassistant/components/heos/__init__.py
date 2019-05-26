@@ -2,7 +2,9 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Dict
 
+from pyheos import CommandError, Heos, const as heos_const
 import voluptuous as vol
 
 from homeassistant.components.media_player.const import (
@@ -14,10 +16,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import Throttle
 
+from . import services
 from .config_flow import format_title
 from .const import (
-    COMMAND_RETRY_ATTEMPTS, COMMAND_RETRY_DELAY, DATA_CONTROLLER,
-    DATA_SOURCE_MANAGER, DOMAIN, SIGNAL_HEOS_SOURCES_UPDATED)
+    COMMAND_RETRY_ATTEMPTS, COMMAND_RETRY_DELAY, DATA_CONTROLLER_MANAGER,
+    DATA_SOURCE_MANAGER, DOMAIN, SIGNAL_HEOS_UPDATED)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -55,7 +58,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Initialize config entry which represents the HEOS controller."""
-    from pyheos import Heos, CommandError
     host = entry.data[CONF_HOST]
     # Setting all_progress_events=False ensures that we only receive a
     # media position update upon start of playback or when media changes
@@ -80,8 +82,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         if controller.is_signed_in:
             favorites = await controller.get_favorites()
         else:
-            _LOGGER.warning("%s is not logged in to your HEOS account and will"
-                            " be unable to retrieve your favorites", host)
+            _LOGGER.warning(
+                "%s is not logged in to a HEOS account and will be unable "
+                "to retrieve HEOS favorites: Use the 'heos.sign_in' service "
+                "to sign-in to a HEOS account", host)
         inputs = await controller.get_input_sources()
     except (asyncio.TimeoutError, ConnectionError, CommandError) as error:
         await controller.disconnect()
@@ -89,14 +93,20 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
                       exc_info=isinstance(error, CommandError))
         raise ConfigEntryNotReady
 
+    controller_manager = ControllerManager(hass, controller)
+    await controller_manager.connect_listeners()
+
     source_manager = SourceManager(favorites, inputs)
     source_manager.connect_update(hass, controller)
 
     hass.data[DOMAIN] = {
-        DATA_CONTROLLER: controller,
+        DATA_CONTROLLER_MANAGER: controller_manager,
         DATA_SOURCE_MANAGER: source_manager,
         MEDIA_PLAYER_DOMAIN: players
     }
+
+    services.register(hass, controller)
+
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(
         entry, MEDIA_PLAYER_DOMAIN))
     return True
@@ -104,12 +114,89 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload a config entry."""
-    controller = hass.data[DOMAIN][DATA_CONTROLLER]
-    controller.dispatcher.disconnect_all()
-    await controller.disconnect()
+    controller_manager = hass.data[DOMAIN][DATA_CONTROLLER_MANAGER]
+    await controller_manager.disconnect()
     hass.data.pop(DOMAIN)
+
+    services.remove(hass)
+
     return await hass.config_entries.async_forward_entry_unload(
         entry, MEDIA_PLAYER_DOMAIN)
+
+
+class ControllerManager:
+    """Class that manages events of the controller."""
+
+    def __init__(self, hass, controller):
+        """Init the controller manager."""
+        self._hass = hass
+        self._device_registry = None
+        self._entity_registry = None
+        self.controller = controller
+        self._signals = []
+
+    async def connect_listeners(self):
+        """Subscribe to events of interest."""
+        self._device_registry, self._entity_registry = await asyncio.gather(
+            self._hass.helpers.device_registry.async_get_registry(),
+            self._hass.helpers.entity_registry.async_get_registry())
+        # Handle controller events
+        self._signals.append(self.controller.dispatcher.connect(
+            heos_const.SIGNAL_CONTROLLER_EVENT, self._controller_event))
+        # Handle connection-related events
+        self._signals.append(self.controller.dispatcher.connect(
+            heos_const.SIGNAL_HEOS_EVENT, self._heos_event))
+
+    async def disconnect(self):
+        """Disconnect subscriptions."""
+        for signal_remove in self._signals:
+            signal_remove()
+        self._signals.clear()
+        self.controller.dispatcher.disconnect_all()
+        await self.controller.disconnect()
+
+    async def _controller_event(self, event, data):
+        """Handle controller event."""
+        if event == heos_const.EVENT_PLAYERS_CHANGED:
+            self.update_ids(data[heos_const.DATA_MAPPED_IDS])
+        # Update players
+        self._hass.helpers.dispatcher.async_dispatcher_send(
+            SIGNAL_HEOS_UPDATED)
+
+    async def _heos_event(self, event):
+        """Handle connection event."""
+        if event == heos_const.EVENT_CONNECTED:
+            try:
+                # Retrieve latest players and refresh status
+                data = await self.controller.load_players()
+                self.update_ids(data[heos_const.DATA_MAPPED_IDS])
+            except (CommandError, asyncio.TimeoutError, ConnectionError) as ex:
+                _LOGGER.error("Unable to refresh players: %s", ex)
+        # Update players
+        self._hass.helpers.dispatcher.async_dispatcher_send(
+            SIGNAL_HEOS_UPDATED)
+
+    def update_ids(self, mapped_ids: Dict[int, int]):
+        """Update the IDs in the device and entity registry."""
+        # mapped_ids contains the mapped IDs (new:old)
+        for new_id, old_id in mapped_ids.items():
+            # update device registry
+            entry = self._device_registry.async_get_device(
+                {(DOMAIN, old_id)}, set())
+            new_identifiers = {(DOMAIN, new_id)}
+            if entry:
+                self._device_registry.async_update_device(
+                    entry.id, new_identifiers=new_identifiers)
+                _LOGGER.debug("Updated device %s identifiers to %s",
+                              entry.id, new_identifiers)
+            # update entity registry
+            entity_id = self._entity_registry.async_get_entity_id(
+                MEDIA_PLAYER_DOMAIN, DOMAIN, str(old_id))
+            if entity_id:
+                self._entity_registry.async_update_entity(
+                    entity_id, new_unique_id=str(new_id))
+                _LOGGER.debug("Updated entity %s unique id to %s",
+                              entity_id, new_id)
 
 
 class SourceManager:
@@ -151,9 +238,8 @@ class SourceManager:
 
     def get_current_source(self, now_playing_media):
         """Determine current source from now playing media."""
-        from pyheos import const
         # Match input by input_name:media_id
-        if now_playing_media.source_id == const.MUSIC_SOURCE_AUX_INPUT:
+        if now_playing_media.source_id == heos_const.MUSIC_SOURCE_AUX_INPUT:
             return next((input_source.name for input_source in self.inputs
                          if input_source.input_name ==
                          now_playing_media.media_id), None)
@@ -170,8 +256,6 @@ class SourceManager:
         physical event therefore throttle it. Retrieving sources immediately
         after the event may fail so retry.
         """
-        from pyheos import CommandError, const
-
         @Throttle(MIN_UPDATE_SOURCES)
         async def get_sources():
             retry_attempts = 0
@@ -195,9 +279,10 @@ class SourceManager:
                                       exc_info=isinstance(error, CommandError))
                         return
 
-        async def update_sources(event):
-            if event in (const.EVENT_SOURCES_CHANGED,
-                         const.EVENT_USER_CHANGED):
+        async def update_sources(event, data=None):
+            if event in (heos_const.EVENT_SOURCES_CHANGED,
+                         heos_const.EVENT_USER_CHANGED,
+                         heos_const.EVENT_CONNECTED):
                 sources = await get_sources()
                 # If throttled, it will return None
                 if sources:
@@ -206,7 +291,9 @@ class SourceManager:
                     _LOGGER.debug("Sources updated due to changed event")
                     # Let players know to update
                     hass.helpers.dispatcher.async_dispatcher_send(
-                        SIGNAL_HEOS_SOURCES_UPDATED)
+                        SIGNAL_HEOS_UPDATED)
 
         controller.dispatcher.connect(
-            const.SIGNAL_CONTROLLER_EVENT, update_sources)
+            heos_const.SIGNAL_CONTROLLER_EVENT, update_sources)
+        controller.dispatcher.connect(
+            heos_const.SIGNAL_HEOS_EVENT, update_sources)

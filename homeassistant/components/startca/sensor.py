@@ -138,7 +138,7 @@ class StartcaData:
         _LOGGER.debug("Updating Start.ca usage data")
         url = 'https://www.start.ca/support/usage/api?key=' + \
               self.api_key
-        with async_timeout.timeout(REQUEST_TIMEOUT, loop=self.loop):
+        with async_timeout.timeout(REQUEST_TIMEOUT):
             req = await self.websession.get(url)
         if req.status != 200:
             _LOGGER.error("Request failed with status: %u", req.status)

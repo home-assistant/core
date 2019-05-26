@@ -1,6 +1,7 @@
 {
   "domain": "ifttt",
   "name": "Ifttt",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/ifttt",
   "requirements": [
     "pyfttt==0.3"

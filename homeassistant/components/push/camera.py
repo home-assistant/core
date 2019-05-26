@@ -60,7 +60,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 async def handle_webhook(hass, webhook_id, request):
     """Handle incoming webhook POST with image files."""
     try:
-        with async_timeout.timeout(5, loop=hass.loop):
+        with async_timeout.timeout(5):
             data = dict(await request.post())
     except (asyncio.TimeoutError, aiohttp.web.HTTPException) as error:
         _LOGGER.error("Could not get information from POST <%s>", error)

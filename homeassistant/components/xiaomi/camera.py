@@ -140,7 +140,7 @@ class XiaomiCamera(Camera):
             ffmpeg = ImageFrame(self._manager.binary, loop=self.hass.loop)
             self._last_image = await asyncio.shield(ffmpeg.get_image(
                 url, output_format=IMAGE_JPEG,
-                extra_cmd=self._extra_arguments), loop=self.hass.loop)
+                extra_cmd=self._extra_arguments))
             self._last_url = url
 
         return self._last_image
