@@ -187,7 +187,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     else:
         reader_factory = partial(
             create_dsmr_reader, config[CONF_PORT], config[CONF_DSMR_VERSION],
-            update_entities_telegram)
+            update_entities_telegram, loop=hass.loop)
 
     async def connect_and_reconnect():
         """Connect to DSMR and keep reconnecting until Home Assistant stops."""
