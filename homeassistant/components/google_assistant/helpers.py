@@ -22,14 +22,19 @@ class Config:
 
     def __init__(self, should_expose,
                  entity_config=None, secure_devices_pin=None,
-                 agent_user_id=None):
+                 agent_user_id=None, should_2fa=None):
         """Initialize the configuration."""
         self.should_expose = should_expose
         self.entity_config = entity_config or {}
         self.secure_devices_pin = secure_devices_pin
+        self._should_2fa = should_2fa
 
         # Agent User Id to use for query responses
         self.agent_user_id = agent_user_id
+
+    def should_2fa(self, state):
+        """If an entity should have 2FA checked."""
+        return self._should_2fa is None or self._should_2fa(state)
 
 
 class RequestData:

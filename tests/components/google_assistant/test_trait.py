@@ -924,6 +924,13 @@ async def test_lock_unlock_unlock(hass):
     assert len(calls) == 1
     assert err.value.code == const.ERR_CHALLENGE_NOT_SETUP
 
+    # Test with 2FA override
+    with patch('homeassistant.components.google_assistant.helpers'
+               '.Config.should_2fa', return_value=False):
+        await trt.execute(
+            trait.COMMAND_LOCKUNLOCK, BASIC_DATA, {'lock': False}, {})
+    assert len(calls) == 2
+
 
 async def test_fan_speed(hass):
     """Test FanSpeed trait speed control support for fan domain."""

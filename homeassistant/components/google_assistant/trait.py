@@ -755,7 +755,7 @@ class LockUnlockTrait(_Trait):
         if params['lock']:
             service = lock.SERVICE_LOCK
         else:
-            _verify_pin_challenge(data, challenge)
+            _verify_pin_challenge(data, self.state, challenge)
             service = lock.SERVICE_UNLOCK
 
         await self.hass.services.async_call(lock.DOMAIN, service, {
@@ -1133,7 +1133,7 @@ class OpenCloseTrait(_Trait):
             if (should_verify and
                     self.state.attributes.get(ATTR_DEVICE_CLASS)
                     in OpenCloseTrait.COVER_2FA):
-                _verify_pin_challenge(data, challenge)
+                _verify_pin_challenge(data, self.state, challenge)
 
             await self.hass.services.async_call(
                 cover.DOMAIN, service, svc_params,
@@ -1219,8 +1219,11 @@ class VolumeTrait(_Trait):
                 ERR_NOT_SUPPORTED, 'Command not supported')
 
 
-def _verify_pin_challenge(data, challenge):
+def _verify_pin_challenge(data, state, challenge):
     """Verify a pin challenge."""
+    if not data.config.should_2fa(state):
+        return
+
     if not data.config.secure_devices_pin:
         raise SmartHomeError(
             ERR_CHALLENGE_NOT_SETUP, 'Challenge is not set up')
@@ -1234,7 +1237,7 @@ def _verify_pin_challenge(data, challenge):
         raise ChallengeNeeded(CHALLENGE_FAILED_PIN_NEEDED)
 
 
-def _verify_ack_challenge(data, challenge):
+def _verify_ack_challenge(data, state, challenge):
     """Verify a pin challenge."""
     if not challenge or not challenge.get('ack'):
         raise ChallengeNeeded(CHALLENGE_ACK_NEEDED)
