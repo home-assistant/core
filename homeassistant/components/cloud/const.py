@@ -14,6 +14,7 @@ PREF_DISABLE_2FA = 'disable_2fa'
 PREF_ALIASES = 'aliases'
 PREF_SHOULD_EXPOSE = 'should_expose'
 DEFAULT_SHOULD_EXPOSE = True
+DEFAULT_DISABLE_2FA = False
 
 CONF_ALEXA = 'alexa'
 CONF_ALIASES = 'aliases'

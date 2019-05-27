@@ -225,23 +225,30 @@ async def test_webhook_msg(hass):
 async def test_google_config_expose_entity(
         hass, mock_cloud_setup, mock_cloud_login):
     """Test Google config exposing entity method uses latest config."""
-    cloud_prefs = prefs.CloudPreferences(hass)
-    await cloud_prefs.async_initialize()
-
-    cloud_client = client.CloudClient(
-        hass, cloud_prefs,
-        hass.helpers.aiohttp_client.async_get_clientsession(), {},
-        GACTIONS_SCHEMA({})
-    )
-    config = cloud_client.google_config
-
+    cloud_client = hass.data[DOMAIN].client
     state = State('light.kitchen', 'on')
 
-    assert config.should_expose(state)
+    assert cloud_client.google_config.should_expose(state)
 
     await cloud_client.prefs.async_update_google_entity_config(
         entity_id='light.kitchen',
         should_expose=False,
     )
 
-    assert not config.should_expose(state)
+    assert not cloud_client.google_config.should_expose(state)
+
+
+async def test_google_config_should_2fa(
+        hass, mock_cloud_setup, mock_cloud_login):
+    """Test Google config disabling 2FA method uses latest config."""
+    cloud_client = hass.data[DOMAIN].client
+    state = State('light.kitchen', 'on')
+
+    assert cloud_client.google_config.should_2fa(state)
+
+    await cloud_client.prefs.async_update_google_entity_config(
+        entity_id='light.kitchen',
+        disable_2fa=True,
+    )
+
+    assert not cloud_client.google_config.should_2fa(state)
