@@ -415,7 +415,7 @@ enturclient==0.2.0
 # envirophat==0.0.6
 
 # homeassistant.components.enphase_envoy
-envoy_reader==0.3
+envoy_reader==0.4
 
 # homeassistant.components.season
 ephem==3.7.6.0
