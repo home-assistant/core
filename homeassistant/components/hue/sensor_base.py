@@ -1,6 +1,5 @@
 """Support for the Philips Hue sensors as a platform."""
 import asyncio
-from datetime import timedelta
 import logging
 from time import monotonic
 
@@ -48,7 +47,6 @@ class SensorManager:
     Intended to be a singleton.
     """
 
-    SCAN_INTERVAL = timedelta(seconds=5)
     sensor_config_map = {}
 
     def __init__(self, hass, bridge):
@@ -95,14 +93,15 @@ class SensorManager:
 
         self._started = True
         _LOGGER.info('Starting sensor polling loop with %s second interval',
-                     self.SCAN_INTERVAL.total_seconds())
+                     self.bridge.scan_interval.total_seconds())
 
         async def async_update_bridge(now):
             """Will update sensors from the bridge."""
             await self.async_update_items()
 
             async_track_point_in_utc_time(
-                self.hass, async_update_bridge, utcnow() + self.SCAN_INTERVAL)
+                self.hass, async_update_bridge,
+                utcnow() + self.bridge.scan_interval)
 
         await async_update_bridge(None)
 

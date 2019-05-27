@@ -15,7 +15,7 @@ async def test_bridge_setup():
     entry = Mock()
     api = Mock()
     entry.data = {'host': '1.2.3.4', 'username': 'mock-username'}
-    hue_bridge = bridge.HueBridge(hass, entry, False, False)
+    hue_bridge = bridge.HueBridge(hass, entry, False, False, 5)
 
     with patch.object(bridge, 'get_bridge', return_value=mock_coro(api)):
         assert await hue_bridge.async_setup() is True
@@ -35,7 +35,7 @@ async def test_bridge_setup_invalid_username():
     hass = Mock()
     entry = Mock()
     entry.data = {'host': '1.2.3.4', 'username': 'mock-username'}
-    hue_bridge = bridge.HueBridge(hass, entry, False, False)
+    hue_bridge = bridge.HueBridge(hass, entry, False, False, 5)
 
     with patch.object(bridge, 'get_bridge',
                       side_effect=errors.AuthenticationRequired):
@@ -53,7 +53,7 @@ async def test_bridge_setup_timeout(hass):
     hass = Mock()
     entry = Mock()
     entry.data = {'host': '1.2.3.4', 'username': 'mock-username'}
-    hue_bridge = bridge.HueBridge(hass, entry, False, False)
+    hue_bridge = bridge.HueBridge(hass, entry, False, False, 5)
 
     with patch.object(
             bridge, 'get_bridge', side_effect=errors.CannotConnect
@@ -66,7 +66,7 @@ async def test_reset_if_entry_had_wrong_auth():
     hass = Mock()
     entry = Mock()
     entry.data = {'host': '1.2.3.4', 'username': 'mock-username'}
-    hue_bridge = bridge.HueBridge(hass, entry, False, False)
+    hue_bridge = bridge.HueBridge(hass, entry, False, False, 5)
 
     with patch.object(bridge, 'get_bridge',
                       side_effect=errors.AuthenticationRequired):
@@ -82,7 +82,7 @@ async def test_reset_unloads_entry_if_setup():
     hass = Mock()
     entry = Mock()
     entry.data = {'host': '1.2.3.4', 'username': 'mock-username'}
-    hue_bridge = bridge.HueBridge(hass, entry, False, False)
+    hue_bridge = bridge.HueBridge(hass, entry, False, False, 5)
 
     with patch.object(bridge, 'get_bridge', return_value=mock_coro(Mock())):
         assert await hue_bridge.async_setup() is True

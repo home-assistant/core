@@ -222,6 +222,7 @@ def mock_bridge(hass):
         available=True,
         allow_unreachable=False,
         allow_groups=False,
+        scan_interval=5,
         api=Mock(),
         spec=hue.HueBridge
     )

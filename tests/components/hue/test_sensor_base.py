@@ -1,4 +1,5 @@
 """Philips Hue sensors platform tests."""
+from datetime import timedelta
 import asyncio
 from collections import deque
 import datetime
@@ -327,6 +328,7 @@ def create_mock_bridge():
         available=True,
         allow_unreachable=False,
         allow_groups=False,
+        scan_interval=timedelta(seconds=5),
         api=Mock(),
         spec=hue.HueBridge
     )
@@ -358,8 +360,9 @@ def mock_bridge(hass):
 
 @pytest.fixture
 def increase_scan_interval(hass):
-    """Increase the SCAN_INTERVAL to prevent unexpected scans during tests."""
-    hue_sensor_base.SensorManager.SCAN_INTERVAL = datetime.timedelta(days=365)
+    """Increase the scan_interval to prevent unexpected scans during tests."""
+    hue_sensor_base.SensorManager.bridge.scan_interval = datetime.timedelta(
+        days=365)
 
 
 async def setup_bridge(hass, mock_bridge, hostname=None):

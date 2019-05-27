@@ -30,7 +30,8 @@ async def test_setup_defined_hosts_known_auth(hass):
                     hue.CONF_HOST: '0.0.0.0',
                     hue.CONF_FILENAME: 'bla.conf',
                     hue.CONF_ALLOW_HUE_GROUPS: False,
-                    hue.CONF_ALLOW_UNREACHABLE: True
+                    hue.CONF_ALLOW_UNREACHABLE: True,
+                    hue.CONF_SCAN_INTERVAL: 5.0
                 }
             }
         }) is True
@@ -44,7 +45,8 @@ async def test_setup_defined_hosts_known_auth(hass):
             hue.CONF_HOST: '0.0.0.0',
             hue.CONF_FILENAME: 'bla.conf',
             hue.CONF_ALLOW_HUE_GROUPS: False,
-            hue.CONF_ALLOW_UNREACHABLE: True
+            hue.CONF_ALLOW_UNREACHABLE: True,
+            hue.CONF_SCAN_INTERVAL: 5.0
         }
     }
 
@@ -60,7 +62,8 @@ async def test_setup_defined_hosts_no_known_auth(hass):
                     hue.CONF_HOST: '0.0.0.0',
                     hue.CONF_FILENAME: 'bla.conf',
                     hue.CONF_ALLOW_HUE_GROUPS: False,
-                    hue.CONF_ALLOW_UNREACHABLE: True
+                    hue.CONF_ALLOW_UNREACHABLE: True,
+                    hue.CONF_SCAN_INTERVAL: 5.0
                 }
             }
         }) is True
@@ -78,7 +81,8 @@ async def test_setup_defined_hosts_no_known_auth(hass):
             hue.CONF_HOST: '0.0.0.0',
             hue.CONF_FILENAME: 'bla.conf',
             hue.CONF_ALLOW_HUE_GROUPS: False,
-            hue.CONF_ALLOW_UNREACHABLE: True
+            hue.CONF_ALLOW_UNREACHABLE: True,
+            hue.CONF_SCAN_INTERVAL: 5.0
         }
     }
 
@@ -108,19 +112,21 @@ async def test_config_passed_to_config_entry(hass):
                     hue.CONF_HOST: '0.0.0.0',
                     hue.CONF_FILENAME: 'bla.conf',
                     hue.CONF_ALLOW_HUE_GROUPS: False,
-                    hue.CONF_ALLOW_UNREACHABLE: True
+                    hue.CONF_ALLOW_UNREACHABLE: True,
+                    hue.CONF_SCAN_INTERVAL: 1.0
                 }
             }
         }) is True
 
     assert len(mock_bridge.mock_calls) == 2
-    p_hass, p_entry, p_allow_unreachable, p_allow_groups = \
+    p_hass, p_entry, p_allow_unreachable, p_allow_groups, p_scan_interval = \
         mock_bridge.mock_calls[0][1]
 
     assert p_hass is hass
     assert p_entry is entry
     assert p_allow_unreachable is True
     assert p_allow_groups is False
+    assert p_scan_interval == 1.0
 
     assert len(mock_registry.mock_calls) == 1
     assert mock_registry.mock_calls[0][2] == {
