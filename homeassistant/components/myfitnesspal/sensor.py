@@ -5,7 +5,7 @@ from homeassistant.helpers.entity import Entity
 
 # REQUIREMENTS = ['myfitnesspal==1.13.3']
 TOTALS = ["sodium", "carbohydrates", "calories", "fat", "sugar", "protein"]
-
+ENERGY_KILOCALORIES = 'kcal'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set the sensor platform."""
@@ -49,7 +49,10 @@ class MyFitnessPalSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return MASS_GRAMS
+        if: self._resource == 'calories':
+            return ENERGY_KILOCALORIES
+        else:
+            return MASS_GRAMS
 
     def update(self):
         """Fetch new state data for the sensor.
