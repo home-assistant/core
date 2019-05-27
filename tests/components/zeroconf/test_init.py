@@ -4,7 +4,7 @@ from unittest.mock import patch
 from zeroconf import ServiceInfo, ServiceStateChange
 
 from homeassistant.generated import zeroconf as zc_gen
-from homeassistant.setup import async_setup_component, setup_component
+from homeassistant.setup import async_setup_component
 from homeassistant.components import zeroconf
 
 
