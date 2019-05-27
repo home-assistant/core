@@ -17,7 +17,8 @@ from homeassistant.util.aiohttp import MockRequest
 
 from . import utils
 from .const import (
-    CONF_ENTITY_CONFIG, CONF_FILTER, DOMAIN, DISPATCHER_REMOTE_UPDATE)
+    CONF_ENTITY_CONFIG, CONF_FILTER, DOMAIN, DISPATCHER_REMOTE_UPDATE,
+    PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE)
 from .prefs import CloudPreferences
 
 
@@ -98,7 +99,13 @@ class CloudClient(Interface):
                 if entity.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
                     return False
 
-                return google_conf['filter'](entity.entity_id)
+                if not google_conf['filter'](entity.entity_id):
+                    return False
+
+                entity_configs = self.prefs.google_entity_configs
+                entity_config = entity_configs.get(entity.entity_id, {})
+                return entity_config.get(
+                    PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE)
 
             username = self._hass.data[DOMAIN].claims["cognito:username"]
 

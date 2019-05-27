@@ -2,9 +2,13 @@
 from unittest.mock import patch, MagicMock
 
 from aiohttp import web
+import jwt
 import pytest
 
+from homeassistant.core import State
 from homeassistant.setup import async_setup_component
+from homeassistant.components.cloud import (
+    client, prefs, DOMAIN, GACTIONS_SCHEMA)
 from homeassistant.components.cloud.const import (
     PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE)
 from tests.components.alexa import test_smart_home as test_alexa
@@ -17,6 +21,25 @@ from . import mock_cloud_prefs
 def mock_cloud():
     """Mock cloud class."""
     return MagicMock(subscription_expired=False)
+
+
+@pytest.fixture
+async def mock_cloud_setup(hass):
+    """Set up the cloud."""
+    with patch('hass_nabucasa.Cloud.start', return_value=mock_coro()):
+        assert await async_setup_component(hass, 'cloud', {
+            'cloud': {}
+        })
+
+
+@pytest.fixture
+def mock_cloud_login(hass, mock_cloud_setup):
+    """Mock cloud is logged in."""
+    hass.data[DOMAIN].id_token = jwt.encode({
+        'email': 'hello@home-assistant.io',
+        'custom:sub-exp': '2018-01-03',
+        'cognito:username': 'abcdefghjkl',
+    }, 'test')
 
 
 async def test_handler_alexa(hass):
@@ -197,3 +220,28 @@ async def test_webhook_msg(hass):
     assert await received[0].json() == {
         'hello': 'world'
     }
+
+
+async def test_google_config_expose_entity(
+        hass, mock_cloud_setup, mock_cloud_login):
+    """Test Google config exposing entity method uses latest config."""
+    cloud_prefs = prefs.CloudPreferences(hass)
+    await cloud_prefs.async_initialize()
+
+    cloud_client = client.CloudClient(
+        hass, cloud_prefs,
+        hass.helpers.aiohttp_client.async_get_clientsession(), {},
+        GACTIONS_SCHEMA({})
+    )
+    config = cloud_client.google_config
+
+    state = State('light.kitchen', 'on')
+
+    assert config.should_expose(state)
+
+    await cloud_client.prefs.async_update_google_entity_config(
+        entity_id='light.kitchen',
+        should_expose=False,
+    )
+
+    assert not config.should_expose(state)
