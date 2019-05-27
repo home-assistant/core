@@ -130,7 +130,7 @@ class RemoteDevice(ToggleEntity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.hass.async_add_executor_job(
+        return self.hass.async_add_executor_job(
             ft.partial(self.send_command, command, **kwargs))
 
     def learn_command(self, **kwargs):
