@@ -49,7 +49,7 @@ class MyFitnessPalSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        if: self._resource == 'calories':
+        if self._resource == 'calories':
             return ENERGY_KILOCALORIES
         else:
             return MASS_GRAMS
