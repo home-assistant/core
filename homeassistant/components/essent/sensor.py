@@ -37,10 +37,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 data['values']['LVR'][tariff]['unit']))
 
     if not meters:
-        raise Exception(
-            "Couldn't find any meter readings. ",
-            "Please ensure VerbruiksManager is enabled in Mijn Essent ",
-            "and at least one reading has been logged to Meterstanden.")
+        hass.components.persistent_notification.create(
+            'Couldn\'t find any meter readings. '
+            'Please ensure Verbruiks Manager is enabled in Mijn Essent '
+            'and at least one reading has been logged to Meterstanden.',
+            title='Essent', notification_id='essent_notification')
+        return
 
     add_devices(meters, True)
 
