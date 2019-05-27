@@ -1,8 +1,7 @@
 """Support for Dyson Pure Hot+Cool link fan."""
 import logging
 
-from libpurecool.const import (
-    HeatMode, HeatState, FocusMode, FocusMode, HeatTarget)
+from libpurecool.const import HeatMode, HeatState, FocusMode, HeatTarget
 from libpurecool.dyson_pure_state import DysonPureHotCoolState
 from libpurecool.dyson_pure_hotcool_link import DysonPureHotCoolLink
 
