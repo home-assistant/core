@@ -53,10 +53,8 @@ async def async_setup(hass, config):
         _LOGGER.debug("Discovered new device %s %s", name, info)
 
         for domain in zeroconf_manifest.SERVICE_TYPES[service_type]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    domain, context={'source': DOMAIN}, data=info
-                )
+            await hass.config_entries.flow.async_init(
+                domain, context={'source': DOMAIN}, data=info
             )
 
     def service_update(_, service_type, name, state_change):

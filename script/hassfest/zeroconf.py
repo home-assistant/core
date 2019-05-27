@@ -31,6 +31,19 @@ def generate_and_validate(integrations: Dict[str, Integration]):
         if not service_types:
             continue
 
+        try:
+            with open(str(integration.path / "config_flow.py")) as fp:
+                if ' async_step_zeroconf(' not in fp.read():
+                    integration.add_error(
+                        'zeroconf', 'Config flow has no async_step_zeroconf')
+                    continue
+        except FileNotFoundError:
+            integration.add_error(
+                'zeroconf',
+                'Zeroconf info in a manifest requires a config flow to exist'
+            )
+            continue
+
         for service_type in service_types:
 
             if service_type not in service_type_dict:
