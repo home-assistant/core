@@ -48,28 +48,31 @@ class FirmataDigitalOut(FirmataBoardPin, SwitchDevice):
         await self._board.api.set_pin_mode(self._conf['firmata_pin'],
                                            self._conf['firmata_pin_mode'])
         if self._conf[CONF_INITIAL_STATE]:
-            await self.async_turn_on()
+            await self.async_turn_on(update_state=False)
         else:
-            await self.async_turn_off()
+            await self.async_turn_off(update_state=False)
 
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        _LOGGER.info('state is %s', self._state)
         return self._state
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, update_state=True, **kwargs):
         """Turn on switch."""
         _LOGGER.debug("Turning switch %s on", self._name)
         new_pin_state = True and not self._conf[CONF_NEGATE_STATE]
-        self._state = True
         await self._board.api.digital_pin_write(self._conf['firmata_pin'],
                                                 new_pin_state)
+        self._state = True
+        if update_state:
+            self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, update_state=True, **kwargs):
         """Turn off switch."""
         _LOGGER.debug("Turning switch %s off", self._name)
         new_pin_state = False or self._conf[CONF_NEGATE_STATE]
-        self._state = False
         await self._board.api.digital_pin_write(self._conf['firmata_pin'],
                                                 new_pin_state)
+        self._state = False
+        if update_state:
+            self.async_write_ha_state()

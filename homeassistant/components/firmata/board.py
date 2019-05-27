@@ -21,7 +21,6 @@ class FirmataBoard:
         self.available = True
         self.api = None
         self.name = name
-        self._prefix = DOMAIN + '.' + self.name + '_'
         self.switches = []
 
     async def async_setup(self, tries=0):
@@ -82,6 +81,7 @@ class FirmataBoardPin(Entity):
 
     def __init__(self, hass, name: str, board_name: str, pin: int, **kwargs):
         """Initialize the pin."""
+        self.hass = hass
         self._name = name
         self._pin = pin
         self._state = None
