@@ -1,6 +1,8 @@
 """Support for deCONZ sensors."""
+from pydeconz.sensor import LightLevel, Switch
+
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY)
+    ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import slugify
@@ -16,7 +18,7 @@ ATTR_EVENT_ID = 'event_id'
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up deCONZ sensors."""
+    """Old way of setting up deCONZ platforms."""
     pass
 
 
@@ -27,17 +29,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     @callback
     def async_add_sensor(sensors):
         """Add sensors from deCONZ."""
-        from pydeconz.sensor import (
-            DECONZ_SENSOR, SWITCH as DECONZ_REMOTE)
         entities = []
 
         for sensor in sensors:
 
-            if sensor.type in DECONZ_SENSOR and \
+            if not sensor.BINARY and \
                not (not gateway.allow_clip_sensor and
                     sensor.type.startswith('CLIP')):
 
-                if sensor.type in DECONZ_REMOTE:
+                if sensor.type in Switch.ZHATYPE:
                     if sensor.battery:
                         entities.append(DeconzBattery(sensor, gateway))
 
@@ -56,16 +56,11 @@ class DeconzSensor(DeconzDevice):
     """Representation of a deCONZ sensor."""
 
     @callback
-    def async_update_callback(self, reason):
-        """Update the sensor's state.
-
-        If reason is that state is updated,
-        or reachable has changed or battery has changed.
-        """
-        if reason['state'] or \
-           'reachable' in reason['attr'] or \
-           'battery' in reason['attr'] or \
-           'on' in reason['attr']:
+    def async_update_callback(self, force_update=False):
+        """Update the sensor's state."""
+        changed = set(self._device.changed_keys)
+        keys = {'battery', 'on', 'reachable', 'state'}
+        if force_update or any(key in changed for key in keys):
             self.async_schedule_update_ha_state()
 
     @property
@@ -76,34 +71,42 @@ class DeconzSensor(DeconzDevice):
     @property
     def device_class(self):
         """Return the class of the sensor."""
-        return self._device.sensor_class
+        return self._device.SENSOR_CLASS
 
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        return self._device.sensor_icon
+        return self._device.SENSOR_ICON
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this sensor."""
-        return self._device.sensor_unit
+        return self._device.SENSOR_UNIT
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        from pydeconz.sensor import LIGHTLEVEL
         attr = {}
         if self._device.battery:
             attr[ATTR_BATTERY_LEVEL] = self._device.battery
+
         if self._device.on is not None:
             attr[ATTR_ON] = self._device.on
-        if self._device.type in LIGHTLEVEL and self._device.dark is not None:
+
+        if self._device.secondary_temperature is not None:
+            attr[ATTR_TEMPERATURE] = self._device.secondary_temperature
+
+        if self._device.type in LightLevel.ZHATYPE and \
+                self._device.dark is not None:
             attr[ATTR_DARK] = self._device.dark
+
         if self.unit_of_measurement == 'Watts':
             attr[ATTR_CURRENT] = self._device.current
             attr[ATTR_VOLTAGE] = self._device.voltage
-        if self._device.sensor_class == 'daylight':
+
+        if self._device.SENSOR_CLASS == 'daylight':
             attr[ATTR_DAYLIGHT] = self._device.daylight
+
         return attr
 
 
@@ -118,9 +121,11 @@ class DeconzBattery(DeconzDevice):
         self._unit_of_measurement = "%"
 
     @callback
-    def async_update_callback(self, reason):
+    def async_update_callback(self, force_update=False):
         """Update the battery's state, if needed."""
-        if 'reachable' in reason['attr'] or 'battery' in reason['attr']:
+        changed = set(self._device.changed_keys)
+        keys = {'battery', 'reachable'}
+        if force_update or any(key in changed for key in keys):
             self.async_schedule_update_ha_state()
 
     @property
