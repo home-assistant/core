@@ -48,5 +48,8 @@ class TestDemoRemote(unittest.TestCase):
         common.send_command(self.hass, 'test', entity_id=ENTITY_ID)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_ID)
-        assert state.attributes == \
-            {'friendly_name': 'Remote One', 'last_command_sent': 'test'}
+        assert state.attributes == {
+            'friendly_name': 'Remote One',
+            'last_command_sent': 'test',
+            'supported_features': 0
+        }
