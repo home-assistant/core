@@ -32,6 +32,7 @@ homeassistant/components/automatic/* @armills
 homeassistant/components/automation/* @home-assistant/core
 homeassistant/components/aws/* @awarecan @robbiet480
 homeassistant/components/axis/* @kane610
+homeassistant/components/azure_event_hub/* @eavanvalkenburg
 homeassistant/components/bitcoin/* @fabaff
 homeassistant/components/bizkaibus/* @UgaitzEtxebarria
 homeassistant/components/blink/* @fronzbot
@@ -131,6 +132,7 @@ homeassistant/components/kodi/* @armills
 homeassistant/components/konnected/* @heythisisnate
 homeassistant/components/lametric/* @robbiet480
 homeassistant/components/launch_library/* @ludeeus
+homeassistant/components/lcn/* @alengwenus
 homeassistant/components/lifx/* @amelchio
 homeassistant/components/lifx_cloud/* @amelchio
 homeassistant/components/lifx_legacy/* @amelchio
@@ -143,6 +145,7 @@ homeassistant/components/luci/* @fbradyirl
 homeassistant/components/luftdaten/* @fabaff
 homeassistant/components/mastodon/* @fabaff
 homeassistant/components/matrix/* @tinloaf
+homeassistant/components/mcp23017/* @jardiamj
 homeassistant/components/mediaroom/* @dgomes
 homeassistant/components/melissa/* @kennedyshead
 homeassistant/components/met/* @danielhiversen
@@ -208,6 +211,7 @@ homeassistant/components/sma/* @kellerza
 homeassistant/components/smarthab/* @outadoc
 homeassistant/components/smartthings/* @andrewsayre
 homeassistant/components/smtp/* @fabaff
+homeassistant/components/solax/* @squishykid
 homeassistant/components/sonos/* @amelchio
 homeassistant/components/spaceapi/* @fabaff
 homeassistant/components/spider/* @peternijssen
@@ -263,7 +267,7 @@ homeassistant/components/worldclock/* @fabaff
 homeassistant/components/xfinity/* @cisasteelersfan
 homeassistant/components/xiaomi_aqara/* @danielhiversen @syssi
 homeassistant/components/xiaomi_miio/* @rytilahti @syssi
-homeassistant/components/xiaomi_tv/* @fattdev
+homeassistant/components/xiaomi_tv/* @simse
 homeassistant/components/xmpp/* @fabaff @flowolf
 homeassistant/components/yamaha_musiccast/* @jalmeroth
 homeassistant/components/yeelight/* @rytilahti @zewelor

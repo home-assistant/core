@@ -4,8 +4,9 @@ import pypck
 from homeassistant.components.cover import CoverDevice
 from homeassistant.const import CONF_ADDRESS
 
-from . import LcnDevice, get_connection
+from . import LcnDevice
 from .const import CONF_CONNECTIONS, CONF_MOTOR, DATA_LCN
+from .helpers import get_connection
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
@@ -34,7 +35,7 @@ class LcnCover(LcnDevice, CoverDevice):
         """Initialize the LCN cover."""
         super().__init__(config, address_connection)
 
-        self.motor = self.pypck.lcn_defs.MotorPort[config[CONF_MOTOR]]
+        self.motor = pypck.lcn_defs.MotorPort[config[CONF_MOTOR]]
         self.motor_port_onoff = self.motor.value * 2
         self.motor_port_updown = self.motor_port_onoff + 1
 
@@ -54,30 +55,30 @@ class LcnCover(LcnDevice, CoverDevice):
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
         self._closed = True
-        states = [self.pypck.lcn_defs.MotorStateModifier.NOCHANGE] * 4
-        states[self.motor.value] = self.pypck.lcn_defs.MotorStateModifier.DOWN
+        states = [pypck.lcn_defs.MotorStateModifier.NOCHANGE] * 4
+        states[self.motor.value] = pypck.lcn_defs.MotorStateModifier.DOWN
         self.address_connection.control_motors(states)
         await self.async_update_ha_state()
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
         self._closed = False
-        states = [self.pypck.lcn_defs.MotorStateModifier.NOCHANGE] * 4
-        states[self.motor.value] = self.pypck.lcn_defs.MotorStateModifier.UP
+        states = [pypck.lcn_defs.MotorStateModifier.NOCHANGE] * 4
+        states[self.motor.value] = pypck.lcn_defs.MotorStateModifier.UP
         self.address_connection.control_motors(states)
         await self.async_update_ha_state()
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
         self._closed = None
-        states = [self.pypck.lcn_defs.MotorStateModifier.NOCHANGE] * 4
-        states[self.motor.value] = self.pypck.lcn_defs.MotorStateModifier.STOP
+        states = [pypck.lcn_defs.MotorStateModifier.NOCHANGE] * 4
+        states[self.motor.value] = pypck.lcn_defs.MotorStateModifier.STOP
         self.address_connection.control_motors(states)
         await self.async_update_ha_state()
 
     def input_received(self, input_obj):
         """Set cover states when LCN input object (command) is received."""
-        if not isinstance(input_obj, self.pypck.inputs.ModStatusRelays):
+        if not isinstance(input_obj, pypck.inputs.ModStatusRelays):
             return
 
         states = input_obj.states  # list of boolean values (relay on/off)

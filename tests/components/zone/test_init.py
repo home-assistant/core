@@ -142,7 +142,7 @@ class TestComponentZone(unittest.TestCase):
             ]
         })
         self.hass.block_till_done()
-        active = zone.zone.active_zone(self.hass, 32.880600, -117.237561)
+        active = zone.async_active_zone(self.hass, 32.880600, -117.237561)
         assert active is None
 
     def test_active_zone_skips_passive_zones_2(self):
@@ -158,7 +158,7 @@ class TestComponentZone(unittest.TestCase):
             ]
         })
         self.hass.block_till_done()
-        active = zone.zone.active_zone(self.hass, 32.880700, -117.237561)
+        active = zone.async_active_zone(self.hass, 32.880700, -117.237561)
         assert 'zone.active_zone' == active.entity_id
 
     def test_active_zone_prefers_smaller_zone_if_same_distance(self):
@@ -182,7 +182,7 @@ class TestComponentZone(unittest.TestCase):
             ]
         })
 
-        active = zone.zone.active_zone(self.hass, latitude, longitude)
+        active = zone.async_active_zone(self.hass, latitude, longitude)
         assert 'zone.small_zone' == active.entity_id
 
     def test_active_zone_prefers_smaller_zone_if_same_distance_2(self):
@@ -200,7 +200,7 @@ class TestComponentZone(unittest.TestCase):
             ]
         })
 
-        active = zone.zone.active_zone(self.hass, latitude, longitude)
+        active = zone.async_active_zone(self.hass, latitude, longitude)
         assert 'zone.smallest_zone' == active.entity_id
 
     def test_in_zone_works_for_passive_zones(self):

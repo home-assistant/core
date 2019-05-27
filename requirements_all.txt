@@ -5,6 +5,7 @@ async_timeout==3.0.1
 attrs==19.1.0
 bcrypt==3.1.6
 certifi>=2018.04.16
+importlib-metadata==0.15
 jinja2>=2.10
 PyJWT==1.7.1
 cryptography==2.6.1
@@ -75,6 +76,7 @@ PyTransportNSW==0.1.1
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.12.3
 
+# homeassistant.components.mcp23017
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.5
 
@@ -98,6 +100,12 @@ YesssSMS==0.2.3
 
 # homeassistant.components.abode
 abodepy==0.15.0
+
+# homeassistant.components.mcp23017
+adafruit-blinka==1.2.1
+
+# homeassistant.components.mcp23017
+adafruit-circuitpython-mcp230xx==1.1.2
 
 # homeassistant.components.frontier_silicon
 afsapi==0.0.4
@@ -209,6 +217,9 @@ av==6.1.2
 # homeassistant.components.axis
 axis==23
 
+# homeassistant.components.azure_event_hub
+azure-eventhub==1.3.1
+
 # homeassistant.components.baidu
 baidu-aip==1.6.6
 
@@ -236,7 +247,7 @@ bimmer_connected==0.5.3
 bizkaibus==0.1.1
 
 # homeassistant.components.blink
-blinkpy==0.13.1
+blinkpy==0.14.0
 
 # homeassistant.components.blinksticklight
 blinkstick==1.1.8
@@ -477,7 +488,7 @@ gearbest_parser==1.0.7
 geizhals==0.0.9
 
 # homeassistant.components.geniushub
-geniushub-client==0.4.9
+geniushub-client==0.4.11
 
 # homeassistant.components.geo_json_events
 # homeassistant.components.nsw_rural_fire_service_feed
@@ -510,6 +521,9 @@ googledevices==1.0.2
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
+
+# homeassistant.components.remote_rpi_gpio
+gpiozero==1.4.1
 
 # homeassistant.components.gpsd
 gps3==0.33.3
@@ -764,6 +778,7 @@ nessclient==0.9.15
 netdata==0.1.2
 
 # homeassistant.components.discovery
+# homeassistant.components.ssdp
 netdisco==2.6.0
 
 # homeassistant.components.neurio_energy
@@ -982,7 +997,7 @@ pyalarmdotcom==0.3.2
 pyarlo==0.2.3
 
 # homeassistant.components.netatmo
-pyatmo==1.11
+pyatmo==1.12
 
 # homeassistant.components.apple_tv
 pyatv==0.3.12
@@ -1252,7 +1267,7 @@ pyowlet==1.0.2
 pyowm==2.10.0
 
 # homeassistant.components.lcn
-pypck==0.5.9
+pypck==0.6.0
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.0
@@ -1645,6 +1660,9 @@ socialbladeclient==0.2
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
+
+# homeassistant.components.solax
+solax==0.0.3
 
 # homeassistant.components.honeywell
 somecomfort==0.5.2

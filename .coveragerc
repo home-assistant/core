@@ -47,6 +47,7 @@ omit =
     homeassistant/components/august/*
     homeassistant/components/automatic/device_tracker.py
     homeassistant/components/avion/light.py
+    homeassistant/components/azure_event_hub/*
     homeassistant/components/baidu/tts.py
     homeassistant/components/bbb_gpio/*
     homeassistant/components/bbox/device_tracker.py
@@ -343,6 +344,7 @@ omit =
     homeassistant/components/mastodon/notify.py
     homeassistant/components/matrix/*
     homeassistant/components/maxcube/*
+    homeassistant/components/mcp23017/*
     homeassistant/components/media_extractor/*
     homeassistant/components/mediaroom/media_player.py
     homeassistant/components/message_bird/notify.py
@@ -486,6 +488,7 @@ omit =
     homeassistant/components/reddit/*
     homeassistant/components/rejseplanen/sensor.py
     homeassistant/components/remember_the_milk/__init__.py
+    homeassistant/components/remote_rpi_gpio/*
     homeassistant/components/rest/binary_sensor.py
     homeassistant/components/rest/notify.py
     homeassistant/components/rest/switch.py
@@ -545,6 +548,7 @@ omit =
     homeassistant/components/sochain/sensor.py
     homeassistant/components/socialblade/sensor.py
     homeassistant/components/solaredge/sensor.py
+    homeassistant/components/solax/sensor.py
     homeassistant/components/somfy_mylink/*
     homeassistant/components/sonarr/sensor.py
     homeassistant/components/songpal/media_player.py
