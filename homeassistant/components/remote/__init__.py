@@ -45,6 +45,8 @@ DEFAULT_NUM_REPEATS = 1
 DEFAULT_DELAY_SECS = 0.4
 DEFAULT_HOLD_SECS = 0
 
+SUPPORT_LEARN_COMMAND = 1
+
 REMOTE_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
@@ -114,6 +116,11 @@ async def async_setup(hass, config):
 class RemoteDevice(ToggleEntity):
     """Representation of a remote."""
 
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return 0
+
     def send_command(self, command, **kwargs):
         """Send a command to a device."""
         raise NotImplementedError()
@@ -130,10 +137,7 @@ class RemoteDevice(ToggleEntity):
         """Learn a command from a device."""
         raise NotImplementedError()
 
-    def async_learn_command(self, **kwargs):
-        """Learn a command from a device.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(ft.partial(
-            self.learn_command, **kwargs))
+    async def async_learn_command(self, **kwargs):
+        """Learn a command from a device."""
+        await self.hass.async_add_executor_job(
+            ft.partial(self.learn_command, **kwargs))
