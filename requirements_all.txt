@@ -1710,7 +1710,7 @@ sucks==0.9.4
 swisshydrodata==0.0.3
 
 # homeassistant.components.synology_srm
-synology-srm==0.0.6
+synology-srm==0.0.7
 
 # homeassistant.components.tahoma
 tahoma-api==0.0.14
