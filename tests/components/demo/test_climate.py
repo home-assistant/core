@@ -4,7 +4,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.climate.const import (
-    ATTR_AUX_HEAT, ATTR_CURRENT_HUMIDITY, ATTR_CURRENT_HVAC,
+    ATTR_AUX_HEAT, ATTR_CURRENT_HUMIDITY, ATTR_HVAC_ACTIONS,
     ATTR_CURRENT_TEMPERATURE, ATTR_FAN_MODE, ATTR_HUMIDITY, ATTR_HVAC_MODES,
     ATTR_MAX_HUMIDITY, ATTR_MAX_TEMP, ATTR_MIN_HUMIDITY, ATTR_MIN_TEMP,
     ATTR_PRESET_MODE, ATTR_SWING_MODE, ATTR_TARGET_TEMP_HIGH,
@@ -210,7 +210,7 @@ async def test_set_hvac_bad_attr_and_state(hass):
     Also check the state.
     """
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get(ATTR_CURRENT_HVAC) == CURRENT_HVAC_COOL
+    assert state.attributes.get(ATTR_HVAC_ACTIONS) == CURRENT_HVAC_COOL
     assert state.state == HVAC_MODE_COOL
 
     with pytest.raises(vol.Invalid):
@@ -218,7 +218,7 @@ async def test_set_hvac_bad_attr_and_state(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get(ATTR_CURRENT_HVAC) == CURRENT_HVAC_COOL
+    assert state.attributes.get(ATTR_HVAC_ACTIONS) == CURRENT_HVAC_COOL
     assert state.state == HVAC_MODE_COOL
 
 

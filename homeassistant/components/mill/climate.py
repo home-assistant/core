@@ -156,7 +156,7 @@ class MillHeater(ClimateDevice):
         return MAX_TEMP
 
     @property
-    def hvac_state(self) -> str:
+    def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
