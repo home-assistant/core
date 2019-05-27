@@ -141,7 +141,7 @@ class MillHeater(ClimateDevice):
         return STATE_ON if self._heater.fan_status == 1 else STATE_OFF
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """List of available fan modes."""
         return [STATE_ON, STATE_OFF]
 
@@ -156,7 +156,7 @@ class MillHeater(ClimateDevice):
         return MAX_TEMP
 
     @property
-    def hvac_state(self) -> str:
+    def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.

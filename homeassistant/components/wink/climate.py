@@ -9,7 +9,7 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, CURRENT_HVAC_OFF, FAN_AUTO, FAN_HIGH,
     FAN_LOW, FAN_MEDIUM, FAN_ON, HVAC_MODE_AUTO, HVAC_MODE_COOL,
     HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, HVAC_MODE_OFF, PRESET_AWAY, PRESET_ECO,
-    SUPPORT_AUX_HEAT, SUPPORT_CURRENT_HVAC, SUPPORT_FAN_MODE,
+    SUPPORT_AUX_HEAT, SUPPORT_HVAC_ACTION, SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE_RANGE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS)
@@ -38,7 +38,7 @@ WINK_HVAC_TO_HA = {value: key for key, value in HA_HVAC_TO_WINK.items()}
 
 SUPPORT_FLAGS_THERMOSTAT = (
     SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_RANGE |
-    SUPPORT_FAN_MODE | SUPPORT_AUX_HEAT | SUPPORT_CURRENT_HVAC)
+    SUPPORT_FAN_MODE | SUPPORT_AUX_HEAT | SUPPORT_HVAC_ACTION)
 SUPPORT_FAN_THERMOSTAT = [FAN_AUTO, FAN_ON]
 SUPPORT_PRESET_THERMOSTAT = [PRESET_AWAY, PRESET_ECO]
 
@@ -145,7 +145,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         return None
 
     @property
-    def preset_list(self):
+    def preset_modes(self):
         """Return a list of available preset modes."""
         return SUPPORT_PRESET_THERMOSTAT
 
@@ -166,24 +166,24 @@ class WinkThermostat(WinkDevice, ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self.hvac_state != HVAC_MODE_AUTO and not self.wink.away():
-            if self.hvac_state == HVAC_MODE_COOL:
+        if self.hvac_mode != HVAC_MODE_AUTO and not self.wink.away():
+            if self.hvac_mode == HVAC_MODE_COOL:
                 return self.wink.current_max_set_point()
-            if self.hvac_state == HVAC_MODE_HEAT:
+            if self.hvac_mode == HVAC_MODE_HEAT:
                 return self.wink.current_min_set_point()
         return None
 
     @property
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
-        if self.hvac_state == HVAC_MODE_AUTO:
+        if self.hvac_mode == HVAC_MODE_AUTO:
             return self.wink.current_min_set_point()
         return None
 
     @property
     def target_temperature_high(self):
         """Return the higher bound temperature we try to reach."""
-        if self.hvac_state == HVAC_MODE_AUTO:
+        if self.hvac_mode == HVAC_MODE_AUTO:
             return self.wink.current_max_set_point()
         return None
 
@@ -192,12 +192,12 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         """Return true if aux heater."""
         if 'aux' not in self.wink.hvac_modes():
             return None
-        if self.wink.current_hvac_mode() == 'aux':
+        if self.wink.hvac_action_mode() == 'aux':
             return True
         return False
 
     @property
-    def hvac_state(self) -> str:
+    def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
@@ -234,7 +234,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         return hvac_list
 
     @property
-    def current_hvac(self):
+    def hvac_action(self):
         """Return the current running hvac operation if supported.
 
         Need to be one of CURRENT_HVAC_*.
@@ -253,9 +253,9 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         if target_temp is not None:
-            if self.hvac_state == HVAC_MODE_COOL:
+            if self.hvac_mode == HVAC_MODE_COOL:
                 target_temp_high = target_temp
-            if self.hvac_state == HVAC_MODE_HEAT:
+            if self.hvac_mode == HVAC_MODE_HEAT:
                 target_temp_low = target_temp
         if target_temp_low is not None:
             target_temp_low = target_temp_low
@@ -290,7 +290,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         return None
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """List of available fan modes."""
         if self.wink.has_fan():
             return SUPPORT_FAN_THERMOSTAT
@@ -314,17 +314,17 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         minimum = 7  # Default minimum
         min_min = self.wink.min_min_set_point()
         min_max = self.wink.min_max_set_point()
-        if self.hvac_state == HVAC_MODE_HEAT:
+        if self.hvac_mode == HVAC_MODE_HEAT:
             if min_min:
                 return_value = min_min
             else:
                 return_value = minimum
-        elif self.hvac_state == HVAC_MODE_COOL:
+        elif self.hvac_mode == HVAC_MODE_COOL:
             if min_max:
                 return_value = min_max
             else:
                 return_value = minimum
-        elif self.hvac_state == HVAC_MODE_AUTO:
+        elif self.hvac_mode == HVAC_MODE_AUTO:
             if min_min and min_max:
                 return_value = min(min_min, min_max)
             else:
@@ -339,17 +339,17 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         maximum = 35  # Default maximum
         max_min = self.wink.max_min_set_point()
         max_max = self.wink.max_max_set_point()
-        if self.hvac_state == HVAC_MODE_HEAT:
+        if self.hvac_mode == HVAC_MODE_HEAT:
             if max_min:
                 return_value = max_min
             else:
                 return_value = maximum
-        elif self.hvac_state == HVAC_MODE_COOL:
+        elif self.hvac_mode == HVAC_MODE_COOL:
             if max_max:
                 return_value = max_max
             else:
                 return_value = maximum
-        elif self.hvac_state == HVAC_MODE_AUTO:
+        elif self.hvac_mode == HVAC_MODE_AUTO:
             if max_min and max_max:
                 return_value = min(max_min, max_max)
             else:
@@ -396,12 +396,12 @@ class WinkAC(WinkDevice, ClimateDevice):
         return None
 
     @property
-    def preset_list(self):
+    def preset_modes(self):
         """Return a list of available preset modes."""
         return SUPPORT_PRESET_AC
 
     @property
-    def hvac_state(self) -> str:
+    def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
@@ -472,7 +472,7 @@ class WinkAC(WinkDevice, ClimateDevice):
         return FAN_HIGH
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """Return a list of available fan modes."""
         return SUPPORT_FAN_AC
 

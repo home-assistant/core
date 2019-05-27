@@ -140,7 +140,7 @@ class SpiderThermostat(ClimateDevice):
         self.thermostat.set_fan_speed(fan_mode)
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """List of available fan modes."""
         return FAN_LIST
 

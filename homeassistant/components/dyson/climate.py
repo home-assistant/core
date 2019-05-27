@@ -9,7 +9,7 @@ from libpurecool.dyson_pure_hotcool_link import DysonPureHotCoolLink
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, HVAC_MODE_COOL,
-    HVAC_MODE_HEAT, SUPPORT_CURRENT_HVAC, SUPPORT_FAN_MODE, FAN_FOCUS,
+    HVAC_MODE_HEAT, SUPPORT_HVAC_ACTION, SUPPORT_FAN_MODE, FAN_FOCUS,
     FAN_DIFFUSE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_FAN = [FAN_FOCUS, FAN_DIFFUSE]
 SUPPORT_HVAG = [HVAC_MODE_COOL, HVAC_MODE_HEAT]
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE |
-                 SUPPORT_CURRENT_HVAC)
+                 SUPPORT_HVAC_ACTION)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -104,7 +104,7 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
         return None
 
     @property
-    def hvac_state(self):
+    def hvac_mode(self):
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
@@ -122,7 +122,7 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
         return SUPPORT_HVAG
 
     @property
-    def current_hvac(self):
+    def hvac_action(self):
         """Return the current running hvac operation if supported.
 
         Need to be one of CURRENT_HVAC_*.
@@ -141,7 +141,7 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
         return FAN_DIFFUSE
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """Return the list of available fan modes."""
         return SUPPORT_FAN
 

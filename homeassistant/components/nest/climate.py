@@ -53,7 +53,7 @@ class NestThermostat(ClimateDevice):
         self._unit = temp_unit
         self.structure = structure
         self.device = device
-        self._fan_list = [STATE_ON, STATE_AUTO]
+        self._fan_modes = [STATE_ON, STATE_AUTO]
 
         # Set the default supported features
         self._support_flags = (SUPPORT_TARGET_TEMPERATURE |
@@ -247,10 +247,10 @@ class NestThermostat(ClimateDevice):
         return None
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """List of available fan modes."""
         if self._has_fan:
-            return self._fan_list
+            return self._fan_modes
         return None
 
     def set_fan_mode(self, fan_mode):

@@ -141,7 +141,7 @@ class TfiacClimate(ClimateDevice):
         return self._client.status['fan_mode']
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """Return the list of available fan modes."""
         return FAN_LIST
 
@@ -151,7 +151,7 @@ class TfiacClimate(ClimateDevice):
         return self._client.status['swing_mode']
 
     @property
-    def swing_list(self):
+    def swing_modes(self):
         """List of available swing modes."""
         return SWING_LIST
 

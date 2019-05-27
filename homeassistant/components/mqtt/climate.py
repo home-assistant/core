@@ -535,7 +535,7 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         return self._current_fan_mode
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """Return the list of available fan modes."""
         return self._config[CONF_FAN_MODE_LIST]
 
@@ -622,7 +622,7 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         return self._current_swing_mode
 
     @property
-    def swing_list(self):
+    def swing_modes(self):
         """List of available swing modes."""
         return self._config[CONF_SWING_MODE_LIST]
 

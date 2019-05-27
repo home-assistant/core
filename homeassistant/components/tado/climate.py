@@ -175,7 +175,7 @@ class TadoClimate(ClimateDevice):
         return None
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """List of available fan modes."""
         if self.ac_mode:
             return list(FAN_MODES_LIST.values())

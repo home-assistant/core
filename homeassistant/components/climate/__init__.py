@@ -20,15 +20,15 @@ from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import (
-    ATTR_AUX_HEAT, ATTR_CURRENT_HUMIDITY, ATTR_CURRENT_HVAC,
-    ATTR_CURRENT_TEMPERATURE, ATTR_FAN_LIST, ATTR_FAN_MODE, ATTR_HUMIDITY,
+    ATTR_AUX_HEAT, ATTR_CURRENT_HUMIDITY, ATTR_HVAC_ACTIONS,
+    ATTR_CURRENT_TEMPERATURE, ATTR_FAN_MODES, ATTR_FAN_MODE, ATTR_HUMIDITY,
     ATTR_HVAC_MODE, ATTR_HVAC_MODES, ATTR_MAX_HUMIDITY, ATTR_MAX_TEMP,
-    ATTR_MIN_HUMIDITY, ATTR_MIN_TEMP, ATTR_PRESET_LIST, ATTR_PRESET_MODE,
-    ATTR_SWING_LIST, ATTR_SWING_MODE, ATTR_TARGET_TEMP_HIGH,
+    ATTR_MIN_HUMIDITY, ATTR_MIN_TEMP, ATTR_PRESET_MODES, ATTR_PRESET_MODE,
+    ATTR_SWING_MODES, ATTR_SWING_MODE, ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_STEP, DOMAIN, HVAC_MODES,
     SERVICE_SET_AUX_HEAT, SERVICE_SET_FAN_MODE, SERVICE_SET_PRESET_MODE,
     SERVICE_SET_HUMIDITY, SERVICE_SET_HVAC_MODE, SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE, SUPPORT_AUX_HEAT, SUPPORT_CURRENT_HVAC,
+    SERVICE_SET_TEMPERATURE, SUPPORT_AUX_HEAT, SUPPORT_HVAC_ACTION,
     SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE, SUPPORT_SWING_MODE,
     SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_TEMPERATURE_RANGE)
 from .reproduce_state import async_reproduce_states  # noqa
@@ -140,7 +140,7 @@ class ClimateDevice(Entity):
     @property
     def state(self) -> str:
         """Return the current state."""
-        return self.hvac_state
+        return self.hvac_mode
 
     @property
     def precision(self) -> float:
@@ -190,18 +190,18 @@ class ClimateDevice(Entity):
 
         if supported_features & SUPPORT_FAN_MODE:
             data[ATTR_FAN_MODE] = self.fan_mode
-            data[ATTR_FAN_LIST] = self.fan_list
+            data[ATTR_FAN_MODES] = self.fan_modes
 
-        if supported_features & SUPPORT_CURRENT_HVAC:
-            data[ATTR_CURRENT_HVAC] = self.current_hvac
+        if supported_features & SUPPORT_HVAC_ACTION:
+            data[ATTR_HVAC_ACTIONS] = self.hvac_action
 
         if supported_features & SUPPORT_PRESET_MODE:
             data[ATTR_PRESET_MODE] = self.preset_mode
-            data[ATTR_PRESET_LIST] = self.preset_list
+            data[ATTR_PRESET_MODES] = self.preset_modes
 
         if supported_features & SUPPORT_SWING_MODE:
             data[ATTR_SWING_MODE] = self.swing_mode
-            data[ATTR_SWING_LIST] = self.swing_list
+            data[ATTR_SWING_MODES] = self.swing_modes
 
         if supported_features & SUPPORT_AUX_HEAT:
             data[ATTR_AUX_HEAT] = STATE_ON if self.is_aux_heat else STATE_OFF
@@ -224,7 +224,7 @@ class ClimateDevice(Entity):
         return None
 
     @property
-    def hvac_state(self) -> str:
+    def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
@@ -240,7 +240,7 @@ class ClimateDevice(Entity):
         raise NotImplementedError()
 
     @property
-    def current_hvac(self) -> Optional[str]:
+    def hvac_action(self) -> Optional[str]:
         """Return the current running hvac operation if supported.
 
         Need to be one of CURRENT_HVAC_*.
@@ -278,7 +278,7 @@ class ClimateDevice(Entity):
         return None
 
     @property
-    def preset_list(self) -> Optional[List[str]]:
+    def preset_modes(self) -> Optional[List[str]]:
         """Return a list of available preset modes."""
         return None
 
@@ -293,7 +293,7 @@ class ClimateDevice(Entity):
         return None
 
     @property
-    def fan_list(self) -> Optional[List[str]]:
+    def fan_modes(self) -> Optional[List[str]]:
         """Return the list of available fan modes."""
         return None
 
@@ -303,7 +303,7 @@ class ClimateDevice(Entity):
         return None
 
     @property
-    def swing_list(self) -> Optional[List[str]]:
+    def swing_modes(self) -> Optional[List[str]]:
         """Return the list of available swing modes."""
         return None
 

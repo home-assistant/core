@@ -194,7 +194,7 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
         return self._support_flags
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """Return the list of available fan modes."""
         if self._fan_mode_device is None:
             return None

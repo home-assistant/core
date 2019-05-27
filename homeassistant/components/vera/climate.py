@@ -42,7 +42,7 @@ class VeraThermostat(VeraDevice, ClimateDevice):
         return SUPPORT_FLAGS
 
     @property
-    def hvac_state(self):
+    def hvac_mode(self):
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
@@ -73,7 +73,7 @@ class VeraThermostat(VeraDevice, ClimateDevice):
         return FAN_AUTO
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """Return a list of available fan modes."""
         return FAN_OPERATION_LIST
 
@@ -110,7 +110,7 @@ class VeraThermostat(VeraDevice, ClimateDevice):
     @property
     def operation(self):
         """Return current operation ie. heat, cool, idle."""
-        return self.vera_device.get_hvac_state()
+        return self.vera_device.get_hvac_mode()
 
     @property
     def target_temperature(self):

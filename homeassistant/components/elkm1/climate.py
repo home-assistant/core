@@ -148,7 +148,7 @@ class ElkThermostat(ElkEntity, ClimateDevice):
         self._elk_set(ThermostatMode.HEAT.value, None)
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """Return the list of available fan modes."""
         return [STATE_AUTO, STATE_ON]
 

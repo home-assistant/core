@@ -116,7 +116,7 @@ class Thermostat(ClimateDevice):
         self._climate_list = self.climate_list
         self._operation_list = ['auto', 'auxHeatOnly', 'cool',
                                 'heat', 'off']
-        self._fan_list = ['auto', 'on']
+        self._fan_modes = ['auto', 'on']
         self.update_without_throttle = False
 
     def update(self):
@@ -194,9 +194,9 @@ class Thermostat(ClimateDevice):
         return None if mode == AWAY_MODE else mode
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """Return the available fan modes."""
-        return self._fan_list
+        return self._fan_modes
 
     @property
     def _current_hold_mode(self):

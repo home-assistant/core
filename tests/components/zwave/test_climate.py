@@ -69,7 +69,7 @@ def test_zxt_120_swing_mode(device_zxt_120):
     """Test operation of the zxt 120 swing mode."""
     device = device_zxt_120
 
-    assert device.swing_list == [6, 7, 8]
+    assert device.swing_modes == [6, 7, 8]
     assert device._zxt_120 == 1
 
     # Test set mode
@@ -106,7 +106,7 @@ def test_default_target_temperature(device):
 
 def test_data_lists(device):
     """Test data lists from zwave value items."""
-    assert device.fan_list == [3, 4, 5]
+    assert device.fan_modes == [3, 4, 5]
     assert device.operation_list == [0, 1, 2]
 
 

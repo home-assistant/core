@@ -261,7 +261,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
         }
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """Return the list of available fan modes."""
         return self._device.status.supported_thermostat_fan_modes
 
@@ -412,7 +412,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
         return state_attributes
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """Return the list of available fan modes."""
         return self._device.status.supported_ac_fan_modes
 

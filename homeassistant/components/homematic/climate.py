@@ -60,7 +60,7 @@ class HMThermostat(HMDevice, ClimateDevice):
         return TEMP_CELSIUS
 
     @property
-    def hvac_state(self):
+    def hvac_mode(self):
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
@@ -101,13 +101,13 @@ class HMThermostat(HMDevice, ClimateDevice):
         return mode
 
     @property
-    def preset_list(self):
+    def preset_modes(self):
         """Return a list of available preset modes."""
-        preset_list = []
+        preset_modes = []
         for mode in self._hmdevice.ACTIONNODE:
             if mode in HM_PRESET_MAP:
-                preset_list.append(HM_PRESET_MAP[mode])
-        return preset_list
+                preset_modes.append(HM_PRESET_MAP[mode])
+        return preset_modes
 
     @property
     def current_humidity(self):

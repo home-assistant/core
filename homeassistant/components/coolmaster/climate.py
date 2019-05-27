@@ -147,7 +147,7 @@ class CoolmasterClimate(ClimateDevice):
         return self._current_fan_mode
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """Return the list of available fan modes."""
         return FAN_MODES
 

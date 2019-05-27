@@ -105,7 +105,7 @@ class MelissaClimate(ClimateDevice):
         return OP_MODES
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """List of available fan modes."""
         return FAN_MODES
 
