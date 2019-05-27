@@ -52,7 +52,7 @@ class NestThermostat(ClimateDevice):
         self._unit = temp_unit
         self.structure = structure
         self.device = device
-        self._fan_modes = [FAN_ON, FAN_AUTO]
+        self._fan_modes = [STATE_ON, STATE_AUTO]
 
         # Set the default supported features
         self._support_flags = (SUPPORT_TARGET_TEMPERATURE |

@@ -98,7 +98,7 @@ class HiveClimateEntity(ClimateDevice):
         return SUPPORT_HVAC
 
     @property
-    def hvac_state(self) -> str:
+    def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
@@ -138,7 +138,7 @@ class HiveClimateEntity(ClimateDevice):
         return None
 
     @property
-    def preset_list(self):
+    def preset_modes(self):
         """Return a list of available preset modes."""
         return SUPPORT_PRESET
 

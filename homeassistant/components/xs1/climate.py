@@ -60,7 +60,7 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateDevice):
         return SUPPORT_TARGET_TEMPERATURE
 
     @property
-    def hvac_state(self):
+    def hvac_mode(self):
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.

@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, CURRENT_HVAC_OFF, HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_CURRENT_HVAC,
+    HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_HVAC_ACTION,
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT,
@@ -26,7 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
 })
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_CURRENT_HVAC
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_HVAC_ACTION
 SUPPORT_HVAC = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
 
@@ -67,7 +67,7 @@ class ThermostatDevice(ClimateDevice):
         return SUPPORT_FLAGS
 
     @property
-    def hvac_state(self):
+    def hvac_mode(self):
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
@@ -97,7 +97,7 @@ class ThermostatDevice(ClimateDevice):
         return TEMP_CELSIUS
 
     @property
-    def current_hvac(self):
+    def hvac_action(self):
         """Return current hvac i.e. heat, cool, idle."""
         if not self._mode:
             return CURRENT_HVAC_OFF
