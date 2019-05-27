@@ -49,6 +49,18 @@ def async_setup(hass, config):
     import json
     global AIS_SPOTIFY_TOKEN
 
+    # TODO info about discovery
+    async def device_discovered(service):
+        """ Called when a Spotify integration has been discovered. """
+        _LOGGER.error("Discovered a new Awesome device: {}".format(service))
+        result = await hass.config_entries.flow.async_init(
+            'ais_spotify_service',
+            context={'source': 'init'},
+            data={}
+        )
+
+    hass.bus.async_listen('ais_spotify_disco', device_discovered)
+
     try:
         ws_resp = aisCloud.key("spotify_oauth")
         json_ws_resp = ws_resp.json()

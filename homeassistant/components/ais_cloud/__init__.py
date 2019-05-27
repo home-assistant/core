@@ -156,17 +156,12 @@ def async_setup(hass, config):
                 i = d.get('discovered')
                 uid = i.get('unique_id')
                 if uid is not None:
-                    # search entity_id for this unique_id
-                    # add sensor to group
-                    hass.async_add_job(
-                        hass.services.async_call(
-                            'group',
-                            'set', {
-                                "object_id": "all_ais_sensors",
-                                "add_entities": ["sensor." + uid]
-                            }
-                        )
-                    )
+                    # search entity_id for this unique_id - add sensor to group
+                    if hass.services.has_service('group', 'set'):
+                        hass.async_add_job(
+                            hass.services.async_call('group', 'set', {
+                                    "object_id": "all_ais_sensors",
+                                    "add_entities": ["sensor." + uid]}))
             elif s == 'load_platform.media_player':
                 hass.async_add_job(
                     hass.services.async_call('ais_cloud', 'get_players')
