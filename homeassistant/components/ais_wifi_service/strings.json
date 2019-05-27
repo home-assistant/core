@@ -14,25 +14,20 @@
           "description": "Szukanie sieci WiFi\n\n",
           "title": "Szukanie sieci WiFi"
         },
-        "add_device": {
-          "description": "Łączymy z siecią WiFi bramkę o identyfikatorze: **{gate_id}**\n",
+        "connect_to_wifi": {
+          "description": "Łączymy z siecią WiFi\n",
           "title": "Wybierz nazwę sieci WiFi oraz podaj hasło",
           "data": { "networks": "Sieć WiFi do której chcesz się połączyć",
-                    "password": "Hasło do sieci WiFi",
-                    "confirm_key": "Potwierdzam, parametry są poprawne."
+                    "password": "Hasło do sieci WiFi"
                 }
         }
       },
       "error": {
-        "search_failed": "Nie można znaleźć sieci WiFi, proszę spróbuj ponownie.",
-        "add_failed": "Nie udało się dodać nowego urządzenia, proszę spróbuj ponownie.",
-        "confirm_error": "Potwierdz proszę, że parametry są poprawne.",
-        "name_error": "Wybrana nazwa może mieć maksymalnie 32 znaki"
+        "search_failed": "Nie można znaleźć sieci WiFi, upewni się, że urządzenie znajduje się w zasięgu sieci i spróbuj ponownie.",
+        "conn_failed": "Nie udało się połączyć w wybraną siecią WiFi, proszę spróbuj ponownie."
       },
       "abort": {
-        "add_failed": "Nie udało się dodać nowego urządzenia, proszę sprawdz podane parametry i spróbuj ponownie.\n\n Informacja o błędzie: {error_info}",
-        "add_not_possible": "Nie można dodać urządzenia.\n\n Informacja o błędzie: {error_info}",
-        "add_executed": "Przesyłamy ustawienia do urządzenia.\n\n Podczas tego kroku konieczne jest rozłączenie bramki **AIS dom** z sieci WiFi, zajmie to tylko chwilę.\n\n Po pomyślnym dodaniu, nowe urządzenie pojawi się automatycznie na liście urządzeń."
+        "conn_failed": "Nie udało się połączyć w wybraną siecią WiFi, proszę sprawdz podane parametry i spróbuj ponownie.\n\n Informacja o błędzie: {error_info}"
       }
     }
 }
