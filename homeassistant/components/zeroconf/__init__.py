@@ -45,22 +45,7 @@ def setup(hass, config):
 
     zeroconf.register_service(info)
 
-<<<<<<< HEAD
-    async def new_service(service_type, name):
-        """Signal new service discovered."""
-        service_info = await zeroconf.get_service_info(service_type, name)
-        info = info_from_service(service_info)
-        _LOGGER.debug("Discovered new device %s %s", name, info)
-
-        for domain in zeroconf_manifest.SERVICE_TYPES[service_type]:
-            await hass.config_entries.flow.async_init(
-                domain, context={'source': DOMAIN}, data=info
-            )
-
-    def service_update(_, service_type, name, state_change):
-=======
     def service_update(zeroconf, service_type, name, state_change):
->>>>>>> Revert back to previously used library
         """Service state changed."""
         if state_change is ServiceStateChange.Added:
             service_info = zeroconf.get_service_info(service_type, name)
