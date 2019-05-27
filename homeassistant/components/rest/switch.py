@@ -149,7 +149,7 @@ class RestSwitch(SwitchDevice):
         """Send a state update to the device."""
         websession = async_get_clientsession(self.hass, self._verify_ssl)
 
-        with async_timeout.timeout(self._timeout, loop=self.hass.loop):
+        with async_timeout.timeout(self._timeout):
             req = await getattr(websession, self._method)(
                 self._resource, auth=self._auth, data=bytes(body, 'utf-8'),
                 headers=self._headers)
@@ -168,7 +168,7 @@ class RestSwitch(SwitchDevice):
         """Get the latest data from REST API and update the state."""
         websession = async_get_clientsession(hass, self._verify_ssl)
 
-        with async_timeout.timeout(self._timeout, loop=hass.loop):
+        with async_timeout.timeout(self._timeout):
             req = await websession.get(self._resource, auth=self._auth,
                                        headers=self._headers)
             text = await req.text()

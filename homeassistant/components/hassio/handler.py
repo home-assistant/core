@@ -156,7 +156,7 @@ class HassIO:
         This method is a coroutine.
         """
         try:
-            with async_timeout.timeout(timeout, loop=self.loop):
+            with async_timeout.timeout(timeout):
                 request = await self.websession.request(
                     method, "http://{}{}".format(self._ip, command),
                     json=payload, headers={

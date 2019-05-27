@@ -169,6 +169,8 @@ UNRECOVERABLE_STATES = (
 
 DISCOVERY_NOTIFICATION_ID = 'config_entry_discovery'
 DISCOVERY_SOURCES = (
+    'ssdp',
+    'zeroconf',
     SOURCE_DISCOVERY,
     SOURCE_IMPORT,
 )

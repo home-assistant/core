@@ -40,10 +40,11 @@ jobs:
         buildArch: 'aarch64'
   steps:
   - script: |
+      sudo apt-get update
       sudo apt-get install -y --no-install-recommends \
         qemu-user-static \
         binfmt-support
-      
+
       sudo mount binfmt_misc -t binfmt_misc /proc/sys/fs/binfmt_misc
       sudo update-binfmts --enable qemu-arm
       sudo update-binfmts --enable qemu-aarch64
@@ -159,7 +160,7 @@ jobs:
       git config --global user.email "pvizeli@syshack.ch"
       git config --global credential.helper store
 
-      echo "https://$(githubToken):x-oauth-basic@github.com > $HOME\.git-credentials
+      echo "https://$(githubToken):x-oauth-basic@github.com" > $HOME/.git-credentials
     displayName: 'Install requirements'
   - script: |
       set -e
@@ -184,3 +185,4 @@ jobs:
 
       git commit -am "Bump Home Assistant $version"
       git push
+    displayName: 'Update version files'

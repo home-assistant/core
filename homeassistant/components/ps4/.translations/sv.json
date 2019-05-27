@@ -8,6 +8,7 @@
             "port_997_bind_error": "Kunde inte binda till port 997."
         },
         "error": {
+            "credential_timeout": "Autentiseringstj\u00e4nsten orsakade timeout. Tryck p\u00e5 Skicka f\u00f6r att starta om.",
             "login_failed": "Misslyckades med att para till PlayStation 4. Verifiera PIN-koden \u00e4r korrekt.",
             "no_ipaddress": "Ange IP-adressen f\u00f6r PlayStation 4 du vill konfigurera.",
             "not_ready": "PlayStation 4 \u00e4r inte p\u00e5slagen eller ansluten till n\u00e4tverket."
@@ -32,6 +33,7 @@
                     "ip_address": "IP-adress (l\u00e4mna tom om du anv\u00e4nder automatisk uppt\u00e4ckt).",
                     "mode": "Konfigureringsl\u00e4ge"
                 },
+                "description": "V\u00e4lj l\u00e4ge f\u00f6r konfigurering. F\u00e4ltet IP-adress kan l\u00e4mnas tomt om du v\u00e4ljer Automatisk uppt\u00e4ckt, eftersom enheter d\u00e5 kommer att identifieras automatiskt.",
                 "title": "PlayStation 4"
             }
         },

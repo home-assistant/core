@@ -226,6 +226,48 @@ async def test_device_entity(hass, mock_openzwave):
     assert device.device_state_attributes[zwave.ATTR_POWER] == 50.123
 
 
+async def test_node_removed(hass, mock_openzwave):
+    """Test node removed in base class."""
+    # Create a mock node & node entity
+    node = MockNode(node_id='10', name='Mock Node')
+    value = MockValue(data=False, node=node, instance=2, object_id='11',
+                      label='Sensor',
+                      command_class=const.COMMAND_CLASS_SENSOR_BINARY)
+    power_value = MockValue(data=50.123456, node=node, precision=3,
+                            command_class=const.COMMAND_CLASS_METER)
+    values = MockEntityValues(primary=value, power=power_value)
+    device = zwave.ZWaveDeviceEntity(values, 'zwave')
+    device.hass = hass
+    device.entity_id = 'zwave.mock_node'
+    device.value_added()
+    device.update_properties()
+    await hass.async_block_till_done()
+
+    # Save it to the entity registry
+    registry = mock_registry(hass)
+    registry.async_get_or_create('zwave', 'zwave', device.unique_id)
+    device.entity_id = registry.async_get_entity_id(
+        'zwave', 'zwave', device.unique_id)
+
+    # Create dummy entity registry entries for other integrations
+    hue_entity = registry.async_get_or_create('light', 'hue', 1234)
+    zha_entity = registry.async_get_or_create('sensor', 'zha', 5678)
+
+    # Verify our Z-Wave entity is registered
+    assert registry.async_is_registered(device.entity_id)
+
+    # Remove it
+    entity_id = device.entity_id
+    await device.node_removed()
+
+    # Verify registry entry for our Z-Wave node is gone
+    assert not registry.async_is_registered(entity_id)
+
+    # Verify registry entries for our other entities remain
+    assert registry.async_is_registered(hue_entity.entity_id)
+    assert registry.async_is_registered(zha_entity.entity_id)
+
+
 async def test_node_discovery(hass, mock_openzwave):
     """Test discovery of a node."""
     mock_receivers = []

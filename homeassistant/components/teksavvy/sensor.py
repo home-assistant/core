@@ -132,7 +132,7 @@ class TekSavvyData:
         _LOGGER.debug("Updating TekSavvy data")
         url = "https://api.teksavvy.com/"\
               "web/Usage/UsageSummaryRecords?$filter=IsCurrent%20eq%20true"
-        with async_timeout.timeout(REQUEST_TIMEOUT, loop=self.loop):
+        with async_timeout.timeout(REQUEST_TIMEOUT):
             req = await self.websession.get(url, headers=headers)
         if req.status != 200:
             _LOGGER.error("Request failed with status: %u", req.status)

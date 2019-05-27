@@ -26,20 +26,17 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
+NAME_FORMAT = 'Plex {}'
 PLEX_CONFIG_FILE = 'plex.conf'
 PLEX_DATA = 'plex'
 
-CONF_INCLUDE_NON_CLIENTS = 'include_non_clients'
 CONF_USE_EPISODE_ART = 'use_episode_art'
-CONF_USE_CUSTOM_ENTITY_IDS = 'use_custom_entity_ids'
 CONF_SHOW_ALL_CONTROLS = 'show_all_controls'
 CONF_REMOVE_UNAVAILABLE_CLIENTS = 'remove_unavailable_clients'
 CONF_CLIENT_REMOVE_INTERVAL = 'client_remove_interval'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_INCLUDE_NON_CLIENTS, default=False): cv.boolean,
     vol.Optional(CONF_USE_EPISODE_ART, default=False): cv.boolean,
-    vol.Optional(CONF_USE_CUSTOM_ENTITY_IDS, default=False): cv.boolean,
     vol.Optional(CONF_SHOW_ALL_CONTROLS, default=False): cv.boolean,
     vol.Optional(CONF_REMOVE_UNAVAILABLE_CLIENTS, default=True): cv.boolean,
     vol.Optional(CONF_CLIENT_REMOVE_INTERVAL, default=timedelta(seconds=600)):
@@ -160,8 +157,7 @@ def setup_plexserver(
 
             if device.machineIdentifier not in plex_clients:
                 new_client = PlexClient(
-                    config, device, None, plex_sessions, update_devices,
-                    update_sessions)
+                    config, device, None, plex_sessions, update_devices)
                 plex_clients[device.machineIdentifier] = new_client
                 _LOGGER.debug("New device: %s", device.machineIdentifier)
                 new_plex_clients.append(new_client)
@@ -171,27 +167,38 @@ def setup_plexserver(
                 plex_clients[device.machineIdentifier].refresh(device, None)
 
         # add devices with a session and no client (ex. PlexConnect Apple TV's)
-        if config.get(CONF_INCLUDE_NON_CLIENTS):
-            # To avoid errors when plex sessions created during iteration
-            sessions = list(plex_sessions.items())
-            for machine_identifier, (session, player) in sessions:
-                if machine_identifier in available_client_ids:
-                    # Avoid using session if already added as a device.
-                    _LOGGER.debug("Skipping session, device exists: %s",
-                                  machine_identifier)
-                    continue
+        try:
+            sessions = plexserver.sessions()
+        except plexapi.exceptions.BadRequest:
+            _LOGGER.exception("Error listing plex sessions")
+            return
+        except requests.exceptions.RequestException as ex:
+            _LOGGER.warning(
+                "Could not connect to plex server at http://%s (%s)", host, ex)
+            return
 
-                if (machine_identifier not in plex_clients
-                        and machine_identifier is not None):
-                    new_client = PlexClient(
-                        config, player, session, plex_sessions, update_devices,
-                        update_sessions)
-                    plex_clients[machine_identifier] = new_client
-                    _LOGGER.debug("New session: %s", machine_identifier)
-                    new_plex_clients.append(new_client)
-                else:
-                    _LOGGER.debug("Refreshing session: %s", machine_identifier)
-                    plex_clients[machine_identifier].refresh(None, session)
+        plex_sessions.clear()
+        for session in sessions:
+            for player in session.players:
+                plex_sessions[player.machineIdentifier] = session, player
+
+        for machine_identifier, (session, player) in plex_sessions.items():
+            if machine_identifier in available_client_ids:
+                # Avoid using session if already added as a device.
+                _LOGGER.debug("Skipping session, device exists: %s",
+                              machine_identifier)
+                continue
+
+            if (machine_identifier not in plex_clients
+                    and machine_identifier is not None):
+                new_client = PlexClient(
+                    config, player, session, plex_sessions, update_devices)
+                plex_clients[machine_identifier] = new_client
+                _LOGGER.debug("New session: %s", machine_identifier)
+                new_plex_clients.append(new_client)
+            else:
+                _LOGGER.debug("Refreshing session: %s", machine_identifier)
+                plex_clients[machine_identifier].refresh(None, session)
 
         clients_to_remove = []
         for client in plex_clients.values():
@@ -219,25 +226,6 @@ def setup_plexserver(
         if new_plex_clients:
             add_entities_callback(new_plex_clients)
 
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
-    def update_sessions():
-        """Update the sessions objects."""
-        try:
-            sessions = plexserver.sessions()
-        except plexapi.exceptions.BadRequest:
-            _LOGGER.exception("Error listing plex sessions")
-            return
-        except requests.exceptions.RequestException as ex:
-            _LOGGER.warning(
-                "Could not connect to plex server at http://%s (%s)", host, ex)
-            return
-
-        plex_sessions.clear()
-        for session in sessions:
-            for player in session.players:
-                plex_sessions[player.machineIdentifier] = session, player
-
-    update_sessions()
     update_devices()
 
 
@@ -285,7 +273,7 @@ class PlexClient(MediaPlayerDevice):
     """Representation of a Plex device."""
 
     def __init__(self, config, device, session, plex_sessions,
-                 update_devices, update_sessions):
+                 update_devices):
         """Initialize the Plex device."""
         self._app_name = ''
         self._device = None
@@ -309,7 +297,6 @@ class PlexClient(MediaPlayerDevice):
         self.config = config
         self.plex_sessions = plex_sessions
         self.update_devices = update_devices
-        self.update_sessions = update_sessions
         # General
         self._media_content_id = None
         self._media_content_rating = None
@@ -330,24 +317,6 @@ class PlexClient(MediaPlayerDevice):
         self._media_series_title = None
 
         self.refresh(device, session)
-
-        # Assign custom entity ID if desired
-        if self.config.get(CONF_USE_CUSTOM_ENTITY_IDS):
-            prefix = ''
-            # allow for namespace prefixing when using custom entity names
-            if config.get("entity_namespace"):
-                prefix = config.get("entity_namespace") + '_'
-
-            # rename the entity id
-            if self.machine_identifier:
-                self.entity_id = "%s.%s%s" % (
-                    'media_player', prefix,
-                    self.machine_identifier.lower().replace('-', '_'))
-            else:
-                if self.name:
-                    self.entity_id = "%s.%s%s" % (
-                        'media_player', prefix,
-                        self.name.lower().replace('-', '_'))
 
     def _clear_media_details(self):
         """Set all Media Items to None."""
@@ -390,7 +359,8 @@ class PlexClient(MediaPlayerDevice):
                 self._device.proxyThroughServer()
             self._session = None
             self._machine_identifier = self._device.machineIdentifier
-            self._name = self._device.title or DEVICE_DEFAULT_NAME
+            self._name = NAME_FORMAT.format(self._device.title or
+                                            DEVICE_DEFAULT_NAME)
             self._device_protocol_capabilities = (
                 self._device.protocolCapabilities)
 
@@ -407,7 +377,7 @@ class PlexClient(MediaPlayerDevice):
                 self._player = [p for p in self._session.players
                                 if p.machineIdentifier ==
                                 self._device.machineIdentifier][0]
-                self._name = self._player.title
+                self._name = NAME_FORMAT.format(self._player.title)
                 self._player_state = self._player.state
                 self._session_username = self._session.usernames[0]
                 self._make = self._player.device
@@ -575,7 +545,6 @@ class PlexClient(MediaPlayerDevice):
     def update(self):
         """Get the latest details."""
         self.update_devices(no_throttle=True)
-        self.update_sessions(no_throttle=True)
 
     @property
     def _active_media_plexapi_type(self):

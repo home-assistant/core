@@ -101,7 +101,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                 update_tasks.append(climate.async_update_ha_state(True))
 
             if update_tasks:
-                await asyncio.wait(update_tasks, loop=hass.loop)
+                await asyncio.wait(update_tasks)
         hass.services.async_register(
             DOMAIN, SERVICE_ASSUME_STATE, async_assume_state,
             schema=ASSUME_STATE_SCHEMA)
