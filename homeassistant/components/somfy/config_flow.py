@@ -48,6 +48,9 @@ class SomfyFlowHandler(config_entries.ConfigFlow):
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason='already_setup')
 
+        if DOMAIN not in self.hass.data:
+            return self.async_abort(reason='missing_configuration')
+
         return await self.async_step_auth()
 
     async def async_step_auth(self, user_input=None):
