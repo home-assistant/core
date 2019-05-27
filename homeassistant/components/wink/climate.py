@@ -445,7 +445,6 @@ class WinkAC(WinkDevice, ClimateDevice):
         hvac_mode_to_set = HA_HVAC_TO_WINK.get(hvac_mode)
         self.wink.set_operation_mode(hvac_mode_to_set)
 
-
     def set_preset_mode(self, preset_mode):
         """Set new preset mode."""
         if preset_mode == PRESET_ECO:
