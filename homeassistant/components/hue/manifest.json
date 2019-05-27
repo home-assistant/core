@@ -6,6 +6,11 @@
   "requirements": [
     "aiohue==1.9.1"
   ],
+  "ssdp": {
+    "manufacturer": [
+      "Royal Philips Electronics"
+    ]
+  },
   "dependencies": [],
   "codeowners": [
     "@balloob"

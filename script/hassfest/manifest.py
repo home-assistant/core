@@ -12,6 +12,11 @@ MANIFEST_SCHEMA = vol.Schema({
     vol.Required('name'): str,
     vol.Optional('config_flow'): bool,
     vol.Optional('zeroconf'): [str],
+    vol.Optional('ssdp'): vol.Schema({
+        vol.Optional('st'): [str],
+        vol.Optional('manufacturer'): [str],
+        vol.Optional('device_type'): [str],
+    }),
     vol.Required('documentation'): str,
     vol.Required('requirements'): [str],
     vol.Required('dependencies'): [str],

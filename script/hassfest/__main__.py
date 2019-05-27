@@ -4,15 +4,23 @@ import sys
 
 from .model import Integration, Config
 from . import (
-    dependencies, manifest, codeowners, services, config_flow, zeroconf)
+    codeowners,
+    config_flow,
+    dependencies,
+    manifest,
+    services,
+    ssdp,
+    zeroconf,
+)
 
 PLUGINS = [
-    manifest,
-    dependencies,
     codeowners,
-    services,
     config_flow,
-    zeroconf
+    dependencies,
+    manifest,
+    services,
+    ssdp,
+    zeroconf,
 ]
 
 

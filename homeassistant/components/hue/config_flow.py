@@ -137,17 +137,22 @@ class HueFlowHandler(config_entries.ConfigFlow):
             errors=errors,
         )
 
-    async def async_step_discovery(self, discovery_info):
+    async def async_step_ssdp(self, discovery_info):
         """Handle a discovered Hue bridge.
 
-        This flow is triggered by the discovery component. It will check if the
+        This flow is triggered by the SSDP component. It will check if the
         host is already configured and delegate to the import step if not.
         """
         # Filter out emulated Hue
         if "HASS Bridge" in discovery_info.get('name', ''):
             return self.async_abort(reason='already_configured')
 
-        host = discovery_info.get('host')
+        # pylint: disable=unsupported-assignment-operation
+        host = self.context['host'] = discovery_info.get('host')
+
+        if any(host == flow['context']['host']
+               for flow in self._async_in_progress()):
+            return self.async_abort(reason='already_in_progress')
 
         if host in configured_hosts(self.hass):
             return self.async_abort(reason='already_configured')
