@@ -1,3 +1,4 @@
+"""Support for Myfitnesspal totals as sensors."""
 from datetime import date
 from homeassistant.const import MASS_GRAMS
 from homeassistant.helpers.entity import Entity
@@ -7,7 +8,7 @@ TOTALS = ["sodium", "carbohydrates", "calories", "fat", "sugar", "protein"]
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the sensor platform."""
+    """Set the sensor platform."""
     dev = []
     for resource in TOTALS:
 
