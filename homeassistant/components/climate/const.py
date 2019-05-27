@@ -59,6 +59,8 @@ FAN_AUTO = "auto"
 FAN_LOW = "low"
 FAN_MEDIUM = "medium"
 FAN_HIGH = "high"
+FAN_FOCUS = "focus"
+FAN_DIFFUSE = "diffuse"
 
 
 # This are support current states of HVAC
