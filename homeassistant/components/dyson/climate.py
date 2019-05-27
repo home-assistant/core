@@ -1,14 +1,15 @@
 """Support for Dyson Pure Hot+Cool link fan."""
 import logging
 
-from libpurecool.const import HeatMode, HeatState, FocusMode, HeatTarget
+from libpurecool.const import (
+    HeatMode, HeatState, FocusMode, FocusMode, HeatTarget)
 from libpurecool.dyson_pure_state import DysonPureHotCoolState
 from libpurecool.dyson_pure_hotcool_link import DysonPureHotCoolLink
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, HVAC_MODE_COOL,
-    HVAC_MODE_HEAT, SUPPORT_FAN_MODE, FAN_FOCUS,
+    HVAC_MODE_HEAT, SUPPORT_CURRENT_HVAC, SUPPORT_FAN_MODE, FAN_FOCUS,
     FAN_DIFFUSE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
@@ -102,7 +103,7 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
         return None
 
     @property
-    def hvac_mode(self):
+    def hvac_state(self):
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
@@ -120,7 +121,7 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
         return SUPPORT_HVAG
 
     @property
-    def hvac_action(self):
+    def current_hvac(self):
         """Return the current running hvac operation if supported.
 
         Need to be one of CURRENT_HVAC_*.
