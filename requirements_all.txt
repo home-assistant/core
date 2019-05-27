@@ -160,7 +160,7 @@ aiopvapi==1.6.14
 aioswitcher==2019.3.21
 
 # homeassistant.components.unifi
-aiounifi==4
+aiounifi==5
 
 # homeassistant.components.aladdin_connect
 aladdin_connect==0.3
@@ -1484,9 +1484,6 @@ pytrafikverket==0.1.5.9
 
 # homeassistant.components.ubee
 pyubee==0.6
-
-# homeassistant.components.unifi
-pyunifi==2.16
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==0.0.5

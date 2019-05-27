@@ -1,7 +1,12 @@
 """Support for Unifi WAP controllers."""
+import asyncio
 import logging
 from datetime import timedelta
 import voluptuous as vol
+
+import async_timeout
+
+import aiounifi
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
@@ -9,6 +14,9 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.const import CONF_VERIFY_SSL, CONF_MONITORED_CONDITIONS
 import homeassistant.util.dt as dt_util
+
+from .controller import get_controller
+from .errors import AuthenticationRequired, CannotConnect
 
 _LOGGER = logging.getLogger(__name__)
 CONF_PORT = 'port'
@@ -54,10 +62,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_scanner(hass, config):
+async def async_get_scanner(hass, config):
     """Set up the Unifi device_tracker."""
-    from pyunifi.controller import Controller, APIError
-
     host = config[DOMAIN].get(CONF_HOST)
     username = config[DOMAIN].get(CONF_USERNAME)
     password = config[DOMAIN].get(CONF_PASSWORD)
@@ -69,9 +75,11 @@ def get_scanner(hass, config):
     ssid_filter = config[DOMAIN].get(CONF_SSID_FILTER)
 
     try:
-        ctrl = Controller(host, username, password, port, version='v4',
-                          site_id=site_id, ssl_verify=verify_ssl)
-    except APIError as ex:
+        controller = await get_controller(
+            hass, host, username, password, port, site_id, verify_ssl)
+        await controller.initialize()
+
+    except (AuthenticationRequired, CannotConnect) as ex:
         _LOGGER.error("Failed to connect to Unifi: %s", ex)
         hass.components.persistent_notification.create(
             'Failed to connect to Unifi. '
@@ -82,8 +90,8 @@ def get_scanner(hass, config):
             notification_id=NOTIFICATION_ID)
         return False
 
-    return UnifiScanner(ctrl, detection_time, ssid_filter,
-                        monitored_conditions)
+    return UnifiScanner(
+        controller, detection_time, ssid_filter, monitored_conditions)
 
 
 class UnifiScanner(DeviceScanner):
@@ -92,36 +100,45 @@ class UnifiScanner(DeviceScanner):
     def __init__(self, controller, detection_time: timedelta,
                  ssid_filter, monitored_conditions) -> None:
         """Initialize the scanner."""
+        self.controller = controller
         self._detection_time = detection_time
-        self._controller = controller
         self._ssid_filter = ssid_filter
         self._monitored_conditions = monitored_conditions
-        self._update()
+        self._clients = {}
 
-    def _update(self):
+    async def async_update(self):
         """Get the clients from the device."""
-        from pyunifi.controller import APIError
         try:
-            clients = self._controller.get_clients()
-        except APIError as ex:
-            _LOGGER.error("Failed to scan clients: %s", ex)
+            await self.controller.clients.update()
+            clients = self.controller.clients.values()
+
+        except aiounifi.LoginRequired:
+            try:
+                with async_timeout.timeout(5):
+                    await self.controller.login()
+            except (asyncio.TimeoutError, aiounifi.AiounifiException):
+                clients = []
+
+        except aiounifi.AiounifiException:
             clients = []
 
         # Filter clients to provided SSID list
         if self._ssid_filter:
-            clients = [client for client in clients
-                       if 'essid' in client and
-                       client['essid'] in self._ssid_filter]
+            clients = [
+                client for client in clients
+                if client.essid in self._ssid_filter
+            ]
 
         self._clients = {
-            client['mac']: client
+            client.raw['mac']: client.raw
             for client in clients
             if (dt_util.utcnow() - dt_util.utc_from_timestamp(float(
-                client['last_seen']))) < self._detection_time}
+                client.last_seen))) < self._detection_time
+        }
 
-    def scan_devices(self):
+    async def async_scan_devices(self):
         """Scan for devices."""
-        self._update()
+        await self.async_update()
         return self._clients.keys()
 
     def get_device_name(self, device):
