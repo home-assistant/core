@@ -63,6 +63,13 @@ FAN_FOCUS = "focus"
 FAN_DIFFUSE = "diffuse"
 
 
+# Possible swing state
+SWING_OFF = "off"
+SWING_BOTH = "both"
+SWING_VERTICAL = "vertical"
+SWING_HORIZONTAL = "horizontal"
+
+
 # This are support current states of HVAC
 CURRENT_HVAC_OFF = 'off'
 CURRENT_HVAC_HEAT = 'heating'
