@@ -87,7 +87,7 @@ class GoogleProvider(Provider):
             }
 
             try:
-                with async_timeout.timeout(10, loop=self.hass.loop):
+                with async_timeout.timeout(10):
                     request = await websession.get(
                         GOOGLE_SPEECH_URL, params=url_param,
                         headers=self.headers

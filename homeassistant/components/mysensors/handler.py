@@ -7,26 +7,17 @@ from homeassistant.util import decorator
 
 from .const import MYSENSORS_GATEWAY_READY, CHILD_CALLBACK, NODE_CALLBACK
 from .device import get_mysensors_devices
-from .helpers import discover_mysensors_platform, validate_child
+from .helpers import discover_mysensors_platform, validate_set_msg
 
 _LOGGER = logging.getLogger(__name__)
 HANDLERS = decorator.Registry()
 
 
-@HANDLERS.register('presentation')
-async def handle_presentation(hass, hass_config, msg):
-    """Handle a mysensors presentation message."""
-    # Handle both node and child presentation.
-    from mysensors.const import SYSTEM_CHILD_ID
-    if msg.child_id == SYSTEM_CHILD_ID:
-        return
-    _handle_child_update(hass, hass_config, msg)
-
-
 @HANDLERS.register('set')
 async def handle_set(hass, hass_config, msg):
     """Handle a mysensors set message."""
-    _handle_child_update(hass, hass_config, msg)
+    validated = validate_set_msg(msg)
+    _handle_child_update(hass, hass_config, validated)
 
 
 @HANDLERS.register('internal')
@@ -77,14 +68,12 @@ async def handle_gateway_ready(hass, hass_config, msg):
 
 
 @callback
-def _handle_child_update(hass, hass_config, msg):
+def _handle_child_update(hass, hass_config, validated):
     """Handle a child update."""
-    child = msg.gateway.sensors[msg.node_id].children[msg.child_id]
     signals = []
 
     # Update all platforms for the device via dispatcher.
-    # Add/update entity if schema validates to true.
-    validated = validate_child(msg.gateway, msg.node_id, child)
+    # Add/update entity for validated children.
     for platform, dev_ids in validated.items():
         devices = get_mysensors_devices(hass, platform)
         new_dev_ids = []

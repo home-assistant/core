@@ -4,20 +4,10 @@ from unittest.mock import patch, call
 
 from homeassistant import setup
 from homeassistant.requirements import (
-    CONSTRAINT_FILE, PackageLoadable, async_process_requirements)
-
-import pkg_resources
+    CONSTRAINT_FILE, async_process_requirements)
 
 from tests.common import (
     get_test_home_assistant, MockModule, mock_coro, mock_integration)
-
-RESOURCE_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '..', 'resources'))
-
-TEST_NEW_REQ = 'pyhelloworld3==1.0.0'
-
-TEST_ZIP_REQ = 'file://{}#{}' \
-    .format(os.path.join(RESOURCE_DIR, 'pyhelloworld3.zip'), TEST_NEW_REQ)
 
 
 class TestRequirements:
@@ -80,47 +70,10 @@ async def test_install_existing_package(hass):
 
     assert len(mock_inst.mock_calls) == 1
 
-    with patch('homeassistant.requirements.PackageLoadable.loadable',
-               return_value=mock_coro(True)), \
+    with patch('homeassistant.util.package.is_installed', return_value=True), \
             patch(
                 'homeassistant.util.package.install_package') as mock_inst:
         assert await async_process_requirements(
             hass, 'test_component', ['hello==1.0.0'])
 
     assert len(mock_inst.mock_calls) == 0
-
-
-async def test_check_package_global(hass):
-    """Test for an installed package."""
-    installed_package = list(pkg_resources.working_set)[0].project_name
-    assert await PackageLoadable(hass).loadable(installed_package)
-
-
-async def test_check_package_zip(hass):
-    """Test for an installed zip package."""
-    assert not await PackageLoadable(hass).loadable(TEST_ZIP_REQ)
-
-
-async def test_package_loadable_installed_twice(hass):
-    """Test that a package is loadable when installed twice.
-
-    If a package is installed twice, only the first version will be imported.
-    Test that package_loadable will only compare with the first package.
-    """
-    v1 = pkg_resources.Distribution(project_name='hello', version='1.0.0')
-    v2 = pkg_resources.Distribution(project_name='hello', version='2.0.0')
-
-    with patch('pkg_resources.find_distributions', side_effect=[[v1]]):
-        assert not await PackageLoadable(hass).loadable('hello==2.0.0')
-
-    with patch('pkg_resources.find_distributions', side_effect=[[v1], [v2]]):
-        assert not await PackageLoadable(hass).loadable('hello==2.0.0')
-
-    with patch('pkg_resources.find_distributions', side_effect=[[v2], [v1]]):
-        assert await PackageLoadable(hass).loadable('hello==2.0.0')
-
-    with patch('pkg_resources.find_distributions', side_effect=[[v2]]):
-        assert await PackageLoadable(hass).loadable('hello==2.0.0')
-
-    with patch('pkg_resources.find_distributions', side_effect=[[v2]]):
-        assert await PackageLoadable(hass).loadable('Hello==2.0.0')

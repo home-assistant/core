@@ -82,7 +82,7 @@ async def async_setup(hass, config):
         await asyncio.wait([
             script.async_turn_off() for script
             in await component.async_extract_from_service(service)
-        ], loop=hass.loop)
+        ])
 
     async def toggle_service(service):
         """Toggle a script."""
@@ -168,8 +168,14 @@ class ScriptEntity(ToggleEntity):
             ATTR_NAME: self.script.name,
             ATTR_ENTITY_ID: self.entity_id,
         }, context=context)
-        await self.script.async_run(
-            kwargs.get(ATTR_VARIABLES), context)
+        try:
+            await self.script.async_run(
+                kwargs.get(ATTR_VARIABLES), context)
+        except Exception as err:  # pylint: disable=broad-except
+            self.script.async_log_exception(
+                _LOGGER, "Error executing script {}".format(self.entity_id),
+                err)
+            raise err
 
     async def async_turn_off(self, **kwargs):
         """Turn script off."""

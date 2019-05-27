@@ -1,9 +1,10 @@
 {
   "domain": "hangouts",
   "name": "Hangouts",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/hangouts",
   "requirements": [
-    "hangups==0.4.6"
+    "hangups==0.4.9"
   ],
   "dependencies": [],
   "codeowners": []

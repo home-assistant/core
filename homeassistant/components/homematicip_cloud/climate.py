@@ -1,6 +1,8 @@
 """Support for HomematicIP Cloud climate devices."""
 import logging
 
+from homematicip.aio.device import (
+    AsyncHeatingThermostat, AsyncHeatingThermostatCompact)
 from homematicip.aio.group import AsyncHeatingGroup
 from homematicip.aio.home import AsyncHome
 
@@ -48,6 +50,9 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
     def __init__(self, home: AsyncHome, device) -> None:
         """Initialize heating group."""
         device.modelType = 'Group-Heating'
+        self._simple_heating = None
+        if device.actualTemperature is None:
+            self._simple_heating = _get_first_heating_thermostat(device)
         super().__init__(home, device)
 
     @property
@@ -68,6 +73,8 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
     @property
     def current_temperature(self) -> float:
         """Return the current temperature."""
+        if self._simple_heating:
+            return self._simple_heating.valveActualTemperature
         return self._device.actualTemperature
 
     @property
@@ -96,3 +103,12 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         if temperature is None:
             return
         await self._device.set_point_temperature(temperature)
+
+
+def _get_first_heating_thermostat(heating_group: AsyncHeatingGroup):
+    """Return the first HeatingThermostat from a HeatingGroup."""
+    for device in heating_group.devices:
+        if isinstance(device, (AsyncHeatingThermostat,
+                               AsyncHeatingThermostatCompact)):
+            return device
+    return None

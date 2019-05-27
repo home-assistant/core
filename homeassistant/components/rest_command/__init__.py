@@ -92,7 +92,7 @@ async def async_setup(hass, config):
                     'utf-8')
 
             try:
-                with async_timeout.timeout(timeout, loop=hass.loop):
+                with async_timeout.timeout(timeout):
                     request = await getattr(websession, method)(
                         template_url.async_render(variables=service.data),
                         data=payload,

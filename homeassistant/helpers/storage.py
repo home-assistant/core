@@ -57,7 +57,7 @@ class Store:
         self._data = None
         self._unsub_delay_listener = None
         self._unsub_stop_listener = None
-        self._write_lock = asyncio.Lock(loop=hass.loop)
+        self._write_lock = asyncio.Lock()
         self._load_task = None
         self._encoder = encoder
 

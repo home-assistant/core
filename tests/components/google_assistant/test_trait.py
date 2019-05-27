@@ -845,38 +845,20 @@ async def test_lock_unlock_lock(hass):
                                            None)
 
     trt = trait.LockUnlockTrait(hass,
-                                State('lock.front_door', lock.STATE_UNLOCKED),
+                                State('lock.front_door', lock.STATE_LOCKED),
                                 PIN_CONFIG)
 
     assert trt.sync_attributes() == {}
 
     assert trt.query_attributes() == {
-        'isLocked': False
+        'isLocked': True
     }
 
     assert trt.can_execute(trait.COMMAND_LOCKUNLOCK, {'lock': True})
 
     calls = async_mock_service(hass, lock.DOMAIN, lock.SERVICE_LOCK)
 
-    # No challenge data
-    with pytest.raises(error.ChallengeNeeded) as err:
-        await trt.execute(
-            trait.COMMAND_LOCKUNLOCK, PIN_DATA, {'lock': True}, {})
-        assert len(calls) == 0
-        assert err.code == const.ERR_CHALLENGE_NEEDED
-        assert err.challenge_type == const.CHALLENGE_PIN_NEEDED
-
-    # invalid pin
-    with pytest.raises(error.ChallengeNeeded) as err:
-        await trt.execute(
-            trait.COMMAND_LOCKUNLOCK, PIN_DATA, {'lock': True},
-            {'pin': 9999})
-        assert len(calls) == 0
-        assert err.code == const.ERR_CHALLENGE_NEEDED
-        assert err.challenge_type == const.CHALLENGE_FAILED_PIN_NEEDED
-
-    await trt.execute(trait.COMMAND_LOCKUNLOCK, PIN_DATA, {'lock': True},
-                      {'pin': '1234'})
+    await trt.execute(trait.COMMAND_LOCKUNLOCK, PIN_DATA, {'lock': True}, {})
 
     assert len(calls) == 1
     assert calls[0].data == {
@@ -908,18 +890,18 @@ async def test_lock_unlock_unlock(hass):
     with pytest.raises(error.ChallengeNeeded) as err:
         await trt.execute(
             trait.COMMAND_LOCKUNLOCK, PIN_DATA, {'lock': False}, {})
-        assert len(calls) == 0
-        assert err.code == const.ERR_CHALLENGE_NEEDED
-        assert err.challenge_type == const.CHALLENGE_PIN_NEEDED
+    assert len(calls) == 0
+    assert err.value.code == const.ERR_CHALLENGE_NEEDED
+    assert err.value.challenge_type == const.CHALLENGE_PIN_NEEDED
 
     # invalid pin
     with pytest.raises(error.ChallengeNeeded) as err:
         await trt.execute(
             trait.COMMAND_LOCKUNLOCK, PIN_DATA, {'lock': False},
             {'pin': 9999})
-        assert len(calls) == 0
-        assert err.code == const.ERR_CHALLENGE_NEEDED
-        assert err.challenge_type == const.CHALLENGE_FAILED_PIN_NEEDED
+    assert len(calls) == 0
+    assert err.value.code == const.ERR_CHALLENGE_NEEDED
+    assert err.value.challenge_type == const.CHALLENGE_FAILED_PIN_NEEDED
 
     await trt.execute(
         trait.COMMAND_LOCKUNLOCK, PIN_DATA, {'lock': False}, {'pin': '1234'})
@@ -928,6 +910,17 @@ async def test_lock_unlock_unlock(hass):
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'lock.front_door'
     }
+
+    # Test without pin
+    trt = trait.LockUnlockTrait(hass,
+                                State('lock.front_door', lock.STATE_LOCKED),
+                                BASIC_CONFIG)
+
+    with pytest.raises(error.SmartHomeError) as err:
+        await trt.execute(
+            trait.COMMAND_LOCKUNLOCK, BASIC_DATA, {'lock': False}, {})
+    assert len(calls) == 1
+    assert err.value.code == const.ERR_CHALLENGE_NOT_SETUP
 
 
 async def test_fan_speed(hass):
@@ -1109,36 +1102,9 @@ async def test_openclose_cover(hass):
     assert trait.OpenCloseTrait.supported(cover.DOMAIN,
                                           cover.SUPPORT_SET_POSITION, None)
 
-    # No position
     trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
-    }), BASIC_CONFIG)
-
-    assert trt.sync_attributes() == {}
-    assert trt.query_attributes() == {
-        'openPercent': 100
-    }
-
-    # No state
-    trt = trait.OpenCloseTrait(hass, State('cover.bla', STATE_UNKNOWN, {
-    }), BASIC_CONFIG)
-
-    assert trt.sync_attributes() == {}
-
-    with pytest.raises(helpers.SmartHomeError):
-        trt.query_attributes()
-
-    # Assumed state
-    trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
-        ATTR_ASSUMED_STATE: True,
-    }), BASIC_CONFIG)
-
-    assert trt.sync_attributes() == {}
-
-    with pytest.raises(helpers.SmartHomeError):
-        trt.query_attributes()
-
-    trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
-        cover.ATTR_CURRENT_POSITION: 75
+        cover.ATTR_CURRENT_POSITION: 75,
+        ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
     }), BASIC_CONFIG)
 
     assert trt.sync_attributes() == {}
@@ -1158,6 +1124,89 @@ async def test_openclose_cover(hass):
     }
 
 
+async def test_openclose_cover_unknown_state(hass):
+    """Test OpenClose trait support for cover domain with unknown state."""
+    assert helpers.get_google_type(cover.DOMAIN, None) is not None
+    assert trait.OpenCloseTrait.supported(cover.DOMAIN,
+                                          cover.SUPPORT_SET_POSITION, None)
+
+    # No state
+    trt = trait.OpenCloseTrait(hass, State('cover.bla', STATE_UNKNOWN, {
+    }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+
+    with pytest.raises(helpers.SmartHomeError):
+        trt.query_attributes()
+
+    calls = async_mock_service(
+        hass, cover.DOMAIN, cover.SERVICE_OPEN_COVER)
+    await trt.execute(
+        trait.COMMAND_OPENCLOSE, BASIC_DATA,
+        {'openPercent': 100}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'cover.bla',
+    }
+
+    assert trt.query_attributes() == {'openPercent': 100}
+
+
+async def test_openclose_cover_assumed_state(hass):
+    """Test OpenClose trait support for cover domain."""
+    assert helpers.get_google_type(cover.DOMAIN, None) is not None
+    assert trait.OpenCloseTrait.supported(cover.DOMAIN,
+                                          cover.SUPPORT_SET_POSITION, None)
+
+    trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
+        ATTR_ASSUMED_STATE: True,
+        ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
+    }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+
+    with pytest.raises(helpers.SmartHomeError):
+        trt.query_attributes()
+
+    calls = async_mock_service(
+        hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
+    await trt.execute(
+        trait.COMMAND_OPENCLOSE, BASIC_DATA,
+        {'openPercent': 40}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'cover.bla',
+        cover.ATTR_POSITION: 40
+    }
+
+    assert trt.query_attributes() == {'openPercent': 40}
+
+
+async def test_openclose_cover_no_position(hass):
+    """Test OpenClose trait support for cover domain."""
+    assert helpers.get_google_type(cover.DOMAIN, None) is not None
+    assert trait.OpenCloseTrait.supported(cover.DOMAIN,
+                                          cover.SUPPORT_SET_POSITION, None)
+
+    trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
+    }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+    assert trt.query_attributes() == {
+        'openPercent': 100
+    }
+
+    calls = async_mock_service(
+        hass, cover.DOMAIN, cover.SERVICE_CLOSE_COVER)
+    await trt.execute(
+        trait.COMMAND_OPENCLOSE, BASIC_DATA,
+        {'openPercent': 0}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'cover.bla',
+    }
+
+
 @pytest.mark.parametrize('device_class', (
     cover.DEVICE_CLASS_DOOR,
     cover.DEVICE_CLASS_GARAGE,
@@ -1170,6 +1219,7 @@ async def test_openclose_cover_secure(hass, device_class):
 
     trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
         ATTR_DEVICE_CLASS: device_class,
+        ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
         cover.ATTR_CURRENT_POSITION: 75
     }), PIN_CONFIG)
 
@@ -1186,18 +1236,18 @@ async def test_openclose_cover_secure(hass, device_class):
         await trt.execute(
             trait.COMMAND_OPENCLOSE, PIN_DATA,
             {'openPercent': 50}, {})
-        assert len(calls) == 0
-        assert err.code == const.ERR_CHALLENGE_NEEDED
-        assert err.challenge_type == const.CHALLENGE_PIN_NEEDED
+    assert len(calls) == 0
+    assert err.value.code == const.ERR_CHALLENGE_NEEDED
+    assert err.value.challenge_type == const.CHALLENGE_PIN_NEEDED
 
     # invalid pin
     with pytest.raises(error.ChallengeNeeded) as err:
         await trt.execute(
             trait.COMMAND_OPENCLOSE, PIN_DATA,
             {'openPercent': 50}, {'pin': '9999'})
-        assert len(calls) == 0
-        assert err.code == const.ERR_CHALLENGE_NEEDED
-        assert err.challenge_type == const.CHALLENGE_FAILED_PIN_NEEDED
+    assert len(calls) == 0
+    assert err.value.code == const.ERR_CHALLENGE_NEEDED
+    assert err.value.challenge_type == const.CHALLENGE_FAILED_PIN_NEEDED
 
     await trt.execute(
         trait.COMMAND_OPENCLOSE, PIN_DATA,
@@ -1206,6 +1256,17 @@ async def test_openclose_cover_secure(hass, device_class):
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'cover.bla',
         cover.ATTR_POSITION: 50
+    }
+
+    # no challenge on close
+    calls = async_mock_service(
+        hass, cover.DOMAIN, cover.SERVICE_CLOSE_COVER)
+    await trt.execute(
+        trait.COMMAND_OPENCLOSE, PIN_DATA,
+        {'openPercent': 0}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'cover.bla'
     }
 
 

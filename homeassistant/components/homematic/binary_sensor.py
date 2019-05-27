@@ -2,7 +2,9 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.components.homematic import (
+    ATTR_DISCOVERY_TYPE, DISCOVER_BATTERY)
+from homeassistant.const import DEVICE_CLASS_BATTERY
 
 from . import ATTR_DISCOVER_DEVICES, HMDevice
 
@@ -31,8 +33,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     devices = []
     for conf in discovery_info[ATTR_DISCOVER_DEVICES]:
-        new_device = HMBinarySensor(conf)
-        devices.append(new_device)
+        if discovery_info[ATTR_DISCOVERY_TYPE] == DISCOVER_BATTERY:
+            devices.append(HMBatterySensor(conf))
+        else:
+            devices.append(HMBinarySensor(conf))
 
     add_entities(devices)
 
@@ -59,4 +63,24 @@ class HMBinarySensor(HMDevice, BinarySensorDevice):
         """Generate the data dictionary (self._data) from metadata."""
         # Add state to data struct
         if self._state:
-            self._data.update({self._state: STATE_UNKNOWN})
+            self._data.update({self._state: None})
+
+
+class HMBatterySensor(HMDevice, BinarySensorDevice):
+    """Representation of an HomeMatic low battery sensor."""
+
+    @property
+    def device_class(self):
+        """Return battery as a device class."""
+        return DEVICE_CLASS_BATTERY
+
+    @property
+    def is_on(self):
+        """Return True if battery is low."""
+        return bool(self._hm_get_state())
+
+    def _init_data_struct(self):
+        """Generate the data dictionary (self._data) from metadata."""
+        # Add state to data struct
+        if self._state:
+            self._data.update({self._state: None})

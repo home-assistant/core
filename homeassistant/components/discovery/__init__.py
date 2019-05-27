@@ -24,7 +24,6 @@ DOMAIN = 'discovery'
 
 SCAN_INTERVAL = timedelta(seconds=300)
 SERVICE_APPLE_TV = 'apple_tv'
-SERVICE_AXIS = 'axis'
 SERVICE_DAIKIN = 'daikin'
 SERVICE_DECONZ = 'deconz'
 SERVICE_DLNA_DMR = 'dlna_dmr'
@@ -34,7 +33,6 @@ SERVICE_HASS_IOS_APP = 'hass_ios'
 SERVICE_HASSIO = 'hassio'
 SERVICE_HOMEKIT = 'homekit'
 SERVICE_HEOS = 'heos'
-SERVICE_HUE = 'philips_hue'
 SERVICE_IGD = 'igd'
 SERVICE_IKEA_TRADFRI = 'ikea_tradfri'
 SERVICE_KONNECTED = 'konnected'
@@ -51,17 +49,15 @@ SERVICE_WINK = 'wink'
 SERVICE_XIAOMI_GW = 'xiaomi_gw'
 
 CONFIG_ENTRY_HANDLERS = {
-    SERVICE_AXIS: 'axis',
     SERVICE_DAIKIN: 'daikin',
     SERVICE_DECONZ: 'deconz',
-    'esphome': 'esphome',
     'google_cast': 'cast',
     SERVICE_HEOS: 'heos',
-    SERVICE_HUE: 'hue',
     SERVICE_TELLDUSLIVE: 'tellduslive',
     SERVICE_IKEA_TRADFRI: 'tradfri',
     'sonos': 'sonos',
     SERVICE_IGD: 'upnp',
+    SERVICE_HOMEKIT: 'homekit_controller',
 }
 
 SERVICE_HANDLERS = {
@@ -101,9 +97,11 @@ SERVICE_HANDLERS = {
 }
 
 OPTIONAL_SERVICE_HANDLERS = {
-    SERVICE_HOMEKIT: ('homekit_controller', None),
     SERVICE_DLNA_DMR: ('media_player', 'dlna_dmr'),
 }
+
+DEFAULT_ENABLED = list(CONFIG_ENTRY_HANDLERS) + list(SERVICE_HANDLERS)
+DEFAULT_DISABLED = list(OPTIONAL_SERVICE_HANDLERS)
 
 CONF_IGNORE = 'ignore'
 CONF_ENABLE = 'enable'
@@ -111,10 +109,10 @@ CONF_ENABLE = 'enable'
 CONFIG_SCHEMA = vol.Schema({
     vol.Optional(DOMAIN): vol.Schema({
         vol.Optional(CONF_IGNORE, default=[]):
-            vol.All(cv.ensure_list, [
-                vol.In(list(CONFIG_ENTRY_HANDLERS) + list(SERVICE_HANDLERS))]),
+            vol.All(cv.ensure_list, [vol.In(DEFAULT_ENABLED)]),
         vol.Optional(CONF_ENABLE, default=[]):
-            vol.All(cv.ensure_list, [vol.In(OPTIONAL_SERVICE_HANDLERS)])
+            vol.All(cv.ensure_list, [
+                vol.In(DEFAULT_DISABLED + DEFAULT_ENABLED)]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -139,6 +137,14 @@ async def async_setup(hass, config):
     else:
         ignored_platforms = []
         enabled_platforms = []
+
+    for platform in enabled_platforms:
+        if platform in DEFAULT_ENABLED:
+            logger.warning(
+                "Please remove %s from your discovery.enable configuration "
+                "as it is now enabled by default",
+                platform,
+            )
 
     async def new_service_found(service, info):
         """Handle a new service if one is found."""

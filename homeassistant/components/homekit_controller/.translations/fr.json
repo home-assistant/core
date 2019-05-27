@@ -9,6 +9,7 @@
         },
         "error": {
             "authentication_error": "Code HomeKit incorrect. S'il vous pla\u00eet v\u00e9rifier et essayez \u00e0 nouveau.",
+            "pairing_failed": "Une erreur non g\u00e9r\u00e9e s'est produite lors de la tentative d'appairage avec cet appareil. Il se peut qu'il s'agisse d'une panne temporaire ou que votre appareil ne soit pas pris en charge actuellement.",
             "unable_to_pair": "Impossible d'appairer, veuillez r\u00e9essayer.",
             "unknown_error": "L'appareil a signal\u00e9 une erreur inconnue. L'appairage a \u00e9chou\u00e9."
         },

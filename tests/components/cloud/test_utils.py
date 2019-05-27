@@ -14,6 +14,40 @@ def test_serialize_text():
     }
 
 
+def test_serialize_body_str():
+    """Test serializing a response with a str as body."""
+    response = web.Response(status=201, body='Hello')
+    assert utils.aiohttp_serialize_response(response) == {
+        'status': 201,
+        'body': 'Hello',
+        'headers': {
+            'Content-Length': '5',
+            'Content-Type': 'text/plain; charset=utf-8'
+        },
+    }
+
+
+def test_serialize_body_None():
+    """Test serializing a response with a str as body."""
+    response = web.Response(status=201, body=None)
+    assert utils.aiohttp_serialize_response(response) == {
+        'status': 201,
+        'body': None,
+        'headers': {
+        },
+    }
+
+
+def test_serialize_body_bytes():
+    """Test serializing a response with a str as body."""
+    response = web.Response(status=201, body=b'Hello')
+    assert utils.aiohttp_serialize_response(response) == {
+        'status': 201,
+        'body': 'Hello',
+        'headers': {},
+    }
+
+
 def test_serialize_json():
     """Test serializing a JSON response."""
     response = web.json_response({"how": "what"})

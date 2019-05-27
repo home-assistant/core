@@ -4,7 +4,7 @@ import logging
 from homeassistant.const import CONF_NAME, CONF_TEMPERATURE_UNIT, POWER_WATT
 from homeassistant.helpers.entity import Entity
 
-from ..greeneye_monitor import (
+from . import (
     CONF_COUNTED_QUANTITY,
     CONF_COUNTED_QUANTITY_PER_PULSE,
     CONF_MONITOR_SERIAL_NUMBER,

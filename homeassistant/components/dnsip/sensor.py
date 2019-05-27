@@ -1,26 +1,26 @@
 """Get your own public IP address or that of any host."""
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_NAME = 'name'
 CONF_HOSTNAME = 'hostname'
+CONF_IPV6 = 'ipv6'
 CONF_RESOLVER = 'resolver'
 CONF_RESOLVER_IPV6 = 'resolver_ipv6'
-CONF_IPV6 = 'ipv6'
 
-DEFAULT_NAME = 'myip'
 DEFAULT_HOSTNAME = 'myip.opendns.com'
+DEFAULT_IPV6 = False
+DEFAULT_NAME = 'myip'
 DEFAULT_RESOLVER = '208.67.222.222'
 DEFAULT_RESOLVER_IPV6 = '2620:0:ccc::2'
-DEFAULT_IPV6 = False
 
 SCAN_INTERVAL = timedelta(seconds=120)
 
@@ -33,8 +33,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_devices, discovery_info=None):
     """Set up the DNS IP sensor."""
     hostname = config.get(CONF_HOSTNAME)
     name = config.get(CONF_NAME)
@@ -57,12 +57,13 @@ class WanIpSensor(Entity):
     """Implementation of a DNS IP sensor."""
 
     def __init__(self, hass, name, hostname, resolver, ipv6):
-        """Initialize the sensor."""
+        """Initialize the DNS IP sensor."""
         import aiodns
+
         self.hass = hass
         self._name = name
         self.hostname = hostname
-        self.resolver = aiodns.DNSResolver(loop=self.hass.loop)
+        self.resolver = aiodns.DNSResolver()
         self.resolver.nameservers = [resolver]
         self.querytype = 'AAAA' if ipv6 else 'A'
         self._state = None
@@ -80,9 +81,10 @@ class WanIpSensor(Entity):
     async def async_update(self):
         """Get the current DNS IP address for hostname."""
         from aiodns.error import DNSError
+
         try:
-            response = await self.resolver.query(self.hostname,
-                                                 self.querytype)
+            response = await self.resolver.query(
+                self.hostname, self.querytype)
         except DNSError as err:
             _LOGGER.warning("Exception while resolving host: %s", err)
             response = None

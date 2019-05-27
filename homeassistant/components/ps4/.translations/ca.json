@@ -4,17 +4,18 @@
             "credential_error": "Error en l'obtenci\u00f3 de les credencials.",
             "devices_configured": "Tots els dispositius trobats ja estan configurats.",
             "no_devices_found": "No s'han trobat dispositius PlayStation 4 a la xarxa.",
-            "port_987_bind_error": "No s'ha pogut vincular amb el port 987.",
-            "port_997_bind_error": "No s'ha pogut vincular amb el port 997."
+            "port_987_bind_error": "No s'ha pogut vincular amb el port 987. Consulta la [documentaci\u00f3](https://www.home-assistant.io/components/ps4/) per a m\u00e9s informaci\u00f3.",
+            "port_997_bind_error": "No s'ha pogut vincular amb el port 997. Consulta la [documentaci\u00f3](https://www.home-assistant.io/components/ps4/) per a m\u00e9s informaci\u00f3."
         },
         "error": {
+            "credential_timeout": "El servei de credencials ha expirat. Prem Envia per reiniciar-lo.",
             "login_failed": "No s'ha pogut sincronitzar amb la PlayStation 4. Verifica el codi PIN.",
             "no_ipaddress": "Introdueix l'adre\u00e7a IP de la PlayStation 4 que vulguis configurar.",
             "not_ready": "La PlayStation 4 no est\u00e0 engegada o no s'ha connectada a la xarxa."
         },
         "step": {
             "creds": {
-                "description": "Credencials necess\u00e0ries. Prem 'Enviar' i, a continuaci\u00f3, a la segona pantalla de l'aplicaci\u00f3 de la PS4, actualitza els dispositius i selecciona 'Home-Assistant' per continuar.",
+                "description": "Credencials necess\u00e0ries. Prem 'Envia' i, a continuaci\u00f3, a la segona pantalla de l'aplicaci\u00f3 de la PS4, actualitza els dispositius i selecciona 'Home-Assistant' per continuar.",
                 "title": "PlayStation 4"
             },
             "link": {
@@ -24,7 +25,7 @@
                     "name": "Nom",
                     "region": "Regi\u00f3"
                 },
-                "description": "Introdueix la informaci\u00f3 de la teva PlayStation 4. Pel 'PIN', ves a 'Configuraci\u00f3' de la PlayStation 4, despr\u00e9s navega fins a 'Configuraci\u00f3 de la connexi\u00f3 de l'aplicaci\u00f3 m\u00f2bil' i selecciona 'Afegir dispositiu'. Introdueix el PIN que es mostra.",
+                "description": "Introdueix la informaci\u00f3 de la teva PlayStation 4. Pel 'PIN', ves a 'Configuraci\u00f3' a la consola de la PlayStation 4. Despr\u00e9s navega fins a 'Configuraci\u00f3 de la connexi\u00f3 de l'aplicaci\u00f3 m\u00f2bil' i selecciona 'Afegir dispositiu'. Introdueix el PIN que es mostra. Consulta la [documentaci\u00f3](https://www.home-assistant.io/components/ps4/) per a m\u00e9s informaci\u00f3.",
                 "title": "PlayStation 4"
             },
             "mode": {

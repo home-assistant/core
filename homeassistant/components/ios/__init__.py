@@ -9,8 +9,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    config_entry_flow, config_validation as cv, discovery)
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.util.json import load_json, save_json
 
 _LOGGER = logging.getLogger(__name__)
@@ -279,8 +278,3 @@ class iOSIdentifyDeviceView(HomeAssistantView):
                                      HTTP_INTERNAL_SERVER_ERROR)
 
         return self.json({"status": "registered"})
-
-
-config_entry_flow.register_discovery_flow(
-    DOMAIN, 'Home Assistant iOS', lambda *_: True,
-    config_entries.CONN_CLASS_CLOUD_PUSH)

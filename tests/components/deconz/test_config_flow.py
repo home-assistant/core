@@ -43,7 +43,7 @@ async def test_flow_works(hass, aioclient_mock):
 
 async def test_user_step_bridge_discovery_fails(hass, aioclient_mock):
     """Test config flow works when discovery fails."""
-    with patch('pydeconz.utils.async_discovery',
+    with patch('homeassistant.components.deconz.config_flow.async_discovery',
                side_effect=asyncio.TimeoutError):
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
@@ -158,8 +158,9 @@ async def test_link_no_api_key(hass):
         config_flow.CONF_PORT: 80
     }
 
-    with patch('pydeconz.utils.async_get_api_key',
-               side_effect=pydeconz.errors.ResponseError):
+    with patch(
+            'homeassistant.components.deconz.config_flow.async_get_api_key',
+            side_effect=pydeconz.errors.ResponseError):
         result = await flow.async_step_link(user_input={})
 
     assert result['type'] == 'form'
@@ -275,8 +276,9 @@ async def test_create_entry_timeout(hass, aioclient_mock):
         config_flow.CONF_API_KEY: '1234567890ABCDEF'
     }
 
-    with patch('pydeconz.utils.async_get_bridgeid',
-               side_effect=asyncio.TimeoutError):
+    with patch(
+            'homeassistant.components.deconz.config_flow.async_get_bridgeid',
+            side_effect=asyncio.TimeoutError):
         result = await flow._create_entry()
 
     assert result['type'] == 'abort'

@@ -3,7 +3,7 @@
   "name": "Netgear",
   "documentation": "https://www.home-assistant.io/components/netgear",
   "requirements": [
-    "pynetgear==0.5.2"
+    "pynetgear==0.6.1"
   ],
   "dependencies": [],
   "codeowners": []

@@ -120,17 +120,21 @@ async def handle_call_service(hass, connection, msg):
             msg['domain'], msg['service'], msg.get('service_data'), blocking,
             connection.context(msg))
         connection.send_message(messages.result_message(msg['id']))
-    except ServiceNotFound:
-        connection.send_message(messages.error_message(
-            msg['id'], const.ERR_NOT_FOUND, 'Service not found.'))
+    except ServiceNotFound as err:
+        if err.domain == msg['domain'] and err.service == msg['service']:
+            connection.send_message(messages.error_message(
+                msg['id'], const.ERR_NOT_FOUND, 'Service not found.'))
+        else:
+            connection.send_message(messages.error_message(
+                msg['id'], const.ERR_HOME_ASSISTANT_ERROR, str(err)))
     except HomeAssistantError as err:
         connection.logger.exception(err)
         connection.send_message(messages.error_message(
-            msg['id'], const.ERR_HOME_ASSISTANT_ERROR, '{}'.format(err)))
+            msg['id'], const.ERR_HOME_ASSISTANT_ERROR, str(err)))
     except Exception as err:  # pylint: disable=broad-except
         connection.logger.exception(err)
         connection.send_message(messages.error_message(
-            msg['id'], const.ERR_UNKNOWN_ERROR, '{}'.format(err)))
+            msg['id'], const.ERR_UNKNOWN_ERROR, str(err)))
 
 
 @callback

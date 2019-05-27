@@ -36,7 +36,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     # If password is set in config, prefer it over token
     if username is not None and password is not None:
         try:
-            with async_timeout.timeout(TIMEOUT, loop=hass.loop):
+            with async_timeout.timeout(TIMEOUT):
                 response = await websession.post(
                     '{}{}'.format(HOOK_ENDPOINT, 'user/login'),
                     data={
@@ -56,7 +56,7 @@ async def async_setup_platform(hass, config, async_add_entities,
             return False
 
     try:
-        with async_timeout.timeout(TIMEOUT, loop=hass.loop):
+        with async_timeout.timeout(TIMEOUT):
             response = await websession.get(
                 '{}{}'.format(HOOK_ENDPOINT, 'device'),
                 params={"token": token})
@@ -103,7 +103,7 @@ class HookSmartHome(SwitchDevice):
         try:
             _LOGGER.debug("Sending: %s", url)
             websession = async_get_clientsession(self.hass)
-            with async_timeout.timeout(TIMEOUT, loop=self.hass.loop):
+            with async_timeout.timeout(TIMEOUT):
                 response = await websession.get(
                     url, params={"token": self._token})
             data = await response.json(content_type=None)

@@ -1,17 +1,12 @@
 # coding: utf-8
 """Constants for the LCN component."""
 from itertools import product
-import re
 
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 DOMAIN = 'lcn'
 DATA_LCN = 'lcn'
 DEFAULT_NAME = 'pchk'
-
-# Regex for address validation
-PATTERN_ADDRESS = re.compile('^((?P<conn_id>\\w+)\\.)?s?(?P<seg_id>\\d+)'
-                             '\\.(?P<type>m|g)?(?P<id>\\d+)$')
 
 CONF_CONNECTIONS = 'connections'
 CONF_SK_NUM_TRIES = 'sk_num_tries'
@@ -21,6 +16,11 @@ CONF_DIMMABLE = 'dimmable'
 CONF_TRANSITION = 'transition'
 CONF_MOTOR = 'motor'
 CONF_SOURCE = 'source'
+CONF_SETPOINT = 'setpoint'
+CONF_LOCKABLE = 'lockable'
+CONF_CLIMATES = 'climates'
+CONF_MAX_TEMP = 'max_temp'
+CONF_MIN_TEMP = 'min_temp'
 
 DIM_MODES = ['STEPS50', 'STEPS200']
 

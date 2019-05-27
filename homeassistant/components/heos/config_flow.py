@@ -1,6 +1,7 @@
 """Config flow to configure Heos."""
 import asyncio
 
+from pyheos import Heos
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -44,7 +45,6 @@ class HeosFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Obtain host and validate connection."""
-        from pyheos import Heos
         self.hass.data.setdefault(DATA_DISCOVERED_HOSTS, {})
         # Only a single entry is needed for all devices
         if self._async_current_entries():
