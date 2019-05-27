@@ -104,6 +104,11 @@ class _Trait:
 
     commands = []
 
+    @staticmethod
+    def might_2fa(domain, features, device_class):
+        """Return if the trait might ask for 2FA."""
+        return False
+
     def __init__(self, hass, state, config):
         """Initialize a trait for a state."""
         self.hass = hass
@@ -732,6 +737,11 @@ class LockUnlockTrait(_Trait):
         """Test if state is supported."""
         return domain == lock.DOMAIN
 
+    @staticmethod
+    def might_2fa(domain, features, device_class):
+        """Return if the trait might ask for 2FA."""
+        return True
+
     def sync_attributes(self):
         """Return LockUnlock attributes for a sync request."""
         return {}
@@ -1020,6 +1030,8 @@ class OpenCloseTrait(_Trait):
 
     https://developers.google.com/actions/smarthome/traits/openclose
     """
+    # Cover device classes that require 2FA
+    COVER_2FA = (cover.DEVICE_CLASS_DOOR, cover.DEVICE_CLASS_GARAGE)
 
     name = TRAIT_OPENCLOSE
     commands = [
@@ -1041,6 +1053,12 @@ class OpenCloseTrait(_Trait):
             binary_sensor.DEVICE_CLASS_OPENING,
             binary_sensor.DEVICE_CLASS_WINDOW,
         )
+
+    @staticmethod
+    def might_2fa(domain, features, device_class):
+        """Return if the trait might ask for 2FA."""
+        return (domain == cover.DOMAIN and
+                device_class in OpenCloseTrait.COVER_2FA)
 
     def sync_attributes(self):
         """Return opening direction."""
@@ -1114,8 +1132,7 @@ class OpenCloseTrait(_Trait):
 
             if (should_verify and
                     self.state.attributes.get(ATTR_DEVICE_CLASS)
-                    in (cover.DEVICE_CLASS_DOOR,
-                        cover.DEVICE_CLASS_GARAGE)):
+                    in OpenCloseTrait.COVER_2FA):
                 _verify_pin_challenge(data, challenge)
 
             await self.hass.services.async_call(

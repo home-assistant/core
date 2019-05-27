@@ -85,6 +85,17 @@ class GoogleEntity:
         """Return if the entity is supported by Google."""
         return self.state.state != STATE_UNAVAILABLE and bool(self.traits())
 
+    @callback
+    def might_2fa(self) -> bool:
+        """Return if the entity might encounter 2FA."""
+        state = self.state
+        domain = state.domain
+        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+
+        return any(trait.might_2fa(domain, features, device_class)
+                   for trait in self.traits())
+
     async def sync_serialize(self):
         """Serialize entity for a SYNC response.
 
