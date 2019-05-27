@@ -26,6 +26,14 @@ class SpotifyFlowHandler(config_entries.ConfigFlow):
         """Initialize zone configuration flow."""
         pass
 
+    async def async_step_discovery(self, discovery_info):
+        """Handle a discovered Spotify integration."""
+        # Abort if other flows in progress or an entry already exists
+        if self._async_in_progress() or self._async_current_entries():
+            return self.async_abort(reason='single_instance_allowed')
+        # Show selection form
+        return self.async_show_form(step_id='user')
+
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if self._async_current_entries():

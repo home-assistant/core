@@ -49,17 +49,19 @@ def async_setup(hass, config):
     import json
     global AIS_SPOTIFY_TOKEN
 
-    # TODO info about discovery
-    async def device_discovered(service):
+    # info about discovery
+    async def do_the_spotify_disco(service):
         """ Called when a Spotify integration has been discovered. """
-        _LOGGER.error("Discovered a new Awesome device: {}".format(service))
+        # from homeassistant.components.ais_spotify_service.config_flow import SpotifyFlowHandler
+        # flow = SpotifyFlowHandler()
         result = await hass.config_entries.flow.async_init(
             'ais_spotify_service',
-            context={'source': 'init'},
+            context={'source': 'discovery'},
             data={}
         )
+        await hass.async_block_till_done()
 
-    hass.bus.async_listen('ais_spotify_disco', device_discovered)
+    hass.bus.async_listen('ais_spotify_disco', do_the_spotify_disco)
 
     try:
         ws_resp = aisCloud.key("spotify_oauth")
@@ -93,13 +95,14 @@ def async_setup(hass, config):
             with open(cache, 'w') as outfile:
                 json.dump(AIS_SPOTIFY_TOKEN, outfile)
             token_info = oauth.get_cached_token()
-        if not token_info:
-            _LOGGER.info("no spotify token exit")
-            return True
 
     # register services
-    data = hass.data[DOMAIN] = SpotifyData(hass, oauth)
+    if not token_info:
+        _LOGGER.info("no spotify token exit")
+        hass.async_add_job(do_the_spotify_disco(hass))
+        return True
 
+    data = hass.data[DOMAIN] = SpotifyData(hass, oauth)
 
     @asyncio.coroutine
     def search(call):

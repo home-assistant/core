@@ -1,0 +1,38 @@
+{
+    "config": {
+      "title": "AIS Konfiguracja połączenia WiFi",
+      "step": {
+        "confirm": {
+          "description": "\n\n<svg style=\"width:100%;height:128px\" viewBox=\"0 0 24 24\">\n    <path fill=\"#ffffff\" d=\"M12,21L15.6,16.2C14.6,15.45 13.35,15 12,15C10.65,15 9.4,15.45 8.4,16.2L12,21M12,3C7.95,3 4.21,4.34 1.2,6.6L3,9C5.5,7.12 8.62,6 12,6C15.38,6 18.5,7.12 21,9L22.8,6.6C19.79,4.34 16.05,3 12,3M12,9C9.3,9 6.81,9.89 4.8,11.4L6.6,13.8C8.1,12.67 9.97,12 12,12C14.03,12 15.9,12.67 17.4,13.8L19.2,11.4C17.19,9.89 14.7,9 12,9Z\" />\n</svg>\n\nCzy chcesz skonfigurować połączenie z WiFi?",
+          "title": "Konfiguracja połączenia WiFi"
+        },
+        "one": {
+          "description": "<svg style=\"width:100%;height:128px\" viewBox=\"0 0 24 24\">\n    <path fill=\"#ffffff\" d=\"M20.2,5.9L21,5.1C19.6,3.7 17.8,3 16,3C14.2,3 12.4,3.7 11,5.1L11.8,5.9C13,4.8 14.5,4.2 16,4.2C17.5,4.2 19,4.8 20.2,5.9M19.3,6.7C18.4,5.8 17.2,5.3 16,5.3C14.8,5.3 13.6,5.8 12.7,6.7L13.5,7.5C14.2,6.8 15.1,6.5 16,6.5C16.9,6.5 17.8,6.8 18.5,7.5L19.3,6.7M19,13H17V9H15V13H5A2,2 0 0,0 3,15V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V15A2,2 0 0,0 19,13M8,18H6V16H8V18M11.5,18H9.5V16H11.5V18M15,18H13V16H15V18Z\" />\n</svg>\n\nUpewnij się, że urządzenie znajduje się **w zasięgu Twojego routera WiFi**.\n\nNastępnie rozpocznij wyszukiwanie sieci WiFi, naciskając **SUBMIT**",
+          "title": "Konfiguracja połączenia WiFi."
+        },
+        "search_wifi": {
+          "description": "Szukanie sieci WiFi\n\n",
+          "title": "Szukanie sieci WiFi"
+        },
+        "add_device": {
+          "description": "Łączymy z siecią WiFi bramkę o identyfikatorze: **{gate_id}**\n",
+          "title": "Wybierz nazwę sieci WiFi oraz podaj hasło",
+          "data": { "networks": "Sieć WiFi do której chcesz się połączyć",
+                    "password": "Hasło do sieci WiFi",
+                    "confirm_key": "Potwierdzam, parametry są poprawne."
+                }
+        }
+      },
+      "error": {
+        "search_failed": "Nie można znaleźć sieci WiFi, proszę spróbuj ponownie.",
+        "add_failed": "Nie udało się dodać nowego urządzenia, proszę spróbuj ponownie.",
+        "confirm_error": "Potwierdz proszę, że parametry są poprawne.",
+        "name_error": "Wybrana nazwa może mieć maksymalnie 32 znaki"
+      },
+      "abort": {
+        "add_failed": "Nie udało się dodać nowego urządzenia, proszę sprawdz podane parametry i spróbuj ponownie.\n\n Informacja o błędzie: {error_info}",
+        "add_not_possible": "Nie można dodać urządzenia.\n\n Informacja o błędzie: {error_info}",
+        "add_executed": "Przesyłamy ustawienia do urządzenia.\n\n Podczas tego kroku konieczne jest rozłączenie bramki **AIS dom** z sieci WiFi, zajmie to tylko chwilę.\n\n Po pomyślnym dodaniu, nowe urządzenie pojawi się automatycznie na liście urządzeń."
+      }
+    }
+}
