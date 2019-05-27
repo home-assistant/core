@@ -220,13 +220,10 @@ def deep_update(target, source):
 
 @callback
 def async_get_entities(hass, config) -> List[GoogleEntity]:
-    """Return all entities that will be exposed to Google."""
+    """Return all entities that are supported by Google."""
     entities = []
     for state in hass.states.async_all():
         if state.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
-            continue
-
-        if not config.should_expose(state):
             continue
 
         entity = GoogleEntity(hass, config, state)

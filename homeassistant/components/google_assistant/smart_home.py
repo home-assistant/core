@@ -84,6 +84,7 @@ async def async_devices_sync(hass, data, payload):
     devices = await asyncio.gather(*[
         entity.sync_serialize() for entity in
         async_get_entities(hass, data.config)
+        if data.config.should_expose(entity.state)
     ])
 
     response = {
