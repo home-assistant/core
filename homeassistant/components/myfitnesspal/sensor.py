@@ -60,7 +60,8 @@ class MyFitnessPalSensor(Entity):
         client = myfitnesspal.Client(self._user, self._pass)
 
         startdate = date.today()
-        mfpday = client.get_date(startdate.year, startdate.month, startdate.day)
+        mfpday = client.get_date(
+            startdate.year, startdate.month, startdate.day)
         if self._resource == 'sodium':
             self._state = int(mfpday.totals[self._resource]) / 1000
         else:
