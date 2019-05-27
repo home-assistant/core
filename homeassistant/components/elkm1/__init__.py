@@ -236,13 +236,13 @@ class ElkEntity(Entity):
         self._prefix = elk_data['prefix']
         self._temperature_unit = elk_data['config']['temperature_unit']
         self._unique_id = 'elkm1_{mac}_{name}'.format(
-            mac = elk.mac_address,
-            name = self._element.default_name('_')).lower()
+            mac=elk.mac_address,
+            name=self._element.default_name('_')).lower()
 
     @property
     def name(self):
         """Name of the element."""
-        return "{p}{n}".format(p=self._prefix,n=self._element.name)
+        return "{p}{n}".format(p=self._prefix, n=self._element.name)
 
     @property
     def unique_id(self):
