@@ -43,7 +43,7 @@ Mastodon.py==1.4.2
 OPi.GPIO==0.3.6
 
 # homeassistant.components.essent
-PyEssent==0.10
+PyEssent==0.12
 
 # homeassistant.components.github
 PyGithub==1.43.5
