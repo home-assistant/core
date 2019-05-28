@@ -125,6 +125,7 @@ ais_mdns:
 
 #
 ais_spotify_service:
+ais_wifi_service:
 
 #
 tts:

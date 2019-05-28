@@ -3,8 +3,6 @@ import logging
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import slugify
-from .config_flow import configured_drivers
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -14,35 +12,36 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up a drive sensor based on a rclone config entry."""
-    from homeassistant.components.ais_drives_service import rclone_get_remotes_long, DRIVES_TYPES
-    remotes = rclone_get_remotes_long()
-    conf_drives = configured_drivers(hass)
+    """Set up a wifi sensor"""
     sensors = []
-    for remote in remotes:
-        drive_type = remote["type"]
-        code, icon = DRIVES_TYPES[drive_type]
-        srn = slugify(remote["name"])
-        # if srn in conf_drives:
-        #     _LOGGER.info('Drive exists ' + srn)
-        # else:
-        #     # check if sensor exists
-        #     #state = hass.states.get('sensor.ais_drives_service_' + srn)
-        #     #if state is None:
-        sensors.append(DriveSensor(srn, icon))
+    network = entry.data.get("networks", "net")
+    ssid = network.split(';')[0]
+    srn = 'ais_wifi_' + ssid
+    name = ssid
+    # remove if exists
+    # if hass.states.get('sensor.ais_wifi_service_current_network_info') is not None:
+    #     hass.states.async_remove('sensor.ais_wifi_service_current_network_info')
+    #     await hass.async_block_till_done()
 
+    # add new
+    sensors.append(WifiSensor(srn, name, 'mdi:wifi'))
     async_add_entities(sensors, True)
 
 
-class DriveSensor(Entity):
-    """Implementation of a Drive sensor."""
+class WifiSensor(Entity):
+    """Implementation of a AIS WiFi sensor."""
 
-    def __init__(self, name, icon):
+    def __init__(self, srn, name, icon):
         """Initialize the Drive sensor."""
         self._icon = icon
-        self._name = name
+        self._srn = srn
         self._data = None
         self._attrs = {}
+        self._name = name
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def icon(self):
@@ -54,10 +53,10 @@ class DriveSensor(Entity):
         """Return the state of the device."""
         return 1
 
-    # @property
-    # def unit_of_measurement(self):
-    #     """Return the unit of measurement of this entity, if any."""
-    #     return '%'
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return 'MB'
 
     @property
     def should_poll(self):
@@ -67,7 +66,7 @@ class DriveSensor(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique, friendly identifier for this entity."""
-        return self._name
+        return self._srn
 
     @property
     def device_state_attributes(self):

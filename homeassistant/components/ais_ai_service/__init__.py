@@ -631,8 +631,8 @@ def say_curr_entity(hass):
     elif entity_id == 'input_select.ais_bookmark_last_played':
         _say_it(hass, info_name + " " + info_data.replace("Local;", ""), None)
         return
-    elif entity_id == 'sensor.ais_android_current_network_info':
-        state = hass.states.get('sensor.ais_android_current_network_info')
+    elif entity_id == 'sensor.ais_wifi_service_current_network_info':
+        state = hass.states.get('sensor.ais_wifi_service_current_network_info')
         attr = state.attributes
         info = attr.get('description', 'brak informacji o połączeniu')
         _say_it(hass, "Prędkość połączenia " + info, None)
@@ -1712,7 +1712,7 @@ async def async_setup(hass, config):
     # sensors
     hass.states.async_set("sensor.aisknowledgeanswer", "", {"text": ""})
     hass.states.async_set(
-        "sensor.ais_android_current_network_info",
+        "sensor.ais_wifi_service_current_network_info",
         0, {"friendly_name": "Prędkość połączenia", "unit_of_measurement": "MB", "icon": "mdi:speedometer"})
 
     return True
@@ -1978,7 +1978,7 @@ def _process_command_from_frame(hass, service):
                     desc += "; " + _wifi_frequency_info(cci["frequency_mhz"])
                     attr["frequency_mhz"] = cci["frequency_mhz"]
         attr["description"] = desc
-        hass.states.async_set("sensor.ais_android_current_network_info", speed, attr)
+        hass.states.async_set("sensor.ais_wifi_service_current_network_info", speed, attr)
         return
     elif service.data["topic"] == 'ais/wifi_state_change_info':
         # current connection info

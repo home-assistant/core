@@ -52,16 +52,12 @@ def async_setup(hass, config):
     # info about discovery
     async def do_the_spotify_disco(service):
         """ Called when a Spotify integration has been discovered. """
-        # from homeassistant.components.ais_spotify_service.config_flow import SpotifyFlowHandler
-        # flow = SpotifyFlowHandler()
-        result = await hass.config_entries.flow.async_init(
+        await hass.config_entries.flow.async_init(
             'ais_spotify_service',
             context={'source': 'discovery'},
             data={}
         )
         await hass.async_block_till_done()
-
-    hass.bus.async_listen('ais_spotify_disco', do_the_spotify_disco)
 
     try:
         ws_resp = aisCloud.key("spotify_oauth")

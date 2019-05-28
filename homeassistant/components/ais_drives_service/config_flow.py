@@ -128,8 +128,7 @@ class DriveFlowHandler(config_entries.ConfigFlow):
             # add new one or update
             user_input[CONF_NAME] = DRIVE_NAME_INPUT
             user_input[CONF_TYPE] = DRIVE_TYPE_INPUT
-            ret = rclone_set_auth_mega(
-                DRIVE_NAME_INPUT, user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
+            ret = rclone_set_auth_mega(DRIVE_NAME_INPUT, user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
             if ret == 'ok':
                 # if exists
                 G_DRIVE_CREATION_TIME_CALL = time.time()

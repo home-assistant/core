@@ -68,7 +68,7 @@ group:
     entities:
       - sensor.local_host_name
       - sensor.internal_ip_address
-      - sensor.ais_android_current_network_info
+      - sensor.ais_wifi_service_current_network_info
       - script.ais_scan_android_wifi_network
       - input_select.ais_android_wifi_network
       - input_text.ais_android_wifi_password
