@@ -171,7 +171,7 @@ class HueFullStateView(HomeAssistantView):
         return self.json({
             'lights': json_response,
             'config': {
-                "mac": "00:00:00:00:00:00"
+                'mac': '00:00:00:00:00:00'
                 }
         })
 
