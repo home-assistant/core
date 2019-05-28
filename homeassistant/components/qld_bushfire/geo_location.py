@@ -41,6 +41,7 @@ VALID_CATEGORIES = [
     'Watch and Act',
     'Advice',
     'Notification',
+    'Information',
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
