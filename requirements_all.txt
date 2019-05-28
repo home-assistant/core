@@ -921,7 +921,7 @@ psutil==5.6.2
 ptvsd==4.2.8
 
 # homeassistant.components.wink
-pubnubsub-handler==1.0.4
+pubnubsub-handler==1.0.5
 
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
