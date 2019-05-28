@@ -1,6 +1,7 @@
 {
   "domain": "zha",
   "name": "Zigbee Home Automation",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/zha",
   "requirements": [
     "bellows-homeassistant==0.7.3",

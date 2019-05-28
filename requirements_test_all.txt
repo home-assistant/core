@@ -57,8 +57,11 @@ aioswitcher==2019.3.21
 # homeassistant.components.unifi
 aiounifi==4
 
+# homeassistant.components.zeroconf
+aiozeroconf==0.1.8
+
 # homeassistant.components.ambiclimate
-ambiclimate==0.1.1
+ambiclimate==0.1.2
 
 # homeassistant.components.apns
 apns2==0.3.0
@@ -67,7 +70,7 @@ apns2==0.3.0
 av==6.1.2
 
 # homeassistant.components.axis
-axis==22
+axis==23
 
 # homeassistant.components.zha
 bellows-homeassistant==0.7.3
@@ -145,7 +148,7 @@ hdate==0.8.7
 holidays==0.9.10
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190514.0
+home-assistant-frontend==20190523.0
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.14.0
@@ -177,6 +180,10 @@ mbddns==0.1.2
 
 # homeassistant.components.mfi
 mficlient==0.3.0
+
+# homeassistant.components.discovery
+# homeassistant.components.ssdp
+netdisco==2.6.0
 
 # homeassistant.components.iqvia
 # homeassistant.components.opencv
@@ -223,7 +230,7 @@ pyHS100==0.3.5
 pyblackbird==0.5
 
 # homeassistant.components.deconz
-pydeconz==58
+pydeconz==59
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -233,6 +240,9 @@ pyheos==0.5.2
 
 # homeassistant.components.homematic
 pyhomematic==0.1.58
+
+# homeassistant.components.iqvia
+pyiqvia==0.2.1
 
 # homeassistant.components.litejet
 pylitejet==0.1

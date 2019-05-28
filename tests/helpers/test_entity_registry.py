@@ -11,7 +11,7 @@ from homeassistant.helpers import entity_registry
 from tests.common import mock_registry, flush_store
 
 
-YAML__OPEN_PATH = 'homeassistant.util.yaml.open'
+YAML__OPEN_PATH = 'homeassistant.util.yaml.loader.open'
 
 
 @pytest.fixture
@@ -213,15 +213,14 @@ async def test_removing_config_entry_id(hass, registry, update_events):
     assert entry.config_entry_id == 'mock-id-1'
     registry.async_clear_config_entry('mock-id-1')
 
-    entry = registry.entities[entry.entity_id]
-    assert entry.config_entry_id is None
+    assert not registry.entities
 
     await hass.async_block_till_done()
 
     assert len(update_events) == 2
     assert update_events[0]['action'] == 'create'
     assert update_events[0]['entity_id'] == entry.entity_id
-    assert update_events[1]['action'] == 'update'
+    assert update_events[1]['action'] == 'remove'
     assert update_events[1]['entity_id'] == entry.entity_id
 
 

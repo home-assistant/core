@@ -15,7 +15,8 @@ from io import StringIO
 from unittest.mock import MagicMock, Mock, patch
 
 import homeassistant.util.dt as date_util
-import homeassistant.util.yaml as yaml
+import homeassistant.util.yaml.loader as yaml_loader
+import homeassistant.util.yaml.dumper as yaml_dumper
 
 from homeassistant import auth, config_entries, core as ha, loader
 from homeassistant.auth import (
@@ -86,6 +87,7 @@ def get_test_home_assistant():
     else:
         loop = asyncio.new_event_loop()
 
+    asyncio.set_event_loop(loop)
     hass = loop.run_until_complete(async_test_home_assistant(loop))
 
     stop_event = threading.Event()
@@ -101,7 +103,7 @@ def get_test_home_assistant():
 
     def start_hass(*mocks):
         """Start hass."""
-        run_coroutine_threadsafe(hass.async_start(), loop=hass.loop).result()
+        run_coroutine_threadsafe(hass.async_start(), loop).result()
 
     def stop_hass():
         """Stop hass."""
@@ -121,7 +123,6 @@ def get_test_home_assistant():
 async def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
     hass = ha.HomeAssistant(loop)
-    hass.config.async_load = Mock()
     store = auth_store.AuthStore(hass)
     hass.auth = auth.AuthManager(hass, store, {}, {})
     ensure_auth_manager_loaded(hass.auth)
@@ -680,7 +681,8 @@ def patch_yaml_files(files_dict, endswith=True):
         # Not found
         raise FileNotFoundError("File not found: {}".format(fname))
 
-    return patch.object(yaml, 'open', mock_open_f, create=True)
+    return patch.object(yaml_loader, 'open', mock_open_f, create=True)
+    return patch.object(yaml_dumper, 'open', mock_open_f, create=True)
 
 
 def mock_coro(return_value=None, exception=None):
@@ -924,7 +926,7 @@ async def get_system_health_info(hass, domain):
 def mock_integration(hass, module):
     """Mock an integration."""
     integration = loader.Integration(
-        hass, 'homeassisant.components.{}'.format(module.DOMAIN), None,
+        hass, 'homeassistant.components.{}'.format(module.DOMAIN), None,
         module.mock_manifest())
 
     _LOGGER.info("Adding mock integration: %s", module.DOMAIN)
@@ -949,3 +951,16 @@ def mock_entity_platform(hass, platform_path, module):
 
     _LOGGER.info("Adding mock integration platform: %s", platform_path)
     module_cache["{}.{}".format(platform_name, domain)] = module
+
+
+def async_capture_events(hass, event_name):
+    """Create a helper that captures events."""
+    events = []
+
+    @ha.callback
+    def capture_events(event):
+        events.append(event)
+
+    hass.bus.async_listen(event_name, capture_events)
+
+    return events

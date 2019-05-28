@@ -140,55 +140,6 @@ SOURCE_DISCOVERY = 'discovery'
 SOURCE_IMPORT = 'import'
 
 HANDLERS = Registry()
-# Components that have config flows. In future we will auto-generate this list.
-FLOWS = [
-    'ambiclimate',
-    'ambient_station',
-    'axis',
-    'cast',
-    'daikin',
-    'deconz',
-    'dialogflow',
-    'esphome',
-    'emulated_roku',
-    'geofency',
-    'gpslogger',
-    'hangouts',
-    'heos',
-    'homematicip_cloud',
-    'hue',
-    'ifttt',
-    'ios',
-    'ipma',
-    'lifx',
-    'locative',
-    'logi_circle',
-    'luftdaten',
-    'mailgun',
-    'mobile_app',
-    'mqtt',
-    'nest',
-    'openuv',
-    'owntracks',
-    'point',
-    'ps4',
-    'rainmachine',
-    'simplisafe',
-    'smartthings',
-    'smhi',
-    'sonos',
-    'tellduslive',
-    'toon',
-    'tplink',
-    'tradfri',
-    'twilio',
-    'unifi',
-    'upnp',
-    'zha',
-    'zone',
-    'zwave',
-]
-
 
 STORAGE_KEY = 'core.config_entries'
 STORAGE_VERSION = 1
@@ -218,6 +169,8 @@ UNRECOVERABLE_STATES = (
 
 DISCOVERY_NOTIFICATION_ID = 'config_entry_discovery'
 DISCOVERY_SOURCES = (
+    'ssdp',
+    'zeroconf',
     SOURCE_DISCOVERY,
     SOURCE_IMPORT,
 )
@@ -297,7 +250,17 @@ class ConfigEntry:
         if integration is None:
             integration = await loader.async_get_integration(hass, self.domain)
 
-        component = integration.get_component()
+        try:
+            component = integration.get_component()
+            if self.domain == integration.domain:
+                integration.get_platform('config_flow')
+        except ImportError as err:
+            _LOGGER.error(
+                'Error importing integration %s to set up %s config entry: %s',
+                integration.domain, self.domain, err)
+            if self.domain == integration.domain:
+                self.state = ENTRY_STATE_SETUP_ERROR
+            return
 
         # Perform migration
         if integration.domain == self.domain:
@@ -420,7 +383,8 @@ class ConfigEntry:
         if self.version == handler.VERSION:
             return True
 
-        component = getattr(hass.components, self.domain)
+        integration = await loader.async_get_integration(hass, self.domain)
+        component = integration.get_component()
         supports_migrate = hasattr(component, 'async_migrate_entry')
         if not supports_migrate:
             _LOGGER.error("Migration handler not found for entry %s for %s",
@@ -428,7 +392,9 @@ class ConfigEntry:
             return False
 
         try:
-            result = await component.async_migrate_entry(hass, self)
+            result = await component.async_migrate_entry(  # type: ignore
+                hass, self
+            )
             if not isinstance(result, bool):
                 _LOGGER.error('%s.async_migrate_entry did not return boolean',
                               self.domain)
@@ -439,7 +405,7 @@ class ConfigEntry:
             return result
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error migrating entry %s for %s',
-                              self.title, component.DOMAIN)
+                              self.title, self.domain)
             return False
 
     def add_update_listener(self, listener: Callable) -> Callable:
@@ -712,10 +678,10 @@ class ConfigEntries:
             self.hass, self._hass_config, integration)
 
         try:
-            integration.get_component()
+            integration.get_platform('config_flow')
         except ImportError as err:
             _LOGGER.error(
-                'Error occurred while loading integration %s: %s',
+                'Error occurred loading config flow for integration %s: %s',
                 handler_key, err)
             raise data_entry_flow.UnknownHandler
 

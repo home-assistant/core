@@ -1,6 +1,7 @@
 {
   "domain": "nest",
   "name": "Nest",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/nest",
   "requirements": [
     "python-nest==4.1.0"

@@ -1,9 +1,10 @@
 {
   "domain": "ambiclimate",
   "name": "Ambiclimate",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/ambiclimate",
   "requirements": [
-    "ambiclimate==0.1.1"
+    "ambiclimate==0.1.2"
   ],
   "dependencies": [],
   "codeowners": [

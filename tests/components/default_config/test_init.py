@@ -5,7 +5,16 @@ from homeassistant.setup import async_setup_component
 
 import pytest
 
-from tests.common import MockDependency
+from tests.common import MockDependency, mock_coro
+
+
+@pytest.fixture(autouse=True)
+def aiozeroconf_mock():
+    """Mock aiozeroconf."""
+    with MockDependency('aiozeroconf') as mocked_zeroconf:
+        mocked_zeroconf.Zeroconf.return_value.register_service \
+            .return_value = mock_coro(True)
+        yield
 
 
 @pytest.fixture(autouse=True)

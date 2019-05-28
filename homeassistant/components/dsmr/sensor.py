@@ -183,12 +183,11 @@ async def async_setup_platform(hass, config, async_add_entities,
     if CONF_HOST in config:
         reader_factory = partial(
             create_tcp_dsmr_reader, config[CONF_HOST], config[CONF_PORT],
-            config[CONF_DSMR_VERSION], update_entities_telegram,
-            loop=hass.loop)
+            config[CONF_DSMR_VERSION], update_entities_telegram)
     else:
         reader_factory = partial(
             create_dsmr_reader, config[CONF_PORT], config[CONF_DSMR_VERSION],
-            update_entities_telegram, loop=hass.loop)
+            update_entities_telegram)
 
     async def connect_and_reconnect():
         """Connect to DSMR and keep reconnecting until Home Assistant stops."""
@@ -223,8 +222,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                 update_entities_telegram({})
 
                 # throttle reconnect attempts
-                await asyncio.sleep(config[CONF_RECONNECT_INTERVAL],
-                                    loop=hass.loop)
+                await asyncio.sleep(config[CONF_RECONNECT_INTERVAL])
 
     # Can't be hass.async_add_job because job runs forever
     hass.loop.create_task(connect_and_reconnect())

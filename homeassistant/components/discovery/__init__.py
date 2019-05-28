@@ -24,7 +24,6 @@ DOMAIN = 'discovery'
 
 SCAN_INTERVAL = timedelta(seconds=300)
 SERVICE_APPLE_TV = 'apple_tv'
-SERVICE_AXIS = 'axis'
 SERVICE_DAIKIN = 'daikin'
 SERVICE_DECONZ = 'deconz'
 SERVICE_DLNA_DMR = 'dlna_dmr'
@@ -34,7 +33,6 @@ SERVICE_HASS_IOS_APP = 'hass_ios'
 SERVICE_HASSIO = 'hassio'
 SERVICE_HOMEKIT = 'homekit'
 SERVICE_HEOS = 'heos'
-SERVICE_HUE = 'philips_hue'
 SERVICE_IGD = 'igd'
 SERVICE_IKEA_TRADFRI = 'ikea_tradfri'
 SERVICE_KONNECTED = 'konnected'
@@ -51,17 +49,15 @@ SERVICE_WINK = 'wink'
 SERVICE_XIAOMI_GW = 'xiaomi_gw'
 
 CONFIG_ENTRY_HANDLERS = {
-    SERVICE_AXIS: 'axis',
     SERVICE_DAIKIN: 'daikin',
     SERVICE_DECONZ: 'deconz',
-    'esphome': 'esphome',
     'google_cast': 'cast',
     SERVICE_HEOS: 'heos',
-    SERVICE_HUE: 'hue',
     SERVICE_TELLDUSLIVE: 'tellduslive',
     SERVICE_IKEA_TRADFRI: 'tradfri',
     'sonos': 'sonos',
     SERVICE_IGD: 'upnp',
+    SERVICE_HOMEKIT: 'homekit_controller',
 }
 
 SERVICE_HANDLERS = {
@@ -101,7 +97,6 @@ SERVICE_HANDLERS = {
 }
 
 OPTIONAL_SERVICE_HANDLERS = {
-    SERVICE_HOMEKIT: ('homekit_controller', None),
     SERVICE_DLNA_DMR: ('media_player', 'dlna_dmr'),
 }
 

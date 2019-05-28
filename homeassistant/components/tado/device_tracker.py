@@ -61,7 +61,7 @@ class TadoDeviceScanner(DeviceScanner):
         self.tadoapiurl += '?username={username}&password={password}'
 
         self.websession = async_create_clientsession(
-            hass, cookie_jar=aiohttp.CookieJar(unsafe=True, loop=hass.loop))
+            hass, cookie_jar=aiohttp.CookieJar(unsafe=True))
 
         self.success_init = asyncio.run_coroutine_threadsafe(
             self._async_update_info(), hass.loop

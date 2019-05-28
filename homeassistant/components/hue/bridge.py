@@ -60,6 +60,7 @@ class HueBridge:
             return False
 
         except CannotConnect:
+            LOGGER.error("Error connecting to the Hue bridge at %s", host)
             raise ConfigEntryNotReady
 
         except Exception:  # pylint: disable=broad-except
@@ -152,7 +153,7 @@ async def get_bridge(hass, host, username=None):
     )
 
     try:
-        with async_timeout.timeout(5):
+        with async_timeout.timeout(10):
             # Create username if we don't have one
             if not username:
                 await bridge.create_user('home-assistant')
@@ -161,10 +162,8 @@ async def get_bridge(hass, host, username=None):
 
         return bridge
     except (aiohue.LinkButtonNotPressed, aiohue.Unauthorized):
-        LOGGER.warning("Connected to Hue at %s but not registered.", host)
         raise AuthenticationRequired
     except (asyncio.TimeoutError, aiohue.RequestError):
-        LOGGER.error("Error connecting to the Hue bridge at %s", host)
         raise CannotConnect
     except aiohue.AiohueException:
         LOGGER.exception('Unknown Hue linking error occurred')

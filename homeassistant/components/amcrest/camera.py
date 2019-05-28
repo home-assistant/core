@@ -203,8 +203,7 @@ class AmcrestCam(Camera):
         """Return the camera model."""
         return self._model
 
-    @property
-    def stream_source(self):
+    async def stream_source(self):
         """Return the source of the stream."""
         return self._api.rtsp_url(typeno=self._resolution)
 

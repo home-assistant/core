@@ -8,27 +8,26 @@ from pyiqvia.errors import IQVIAError, InvalidZipError
 
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.decorator import Registry
 
+from .config_flow import configured_instances
 from .const import (
-    DATA_CLIENT, DATA_LISTENER, DOMAIN, SENSORS, TOPIC_DATA_UPDATE,
-    TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_INDEX, TYPE_ALLERGY_OUTLOOK,
-    TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW, TYPE_ASTHMA_FORECAST,
-    TYPE_ASTHMA_INDEX, TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
-    TYPE_DISEASE_FORECAST, TYPE_DISEASE_INDEX, TYPE_DISEASE_TODAY)
+    CONF_ZIP_CODE, DATA_CLIENT, DATA_LISTENER, DOMAIN, SENSORS,
+    TOPIC_DATA_UPDATE, TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_INDEX,
+    TYPE_ALLERGY_OUTLOOK, TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
+    TYPE_ASTHMA_FORECAST, TYPE_ASTHMA_INDEX, TYPE_ASTHMA_TODAY,
+    TYPE_ASTHMA_TOMORROW, TYPE_DISEASE_FORECAST, TYPE_DISEASE_INDEX,
+    TYPE_DISEASE_TODAY)
 
 _LOGGER = logging.getLogger(__name__)
-
-
-CONF_ZIP_CODE = 'zip_code'
 
 DATA_CONFIG = 'config'
 
@@ -59,23 +58,40 @@ async def async_setup(hass, config):
     hass.data[DOMAIN][DATA_CLIENT] = {}
     hass.data[DOMAIN][DATA_LISTENER] = {}
 
+    if DOMAIN not in config:
+        return True
+
     conf = config[DOMAIN]
 
+    if conf[CONF_ZIP_CODE] in configured_instances(hass):
+        return True
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={'source': SOURCE_IMPORT}, data=conf))
+
+    return True
+
+
+async def async_setup_entry(hass, config_entry):
+    """Set up IQVIA as config entry."""
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
         iqvia = IQVIAData(
-            Client(conf[CONF_ZIP_CODE], websession),
-            conf[CONF_MONITORED_CONDITIONS])
+            Client(config_entry.data[CONF_ZIP_CODE], websession),
+            config_entry.data.get(CONF_MONITORED_CONDITIONS, list(SENSORS)))
         await iqvia.async_update()
-    except IQVIAError as err:
-        _LOGGER.error('Unable to set up IQVIA: %s', err)
+    except InvalidZipError:
+        _LOGGER.error(
+            'Invalid ZIP code provided: %s', config_entry.data[CONF_ZIP_CODE])
         return False
 
-    hass.data[DOMAIN][DATA_CLIENT] = iqvia
+    hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = iqvia
 
     hass.async_create_task(
-        async_load_platform(hass, 'sensor', DOMAIN, {}, config))
+        hass.config_entries.async_forward_entry_setup(
+            config_entry, 'sensor'))
 
     async def refresh(event_time):
         """Refresh IQVIA data."""
@@ -83,8 +99,23 @@ async def async_setup(hass, config):
         await iqvia.async_update()
         async_dispatcher_send(hass, TOPIC_DATA_UPDATE)
 
-    hass.data[DOMAIN][DATA_LISTENER] = async_track_time_interval(
-        hass, refresh, DEFAULT_SCAN_INTERVAL)
+    hass.data[DOMAIN][DATA_LISTENER][
+        config_entry.entry_id] = async_track_time_interval(
+            hass, refresh, DEFAULT_SCAN_INTERVAL)
+
+    return True
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload an OpenUV config entry."""
+    hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
+
+    remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(
+        config_entry.entry_id)
+    remove_listener()
+
+    await hass.config_entries.async_forward_entry_unload(
+        config_entry, 'sensor')
 
     return True
 
@@ -127,16 +158,7 @@ class IQVIAData:
 
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
 
-        # IQVIA sites require a bit more complicated error handling, given that
-        # they sometimes have parts (but not the whole thing) go down:
-        #   1. If `InvalidZipError` is thrown, quit everything immediately.
-        #   2. If a single request throws any other error, try the others.
         for key, result in zip(tasks, results):
-            if isinstance(result, InvalidZipError):
-                _LOGGER.error("No data for ZIP: %s", self._client.zip_code)
-                self.data = {}
-                return
-
             if isinstance(result, IQVIAError):
                 _LOGGER.error('Unable to get %s data: %s', key, result)
                 self.data[key] = {}
