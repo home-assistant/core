@@ -17,14 +17,16 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
 # define configuration parameters
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
+PLATFORM_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_SCAN_INTERVAL,
                      default=DEFAULT_SCAN_INTERVAL): cv.time_period,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+})
+
+#CONFIG_SCHEMA = vol.Schema({
+#    DOMAIN: vol.Any(DOMAIN_SCHEMA, [DOMAIN_SCHEMA])
+#}, extra=vol.ALLOW_EXTRA)
 
 N26_COMPONENTS = [
     'sensor',
@@ -34,24 +36,36 @@ N26_COMPONENTS = [
 
 def setup(hass, config):
     """Set up N26 Component."""
-    user = config[DOMAIN][CONF_USERNAME]
-    password = config[DOMAIN][CONF_PASSWORD]
+    if config[DOMAIN] and type(config[DOMAIN]) is list:
+        _LOGGER.debug('Config is list')
+        acc_list = config[DOMAIN]
+    else:
+        _LOGGER.debug('Config is %s',type(config[DOMAIN]))
+        acc_list = [config[DOMAIN]]
 
-    from n26 import api, config as api_config
-    api = api.Api(api_config.Config(user, password))
+    api_data_list = []
 
-    from requests import HTTPError
-    try:
-        api.get_token()
-    except HTTPError as err:
-        _LOGGER.error(str(err))
-        return False
+    for acc in acc_list:
+        user = acc[CONF_USERNAME]
+        password = acc[CONF_PASSWORD]
 
-    api_data = N26Data(api)
-    api_data.update()
+        from n26 import api, config as api_config
+        api = api.Api(api_config.Config(user, password))
+
+        from requests import HTTPError
+        try:
+            api.get_token()
+        except HTTPError as err:
+            _LOGGER.error(str(err))
+            return False
+
+        api_data = N26Data(api)
+        api_data.update()
+
+        api_data_list.append(api_data)
 
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA] = api_data
+    hass.data[DOMAIN][DATA] = api_data_list
 
     # Load components for supported devices
     for component in N26_COMPONENTS:
