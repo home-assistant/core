@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_IP_ADDRESS, CONF_MONITORED_CONDITIONS, CONF_NAME, POWER_WATT,
+    CONF_IP_ADDRESS, CONF_NAME, POWER_WATT,
     ENERGY_WATT_HOUR)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -37,8 +37,6 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_IP_ADDRESS): cv.string,
     vol.Optional(CONF_NAME, default='SolarEdge'): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=['current_power']):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,7 +72,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Create a new sensor for each sensor type.
     entities = []
-    for sensor_key in config[CONF_MONITORED_CONDITIONS]:
+    for sensor_key in SENSOR_TYPES:
         sensor = SolarEdgeSensor(platform_name, sensor_key, data)
         entities.append(sensor)
 
