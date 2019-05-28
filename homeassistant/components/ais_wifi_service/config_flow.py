@@ -3,7 +3,7 @@
 from homeassistant import config_entries
 from homeassistant.core import callback
 from .const import DOMAIN
-from homeassistant.const import (CONF_NAME, CONF_PASSWORD, CONF_TYPE)
+from homeassistant.const import (CONF_PASSWORD, CONF_NAME)
 from homeassistant.ais_dom import ais_global
 import time
 import voluptuous as vol
@@ -11,6 +11,13 @@ import logging
 
 G_WIFI_NETWORKS = []
 _LOGGER = logging.getLogger(__name__)
+
+
+@callback
+def configured_connections(hass):
+    """Return a set of configured connections instances."""
+    return set(entry.data.get(CONF_NAME)
+               for entry in hass.config_entries.async_entries(DOMAIN))
 
 
 def scan_for_wifi(hass, loop) -> []:

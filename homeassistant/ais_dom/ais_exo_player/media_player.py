@@ -135,7 +135,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
     @property
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
-        return int(float(self._duration))
+        return float(self._duration) // 1000
 
     @property
     def shuffle(self):
@@ -171,11 +171,11 @@ class ExoPlayerDevice(MediaPlayerDevice):
                 'ais_ai_service',
                 'publish_command_to_frame', {
                     "key": 'skipTo',
-                    "val": position
+                    "val": position * 1000
                 }
             )
             self._media_status_received_time = dt_util.utcnow()
-            self._media_position = position
+            self._media_position = position * 1000
 
     def volume_up(self):
         """Service to send the exo the command for volume up."""
@@ -307,10 +307,10 @@ class ExoPlayerDevice(MediaPlayerDevice):
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
-        position = self._media_position
-        if self._status == 3 and self._media_status_received_time is not None:
-            position += (dt_util.utcnow() - self._media_status_received_time).total_seconds()
-        return int(float(position))
+        position = float(self._media_position) // 1000
+        # if self._status == 3 and self._media_status_received_time is not None:
+        #     position += (dt_util.utcnow() - self._media_status_received_time).total_seconds()
+        return int(position)
 
     @property
     def device_state_attributes(self):
