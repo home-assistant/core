@@ -15,12 +15,17 @@ def setup_platform(
         hass, config, add_entities, discovery_info=None):
     """Set up the N26 switch platform."""
     api_data = hass.data[DOMAIN][DATA]
+    if api_data and type(api_data) is list:
+        api_list = api_data
+    else:
+        api_list = [api_data]
 
-    switch_entities = []
-    for card in api_data.cards:
-        switch_entities.append(N26CardSwitch(api_data, card))
+    for api_data in api_list:
+        switch_entities = []
+        for card in api_data.cards:
+            switch_entities.append(N26CardSwitch(api_data, card))
 
-    add_entities(switch_entities)
+        add_entities(switch_entities)
 
 
 class N26CardSwitch(SwitchDevice):
