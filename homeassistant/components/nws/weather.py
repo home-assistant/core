@@ -210,7 +210,7 @@ class NWSWeather(WeatherEntity):
     def temperature(self):
         """Return the current temperature."""
         temp_c = self._observation['temperature']['value']
-        if temp_c is None and self._metar_obs:
+        if temp_c is None and self._metar_obs and self._metar_obs.temp:
             temp_c = self._metar_obs.temp.value(units='C')
         if temp_c is not None:
             return convert_temperature(temp_c, TEMP_CELSIUS, TEMP_FAHRENHEIT)
@@ -221,7 +221,7 @@ class NWSWeather(WeatherEntity):
         """Return the current pressure."""
         pressure_pa = self._observation['seaLevelPressure']['value']
 
-        if pressure_pa is None and self._metar_obs:
+        if pressure_pa is None and self._metar_obs and self._metar_obs.press:
             pressure_hpa = self._metar_obs.press.value(units='HPA')
             if pressure_hpa is None:
                 return None
@@ -246,9 +246,8 @@ class NWSWeather(WeatherEntity):
     def wind_speed(self):
         """Return the current windspeed."""
         wind_m_s = self._observation['windSpeed']['value']
-        if wind_m_s is None and self._metar_obs:
+        if wind_m_s is None and self._metar_obs and self._metar_obs.wind_speed:
             wind_m_s = self._metar_obs.wind_speed.value(units='MPS')
-            print(wind_m_s)
         if wind_m_s is None:
             return None
         wind_m_hr = wind_m_s * 3600
@@ -264,7 +263,8 @@ class NWSWeather(WeatherEntity):
     def wind_bearing(self):
         """Return the current wind bearing (degrees)."""
         wind_bearing = self._observation['windDirection']['value']
-        if wind_bearing is None and self._metar_obs:
+        if wind_bearing is None and (self._metar_obs
+                                     and self._metar_obs.wind_dir):
             wind_bearing = self._metar_obs.wind_dir.value()
         return wind_bearing
 
@@ -284,7 +284,7 @@ class NWSWeather(WeatherEntity):
     def visibility(self):
         """Return visibility."""
         vis_m = self._observation['visibility']['value']
-        if vis_m is None and self._metar_obs:
+        if vis_m is None and self._metar_obs and self._metar_obs.vis:
             vis_m = self._metar_obs.vis.value(units='M')
         if vis_m is None:
             return None
