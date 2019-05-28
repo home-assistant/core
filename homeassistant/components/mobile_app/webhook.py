@@ -24,6 +24,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.template import attach
 from homeassistant.helpers.typing import HomeAssistantType
 
+from homeassistant.util import slugify
+
 from .const import (ATTR_ALTITUDE, ATTR_BATTERY, ATTR_COURSE, ATTR_DEVICE_ID,
                     ATTR_DEVICE_NAME, ATTR_EVENT_DATA, ATTR_EVENT_TYPE,
                     ATTR_GPS, ATTR_GPS_ACCURACY, ATTR_LOCATION_NAME,
@@ -150,7 +152,7 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
 
     if webhook_type == WEBHOOK_TYPE_UPDATE_LOCATION:
         see_payload = {
-            ATTR_DEV_ID: registration[ATTR_DEVICE_ID],
+            ATTR_DEV_ID: slugify(registration[ATTR_DEVICE_NAME]),
             ATTR_GPS: data[ATTR_GPS],
             ATTR_GPS_ACCURACY: data[ATTR_GPS_ACCURACY],
         }
