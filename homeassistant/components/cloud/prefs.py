@@ -32,6 +32,7 @@ class CloudPreferences:
                 PREF_ENABLE_GOOGLE: True,
                 PREF_ENABLE_REMOTE: False,
                 PREF_GOOGLE_SECURE_DEVICES_PIN: None,
+                PREF_GOOGLE_ENTITY_CONFIGS: {},
                 PREF_CLOUDHOOKS: {},
                 PREF_CLOUD_USER: None,
             }
@@ -93,7 +94,15 @@ class CloudPreferences:
 
     def as_dict(self):
         """Return dictionary version."""
-        return self._prefs
+        return {
+            PREF_ENABLE_ALEXA: self.alexa_enabled,
+            PREF_ENABLE_GOOGLE: self.google_enabled,
+            PREF_ENABLE_REMOTE: self.remote_enabled,
+            PREF_GOOGLE_SECURE_DEVICES_PIN: self.google_secure_devices_pin,
+            PREF_GOOGLE_ENTITY_CONFIGS: self.google_entity_configs,
+            PREF_CLOUDHOOKS: self.cloudhooks,
+            PREF_CLOUD_USER: self.cloud_user,
+        }
 
     @property
     def remote_enabled(self):

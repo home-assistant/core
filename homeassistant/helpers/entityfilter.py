@@ -20,6 +20,8 @@ def _convert_filter(config: Dict[str, Iterable[str]]) -> Callable[[str], bool]:
         config[CONF_EXCLUDE_ENTITIES],
     )
     setattr(filt, 'config', config)
+    setattr(
+        filt, 'empty_filter', sum(len(val) for val in config.values()) == 0)
     return filt
 
 

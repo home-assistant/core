@@ -100,8 +100,8 @@ class CloudClient(Interface):
                 if entity.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
                     return False
 
-                if not google_conf['filter'](entity.entity_id):
-                    return False
+                if not google_conf['filter'].empty_filter:
+                    return google_conf['filter'](entity.entity_id)
 
                 entity_configs = self.prefs.google_entity_configs
                 entity_config = entity_configs.get(entity.entity_id, {})

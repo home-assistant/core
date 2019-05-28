@@ -14,8 +14,7 @@ from homeassistant.components.http.data_validator import (
     RequestDataValidator)
 from homeassistant.components import websocket_api
 from homeassistant.components.alexa import smart_home as alexa_sh
-from homeassistant.components.google_assistant import (
-    const as google_const, helpers as google_helpers)
+from homeassistant.components.google_assistant import helpers as google_helpers
 
 from .const import (
     DOMAIN, REQUEST_TIMEOUT, PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE,
@@ -417,7 +416,6 @@ def _account_data(cloud):
         'cloud': cloud.iot.state,
         'prefs': client.prefs.as_dict(),
         'google_entities': client.google_user_config['filter'].config,
-        'google_domains': list(google_const.DOMAIN_TO_GOOGLE_TYPES),
         'alexa_entities': client.alexa_config.should_expose.config,
         'alexa_domains': list(alexa_sh.ENTITY_ADAPTERS),
         'remote_domain': remote.instance_domain,
@@ -503,4 +501,6 @@ async def google_assistant_update(hass, connection, msg):
 
     await cloud.client.prefs.async_update_google_entity_config(**changes)
 
-    connection.send_result(msg['id'])
+    connection.send_result(
+        msg['id'],
+        cloud.client.prefs.google_entity_configs.get(msg['entity_id']))
