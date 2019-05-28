@@ -50,15 +50,15 @@ def async_listen(hass, service, callback):
 
 
 @bind_hass
-def discover(hass, service, discovered=None, component=None, hass_config=None):
+def discover(hass, service, discovered, component, hass_config):
     """Fire discovery event. Can ensure a component is loaded."""
     hass.add_job(
         async_discover(hass, service, discovered, component, hass_config))
 
 
 @bind_hass
-async def async_discover(hass, service, discovered=None, component=None,
-                         hass_config=None):
+async def async_discover(hass, service, discovered, component,
+                         hass_config):
     """Fire discovery event. Can ensure a component is loaded."""
     if component in DEPENDENCY_BLACKLIST:
         raise HomeAssistantError(

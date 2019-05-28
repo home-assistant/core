@@ -18,6 +18,7 @@
             },
             "user": {
                 "data": {
+                    "authorization_code": "Codi d'autoritzaci\u00f3 (necessari per a l'autenticaci\u00f3 manual)",
                     "email": "Correu electr\u00f2nic",
                     "password": "Contrasenya"
                 },

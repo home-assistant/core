@@ -1,9 +1,4 @@
-"""
-Support for Nest devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/nest/
-"""
+"""Support for Nest devices."""
 import logging
 import socket
 from datetime import datetime, timedelta
@@ -12,7 +7,7 @@ import threading
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.climate import (
+from homeassistant.components.climate.const import (
     ATTR_AWAY_MODE, SERVICE_SET_AWAY_MODE)
 from homeassistant.const import (
     CONF_BINARY_SENSORS, CONF_FILENAME, CONF_MONITORED_CONDITIONS,
@@ -26,8 +21,6 @@ from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 from . import local_auth
-
-REQUIREMENTS = ['python-nest==4.0.5']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -53,7 +46,7 @@ AWAY_MODE_AWAY = 'away'
 AWAY_MODE_HOME = 'home'
 
 SENSOR_SCHEMA = vol.Schema({
-    vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list)
+    vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list),
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -62,25 +55,25 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_CLIENT_SECRET): cv.string,
         vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
-        vol.Optional(CONF_BINARY_SENSORS): SENSOR_SCHEMA
+        vol.Optional(CONF_BINARY_SENSORS): SENSOR_SCHEMA,
     })
 }, extra=vol.ALLOW_EXTRA)
 
 SET_AWAY_MODE_SCHEMA = vol.Schema({
     vol.Required(ATTR_AWAY_MODE): vol.In([AWAY_MODE_AWAY, AWAY_MODE_HOME]),
-    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, [cv.string])
+    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, [cv.string]),
 })
 
 SET_ETA_SCHEMA = vol.Schema({
     vol.Required(ATTR_ETA): cv.time_period,
     vol.Optional(ATTR_TRIP_ID): cv.string,
     vol.Optional(ATTR_ETA_WINDOW): cv.time_period,
-    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, [cv.string])
+    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, [cv.string]),
 })
 
 CANCEL_ETA_SCHEMA = vol.Schema({
     vol.Required(ATTR_TRIP_ID): cv.string,
-    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, [cv.string])
+    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, [cv.string]),
 })
 
 
@@ -90,7 +83,7 @@ def nest_update_event_broker(hass, nest):
 
     Runs in its own thread.
     """
-    _LOGGER.debug("listening nest.update_event")
+    _LOGGER.debug("Listening for nest.update_event")
 
     while hass.is_running:
         nest.update_event.wait()
@@ -99,10 +92,10 @@ def nest_update_event_broker(hass, nest):
             break
 
         nest.update_event.clear()
-        _LOGGER.debug("dispatching nest data update")
+        _LOGGER.debug("Dispatching nest data update")
         dispatcher_send(hass, SIGNAL_NEST_UPDATE)
 
-    _LOGGER.debug("stop listening nest.update_event")
+    _LOGGER.debug("Stop listening for nest.update_event")
 
 
 async def async_setup(hass, config):

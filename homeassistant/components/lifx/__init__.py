@@ -1,20 +1,19 @@
-"""Component to embed LIFX."""
+"""Support for LIFX."""
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_PORT
 from homeassistant.helpers import config_entry_flow
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 
-
 DOMAIN = 'lifx'
-REQUIREMENTS = ['aiolifx==0.6.7']
-
 CONF_SERVER = 'server'
 CONF_BROADCAST = 'broadcast'
 
 INTERFACE_SCHEMA = vol.Schema({
     vol.Optional(CONF_SERVER): cv.string,
+    vol.Optional(CONF_PORT): cv.port,
     vol.Optional(CONF_BROADCAST): cv.string,
 })
 

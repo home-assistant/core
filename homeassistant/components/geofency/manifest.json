@@ -1,0 +1,10 @@
+{
+  "domain": "geofency",
+  "name": "Geofency",
+  "documentation": "https://www.home-assistant.io/components/geofency",
+  "requirements": [],
+  "dependencies": [
+    "webhook"
+  ],
+  "codeowners": []
+}

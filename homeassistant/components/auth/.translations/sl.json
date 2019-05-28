@@ -21,7 +21,7 @@
         },
         "totp": {
             "error": {
-                "invalid_code": "Neveljavna koda, prosimo, poskusite znova. \u010ce dobite to sporo\u010dilo ve\u010dkrat, prosimo poskrbite, da bo ura va\u0161ega Home Assistenta to\u010dna."
+                "invalid_code": "Neveljavna koda, prosimo, poskusite znova. \u010ce dobite to sporo\u010dilo ve\u010dkrat, prosimo poskrbite, da bo ura va\u0161ega Home Assistanta to\u010dna."
             },
             "step": {
                 "init": {

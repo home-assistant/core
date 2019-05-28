@@ -20,7 +20,7 @@ from .const import (
     CONF_TOPIC_IN_PREFIX, CONF_TOPIC_OUT_PREFIX, CONF_VERSION, DOMAIN,
     MYSENSORS_GATEWAY_READY, MYSENSORS_GATEWAYS)
 from .handler import HANDLERS
-from .helpers import discover_mysensors_platform, validate_child
+from .helpers import discover_mysensors_platform, validate_child, validate_node
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,9 +98,9 @@ async def _get_gateway(hass, config, gateway_conf, persistence_file):
         def sub_callback(topic, sub_cb, qos):
             """Call MQTT subscribe function."""
             @callback
-            def internal_callback(*args):
+            def internal_callback(msg):
                 """Call callback."""
-                sub_cb(*args)
+                sub_cb(msg.topic, msg.payload, msg.qos)
 
             hass.async_create_task(
                 mqtt.async_subscribe(topic, internal_callback, qos))
@@ -161,6 +161,8 @@ async def _discover_persistent_devices(hass, hass_config, gateway):
     tasks = []
     new_devices = defaultdict(list)
     for node_id in gateway.sensors:
+        if not validate_node(gateway, node_id):
+            continue
         node = gateway.sensors[node_id]
         for child in node.children.values():
             validated = validate_child(gateway, node_id, child)

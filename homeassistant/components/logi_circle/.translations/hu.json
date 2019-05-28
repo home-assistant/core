@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "auth_error": "Az API enged\u00e9lyez\u00e9se sikertelen.",
+            "auth_timeout": "A hozz\u00e1f\u00e9r\u00e9si token k\u00e9r\u00e9sekor az enged\u00e9lyez\u00e9s lej\u00e1rt.",
+            "follow_link": "K\u00e9rlek, k\u00f6vesd a hivatkoz\u00e1st \u00e9s hiteles\u00edtsd magad miel\u0151tt megnyomod a K\u00fcld\u00e9s gombot"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "flow_impl": "Szolg\u00e1ltat\u00f3"
+                },
+                "title": "Hiteles\u00edt\u00e9si Szolg\u00e1ltat\u00f3"
+            }
+        }
+    }
+}

@@ -1,9 +1,4 @@
-"""
-Provides functionality to interact with image processing services.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/image_processing/
-"""
+"""Provides functionality to interact with image processing services."""
 import asyncio
 from datetime import timedelta
 import logging
@@ -22,8 +17,6 @@ from homeassistant.util.async_ import run_callback_threadsafe
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'image_processing'
-DEPENDENCIES = ['camera']
-
 SCAN_INTERVAL = timedelta(seconds=10)
 
 DEVICE_CLASSES = [
@@ -60,6 +53,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE):
         vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
 })
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
 
 SERVICE_SCAN_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
@@ -74,7 +68,7 @@ async def async_setup(hass, config):
 
     async def async_scan_service(service):
         """Service handler for scan."""
-        image_entities = component.async_extract_from_service(service)
+        image_entities = await component.async_extract_from_service(service)
 
         update_tasks = []
         for entity in image_entities:

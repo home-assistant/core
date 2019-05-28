@@ -1,9 +1,4 @@
-"""
-Support for Google Actions Smart Home Control.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/google_assistant/
-"""
+"""Support for Google Actions Smart Home Control."""
 import logging
 
 from aiohttp.web import Request, Response
@@ -15,12 +10,12 @@ from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 
 from .const import (
     GOOGLE_ASSISTANT_API_ENDPOINT,
-    CONF_ALLOW_UNLOCK,
     CONF_EXPOSE_BY_DEFAULT,
     CONF_EXPOSED_DOMAINS,
     CONF_ENTITY_CONFIG,
     CONF_EXPOSE,
-    )
+    CONF_SECURE_DEVICES_PIN,
+)
 from .smart_home import async_handle_message
 from .helpers import Config
 
@@ -33,7 +28,7 @@ def async_register_http(hass, cfg):
     expose_by_default = cfg.get(CONF_EXPOSE_BY_DEFAULT)
     exposed_domains = cfg.get(CONF_EXPOSED_DOMAINS)
     entity_config = cfg.get(CONF_ENTITY_CONFIG) or {}
-    allow_unlock = cfg.get(CONF_ALLOW_UNLOCK, False)
+    secure_devices_pin = cfg.get(CONF_SECURE_DEVICES_PIN)
 
     def is_exposed(entity) -> bool:
         """Determine if an entity should be exposed to Google Assistant."""
@@ -58,8 +53,13 @@ def async_register_http(hass, cfg):
 
         return is_default_exposed or explicit_expose
 
-    hass.http.register_view(
-        GoogleAssistantView(is_exposed, entity_config, allow_unlock))
+    config = Config(
+        should_expose=is_exposed,
+        entity_config=entity_config,
+        secure_devices_pin=secure_devices_pin
+    )
+
+    hass.http.register_view(GoogleAssistantView(config))
 
 
 class GoogleAssistantView(HomeAssistantView):
@@ -69,19 +69,16 @@ class GoogleAssistantView(HomeAssistantView):
     name = 'api:google_assistant'
     requires_auth = True
 
-    def __init__(self, is_exposed, entity_config, allow_unlock):
+    def __init__(self, config):
         """Initialize the Google Assistant request handler."""
-        self.is_exposed = is_exposed
-        self.entity_config = entity_config
-        self.allow_unlock = allow_unlock
+        self.config = config
 
     async def post(self, request: Request) -> Response:
         """Handle Google Assistant requests."""
         message = await request.json()  # type: dict
-        config = Config(self.is_exposed,
-                        self.allow_unlock,
-                        request['hass_user'].id,
-                        self.entity_config)
         result = await async_handle_message(
-            request.app['hass'], config, message)
+            request.app['hass'],
+            self.config,
+            request['hass_user'].id,
+            message)
         return self.json(result)

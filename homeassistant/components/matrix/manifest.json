@@ -1,0 +1,12 @@
+{
+  "domain": "matrix",
+  "name": "Matrix",
+  "documentation": "https://www.home-assistant.io/components/matrix",
+  "requirements": [
+    "matrix-client==0.2.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@tinloaf"
+  ]
+}

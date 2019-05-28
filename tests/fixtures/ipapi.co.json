@@ -1,0 +1,20 @@
+{
+  "ip": "1.2.3.4",
+  "city": "Bern",
+  "region": "Bern",
+  "region_code": "BE",
+  "country": "CH",
+  "country_name": "Switzerland",
+  "continent_code": "EU",
+  "in_eu": false,
+  "postal": "3000",
+  "latitude": 46.9480278,
+  "longitude": 7.4490812,
+  "timezone": "Europe/Zurich",
+  "utc_offset": "+0100",
+  "country_calling_code": "+41",
+  "currency": "CHF",
+  "languages": "de-CH,fr-CH,it-CH,rm",
+  "asn": "AS6830",
+  "org": "Liberty Global B.V."
+}

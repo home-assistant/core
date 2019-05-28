@@ -1,0 +1,10 @@
+{
+  "domain": "cppm_tracker",
+  "name": "Cppm tracker",
+  "documentation": "https://www.home-assistant.io/components/cppm_tracker",
+  "requirements": [
+    "clearpasspy==1.0.2"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

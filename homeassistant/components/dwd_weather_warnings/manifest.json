@@ -1,0 +1,8 @@
+{
+  "domain": "dwd_weather_warnings",
+  "name": "Dwd weather warnings",
+  "documentation": "https://www.home-assistant.io/components/dwd_weather_warnings",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

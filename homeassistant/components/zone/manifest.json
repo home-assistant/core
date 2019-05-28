@@ -1,0 +1,10 @@
+{
+  "domain": "zone",
+  "name": "Zone",
+  "documentation": "https://www.home-assistant.io/components/zone",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

@@ -1,0 +1,6 @@
+send_magic_packet:
+  description: Send a 'magic packet' to wake up a device with 'Wake-On-LAN' capabilities.
+  fields:
+    broadcast_address: {description: Optional broadcast IP where to send the magic
+        packet., example: 192.168.255.255}
+    mac: {description: MAC address of the device to wake up., example: 'aa:bb:cc:dd:ee:ff'}

@@ -1,0 +1,10 @@
+{
+  "domain": "hipchat",
+  "name": "Hipchat",
+  "documentation": "https://www.home-assistant.io/components/hipchat",
+  "requirements": [
+    "hipnotify==1.0.8"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

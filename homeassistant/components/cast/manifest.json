@@ -1,0 +1,10 @@
+{
+  "domain": "cast",
+  "name": "Cast",
+  "documentation": "https://www.home-assistant.io/components/cast",
+  "requirements": [
+    "pychromecast==3.2.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

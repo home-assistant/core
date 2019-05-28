@@ -1,33 +1,23 @@
-"""
-The hangouts bot component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/hangouts/
-"""
+"""Support for Hangouts."""
 import logging
 
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.hangouts.intents import HelpIntent
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.helpers import intent
-from homeassistant.helpers import dispatcher
+from homeassistant.helpers import dispatcher, intent
 import homeassistant.helpers.config_validation as cv
 
-from .const import (
-    CONF_BOT, CONF_INTENTS, CONF_REFRESH_TOKEN, DOMAIN,
-    EVENT_HANGOUTS_CONNECTED, EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
-    MESSAGE_SCHEMA, SERVICE_SEND_MESSAGE,
-    SERVICE_UPDATE, CONF_SENTENCES, CONF_MATCHERS,
-    CONF_ERROR_SUPPRESSED_CONVERSATIONS, INTENT_SCHEMA, TARGETS_SCHEMA,
-    CONF_DEFAULT_CONVERSATIONS, EVENT_HANGOUTS_CONVERSATIONS_RESOLVED,
-    INTENT_HELP, SERVICE_RECONNECT)
-
 # We need an import from .config_flow, without it .config_flow is never loaded.
+from .intents import HelpIntent
 from .config_flow import HangoutsFlowHandler  # noqa: F401
-
-REQUIREMENTS = ['hangups==0.4.6']
+from .const import (
+    CONF_BOT, CONF_DEFAULT_CONVERSATIONS, CONF_ERROR_SUPPRESSED_CONVERSATIONS,
+    CONF_INTENTS, CONF_MATCHERS, CONF_REFRESH_TOKEN, CONF_SENTENCES, DOMAIN,
+    EVENT_HANGOUTS_CONNECTED, EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
+    EVENT_HANGOUTS_CONVERSATIONS_RESOLVED, INTENT_HELP, INTENT_SCHEMA,
+    MESSAGE_SCHEMA, SERVICE_RECONNECT, SERVICE_SEND_MESSAGE, SERVICE_UPDATE,
+    TARGETS_SCHEMA)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +29,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_DEFAULT_CONVERSATIONS, default=[]):
             [TARGETS_SCHEMA],
         vol.Optional(CONF_ERROR_SUPPRESSED_CONVERSATIONS, default=[]):
-            [TARGETS_SCHEMA]
+            [TARGETS_SCHEMA],
     })
 }, extra=vol.ALLOW_EXTRA)
 

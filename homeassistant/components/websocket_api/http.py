@@ -13,7 +13,10 @@ from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.helpers.json import JSONEncoder
 
-from .const import MAX_PENDING_MSG, CANCELLATION_ERRORS, URL, ERR_UNKNOWN_ERROR
+from .const import (
+    MAX_PENDING_MSG, CANCELLATION_ERRORS, URL, ERR_UNKNOWN_ERROR,
+    SIGNAL_WEBSOCKET_CONNECTED, SIGNAL_WEBSOCKET_DISCONNECTED,
+    DATA_CONNECTIONS)
 from .auth import AuthPhase, auth_required_message
 from .error import Disconnect
 from .messages import error_message
@@ -51,7 +54,8 @@ class WebSocketHandler:
     async def _writer(self):
         """Write outgoing messages."""
         # Exceptions if Socket disconnected or cancelled by connection handler
-        with suppress(RuntimeError, *CANCELLATION_ERRORS):
+        with suppress(RuntimeError, ConnectionResetError,
+                      *CANCELLATION_ERRORS):
             while not self.wsock.closed:
                 message = await self._to_write.get()
                 if message is None:
@@ -130,7 +134,7 @@ class WebSocketHandler:
             if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSING):
                 raise Disconnect
 
-            elif msg.type != WSMsgType.TEXT:
+            if msg.type != WSMsgType.TEXT:
                 disconnect_warn = 'Received non-Text message.'
                 raise Disconnect
 
@@ -142,6 +146,10 @@ class WebSocketHandler:
 
             self._logger.debug("Received %s", msg)
             connection = await auth.async_handle(msg)
+            self.hass.data[DATA_CONNECTIONS] = \
+                self.hass.data.get(DATA_CONNECTIONS, 0) + 1
+            self.hass.helpers.dispatcher.async_dispatcher_send(
+                SIGNAL_WEBSOCKET_CONNECTED)
 
             # Command phase
             while not wsock.closed:
@@ -191,5 +199,10 @@ class WebSocketHandler:
                 self._logger.debug("Disconnected")
             else:
                 self._logger.warning("Disconnected: %s", disconnect_warn)
+
+            if connection is not None:
+                self.hass.data[DATA_CONNECTIONS] -= 1
+            self.hass.helpers.dispatcher.async_dispatcher_send(
+                SIGNAL_WEBSOCKET_DISCONNECTED)
 
         return wsock

@@ -1,9 +1,4 @@
-"""
-Provides functionality to interact with water heater devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/water_heater/
-"""
+"""Support for water heater devices."""
 from datetime import timedelta
 import logging
 import functools as ft
@@ -14,7 +9,8 @@ from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, SERVICE_TURN_ON, SERVICE_TURN_OFF,
@@ -49,6 +45,9 @@ ATTR_MIN_TEMP = 'min_temp'
 ATTR_AWAY_MODE = 'away_mode'
 ATTR_OPERATION_MODE = 'operation_mode'
 ATTR_OPERATION_LIST = 'operation_list'
+ATTR_TARGET_TEMP_HIGH = 'target_temp_high'
+ATTR_TARGET_TEMP_LOW = 'target_temp_low'
+ATTR_CURRENT_TEMPERATURE = 'current_temperature'
 
 CONVERTIBLE_ATTRIBUTE = [
     ATTR_TEMPERATURE,
@@ -136,6 +135,9 @@ class WaterHeaterDevice(Entity):
     def state_attributes(self):
         """Return the optional state attributes."""
         data = {
+            ATTR_CURRENT_TEMPERATURE: show_temp(
+                self.hass, self.current_temperature, self.temperature_unit,
+                self.precision),
             ATTR_MIN_TEMP: show_temp(
                 self.hass, self.min_temp, self.temperature_unit,
                 self.precision),
@@ -144,6 +146,12 @@ class WaterHeaterDevice(Entity):
                 self.precision),
             ATTR_TEMPERATURE: show_temp(
                 self.hass, self.target_temperature, self.temperature_unit,
+                self.precision),
+            ATTR_TARGET_TEMP_HIGH: show_temp(
+                self.hass, self.target_temperature_high, self.temperature_unit,
+                self.precision),
+            ATTR_TARGET_TEMP_LOW: show_temp(
+                self.hass, self.target_temperature_low, self.temperature_unit,
                 self.precision),
         }
 
@@ -176,8 +184,23 @@ class WaterHeaterDevice(Entity):
         return None
 
     @property
+    def current_temperature(self):
+        """Return the current temperature."""
+        return None
+
+    @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
+        return None
+
+    @property
+    def target_temperature_high(self):
+        """Return the highbound target temperature we try to reach."""
+        return None
+
+    @property
+    def target_temperature_low(self):
+        """Return the lowbound target temperature we try to reach."""
         return None
 
     @property

@@ -1,7 +1,10 @@
 """Home Assistant auth provider."""
+import asyncio
 import base64
 from collections import OrderedDict
-from typing import Any, Dict, List, Optional, cast
+import logging
+
+from typing import Any, Dict, List, Optional, Set, cast  # noqa: F401
 
 import bcrypt
 import voluptuous as vol
@@ -51,6 +54,18 @@ class Data:
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY,
                                                  private=True)
         self._data = None  # type: Optional[Dict[str, Any]]
+        # Legacy mode will allow usernames to start/end with whitespace
+        # and will compare usernames case-insensitive.
+        # Remove in 2020 or when we launch 1.0.
+        self.is_legacy = False
+
+    @callback
+    def normalize_username(self, username: str) -> str:
+        """Normalize a username based on the mode."""
+        if self.is_legacy:
+            return username
+
+        return username.strip().casefold()
 
     async def async_load(self) -> None:
         """Load stored data."""
@@ -60,6 +75,37 @@ class Data:
             data = {
                 'users': []
             }
+
+        seen = set()  # type: Set[str]
+
+        for user in data['users']:
+            username = user['username']
+
+            # check if we have duplicates
+            folded = username.casefold()
+
+            if folded in seen:
+                self.is_legacy = True
+
+                logging.getLogger(__name__).warning(
+                    "Home Assistant auth provider is running in legacy mode "
+                    "because we detected usernames that are case-insensitive"
+                    "equivalent. Please change the username: '%s'.", username)
+
+                break
+
+            seen.add(folded)
+
+            # check if we have unstripped usernames
+            if username != username.strip():
+                self.is_legacy = True
+
+                logging.getLogger(__name__).warning(
+                    "Home Assistant auth provider is running in legacy mode "
+                    "because we detected usernames that start or end in a "
+                    "space. Please change the username: '%s'.", username)
+
+                break
 
         self._data = data
 
@@ -73,12 +119,13 @@ class Data:
 
         Raises InvalidAuth if auth invalid.
         """
+        username = self.normalize_username(username)
         dummy = b'$2b$12$CiuFGszHx9eNHxPuQcwBWez4CwDTOcLTX5CbOpV6gef2nYuXkY7BO'
         found = None
 
         # Compare all users to avoid timing attacks.
         for user in self.users:
-            if username == user['username']:
+            if self.normalize_username(user['username']) == username:
                 found = user
 
         if found is None:
@@ -105,7 +152,10 @@ class Data:
 
     def add_auth(self, username: str, password: str) -> None:
         """Add a new authenticated user/pass."""
-        if any(user['username'] == username for user in self.users):
+        username = self.normalize_username(username)
+
+        if any(self.normalize_username(user['username']) == username
+               for user in self.users):
             raise InvalidUser
 
         self.users.append({
@@ -116,9 +166,11 @@ class Data:
     @callback
     def async_remove_auth(self, username: str) -> None:
         """Remove authentication."""
+        username = self.normalize_username(username)
+
         index = None
         for i, user in enumerate(self.users):
-            if user['username'] == username:
+            if self.normalize_username(user['username']) == username:
                 index = i
                 break
 
@@ -132,8 +184,10 @@ class Data:
 
         Raises InvalidUser if user cannot be found.
         """
+        username = self.normalize_username(username)
+
         for user in self.users:
-            if user['username'] == username:
+            if self.normalize_username(user['username']) == username:
                 user['password'] = self.hash_password(
                     new_password, True).decode()
                 break
@@ -151,15 +205,21 @@ class HassAuthProvider(AuthProvider):
 
     DEFAULT_TITLE = 'Home Assistant Local'
 
-    data = None
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize an Home Assistant auth provider."""
+        super().__init__(*args, **kwargs)
+        self.data = None  # type: Optional[Data]
+        self._init_lock = asyncio.Lock()
 
     async def async_initialize(self) -> None:
         """Initialize the auth provider."""
-        if self.data is not None:
-            return
+        async with self._init_lock:
+            if self.data is not None:
+                return
 
-        self.data = Data(self.hass)
-        await self.data.async_load()
+            data = Data(self.hass)
+            await data.async_load()
+            self.data = data
 
     async def async_login_flow(
             self, context: Optional[Dict]) -> LoginFlow:
@@ -178,10 +238,15 @@ class HassAuthProvider(AuthProvider):
     async def async_get_or_create_credentials(
             self, flow_result: Dict[str, str]) -> Credentials:
         """Get credentials based on the flow result."""
-        username = flow_result['username']
+        if self.data is None:
+            await self.async_initialize()
+            assert self.data is not None
+
+        norm_username = self.data.normalize_username
+        username = norm_username(flow_result['username'])
 
         for credential in await self.async_credentials():
-            if credential.data['username'] == username:
+            if norm_username(credential.data['username']) == username:
                 return credential
 
         # Create new credentials.

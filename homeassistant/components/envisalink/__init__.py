@@ -1,9 +1,4 @@
-"""
-Support for Envisalink devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/envisalink/
-"""
+"""Support for Envisalink devices."""
 import asyncio
 import logging
 
@@ -11,12 +6,11 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_TIMEOUT
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_TIMEOUT, \
+    CONF_HOST
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-
-REQUIREMENTS = ['pyenvisalink==3.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +19,6 @@ DOMAIN = 'envisalink'
 DATA_EVL = 'envisalink'
 
 CONF_CODE = 'code'
-CONF_EVL_HOST = 'host'
 CONF_EVL_KEEPALIVE = 'keepalive_interval'
 CONF_EVL_PORT = 'port'
 CONF_EVL_VERSION = 'evl_version'
@@ -61,7 +54,7 @@ PARTITION_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_EVL_HOST): cv.string,
+        vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PANEL_TYPE):
             vol.All(cv.string, vol.In(['HONEYWELL', 'DSC'])),
         vol.Required(CONF_USERNAME): cv.string,
@@ -100,7 +93,7 @@ async def async_setup(hass, config):
 
     conf = config.get(DOMAIN)
 
-    host = conf.get(CONF_EVL_HOST)
+    host = conf.get(CONF_HOST)
     port = conf.get(CONF_EVL_PORT)
     code = conf.get(CONF_CODE)
     panel_type = conf.get(CONF_PANEL_TYPE)
@@ -146,19 +139,19 @@ async def async_setup(hass, config):
     @callback
     def zones_updated_callback(data):
         """Handle zone timer updates."""
-        _LOGGER.info("Envisalink sent a zone update event. Updating zones...")
+        _LOGGER.debug("Envisalink sent a zone update event. Updating zones...")
         async_dispatcher_send(hass, SIGNAL_ZONE_UPDATE, data)
 
     @callback
     def alarm_data_updated_callback(data):
         """Handle non-alarm based info updates."""
-        _LOGGER.info("Envisalink sent new alarm info. Updating alarms...")
+        _LOGGER.debug("Envisalink sent new alarm info. Updating alarms...")
         async_dispatcher_send(hass, SIGNAL_KEYPAD_UPDATE, data)
 
     @callback
     def partition_updated_callback(data):
         """Handle partition changes thrown by evl (including alarms)."""
-        _LOGGER.info("The envisalink sent a partition update event")
+        _LOGGER.debug("The envisalink sent a partition update event")
         async_dispatcher_send(hass, SIGNAL_PARTITION_UPDATE, data)
 
     @callback

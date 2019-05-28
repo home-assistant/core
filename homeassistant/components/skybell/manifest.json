@@ -1,0 +1,10 @@
+{
+  "domain": "skybell",
+  "name": "Skybell",
+  "documentation": "https://www.home-assistant.io/components/skybell",
+  "requirements": [
+    "skybellpy==0.4.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

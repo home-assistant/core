@@ -4,14 +4,12 @@ from unittest.mock import patch, Mock
 from homeassistant.const import HTTP_HEADER_HA_AUTH
 from homeassistant.exceptions import HomeAssistantError
 
-from tests.common import mock_coro, register_auth_provider
+from tests.common import mock_coro
 from . import API_PASSWORD
 
 
 async def test_login_success(hass, hassio_client):
     """Test no auth needed for ."""
-    await register_auth_provider(hass, {'type': 'homeassistant'})
-
     with patch('homeassistant.auth.providers.homeassistant.'
                'HassAuthProvider.async_validate_login',
                Mock(return_value=mock_coro())) as mock_login:
@@ -34,8 +32,6 @@ async def test_login_success(hass, hassio_client):
 
 async def test_login_error(hass, hassio_client):
     """Test no auth needed for error."""
-    await register_auth_provider(hass, {'type': 'homeassistant'})
-
     with patch('homeassistant.auth.providers.homeassistant.'
                'HassAuthProvider.async_validate_login',
                Mock(side_effect=HomeAssistantError())) as mock_login:
@@ -58,8 +54,6 @@ async def test_login_error(hass, hassio_client):
 
 async def test_login_no_data(hass, hassio_client):
     """Test auth with no data -> error."""
-    await register_auth_provider(hass, {'type': 'homeassistant'})
-
     with patch('homeassistant.auth.providers.homeassistant.'
                'HassAuthProvider.async_validate_login',
                Mock(side_effect=HomeAssistantError())) as mock_login:
@@ -77,8 +71,6 @@ async def test_login_no_data(hass, hassio_client):
 
 async def test_login_no_username(hass, hassio_client):
     """Test auth with no username in data -> error."""
-    await register_auth_provider(hass, {'type': 'homeassistant'})
-
     with patch('homeassistant.auth.providers.homeassistant.'
                'HassAuthProvider.async_validate_login',
                Mock(side_effect=HomeAssistantError())) as mock_login:
@@ -100,8 +92,6 @@ async def test_login_no_username(hass, hassio_client):
 
 async def test_login_success_extra(hass, hassio_client):
     """Test auth with extra data."""
-    await register_auth_provider(hass, {'type': 'homeassistant'})
-
     with patch('homeassistant.auth.providers.homeassistant.'
                'HassAuthProvider.async_validate_login',
                Mock(return_value=mock_coro())) as mock_login:

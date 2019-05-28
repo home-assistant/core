@@ -1,0 +1,10 @@
+{
+  "domain": "envisalink",
+  "name": "Envisalink",
+  "documentation": "https://www.home-assistant.io/components/envisalink",
+  "requirements": [
+    "pyenvisalink==3.8"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

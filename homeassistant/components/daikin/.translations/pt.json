@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado",
+            "device_fail": "Erro inesperado ao criar dispositivo.",
+            "device_timeout": "Tempo excedido a tentar ligar ao dispositivo."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Servidor"
+                },
+                "description": "Introduza o endere\u00e7o IP do seu Daikin AC.",
+                "title": "Configurar o Daikin AC"
+            }
+        },
+        "title": "Daikin AC"
+    }
+}

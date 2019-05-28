@@ -1,0 +1,10 @@
+{
+  "domain": "harman_kardon_avr",
+  "name": "Harman kardon avr",
+  "documentation": "https://www.home-assistant.io/components/harman_kardon_avr",
+  "requirements": [
+    "hkavr==0.0.5"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

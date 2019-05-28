@@ -1,4 +1,4 @@
-"""Zwave discovery schemas."""
+"""Z-Wave discovery schemas."""
 from . import const
 
 DEFAULT_VALUES_SCHEMA = {

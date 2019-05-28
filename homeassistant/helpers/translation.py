@@ -1,10 +1,9 @@
 """Translation string lookup helpers."""
 import logging
-from os import path
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Iterable, Optional
 
 from homeassistant import config_entries
-from homeassistant.loader import get_component, bind_hass
+from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.json import load_json
 from .typing import HomeAssistantType
 
@@ -30,26 +29,36 @@ def flatten(data: Dict) -> Dict[str, Any]:
     return recursive_flatten('', data)
 
 
-def component_translation_file(hass: HomeAssistantType, component: str,
-                               language: str) -> str:
-    """Return the translation json file location for a component."""
-    if '.' in component:
-        name = component.split('.', 1)[1]
-    else:
-        name = component
+async def component_translation_file(hass: HomeAssistantType, component: str,
+                                     language: str) -> Optional[str]:
+    """Return the translation json file location for a component.
 
-    module = get_component(hass, component)
-    assert module is not None
-    component_path = path.dirname(module.__file__)
+    For component:
+     - components/hue/.translations/nl.json
 
-    # If loading translations for the package root, (__init__.py), the
-    # prefix should be skipped.
-    if module.__name__ == module.__package__:
-        filename = '{}.json'.format(language)
-    else:
-        filename = '{}.{}.json'.format(name, language)
+    For platform:
+     - components/hue/.translations/light.nl.json
 
-    return path.join(component_path, '.translations', filename)
+    If component is just a single file, will return None.
+    """
+    parts = component.split('.')
+    domain = parts[-1]
+    is_platform = len(parts) == 2
+
+    integration = await async_get_integration(hass, domain)
+    assert integration is not None, domain
+
+    if is_platform:
+        filename = "{}.{}.json".format(parts[0], language)
+        return str(integration.file_path / '.translations' / filename)
+
+    # If it's a component that is just one file, we don't support translations
+    # Example custom_components/my_component.py
+    if integration.file_path.name != domain:
+        return None
+
+    filename = '{}.json'.format(language)
+    return str(integration.file_path / '.translations' / filename)
 
 
 def load_translations_files(translation_files: Dict[str, str]) \
@@ -103,8 +112,12 @@ async def async_get_component_resources(hass: HomeAssistantType,
     missing_components = components - set(translation_cache)
     missing_files = {}
     for component in missing_components:
-        missing_files[component] = component_translation_file(
-            hass, component, language)
+        path = await component_translation_file(hass, component, language)
+        # No translation available
+        if path is None:
+            translation_cache[component] = {}
+        else:
+            missing_files[component] = path
 
     # Load missing files
     if missing_files:

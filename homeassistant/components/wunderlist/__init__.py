@@ -1,9 +1,4 @@
-"""
-Component to interact with Wunderlist.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/wunderlist/
-"""
+"""Support to interact with Wunderlist."""
 import logging
 
 import voluptuous as vol
@@ -11,8 +6,6 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_NAME, CONF_ACCESS_TOKEN)
-
-REQUIREMENTS = ['wunderpy2==0.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +18,7 @@ CONF_STARRED = 'starred'
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_CLIENT_ID): cv.string,
-        vol.Required(CONF_ACCESS_TOKEN): cv.string
+        vol.Required(CONF_ACCESS_TOKEN): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -35,7 +28,7 @@ SERVICE_CREATE_TASK = 'create_task'
 SERVICE_SCHEMA_CREATE_TASK = vol.Schema({
     vol.Required(CONF_LIST_NAME): cv.string,
     vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_STARRED): cv.boolean
+    vol.Optional(CONF_STARRED): cv.boolean,
 })
 
 

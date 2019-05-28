@@ -1,0 +1,13 @@
+{
+  "domain": "tplink",
+  "name": "Tplink",
+  "documentation": "https://www.home-assistant.io/components/tplink",
+  "requirements": [
+    "pyHS100==0.3.5",
+    "tplink==0.2.1"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@rytilahti"
+  ]
+}

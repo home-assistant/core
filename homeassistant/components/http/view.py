@@ -1,26 +1,20 @@
-"""
-This module provides WSGI application to serve the Home Assistant API.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/http/
-"""
+"""Support for views."""
 import asyncio
 import json
 import logging
 
 from aiohttp import web
 from aiohttp.web_exceptions import (
-    HTTPUnauthorized, HTTPInternalServerError, HTTPBadRequest)
+    HTTPBadRequest, HTTPInternalServerError, HTTPUnauthorized)
 import voluptuous as vol
 
-from homeassistant.components.http.ban import process_success_login
-from homeassistant.core import Context, is_callback
-from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant import exceptions
+from homeassistant.const import CONTENT_TYPE_JSON
+from homeassistant.core import Context, is_callback
 from homeassistant.helpers.json import JSONEncoder
 
-from .const import KEY_AUTHENTICATED, KEY_REAL_IP
-
+from .ban import process_success_login
+from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_REAL_IP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +66,8 @@ class HomeAssistantView:
         urls = [self.url] + self.extra_urls
         routes = []
 
-        for method in ('get', 'post', 'delete', 'put'):
+        for method in ('get', 'post', 'delete', 'put', 'patch', 'head',
+                       'options'):
             handler = getattr(self, method, None)
 
             if not handler:
@@ -97,19 +92,21 @@ def request_handler_factory(view, handler):
 
     async def handle(request):
         """Handle incoming request."""
-        if not request.app['hass'].is_running:
+        if not request.app[KEY_HASS].is_running:
             return web.Response(status=503)
 
         authenticated = request.get(KEY_AUTHENTICATED, False)
 
         if view.requires_auth:
             if authenticated:
+                if 'deprecate_warning_message' in request:
+                    _LOGGER.warning(request['deprecate_warning_message'])
                 await process_success_login(request)
             else:
                 raise HTTPUnauthorized()
 
-        _LOGGER.info('Serving %s to %s (auth: %s)',
-                     request.path, request.get(KEY_REAL_IP), authenticated)
+        _LOGGER.debug('Serving %s to %s (auth: %s)',
+                      request.path, request.get(KEY_REAL_IP), authenticated)
 
         try:
             result = handler(request, **request.match_info)
