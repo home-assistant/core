@@ -1030,6 +1030,7 @@ class OpenCloseTrait(_Trait):
 
     https://developers.google.com/actions/smarthome/traits/openclose
     """
+
     # Cover device classes that require 2FA
     COVER_2FA = (cover.DEVICE_CLASS_DOOR, cover.DEVICE_CLASS_GARAGE)
 
