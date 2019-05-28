@@ -186,7 +186,7 @@ group.all_lights:
   hidden: false
   control: hidden
   context_key_words: światła
-  context_answer: OK, wybrano wszystkie światła. Możesz powiedzieć co włączyć lub nawigować pilotem by sprawdzać status oraz przełączać.
+  context_answer: OK, wybrano wszystkie światła. Możesz powiedzieć co włączyć lub nawigować pilotem by sprawdzać status oraz przełączać
   friendly_name: Światła
   remote_group_view: Mój Dom
 group.all_ais_sensors:
@@ -265,7 +265,7 @@ group.podcast_player:
   order: 6
 group.music_player:
   context_key_words: youtube,muzyka,yt,tuba,spotify
-  context_answer: OK, powiedz jakiej muzyki chcesz posłuchać?
+  context_answer: OK, powiedz jakiej muzyki chcesz posłuchać
   context_suffix: Muzyka
   remote_group_view: Audio
   order: 7

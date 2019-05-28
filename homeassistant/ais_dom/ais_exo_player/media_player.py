@@ -392,12 +392,17 @@ class ExoPlayerDevice(MediaPlayerDevice):
             ais_global.G_CURR_MEDIA_CONTENT = j_info
             # play
             self._media_content_id = j_info["media_content_id"]
-            self._media_position = 0
             self._media_status_received_time = dt_util.utcnow()
+            if "media_position_ms" in j_info:
+                self._media_position = j_info["media_position_ms"]
+            else:
+                self._media_position = 0
+
             # TODO one call to frame
             self.hass.services.call('ais_ai_service', 'publish_command_to_frame', {
                     "key": 'playAudio', "val": self._media_content_id,
-                    "ip": self._device_ip, "setPlayerShuffle": self._shuffle})
+                    "ip": self._device_ip, "setPlayerShuffle": self._shuffle,
+                    "setMediaPosition": self._media_position})
 
             if "IMAGE_URL" not in j_info:
                 self._stream_image = "/static/icons/tile-win-310x150.png"
@@ -514,6 +519,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
             if "giveMeNextOne" in message:
                 play_next = message.get("giveMeNextOne", False)
                 if play_next is True:
+                    # TODO remove bookmark
                     self.hass.async_add_job(
                         self.hass.services.async_call(
                             'media_player',

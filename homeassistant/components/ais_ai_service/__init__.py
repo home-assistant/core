@@ -1357,8 +1357,7 @@ def get_groups(hass):
         if entity.entity_id.startswith('group.'):
             remote = entity.attributes.get('remote_group_view')
             if remote is not None:
-                if entity.entity_id != 'group.ais_pilot':
-                    add_menu_item(entity)
+                add_menu_item(entity)
         elif entity.entity_id.startswith('sensor.'):
             # add sensors to the all_ais_sensors group
             device_class = entity.attributes.get('device_class', None)

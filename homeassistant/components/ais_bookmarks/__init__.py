@@ -149,7 +149,8 @@ def async_setup(hass, config):
             _audio_info = json.dumps({"IMAGE_URL": track["thumbnail"], "NAME": track['title'],
                                       "audio_type": track['audio_type'],
                                       "MEDIA_SOURCE": track['media_source'],
-                                      "media_content_id": track['uri']})
+                                      "media_content_id": track['uri'],
+                                      "media_position_ms": track["media_position_ms"]})
             # set stream uri, image and title
             hass.async_add_job(
                 hass.services.async_call(
@@ -158,12 +159,6 @@ def async_setup(hass, config):
                         "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
                         "media_content_type": "ais_content_info",
                         "media_content_id": _audio_info
-                    })
-            )
-            # seek to position
-            hass.async_add_job(hass.services.async_call('media_player', 'media_seek', {
-                        "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                        "seek_position": track["media_position_ms"]
                     })
             )
 
