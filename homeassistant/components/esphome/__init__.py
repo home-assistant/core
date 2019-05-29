@@ -2,35 +2,34 @@
 import asyncio
 import logging
 import math
-from typing import Any, Dict, List, Optional, TYPE_CHECKING, Callable, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
+from aioesphomeapi import (
+    COMPONENT_TYPE_TO_INFO, APIClient, APIConnectionError, DeviceInfo,
+    EntityInfo, EntityState, ServiceCall, UserService, UserServiceArgType)
 import attr
 import voluptuous as vol
 
 from homeassistant import const
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, \
-    EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback, Event, State
-import homeassistant.helpers.device_registry as dr
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.core import Event, State, callback
 from homeassistant.exceptions import TemplateError
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import template
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, \
-    async_dispatcher_send
+import homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
-from homeassistant.helpers.template import Template
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 # Import config flow so that it's added to the registry
 from .config_flow import EsphomeFlowHandler  # noqa
-
-if TYPE_CHECKING:
-    from aioesphomeapi import APIClient, EntityInfo, EntityState, DeviceInfo, \
-        ServiceCall, UserService
 
 DOMAIN = 'esphome'
 _LOGGER = logging.getLogger(__name__)
@@ -110,10 +109,6 @@ class RuntimeEntryData:
     async def async_load_from_store(self) -> Tuple[List['EntityInfo'],
                                                    List['UserService']]:
         """Load the retained data from store and return de-serialized data."""
-        # pylint: disable= redefined-outer-name
-        from aioesphomeapi import COMPONENT_TYPE_TO_INFO, DeviceInfo, \
-            UserService
-
         restored = await self.store.async_load()
         if restored is None:
             return [], []
@@ -164,9 +159,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistantType,
                             entry: ConfigEntry) -> bool:
     """Set up the esphome component."""
-    # pylint: disable=redefined-outer-name
-    from aioesphomeapi import APIClient, APIConnectionError
-
     hass.data.setdefault(DOMAIN, {})
 
     host = entry.data[CONF_HOST]
@@ -306,8 +298,6 @@ async def _setup_auto_reconnect_logic(hass: HomeAssistantType,
                                       cli: 'APIClient',
                                       entry: ConfigEntry, host: str, on_login):
     """Set up the re-connect logic for the API client."""
-    from aioesphomeapi import APIConnectionError
-
     async def try_connect(tries: int = 0, is_disconnect: bool = True) -> None:
         """Try connecting to the API client. Will retry if not successful."""
         if entry.entry_id not in hass.data[DOMAIN]:
@@ -382,7 +372,6 @@ async def _async_setup_device_registry(hass: HomeAssistantType,
 async def _register_service(hass: HomeAssistantType,
                             entry_data: RuntimeEntryData,
                             service: 'UserService'):
-    from aioesphomeapi import UserServiceArgType
     service_name = '{}_{}'.format(entry_data.device_info.name, service.name)
     schema = {}
     for arg in service.args:

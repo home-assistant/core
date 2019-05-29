@@ -46,6 +46,7 @@ TEST_REQUIREMENTS = (
     'aioambient',
     'aioautomatic',
     'aiobotocore',
+    'aioesphomeapi',
     'aiohttp_cors',
     'aiohue',
     'aiounifi',
