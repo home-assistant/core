@@ -1,17 +1,15 @@
 """Support for esphome sensors."""
 import logging
 import math
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
+
+from aioesphomeapi import (
+    SensorInfo, SensorState, TextSensorInfo, TextSensorState)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import EsphomeEntity, platform_async_setup_entry, esphome_state_property
-
-if TYPE_CHECKING:
-    # pylint: disable=unused-import
-    from aioesphomeapi import ( # noqa
-        SensorInfo, SensorState, TextSensorInfo, TextSensorState)
+from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,10 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistantType,
                             entry: ConfigEntry, async_add_entities) -> None:
     """Set up esphome sensors based on a config entry."""
-    # pylint: disable=redefined-outer-name
-    from aioesphomeapi import (  # noqa
-        SensorInfo, SensorState, TextSensorInfo, TextSensorState)
-
     await platform_async_setup_entry(
         hass, entry, async_add_entities,
         component_key='sensor',
@@ -41,11 +35,11 @@ class EsphomeSensor(EsphomeEntity):
     """A sensor implementation for esphome."""
 
     @property
-    def _static_info(self) -> 'SensorInfo':
+    def _static_info(self) -> SensorInfo:
         return super()._static_info
 
     @property
-    def _state(self) -> Optional['SensorState']:
+    def _state(self) -> Optional[SensorState]:
         return super()._state
 
     @property

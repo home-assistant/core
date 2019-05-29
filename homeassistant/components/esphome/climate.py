@@ -1,6 +1,8 @@
 """Support for ESPHome climate devices."""
 import logging
-from typing import TYPE_CHECKING, List, Optional
+from typing import List, Optional
+
+from aioesphomeapi import ClimateInfo, ClimateMode, ClimateState
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -12,21 +14,15 @@ from homeassistant.const import (
     ATTR_TEMPERATURE, PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE,
     STATE_OFF, TEMP_CELSIUS)
 
-from . import EsphomeEntity, platform_async_setup_entry, \
-    esphome_state_property, esphome_map_enum
-
-if TYPE_CHECKING:
-    # pylint: disable=unused-import
-    from aioesphomeapi import ClimateInfo, ClimateState, ClimateMode  # noqa
+from . import (
+    EsphomeEntity, esphome_map_enum, esphome_state_property,
+    platform_async_setup_entry)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up ESPHome climate devices based on a config entry."""
-    # pylint: disable=redefined-outer-name
-    from aioesphomeapi import ClimateInfo, ClimateState  # noqa
-
     await platform_async_setup_entry(
         hass, entry, async_add_entities,
         component_key='climate',
@@ -37,8 +33,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 @esphome_map_enum
 def _climate_modes():
-    # pylint: disable=redefined-outer-name
-    from aioesphomeapi import ClimateMode  # noqa
     return {
         ClimateMode.OFF: STATE_OFF,
         ClimateMode.AUTO: STATE_AUTO,
@@ -51,11 +45,11 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
     """A climate implementation for ESPHome."""
 
     @property
-    def _static_info(self) -> 'ClimateInfo':
+    def _static_info(self) -> ClimateInfo:
         return super()._static_info
 
     @property
-    def _state(self) -> Optional['ClimateState']:
+    def _state(self) -> Optional[ClimateState]:
         return super()._state
 
     @property
