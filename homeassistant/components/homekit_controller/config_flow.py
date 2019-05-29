@@ -109,7 +109,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             })
         )
 
-    async def async_step_discovery(self, discovery_info):
+    async def async_step_zeroconf(self, discovery_info):
         """Handle a discovered HomeKit accessory.
 
         This flow is triggered by the discovery component.
@@ -132,7 +132,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
         # pylint: disable=unsupported-assignment-operation
         self.context['title_placeholders'] = {
-            'name': discovery_info['name'],
+            'name': discovery_info['name'].replace('._hap._tcp.local.', ''),
         }
 
         # The configuration number increases every time the characteristic map
