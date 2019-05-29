@@ -89,13 +89,12 @@ class MobileAppNotificationService(BaseNotificationService):
         targets = kwargs.get(ATTR_TARGET)
 
         if not targets:
-            targets = push_registrations(self.hass)
+            targets = push_registrations(self.hass).values()
 
         if kwargs.get(ATTR_DATA) is not None:
             data[ATTR_DATA] = kwargs.get(ATTR_DATA)
 
         for target in targets:
-
             entry = self.hass.data[DOMAIN][DATA_CONFIG_ENTRIES][target]
             entry_data = entry.data
 
