@@ -12,7 +12,7 @@ To update, run python3 -m hassfest
 \"\"\"
 
 
-SERVICE_TYPES = {}
+ZEROCONF = {}
 """.strip()
 
 
