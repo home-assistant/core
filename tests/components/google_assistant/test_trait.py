@@ -843,6 +843,8 @@ async def test_lock_unlock_lock(hass):
     assert helpers.get_google_type(lock.DOMAIN, None) is not None
     assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN,
                                            None)
+    assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, lock.SUPPORT_OPEN,
+                                           None)
 
     trt = trait.LockUnlockTrait(hass,
                                 State('lock.front_door', lock.STATE_LOCKED),
@@ -921,6 +923,13 @@ async def test_lock_unlock_unlock(hass):
             trait.COMMAND_LOCKUNLOCK, BASIC_DATA, {'lock': False}, {})
     assert len(calls) == 1
     assert err.value.code == const.ERR_CHALLENGE_NOT_SETUP
+
+    # Test with 2FA override
+    with patch('homeassistant.components.google_assistant.helpers'
+               '.Config.should_2fa', return_value=False):
+        await trt.execute(
+            trait.COMMAND_LOCKUNLOCK, BASIC_DATA, {'lock': False}, {})
+    assert len(calls) == 2
 
 
 async def test_fan_speed(hass):
@@ -1215,6 +1224,8 @@ async def test_openclose_cover_secure(hass, device_class):
     """Test OpenClose trait support for cover domain."""
     assert helpers.get_google_type(cover.DOMAIN, device_class) is not None
     assert trait.OpenCloseTrait.supported(
+        cover.DOMAIN, cover.SUPPORT_SET_POSITION, device_class)
+    assert trait.OpenCloseTrait.might_2fa(
         cover.DOMAIN, cover.SUPPORT_SET_POSITION, device_class)
 
     trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
