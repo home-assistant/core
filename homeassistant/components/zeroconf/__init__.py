@@ -1,4 +1,7 @@
 """Support for exposing Home Assistant via Zeroconf."""
+# PyLint bug confuses absolute/relative imports
+# https://github.com/PyCQA/pylint/issues/1931
+# pylint: disable=no-name-in-module
 import logging
 
 import ipaddress
