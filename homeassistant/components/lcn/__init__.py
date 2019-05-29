@@ -21,6 +21,9 @@ from .const import (
     LOGICOP_PORTS, MOTOR_PORTS, OUTPUT_PORTS, RELAY_PORTS, S0_INPUTS,
     SETPOINTS, THRESHOLDS, VAR_UNITS, VARIABLES)
 from .helpers import has_unique_connection_names, is_address
+from .services import (
+    DynText, Led, LockKeys, LockRegulator, OutputAbs, OutputRel, OutputToggle,
+    Pck, Relays, SendKeys, VarAbs, VarRel, VarReset)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -155,6 +158,24 @@ async def async_setup(hass, config):
             hass.async_create_task(
                 async_load_platform(hass, component, DOMAIN,
                                     config[DOMAIN][conf_key], config))
+
+    # register service calls
+    for service_name, service in (('output_abs', OutputAbs),
+                                  ('output_rel', OutputRel),
+                                  ('output_toggle', OutputToggle),
+                                  ('relays', Relays),
+                                  ('var_abs', VarAbs),
+                                  ('var_reset', VarReset),
+                                  ('var_rel', VarRel),
+                                  ('lock_regulator', LockRegulator),
+                                  ('led', Led),
+                                  ('send_keys', SendKeys),
+                                  ('lock_keys', LockKeys),
+                                  ('dyn_text', DynText),
+                                  ('pck', Pck)):
+        hass.services.async_register(DOMAIN, service_name,
+                                     service(hass), service.schema)
+
     return True
 
 
