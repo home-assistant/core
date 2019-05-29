@@ -42,7 +42,8 @@ def is_installed(package: str) -> bool:
 
 def install_package(package: str, upgrade: bool = True,
                     target: Optional[str] = None,
-                    constraints: Optional[str] = None) -> bool:
+                    constraints: Optional[str] = None,
+                    find_links: Optional[str] = None) -> bool:
     """Install a package on PyPi. Accepts pip compatible package strings.
 
     Return boolean if install successful.
@@ -55,6 +56,8 @@ def install_package(package: str, upgrade: bool = True,
         args.append('--upgrade')
     if constraints is not None:
         args += ['--constraint', constraints]
+    if find_links is not None:
+        args += ['--find-links', find_links]
     if target:
         assert not is_virtual_env()
         # This only works if not running in venv

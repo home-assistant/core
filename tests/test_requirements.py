@@ -77,3 +77,30 @@ async def test_install_existing_package(hass):
             hass, 'test_component', ['hello==1.0.0'])
 
     assert len(mock_inst.mock_calls) == 0
+
+
+async def test_install_on_hassio(hass):
+    """Test an install attempt on an hassio system env."""
+    hass.config.skip_pip = False
+    mock_integration(
+        hass, MockModule('comp', requirements=['hello==1.0.0']))
+
+    with patch(
+            'homeassistant.util.package.is_installed', return_value=False
+        ), \
+        patch(
+            'homeassistant.util.package.install_package'
+        ) as mock_inst, \
+        patch.dict(
+            os.environ, {'HASSIO_WHEELS': "https://wheels.hass.io/test"}
+        ), \
+        patch(
+            'os.path.dirname'
+    ) as mock_dir:
+        mock_dir.return_value = 'ha_package_path'
+        assert await setup.async_setup_component(hass, 'comp', {})
+        assert 'comp' in hass.config.components
+        print(mock_inst.call_args)
+        assert mock_inst.call_args == call(
+            'hello==1.0.0', find_links="https://wheels.hass.io/test",
+            constraints=os.path.join('ha_package_path', CONSTRAINT_FILE))

@@ -47,6 +47,8 @@ def pip_kwargs(config_dir: Optional[str]) -> Dict[str, Any]:
     kwargs = {
         'constraints': os.path.join(os.path.dirname(__file__), CONSTRAINT_FILE)
     }
-    if not (config_dir is None or pkg_util.is_virtual_env()):
+    if 'HASSIO_WHEELS' in os.environ:
+        kwargs['find_links'] = os.environ['HASSIO_WHEELS']
+    elif not (config_dir is None or pkg_util.is_virtual_env()):
         kwargs['target'] = os.path.join(config_dir, 'deps')
     return kwargs
