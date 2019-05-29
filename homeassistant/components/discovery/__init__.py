@@ -96,8 +96,18 @@ OPTIONAL_SERVICE_HANDLERS = {
     SERVICE_DLNA_DMR: ('media_player', 'dlna_dmr'),
 }
 
-DEFAULT_ENABLED = list(CONFIG_ENTRY_HANDLERS) + list(SERVICE_HANDLERS)
-DEFAULT_DISABLED = list(OPTIONAL_SERVICE_HANDLERS)
+MIGRATED_SERVICE_HANDLERS = {
+    'axis': None,
+    'esphome': None,
+    'ikea_tradfri': None,
+    'homekit': None,
+    'philips_hue': None
+}
+
+DEFAULT_ENABLED = list(CONFIG_ENTRY_HANDLERS) + list(SERVICE_HANDLERS) + \
+    list(MIGRATED_SERVICE_HANDLERS)
+DEFAULT_DISABLED = list(OPTIONAL_SERVICE_HANDLERS) + \
+    list(MIGRATED_SERVICE_HANDLERS)
 
 CONF_IGNORE = 'ignore'
 CONF_ENABLE = 'enable'
@@ -144,6 +154,9 @@ async def async_setup(hass, config):
 
     async def new_service_found(service, info):
         """Handle a new service if one is found."""
+        if service in MIGRATED_SERVICE_HANDLERS:
+            return
+
         if service in ignored_platforms:
             logger.info("Ignoring service: %s %s", service, info)
             return
