@@ -883,6 +883,17 @@ def select_entity(hass, long_press):
         else:
             hass.services.call('ais_drives_service', 'remote_select_item')
             return
+    elif CURR_ENTITIE.startswith("media_player."):
+        if CURR_ENTITIE_SELECTED_ACTION == ais_global.G_ACTION_SET_AUDIO_SHUFFLE:
+            state = hass.states.get('media_player.wbudowany_glosnik')
+            shuffle = state.attributes.get('shuffle', False)
+            if shuffle:
+                _say_it(hass, "Odtwarzaj w kolejności.", None)
+                hass.services.call('media_player', 'shuffle_set', {"entity_id": CURR_ENTITIE, "shuffle": False})
+            else:
+                _say_it(hass, "Odtwarzaj losowo.", None)
+                hass.services.call('media_player', 'shuffle_set', {"entity_id": CURR_ENTITIE, "shuffle": True})
+            return
 
     if CURR_ENTITIE_ENTERED is False:
         # check if the entity option can be selected
@@ -1049,16 +1060,20 @@ def set_on_dpad_down(hass, long_press):
     global CURR_ENTITIE_SELECTED_ACTION
     if CURR_ENTITIE is not None:
         if CURR_ENTITIE.startswith("media_player."):
-            # speed up on remote
-            state = hass.states.get('input_number.media_player_speed')
-            _min = float(state.attributes.get('min'))
-            _step = float(state.attributes.get('step'))
-            _curr = round(max(float(state.state) - _step, _min), 2)
-            _say_it(hass, str(_curr), None)
-            _LOGGER.info("speed down the player - info from remote: " + str(_curr))
-            hass.services.call('ais_ai_service', 'publish_command_to_frame', {"key": 'setPlaybackSpeed', "val": _curr})
-            hass.services.call('input_number', 'set_value',
-                               {"entity_id": "input_number.media_player_speed", "value": _curr})
+            if CURR_ENTITIE_SELECTED_ACTION is None or \
+                    CURR_ENTITIE_SELECTED_ACTION == ais_global.G_ACTION_SET_AUDIO_SHUFFLE:
+                CURR_ENTITIE_SELECTED_ACTION = ais_global.G_ACTION_SET_AUDIO_SPEED
+                state = hass.states.get('input_number.media_player_speed')
+                _say_it(hass, "Prędkość odtwarzania audio " + str(state.state) +
+                        " przyśpiesz strzałką w prawo zwolnij strzałką w lewo.", None)
+            elif CURR_ENTITIE_SELECTED_ACTION == ais_global.G_ACTION_SET_AUDIO_SPEED:
+                CURR_ENTITIE_SELECTED_ACTION = ais_global.G_ACTION_SET_AUDIO_SHUFFLE
+                state = hass.states.get('media_player.wbudowany_glosnik')
+                shuffle = state.attributes.get('shuffle', False)
+                if shuffle:
+                    _say_it(hass, "Odtwarzanie losowe wyłączone. Naciśnij OK by włączyć.", None)
+                else:
+                    _say_it(hass, "Odtwarzanie losowe włączone. Naciśnij OK by wyłączyć.", None)
             return
         elif CURR_ENTITIE.startswith('input_text.') and CURR_ENTITIE_ENTERED:
             set_prev_virtual_keyboard_mode()
@@ -1081,28 +1096,13 @@ def set_on_dpad_down(hass, long_press):
 
 
 def set_on_dpad_up(hass, long_press):
-    #
     if CURR_ENTITIE is not None:
         if CURR_ENTITIE.startswith("media_player."):
-            # speed up on remote
-            state = hass.states.get('input_number.media_player_speed')
-            _max = float(state.attributes.get('max'))
-            _step = float(state.attributes.get('step'))
-            _curr = round(min(float(state.state) + _step, _max), 2)
-            _say_it(hass, str(_curr), None)
-            _LOGGER.info("speed up the player - info from remote: " + str(_curr))
-            hass.services.call(
-                'ais_ai_service',
-                'publish_command_to_frame', {
-                    "key": 'setPlaybackSpeed',
-                    "val": _curr
-                }
-            )
-            hass.services.call(
-                'input_number',
-                'set_value', {
-                    "entity_id": "input_number.media_player_speed",
-                    "value": _curr})
+            # info about audio
+            state = hass.states.get('media_player.wbudowany_glosnik')
+            text = 'Odtwarzam ' + state.attributes.get('media_title', '')
+            text += ' z ' + state.attributes.get('source', '')
+            _say_it(hass, text, None)
             return
         elif CURR_ENTITIE.startswith('input_text.') and CURR_ENTITIE_ENTERED:
             set_next_virtual_keyboard_mode()
@@ -1113,12 +1113,27 @@ def set_on_dpad_up(hass, long_press):
 
 def set_focus_on_prev_entity(hass, long_press):
     # prev on joystick
-    if long_press and CURR_ENTITIE is not None:
+    if CURR_ENTITIE is not None:
         if CURR_ENTITIE.startswith("media_player."):
-            # seek back on remote
-            _LOGGER.info("seek back in the player - info from remote")
-            hass.services.call('media_player', 'media_seek', {"entity_id": CURR_ENTITIE, "seek_position": 0})
-            return
+            if long_press:
+                # seek back on remote
+                _LOGGER.info("seek back in the player - info from remote")
+                hass.services.call('media_player', 'media_seek', {"entity_id": CURR_ENTITIE, "seek_position": 0})
+                return
+            else:
+                if CURR_ENTITIE_SELECTED_ACTION == ais_global.G_ACTION_SET_AUDIO_SPEED:
+                    # speed down on remote
+                    state = hass.states.get('input_number.media_player_speed')
+                    _min = float(state.attributes.get('min'))
+                    _step = float(state.attributes.get('step'))
+                    _curr = round(max(float(state.state) - _step, _min), 2)
+                    _say_it(hass, str(_curr), None)
+                    hass.services.call(
+                        'ais_ai_service', 'publish_command_to_frame', {"key": 'setPlaybackSpeed', "val": _curr})
+                    hass.services.call('input_number', 'set_value',
+                                       {"entity_id": "input_number.media_player_speed", "value": _curr})
+                    return
+
     # no group is selected go to prev in the groups view menu
     if CURR_GROUP is None:
             set_prev_group_view()
@@ -1152,12 +1167,27 @@ def set_focus_on_prev_entity(hass, long_press):
 
 def set_focus_on_next_entity(hass, long_press):
     # next on joystick
-    if long_press and CURR_ENTITIE is not None:
+    if CURR_ENTITIE is not None:
         if CURR_ENTITIE.startswith("media_player."):
-            # seek next on remote
-            _LOGGER.info("seek next in the player - info from remote")
-            hass.services.call('media_player', 'media_seek', {"entity_id": CURR_ENTITIE, "seek_position": 1})
-            return
+            if long_press:
+                # seek next on remote
+                _LOGGER.info("seek next in the player - info from remote")
+                hass.services.call('media_player', 'media_seek', {"entity_id": CURR_ENTITIE, "seek_position": 1})
+                return
+            else:
+                if CURR_ENTITIE_SELECTED_ACTION == ais_global.G_ACTION_SET_AUDIO_SPEED:
+                    # speed up on remote
+                    state = hass.states.get('input_number.media_player_speed')
+                    _max = float(state.attributes.get('max'))
+                    _step = float(state.attributes.get('step'))
+                    _curr = round(min(float(state.state) + _step, _max), 2)
+                    _say_it(hass, str(_curr), None)
+                    _LOGGER.info("speed up the player - info from remote: " + str(_curr))
+                    hass.services.call('ais_ai_service', 'publish_command_to_frame',
+                                       {"key": 'setPlaybackSpeed', "val": _curr})
+                    hass.services.call('input_number', 'set_value',
+                                       {"entity_id": "input_number.media_player_speed", "value": _curr})
+                    return
     # no group is selected go to next in the groups view menu
     if CURR_GROUP is None:
         set_next_group_view()
@@ -1879,7 +1909,7 @@ def _process_command_from_frame(hass, service):
             _LOGGER.info("problem to add_bookmark: " + str(e))
         return
     elif service.data["topic"] == 'ais/player_speed':
-        speed = json.loads(service.data["payload"])
+        # speed = json.loads(service.data["payload"])
         # _say_it(hass, "prędkość odtwarzania: " + str(speed["currentSpeed"]), callback)
         # hass.services.call(
         #     'input_number',
@@ -2176,7 +2206,7 @@ def _process_code(hass, data, callback):
     global CURR_BUTTON_CODE
     global CURR_BUTTON_LONG_PRESS
     global CURR_ENTITIE_ENTERED
-    global CURR_ENTITIE_MARKED_ACTION
+    global CURR_ENTITIE_SELECTED_ACTION
     if 'Action' not in data or 'KeyCode' not in data:
         return
     # check if we have callback
@@ -2222,8 +2252,9 @@ def _process_code(hass, data, callback):
     CURR_BUTTON_CODE = code
     # show the code in web app
     hass.states.set('binary_sensor.ais_remote_button', code)
+
     # remove selected action
-    if code != 23:
+    if code not in (21, 22, 23):
         CURR_ENTITIE_SELECTED_ACTION = None
 
 # decode Key Events

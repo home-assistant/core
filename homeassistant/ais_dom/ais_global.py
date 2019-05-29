@@ -32,7 +32,8 @@ G_CURR_MEDIA_CONTENT = {}
 
 # actions on remote
 G_ACTION_DELETE = 'delete'
-
+G_ACTION_SET_AUDIO_SPEED = 'set_audio_speed'
+G_ACTION_SET_AUDIO_SHUFFLE = 'set_audio_shuffle'
 
 G_ICON_FOR_AUDIO = {
     G_AN_RADIO: 'mdi:radio',
