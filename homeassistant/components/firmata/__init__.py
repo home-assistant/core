@@ -8,11 +8,10 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
 from .board import FirmataBoard
-from .const import (CONF_ARDUINO_WAIT, CONF_BOARDS, CONF_HANDSHAKE,
-                    CONF_INITIAL_STATE, CONF_NEGATE_STATE, CONF_PIN, CONF_PORT,
-                    CONF_REMOTE, CONF_SERIAL_PORT, CONF_SLEEP_TUNE,
-                    CONF_SWITCHES, CONF_TYPE, CONF_TYPE_ANALOG,
-                    CONF_TYPE_DIGITAL, DOMAIN)
+from .const import (CONF_ARDUINO_WAIT, CONF_HANDSHAKE, CONF_INITIAL_STATE,
+                    CONF_NEGATE_STATE, CONF_PIN, CONF_PORT, CONF_REMOTE,
+                    CONF_SERIAL_PORT, CONF_SLEEP_TUNE, CONF_SWITCHES,
+                    CONF_TYPE, CONF_TYPE_ANALOG, CONF_TYPE_DIGITAL, DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,8 +52,8 @@ BOARD_CONFIG_SCHEMA = vol.Schema(vol.All(
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_BOARDS): {cv.string: BOARD_CONFIG_SCHEMA},
-    }),
+        cv.string: BOARD_CONFIG_SCHEMA
+    })
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -64,10 +63,8 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN] = {}
 
-    boards = conf[CONF_BOARDS]
-
-    for name in boards:
-        board_conf = boards[name]
+    for name in conf:
+        board_conf = conf[name]
 
         board = FirmataBoard(hass, name, board_conf)
 

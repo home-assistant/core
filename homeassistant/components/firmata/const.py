@@ -4,7 +4,6 @@ import logging
 LOGGER = logging.getLogger('.')
 
 CONF_ARDUINO_WAIT = 'arduino_wait'
-CONF_BOARDS = 'boards'
 CONF_DIGITAL_PULLUP = 'pullup'
 CONF_HANDSHAKE = 'handshake'
 CONF_INITIAL_STATE = 'initial'
