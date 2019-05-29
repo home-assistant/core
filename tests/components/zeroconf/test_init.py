@@ -38,4 +38,4 @@ async def test_setup(hass):
         await hass.async_block_till_done()
 
     assert len(MockServiceBrowser.mock_calls) == len(zc_gen.SERVICE_TYPES)
-    assert len(mock_config_flow.mock_calls) == 2
+    assert len(mock_config_flow.mock_calls) == len(zc_gen.SERVICE_TYPES)
