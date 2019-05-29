@@ -32,7 +32,7 @@ N26_COMPONENTS = [
 
 def setup(hass, config):
     """Set up N26 Component."""
-    if config[DOMAIN] and type(config[DOMAIN]) is list:
+    if config[DOMAIN] and isinstance(config[DOMAIN], list):
         acc_list = config[DOMAIN]
     else:
         acc_list = [config[DOMAIN]]

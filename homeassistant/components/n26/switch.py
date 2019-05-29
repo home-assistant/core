@@ -15,7 +15,7 @@ def setup_platform(
         hass, config, add_entities, discovery_info=None):
     """Set up the N26 switch platform."""
     api_data = hass.data[DOMAIN][DATA]
-    if api_data and type(api_data) is list:
+    if api_data and isinstance(api_data, list):
         api_list = api_data
     else:
         api_list = [api_data]
