@@ -277,7 +277,7 @@ async def device_config_changed(hass, accessories):
     flow = config_flow.HomekitControllerFlowHandler()
     flow.hass = hass
     flow.context = {}
-    result = await flow.async_step_discovery(discovery_info)
+    result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'abort'
     assert result['reason'] == 'already_configured'
 
