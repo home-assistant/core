@@ -1,6 +1,5 @@
 """Helpers for config validation using voluptuous."""
 import inspect
-import json
 import logging
 import os
 import re
@@ -17,7 +16,7 @@ from pkg_resources import parse_version
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
     CONF_ABOVE, CONF_ALIAS, CONF_BELOW, CONF_CONDITION, CONF_ENTITY_ID,
-    CONF_ENTITY_NAMESPACE, CONF_NAME, CONF_PLATFORM, CONF_SCAN_INTERVAL,
+    CONF_ENTITY_NAMESPACE, CONF_PLATFORM, CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC, CONF_VALUE_TEMPLATE,
     CONF_TIMEOUT, ENTITY_MATCH_ALL, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET,
     TEMP_CELSIUS, TEMP_FAHRENHEIT, WEEKDAYS, __version__)
