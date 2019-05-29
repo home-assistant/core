@@ -86,12 +86,14 @@ async def test_full_flow_implementation(hass):
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
 
 
-async def test_abort_no_code(hass):
+async def test_abort_invalid_code(hass):
     """Test if no code is given to step_code."""
     config_flow.register_flow_implementation(hass, None, None)
     flow = await init_config_flow(hass)
 
-    result = await flow.async_step_code('invalid')
+    with patch('ambiclimate.AmbiclimateOAuth.get_access_token',
+               return_value=mock_coro(None)):
+        result = await flow.async_step_code('invalid')
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
     assert result['reason'] == 'access_token'
 

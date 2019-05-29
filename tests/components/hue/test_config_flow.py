@@ -185,14 +185,15 @@ async def test_flow_link_unknown_host(hass):
     }
 
 
-async def test_bridge_discovery(hass):
+async def test_bridge_ssdp(hass):
     """Test a bridge being discovered."""
     flow = config_flow.HueFlowHandler()
     flow.hass = hass
+    flow.context = {}
 
     with patch.object(config_flow, 'get_bridge',
                       side_effect=errors.AuthenticationRequired):
-        result = await flow.async_step_discovery({
+        result = await flow.async_step_ssdp({
             'host': '0.0.0.0',
             'serial': '1234'
         })
@@ -201,12 +202,13 @@ async def test_bridge_discovery(hass):
     assert result['step_id'] == 'link'
 
 
-async def test_bridge_discovery_emulated_hue(hass):
+async def test_bridge_ssdp_emulated_hue(hass):
     """Test if discovery info is from an emulated hue instance."""
     flow = config_flow.HueFlowHandler()
     flow.hass = hass
+    flow.context = {}
 
-    result = await flow.async_step_discovery({
+    result = await flow.async_step_ssdp({
         'name': 'HASS Bridge',
         'host': '0.0.0.0',
         'serial': '1234'
@@ -215,7 +217,7 @@ async def test_bridge_discovery_emulated_hue(hass):
     assert result['type'] == 'abort'
 
 
-async def test_bridge_discovery_already_configured(hass):
+async def test_bridge_ssdp_already_configured(hass):
     """Test if a discovered bridge has already been configured."""
     MockConfigEntry(domain='hue', data={
         'host': '0.0.0.0'
@@ -223,8 +225,9 @@ async def test_bridge_discovery_already_configured(hass):
 
     flow = config_flow.HueFlowHandler()
     flow.hass = hass
+    flow.context = {}
 
-    result = await flow.async_step_discovery({
+    result = await flow.async_step_ssdp({
         'host': '0.0.0.0',
         'serial': '1234'
     })

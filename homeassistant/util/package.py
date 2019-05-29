@@ -5,6 +5,11 @@ import os
 from subprocess import PIPE, Popen
 import sys
 from typing import Optional
+from urllib.parse import urlparse
+
+import pkg_resources
+from importlib_metadata import version, PackageNotFoundError
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,6 +19,25 @@ def is_virtual_env() -> bool:
     # Check supports venv && virtualenv
     return (getattr(sys, 'base_prefix', sys.prefix) != sys.prefix or
             hasattr(sys, 'real_prefix'))
+
+
+def is_installed(package: str) -> bool:
+    """Check if a package is installed and will be loaded when we import it.
+
+    Returns True when the requirement is met.
+    Returns False when the package is not installed or doesn't meet req.
+    """
+    try:
+        req = pkg_resources.Requirement.parse(package)
+    except ValueError:
+        # This is a zip file. We no longer use this in Home Assistant,
+        # leaving it in for custom components.
+        req = pkg_resources.Requirement.parse(urlparse(package).fragment)
+
+    try:
+        return version(req.project_name) in req
+    except PackageNotFoundError:
+        return False
 
 
 def install_package(package: str, upgrade: bool = True,

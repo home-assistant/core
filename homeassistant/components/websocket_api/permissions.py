@@ -10,6 +10,7 @@ from homeassistant.const import (
     EVENT_THEMES_UPDATED)
 from homeassistant.components.persistent_notification import (
     EVENT_PERSISTENT_NOTIFICATIONS_UPDATED)
+from homeassistant.components.lovelace import EVENT_LOVELACE_UPDATED
 from homeassistant.helpers.area_registry import EVENT_AREA_REGISTRY_UPDATED
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
@@ -26,4 +27,5 @@ SUBSCRIBE_WHITELIST = {
     EVENT_AREA_REGISTRY_UPDATED,
     EVENT_DEVICE_REGISTRY_UPDATED,
     EVENT_ENTITY_REGISTRY_UPDATED,
+    EVENT_LOVELACE_UPDATED,
 }

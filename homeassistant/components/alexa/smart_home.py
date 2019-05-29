@@ -1432,7 +1432,7 @@ async def async_send_changereport_message(hass, config, alexa_entity):
 
     try:
         session = aiohttp_client.async_get_clientsession(hass)
-        with async_timeout.timeout(DEFAULT_TIMEOUT, loop=hass.loop):
+        with async_timeout.timeout(DEFAULT_TIMEOUT):
             response = await session.post(config.endpoint,
                                           headers=headers,
                                           json=message_serialized,

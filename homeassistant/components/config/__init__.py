@@ -62,7 +62,7 @@ async def async_setup(hass, config):
             tasks.append(setup_panel(panel_name))
 
     if tasks:
-        await asyncio.wait(tasks, loop=hass.loop)
+        await asyncio.wait(tasks)
 
     return True
 

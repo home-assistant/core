@@ -3,7 +3,8 @@
   "name": "Axis",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/axis",
-  "requirements": ["axis==22"],
+  "requirements": ["axis==23"],
   "dependencies": [],
+  "zeroconf": ["_axis-video._tcp.local."],
   "codeowners": ["@kane610"]
 }
