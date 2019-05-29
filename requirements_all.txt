@@ -129,7 +129,11 @@ aiopvapi==1.6.14
 # homeassistant.components.unifi
 aiounifi==4
 
+<<<<<<< HEAD
 # homeassistant.components.cover.aladdin_connect
+=======
+# homeassistant.components.aladdin_connect
+>>>>>>> Revert Zeroconf back to previously used library (#24139)
 aladdin_connect==0.3
 
 # homeassistant.components.alarmdecoder
@@ -1747,7 +1751,11 @@ youtube_dl==2019.01.10
 zengge==0.2
 
 # homeassistant.components.zeroconf
+<<<<<<< HEAD
 zeroconf==0.21.3
+=======
+zeroconf==0.22.0
+>>>>>>> Revert Zeroconf back to previously used library (#24139)
 
 # homeassistant.components.zha
 zha-quirks==0.0.6

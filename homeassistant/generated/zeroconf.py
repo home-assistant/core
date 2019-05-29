@@ -4,7 +4,7 @@ To update, run python3 -m hassfest
 """
 
 
-SERVICE_TYPES = {
+ZEROCONF = {
     "_axis-video._tcp.local.": [
         "axis"
     ],

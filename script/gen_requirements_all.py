@@ -51,7 +51,6 @@ TEST_REQUIREMENTS = (
     'aiohue',
     'aiounifi',
     'aioswitcher',
-    'aiozeroconf',
     'apns2',
     'av',
     'axis',
@@ -150,6 +149,7 @@ TEST_REQUIREMENTS = (
     'vultr',
     'YesssSMS',
     'ruamel.yaml',
+    'zeroconf',
     'zigpy-homeassistant',
     'bellows-homeassistant',
 )
