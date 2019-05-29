@@ -4,7 +4,7 @@ import voluptuous as vol
 import homeassistant.components.automation.state as state
 from homeassistant.core import split_entity_id
 from homeassistant.const import (
-    CONF_DOMAIN, CONF_PLATFORM, CONF_ENTITY_ID, CONF_TYPE)
+    CONF_DEVICE_ID, CONF_DOMAIN, CONF_ENTITY_ID, CONF_PLATFORM, CONF_TYPE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from . import DOMAIN
@@ -26,6 +26,7 @@ ENTITY_TRIGGERS = [
 
 TRIGGER_SCHEMA = vol.All(vol.Schema({
     vol.Required(CONF_PLATFORM): 'device',
+    vol.Optional(CONF_DEVICE_ID): str,
     vol.Required(CONF_DOMAIN): DOMAIN,
     vol.Required(CONF_ENTITY_ID): cv.entity_ids,
     vol.Required(CONF_TYPE): str,
@@ -67,7 +68,7 @@ async def async_get_triggers(hass, device_id):
     for entity in domain_entities:
         for trigger in ENTITY_TRIGGERS:
             trigger = dict(trigger)
-            trigger.update(entity_id=entity.entity_id)
+            trigger.update(device_id=device_id, entity_id=entity.entity_id)
             triggers.append(trigger)
 
     return triggers

@@ -52,8 +52,8 @@ _LOGGER = logging.getLogger(__name__)
 def _platform_validator(config):
     """Validate it is a valid platform."""
     try:
-        platform = importlib.import_module(
-            '.{}'.format(config[CONF_PLATFORM]), __name__)
+        platform = importlib.import_module('.{}'.format(config[CONF_PLATFORM]),
+                                           __name__)
     except ImportError:
         raise vol.Invalid('Invalid platform specified') from None
 
@@ -414,8 +414,8 @@ async def _async_process_trigger(hass, config, trigger_configs, name, action):
     }
 
     for conf in trigger_configs:
-        platform = importlib.import_module(
-            '.{}'.format(conf[CONF_PLATFORM]), __name__)
+        platform = importlib.import_module('.{}'.format(conf[CONF_PLATFORM]),
+                                           __name__)
 
         remove = await platform.async_trigger(hass, conf, action, info)
 
