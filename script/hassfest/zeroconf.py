@@ -63,7 +63,8 @@ def validate(integrations: Dict[str, Integration], config: Config):
     config.cache['zeroconf'] = content = generate_and_validate(integrations)
 
     with open(str(zeroconf_path), 'r') as fp:
-        if fp.read().strip() != content:
+        current = fp.read().strip()
+        if current != content:
             config.add_error(
                 "zeroconf",
                 "File zeroconf.py is not up to date. "
