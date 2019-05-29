@@ -24,10 +24,6 @@ PLATFORM_SCHEMA = vol.Schema({
                      default=DEFAULT_SCAN_INTERVAL): cv.time_period,
 })
 
-#CONFIG_SCHEMA = vol.Schema({
-#    DOMAIN: vol.Any(DOMAIN_SCHEMA, [DOMAIN_SCHEMA])
-#}, extra=vol.ALLOW_EXTRA)
-
 N26_COMPONENTS = [
     'sensor',
     'switch'
@@ -37,10 +33,8 @@ N26_COMPONENTS = [
 def setup(hass, config):
     """Set up N26 Component."""
     if config[DOMAIN] and type(config[DOMAIN]) is list:
-        _LOGGER.debug('Config is list')
         acc_list = config[DOMAIN]
     else:
-        _LOGGER.debug('Config is %s',type(config[DOMAIN]))
         acc_list = [config[DOMAIN]]
 
     api_data_list = []
