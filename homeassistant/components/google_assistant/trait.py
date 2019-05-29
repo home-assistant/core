@@ -104,6 +104,11 @@ class _Trait:
 
     commands = []
 
+    @staticmethod
+    def might_2fa(domain, features, device_class):
+        """Return if the trait might ask for 2FA."""
+        return False
+
     def __init__(self, hass, state, config):
         """Initialize a trait for a state."""
         self.hass = hass
@@ -732,6 +737,11 @@ class LockUnlockTrait(_Trait):
         """Test if state is supported."""
         return domain == lock.DOMAIN
 
+    @staticmethod
+    def might_2fa(domain, features, device_class):
+        """Return if the trait might ask for 2FA."""
+        return True
+
     def sync_attributes(self):
         """Return LockUnlock attributes for a sync request."""
         return {}
@@ -745,7 +755,7 @@ class LockUnlockTrait(_Trait):
         if params['lock']:
             service = lock.SERVICE_LOCK
         else:
-            _verify_pin_challenge(data, challenge)
+            _verify_pin_challenge(data, self.state, challenge)
             service = lock.SERVICE_UNLOCK
 
         await self.hass.services.async_call(lock.DOMAIN, service, {
@@ -1021,6 +1031,9 @@ class OpenCloseTrait(_Trait):
     https://developers.google.com/actions/smarthome/traits/openclose
     """
 
+    # Cover device classes that require 2FA
+    COVER_2FA = (cover.DEVICE_CLASS_DOOR, cover.DEVICE_CLASS_GARAGE)
+
     name = TRAIT_OPENCLOSE
     commands = [
         COMMAND_OPENCLOSE
@@ -1041,6 +1054,12 @@ class OpenCloseTrait(_Trait):
             binary_sensor.DEVICE_CLASS_OPENING,
             binary_sensor.DEVICE_CLASS_WINDOW,
         )
+
+    @staticmethod
+    def might_2fa(domain, features, device_class):
+        """Return if the trait might ask for 2FA."""
+        return (domain == cover.DOMAIN and
+                device_class in OpenCloseTrait.COVER_2FA)
 
     def sync_attributes(self):
         """Return opening direction."""
@@ -1114,9 +1133,8 @@ class OpenCloseTrait(_Trait):
 
             if (should_verify and
                     self.state.attributes.get(ATTR_DEVICE_CLASS)
-                    in (cover.DEVICE_CLASS_DOOR,
-                        cover.DEVICE_CLASS_GARAGE)):
-                _verify_pin_challenge(data, challenge)
+                    in OpenCloseTrait.COVER_2FA):
+                _verify_pin_challenge(data, self.state, challenge)
 
             await self.hass.services.async_call(
                 cover.DOMAIN, service, svc_params,
@@ -1202,8 +1220,11 @@ class VolumeTrait(_Trait):
                 ERR_NOT_SUPPORTED, 'Command not supported')
 
 
-def _verify_pin_challenge(data, challenge):
+def _verify_pin_challenge(data, state, challenge):
     """Verify a pin challenge."""
+    if not data.config.should_2fa(state):
+        return
+
     if not data.config.secure_devices_pin:
         raise SmartHomeError(
             ERR_CHALLENGE_NOT_SETUP, 'Challenge is not set up')
@@ -1217,7 +1238,7 @@ def _verify_pin_challenge(data, challenge):
         raise ChallengeNeeded(CHALLENGE_FAILED_PIN_NEEDED)
 
 
-def _verify_ack_challenge(data, challenge):
+def _verify_ack_challenge(data, state, challenge):
     """Verify a pin challenge."""
     if not challenge or not challenge.get('ack'):
         raise ChallengeNeeded(CHALLENGE_ACK_NEEDED)

@@ -14,8 +14,7 @@ from homeassistant.components.http.data_validator import (
     RequestDataValidator)
 from homeassistant.components import websocket_api
 from homeassistant.components.alexa import smart_home as alexa_sh
-from homeassistant.components.google_assistant import (
-    const as google_const)
+from homeassistant.components.google_assistant import helpers as google_helpers
 
 from .const import (
     DOMAIN, REQUEST_TIMEOUT, PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE,
@@ -81,6 +80,12 @@ async def async_setup(hass):
         websocket_remote_connect)
     hass.components.websocket_api.async_register_command(
         websocket_remote_disconnect)
+
+    hass.components.websocket_api.async_register_command(
+        google_assistant_list)
+    hass.components.websocket_api.async_register_command(
+        google_assistant_update)
+
     hass.http.register_view(GoogleActionsSyncView)
     hass.http.register_view(CloudLoginView)
     hass.http.register_view(CloudLogoutView)
@@ -411,7 +416,6 @@ def _account_data(cloud):
         'cloud': cloud.iot.state,
         'prefs': client.prefs.as_dict(),
         'google_entities': client.google_user_config['filter'].config,
-        'google_domains': list(google_const.DOMAIN_TO_GOOGLE_TYPES),
         'alexa_entities': client.alexa_config.should_expose.config,
         'alexa_domains': list(alexa_sh.ENTITY_ADAPTERS),
         'remote_domain': remote.instance_domain,
@@ -448,3 +452,55 @@ async def websocket_remote_disconnect(hass, connection, msg):
     await cloud.client.prefs.async_update(remote_enabled=False)
     await cloud.remote.disconnect()
     connection.send_result(msg['id'], _account_data(cloud))
+
+
+@websocket_api.require_admin
+@_require_cloud_login
+@websocket_api.async_response
+@_ws_handle_cloud_errors
+@websocket_api.websocket_command({
+    'type': 'cloud/google_assistant/entities'
+})
+async def google_assistant_list(hass, connection, msg):
+    """List all google assistant entities."""
+    cloud = hass.data[DOMAIN]
+    entities = google_helpers.async_get_entities(
+        hass, cloud.client.google_config
+    )
+
+    result = []
+
+    for entity in entities:
+        result.append({
+            'entity_id': entity.entity_id,
+            'traits': [trait.name for trait in entity.traits()],
+            'might_2fa': entity.might_2fa(),
+        })
+
+    connection.send_result(msg['id'], result)
+
+
+@websocket_api.require_admin
+@_require_cloud_login
+@websocket_api.async_response
+@_ws_handle_cloud_errors
+@websocket_api.websocket_command({
+    'type': 'cloud/google_assistant/entities/update',
+    'entity_id': str,
+    vol.Optional('should_expose'): bool,
+    vol.Optional('override_name'): str,
+    vol.Optional('aliases'): [str],
+    vol.Optional('disable_2fa'): bool,
+})
+async def google_assistant_update(hass, connection, msg):
+    """List all google assistant entities."""
+    cloud = hass.data[DOMAIN]
+    changes = dict(msg)
+    changes.pop('type')
+    changes.pop('id')
+
+    await cloud.client.prefs.async_update_google_entity_config(**changes)
+
+    connection.send_result(
+        msg['id'],
+        cloud.client.prefs.google_entity_configs.get(msg['entity_id']))
