@@ -34,7 +34,7 @@ def get_filled_totals():
 
 
 class TestMyFitnessPal(unittest.TestCase):
-    """Test the MoldIndicator sensor."""
+    """Test the myfitnesspal sensor."""
 
     def setUp(self):
         """Set up things to be run when tests are started."""
