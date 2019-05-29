@@ -388,7 +388,8 @@ class LocalData:
                            "IMAGE_URL": album_cover_path,
                            "DURATION": file_length,
                            "media_content_id": _url,
-                           "lookup_url": self.current_path}
+                           "lookup_url": self.current_path,
+                           "media_position_ms": self.seek_position}
             _audio_info = json.dumps(_audio_info)
 
             if _url is not None:
@@ -401,12 +402,7 @@ class LocalData:
                         "media_content_id": _audio_info
                     })
                 # seek position
-                if self.seek_position > 0:
-                    self.hass.async_add_job(self.hass.services.async_call('media_player', 'media_seek', {
-                        "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                        "seek_position": self.seek_position
-                    }))
-                    self.seek_position = 0
+                self.seek_position = 0
         else:
             _LOGGER.info("Tego typu plików jeszcze nie obsługuję." + str(self.current_path))
             self.say("Tego typu plików jeszcze nie obsługuję.")
@@ -660,7 +656,8 @@ class LocalData:
                        "MEDIA_SOURCE": ais_global.G_AN_LOCAL,
                        "ALBUM_NAME": os.path.basename(os.path.dirname(self.current_path)),
                        "media_content_id": self.rclone_url_to_stream,
-                       "lookup_url": self.current_path}
+                       "lookup_url": self.current_path,
+                       "media_position_ms": self.seek_position}
         _audio_info = json.dumps(_audio_info)
         # to set the stream image and title
         self.hass.services.call('media_player', 'play_media', {
@@ -669,12 +666,7 @@ class LocalData:
                 "media_content_id": _audio_info
             })
         # seek position
-        if self.seek_position > 0:
-            self.hass.async_add_job(self.hass.services.async_call('media_player', 'media_seek', {
-                "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                "seek_position": self.seek_position
-            }))
-            self.seek_position = 0
+        self.seek_position = 0
 
     def check_kill_process(self, pstring):
         for line in os.popen("ps ax | grep " + pstring + " | grep -v grep"):

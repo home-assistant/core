@@ -136,18 +136,22 @@ class YouTubeData:
         _LOGGER.info("process_select_track_uri")
         # """play track by id on sensor list."""
         call_id = call.data["id"]
-        state = self.hass.states.get('sensor.youtubelist')
+        list_sensor = 'sensor.youtubelist'
         media_source = ais_global.G_AN_MUSIC
         if "media_source" in call.data:
             media_source = call.data["media_source"]
             if media_source == ais_global.G_AN_FAVORITE:
-                state = self.hass.states.get('sensor.aisfavoriteslist')
-            
+                list_sensor = 'sensor.aisfavoriteslist'
+            elif media_source == ais_global.G_AN_BOOKMARK:
+                list_sensor = 'sensor.aisbookmarkslist'
+
+        state = self.hass.states.get(list_sensor)
         attr = state.attributes
         track = attr.get(int(call_id))
+        media_position_ms = track.get("media_position_ms", 0)
         url = "https://www.youtube.com/watch?v="
         # update list
-        self.hass.states.async_set("sensor.youtubelist", call_id, attr)
+        self.hass.states.async_set(list_sensor, call_id, attr)
 
         # try to get media url from AIS cloud
         media_url = None
@@ -174,7 +178,7 @@ class YouTubeData:
             # set stream url, image and title
             _audio_info = json.dumps(
                 {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "lookup_url": track["uri"],
-                 "MEDIA_SOURCE": media_source, "media_content_id": media_url})
+                 "MEDIA_SOURCE": media_source, "media_content_id": media_url, "media_position_ms": media_position_ms})
             self.hass.services.call(
                 'media_player',
                 'play_media', {

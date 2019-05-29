@@ -145,6 +145,11 @@ def async_setup(hass, config):
                 'ais_drives_service', 'browse_path',
                 {"path": dir_path, "file_path": track["uri"], "seek_position": track["media_position_ms"]}))
 
+        elif track['media_source'] == ais_global.G_AN_MUSIC:
+            hass.async_add_job(
+                hass.services.async_call(
+                    'ais_yt_service', 'select_track_uri', {"id": bookmark_id, "media_source": ais_global.G_AN_BOOKMARK})
+            )
         else:
             _audio_info = json.dumps({"IMAGE_URL": track["thumbnail"], "NAME": track['title'],
                                       "audio_type": track['audio_type'],
@@ -255,19 +260,32 @@ class BookmarksData:
         voice_call = False
         if 'voice_call' in call.data:
             voice_call = True
+
+        if bookmark and "attr" not in call.data:
+            # ask the player to add bookmark
+            self.hass.async_add_job(
+                self.hass.services.async_call(
+                    'ais_ai_service', 'publish_command_to_frame', {"key": 'addBookmark', "val": True})
+            )
+            self.hass.async_add_job(
+                self.hass.services.async_call(
+                    'ais_ai_service', 'say_it', {"text": "Zakładka"})
+            )
+            return
+
         attributes = {}
         if "attr" in call.data:
             attributes = call.data["attr"]
             name = attributes.get("media_title").strip()
             source = attributes.get("source").strip()
-            media_position = attributes.get("media_position", None)
+            media_position = attributes.get("media_position", 0)
             media_content_id = attributes.get("media_content_id")
         else:
             state = self.hass.states.get(ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID)
             attributes = state.attributes
             name = attributes.get("media_title")
             source = attributes.get("source")
-            media_position = attributes.get("media_position", None)
+            media_position = attributes.get("media_position", 0)
             media_content_id = attributes.get("media_content_id")
         try:
             media_stream_image = ais_global.G_CURR_MEDIA_CONTENT["IMAGE_URL"]

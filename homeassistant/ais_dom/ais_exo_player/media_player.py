@@ -281,7 +281,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
         if self._media_source is not None:
             app = self._media_source
             if self._album_name is not None:
-                app = app + " " + self._album_name
+                app = str(app) + " " + str(self._album_name)
         return app
 
     @property
@@ -397,13 +397,6 @@ class ExoPlayerDevice(MediaPlayerDevice):
                 self._media_position = j_info["media_position_ms"]
             else:
                 self._media_position = 0
-
-            # TODO one call to frame
-            self.hass.services.call('ais_ai_service', 'publish_command_to_frame', {
-                    "key": 'playAudio', "val": self._media_content_id,
-                    "ip": self._device_ip, "setPlayerShuffle": self._shuffle,
-                    "setMediaPosition": self._media_position})
-
             if "IMAGE_URL" not in j_info:
                 self._stream_image = "/static/icons/tile-win-310x150.png"
             else:
@@ -414,19 +407,20 @@ class ExoPlayerDevice(MediaPlayerDevice):
             if "ALBUM_NAME" in j_info:
                 self._album_name = j_info["ALBUM_NAME"]
             else:
-                self._album_name = None
+                self._album_name = 0
             if "DURATION" in j_info:
                 self._duration = j_info["DURATION"]
 
-            try:
-                j_media_info = {"media_title": self._media_title,
-                                "media_source": self._media_source,
-                                "media_stream_image": self._stream_image,
-                                "media_album_name": self._album_name}
-                self.hass.services.call('ais_ai_service', 'publish_command_to_frame', {
-                        "key": 'setAudioInfo', "val": j_media_info, "ip": self._device_ip})
-            except Exception as e:
-                _LOGGER.info("problem to publish setAudioInfo: " + str(e))
+            j_media_info = {"media_title": self._media_title,
+                            "media_source": self._media_source,
+                            "media_stream_image": self._stream_image,
+                            "media_album_name": self._album_name,
+                            "media_content_id": self._media_content_id,
+                            "setPlayerShuffle": self._shuffle,
+                            "setMediaPosition": self._media_position}
+
+            self.hass.services.call('ais_ai_service', 'publish_command_to_frame', {
+                    "key": 'playAudioFullInfo', "val": j_media_info, "ip": self._device_ip})
 
             # go to media player context on localhost
             if self._device_ip == 'localhost':
@@ -440,6 +434,8 @@ class ExoPlayerDevice(MediaPlayerDevice):
                                         {"topic": 'ais/go_to_player', "payload": ""})
 
         elif media_type == 'ais_info':
+            # TODO remove this - it is only used in one case - for local media_extractor
+            # set only the audio info
             j_info = json.loads(media_content_id)
             ais_global.G_CURR_MEDIA_CONTENT = j_info
             if "IMAGE_URL" not in j_info:
@@ -527,7 +523,8 @@ class ExoPlayerDevice(MediaPlayerDevice):
                                 "entity_id": "media_player.wbudowany_glosnik"})
                     )
         else:
-            # play only - old way - TODO delete this part soon...
+            # TODO remove this - it is only used in one case - for local media_extractor
+            # play only
             self._media_content_id = media_content_id
             self._media_position = 0
             self._media_status_received_time = dt_util.utcnow()

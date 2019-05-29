@@ -1056,7 +1056,7 @@ def set_on_dpad_down(hass, long_press):
             _curr = round(max(float(state.state) - _step, _min), 2)
             _say_it(hass, str(_curr), None)
             _LOGGER.info("speed down the player - info from remote: " + str(_curr))
-            hass.services.call('ais_ai_service', 'publish_command_to_frame', {"key": 'setPlaybackSpeed',"val": _curr})
+            hass.services.call('ais_ai_service', 'publish_command_to_frame', {"key": 'setPlaybackSpeed', "val": _curr})
             hass.services.call('input_number', 'set_value',
                                {"entity_id": "input_number.media_player_speed", "value": _curr})
             return
@@ -1865,8 +1865,6 @@ def _process_command_from_frame(hass, service):
         _LOGGER.info('add_bookmark: ' + str(service.data["payload"]))
         try:
             bookmark = json.loads(service.data["payload"])
-            if bookmark["media_source"] != ais_global.G_AN_LOCAL:
-                return
             hass.async_run_job(
                 hass.services.call('ais_bookmarks',
                                    'add_bookmark',
