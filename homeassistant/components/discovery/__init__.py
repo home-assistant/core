@@ -34,7 +34,6 @@ SERVICE_HASSIO = 'hassio'
 SERVICE_HOMEKIT = 'homekit'
 SERVICE_HEOS = 'heos'
 SERVICE_IGD = 'igd'
-SERVICE_IKEA_TRADFRI = 'ikea_tradfri'
 SERVICE_KONNECTED = 'konnected'
 SERVICE_MOBILE_APP = 'hass_mobile_app'
 SERVICE_NETGEAR = 'netgear_router'
@@ -54,7 +53,6 @@ CONFIG_ENTRY_HANDLERS = {
     'google_cast': 'cast',
     SERVICE_HEOS: 'heos',
     SERVICE_TELLDUSLIVE: 'tellduslive',
-    SERVICE_IKEA_TRADFRI: 'tradfri',
     'sonos': 'sonos',
     SERVICE_IGD: 'upnp',
     SERVICE_HOMEKIT: 'homekit_controller',
