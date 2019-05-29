@@ -84,8 +84,7 @@ class MeteoAlertBinarySensor(BinarySensorDevice):
         """Icon to use in the frontend."""
         if self._state:
             return ICON_ALERT
-        else:
-            return ICON_OK
+        return ICON_OK
 
     @property
     def device_class(self):
