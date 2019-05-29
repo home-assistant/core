@@ -26,6 +26,7 @@ FLOWS = [
     "ios",
     "ipma",
     "iqvia",
+    "life360",
     "lifx",
     "locative",
     "logi_circle",
