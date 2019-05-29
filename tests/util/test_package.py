@@ -167,6 +167,23 @@ def test_install_constraint(mock_sys, mock_popen, mock_env_copy, mock_venv):
     assert mock_popen.return_value.communicate.call_count == 1
 
 
+def test_install_find_links(mock_sys, mock_popen, mock_env_copy, mock_venv):
+    """Test install with find-links on not installed package."""
+    env = mock_env_copy()
+    link = 'https://wheels-repository'
+    assert package.install_package(
+        TEST_NEW_REQ, False, find_links=link)
+    assert mock_popen.call_count == 1
+    assert (
+        mock_popen.call_args ==
+        call([
+            mock_sys.executable, '-m', 'pip', 'install', '--quiet',
+            TEST_NEW_REQ, '--find-links', link
+        ], stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
+    )
+    assert mock_popen.return_value.communicate.call_count == 1
+
+
 @asyncio.coroutine
 def test_async_get_user_site(mock_env_copy):
     """Test async get user site directory."""
