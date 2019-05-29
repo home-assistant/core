@@ -530,7 +530,11 @@ homematicip==0.10.3
 httplib2==0.10.3
 
 # homeassistant.components.huawei_lte
+<<<<<<< HEAD
 huawei-lte-api==1.1.3
+=======
+huawei-lte-api==1.2.0
+>>>>>>> Upgrade huawei-lte-api to 1.2.0 (#24165)
 
 # homeassistant.components.hydrawise
 hydrawiser==0.1.1
