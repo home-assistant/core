@@ -19,7 +19,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_SELECT_SOURCE,
     SUPPORT_SHUFFLE_SET, SUPPORT_STOP, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
 from homeassistant.const import (
-    ENTITY_MATCH_ALL, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
+    ENTITY_MATCH_ALL, STATE_IDLE, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.dt import utcnow
 
@@ -307,8 +307,6 @@ class SonosEntity(MediaPlayerDevice):
             return STATE_PAUSED
         if self._status in ('PLAYING', 'TRANSITIONING'):
             return STATE_PLAYING
-        if self._status == 'OFF':
-            return STATE_OFF
         return STATE_IDLE
 
     @property
@@ -403,7 +401,7 @@ class SonosEntity(MediaPlayerDevice):
 
                 self._player_volume = None
                 self._player_muted = None
-                self._status = 'OFF'
+                self._status = 'IDLE'
                 self._coordinator = None
                 self._media_duration = None
                 self._media_position = None
@@ -801,16 +799,6 @@ class SonosEntity(MediaPlayerDevice):
             sources += [SOURCE_TV]
 
         return sources
-
-    @soco_error()
-    def turn_on(self):
-        """Turn the media player on."""
-        self.media_play()
-
-    @soco_error()
-    def turn_off(self):
-        """Turn off media player."""
-        self.media_stop()
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
     @soco_coordinator
