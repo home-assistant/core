@@ -118,6 +118,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 _discovered_player,
                 interface_addr=config.get(CONF_INTERFACE_ADDR))
 
+        for entity in hass.data[DATA_SONOS].entities:
+            entity.check_unseen()
+
         hass.helpers.event.call_later(DISCOVERY_INTERVAL, _discovery)
 
     hass.async_add_executor_job(_discovery)
@@ -328,14 +331,35 @@ class SonosEntity(MediaPlayerDevice):
         """Record that this player was seen right now."""
         self._seen = time.monotonic()
 
+        if self._available:
+            return
+
+        self._available = True
+        self._set_basic_information()
+        self._subscribe_to_player_events()
+        self.schedule_update_ha_state()
+
+    def check_unseen(self):
+        """Make this player unavailable if it was not seen recently."""
+        if not self._available:
+            return
+
+        if self._seen < time.monotonic() - 2*DISCOVERY_INTERVAL:
+            self._available = False
+
+            def _unsub(subscriptions):
+                for subscription in subscriptions:
+                    subscription.unsubscribe()
+            self.hass.add_job(_unsub, self._subscriptions)
+
+            self._subscriptions = []
+
+            self.schedule_update_ha_state()
+
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
-
-    def _check_available(self):
-        """Check that we saw the player recently."""
-        return self._seen > time.monotonic() - 2*DISCOVERY_INTERVAL
 
     def _set_basic_information(self):
         """Set initial entity information."""
@@ -388,30 +412,7 @@ class SonosEntity(MediaPlayerDevice):
 
     def update(self):
         """Retrieve latest state."""
-        available = self._check_available()
-        if self._available != available:
-            self._available = available
-            if available:
-                self._set_basic_information()
-                self._subscribe_to_player_events()
-            else:
-                for subscription in self._subscriptions:
-                    subscription.unsubscribe()
-                self._subscriptions = []
-
-                self._player_volume = None
-                self._player_muted = None
-                self._status = 'IDLE'
-                self._coordinator = None
-                self._media_duration = None
-                self._media_position = None
-                self._media_position_updated_at = None
-                self._media_image_url = None
-                self._media_artist = None
-                self._media_album_name = None
-                self._media_title = None
-                self._source_name = None
-        elif available and not self._receives_events:
+        if self._available and not self._receives_events:
             try:
                 self.update_groups()
                 self.update_volume()
