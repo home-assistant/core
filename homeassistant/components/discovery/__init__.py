@@ -98,7 +98,10 @@ OPTIONAL_SERVICE_HANDLERS = {
 
 MIGRATED_SERVICE_HANDLERS = {
     'axis': None,
-    'esphome': None
+    'esphome': None,
+    'ikea_tradfri': None,
+    'homekit': None,
+    'philips_hue': None
 }
 
 DEFAULT_ENABLED = list(CONFIG_ENTRY_HANDLERS) + list(SERVICE_HANDLERS) + \
