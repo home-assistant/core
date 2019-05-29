@@ -59,9 +59,6 @@ default_config:
 # http:
 #   base_url: example.duckdns.org:8123
 
-# Discover some devices automatically
-discovery:
-
 # Sensors
 sensor:
   # Weather prediction
