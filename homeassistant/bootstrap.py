@@ -101,51 +101,6 @@ async def async_from_config_dict(config: Dict[str, Any],
             "upgrade Python.", "Python version", "python_version"
         )
 
-    # TEMP: warn users for invalid slugs
-    # Remove after 0.94 or 1.0
-    if cv.INVALID_SLUGS_FOUND or cv.INVALID_ENTITY_IDS_FOUND:
-        msg = []
-
-        if cv.INVALID_ENTITY_IDS_FOUND:
-            msg.append(
-                "Your configuration contains invalid entity ID references. "
-                "Please find and update the following. "
-                "This will become a breaking change."
-            )
-            msg.append('\n'.join('- {} -> {}'.format(*item)
-                                 for item
-                                 in cv.INVALID_ENTITY_IDS_FOUND.items()))
-
-        if cv.INVALID_SLUGS_FOUND:
-            msg.append(
-                "Your configuration contains invalid slugs. "
-                "Please find and update the following. "
-                "This will become a breaking change."
-            )
-            msg.append('\n'.join('- {} -> {}'.format(*item)
-                                 for item in cv.INVALID_SLUGS_FOUND.items()))
-
-        hass.components.persistent_notification.async_create(
-            '\n\n'.join(msg), "Config Warning", "config_warning"
-        )
-
-    # TEMP: warn users of invalid extra keys
-    # Remove after 0.92
-    if cv.INVALID_EXTRA_KEYS_FOUND:
-        msg = []
-        msg.append(
-            "Your configuration contains extra keys "
-            "that the platform does not support (but were silently "
-            "accepted before 0.88). Please find and remove the following."
-            "This will become a breaking change."
-        )
-        msg.append('\n'.join('- {}'.format(it)
-                             for it in cv.INVALID_EXTRA_KEYS_FOUND))
-
-        hass.components.persistent_notification.async_create(
-            '\n\n'.join(msg), "Config Warning", "config_warning"
-        )
-
     return hass
 
 
