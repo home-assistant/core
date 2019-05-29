@@ -31,7 +31,6 @@ SERVICE_ENIGMA2 = 'enigma2'
 SERVICE_FREEBOX = 'freebox'
 SERVICE_HASS_IOS_APP = 'hass_ios'
 SERVICE_HASSIO = 'hassio'
-SERVICE_HOMEKIT = 'homekit'
 SERVICE_HEOS = 'heos'
 SERVICE_IGD = 'igd'
 SERVICE_KONNECTED = 'konnected'
@@ -55,7 +54,6 @@ CONFIG_ENTRY_HANDLERS = {
     SERVICE_TELLDUSLIVE: 'tellduslive',
     'sonos': 'sonos',
     SERVICE_IGD: 'upnp',
-    SERVICE_HOMEKIT: 'homekit_controller',
 }
 
 SERVICE_HANDLERS = {

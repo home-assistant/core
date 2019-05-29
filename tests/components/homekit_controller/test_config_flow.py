@@ -64,7 +64,7 @@ async def test_discovery_works(hass):
     flow = _setup_flow_handler(hass)
 
     # Device is discovered
-    result = await flow.async_step_discovery(discovery_info)
+    result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
     assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
@@ -119,7 +119,7 @@ async def test_discovery_works_upper_case(hass):
     flow = _setup_flow_handler(hass)
 
     # Device is discovered
-    result = await flow.async_step_discovery(discovery_info)
+    result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
     assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
@@ -172,7 +172,7 @@ async def test_discovery_works_missing_csharp(hass):
     flow = _setup_flow_handler(hass)
 
     # Device is discovered
-    result = await flow.async_step_discovery(discovery_info)
+    result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
     assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
@@ -226,7 +226,7 @@ async def test_pair_already_paired_1(hass):
 
     flow = _setup_flow_handler(hass)
 
-    result = await flow.async_step_discovery(discovery_info)
+    result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'abort'
     assert result['reason'] == 'already_paired'
     assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
@@ -248,7 +248,7 @@ async def test_discovery_ignored_model(hass):
 
     flow = _setup_flow_handler(hass)
 
-    result = await flow.async_step_discovery(discovery_info)
+    result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'abort'
     assert result['reason'] == 'ignored_model'
     assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
@@ -277,7 +277,7 @@ async def test_discovery_invalid_config_entry(hass):
 
     flow = _setup_flow_handler(hass)
 
-    result = await flow.async_step_discovery(discovery_info)
+    result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
     assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
@@ -311,7 +311,7 @@ async def test_discovery_already_configured(hass):
 
     flow = _setup_flow_handler(hass)
 
-    result = await flow.async_step_discovery(discovery_info)
+    result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'abort'
     assert result['reason'] == 'already_configured'
     assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
@@ -341,7 +341,7 @@ async def test_discovery_already_configured_config_change(hass):
 
     flow = _setup_flow_handler(hass)
 
-    result = await flow.async_step_discovery(discovery_info)
+    result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'abort'
     assert result['reason'] == 'already_configured'
     assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
@@ -366,7 +366,7 @@ async def test_pair_unable_to_pair(hass):
     flow = _setup_flow_handler(hass)
 
     # Device is discovered
-    result = await flow.async_step_discovery(discovery_info)
+    result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
     assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
@@ -403,7 +403,7 @@ async def test_pair_abort_errors_on_start(hass, exception, expected):
     flow = _setup_flow_handler(hass)
 
     # Device is discovered
-    result = await flow.async_step_discovery(discovery_info)
+    result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
     assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
@@ -436,7 +436,7 @@ async def test_pair_form_errors_on_start(hass, exception, expected):
     flow = _setup_flow_handler(hass)
 
     # Device is discovered
-    result = await flow.async_step_discovery(discovery_info)
+    result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
     assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
@@ -469,7 +469,7 @@ async def test_pair_abort_errors_on_finish(hass, exception, expected):
     flow = _setup_flow_handler(hass)
 
     # Device is discovered
-    result = await flow.async_step_discovery(discovery_info)
+    result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
     assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
@@ -508,7 +508,7 @@ async def test_pair_form_errors_on_finish(hass, exception, expected):
     flow = _setup_flow_handler(hass)
 
     # Device is discovered
-    result = await flow.async_step_discovery(discovery_info)
+    result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
     assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
@@ -738,7 +738,7 @@ async def test_parse_new_homekit_json(hass):
         pairing_cls.return_value = pairing
         with mock.patch('builtins.open', mock_open):
             with mock.patch('os.path', mock_path):
-                result = await flow.async_step_discovery(discovery_info)
+                result = await flow.async_step_zeroconf(discovery_info)
 
     assert result['type'] == 'create_entry'
     assert result['title'] == 'TestDevice'
@@ -796,7 +796,7 @@ async def test_parse_old_homekit_json(hass):
         with mock.patch('builtins.open', mock_open):
             with mock.patch('os.path', mock_path):
                 with mock.patch('os.listdir', mock_listdir):
-                    result = await flow.async_step_discovery(discovery_info)
+                    result = await flow.async_step_zeroconf(discovery_info)
 
     assert result['type'] == 'create_entry'
     assert result['title'] == 'TestDevice'
@@ -865,7 +865,7 @@ async def test_parse_overlapping_homekit_json(hass):
         with mock.patch('builtins.open', side_effect=side_effects):
             with mock.patch('os.path', mock_path):
                 with mock.patch('os.listdir', mock_listdir):
-                    result = await flow.async_step_discovery(discovery_info)
+                    result = await flow.async_step_zeroconf(discovery_info)
 
         await hass.async_block_till_done()
 
