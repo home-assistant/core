@@ -1182,7 +1182,14 @@ pyrainbird==0.1.6
 # homeassistant.components.switch.recswitch
 pyrecswitch==1.0.2
 
+<<<<<<< HEAD
 # homeassistant.components.sensor.ruter
+=======
+# homeassistant.components.repetier
+pyrepetier==3.0.5
+
+# homeassistant.components.ruter
+>>>>>>> Add Repetier-Server Component (#21658)
 pyruter==1.1.0
 
 # homeassistant.components.sabnzbd

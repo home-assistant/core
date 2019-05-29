@@ -488,6 +488,8 @@ omit =
     homeassistant/components/reddit/*
     homeassistant/components/rejseplanen/sensor.py
     homeassistant/components/remember_the_milk/__init__.py
+    homeassistant/components/repetier/__init__.py
+    homeassistant/components/repetier/sensor.py
     homeassistant/components/remote_rpi_gpio/*
     homeassistant/components/rest/binary_sensor.py
     homeassistant/components/rest/notify.py
