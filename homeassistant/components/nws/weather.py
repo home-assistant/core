@@ -1,9 +1,11 @@
 """Support for NWS weather service."""
 from collections import OrderedDict
 from datetime import timedelta
+from json import JSONDecodeError
 import logging
 from statistics import mean
 
+import aiohttp
 import async_timeout
 import voluptuous as vol
 
@@ -15,6 +17,7 @@ from homeassistant.const import (
     CONF_API_KEY, CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE,
     LENGTH_KILOMETERS, LENGTH_METERS, LENGTH_MILES, PRESSURE_HPA, PRESSURE_PA,
     PRESSURE_INHG, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
@@ -143,8 +146,13 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     _LOGGER.debug("Setting up station: %s", station)
     if station is None:
-        with async_timeout.timeout(10, loop=hass.loop):
-            stations = await nws.stations()
+        try:
+            with async_timeout.timeout(10, loop=hass.loop):
+                stations = await nws.stations()
+        except aiohttp.ClientError, JSONDecodeError as status:
+            _LOGGER.error("Error getting station list for %s: %s",
+                          nws.latlon, status)
+            raise PlatformNotReady
         _LOGGER.debug("Station list: %s", stations)
         nws.station = stations[0]
         _LOGGER.debug("Initialized for coordinates %s, %s -> station %s",
