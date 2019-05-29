@@ -47,6 +47,15 @@ def _setup_flow_handler(hass):
     return flow
 
 
+async def _setup_flow_zeroconf(hass, discovery_info):
+    result = await hass.config_entries.flow.async_init(
+        'homekit_controller',
+        context={'source': 'zeroconf'},
+        data=discovery_info,
+    )
+    return result
+
+
 async def test_discovery_works(hass):
     """Test a device being discovered."""
     discovery_info = {
@@ -67,7 +76,10 @@ async def test_discovery_works(hass):
     result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
-    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+    assert flow.context == {
+        'hkid': '00:00:00:00:00:00',
+        'title_placeholders': {'name': 'TestDevice'}
+    }
 
     # User initiates pairing - device enters pairing mode and displays code
     result = await flow.async_step_pair({})
@@ -122,7 +134,10 @@ async def test_discovery_works_upper_case(hass):
     result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
-    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+    assert flow.context == {
+        'hkid': '00:00:00:00:00:00',
+        'title_placeholders': {'name': 'TestDevice'}
+    }
 
     # User initiates pairing - device enters pairing mode and displays code
     result = await flow.async_step_pair({})
@@ -175,7 +190,10 @@ async def test_discovery_works_missing_csharp(hass):
     result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
-    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+    assert flow.context == {
+        'hkid': '00:00:00:00:00:00',
+        'title_placeholders': {'name': 'TestDevice'}
+    }
 
     # User initiates pairing - device enters pairing mode and displays code
     result = await flow.async_step_pair({})
@@ -210,6 +228,29 @@ async def test_discovery_works_missing_csharp(hass):
     assert result['data'] == pairing.pairing_data
 
 
+async def test_abort_duplicate_flow(hass):
+    """Already paired."""
+    discovery_info = {
+        'name': 'TestDevice',
+        'host': '127.0.0.1',
+        'port': 8080,
+        'properties': {
+            'md': 'TestDevice',
+            'id': '00:00:00:00:00:00',
+            'c#': 1,
+            'sf': 1,
+        }
+    }
+
+    result = await _setup_flow_zeroconf(hass, discovery_info)
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'pair'
+
+    result = await _setup_flow_zeroconf(hass, discovery_info)
+    assert result['type'] == 'abort'
+    assert result['reason'] == 'already_in_progress'
+
+
 async def test_pair_already_paired_1(hass):
     """Already paired."""
     discovery_info = {
@@ -229,7 +270,10 @@ async def test_pair_already_paired_1(hass):
     result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'abort'
     assert result['reason'] == 'already_paired'
-    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+    assert flow.context == {
+        'hkid': '00:00:00:00:00:00',
+        'title_placeholders': {'name': 'TestDevice'}
+    }
 
 
 async def test_discovery_ignored_model(hass):
@@ -251,7 +295,10 @@ async def test_discovery_ignored_model(hass):
     result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'abort'
     assert result['reason'] == 'ignored_model'
-    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+    assert flow.context == {
+        'hkid': '00:00:00:00:00:00',
+        'title_placeholders': {'name': 'TestDevice'}
+    }
 
 
 async def test_discovery_invalid_config_entry(hass):
@@ -280,7 +327,10 @@ async def test_discovery_invalid_config_entry(hass):
     result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
-    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+    assert flow.context == {
+        'hkid': '00:00:00:00:00:00',
+        'title_placeholders': {'name': 'TestDevice'}
+    }
 
     # Discovery of a HKID that is in a pairable state but for which there is
     # already a config entry - in that case the stale config entry is
@@ -314,7 +364,10 @@ async def test_discovery_already_configured(hass):
     result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'abort'
     assert result['reason'] == 'already_configured'
-    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+    assert flow.context == {
+        'hkid': '00:00:00:00:00:00',
+        'title_placeholders': {'name': 'TestDevice'}
+    }
 
     assert conn.async_config_num_changed.call_count == 0
 
@@ -344,7 +397,10 @@ async def test_discovery_already_configured_config_change(hass):
     result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'abort'
     assert result['reason'] == 'already_configured'
-    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+    assert flow.context == {
+        'hkid': '00:00:00:00:00:00',
+        'title_placeholders': {'name': 'TestDevice'}
+    }
 
     assert conn.async_refresh_entity_map.call_args == mock.call(2)
 
@@ -369,7 +425,10 @@ async def test_pair_unable_to_pair(hass):
     result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
-    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+    assert flow.context == {
+        'hkid': '00:00:00:00:00:00',
+        'title_placeholders': {'name': 'TestDevice'}
+    }
 
     # User initiates pairing - device enters pairing mode and displays code
     result = await flow.async_step_pair({})
@@ -406,7 +465,10 @@ async def test_pair_abort_errors_on_start(hass, exception, expected):
     result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
-    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+    assert flow.context == {
+        'hkid': '00:00:00:00:00:00',
+        'title_placeholders': {'name': 'TestDevice'}
+    }
 
     # User initiates pairing - device refuses to enter pairing mode
     with mock.patch.object(flow.controller, 'start_pairing') as start_pairing:
@@ -415,7 +477,10 @@ async def test_pair_abort_errors_on_start(hass, exception, expected):
 
     assert result['type'] == 'abort'
     assert result['reason'] == expected
-    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+    assert flow.context == {
+        'hkid': '00:00:00:00:00:00',
+        'title_placeholders': {'name': 'TestDevice'}
+    }
 
 
 @pytest.mark.parametrize("exception,expected", PAIRING_START_FORM_ERRORS)
@@ -439,7 +504,10 @@ async def test_pair_form_errors_on_start(hass, exception, expected):
     result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
-    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+    assert flow.context == {
+        'hkid': '00:00:00:00:00:00',
+        'title_placeholders': {'name': 'TestDevice'}
+    }
 
     # User initiates pairing - device refuses to enter pairing mode
     with mock.patch.object(flow.controller, 'start_pairing') as start_pairing:
@@ -448,7 +516,10 @@ async def test_pair_form_errors_on_start(hass, exception, expected):
 
     assert result['type'] == 'form'
     assert result['errors']['pairing_code'] == expected
-    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+    assert flow.context == {
+        'hkid': '00:00:00:00:00:00',
+        'title_placeholders': {'name': 'TestDevice'}
+    }
 
 
 @pytest.mark.parametrize("exception,expected", PAIRING_FINISH_ABORT_ERRORS)
@@ -472,7 +543,10 @@ async def test_pair_abort_errors_on_finish(hass, exception, expected):
     result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
-    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+    assert flow.context == {
+        'hkid': '00:00:00:00:00:00',
+        'title_placeholders': {'name': 'TestDevice'}
+    }
 
     # User initiates pairing - device enters pairing mode and displays code
     result = await flow.async_step_pair({})
@@ -487,7 +561,10 @@ async def test_pair_abort_errors_on_finish(hass, exception, expected):
     })
     assert result['type'] == 'abort'
     assert result['reason'] == expected
-    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+    assert flow.context == {
+        'hkid': '00:00:00:00:00:00',
+        'title_placeholders': {'name': 'TestDevice'}
+    }
 
 
 @pytest.mark.parametrize("exception,expected", PAIRING_FINISH_FORM_ERRORS)
@@ -511,7 +588,10 @@ async def test_pair_form_errors_on_finish(hass, exception, expected):
     result = await flow.async_step_zeroconf(discovery_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'pair'
-    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+    assert flow.context == {
+        'hkid': '00:00:00:00:00:00',
+        'title_placeholders': {'name': 'TestDevice'}
+    }
 
     # User initiates pairing - device enters pairing mode and displays code
     result = await flow.async_step_pair({})
@@ -526,7 +606,10 @@ async def test_pair_form_errors_on_finish(hass, exception, expected):
     })
     assert result['type'] == 'form'
     assert result['errors']['pairing_code'] == expected
-    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+    assert flow.context == {
+        'hkid': '00:00:00:00:00:00',
+        'title_placeholders': {'name': 'TestDevice'}
+    }
 
 
 async def test_import_works(hass):
@@ -743,7 +826,10 @@ async def test_parse_new_homekit_json(hass):
     assert result['type'] == 'create_entry'
     assert result['title'] == 'TestDevice'
     assert result['data']['AccessoryPairingID'] == '00:00:00:00:00:00'
-    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+    assert flow.context == {
+        'hkid': '00:00:00:00:00:00',
+        'title_placeholders': {'name': 'TestDevice'}
+    }
 
 
 async def test_parse_old_homekit_json(hass):
@@ -801,7 +887,10 @@ async def test_parse_old_homekit_json(hass):
     assert result['type'] == 'create_entry'
     assert result['title'] == 'TestDevice'
     assert result['data']['AccessoryPairingID'] == '00:00:00:00:00:00'
-    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+    assert flow.context == {
+        'hkid': '00:00:00:00:00:00',
+        'title_placeholders': {'name': 'TestDevice'}
+    }
 
 
 async def test_parse_overlapping_homekit_json(hass):
@@ -872,4 +961,7 @@ async def test_parse_overlapping_homekit_json(hass):
     assert result['type'] == 'create_entry'
     assert result['title'] == 'TestDevice'
     assert result['data']['AccessoryPairingID'] == '00:00:00:00:00:00'
-    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+    assert flow.context == {
+        'hkid': '00:00:00:00:00:00',
+        'title_placeholders': {'name': 'TestDevice'}
+    }

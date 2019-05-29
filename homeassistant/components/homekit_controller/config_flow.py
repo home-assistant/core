@@ -131,9 +131,16 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         paired = not status_flags & 0x01
 
         # pylint: disable=unsupported-assignment-operation
+        self.context['hkid'] = hkid
         self.context['title_placeholders'] = {
             'name': discovery_info['name'].replace('._hap._tcp.local.', ''),
         }
+
+        # If multiple HomekitControllerFlowHandler end up getting created
+        # for the same accessory dont  let duplicates hang around
+        active_flows = self._async_in_progress()
+        if any(hkid == flow['context']['hkid'] for flow in active_flows):
+            return self.async_abort(reason='already_in_progress')
 
         # The configuration number increases every time the characteristic map
         # needs updating. Some devices use a slightly off-spec name so handle
