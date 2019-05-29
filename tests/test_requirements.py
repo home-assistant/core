@@ -88,20 +88,20 @@ async def test_install_with_wheels_index(hass):
         hass, MockModule('comp', requirements=['hello==1.0.0']))
 
     with patch(
-            'homeassistant.util.package.is_installed', return_value=False
-        ), \
-        patch(
-            'homeassistant.util.package.is_docker_env', return_value=True
-        ), \
-        patch(
-            'homeassistant.util.package.install_package'
-        ) as mock_inst, \
-        patch.dict(
-            os.environ, {'WHEELS_LINKS': "https://wheels.hass.io/test"}
-        ), \
-        patch(
-            'os.path.dirname'
-        ) as mock_dir:
+                'homeassistant.util.package.is_installed', return_value=False
+            ), \
+            patch(
+                'homeassistant.util.package.is_docker_env', return_value=True
+            ), \
+            patch(
+                'homeassistant.util.package.install_package'
+            ) as mock_inst, \
+            patch.dict(
+                os.environ, {'WHEELS_LINKS': "https://wheels.hass.io/test"}
+            ), \
+            patch(
+                'os.path.dirname'
+            ) as mock_dir:
         mock_dir.return_value = 'ha_package_path'
         assert await setup.async_setup_component(hass, 'comp', {})
         assert 'comp' in hass.config.components
@@ -118,17 +118,17 @@ async def test_install_on_docker(hass):
         hass, MockModule('comp', requirements=['hello==1.0.0']))
 
     with patch(
-            'homeassistant.util.package.is_installed', return_value=False
-        ), \
-        patch(
-            'homeassistant.util.package.is_docker_env', return_value=True
-        ), \
-        patch(
-            'homeassistant.util.package.install_package'
-        ) as mock_inst, \
-        patch(
-            'os.path.dirname'
-        ) as mock_dir:
+                'homeassistant.util.package.is_installed', return_value=False
+            ), \
+            patch(
+                'homeassistant.util.package.is_docker_env', return_value=True
+            ), \
+            patch(
+                'homeassistant.util.package.install_package'
+            ) as mock_inst, \
+            patch(
+                'os.path.dirname'
+            ) as mock_dir:
         mock_dir.return_value = 'ha_package_path'
         assert await setup.async_setup_component(hass, 'comp', {})
         assert 'comp' in hass.config.components
