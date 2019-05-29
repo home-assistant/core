@@ -21,7 +21,8 @@ ATTRIBUTION = "Information provided by MeteoAlarm."
 DEFAULT_NAME = 'meteoalarm'
 DEFAULT_DEVICE_CLASS = 'safety'
 
-ICON = 'mdi:alert'
+ICON_ALERT = 'mdi:alert'
+ICON_OK = 'mdi:check'
 
 SCAN_INTERVAL = timedelta(minutes=30)
 
@@ -59,7 +60,7 @@ class MeteoAlertBinarySensor(BinarySensorDevice):
         """Initialize the MeteoAlert binary sensor."""
         self._name = name
         self._attributes = {}
-        self._state = None
+        self._state = False
         self._api = api
 
     @property
@@ -81,7 +82,10 @@ class MeteoAlertBinarySensor(BinarySensorDevice):
     @property
     def icon(self):
         """Icon to use in the frontend."""
-        return ICON
+        if self._state:
+            return ICON_ALERT
+        else:
+            return ICON_OK
 
     @property
     def device_class(self):
