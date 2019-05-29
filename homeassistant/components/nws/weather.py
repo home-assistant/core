@@ -1,4 +1,5 @@
 """Support for NWS weather service."""
+import asyncio
 from collections import OrderedDict
 from datetime import timedelta
 from json import JSONDecodeError
@@ -149,7 +150,8 @@ async def async_setup_platform(hass, config, async_add_entities,
         try:
             with async_timeout.timeout(10, loop=hass.loop):
                 stations = await nws.stations()
-        except aiohttp.ClientError, JSONDecodeError as status:
+        except (aiohttp.ClientError, JSONDecodeError,
+                asyncio.CancelledError) as status:
             _LOGGER.error("Error getting station list for %s: %s",
                           nws.latlon, status)
             raise PlatformNotReady
