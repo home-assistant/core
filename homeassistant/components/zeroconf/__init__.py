@@ -1,5 +1,4 @@
 """Support for exposing Home Assistant via Zeroconf."""
-from __future__ import absolute_import
 import logging
 
 import ipaddress
