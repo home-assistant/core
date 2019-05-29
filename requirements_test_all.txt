@@ -60,9 +60,6 @@ aioswitcher==2019.3.21
 # homeassistant.components.unifi
 aiounifi==4
 
-# homeassistant.components.zeroconf
-aiozeroconf==0.1.8
-
 # homeassistant.components.ambiclimate
 ambiclimate==0.1.2
 
@@ -353,6 +350,9 @@ vultr==0.1.2
 # homeassistant.components.samsungtv
 # homeassistant.components.wake_on_lan
 wakeonlan==1.1.6
+
+# homeassistant.components.zeroconf
+zeroconf==0.22.0
 
 # homeassistant.components.zha
 zigpy-homeassistant==0.3.3
