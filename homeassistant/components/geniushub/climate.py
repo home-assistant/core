@@ -32,15 +32,14 @@ GH_MODE_TO_HA_PRESET = {
     'linked': None,
     'other': None,
 }
-HA_PRESET_TO_GH_MODE = {v: k for k, v in GH_MODE_TO_HA_PRESET
+HA_PRESET_TO_GH_MODE = {v: k for k, v in GH_MODE_TO_HA_PRESET.items()
                         if k is not None}
 
 HA_HVAC_MODE_TO_GH_MODE = {
     HVAC_MODE_OFF: 'off',
-    HVAC_MODE_AUTO: None,
+    HVAC_MODE_AUTO: 'timer',
 }
-GH_MODE_TO_HA_PRESET = {v: k for k, v in HA_HVAC_MODE_TO_GH_MODE
-                        if k is not None}
+GH_MODE_TO_HA_HVAC_MODE = {v: k for k, v in HA_HVAC_MODE_TO_GH_MODE.items()}
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
@@ -59,13 +58,6 @@ class GeniusClimateZone(ClimateDevice):
         """Initialize the climate device."""
         self._client = client
         self._zone = zone
-
-        self._hvac_mode_list = list(HA_HVAC_MODE_TO_GH_MODE)
-        # Only some zones have movement detectors, which allow Footprint mode
-        if hasattr(self._zone, 'occupied'):
-            self._preset_list = [PRESET_ECO, PRESET_BOOST]
-        else:
-            self._preset_list = [PRESET_BOOST]
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
@@ -132,7 +124,7 @@ class GeniusClimateZone(ClimateDevice):
 
         Need to be one of HVAC_MODE_*.
         """
-        return GH_MODE_TO_HA_PRESET.get(self._zone.mode)
+        return GH_MODE_TO_HA_HVAC_MODE.get(self._zone.mode, HVAC_MODE_AUTO)
 
     @property
     def hvac_modes(self) -> List[str]:
@@ -150,7 +142,9 @@ class GeniusClimateZone(ClimateDevice):
     @property
     def preset_modes(self) -> Optional[List[str]]:
         """Return a list of available preset modes."""
-        return self._preset_list
+        if hasattr(self._zone, 'occupied'):  # has a movement sensor
+            return list(HA_PRESET_TO_GH_MODE)
+        return [PRESET_BOOST]
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set a new target temperature for this zone."""
