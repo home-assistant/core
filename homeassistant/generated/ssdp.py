@@ -7,6 +7,9 @@ To update, run python3 -m script.hassfest
 SSDP = {
     "device_type": {},
     "manufacturer": {
+        "Belkin International Inc.": [
+            "wemo"
+        ],
         "Royal Philips Electronics": [
             "deconz",
             "hue"
