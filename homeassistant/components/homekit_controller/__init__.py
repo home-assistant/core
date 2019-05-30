@@ -17,12 +17,15 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def test_homekit_zeroconf(discovery_info, exclude_models):
-    """Test if info belongs to a HK device that is not part of given models."""
+    """Test if info belongs to a HK device that is not part of given models.
+
+    Models are tested by testing if model starts with any of the given models.
+    """
     if not discovery_info.get('name', '').endswith('._hap._tcp.local.'):
         return False
 
     props = normalize_zeroconf_props(discovery_info.get('properties', {}))
-    return props.get('md') not in exclude_models
+    return not props.get('md', '').startswith(tuple(exclude_models))
 
 
 def escape_characteristic_name(char_name):
