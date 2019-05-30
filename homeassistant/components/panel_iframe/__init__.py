@@ -32,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema({
 async def async_setup(hass, config):
     """Set up the iFrame frontend panels."""
     for url_path, info in config[DOMAIN].items():
-        await hass.components.frontend.async_register_built_in_panel(
+        hass.components.frontend.async_register_built_in_panel(
             'iframe', info.get(CONF_TITLE), info.get(CONF_ICON),
             url_path, {'url': info[CONF_URL]},
             require_admin=info[CONF_REQUIRE_ADMIN])
