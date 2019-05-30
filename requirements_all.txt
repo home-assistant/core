@@ -525,10 +525,14 @@ holidays==0.9.9
 # homeassistant.components.frontend
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 home-assistant-frontend==20190109.1
 =======
 home-assistant-frontend==20190529.0
 >>>>>>> Updated frontend to 20190529.0
+=======
+home-assistant-frontend==20190530.0
+>>>>>>> Updated frontend to 20190530.0
 =======
 home-assistant-frontend==20190530.0
 >>>>>>> Updated frontend to 20190530.0
