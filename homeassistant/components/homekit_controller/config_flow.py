@@ -12,11 +12,12 @@ from .const import DOMAIN, KNOWN_DEVICES
 from .connection import get_bridge_information, get_accessory_name
 
 
-HOMEKIT_IGNORE = [
+HOMEKIT_IGNORE = (
     'BSB002',
     'Home Assistant Bridge',
     'TRADFRI gateway',
-]
+    'LIFX',
+)
 HOMEKIT_DIR = '.homekit'
 PAIRING_FILE = 'pairing.json'
 
@@ -190,7 +191,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         # Devices in HOMEKIT_IGNORE have native local integrations - users
         # should be encouraged to use native integration and not confused
         # by alternative HK API.
-        if model in HOMEKIT_IGNORE:
+        if model.startswith(HOMEKIT_IGNORE):
             return self.async_abort(reason='ignored_model')
 
         # Device isn't paired with us or anyone else.
