@@ -374,7 +374,9 @@ class SonosEntity(MediaPlayerDevice):
 
     def _set_favorites(self):
         """Set available favorites."""
-        self._favorites = self.soco.music_library.get_sonos_favorites()
+        favorites = self.soco.music_library.get_sonos_favorites()
+        # Exclude favorites that are non-playable due to no linked resources
+        self._favorites = [f for f in favorites if f.reference.resources]
 
     def _radio_artwork(self, url):
         """Return the private URL with artwork for a radio stream."""
