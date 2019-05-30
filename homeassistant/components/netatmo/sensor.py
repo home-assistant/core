@@ -125,7 +125,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             try:
                 _dev = find_devices(_data)
             except socket.timeout:
-                return call_later(hass, NETATMO_UPDATE_INTERVAL, lambda _: _retry(_data))
+                return call_later(hass, NETATMO_UPDATE_INTERVAL,
+                                  lambda _: _retry(_data))
             if _dev:
                 add_entities(_dev, True)
 
@@ -146,17 +147,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             try:
                 dev.extend(find_devices(data))
             except socket.timeout:
-                call_later(hass, NETATMO_UPDATE_INTERVAL, lambda _: _retry(data))
+                call_later(hass, NETATMO_UPDATE_INTERVAL,
+                           lambda _: _retry(data))
 
     if dev:
         add_entities(dev, True)
 
 
 def find_devices(data):
+    """Find all devices."""
     dev = []
     not_handled = []
     for module_name in data.get_module_names():
-        if module_name not in data.get_module_names() and module_name not in not_handled:
+        if (module_name not in data.get_module_names()
+                and module_name not in not_handled):
             not_handled.append(not_handled)
             continue
         for condition in data.station_data.monitoredConditions(module_name):
