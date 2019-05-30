@@ -500,6 +500,9 @@ hangups==0.4.9
 
 # homeassistant.components.cloud
 hass-nabucasa==0.13
+<<<<<<< HEAD
+>>>>>>> Update hass-nabucasa (#24197)
+=======
 >>>>>>> Update hass-nabucasa (#24197)
 
 # homeassistant.components.mqtt.server
