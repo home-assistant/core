@@ -547,7 +547,7 @@ habitipy==0.2.0
 hangups==0.4.9
 
 # homeassistant.components.cloud
-hass-nabucasa==0.12
+hass-nabucasa==0.13
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.4
