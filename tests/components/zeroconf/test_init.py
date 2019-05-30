@@ -37,4 +37,3 @@ async def test_setup(hass):
             hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
 
     assert len(MockServiceBrowser.mock_calls) == len(zc_gen.ZEROCONF)
-    assert len(mock_config_flow.mock_calls) == len(zc_gen.ZEROCONF) * 2
