@@ -144,9 +144,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         if model in HOMEKIT_IGNORE:
             return self.async_abort(reason='ignored_model')
 
-        # Devices in HOMEKIT_IGNORE have native local integrations - users
-        # should be encouraged to use native integration and not confused
-        # by alternative HK API.
         if model in HOMEKIT_FORWARD_ZEROCONF:
             self.hass.async_create_task(
                 self.hass.config_entries.flow.async_init(
