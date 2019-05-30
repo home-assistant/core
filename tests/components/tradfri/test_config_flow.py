@@ -117,6 +117,35 @@ async def test_discovery_connection(hass, mock_auth, mock_entry_setup):
     }
 
 
+async def test_discovery_filter_homekit(hass):
+    """Test a connection via homekit discovery filters non-tradfri devices."""
+    flow = await hass.config_entries.flow.async_init(
+        'tradfri', context={'source': 'zeroconf'}, data={
+            'name': 'tradfri._hap._tcp.local.',
+            'host': '123.123.123.123',
+            'properties': {
+                'md': "Not Tradfri"
+            }
+        })
+
+    assert flow['type'] == data_entry_flow.RESULT_TYPE_ABORT
+    assert flow['reason'] == 'not_supported'
+
+
+async def test_discovery_allow_homekit(hass):
+    """Test a connection via homekit discovery."""
+    flow = await hass.config_entries.flow.async_init(
+        'tradfri', context={'source': 'zeroconf'}, data={
+            'name': 'tradfri._hap._tcp.local.',
+            'host': '123.123.123.123',
+            'properties': {
+                'md': "TRADFRI gateway"
+            }
+        })
+
+    assert flow['type'] == data_entry_flow.RESULT_TYPE_FORM
+
+
 async def test_import_connection(hass, mock_auth, mock_entry_setup):
     """Test a connection via import."""
     mock_auth.side_effect = lambda hass, host, code: mock_coro({

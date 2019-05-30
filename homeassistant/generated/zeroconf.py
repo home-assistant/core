@@ -15,6 +15,7 @@ ZEROCONF = {
         "esphome"
     ],
     "_hap._tcp.local.": [
-        "homekit_controller"
+        "homekit_controller",
+        "tradfri"
     ]
 }

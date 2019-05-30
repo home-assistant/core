@@ -7,7 +7,7 @@
     "pytradfri[async]==6.0.1"
   ],
   "dependencies": [],
-  "zeroconf": ["_coap._udp.local."],
+  "zeroconf": ["_coap._udp.local.", "_hap._tcp.local."],
   "codeowners": [
     "@ggravlingen"
   ]

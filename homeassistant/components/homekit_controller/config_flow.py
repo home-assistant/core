@@ -57,6 +57,14 @@ def find_existing_host(hass, serial):
             return entry
 
 
+def normalize_zeroconf_props(properties):
+    """Normalize zeroconf properties."""
+    return {
+        key.lower(): value
+        for (key, value) in properties.items()
+    }
+
+
 @config_entries.HANDLERS.register(DOMAIN)
 class HomekitControllerFlowHandler(config_entries.ConfigFlow):
     """Handle a HomeKit config flow."""
@@ -117,10 +125,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         # Normalize properties from discovery
         # homekit_python has code to do this, but not in a form we can
         # easily use, so do the bare minimum ourselves here instead.
-        properties = {
-            key.lower(): value
-            for (key, value) in discovery_info['properties'].items()
-        }
+        properties = normalize_zeroconf_props(discovery_info['properties'])
 
         # The hkid is a unique random number that looks like a pairing code.
         # It changes if a device is factory reset.
