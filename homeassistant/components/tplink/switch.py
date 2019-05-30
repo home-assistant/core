@@ -31,6 +31,19 @@ async def async_setup_platform(hass, config, add_entities,
                     'convert to use the tplink component.')
 
 
+def add_entity(device: SmartPlug, async_add_entities):
+    """Check if device is online and add the entity."""
+    # Attempt to get the sysinfo. If it fails, it will raise an
+    # exception that is caught by async_add_entities_retry which
+    # will try again later.
+    device.get_sysinfo()
+
+    async_add_entities(
+        [SmartPlugSwitch(device)],
+        update_before_add=True
+    )
+
+
 async def async_setup_entry(
         hass: HomeAssistantType,
         config_entry,
@@ -45,15 +58,6 @@ async def async_setup_entry(
     )
 
     return True
-
-
-def add_entity(device: SmartPlug, async_add_entities):
-    """Check if device is online and add the entity."""
-    device.get_sysinfo()
-    async_add_entities(
-        [SmartPlugSwitch(device)],
-        update_before_add=True
-    )
 
 
 class SmartPlugSwitch(SwitchDevice):

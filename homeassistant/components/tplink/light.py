@@ -53,7 +53,11 @@ async def async_setup_entry(
 
 def add_entity(device: SmartBulb, async_add_entities):
     """Check if device is online and add the entity."""
+    # Attempt to get the sysinfo. If it fails, it will raise an
+    # exception that is caught by async_add_entities_retry which
+    # will try again later.
     device.get_sysinfo()
+
     async_add_entities(
         [TPLinkSmartBulb(device)],
         update_before_add=True

@@ -119,9 +119,9 @@ def get_static_devices(config_data) -> SmartDevices:
                 lights.append(SmartBulb(host))
             elif type_ == CONF_SWITCH:
                 switches.append(SmartPlug(host))
-            # Dimmers need to be defined as smart bulbs to work correctly.
+            # Dimmers need to be defined as smart plugs to work correctly.
             elif type_ == CONF_DIMMER:
-                lights.append(SmartBulb(host))
+                lights.append(SmartPlug(host))
 
     return SmartDevices(
         lights,
