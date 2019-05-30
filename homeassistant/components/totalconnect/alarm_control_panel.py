@@ -45,7 +45,7 @@ class TotalConnect(alarm.AlarmControlPanel):
         self._username = username
         self._password = password
         self._state = None
-        self._state_attributes = {}
+        self._device_state_attributes = {}
         self._client = TotalConnectClient.TotalConnectClient(
             username, password)
 
@@ -60,9 +60,9 @@ class TotalConnect(alarm.AlarmControlPanel):
         return self._state
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes of the device."""
-        return self._state_attributes
+        return self._device_state_attributes
 
     def update(self):
         """Return the state of the device."""
@@ -98,7 +98,7 @@ class TotalConnect(alarm.AlarmControlPanel):
             state = None
 
         self._state = state
-        self._state_attributes = attr
+        self._device_state_attributes = attr
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
