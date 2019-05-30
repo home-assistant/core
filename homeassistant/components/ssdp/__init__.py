@@ -135,15 +135,15 @@ class Scanner:
             if not xml:
                 resp = await session.get(xml_location, timeout=5)
                 xml = await resp.text()
-        except aiohttp.ClientError as err:
+        except (aiohttp.ClientError, asyncio.TimeoutError) as err:
             _LOGGER.debug("Error fetching %s: %s", xml_location, err)
-            return None
+            return {}
 
         try:
             tree = ElementTree.fromstring(xml)
         except ElementTree.ParseError as err:
             _LOGGER.debug("Error parsing %s: %s", xml_location, err)
-            return None
+            return {}
 
         return util.etree_to_dict(tree).get('root', {}).get('device', {})
 
