@@ -116,7 +116,11 @@ jobs:
 
 
 - job: 'Release'
+<<<<<<< HEAD
   condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded('VersionValidate'))
+=======
+  condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded('VersionValidate')
+>>>>>>> Update azure-pipelines.yml for check version (#24194)
   dependsOn:
   - 'VersionValidate'
   timeoutInMinutes: 120
