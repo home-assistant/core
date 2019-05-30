@@ -42,7 +42,7 @@ PRESET_AWAY = 'away'
 # Device turn all valve full up
 PRESET_BOOST = 'boost'
 
-# Device have a comfort mode
+# Device is in comfort mode
 PRESET_COMFORT = 'comfort'
 
 # Device is on home mode
@@ -50,6 +50,9 @@ PRESET_HOME = 'home'
 
 # Device is prepared for sleep
 PRESET_SLEEP = 'sleep'
+
+# Device is reacting to activity (e.g. movement sensors)
+PRESET_ACTIVITY = 'acivity'
 
 
 # Possible fan state

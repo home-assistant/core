@@ -230,6 +230,7 @@ ATTR_NOW = 'now'
 ATTR_DATE = 'date'
 ATTR_TIME = 'time'
 ATTR_SECONDS = 'seconds'
+ATTR_DURATION = 'duration'
 
 # Contains domain, service for a SERVICE_CALL event
 ATTR_DOMAIN = 'domain'
