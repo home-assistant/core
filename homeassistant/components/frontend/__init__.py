@@ -1,5 +1,4 @@
 """Handle the frontend for Home Assistant."""
-import asyncio
 import json
 import logging
 import os
@@ -26,6 +25,7 @@ CONF_EXTRA_HTML_URL = 'extra_html_url'
 CONF_EXTRA_HTML_URL_ES5 = 'extra_html_url_es5'
 CONF_FRONTEND_REPO = 'development_repo'
 CONF_JS_VERSION = 'javascript_version'
+EVENT_PANELS_UPDATED = 'panels_updated'
 
 DEFAULT_THEME_COLOR = '#03A9F4'
 
@@ -97,6 +97,28 @@ SCHEMA_GET_TRANSLATIONS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 })
 
 
+def generate_negative_index_regex():
+    """Generate regex for index."""
+    skip = [
+        # files
+        "service_worker.js",
+        "robots.txt",
+        "onboarding.html",
+        "manifest.json",
+    ]
+    for folder in (
+            "static",
+            "frontend_latest",
+            "frontend_es5",
+            "local",
+            "auth",
+            "api",
+    ):
+        # Regex matching static, static/, static/index.html
+        skip.append("{}(/|/.+|)".format(folder))
+    return r"(?!(" + "|".join(skip) + r")).*"
+
+
 class Panel:
     """Abstract class for panels."""
 
@@ -129,15 +151,6 @@ class Panel:
         self.require_admin = require_admin
 
     @callback
-    def async_register_index_routes(self, router, index_view):
-        """Register routes for panel to be served by index view."""
-        router.add_route(
-            'get', '/{}'.format(self.frontend_url_path), index_view.get)
-        router.add_route(
-            'get', '/{}/{{extra:.+}}'.format(self.frontend_url_path),
-            index_view.get)
-
-    @callback
     def to_response(self):
         """Panel as dictionary."""
         return {
@@ -151,25 +164,35 @@ class Panel:
 
 
 @bind_hass
-async def async_register_built_in_panel(hass, component_name,
-                                        sidebar_title=None, sidebar_icon=None,
-                                        frontend_url_path=None, config=None,
-                                        require_admin=False):
+@callback
+def async_register_built_in_panel(hass, component_name,
+                                  sidebar_title=None, sidebar_icon=None,
+                                  frontend_url_path=None, config=None,
+                                  require_admin=False):
     """Register a built-in panel."""
     panel = Panel(component_name, sidebar_title, sidebar_icon,
                   frontend_url_path, config, require_admin)
 
-    panels = hass.data.get(DATA_PANELS)
-    if panels is None:
-        panels = hass.data[DATA_PANELS] = {}
+    panels = hass.data.setdefault(DATA_PANELS, {})
 
     if panel.frontend_url_path in panels:
         _LOGGER.warning("Overwriting component %s", panel.frontend_url_path)
 
-    if DATA_FINALIZE_PANEL in hass.data:
-        hass.data[DATA_FINALIZE_PANEL](panel)
-
     panels[panel.frontend_url_path] = panel
+
+    hass.bus.async_fire(EVENT_PANELS_UPDATED)
+
+
+@bind_hass
+@callback
+def async_remove_panel(hass, frontend_url_path):
+    """Remove a built-in panel."""
+    panel = hass.data.get(DATA_PANELS, {}).pop(frontend_url_path, None)
+
+    if panel is None:
+        _LOGGER.warning("Removing unknown panel %s", frontend_url_path)
+
+    hass.bus.async_fire(EVENT_PANELS_UPDATED)
 
 
 @bind_hass
@@ -233,28 +256,14 @@ async def async_setup(hass, config):
     if os.path.isdir(local):
         hass.http.register_static_path("/local", local, not is_dev)
 
-    index_view = IndexView(repo_path)
-    hass.http.register_view(index_view)
+    hass.http.register_view(IndexView(repo_path))
 
-    @callback
-    def async_finalize_panel(panel):
-        """Finalize setup of a panel."""
-        panel.async_register_index_routes(hass.http.app.router, index_view)
+    for panel in ('kiosk', 'states', 'profile'):
+        async_register_built_in_panel(hass, panel)
 
-    await asyncio.wait(
-        [async_register_built_in_panel(hass, panel) for panel in (
-            'kiosk', 'states', 'profile')])
-    await asyncio.wait(
-        [async_register_built_in_panel(hass, panel, require_admin=True)
-         for panel in ('dev-event', 'dev-info', 'dev-service', 'dev-state',
-                       'dev-template', 'dev-mqtt')])
-
-    hass.data[DATA_FINALIZE_PANEL] = async_finalize_panel
-
-    # Finalize registration of panels that registered before frontend was setup
-    # This includes the built-in panels from line above.
-    for panel in hass.data[DATA_PANELS].values():
-        async_finalize_panel(panel)
+    for panel in ('dev-event', 'dev-info', 'dev-service', 'dev-state',
+                  'dev-template', 'dev-mqtt'):
+        async_register_built_in_panel(hass, panel, require_admin=True)
 
     if DATA_EXTRA_HTML_URL not in hass.data:
         hass.data[DATA_EXTRA_HTML_URL] = set()
@@ -324,6 +333,9 @@ class IndexView(HomeAssistantView):
     url = '/'
     name = 'frontend:index'
     requires_auth = False
+    extra_urls = [
+        "/{extra:%s}" % generate_negative_index_regex()
+    ]
 
     def __init__(self, repo_path):
         """Initialize the frontend view."""
@@ -348,6 +360,10 @@ class IndexView(HomeAssistantView):
     async def get(self, request, extra=None):
         """Serve the index view."""
         hass = request.app['hass']
+
+        if (request.path != '/' and
+                request.url.parts[1] not in hass.data[DATA_PANELS]):
+            raise web.HTTPNotFound
 
         if not hass.components.onboarding.async_is_onboarded():
             return web.Response(status=302, headers={

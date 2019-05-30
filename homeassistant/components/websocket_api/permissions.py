@@ -14,11 +14,13 @@ from homeassistant.components.lovelace import EVENT_LOVELACE_UPDATED
 from homeassistant.helpers.area_registry import EVENT_AREA_REGISTRY_UPDATED
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
+from homeassistant.components.frontend import EVENT_PANELS_UPDATED
 
 # These are events that do not contain any sensitive data
 # Except for state_changed, which is handled accordingly.
 SUBSCRIBE_WHITELIST = {
     EVENT_COMPONENT_LOADED,
+    EVENT_PANELS_UPDATED,
     EVENT_PERSISTENT_NOTIFICATIONS_UPDATED,
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
