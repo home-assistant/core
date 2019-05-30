@@ -116,7 +116,7 @@ jobs:
 
 
 - job: 'Release'
-  condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded('VersionValidate')
+  condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded('VersionValidate'))
   dependsOn:
   - 'VersionValidate'
   timeoutInMinutes: 120
