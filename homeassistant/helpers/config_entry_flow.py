@@ -83,7 +83,10 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 
     async_step_zeroconf = async_step_discovery
     async_step_ssdp = async_step_discovery
+<<<<<<< HEAD
     async_step_homekit = async_step_discovery
+=======
+>>>>>>> Allow discovery flows to be discovered via zeroconf/ssdp (#24199)
 
     async def async_step_import(self, _):
         """Handle a flow initialized by import."""
