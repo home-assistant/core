@@ -1,5 +1,4 @@
 """Handle the frontend for Home Assistant."""
-import asyncio
 import json
 import logging
 import os
@@ -26,6 +25,7 @@ CONF_EXTRA_HTML_URL = 'extra_html_url'
 CONF_EXTRA_HTML_URL_ES5 = 'extra_html_url_es5'
 CONF_FRONTEND_REPO = 'development_repo'
 CONF_JS_VERSION = 'javascript_version'
+EVENT_PANELS_UPDATED = 'panels_updated'
 
 DEFAULT_THEME_COLOR = '#03A9F4'
 
@@ -164,22 +164,35 @@ class Panel:
 
 
 @bind_hass
-async def async_register_built_in_panel(hass, component_name,
-                                        sidebar_title=None, sidebar_icon=None,
-                                        frontend_url_path=None, config=None,
-                                        require_admin=False):
+@callback
+def async_register_built_in_panel(hass, component_name,
+                                  sidebar_title=None, sidebar_icon=None,
+                                  frontend_url_path=None, config=None,
+                                  require_admin=False):
     """Register a built-in panel."""
     panel = Panel(component_name, sidebar_title, sidebar_icon,
                   frontend_url_path, config, require_admin)
 
-    panels = hass.data.get(DATA_PANELS)
-    if panels is None:
-        panels = hass.data[DATA_PANELS] = {}
+    panels = hass.data.setdefault(DATA_PANELS, {})
 
     if panel.frontend_url_path in panels:
         _LOGGER.warning("Overwriting component %s", panel.frontend_url_path)
 
     panels[panel.frontend_url_path] = panel
+
+    hass.bus.async_fire(EVENT_PANELS_UPDATED)
+
+
+@bind_hass
+@callback
+def async_remove_panel(hass, frontend_url_path):
+    """Remove a built-in panel."""
+    panel = hass.data.get(DATA_PANELS, {}).pop(frontend_url_path, None)
+
+    if panel is None:
+        _LOGGER.warning("Removing unknown panel %s", frontend_url_path)
+
+    hass.bus.async_fire(EVENT_PANELS_UPDATED)
 
 
 @bind_hass
@@ -245,13 +258,12 @@ async def async_setup(hass, config):
 
     hass.http.register_view(IndexView(repo_path))
 
-    await asyncio.wait(
-        [async_register_built_in_panel(hass, panel) for panel in (
-            'kiosk', 'states', 'profile')])
-    await asyncio.wait(
-        [async_register_built_in_panel(hass, panel, require_admin=True)
-         for panel in ('dev-event', 'dev-info', 'dev-service', 'dev-state',
-                       'dev-template', 'dev-mqtt')])
+    for panel in ('kiosk', 'states', 'profile'):
+        async_register_built_in_panel(hass, panel)
+
+    for panel in ('dev-event', 'dev-info', 'dev-service', 'dev-state',
+                  'dev-template', 'dev-mqtt'):
+        async_register_built_in_panel(hass, panel, require_admin=True)
 
     if DATA_EXTRA_HTML_URL not in hass.data:
         hass.data[DATA_EXTRA_HTML_URL] = set()
