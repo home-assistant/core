@@ -301,6 +301,34 @@ async def test_discovery_ignored_model(hass):
     }
 
 
+async def test_discovery_forward_discovery(hass):
+    """Forward discovery."""
+    discovery_info = {
+        'name': 'TestDevice',
+        'host': '127.0.0.1',
+        'port': 8080,
+        'properties': {
+            'md': 'TRADFRI gateway',
+            'id': '00:00:00:00:00:00',
+            'c#': 1,
+            'sf': 1,
+        }
+    }
+
+    flow = _setup_flow_handler(hass)
+
+    with mock.patch.object(hass.config_entries.flow, 'async_init') as mock_ini:
+        result = await flow.async_step_zeroconf(discovery_info)
+
+    assert result['type'] == 'abort'
+    assert result['reason'] == 'ignored_model'
+
+    assert len(mock_ini.mock_calls) == 1
+    assert mock_ini.mock_calls[0][1][0] == 'tradfri'
+    assert mock_ini.mock_calls[0][2]['context'] == {'source': 'zeroconf'}
+    assert mock_ini.mock_calls[0][2]['data'] == discovery_info
+
+
 async def test_discovery_invalid_config_entry(hass):
     """There is already a config entry for the pairing id but its invalid."""
     MockConfigEntry(domain='homekit_controller', data={
@@ -965,3 +993,4 @@ async def test_parse_overlapping_homekit_json(hass):
         'hkid': '00:00:00:00:00:00',
         'title_placeholders': {'name': 'TestDevice'}
     }
+

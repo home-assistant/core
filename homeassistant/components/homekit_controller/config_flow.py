@@ -15,8 +15,10 @@ from .connection import get_bridge_information, get_accessory_name
 HOMEKIT_IGNORE = [
     'BSB002',
     'Home Assistant Bridge',
-    'TRADFRI gateway',
 ]
+HOMEKIT_FORWARD_ZEROCONF = {
+    'TRADFRI gateway': 'tradfri',
+}
 HOMEKIT_DIR = '.homekit'
 PAIRING_FILE = 'pairing.json'
 
@@ -136,6 +138,23 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             'name': discovery_info['name'].replace('._hap._tcp.local.', ''),
         }
 
+        # Devices in HOMEKIT_IGNORE have native local integrations - users
+        # should be encouraged to use native integration and not confused
+        # by alternative HK API.
+        if model in HOMEKIT_IGNORE:
+            return self.async_abort(reason='ignored_model')
+
+        # Devices in HOMEKIT_IGNORE have native local integrations - users
+        # should be encouraged to use native integration and not confused
+        # by alternative HK API.
+        if model in HOMEKIT_FORWARD_ZEROCONF:
+            self.hass.async_create_task(
+                self.hass.config_entries.flow.async_init(
+                    HOMEKIT_FORWARD_ZEROCONF[model],
+                    context={'source': 'zeroconf'}, data=discovery_info
+                ))
+            return self.async_abort(reason='ignored_model')
+
         # If multiple HomekitControllerFlowHandler end up getting created
         # for the same accessory dont  let duplicates hang around
         active_flows = self._async_in_progress()
@@ -181,12 +200,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             # Device is paired but not to us - ignore it
             _LOGGER.debug("HomeKit device %s ignored as already paired", hkid)
             return self.async_abort(reason='already_paired')
-
-        # Devices in HOMEKIT_IGNORE have native local integrations - users
-        # should be encouraged to use native integration and not confused
-        # by alternative HK API.
-        if model in HOMEKIT_IGNORE:
-            return self.async_abort(reason='ignored_model')
 
         # Device isn't paired with us or anyone else.
         # But we have a 'complete' config entry for it - that is probably
