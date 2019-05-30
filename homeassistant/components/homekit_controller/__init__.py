@@ -95,7 +95,8 @@ class HomeKitEntity(Entity):
         """Obtain a HomeKit device's state."""
         # pylint: disable=import-error
         from homekit.exceptions import (
-            AccessoryDisconnectedError, AccessoryNotFoundError)
+            AccessoryDisconnectedError, AccessoryNotFoundError,
+            EncryptionError)
 
         try:
             new_values_dict = await self._accessory.get_characteristics(
@@ -106,7 +107,7 @@ class HomeKitEntity(Entity):
             # visible on the network.
             self._available = False
             return
-        except AccessoryDisconnectedError:
+        except (AccessoryDisconnectedError, EncryptionError):
             # Temporary connection failure. Device is still available but our
             # connection was dropped.
             return
