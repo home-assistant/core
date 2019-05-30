@@ -26,9 +26,8 @@ def get_service_info_mock(service_type, name):
 async def test_setup(hass):
     """Test configured options for a device are loaded via config entry."""
     with patch.object(hass.config_entries, 'flow'), \
-            patch.object(zeroconf, 'ServiceBrowser'), \
-            patch.object(zeroconf.Zeroconf, 'get_service_info') as \
-            mock_get_service_info:
+            patch.object(zeroconf, 'ServiceBrowser') as MockServiceBrowser, \
+            patch.object(zeroconf.Zeroconf, 'get_service_info'):
 
         assert await async_setup_component(
             hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
