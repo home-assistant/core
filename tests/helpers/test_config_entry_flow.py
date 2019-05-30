@@ -24,7 +24,8 @@ def discovery_flow_conf(hass):
     with patch.dict(config_entries.HANDLERS):
         config_entry_flow.register_discovery_flow(
             'test', 'Test', has_discovered_devices,
-            config_entries.CONN_CLASS_LOCAL_POLL)
+            config_entries.CONN_CLASS_LOCAL_POLL,
+            homekit_models=['HASS'])
         yield handler_conf
 
 
@@ -101,6 +102,37 @@ async def test_discovery_confirmation(hass, discovery_flow_conf, source):
 
     result = await flow.async_step_confirm({})
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+
+async def test_discovery_zeroconf_filter_homekit(hass, discovery_flow_conf):
+    """Test we not allow duplicates."""
+    flow = config_entries.HANDLERS['test']()
+    flow.hass = hass
+
+    result = await flow.async_step_zeroconf({
+        'name': 'hass._hap._tcp.local.',
+        'properties': {
+            'md': 'Not-HASS'
+        }
+    })
+
+    assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result['reason'] == 'not_supported'
+
+
+async def test_discovery_zeroconf_allow_homekit(hass, discovery_flow_conf):
+    """Test we not allow duplicates."""
+    flow = config_entries.HANDLERS['test']()
+    flow.hass = hass
+
+    result = await flow.async_step_zeroconf({
+        'name': 'hass._hap._tcp.local.',
+        'properties': {
+            'md': 'HASS'
+        }
+    })
+
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
 
 
 async def test_multiple_discoveries(hass, discovery_flow_conf):

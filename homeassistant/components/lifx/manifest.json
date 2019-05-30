@@ -8,6 +8,7 @@
     "aiolifx_effects==0.2.2"
   ],
   "dependencies": [],
+  "zeroconf": ["_hap._tcp.local."],
   "codeowners": [
     "@amelchio"
   ]

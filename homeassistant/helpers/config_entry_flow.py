@@ -5,11 +5,11 @@ from homeassistant import config_entries
 
 
 def register_discovery_flow(domain, title, discovery_function,
-                            connection_class):
+                            connection_class, *, homekit_models=None):
     """Register flow for discovered integrations that not require auth."""
     config_entries.HANDLERS.register(domain)(
         partial(DiscoveryFlowHandler, domain, title, discovery_function,
-                connection_class))
+                connection_class, homekit_models=homekit_models))
 
 
 def register_webhook_flow(domain, title, description_placeholder,
@@ -25,11 +25,13 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 
     VERSION = 1
 
-    def __init__(self, domain, title, discovery_function, connection_class):
+    def __init__(self, domain, title, discovery_function, connection_class,
+                 homekit_models):
         """Initialize the discovery config flow."""
         self._domain = domain
         self._title = title
         self._discovery_function = discovery_function
+        self._homekit_models = homekit_models
         self.CONNECTION_CLASS = connection_class  # pylint: disable=C0103
 
     async def async_step_user(self, user_input=None):
@@ -81,8 +83,18 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 
         return await self.async_step_confirm()
 
-    async_step_zeroconf = async_step_discovery
     async_step_ssdp = async_step_discovery
+
+    async def async_step_zeroconf(self, discovery_info):
+        """Handle a flow initialized by zerconf."""
+        # If it's a zeroconf discovery, we want to exclude it unless the model
+        # is one of ours.
+        if (self._homekit_models is not None and
+                self.hass.components.homekit_controller.test_homekit_zeroconf(
+                    discovery_info, self._homekit_models)):
+            return self.async_abort(reason='not_supported')
+
+        return await self.async_step_discovery(discovery_info)
 
     async def async_step_import(self, _):
         """Handle a flow initialized by import."""
