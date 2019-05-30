@@ -40,7 +40,7 @@ async def test_config_yaml_host_imported(hass):
     progress = hass.config_entries.flow.async_progress()
     assert len(progress) == 1
     assert progress[0]['handler'] == 'tradfri'
-    assert progress[0]['context'] == {'source': 'import'}
+    assert progress[0]['context'] == {'source': 'import', 'host': 'mock-host'}
 
 
 async def test_config_json_host_not_imported(hass):

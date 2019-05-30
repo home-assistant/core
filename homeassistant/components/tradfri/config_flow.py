@@ -7,6 +7,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.core import callback
 
 from .const import (
     CONF_IMPORT_GROUPS, CONF_IDENTITY, CONF_HOST, CONF_KEY, CONF_GATEWAY_ID)
@@ -78,13 +79,19 @@ class FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_zeroconf(self, user_input):
         """Handle zeroconf discovery."""
+        host = user_input['host']
+
+        if any(flow['context']['host'] == host
+               for flow in self._async_in_progress()):
+            return self.async_abort(reason='already_in_progress')
+
         for entry in self._async_current_entries():
-            if entry.data[CONF_HOST] == user_input['host']:
+            if entry.data[CONF_HOST] == host:
                 return self.async_abort(
                     reason='already_configured'
                 )
 
-        self._host = user_input['host']
+        self._set_host(host)
         return await self.async_step_auth()
 
     async def async_step_import(self, user_input):
@@ -97,7 +104,7 @@ class FlowHandler(config_entries.ConfigFlow):
 
         # Happens if user has host directly in configuration.yaml
         if 'key' not in user_input:
-            self._host = user_input['host']
+            self._set_host(user_input['host'])
             self._import_groups = user_input[CONF_IMPORT_GROUPS]
             return await self.async_step_auth()
 
@@ -113,7 +120,7 @@ class FlowHandler(config_entries.ConfigFlow):
             return await self._entry_from_data(data)
         except AuthError:
             # If we fail to connect, just pass it on to discovery
-            self._host = user_input['host']
+            self._set_host(user_input['host'])
             return await self.async_step_auth()
 
     async def _entry_from_data(self, data):
@@ -134,6 +141,13 @@ class FlowHandler(config_entries.ConfigFlow):
             title=host,
             data=data
         )
+
+    @callback
+    def _set_host(self, host):
+        """Set the host."""
+        # pylint: disable=unsupported-assignment-operation
+        self.context['host'] = host
+        self._host = host
 
 
 async def authenticate(hass, host, security_code):
