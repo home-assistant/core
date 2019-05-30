@@ -493,7 +493,14 @@ ha-philipsjs==0.0.5
 habitipy==0.2.0
 
 # homeassistant.components.hangouts
+<<<<<<< HEAD
 hangups==0.4.6
+=======
+hangups==0.4.9
+
+# homeassistant.components.cloud
+hass-nabucasa==0.13
+>>>>>>> Update hass-nabucasa (#24197)
 
 # homeassistant.components.mqtt.server
 hbmqtt==0.9.4
