@@ -30,9 +30,6 @@ async def test_setup(hass):
             patch.object(zeroconf.Zeroconf, 'get_service_info') as \
             mock_get_service_info:
 
-        MockServiceBrowser.side_effect = service_update_mock
-        mock_get_service_info.side_effect = get_service_info_mock
-
         assert await async_setup_component(
             hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
 
