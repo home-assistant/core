@@ -16,6 +16,7 @@ ZEROCONF = {
     ],
     "_hap._tcp.local.": [
         "homekit_controller",
+        "lifx",
         "tradfri"
     ]
 }
