@@ -1,22 +1,21 @@
 """Support for the Netatmo Weather Service."""
-from datetime import timedelta
 import logging
 import socket
-from time import time
 import threading
+from datetime import timedelta
+from time import time
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_MODE, CONF_MONITORED_CONDITIONS,
     TEMP_CELSIUS, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_BATTERY)
-from homeassistant.helpers.event import call_later
 from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import call_later
 from homeassistant.util import Throttle
-
 from .const import DATA_NETATMO_AUTH
 
 _LOGGER = logging.getLogger(__name__)
@@ -130,7 +129,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             if _dev:
                 add_entities(_dev, True)
 
-        for data_class in all_product_classes():
+        import pyatmo
+        for data_class in [pyatmo.WeatherStationData, pyatmo.HomeCoachData]:
             data = NetatmoData(auth, data_class, config.get(CONF_STATION))
             # Test if manually configured
             if CONF_MODULES in config:
@@ -166,13 +166,6 @@ def find_devices(data):
     for module_name in not_handled:
         _LOGGER.error('Module name: "%s" not found', module_name)
     return dev
-
-
-def all_product_classes():
-    """Provide all handled Netatmo product classes."""
-    import pyatmo
-
-    return [pyatmo.WeatherStationData, pyatmo.HomeCoachData]
 
 
 class NetatmoSensor(Entity):
