@@ -108,37 +108,6 @@ class TestSetup:
             'platform_conf.whatever',
             MockPlatform(platform_schema=platform_schema))
 
-        with assert_setup_component(1):
-            assert setup.setup_component(self.hass, 'platform_conf', {
-                'platform_conf': {
-                    'platform': 'whatever',
-                    'hello': 'world',
-                    'invalid': 'extra',
-                }
-            })
-            assert caplog.text.count('Your configuration contains '
-                                     'extra keys') == 1
-
-        self.hass.data.pop(setup.DATA_SETUP)
-        self.hass.config.components.remove('platform_conf')
-
-        with assert_setup_component(2):
-            assert setup.setup_component(self.hass, 'platform_conf', {
-                'platform_conf': {
-                    'platform': 'whatever',
-                    'hello': 'world',
-                },
-                'platform_conf 2': {
-                    'platform': 'whatever',
-                    'invalid': True
-                }
-            })
-            assert caplog.text.count('Your configuration contains '
-                                     'extra keys') == 2
-
-        self.hass.data.pop(setup.DATA_SETUP)
-        self.hass.config.components.remove('platform_conf')
-
         with assert_setup_component(0):
             assert setup.setup_component(self.hass, 'platform_conf', {
                 'platform_conf': {
@@ -208,21 +177,6 @@ class TestSetup:
 
         with assert_setup_component(1):
             assert setup.setup_component(self.hass, 'platform_conf', {
-                # fail: no extra keys allowed in platform schema
-                'platform_conf': {
-                    'platform': 'whatever',
-                    'hello': 'world',
-                    'invalid': 'extra',
-                }
-            })
-            assert caplog.text.count('Your configuration contains '
-                                     'extra keys') == 1
-
-        self.hass.data.pop(setup.DATA_SETUP)
-        self.hass.config.components.remove('platform_conf')
-
-        with assert_setup_component(1):
-            assert setup.setup_component(self.hass, 'platform_conf', {
                 # pass
                 'platform_conf': {
                     'platform': 'whatever',
@@ -234,9 +188,6 @@ class TestSetup:
                     'hello': 'there'
                 }
             })
-
-        self.hass.data.pop(setup.DATA_SETUP)
-        self.hass.config.components.remove('platform_conf')
 
     def test_validate_platform_config_3(self, caplog):
         """Test fallback to component PLATFORM_SCHEMA."""
@@ -260,20 +211,6 @@ class TestSetup:
 
         with assert_setup_component(1):
             assert setup.setup_component(self.hass, 'platform_conf', {
-                'platform_conf': {
-                    'platform': 'whatever',
-                    'hello': 'world',
-                    'invalid': 'extra',
-                }
-            })
-            assert caplog.text.count('Your configuration contains '
-                                     'extra keys') == 1
-
-        self.hass.data.pop(setup.DATA_SETUP)
-        self.hass.config.components.remove('platform_conf')
-
-        with assert_setup_component(1):
-            assert setup.setup_component(self.hass, 'platform_conf', {
                 # pass
                 'platform_conf': {
                     'platform': 'whatever',
@@ -285,9 +222,6 @@ class TestSetup:
                     'hello': 'there'
                 }
             })
-
-        self.hass.data.pop(setup.DATA_SETUP)
-        self.hass.config.components.remove('platform_conf')
 
     def test_validate_platform_config_4(self):
         """Test entity_namespace in PLATFORM_SCHEMA."""
