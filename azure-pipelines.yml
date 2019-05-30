@@ -8,7 +8,6 @@ trigger:
   tags:
     include:
     - '*'
-
 variables:
   - name: versionBuilder
     value: '3.2'
@@ -17,6 +16,7 @@ variables:
   - group: docker
   - group: wheels
   - group: github
+
 
 jobs:
 
@@ -96,8 +96,30 @@ jobs:
     displayName: 'Run wheels build'
 
 
-- job: 'Release'
+- job: 'VersionValidate'
   condition: startsWith(variables['Build.SourceBranch'], 'refs/tags')
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - task: UsePythonVersion@0
+    displayName: 'Use Python 3.7'
+    inputs:
+      versionSpec: '3.7'
+  - script: |
+      setup_version="$(python setup.py -V)"
+      branch_version="$(Build.SourceBranchName)"
+
+      if [ "${setup_version}" != "${branch_version}" ]; then
+        echo "Version of tag ${branch_version} don't match with ${setup_version}!"
+        exit 1
+      fi
+    displayName: 'Check version of branch/tag'
+
+
+- job: 'Release'
+  condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded('VersionValidate')
+  dependsOn:
+  - 'VersionValidate'
   timeoutInMinutes: 120
   pool:
     vmImage: 'ubuntu-16.04'
