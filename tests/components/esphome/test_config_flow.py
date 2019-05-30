@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.esphome import config_flow
+from homeassistant.components.esphome import config_flow, DATA_KEY
 from tests.common import mock_coro, MockConfigEntry
 
 MockDeviceInfo = namedtuple("DeviceInfo", ["uses_password", "name"])
@@ -249,6 +249,33 @@ async def test_discovery_already_configured_ip(hass, mock_client):
         'hostname': 'test8266.local.',
         'properties': {
             "address": "192.168.43.183"
+        }
+    }
+    result = await flow.async_step_zeroconf(user_input=service_info)
+    assert result['type'] == 'abort'
+    assert result['reason'] == 'already_configured'
+
+
+async def test_discovery_already_configured_name(hass, mock_client):
+    """Test discovery aborts if already configured via name."""
+    entry = MockConfigEntry(
+        domain='esphome',
+        data={'host': '192.168.43.183', 'port': 6053, 'password': ''}
+    )
+    entry.add_to_hass(hass)
+    mock_entry_data = MagicMock()
+    mock_entry_data.device_info.name = 'test8266'
+    hass.data[DATA_KEY] = {
+        entry.entry_id: mock_entry_data,
+    }
+
+    flow = _setup_flow_handler(hass)
+    service_info = {
+        'host': '192.168.43.183',
+        'port': 6053,
+        'hostname': 'test8266.local.',
+        'properties': {
+            "address": "test8266.local"
         }
     }
     result = await flow.async_step_zeroconf(user_input=service_info)
