@@ -8,7 +8,7 @@ import pytest
 from homeassistant.setup import async_setup_component
 from homeassistant.components.frontend import (
     DOMAIN, CONF_JS_VERSION, CONF_THEMES, CONF_EXTRA_HTML_URL,
-    CONF_EXTRA_HTML_URL_ES5)
+    CONF_EXTRA_HTML_URL_ES5, generate_negative_index_regex)
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 
 from tests.common import mock_coro
@@ -331,3 +331,43 @@ async def test_auth_authorize(mock_http_client):
     resp = await mock_http_client.get(authorizejs.groups(0)[0])
     assert resp.status == 200
     assert 'public' in resp.headers.get('cache-control')
+
+
+def test_index_regex():
+    """Test the index regex."""
+    pattern = re.compile('/' + generate_negative_index_regex())
+
+    for should_match in (
+            '/',
+            '/lovelace',
+            '/lovelace/default_view',
+            '/map',
+            '/config',
+    ):
+        assert pattern.match(should_match), should_match
+
+    for should_not_match in (
+            '/service_worker.js',
+            '/manifest.json',
+            '/onboarding.html',
+            '/manifest.json',
+            'static',
+            'static/',
+            'static/index.html',
+            'frontend_latest',
+            'frontend_latest/',
+            'frontend_latest/index.html',
+            'frontend_es5',
+            'frontend_es5/',
+            'frontend_es5/index.html',
+            'local',
+            'local/',
+            'local/index.html',
+            'auth',
+            'auth/',
+            'auth/index.html',
+            '/api',
+            '/api/',
+            '/api/logbook',
+    ):
+        assert not pattern.match(should_not_match), should_not_match
