@@ -1,9 +1,4 @@
-"""
-Support for Luftdaten stations.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/luftdaten/
-"""
+"""Support for Luftdaten stations."""
 import logging
 
 import voluptuous as vol
@@ -12,16 +7,15 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL, CONF_SENSORS,
     CONF_SHOW_ON_MAP, TEMP_CELSIUS)
+from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-from .config_flow import configured_sensors
+from .config_flow import configured_sensors, duplicate_stations
 from .const import CONF_SENSOR_ID, DEFAULT_SCAN_INTERVAL, DOMAIN
-
-REQUIREMENTS = ['luftdaten==0.3.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,6 +61,14 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
+@callback
+def _async_fixup_sensor_id(hass, config_entry, sensor_id):
+    hass.config_entries.async_update_entry(
+        config_entry, data={
+            **config_entry.data, CONF_SENSOR_ID: int(sensor_id)
+        })
+
+
 async def async_setup(hass, config):
     """Set up the Luftdaten component."""
     hass.data[DOMAIN] = {}
@@ -77,7 +79,7 @@ async def async_setup(hass, config):
         return True
 
     conf = config[DOMAIN]
-    station_id = conf.get(CONF_SENSOR_ID)
+    station_id = conf[CONF_SENSOR_ID]
 
     if station_id not in configured_sensors(hass):
         hass.async_create_task(
@@ -101,6 +103,18 @@ async def async_setup_entry(hass, config_entry):
     """Set up Luftdaten as config entry."""
     from luftdaten import Luftdaten
     from luftdaten.exceptions import LuftdatenError
+
+    if not isinstance(config_entry.data[CONF_SENSOR_ID], int):
+        _async_fixup_sensor_id(hass, config_entry,
+                               config_entry.data[CONF_SENSOR_ID])
+
+    if (config_entry.data[CONF_SENSOR_ID] in
+            duplicate_stations(hass) and config_entry.source == SOURCE_IMPORT):
+        _LOGGER.warning("Removing duplicate sensors for station %s",
+                        config_entry.data[CONF_SENSOR_ID])
+        hass.async_create_task(hass.config_entries.async_remove(
+            config_entry.entry_id))
+        return False
 
     session = async_get_clientsession(hass)
 

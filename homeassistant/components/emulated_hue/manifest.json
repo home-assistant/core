@@ -1,0 +1,10 @@
+{
+  "domain": "emulated_hue",
+  "name": "Emulated hue",
+  "documentation": "https://www.home-assistant.io/components/emulated_hue",
+  "requirements": [
+    "aiohttp_cors==0.7.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

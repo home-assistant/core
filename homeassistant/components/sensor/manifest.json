@@ -1,0 +1,8 @@
+{
+  "domain": "sensor",
+  "name": "Sensor",
+  "documentation": "https://www.home-assistant.io/components/sensor",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

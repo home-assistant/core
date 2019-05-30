@@ -1,9 +1,4 @@
-"""
-Support for vacuum cleaner robots (botvacs).
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/vacuum/
-"""
+"""Support for vacuum cleaner robots (botvacs)."""
 from datetime import timedelta
 from functools import partial
 import logging
@@ -16,7 +11,8 @@ from homeassistant.const import (
     SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON, STATE_PAUSED, STATE_IDLE)
 from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import (ToggleEntity, Entity)
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -24,8 +20,6 @@ from homeassistant.helpers.icon import icon_for_battery_level
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'vacuum'
-DEPENDENCIES = ['group']
-
 SCAN_INTERVAL = timedelta(seconds=20)
 
 GROUP_NAME_ALL_VACUUMS = 'all vacuum cleaners'
@@ -95,7 +89,7 @@ def is_on(hass, entity_id=None):
 
 async def async_setup(hass, config):
     """Set up the vacuum component."""
-    component = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_VACUUMS)
 
     await component.async_setup(config)
@@ -150,6 +144,16 @@ async def async_setup(hass, config):
     )
 
     return True
+
+
+async def async_setup_entry(hass, entry):
+    """Set up a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
 class _BaseVacuum(Entity):

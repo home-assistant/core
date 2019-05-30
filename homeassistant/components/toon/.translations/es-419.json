@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "unknown_auth_fail": "Ocurri\u00f3 un error inesperado, mientras se autenticaba."
+        },
+        "error": {
+            "credentials": "Las credenciales proporcionadas no son v\u00e1lidas."
+        },
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Nombre de usuario"
+                }
+            }
+        },
+        "title": "Toon"
+    }
+}

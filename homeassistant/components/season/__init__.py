@@ -1,0 +1,1 @@
+"""The season component."""

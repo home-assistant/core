@@ -1,9 +1,4 @@
-"""
-The Habitica API component.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/habitica/
-"""
+"""Support for Habitica devices."""
 from collections import namedtuple
 import logging
 
@@ -13,8 +8,6 @@ from homeassistant.const import (
     CONF_API_KEY, CONF_NAME, CONF_PATH, CONF_SENSORS, CONF_URL)
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-REQUIREMENTS = ['habitipy==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 

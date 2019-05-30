@@ -1,0 +1,10 @@
+{
+  "domain": "velbus",
+  "name": "Velbus",
+  "documentation": "https://www.home-assistant.io/components/velbus",
+  "requirements": [
+    "python-velbus==2.0.24"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

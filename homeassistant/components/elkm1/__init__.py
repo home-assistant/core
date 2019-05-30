@@ -1,10 +1,4 @@
-"""
-Support the ElkM1 Gold and ElkM1 EZ8 alarm / integration panels.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/elkm1/
-"""
-
+"""Support the ElkM1 Gold and ElkM1 EZ8 alarm/integration panels."""
 import logging
 import re
 
@@ -18,20 +12,18 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType  # noqa
 
-DOMAIN = "elkm1"
-
-REQUIREMENTS = ['elkm1-lib==0.7.13']
+DOMAIN = 'elkm1'
 
 CONF_AREA = 'area'
 CONF_COUNTER = 'counter'
+CONF_ENABLED = 'enabled'
 CONF_KEYPAD = 'keypad'
 CONF_OUTPUT = 'output'
+CONF_PLC = 'plc'
 CONF_SETTING = 'setting'
 CONF_TASK = 'task'
 CONF_THERMOSTAT = 'thermostat'
-CONF_PLC = 'plc'
 CONF_ZONE = 'zone'
-CONF_ENABLED = 'enabled'
 
 _LOGGER = logging.getLogger(__name__)
 

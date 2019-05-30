@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_discovered": "Nenhum UPnP/IGD descoberto",
+            "no_devices_found": "Nenhum dispositivo UPnP/IGD encontrado na rede.",
+            "no_sensors_or_port_mapping": "Ative pelo menos sensores ou mapeamento de porta",
+            "single_instance_allowed": "Apenas uma configura\u00e7\u00e3o do UPnP/IGD \u00e9 necess\u00e1ria."
+        },
+        "step": {
+            "confirm": {
+                "description": "Deseja configurar o UPnP/IGD?",
+                "title": "UPnP/IGD"
+            },
+            "init": {
+                "title": "UPnP/IGD"
+            },
+            "user": {
+                "data": {
+                    "enable_port_mapping": "Ativar o mapeamento de porta para o Home Assistant",
+                    "enable_sensors": "Adicionar sensores de tr\u00e1fego",
+                    "igd": "UPnP/IGD"
+                },
+                "title": "Op\u00e7\u00f5es de configura\u00e7\u00e3o para o UPnP/IGD"
+            }
+        },
+        "title": "UPnP/IGD"
+    }
+}

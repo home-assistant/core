@@ -1,9 +1,4 @@
-"""
-Trigger an automation when a LiteJet switch is released.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/automation.litejet/
-"""
+"""Trigger an automation when a LiteJet switch is released."""
 import logging
 
 import voluptuous as vol
@@ -13,8 +8,6 @@ from homeassistant.const import CONF_PLATFORM
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_point_in_utc_time
-
-DEPENDENCIES = ['litejet']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -12,7 +12,7 @@
             "init": {
                 "data": {
                     "host": "Hostitel",
-                    "port": "Port (v\u00fdchoz\u00ed hodnota: '80')"
+                    "port": "Port"
                 },
                 "title": "Definujte br\u00e1nu deCONZ"
             },

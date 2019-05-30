@@ -13,8 +13,12 @@
                 "data": {
                     "password": "Password"
                 },
-                "description": "Please enter the password you set in your configuration.",
+                "description": "Please enter the password you set in your configuration for {name}.",
                 "title": "Enter Password"
+            },
+            "discovery_confirm": {
+                "description": "Do you want to add the ESPHome node `{name}` to Home Assistant?",
+                "title": "Discovered ESPHome node"
             },
             "user": {
                 "data": {

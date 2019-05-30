@@ -1,0 +1,14 @@
+{
+  "domain": "point",
+  "name": "Point",
+  "documentation": "https://www.home-assistant.io/components/point",
+  "requirements": [
+    "pypoint==1.1.1"
+  ],
+  "dependencies": [
+    "webhook"
+  ],
+  "codeowners": [
+    "@fredrike"
+  ]
+}

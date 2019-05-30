@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "connection_failure": "Det gick inte att ansluta till den angivna v\u00e4rden."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "V\u00e4rd",
+                    "host": "V\u00e4rd"
+                },
+                "description": "Ange v\u00e4rdnamnet eller IP-adressen f\u00f6r en Heos-enhet (helst en ansluten via kabel till n\u00e4tverket).",
+                "title": "Anslut till Heos"
+            }
+        },
+        "title": "Heos"
+    }
+}

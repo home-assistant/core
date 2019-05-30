@@ -1,0 +1,12 @@
+{
+  "domain": "wemo",
+  "name": "Wemo",
+  "documentation": "https://www.home-assistant.io/components/wemo",
+  "requirements": [
+    "pywemo==0.4.34"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@sqldiablo"
+  ]
+}

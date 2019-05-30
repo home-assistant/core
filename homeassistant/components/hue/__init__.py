@@ -1,9 +1,4 @@
-"""
-This component provides basic support for the Philips Hue system.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/hue/
-"""
+"""Support for the Philips Hue system."""
 import ipaddress
 import logging
 
@@ -19,14 +14,14 @@ from .bridge import HueBridge
 # Loading the config flow file will register the flow
 from .config_flow import configured_hosts
 
-REQUIREMENTS = ['aiohue==1.5.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BRIDGES = "bridges"
 
 CONF_ALLOW_UNREACHABLE = 'allow_unreachable'
 DEFAULT_ALLOW_UNREACHABLE = False
+
+DATA_CONFIGS = 'hue_configs'
 
 PHUE_CONFIG_FILE = 'phue.conf'
 
@@ -59,6 +54,7 @@ async def async_setup(hass, config):
         conf = {}
 
     hass.data[DOMAIN] = {}
+    hass.data[DATA_CONFIGS] = {}
     configured = configured_hosts(hass)
 
     # User has configured bridges
@@ -71,7 +67,7 @@ async def async_setup(hass, config):
         host = bridge_conf[CONF_HOST]
 
         # Store config in hass.data so the config entry can find it
-        hass.data[DOMAIN][host] = bridge_conf
+        hass.data[DATA_CONFIGS][host] = bridge_conf
 
         # If configured, the bridge will be set up during config entry phase
         if host in configured:
@@ -96,7 +92,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Set up a bridge from a config entry."""
     host = entry.data['host']
-    config = hass.data[DOMAIN].get(host)
+    config = hass.data[DATA_CONFIGS].get(host)
 
     if config is None:
         allow_unreachable = DEFAULT_ALLOW_UNREACHABLE
@@ -106,11 +102,11 @@ async def async_setup_entry(hass, entry):
         allow_groups = config[CONF_ALLOW_HUE_GROUPS]
 
     bridge = HueBridge(hass, entry, allow_unreachable, allow_groups)
-    hass.data[DOMAIN][host] = bridge
 
     if not await bridge.async_setup():
         return False
 
+    hass.data[DOMAIN][host] = bridge
     config = bridge.api.config
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
@@ -123,10 +119,16 @@ async def async_setup_entry(hass, entry):
         },
         manufacturer='Signify',
         name=config.name,
-        # Not yet exposed as properties in aiohue
-        model=config.raw['modelid'],
-        sw_version=config.raw['swversion'],
+        model=config.modelid,
+        sw_version=config.swversion,
     )
+
+    if config.swupdate2_bridge_state == "readytoinstall":
+        err = (
+            "Please check for software updates of the bridge "
+            "in the Philips Hue App."
+        )
+        _LOGGER.warning(err)
 
     return True
 

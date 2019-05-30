@@ -1,9 +1,4 @@
-"""
-Provides functionality to interact with climate devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/climate/
-"""
+"""Provides functionality to interact with climate devices."""
 from datetime import timedelta
 import logging
 import functools as ft
@@ -14,74 +9,64 @@ from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    STATE_ON, STATE_OFF, STATE_UNKNOWN, TEMP_CELSIUS, PRECISION_WHOLE,
+    STATE_ON, STATE_OFF, TEMP_CELSIUS, PRECISION_WHOLE,
     PRECISION_TENTHS)
+
+from .const import (
+    ATTR_AUX_HEAT,
+    ATTR_AWAY_MODE,
+    ATTR_CURRENT_HUMIDITY,
+    ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_LIST,
+    ATTR_FAN_MODE,
+    ATTR_HOLD_MODE,
+    ATTR_HUMIDITY,
+    ATTR_MAX_HUMIDITY,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_HUMIDITY,
+    ATTR_MIN_TEMP,
+    ATTR_OPERATION_LIST,
+    ATTR_OPERATION_MODE,
+    ATTR_SWING_LIST,
+    ATTR_SWING_MODE,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
+    ATTR_TARGET_TEMP_STEP,
+    DOMAIN,
+    SERVICE_SET_AUX_HEAT,
+    SERVICE_SET_AWAY_MODE,
+    SERVICE_SET_FAN_MODE,
+    SERVICE_SET_HOLD_MODE,
+    SERVICE_SET_HUMIDITY,
+    SERVICE_SET_OPERATION_MODE,
+    SERVICE_SET_SWING_MODE,
+    SERVICE_SET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_HIGH,
+    SUPPORT_TARGET_TEMPERATURE_LOW,
+    SUPPORT_TARGET_HUMIDITY,
+    SUPPORT_TARGET_HUMIDITY_HIGH,
+    SUPPORT_TARGET_HUMIDITY_LOW,
+    SUPPORT_FAN_MODE,
+    SUPPORT_OPERATION_MODE,
+    SUPPORT_HOLD_MODE,
+    SUPPORT_SWING_MODE,
+    SUPPORT_AWAY_MODE,
+    SUPPORT_AUX_HEAT,
+)
+from .reproduce_state import async_reproduce_states  # noqa
 
 DEFAULT_MIN_TEMP = 7
 DEFAULT_MAX_TEMP = 35
 DEFAULT_MIN_HUMITIDY = 30
 DEFAULT_MAX_HUMIDITY = 99
 
-DOMAIN = 'climate'
-
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 SCAN_INTERVAL = timedelta(seconds=60)
-
-SERVICE_SET_AWAY_MODE = 'set_away_mode'
-SERVICE_SET_AUX_HEAT = 'set_aux_heat'
-SERVICE_SET_TEMPERATURE = 'set_temperature'
-SERVICE_SET_FAN_MODE = 'set_fan_mode'
-SERVICE_SET_HOLD_MODE = 'set_hold_mode'
-SERVICE_SET_OPERATION_MODE = 'set_operation_mode'
-SERVICE_SET_SWING_MODE = 'set_swing_mode'
-SERVICE_SET_HUMIDITY = 'set_humidity'
-
-STATE_HEAT = 'heat'
-STATE_COOL = 'cool'
-STATE_IDLE = 'idle'
-STATE_AUTO = 'auto'
-STATE_MANUAL = 'manual'
-STATE_DRY = 'dry'
-STATE_FAN_ONLY = 'fan_only'
-STATE_ECO = 'eco'
-
-SUPPORT_TARGET_TEMPERATURE = 1
-SUPPORT_TARGET_TEMPERATURE_HIGH = 2
-SUPPORT_TARGET_TEMPERATURE_LOW = 4
-SUPPORT_TARGET_HUMIDITY = 8
-SUPPORT_TARGET_HUMIDITY_HIGH = 16
-SUPPORT_TARGET_HUMIDITY_LOW = 32
-SUPPORT_FAN_MODE = 64
-SUPPORT_OPERATION_MODE = 128
-SUPPORT_HOLD_MODE = 256
-SUPPORT_SWING_MODE = 512
-SUPPORT_AWAY_MODE = 1024
-SUPPORT_AUX_HEAT = 2048
-SUPPORT_ON_OFF = 4096
-
-ATTR_CURRENT_TEMPERATURE = 'current_temperature'
-ATTR_MAX_TEMP = 'max_temp'
-ATTR_MIN_TEMP = 'min_temp'
-ATTR_TARGET_TEMP_HIGH = 'target_temp_high'
-ATTR_TARGET_TEMP_LOW = 'target_temp_low'
-ATTR_TARGET_TEMP_STEP = 'target_temp_step'
-ATTR_AWAY_MODE = 'away_mode'
-ATTR_AUX_HEAT = 'aux_heat'
-ATTR_FAN_MODE = 'fan_mode'
-ATTR_FAN_LIST = 'fan_list'
-ATTR_CURRENT_HUMIDITY = 'current_humidity'
-ATTR_HUMIDITY = 'humidity'
-ATTR_MAX_HUMIDITY = 'max_humidity'
-ATTR_MIN_HUMIDITY = 'min_humidity'
-ATTR_HOLD_MODE = 'hold_mode'
-ATTR_OPERATION_MODE = 'operation_mode'
-ATTR_OPERATION_LIST = 'operation_list'
-ATTR_SWING_MODE = 'swing_mode'
-ATTR_SWING_LIST = 'swing_list'
 
 CONVERTIBLE_ATTRIBUTE = [
     ATTR_TEMPERATURE,
@@ -208,7 +193,7 @@ class ClimateDevice(Entity):
             return self.current_operation
         if self.is_on:
             return STATE_ON
-        return STATE_UNKNOWN
+        return None
 
     @property
     def precision(self):

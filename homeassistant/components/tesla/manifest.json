@@ -1,0 +1,12 @@
+{
+  "domain": "tesla",
+  "name": "Tesla",
+  "documentation": "https://www.home-assistant.io/components/tesla",
+  "requirements": [
+    "teslajsonpy==0.0.25"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@zabuldon"
+  ]
+}

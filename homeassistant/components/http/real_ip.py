@@ -1,9 +1,8 @@
 """Middleware to fetch real IP."""
-
 from ipaddress import ip_address
 
-from aiohttp.web import middleware
 from aiohttp.hdrs import X_FORWARDED_FOR
+from aiohttp.web import middleware
 
 from homeassistant.core import callback
 

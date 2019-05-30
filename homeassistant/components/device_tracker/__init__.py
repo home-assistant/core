@@ -1,9 +1,4 @@
-"""
-Provide functionality to keep track of devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/device_tracker/
-"""
+"""Provide functionality to keep track of devices."""
 import asyncio
 from datetime import timedelta
 import logging
@@ -22,10 +17,10 @@ from homeassistant.components.zone.zone import async_active_zone
 from homeassistant.config import load_yaml_config_file, async_log_exception
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
-import homeassistant.helpers.config_validation as cv
 from homeassistant import util
 from homeassistant.util.async_ import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
@@ -40,8 +35,6 @@ from homeassistant.const import (
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'device_tracker'
-DEPENDENCIES = ['zone', 'group']
-
 GROUP_NAME_ALL_DEVICES = 'all devices'
 ENTITY_ID_ALL_DEVICES = group.ENTITY_ID_FORMAT.format('all_devices')
 
@@ -96,6 +89,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NEW_DEVICE_DEFAULTS,
                  default={}): NEW_DEVICE_DEFAULTS_SCHEMA
 })
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
 SERVICE_SEE_PAYLOAD_SCHEMA = vol.Schema(vol.All(
     cv.has_at_least_one_key(ATTR_MAC, ATTR_DEV_ID), {
         ATTR_MAC: cv.string,
@@ -290,7 +284,7 @@ class DeviceTracker:
         """
         if mac is None and dev_id is None:
             raise HomeAssistantError('Neither mac or device id passed in')
-        elif mac is not None:
+        if mac is not None:
             mac = str(mac).upper()
             device = self.mac_to_dev.get(mac)
             if not device:
@@ -579,6 +573,7 @@ class Device(RestoreEntity):
             return
         self._state = state.state
         self.last_update_home = (state.state == STATE_HOME)
+        self.last_seen = dt_util.utcnow()
 
         for attr, var in (
                 (ATTR_SOURCE_TYPE, 'source_type'),

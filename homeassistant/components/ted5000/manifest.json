@@ -1,0 +1,10 @@
+{
+  "domain": "ted5000",
+  "name": "Ted5000",
+  "documentation": "https://www.home-assistant.io/components/ted5000",
+  "requirements": [
+    "xmltodict==0.12.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}
