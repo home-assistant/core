@@ -150,7 +150,6 @@ class FlowHandler(config_entries.ConfigFlow):
         self._host = host
 
 
-
 async def authenticate(hass, host, security_code):
     """Authenticate with a Tradfri hub."""
     from pytradfri.api.aiocoap_api import APIFactory

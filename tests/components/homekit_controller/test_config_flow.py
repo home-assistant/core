@@ -993,4 +993,3 @@ async def test_parse_overlapping_homekit_json(hass):
         'hkid': '00:00:00:00:00:00',
         'title_placeholders': {'name': 'TestDevice'}
     }
-
