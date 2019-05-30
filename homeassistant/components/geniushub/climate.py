@@ -4,10 +4,10 @@ from typing import Awaitable, Dict, Optional, List
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_OFF, HVAC_MODE_AUTO, PRESET_BOOST, PRESET_ECO,
+    HVAC_MODE_OFF, HVAC_MODE_AUTO, PRESET_BOOST, PRESET_ACTIVITY,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, TEMP_CELSIUS)
+    ATTR_DURATION, ATTR_TEMPERATURE, TEMP_CELSIUS)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -24,7 +24,7 @@ GH_STATE_ATTRS = ['mode', 'temperature', 'type', 'occupied', 'override']
 GH_MODE_TO_HA_PRESET = {
     'off': None,
     'timer': None,
-    'footprint': PRESET_ECO,
+    'footprint': PRESET_ACTIVITY,
     'away': None,
     'override': PRESET_BOOST,
     'early': None,
@@ -33,7 +33,7 @@ GH_MODE_TO_HA_PRESET = {
     'other': None,
 }
 HA_PRESET_TO_GH_MODE = {v: k for k, v in GH_MODE_TO_HA_PRESET.items()
-                        if k is not None}
+                        if v is not None}
 
 HA_HVAC_MODE_TO_GH_MODE = {
     HVAC_MODE_OFF: 'off',
@@ -148,7 +148,8 @@ class GeniusClimateZone(ClimateDevice):
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set a new target temperature for this zone."""
-        await self._zone.set_override(kwargs[ATTR_TEMPERATURE], 3600)
+        await self._zone.set_override(kwargs[ATTR_TEMPERATURE],
+                                      kwargs.get(ATTR_DURATION, 3600))
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> Awaitable[None]:
         """Set new target hvac mode."""
