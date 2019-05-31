@@ -83,7 +83,7 @@ homeassistant/components/flock/* @fabaff
 homeassistant/components/flunearyou/* @bachya
 homeassistant/components/foursquare/* @robbiet480
 homeassistant/components/freebox/* @snoof85
-homeassistant/components/frontend/* @home-assistant/core
+homeassistant/components/frontend/* @home-assistant/frontend
 homeassistant/components/gearbest/* @HerrHofrat
 homeassistant/components/geniushub/* @zxdavb
 homeassistant/components/gitter/* @fabaff
@@ -138,7 +138,7 @@ homeassistant/components/linux_battery/* @fabaff
 homeassistant/components/liveboxplaytv/* @pschmitt
 homeassistant/components/logger/* @home-assistant/core
 homeassistant/components/logi_circle/* @evanjd
-homeassistant/components/lovelace/* @home-assistant/core
+homeassistant/components/lovelace/* @home-assistant/frontend
 homeassistant/components/luci/* @fbradyirl
 homeassistant/components/luftdaten/* @fabaff
 homeassistant/components/mastodon/* @fabaff
@@ -173,8 +173,8 @@ homeassistant/components/openuv/* @bachya
 homeassistant/components/openweathermap/* @fabaff
 homeassistant/components/orangepi_gpio/* @pascallj
 homeassistant/components/owlet/* @oblogic7
-homeassistant/components/panel_custom/* @home-assistant/core
-homeassistant/components/panel_iframe/* @home-assistant/core
+homeassistant/components/panel_custom/* @home-assistant/frontend
+homeassistant/components/panel_iframe/* @home-assistant/frontend
 homeassistant/components/persistent_notification/* @home-assistant/core
 homeassistant/components/philips_js/* @elupus
 homeassistant/components/pi_hole/* @fabaff
