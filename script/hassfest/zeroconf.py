@@ -64,6 +64,9 @@ def generate_and_validate(integrations: Dict[str, Integration]):
             service_type_dict[service_type].append(domain)
 
         for model in homekit_models:
+            # We add a space, as we want to test for it to be model + space.
+            model += " "
+
             if model in homekit_dict:
                 integration.add_error(
                     'zeroconf',

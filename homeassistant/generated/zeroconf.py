@@ -20,5 +20,5 @@ ZEROCONF = {
 }
 
 HOMEKIT = {
-    "LIFX": "lifx"
+    "LIFX ": "lifx"
 }
