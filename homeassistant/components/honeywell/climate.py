@@ -4,6 +4,7 @@ import datetime
 
 import requests
 import voluptuous as vol
+import somecomfort
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
@@ -54,41 +55,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return _setup_us(username, password, config, add_entities)
 
     _LOGGER.warning(
-        "The honeywell component is deprecated for EU (i.e. non-US) systems, "
-        "this functionality will be removed in version 0.96. "
-        "Please switch to the evohome component, "
+        "The honeywell component has been deprecated for EU (i.e. non-US) "
+        "systems. Please switch to the evohome component, "
         "see: https://home-assistant.io/components/evohome")
-
-    return _setup_round(username, password, config, add_entities)
-
-
-def _setup_round(username, password, config, add_entities):
-    """Set up the rounding function."""
-    from evohomeclient import EvohomeClient
-
-    away_temp = config.get(CONF_AWAY_TEMPERATURE)
-    evo_api = EvohomeClient(username, password)
-
-    try:
-        zones = evo_api.temperatures(force_refresh=True)
-        for i, zone in enumerate(zones):
-            add_entities(
-                [RoundThermostat(evo_api, zone['id'], i == 0, away_temp)],
-                True
-            )
-    except requests.exceptions.RequestException as err:
-        _LOGGER.error(
-            "Connection error logging into the honeywell evohome web service, "
-            "hint: %s", err)
-        return False
-    return True
 
 
 # config will be used later
 def _setup_us(username, password, config, add_entities):
     """Set up the user."""
-    import somecomfort
-
     try:
         client = somecomfort.SomeComfort(username, password)
     except somecomfort.AuthError:
@@ -112,121 +86,6 @@ def _setup_us(username, password, config, add_entities):
     return True
 
 
-class RoundThermostat(ClimateDevice):
-    """Representation of a Honeywell Round Connected thermostat."""
-
-    def __init__(self, client, zone_id, master, away_temp):
-        """Initialize the thermostat."""
-        self.client = client
-        self._current_temperature = None
-        self._target_temperature = None
-        self._name = 'round connected'
-        self._id = zone_id
-        self._master = master
-        self._is_dhw = False
-        self._away_temp = away_temp
-        self._away = False
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        supported = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE)
-        return supported
-
-    @property
-    def name(self):
-        """Return the name of the honeywell, if any."""
-        return self._name
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self._current_temperature
-
-    @property
-    def target_temperature(self):
-        """Return the temperature we try to reach."""
-        if self._is_dhw:
-            return None
-        return self._target_temperature
-
-    def set_temperature(self, **kwargs):
-        """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
-            return
-        self.client.set_temperature(self._name, temperature)
-
-    @property
-    def hvac_mode(self) -> str:
-        """Get the current operation of the system."""
-        return getattr(self.client, ATTR_SYSTEM_MODE, None)
-
-    @property
-    def is_away_mode_on(self):
-        """Return true if away mode is on."""
-        return self._away
-
-    def set_hvac_mode(self, hvac_mode: str) -> None:
-        """Set the HVAC mode for the thermostat."""
-        if hasattr(self.client, ATTR_SYSTEM_MODE):
-            self.client.system_mode = hvac_mode
-
-    def turn_away_mode_on(self):
-        """Turn away on.
-
-        Honeywell does have a proprietary away mode, but it doesn't really work
-        the way it should. For example: If you set a temperature manually
-        it doesn't get overwritten when away mode is switched on.
-        """
-        self._away = True
-        self.client.set_temperature(self._name, self._away_temp)
-
-    def turn_away_mode_off(self):
-        """Turn away off."""
-        self._away = False
-        self.client.cancel_temp_override(self._name)
-
-    def update(self):
-        """Get the latest date."""
-        try:
-            # Only refresh if this is the "master" device,
-            # others will pick up the cache
-            for val in self.client.temperatures(force_refresh=self._master):
-                if val['id'] == self._id:
-                    data = val
-
-        except KeyError:
-            _LOGGER.error("Update failed from Honeywell server")
-            self.client.user_data = None
-            return
-
-        except StopIteration:
-            _LOGGER.error("Did not receive any temperature data from the "
-                          "evohomeclient API")
-            return
-
-        self._current_temperature = data['temp']
-        self._target_temperature = data['setpoint']
-        if data['thermostat'] == 'DOMESTIC_HOT_WATER':
-            self._name = 'Hot Water'
-            self._is_dhw = True
-        else:
-            self._name = data['name']
-            self._is_dhw = False
-
-            # The underlying library doesn't expose the thermostat's mode
-            # but we can pull it out of the big dictionary of information.
-            device = self.client.devices[self._id]
-            self.client.system_mode = device[
-                'thermostat']['changeableValues']['mode']
-
-
 class HoneywellUSThermostat(ClimateDevice):
     """Representation of a Honeywell US Thermostat."""
 
@@ -244,37 +103,49 @@ class HoneywellUSThermostat(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        supported = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE)
+        supported = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE)
+        if hasattr(self._device, ATTR_SYSTEM_MODE):
+            supported |= SUPPORT_OPERATION_MODE
+        supported = (SUPPORT_FAN_MODE)
         return supported
 
-    @property
-    def is_fan_on(self):
-        """Return true if fan is on."""
-        return self._device.fan_running
+    @property  # TODO: will need mapping of modes
+    def fan_mode(self) -> Optional[str]:                                         # def is_fan_on(self):
+        """Return the fan setting."""
+        return self._device.fan_mode                                             #     return self._device.fan_running
 
     @property
-    def name(self):
+    def fan_modes(self) -> Optional[List[str]]:
+        """Return the list of available fan modes."""
+        return somecomfort.FAN_MODES  # TODO: ['auto', 'on', 'circulate', 'follow schedule']
+
+    def set_fan_mode(self, fan_mode: str) -> None:
+        """Set new target fan mode."""
+        self._device.fan_mode = fan_mode
+
+    @property
+    def name(self) -> Optional[str]:
         """Return the name of the honeywell, if any."""
         return self._device.name
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return (TEMP_CELSIUS if self._device.temperature_unit == 'C'
                 else TEMP_FAHRENHEIT)
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
         return self._device.current_temperature
 
     @property
-    def current_humidity(self):
+    def current_humidity(self) -> Optional[int]:
         """Return the current humidity."""
         return self._device.current_humidity
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> Optional[float]:
         """Return the temperature we try to reach."""
         if self._device.system_mode == 'cool':
             return self._device.setpoint_cool
@@ -288,12 +159,11 @@ class HoneywellUSThermostat(ClimateDevice):
             oper = "idle"
         return oper
 
-    def set_temperature(self, **kwargs):
-        """Set target temperature."""
+    def set_temperature(self, **kwargs) -> None:
+        """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        import somecomfort
         try:
             # Get current mode
             mode = self._device.system_mode
@@ -319,7 +189,6 @@ class HoneywellUSThermostat(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
-        import somecomfort
         data = {
             ATTR_FAN: (self.is_fan_on and 'running' or 'idle'),
             ATTR_FAN_MODE: self._device.fan_mode,
@@ -342,7 +211,6 @@ class HoneywellUSThermostat(ClimateDevice):
         it doesn't get overwritten when away mode is switched on.
         """
         self._away = True
-        import somecomfort
         try:
             # Get current mode
             mode = self._device.system_mode
@@ -366,7 +234,6 @@ class HoneywellUSThermostat(ClimateDevice):
     def turn_away_mode_off(self):
         """Turn away off."""
         self._away = False
-        import somecomfort
         try:
             # Disabling all hold modes
             self._device.hold_cool = False
@@ -381,7 +248,6 @@ class HoneywellUSThermostat(ClimateDevice):
 
     def update(self):
         """Update the state."""
-        import somecomfort
         retries = 3
         while retries > 0:
             try:
@@ -403,7 +269,6 @@ class HoneywellUSThermostat(ClimateDevice):
         When we got an error, the best way to be sure that the next query
         will succeed, is to recreate a new somecomfort client.
         """
-        import somecomfort
         try:
             self._client = somecomfort.SomeComfort(
                 self._username, self._password)
