@@ -143,8 +143,8 @@ jobs:
     displayName: 'Use Python 3.7'
     inputs:
       versionSpec: '3.7'
-  - script: pip install twine
-    displayName: 'Install twine'
+  - script: pip install twine wheel
+    displayName: 'Install tools'
   - script: python setup.py sdist bdist_wheel
     displayName: 'Build package'
   - script: |
