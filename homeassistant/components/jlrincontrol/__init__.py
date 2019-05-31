@@ -1,11 +1,12 @@
-"""Support for Jaguar/Land Rover InControl services"""
+"""Support for Jaguar/Land Rover InControl services."""
 import logging
 from datetime import timedelta
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_NAME, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, \
+    CONF_NAME, CONF_SCAN_INTERVAL
 from homeassistant.helpers.dispatcher import (
     dispatcher_send
 )
@@ -26,9 +27,11 @@ DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
 RESOURCES = {
     'FUEL_LEVEL_PERC': ('sensor', 'Fuel level', 'mdi:fuel', '%'),
     'DISTANCE_TO_EMPTY_FUEL': ('sensor', 'Range', 'mdi:road', 'km'),
-    'EXT_KILOMETERS_TO_SERVICE': ('sensor', 'Distance to next service', 'mdi:garage', 'km'),
+    'EXT_KILOMETERS_TO_SERVICE': ('sensor', 'Distance to next service',
+                                  'mdi:garage', 'km'),
     'ODOMETER_METER': ('sensor', 'Odometer', 'mdi:car', 'km'),
-    'DOOR_IS_ALL_DOORS_LOCKED': ('binary_sensor', 'All Doors Locked', 'mdi:lock', 'lock')
+    'DOOR_IS_ALL_DOORS_LOCKED': ('binary_sensor', 'All Doors Locked',
+                                 'mdi:lock', 'lock')
 
 
 }
@@ -48,7 +51,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the jlrpy component"""
+    """Set up the jlrpy component."""
     import jlrpy
 
     username = config[DOMAIN].get(CONF_USERNAME)
@@ -183,5 +186,6 @@ class JLREntity(Entity):
     def device_state_attributes(self):
         """Return device specific state attributes."""
         vehicle_attr = self.vehicle.get_attributes()
-        return dict(model='{} {} {}'.format(vehicle_attr['modelYear'], vehicle_attr['vehicleBrand'],
+        return dict(model='{} {} {}'.format(vehicle_attr['modelYear'],
+                                            vehicle_attr['vehicleBrand'],
                                             vehicle_attr['vehicleType']))

@@ -1,4 +1,4 @@
-"""Support for JLR InControl sensors"""
+"""Support for JLR InControl sensors."""
 import logging
 
 from . import JLREntity, RESOURCES
@@ -56,10 +56,3 @@ class JLRSensor(JLREntity):
     def available(self):
         """Return True if entity is available."""
         return True
-
-    # def update(self):
-    #     _LOGGER.info("UPDATING")
-    #     vehicle_status = self.vehicle.get_status().get('vehicleStatus')
-    #     if vehicle_status:
-    #         response = self._get_vehicle_status(vehicle_status)
-    #         self.vehicle.info = response

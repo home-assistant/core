@@ -1,3 +1,4 @@
+"""Support for JLR Incontrol Binary Sensors."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
@@ -14,11 +15,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class JLRSensor(JLREntity, BinarySensorDevice):
-    """Representation of a JLR sensor"""
+    """Representation of a JLR sensor."""
 
     @property
     def is_on(self):
-        """Return true if the binary sensor is on"""
+        """Return true if the binary sensor is on."""
         _LOGGER.debug('Getting state of %s binary sensor' % self._attribute)
         val = self._get_vehicle_status(self.vehicle.info.get('vehicleStatus'))
         if val is None:
@@ -44,10 +45,10 @@ class JLRSensor(JLREntity, BinarySensorDevice):
 
     @property
     def device_class(self):
-        """Return the class of this sensor"""
+        """Return the class of this sensor."""
         return RESOURCES[self._attribute][3]
 
     @property
     def icon(self):
-        """Return the icon"""
+        """Return the icon."""
         return RESOURCES[self._attribute][2]
