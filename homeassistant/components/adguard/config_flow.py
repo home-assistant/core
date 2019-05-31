@@ -41,7 +41,7 @@ class AdGuardHomeFlowHandler(ConfigFlow):
                     vol.Required(CONF_VERIFY_SSL, default=True): bool,
                 }
             ),
-            errors=errors if errors else {},
+            errors=errors or {},
         )
 
     async def _show_hassio_form(self, errors=None):
@@ -52,7 +52,7 @@ class AdGuardHomeFlowHandler(ConfigFlow):
                 'addon': self._hassio_discovery['addon']
             },
             data_schema=vol.Schema({}),
-            errors=errors if errors else {},
+            errors=errors or {},
         )
 
     async def async_step_init(self, user_input=None):
