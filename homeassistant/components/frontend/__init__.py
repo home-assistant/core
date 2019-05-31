@@ -1,4 +1,5 @@
 """Handle the frontend for Home Assistant."""
+import asyncio
 import json
 import logging
 import os
@@ -257,12 +258,13 @@ async def async_setup(hass, config):
 
     hass.http.register_view(IndexView(repo_path))
 
-    for panel in ('kiosk', 'states', 'profile'):
-        async_register_built_in_panel(hass, panel)
-
-    for panel in ('dev-event', 'dev-info', 'dev-service', 'dev-state',
-                  'dev-template', 'dev-mqtt'):
-        async_register_built_in_panel(hass, panel, require_admin=True)
+    await asyncio.wait(
+        [async_register_built_in_panel(hass, panel) for panel in (
+            'kiosk', 'states', 'profile')])
+    await asyncio.wait(
+        [async_register_built_in_panel(hass, panel, require_admin=True)
+         for panel in ('dev-event', 'dev-info', 'dev-service', 'dev-state',
+                       'dev-template', 'dev-mqtt')])
 
     if DATA_EXTRA_HTML_URL not in hass.data:
         hass.data[DATA_EXTRA_HTML_URL] = set()
