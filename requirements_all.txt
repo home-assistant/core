@@ -175,8 +175,11 @@ async-upnp-client==0.14.0
 
 # homeassistant.components.axis
 <<<<<<< HEAD
+<<<<<<< HEAD
 axis==16
 =======
+=======
+>>>>>>> Axis - Handle Vapix error messages (#24215)
 axis==24
 
 # homeassistant.components.azure_event_hub
