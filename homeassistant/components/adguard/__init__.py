@@ -60,7 +60,6 @@ async def async_setup_entry(
 
     def add_url(call) -> None:
         """Service call to add a new filter subscription to AdGuard Home."""
-        adguard = hass.data[DOMAIN][DATA_ADGUARD_CLIENT]
         hass.async_create_task(
             adguard.filtering.add_url(
                 call.data.get(CONF_NAME), call.data.get(CONF_URL)
@@ -69,28 +68,24 @@ async def async_setup_entry(
 
     def remove_url(call) -> None:
         """Service call to remove a filter subscription from AdGuard Home."""
-        adguard = hass.data[DOMAIN][DATA_ADGUARD_CLIENT]
         hass.async_create_task(
             adguard.filtering.remove_url(call.data.get(CONF_URL))
         )
 
     def enable_url(call) -> None:
         """Service call to enable a filter subscription in AdGuard Home."""
-        adguard = hass.data[DOMAIN][DATA_ADGUARD_CLIENT]
         hass.async_create_task(
             adguard.filtering.enable_url(call.data.get(CONF_URL))
         )
 
     def disable_url(call) -> None:
         """Service call to disable a filter subscription in AdGuard Home."""
-        adguard = hass.data[DOMAIN][DATA_ADGUARD_CLIENT]
         hass.async_create_task(
             adguard.filtering.disable_url(call.data.get(CONF_URL))
         )
 
     def refresh(call) -> None:
         """Service call to refresh the filter subscriptions in AdGuard Home."""
-        adguard = hass.data[DOMAIN][DATA_ADGUARD_CLIENT]
         hass.async_create_task(
             adguard.filtering.refresh(call.data.get(CONF_FORCE))
         )
