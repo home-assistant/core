@@ -240,7 +240,7 @@ async def test_get_panels(hass, hass_ws_client, mock_http_client):
     resp = await mock_http_client.get('/map')
     assert resp.status == 404
 
-    hass.components.frontend.async_register_built_in_panel(
+    await hass.components.frontend.async_register_built_in_panel(
         'map', 'Map', 'mdi:tooltip-account', require_admin=True)
 
     resp = await mock_http_client.get('/map')
@@ -277,9 +277,9 @@ async def test_get_panels_non_admin(hass, hass_ws_client, hass_admin_user):
     """Test get_panels command."""
     hass_admin_user.groups = []
     await async_setup_component(hass, 'frontend', {})
-    hass.components.frontend.async_register_built_in_panel(
+    await hass.components.frontend.async_register_built_in_panel(
         'map', 'Map', 'mdi:tooltip-account', require_admin=True)
-    hass.components.frontend.async_register_built_in_panel(
+    await hass.components.frontend.async_register_built_in_panel(
         'history', 'History', 'mdi:history')
 
     client = await hass_ws_client(hass)
