@@ -8,7 +8,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the JLR Binary sensors."""
+    """Set up the JLR Binary sensors."""
     if discovery_info is None:
         return
     add_devices([JLRSensor(hass, *discovery_info)])
