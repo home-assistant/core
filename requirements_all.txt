@@ -410,11 +410,16 @@ fiblary3==0.1.7
 # homeassistant.components.sensor.fints
 fints==1.0.1
 
+<<<<<<< HEAD
 # homeassistant.components.media_player.firetv
 firetv==1.0.7
 
 # homeassistant.components.sensor.fitbit
 fitbit==0.3.0
+=======
+# homeassistant.components.fitbit
+fitbit==0.3.1
+>>>>>>> Bump oauthlib version (#24111)
 
 # homeassistant.components.sensor.fixer
 fixerio==1.0.0a0
