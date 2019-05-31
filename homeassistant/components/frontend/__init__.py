@@ -4,9 +4,10 @@ import logging
 import os
 import pathlib
 
-from aiohttp import web
+from aiohttp import web, web_urldispatcher, hdrs
 import voluptuous as vol
 import jinja2
+from yarl import URL
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.http.view import HomeAssistantView
@@ -50,7 +51,6 @@ for size in (192, 384, 512, 1024):
         'type': 'image/png'
     })
 
-DATA_FINALIZE_PANEL = 'frontend_finalize_panel'
 DATA_PANELS = 'frontend_panels'
 DATA_JS_VERSION = 'frontend_js_version'
 DATA_EXTRA_HTML_URL = 'frontend_extra_html_url'
@@ -95,28 +95,6 @@ SCHEMA_GET_TRANSLATIONS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_GET_TRANSLATIONS,
     vol.Required('language'): str,
 })
-
-
-def generate_negative_index_regex():
-    """Generate regex for index."""
-    skip = [
-        # files
-        "service_worker.js",
-        "robots.txt",
-        "onboarding.html",
-        "manifest.json",
-    ]
-    for folder in (
-            "static",
-            "frontend_latest",
-            "frontend_es5",
-            "local",
-            "auth",
-            "api",
-    ):
-        # Regex matching static, static/, static/index.html
-        skip.append("{}(/|/.+|)".format(folder))
-    return r"(?!(" + "|".join(skip) + r")).*"
 
 
 class Panel:
@@ -256,7 +234,7 @@ async def async_setup(hass, config):
     if os.path.isdir(local):
         hass.http.register_static_path("/local", local, not is_dev)
 
-    hass.http.register_view(IndexView(repo_path))
+    hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
     for panel in ('kiosk', 'states', 'profile'):
         async_register_built_in_panel(hass, panel)
@@ -327,20 +305,63 @@ def _async_setup_themes(hass, themes):
     hass.services.async_register(DOMAIN, SERVICE_RELOAD_THEMES, reload_themes)
 
 
-class IndexView(HomeAssistantView):
+class IndexView(web_urldispatcher.AbstractResource):
     """Serve the frontend."""
 
-    url = '/'
-    name = 'frontend:index'
-    requires_auth = False
-    extra_urls = [
-        "/{extra:%s}" % generate_negative_index_regex()
-    ]
-
-    def __init__(self, repo_path):
+    def __init__(self, repo_path, hass):
         """Initialize the frontend view."""
+        super().__init__(name="frontend:index")
         self.repo_path = repo_path
+        self.hass = hass
         self._template_cache = None
+
+    @property
+    def canonical(self) -> str:
+        """Return resource's canonical path."""
+        return '/'
+
+    @property
+    def _route(self):
+        """Return the index route."""
+        return web_urldispatcher.ResourceRoute('GET', self.get, self)
+
+    def url_for(self, **kwargs: str) -> URL:
+        """Construct url for resource with additional params."""
+        return URL("/")
+
+    async def resolve(self, request: web.Request):
+        """Resolve resource.
+
+        Return (UrlMappingMatchInfo, allowed_methods) pair.
+        """
+        if (request.path != '/' and
+                request.url.parts[1] not in self.hass.data[DATA_PANELS]):
+            return None, set()
+
+        if request.method != hdrs.METH_GET:
+            return None, {'GET'}
+
+        return web_urldispatcher.UrlMappingMatchInfo({}, self._route), {'GET'}
+
+    def add_prefix(self, prefix: str) -> None:
+        """Add a prefix to processed URLs.
+
+        Required for subapplications support.
+        """
+
+    def get_info(self):
+        """Return a dict with additional info useful for introspection."""
+        return {
+            'panels': list(self.hass.data[DATA_PANELS])
+        }
+
+    def freeze(self) -> None:
+        """Freeze the resource."""
+        pass
+
+    def raw_match(self, path: str) -> bool:
+        """Perform a raw match against path."""
+        pass
 
     def get_template(self):
         """Get template."""
@@ -357,13 +378,9 @@ class IndexView(HomeAssistantView):
 
         return tpl
 
-    async def get(self, request, extra=None):
-        """Serve the index view."""
+    async def get(self, request: web.Request):
+        """Serve the index page for panel pages."""
         hass = request.app['hass']
-
-        if (request.path != '/' and
-                request.url.parts[1] not in hass.data[DATA_PANELS]):
-            raise web.HTTPNotFound
 
         if not hass.components.onboarding.async_is_onboarded():
             return web.Response(status=302, headers={
@@ -382,6 +399,14 @@ class IndexView(HomeAssistantView):
             ),
             content_type='text/html'
         )
+
+    def __len__(self) -> int:
+        """Return length of resource."""
+        return 1
+
+    def __iter__(self):
+        """Iterate over routes."""
+        return iter([self._route])
 
 
 class ManifestJSONView(HomeAssistantView):
