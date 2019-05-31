@@ -11,7 +11,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=300)
 PARALLEL_UPDATES = 4
 
 
