@@ -6,7 +6,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, \
-    CONF_NAME, CONF_SCAN_INTERVAL
+    CONF_VEHICLES, CONF_SCAN_INTERVAL
 from homeassistant.helpers.dispatcher import (
     dispatcher_send
 )
@@ -44,7 +44,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_UPDATE_INTERVAL):
             vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)),
-        vol.Required(CONF_NAME, default={}): vol.Schema(
+        vol.Required(CONF_VEHICLES, default={}): vol.Schema(
             {cv.slug: cv.string}),
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -120,7 +120,7 @@ class JLRData:
         self.entities = {}
         self.vehicles = {}
         self.config = config[DOMAIN]
-        self.names = self.config.get(CONF_NAME)
+        self.names = self.config.get(CONF_VEHICLES)
 
     def vehicle_name(self, vehicle):
         """Provide a friendly name for a vehicle."""
