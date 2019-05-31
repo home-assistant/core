@@ -5,7 +5,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_NAME
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_NAME, CONF_SCAN_INTERVAL
 from homeassistant.helpers.dispatcher import (
     dispatcher_send
 )
@@ -20,10 +20,13 @@ SIGNAL_VEHICLE_SEEN = '{}.vehicle_seen'.format(DOMAIN)
 DATA_KEY = DOMAIN
 CONF_MUTABLE = 'mutable'
 
+MIN_UPDATE_INTERVAL = timedelta(minutes=1)
+DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
+
 RESOURCES = {
     'FUEL_LEVEL_PERC': ('sensor', 'Fuel level', 'mdi:fuel', '%'),
     'DISTANCE_TO_EMPTY_FUEL': ('sensor', 'Range', 'mdi:road', 'km'),
-    'EXT_KILOMETERS_TO_SERVICE': ('sensor', 'Distance to next service', 'mdi:road', 'km'),
+    'EXT_KILOMETERS_TO_SERVICE': ('sensor', 'Distance to next service', 'mdi:garage', 'km'),
     'ODOMETER_METER': ('sensor', 'Odometer', 'mdi:car', 'km'),
     'DOOR_IS_ALL_DOORS_LOCKED': ('binary_sensor', 'All Doors Locked', 'mdi:lock', 'lock')
 
@@ -36,6 +39,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_UPDATE_INTERVAL):
+            vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)),
         vol.Required(CONF_NAME, default={}): vol.Schema(
             {cv.slug: cv.string}),
     })
@@ -51,16 +56,16 @@ def setup(hass, config):
 
     state = hass.data[DATA_KEY] = JLRData(config)
 
+    interval = config[DOMAIN].get(CONF_SCAN_INTERVAL)
+
     connection = jlrpy.Connection(username, password)
     vehicles = connection.vehicles
 
-    vehicles[0].info = vehicles[0].get_status()  # TODO: Remove this and reactivate below
-
-    # vehicles = []
-    # for vehicle in connection.vehicles:
-    #     __LOGGER.info("Populating vehicle info")
-    #     vehicle.info = vehicle.get_status()
-    #     vehicles.append(vehicle)
+    vehicles = []
+    for vehicle in connection.vehicles:
+        __LOGGER.info("Populating vehicle info")
+        vehicle.info = vehicle.get_status()
+        vehicles.append(vehicle)
 
     def discover_vehicle(vehicle):
         state.entities[vehicle.vin] = []
@@ -73,10 +78,6 @@ def setup(hass, config):
     def update_vehicle(vehicle):
         """Update information on vehicle"""
         __LOGGER.info("Pulling info from JLR")
-
-        perc = vehicle.info['vehicleStatus'][63]['value']  # TODO: Remove this block
-        vehicle.info = vehicle.get_status()
-        vehicle.info['vehicleStatus'][63]['value'] = int(perc) + 1
 
         state.vehicles[vehicle.vin] = vehicle
         if vehicle.vin not in state.entities:
@@ -101,7 +102,7 @@ def setup(hass, config):
             return True
         finally:
             track_point_in_utc_time(hass, update,
-                                    now + timedelta(minutes=1))  # TODO: replace 60 with scan interval
+                                    utcnow() + interval)
 
     __LOGGER.info("Logging into InControl")
 
