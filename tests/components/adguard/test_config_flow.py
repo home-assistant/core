@@ -1,10 +1,5 @@
 """Tests for the AdGuard Home config flow."""
-
-from unittest.mock import patch
-
-from adguardhome import AdGuardHomeConnectionError
 import aiohttp
-import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.adguard import config_flow
@@ -12,9 +7,8 @@ from homeassistant.components.adguard.const import DOMAIN
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SSL, CONF_USERNAME,
     CONF_VERIFY_SSL)
-from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, MockDependency
+from tests.common import MockConfigEntry
 
 FIXTURE_USER_INPUT = {
     CONF_HOST: '127.0.0.1',
@@ -28,7 +22,6 @@ FIXTURE_USER_INPUT = {
 
 async def test_show_authenticate_form(hass):
     """Test that the setup form is served."""
-
     flow = config_flow.AdGuardHomeFlowHandler()
     flow.hass = hass
     result = await flow.async_step_user(user_input=None)
@@ -141,8 +134,8 @@ async def test_hassio_confirm(hass, aioclient_mock):
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result['title'] == 'AdGuard Home Addon'
     assert result['data'][CONF_HOST] == 'mock-adguard'
-    assert result['data'][CONF_PASSWORD] == None
+    assert result['data'][CONF_PASSWORD] is None
     assert result['data'][CONF_PORT] == 3000
-    assert result['data'][CONF_SSL] == False
-    assert result['data'][CONF_USERNAME] == None
-    assert result['data'][CONF_VERIFY_SSL] == True
+    assert result['data'][CONF_SSL] is False
+    assert result['data'][CONF_USERNAME] is None
+    assert result['data'][CONF_VERIFY_SSL]
