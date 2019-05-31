@@ -1,4 +1,4 @@
-"""Support for JLR Incontrol Binary Sensors."""
+"""Add Support for JLR Incontrol Binary Sensors."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice

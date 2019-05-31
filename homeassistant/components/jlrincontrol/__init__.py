@@ -79,7 +79,7 @@ def setup(hass, config):
             )
 
     def update_vehicle(vehicle):
-        """Update information on vehicle"""
+        """Update information on vehicle."""
         __LOGGER.info("Pulling info from JLR")
 
         state.vehicles[vehicle.vin] = vehicle
@@ -92,7 +92,7 @@ def setup(hass, config):
         dispatcher_send(hass, SIGNAL_VEHICLE_SEEN, vehicle)
 
     def update(now):
-        """Update status from the online service"""
+        """Update status from the online service."""
         __LOGGER.info("Update method in INIT")
         try:
             if not connection:
