@@ -116,6 +116,8 @@ class ZHAGateway:
 
     def raw_device_initialized(self, device):
         """Handle a device initialization without quirks loaded."""
+        if device.nwk == 0x0000:
+            return
         endpoint_ids = device.endpoints.keys()
         ept_id = next((ept_id for ept_id in endpoint_ids if ept_id != 0), None)
         manufacturer = 'Unknown'
@@ -259,6 +261,9 @@ class ZHAGateway:
 
     async def async_device_initialized(self, device, is_new_join):
         """Handle device joined and basic information discovered (async)."""
+        if device.nwk == 0x0000:
+            return
+
         zha_device = self._async_get_or_create_device(device, is_new_join)
 
         is_rejoin = False
