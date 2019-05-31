@@ -204,7 +204,11 @@ batinfo==0.4.2
 beautifulsoup4==4.7.1
 
 # homeassistant.components.zha
+<<<<<<< HEAD
 bellows==0.7.0
+=======
+bellows-homeassistant==0.8.0
+>>>>>>> ZHA requirements version bump. (#24228)
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.5.3
@@ -1809,7 +1813,11 @@ zeroconf==0.22.0
 >>>>>>> Revert Zeroconf back to previously used library (#24139)
 
 # homeassistant.components.zha
+<<<<<<< HEAD
 zha-quirks==0.0.6
+=======
+zha-quirks==0.0.14
+>>>>>>> ZHA requirements version bump. (#24228)
 
 # homeassistant.components.climate.zhong_hong
 zhong_hong_hvac==1.0.9
@@ -1818,10 +1826,20 @@ zhong_hong_hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
+<<<<<<< HEAD
 zigpy-xbee==0.1.1
 
 # homeassistant.components.zha
 zigpy==0.2.0
+=======
+zigpy-deconz==0.1.4
+
+# homeassistant.components.zha
+zigpy-homeassistant==0.4.2
+
+# homeassistant.components.zha
+zigpy-xbee-homeassistant==0.3.0
+>>>>>>> ZHA requirements version bump. (#24228)
 
 # homeassistant.components.zoneminder
 zm-py==0.3.0
