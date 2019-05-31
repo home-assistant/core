@@ -10,7 +10,7 @@ import voluptuous as vol
 from zeroconf import ServiceBrowser, ServiceInfo, ServiceStateChange, Zeroconf
 
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, __version__)
-from homeassistant.generated.zeroconf import ZEROCONF
+from homeassistant.generated.zeroconf import ZEROCONF, HOMEKIT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,6 +24,7 @@ ATTR_NAME = 'name'
 ATTR_PROPERTIES = 'properties'
 
 ZEROCONF_TYPE = '_home-assistant._tcp.local.'
+HOMEKIT_TYPE = '_hap._tcp.local.'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({}),
@@ -50,20 +51,29 @@ def setup(hass, config):
 
     def service_update(zeroconf, service_type, name, state_change):
         """Service state changed."""
-        if state_change is ServiceStateChange.Added:
-            service_info = zeroconf.get_service_info(service_type, name)
-            info = info_from_service(service_info)
-            _LOGGER.debug("Discovered new device %s %s", name, info)
+        if state_change != ServiceStateChange.Added:
+            return
 
-            for domain in ZEROCONF[service_type]:
-                hass.add_job(
-                    hass.config_entries.flow.async_init(
-                        domain, context={'source': DOMAIN}, data=info
-                    )
+        service_info = zeroconf.get_service_info(service_type, name)
+        info = info_from_service(service_info)
+        _LOGGER.debug("Discovered new device %s %s", name, info)
+
+        # If we can handle it as a HomeKit discovery, we do that here.
+        if service_type == HOMEKIT_TYPE and handle_homekit(hass, info):
+            return
+
+        for domain in ZEROCONF[service_type]:
+            hass.add_job(
+                hass.config_entries.flow.async_init(
+                    domain, context={'source': DOMAIN}, data=info
                 )
+            )
 
     for service in ZEROCONF:
         ServiceBrowser(zeroconf, service, handlers=[service_update])
+
+    if HOMEKIT_TYPE not in ZEROCONF:
+        ServiceBrowser(zeroconf, HOMEKIT_TYPE, handlers=[service_update])
 
     def stop_zeroconf(_):
         """Stop Zeroconf."""
@@ -73,6 +83,36 @@ def setup(hass, config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zeroconf)
 
     return True
+
+
+def handle_homekit(hass, info) -> bool:
+    """Handle a HomeKit discovery.
+
+    Return if discovery was forwarded.
+    """
+    model = None
+    props = info.get('properties', {})
+
+    for key in props:
+        if key.lower() == 'md':
+            model = props[key]
+            break
+
+    if model is None:
+        return False
+
+    for test_model in HOMEKIT:
+        if not model.startswith(test_model):
+            continue
+
+        hass.add_job(
+            hass.config_entries.flow.async_init(
+                HOMEKIT[test_model], context={'source': 'homekit'}, data=info
+            )
+        )
+        return True
+
+    return False
 
 
 def info_from_service(service):
