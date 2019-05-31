@@ -18,3 +18,7 @@ ZEROCONF = {
         "homekit_controller"
     ]
 }
+
+HOMEKIT = {
+    "LIFX": "lifx"
+}
