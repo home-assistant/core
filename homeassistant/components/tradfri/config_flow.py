@@ -81,7 +81,7 @@ class FlowHandler(config_entries.ConfigFlow):
         """Handle zeroconf discovery."""
         # If it's a zeroconf discovery, we want to exclude it unless the model
         # is one of ours.
-        if self.hass.components.homekit_controller.test_homekit_zeroconf(
+        if self.hass.components.zeroconf.test_homekit_zeroconf(
                 user_input, ['TRADFRI gateway']):
             return self.async_abort(reason='not_supported')
 

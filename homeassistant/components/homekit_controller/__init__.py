@@ -5,7 +5,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .config_flow import normalize_zeroconf_props
+# We need an import from .config_flow, without it .config_flow is never loaded.
+from .config_flow import HomekitControllerFlowHandler  # noqa: F401
 from .connection import get_accessory_information, HKDevice
 from .const import (
     CONTROLLER, ENTITY_MAP, KNOWN_DEVICES
@@ -14,18 +15,6 @@ from .const import DOMAIN   # noqa: pylint: disable=unused-import
 from .storage import EntityMapStorage
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def test_homekit_zeroconf(discovery_info, exclude_models):
-    """Test if info belongs to a HK device that is not part of given models.
-
-    Models are tested by testing if model starts with any of the given models.
-    """
-    if not discovery_info.get('name', '').endswith('._hap._tcp.local.'):
-        return False
-
-    props = normalize_zeroconf_props(discovery_info.get('properties', {}))
-    return not props.get('md', '').startswith(tuple(exclude_models))
 
 
 def escape_characteristic_name(char_name):

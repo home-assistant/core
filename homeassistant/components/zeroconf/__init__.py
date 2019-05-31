@@ -30,6 +30,25 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
+def test_homekit_zeroconf(discovery_info, exclude_models):
+    """Test if info belongs to a HK device that is not part of given models.
+
+    Models are tested by testing if model starts with any of the given models.
+    """
+    if not discovery_info.get('name', '').endswith('._hap._tcp.local.'):
+        return False
+
+    model = ''
+    props = discovery_info.get('properties', {})
+
+    for key in props:
+        if key.lower() == 'md':
+            model = props[key]
+            break
+
+    return not model.startswith(tuple(exclude_models))
+
+
 def setup(hass, config):
     """Set up Zeroconf and make Home Assistant discoverable."""
     zeroconf_name = '{}.{}'.format(hass.config.location_name, ZEROCONF_TYPE)
