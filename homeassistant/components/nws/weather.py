@@ -58,6 +58,8 @@ CONDITION_CLASSES = OrderedDict([
     ('partlycloudy', ['few', 'sct'])
 ])
 
+ERRORS = (aiohttp.ClientError, JSONDecodeError, asyncio.CancelledError)
+
 FORECAST_CLASSES = {
     ATTR_FORECAST_DETAIL_DESCRIPTION: 'detailedForecast',
     ATTR_FORECAST_TEMP: 'temperature',
@@ -150,8 +152,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         try:
             with async_timeout.timeout(10, loop=hass.loop):
                 stations = await nws.stations()
-        except (aiohttp.ClientError, JSONDecodeError,
-                asyncio.CancelledError) as status:
+        except ERRORS as status:
             _LOGGER.error("Error getting station list for %s: %s",
                           nws.latlon, status)
             raise PlatformNotReady
@@ -187,24 +188,33 @@ class NWSWeather(WeatherEntity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Update Condition."""
-        with async_timeout.timeout(10, loop=self.hass.loop):
-            _LOGGER.debug("Updating station observations %s",
-                          self._nws.station)
-
-            obs = await self._nws.observations(limit=1)
+        _LOGGER.debug("Updating station observations %s", self._nws.station)
+        try:
+            with async_timeout.timeout(10, loop=self.hass.loop):
+                obs = await self._nws.observations(limit=1)
+        except ERRORS as status:
+            _LOGGER.error("Error updating observation from station %s: %s",
+                          self._nws.station, status)
+        else:
             self._observation = obs[0]
             if 'rawMessage' in self._observation.keys():
-                self._metar_obs = self._metar(self._observation['rawMessage'])
+                self._metar_obs = self._metar(
+                    self._observation['rawMessage'])
             else:
                 self._metar_obs = None
-
-            _LOGGER.debug("Updating forecast")
+            _LOGGER.debug("Observations: %s", self._observation)
+        _LOGGER.debug("Updating forecast")
+        try:
             if self._mode == 'daynight':
                 self._forecast = await self._nws.forecast()
             elif self._mode == 'hourly':
                 self._forecast = await self._nws.forecast_hourly()
-        _LOGGER.debug("Observations: %s", self._observation)
-        _LOGGER.debug("Forecasts: %s", self._forecast)
+        except ERRORS as status:
+            _LOGGER.error("Error updating forecast from station %s: %s",
+                          self._nws.station, status)
+        else:
+            _LOGGER.debug("Forecasts: %s", self._forecast)
+        return
 
     @property
     def attribution(self):
