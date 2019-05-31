@@ -13,6 +13,7 @@ omit =
     homeassistant/components/abode/*
     homeassistant/components/acer_projector/switch.py
     homeassistant/components/actiontec/device_tracker.py
+    homeassistant/components/adguard/*
     homeassistant/components/ads/*
     homeassistant/components/aftership/sensor.py
     homeassistant/components/airvisual/sensor.py
