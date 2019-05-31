@@ -8,6 +8,7 @@ from homeassistant.components.adguard.const import (
     CONF_FORCE, DATA_ADGUARD_CLIENT, DATA_ADGUARD_VERION, DOMAIN,
     SERVICE_ADD_URL, SERVICE_DISABLE_URL, SERVICE_ENABLE_URL, SERVICE_REFRESH,
     SERVICE_REMOVE_URL)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_SSL, CONF_URL,
     CONF_USERNAME, CONF_VERIFY_SSL)
@@ -33,7 +34,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(
-        hass: HomeAssistantType, entry: ConfigType
+        hass: HomeAssistantType, entry: ConfigEntry
 ) -> bool:
     """Set up AdGuard Home from a config entry."""
     from adguardhome import AdGuardHome
