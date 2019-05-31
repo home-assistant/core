@@ -88,7 +88,7 @@ def setup(hass, config):
 def handle_homekit(hass, info) -> bool:
     """Handle a HomeKit discovery.
 
-    Return boolean if discovery was forwarded.
+    Return if discovery was forwarded.
     """
     model = None
     props = info.get('properties', {})
