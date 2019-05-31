@@ -155,6 +155,13 @@ class AxisFlowHandler(config_entries.ConfigFlow):
             return self.async_abort(reason='link_local_address')
 
         serialnumber = discovery_info['properties']['macaddress']
+        # pylint: disable=unsupported-assignment-operation
+        self.context['macaddress'] = serialnumber
+
+        if any(serialnumber == flow['context']['macaddress']
+               for flow in self._async_in_progress()):
+            return self.async_abort(reason='already_in_progress')
+
         device_entries = configured_devices(self.hass)
 
         if serialnumber in device_entries:
