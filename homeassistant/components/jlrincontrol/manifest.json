@@ -1,0 +1,12 @@
+{
+  "domain": "jlrincontrol",
+  "name": "JLRIncontrol",
+  "documentation": "https://www.home-assistant.io/components/jlrincontrol",
+  "requirements": [
+    "jlrpy==1.2.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "rb28z2"
+  ]
+}
