@@ -52,10 +52,11 @@ G_NAME_FOR_AUDIO_NATURE = {
     G_AN_MUSIC: 'YouTube',
     G_AN_AUDIOBOOK: 'Audio książka',
     G_AN_SPOTIFY: 'Spotify',
-    G_AN_LOCAL: 'Plik',
+    G_AN_LOCAL: 'Dysk',
     G_AN_FAVORITE: 'Ulubione',
     G_AN_BOOKMARK: 'Zakładki'
 }
+
 
 # tokens
 G_OFFLINE_MODE = False
@@ -157,6 +158,16 @@ def set_ais_gate_req(req_id, req_answer=None):
 def get_ais_gate_req_answer(req_id):
     global G_AIS_GATE_REQ
     return G_AIS_GATE_REQ.get(req_id, None)
+
+
+def get_audio_speed_name(speed):
+    l_speed = int(float(speed)*100)
+    if l_speed == 100:
+        return 'normalna'
+    elif l_speed < 100:
+        return 'wolniej o ' + str(100 - l_speed) + '%'
+    elif l_speed > 100:
+        return 'szybciej o ' + str(l_speed) + '%'
 
 
 set_global_my_ip(None)

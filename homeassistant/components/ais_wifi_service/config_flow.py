@@ -113,6 +113,14 @@ class AisWiFilowHandler(config_entries.ConfigFlow):
     async def async_step_search_wifi(self, user_input=None):
         """Step - scan the wifi"""
         errors = {}
+        # reset wifi's list
+        self.hass.async_run_job(
+            self.hass.services.async_call(
+                'input_select',
+                'set_options', {
+                    "entity_id": "input_select.ais_android_wifi_network",
+                    "options": [ais_global.G_EMPTY_OPTION]})
+        )
         for x in range(0, 7):
             result = await self.hass.async_add_executor_job(scan_for_wifi, self.hass, x)
             _LOGGER.info("Szukam sieci WiFi: " + str(result))
@@ -139,8 +147,7 @@ class AisWiFilowHandler(config_entries.ConfigFlow):
         if len(networks) == 0:
             errors['general'] = 'wifi_error'
             return self.async_abort(reason='add_failed', description_placeholders={
-                'error_info': "Nie udało się znaleść żadnej sieci WiFi o częstotliwości 2.4 Ghz "
-                              "do której można by było dodać urządzenie."
+                'error_info': "Nie udało się znaleść żadnej sieci WiFi."
             })
 
         if user_input is None:
@@ -162,6 +169,10 @@ class AisWiFilowHandler(config_entries.ConfigFlow):
             if errors == {}:
                 # send a request to frame to add the new device
                 network = user_input['networks']
+                text = "Łaczę z siecią " + network.split(';')[0]
+                self.hass.async_run_job(
+                    self.hass.services.async_call('ais_ai_service', 'say_it', {"text": text})
+                )
                 await self.hass.async_add_executor_job(connect_to_wifi, network, password)
                 # request was correctly send, now check and wait for the answer
                 for x in range(0, 7):

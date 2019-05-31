@@ -62,6 +62,8 @@ recorder:
       - sensor.spotifylist
       - sensor.rssnewslist
       - sensor.podcastnamelist
+      - sensor.aisbookmarkslist
+      - sensor.aisfavoriteslist
     domains:
       - mqtt
 history:
@@ -85,6 +87,8 @@ history:
       - sensor.spotifylist
       - sensor.rssnewslist
       - sensor.podcastnamelist
+      - sensor.aisbookmarkslist
+      - sensor.aisfavoriteslist
     domains:
       - mqtt
 media_extractor:

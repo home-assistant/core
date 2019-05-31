@@ -1,9 +1,3 @@
-binary_sensor.ping_binary_sensor:
-  friendly_name: Status serwisu Asystent domowy
-  icon: mdi:cloud
-weblink.upgrade_log:
-  friendly_name: Logi aktualizacji
-  icon: mdi:file-document
 sensor.version_info:
   friendly_name: Wersja
   icon: mdi:update
@@ -13,6 +7,8 @@ script.ais_restart_system:
   icon: mdi:restart
 script.ais_stop_system:
   icon: mdi:stop
+script.ais_cloud_sync:
+  icon: mdi:cloud-sync
 sun.sun:
   friendly_name: Pozycja słońca
 sensor.time:
@@ -35,6 +31,7 @@ input_text.buttons_ais_remote:
     column_width: 110px
     row_height: 22px
     entities:
+
 
 
 #    - entity: script.ais_button_click
