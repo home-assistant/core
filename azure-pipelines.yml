@@ -121,6 +121,8 @@ jobs:
 
       release="$(Build.SourceBranchName)"
       created_by="$(curl -s https://api.github.com/repos/home-assistant/home-assistant/releases/tags/${release} | jq --raw-output '.author.login')"
+<<<<<<< HEAD
+=======
 
       if [[ "${created_by}" =~ ^(balloob|pvizeli|fabaff|robbiet480)$ ]]; then
         exit 0
@@ -130,6 +132,39 @@ jobs:
       exit 1
     displayName: 'Check rights'
 
+
+- job: 'ReleasePython'
+  condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded('VersionValidate'))
+  dependsOn:
+  - 'VersionValidate'
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - task: UsePythonVersion@0
+    displayName: 'Use Python 3.7'
+    inputs:
+      versionSpec: '3.7'
+  - script: pip install twine
+    displayName: 'Install twine'
+  - script: python setup.py sdist bdist_wheel
+    displayName: 'Build package'
+  - script: |
+      export TWINE_USERNAME="$(twineUser)"
+      export TWINE_PASSWORD="$(twinePassword)"
+      
+      twine upload dist/* --skip-existing
+    displayName: 'Upload pypi'
+>>>>>>> Update azure-pipelines.yml for Azure Pipelines
+
+      if [[ "${created_by}" =~ ^(balloob|pvizeli|fabaff|robbiet480)$ ]]; then
+        exit 0
+      fi
+
+      echo "${created_by} is not allowed to create an release!"
+      exit 1
+    displayName: 'Check rights'
+
+<<<<<<< HEAD
 
 - job: 'ReleasePython'
   condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded('VersionValidate'))
@@ -163,6 +198,9 @@ jobs:
   condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded('VersionValidate')
 >>>>>>> Update azure-pipelines.yml for check version (#24194)
 =======
+=======
+- job: 'ReleaseDocker'
+>>>>>>> Update azure-pipelines.yml for Azure Pipelines
 =======
 - job: 'ReleaseDocker'
 >>>>>>> Update azure-pipelines.yml for Azure Pipelines
