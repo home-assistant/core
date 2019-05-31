@@ -94,7 +94,8 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
                 data = self.hass.data[DATA_KEY][
                     entry.entry_id]  # type: RuntimeEntryData
                 # Node names are unique in the network
-                already_configured = data.device_info.name == node_name
+                if data.device_info is not None:
+                    already_configured = data.device_info.name == node_name
 
             if already_configured:
                 return self.async_abort(
