@@ -16,6 +16,7 @@ variables:
   - group: docker
   - group: wheels
   - group: github
+  - group: twine
 
 
 jobs:
@@ -24,7 +25,7 @@ jobs:
   condition: eq(variables['Build.SourceBranchName'], 'dev')
   timeoutInMinutes: 360
   pool:
-    vmImage: 'ubuntu-16.04'
+    vmImage: 'ubuntu-latest'
   strategy:
     maxParallel: 3
     matrix:
@@ -114,15 +115,53 @@ jobs:
         exit 1
       fi
     displayName: 'Check version of branch/tag'
+  - script: |
+      sudo apt-get update
+      sudo apt-get install -y --no-install-recommends \
+        jq curl
+
+      release="$(Build.SourceBranchName)"
+      created_by="$(curl -s https://api.github.com/repos/home-assistant/home-assistant/releases/tags/${release} | jq --raw-output '.author.login')"
+
+      if [[ "${created_by}" =~ ^(balloob|pvizeli|fabaff|robbiet480)$ ]]; then
+        exit 0
+      fi
+
+      echo "${created_by} is not allowed to create an release!"
+      exit 1
+    displayName: 'Check rights'
 
 
-- job: 'Release'
+- job: 'ReleasePython'
+  condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded('VersionValidate'))
+  dependsOn:
+  - 'VersionValidate'
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - task: UsePythonVersion@0
+    displayName: 'Use Python 3.7'
+    inputs:
+      versionSpec: '3.7'
+  - script: pip install twine
+    displayName: 'Install twine'
+  - script: python setup.py sdist bdist_wheel
+    displayName: 'Build package'
+  - script: |
+      export TWINE_USERNAME="$(twineUser)"
+      export TWINE_PASSWORD="$(twinePassword)"
+      
+      twine upload dist/* --skip-existing
+    displayName: 'Upload pypi'
+
+
+- job: 'ReleaseDocker'
   condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded('VersionValidate'))
   dependsOn:
   - 'VersionValidate'
   timeoutInMinutes: 120
   pool:
-    vmImage: 'ubuntu-16.04'
+    vmImage: 'ubuntu-latest'
   strategy:
     maxParallel: 5
     matrix:
@@ -167,16 +206,17 @@ jobs:
     displayName: 'Build Release'
 
 
-- job: 'ReleasePublish'
-  condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded('Release'))
+- job: 'ReleaseHassio'
+  condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded('ReleaseDocker'))
   dependsOn:
-    - 'Release'
+    - 'ReleaseDocker'
   pool:
-    vmImage: 'ubuntu-16.04'
+    vmImage: 'ubuntu-latest'
   steps:
   - script: |
+      sudo apt-get update
       sudo apt-get install -y --no-install-recommends \
-        git jq
+        git jq curl
 
       git config --global user.name "Pascal Vizeli"
       git config --global user.email "pvizeli@syshack.ch"
