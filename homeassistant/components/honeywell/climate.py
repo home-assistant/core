@@ -110,121 +110,67 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return True
 
     _LOGGER.warning(
-        "The honeywell component is deprecated for EU (i.e. non-US) systems, "
-        "this functionality will be removed in version 0.96. "
-        "Please switch to the evohome component, "
+        "The honeywell component has been deprecated for EU (i.e. non-US) "
+        "systems. Please switch to the evohome component, "
         "see: https://home-assistant.io/components/evohome")
     return False
 
 
+# config will be used later
+def _setup_us(username, password, config, add_entities):
+    """Set up the user."""
+    try:
+        client = somecomfort.SomeComfort(username, password)
+    except somecomfort.AuthError:
+        _LOGGER.error("Failed to login to honeywell account %s", username)
+        return False
+    except somecomfort.SomeComfortError as ex:
+        _LOGGER.error("Failed to initialize honeywell client: %s", str(ex))
+        return False
+
+    dev_id = config.get('thermostat')
+    loc_id = config.get('location')
+    cool_away_temp = config.get(CONF_COOL_AWAY_TEMPERATURE)
+    heat_away_temp = config.get(CONF_HEAT_AWAY_TEMPERATURE)
+
+    add_entities([HoneywellUSThermostat(client, device, cool_away_temp,
+                                        heat_away_temp, username, password)
+                  for location in client.locations_by_id.values()
+                  for device in location.devices_by_id.values()
+                  if ((not loc_id or location.locationid == loc_id) and
+                      (not dev_id or device.deviceid == dev_id))])
+    return True
+
+
 class HoneywellUSThermostat(ClimateDevice):
     """Representation of a Honeywell US Thermostat."""
-
-    def __init__(self, client, device, cool_away_temp,
-                 heat_away_temp, username, password):
-        """Initialize the thermostat."""
-        self._client = client
-        self._device = device
-        self._cool_away_temp = cool_away_temp
-        self._heat_away_temp = heat_away_temp
-        self._away = False
-        self._username = username
-        self._password = password
-
-        self._supported_features = (SUPPORT_HVAC_ACTION |
-                                    SUPPORT_PRESET_MODE |
-                                    SUPPORT_TARGET_TEMPERATURE)
-
-        # pylint: disable=protected-access
-        # not all honeywell HVACs upport all modes
-        mappings = [v for k, v in HVAC_MODE_TO_HW_MODE.items()
-                    if k in device._data['uiData']]
-        self._hvac_mode_map = {k: v for d in mappings for k, v in d.items()}
-
-        if device._data['canControlHumidification']:
-            self._supported_features |= SUPPORT_TARGET_HUMIDITY
-        if device._data['uiData']['SwitchEmergencyHeatAllowed']:
-            self._supported_features |= SUPPORT_AUX_HEAT
-
-        if not device._data['hasFan']:
-            return
-
-        self._supported_features |= SUPPORT_FAN_MODE
-        # not all honeywell fans support all modes
-        mappings = [v for k, v in FAN_MODE_TO_HW.items()
-                    if k in device._data['fanData']]
-        self._fan_mode_map = {k: v for d in mappings for k, v in d.items()}
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return self._supported_features
-
-    @property
-    def hvac_mode(self) -> str:
-        """Return hvac operation ie. heat, cool mode."""
-        return HW_MODE_TO_HVAC_MODE[self._device.system_mode]
-
-    @property
-    def hvac_modes(self) -> List[str]:
-        """Return the list of available hvac operation modes."""
-        return list(self._hvac_mode_map)
-
-    @property
-    def hvac_action(self) -> Optional[str]:
-        """Return the current running hvac operation if supported.
-
-        Need to be one of CURRENT_HVAC_*.
-        """
-        return HW_MODE_TO_HA_HVAC_ACTION[self._device.equipment_output_status]
-
-    def set_hvac_mode(self, hvac_mode: str) -> None:
-        """Set new target hvac mode."""
-        self._device.system_mode = self._hvac_mode_map[hvac_mode]
-
-    @property
-    def preset_mode(self) -> Optional[str]:
-        """Return the current preset mode, e.g., home, away, temp."""
-        return PRESET_AWAY if self._away else None
-
-    @property
-    def preset_modes(self) -> Optional[List[str]]:
-        """Return a list of available preset modes."""
-        return [PRESET_AWAY]
-
-    def set_preset_mode(self, preset_mode: str) -> None:
-        """Set new preset mode."""
-        if preset_mode == PRESET_AWAY:
-            self._turn_away_mode_on()
-        else:
-            self._turn_away_mode_off()
-
-    @property
-    def is_aux_heat(self) -> Optional[str]:
-        """Return true if aux heater."""
-        return self._device.system_mode == 'emheat'
-
-    def turn_aux_heat_on(self) -> None:
-        """Turn auxiliary heater on."""
-        self._device.system_mode = 'emheat'
 
     def turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
         self._device.system_mode = 'auto'
 
     @property
-    def fan_mode(self) -> Optional[str]:
+    def supported_features(self):
+        """Return the list of supported features."""
+        supported = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE)
+        if hasattr(self._device, ATTR_SYSTEM_MODE):
+            supported |= SUPPORT_OPERATION_MODE
+        supported = (SUPPORT_FAN_MODE)
+        return supported
+
+    @property  # TODO: will need mapping of modes
+    def fan_mode(self) -> Optional[str]:                                         # def is_fan_on(self):
         """Return the fan setting."""
-        return HW_FAN_MODE_TO_HA[self._device.fan_mode]
+        return self._device.fan_mode                                             #     return self._device.fan_running
 
     @property
     def fan_modes(self) -> Optional[List[str]]:
         """Return the list of available fan modes."""
-        return list(self._fan_mode_map)
+        return somecomfort.FAN_MODES  # TODO: ['auto', 'on', 'circulate', 'follow schedule']
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        self._device.fan_mode = self._fan_mode_map[fan_mode]
+        self._device.fan_mode = fan_mode
 
     @property
     def name(self) -> Optional[str]:
@@ -256,6 +202,14 @@ class HoneywellUSThermostat(ClimateDevice):
             return self._device.setpoint_heat
         return None
 
+    @property
+    def current_operation(self) -> str:
+        """Return current operation ie. heat, cool, idle."""
+        oper = getattr(self._device, ATTR_CURRENT_OPERATION, None)
+        if oper == "off":
+            oper = "idle"
+        return oper
+
     def set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -286,11 +240,13 @@ class HoneywellUSThermostat(ClimateDevice):
     @property
     def device_state_attributes(self) -> Dict:
         """Return the device specific state attributes."""
-        # pylint: disable=protected-access
-        data = {'uiData': self._device._data['uiData']}  # TODO: ?or: {}
-        if self._device._data['hasFan']:
-            data['fan_action'] = \
-                'running' if self._device.fan_running else 'idle'
+        data = {
+            ATTR_FAN: (self.is_fan_on and 'running' or 'idle'),
+            ATTR_FAN_MODE: self._device.fan_mode,
+            ATTR_OPERATION_MODE: self._device.system_mode,
+        }
+        data[ATTR_FAN_MODES] = somecomfort.FAN_MODES
+        data[ATTR_OPERATION_LIST] = somecomfort.SYSTEM_MODES
         return data
 
     def _turn_away_mode_on(self):
@@ -333,7 +289,6 @@ class HoneywellUSThermostat(ClimateDevice):
 
     def update(self):
         """Update the state."""
-        _LOGGER.error("SomeComfort update...")
         retries = 3
         while retries > 0:
             try:
