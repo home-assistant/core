@@ -3,6 +3,7 @@ import logging
 from datetime import timedelta
 
 import aiohttp
+from amcrest import AmcrestCamera, AmcrestError
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import POLICY_CONTROL
@@ -32,6 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_RESOLUTION = 'resolution'
 CONF_STREAM_SOURCE = 'stream_source'
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
+CONF_CONTROL_LIGHT = 'control_light'
 
 DEFAULT_NAME = 'Amcrest Camera'
 DEFAULT_PORT = 80
@@ -103,6 +105,7 @@ AMCREST_SCHEMA = vol.All(
                     _deprecated_sensor_values),
         vol.Optional(CONF_SWITCHES):
             vol.All(cv.ensure_list, [vol.In(SWITCHES)]),
+        vol.Optional(CONF_CONTROL_LIGHT, default=True): cv.boolean,
     }),
     _deprecated_switches
 )
@@ -114,8 +117,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the Amcrest IP Camera component."""
-    from amcrest import AmcrestCamera, AmcrestError
-
     hass.data.setdefault(DATA_AMCREST, {'devices': {}, 'cameras': []})
     devices = config[DOMAIN]
 
@@ -149,6 +150,7 @@ def setup(hass, config):
         sensors = device.get(CONF_SENSORS)
         switches = device.get(CONF_SWITCHES)
         stream_source = device[CONF_STREAM_SOURCE]
+        control_light = device.get(CONF_CONTROL_LIGHT)
 
         # currently aiohttp only works with basic authentication
         # only valid for mjpeg streaming
@@ -159,7 +161,7 @@ def setup(hass, config):
 
         hass.data[DATA_AMCREST]['devices'][name] = AmcrestDevice(
             api, authentication, ffmpeg_arguments, stream_source,
-            resolution)
+            resolution, control_light)
 
         discovery.load_platform(
             hass, CAMERA, DOMAIN, {
@@ -245,10 +247,11 @@ class AmcrestDevice:
     """Representation of a base Amcrest discovery device."""
 
     def __init__(self, api, authentication, ffmpeg_arguments,
-                 stream_source, resolution):
+                 stream_source, resolution, control_light):
         """Initialize the entity."""
         self.api = api
         self.authentication = authentication
         self.ffmpeg_arguments = ffmpeg_arguments
         self.stream_source = stream_source
         self.resolution = resolution
+        self.control_light = control_light

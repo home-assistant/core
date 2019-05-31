@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+from amcrest import AmcrestError
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, DEVICE_CLASS_MOTION)
 from homeassistant.const import CONF_NAME, CONF_BINARY_SENSORS
@@ -58,8 +60,6 @@ class AmcrestBinarySensor(BinarySensorDevice):
 
     def update(self):
         """Update entity."""
-        from amcrest import AmcrestError
-
         _LOGGER.debug('Pulling data from %s binary sensor', self._name)
 
         try:
