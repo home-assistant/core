@@ -45,7 +45,7 @@ class EntityPlatform:
         self._async_unsub_polling = None
         # Method to cancel the retry of setup
         self._async_cancel_retry_setup = None
-        self._process_updates = asyncio.Lock()
+        self._process_updates = None
 
         # Platform is None for the EntityComponent "catch-all" EntityPlatform
         # which powers entity_component.add_entities
@@ -404,6 +404,8 @@ class EntityPlatform:
 
         This method must be run in the event loop.
         """
+        if self._process_updates is None:
+            self._process_updates = asyncio.Lock()
         if self._process_updates.locked():
             self.logger.warning(
                 "Updating %s %s took longer than the scheduled update "
