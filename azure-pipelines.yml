@@ -82,6 +82,7 @@ jobs:
       sed -i "s|# decora|decora|g" requirements_hassio.txt
       sed -i "s|# PySwitchbot|PySwitchbot|g" requirements_hassio.txt
       sed -i "s|# pySwitchmate|pySwitchmate|g" requirements_hassio.txt
+      sed -i "s|# face_recognition|face_recognition|g" requirements_hassio.txt
 
       # Disable because of error
       sed -i "s|insteonplm|# insteonplm|g" requirements_hassio.txt
