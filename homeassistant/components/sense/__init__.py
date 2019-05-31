@@ -32,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema({
 async def async_setup(hass, config):
     """Set up the Sense sensor."""
     from sense_energy import (
-        ASyncSenseable, SenseAuthenticationException, 
+        ASyncSenseable, SenseAuthenticationException,
         SenseAPITimeoutException)
 
     username = config[DOMAIN][CONF_EMAIL]
@@ -60,6 +60,6 @@ async def async_setup(hass, config):
         except SenseAPITimeoutException:
             _LOGGER.error("Timeout retrieving data")
 
-    async_track_time_interval(hass, async_sense_update, 
+    async_track_time_interval(hass, async_sense_update,
                               timedelta(seconds=ACTIVE_UPDATE_RATE))
     return True
