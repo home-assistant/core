@@ -133,6 +133,7 @@ class HassIOIngress(HomeAssistantView):
                     headers=headers,
                     status=result.status,
                     content_type=result.content_type,
+                    allow_redirects=False,
                     body=body
                 )
 
