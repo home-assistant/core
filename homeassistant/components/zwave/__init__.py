@@ -13,6 +13,8 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers.device_registry import (
+    async_get_registry as async_get_device_registry)
 from homeassistant.const import (
     ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity_values import EntityValues
@@ -334,6 +336,7 @@ async def async_setup_entry(hass, config_entry):
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     registry = await async_get_registry(hass)
+    dev_reg = await async_get_device_registry(hass)
 
     def node_added(node):
         """Handle a new node on the network."""
@@ -354,6 +357,16 @@ async def async_setup_entry(hass, config_entry):
 
             hass.data[DATA_DEVICES][entity.unique_id] = entity
             component.add_entities([entity])
+
+            # Update the created entity with the entry ID
+            dev_info = entity.device_info
+            dev_info['config_entry_id'] = config_entry.entry_id
+            device = dev_reg.async_get_or_create(**dev_info)
+
+            registry.async_get_or_create(
+                DOMAIN, DOMAIN, entity.unique_id,
+                config_entry_id=config_entry.entry_id,
+                device_id=device.id)
 
         if entity.unique_id:
             _add_node_to_component()
@@ -1057,21 +1070,25 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
     @property
     def device_info(self):
         """Return device information."""
-        ident = self.node_id
-        name = node_name(self.node)
-        if self.values.primary.instance > 1:
-            ident = '{}_{}'.format(
-                self.node_id, self.values.primary.instance)
-            name = '{} ({})'.format(
-                name, self.values.primary.instance)
-        return {
-            'identifiers': {
-                (DOMAIN, ident)
-            },
+        info = {
             'manufacturer': self.node.manufacturer_name,
             'model': self.node.product_name,
-            'name': name,
         }
+        if self.values.primary.instance > 1:
+            info['name'] = '{} ({})'.format(
+                node_name(self.node), self.values.primary.instance)
+            info['identifiers'] = {
+                (DOMAIN, self.node_id, self.values.primary.instance, ),
+            }
+            info['via_hub'] = (DOMAIN, self.node_id, )
+        else:
+            info['name'] = node_name(self.node)
+            info['identifiers'] = {
+                (DOMAIN, self.node_id),
+            }
+            if self.node_id > 1:
+                info['via_hub'] = (DOMAIN, 1, )
+        return info
 
     @property
     def name(self):
