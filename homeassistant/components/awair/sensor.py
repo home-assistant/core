@@ -219,6 +219,6 @@ class AwairData:
         # The air_data_latest call only returns one item, so this should
         # be safe to only process one entry.
         for sensor in resp[0][ATTR_SENSORS]:
-            self.data[sensor[ATTR_COMPONENT]] = sensor[ATTR_VALUE]
+            self.data[sensor[ATTR_COMPONENT]] = round(sensor[ATTR_VALUE], 1)
 
         _LOGGER.debug("Got Awair Data for %s: %s", self._uuid, self.data)
