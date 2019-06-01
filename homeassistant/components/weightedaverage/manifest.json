@@ -1,0 +1,11 @@
+{
+  "domain": "weightedaverage",
+  "name": "Weighted Average",
+  "documentation": "https://www.home-assistant.io/components/weightedaverage",
+  "requirements": [
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@stafbulp"
+  ]
+}
