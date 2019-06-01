@@ -6,11 +6,11 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import (ATTR_DEVICE_ID, ATTR_DEVICE_NAME, ATTR_MANUFACTURER,
-                    ATTR_MODEL, ATTR_OS_VERSION, ATTR_SENSOR_ATTRIBUTES,
+from .const import (ATTR_SENSOR_ATTRIBUTES,
                     ATTR_SENSOR_DEVICE_CLASS, ATTR_SENSOR_ICON,
                     ATTR_SENSOR_NAME, ATTR_SENSOR_TYPE, ATTR_SENSOR_UNIQUE_ID,
                     DOMAIN, SIGNAL_SENSOR_UPDATE)
+from .helpers import device_info
 
 
 def sensor_id(webhook_id, unique_id):
@@ -76,17 +76,7 @@ class MobileAppEntity(Entity):
     @property
     def device_info(self):
         """Return device registry information for this entity."""
-        return {
-            'identifiers': {
-                (ATTR_DEVICE_ID, self._registration[ATTR_DEVICE_ID]),
-                (CONF_WEBHOOK_ID, self._registration[CONF_WEBHOOK_ID])
-            },
-            'manufacturer': self._registration[ATTR_MANUFACTURER],
-            'model': self._registration[ATTR_MODEL],
-            'device_name': self._registration[ATTR_DEVICE_NAME],
-            'sw_version': self._registration[ATTR_OS_VERSION],
-            'config_entries': self._device.config_entries
-        }
+        return device_info(self._registration)
 
     async def async_update(self):
         """Get the latest state of the sensor."""

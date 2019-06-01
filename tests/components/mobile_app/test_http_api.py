@@ -7,10 +7,9 @@ from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.setup import async_setup_component
 
 from .const import REGISTER, RENDER_TEMPLATE
-from . import authed_api_client  # noqa: F401
 
 
-async def test_registration(hass, hass_client):  # noqa: F811
+async def test_registration(hass, hass_client):
     """Test that registrations happen."""
     try:
         # pylint: disable=unused-import
