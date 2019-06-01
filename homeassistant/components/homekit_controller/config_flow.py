@@ -126,14 +126,16 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         # It changes if a device is factory reset.
         hkid = properties['id']
         model = properties['md']
-
+        name = discovery_info['name'].replace('._hap._tcp.local.', '')
         status_flags = int(properties['sf'])
         paired = not status_flags & 0x01
+
+        _LOGGER.debug("Discovered device %s (%s - %s)", name, model, hkid)
 
         # pylint: disable=unsupported-assignment-operation
         self.context['hkid'] = hkid
         self.context['title_placeholders'] = {
-            'name': discovery_info['name'].replace('._hap._tcp.local.', ''),
+            'name': name,
         }
 
         # If multiple HomekitControllerFlowHandler end up getting created
