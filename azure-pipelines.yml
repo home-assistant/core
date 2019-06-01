@@ -12,7 +12,7 @@ variables:
   - name: versionBuilder
     value: '3.2'
   - name: versionWheels
-    value: '0.4'
+    value: '0.5'
   - group: docker
   - group: wheels
   - group: github
