@@ -20,6 +20,8 @@ SUPPORT_APPLE_TV = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | \
                    SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_SEEK | \
                    SUPPORT_STOP | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
 
+PLEX_TVSHOW_REGEX = '^S\d+\s.\sE\d+.*$'
+
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
@@ -131,9 +133,23 @@ class AppleTvDevice(MediaPlayerDevice):
             if media_type == const.MEDIA_TYPE_VIDEO:
                 return MEDIA_TYPE_VIDEO
             if media_type == const.MEDIA_TYPE_MUSIC:
-                return MEDIA_TYPE_MUSIC
+                return self._plex_media_content_type
             if media_type == const.MEDIA_TYPE_TV:
                 return MEDIA_TYPE_TVSHOW
+    @property
+    def _plex_media_content_type(self):
+        """Content type hack for Plex which always shows as music."""
+        from pyatv import const
+        media_type = self._playing.media_type
+        if self._playing and media_type == const.MEDIA_TYPE_MUSIC:
+            title = self._playing.title
+            artist = self._playing.artist
+            if re.search(PLEX_TV_REGEX, title):
+                return MEDIA_TYPE_TVSHOW
+            elif not artist:
+                return MEDIA_TYPE_VIDEO
+            else:
+                return MEDIA_TYPE_MUSIC
 
     @property
     def media_duration(self):
