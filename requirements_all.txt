@@ -1692,8 +1692,13 @@ todoist-python==7.0.17
 # homeassistant.components.toon
 toonlib==1.1.3
 
+<<<<<<< HEAD
 # homeassistant.components.alarm_control_panel.totalconnect
 total_connect_client==0.22
+=======
+# homeassistant.components.totalconnect
+total_connect_client==0.27
+>>>>>>> Add details to triggered state for total connect alarms (#24106)
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4
