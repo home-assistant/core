@@ -56,10 +56,6 @@ class AdGuardHomeFlowHandler(ConfigFlow):
             errors=errors or {},
         )
 
-    async def async_step_init(self, user_input=None):
-        """Needed in order to not require re-translation of strings."""
-        return await self.async_step_user(user_input)
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         if self._async_current_entries():

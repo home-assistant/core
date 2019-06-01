@@ -64,7 +64,7 @@ async def test_full_flow_implementation(hass, aioclient_mock):
 
     flow = config_flow.AdGuardHomeFlowHandler()
     flow.hass = hass
-    result = await flow.async_step_init(user_input=None)
+    result = await flow.async_step_user(user_input=None)
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'user'
 
