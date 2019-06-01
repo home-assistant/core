@@ -23,20 +23,17 @@ def in_zone(zone, latitude, longitude, radius=0) -> bool:
 class Zone(Entity):
     """Representation of a Zone."""
 
+    name = None
+
     def __init__(self, hass, name, latitude, longitude, radius, icon, passive):
         """Initialize the zone."""
         self.hass = hass
-        self._name = name
-        self._latitude = latitude
-        self._longitude = longitude
+        self.name = name
+        self.latitude = latitude
+        self.longitude = longitude
         self._radius = radius
         self._icon = icon
         self._passive = passive
-
-    @property
-    def name(self):
-        """Return the name of the zone."""
-        return self._name
 
     @property
     def state(self):
@@ -53,8 +50,8 @@ class Zone(Entity):
         """Return the state attributes of the zone."""
         data = {
             ATTR_HIDDEN: True,
-            ATTR_LATITUDE: self._latitude,
-            ATTR_LONGITUDE: self._longitude,
+            ATTR_LATITUDE: self.latitude,
+            ATTR_LONGITUDE: self.longitude,
             ATTR_RADIUS: self._radius,
         }
         if self._passive:
