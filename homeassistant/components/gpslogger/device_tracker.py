@@ -45,6 +45,7 @@ class GPSLoggerEntity(DeviceTrackerEntity):
         self._battery = battery
         self._location = location
         self._unsub_dispatcher = None
+        self._unique_id = device
 
     @property
     def battery_level(self):
@@ -80,6 +81,19 @@ class GPSLoggerEntity(DeviceTrackerEntity):
     def should_poll(self):
         """No polling needed."""
         return False
+
+    @property
+    def unique_id(self):
+        """Return the unique ID."""
+        return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            'name': self._name,
+            'identifiers': {(GPL_DOMAIN, self._unique_id)},
+        }
 
     @property
     def source_type(self):
