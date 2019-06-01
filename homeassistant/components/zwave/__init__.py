@@ -53,6 +53,7 @@ CONF_REFRESH_DELAY = 'delay'
 CONF_DEVICE_CONFIG = 'device_config'
 CONF_DEVICE_CONFIG_GLOB = 'device_config_glob'
 CONF_DEVICE_CONFIG_DOMAIN = 'device_config_domain'
+CONF_TILT_OPEN_POSITION = 'tilt_open_position'
 
 DATA_ZWAVE_CONFIG = 'zwave_config'
 
@@ -153,7 +154,8 @@ DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
     vol.Optional(CONF_REFRESH_VALUE, default=DEFAULT_CONF_REFRESH_VALUE):
         cv.boolean,
     vol.Optional(CONF_REFRESH_DELAY, default=DEFAULT_CONF_REFRESH_DELAY):
-        cv.positive_int
+        cv.positive_int,
+    vol.Optional(CONF_TILT_OPEN_POSITION): cv.positive_int,
 })
 
 SIGNAL_REFRESH_ENTITY_FORMAT = 'zwave_refresh_entity_{}'
