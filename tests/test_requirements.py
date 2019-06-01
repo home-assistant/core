@@ -30,9 +30,8 @@ class TestRequirements:
     @patch('homeassistant.util.package.is_docker_env', return_value=False)
     @patch('homeassistant.util.package.install_package', return_value=True)
     def test_requirement_installed_in_venv(
-            self, mock_install, mock_venv, mock_denv, mock_dirname):
+            self, mock_install, mock_denv, mock_venv, mock_dirname):
         """Test requirement installed in virtual environment."""
-        mock_venv.return_value = True
         mock_dirname.return_value = 'ha_package_path'
         self.hass.config.skip_pip = False
         mock_integration(
@@ -42,14 +41,16 @@ class TestRequirements:
         assert 'comp' in self.hass.config.components
         assert mock_install.call_args == call(
             'package==0.0.1',
-            constraints=os.path.join('ha_package_path', CONSTRAINT_FILE))
+            constraints=os.path.join('ha_package_path', CONSTRAINT_FILE),
+            no_cache_dir=False,
+        )
 
     @patch('os.path.dirname')
     @patch('homeassistant.util.package.is_virtual_env', return_value=False)
     @patch('homeassistant.util.package.is_docker_env', return_value=False)
     @patch('homeassistant.util.package.install_package', return_value=True)
     def test_requirement_installed_in_deps(
-            self, mock_install, mock_venv, mock_denv, mock_dirname):
+            self, mock_install, mock_denv, mock_venv, mock_dirname):
         """Test requirement installed in deps directory."""
         mock_dirname.return_value = 'ha_package_path'
         self.hass.config.skip_pip = False
@@ -60,7 +61,9 @@ class TestRequirements:
         assert 'comp' in self.hass.config.components
         assert mock_install.call_args == call(
             'package==0.0.1', target=self.hass.config.path('deps'),
-            constraints=os.path.join('ha_package_path', CONSTRAINT_FILE))
+            constraints=os.path.join('ha_package_path', CONSTRAINT_FILE),
+            no_cache_dir=False,
+        )
 
 
 async def test_install_existing_package(hass):
@@ -108,7 +111,9 @@ async def test_install_with_wheels_index(hass):
         print(mock_inst.call_args)
         assert mock_inst.call_args == call(
             'hello==1.0.0', find_links="https://wheels.hass.io/test",
-            constraints=os.path.join('ha_package_path', CONSTRAINT_FILE))
+            constraints=os.path.join('ha_package_path', CONSTRAINT_FILE),
+            no_cache_dir=True,
+        )
 
 
 async def test_install_on_docker(hass):
@@ -135,4 +140,6 @@ async def test_install_on_docker(hass):
         print(mock_inst.call_args)
         assert mock_inst.call_args == call(
             'hello==1.0.0',
-            constraints=os.path.join('ha_package_path', CONSTRAINT_FILE))
+            constraints=os.path.join('ha_package_path', CONSTRAINT_FILE),
+            no_cache_dir=True,
+        )
