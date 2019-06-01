@@ -1,5 +1,6 @@
 """Support for Apple TV media player."""
 import logging
+import re
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -20,7 +21,7 @@ SUPPORT_APPLE_TV = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | \
                    SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_SEEK | \
                    SUPPORT_STOP | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
 
-PLEX_TVSHOW_REGEX = '^S\d+\s.\sE\d+.*$'
+PLEX_TVSHOW_REGEX = re.compile('^S\d+\s.\sE\d+.*$')
 
 
 async def async_setup_platform(
@@ -136,6 +137,7 @@ class AppleTvDevice(MediaPlayerDevice):
                 return self._plex_media_content_type
             if media_type == const.MEDIA_TYPE_TV:
                 return MEDIA_TYPE_TVSHOW
+
     @property
     def _plex_media_content_type(self):
         """Content type hack for Plex which always shows as music."""
@@ -144,7 +146,7 @@ class AppleTvDevice(MediaPlayerDevice):
         if self._playing and media_type == const.MEDIA_TYPE_MUSIC:
             title = self._playing.title
             artist = self._playing.artist
-            if re.search(PLEX_TV_REGEX, title):
+            if PLEX_TVSHOW_REGEX.search(title):
                 return MEDIA_TYPE_TVSHOW
             elif not artist:
                 return MEDIA_TYPE_VIDEO
