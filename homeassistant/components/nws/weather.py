@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_API_KEY, CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE,
     LENGTH_KILOMETERS, LENGTH_METERS, LENGTH_MILES, PRESSURE_HPA, PRESSURE_PA,
     PRESSURE_INHG, TEMP_CELSIUS, TEMP_FAHRENHEIT)
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import PlatformNotReady, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
@@ -139,7 +139,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude/longitude not set in Home Assistant config")
-        return
+        return ConfigEntryNotReady
 
     websession = async_get_clientsession(hass)
     # ID request as being from HA, pynws prepends the api_key in addition
@@ -154,7 +154,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                 stations = await nws.stations()
         except ERRORS as status:
             _LOGGER.error("Error getting station list for %s: %s",
-                          nws.latlon, status)
+                          (latitude, longitude), status)
             raise PlatformNotReady
         _LOGGER.debug("Station list: %s", stations)
         nws.station = stations[0]
@@ -197,9 +197,9 @@ class NWSWeather(WeatherEntity):
                           self._nws.station, status)
         else:
             self._observation = obs[0]
-            if 'rawMessage' in self._observation.keys():
-                self._metar_obs = self._metar(
-                    self._observation['rawMessage'])
+            metar_msg = self._observation.get('rawMessage')
+            if metar_msg:
+                self._metar_obs = self._metar(metar_msg)
             else:
                 self._metar_obs = None
             _LOGGER.debug("Observations: %s", self._observation)
@@ -229,7 +229,9 @@ class NWSWeather(WeatherEntity):
     @property
     def temperature(self):
         """Return the current temperature."""
-        temp_c = self._observation['temperature']['value']
+        temp_c = None
+        if self._observation:
+            temp_c = self._observation.get('temperature', {}).get('value')
         if temp_c is None and self._metar_obs and self._metar_obs.temp:
             temp_c = self._metar_obs.temp.value(units='C')
         if temp_c is not None:
@@ -239,7 +241,10 @@ class NWSWeather(WeatherEntity):
     @property
     def pressure(self):
         """Return the current pressure."""
-        pressure_pa = self._observation['seaLevelPressure']['value']
+        pressure_pa = None
+        if self._observation:
+            pressure_pa = self._observation.get('seaLevelPressure',
+                                                {}).get('value')
 
         if pressure_pa is None and self._metar_obs and self._metar_obs.press:
             pressure_hpa = self._metar_obs.press.value(units='HPA')
@@ -247,9 +252,11 @@ class NWSWeather(WeatherEntity):
                 return None
             pressure_pa = convert_pressure(pressure_hpa, PRESSURE_HPA,
                                            PRESSURE_PA)
-
+        if pressure_pa is None:
+            return None
         if self._is_metric:
-            pressure = convert_pressure(pressure_pa, PRESSURE_PA, PRESSURE_HPA)
+            pressure = convert_pressure(pressure_pa,
+                                        PRESSURE_PA, PRESSURE_HPA)
             pressure = round(pressure)
         else:
             pressure = convert_pressure(pressure_pa,
@@ -260,12 +267,18 @@ class NWSWeather(WeatherEntity):
     @property
     def humidity(self):
         """Return the name of the sensor."""
-        return self._observation['relativeHumidity']['value']
+        humidity = None
+        if self._observation:
+            humidity = self._observation.get('relativeHumidity',
+                                             {}).get('value')
+        return humidity
 
     @property
     def wind_speed(self):
         """Return the current windspeed."""
-        wind_m_s = self._observation['windSpeed']['value']
+        wind_m_s = None
+        if self._observation:
+            wind_m_s = self._observation.get('windSpeed', {}).get('value')
         if wind_m_s is None and self._metar_obs and self._metar_obs.wind_speed:
             wind_m_s = self._metar_obs.wind_speed.value(units='MPS')
         if wind_m_s is None:
@@ -282,7 +295,10 @@ class NWSWeather(WeatherEntity):
     @property
     def wind_bearing(self):
         """Return the current wind bearing (degrees)."""
-        wind_bearing = self._observation['windDirection']['value']
+        wind_bearing = None
+        if self._observation:
+            wind_bearing = self._observation.get('windDirection',
+                                                 {}).get('value')
         if wind_bearing is None and (self._metar_obs
                                      and self._metar_obs.wind_dir):
             wind_bearing = self._metar_obs.wind_dir.value()
@@ -296,14 +312,21 @@ class NWSWeather(WeatherEntity):
     @property
     def condition(self):
         """Return current condition."""
-        time, weather = parse_icon(self._observation['icon'])
-        cond, _ = convert_condition(time, weather)
-        return cond
+        icon = None
+        if self._observation:
+            icon = self._observation.get('icon')
+        if icon:
+            time, weather = parse_icon(self._observation['icon'])
+            cond, _ = convert_condition(time, weather)
+            return cond
+        return
 
     @property
     def visibility(self):
         """Return visibility."""
-        vis_m = self._observation['visibility']['value']
+        vis_m = None
+        if self._observation:
+            vis_m = self._observation.get('visibility', {}).get('value')
         if vis_m is None and self._metar_obs and self._metar_obs.vis:
             vis_m = self._metar_obs.vis.value(units='M')
         if vis_m is None:

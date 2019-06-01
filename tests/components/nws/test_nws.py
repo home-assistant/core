@@ -2,6 +2,8 @@
 import unittest
 from unittest.mock import patch
 
+import aiohttp
+
 from homeassistant.components import weather
 from homeassistant.components.nws.weather import ATTR_FORECAST_PRECIP_PROB
 from homeassistant.components.weather import (
@@ -54,6 +56,19 @@ OBS_METAR = [{
     "visibility": {"value": None, "qualityControl": "qc:Z"},
     "relativeHumidity": {"value": None, "qualityControl": "qc:Z"},
 }]
+
+OBS_NONE = [{
+    "rawMessage": None,
+    "textDescription": None,
+    "icon": None,
+    "temperature": {"value": None, "qualityControl": "qc:Z"},
+    "windDirection": {"value": None, "qualityControl": "qc:Z"},
+    "windSpeed": {"value": None, "qualityControl": "qc:Z"},
+    "seaLevelPressure": {"value": None, "qualityControl": "qc:Z"},
+    "visibility": {"value": None, "qualityControl": "qc:Z"},
+    "relativeHumidity": {"value": None, "qualityControl": "qc:Z"},
+}]
+
 
 FORE = [{
     'endTime': '2018-12-21T18:00:00-05:00',
@@ -356,7 +371,7 @@ class TestNwsMetric(unittest.TestCase):
             convert_distance(9, LENGTH_MILES, LENGTH_KILOMETERS))
 
 
-class MockNws_Metar():
+class MockNws_Metar(MockNws):
     """Mock Station from pynws."""
 
     def __init__(self, websession, latlon, userid):
@@ -366,18 +381,6 @@ class MockNws_Metar():
     async def observations(self, limit):
         """Mock Observation."""
         return OBS_METAR
-
-    async def forecast(self):
-        """Mock Forecast."""
-        return FORE
-
-    async def forecast_hourly(self):
-        """Mock Hourly Forecast."""
-        return HOURLY_FORE
-
-    async def stations(self):
-        """Mock stations."""
-        return [STN]
 
 
 class TestNWS_Metar(unittest.TestCase):
@@ -429,3 +432,141 @@ class TestNWS_Metar(unittest.TestCase):
         assert data.get(ATTR_WEATHER_WIND_BEARING) == truth.wind_dir.value()
         vis = convert_distance(truth.vis.value(), LENGTH_METERS, LENGTH_MILES)
         assert data.get(ATTR_WEATHER_VISIBILITY) == round(vis)
+
+
+class MockNwsFailObs(MockNws):
+    """Mock Station from pynws."""
+
+    def __init__(self, websession, latlon, userid):
+        """Init mock nws."""
+        pass
+
+    async def observations(self, limit):
+        """Mock Observation."""
+        raise aiohttp.ClientError
+
+
+class MockNwsFailStn(MockNws):
+    """Mock Station from pynws."""
+
+    def __init__(self, websession, latlon, userid):
+        """Init mock nws."""
+        pass
+
+    async def stations(self):
+        """Mock Observation."""
+        raise aiohttp.ClientError
+
+
+class MockNwsFailFore(MockNws):
+    """Mock Station from pynws."""
+
+    def __init__(self, websession, latlon, userid):
+        """Init mock nws."""
+        pass
+
+    async def forecast(self):
+        """Mock Observation."""
+        raise aiohttp.ClientError
+
+
+class MockNws_NoObs(MockNws):
+    """Mock Station from pynws."""
+
+    def __init__(self, websession, latlon, userid):
+        """Init mock nws."""
+        pass
+
+    async def observations(self, limit):
+        """Mock Observation."""
+        return OBS_NONE
+
+
+class TestFailures(unittest.TestCase):
+    """Test the NWS weather component."""
+
+    def setUp(self):
+        """Set up things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+        self.hass.config.units = IMPERIAL_SYSTEM
+        self.lat = self.hass.config.latitude = 40.00
+        self.lon = self.hass.config.longitude = -8.00
+
+    def tearDown(self):
+        """Stop down everything that was started."""
+        self.hass.stop()
+
+    @MockDependency("metar")
+    @MockDependency("pynws")
+    @patch("pynws.Nws", new=MockNwsFailObs)
+    def test_obs_fail(self, mock_metar, mock_pynws):
+        """Test for successfully setting up the NWS platform with name."""
+        assert setup_component(self.hass, weather.DOMAIN, {
+            'weather': {
+                'name': 'HomeWeather',
+                'platform': 'nws',
+                'api_key': 'test_email',
+            }
+        })
+
+    @MockDependency("metar")
+    @MockDependency("pynws")
+    @patch("pynws.Nws", new=MockNwsFailStn)
+    def test_fail_stn(self, mock_metar, mock_pynws):
+        """Test for successfully setting up the NWS platform with name."""
+        assert setup_component(self.hass, weather.DOMAIN, {
+            'weather': {
+                'name': 'HomeWeather',
+                'platform': 'nws',
+                'api_key': 'test_email',
+            }
+        })
+        state = self.hass.states.get('weather.homeweather')
+        assert state is None
+
+    @MockDependency("metar")
+    @MockDependency("pynws")
+    @patch("pynws.Nws", new=MockNwsFailFore)
+    def test_fail_fore(self, mock_metar, mock_pynws):
+        """Test for successfully setting up the NWS platform with name."""
+        assert setup_component(self.hass, weather.DOMAIN, {
+            'weather': {
+                'name': 'HomeWeather',
+                'platform': 'nws',
+                'api_key': 'test_email',
+            }
+        })
+
+    @MockDependency("metar")
+    @MockDependency("pynws")
+    @patch("pynws.Nws", new=MockNws_NoObs)
+    def test_no_obs(self, mock_metar, mock_pynws):
+        """Test for successfully setting up the NWS platform with name."""
+        assert setup_component(self.hass, weather.DOMAIN, {
+            'weather': {
+                'name': 'HomeWeather',
+                'platform': 'nws',
+                'api_key': 'test_email',
+            }
+        })
+        state = self.hass.states.get('weather.homeweather')
+        assert state.state == 'unknown'
+
+    @MockDependency("metar")
+    @MockDependency("pynws")
+    @patch("pynws.Nws", new=MockNws)
+    def test_no_lat(self, mock_metar, mock_pynws):
+        """Test for successfully setting up the NWS platform with name."""
+        hass = self.hass
+        hass.config.latitude = None
+
+        assert setup_component(self.hass, weather.DOMAIN, {
+            'weather': {
+                'name': 'HomeWeather',
+                'platform': 'nws',
+                'api_key': 'test_email',
+            }
+        })
+
+        state = self.hass.states.get('weather.homeweather')
+        assert state is None
