@@ -421,7 +421,7 @@ async def test_updating_configuration(hass, hass_storage):
     hass_storage["core.config"] = dict(core_data)
     await config_util.async_process_ha_core_config(
         hass, {'whitelist_external_dirs': '/tmp'})
-    await hass.config.update(latitude=50)
+    await hass.config.async_update(latitude=50)
 
     new_core_data = copy.deepcopy(core_data)
     new_core_data['data']['latitude'] = 50

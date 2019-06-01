@@ -1288,10 +1288,7 @@ class Config:
                 unit_system: Optional[str] = None,
                 location_name: Optional[str] = None,
                 time_zone: Optional[str] = None) -> None:
-        """Update the configuration from a dictionary.
-
-        Async friendly.
-        """
+        """Update the configuration from a dictionary."""
         self.config_source = source
         if latitude is not None:
             self.latitude = latitude
@@ -1309,11 +1306,8 @@ class Config:
         if time_zone is not None:
             self.set_time_zone(time_zone)
 
-    async def update(self, **kwargs: Any) -> None:
-        """Update the configuration from a dictionary.
-
-        Async friendly.
-        """
+    async def async_update(self, **kwargs: Any) -> None:
+        """Update the configuration from a dictionary."""
         self._update(source=SOURCE_STORAGE, **kwargs)
         await self.async_store()
         self.hass.bus.async_fire(
