@@ -25,6 +25,7 @@ DATA_BINARY_SENSOR = 'binary_sensor'
 DATA_CONFIG_ENTRIES = 'config_entries'
 DATA_DELETED_IDS = 'deleted_ids'
 DATA_DEVICES = 'devices'
+DATA_DEVICE_TRACKER = 'device_tracker'
 DATA_SENSOR = 'sensor'
 DATA_STORE = 'store'
 
@@ -160,6 +161,7 @@ SENSOR_TYPES = [ATTR_SENSOR_TYPE_BINARY_SENSOR, ATTR_SENSOR_TYPE_SENSOR]
 COMBINED_CLASSES = sorted(set(BINARY_SENSOR_CLASSES + SENSOR_CLASSES))
 
 SIGNAL_SENSOR_UPDATE = DOMAIN + '_sensor_update'
+SIGNAL_LOCATION_UPDATE = DOMAIN + '_location_update_{}'
 
 REGISTER_SENSOR_SCHEMA = vol.Schema({
     vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
