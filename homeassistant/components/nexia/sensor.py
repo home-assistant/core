@@ -1,7 +1,7 @@
-from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.const import (DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT,
+                                 ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
-from . import DATA_NEXIA
+from . import (DATA_NEXIA, ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTRIBUTION)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up sensors for a Nexia device."""
@@ -10,15 +10,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensors = list()
 
     if thermostat.has_variable_speed_compressor():
-        sensors.append(NexiaSensor(thermostat, "get_compressor_speed", "nexia_compressor_speed", None, "%", percent_conv))
+        sensors.append(NexiaSensor(thermostat, "get_compressor_speed", "Compressor Speed", None, "%", percent_conv))
     # The fan speed reported is actually what the set fan speed is, not the current fan speed.
     # if thermostat.has_variable_fan_speed():
     #     sensors.append(NexiaSensor(thermostat, "get_fan_speed", "nexia_fan_speed", None, "%", percent_conv))
     if thermostat.has_outdoor_temperature():
         unit = (TEMP_CELSIUS if thermostat.get_unit() == 'C' else TEMP_FAHRENHEIT)
-        sensors.append(NexiaSensor(thermostat, "get_outdoor_temperature", "nexia_outdoor_temperature", DEVICE_CLASS_TEMPERATURE, unit))
+        sensors.append(NexiaSensor(thermostat, "get_outdoor_temperature", "Outdoor Temperature", DEVICE_CLASS_TEMPERATURE, unit))
     if thermostat.has_relative_humidity():
-        sensors.append(NexiaSensor(thermostat, "get_relative_humidity", "nexia_relative_humidity", DEVICE_CLASS_HUMIDITY, "%", percent_conv))
+        sensors.append(NexiaSensor(thermostat, "get_relative_humidity", "Relative Humidity", DEVICE_CLASS_HUMIDITY, "%", percent_conv))
 
     add_entities(sensors, True)
 
@@ -47,6 +47,18 @@ class NexiaSensor(Entity):
     def name(self):
         """Return the name of the Ecobee sensor."""
         return self._name
+
+    @property
+    def device_state_attributes(self):
+        """Return the device specific state attributes."""
+
+        data = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_MODEL: self._device.get_thermostat_model(),
+            ATTR_FIRMWARE: self._device.get_thermostat_firmware(),
+            ATTR_THERMOSTAT_NAME: self._device.get_thermostat_name()
+        }
+        return data
 
     @property
     def device_class(self):

@@ -253,7 +253,7 @@ class NexiaThermostat:
     def get_thermostat_type(self):
         return self._get_thermostat_key("type")
 
-    def get_thermoatat_name(self):
+    def get_thermostat_name(self):
         return self._get_thermostat_key("name")
 
     ########################################################################

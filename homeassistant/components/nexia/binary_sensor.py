@@ -1,5 +1,6 @@
+from homeassistant.const import (ATTR_ATTRIBUTION)
 from homeassistant.components.binary_sensor import (BinarySensorDevice, DEVICE_CLASS_MOVING, DEVICE_CLASS_HEAT)
-from . import DATA_NEXIA
+from . import (DATA_NEXIA, ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTRIBUTION)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a sensor for a Nexia device."""
@@ -7,9 +8,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     sensors = list()
 
-    sensors.append(NexiaBinarySensor(thermostat, "is_blower_active", "nexia_blower_active", DEVICE_CLASS_MOVING))
+    sensors.append(NexiaBinarySensor(thermostat, "is_blower_active", "Blower Active", DEVICE_CLASS_MOVING))
     if thermostat.has_emergency_heat():
-        sensors.append(NexiaBinarySensor(thermostat, "is_emergency_heat_active", "nexia_emergency_heat_active", DEVICE_CLASS_HEAT))
+        sensors.append(NexiaBinarySensor(thermostat, "is_emergency_heat_active", "Emergency Heat Active", DEVICE_CLASS_HEAT))
 
     add_entities(sensors, True)
 
@@ -31,6 +32,18 @@ class NexiaBinarySensor(BinarySensorDevice):
     def name(self):
         """Return the name of the Ecobee sensor."""
         return self._name
+
+    @property
+    def device_state_attributes(self):
+        """Return the device specific state attributes."""
+
+        data = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_MODEL: self._device.get_thermostat_model(),
+            ATTR_FIRMWARE: self._device.get_thermostat_firmware(),
+            ATTR_THERMOSTAT_NAME: self._device.get_thermostat_name()
+        }
+        return data
 
     @property
     def is_on(self):

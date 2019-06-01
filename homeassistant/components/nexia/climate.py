@@ -4,24 +4,16 @@ import logging
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     ATTR_FAN_MODE, ATTR_FAN_LIST,
-    ATTR_OPERATION_MODE, ATTR_OPERATION_LIST, ATTR_AUX_HEAT, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
+    ATTR_OPERATION_MODE, ATTR_OPERATION_LIST, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_STEP, ATTR_CURRENT_HUMIDITY, ATTR_MIN_HUMIDITY, ATTR_MAX_HUMIDITY, ATTR_HUMIDITY,
     ATTR_MIN_TEMP, ATTR_MAX_TEMP, SUPPORT_TARGET_TEMPERATURE, SUPPORT_AWAY_MODE, SUPPORT_OPERATION_MODE,
     SUPPORT_AUX_HEAT, SUPPORT_HOLD_MODE, SUPPORT_FAN_MODE, SUPPORT_TARGET_HUMIDITY, ATTR_HOLD_MODE)
-from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    ATTR_TEMPERATURE)
-from . import DATA_NEXIA
+from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_ATTRIBUTION, ATTR_TEMPERATURE)
+from . import (DATA_NEXIA, ATTR_DAMPER_STATUS, ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTRIBUTION)
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_FAN = 'fan'
-ATTR_SYSTEM_MODE = 'system_mode'
-ATTR_CURRENT_OPERATION = 'system_status'
-ATTR_DAMPER_STATUS = 'damper_status'
-ATTR_MODEL = "model"
-ATTR_FIRMWARE = 'firmware'
-ATTR_THERMOSTAT_NAME = 'thermostat_name'
+
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -182,6 +174,7 @@ class NexiaZone(ClimateDevice):
 
         (min_temp, max_temp) = self._device.get_setpoint_limits()
         data = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_FAN_MODE: self._device.get_fan_mode(),
             ATTR_DAMPER_STATUS: self._device.get_zone_damper_status(self._zone),
             ATTR_OPERATION_MODE: self.mode,
@@ -207,9 +200,7 @@ class NexiaZone(ClimateDevice):
 
 
         return data
-    #
-    # def set_humidity(self, humidty):
-    #     self._device.set_target_humidity(humidty/100.0)
+
 
     @property
     def is_away_mode_on(self):

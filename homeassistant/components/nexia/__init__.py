@@ -30,6 +30,14 @@ DATA_NEXIA = 'nexia'
 DOMAIN = 'nexia'
 DEFAULT_ENTITY_NAMESPACE = 'nexia'
 
+ATTR_FAN = 'fan'
+ATTR_SYSTEM_MODE = 'system_mode'
+ATTR_CURRENT_OPERATION = 'system_status'
+ATTR_DAMPER_STATUS = 'damper_status'
+ATTR_MODEL = "model"
+ATTR_FIRMWARE = 'firmware'
+ATTR_THERMOSTAT_NAME = 'thermostat_name'
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
