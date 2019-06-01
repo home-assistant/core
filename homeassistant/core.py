@@ -1268,17 +1268,6 @@ class Config:
             'config_source': self.config_source
         }
 
-    def set_time_zone(self, time_zone_str: str) -> None:
-        """Help to set the time zone."""
-        time_zone = dt_util.get_time_zone(time_zone_str)
-
-        if time_zone:
-            self.time_zone = time_zone
-            dt_util.set_default_time_zone(time_zone)
-        else:
-            raise ValueError(
-                "Received invalid time zone {}".format(time_zone_str))
-
     @callback
     def _update(self, *,
                 source: str,
@@ -1288,10 +1277,7 @@ class Config:
                 unit_system: Optional[str] = None,
                 location_name: Optional[str] = None,
                 time_zone: Optional[str] = None) -> None:
-        """Update the configuration from a dictionary.
-
-        Async friendly.
-        """
+        """Update the configuration from a dictionary."""
         self.config_source = source
         if latitude is not None:
             self.latitude = latitude
@@ -1307,13 +1293,17 @@ class Config:
         if location_name is not None:
             self.location_name = location_name
         if time_zone is not None:
-            self.set_time_zone(time_zone)
+            tzinfo = dt_util.get_time_zone(time_zone)
 
-    async def update(self, **kwargs: Any) -> None:
-        """Update the configuration from a dictionary.
+            if not tzinfo:
+                raise ValueError(
+                    "Received invalid time zone {}".format(time_zone))
 
-        Async friendly.
-        """
+            self.time_zone = tzinfo
+            dt_util.set_default_time_zone(tzinfo)
+
+    async def async_update(self, **kwargs: Any) -> None:
+        """Update the configuration from a dictionary."""
         self._update(source=SOURCE_STORAGE, **kwargs)
         await self.async_store()
         self.hass.bus.async_fire(

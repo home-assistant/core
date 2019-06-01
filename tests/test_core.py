@@ -955,7 +955,7 @@ async def test_event_on_update(hass, hass_storage):
 
     assert hass.config.latitude != 12
 
-    await hass.config.update(latitude=12)
+    await hass.config.async_update(latitude=12)
     await hass.async_block_till_done()
 
     assert hass.config.latitude == 12
@@ -963,10 +963,10 @@ async def test_event_on_update(hass, hass_storage):
     assert events[0].data == {'latitude': 12}
 
 
-def test_bad_timezone_raises_value_error(hass):
+async def test_bad_timezone_raises_value_error(hass):
     """Test bad timezone raises ValueError."""
     with pytest.raises(ValueError):
-        hass.config.set_time_zone('not_a_timezone')
+        await hass.config.async_update(time_zone='not_a_timezone')
 
 
 @patch('homeassistant.core.monotonic')
