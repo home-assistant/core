@@ -44,12 +44,15 @@ async def async_process_requirements(hass: HomeAssistant, name: str,
 
 def pip_kwargs(config_dir: Optional[str]) -> Dict[str, Any]:
     """Return keyword arguments for PIP install."""
+    is_docker = pkg_util.is_docker_env()
     kwargs = {
-        'constraints': os.path.join(os.path.dirname(__file__), CONSTRAINT_FILE)
+        'constraints': os.path.join(os.path.dirname(__file__),
+                                    CONSTRAINT_FILE),
+        'no_cache_dir': is_docker,
     }
     if 'WHEELS_LINKS' in os.environ:
         kwargs['find_links'] = os.environ['WHEELS_LINKS']
     if not (config_dir is None or pkg_util.is_virtual_env()) and \
-            not pkg_util.is_docker_env():
+            not is_docker:
         kwargs['target'] = os.path.join(config_dir, 'deps')
     return kwargs
