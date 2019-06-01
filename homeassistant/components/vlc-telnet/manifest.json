@@ -1,0 +1,10 @@
+{
+  "domain": "vlc-telnet",
+  "name": "VLC telnet",
+  "documentation": "https://www.home-assistant.io/components/vlc",
+  "requirements": [
+    "python-telnet-vlc"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}
