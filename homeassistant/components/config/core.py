@@ -56,7 +56,7 @@ async def websocket_update_config(hass, connection, msg):
     data.pop('type')
 
     try:
-        await hass.config.update(**data)
+        await hass.config.async_update(**data)
         connection.send_result(msg['id'])
     except ValueError as err:
         connection.send_error(
