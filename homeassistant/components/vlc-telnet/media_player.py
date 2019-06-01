@@ -7,7 +7,8 @@ from homeassistant.components.media_player import (
     MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC, SUPPORT_PAUSE, SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA, SUPPORT_STOP, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
+    SUPPORT_PLAY_MEDIA, SUPPORT_STOP, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_NEXT_TRACK, SUPPORT_CLEAR_PLAYLIST, SUPPORT_SHUFFLE_SET)
 from homeassistant.const import (
     CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNAVAILABLE)
@@ -41,14 +42,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                             config.get(TELNET_HOST),
                             config.get(TELNET_PORT))])
 
-
-def setup(hass, config):
-    hass.states.set('hello_state.world', 'Paulus')
-
-    # Return boolean to indicate that initialization was successful.
-    return True
-
-
 class VlcDevice(MediaPlayerDevice):
     def __init__(self, name, host, port):
         """Initialize the vlc device."""
@@ -56,13 +49,16 @@ class VlcDevice(MediaPlayerDevice):
         self._name = name
         self._volume = None
         self._muted = None
-        self._state = None
+        self._state = STATE_UNAVAILABLE
         self._media_position_updated_at = None
         self._media_position = None
         self._media_duration = None
         self._host = host
         self._port = port
         self._vlc = None
+        self._volume_bkp = 0
+        self._media_artist = ""
+        self._media_title = ""
         print("loaded!")
 
     def update(self):
@@ -74,23 +70,43 @@ class VlcDevice(MediaPlayerDevice):
                 self._vlc = VLCTelnet(self._host,
                                       "test", self._port)
                 self._state = STATE_IDLE
-            except ConnectionError:
+            except Exception:
                 self._state = STATE_UNAVAILABLE
         else:
-            status = self._vlc.status()
-            if status:
-                if 'volume' in status:
-                    self._volume = status['volume']
-                if 'state' in status:
-                    state = status["state"]
-                    if state == "playing":
-                        self._state = STATE_PLAYING
-                    elif state == "paused":
-                        self._state = STATE_PAUSED
+            try:
+                status = self._vlc.status()
+                if status:
+                    if 'volume' in status:
+                        self._volume = int(status['volume']) / 500.0
+                    else:
+                        self._volume = None
+                    if 'state' in status:
+                        state = status["state"]
+                        if state == "playing":
+                            self._state = STATE_PLAYING
+                        elif state == "paused":
+                            self._state = STATE_PAUSED
+                        else:
+                            self._state = STATE_IDLE
                     else:
                         self._state = STATE_IDLE
-                else:
-                    self._state = STATE_IDLE
+
+                self._media_duration = self._vlc.get_length()
+                self._media_position = self._vlc.get_time()
+
+                info = self._vlc.info()
+                if info is not None and len(info) > 0:
+                    if 'artist' in info[0]:
+                        self._media_artist = info[0]['artist']
+                    else:
+                        self._media_artist = None
+                    if 'title' in info[0]:
+                        self._media_title = info[0]['title']
+                    else:
+                        self._media_title = None
+
+            except Exception:
+                pass
 
         return True
 
@@ -139,19 +155,36 @@ class VlcDevice(MediaPlayerDevice):
         """When was the position of the current playing media valid."""
         return self._media_position_updated_at
 
+    @property
+    def media_title(self):
+        """Title of current playing media."""
+        return self._media_title
+
+    @property
+    def media_artist(self):
+        """Artist of current playing media, music track only."""
+        return self._media_artist
+
     def media_seek(self, position):
         """Seek the media to a specific location."""
         track_length = self._vlc.get_length() / 1000
-        self._vlc.seek(position)
+        self._vlc.seek(position / track_length)
 
     def mute_volume(self, mute):
         """Mute the volume."""
-        self._vlc.set_volume(0)
+        if mute:
+            self._volume_bkp = self._volume
+            self._volume = 0
+            self._vlc.set_volume("0")
+        else:
+            self._vlc.set_volume(str(self._volume_bkp))
+            self._volume = self._volume_bkp
+
         self._muted = mute
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        self._vlc.set_volume(int(volume * 100))
+        self._vlc.set_volume(str(volume * 500))
         self._volume = volume
 
     def media_play(self):
@@ -177,14 +210,7 @@ class VlcDevice(MediaPlayerDevice):
                 media_type, MEDIA_TYPE_MUSIC)
             return
         self._vlc.add(media_id)
-        self._vlc.play()
         self._state = STATE_PLAYING
-
-    def turn_on(self):
-        pass
-
-    def turn_off(self):
-        pass
 
     def media_previous_track(self):
         self._vlc.prev()
@@ -192,14 +218,8 @@ class VlcDevice(MediaPlayerDevice):
     def media_next_track(self):
         self._vlc.next()
 
-    def select_source(self, source):
-        pass
-
-    def select_sound_mode(self, sound_mode):
-        pass
-
     def clear_playlist(self):
-        pass
+        self._vlc.clear()
 
     def set_shuffle(self, shuffle):
         self._vlc.random(shuffle)
