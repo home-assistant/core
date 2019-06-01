@@ -49,7 +49,8 @@ def is_installed(package: str) -> bool:
 def install_package(package: str, upgrade: bool = True,
                     target: Optional[str] = None,
                     constraints: Optional[str] = None,
-                    find_links: Optional[str] = None) -> bool:
+                    find_links: Optional[str] = None,
+                    no_cache_dir: Optional[bool] = False) -> bool:
     """Install a package on PyPi. Accepts pip compatible package strings.
 
     Return boolean if install successful.
@@ -58,6 +59,8 @@ def install_package(package: str, upgrade: bool = True,
     _LOGGER.info('Attempting install of %s', package)
     env = os.environ.copy()
     args = [sys.executable, '-m', 'pip', 'install', '--quiet', package]
+    if no_cache_dir:
+        args.append('--no-cache-dir')
     if upgrade:
         args.append('--upgrade')
     if constraints is not None:
