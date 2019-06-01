@@ -1,0 +1,8 @@
+{
+  "domain": "nexia",
+  "name": "Nexia",
+  "documentation": "https://www.example.com",
+  "requirements": ["requests", "bs4", "html5lib"],
+  "dependencies": [],
+  "codeowners": []
+}
