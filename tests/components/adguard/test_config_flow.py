@@ -64,7 +64,7 @@ async def test_full_flow_implementation(hass, aioclient_mock):
 
     flow = config_flow.AdGuardHomeFlowHandler()
     flow.hass = hass
-    result = await flow.async_step_user(user_input=None)
+    result = await flow.async_step_init(user_input=None)
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'user'
 
@@ -101,7 +101,7 @@ async def test_hassio_single_instance(hass):
     result = await hass.config_entries.flow.async_init(
         'adguard', context={'source': 'hassio'}
     )
-    assert result['type'] == 'abort'
+    assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
     assert result['reason'] == 'single_instance_allowed'
 
 
@@ -122,7 +122,7 @@ async def test_hassio_confirm(hass, aioclient_mock):
         },
         context={'source': 'hassio'},
     )
-    assert result['type'] == 'form'
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'hassio_confirm'
     assert result['description_placeholders'] == {
         'addon': 'AdGuard Home Addon'
@@ -139,3 +139,29 @@ async def test_hassio_confirm(hass, aioclient_mock):
     assert result['data'][CONF_SSL] is False
     assert result['data'][CONF_USERNAME] is None
     assert result['data'][CONF_VERIFY_SSL]
+
+
+async def test_hassio_connection_error(hass, aioclient_mock):
+    """Test we show hassio confirm form on AdGuard Home connection error."""
+    aioclient_mock.get(
+        "http://mock-adguard:3000/control/status",
+        exc=aiohttp.ClientError,
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        'adguard',
+        data={
+            'addon': 'AdGuard Home Addon',
+            'host': 'mock-adguard',
+            'port': 3000,
+        },
+        context={'source': 'hassio'},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result['flow_id'], {}
+    )
+
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['step_id'] == 'hassio_confirm'
+    assert result['errors'] == {'base': 'connection_error'}
