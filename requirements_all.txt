@@ -1404,7 +1404,11 @@ python-telegram-bot==11.1.0
 python-twitch-client==0.6.0
 
 # homeassistant.components.velbus
+<<<<<<< HEAD
 python-velbus==2.0.21
+=======
+python-velbus==2.0.26
+>>>>>>> Bump python-velbus version for velbus component (#24226)
 
 # homeassistant.components.media_player.vlc
 python-vlc==1.1.2
