@@ -23,6 +23,7 @@ from .const import (
 
     SIGNAL_LOCATION_UPDATE,
 )
+from .helpers import device_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,9 +128,7 @@ class MobileAppEntity(DeviceTrackerEntity):
     @property
     def device_info(self):
         """Return the device info."""
-        return {
-            'identifiers': {(MA_DOMAIN, self.unique_id)},
-        }
+        return device_info(self._entry.data)
 
     @callback
     def update_data(self, data):
