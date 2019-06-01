@@ -6,8 +6,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import (ATTR_DEVICE_ID, ATTR_DEVICE_NAME, ATTR_MANUFACTURER,
-                    ATTR_MODEL, ATTR_OS_VERSION, ATTR_SENSOR_ATTRIBUTES,
+from .const import (ATTR_SENSOR_ATTRIBUTES,
                     ATTR_SENSOR_DEVICE_CLASS, ATTR_SENSOR_ICON,
                     ATTR_SENSOR_NAME, ATTR_SENSOR_TYPE, ATTR_SENSOR_UNIQUE_ID,
                     DOMAIN, SIGNAL_SENSOR_UPDATE)
