@@ -77,6 +77,7 @@ class SenseDevice(BinarySensorDevice):
         self._id = device['id']
         self._icon = sense_to_mdi(device['icon'])
         self._data = data
+        self._undo_dispatch_subscription = None
 
     @property
     def is_on(self):
@@ -115,4 +116,10 @@ class SenseDevice(BinarySensorDevice):
             """Update the state."""
             self.async_schedule_update_ha_state(True)
 
-        async_dispatcher_connect(self.hass, SENSE_DEVICE_UPDATE, update)
+        self._undo_dispatch_subscription = async_dispatcher_connect(
+            self.hass, SENSE_DEVICE_UPDATE, update)
+
+    async def async_will_remove_from_hass(self):
+        """Undo subscription."""
+        if self._undo_dispatch_subscription:
+            self._undo_dispatch_subscription()
