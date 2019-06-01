@@ -217,6 +217,12 @@ async def test_gps_enter_and_exit_home(hass, geofency_client, webhook_id):
         'device_tracker', device_name)).attributes['longitude']
     assert NOT_HOME_LONGITUDE == current_longitude
 
+    dev_reg = await hass.helpers.device_registry.async_get_registry()
+    assert len(dev_reg.devices) == 1
+
+    ent_reg = await hass.helpers.entity_registry.async_get_registry()
+    assert len(ent_reg.entities) == 1
+
 
 async def test_beacon_enter_and_exit_home(hass, geofency_client, webhook_id):
     """Test iBeacon based zone enter and exit - a.k.a stationary iBeacon."""
