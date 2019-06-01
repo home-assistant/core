@@ -1268,6 +1268,17 @@ class Config:
             'config_source': self.config_source
         }
 
+    def set_time_zone(self, time_zone_str: str) -> None:
+        """Help to set the time zone."""
+        time_zone = dt_util.get_time_zone(time_zone_str)
+
+        if time_zone:
+            self.time_zone = time_zone
+            dt_util.set_default_time_zone(time_zone)
+        else:
+            raise ValueError(
+                "Received invalid time zone {}".format(time_zone_str))
+
     @callback
     def _update(self, *,
                 source: str,
@@ -1293,14 +1304,7 @@ class Config:
         if location_name is not None:
             self.location_name = location_name
         if time_zone is not None:
-            tzinfo = dt_util.get_time_zone(time_zone)
-
-            if not tzinfo:
-                raise ValueError(
-                    "Received invalid time zone {}".format(time_zone))
-
-            self.time_zone = tzinfo
-            dt_util.set_default_time_zone(tzinfo)
+            self.set_time_zone(time_zone)
 
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
