@@ -1,6 +1,7 @@
 """Config flow to configure the AdGuard Home integration."""
 import logging
 
+from adguardhome import AdGuardHome, AdGuardHomeConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -61,9 +62,6 @@ class AdGuardHomeFlowHandler(ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
-        from adguardhome import AdGuardHome
-        from adguardhome.exceptions import AdGuardHomeConnectionError
-
         if self._async_current_entries():
             return self.async_abort(reason='single_instance_allowed')
 
@@ -119,9 +117,6 @@ class AdGuardHomeFlowHandler(ConfigFlow):
 
     async def async_step_hassio_confirm(self, user_input=None):
         """Confirm Hass.io discovery."""
-        from adguardhome import AdGuardHome
-        from adguardhome.exceptions import AdGuardHomeConnectionError
-
         if user_input is None:
             return await self._show_hassio_form()
 

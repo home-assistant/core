@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+from adguardhome import AdGuardHomeConnectionError
+
 from homeassistant.components.adguard import AdGuardHomeDeviceEntity
 from homeassistant.components.adguard.const import (
     DATA_ADGUARD_CLIENT, DATA_ADGUARD_VERION, DOMAIN)
@@ -19,8 +21,6 @@ async def async_setup_entry(
         hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up AdGuard Home sensor based on a config entry."""
-    from adguardhome import AdGuardHomeConnectionError
-
     adguard = hass.data[DOMAIN][DATA_ADGUARD_CLIENT]
 
     try:

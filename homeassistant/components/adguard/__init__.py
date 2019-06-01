@@ -2,6 +2,7 @@
 import logging
 from typing import Any, Dict
 
+from adguardhome import AdGuardHome, AdGuardHomeError
 import voluptuous as vol
 
 from homeassistant.components.adguard.const import (
@@ -37,8 +38,6 @@ async def async_setup_entry(
         hass: HomeAssistantType, entry: ConfigEntry
 ) -> bool:
     """Set up AdGuard Home from a config entry."""
-    from adguardhome import AdGuardHome
-
     session = async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL])
     adguard = AdGuardHome(
         entry.data[CONF_HOST],
@@ -154,8 +153,6 @@ class AdGuardHomeEntity(Entity):
 
     async def async_update(self) -> None:
         """Update AdGuard Home entity."""
-        from adguardhome import AdGuardHomeError
-
         try:
             await self._adguard_update()
             self._available = True
