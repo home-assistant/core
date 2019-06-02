@@ -128,7 +128,6 @@ def do_authentication(hass, hass_config, config):
         scope='https://www.googleapis.com/auth/calendar',
         redirect_uri='Home-Assistant.io',
     )
-
     try:
         dev_flow = oauth.step1_get_device_and_user_codes()
     except OAuth2DeviceCodeError as err:
@@ -193,10 +192,21 @@ def setup(hass, config):
     if not os.path.isfile(token_file):
         do_authentication(hass, config, conf)
     else:
-        do_setup(hass, config, conf)
+        if not check_correct_scopes(token_file):
+            do_authentication(hass, config, conf)
+        else:
+            do_setup(hass, config, conf)
 
     return True
 
+def check_correct_scopes(token_file):
+    """Check for the correct scopes in file"""
+    tokenfile = open(token_file, "r").read()
+    if "readonly" in tokenfile:
+        _LOGGER.warning("The existing Google token is read only, please re-authenticate.")
+        return False
+    else:
+        return True
 
 def setup_services(hass, hass_config, track_new_found_calendars,
                    calendar_service):
