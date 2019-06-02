@@ -1,5 +1,6 @@
 """UniFi Controller abstraction."""
 import asyncio
+import ssl
 import async_timeout
 
 from aiohttp import CookieJar
@@ -81,15 +82,19 @@ async def get_controller(
     """Create a controller object and verify authentication."""
     import aiounifi
 
+    sslcontext = None
+
     if verify_ssl:
         session = aiohttp_client.async_get_clientsession(hass)
+        if isinstance(verify_ssl, str):
+            sslcontext = ssl.create_default_context(cafile=verify_ssl)
     else:
         session = aiohttp_client.async_create_clientsession(
             hass, verify_ssl=verify_ssl, cookie_jar=CookieJar(unsafe=True))
 
     controller = aiounifi.Controller(
         host, username=username, password=password, port=port, site=site,
-        websession=session
+        websession=session, sslcontext=sslcontext
     )
 
     try:

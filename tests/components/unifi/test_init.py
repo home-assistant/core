@@ -146,7 +146,8 @@ async def test_flow_works(hass, aioclient_mock):
     flow.hass = hass
 
     with patch('aiounifi.Controller') as mock_controller:
-        def mock_constructor(host, username, password, port, site, websession):
+        def mock_constructor(
+                host, username, password, port, site, websession, sslcontext):
             """Fake the controller constructor."""
             mock_controller.host = host
             mock_controller.username = username
@@ -254,7 +255,8 @@ async def test_user_permissions_low(hass, aioclient_mock):
     flow.hass = hass
 
     with patch('aiounifi.Controller') as mock_controller:
-        def mock_constructor(host, username, password, port, site, websession):
+        def mock_constructor(
+                host, username, password, port, site, websession, sslcontext):
             """Fake the controller constructor."""
             mock_controller.host = host
             mock_controller.username = username

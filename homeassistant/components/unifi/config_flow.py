@@ -84,6 +84,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow):
 
             try:
                 desc = user_input.get(CONF_SITE_ID, self.desc)
+                print(self.sites)
                 for site in self.sites.values():
                     if desc == site['desc']:
                         if site['role'] != 'admin':
