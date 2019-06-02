@@ -1,7 +1,7 @@
 """Device tracker platform that adds support for OwnTracks over MQTT."""
 import logging
 
-from homeassistant.core import callback, split_entity_id
+from homeassistant.core import callback
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
