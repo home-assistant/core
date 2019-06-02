@@ -25,7 +25,6 @@ DATA_BINARY_SENSOR = 'binary_sensor'
 DATA_CONFIG_ENTRIES = 'config_entries'
 DATA_DELETED_IDS = 'deleted_ids'
 DATA_DEVICES = 'devices'
-DATA_DEVICE_TRACKER = 'device_tracker'
 DATA_SENSOR = 'sensor'
 DATA_STORE = 'store'
 
