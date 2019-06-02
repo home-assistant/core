@@ -61,7 +61,7 @@ aiohue==1.9.1
 aioswitcher==2019.3.21
 
 # homeassistant.components.unifi
-aiounifi==4
+aiounifi==6
 
 # homeassistant.components.ambiclimate
 ambiclimate==0.1.2
@@ -293,9 +293,6 @@ python_awair==0.0.4
 
 # homeassistant.components.tradfri
 pytradfri[async]==6.0.1
-
-# homeassistant.components.unifi
-pyunifi==2.16
 
 # homeassistant.components.html5
 pywebpush==1.9.2

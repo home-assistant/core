@@ -140,7 +140,7 @@ aiolifx_effects==0.2.1
 aiopvapi==1.6.14
 
 # homeassistant.components.unifi
-aiounifi==4
+aiounifi==6
 
 <<<<<<< HEAD
 # homeassistant.components.cover.aladdin_connect
@@ -1467,10 +1467,14 @@ pytradfri[async]==6.0.1
 # homeassistant.components.sensor.trafikverket_weatherstation
 pytrafikverket==0.1.5.8
 
+<<<<<<< HEAD
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
 
 # homeassistant.components.binary_sensor.uptimerobot
+=======
+# homeassistant.components.uptimerobot
+>>>>>>> Replace pyunifi with aiounifi in UniFi device tracker (#24149)
 pyuptimerobot==0.0.5
 
 # homeassistant.components.keyboard
