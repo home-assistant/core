@@ -22,7 +22,7 @@ variables:
 jobs:
 
 - job: 'Wheels'
-  condition: or(eq(variables['Build.SourceBranchName'], 'dev'), startsWith(variables['Build.SourceBranch'], 'refs/tags'))
+  condition: eq(variables['Build.SourceBranchName'], 'dev')
   timeoutInMinutes: 360
   pool:
     vmImage: 'ubuntu-latest'
@@ -61,15 +61,9 @@ jobs:
     displayName: 'Install wheels builder'
   - script: |
       cp requirements_all.txt requirements_wheels.txt
-      if [ "$(Build.SourceBranchName)" == "dev" ]; then
-        curl -s -o requirements_diff.txt https://raw.githubusercontent.com/home-assistant/home-assistant/master/requirements_all.txt
-      else
-        touch requirements_diff.txt
-      fi
+      curl -s -o requirements_diff.txt https://raw.githubusercontent.com/home-assistant/home-assistant/master/requirements_all.txt
 
-      # Enable because we can build it
       requirement_files="requirements_wheels.txt requirements_diff.txt"
-
       for requirement_file in ${requirement_files}; do
         sed -i "s|# pytradfri|pytradfri|g" ${requirement_file}
         sed -i "s|# pybluez|pybluez|g" ${requirement_file}
