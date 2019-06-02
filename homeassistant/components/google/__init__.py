@@ -1,4 +1,5 @@
 """Support for Google - Calendar Event Devices."""
+from datetime import timedelta, datetime
 import logging
 import os
 import yaml
@@ -105,7 +106,8 @@ ADD_EVENT_SERVICE_SCHEMA = vol.Schema(
         vol.Exclusive(EVENT_END_DATE, EVENT_END_CONF): cv.date,
         vol.Exclusive(EVENT_START_DATETIME, EVENT_START_CONF): cv.datetime,
         vol.Exclusive(EVENT_END_DATETIME, EVENT_END_CONF): cv.datetime,
-        vol.Exclusive(EVENT_IN, EVENT_START_CONF, EVENT_END_CONF): _EVENT_IN_TYPES
+        vol.Exclusive(EVENT_IN, EVENT_START_CONF, EVENT_END_CONF):
+        _EVENT_IN_TYPES
     }
 )
 
@@ -264,10 +266,14 @@ def setup_services(hass, hass_config, track_new_found_calendars,
             end = {'date': str(call.data[EVENT_END_DATE])}
 
         elif EVENT_START_DATETIME in call.data:
-            start_dt = str(call.data[EVENT_START_DATETIME].strftime('%Y-%m-%dT%H:%M:%S'))
-            end_dt = str(call.data[EVENT_END_DATETIME].strftime('%Y-%m-%dT%H:%M:%S'))
-            start = {'dateTime': start_dt, 'timeZone': str(hass.config.time_zone)}
-            end = {'dateTime': end_dt, 'timeZone':str(hass.config.time_zone)}
+            start_dt = str(call.data[EVENT_START_DATETIME]
+                           .strftime('%Y-%m-%dT%H:%M:%S'))
+            end_dt = str(call.data[EVENT_END_DATETIME]
+                         .strftime('%Y-%m-%dT%H:%M:%S'))
+            start = {'dateTime': start_dt,
+                     'timeZone': str(hass.config.time_zone)}
+            end = {'dateTime': end_dt,
+                   'timeZone': str(hass.config.time_zone)}
 
         event = {
             'summary': call.data[EVENT_SUMMARY],
@@ -275,12 +281,9 @@ def setup_services(hass, hass_config, track_new_found_calendars,
             'start': start,
             'end': end,
         }
-        service_data = {'calendarId': call.data[EVENT_CALENDAR_ID], 'body': event}
-        event = (
-            service.events()
-            .insert(**service_data)
-            .execute()
-        )
+        service_data = {'calendarId': call.data[EVENT_CALENDAR_ID],
+                        'body': event}
+        event = service.events().insert(**service_data).execute()
 
     hass.services.register(
         DOMAIN, SERVICE_ADD_EVENT, _add_event, schema=ADD_EVENT_SERVICE_SCHEMA
