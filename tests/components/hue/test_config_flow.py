@@ -198,7 +198,7 @@ async def test_bridge_ssdp(hass):
         result = await flow.async_step_ssdp({
             'host': '0.0.0.0',
             'serial': '1234',
-        'manufacturerURL': 'http://www.philips.com'
+            'manufacturerURL': 'http://www.philips.com'
         })
 
     assert result['type'] == 'form'
