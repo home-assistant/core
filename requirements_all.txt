@@ -1053,6 +1053,9 @@ pydeconz==59
 # homeassistant.components.delijn
 pydelijn==0.4.0
 
+# homeassistant.components.delijn
+pydelijn==0.4.0
+
 # homeassistant.components.zwave
 pydispatcher==2.0.5
 
