@@ -5,22 +5,24 @@ from datetime import timedelta
 import voluptuous as vol
 
 import async_timeout
-
 import aiounifi
 
+from homeassistant import config_entries
+from homeassistant.components import unifi
+from homeassistant.components.device_tracker.config_entry import (
+    NetworkDeviceTrackerEntity)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
-from homeassistant.const import CONF_VERIFY_SSL, CONF_MONITORED_CONDITIONS
+from homeassistant.components.device_tracker import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_VERIFY_SSL,
+    CONF_MONITORED_CONDITIONS)
 import homeassistant.util.dt as dt_util
 
-from .controller import get_controller
-from .errors import AuthenticationRequired, CannotConnect
+from .const import CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID
 
-_LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 CONF_PORT = 'port'
-CONF_SITE_ID = 'site_id'
+CONF_DT_SITE_ID = 'site_id'
 CONF_DETECTION_TIME = 'detection_time'
 CONF_SSID_FILTER = 'ssid_filter'
 
@@ -29,26 +31,11 @@ DEFAULT_PORT = 8443
 DEFAULT_VERIFY_SSL = True
 DEFAULT_DETECTION_TIME = timedelta(seconds=300)
 
-NOTIFICATION_ID = 'unifi_notification'
-NOTIFICATION_TITLE = 'Unifi Device Tracker Setup'
-
-AVAILABLE_ATTRS = [
-    '_id', '_is_guest_by_uap', '_last_seen_by_uap', '_uptime_by_uap',
-    'ap_mac', 'assoc_time', 'authorized', 'bssid', 'bytes-r', 'ccq',
-    'channel', 'essid', 'first_seen', 'hostname', 'idletime', 'ip',
-    'is_11r', 'is_guest', 'is_wired', 'last_seen', 'latest_assoc_time',
-    'mac', 'name', 'noise', 'noted', 'oui', 'powersave_enabled',
-    'qos_policy_applied', 'radio', 'radio_proto', 'rssi', 'rx_bytes',
-    'rx_bytes-r', 'rx_packets', 'rx_rate', 'signal', 'site_id',
-    'tx_bytes', 'tx_bytes-r', 'tx_packets', 'tx_power', 'tx_rate',
-    'uptime', 'user_id', 'usergroup_id', 'vlan'
-]
-
 TIMESTAMP_ATTRS = ['first_seen', 'last_seen', 'latest_assoc_time']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_SITE_ID, default='default'): cv.string,
+    vol.Optional(CONF_DT_SITE_ID, default='default'): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -56,117 +43,153 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.boolean, cv.isfile),
     vol.Optional(CONF_DETECTION_TIME, default=DEFAULT_DETECTION_TIME): vol.All(
         cv.time_period, cv.positive_timedelta),
-    vol.Optional(CONF_MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(AVAILABLE_ATTRS)]),
+    vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list),
     vol.Optional(CONF_SSID_FILTER): vol.All(cv.ensure_list, [cv.string])
 })
 
 
-async def async_get_scanner(hass, config):
-    """Set up the Unifi device_tracker."""
-    host = config[DOMAIN].get(CONF_HOST)
-    username = config[DOMAIN].get(CONF_USERNAME)
-    password = config[DOMAIN].get(CONF_PASSWORD)
-    site_id = config[DOMAIN].get(CONF_SITE_ID)
-    port = config[DOMAIN].get(CONF_PORT)
-    verify_ssl = config[DOMAIN].get(CONF_VERIFY_SSL)
-    detection_time = config[DOMAIN].get(CONF_DETECTION_TIME)
-    monitored_conditions = config[DOMAIN].get(CONF_MONITORED_CONDITIONS)
-    ssid_filter = config[DOMAIN].get(CONF_SSID_FILTER)
+async def async_setup_scanner(hass, config, sync_see, discovery_info):
+    """Set up the Unifi integration."""
+    if not hass.config_entries.async_entries(unifi.DOMAIN):
+        hass.async_create_task(hass.config_entries.flow.async_init(
+            unifi.DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
+            data=config
+        ))
+    return True
 
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up device tracker for UniFi component."""
+    # return True
+    controller_id = CONTROLLER_ID.format(
+        host=config_entry.data[CONF_CONTROLLER][CONF_HOST],
+        site=config_entry.data[CONF_CONTROLLER][CONF_SITE_ID],
+    )
+    controller = hass.data[unifi.DOMAIN][controller_id]
+    tracked = {}
+
+    progress = None
+
+    async def request_update(object_id):
+        """Request an update."""
+        nonlocal progress
+
+        if progress is not None:
+            return await progress
+
+        progress = asyncio.ensure_future(update_controller())
+        result = await progress
+        progress = None
+        return result
+
+    async def update_controller():
+        """Update the values of the controller."""
+        tasks = [async_update_items(
+            controller, async_add_entities, request_update, tracked
+        )]
+        await asyncio.wait(tasks)
+
+    await update_controller()
+
+
+async def async_update_items(
+        controller, async_add_entities, request_controller_update, tracked):
+    """Update POE port state from the controller."""
     try:
-        controller = await get_controller(
-            hass, host, username, password, port, site_id, verify_ssl)
-        await controller.initialize()
+        with async_timeout.timeout(4):
+            await controller.api.clients.update()
+            await controller.api.devices.update()
 
-    except (AuthenticationRequired, CannotConnect) as ex:
-        _LOGGER.error("Failed to connect to Unifi: %s", ex)
-        hass.components.persistent_notification.create(
-            'Failed to connect to Unifi. '
-            'Error: {}<br />'
-            'You will need to restart hass after fixing.'
-            ''.format(ex),
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID)
-        return False
+    except aiounifi.LoginRequired:
+        try:
+            with async_timeout.timeout(5):
+                await controller.api.login()
 
-    return UnifiScanner(
-        controller, detection_time, ssid_filter, monitored_conditions)
+        except (asyncio.TimeoutError, aiounifi.AiounifiException):
+            if controller.available:
+                controller.available = False
+                # update_switch_state()
+            return
+
+    except (asyncio.TimeoutError, aiounifi.AiounifiException):
+        if controller.available:
+            LOGGER.error('Unable to reach controller %s', controller.host)
+            controller.available = False
+            # update_switch_state()
+        return
+
+    if not controller.available:
+        LOGGER.info('Reconnected to controller %s', controller.host)
+        controller.available = True
+
+    new_tracked = []
+    for client_id in controller.api.clients:
+
+        if client_id in tracked:
+            LOGGER.debug("Updating UniFi tracked device %s (%s)",
+                         tracked[client_id].entity_id,
+                         tracked[client_id].client.mac)
+            tracked[client_id].async_schedule_update_ha_state()
+            continue
+
+        # if self.client.essid not in self.controller.ssid_filter:
+        #     continue
+
+        client = controller.api.clients[client_id]
+
+        tracked[client_id] = UniFiClientTracker(
+            client, controller, request_controller_update)
+        new_tracked.append(tracked[client_id])
+        LOGGER.debug("New UniFi switch %s (%s)", client.hostname, client.mac)
+
+    if new_tracked:
+        async_add_entities(new_tracked)
 
 
-class UnifiScanner(DeviceScanner):
-    """Provide device_tracker support from Unifi WAP client data."""
+class UniFiClientTracker(NetworkDeviceTrackerEntity):
+    """Representation of a network device."""
 
-    def __init__(self, controller, detection_time: timedelta,
-                 ssid_filter, monitored_conditions) -> None:
-        """Initialize the scanner."""
+    def __init__(self, client, controller, request_controller_update):
+        """Set up tracked device."""
+        self.client = client
         self.controller = controller
-        self._detection_time = detection_time
-        self._ssid_filter = ssid_filter
-        self._monitored_conditions = monitored_conditions
-        self._clients = {}
+        self.async_request_controller_update = request_controller_update
 
     async def async_update(self):
-        """Get the clients from the device."""
-        try:
-            await self.controller.clients.update()
-            clients = self.controller.clients.values()
+        """Synchronize state with controller."""
+        await self.async_request_controller_update(self.client.mac)
+        await self.async_see()
 
-        except aiounifi.LoginRequired:
-            try:
-                with async_timeout.timeout(5):
-                    await self.controller.login()
-            except (asyncio.TimeoutError, aiounifi.AiounifiException):
-                clients = []
+    @property
+    def name(self) -> str:
+        """Return the name of the device."""
+        return self.client.name or self.client.hostname
 
-        except aiounifi.AiounifiException:
-            clients = []
+    @property
+    def unique_id(self) -> str:
+        """Return a unique identifier for this switch."""
+        return 'unifi-dt-{}'.format(self.client.mac)
 
-        # Filter clients to provided SSID list
-        if self._ssid_filter:
-            clients = [
-                client for client in clients
-                if client.essid in self._ssid_filter
-            ]
+    @property
+    def available(self) -> bool:
+        """Return if controller is available."""
+        return self.controller.available
 
-        self._clients = {
-            client.raw['mac']: client.raw
-            for client in clients
-            if (dt_util.utcnow() - dt_util.utc_from_timestamp(float(
-                client.last_seen))) < self._detection_time
-        }
+    @property
+    def last_seen(self) -> dt_util.dt.datetime:
+        """Return the timestamp when device was last seen."""
+        return dt_util.utc_from_timestamp(float(self.client.last_seen))
 
-    async def async_scan_devices(self):
-        """Scan for devices."""
-        await self.async_update()
-        return self._clients.keys()
-
-    def get_device_name(self, device):
-        """Return the name (if known) of the device.
-
-        If a name has been set in Unifi, then return that, else
-        return the hostname if it has been detected.
-        """
-        client = self._clients.get(device, {})
-        name = client.get('name') or client.get('hostname')
-        _LOGGER.debug("Device mac %s name %s", device, name)
-        return name
-
-    def get_extra_attributes(self, device):
-        """Return the extra attributes of the device."""
-        if not self._monitored_conditions:
-            return {}
-
-        client = self._clients.get(device, {})
+    @property
+    def device_state_attributes(self) -> dict:
+        """Return the device state attributes."""
         attributes = {}
-        for variable in self._monitored_conditions:
-            if variable in client:
-                if variable in TIMESTAMP_ATTRS:
-                    attributes[variable] = dt_util.utc_from_timestamp(
-                        float(client[variable])
-                    )
-                else:
-                    attributes[variable] = client[variable]
+        for variable in self.client.raw:
+            if variable in TIMESTAMP_ATTRS:
+                attributes[variable] = dt_util.utc_from_timestamp(
+                    float(self.client.raw[variable])
+                )
+            else:
+                attributes[variable] = self.client.raw[variable]
 
-        _LOGGER.debug("Device mac %s attributes %s", device, attributes)
         return attributes

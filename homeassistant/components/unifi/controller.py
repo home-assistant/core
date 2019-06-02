@@ -107,9 +107,10 @@ class UniFiController:
                 'Unknown error connecting with UniFi controller.')
             return False
 
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(
-                self.config_entry, 'switch'))
+        for component in ['device_tracker', 'switch']:
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(
+                    self.config_entry, component))
 
         return True
 
