@@ -103,7 +103,7 @@ class DdWrtDeviceScanner(DeviceScanner):
         """
         _LOGGER.info("Checking ARP")
 
-        url = '{}://{}/Status_Wireless.live.asp'.format(
+        url = '{}://{}/Status_Lan.live.asp'.format(
             self.protocol, self.host)
         data = self.get_ddwrt_data(url)
 
@@ -112,7 +112,7 @@ class DdWrtDeviceScanner(DeviceScanner):
 
         self.last_results = []
 
-        active_clients = data.get('active_wireless', None)
+        active_clients = data.get('arp_table', None)
         if not active_clients:
             return False
 
