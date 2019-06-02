@@ -1,6 +1,7 @@
 from homeassistant.const import (ATTR_ATTRIBUTION)
-from homeassistant.components.binary_sensor import (BinarySensorDevice, DEVICE_CLASS_MOVING, DEVICE_CLASS_HEAT)
+from homeassistant.components.binary_sensor import (BinarySensorDevice)
 from . import (DATA_NEXIA, ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTRIBUTION)
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a sensor for a Nexia device."""
@@ -14,8 +15,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities(sensors, True)
 
+
 def percent_conv(val):
     return val * 100.0
+
 
 class NexiaBinarySensor(BinarySensorDevice):
 
@@ -30,7 +33,7 @@ class NexiaBinarySensor(BinarySensorDevice):
 
     @property
     def name(self):
-        """Return the name of the Ecobee sensor."""
+        """Return the name of the sensor."""
         return self._name
 
     @property

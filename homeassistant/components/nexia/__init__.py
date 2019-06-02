@@ -8,15 +8,15 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_ID
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = [
-"beautifulsoup4==4.6.3",
-"certifi==2018.8.24",
-"chardet==3.0.4",
-"html5lib==1.0.1",
-"idna==2.7",
-"requests==2.19.1",
-"six==1.11.0",
-"urllib3==1.23",
-"webencodings==0.5.1"
+    "beautifulsoup4==4.6.3",
+    "certifi==2018.8.24",
+    "chardet==3.0.4",
+    "html5lib==1.0.1",
+    "idna==2.7",
+    "requests==2.19.1",
+    "six==1.11.0",
+    "urllib3==1.23",
+    "webencodings==0.5.1"
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,6 +37,8 @@ ATTR_DAMPER_STATUS = 'damper_status'
 ATTR_MODEL = "model"
 ATTR_FIRMWARE = 'firmware'
 ATTR_THERMOSTAT_NAME = 'thermostat_name'
+ATTR_HOLD_MODES = 'hold_modes'
+
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
