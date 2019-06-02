@@ -3,7 +3,6 @@ from datetime import timedelta, datetime
 import logging
 import os
 import yaml
-from datetime import timedelta, datetime
 
 import voluptuous as vol
 from voluptuous.error import Error as VoluptuousError
@@ -199,14 +198,16 @@ def setup(hass, config):
 
     return True
 
+
 def check_correct_scopes(token_file):
-    """Check for the correct scopes in file"""
+    """Check for the correct scopes in file."""
     tokenfile = open(token_file, "r").read()
     if "readonly" in tokenfile:
-        _LOGGER.warning("The existing Google token is read only, please re-authenticate.")
+        _LOGGER.warning("Please re-authenticate with Google.")
         return False
     else:
         return True
+
 
 def setup_services(hass, hass_config, track_new_found_calendars,
                    calendar_service):
