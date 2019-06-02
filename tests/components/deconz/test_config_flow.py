@@ -176,8 +176,8 @@ async def test_bridge_ssdp_discovery(hass):
             config_flow.CONF_HOST: '1.2.3.4',
             config_flow.CONF_PORT: 80,
             config_flow.ATTR_SERIAL: 'id',
-            config_flow.ATTR_MANUFACTURER_URL:
-                config_flow.DECONZ_MANUFACTURER_URL
+            config_flow.ATTR_MANUFACTURERURL:
+                config_flow.DECONZ_MANUFACTURERURL
         },
         context={'source': 'ssdp'}
     )
@@ -191,7 +191,7 @@ async def test_bridge_ssdp_discovery_not_deconz_bridge(hass):
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         data={
-            config_flow.ATTR_MANUFACTURER_URL: 'not deconz bridge'
+            config_flow.ATTR_MANUFACTURERURL: 'not deconz bridge'
         },
         context={'source': 'ssdp'}
     )
@@ -212,8 +212,8 @@ async def test_bridge_discovery_update_existing_entry(hass):
         data={
             config_flow.CONF_HOST: 'mock-deconz',
             config_flow.ATTR_SERIAL: 'id',
-            config_flow.ATTR_MANUFACTURER_URL:
-                config_flow.DECONZ_MANUFACTURER_URL
+            config_flow.ATTR_MANUFACTURERURL:
+                config_flow.DECONZ_MANUFACTURERURL
         },
         context={'source': 'ssdp'}
     )

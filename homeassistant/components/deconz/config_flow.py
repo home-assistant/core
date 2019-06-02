@@ -9,14 +9,14 @@ from pydeconz.utils import (
     async_discovery, async_get_api_key, async_get_bridgeid)
 
 from homeassistant import config_entries
-from homeassistant.components.ssdp import ATTR_MANUFACTURER_URL, ATTR_SERIAL
+from homeassistant.components.ssdp import ATTR_MANUFACTURERURL, ATTR_SERIAL
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
 from .const import CONF_BRIDGEID, DEFAULT_PORT, DOMAIN
 
-DECONZ_MANUFACTURER_URL = 'http://www.dresden-elektronik.de'
+DECONZ_MANUFACTURERURL = 'http://www.dresden-elektronik.de'
 CONF_SERIAL = 'serial'
 
 
@@ -153,7 +153,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered deCONZ bridge."""
-        if discovery_info[ATTR_MANUFACTURER_URL] != DECONZ_MANUFACTURER_URL:
+        if discovery_info[ATTR_MANUFACTURERURL] != DECONZ_MANUFACTURERURL:
             return self.async_abort(reason='not_deconz_bridge')
 
         bridgeid = discovery_info[ATTR_SERIAL]

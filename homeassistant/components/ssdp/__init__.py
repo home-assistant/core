@@ -23,7 +23,7 @@ ATTR_MODEL_NAME = 'model_name'
 ATTR_MODEL_NUMBER = 'model_number'
 ATTR_SERIAL = 'serial_number'
 ATTR_MANUFACTURER = 'manufacturer'
-ATTR_MANUFACTURER_URL = 'manufacturerURL'
+ATTR_MANUFACTURERURL = 'manufacturerURL'
 ATTR_UDN = 'udn'
 ATTR_UPNP_DEVICE_TYPE = 'upnp_device_type'
 
