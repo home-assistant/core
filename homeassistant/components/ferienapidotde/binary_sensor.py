@@ -12,8 +12,6 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['ferien-api==0.3.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 ALL_STATE_CODES = [
