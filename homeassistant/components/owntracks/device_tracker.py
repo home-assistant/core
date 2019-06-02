@@ -25,16 +25,16 @@ async def async_setup_entry(hass, entry, async_add_entities):
     @callback
     def _receive_data(dev_id, **data):
         """Receive set location."""
-        device = hass.data[OT_DOMAIN]['devices'].get(dev_id)
+        entity = hass.data[OT_DOMAIN]['devices'].get(dev_id)
 
-        if device is not None:
-            device.update_data(data)
+        if entity is not None:
+            entity.update_data(data)
             return
 
-        device = hass.data[OT_DOMAIN]['devices'][dev_id] = OwnTracksEntity(
+        entity = hass.data[OT_DOMAIN]['devices'][dev_id] = OwnTracksEntity(
             dev_id, data
         )
-        async_add_entities([device])
+        async_add_entities([entity])
 
     hass.data[OT_DOMAIN]['context'].async_see = _receive_data
 
@@ -47,8 +47,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
         if identifier[0] == OT_DOMAIN
     }
 
-    if dev_ids:
-        async_add_entities(OwnTracksEntity(dev_id) for dev_id in dev_ids)
+    if not dev_ids:
+        return True
+
+    entities = []
+    for dev_id in dev_ids:
+        entity = hass.data[OT_DOMAIN]['devices'][dev_id] = OwnTracksEntity(
+            dev_id
+        )
+        entities.append(entity)
+
+    async_add_entities(entities)
 
     return True
 
