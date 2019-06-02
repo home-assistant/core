@@ -12,6 +12,7 @@ from homeassistant.components import (
     media_player,
     scene,
     script,
+    sensor,
     switch,
     vacuum,
 )
@@ -107,6 +108,7 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_OPENING): TYPE_SENSOR,
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_WINDOW): TYPE_SENSOR,
     (media_player.DOMAIN, media_player.DEVICE_CLASS_TV): TYPE_TV,
+    (sensor.DOMAIN, sensor.DEVICE_CLASS_TEMPERATURE): TYPE_THERMOSTAT,
     (media_player.DOMAIN, media_player.DEVICE_CLASS_SPEAKER): TYPE_SPEAKER,
 }
 
