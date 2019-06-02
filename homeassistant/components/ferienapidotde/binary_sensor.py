@@ -1,5 +1,4 @@
 """Binary sensor to indicate if today is a german vacation day or not."""
-
 from datetime import timedelta
 import logging
 
@@ -10,7 +9,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, dt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,8 +42,8 @@ SCAN_INTERVAL = timedelta(minutes=1)
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Setups the ferienapidotde platform."""
-    state_code = config.get(CONF_STATE_CODE)
-    name = config.get(CONF_NAME)
+    state_code = config[CONF_STATE_CODE]
+    name = config[CONF_NAME]
 
     import aiohttp.client_exceptions as exc
     try:
@@ -88,27 +87,29 @@ class VacationSensor(BinarySensorDevice):
         import ferien
         await self.data_object.async_update()
         vacations = self.data_object.data
-        current = ferien.current_vacation(vacs=vacations)
-        if current:
-            self._state = True
-            aligned_end = current.end - timedelta(seconds=1)
-            self._state_attrs = {
-                ATTR_START: current.start.strftime('%Y-%m-%d'),
-                ATTR_END: aligned_end.strftime('%Y-%m-%d'),
-                ATTR_VACATION_NAME: current.name
-            }
-        else:
-            self._state = False
-            next_vacation = ferien.next_vacation(vacs=vacations)
-            if next_vacation:
-                aligned_end = next_vacation.end - timedelta(seconds=1)
+        if vacations:  # Might be none in case of failure
+            current = ferien.current_vacation(vacs=vacations)
+            if current:
+                self._state = True
+                aligned_end = current.end - timedelta(seconds=1)
                 self._state_attrs = {
-                    ATTR_NEXT_START: next_vacation.start.strftime('%Y-%m-%d'),
-                    ATTR_NEXT_END: aligned_end.strftime('%Y-%m-%d'),
-                    ATTR_VACATION_NAME: next_vacation.name
+                    ATTR_START: dt.as_utc(current.start).isoformat(),
+                    ATTR_END: dt.as_utc(aligned_end).isoformat(),
+                    ATTR_VACATION_NAME: current.name
                 }
             else:
-                self._state_attrs = {}
+                self._state = False
+                next_vacation = ferien.next_vacation(vacs=vacations)
+                if next_vacation:
+                    aligned_end = next_vacation.end - timedelta(seconds=1)
+                    self._state_attrs = {
+                        ATTR_NEXT_START:
+                            dt.as_utc(next_vacation.start).isoformat(),
+                        ATTR_NEXT_END: dt.as_utc(aligned_end).isoformat(),
+                        ATTR_VACATION_NAME: next_vacation.name
+                    }
+                else:
+                    self._state_attrs = {}
 
 
 class VacationData:
@@ -116,7 +117,7 @@ class VacationData:
 
     def __init__(self, state_code):
         """Initializer."""
-        self.state_code = str(state_code)
+        self.state_code = state_code
         self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -127,7 +128,8 @@ class VacationData:
             import ferien
             self.data = await ferien.state_vacations_async(self.state_code)
         except exc.ClientError:
-            if self.data is None:
-                raise
-            _LOGGER.error("Failed to update the vacation data."
-                          "Re-using an old state")
+            import traceback
+            _LOGGER.error(
+                "Failed to update the vacation data from ferien-api.de: %s",
+                traceback.format_exc()
+            )
