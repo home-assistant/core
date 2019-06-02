@@ -14,6 +14,10 @@ from homeassistant.const import (
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from homeassistant import config_entries
+from homeassistant.components import unifi
+from homeassistant.components.device_tracker.config_entry import (
+    NetworkDeviceTrackerEntity)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
@@ -54,8 +58,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.boolean, cv.isfile),
     vol.Optional(CONF_DETECTION_TIME, default=DEFAULT_DETECTION_TIME): vol.All(
         cv.time_period, cv.positive_timedelta),
-    vol.Optional(CONF_MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(AVAILABLE_ATTRS)]),
+    vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list),
     vol.Optional(CONF_SSID_FILTER): vol.All(cv.ensure_list, [cv.string])
 })
 

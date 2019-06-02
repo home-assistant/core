@@ -24,6 +24,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     Switches are controlling network switch ports with Poe.
     """
+    return True
     controller_id = CONTROLLER_ID.format(
         host=config_entry.data[CONF_CONTROLLER][CONF_HOST],
         site=config_entry.data[CONF_CONTROLLER][CONF_SITE_ID],
