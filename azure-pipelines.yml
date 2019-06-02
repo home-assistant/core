@@ -123,7 +123,6 @@ jobs:
       fi
     displayName: 'Check version of branch/tag'
   - script: |
-      sudo apt-get update
       sudo apt-get install -y --no-install-recommends \
         jq curl
 
@@ -271,7 +270,6 @@ jobs:
     vmImage: 'ubuntu-latest'
   steps:
   - script: |
-      sudo apt-get update
       sudo apt-get install -y --no-install-recommends \
         git jq curl
 
