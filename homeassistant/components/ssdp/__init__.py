@@ -165,7 +165,7 @@ def info_from_entry(entry, device_info):
         info[ATTR_MODEL_NUMBER] = device_info.get('modelNumber')
         info[ATTR_SERIAL] = device_info.get('serialNumber')
         info[ATTR_MANUFACTURER] = device_info.get('manufacturer')
-        info[ATTR_MANUFACTURER_URL] = device_info.get('manufacturerURL')
+        info[ATTR_MANUFACTURERURL] = device_info.get('manufacturerURL')
         info[ATTR_UDN] = device_info.get('UDN')
         info[ATTR_UPNP_DEVICE_TYPE] = device_info.get('deviceType')
 

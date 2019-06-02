@@ -7,7 +7,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.deconz.config_flow import (
-    DECONZ_MANUFACTURER_URL)
+    DECONZ_MANUFACTURERURL)
 from homeassistant.components.hue import config_flow, const, errors
 
 from tests.common import MockConfigEntry, mock_coro
@@ -211,7 +211,7 @@ async def test_bridge_ssdp_discover_deconz(hass):
     flow.hass = hass
 
     result = await flow.async_step_ssdp({
-        'manufacturerURL': DECONZ_MANUFACTURER_URL
+        'manufacturerURL': DECONZ_MANUFACTURERURL
     })
 
     assert result['type'] == 'abort'
