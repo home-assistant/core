@@ -6,6 +6,8 @@ import aiohue
 import pytest
 import voluptuous as vol
 
+from homeassistant.components.deconz.config_flow import (
+    DECONZ_MANUFACTURER_URL)
 from homeassistant.components.hue import config_flow, const, errors
 
 from tests.common import MockConfigEntry, mock_coro
@@ -195,11 +197,24 @@ async def test_bridge_ssdp(hass):
                       side_effect=errors.AuthenticationRequired):
         result = await flow.async_step_ssdp({
             'host': '0.0.0.0',
-            'serial': '1234'
+            'serial': '1234',
+        'manufacturerURL': 'http://www.philips.com'
         })
 
     assert result['type'] == 'form'
     assert result['step_id'] == 'link'
+
+
+async def test_bridge_ssdp_discover_deconz(hass):
+    """Test that discovery ignores deCONZ bridges."""
+    flow = config_flow.HueFlowHandler()
+    flow.hass = hass
+
+    result = await flow.async_step_ssdp({
+        'manufacturerURL': DECONZ_MANUFACTURER_URL
+    })
+
+    assert result['type'] == 'abort'
 
 
 async def test_bridge_ssdp_emulated_hue(hass):
@@ -211,7 +226,8 @@ async def test_bridge_ssdp_emulated_hue(hass):
     result = await flow.async_step_ssdp({
         'name': 'HASS Bridge',
         'host': '0.0.0.0',
-        'serial': '1234'
+        'serial': '1234',
+        'manufacturerURL': 'http://www.philips.com'
     })
 
     assert result['type'] == 'abort'
@@ -229,7 +245,8 @@ async def test_bridge_ssdp_already_configured(hass):
 
     result = await flow.async_step_ssdp({
         'host': '0.0.0.0',
-        'serial': '1234'
+        'serial': '1234',
+        'manufacturerURL': 'http://www.philips.com'
     })
 
     assert result['type'] == 'abort'
