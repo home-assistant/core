@@ -42,6 +42,7 @@ COMMENT_REQUIREMENTS = (
 )
 
 TEST_REQUIREMENTS = (
+    'adguardhome',
     'ambiclimate',
     'aioambient',
     'aioautomatic',

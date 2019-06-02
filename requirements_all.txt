@@ -83,7 +83,20 @@ YesssSMS==0.2.3
 # homeassistant.components.abode
 abodepy==0.14.0
 
+<<<<<<< HEAD
 # homeassistant.components.media_player.frontier_silicon
+=======
+# homeassistant.components.mcp23017
+adafruit-blinka==1.2.1
+
+# homeassistant.components.mcp23017
+adafruit-circuitpython-mcp230xx==1.1.2
+
+# homeassistant.components.adguard
+adguardhome==0.2.0
+
+# homeassistant.components.frontier_silicon
+>>>>>>> Adds AdGuard Home integration (#24219)
 afsapi==0.0.4
 
 # homeassistant.components.asuswrt
