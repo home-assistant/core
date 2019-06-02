@@ -10,11 +10,12 @@ import somecomfort
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    ATTR_FAN_MODE, ATTR_FAN_MODES,
-    ATTR_OPERATION_MODE, ATTR_OPERATION_LIST, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_AWAY_MODE, SUPPORT_OPERATION_MODE,
-    HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_AUTO,
+    FAN_AUTO, FAN_DIFFUSE, FAN_ON,
+    SUPPORT_AUX_HEAT, SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
     CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE,
+    HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_AUTO,
+    PRESET_AWAY,
 )
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
@@ -66,6 +67,17 @@ HW_MODE_TO_HA_HVAC_ACTION = {
     'fan': CURRENT_HVAC_IDLE,
     'heat': CURRENT_HVAC_HEAT,
     'cool': CURRENT_HVAC_COOL,
+}
+HA_FAN_MODE_TO_HW = {
+    FAN_ON: 'on',
+    FAN_AUTO: 'auto',
+    FAN_DIFFUSE: 'circulate'
+}
+HW_FAN_MODE_TO_HA = {
+    'on': FAN_ON,
+    'auto': FAN_AUTO,
+    'circulate': FAN_DIFFUSE,
+    'follow schedule': FAN_AUTO,
 }
 
 
@@ -121,14 +133,10 @@ class HoneywellUSThermostat(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        supported = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE)
-        if hasattr(self._device, ATTR_SYSTEM_MODE):
-            supported |= SUPPORT_OPERATION_MODE
-        supported = (SUPPORT_FAN_MODE)
-        return supported
-
-
-
+        return (SUPPORT_AUX_HEAT |
+                SUPPORT_FAN_MODE |
+                SUPPORT_PRESET_MODE |
+                SUPPORT_TARGET_TEMPERATURE)
 
     @property
     def hvac_mode(self) -> str:
@@ -159,37 +167,42 @@ class HoneywellUSThermostat(ClimateDevice):
         self._device.system_mode = \
             somecomfort.SYSTEM_MODES.index(HA_HVAC_MODE_TO_HW_MODE[hvac_mode])
 
-
-
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        return None
+        return PRESET_AWAY if self._away else None
 
     @property
     def preset_modes(self) -> Optional[List[str]]:
         """Return a list of available preset modes."""
-        return None
+        return [PRESET_AWAY]
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        raise NotImplementedError()
+        if preset_mode == PRESET_AWAY:
+            self._turn_away_mode_on()
+        else:
+            self._turn_away_mode_off()
 
+    @property
+    def is_aux_heat(self) -> Optional[str]:
+        """Return true if aux heater."""
+        return self._device.system_mode == 'emheat'
 
-
-    @property  # TODO: will need mapping of modes
+    @property
     def fan_mode(self) -> Optional[str]:
         """Return the fan setting."""
-        return self._device.fan_mode
+        return HW_FAN_MODE_TO_HA[self._device.fan_mode]
 
     @property
     def fan_modes(self) -> Optional[List[str]]:
         """Return the list of available fan modes."""
-        return somecomfort.FAN_MODES  # TODO: ['auto', 'on', 'circulate', 'follow schedule']
+        return list(HA_FAN_MODE_TO_HW)
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        self._device.fan_mode = fan_mode
+        self._device.fan_mode = \
+            somecomfort.FAN_MODES.index(HA_FAN_MODE_TO_HW[fan_mode])
 
     @property
     def name(self) -> Optional[str]:
@@ -252,19 +265,13 @@ class HoneywellUSThermostat(ClimateDevice):
     def device_state_attributes(self) -> Dict:
         """Return the device specific state attributes."""
         data = {
-            ATTR_FAN: (self._device.fan_running and 'running' or 'idle'),
-            ATTR_FAN_MODE: self._device.fan_mode,
-            ATTR_HVAC_MODE: self._device.system_mode,
+            'fan': (self._device.fan_running and 'running' or 'idle'),
+            'fan_mode': self._device.fan_mode,
+            'operation_mode': self._device.system_mode,
         }
-        data[ATTR_OPERATION_LIST] = somecomfort.SYSTEM_MODES
         return data
 
-    @property
-    def is_away_mode_on(self):
-        """Return true if away mode is on."""
-        return self._away
-
-    def turn_away_mode_on(self):
+    def _turn_away_mode_on(self):
         """Turn away on.
 
         Somecomfort does have a proprietary away mode, but it doesn't really
@@ -292,7 +299,7 @@ class HoneywellUSThermostat(ClimateDevice):
             _LOGGER.error('Temperature %.1f out of range',
                           getattr(self, "_{}_away_temp".format(mode)))
 
-    def turn_away_mode_off(self):
+    def _turn_away_mode_off(self):
         """Turn away off."""
         self._away = False
         try:
