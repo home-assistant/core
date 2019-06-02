@@ -5,6 +5,7 @@ To update, run python3 -m script.hassfest
 
 
 FLOWS = [
+    "adguard",
     "ambiclimate",
     "ambient_station",
     "axis",
