@@ -205,8 +205,7 @@ def check_correct_scopes(token_file):
     if "readonly" in tokenfile:
         _LOGGER.warning("Please re-authenticate with Google.")
         return False
-    else:
-        return True
+    return True
 
 
 def setup_services(hass, hass_config, track_new_found_calendars,
