@@ -450,7 +450,7 @@ fedexdeliverymanager==1.0.6
 feedparser-homeassistant==5.2.2.dev1
 
 # homeassistant.components.ferienapidotde.binary_sensor
-ferien-api==0.3.1
+ferien-api==0.3.3
 
 # homeassistant.components.fibaro
 fiblary3==0.1.7
