@@ -952,17 +952,28 @@ class NexiaThermostat:
         deadband = self.get_deadband()
 
         if set_temperature is None:
-            heat_temperature = int(heat_temperature)
-            cool_temperature = int(cool_temperature)
+            if heat_temperature:
+                heat_temperature = int(heat_temperature)
+            else:
+                heat_temperature = min(self.get_zone_heating_setpoint(zone_id), int(cool_temperature)-deadband)
+
+            if cool_temperature:
+                cool_temperature = int(cool_temperature)
+            else:
+                cool_temperature = max(self.get_zone_cooling_setpoint(zone_id), int(heat_temperature)+deadband)
+
         else:
+            # This will smartly select either the ceiling of the floor temp depending on the current operating mode.
             zone_mode = self.get_zone_current_mode(zone_id)
             if zone_mode == self.OPERATION_MODE_COOL:
-                cool_temperature = set_temperature
+                cool_temperature = int(set_temperature)
+                heat_temperature = min(self.get_zone_heating_setpoint(zone_id), int(cool_temperature)-deadband)
             elif zone_mode == self.OPERATION_MODE_HEAT:
-                heat_temperature = set_temperature
+                cool_temperature = max(self.get_zone_cooling_setpoint(zone_id), int(heat_temperature)+deadband)
+                heat_temperature = int(set_temperature)
             else:
-                cool_temperature = set_temperature + math.ceil(deadband/2)
-                heat_temperature = set_temperature - math.ceil(deadband/2)
+                cool_temperature = int(set_temperature) + math.ceil(deadband/2)
+                heat_temperature = int(set_temperature) - math.ceil(deadband/2)
 
         zone_mode = self.get_zone_requested_mode(zone_id=zone_id)
         if zone_mode == self.OPERATION_MODE_AUTO:

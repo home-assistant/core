@@ -161,16 +161,10 @@ class NexiaZone(ClimateDevice):
             if new_cool_temp - new_heat_temp < deadband:
                 new_heat_temp = new_cool_temp - deadband
 
-        requested_mode = self._device.get_zone_requested_mode(self._zone)
-        if requested_mode == self._device.OPERATION_MODE_COOL or requested_mode == self._device.OPERATION_MODE_HEAT:
-            self._device.set_zone_heat_cool_temp(set_temperature=set_temp, zone_id=self._zone)
-        elif requested_mode == self._device.OPERATION_MODE_AUTO:
-            self._device.set_zone_heat_cool_temp(heat_temperature=new_heat_temp,
-                                                 cool_temperature=new_cool_temp,
-                                                 zone_id=self._zone)
-        else:
-            # Nothing to do
-            pass
+        self._device.set_zone_heat_cool_temp(heat_temperature=new_heat_temp,
+                                             cool_temperature=new_cool_temp,
+                                             set_temperature=set_temp,
+                                             zone_id=self._zone)
 
     @property
     def device_state_attributes(self):
