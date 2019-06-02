@@ -1412,3 +1412,4 @@ async def test_temperature_setting_sensor(hass):
     assert trt.query_attributes() == {
         'thermostatTemperatureAmbient': 21.1
     }
+    hass.config.units.temperature_unit = TEMP_CELSIUS
