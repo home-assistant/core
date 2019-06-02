@@ -1,7 +1,7 @@
 """Support for JLR InControl sensors."""
 import logging
 
-from . import JLREntity, RESOURCES
+from homeassistant.components.jlrincontrol import JLREntity, RESOURCES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,12 +19,12 @@ class JLRSensor(JLREntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        _LOGGER.info('Getting state of %s sensor' % self._attribute)
+        _LOGGER.info('Getting state of %s sensor', self._attribute)
 
         val = self._get_vehicle_status(self.vehicle.info.get('vehicleStatus'))
         if val is None:
             return val
-        elif val:
+        if val:
             val = val[self._attribute]
         else:
             return None
@@ -34,13 +34,14 @@ class JLRSensor(JLREntity):
             return str(val)
         if self._attribute in ['ODOMETER_METER']:
             return float(int(val) / 1000)
-        else:
-            return int(float(val))
 
-    def _get_vehicle_status(self, vehicle):
+        return int(float(val))
+
+    @staticmethod
+    def _get_vehicle_status(vehicle):
         dict_only = {}
-        for el in vehicle:
-            dict_only[el.get('key')] = el.get('value')
+        for element in vehicle:
+            dict_only[element.get('key')] = element.get('value')
         return dict_only
 
     @property

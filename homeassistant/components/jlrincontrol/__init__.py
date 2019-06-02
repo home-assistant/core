@@ -126,10 +126,11 @@ class JLRData:
         """Provide a friendly name for a vehicle."""
         if vehicle.vin and vehicle.vin.lower() in self.names:
             return self.names[vehicle.vin.lower()]
-        elif vehicle.vin:
+
+        if vehicle.vin:
             return vehicle.vin
-        else:
-            return ''
+
+        return ''
 
 
 class JLREntity(Entity):
@@ -142,10 +143,11 @@ class JLREntity(Entity):
         self._attribute = attribute
         self._state.entities[self._vin].append(self)
 
-    def _get_vehicle_status(self, vehicle):
+    @staticmethod
+    def _get_vehicle_status(vehicle):
         dict_only = {}
-        for el in vehicle.get_status().get('vehicleStatus'):
-            dict_only[el.get('key')] = el.get('value')
+        for element in vehicle.get_status().get('vehicleStatus'):
+            dict_only[element.get('key')] = element.get('value')
         return dict_only
 
     @property

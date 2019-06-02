@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from . import JLREntity, RESOURCES
+from homeassistant.components.jlrincontrol import JLREntity, RESOURCES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,27 +20,26 @@ class JLRSensor(JLREntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        _LOGGER.debug('Getting state of %s binary sensor' % self._attribute)
+        _LOGGER.debug('Getting state of %s binary sensor', self._attribute)
         val = self._get_vehicle_status(self.vehicle.info.get('vehicleStatus'))
         if val is None:
             return val
-        elif val:
+
+        if val:
             val = val[self._attribute]
         else:
             return None
 
         if self._attribute in ['DOOR_IS_ALL_DOORS_LOCKED']:
-            if val == 'FALSE':
-                return True
-            else:
-                return False
-        else:
-            return val
+            return bool(val == 'FALSE')
 
-    def _get_vehicle_status(self, vehicle):
+        return val
+
+    @staticmethod
+    def _get_vehicle_status(vehicle):
         dict_only = {}
-        for el in vehicle:
-            dict_only[el.get('key')] = el.get('value')
+        for element in vehicle:
+            dict_only[element.get('key')] = element.get('value')
         return dict_only
 
     @property
