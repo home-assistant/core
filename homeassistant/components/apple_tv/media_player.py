@@ -21,7 +21,7 @@ SUPPORT_APPLE_TV = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | \
                    SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_SEEK | \
                    SUPPORT_STOP | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
 
-PLEX_TVSHOW_REGEX = re.compile('^S\d+\s.\sE\d+.*$')
+PLEX_TVSHOW_REGEX = re.compile(r'^S\d+\s.\sE\d+.*$')
 
 
 async def async_setup_platform(
