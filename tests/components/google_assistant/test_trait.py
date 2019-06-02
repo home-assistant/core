@@ -1382,11 +1382,21 @@ async def test_volume_media_player_relative(hass):
         media_player.ATTR_MEDIA_VOLUME_LEVEL: .5
     }
 
+
 async def test_temperature_setting_sensor(hass):
-    """Test TemperatureSetting trait support for sensor domain (temperature sensor)."""
-    assert helpers.get_google_type(sensor.DOMAIN, sensor.DEVICE_CLASS_TEMPERATURE) is not None
-    assert not trait.TemperatureSettingTrait.supported(sensor.DOMAIN, 0, sensor.DEVICE_CLASS_HUMIDITY)
-    assert trait.TemperatureSettingTrait.supported(sensor.DOMAIN, 0, sensor.DEVICE_CLASS_TEMPERATURE)
+    """Test TemperatureSetting trait support for temperature sensor."""
+    assert helpers.get_google_type(sensor.DOMAIN,
+                                   sensor.DEVICE_CLASS_TEMPERATURE) is not None
+    assert not trait.TemperatureSettingTrait.supported(
+        sensor.DOMAIN,
+        0,
+        sensor.DEVICE_CLASS_HUMIDITY
+    )
+    assert trait.TemperatureSettingTrait.supported(
+        sensor.DOMAIN,
+        0,
+        sensor.DEVICE_CLASS_TEMPERATURE
+    )
 
     hass.config.units.temperature_unit = TEMP_FAHRENHEIT
 
