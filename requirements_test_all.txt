@@ -35,6 +35,9 @@ PyTransportNSW==0.1.1
 # homeassistant.components.yessssms
 YesssSMS==0.2.3
 
+# homeassistant.components.adguard
+adguardhome==0.2.0
+
 # homeassistant.components.ambient_station
 aioambient==0.3.0
 
