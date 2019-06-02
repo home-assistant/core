@@ -4,14 +4,13 @@ import json
 from asynctest import patch
 import pytest
 
-from homeassistant.components import owntracks, device_tracker
+from homeassistant.components import owntracks
 from homeassistant.const import STATE_NOT_HOME
 from homeassistant.setup import async_setup_component
-from homeassistant.helpers import entity_registry
 
 from tests.common import (
     MockConfigEntry, async_fire_mqtt_message, async_mock_mqtt_component,
-    mock_coro, mock_registry)
+    mock_coro)
 
 USER = 'greg'
 DEVICE = 'phone'
