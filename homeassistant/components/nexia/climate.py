@@ -7,7 +7,7 @@ from homeassistant.components.climate.const import (
     ATTR_OPERATION_MODE, ATTR_OPERATION_LIST, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_STEP, ATTR_CURRENT_HUMIDITY, ATTR_MIN_HUMIDITY, ATTR_MAX_HUMIDITY, ATTR_HUMIDITY,
     ATTR_MIN_TEMP, ATTR_MAX_TEMP, SUPPORT_TARGET_TEMPERATURE, SUPPORT_AWAY_MODE, SUPPORT_OPERATION_MODE,
-    SUPPORT_AUX_HEAT, SUPPORT_HOLD_MODE, SUPPORT_FAN_MODE, SUPPORT_TARGET_HUMIDITY, ATTR_HOLD_MODE)
+    SUPPORT_AUX_HEAT, SUPPORT_HOLD_MODE, SUPPORT_FAN_MODE, SUPPORT_TARGET_HUMIDITY, ATTR_HOLD_MODE, ATTR_AUX_HEAT)
 from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_ATTRIBUTION, ATTR_TEMPERATURE)
 from . import (DATA_NEXIA, ATTR_DAMPER_STATUS, ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTR_HOLD_MODES,
                ATTRIBUTION)
@@ -189,6 +189,9 @@ class NexiaZone(ClimateDevice):
             ATTR_FIRMWARE: self._device.get_thermostat_firmware(),
             ATTR_THERMOSTAT_NAME: self._device.get_thermostat_name()
         }
+
+        if self._device.has_emergency_heat():
+            data.update({ATTR_AUX_HEAT: "on" if self._device.is_emergency_heat_active() else "off"})
 
         if self._device.has_relative_humidity():
             data.update({ATTR_HUMIDITY:         round(self._device.get_dehumidify_setpoint() * 100.0, 1),
