@@ -1,7 +1,7 @@
 """UniFi Controller abstraction."""
 import asyncio
-import async_timeout
 import ssl
+import async_timeout
 
 from aiohttp import CookieJar
 
