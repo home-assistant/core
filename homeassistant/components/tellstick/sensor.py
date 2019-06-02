@@ -1,5 +1,6 @@
 """Support for Tellstick sensors."""
 import logging
+import time
 from collections import namedtuple
 
 import voluptuous as vol
@@ -15,12 +16,15 @@ DatatypeDescription = namedtuple('DatatypeDescription', ['name', 'unit'])
 
 CONF_DATATYPE_MASK = 'datatype_mask'
 CONF_ONLY_NAMED = 'only_named'
+CONF_MAX_AGE = 'max_age'
 CONF_TEMPERATURE_SCALE = 'temperature_scale'
 
 DEFAULT_DATATYPE_MASK = 127
 DEFAULT_TEMPERATURE_SCALE = TEMP_CELSIUS
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_MAX_AGE):
+        cv.positive_int,
     vol.Optional(CONF_TEMPERATURE_SCALE, default=DEFAULT_TEMPERATURE_SCALE):
         cv.string,
     vol.Optional(CONF_DATATYPE_MASK, default=DEFAULT_DATATYPE_MASK):
@@ -67,6 +71,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.exception('Could not initialize Tellstick')
         return
 
+    now = time.time()
     sensors = []
     datatype_mask = config.get(CONF_DATATYPE_MASK)
 
@@ -86,6 +91,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for datatype in sensor_value_descriptions:
             if datatype & datatype_mask and \
                tellcore_sensor.has_value(datatype):
+                age = now - tellcore_sensor.value(datatype).timestamp
+                if CONF_MAX_AGE in config and age > config[CONF_MAX_AGE]:
+                    _LOGGER.info("Skipping sensor %d because its age is %d",
+                                 tellcore_sensor.id, age)
+                    continue
                 sensor_info = sensor_value_descriptions[datatype]
                 sensors.append(TellstickSensor(
                     sensor_name, tellcore_sensor,
