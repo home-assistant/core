@@ -9,7 +9,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_SEEK, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF,
-    STATE_PAUSED, STATE_PLAYING, STATE_STANDBY)
+    STATE_PAUSED, STATE_PLAYING, STATE_STANDBY, STATE_UNKNOWN)
 from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
 
@@ -144,14 +144,16 @@ class AppleTvDevice(MediaPlayerDevice):
         from pyatv import const
         media_type = self._playing.media_type
         if self._playing and media_type == const.MEDIA_TYPE_MUSIC:
+            media_type_result = STATE_UNKNOWN
             title = self._playing.title
             artist = self._playing.artist
             if PLEX_TVSHOW_REGEX.search(title):
-                return MEDIA_TYPE_TVSHOW
+                media_type_result = MEDIA_TYPE_TVSHOW
             elif not artist:
-                return MEDIA_TYPE_VIDEO
+                media_type_result = MEDIA_TYPE_VIDEO
             else:
-                return MEDIA_TYPE_MUSIC
+                media_type_result = MEDIA_TYPE_MUSIC
+            return media_type_result
 
     @property
     def media_duration(self):
