@@ -11,7 +11,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_NEXT_TRACK, SUPPORT_CLEAR_PLAYLIST, SUPPORT_SHUFFLE_SET)
 from homeassistant.const import (
-    CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNAVAILABLE)
+    CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNAVAILABLE,
+    CONF_HOST, CONF_PORT, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 
 import homeassistant.util.dt as dt_util
@@ -21,8 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'vlc_telnet'
 
 DEFAULT_NAME = 'Vlc Telnet'
-TELNET_HOST = 'telnet_host'
-TELNET_PORT = 'telnet_port'
 
 SUPPORT_VLC = SUPPORT_PAUSE | SUPPORT_SEEK | SUPPORT_VOLUME_SET \
               | SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK \
@@ -30,8 +29,9 @@ SUPPORT_VLC = SUPPORT_PAUSE | SUPPORT_SEEK | SUPPORT_VOLUME_SET \
               | SUPPORT_CLEAR_PLAYLIST | SUPPORT_PLAY \
               | SUPPORT_SHUFFLE_SET
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(TELNET_HOST, default='127.0.0.1'): cv.string,
-    vol.Optional(TELNET_PORT, default='4212'): cv.string,
+    vol.Optional(CONF_HOST, default='127.0.0.1'): cv.string,
+    vol.Optional(CONF_PORT, default='4212'): cv.string,
+    vol.Optional(CONF_PASSWORD, default='test'): cv.string,
     vol.Optional(CONF_NAME, default='VLC-TELNET'): cv.string,
 })
 
@@ -39,11 +39,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the vlc platform."""
     add_entities([VlcDevice(config.get(CONF_NAME),
-                            config.get(TELNET_HOST),
-                            config.get(TELNET_PORT))])
+                            config.get(CONF_HOST),
+                            config.get(CONF_PORT),
+                            config.get(CONF_PASSWORD))])
+
 
 class VlcDevice(MediaPlayerDevice):
-    def __init__(self, name, host, port):
+    def __init__(self, name, host, port, passwd):
         """Initialize the vlc device."""
         self._instance = None
         self._name = name
@@ -55,6 +57,7 @@ class VlcDevice(MediaPlayerDevice):
         self._media_duration = None
         self._host = host
         self._port = port
+        self._password = passwd
         self._vlc = None
         self._volume_bkp = 0
         self._media_artist = ""
@@ -67,8 +70,7 @@ class VlcDevice(MediaPlayerDevice):
 
         if self._vlc is None:
             try:
-                self._vlc = VLCTelnet(self._host,
-                                      "test", self._port)
+                self._vlc = VLCTelnet(self._host, self._password, self._port)
                 self._state = STATE_IDLE
             except Exception:
                 self._state = STATE_UNAVAILABLE
