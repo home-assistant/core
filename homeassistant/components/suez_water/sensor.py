@@ -1,8 +1,8 @@
-Sensor for Suez Water Consumption data."""
+"""Sensor for Suez Water Consumption data."""
 from datetime import timedelta
 import logging
-import pysuez
 
+import pysuez
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
