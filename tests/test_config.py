@@ -256,9 +256,32 @@ async def test_entity_customization(hass):
 
 @mock.patch('homeassistant.config.shutil')
 @mock.patch('homeassistant.config.os')
-def test_remove_lib_on_upgrade(mock_os, mock_shutil, hass):
+@mock.patch('homeassistant.config.is_docker_env', return_value=False)
+def test_remove_lib_on_upgrade(mock_docker, mock_os, mock_shutil, hass):
     """Test removal of library on upgrade from before 0.50."""
     ha_version = '0.49.0'
+    mock_os.path.isdir = mock.Mock(return_value=True)
+    mock_open = mock.mock_open()
+    with mock.patch('homeassistant.config.open', mock_open, create=True):
+        opened_file = mock_open.return_value
+        # pylint: disable=no-member
+        opened_file.readline.return_value = ha_version
+        hass.config.path = mock.Mock()
+        config_util.process_ha_config_upgrade(hass)
+        hass_path = hass.config.path.return_value
+
+        assert mock_os.path.isdir.call_count == 1
+        assert mock_os.path.isdir.call_args == mock.call(hass_path)
+        assert mock_shutil.rmtree.call_count == 1
+        assert mock_shutil.rmtree.call_args == mock.call(hass_path)
+
+
+@mock.patch('homeassistant.config.shutil')
+@mock.patch('homeassistant.config.os')
+@mock.patch('homeassistant.config.is_docker_env', return_value=True)
+def test_remove_lib_on_upgrade_94(mock_docker, mock_os, mock_shutil, hass):
+    """Test removal of library on upgrade from before 0.94 and in Docker."""
+    ha_version = '0.94.0b5'
     mock_os.path.isdir = mock.Mock(return_value=True)
     mock_open = mock.mock_open()
     with mock.patch('homeassistant.config.open', mock_open, create=True):
