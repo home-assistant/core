@@ -93,6 +93,7 @@ OPTIONAL_SERVICE_HANDLERS = {
     SERVICE_DLNA_DMR: ('media_player', 'dlna_dmr'),
 }
 
+<<<<<<< HEAD
 MIGRATED_SERVICE_HANDLERS = [
     'axis',
     'deconz',
@@ -102,6 +103,16 @@ MIGRATED_SERVICE_HANDLERS = [
     'philips_hue',
     SERVICE_WEMO,
 ]
+=======
+MIGRATED_SERVICE_HANDLERS = {
+    'axis': None,
+    'deconz': None,
+    'esphome': None,
+    'ikea_tradfri': None,
+    'homekit': None,
+    'philips_hue': None
+}
+>>>>>>> deCONZ migrate to SSDP discovery (#24252)
 
 DEFAULT_ENABLED = list(CONFIG_ENTRY_HANDLERS) + list(SERVICE_HANDLERS) + \
     MIGRATED_SERVICE_HANDLERS
