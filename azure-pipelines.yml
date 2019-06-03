@@ -8,23 +8,24 @@ trigger:
   tags:
     include:
     - '*'
-
 variables:
   - name: versionBuilder
     value: '3.2'
   - name: versionWheels
-    value: '0.3'
+    value: '0.7'
   - group: docker
   - group: wheels
   - group: github
+  - group: twine
+
 
 jobs:
 
 - job: 'Wheels'
-  condition: eq(variables['Build.SourceBranchName'], 'dev')
+  condition: or(eq(variables['Build.SourceBranchName'], 'dev'), eq(variables['Build.SourceBranchName'], 'master'))
   timeoutInMinutes: 360
   pool:
-    vmImage: 'ubuntu-16.04'
+    vmImage: 'ubuntu-latest'
   strategy:
     maxParallel: 3
     matrix:
@@ -40,10 +41,12 @@ jobs:
         buildArch: 'aarch64'
   steps:
   - script: |
+      sudo apt-get update
       sudo apt-get install -y --no-install-recommends \
         qemu-user-static \
-        binfmt-support
-      
+        binfmt-support \
+        curl
+
       sudo mount binfmt_misc -t binfmt_misc /proc/sys/fs/binfmt_misc
       sudo update-binfmts --enable qemu-arm
       sudo update-binfmts --enable qemu-aarch64
@@ -57,49 +60,114 @@ jobs:
   - script: sudo docker pull homeassistant/$(buildArch)-wheels:$(versionWheels)
     displayName: 'Install wheels builder'
   - script: |
-      cp requirements_all.txt requirements_hassio.txt
+      cp requirements_all.txt requirements_wheels.txt
+      if [ "$(Build.SourceBranchName)" == "dev" ]; then
+        curl -s -o requirements_diff.txt https://raw.githubusercontent.com/home-assistant/home-assistant/master/requirements_all.txt
+      else
+        touch requirements_diff.txt
+      fi
 
-      # Enable because we can build it
-      sed -i "s|# pytradfri|pytradfri|g" requirements_hassio.txt
-      sed -i "s|# pybluez|pybluez|g" requirements_hassio.txt
-      sed -i "s|# bluepy|bluepy|g" requirements_hassio.txt
-      sed -i "s|# beacontools|beacontools|g" requirements_hassio.txt
-      sed -i "s|# RPi.GPIO|RPi.GPIO|g" requirements_hassio.txt
-      sed -i "s|# raspihats|raspihats|g" requirements_hassio.txt
-      sed -i "s|# rpi-rf|rpi-rf|g" requirements_hassio.txt
-      sed -i "s|# blinkt|blinkt|g" requirements_hassio.txt
-      sed -i "s|# fritzconnection|fritzconnection|g" requirements_hassio.txt
-      sed -i "s|# pyuserinput|pyuserinput|g" requirements_hassio.txt
-      sed -i "s|# evdev|evdev|g" requirements_hassio.txt
-      sed -i "s|# smbus-cffi|smbus-cffi|g" requirements_hassio.txt
-      sed -i "s|# i2csense|i2csense|g" requirements_hassio.txt
-      sed -i "s|# python-eq3bt|python-eq3bt|g" requirements_hassio.txt
-      sed -i "s|# pycups|pycups|g" requirements_hassio.txt
-      sed -i "s|# homekit|homekit|g" requirements_hassio.txt
-      sed -i "s|# decora_wifi|decora_wifi|g" requirements_hassio.txt
-      sed -i "s|# decora|decora|g" requirements_hassio.txt
-      sed -i "s|# PySwitchbot|PySwitchbot|g" requirements_hassio.txt
-      sed -i "s|# pySwitchmate|pySwitchmate|g" requirements_hassio.txt
-
-      # Disable because of error
-      sed -i "s|insteonplm|# insteonplm|g" requirements_hassio.txt
+      requirement_files="requirements_wheels.txt requirements_diff.txt"
+      for requirement_file in ${requirement_files}; do
+        sed -i "s|# pytradfri|pytradfri|g" ${requirement_file}
+        sed -i "s|# pybluez|pybluez|g" ${requirement_file}
+        sed -i "s|# bluepy|bluepy|g" ${requirement_file}
+        sed -i "s|# beacontools|beacontools|g" ${requirement_file}
+        sed -i "s|# RPi.GPIO|RPi.GPIO|g" ${requirement_file}
+        sed -i "s|# raspihats|raspihats|g" ${requirement_file}
+        sed -i "s|# rpi-rf|rpi-rf|g" ${requirement_file}
+        sed -i "s|# blinkt|blinkt|g" ${requirement_file}
+        sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
+        sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
+        sed -i "s|# evdev|evdev|g" ${requirement_file}
+        sed -i "s|# smbus-cffi|smbus-cffi|g" ${requirement_file}
+        sed -i "s|# i2csense|i2csense|g" ${requirement_file}
+        sed -i "s|# python-eq3bt|python-eq3bt|g" ${requirement_file}
+        sed -i "s|# pycups|pycups|g" ${requirement_file}
+        sed -i "s|# homekit|homekit|g" ${requirement_file}
+        sed -i "s|# decora_wifi|decora_wifi|g" ${requirement_file}
+        sed -i "s|# decora|decora|g" ${requirement_file}
+        sed -i "s|# PySwitchbot|PySwitchbot|g" ${requirement_file}
+        sed -i "s|# pySwitchmate|pySwitchmate|g" ${requirement_file}
+        sed -i "s|# face_recognition|face_recognition|g" ${requirement_file}
+      done
     displayName: 'Prepare requirements files for Hass.io'
   - script: |
       sudo docker run --rm -v $(pwd):/data:ro -v $(pwd)/.ssh:/root/.ssh:rw \
         homeassistant/$(buildArch)-wheels:$(versionWheels) \
         --apk "build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;linux-headers;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev" \
-        --index https://wheels.hass.io \
-        --requirement requirements_hassio.txt \
+        --index $(wheelsIndex) \
+        --requirement requirements_wheels.txt \
+        --requirement-diff requirements_diff.txt \
         --upload rsync \
         --remote wheels@$(wheelsHost):/opt/wheels
     displayName: 'Run wheels build'
 
 
-- job: 'Release'
+- job: 'VersionValidate'
   condition: startsWith(variables['Build.SourceBranch'], 'refs/tags')
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - task: UsePythonVersion@0
+    displayName: 'Use Python 3.7'
+    inputs:
+      versionSpec: '3.7'
+  - script: |
+      setup_version="$(python setup.py -V)"
+      branch_version="$(Build.SourceBranchName)"
+
+      if [ "${setup_version}" != "${branch_version}" ]; then
+        echo "Version of tag ${branch_version} don't match with ${setup_version}!"
+        exit 1
+      fi
+    displayName: 'Check version of branch/tag'
+  - script: |
+      sudo apt-get install -y --no-install-recommends \
+        jq curl
+
+      release="$(Build.SourceBranchName)"
+      created_by="$(curl -s https://api.github.com/repos/home-assistant/home-assistant/releases/tags/${release} | jq --raw-output '.author.login')"
+
+      if [[ "${created_by}" =~ ^(balloob|pvizeli|fabaff|robbiet480)$ ]]; then
+        exit 0
+      fi
+
+      echo "${created_by} is not allowed to create an release!"
+      exit 1
+    displayName: 'Check rights'
+
+
+- job: 'ReleasePython'
+  condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded('VersionValidate'))
+  dependsOn:
+  - 'VersionValidate'
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - task: UsePythonVersion@0
+    displayName: 'Use Python 3.7'
+    inputs:
+      versionSpec: '3.7'
+  - script: pip install twine wheel
+    displayName: 'Install tools'
+  - script: python setup.py sdist bdist_wheel
+    displayName: 'Build package'
+  - script: |
+      export TWINE_USERNAME="$(twineUser)"
+      export TWINE_PASSWORD="$(twinePassword)"
+      
+      twine upload dist/* --skip-existing
+    displayName: 'Upload pypi'
+
+
+- job: 'ReleaseDocker'
+  condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded('VersionValidate'))
+  dependsOn:
+  - 'VersionValidate'
   timeoutInMinutes: 120
   pool:
-    vmImage: 'ubuntu-16.04'
+    vmImage: 'ubuntu-latest'
   strategy:
     maxParallel: 5
     matrix:
@@ -144,16 +212,16 @@ jobs:
     displayName: 'Build Release'
 
 
-- job: 'ReleasePublish'
-  condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded('Release'))
+- job: 'ReleaseHassio'
+  condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded('ReleaseDocker'))
   dependsOn:
-    - 'Release'
+    - 'ReleaseDocker'
   pool:
-    vmImage: 'ubuntu-16.04'
+    vmImage: 'ubuntu-latest'
   steps:
   - script: |
       sudo apt-get install -y --no-install-recommends \
-        git jq
+        git jq curl
 
       git config --global user.name "Pascal Vizeli"
       git config --global user.email "pvizeli@syshack.ch"
@@ -184,3 +252,4 @@ jobs:
 
       git commit -am "Bump Home Assistant $version"
       git push
+    displayName: 'Update version files'
