@@ -162,7 +162,7 @@ class TraccarScanner:
                     if custom_attr in self._skip_accuracy_on:
                         skip_accuracy_filter = True
 
-            accuracy = float(0)
+            accuracy = 0.0
             if device_info.get('accuracy') is not None:
                 accuracy = device_info['accuracy']
             if (not skip_accuracy_filter and self._max_accuracy > 0 and
