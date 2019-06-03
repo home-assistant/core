@@ -110,7 +110,11 @@ aiodns==1.1.1
 
 # homeassistant.components.esphome
 <<<<<<< HEAD
+<<<<<<< HEAD
 aioesphomeapi==1.4.1
+=======
+aioesphomeapi==2.1.0
+>>>>>>> Bump aioesphomeapi to 2.1.0 (#24278)
 =======
 aioesphomeapi==2.1.0
 >>>>>>> Bump aioesphomeapi to 2.1.0 (#24278)
