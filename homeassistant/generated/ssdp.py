@@ -8,6 +8,7 @@ SSDP = {
     "device_type": {},
     "manufacturer": {
         "Royal Philips Electronics": [
+            "deconz",
             "hue"
         ]
     },
