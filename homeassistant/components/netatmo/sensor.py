@@ -545,7 +545,7 @@ class NetatmoData:
                             str(self.station)
                             )
             return
-        except requests.exceptions.Timeout:\
+        except requests.exceptions.Timeout:
             _LOGGER.warning("Timed out when connecting to Netatmo server.")
             return
         try:
