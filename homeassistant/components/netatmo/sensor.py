@@ -146,7 +146,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             # otherwise add all modules and conditions
             try:
                 dev.extend(find_devices(data))
-            except requests.exceptions.Timeout:\
+            except requests.exceptions.Timeout:
                 call_later(hass, NETATMO_UPDATE_INTERVAL,
                            lambda _: _retry(data))
 
