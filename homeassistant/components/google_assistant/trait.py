@@ -13,6 +13,7 @@ from homeassistant.components import (
     lock,
     scene,
     script,
+    sensor,
     switch,
     vacuum,
 )
@@ -550,89 +551,126 @@ class TemperatureSettingTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class):
         """Test if state is supported."""
-        if domain != climate.DOMAIN:
-            return False
+        if domain == climate.DOMAIN:
+            return features & climate.SUPPORT_OPERATION_MODE
 
-        return features & climate.SUPPORT_OPERATION_MODE
+        return (domain == sensor.DOMAIN
+                and device_class == sensor.DEVICE_CLASS_TEMPERATURE)
 
     def sync_attributes(self):
         """Return temperature point and modes attributes for a sync request."""
-        modes = []
-        supported = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        response = {}
+        attrs = self.state.attributes
+        domain = self.state.domain
+        response['thermostatTemperatureUnit'] = _google_temp_unit(
+            self.hass.config.units.temperature_unit)
 
-        if supported & climate.SUPPORT_ON_OFF != 0:
-            modes.append(STATE_OFF)
-            modes.append(STATE_ON)
+        if domain == sensor.DOMAIN:
+            device_class = attrs.get(ATTR_DEVICE_CLASS)
+            if device_class == sensor.DEVICE_CLASS_TEMPERATURE:
+                response["queryOnlyTemperatureSetting"] = True
 
-        if supported & climate.SUPPORT_OPERATION_MODE != 0:
-            for mode in self.state.attributes.get(climate.ATTR_OPERATION_LIST,
-                                                  []):
-                google_mode = self.hass_to_google.get(mode)
-                if google_mode and google_mode not in modes:
-                    modes.append(google_mode)
+        elif domain == climate.DOMAIN:
+            modes = []
+            supported = attrs.get(ATTR_SUPPORTED_FEATURES)
 
-        return {
-            'availableThermostatModes': ','.join(modes),
-            'thermostatTemperatureUnit': _google_temp_unit(
-                self.hass.config.units.temperature_unit)
-        }
+            if supported & climate.SUPPORT_ON_OFF != 0:
+                modes.append(STATE_OFF)
+                modes.append(STATE_ON)
+
+            if supported & climate.SUPPORT_OPERATION_MODE != 0:
+                for mode in attrs.get(climate.ATTR_OPERATION_LIST, []):
+                    google_mode = self.hass_to_google.get(mode)
+                    if google_mode and google_mode not in modes:
+                        modes.append(google_mode)
+            response['availableThermostatModes'] = ','.join(modes)
+
+        return response
 
     def query_attributes(self):
         """Return temperature point and modes query attributes."""
-        attrs = self.state.attributes
         response = {}
-
-        operation = attrs.get(climate.ATTR_OPERATION_MODE)
-        supported = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
-
-        if (supported & climate.SUPPORT_ON_OFF
-                and self.state.state == STATE_OFF):
-            response['thermostatMode'] = 'off'
-        elif (supported & climate.SUPPORT_OPERATION_MODE and
-              operation in self.hass_to_google):
-            response['thermostatMode'] = self.hass_to_google[operation]
-        elif supported & climate.SUPPORT_ON_OFF:
-            response['thermostatMode'] = 'on'
-
+        attrs = self.state.attributes
+        domain = self.state.domain
         unit = self.hass.config.units.temperature_unit
+        if domain == sensor.DOMAIN:
+            device_class = attrs.get(ATTR_DEVICE_CLASS)
+            if device_class == sensor.DEVICE_CLASS_TEMPERATURE:
+                current_temp = self.state.state
+                if current_temp is not None:
+                    response['thermostatTemperatureAmbient'] = \
+                        round(temp_util.convert(
+                            float(current_temp),
+                            unit,
+                            TEMP_CELSIUS
+                        ), 1)
 
-        current_temp = attrs.get(climate.ATTR_CURRENT_TEMPERATURE)
-        if current_temp is not None:
-            response['thermostatTemperatureAmbient'] = \
-                round(temp_util.convert(current_temp, unit, TEMP_CELSIUS), 1)
+        elif domain == climate.DOMAIN:
+            operation = attrs.get(climate.ATTR_OPERATION_MODE)
+            supported = attrs.get(ATTR_SUPPORTED_FEATURES)
 
-        current_humidity = attrs.get(climate.ATTR_CURRENT_HUMIDITY)
-        if current_humidity is not None:
-            response['thermostatHumidityAmbient'] = current_humidity
+            if (supported & climate.SUPPORT_ON_OFF
+                    and self.state.state == STATE_OFF):
+                response['thermostatMode'] = 'off'
+            elif (supported & climate.SUPPORT_OPERATION_MODE
+                  and operation in self.hass_to_google):
+                response['thermostatMode'] = self.hass_to_google[operation]
+            elif supported & climate.SUPPORT_ON_OFF:
+                response['thermostatMode'] = 'on'
 
-        if operation == climate.STATE_AUTO:
-            if (supported & climate.SUPPORT_TARGET_TEMPERATURE_HIGH and
-                    supported & climate.SUPPORT_TARGET_TEMPERATURE_LOW):
-                response['thermostatTemperatureSetpointHigh'] = \
+            current_temp = attrs.get(climate.ATTR_CURRENT_TEMPERATURE)
+            if current_temp is not None:
+                response['thermostatTemperatureAmbient'] = \
                     round(temp_util.convert(
-                        attrs[climate.ATTR_TARGET_TEMP_HIGH],
-                        unit, TEMP_CELSIUS), 1)
-                response['thermostatTemperatureSetpointLow'] = \
-                    round(temp_util.convert(
-                        attrs[climate.ATTR_TARGET_TEMP_LOW],
-                        unit, TEMP_CELSIUS), 1)
+                        current_temp,
+                        unit,
+                        TEMP_CELSIUS
+                    ), 1)
+
+            current_humidity = attrs.get(climate.ATTR_CURRENT_HUMIDITY)
+            if current_humidity is not None:
+                response['thermostatHumidityAmbient'] = current_humidity
+
+            if operation == climate.STATE_AUTO:
+                if (supported & climate.SUPPORT_TARGET_TEMPERATURE_HIGH and
+                        supported & climate.SUPPORT_TARGET_TEMPERATURE_LOW):
+                    response['thermostatTemperatureSetpointHigh'] = \
+                        round(temp_util.convert(
+                            attrs[climate.ATTR_TARGET_TEMP_HIGH],
+                            unit, TEMP_CELSIUS), 1)
+                    response['thermostatTemperatureSetpointLow'] = \
+                        round(temp_util.convert(
+                            attrs[climate.ATTR_TARGET_TEMP_LOW],
+                            unit, TEMP_CELSIUS), 1)
+                else:
+                    target_temp = attrs.get(ATTR_TEMPERATURE)
+                    if target_temp is not None:
+                        target_temp = round(
+                            temp_util.convert(
+                                target_temp,
+                                unit,
+                                TEMP_CELSIUS
+                            ), 1)
+                        response['thermostatTemperatureSetpointHigh'] = \
+                            target_temp
+                        response['thermostatTemperatureSetpointLow'] = \
+                            target_temp
             else:
                 target_temp = attrs.get(ATTR_TEMPERATURE)
                 if target_temp is not None:
-                    target_temp = round(
+                    response['thermostatTemperatureSetpoint'] = round(
                         temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1)
-                    response['thermostatTemperatureSetpointHigh'] = target_temp
-                    response['thermostatTemperatureSetpointLow'] = target_temp
-        else:
-            target_temp = attrs.get(ATTR_TEMPERATURE)
-            if target_temp is not None:
-                response['thermostatTemperatureSetpoint'] = round(
-                    temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1)
 
         return response
 
     async def execute(self, command, data, params, challenge):
         """Execute a temperature point or mode command."""
+        domain = self.state.domain
+        if domain == sensor.DOMAIN:
+            raise SmartHomeError(
+                ERR_NOT_SUPPORTED,
+                'Execute is not supported by sensor')
+
         # All sent in temperatures are always in Celsius
         unit = self.hass.config.units.temperature_unit
         min_temp = self.state.attributes[climate.ATTR_MIN_TEMP]
@@ -687,8 +725,8 @@ class TemperatureSettingTrait(_Trait):
                 ATTR_ENTITY_ID: self.state.entity_id,
             }
 
-            if(supported & climate.SUPPORT_TARGET_TEMPERATURE_HIGH and
-               supported & climate.SUPPORT_TARGET_TEMPERATURE_LOW):
+            if(supported & climate.SUPPORT_TARGET_TEMPERATURE_HIGH
+               and supported & climate.SUPPORT_TARGET_TEMPERATURE_LOW):
                 svc_data[climate.ATTR_TARGET_TEMP_HIGH] = temp_high
                 svc_data[climate.ATTR_TARGET_TEMP_LOW] = temp_low
             else:
