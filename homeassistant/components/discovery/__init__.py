@@ -94,6 +94,9 @@ OPTIONAL_SERVICE_HANDLERS = {
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> Add a discovery config flow to Wemo (#24208)
 MIGRATED_SERVICE_HANDLERS = [
     'axis',
     'deconz',
@@ -103,6 +106,7 @@ MIGRATED_SERVICE_HANDLERS = [
     'philips_hue',
     SERVICE_WEMO,
 ]
+<<<<<<< HEAD
 =======
 MIGRATED_SERVICE_HANDLERS = {
     'axis': None,
@@ -113,6 +117,8 @@ MIGRATED_SERVICE_HANDLERS = {
     'philips_hue': None
 }
 >>>>>>> deCONZ migrate to SSDP discovery (#24252)
+=======
+>>>>>>> Add a discovery config flow to Wemo (#24208)
 
 DEFAULT_ENABLED = list(CONFIG_ENTRY_HANDLERS) + list(SERVICE_HANDLERS) + \
     MIGRATED_SERVICE_HANDLERS

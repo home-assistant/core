@@ -11,11 +11,14 @@
       "Belkin International Inc."
     ]
   },
+<<<<<<< HEAD
   "homekit": {
     "models": [
       "Wemo"
     ]
   },
+=======
+>>>>>>> Add a discovery config flow to Wemo (#24208)
   "dependencies": [],
   "codeowners": [
     "@sqldiablo"
