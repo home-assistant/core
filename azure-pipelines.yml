@@ -5,6 +5,7 @@ trigger:
   branches:
     include:
     - dev
+    - master
   tags:
     include:
     - '*'
