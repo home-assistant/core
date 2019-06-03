@@ -7,7 +7,7 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from .const import (ATTR_DEVICE_ID, ATTR_DEVICE_NAME,
                     ATTR_MANUFACTURER, ATTR_MODEL, ATTR_OS_VERSION,
                     DATA_BINARY_SENSOR, DATA_CONFIG_ENTRIES, DATA_DELETED_IDS,
-                    DATA_DEVICES, DATA_DEVICE_TRACKER, DATA_SENSOR, DATA_STORE,
+                    DATA_DEVICES, DATA_SENSOR, DATA_STORE,
                     DOMAIN, STORAGE_KEY, STORAGE_VERSION)
 
 from .http_api import RegistrationsView
@@ -34,7 +34,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         DATA_CONFIG_ENTRIES: {},
         DATA_DELETED_IDS: app_config.get(DATA_DELETED_IDS, []),
         DATA_DEVICES: {},
-        DATA_DEVICE_TRACKER: {},
         DATA_SENSOR: app_config.get(DATA_SENSOR, {}),
         DATA_STORE: store,
     }
