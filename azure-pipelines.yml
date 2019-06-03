@@ -12,7 +12,7 @@ variables:
   - name: versionBuilder
     value: '3.2'
   - name: versionWheels
-    value: '0.6'
+    value: '0.7'
   - group: docker
   - group: wheels
   - group: github
@@ -22,7 +22,7 @@ variables:
 jobs:
 
 - job: 'Wheels'
-  condition: eq(variables['Build.SourceBranchName'], 'dev')
+  condition: or(eq(variables['Build.SourceBranchName'], 'dev'), eq(variables['Build.SourceBranchName'], 'master'))
   timeoutInMinutes: 360
   pool:
     vmImage: 'ubuntu-latest'
@@ -61,7 +61,11 @@ jobs:
     displayName: 'Install wheels builder'
   - script: |
       cp requirements_all.txt requirements_wheels.txt
-      curl -s -o requirements_diff.txt https://raw.githubusercontent.com/home-assistant/home-assistant/master/requirements_all.txt
+      if [ "$(Build.SourceBranchName)" == "dev" ]; then
+        curl -s -o requirements_diff.txt https://raw.githubusercontent.com/home-assistant/home-assistant/master/requirements_all.txt
+      else
+        touch requirements_diff.txt
+      fi
 
       requirement_files="requirements_wheels.txt requirements_diff.txt"
       for requirement_file in ${requirement_files}; do
