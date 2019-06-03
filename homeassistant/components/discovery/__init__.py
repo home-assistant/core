@@ -25,7 +25,6 @@ DOMAIN = 'discovery'
 SCAN_INTERVAL = timedelta(seconds=300)
 SERVICE_APPLE_TV = 'apple_tv'
 SERVICE_DAIKIN = 'daikin'
-SERVICE_DECONZ = 'deconz'
 SERVICE_DLNA_DMR = 'dlna_dmr'
 SERVICE_ENIGMA2 = 'enigma2'
 SERVICE_FREEBOX = 'freebox'
@@ -48,7 +47,6 @@ SERVICE_XIAOMI_GW = 'xiaomi_gw'
 
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_DAIKIN: 'daikin',
-    SERVICE_DECONZ: 'deconz',
     'google_cast': 'cast',
     SERVICE_HEOS: 'heos',
     SERVICE_TELLDUSLIVE: 'tellduslive',
@@ -98,6 +96,7 @@ OPTIONAL_SERVICE_HANDLERS = {
 
 MIGRATED_SERVICE_HANDLERS = {
     'axis': None,
+    'deconz': None,
     'esphome': None,
     'ikea_tradfri': None,
     'homekit': None,
