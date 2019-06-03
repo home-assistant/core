@@ -269,8 +269,6 @@ def test_remove_lib_on_upgrade(mock_os, mock_shutil, hass):
         config_util.process_ha_config_upgrade(hass)
         hass_path = hass.config.path.return_value
 
-        assert mock_os.path.isdir.call_count == 1
-        assert mock_os.path.isdir.call_args == mock.call(hass_path)
         assert mock_shutil.rmtree.call_count == 1
         assert mock_shutil.rmtree.call_args == mock.call(hass_path)
 
@@ -291,8 +289,6 @@ def test_remove_lib_on_upgrade_94(mock_docker, mock_os, mock_shutil, hass):
         config_util.process_ha_config_upgrade(hass)
         hass_path = hass.config.path.return_value
 
-        assert mock_os.path.isdir.call_count == 1
-        assert mock_os.path.isdir.call_args == mock.call(hass_path)
         assert mock_shutil.rmtree.call_count == 1
         assert mock_shutil.rmtree.call_args == mock.call(hass_path)
 
