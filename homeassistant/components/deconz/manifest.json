@@ -6,6 +6,11 @@
   "requirements": [
     "pydeconz==59"
   ],
+  "ssdp": {
+    "manufacturer": [
+      "Royal Philips Electronics"
+    ]
+  },
   "dependencies": [],
   "codeowners": [
     "@kane610"

@@ -9,12 +9,14 @@ from pydeconz.utils import (
     async_discovery, async_get_api_key, async_get_bridgeid)
 
 from homeassistant import config_entries
+from homeassistant.components.ssdp import ATTR_MANUFACTURERURL, ATTR_SERIAL
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
 from .const import CONF_BRIDGEID, DEFAULT_PORT, DOMAIN
 
+DECONZ_MANUFACTURERURL = 'http://www.dresden-elektronik.de'
 CONF_SERIAL = 'serial'
 
 
@@ -149,12 +151,12 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
         entry.data[CONF_HOST] = host
         self.hass.config_entries.async_update_entry(entry)
 
-    async def async_step_discovery(self, discovery_info):
-        """Prepare configuration for a discovered deCONZ bridge.
+    async def async_step_ssdp(self, discovery_info):
+        """Handle a discovered deCONZ bridge."""
+        if discovery_info[ATTR_MANUFACTURERURL] != DECONZ_MANUFACTURERURL:
+            return self.async_abort(reason='not_deconz_bridge')
 
-        This flow is triggered by the discovery component.
-        """
-        bridgeid = discovery_info[CONF_SERIAL]
+        bridgeid = discovery_info[ATTR_SERIAL]
         gateway_entries = configured_gateways(self.hass)
 
         if bridgeid in gateway_entries:
@@ -162,10 +164,17 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
             await self._update_entry(entry, discovery_info[CONF_HOST])
             return self.async_abort(reason='updated_instance')
 
+        # pylint: disable=unsupported-assignment-operation
+        self.context[ATTR_SERIAL] = bridgeid
+
+        if any(bridgeid == flow['context'][ATTR_SERIAL]
+               for flow in self._async_in_progress()):
+            return self.async_abort(reason='already_in_progress')
+
         deconz_config = {
             CONF_HOST: discovery_info[CONF_HOST],
             CONF_PORT: discovery_info[CONF_PORT],
-            CONF_BRIDGEID: discovery_info[CONF_SERIAL]
+            CONF_BRIDGEID: bridgeid
         }
 
         return await self.async_step_import(deconz_config)
