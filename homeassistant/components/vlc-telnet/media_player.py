@@ -1,5 +1,4 @@
-"""Provide functionality to interact with the vlc telnet interface over the
-network."""
+"""Provide functionality to interact with the vlc telnet interface."""
 import logging
 import voluptuous as vol
 
@@ -30,8 +29,8 @@ SUPPORT_VLC = SUPPORT_PAUSE | SUPPORT_SEEK | SUPPORT_VOLUME_SET \
               | SUPPORT_SHUFFLE_SET
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default='127.0.0.1'): cv.string,
-    vol.Optional(CONF_PORT, default='4212'): cv.string,
-    vol.Optional(CONF_PASSWORD, default='test'): cv.string,
+    vol.Optional(CONF_PORT, default='4212'): cv.positive_int,
+    vol.Required(CONF_PASSWORD, default='test'): cv.string,
     vol.Optional(CONF_NAME, default='VLC-TELNET'): cv.string,
 })
 
@@ -45,6 +44,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class VlcDevice(MediaPlayerDevice):
+    """Representation of a vlc player."""
+
     def __init__(self, name, host, port, passwd):
         """Initialize the vlc device."""
         self._instance = None
@@ -215,13 +216,17 @@ class VlcDevice(MediaPlayerDevice):
         self._state = STATE_PLAYING
 
     def media_previous_track(self):
+        """Send previous track command."""
         self._vlc.prev()
 
     def media_next_track(self):
+        """Send next track command."""
         self._vlc.next()
 
     def clear_playlist(self):
+        """Clear players playlist."""
         self._vlc.clear()
 
     def set_shuffle(self, shuffle):
+        """Enable/disable shuffle mode."""
         self._vlc.random(shuffle)
