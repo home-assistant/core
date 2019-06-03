@@ -8,8 +8,6 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.deconz.config_flow import (
-    DECONZ_MANUFACTURERURL)
 from homeassistant.components.ssdp import ATTR_MANUFACTURERURL
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
@@ -17,6 +15,8 @@ from homeassistant.helpers import aiohttp_client
 from .bridge import get_bridge
 from .const import DOMAIN, LOGGER
 from .errors import AuthenticationRequired, CannotConnect
+
+HUE_MANUFACTURERURL = 'http://www.philips.com'
 
 
 @callback
@@ -146,7 +146,7 @@ class HueFlowHandler(config_entries.ConfigFlow):
         This flow is triggered by the SSDP component. It will check if the
         host is already configured and delegate to the import step if not.
         """
-        if discovery_info[ATTR_MANUFACTURERURL] == DECONZ_MANUFACTURERURL:
+        if discovery_info[ATTR_MANUFACTURERURL] != HUE_MANUFACTURERURL:
             return self.async_abort(reason='not_hue_bridge')
 
         # Filter out emulated Hue
