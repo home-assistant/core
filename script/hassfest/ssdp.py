@@ -43,7 +43,9 @@ def generate_and_validate(integrations: Dict[str, Integration]):
 
         try:
             with open(str(integration.path / "config_flow.py")) as fp:
-                if ' async_step_ssdp(' not in fp.read():
+                content = fp.read()
+                if (' async_step_ssdp(' not in content and
+                        'register_discovery_flow' not in content):
                     integration.add_error(
                         'ssdp', 'Config flow has no async_step_ssdp')
                     continue
