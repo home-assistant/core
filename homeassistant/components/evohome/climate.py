@@ -1,7 +1,7 @@
 """Support for Climate devices of (EMEA/EU-based) Honeywell evohome systems."""
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Awaitable, Dict, Optional, List
+from typing import Optional, List  # TODO: # also: Any, Awaitable, Dict
 
 import requests.exceptions
 
@@ -11,7 +11,7 @@ from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF,
     PRESET_ECO, PRESET_AWAY, PRESET_HOME, PRESET_SLEEP,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE, SUPPORT_CURRENT_HVAC,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE,
     CURRENT_HVAC_OFF, CURRENT_HVAC_HEAT,
 )
 from homeassistant.const import (
@@ -121,7 +121,6 @@ class EvoZone(EvoDevice, ClimateDevice):
                 break
 
         self._supported_features = (SUPPORT_TARGET_TEMPERATURE |
-                                    SUPPORT_CURRENT_HVAC |
                                     SUPPORT_PRESET_MODE)
 
     async def async_update(self):
@@ -347,7 +346,7 @@ class EvoController(EvoDevice, ClimateDevice):
         self._status = evo_data['status']
         self._timers['statusUpdated'] = datetime.min
 
-        self._supported_features = SUPPORT_PRESET_MODE | SUPPORT_CURRENT_HVAC
+        self._supported_features = SUPPORT_PRESET_MODE
 
     @callback
     def _refresh(self, packet):
@@ -526,7 +525,7 @@ class EvoController(EvoDevice, ClimateDevice):
         Currently limited to 'Auto', 'AutoWithEco' & 'HeatingOff'. If 'Away'
         mode is needed, it can be enabled via turn_away_mode_on method.
         """
-        self._set_operation_mode(HA_STATE_TO_TCS.get(operation_mode))
+        self._set_operation_mode(HA_PRESET_TO_TCS.get(operation_mode))
 
     def XXX_turn_away_mode_on(self):
         """Turn away mode on.
