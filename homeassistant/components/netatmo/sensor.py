@@ -546,7 +546,7 @@ class NetatmoData:
                             )
             return
         except requests.exceptions.Timeout:\
-                _LOGGER.warning("Timed out when connecting to Netatmo server.")
+            _LOGGER.warning("Timed out when connecting to Netatmo server.")
             return
         try:
             if self.station is not None:
