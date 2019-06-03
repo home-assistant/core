@@ -14,6 +14,7 @@ from homeassistant.components import (
     media_player,
     scene,
     script,
+    sensor,
     switch,
     vacuum,
     group,
@@ -1380,3 +1381,35 @@ async def test_volume_media_player_relative(hass):
         ATTR_ENTITY_ID: 'media_player.bla',
         media_player.ATTR_MEDIA_VOLUME_LEVEL: .5
     }
+
+
+async def test_temperature_setting_sensor(hass):
+    """Test TemperatureSetting trait support for temperature sensor."""
+    assert helpers.get_google_type(sensor.DOMAIN,
+                                   sensor.DEVICE_CLASS_TEMPERATURE) is not None
+    assert not trait.TemperatureSettingTrait.supported(
+        sensor.DOMAIN,
+        0,
+        sensor.DEVICE_CLASS_HUMIDITY
+    )
+    assert trait.TemperatureSettingTrait.supported(
+        sensor.DOMAIN,
+        0,
+        sensor.DEVICE_CLASS_TEMPERATURE
+    )
+
+    hass.config.units.temperature_unit = TEMP_FAHRENHEIT
+
+    trt = trait.TemperatureSettingTrait(hass, State('sensor.test', "70", {
+        ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TEMPERATURE,
+    }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {
+        'queryOnlyTemperatureSetting': True,
+        'thermostatTemperatureUnit': 'F',
+    }
+
+    assert trt.query_attributes() == {
+        'thermostatTemperatureAmbient': 21.1
+    }
+    hass.config.units.temperature_unit = TEMP_CELSIUS
