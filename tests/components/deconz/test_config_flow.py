@@ -168,20 +168,36 @@ async def test_link_no_api_key(hass):
     assert result['errors'] == {'base': 'no_key'}
 
 
-async def test_bridge_discovery(hass):
-    """Test a bridge being discovered."""
+async def test_bridge_ssdp_discovery(hass):
+    """Test a bridge being discovered over ssdp."""
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         data={
             config_flow.CONF_HOST: '1.2.3.4',
             config_flow.CONF_PORT: 80,
-            config_flow.CONF_SERIAL: 'id',
+            config_flow.ATTR_SERIAL: 'id',
+            config_flow.ATTR_MANUFACTURERURL:
+                config_flow.DECONZ_MANUFACTURERURL
         },
-        context={'source': 'discovery'}
+        context={'source': 'ssdp'}
     )
 
     assert result['type'] == 'form'
     assert result['step_id'] == 'link'
+
+
+async def test_bridge_ssdp_discovery_not_deconz_bridge(hass):
+    """Test a non deconz bridge being discovered over ssdp."""
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        data={
+            config_flow.ATTR_MANUFACTURERURL: 'not deconz bridge'
+        },
+        context={'source': 'ssdp'}
+    )
+
+    assert result['type'] == 'abort'
+    assert result['reason'] == 'not_deconz_bridge'
 
 
 async def test_bridge_discovery_update_existing_entry(hass):
@@ -195,9 +211,11 @@ async def test_bridge_discovery_update_existing_entry(hass):
         config_flow.DOMAIN,
         data={
             config_flow.CONF_HOST: 'mock-deconz',
-            config_flow.CONF_SERIAL: 'id',
+            config_flow.ATTR_SERIAL: 'id',
+            config_flow.ATTR_MANUFACTURERURL:
+                config_flow.DECONZ_MANUFACTURERURL
         },
-        context={'source': 'discovery'}
+        context={'source': 'ssdp'}
     )
 
     assert result['type'] == 'abort'

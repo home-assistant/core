@@ -195,11 +195,24 @@ async def test_bridge_ssdp(hass):
                       side_effect=errors.AuthenticationRequired):
         result = await flow.async_step_ssdp({
             'host': '0.0.0.0',
-            'serial': '1234'
+            'serial': '1234',
+            'manufacturerURL': config_flow.HUE_MANUFACTURERURL
         })
 
     assert result['type'] == 'form'
     assert result['step_id'] == 'link'
+
+
+async def test_bridge_ssdp_discover_other_bridge(hass):
+    """Test that discovery ignores other bridges."""
+    flow = config_flow.HueFlowHandler()
+    flow.hass = hass
+
+    result = await flow.async_step_ssdp({
+        'manufacturerURL': 'http://www.notphilips.com'
+    })
+
+    assert result['type'] == 'abort'
 
 
 async def test_bridge_ssdp_emulated_hue(hass):
@@ -211,7 +224,8 @@ async def test_bridge_ssdp_emulated_hue(hass):
     result = await flow.async_step_ssdp({
         'name': 'HASS Bridge',
         'host': '0.0.0.0',
-        'serial': '1234'
+        'serial': '1234',
+        'manufacturerURL': config_flow.HUE_MANUFACTURERURL
     })
 
     assert result['type'] == 'abort'
@@ -229,7 +243,8 @@ async def test_bridge_ssdp_already_configured(hass):
 
     result = await flow.async_step_ssdp({
         'host': '0.0.0.0',
-        'serial': '1234'
+        'serial': '1234',
+        'manufacturerURL': config_flow.HUE_MANUFACTURERURL
     })
 
     assert result['type'] == 'abort'
