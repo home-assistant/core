@@ -45,8 +45,14 @@ jobs:
       sudo apt-get install -y --no-install-recommends \
         qemu-user-static \
 <<<<<<< HEAD
+<<<<<<< HEAD
         binfmt-support
       
+=======
+        binfmt-support \
+        curl
+
+>>>>>>> Update azure-pipelines.yml for Azure Pipelines
 =======
         binfmt-support \
         curl
@@ -134,7 +140,10 @@ jobs:
       release="$(Build.SourceBranchName)"
       created_by="$(curl -s https://api.github.com/repos/home-assistant/home-assistant/releases/tags/${release} | jq --raw-output '.author.login')"
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> Update azure-pipelines.yml for Azure Pipelines
 
       if [[ "${created_by}" =~ ^(balloob|pvizeli|fabaff|robbiet480)$ ]]; then
         exit 0
@@ -166,6 +175,7 @@ jobs:
       
       twine upload dist/* --skip-existing
     displayName: 'Upload pypi'
+<<<<<<< HEAD
 >>>>>>> Update azure-pipelines.yml for Azure Pipelines
 
       if [[ "${created_by}" =~ ^(balloob|pvizeli|fabaff|robbiet480)$ ]]; then
@@ -216,6 +226,12 @@ jobs:
 =======
 - job: 'ReleaseDocker'
 >>>>>>> Update azure-pipelines.yml for Azure Pipelines
+  condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded('VersionValidate'))
+>>>>>>> Update azure-pipelines.yml for Azure Pipelines
+=======
+
+
+- job: 'ReleaseDocker'
   condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded('VersionValidate'))
 >>>>>>> Update azure-pipelines.yml for Azure Pipelines
   dependsOn:
@@ -307,3 +323,4 @@ jobs:
 
       git commit -am "Bump Home Assistant $version"
       git push
+    displayName: 'Update version files'
