@@ -1366,14 +1366,14 @@ def go_to_player(hass, say):
         PREV_CURR_GROUP = CURR_GROUP
         PREV_CURR_ENTITIE = CURR_ENTITIE
 
-        for group in GROUP_ENTITIES:
-            if group['entity_id'] == 'group.audio_player':
-                set_curr_group(hass, group)
-                set_curr_entity(hass, 'media_player.wbudowany_glosnik')
-                CURR_ENTITIE_ENTERED = True
-                if say:
-                    _say_it(hass, "Sterowanie odtwarzaczem", None)
-                break
+    for group in GROUP_ENTITIES:
+        if group['entity_id'] == 'group.audio_player':
+            set_curr_group(hass, group)
+            set_curr_entity(hass, 'media_player.wbudowany_glosnik')
+            CURR_ENTITIE_ENTERED = True
+            if say:
+                _say_it(hass, "Sterowanie odtwarzaczem", None)
+            break
 
 
 def go_home(hass):
@@ -2233,9 +2233,7 @@ def _process_code(hass, data, callback):
     if 'Action' not in data or 'KeyCode' not in data:
         return
     # check if we have callback
-    if callback is not None:
-        # TODO the answer should go to the correct clien
-        pass
+    # TODO the answer should go to the correct client
 
     action = data["Action"]
     code = data["KeyCode"]
