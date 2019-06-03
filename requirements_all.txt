@@ -109,7 +109,11 @@ aioautomatic==0.6.5
 aiodns==1.1.1
 
 # homeassistant.components.esphome
+<<<<<<< HEAD
 aioesphomeapi==1.4.1
+=======
+aioesphomeapi==2.1.0
+>>>>>>> Bump aioesphomeapi to 2.1.0 (#24278)
 
 # homeassistant.components.freebox
 aiofreepybox==0.0.6
