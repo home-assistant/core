@@ -11,10 +11,9 @@ from homeassistant import config_entries
 from homeassistant.core import callback, CoreState
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.entity_registry import async_get_registry
-from homeassistant.helpers.device_registry import (
-    async_get_registry as async_get_device_registry)
 from homeassistant.const import (
     ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity_values import EntityValues
@@ -293,6 +292,8 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DATA_DEVICES] = {}
     hass.data[DATA_ENTITY_VALUES] = []
 
+    registry = await async_get_registry(hass)
+
     if use_debug:  # pragma: no cover
         def log_all(signal, value=None):
             """Log all the signals."""
@@ -334,15 +335,23 @@ async def async_setup_entry(hass, config_entry):
             new_values = hass.data[DATA_ENTITY_VALUES] + [values]
             hass.data[DATA_ENTITY_VALUES] = new_values
 
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
-    registry = await async_get_registry(hass)
-    dev_reg = await async_get_device_registry(hass)
+    platform = EntityPlatform(
+        hass=hass,
+        logger=_LOGGER,
+        domain=DOMAIN,
+        platform_name=DOMAIN,
+        platform=None,
+        scan_interval=DEFAULT_SCAN_INTERVAL,
+        entity_namespace=None,
+        async_entities_added_callback=lambda: None,
+    )
+    platform.config_entry = config_entry
 
     def node_added(node):
         """Handle a new node on the network."""
         entity = ZWaveNodeEntity(node, network)
 
-        def _add_node_to_component():
+        async def _add_node_to_component():
             if hass.data[DATA_DEVICES].get(entity.unique_id):
                 return
 
@@ -356,20 +365,10 @@ async def async_setup_entry(hass, config_entry):
                 return
 
             hass.data[DATA_DEVICES][entity.unique_id] = entity
-            component.add_entities([entity])
-
-            # Update the created entity with the entry ID
-            dev_info = entity.device_info
-            dev_info['config_entry_id'] = config_entry.entry_id
-            device = dev_reg.async_get_or_create(**dev_info)
-
-            registry.async_get_or_create(
-                DOMAIN, DOMAIN, entity.unique_id,
-                config_entry_id=config_entry.entry_id,
-                device_id=device.id)
+            await platform.async_add_entities([entity])
 
         if entity.unique_id:
-            _add_node_to_component()
+            hass.async_add_job(_add_node_to_component())
             return
 
         @callback
