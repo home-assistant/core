@@ -2,10 +2,8 @@
 import logging
 
 from homeassistant.const import (
-    ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    ATTR_BATTERY_LEVEL,
 )
 from homeassistant.core import callback
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
