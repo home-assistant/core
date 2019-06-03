@@ -157,9 +157,6 @@ def async_track_template(
             _LOGGER.exception(result)
             return
 
-        # These really should use the new `cv.boolean_coerce`
-        # validator as per #23293 rather than have potential exceptions
-        # thrown. Change once #23293 merged.
         if last_result is not None:
             if not _boolean_coerce(last_result) \
                     and _boolean_coerce(result):
