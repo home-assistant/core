@@ -644,6 +644,7 @@ omit =
     homeassistant/components/viaggiatreno/sensor.py
     homeassistant/components/vizio/media_player.py
     homeassistant/components/vlc/media_player.py
+    homeassistant/components/vlc-telnet/media_player.py
     homeassistant/components/volkszaehler/sensor.py
     homeassistant/components/volumio/media_player.py
     homeassistant/components/volvooncall/*
