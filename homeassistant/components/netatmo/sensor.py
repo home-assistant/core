@@ -1,6 +1,6 @@
 """Support for the Netatmo Weather Service."""
 import logging
-import socket
+import requests
 import threading
 from datetime import timedelta
 from time import time
@@ -124,7 +124,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         def _retry(_data):
             try:
                 _dev = find_devices(_data)
-            except socket.timeout:
+            except requests.exceptions.Timeout:
                 return call_later(hass, NETATMO_UPDATE_INTERVAL,
                                   lambda _: _retry(_data))
             if _dev:
@@ -146,7 +146,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             # otherwise add all modules and conditions
             try:
                 dev.extend(find_devices(data))
-            except socket.timeout:
+            except requests.exceptions.Timeout:\
                 call_later(hass, NETATMO_UPDATE_INTERVAL,
                            lambda _: _retry(data))
 
@@ -545,8 +545,8 @@ class NetatmoData:
                             str(self.station)
                             )
             return
-        except socket.timeout:
-            _LOGGER.warning("Timed out when connecting to Netatmo server.")
+        except requests.exceptions.Timeout:\
+                _LOGGER.warning("Timed out when connecting to Netatmo server.")
             return
         try:
             if self.station is not None:
