@@ -1,7 +1,10 @@
 """The iCloud component."""
+import json
 import logging
+import operator
 import os
 from datetime import timedelta
+from pprint import pprint
 
 import voluptuous as vol
 from pyicloud import PyiCloudService
@@ -11,12 +14,15 @@ from pyicloud.exceptions import (PyiCloudException,
 from pyicloud.services.findmyiphone import AppleDevice
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.zone import async_active_zone
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import slugify
+from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.dt import utcnow
+from homeassistant.util.location import distance
 
 DOMAIN = 'icloud'
 DATA_ICLOUD = 'icloud_data'
@@ -100,7 +106,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(ATTR_ACCOUNTNAME): cv.slugify,
-        vol.Optional(CONF_MAX_INTERVAL, default=60): cv.positive_int,
+        vol.Optional(CONF_MAX_INTERVAL, default=30): cv.positive_int,
         vol.Optional(CONF_GPS_ACCURACY_THRESHOLD, default=500): cv.positive_int
     })])
 }, extra=vol.ALLOW_EXTRA)
@@ -112,7 +118,6 @@ ICLOUD_COMPONENTS = [
 
 def setup(hass, config):
     """Set up the iCloud component."""
-
     async def play_sound(service):
         """Play sound on the device."""
         accountname = service.data.get(ATTR_ACCOUNTNAME)
@@ -133,9 +138,10 @@ def setup(hass, config):
         message = service.data.get(SERVICE_ATTR_LOST_DEVICE_MESSAGE)
         sound = service.data.get(SERVICE_ATTR_LOST_DEVICE_SOUND, False)
 
-        hass.data[DATA_ICLOUD][accountname].devices[devicename].display_message(
-            message,
-            sound)
+        hass.data[DATA_ICLOUD][accountname].devices[
+            devicename].display_message(
+                message,
+                sound)
     hass.services.register(DOMAIN, SERVICE_ICLOUD_DISPLAY_MESSAGE,
                            display_message,
                            schema=SERVICE_SCHEMA_DISPLAY_MESSAGE)
@@ -182,7 +188,6 @@ def setup(hass, config):
     hass.services.register(DOMAIN, SERVICE_ICLOUD_RESET,
                            reset_account, schema=SERVICE_SCHEMA)
 
-
     def setup_icloud(icloud_config):
         """Set up an iCloud account."""
         _LOGGER.debug("Logging into iCloud...")
@@ -205,7 +210,6 @@ def setup(hass, config):
             return False
 
         for component in ICLOUD_COMPONENTS:
-            # if component != 'device_tracker':
             load_platform(hass, component, DOMAIN, {}, icloud_config)
 
     hass.data[DATA_ICLOUD] = {}
@@ -240,7 +244,6 @@ class IcloudAccount():
 
     def reset_account(self):
         """Reset an iCloud account."""
-
         icloud_dir = self._hass.config.path('icloud')
         if not os.path.exists(icloud_dir):
             os.makedirs(icloud_dir)
@@ -258,11 +261,13 @@ class IcloudAccount():
         try:
             # Gets device owners infos
             user_info = self.api.devices.response['userInfo']
-            self.account_owner_fullname = user_info['firstName'] + ' ' + user_info['lastName']
+            self.account_owner_fullname = user_info[
+                'firstName'] + ' ' + user_info['lastName']
 
             self.family_members_fullname = {}
             for prs_id, member in user_info['membersInfo'].items():
-                self.family_members_fullname[prs_id] = member['firstName'] + ' ' + member['lastName']
+                self.family_members_fullname[prs_id] = member[
+                    'firstName'] + ' ' + member['lastName']
 
             self.devices = {}
             self.update_devices()
@@ -288,7 +293,8 @@ class IcloudAccount():
                 else:
                     # New device, should be unique
                     if devicename in self.devices:
-                        _LOGGER.error('Multiple devices with name: %s', devicename)
+                        _LOGGER.error('Multiple devices with name: %s',
+                            devicename)
                         continue
 
                     _LOGGER.debug('Adding iCloud device: %s', devicename)
@@ -298,8 +304,85 @@ class IcloudAccount():
             _LOGGER.error("No iCloud Devices found")
 
         async_dispatcher_send(self._hass, SIGNAL_UPDATE_ICLOUD)
-        # compute interval HERE
-        async_track_point_in_utc_time(self._hass, self.keep_alive, utcnow() + timedelta(seconds=30))
+        interval = self.determine_interval()
+        _LOGGER.error('determine_interval : %s', interval)
+        async_track_point_in_utc_time(
+            self._hass,
+            self.keep_alive, utcnow() + timedelta(minutes=interval))
+
+    def determine_interval(self) -> int:
+        """Calculate new interval between to API fetch (in minutes)."""
+        intervals = {}
+        for devicename, device in self.devices.items():
+            if device.location is None:
+                continue
+
+            currentzone = run_callback_threadsafe(
+                self._hass.loop,
+                async_active_zone,
+                self._hass,
+                device.location['latitude'],
+                device.location['longitude']
+            ).result()
+            _LOGGER.error('currentzone')
+            pprint(currentzone)
+
+            if currentzone is not None:
+                intervals[device.name] = self._max_interval
+                _LOGGER.error('intervals')
+                _LOGGER.info(json.dumps(intervals, indent=2))
+                continue
+
+            zones = (self._hass.states.get(entity_id) for entity_id
+                     in sorted(self._hass.states.entity_ids('zone')))
+
+            distances = []
+            for zone_state in zones:
+                zone_state_lat = zone_state.attributes['latitude']
+                zone_state_long = zone_state.attributes['longitude']
+                zone_distance = distance(
+                    device.location['latitude'],
+                    device.location['longitude'],
+                    zone_state_lat,
+                    zone_state_long)
+                distances.append(round(zone_distance / 1000, 1))
+
+            if distances:
+                mindistance = min(distances)
+                _LOGGER.error('distances')
+                _LOGGER.info(json.dumps(distances, indent=2))
+                _LOGGER.error('mindistance : %s', mindistance)
+            else:
+                _LOGGER.error('NO distances')
+                continue
+
+            # Calculate out how long it would take for the device to drive
+            # to the nearest zone at 120 km/h:
+            interval = round(mindistance / 2, 0)
+
+            # Never poll more than once per minute
+            interval = max(interval, 1)
+
+            if interval > 180:
+                _LOGGER.error('interval > 180 : %s', interval)
+                # Three hour drive?
+                # This is far enough that they might be flying
+                interval = 30
+
+            if device.battery_level is not None and device.battery_level <= 33 and mindistance > 3:
+                # Low battery - let's check half as often
+                _LOGGER.error('Low battery : %s', interval)
+                interval = interval * 2
+
+            _LOGGER.error('intervals')
+            intervals[device.name] = interval
+            _LOGGER.info(json.dumps(intervals, indent=2))
+
+        return max(
+            int(min(
+                intervals.items(),
+                key=operator.itemgetter(1))[1]),
+            self._max_interval)
 
     def keep_alive(self, now):
         """Keep the API alive."""
@@ -435,7 +518,8 @@ class IcloudDevice():
         self._device_class = self.__status['deviceClass']
         self._device_name = self.__status['deviceDisplayName']
         if self.__status['prsId']:
-            self._owner_fullname = account.family_members_fullname[self.__status['prsId']]
+            self._owner_fullname = account.family_members_fullname[
+                self.__status['prsId']]
         else:
             self._owner_fullname = account.account_owner_fullname
 
@@ -452,7 +536,8 @@ class IcloudDevice():
         """Update the iCloud device."""
         self.__status = status
 
-        self._device_status = DEVICE_STATUS_CODES.get(self.__status['deviceStatus'], 'error')
+        self._device_status = DEVICE_STATUS_CODES.get(self.__status[
+            'deviceStatus'], 'error')
 
         self._attrs = {
             ATTR_ACCOUNTNAME: self._accountname,
@@ -472,7 +557,8 @@ class IcloudDevice():
             self._attrs[ATTR_BATTERYSTATUS] = self._battery_status
             self._attrs[ATTR_LOWPOWERMODE] = self._low_power_mode
 
-            if self.__status['location'] and self.__status['location']['latitude']:
+            if self.__status['location'] and self.__status[
+                    'location']['latitude']:
                 location = self.__status['location']
                 self._location = location
 

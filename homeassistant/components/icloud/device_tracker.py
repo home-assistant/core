@@ -48,14 +48,15 @@ def setup_scanner(hass, config, see, discovery_info=None):
 
     return True
 
+
 def icon_for_icloud_device(icloud_device: IcloudDevice) -> str:
     """Return a battery icon valid identifier."""
     switcher = {
-        "iPad":"mdi:tablet-ipad",
+        "iPad": "mdi:tablet-ipad",
         "iPhone": "mdi:cellphone-iphone",
         "iPod": "mdi:ipod",
-        "iMac":"mdi:desktop-mac",
-        "MacBookPro":"mdi:laptop-mac",
+        "iMac": "mdi:desktop-mac",
+        "MacBookPro": "mdi:laptop-mac",
     }
 
     return switcher.get(icloud_device.device_class, "mdi:cellphone-link")

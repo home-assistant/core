@@ -20,7 +20,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for devicename, icloud_device in icloud_account.devices.items():
             if icloud_device.battery_level is not None:
                 _LOGGER.debug("Adding sensors from iCloud device=%s",
-                             devicename)
+                              devicename)
                 devices.append(IcloudDeviceBatterySensor(hass,
                                                          accountname,
                                                          devicename))
@@ -32,6 +32,7 @@ class IcloudDeviceBatterySensor(Entity):
     """iCloud device Battery Sensor."""
 
     def __init__(self, hass, accountname, devicename):
+        """Initialize the iCloud device battery sensor."""
         self._hass = hass
         self._accountname = accountname
         self._devicename = devicename
@@ -43,7 +44,6 @@ class IcloudDeviceBatterySensor(Entity):
         self._battery_level = device.battery_level
         self._battery_status = device.battery_status
         self._attrs = device.attributes
-
 
     def update(self):
         """Fetch new state data for the sensor."""
