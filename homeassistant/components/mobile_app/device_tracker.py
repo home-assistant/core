@@ -145,9 +145,9 @@ class MobileAppEntity(DeviceTrackerEntity, RestoreEntity):
 
         attr = state.attributes
         data = {
-            ATTR_GPS: (attr[ATTR_LATITUDE], attr[ATTR_LONGITUDE]),
-            ATTR_GPS_ACCURACY: attr[ATTR_GPS_ACCURACY],
-            ATTR_BATTERY: attr[ATTR_BATTERY_LEVEL],
+            ATTR_GPS: (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE)),
+            ATTR_GPS_ACCURACY: attr.get(ATTR_GPS_ACCURACY),
+            ATTR_BATTERY: attr.get(ATTR_BATTERY_LEVEL),
         }
         data.update({key: attr[key] for key in attr if key in ATTR_KEYS})
         self._data = data
