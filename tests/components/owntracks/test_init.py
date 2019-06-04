@@ -4,7 +4,7 @@ import asyncio
 import pytest
 
 from homeassistant.setup import async_setup_component
-
+from homeassistant.components import owntracks
 from tests.common import mock_component, MockConfigEntry
 
 MINIMAL_LOCATION_MESSAGE = {
@@ -160,3 +160,24 @@ def test_returns_error_missing_device(mock_client):
 
     json = yield from resp.json()
     assert json == []
+
+
+def test_context_delivers_pending_msg():
+    """Test that context is able to hold pending messages while being init."""
+    context = owntracks.OwnTracksContext(
+        None, None, None, None, None, None, None, None
+    )
+    context.async_see(hello='world')
+    context.async_see(world='hello')
+    received = []
+
+    context.set_async_see(lambda **data: received.append(data))
+
+    assert len(received) == 2
+    assert received[0] == {'hello': 'world'}
+    assert received[1] == {'world': 'hello'}
+
+    received.clear()
+
+    context.set_async_see(lambda **data: received.append(data))
+    assert len(received) == 0
