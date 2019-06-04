@@ -1,9 +1,6 @@
 import logging
-from random import randint
-import voluptuous as vol
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light, PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
 
@@ -32,7 +29,7 @@ class AveaLight(Light):
         else:
           self._state = True
         self._brightness = round(255 * (light.get_brightness() / 100))
-    
+
     @property
     def supported_features(self):
         """Flag supported features."""
@@ -64,20 +61,19 @@ class AveaLight(Light):
         brightness control.
         """
         if not kwargs:
-            self._light.set_brightness(4095);
+            self._light.set_brightness(4095)
         else:
           if ATTR_BRIGHTNESS in kwargs:
-              bright_percent = round((kwargs.get(ATTR_BRIGHTNESS, 255)/255)*100) 
-              bright = round((kwargs[ATTR_BRIGHTNESS] / 255) * 4095)
-              self._light.set_brightness(bright)
+            bright = round((kwargs[ATTR_BRIGHTNESS] / 255) * 4095)
+            self._light.set_brightness(bright)
           if ATTR_HS_COLOR in kwargs:
-              rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
-              self._light.set_rgb(round(255 * (rgb[0] / 100)), round(255 * (rgb[1] / 100)), round(255 * (rgb[2] / 100)));
+            rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
+            self._light.set_rgb(round(255 * (rgb[0] / 100)), round(255 * (rgb[1] / 100)), round(255 * (rgb[2] / 100)))
 
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        self._light.set_brightness(0);
+        self._light.set_brightness(0)
 
     def update(self):
         """Fetch new state data for this light.
