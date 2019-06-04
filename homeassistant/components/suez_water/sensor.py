@@ -2,7 +2,6 @@
 from datetime import timedelta
 import logging
 
-import pysuez
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -15,6 +14,7 @@ CONF_COUNTER_ID = 'counter_id'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=720)
 SCAN_INTERVAL = timedelta(minutes=720)
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -52,10 +52,10 @@ class SuezClient(Entity):
         self._password = password
         self._counter_id = counter_id
         self._attributes = {}
-        self.data = {}
         self.success = False
         self._state = 0
         self._icon = 'mdi:water-pump'
+        self.data = {}
 
     @property
     def name(self):
@@ -88,7 +88,8 @@ class SuezClient(Entity):
         from pysuez import SuezClient
   
         try:
-            self.client = SuezClient(self._username, self._password, self._counter_id)
+            self.client = SuezClient(
+                self._username, self._password, self._counter_id)
             self.client.update()
 
             self._state = self.client._state
