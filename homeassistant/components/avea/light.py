@@ -68,7 +68,8 @@ class AveaLight(Light):
         else:
           if ATTR_BRIGHTNESS in kwargs:
               bright_percent = round((kwargs.get(ATTR_BRIGHTNESS, 255)/255)*100) 
-              self._light.set_brightness(round(4095 * (bright_percent / 100)));
+              bright = round((kwargs[ATTR_BRIGHTNESS] / 255) * 4095)
+              self._light.set_brightness(bright)
           if ATTR_HS_COLOR in kwargs:
               rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
               self._light.set_rgb(round(255 * (rgb[0] / 100)), round(255 * (rgb[1] / 100)), round(255 * (rgb[2] / 100)));
