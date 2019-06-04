@@ -1,29 +1,29 @@
 {
     "config": {
-        "title": "AdGuard Home",
-        "step": {
-            "user": {
-                "title": "Link your AdGuard Home.",
-                "description": "Set up your AdGuard Home instance to allow monitoring and control.",
-                "data": {
-                    "host": "Host",
-                    "password": "Password",
-                    "port": "Port",
-                    "username": "Username",
-                    "ssl": "AdGuard Home uses a SSL certificate",
-                    "verify_ssl": "AdGuard Home uses a proper certificate"
-                }
-            },
-            "hassio_confirm": {
-                "title": "AdGuard Home via Hass.io add-on",
-                "description": "Do you want to configure Home Assistant to connect to the AdGuard Home provided by the Hass.io add-on: {addon}?"
-            }
+        "abort": {
+            "single_instance_allowed": "Only a single configuration of AdGuard Home is allowed."
         },
         "error": {
             "connection_error": "Failed to connect."
         },
-        "abort": {
-            "single_instance_allowed": "Only a single configuration of AdGuard Home is allowed."
-        }
+        "step": {
+            "hassio_confirm": {
+                "description": "Do you want to configure Home Assistant to connect to the AdGuard Home provided by the Hass.io add-on: {addon}?",
+                "title": "AdGuard Home via Hass.io add-on"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "ssl": "AdGuard Home uses a SSL certificate",
+                    "username": "Username",
+                    "verify_ssl": "AdGuard Home uses a proper certificate"
+                },
+                "description": "Set up your AdGuard Home instance to allow monitoring and control.",
+                "title": "Link your AdGuard Home."
+            }
+        },
+        "title": "AdGuard Home"
     }
 }
