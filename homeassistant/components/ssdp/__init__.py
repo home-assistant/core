@@ -86,13 +86,16 @@ class Scanner:
         if not to_load:
             return
 
-        for entry, info, domains in to_load:
+        tasks = []
 
+        for entry, info, domains in to_load:
             for domain in domains:
                 _LOGGER.debug("Discovered %s at %s", domain, entry.location)
-                await self.hass.config_entries.flow.async_init(
+                tasks.append(self.hass.config_entries.flow.async_init(
                     domain, context={'source': DOMAIN}, data=info
-                )
+                ))
+
+        await asyncio.wait(tasks)
 
     async def _process_entry(self, entry):
         """Process a single entry."""
