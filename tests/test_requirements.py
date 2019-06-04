@@ -152,8 +152,8 @@ async def test_progress_lock(hass):
 
     with patch('homeassistant.util.package.install_package',
                return_value=event.wait()) as mock_inst:
-        assert await async_process_requirements(
-            hass, 'test_component', ['hello==1.0.0'])
+        hass.async_create_task(async_process_requirements(
+            hass, 'test_component', ['hello==1.0.0']))
 
     assert len(mock_inst.mock_calls) == 1
     assert PROGRESS_FILE.exists()
