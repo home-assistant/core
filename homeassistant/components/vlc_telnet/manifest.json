@@ -1,5 +1,5 @@
 {
-  "domain": "vlc-telnet",
+  "domain": "vlc_telnet",
   "name": "VLC telnet",
   "documentation": "https://www.home-assistant.io/components/vlc-telnet",
   "requirements": [
