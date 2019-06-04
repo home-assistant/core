@@ -47,8 +47,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.warning("Error creatin a Suez Client")
         return False
 
-    
-
 
 class SuezHAClient(Entity):
     """Representation of a Sensor."""
