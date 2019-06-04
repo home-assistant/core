@@ -40,8 +40,18 @@ class UniFiController:
                 return client.mac
         return None
 
+    async def request_update(self):
+        """Request an update."""
+        if self.progress is not None:
+            return
+
+        self.progress = True
+        await self.async_update()
+
+        self.progress = None
+
     async def async_update(self):
-        """"""
+        """Update UniFi controller information."""
         try:
             with async_timeout.timeout(4):
                 await self.api.clients.update()

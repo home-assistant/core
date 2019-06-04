@@ -1,4 +1,5 @@
 """Support for devices connected to UniFi POE."""
+from datetime import timedelta
 import logging
 
 from homeassistant.components import unifi
@@ -9,6 +10,8 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID
+
+SCAN_INTERVAL = timedelta(seconds=15)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -94,10 +97,14 @@ class UniFiSwitch(SwitchDevice):
         if self.port.poe_mode != 'off':
             self.poe_mode = self.port.poe_mode
 
-    @callback
-    def async_update(self):
+    async def async_update(self):
         """Synchronize state with controller."""
-        self.async_schedule_update_ha_state()
+        await self.controller.request_update()
+
+    # @callback
+    # def async_update(self):
+    #     """Synchronize state with controller."""
+    #     self.async_schedule_update_ha_state()
 
     @property
     def name(self):
@@ -120,19 +127,21 @@ class UniFiSwitch(SwitchDevice):
         return self.controller.available or \
             self.client.sw_mac in self.controller.api.devices
 
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
+    # @property
+    # def should_poll(self):
+    #     """No polling needed."""
+    #     return False
 
     async def async_turn_on(self, **kwargs):
         """Enable POE for client."""
         await self.device.async_set_port_poe_mode(
             self.client.sw_port, self.poe_mode)
+        self.hass.async_create_task(self.controller.request_update())
 
     async def async_turn_off(self, **kwargs):
         """Disable POE for client."""
         await self.device.async_set_port_poe_mode(self.client.sw_port, 'off')
+        self.hass.async_create_task(self.controller.request_update())
 
     @property
     def device_state_attributes(self):
