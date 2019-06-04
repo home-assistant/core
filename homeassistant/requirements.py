@@ -1,6 +1,5 @@
 """Module to handle installing requirements."""
 import asyncio
-from functools import partial
 from pathlib import Path
 import logging
 import os
