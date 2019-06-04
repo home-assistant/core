@@ -1,6 +1,7 @@
 """Module to handle installing requirements."""
 import asyncio
 from functools import partial
+from pathlib import Path
 import logging
 import os
 from typing import Any, Dict, List, Optional
@@ -11,6 +12,7 @@ from homeassistant.core import HomeAssistant
 DATA_PIP_LOCK = 'pip_lock'
 DATA_PKG_CACHE = 'pkg_cache'
 CONSTRAINT_FILE = 'package_constraints.txt'
+PROGRESS_FILE = Path('.pip_progress')
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -32,7 +34,11 @@ async def async_process_requirements(hass: HomeAssistant, name: str,
             if pkg_util.is_installed(req):
                 continue
 
-            ret = await hass.async_add_executor_job(pip_install, req)
+            try:
+                PROGRESS_FILE.touch()
+                ret = await hass.async_add_executor_job(pip_install, req)
+            finally:
+                PROGRESS_FILE.unlink()
 
             if not ret:
                 _LOGGER.error("Not initializing %s because could not install "

@@ -1,10 +1,11 @@
 """Test requirements module."""
+import asyncio
 import os
 from unittest.mock import patch, call
 
 from homeassistant import setup
 from homeassistant.requirements import (
-    CONSTRAINT_FILE, async_process_requirements)
+    CONSTRAINT_FILE, async_process_requirements, PROGRESS_FILE)
 
 from tests.common import (
     get_test_home_assistant, MockModule, mock_coro, mock_integration)
@@ -143,3 +144,21 @@ async def test_install_on_docker(hass):
             constraints=os.path.join('ha_package_path', CONSTRAINT_FILE),
             no_cache_dir=True,
         )
+
+
+async def test_progress_lock(hass):
+    """Test an install attempt on an existing package."""
+    event = asyncio.Event()
+
+    with patch('homeassistant.util.package.install_package',
+               return_value=event.wait()) as mock_inst:
+        assert await async_process_requirements(
+            hass, 'test_component', ['hello==1.0.0'])
+
+    assert len(mock_inst.mock_calls) == 1
+    assert PROGRESS_FILE.exists()
+
+    event.set()
+    await hass.async_block_till_done()
+
+    assert not PROGRESS_FILE.exists()
