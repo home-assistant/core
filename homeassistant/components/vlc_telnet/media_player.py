@@ -108,7 +108,6 @@ class VlcDevice(MediaPlayerDevice):
 
             except ConnectionError as err:
                 _LOGGER.error(err)
-                pass
 
         return True
 
