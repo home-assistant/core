@@ -1,6 +1,6 @@
 import logging
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light, PLATFORM_SCHEMA
+from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light
 import homeassistant.util.color as color_util
 
 
@@ -17,6 +17,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices(AveaLight(bulb) for bulb in nearbyBulbs)
 
+
 class AveaLight(Light):
     """Representation of an Avea."""
 
@@ -25,9 +26,9 @@ class AveaLight(Light):
         self._light = light
         self._name = light.get_name()
         if int(light.get_brightness()) == 0:
-          self._state = False
+            self._state = False
         else:
-          self._state = True
+            self._state = True
         self._brightness = round(255 * (light.get_brightness() / 100))
 
     @property
@@ -63,13 +64,12 @@ class AveaLight(Light):
         if not kwargs:
             self._light.set_brightness(4095)
         else:
-          if ATTR_BRIGHTNESS in kwargs:
-            bright = round((kwargs[ATTR_BRIGHTNESS] / 255) * 4095)
-            self._light.set_brightness(bright)
-          if ATTR_HS_COLOR in kwargs:
-            rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
-            self._light.set_rgb(round(255 * (rgb[0] / 100)), round(255 * (rgb[1] / 100)), round(255 * (rgb[2] / 100)))
-
+            if ATTR_BRIGHTNESS in kwargs:
+                bright = round((kwargs[ATTR_BRIGHTNESS] / 255) * 4095)
+                self._light.set_brightness(bright)
+            if ATTR_HS_COLOR in kwargs:
+                rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
+                self._light.set_rgb(round(255 * (rgb[0] / 100)), round(255 * (rgb[1] / 100)), round(255 * (rgb[2] / 100)))
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
@@ -81,8 +81,8 @@ class AveaLight(Light):
         This is the only method that should fetch new data for Home Assistant.
         """
         if self._light.get_brightness() == 0:
-          self._state = False
+            self._state = False
         else:
-          self._state = True
+            self._state = True
         bright_percent = round((self._light.get_brightness()/4095)*100)
         self._brightness = round(255 * (bright_percent / 100))
