@@ -70,6 +70,7 @@ class VeluxCover(CoverDevice):
             return 'shutter'
         if isinstance(self.node, Awning):
             return 'awning'
+        return 'window'
 
     @property
     def is_closed(self):
