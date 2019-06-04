@@ -1495,7 +1495,7 @@ pyuptimerobot==0.0.5
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.2.45
+pyvera==0.3.1
 
 # homeassistant.components.vesync
 pyvesync_v2==0.9.7
