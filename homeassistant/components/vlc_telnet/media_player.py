@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'vlc_telnet'
 
-DEFAULT_NAME = 'Vlc Telnet'
+DEFAULT_NAME = 'VLC Telnet'
 
 SUPPORT_VLC = SUPPORT_PAUSE | SUPPORT_SEEK | SUPPORT_VOLUME_SET \
               | SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK \
