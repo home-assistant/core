@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 DATA_PIP_LOCK = 'pip_lock'
 DATA_PKG_CACHE = 'pkg_cache'
 CONSTRAINT_FILE = 'package_constraints.txt'
-PROGRESS_FILE = Path('.pip_progress')
+PROGRESS_FILE = '.pip_progress'
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -26,19 +26,16 @@ async def async_process_requirements(hass: HomeAssistant, name: str,
     if pip_lock is None:
         pip_lock = hass.data[DATA_PIP_LOCK] = asyncio.Lock()
 
-    pip_install = partial(pkg_util.install_package,
-                          **pip_kwargs(hass.config.config_dir))
+    kwargs = pip_kwargs(hass.config.config_dir)
 
     async with pip_lock:
         for req in requirements:
             if pkg_util.is_installed(req):
                 continue
 
-            try:
-                PROGRESS_FILE.touch()
-                ret = await hass.async_add_executor_job(pip_install, req)
-            finally:
-                PROGRESS_FILE.unlink()
+            ret = await hass.async_add_executor_job(
+                _install, hass, req, kwargs
+            )
 
             if not ret:
                 _LOGGER.error("Not initializing %s because could not install "
@@ -46,6 +43,16 @@ async def async_process_requirements(hass: HomeAssistant, name: str,
                 return False
 
     return True
+
+
+def _install(hass, req, kwargs):
+    """Install requirement."""
+    progress_path = Path(hass.config.path(PROGRESS_FILE))
+    progress_path.touch()
+    try:
+        return pkg_util.install_package(req, **kwargs)
+    finally:
+        progress_path.unlink()
 
 
 def pip_kwargs(config_dir: Optional[str]) -> Dict[str, Any]:

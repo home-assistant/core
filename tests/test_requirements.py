@@ -1,11 +1,11 @@
 """Test requirements module."""
-import asyncio
 import os
+from pathlib import Path
 from unittest.mock import patch, call
 
 from homeassistant import setup
 from homeassistant.requirements import (
-    CONSTRAINT_FILE, async_process_requirements, PROGRESS_FILE)
+    CONSTRAINT_FILE, async_process_requirements, PROGRESS_FILE, _install)
 
 from tests.common import (
     get_test_home_assistant, MockModule, mock_coro, mock_integration)
@@ -148,17 +148,18 @@ async def test_install_on_docker(hass):
 
 async def test_progress_lock(hass):
     """Test an install attempt on an existing package."""
-    event = asyncio.Event()
+    progress_path = Path(hass.config.path(PROGRESS_FILE))
+    kwargs = {'hello': 'world'}
+
+    def assert_env(req, **passed_kwargs):
+        """Assert the env."""
+        assert progress_path.exists()
+        assert req == 'hello'
+        assert passed_kwargs == kwargs
+        return True
 
     with patch('homeassistant.util.package.install_package',
-               return_value=event.wait()) as mock_inst:
-        hass.async_create_task(async_process_requirements(
-            hass, 'test_component', ['hello==1.0.0']))
+               side_effect=assert_env):
+        _install(hass, 'hello', kwargs)
 
-    await asyncio.sleep(0)
-    assert PROGRESS_FILE.exists()
-
-    event.set()
-    await hass.async_block_till_done()
-
-    assert not PROGRESS_FILE.exists()
+    assert not progress_path.exists()
