@@ -25,10 +25,29 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the sensor platform."""
+    from pysuez.client import PySuezError
+    from pysuez import SuezClient
+
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     counter_id = config.get(CONF_COUNTER_ID)
-    add_devices([SuezHAClient(username, password, counter_id)], True)
+
+    try:
+        client = SuezClient(
+            username, password, counter_id)
+        test = client.check_credentials()
+
+        if test:
+            _LOGGER.warning("Username and password OK")
+            add_devices([SuezHAClient(username, password, counter_id)], True)
+        else:
+            _LOGGER.warning("Wrong username and/or password")
+
+    except PySuezError:
+        _LOGGER.warning("Error creatin a Suez Client")
+        return False
+
+    
 
 
 class SuezHAClient(Entity):
