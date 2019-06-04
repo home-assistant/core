@@ -28,21 +28,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     counter_id = config.get(CONF_COUNTER_ID)
-    _LOGGER.debug(
-        "Username is %s and counter_id is %s.",
-        username, counter_id
-        )
-    add_devices([SuezClient(username, password, counter_id)], True)
+    add_devices([SuezHAClient(username, password, counter_id)], True)
 
 
-class SuezClient(Entity):
-    """Global variables."""
-
-    BASE_URI = 'https://www.toutsurmoneau.fr'
-    API_ENDPOINT_LOGIN = '/mon-compte-en-ligne/je-me-connecte'
-    API_ENDPOINT_DATA = '/mon-compte-en-ligne/statJData/'
-    API_ENDPOINT_HISTORY = '/mon-compte-en-ligne/statMData/'
-
+class SuezHAClient(Entity):
     """Representation of a Sensor."""
 
     def __init__(self, username, password, counter_id):
@@ -55,7 +44,7 @@ class SuezClient(Entity):
         self.success = False
         self._state = 0
         self._icon = 'mdi:water-pump'
-        self.data = {}
+        self.client = None
 
     @property
     def name(self):
@@ -86,17 +75,17 @@ class SuezClient(Entity):
         """Fetch latest data from Suez."""
         from pysuez.client import PySuezError
         from pysuez import SuezClient
-  
+
         try:
             self.client = SuezClient(
                 self._username, self._password, self._counter_id)
             self.client.update()
 
-            self._state = self.client._state
-            self._attributes = self.client._attributes
+            self._state = self.client.state
+            self._attributes = self.client.attributes
             self.success = True
-            
-        except PySuezError as exp:
+
+        except PySuezError:
             _LOGGER.warning("Unable to fetch data")
             return False
 
@@ -107,4 +96,6 @@ class SuezClient(Entity):
         self._fetch_data()
         if not self.success:
             return
-        _LOGGER.debug("Suez data state is: %s", self._state)
+        _LOGGER.debug(
+            "Suez data state is: %s, and the success is %s",
+            self._state, self.success)
