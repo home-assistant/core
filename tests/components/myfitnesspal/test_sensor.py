@@ -2,35 +2,40 @@
 import unittest
 from unittest.mock import patch
 
-from tests.common import get_test_home_assistant
+from tests.common import MockDependency, get_test_home_assistant
 
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.components.myfitnesspal.sensor import MyFitnessPalSensor
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, STATE_UNKNOWN
 from homeassistant.setup import setup_component
 
-VALID_CONFIG = {
-    "platform": "myfitnesspal",
-    "username": "person@email.com",
-    "password": "asdf45678thjk"
+VALID_CONFIG = {'sensor': {
+        "platform": "myfitnesspal",
+        "username": "person@email.com",
+        "password": "asdf45678thjk"
+    }
 }
 
 
-def get_empty_totals():
-    """Mock TransportNSW departures loading."""
-    data = {}
-    return {'totals': data}
+class MockMFPClient():
+    """Mock class for tmdbsimple library."""
 
+    def __init__(self):
+        """Add mock data for API return."""
+        dfkdsfkdspfk()
+        print('woooo')
 
-def get_filled_totals():
-    """Mock TransportNSW departures loading."""
-    data = {
-        'calories': 123,
-        'sodium': 234,
-        'protein': 345,
-        'sugar': 456,
-        'carbohydrates': 567,
-        'fat': 789
-    }
-    return {'totals': data}
+    def get_date(self):
+        """Return an instance of a sunbreddit."""
+        print('hi')
+        data = {
+            'calories': 123,
+            'sodium': 234,
+            'protein': 345,
+            'sugar': 456,
+            'carbohydrates': 567,
+            'fat': 789
+        }
+        return {'totals': data}
 
 
 class TestMyFitnessPal(unittest.TestCase):
@@ -39,44 +44,40 @@ class TestMyFitnessPal(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.config = VALID_CONFIG
 
     def tearDown(self):
         """Stop down everything that was started."""
         self.hass.stop()
 
-    def test_setup(self):
+    @MockDependency('myfitnesspal')
+    @patch('myfitnesspal.Client', new=MockMFPClient)
+    def test_setup(self, c):
         """Test the mold indicator sensor setup."""
-        assert setup_component(
-                self.hass, 'sensor', {'sensor': self.config})
+        assert setup_component(self.hass, 'sensor', VALID_CONFIG)
 
         mfp_sensor = self.hass.states.get('sensor.myfitnesspal_totals')
         assert mfp_sensor
         assert 'kcal' == mfp_sensor.attributes.get('unit_of_measurement')
         assert mfp_sensor.state == 'unknown'
 
-    @patch('myfitnesspal.Client.get_date',
-           side_effect=get_empty_totals)
-    @patch('myfitnesspal.Client')
-    def test_empty_day(self, mock_totals, mock_client):
+    @MockDependency('myfitnesspal')
+    @patch('myfitnesspal.Client', new=MockMFPClient)
+    def test_empty_day(self, c):
         """Test invalid sensor values."""
-        assert setup_component(
-                self.hass, 'sensor', {'sensor': self.config})
+        assert setup_component(self.hass, 'sensor', VALID_CONFIG)
 
         mfp_sensor = self.hass.states.get('sensor.myfitnesspal_totals')
         assert mfp_sensor
         assert 'kcal' == mfp_sensor.attributes.get('unit_of_measurement')
-        assert mfp_sensor.state == 'unknown'
+        assert mfp_sensor.state == 0
 
-    @patch('myfitnesspal.Client.get_date',
-           side_effect=get_filled_totals)
-    @patch('myfitnesspal.Client')
-    def test_pulling_data(self, mock_totals, mock_client):
+    @MockDependency('myfitnesspal')
+    @patch('myfitnesspal.Client', new=MockMFPClient)
+    def test_pulling_data(self, c):
         """Test invalid sensor values."""
-        assert setup_component(
-                self.hass, 'sensor', {'sensor': self.config})
+        assert setup_component(self.hass, 'sensor', VALID_CONFIG)
 
         mfp_sensor = self.hass.states.get('sensor.myfitnesspal_totals')
         assert mfp_sensor
         assert 'kcal' == mfp_sensor.attributes.get('unit_of_measurement')
-        assert mfp_sensor.state == 123
+        assert mfp_sensor.state == 124

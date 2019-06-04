@@ -1,11 +1,15 @@
 """Support for Myfitnesspal totals as sensors."""
+import logging
 from datetime import date
 
+import myfitnesspal
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
+
+_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'myfitnesspal'
 
@@ -21,7 +25,17 @@ ENERGY_KILOCALORIES = 'kcal'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set the sensor platform."""
-    add_devices([MyFitnessPalSensor(config)])
+    try:
+        client = myfitnesspal.Client(
+            CONF_USERNAME, CONF_PASSWORD)
+
+        _LOGGER.debug('Connected to mfp')
+
+    except Exception as err:
+        _LOGGER.error("mfp error %s", err)
+        return
+
+    add_devices([MyFitnessPalSensor(client)])
 
 
 class MyFitnessPalSensor(Entity):
@@ -29,12 +43,10 @@ class MyFitnessPalSensor(Entity):
 
     ICON = 'mdi:barley'
 
-    def __init__(self, config):
+    def __init__(self, client):
         """Initialize the sensor."""
         self._attributes = {}
         self._state = None
-        self._username = config['username']
-        self._password = config['password']
 
     @property
     def device_state_attributes(self):
@@ -66,14 +78,18 @@ class MyFitnessPalSensor(Entity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        import myfitnesspal
-        client = myfitnesspal.Client(self._username, self._password)
-
+        
         startdate = date.today()
+        print(client)
         mfpday = client.get_date(
             startdate.year, startdate.month, startdate.day)
+        print(mfpday)
         totals = mfpday.totals
+        print(totals)
+
         if 'calories' in totals:
             self._state = totals['calories']
             totals.pop('calories')
             self._attributes = totals
+        elif totals == {}:
+            return 0
