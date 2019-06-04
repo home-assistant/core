@@ -65,13 +65,13 @@ class VlcDevice(MediaPlayerDevice):
 
     def update(self):
         """Get the latest details from the device."""
-        from python_telnet_vlc import VLCTelnet
+        from python_telnet_vlc import VLCTelnet, ConnectionError as ConnErr
 
         if self._vlc is None:
             try:
                 self._vlc = VLCTelnet(self._host, self._password, self._port)
                 self._state = STATE_IDLE
-            except Exception:
+            except ConnErr:
                 self._state = STATE_UNAVAILABLE
         else:
             try:
@@ -96,7 +96,7 @@ class VlcDevice(MediaPlayerDevice):
                 self._media_position = self._vlc.get_time()
 
                 info = self._vlc.info()
-                if info is not None and len(info) > 0:
+                if info is not None and info:
                     if 'artist' in info[0]:
                         self._media_artist = info[0]['artist']
                     else:
@@ -106,7 +106,8 @@ class VlcDevice(MediaPlayerDevice):
                     else:
                         self._media_title = None
 
-            except Exception:
+            except ConnectionError as err:
+                _LOGGER.error(err)
                 pass
 
         return True
