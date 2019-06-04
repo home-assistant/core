@@ -44,7 +44,7 @@ async def async_process_requirements(hass: HomeAssistant, name: str,
     return True
 
 
-def _install(hass, req, kwargs):
+def _install(hass: HomeAssistant, req: str, kwargs: Dict) -> bool:
     """Install requirement."""
     progress_path = Path(hass.config.path(PROGRESS_FILE))
     progress_path.touch()
