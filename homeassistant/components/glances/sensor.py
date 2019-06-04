@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, CONF_USERNAME, CONF_PASSWORD, CONF_SSL,
-    CONF_VERIFY_SSL, CONF_RESOURCES, STATE_UNAVAILABLE, TEMP_CELSIUS)
+    CONF_VERIFY_SSL, CONF_RESOURCES, STATE_UNAVAILABLE)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
