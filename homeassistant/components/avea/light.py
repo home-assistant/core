@@ -17,6 +17,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import avea
 
     nearbyBulbs = avea.discover_avea_bulbs()
+    try:
+        for bulb in nearbyBulbs:
+            bulb.get_name()
+    except:
+        raise PlatformNotReady
 
     add_devices(AveaLight(bulb) for bulb in nearbyBulbs)
 
@@ -27,12 +32,9 @@ class AveaLight(Light):
     def __init__(self, light):
         """Initialize an AveaLight."""
         self._light = light
-        self._name = light.get_name()
-        if int(light.get_brightness()) == 0:
-            self._state = False
-        else:
-            self._state = True
-        self._brightness = round(255 * (light.get_brightness() / 100))
+        self._name = light.name
+        self._state = None
+        self._brightness = None
 
     @property
     def supported_features(self):
