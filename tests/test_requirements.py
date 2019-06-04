@@ -155,7 +155,7 @@ async def test_progress_lock(hass):
         hass.async_create_task(async_process_requirements(
             hass, 'test_component', ['hello==1.0.0']))
 
-    assert len(mock_inst.mock_calls) == 1
+    await asyncio.sleep(0)
     assert PROGRESS_FILE.exists()
 
     event.set()
