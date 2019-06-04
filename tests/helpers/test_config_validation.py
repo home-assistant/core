@@ -17,14 +17,17 @@ def test_boolean():
     """Test boolean validation."""
     schema = vol.Schema(cv.boolean)
 
-    for value in ('T', 'negative', 'lock'):
+    for value in (
+            'T', 'negative', 'lock', 'tr  ue',
+            [], [1, 2], {'one': 'two'}, test_boolean):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
-    for value in ('true', 'On', '1', 'YES', 'enable', 1, True):
+    for value in ('true', 'On', '1', 'YES', '   true  ',
+                  'enable', 1, 50, True, 0.1):
         assert schema(value)
 
-    for value in ('false', 'Off', '0', 'NO', 'disable', 0, False):
+    for value in (None, 'false', 'Off', '0', 'NO', 'disable', 0, False):
         assert not schema(value)
 
 
