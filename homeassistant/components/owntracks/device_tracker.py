@@ -153,10 +153,10 @@ class OwnTracksEntity(DeviceTrackerEntity, RestoreEntity):
         attr = state.attributes
         self._data = {
             'host_name': state.name,
-            'gps': (attr[ATTR_LATITUDE], attr[ATTR_LONGITUDE]),
-            'gps_accuracy': attr[ATTR_GPS_ACCURACY],
-            'battery': attr[ATTR_BATTERY_LEVEL],
-            'source_type': attr[ATTR_SOURCE_TYPE],
+            'gps': (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE)),
+            'gps_accuracy': attr.get(ATTR_GPS_ACCURACY),
+            'battery': attr.get(ATTR_BATTERY_LEVEL),
+            'source_type': attr.get(ATTR_SOURCE_TYPE),
         }
 
     @callback
