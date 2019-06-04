@@ -127,7 +127,7 @@ def info_from_service(service):
         except UnicodeDecodeError:
             _LOGGER.warning("Unicode decode error on %s: %s", key, value)
 
-    address = service.address or service.address6
+    address = service.addresses[0]
 
     info = {
         ATTR_HOST: str(ipaddress.ip_address(address)),
