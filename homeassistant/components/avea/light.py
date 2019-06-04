@@ -1,6 +1,9 @@
+"""Support for the Elgato Avea lights."""
 import logging
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR, Light)
 import homeassistant.util.color as color_util
 
 
@@ -10,7 +13,7 @@ SUPPORT_AVEA = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Avea platform."""
+    """Set up the Avea platform."""
     import avea
 
     nearbyBulbs = avea.discover_avea_bulbs()
