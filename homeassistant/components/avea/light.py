@@ -25,7 +25,7 @@ class AveaLight(Light):
     """Representation of an Avea."""
 
     def __init__(self, light):
-        """Initialize an AveaLigh."""
+        """Initialize an AveaLight."""
         self._light = light
         self._name = light.get_name()
         if int(light.get_brightness()) == 0:
@@ -72,7 +72,7 @@ class AveaLight(Light):
                 self._light.set_brightness(bright)
             if ATTR_HS_COLOR in kwargs:
                 rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
-                self._light.set_rgb(round(255 * (rgb[0] / 100)), round(255 * (rgb[1] / 100)), round(255 * (rgb[2] / 100)))
+                self._light.set_rgb(rgb[0],rgb[1],rgb[2])
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
