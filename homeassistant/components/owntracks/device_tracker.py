@@ -36,7 +36,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         )
         async_add_entities([entity])
 
-    hass.data[OT_DOMAIN]['context'].async_see = _receive_data
+    hass.data[OT_DOMAIN]['context'].set_async_see(_receive_data)
 
     # Restore previously loaded devices
     dev_reg = await device_registry.async_get_registry(hass)
