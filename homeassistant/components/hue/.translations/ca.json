@@ -7,6 +7,7 @@
             "cannot_connect": "No s'ha pogut connectar amb l'enlla\u00e7",
             "discover_timeout": "No s'han pogut descobrir enlla\u00e7os Hue",
             "no_bridges": "No s'han trobat enlla\u00e7os Philips Hue",
+            "not_hue_bridge": "No \u00e9s un enlla\u00e7 Hue",
             "unknown": "S'ha produ\u00eft un error desconegut"
         },
         "error": {
