@@ -1,0 +1,22 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Autenticado com sucesso com o Logi Circle."
+        },
+        "error": {
+            "auth_error": "Falha na autoriza\u00e7\u00e3o da API."
+        },
+        "step": {
+            "auth": {
+                "title": "Autenticar com o Logi Circle"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Provedor"
+                },
+                "title": "Provedor de Autentica\u00e7\u00e3o"
+            }
+        },
+        "title": "C\u00edrculo Logi"
+    }
+}
