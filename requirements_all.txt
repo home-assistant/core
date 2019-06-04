@@ -1320,6 +1320,9 @@ pystiebeleltron==0.0.1.dev2
 # homeassistant.components.stride
 pystride==0.1.7
 
+# homeassistant.components.suez_water
+pysuez==0.1.5
+
 # homeassistant.components.supla
 pysupla==0.0.3
 
