@@ -1869,10 +1869,14 @@ zengge==0.2
 
 # homeassistant.components.zeroconf
 <<<<<<< HEAD
+<<<<<<< HEAD
 zeroconf==0.21.3
 =======
 zeroconf==0.22.0
 >>>>>>> Revert Zeroconf back to previously used library (#24139)
+=======
+zeroconf==0.23.0
+>>>>>>> Upgrade Zeroconf to 0.23 (#24300)
 
 # homeassistant.components.zha
 <<<<<<< HEAD
