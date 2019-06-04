@@ -96,7 +96,7 @@ class VlcDevice(MediaPlayerDevice):
                 self._media_position = self._vlc.get_time()
 
                 info = self._vlc.info()
-                if info is not None and info:
+                if info:
                     if 'artist' in info[0]:
                         self._media_artist = info[0]['artist']
                     else:
