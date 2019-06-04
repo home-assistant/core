@@ -5,9 +5,12 @@ import async_timeout
 
 from aiohttp import CookieJar
 
+import aiounifi
+
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import CONF_CONTROLLER, CONF_POE_CONTROL, LOGGER
 from .errors import AuthenticationRequired, CannotConnect
@@ -37,7 +40,38 @@ class UniFiController:
                 return client.mac
         return None
 
-    async def async_setup(self, tries=0):
+    async def async_update(self):
+        """"""
+        try:
+            with async_timeout.timeout(4):
+                await self.api.clients.update()
+                await self.api.devices.update()
+
+        except aiounifi.LoginRequired:
+            try:
+                with async_timeout.timeout(5):
+                    await self.api.login()
+            except (asyncio.TimeoutError, aiounifi.AiounifiException):
+                if self.available:
+                    self.available = False
+                    async_dispatcher_send(self.hass, 'unifi-update-event')
+                return
+
+        except (asyncio.TimeoutError, aiounifi.AiounifiException):
+            if self.available:
+                LOGGER.error('Unable to reach controller %s', self.host)
+                self.available = False
+                async_dispatcher_send(self.hass, 'unifi-update-event')
+            return
+
+        if not self.available:
+            LOGGER.info('Reconnected to controller %s', self.host)
+            self.available = True
+
+        async_dispatcher_send(self.hass, 'unifi-update-event')
+
+
+    async def async_setup(self):
         """Set up a UniFi controller."""
         hass = self.hass
 
@@ -80,8 +114,6 @@ class UniFiController:
 async def get_controller(
         hass, host, username, password, port, site, verify_ssl):
     """Create a controller object and verify authentication."""
-    import aiounifi
-
     sslcontext = None
 
     if verify_ssl:
