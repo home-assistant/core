@@ -32,6 +32,10 @@ CONF_PCK = 'pck'
 CONF_CLIMATES = 'climates'
 CONF_MAX_TEMP = 'max_temp'
 CONF_MIN_TEMP = 'min_temp'
+CONF_SCENES = 'scenes'
+CONF_REGISTER = 'register'
+CONF_SCENE = 'scene'
+CONF_OUTPUTS = 'outputs'
 
 DIM_MODES = ['STEPS50', 'STEPS200']
 
