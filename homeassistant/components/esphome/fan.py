@@ -1,6 +1,8 @@
 """Support for ESPHome fans."""
 import logging
-from typing import TYPE_CHECKING, List, Optional
+from typing import List, Optional
+
+from aioesphomeapi import FanInfo, FanSpeed, FanState
 
 from homeassistant.components.fan import (
     SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF, SUPPORT_OSCILLATE,
@@ -8,12 +10,9 @@ from homeassistant.components.fan import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import EsphomeEntity, platform_async_setup_entry, \
-    esphome_state_property, esphome_map_enum
-
-if TYPE_CHECKING:
-    # pylint: disable=unused-import
-    from aioesphomeapi import FanInfo, FanState, FanSpeed  # noqa
+from . import (
+    EsphomeEntity, esphome_map_enum, esphome_state_property,
+    platform_async_setup_entry)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,9 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistantType,
                             entry: ConfigEntry, async_add_entities) -> None:
     """Set up ESPHome fans based on a config entry."""
-    # pylint: disable=redefined-outer-name
-    from aioesphomeapi import FanInfo, FanState  # noqa
-
     await platform_async_setup_entry(
         hass, entry, async_add_entities,
         component_key='fan',
@@ -34,8 +30,6 @@ async def async_setup_entry(hass: HomeAssistantType,
 
 @esphome_map_enum
 def _fan_speeds():
-    # pylint: disable=redefined-outer-name
-    from aioesphomeapi import FanSpeed  # noqa
     return {
         FanSpeed.LOW: SPEED_LOW,
         FanSpeed.MEDIUM: SPEED_MEDIUM,
@@ -47,11 +41,11 @@ class EsphomeFan(EsphomeEntity, FanEntity):
     """A fan implementation for ESPHome."""
 
     @property
-    def _static_info(self) -> 'FanInfo':
+    def _static_info(self) -> FanInfo:
         return super()._static_info
 
     @property
-    def _state(self) -> Optional['FanState']:
+    def _state(self) -> Optional[FanState]:
         return super()._state
 
     async def async_set_speed(self, speed: str) -> None:

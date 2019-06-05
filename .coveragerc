@@ -47,6 +47,7 @@ omit =
     homeassistant/components/august/*
     homeassistant/components/automatic/device_tracker.py
     homeassistant/components/avion/light.py
+    homeassistant/components/azure_event_hub/*
     homeassistant/components/baidu/tts.py
     homeassistant/components/bbb_gpio/*
     homeassistant/components/bbox/device_tracker.py
@@ -171,6 +172,7 @@ omit =
     homeassistant/components/esphome/camera.py
     homeassistant/components/esphome/climate.py
     homeassistant/components/esphome/cover.py
+    homeassistant/components/esphome/entry_data.py
     homeassistant/components/esphome/fan.py
     homeassistant/components/esphome/light.py
     homeassistant/components/esphome/sensor.py
@@ -250,7 +252,6 @@ omit =
     homeassistant/components/hitron_coda/device_tracker.py
     homeassistant/components/hive/*
     homeassistant/components/hlk_sw16/*
-    homeassistant/components/homekit_controller/*
     homeassistant/components/homematic/*
     homeassistant/components/homematic/climate.py
     homeassistant/components/homematic/cover.py
@@ -344,6 +345,7 @@ omit =
     homeassistant/components/mastodon/notify.py
     homeassistant/components/matrix/*
     homeassistant/components/maxcube/*
+    homeassistant/components/mcp23017/*
     homeassistant/components/media_extractor/*
     homeassistant/components/mediaroom/media_player.py
     homeassistant/components/message_bird/notify.py
@@ -487,6 +489,9 @@ omit =
     homeassistant/components/reddit/*
     homeassistant/components/rejseplanen/sensor.py
     homeassistant/components/remember_the_milk/__init__.py
+    homeassistant/components/repetier/__init__.py
+    homeassistant/components/repetier/sensor.py
+    homeassistant/components/remote_rpi_gpio/*
     homeassistant/components/rest/binary_sensor.py
     homeassistant/components/rest/notify.py
     homeassistant/components/rest/switch.py
@@ -539,12 +544,14 @@ omit =
     homeassistant/components/slack/notify.py
     homeassistant/components/sma/sensor.py
     homeassistant/components/smappee/*
+    homeassistant/components/smarthab/*
     homeassistant/components/smtp/notify.py
     homeassistant/components/snapcast/media_player.py
     homeassistant/components/snmp/*
     homeassistant/components/sochain/sensor.py
     homeassistant/components/socialblade/sensor.py
     homeassistant/components/solaredge/sensor.py
+    homeassistant/components/solax/sensor.py
     homeassistant/components/somfy_mylink/*
     homeassistant/components/sonarr/sensor.py
     homeassistant/components/songpal/media_player.py
@@ -651,6 +658,7 @@ omit =
     homeassistant/components/waqi/sensor.py
     homeassistant/components/waterfurnace/*
     homeassistant/components/watson_iot/*
+    homeassistant/components/watson_tts/tts.py
     homeassistant/components/waze_travel_time/sensor.py
     homeassistant/components/webostv/*
     homeassistant/components/wemo/*

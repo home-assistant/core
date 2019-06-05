@@ -4,8 +4,9 @@ import pypck
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import CONF_ADDRESS
 
-from . import LcnDevice, get_connection
+from . import LcnDevice
 from .const import CONF_CONNECTIONS, CONF_OUTPUT, DATA_LCN, OUTPUT_PORTS
+from .helpers import get_connection
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
@@ -39,7 +40,7 @@ class LcnOutputSwitch(LcnDevice, SwitchDevice):
         """Initialize the LCN switch."""
         super().__init__(config, address_connection)
 
-        self.output = self.pypck.lcn_defs.OutputPort[config[CONF_OUTPUT]]
+        self.output = pypck.lcn_defs.OutputPort[config[CONF_OUTPUT]]
 
         self._is_on = None
 
@@ -68,7 +69,7 @@ class LcnOutputSwitch(LcnDevice, SwitchDevice):
 
     def input_received(self, input_obj):
         """Set switch state when LCN input object (command) is received."""
-        if not isinstance(input_obj, self.pypck.inputs.ModStatusOutput) or \
+        if not isinstance(input_obj, pypck.inputs.ModStatusOutput) or \
                 input_obj.get_output_id() != self.output.value:
             return
 
@@ -83,7 +84,7 @@ class LcnRelaySwitch(LcnDevice, SwitchDevice):
         """Initialize the LCN switch."""
         super().__init__(config, address_connection)
 
-        self.output = self.pypck.lcn_defs.RelayPort[config[CONF_OUTPUT]]
+        self.output = pypck.lcn_defs.RelayPort[config[CONF_OUTPUT]]
 
         self._is_on = None
 
@@ -102,8 +103,8 @@ class LcnRelaySwitch(LcnDevice, SwitchDevice):
         """Turn the entity on."""
         self._is_on = True
 
-        states = [self.pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
-        states[self.output.value] = self.pypck.lcn_defs.RelayStateModifier.ON
+        states = [pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
+        states[self.output.value] = pypck.lcn_defs.RelayStateModifier.ON
         self.address_connection.control_relays(states)
         await self.async_update_ha_state()
 
@@ -111,14 +112,14 @@ class LcnRelaySwitch(LcnDevice, SwitchDevice):
         """Turn the entity off."""
         self._is_on = False
 
-        states = [self.pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
-        states[self.output.value] = self.pypck.lcn_defs.RelayStateModifier.OFF
+        states = [pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
+        states[self.output.value] = pypck.lcn_defs.RelayStateModifier.OFF
         self.address_connection.control_relays(states)
         await self.async_update_ha_state()
 
     def input_received(self, input_obj):
         """Set switch state when LCN input object (command) is received."""
-        if not isinstance(input_obj, self.pypck.inputs.ModStatusRelays):
+        if not isinstance(input_obj, pypck.inputs.ModStatusRelays):
             return
 
         self._is_on = input_obj.get_state(self.output.value)

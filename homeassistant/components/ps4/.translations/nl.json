@@ -9,6 +9,7 @@
         },
         "error": {
             "login_failed": "Kan niet koppelen met PlayStation 4. Controleer of de pincode juist is.",
+            "no_ipaddress": "Voer het IP-adres in van de PlayStation 4 die je wilt configureren.",
             "not_ready": "PlayStation 4 staat niet aan of is niet verbonden met een netwerk."
         },
         "step": {
@@ -24,6 +25,12 @@
                     "region": "Regio"
                 },
                 "description": "Voer je PlayStation 4 informatie in. Voor 'PIN', blader naar 'Instellingen' op je PlayStation 4. Blader dan naar 'Mobiele App verbindingsinstellingen' en kies 'Apparaat toevoegen'. Voer de weergegeven PIN-code in.",
+                "title": "PlayStation 4"
+            },
+            "mode": {
+                "data": {
+                    "ip_address": "IP-adres (leeg laten als u Auto Discovery gebruikt)."
+                },
                 "title": "PlayStation 4"
             }
         },

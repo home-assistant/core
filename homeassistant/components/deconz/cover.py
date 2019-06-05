@@ -14,7 +14,7 @@ ZIGBEE_SPEC = ['lumi.curtain']
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
-    """Unsupported way of setting up deCONZ covers."""
+    """Old way of setting up deCONZ platforms."""
     pass
 
 

@@ -112,7 +112,7 @@ async def async_register_panel(
 
     config['_panel_custom'] = custom_panel_config
 
-    await hass.components.frontend.async_register_built_in_panel(
+    hass.components.frontend.async_register_built_in_panel(
         component_name='custom',
         sidebar_title=sidebar_title,
         sidebar_icon=sidebar_icon,

@@ -5,7 +5,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_SELECT_SOUND_MODE, SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP)
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 import homeassistant.util.dt as dt_util
 
@@ -35,7 +36,7 @@ YOUTUBE_PLAYER_SUPPORT = \
 MUSIC_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_CLEAR_PLAYLIST | \
-    SUPPORT_PLAY | SUPPORT_SHUFFLE_SET | \
+    SUPPORT_PLAY | SUPPORT_SHUFFLE_SET | SUPPORT_VOLUME_STEP | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_SELECT_SOUND_MODE
 
@@ -120,6 +121,16 @@ class AbstractDemoPlayer(MediaPlayerDevice):
     def mute_volume(self, mute):
         """Mute the volume."""
         self._volume_muted = mute
+        self.schedule_update_ha_state()
+
+    def volume_up(self):
+        """Increase volume."""
+        self._volume_level = min(1.0, self._volume_level + 0.1)
+        self.schedule_update_ha_state()
+
+    def volume_down(self):
+        """Decrease volume."""
+        self._volume_level = max(0.0, self._volume_level - 0.1)
         self.schedule_update_ha_state()
 
     def set_volume_level(self, volume):

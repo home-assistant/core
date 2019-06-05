@@ -1,6 +1,7 @@
 {
   "domain": "unifi",
   "name": "Unifi",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/unifi",
   "requirements": [
     "aiounifi==4",

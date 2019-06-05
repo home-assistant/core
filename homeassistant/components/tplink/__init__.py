@@ -5,13 +5,11 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_HOST
 from homeassistant import config_entries
-from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
-
+from .config_flow import async_get_devices
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = 'tplink'
 
 TPLINK_HOST_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string
@@ -32,16 +30,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional('discovery', default=True): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
-
-
-async def _async_has_devices(hass):
-    """Return if there are devices that can be discovered."""
-    from pyHS100 import Discover
-
-    def discover():
-        devs = Discover.discover()
-        return devs
-    return await hass.async_add_executor_job(discover)
 
 
 async def async_setup(hass, config):
@@ -74,7 +62,7 @@ async def async_setup_entry(hass, config_entry):
     # If initialized from configure integrations, there's no config
     # so we default here to True
     if config_data is None or config_data[CONF_DISCOVERY]:
-        devs = await _async_has_devices(hass)
+        devs = await async_get_devices(hass)
         _LOGGER.info("Discovered %s TP-Link smart home device(s)", len(devs))
         devices.update(devs)
 
@@ -149,9 +137,3 @@ async def async_unload_entry(hass, entry):
     # We were not able to unload the platforms, either because there
     # were none or one of the forward_unloads failed.
     return False
-
-
-config_entry_flow.register_discovery_flow(DOMAIN,
-                                          'TP-Link Smart Home',
-                                          _async_has_devices,
-                                          config_entries.CONN_CLASS_LOCAL_POLL)

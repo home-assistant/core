@@ -302,9 +302,11 @@ class EntityRegistry:
     @callback
     def async_clear_config_entry(self, config_entry):
         """Clear config entry from registry entries."""
-        for entity_id, entry in self.entities.items():
-            if config_entry == entry.config_entry_id:
-                self._async_update_entity(entity_id, config_entry_id=None)
+        for entity_id in [
+                entity_id
+                for entity_id, entry in self.entities.items()
+                if config_entry == entry.config_entry_id]:
+            self.async_remove(entity_id)
 
 
 @bind_hass

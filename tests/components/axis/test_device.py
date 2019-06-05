@@ -37,6 +37,7 @@ async def test_device_setup():
     api = Mock()
 
     axis_device = device.AxisNetworkDevice(hass, entry)
+    axis_device.start = Mock()
 
     assert axis_device.host == DEVICE_DATA[device.CONF_HOST]
     assert axis_device.model == ENTRY_CONFIG[device.CONF_MODEL]
@@ -47,11 +48,13 @@ async def test_device_setup():
         assert await axis_device.async_setup() is True
 
     assert axis_device.api is api
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 2
+    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 3
     assert hass.config_entries.async_forward_entry_setup.mock_calls[0][1] == \
         (entry, 'camera')
     assert hass.config_entries.async_forward_entry_setup.mock_calls[1][1] == \
         (entry, 'binary_sensor')
+    assert hass.config_entries.async_forward_entry_setup.mock_calls[2][1] == \
+        (entry, 'switch')
 
 
 async def test_device_signal_new_address(hass):
@@ -71,7 +74,7 @@ async def test_device_signal_new_address(hass):
         await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1
-    assert len(axis_device.listeners) == 1
+    assert len(axis_device.listeners) == 2
 
     entry.data[device.CONF_DEVICE][device.CONF_HOST] = '2.3.4.5'
     hass.config_entries.async_update_entry(entry, data=entry.data)
@@ -193,6 +196,8 @@ async def test_get_device(hass):
     with patch('axis.param_cgi.Params.update_brand',
                return_value=mock_coro()), \
             patch('axis.param_cgi.Params.update_properties',
+                  return_value=mock_coro()), \
+            patch('axis.port_cgi.Ports.update',
                   return_value=mock_coro()):
         assert await device.get_device(hass, DEVICE_DATA)
 

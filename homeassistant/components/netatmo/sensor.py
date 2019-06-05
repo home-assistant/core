@@ -145,7 +145,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     # Only create sensors for monitored properties
                     for condition in monitored_conditions:
                         dev.append(NetatmoSensor(
-                            data, module_name, condition.lower()))
+                            data, module_name, condition.lower(),
+                            config.get(CONF_STATION)))
 
         for module_name, _ in not_handled.items():
             _LOGGER.error('Module name: "%s" not found', module_name)
@@ -164,13 +165,14 @@ def all_product_classes():
 class NetatmoSensor(Entity):
     """Implementation of a Netatmo sensor."""
 
-    def __init__(self, netatmo_data, module_name, sensor_type):
+    def __init__(self, netatmo_data, module_name, sensor_type, station):
         """Initialize the sensor."""
         self._name = 'Netatmo {} {}'.format(module_name,
                                             SENSOR_TYPES[sensor_type][0])
         self.netatmo_data = netatmo_data
         self.module_name = module_name
         self.type = sensor_type
+        self.station_name = station
         self._state = None
         self._device_class = SENSOR_TYPES[self.type][3]
         self._icon = SENSOR_TYPES[self.type][2]
@@ -178,7 +180,8 @@ class NetatmoSensor(Entity):
         self._module_type = self.netatmo_data. \
             station_data.moduleByName(module=module_name)['type']
         module_id = self.netatmo_data. \
-            station_data.moduleByName(module=module_name)['_id']
+            station_data.moduleByName(station=self.station_name,
+                                      module=module_name)['_id']
         self._unique_id = '{}-{}'.format(module_id, self.type)
 
     @property
@@ -523,9 +526,9 @@ class NetatmoData:
             _LOGGER.debug("%s detected!", str(self.data_class.__name__))
             return station_data
         except NoDevice:
-            _LOGGER.error("No Weather or HomeCoach devices found for %s", str(
-                self.station
-                ))
+            _LOGGER.warning("No Weather or HomeCoach devices found for %s",
+                            str(self.station)
+                            )
             raise
 
     def update(self):
@@ -547,10 +550,14 @@ class NetatmoData:
 
         try:
             if self.station is not None:
-                self.data = self.station_data.lastData(
+                data = self.station_data.lastData(
                     station=self.station, exclude=3600)
             else:
-                self.data = self.station_data.lastData(exclude=3600)
+                data = self.station_data.lastData(exclude=3600)
+            if not data:
+                self._next_update = time() + NETATMO_UPDATE_INTERVAL
+                return
+            self.data = data
 
             newinterval = 0
             try:
