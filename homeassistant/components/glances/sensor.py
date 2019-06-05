@@ -41,7 +41,7 @@ SENSOR_TYPES = {
     'process_thread': ['Thread', 'Count', 'mdi:memory'],
     'process_sleeping': ['Sleeping', 'Count', 'mdi:memory'],
     'cpu_use_percent': ['CPU used', '%', 'mdi:memory'],
-    'cpu_temp': ['CPU Temp', '°C', 'mdi:thermometer'],
+    'cpu_temp': ['CPU Temp', '', 'mdi:thermometer'],
     'docker_active': ['Containers active', '', 'mdi:docker'],
     'docker_cpu_use': ['Containers CPU used', '%', 'mdi:docker'],
     'docker_memory_use': ['Containers RAM used', 'MiB', 'mdi:docker'],
@@ -181,6 +181,7 @@ class GlancesSensor(Entity):
                                            "exynos-therm 1", "soc_thermal 1",
                                            "soc-thermal 1"]:
                         self._state = sensor['value']
+                        self._unit_of_measurement = sensor['unit']
             elif self.type == 'docker_active':
                 count = 0
                 try:
