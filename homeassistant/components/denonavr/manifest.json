@@ -3,7 +3,7 @@
   "name": "Denonavr",
   "documentation": "https://www.home-assistant.io/components/denonavr",
   "requirements": [
-    "denonavr==0.7.8"
+    "denonavr==0.7.9"
   ],
   "dependencies": [],
   "codeowners": []
