@@ -5,6 +5,9 @@ trigger:
   branches:
     include:
     - dev
+  paths:
+    include:
+    - requirements_all.txt
 pr: none
 variables:
   - name: versionWheels
