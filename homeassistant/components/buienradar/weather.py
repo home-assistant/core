@@ -168,7 +168,7 @@ class BrWeather(WeatherEntity):
                     data_out[ATTR_FORECAST_TEMP_LOW] = data_in.get(MIN_TEMP)
                     data_out[ATTR_FORECAST_TEMP] = data_in.get(MAX_TEMP)
                     data_out[ATTR_FORECAST_PRECIPITATION] = data_in.get(RAIN)
-                    
+
                     fcdata_out.append(data_out)
 
             return fcdata_out
