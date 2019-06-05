@@ -17,9 +17,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Avea platform."""
     import avea
 
-    nearbyBulbs = avea.discover_avea_bulbs()
+    nearby_bulbs = avea.discover_avea_bulbs()
     try:
-        for bulb in nearbyBulbs:
+        for bulb in nearby_bulbs:
             bulb.get_name()
             bulb.get_brightness()
     except Exception:
