@@ -275,9 +275,8 @@ class LgWebOSDevice(MediaPlayerDevice):
             if self._last_icon and \
                     (icon.split('/')[-1] == self._last_icon.split('/')[-1]):
                 return self._last_icon
-            else:
-                self._last_icon = icon
-                return icon
+            self._last_icon = icon
+            return icon
         return None
 
     @property
