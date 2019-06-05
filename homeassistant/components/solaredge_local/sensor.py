@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.solaredge_local/
 """
 
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -15,8 +16,10 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 DOMAIN = 'solaredge_local'
+UPDATE_DELAY = timedelta(seconds=10)
 
 # Supported sensor types:
 # Key: ['json_key', 'name', unit, icon]
@@ -127,6 +130,7 @@ class SolarEdgeData:
         self.api = api
         self.data = {}
 
+    @Throttle(UPDATE_DELAY)
     def update(self):
         """Update the data from the SolarEdge Monitoring API."""
         from requests.exceptions import HTTPError, ConnectTimeout
