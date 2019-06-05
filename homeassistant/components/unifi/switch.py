@@ -44,6 +44,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     update_controller()
 
 
+@callback
 def update_items(controller, async_add_entities, switches):
     """Update POE port state from the controller."""
     new_switches = []
@@ -101,11 +102,6 @@ class UniFiSwitch(SwitchDevice):
         """Synchronize state with controller."""
         await self.controller.request_update()
 
-    # @callback
-    # def async_update(self):
-    #     """Synchronize state with controller."""
-    #     self.async_schedule_update_ha_state()
-
     @property
     def name(self):
         """Return the name of the switch."""
@@ -126,11 +122,6 @@ class UniFiSwitch(SwitchDevice):
         """Return if switch is available."""
         return self.controller.available or \
             self.client.sw_mac in self.controller.api.devices
-
-    # @property
-    # def should_poll(self):
-    #     """No polling needed."""
-    #     return False
 
     async def async_turn_on(self, **kwargs):
         """Enable POE for client."""

@@ -80,7 +80,6 @@ class UniFiController:
 
         async_dispatcher_send(self.hass, 'unifi-update-event')
 
-
     async def async_setup(self):
         """Set up a UniFi controller."""
         hass = self.hass
