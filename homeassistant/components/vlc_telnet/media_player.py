@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([VlcDevice(config.get(CONF_NAME),
                             config.get(CONF_HOST),
                             config.get(CONF_PORT),
-                            config.get(CONF_PASSWORD))])
+                            config.get(CONF_PASSWORD))], True)
 
 
 class VlcDevice(MediaPlayerDevice):
@@ -61,7 +61,6 @@ class VlcDevice(MediaPlayerDevice):
         self._volume_bkp = 0
         self._media_artist = ""
         self._media_title = ""
-        print("loaded!")
 
     def update(self):
         """Get the latest details from the device."""
@@ -71,8 +70,9 @@ class VlcDevice(MediaPlayerDevice):
             try:
                 self._vlc = VLCTelnet(self._host, self._password, self._port)
                 self._state = STATE_IDLE
-            except ConnErr:
+            except (ConnErr, EOFError):
                 self._state = STATE_UNAVAILABLE
+                self._vlc = None
         else:
             try:
                 status = self._vlc.status()
@@ -97,14 +97,8 @@ class VlcDevice(MediaPlayerDevice):
 
                 info = self._vlc.info()
                 if info:
-                    if 'artist' in info[0]:
-                        self._media_artist = info[0]['artist']
-                    else:
-                        self._media_artist = None
-                    if 'title' in info[0]:
-                        self._media_title = info[0]['title']
-                    else:
-                        self._media_title = None
+                    self._media_artist = info[0].get('artist')
+                    self._media_title = info[0].get('title')
 
             except ConnectionError as err:
                 _LOGGER.error(err)
