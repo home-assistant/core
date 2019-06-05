@@ -12,7 +12,7 @@ from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     FAN_AUTO, FAN_DIFFUSE, FAN_ON,
     SUPPORT_AUX_HEAT, SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_TEMPERATURE,
     CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE,
     HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_AUTO,
     PRESET_AWAY,
@@ -123,13 +123,19 @@ class HoneywellUSThermostat(ClimateDevice):
         """Turn auxiliary heater off."""
         self._device.system_mode = 'auto'
 
+        self._supported_features = (SUPPORT_TARGET_TEMPERATURE |
+                                    SUPPORT_PRESET_MODE)
+        # these are intentionally not using: self._data['uiData'].get('xxx')
+        # pylint: disable=no-member
+        if self._data['uiData']['hasFan']:
+            self._supported_features |= SUPPORT_FAN_MODE
+        if self._data['uiData']['canControlHumidification']:
+            self._supported_features |= SUPPORT_TARGET_HUMIDITY
+
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return (SUPPORT_AUX_HEAT |
-                SUPPORT_FAN_MODE |
-                SUPPORT_PRESET_MODE |
-                SUPPORT_TARGET_TEMPERATURE)
+        return self._supported_features
 
     @property
     def hvac_mode(self) -> str:
