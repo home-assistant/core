@@ -160,7 +160,7 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
             cache_file=DEFAULT_CACHEDB)
 
         try:
-            with async_timeout.timeout(_TIMEOUT, loop=self.hass.loop):
+            with async_timeout.timeout(_TIMEOUT):
                 await logi_session.authorize(code)
         except AuthorizationFailed:
             (self.hass.data[DATA_FLOW_IMPL][DOMAIN]

@@ -9,7 +9,7 @@ from homeassistant.core import Context
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import (ATTR_APP_DATA, ATTR_APP_ID, ATTR_APP_NAME,
+from .const import (ATTR_APP_DATA, ATTR_APP_ID, ATTR_APP_NAME, ATTR_DEVICE_ID,
                     ATTR_APP_VERSION, ATTR_DEVICE_NAME, ATTR_MANUFACTURER,
                     ATTR_MODEL, ATTR_OS_VERSION, ATTR_SUPPORTS_ENCRYPTION,
                     CONF_SECRET, CONF_USER_ID, DATA_BINARY_SENSOR,
@@ -148,3 +148,16 @@ def webhook_response(data, *, registration: Dict, status: int = 200,
 
     return Response(text=data, status=status, content_type='application/json',
                     headers=headers)
+
+
+def device_info(registration: Dict) -> Dict:
+    """Return the device info for this registration."""
+    return {
+        'identifiers': {
+            (DOMAIN, registration[ATTR_DEVICE_ID]),
+        },
+        'manufacturer': registration[ATTR_MANUFACTURER],
+        'model': registration[ATTR_MODEL],
+        'device_name': registration[ATTR_DEVICE_NAME],
+        'sw_version': registration[ATTR_OS_VERSION],
+    }

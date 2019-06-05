@@ -3,6 +3,7 @@
         "abort": {
             "all_configured": "Vsi mostovi Philips Hue so \u017ee konfigurirani",
             "already_configured": "Most je \u017ee konfiguriran",
+            "already_in_progress": "Konfiguracijski tok za most je \u017ee v teku.",
             "cannot_connect": "Ni mogo\u010de vzpostaviti povezave z mostom",
             "discover_timeout": "Ni bilo mogo\u010de odkriti Hue mostov",
             "no_bridges": "Ni odkritih mostov Philips Hue",

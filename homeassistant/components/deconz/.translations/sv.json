@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Bryggan \u00e4r redan konfigurerad",
             "no_bridges": "Inga deCONZ-bryggor uppt\u00e4cktes",
-            "one_instance_only": "Komponenten st\u00f6djer endast en deCONZ-instans"
+            "one_instance_only": "Komponenten st\u00f6djer endast en deCONZ-instans",
+            "updated_instance": "Uppdaterad deCONZ-instans med ny v\u00e4rdadress"
         },
         "error": {
             "no_key": "Det gick inte att ta emot en API-nyckel"
@@ -11,8 +12,10 @@
         "step": {
             "hassio_confirm": {
                 "data": {
-                    "allow_clip_sensor": "Till\u00e5t import av virtuella sensorer"
+                    "allow_clip_sensor": "Till\u00e5t import av virtuella sensorer",
+                    "allow_deconz_groups": "Till\u00e5t import av deCONZ-grupper"
                 },
+                "description": "Vill du konfigurera Home Assistant f\u00f6r att ansluta till deCONZ gateway som tillhandah\u00e5lls av hass.io till\u00e4gg {addon}?",
                 "title": "deCONZ Zigbee gateway via Hass.io till\u00e4gg"
             },
             "init": {

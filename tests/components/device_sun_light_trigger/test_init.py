@@ -8,6 +8,8 @@ from homeassistant.setup import async_setup_component
 from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME
 from homeassistant.components import (
     device_tracker, light, device_sun_light_trigger)
+from homeassistant.components.device_tracker.const import (
+    ENTITY_ID_FORMAT as DT_ENTITY_ID_FORMAT)
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
@@ -26,7 +28,7 @@ def scanner(hass):
     getattr(hass.components, 'test.light').init()
 
     with patch(
-        'homeassistant.components.device_tracker.load_yaml_config_file',
+        'homeassistant.components.device_tracker.legacy.load_yaml_config_file',
         return_value={
             'device_1': {
                 'hide_if_away': False,
@@ -102,7 +104,7 @@ async def test_lights_turn_on_when_coming_home_after_sun_set(hass, scanner):
                 device_sun_light_trigger.DOMAIN: {}})
 
         hass.states.async_set(
-            device_tracker.ENTITY_ID_FORMAT.format('device_2'), STATE_HOME)
+            DT_ENTITY_ID_FORMAT.format('device_2'), STATE_HOME)
 
         await hass.async_block_till_done()
     assert light.is_on(hass)

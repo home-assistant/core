@@ -99,7 +99,7 @@ async def test_discovery_connection(hass, mock_auth, mock_entry_setup):
     })
 
     flow = await hass.config_entries.flow.async_init(
-        'tradfri', context={'source': 'discovery'}, data={
+        'tradfri', context={'source': 'zeroconf'}, data={
             'host': '123.123.123.123'
         })
 
@@ -249,7 +249,7 @@ async def test_discovery_duplicate_aborted(hass):
     ).add_to_hass(hass)
 
     flow = await hass.config_entries.flow.async_init(
-        'tradfri', context={'source': 'discovery'}, data={
+        'tradfri', context={'source': 'zeroconf'}, data={
             'host': 'some-host'
         })
 

@@ -107,7 +107,7 @@ class SmhiWeather(WeatherEntity):
                     RETRY_TIMEOUT, self.retry_update())
 
         try:
-            with async_timeout.timeout(10, loop=self.hass.loop):
+            with async_timeout.timeout(10):
                 self._forecasts = await self.get_weather_forecast()
                 self._fail_count = 0
 

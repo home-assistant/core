@@ -15,6 +15,6 @@
     "websocket_api"
   ],
   "codeowners": [
-    "@home-assistant/core"
+    "@home-assistant/frontend"
   ]
 }

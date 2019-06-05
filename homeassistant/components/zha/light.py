@@ -246,6 +246,7 @@ class Light(ZhaEntity, light.Light):
 
     async def async_get_state(self, from_cache=True):
         """Attempt to retrieve on off state from the light."""
+        self.debug("polling current state")
         if self._on_off_channel:
             self._state = await self._on_off_channel.get_attribute_value(
                 'on_off', from_cache=from_cache)
