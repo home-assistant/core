@@ -2,26 +2,21 @@
 
 trigger:
   batch: true
-  branches:
-    include:
-    - dev
-    - master
   tags:
     include:
     - '*'
+pr: none
 variables:
   - name: versionBuilder
     value: '3.2'
-  - name: versionWheels
-    value: '0.7'
   - group: docker
-  - group: wheels
   - group: github
   - group: twine
 
 
 jobs:
 
+<<<<<<< HEAD:azure-pipelines.yml
 - job: 'Wheels'
   condition: or(eq(variables['Build.SourceBranchName'], 'dev'), eq(variables['Build.SourceBranchName'], 'master'))
   timeoutInMinutes: 360
@@ -115,6 +110,8 @@ jobs:
         --remote wheels@$(wheelsHost):/opt/wheels
     displayName: 'Run wheels build'
 
+=======
+>>>>>>> Update and rename azure-pipelines.yml to azure-pipelines-release.yml:azure-pipelines-release.yml
 
 - job: 'VersionValidate'
   condition: startsWith(variables['Build.SourceBranch'], 'refs/tags')
