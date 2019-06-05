@@ -57,10 +57,10 @@ jobs:
     displayName: 'Install wheels builder'
   - script: |
       cp requirements_all.txt requirements_wheels.txt
-      if [ "$(Build.Reason)" != "Schedule" ]; then
-        curl -s -o requirements_diff.txt https://raw.githubusercontent.com/home-assistant/home-assistant/master/requirements_all.txt
-      else
+      if [[ "$(Build.Reason)" =~ (Schedule|Manual) ]]; then
         touch requirements_diff.txt
+      else
+        curl -s -o requirements_diff.txt https://raw.githubusercontent.com/home-assistant/home-assistant/master/requirements_all.txt
       fi
 
       requirement_files="requirements_wheels.txt requirements_diff.txt"
