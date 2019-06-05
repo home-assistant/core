@@ -272,6 +272,9 @@ class LgWebOSDevice(MediaPlayerDevice):
             icon = self._app_list[self._current_source_id]['largeIcon']
             if not icon.startswith('http'):
                 icon = self._app_list[self._current_source_id]['icon']
+
+            # 'icon' holds a URL with a transient key. Avoid unnecessary
+            # updates by returning the same URL until the image changes.
             if self._last_icon and \
                     (icon.split('/')[-1] == self._last_icon.split('/')[-1]):
                 return self._last_icon
