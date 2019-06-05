@@ -100,8 +100,9 @@ class VlcDevice(MediaPlayerDevice):
                     self._media_artist = info[0].get('artist')
                     self._media_title = info[0].get('title')
 
-            except ConnectionError as err:
-                _LOGGER.error(err)
+            except (ConnErr, EOFError):
+                self._state = STATE_UNAVAILABLE
+                self._vlc = None
 
         return True
 
