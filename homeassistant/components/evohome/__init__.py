@@ -8,7 +8,7 @@ to 13 Children:
 """
 from datetime import datetime, timedelta
 import logging
-# from typing import Any, Awaitable, Dict, Optional, List
+from typing import Any, Awaitable, Dict, Optional, List
 
 import requests.exceptions
 import voluptuous as vol
@@ -239,49 +239,49 @@ class EvoDevice(Entity):
             else:
                 raise  # we don't expect/handle any other HTTPErrors
 
-# These properties, methods are from the Entity class
-    @property  # Entity
+    # These are from the Entity class
+    @property
     def should_poll(self) -> bool:
         """Only the Evohome Controller should be polled."""
         return False
 
-    @property  # Entity
-    def name(self) -> str:  # not Optional[str]  # TODO: DHW name
+    @property
+    def name(self) -> str:  # TODO: not Optional[str] make DHW name optional?
         """Return the name of the Evohome entity."""
         return self._name
 
-    @property  # Entity
-    def device_state_attributes(self):
+    @property
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the Evohome-specific state attributes."""
         return {'status': self._status}
 
-    @property  # Entity
+    @property
     def icon(self) -> str:
         """Return the icon to use in the frontend UI."""
         return self._icon
 
-    @property  # Entity
+    @property
     def available(self) -> bool:
         """Return True if the device is currently available."""
         return self._available
 
-    @property  # Entity
+    @property
     def supported_features(self) -> int:
         """Get the flag of supported features of the device."""
-        _LOGGER.warn("supported_features(%s) = %s", self._id, self._supported_features)
-        return 2**16-1  # self._supported_features  # 2**16-1
+        _LOGGER.warn("supported_features(%s) = %s", self._id, self._supported_features)  #TODO: deleteme
+        return self._supported_features
 
-    async def async_added_to_hass(self) -> None:  # Entity
+    async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
 
-# These properties, methods are from the ClimateDevice class
-    @property  # ClimateDevice
-    def precision(self) -> float:
+    # These are from the ClimateDevice, WaterHeaterDevice classes
+    @property
+    def precision(self) -> float:  # TODO: use self._precision??
         """Return the temperature precision to use in the frontend UI."""
         return PRECISION_HALVES
 
-    @property  # ClimateDevice
+    @property
     def temperature_unit(self) -> str:
         """Return the temperature unit to use in the frontend UI."""
         return TEMP_CELSIUS

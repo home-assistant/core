@@ -4,13 +4,12 @@ import logging
 from typing import Optional, List  # TODO: # also: Any, Awaitable, Dict
 
 import requests.exceptions
-
 import evohomeclient2
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF,
-    PRESET_ECO, PRESET_AWAY, PRESET_HOME, PRESET_SLEEP,
+    PRESET_AWAY, PRESET_CUSTOM, PRESET_ECO, PRESET_HOME,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE,
     CURRENT_HVAC_OFF, CURRENT_HVAC_HEAT,
 )
@@ -30,43 +29,32 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# For the Controller
-TCS_STATE_TO_HA = {
+TCS_MODE_TO_HA_HVAC_MODE = {
     EVO_RESET: HVAC_MODE_AUTO,
     EVO_AUTO: HVAC_MODE_AUTO,
-    EVO_AUTOECO: PRESET_ECO,
-    EVO_AWAY: PRESET_AWAY,
-    EVO_DAYOFF: PRESET_HOME,
+    EVO_AUTOECO: HVAC_MODE_AUTO,
+    EVO_AWAY: HVAC_MODE_AUTO,
+    EVO_DAYOFF: HVAC_MODE_AUTO,
     EVO_CUSTOM: HVAC_MODE_AUTO,
-    EVO_HEATOFF: HVAC_MODE_OFF
+    EVO_HEATOFF: HVAC_MODE_OFF,
 }
-HA_PRESET_TO_TCS = {
+HA_HVAC_MODE_TO_TCS_MODE = {
     HVAC_MODE_AUTO: EVO_AUTO,
+    HVAC_MODE_OFF: EVO_HEATOFF,
+}
+
+TCS_MODE_TO_HA_PRESET = {
+    EVO_AUTOECO: HVAC_MODE_AUTO,
+    EVO_AWAY: PRESET_AWAY,
+    EVO_DAYOFF: HVAC_MODE_AUTO,
+    EVO_CUSTOM: HVAC_MODE_AUTO,
+}
+HA_PRESET_TO_TCS_MODE = {
+    PRESET_AWAY: EVO_AWAY,
+    PRESET_CUSTOM: EVO_CUSTOM,
     PRESET_ECO: EVO_AUTOECO,
-    STATE_OFF: EVO_HEATOFF
+    PRESET_HOME: EVO_DAYOFF,
 }
-EVO_MODES_TCS = list()
-
-# for the Zones
-ZONE_MODE_TO_HA = {
-    EVO_FOLLOW: HVAC_MODE_AUTO,
-    EVO_TEMPOVER: HVAC_MODE_HEAT,
-    EVO_PERMOVER: HVAC_MODE_HEAT
-}
-HA_MODE_TO_ZONE = {
-    HVAC_MODE_AUTO: EVO_FOLLOW,
-    HVAC_MODE_HEAT: EVO_PERMOVER
-}
-HA_MODES_FOR_ZONE = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
-HA_MODES_FOR_TCS = [HVAC_MODE_AUTO, HVAC_MODE_OFF]
-
-HA_PRESETS_FOR_ZONE = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
-HA_PRESETS_FOR_TCS = [
-    PRESET_ECO,
-    PRESET_AWAY,
-    PRESET_HOME,
-    PRESET_SLEEP
-]
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
@@ -99,7 +87,7 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
             evo_zone_ref.zoneId, evo_zone_ref.zone_type, evo_zone_ref.name)
         zones.append(EvoZone(evo_data, client, evo_zone_ref))
 
-    entities = [controller] + zones
+    entities = [controller] # + zones
 
     async_add_entities(entities, update_before_add=False)
 
@@ -133,7 +121,7 @@ class EvoZone(EvoDevice, ClimateDevice):
         self._available = self._status['temperatureStatus']['isAvailable']
 
 
-# REMOVE: These are from the ToggleEntity class
+# These are from the ToggleEntity class  # TODO: remove this line
     @property
     def XXX_is_on(self) -> bool:
         """Return True if the evohome Zone is off.
@@ -166,32 +154,26 @@ class EvoZone(EvoDevice, ClimateDevice):
 
 
 # These properties, methods are from the ClimateDevice class
-    @property  # ClimateDevice
-    def hvac_state(self) -> str:
+    @property
+    def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
         """
-        # _LOGGER.warn("hvac_state(%s): %s", self._id, HVAC_MODE_AUTO)
-        return HVAC_MODE_AUTO
+        mode = TCS_MODE_TO_HA_HVAC_MODE[self._status['systemModeStatus']['mode']]
+        _LOGGER.warn("hvac_mode(TCS=%s): %s", self._id, mode)
+        return mode
 
-    @property  # ClimateDevice
+    @property
     def hvac_modes(self) -> List[str]:
         """Return the list of available hvac operation modes.
 
         Need to be a subset of HVAC_MODES.
         """
-        # _LOGGER.warn("hvac_modes(%s): %s", self._id, HA_MODES_FOR_ZONE)
-        return HA_MODES_FOR_ZONE
+        _LOGGER.warn("hvac_modes(TCS=%s): %s", self._id,
+                     list(HA_HVAC_MODE_TO_TCS_MODE))
+        return list(HA_HVAC_MODE_TO_TCS_MODE)
 
-    @property  # ClimateDevice
-    def current_hvac(self) -> Optional[str]:
-        """Return the current running hvac operation if supported.
-
-        Need to be one of CURRENT_HVAC_*.
-        """
-        # _LOGGER.warn("current_hvac(%s): %s", self._id, HVAC_MODE_AUTO)
-        return HVAC_MODE_AUTO
 
     @property
     def current_temperature(self) -> Optional[float]:
@@ -409,48 +391,25 @@ class EvoController(EvoDevice, ClimateDevice):
         return {'status': status}
 
 
-# REMOVE: These are from the ToggleEntity class
-    @property
-    def XXX_is_on(self) -> bool:
-        """Return True as evohome Controllers are always on.
-
-        For example, evohome Controllers have a 'HeatingOff' mode, but even
-        then the DHW would remain on.
-        """
-        return True
-
-
 # These properties, methods are from the ClimateDevice class
-    @property  # ClimateDevice
-    def hvac_state(self) -> str:
+    @property
+    def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
         """
-        _LOGGER.warn("hvac_state(TCS=%s): %s", self._id, HVAC_MODE_AUTO)
-        return HVAC_MODE_AUTO
+        mode = TCS_MODE_TO_HA_HVAC_MODE[self._status['systemModeStatus']['mode']]
+        _LOGGER.warn("hvac_mode(TCS=%s): %s", self._id, mode)
+        return mode
 
-    @property  # ClimateDevice
+    @property
     def hvac_modes(self) -> List[str]:
         """Return the list of available hvac operation modes.
 
         Need to be a subset of HVAC_MODES.
         """
-        _LOGGER.warn("hvac_modes(TCS=%s): %s", self._id, HA_MODES_FOR_TCS)
-        return HA_MODES_FOR_TCS
-
-    @property  # ClimateDevice
-    def current_hvac(self) -> Optional[str]:
-        """Return the current running hvac operation if supported.
-
-        Need to be one of CURRENT_HVAC_*.
-        """
-        if self._status['systemModeStatus']['mode'] == EVO_HEATOFF:
-            current_hvac = CURRENT_HVAC_OFF
-        else:
-            current_hvac = CURRENT_HVAC_HEAT
-        _LOGGER.warn("current_hvac(TCS=%s): %s", self._id, current_hvac)
-        return current_hvac
+        _LOGGER.warn("hvac_modes(TCS=%s): %s", self._id, list(HA_HVAC_MODE_TO_TCS_MODE))
+        return list(HA_HVAC_MODE_TO_TCS_MODE)
 
     @property
     def current_temperature(self) -> Optional[float]:

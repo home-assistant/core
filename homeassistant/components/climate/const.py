@@ -45,6 +45,9 @@ PRESET_BOOST = 'boost'
 # Device have a comfort mode
 PRESET_COMFORT = 'comfort'
 
+# Device has a custom mode
+PRESET_CUSTOM = 'custom'
+
 # Device is on home mode
 PRESET_HOME = 'home'
 
