@@ -121,9 +121,7 @@ class ZHADevice:
     @property
     def is_mains_powered(self):
         """Return true if device is mains powered."""
-        if self._zigpy_device.node_desc.is_valid:
-            return self._zigpy_device.node_desc.is_mains_powered
-        return None
+        return self._zigpy_device.node_desc.is_mains_powered
 
     @property
     def power_source(self):
@@ -133,23 +131,17 @@ class ZHADevice:
     @property
     def is_router(self):
         """Return true if this is a routing capable device."""
-        if self._zigpy_device.node_desc.is_valid:
-            return self._zigpy_device.node_desc.is_router
-        return None
+        return self._zigpy_device.node_desc.is_router
 
     @property
     def is_coordinator(self):
         """Return true if this device represents the coordinator."""
-        if self._zigpy_device.node_desc.is_valid:
-            return self._zigpy_device.node_desc.is_coordinator
-        return None
+        return self._zigpy_device.node_desc.is_coordinator
 
     @property
     def is_end_device(self):
         """Return true if this device is an end device."""
-        if self._zigpy_device.node_desc.is_valid:
-            return self._zigpy_device.node_desc.is_end_device
-        return None
+        return self._zigpy_device.node_desc.is_end_device
 
     @property
     def gateway(self):
