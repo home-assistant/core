@@ -1662,7 +1662,14 @@ snapcast==2.0.9
 # homeassistant.components.sensor.socialblade
 socialbladeclient==0.2
 
+<<<<<<< HEAD
 # homeassistant.components.sensor.solaredge
+=======
+# homeassistant.components.solaredge_local
+solaredge-local==0.1.4
+
+# homeassistant.components.solaredge
+>>>>>>> SolarEdge Local Component (#23996)
 solaredge==0.0.2
 
 # homeassistant.components.climate.honeywell
