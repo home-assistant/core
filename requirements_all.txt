@@ -1630,7 +1630,11 @@ shodan==1.10.4
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
+<<<<<<< HEAD
 simplisafe-python==3.1.14
+=======
+simplisafe-python==3.4.2
+>>>>>>> Bump simplipy to 3.4.2 (#24326)
 
 # homeassistant.components.sisyphus
 sisyphus-control==2.1
