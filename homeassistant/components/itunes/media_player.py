@@ -98,7 +98,8 @@ class Itunes:
 
     def set_shuffle(self, shuffle):
         """Set the shuffle mode, shuffle True or False."""
-        return self._request('PUT', '/shuffle', {'mode': ('songs' if shuffle else 'off')})
+        return self._request('PUT', '/shuffle', {'mode':
+          ('songs' if shuffle else 'off')})
 
     def play(self):
         """Set playback to play and returns the current state."""
@@ -337,6 +338,7 @@ class ItunesDevice(MediaPlayerDevice):
     def set_shuffle(self, shuffle):
         """Shuffle (true) or no shuffle (false) media player."""
         response = self.client.set_shuffle(shuffle)
+        self.update_state(response)
 
     def media_play(self):
         """Send media_play command to media player."""
