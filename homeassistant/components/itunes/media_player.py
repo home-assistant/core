@@ -98,8 +98,8 @@ class Itunes:
 
     def set_shuffle(self, shuffle):
         """Set the shuffle mode, shuffle True or False."""
-        return self._request('PUT', '/shuffle', {'mode':
-          ('songs' if shuffle else 'off')})
+        return self._request('PUT', '/shuffle',
+                             {'mode': ('songs' if shuffle else 'off')})
 
     def play(self):
         """Set playback to play and returns the current state."""
@@ -290,7 +290,7 @@ class ItunesDevice(MediaPlayerDevice):
         """Image url of current playing media."""
         if self.player_state in (STATE_PLAYING, STATE_IDLE, STATE_PAUSED) and \
            self.current_title is not None:
-              return self.client.artwork_url() + '?id=' + self.content_id
+            return self.client.artwork_url() + '?id=' + self.content_id
 
         return 'https://cloud.githubusercontent.com/assets/260/9829355' \
             '/33fab972-58cf-11e5-8ea2-2ca74bdaae40.png'
