@@ -4,11 +4,13 @@ Support for SolarEdge Monitoring API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.solaredge_local/
 """
-
 import logging
 from datetime import timedelta
 
+from requests.exceptions import HTTPError, ConnectTimeout
+from solaredge_local import SolarEdge
 import voluptuous as vol
+
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -46,9 +48,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the SolarEdge Monitoring API sensor."""
-    from solaredge_local import SolarEdge
-    from requests.exceptions import HTTPError, ConnectTimeout
-
     ip_address = config[CONF_IP_ADDRESS]
     platform_name = config[CONF_NAME]
 
@@ -133,8 +132,6 @@ class SolarEdgeData:
     @Throttle(UPDATE_DELAY)
     def update(self):
         """Update the data from the SolarEdge Monitoring API."""
-        from requests.exceptions import HTTPError, ConnectTimeout
-
         try:
             response = self.api.get_status()
             _LOGGER.debug("response from SolarEdge: %s", response)
