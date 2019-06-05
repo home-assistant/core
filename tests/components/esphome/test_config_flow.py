@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.esphome import config_flow
+from homeassistant.components.esphome import config_flow, DATA_KEY
 from tests.common import mock_coro, MockConfigEntry
 
 MockDeviceInfo = namedtuple("DeviceInfo", ["uses_password", "name"])
@@ -45,10 +45,16 @@ def mock_api_connection_error():
         yield mock_error
 
 
-async def test_user_connection_works(hass, mock_client):
-    """Test we can finish a config flow."""
+def _setup_flow_handler(hass):
     flow = config_flow.EsphomeFlowHandler()
     flow.hass = hass
+    flow.context = {}
+    return flow
+
+
+async def test_user_connection_works(hass, mock_client):
+    """Test we can finish a config flow."""
+    flow = _setup_flow_handler(hass)
     result = await flow.async_step_user(user_input=None)
     assert result['type'] == 'form'
 
@@ -78,8 +84,7 @@ async def test_user_connection_works(hass, mock_client):
 async def test_user_resolve_error(hass, mock_api_connection_error,
                                   mock_client):
     """Test user step with IP resolve error."""
-    flow = config_flow.EsphomeFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
     await flow.async_step_user(user_input=None)
 
     class MockResolveError(mock_api_connection_error):
@@ -111,8 +116,7 @@ async def test_user_resolve_error(hass, mock_api_connection_error,
 async def test_user_connection_error(hass, mock_api_connection_error,
                                      mock_client):
     """Test user step with connection error."""
-    flow = config_flow.EsphomeFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
     await flow.async_step_user(user_input=None)
 
     mock_client.device_info.side_effect = mock_api_connection_error
@@ -134,8 +138,7 @@ async def test_user_connection_error(hass, mock_api_connection_error,
 
 async def test_user_with_password(hass, mock_client):
     """Test user step with password."""
-    flow = config_flow.EsphomeFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
     await flow.async_step_user(user_input=None)
 
     mock_client.device_info.return_value = mock_coro(
@@ -165,8 +168,7 @@ async def test_user_with_password(hass, mock_client):
 async def test_user_invalid_password(hass, mock_api_connection_error,
                                      mock_client):
     """Test user step with invalid password."""
-    flow = config_flow.EsphomeFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
     await flow.async_step_user(user_input=None)
 
     mock_client.device_info.return_value = mock_coro(
@@ -190,8 +192,7 @@ async def test_user_invalid_password(hass, mock_api_connection_error,
 
 async def test_discovery_initiation(hass, mock_client):
     """Test discovery importing works."""
-    flow = config_flow.EsphomeFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
     service_info = {
         'host': '192.168.43.183',
         'port': 6053,
@@ -202,10 +203,11 @@ async def test_discovery_initiation(hass, mock_client):
     mock_client.device_info.return_value = mock_coro(
         MockDeviceInfo(False, "test8266"))
 
-    result = await flow.async_step_discovery(user_input=service_info)
+    result = await flow.async_step_zeroconf(user_input=service_info)
     assert result['type'] == 'form'
     assert result['step_id'] == 'discovery_confirm'
     assert result['description_placeholders']['name'] == 'test8266'
+    assert flow.context['title_placeholders']['name'] == 'test8266'
 
     result = await flow.async_step_discovery_confirm(user_input={})
     assert result['type'] == 'create_entry'
@@ -221,15 +223,14 @@ async def test_discovery_already_configured_hostname(hass, mock_client):
         data={'host': 'test8266.local', 'port': 6053, 'password': ''}
     ).add_to_hass(hass)
 
-    flow = config_flow.EsphomeFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
     service_info = {
         'host': '192.168.43.183',
         'port': 6053,
         'hostname': 'test8266.local.',
         'properties': {}
     }
-    result = await flow.async_step_discovery(user_input=service_info)
+    result = await flow.async_step_zeroconf(user_input=service_info)
     assert result['type'] == 'abort'
     assert result['reason'] == 'already_configured'
 
@@ -241,8 +242,7 @@ async def test_discovery_already_configured_ip(hass, mock_client):
         data={'host': '192.168.43.183', 'port': 6053, 'password': ''}
     ).add_to_hass(hass)
 
-    flow = config_flow.EsphomeFlowHandler()
-    flow.hass = hass
+    flow = _setup_flow_handler(hass)
     service_info = {
         'host': '192.168.43.183',
         'port': 6053,
@@ -251,6 +251,33 @@ async def test_discovery_already_configured_ip(hass, mock_client):
             "address": "192.168.43.183"
         }
     }
-    result = await flow.async_step_discovery(user_input=service_info)
+    result = await flow.async_step_zeroconf(user_input=service_info)
+    assert result['type'] == 'abort'
+    assert result['reason'] == 'already_configured'
+
+
+async def test_discovery_already_configured_name(hass, mock_client):
+    """Test discovery aborts if already configured via name."""
+    entry = MockConfigEntry(
+        domain='esphome',
+        data={'host': '192.168.43.183', 'port': 6053, 'password': ''}
+    )
+    entry.add_to_hass(hass)
+    mock_entry_data = MagicMock()
+    mock_entry_data.device_info.name = 'test8266'
+    hass.data[DATA_KEY] = {
+        entry.entry_id: mock_entry_data,
+    }
+
+    flow = _setup_flow_handler(hass)
+    service_info = {
+        'host': '192.168.43.183',
+        'port': 6053,
+        'hostname': 'test8266.local.',
+        'properties': {
+            "address": "test8266.local"
+        }
+    }
+    result = await flow.async_step_zeroconf(user_input=service_info)
     assert result['type'] == 'abort'
     assert result['reason'] == 'already_configured'

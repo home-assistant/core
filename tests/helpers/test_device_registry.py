@@ -211,10 +211,10 @@ async def test_removing_config_entries(hass, registry, update_events):
 
     registry.async_clear_config_entry('123')
     entry = registry.async_get_device({('bridgeid', '0123')}, set())
-    entry3 = registry.async_get_device({('bridgeid', '4567')}, set())
+    entry3_removed = registry.async_get_device({('bridgeid', '4567')}, set())
 
     assert entry.config_entries == {'456'}
-    assert entry3.config_entries == set()
+    assert entry3_removed is None
 
     await hass.async_block_till_done()
 
@@ -227,7 +227,7 @@ async def test_removing_config_entries(hass, registry, update_events):
     assert update_events[2]['device_id'] == entry3.id
     assert update_events[3]['action'] == 'update'
     assert update_events[3]['device_id'] == entry.id
-    assert update_events[4]['action'] == 'update'
+    assert update_events[4]['action'] == 'remove'
     assert update_events[4]['device_id'] == entry3.id
 
 

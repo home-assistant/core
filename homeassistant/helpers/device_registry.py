@@ -219,6 +219,14 @@ class DeviceRegistry:
 
         return new
 
+    def _async_remove_device(self, device_id):
+        del self.devices[device_id]
+        self.hass.bus.async_fire(EVENT_DEVICE_REGISTRY_UPDATED, {
+            'action': 'remove',
+            'device_id': device_id,
+        })
+        self.async_schedule_save()
+
     async def async_load(self):
         """Load the device registry."""
         data = await self._store.async_load()
@@ -278,10 +286,15 @@ class DeviceRegistry:
     @callback
     def async_clear_config_entry(self, config_entry_id):
         """Clear config entry from registry entries."""
+        remove = []
         for dev_id, device in self.devices.items():
-            if config_entry_id in device.config_entries:
+            if device.config_entries == {config_entry_id}:
+                remove.append(dev_id)
+            else:
                 self._async_update_device(
                     dev_id, remove_config_entry_id=config_entry_id)
+        for dev_id in remove:
+            self._async_remove_device(dev_id)
 
     @callback
     def async_clear_area_id(self, area_id: str) -> None:

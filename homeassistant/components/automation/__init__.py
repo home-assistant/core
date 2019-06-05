@@ -124,7 +124,7 @@ async def async_setup(hass, config):
                 context=service_call.context))
 
         if tasks:
-            await asyncio.wait(tasks, loop=hass.loop)
+            await asyncio.wait(tasks)
 
     async def turn_onoff_service_handler(service_call):
         """Handle automation turn on/off service calls."""
@@ -134,7 +134,7 @@ async def async_setup(hass, config):
             tasks.append(getattr(entity, method)())
 
         if tasks:
-            await asyncio.wait(tasks, loop=hass.loop)
+            await asyncio.wait(tasks)
 
     async def toggle_service_handler(service_call):
         """Handle automation toggle service calls."""
@@ -146,7 +146,7 @@ async def async_setup(hass, config):
                 tasks.append(entity.async_turn_on())
 
         if tasks:
-            await asyncio.wait(tasks, loop=hass.loop)
+            await asyncio.wait(tasks)
 
     async def reload_service_handler(service_call):
         """Remove all automations and load new ones from config."""

@@ -530,34 +530,6 @@ async def test_unavailable_state_doesnt_sync(hass):
     }
 
 
-async def test_empty_name_doesnt_sync(hass):
-    """Test that an entity with empty name does not sync over."""
-    light = DemoLight(
-        None, ' ',
-        state=False,
-    )
-    light.hass = hass
-    light.entity_id = 'light.demo_light'
-    await light.async_update_ha_state()
-
-    result = await sh.async_handle_message(
-        hass, BASIC_CONFIG, 'test-agent',
-        {
-            "requestId": REQ_ID,
-            "inputs": [{
-                "intent": "action.devices.SYNC"
-            }]
-        })
-
-    assert result == {
-        'requestId': REQ_ID,
-        'payload': {
-            'agentUserId': 'test-agent',
-            'devices': []
-        }
-    }
-
-
 @pytest.mark.parametrize("device_class,google_type", [
     ('non_existing_class', 'action.devices.types.SWITCH'),
     ('switch', 'action.devices.types.SWITCH'),
