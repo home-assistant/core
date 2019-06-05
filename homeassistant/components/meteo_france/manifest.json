@@ -6,5 +6,7 @@
     "meteofrance==0.3.7"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@victorcerutti"
+  ]
 }
