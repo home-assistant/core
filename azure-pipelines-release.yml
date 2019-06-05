@@ -240,7 +240,7 @@ jobs:
 >>>>>>> Update azure-pipelines.yml for Azure Pipelines
   dependsOn:
   - 'VersionValidate'
-  timeoutInMinutes: 120
+  timeoutInMinutes: 240
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
