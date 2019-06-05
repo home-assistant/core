@@ -764,8 +764,16 @@ mbddns==0.1.2
 # homeassistant.components.notify.message_bird
 messagebird==1.2.0
 
+<<<<<<< HEAD
 # homeassistant.components.sensor.meteo_france
 meteofrance==0.2.7
+=======
+# homeassistant.components.meteoalarm
+meteoalertapi==0.1.3
+
+# homeassistant.components.meteo_france
+meteofrance==0.3.4
+>>>>>>> Change meteoalertapi to version 0.1.3 (#24307)
 
 # homeassistant.components.sensor.mfi
 # homeassistant.components.switch.mfi
