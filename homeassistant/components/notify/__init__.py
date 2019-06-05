@@ -139,7 +139,7 @@ async def async_setup(hass, config):
                    in config_per_platform(config, DOMAIN)]
 
     if setup_tasks:
-        await asyncio.wait(setup_tasks, loop=hass.loop)
+        await asyncio.wait(setup_tasks)
 
     async def async_platform_discovered(platform, info):
         """Handle for discovered platform."""

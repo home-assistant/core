@@ -31,7 +31,7 @@ class DeconzDevice(Entity):
         self.unsub_dispatcher()
 
     @callback
-    def async_update_callback(self, reason):
+    def async_update_callback(self, force_update=False):
         """Update the device's state."""
         self.async_schedule_update_ha_state()
 

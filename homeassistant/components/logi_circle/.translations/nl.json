@@ -1,5 +1,14 @@
 {
     "config": {
+        "abort": {
+            "external_error": "Uitzondering opgetreden uit een andere stroom."
+        },
+        "create_entry": {
+            "default": "Succesvol geverifieerd met Logi Circle."
+        },
+        "error": {
+            "auth_error": "API-autorisatie mislukt."
+        },
         "title": "Logi Circle"
     }
 }

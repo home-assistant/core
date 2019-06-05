@@ -76,8 +76,8 @@ class FlowHandler(config_entries.ConfigFlow):
             errors=errors,
         )
 
-    async def async_step_discovery(self, user_input):
-        """Handle discovery."""
+    async def async_step_zeroconf(self, user_input):
+        """Handle zeroconf discovery."""
         for entry in self._async_current_entries():
             if entry.data[CONF_HOST] == user_input['host']:
                 return self.async_abort(
@@ -143,7 +143,7 @@ async def authenticate(hass, host, security_code):
 
     identity = uuid4().hex
 
-    api_factory = APIFactory(host, psk_id=identity, loop=hass.loop)
+    api_factory = APIFactory(host, psk_id=identity)
 
     try:
         with async_timeout.timeout(5):
