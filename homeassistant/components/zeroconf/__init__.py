@@ -3,12 +3,14 @@
 # https://github.com/PyCQA/pylint/issues/1931
 # pylint: disable=no-name-in-module
 import logging
+import socket
 
 import ipaddress
 import voluptuous as vol
 
 from zeroconf import ServiceBrowser, ServiceInfo, ServiceStateChange, Zeroconf
 
+from homeassistant import util
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, __version__)
 from homeassistant.generated.zeroconf import ZEROCONF, HOMEKIT
 
@@ -42,8 +44,16 @@ def setup(hass, config):
         'requires_api_password': True,
     }
 
-    info = ServiceInfo(ZEROCONF_TYPE, zeroconf_name,
-                       port=hass.http.server_port, properties=params)
+    host_ip = util.get_local_ip()
+
+    try:
+        host_ip_pton = socket.inet_pton(socket.AF_INET, host_ip)
+    except socket.error:
+        host_ip_pton = socket.inet_pton(socket.AF_INET6, host_ip)
+
+    info = ServiceInfo(ZEROCONF_TYPE, zeroconf_name, None,
+                       addresses=[host_ip_pton], port=hass.http.server_port,
+                       properties=params)
 
     zeroconf = Zeroconf()
 
