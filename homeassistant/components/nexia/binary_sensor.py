@@ -1,5 +1,6 @@
 from homeassistant.const import (ATTR_ATTRIBUTION)
 from homeassistant.components.binary_sensor import (BinarySensorDevice)
+from homeassistant.util import Throttle
 from . import (DATA_NEXIA, ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTRIBUTION)
 
 
@@ -30,6 +31,8 @@ class NexiaBinarySensor(BinarySensorDevice):
         self._call = sensor_call
         self._state = None
         self._device_class = sensor_class
+        self.update = Throttle(self._device.update_rate)(self._update)
+
 
     @property
     def name(self):
@@ -58,6 +61,6 @@ class NexiaBinarySensor(BinarySensorDevice):
         """Return the class of this sensor, from DEVICE_CLASSES."""
         return self._device_class
 
-    def update(self):
+    def _update(self):
         """Get the latest state of the sensor."""
         self._device.update()

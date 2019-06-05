@@ -4,7 +4,7 @@ import logging
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_ID
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_ID, CONF_SCAN_INTERVAL
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = [
@@ -33,11 +33,15 @@ DEFAULT_ENTITY_NAMESPACE = 'nexia'
 ATTR_FAN = 'fan'
 ATTR_SYSTEM_MODE = 'system_mode'
 ATTR_CURRENT_OPERATION = 'system_status'
-ATTR_DAMPER_STATUS = 'damper_status'
 ATTR_MODEL = "model"
 ATTR_FIRMWARE = 'firmware'
 ATTR_THERMOSTAT_NAME = 'thermostat_name'
 ATTR_HOLD_MODES = 'hold_modes'
+ATTR_SETPOINT_STATUS = 'setpoint_status'
+ATTR_ZONE_STATUS = 'zone_status'
+ATTR_FAN_SPEED = 'fan_speed'
+ATTR_COMPRESSOR_SPEED = 'compressor_speed'
+ATTR_OUTDOOR_TEMPERATURE = 'outdoor_temperature'
 
 
 CONFIG_SCHEMA = vol.Schema({
@@ -45,21 +49,25 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_ID): cv.positive_int,
+        vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int
     }),
 }, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
+    from .nexia_thermostat import NexiaThermostat
+
     conf = config[DOMAIN]
 
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
     house_id = conf[CONF_ID]
 
+    scan_interval = conf.get(CONF_SCAN_INTERVAL, NexiaThermostat.UPDATE_RATE)
+
     try:
-        from .nexia_thermostat import NexiaThermostat
-        thermostat = NexiaThermostat(username=username, password=password, house_id=house_id)
-        hass.data['nexia'] = thermostat
+        thermostat = NexiaThermostat(username=username, password=password, house_id=house_id, update_rate=scan_interval)
+        hass.data[DATA_NEXIA] = thermostat
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Nexia service: %s", str(ex))
         hass.components.persistent_notification.create(

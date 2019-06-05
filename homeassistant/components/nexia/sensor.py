@@ -1,7 +1,8 @@
 from homeassistant.const import (DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT,
                                  ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
-from . import (DATA_NEXIA, ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTRIBUTION)
+from homeassistant.util import Throttle
+from . import (DATA_NEXIA, ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTRIBUTION, )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -10,22 +11,37 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     sensors = list()
 
+    sensors.append(NexiaSensor(thermostat, "get_system_status", "System Status", None, None))
+
     if thermostat.has_variable_speed_compressor():
-        sensors.append(NexiaSensor(thermostat, "get_compressor_speed", "Compressor Speed", None, "%", percent_conv))
+        sensors.append(NexiaSensor(thermostat, "get_current_compressor_speed", "Current Compressor Speed", None, "%",
+                                   percent_conv))
+        sensors.append(NexiaSensor(thermostat, "get_requested_compressor_speed", "Requested Compressor Speed", None,
+                                   "%", percent_conv))
+
     if thermostat.has_outdoor_temperature():
-        unit = (TEMP_CELSIUS if thermostat.get_unit() == 'C' else TEMP_FAHRENHEIT)
+        unit = (TEMP_CELSIUS if thermostat.get_unit() == thermostat.UNIT_CELSIUS else TEMP_FAHRENHEIT)
         sensors.append(NexiaSensor(thermostat, "get_outdoor_temperature", "Outdoor Temperature",
                                    DEVICE_CLASS_TEMPERATURE, unit))
+
     if thermostat.has_relative_humidity():
         sensors.append(NexiaSensor(thermostat, "get_relative_humidity", "Relative Humidity", DEVICE_CLASS_HUMIDITY,
                                    "%", percent_conv))
 
+    for zone in thermostat.get_zone_ids():
+        name = thermostat.get_zone_name(zone)
+        unit = (TEMP_CELSIUS if thermostat.get_unit() == thermostat.UNIT_CELSIUS else TEMP_FAHRENHEIT)
+        sensors.append(NexiaZoneSensor(thermostat, zone, "get_zone_temperature", f"{name} Temperature",
+                                       DEVICE_CLASS_TEMPERATURE, unit, None))
+        sensors.append(NexiaZoneSensor(thermostat, zone, "get_zone_status", f"{name} Zone Status", None, None))
+        sensors.append(NexiaZoneSensor(thermostat, zone, "get_zone_setpoint_status", f"{name} Zone Setpoint Status",
+                                       None, None))
+
+
+
+
     add_entities(sensors, True)
 
-
-ATTR_FAN_SPEED = 'fan_speed'
-ATTR_COMPRESSOR_SPEED = 'compressor_speed'
-ATTR_OUTDOOR_TEMPERATURE = 'outdoor_temperature'
 
 
 def percent_conv(val):
@@ -42,6 +58,8 @@ class NexiaSensor(Entity):
         self._state = None
         self._unit_of_measurement = sensor_unit
         self._modifier = modifier
+        self.update = Throttle(self._device.update_rate)(self._update)
+
 
     @property
     def name(self):
@@ -80,5 +98,21 @@ class NexiaSensor(Entity):
         """Return the unit of measurement this sensor expresses itself in."""
         return self._unit_of_measurement
 
-    def update(self):
+    def _update(self):
         self._device.update()
+
+
+class NexiaZoneSensor(NexiaSensor):
+    def __init__(self, device, zone, sensor_call, sensor_name, sensor_class, sensor_unit, modifier=None):
+        super().__init__(device, sensor_call, sensor_name, sensor_class, sensor_unit, modifier)
+        self.zone = zone
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        val = getattr(self._device, self._call)(self.zone)
+        if self._modifier:
+            val = self._modifier(val)
+        if type(val) is float:
+            val = round(val, 1)
+        return val

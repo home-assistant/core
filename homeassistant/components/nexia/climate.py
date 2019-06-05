@@ -3,14 +3,15 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    ATTR_FAN_MODE, ATTR_FAN_LIST,
-    ATTR_OPERATION_MODE, ATTR_OPERATION_LIST, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
+    ATTR_FAN_MODE, ATTR_FAN_LIST, ATTR_OPERATION_MODE, ATTR_OPERATION_LIST, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_STEP, ATTR_CURRENT_HUMIDITY, ATTR_MIN_HUMIDITY, ATTR_MAX_HUMIDITY, ATTR_HUMIDITY,
     ATTR_MIN_TEMP, ATTR_MAX_TEMP, SUPPORT_TARGET_TEMPERATURE, SUPPORT_AWAY_MODE, SUPPORT_OPERATION_MODE,
-    SUPPORT_AUX_HEAT, SUPPORT_HOLD_MODE, SUPPORT_FAN_MODE, SUPPORT_TARGET_HUMIDITY, ATTR_HOLD_MODE, ATTR_AUX_HEAT)
-from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_ATTRIBUTION, ATTR_TEMPERATURE)
-from . import (DATA_NEXIA, ATTR_DAMPER_STATUS, ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTR_HOLD_MODES,
-               ATTRIBUTION)
+    SUPPORT_AUX_HEAT, SUPPORT_HOLD_MODE, SUPPORT_FAN_MODE, SUPPORT_TARGET_HUMIDITY, ATTR_HOLD_MODE, ATTR_AUX_HEAT,
+    STATE_COOL, STATE_HEAT, STATE_IDLE)
+from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_ATTRIBUTION, ATTR_TEMPERATURE, STATE_OFF)
+from homeassistant.util import Throttle
+from . import (DATA_NEXIA, ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTR_HOLD_MODES,
+               ATTR_SETPOINT_STATUS, ATTR_ZONE_STATUS, ATTRIBUTION)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +30,7 @@ class NexiaZone(ClimateDevice):
         """Initialize the thermostat."""
         self._device = device
         self._zone = zone
+        self.update = Throttle(self._device.update_rate)(self._update)
 
     @property
     def supported_features(self):
@@ -80,7 +82,10 @@ class NexiaZone(ClimateDevice):
 
     def set_hold_mode(self, hold_mode):
         """Set new target hold mode."""
-        self._device.set_zone_preset(hold_mode, self._zone)
+        if hold_mode.lower() == "none":
+            self._device.call_return_to_schedule(self._zone)
+        else:
+            self._device.set_zone_preset(hold_mode, self._zone)
 
     @property
     def current_hold_mode(self):
@@ -107,24 +112,22 @@ class NexiaZone(ClimateDevice):
     @property
     def current_operation(self) -> str:
         """Return current operation ie. heat, cool, idle."""
-        zone_status = self._device.get_zone_current_mode(self._zone)
-        damper_status = self._device.get_zone_status(self._zone)
+        system_status = self._device.get_system_status()
+        zone_called = self._device.is_zone_calling(self._zone)
 
         if self._device.get_zone_requested_mode(self._zone) == self._device.OPERATION_MODE_OFF:
-            return "off"
-
-        if damper_status == self._device.DAMPER_MODE_CLOSED:
-            return "idle"
-
-        if self.is_fan_on and zone_status != self._device.OPERATION_MODE_OFF:
-            if zone_status == self._device.STATUS_COOL:
-                return "cool"
-            elif zone_status == self._device.STATUS_HEAT:
-                return "heat"
-            else:
-                raise KeyError(f"Unexpected zone status: {zone_status}")
+            return STATE_OFF
+        elif not zone_called:
+            return STATE_IDLE
+        if system_status == self._device.SYSTEM_STATUS_COOL:
+            return STATE_COOL
+        elif system_status == self._device.SYSTEM_STATUS_HEAT:
+            return STATE_HEAT
+        elif system_status == self._device.SYSTEM_STATUS_IDLE:
+            return STATE_IDLE
         else:
             return "idle"
+
 
     @property
     def operation_mode(self):
@@ -174,20 +177,22 @@ class NexiaZone(ClimateDevice):
         data = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_FAN_MODE: self._device.get_fan_mode(),
-            ATTR_DAMPER_STATUS: self._device.get_zone_status(self._zone),
             ATTR_OPERATION_MODE: self.mode,
             ATTR_TARGET_TEMP_HIGH: self._device.get_zone_cooling_setpoint(self._zone),
             ATTR_TARGET_TEMP_LOW: self._device.get_zone_heating_setpoint(self._zone),
-            ATTR_TARGET_TEMP_STEP: 1,
+            ATTR_TARGET_TEMP_STEP: 1.0 if self._device.get_unit() == self._device.UNIT_FAHRENHEIT else 0.5,
             ATTR_MIN_TEMP: min_temp,
             ATTR_MAX_TEMP: max_temp,
             ATTR_FAN_LIST: self._device.FAN_MODES,
             ATTR_OPERATION_LIST: self._device.OPERATION_MODES,
             ATTR_HOLD_MODE: self._device.get_zone_preset(self._zone),
-            ATTR_HOLD_MODES: self._device.get_zone_presets(self._zone),
+            # TODO - Enable HOLD_MODES once the presets can be parsed reliably
+            # ATTR_HOLD_MODES: self._device.get_zone_presets(self._zone),
             ATTR_MODEL: self._device.get_thermostat_model(),
             ATTR_FIRMWARE: self._device.get_thermostat_firmware(),
-            ATTR_THERMOSTAT_NAME: self._device.get_thermostat_name()
+            ATTR_THERMOSTAT_NAME: self._device.get_thermostat_name(),
+            ATTR_SETPOINT_STATUS: self._device.get_zone_setpoint_status(self._zone),
+            ATTR_ZONE_STATUS: self._device.get_zone_status(self._zone)
         }
 
         if self._device.has_emergency_heat():
@@ -239,7 +244,7 @@ class NexiaZone(ClimateDevice):
             raise KeyError(f"Operation mode {operation_mode} not in the supported operations "
                            f"list {str(self._device.OPERATION_MODES)}")
 
-    def update(self):
+    def _update(self):
         """Update the state."""
         self._device.update()
 
