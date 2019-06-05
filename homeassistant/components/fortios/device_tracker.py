@@ -15,7 +15,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.const import CONF_VERIFY_SSL
 
-REQUIREMENTS = ['fortiosapi==0.10.5']
+REQUIREMENTS = ['fortiosapi==0.10.8']
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_VERIFY_SSL = False
