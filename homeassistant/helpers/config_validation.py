@@ -92,8 +92,7 @@ def boolean(value: Any) -> bool:
             return True
         if value in ('0', 'false', 'no', 'off', 'disable'):
             return False
-        raise vol.Invalid('invalid boolean value {}'.format(value))
-    if isinstance(value, Number):
+    elif isinstance(value, Number):
         return value != 0
     raise vol.Invalid('invalid boolean value {}'.format(value))
 
