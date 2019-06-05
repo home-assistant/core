@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except Exception:
         raise PlatformNotReady
 
-    add_devices(AveaLight(bulb) for bulb in nearbyBulbs)
+    add_devices(AveaLight(bulb) for bulb in nearby_bulbs)
 
 
 class AveaLight(Light):
