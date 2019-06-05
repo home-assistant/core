@@ -35,18 +35,30 @@ CURRENT_WINDOW_STATE_MAP = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up HomeKit Cover support."""
-    if discovery_info is None:
-        return
-    accessory = hass.data[KNOWN_DEVICES][discovery_info['serial']]
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Legacy set up platform."""
+    pass
 
-    if discovery_info['device-type'] == 'garage-door-opener':
-        add_entities([HomeKitGarageDoorCover(accessory, discovery_info)],
-                     True)
-    else:
-        add_entities([HomeKitWindowCover(accessory, discovery_info)],
-                     True)
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Homekit covers."""
+    hkid = config_entry.data['AccessoryPairingID']
+    conn = hass.data[KNOWN_DEVICES][hkid]
+
+    def async_add_service(aid, service):
+        info = {'aid': aid, 'iid': service['iid']}
+        if service['stype'] == 'garage-door-opener':
+            async_add_entities([HomeKitGarageDoorCover(conn, info)], True)
+            return True
+
+        if service['stype'] in ('window-covering', 'window'):
+            async_add_entities([HomeKitWindowCover(conn, info)], True)
+            return True
+
+        return False
+
+    conn.add_listener(async_add_service)
 
 
 class HomeKitGarageDoorCover(HomeKitEntity, CoverDevice):

@@ -13,7 +13,9 @@ from .consts import (
     DUMMY_REMAINING_TIME, MANDATORY_CONFIGURATION)
 
 
-async def test_failed_config(hass: HomeAssistantType) -> None:
+async def test_failed_config(
+        hass: HomeAssistantType,
+        mock_failed_bridge: Generator[None, Any, None]) -> None:
     """Test failed configuration."""
     assert await async_setup_component(
         hass, DOMAIN, MANDATORY_CONFIGURATION) is False

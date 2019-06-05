@@ -4,6 +4,7 @@ from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.auth.util import generate_secret
 
 CONF_SECRET = 'secret'
+CONF_CLOUDHOOK = 'cloudhook'
 
 
 def supports_encryption():
@@ -31,9 +32,7 @@ class OwnTracksFlow(config_entries.ConfigFlow):
                 step_id='user',
             )
 
-        webhook_id = self.hass.components.webhook.async_generate_id()
-        webhook_url = \
-            self.hass.components.webhook.async_generate_url(webhook_id)
+        webhook_id, webhook_url, cloudhook = await self._get_webhook_id()
 
         secret = generate_secret(16)
 
@@ -50,7 +49,8 @@ class OwnTracksFlow(config_entries.ConfigFlow):
             title="OwnTracks",
             data={
                 CONF_WEBHOOK_ID: webhook_id,
-                CONF_SECRET: secret
+                CONF_SECRET: secret,
+                CONF_CLOUDHOOK: cloudhook,
             },
             description_placeholders={
                 'secret': secret_desc,
@@ -67,12 +67,29 @@ class OwnTracksFlow(config_entries.ConfigFlow):
 
     async def async_step_import(self, user_input):
         """Import a config flow from configuration."""
-        webhook_id = self.hass.components.webhook.async_generate_id()
+        webhook_id, _webhook_url, cloudhook = await self._get_webhook_id()
         secret = generate_secret(16)
         return self.async_create_entry(
             title="OwnTracks",
             data={
                 CONF_WEBHOOK_ID: webhook_id,
-                CONF_SECRET: secret
+                CONF_SECRET: secret,
+                CONF_CLOUDHOOK: cloudhook,
             }
         )
+
+    async def _get_webhook_id(self):
+        """Generate webhook ID."""
+        webhook_id = self.hass.components.webhook.async_generate_id()
+        if self.hass.components.cloud.async_active_subscription():
+            webhook_url = \
+                await self.hass.components.cloud.async_create_cloudhook(
+                    webhook_id
+                )
+            cloudhook = True
+        else:
+            webhook_url = \
+                self.hass.components.webhook.async_generate_url(webhook_id)
+            cloudhook = False
+
+        return webhook_id, webhook_url, cloudhook

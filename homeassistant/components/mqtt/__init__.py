@@ -651,7 +651,7 @@ class MQTT:
         self.birth_message = birth_message
         self.connected = False
         self._mqttc = None  # type: mqtt.Client
-        self._paho_lock = asyncio.Lock(loop=hass.loop)
+        self._paho_lock = asyncio.Lock()
 
         if protocol == PROTOCOL_31:
             proto = mqtt.MQTTv31  # type: int

@@ -94,6 +94,13 @@ async def async_from_config_dict(config: Dict[str, Any],
     stop = time()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop-start)
 
+    if sys.version_info[:3] < (3, 6, 0):
+        hass.components.persistent_notification.async_create(
+            "Python 3.5 support is deprecated and will "
+            "be removed in the first release after August 1. Please "
+            "upgrade Python.", "Python version", "python_version"
+        )
+
     # TEMP: warn users for invalid slugs
     # Remove after 0.94 or 1.0
     if cv.INVALID_SLUGS_FOUND or cv.INVALID_ENTITY_IDS_FOUND:

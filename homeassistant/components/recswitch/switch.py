@@ -33,7 +33,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     if not hass.data.get(DATA_RSN):
         hass.data[DATA_RSN] = RSNetwork()
-        job = hass.data[DATA_RSN].create_datagram_endpoint(loop=hass.loop)
+        job = hass.data[DATA_RSN].create_datagram_endpoint()
         hass.async_create_task(job)
 
     device = hass.data[DATA_RSN].register_device(mac_address, host)

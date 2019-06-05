@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Enheten \u00e4r redan konfigurerad",
-            "bad_config_file": "Felaktig data fr\u00e5n config fil"
+            "bad_config_file": "Felaktig data fr\u00e5n config fil",
+            "link_local_address": "Link local addresses are not supported"
         },
         "error": {
             "already_configured": "Enheten \u00e4r redan konfigurerad",
@@ -17,7 +18,7 @@
                     "port": "Port",
                     "username": "Anv\u00e4ndarnamn"
                 },
-                "title": "Konfigurera Axis enhet"
+                "title": "Konfigurera Axis-enhet"
             }
         },
         "title": "Axis enhet"

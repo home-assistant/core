@@ -1,5 +1,4 @@
 """Support for Genius Hub water_heater devices."""
-import asyncio
 import logging
 
 from homeassistant.components.water_heater import (
@@ -7,6 +6,8 @@ from homeassistant.components.water_heater import (
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS)
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DOMAIN
 
@@ -15,15 +16,15 @@ STATE_MANUAL = 'manual'
 
 _LOGGER = logging.getLogger(__name__)
 
-GH_WATER_HEATERS = ['hot water temperature']
+GH_HEATERS = ['hot water temperature']
 
-GENIUSHUB_SUPPORT_FLAGS = \
+GH_SUPPORT_FLAGS = \
     SUPPORT_TARGET_TEMPERATURE | \
     SUPPORT_OPERATION_MODE
 # HA does not have SUPPORT_ON_OFF for water_heater
 
-GENIUSHUB_MAX_TEMP = 80.0
-GENIUSHUB_MIN_TEMP = 30.0
+GH_MAX_TEMP = 80.0
+GH_MIN_TEMP = 30.0
 
 # Genius Hub HW supports only Off, Override/Boost & Timer modes
 HA_OPMODE_TO_GH = {
@@ -31,7 +32,6 @@ HA_OPMODE_TO_GH = {
     STATE_AUTO: 'timer',
     STATE_MANUAL: 'override',
 }
-GH_OPMODE_OFF = 'off'
 GH_STATE_TO_HA = {
     'off': STATE_OFF,
     'timer': STATE_AUTO,
@@ -43,8 +43,7 @@ GH_STATE_TO_HA = {
     'linked': None,
     'other': None,
 }
-
-GH_DEVICE_STATE_ATTRS = ['type', 'override']
+GH_STATE_ATTRS = ['type', 'override']
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
@@ -53,7 +52,7 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     client = hass.data[DOMAIN]['client']
 
     entities = [GeniusWaterHeater(client, z)
-                for z in client.hub.zone_objs if z.type in GH_WATER_HEATERS]
+                for z in client.hub.zone_objs if z.type in GH_HEATERS]
 
     async_add_entities(entities)
 
@@ -65,10 +64,16 @@ class GeniusWaterHeater(WaterHeaterDevice):
         """Initialize the water_heater device."""
         self._client = client
         self._boiler = boiler
-        self._id = boiler.id
-        self._name = boiler.name
 
         self._operation_list = list(HA_OPMODE_TO_GH)
+
+    async def async_added_to_hass(self):
+        """Run when entity about to be added."""
+        async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
+
+    @callback
+    def _refresh(self):
+        self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
     def name(self):
@@ -79,9 +84,12 @@ class GeniusWaterHeater(WaterHeaterDevice):
     def device_state_attributes(self):
         """Return the device state attributes."""
         tmp = self._boiler.__dict__.items()
-        state = {k: v for k, v in tmp if k in GH_DEVICE_STATE_ATTRS}
+        return {'status': {k: v for k, v in tmp if k in GH_STATE_ATTRS}}
 
-        return {'status': state}
+    @property
+    def should_poll(self) -> bool:
+        """Return False as the geniushub devices should not be polled."""
+        return False
 
     @property
     def current_temperature(self):
@@ -96,12 +104,12 @@ class GeniusWaterHeater(WaterHeaterDevice):
     @property
     def min_temp(self):
         """Return max valid temperature that can be set."""
-        return GENIUSHUB_MIN_TEMP
+        return GH_MIN_TEMP
 
     @property
     def max_temp(self):
         """Return max valid temperature that can be set."""
-        return GENIUSHUB_MAX_TEMP
+        return GH_MAX_TEMP
 
     @property
     def temperature_unit(self):
@@ -111,7 +119,7 @@ class GeniusWaterHeater(WaterHeaterDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return GENIUSHUB_SUPPORT_FLAGS
+        return GH_SUPPORT_FLAGS
 
     @property
     def operation_list(self):
@@ -121,21 +129,13 @@ class GeniusWaterHeater(WaterHeaterDevice):
     @property
     def current_operation(self):
         """Return the current operation mode."""
-        return GH_STATE_TO_HA.get(self._boiler.mode)
+        return GH_STATE_TO_HA[self._boiler.mode]
 
     async def async_set_operation_mode(self, operation_mode):
         """Set a new operation mode for this boiler."""
-        await self._boiler.set_mode(HA_OPMODE_TO_GH.get(operation_mode))
+        await self._boiler.set_mode(HA_OPMODE_TO_GH[operation_mode])
 
     async def async_set_temperature(self, **kwargs):
         """Set a new target temperature for this boiler."""
         temperature = kwargs[ATTR_TEMPERATURE]
         await self._boiler.set_override(temperature, 3600)  # 1 hour
-
-    async def async_update(self):
-        """Get the latest data from the hub."""
-        try:
-            await self._boiler.update()
-        except (AssertionError, asyncio.TimeoutError) as err:
-            _LOGGER.warning("Update for %s failed, message: %s",
-                            self._id, err)
