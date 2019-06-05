@@ -16,6 +16,7 @@ variables:
 
 jobs:
 
+<<<<<<< HEAD:azure-pipelines-release.yml
 <<<<<<< HEAD:azure-pipelines.yml
 - job: 'Wheels'
   condition: or(eq(variables['Build.SourceBranchName'], 'dev'), eq(variables['Build.SourceBranchName'], 'master'))
@@ -112,6 +113,8 @@ jobs:
 
 =======
 >>>>>>> Update and rename azure-pipelines.yml to azure-pipelines-release.yml:azure-pipelines-release.yml
+=======
+>>>>>>> Update and rename azure-pipelines.yml to azure-pipelines-release.yml:azure-pipelines-release.yml
 
 - job: 'VersionValidate'
   condition: startsWith(variables['Build.SourceBranch'], 'refs/tags')
@@ -171,6 +174,7 @@ jobs:
       export TWINE_USERNAME="$(twineUser)"
       export TWINE_PASSWORD="$(twinePassword)"
       
+<<<<<<< HEAD:azure-pipelines-release.yml
       twine upload dist/* --skip-existing
     displayName: 'Upload pypi'
 <<<<<<< HEAD
@@ -205,6 +209,8 @@ jobs:
       export TWINE_USERNAME="$(twineUser)"
       export TWINE_PASSWORD="$(twinePassword)"
       
+=======
+>>>>>>> Update and rename azure-pipelines.yml to azure-pipelines-release.yml:azure-pipelines-release.yml
       twine upload dist/* --skip-existing
     displayName: 'Upload pypi'
 
