@@ -4,6 +4,7 @@ import logging
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR, Light)
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.util.color as color_util
 
 
@@ -20,7 +21,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         for bulb in nearbyBulbs:
             bulb.get_name()
-    except:
+            bulb.get_brightness()
+    except Exception:
         raise PlatformNotReady
 
     add_devices(AveaLight(bulb) for bulb in nearbyBulbs)
@@ -34,7 +36,7 @@ class AveaLight(Light):
         self._light = light
         self._name = light.name
         self._state = None
-        self._brightness = None
+        self._brightness = light.brightness
 
     @property
     def supported_features(self):
@@ -74,7 +76,7 @@ class AveaLight(Light):
                 self._light.set_brightness(bright)
             if ATTR_HS_COLOR in kwargs:
                 rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
-                self._light.set_rgb(rgb[0],rgb[1],rgb[2])
+                self._light.set_rgb(rgb[0], rgb[1], rgb[2])
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
@@ -86,9 +88,10 @@ class AveaLight(Light):
         This is the only method that should fetch new data for Home Assistant.
         """
         brightness = self._light.get_brightness()
-        if brightness == 0:
-            self._state = False
-        else:
-            self._state = True
-        bright_percent = round((brightness/4095)*100)
-        self._brightness = round(255 * (bright_percent / 100))
+        if brightness is not None:
+            if brightness == 0:
+                self._state = False
+            else:
+                self._state = True
+            bright_percent = round((brightness/4095)*100)
+            self._brightness = round(255 * (bright_percent / 100))
