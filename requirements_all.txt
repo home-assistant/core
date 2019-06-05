@@ -211,6 +211,9 @@ async-upnp-client==0.14.7
 # homeassistant.components.stream
 av==6.1.2
 
+# homeassistant.components.avea
+avea==1.2.8
+
 # homeassistant.components.avion
 # avion==0.10
 
