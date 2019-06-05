@@ -5,6 +5,7 @@ trigger:
   branches:
     include:
     - dev
+pr: none
 variables:
   - name: versionWheels
     value: '0.7'
