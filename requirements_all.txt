@@ -1304,7 +1304,11 @@ pyotp==2.2.6
 pyowm==2.10.0
 
 # homeassistant.components.lcn
+<<<<<<< HEAD
 pypck==0.5.9
+=======
+pypck==0.6.1
+>>>>>>> Bump to pypck==0.6.1 (#24356)
 
 # homeassistant.components.media_player.pjlink
 pypjlink2==1.2.0
