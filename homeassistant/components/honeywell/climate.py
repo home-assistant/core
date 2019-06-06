@@ -179,7 +179,7 @@ class HoneywellUSThermostat(ClimateDevice):
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        self._device.system_mode = hvac_mode
+        self._device.system_mode = self._hvac_mode_map[hvac_mode]
 
     @property
     def preset_mode(self) -> Optional[str]:
@@ -223,7 +223,7 @@ class HoneywellUSThermostat(ClimateDevice):
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        self._device.fan_mode = fan_mode
+        self._device.fan_mode = self._fan_mode_map[fan_mode]
 
     @property
     def name(self) -> Optional[str]:
