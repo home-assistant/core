@@ -8,8 +8,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, CONF_PASSWORD, CONF_TIMEOUT,
-    CONF_USERNAME, ENERGY_KILO_WATT_HOUR)
+    ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME,
+    ENERGY_KILO_WATT_HOUR)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
@@ -41,8 +41,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)):
-        vol.All(cv.ensure_list, [vol.In(SENSORS)]),
 })
 
 
@@ -51,33 +49,34 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
     timeout = config[CONF_TIMEOUT]
-    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
 
-    account = LinkyAccount(hass, add_entities, username, password, timeout,
-                           monitored_conditions)
+    account = LinkyAccount(hass, add_entities, username, password, timeout)
     add_entities(account.sensors, True)
 
 
 class LinkyAccount:
     """Representation of a Linky account."""
 
-    def __init__(self, hass, add_entities, username, password, timeout,
-                 monitored_conditions):
+    def __init__(self, hass, add_entities, username, password, timeout):
         """Initialise the Linky account."""
         self._username = username
         self.__password = password
         self._timeout = timeout
         self._data = None
+        self.sensors = []
 
         self.update_linky_data(dt_util.utcnow())
 
-        self.sensors = []
-        for condition in monitored_conditions:
-            self.sensors.append(
-                LinkySensor(SENSORS[condition][SENSORS_INDEX_LABEL],
-                            self,
-                            SENSORS[condition][SENSORS_INDEX_SCALE],
-                            SENSORS[condition][SENSORS_INDEX_WHEN]))
+        self.sensors.append(
+            LinkySensor("Linky yesterday", self, DAILY, INDEX_LAST))
+        self.sensors.append(
+            LinkySensor("Linky current month", self, MONTHLY, INDEX_CURRENT))
+        self.sensors.append(
+            LinkySensor("Linky last month", self, MONTHLY, INDEX_LAST))
+        self.sensors.append(
+            LinkySensor("Linky current year", self, YEARLY, INDEX_CURRENT))
+        self.sensors.append(
+            LinkySensor("Linky last year", self, YEARLY, INDEX_LAST))
 
         track_time_interval(hass, self.update_linky_data, SCAN_INTERVAL)
 
@@ -158,5 +157,4 @@ class LinkySensor(Entity):
             year_index = INDEX_CURRENT
             if self.__time.endswith("Dec"):
                 year_index = INDEX_LAST
-            self.__time += ' ' + self.__account.data[YEARLY][year_index][
-                TIME]
+            self.__time += ' ' + self.__account.data[YEARLY][year_index][TIME]
