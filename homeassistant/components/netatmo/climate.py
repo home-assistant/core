@@ -365,6 +365,7 @@ class ThermostatData:
     def update(self):
         """Call the NetAtmo API to update the data."""
         import pyatmo
+
         try:
             self.homestatus = pyatmo.HomeStatus(self.auth, home=self.home)
         except TypeError:
@@ -382,9 +383,9 @@ class ThermostatData:
                 roomstatus["target_temperature"] = homestatus_room[
                     "therm_setpoint_temperature"
                 ]
-                roomstatus["setpoint_mode"] = (
-                    homestatus_room["therm_setpoint_mode"]
-                )
+                roomstatus["setpoint_mode"] = homestatus_room[
+                    "therm_setpoint_mode"
+                ]
                 roomstatus["current_temperature"] = homestatus_room[
                     "therm_measured_temperature"
                 ]
@@ -395,9 +396,9 @@ class ThermostatData:
                 roomstatus["heating_status"] = None
                 roomstatus["heating_power_request"] = None
                 for module_id in homedata_room["module_ids"]:
-                    if self.homedata.modules[self.home][module_id]["type"] == (
-                        NA_THERM or roomstatus["module_id"] is None
-                    ):
+                    if (self.homedata.modules[self.home][module_id]["type"]
+                            == NA_THERM
+                            or roomstatus["module_id"] is None):
                         roomstatus["module_id"] = module_id
                 if roomstatus["module_type"] == NA_THERM:
                     self.boilerstatus = self.homestatus.boilerStatus(
@@ -416,8 +417,8 @@ class ThermostatData:
                             self.boilerstatus and roomstatus["heating_status"]
                         )
                 self.room_status[room] = roomstatus
-            except KeyError as e:
-                _LOGGER.error("Update of room %s failed. Error: %s", room, e)
+            except KeyError as err:
+                _LOGGER.error("Update of room %s failed. Error: %s", room, err)
         self.away_temperature = self.homestatus.getAwaytemp(self.home)
         self.hg_temperature = self.homestatus.getHgtemp(self.home)
         self.setpoint_duration = self.homedata.setpoint_duration[self.home]
