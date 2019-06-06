@@ -101,6 +101,19 @@ class ZhaDeviceEntity(ZhaEntity):
             # only do this on add to HA because it is static
             await self._async_init_battery_values()
 
+    def async_update_state_attribute(self, key, value):
+        """Update a single device state attribute."""
+        if key == 'battery_level':
+            if value is not None and value != -1:
+                value = value / 2
+                value = int(round(value))
+            else:
+                return
+        self._device_state_attributes.update({
+            key: value
+        })
+        self.async_schedule_update_ha_state()
+
     async def async_update(self):
         """Handle polling."""
         if self._zha_device.last_seen is None:
