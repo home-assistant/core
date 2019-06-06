@@ -8,8 +8,6 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['linode-api==4.1.9b1']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CREATED = 'created'

@@ -21,8 +21,6 @@ from homeassistant.util.dt import utcnow
 from homeassistant.components.mjpeg.camera import (
     CONF_MJPEG_URL, CONF_STILL_IMAGE_URL)
 
-REQUIREMENTS = ['pydroid-ipcam==0.8']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_AUD_CONNS = 'Audio Connections'
@@ -235,7 +233,7 @@ async def async_setup(hass, config):
 
     tasks = [async_setup_ipcamera(conf) for conf in config[DOMAIN]]
     if tasks:
-        await asyncio.wait(tasks, loop=hass.loop)
+        await asyncio.wait(tasks)
 
     return True
 

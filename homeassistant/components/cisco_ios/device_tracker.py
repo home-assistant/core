@@ -11,8 +11,6 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, \
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pexpect==4.6.0']
-
 PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend({
         vol.Required(CONF_HOST): cv.string,

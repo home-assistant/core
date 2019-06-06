@@ -16,7 +16,6 @@ CONF_BASE_TOPIC = 'base_topic'
 CONF_PUBLISH_ATTRIBUTES = 'publish_attributes'
 CONF_PUBLISH_TIMESTAMPS = 'publish_timestamps'
 
-DEPENDENCIES = ['mqtt']
 DOMAIN = 'mqtt_statestream'
 
 CONFIG_SCHEMA = vol.Schema({

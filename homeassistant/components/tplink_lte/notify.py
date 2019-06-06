@@ -7,9 +7,7 @@ from homeassistant.components.notify import (
     ATTR_TARGET, BaseNotificationService)
 from homeassistant.const import CONF_RECIPIENT
 
-from ..tplink_lte import DATA_KEY
-
-DEPENDENCIES = ['tplink_lte']
+from . import DATA_KEY
 
 _LOGGER = logging.getLogger(__name__)
 

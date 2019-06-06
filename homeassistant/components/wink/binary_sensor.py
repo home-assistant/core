@@ -7,8 +7,6 @@ from . import DOMAIN, WinkDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['wink']
-
 # These are the available sensors mapped to binary_sensor class
 SENSOR_TYPES = {
     'brightness': 'light',

@@ -11,8 +11,6 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pynx584==0.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = 'localhost'

@@ -27,7 +27,6 @@ ATTR_CARBON_FILTER = 'carbon_filter'
 ATTR_DYSON_SPEED = 'dyson_speed'
 ATTR_DYSON_SPEED_LIST = 'dyson_speed_list'
 
-DEPENDENCIES = ['dyson']
 DYSON_DOMAIN = 'dyson'
 DYSON_FAN_DEVICES = 'dyson_fan_devices'
 
@@ -475,7 +474,8 @@ class DysonPureCoolDevice(FanEntity):
                      FanSpeed.FAN_SPEED_6.value: SPEED_MEDIUM,
                      FanSpeed.FAN_SPEED_7.value: SPEED_MEDIUM,
                      FanSpeed.FAN_SPEED_8.value: SPEED_HIGH,
-                     FanSpeed.FAN_SPEED_9.value: SPEED_HIGH}
+                     FanSpeed.FAN_SPEED_9.value: SPEED_HIGH,
+                     FanSpeed.FAN_SPEED_10.value: SPEED_HIGH}
 
         return speed_map[self._device.state.speed]
 

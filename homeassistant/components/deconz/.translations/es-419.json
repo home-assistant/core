@@ -9,6 +9,12 @@
             "no_key": "No se pudo obtener una clave de API"
         },
         "step": {
+            "hassio_confirm": {
+                "data": {
+                    "allow_clip_sensor": "Permitir la importaci\u00f3n de sensores virtuales",
+                    "allow_deconz_groups": "Permitir la importaci\u00f3n de grupos deCONZ"
+                }
+            },
             "init": {
                 "data": {
                     "host": "Host",

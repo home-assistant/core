@@ -5,8 +5,6 @@ from homeassistant.helpers.entity import Entity
 
 from . import DATA_FREEBOX
 
-DEPENDENCIES = ['freebox']
-
 _LOGGER = logging.getLogger(__name__)
 
 

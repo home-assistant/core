@@ -14,8 +14,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyads==3.0.7']
-
 _LOGGER = logging.getLogger(__name__)
 
 DATA_ADS = 'data_ads'
@@ -33,9 +31,11 @@ CONF_ADS_TYPE = 'adstype'
 CONF_ADS_VALUE = 'value'
 CONF_ADS_VAR = 'adsvar'
 CONF_ADS_VAR_BRIGHTNESS = 'adsvar_brightness'
+CONF_ADS_VAR_POSITION = 'adsvar_position'
 
 STATE_KEY_STATE = 'state'
 STATE_KEY_BRIGHTNESS = 'brightness'
+STATE_KEY_POSITION = 'position'
 
 DOMAIN = 'ads'
 

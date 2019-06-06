@@ -8,8 +8,6 @@ from . import CONF_MONITORED_CONDITIONS, DATA_KEY, LTEEntity
 from .sensor_types import (
     SENSOR_SMS, SENSOR_SMS_TOTAL, SENSOR_USAGE, SENSOR_UNITS)
 
-DEPENDENCIES = ['netgear_lte']
-
 _LOGGER = logging.getLogger(__name__)
 
 

@@ -27,8 +27,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import get_local_ip
 
-REQUIREMENTS = ['async-upnp-client==0.14.7']
-
 _LOGGER = logging.getLogger(__name__)
 
 DLNA_DMR_DATA = 'dlna_dmr'
@@ -105,7 +103,6 @@ async def async_start_event_handler(
         requester,
         listen_port=server_port,
         listen_host=server_host,
-        loop=hass.loop,
         callback_url=callback_url_override)
     await server.start_server()
     _LOGGER.info(

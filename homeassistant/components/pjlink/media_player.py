@@ -12,8 +12,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pypjlink2==1.2.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ENCODING = 'encoding'

@@ -1,6 +1,8 @@
 """Support for ESPHome lights."""
 import logging
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import List, Optional, Tuple
+
+from aioesphomeapi import LightInfo, LightState
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
@@ -11,13 +13,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.color as color_util
 
-from . import EsphomeEntity, platform_async_setup_entry
+from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
-if TYPE_CHECKING:
-    # pylint: disable=unused-import
-    from aioesphomeapi import LightInfo, LightState  # noqa
-
-DEPENDENCIES = ['esphome']
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -30,9 +27,6 @@ FLASH_LENGTHS = {
 async def async_setup_entry(hass: HomeAssistantType,
                             entry: ConfigEntry, async_add_entities) -> None:
     """Set up ESPHome lights based on a config entry."""
-    # pylint: disable=redefined-outer-name
-    from aioesphomeapi import LightInfo, LightState  # noqa
-
     await platform_async_setup_entry(
         hass, entry, async_add_entities,
         component_key='light',
@@ -45,18 +39,16 @@ class EsphomeLight(EsphomeEntity, Light):
     """A switch implementation for ESPHome."""
 
     @property
-    def _static_info(self) -> 'LightInfo':
+    def _static_info(self) -> LightInfo:
         return super()._static_info
 
     @property
-    def _state(self) -> Optional['LightState']:
+    def _state(self) -> Optional[LightState]:
         return super()._state
 
-    @property
+    @esphome_state_property
     def is_on(self) -> Optional[bool]:
         """Return true if the switch is on."""
-        if self._state is None:
-            return None
         return self._state.state
 
     async def async_turn_on(self, **kwargs) -> None:
@@ -89,42 +81,32 @@ class EsphomeLight(EsphomeEntity, Light):
             data['transition_length'] = kwargs[ATTR_TRANSITION]
         await self._client.light_command(**data)
 
-    @property
+    @esphome_state_property
     def brightness(self) -> Optional[int]:
         """Return the brightness of this light between 0..255."""
-        if self._state is None:
-            return None
         return round(self._state.brightness * 255)
 
-    @property
+    @esphome_state_property
     def hs_color(self) -> Optional[Tuple[float, float]]:
         """Return the hue and saturation color value [float, float]."""
-        if self._state is None:
-            return None
         return color_util.color_RGB_to_hs(
             self._state.red * 255,
             self._state.green * 255,
             self._state.blue * 255)
 
-    @property
+    @esphome_state_property
     def color_temp(self) -> Optional[float]:
         """Return the CT color value in mireds."""
-        if self._state is None:
-            return None
         return self._state.color_temperature
 
-    @property
+    @esphome_state_property
     def white_value(self) -> Optional[int]:
         """Return the white value of this light between 0..255."""
-        if self._state is None:
-            return None
         return round(self._state.white * 255)
 
-    @property
+    @esphome_state_property
     def effect(self) -> Optional[str]:
         """Return the current effect."""
-        if self._state is None:
-            return None
         return self._state.effect
 
     @property

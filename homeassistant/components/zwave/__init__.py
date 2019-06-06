@@ -1,6 +1,7 @@
 """Support for Z-Wave."""
 import asyncio
 import copy
+from importlib import import_module
 import logging
 from pprint import pprint
 
@@ -8,10 +9,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback, CoreState
-from homeassistant.loader import get_platform
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.const import (
     ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
@@ -36,8 +37,6 @@ from . import workaround
 from .discovery_schemas import DISCOVERY_SCHEMAS
 from .util import (check_node_schema, check_value_schema, node_name,
                    check_has_unique_id, is_node_parsed)
-
-REQUIREMENTS = ['pydispatcher==2.0.5', 'homeassistant-pyozw==0.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -293,6 +292,8 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DATA_DEVICES] = {}
     hass.data[DATA_ENTITY_VALUES] = []
 
+    registry = await async_get_registry(hass)
+
     if use_debug:  # pragma: no cover
         def log_all(signal, value=None):
             """Log all the signals."""
@@ -334,14 +335,23 @@ async def async_setup_entry(hass, config_entry):
             new_values = hass.data[DATA_ENTITY_VALUES] + [values]
             hass.data[DATA_ENTITY_VALUES] = new_values
 
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
-    registry = await async_get_registry(hass)
+    platform = EntityPlatform(
+        hass=hass,
+        logger=_LOGGER,
+        domain=DOMAIN,
+        platform_name=DOMAIN,
+        platform=None,
+        scan_interval=DEFAULT_SCAN_INTERVAL,
+        entity_namespace=None,
+        async_entities_added_callback=lambda: None,
+    )
+    platform.config_entry = config_entry
 
     def node_added(node):
         """Handle a new node on the network."""
         entity = ZWaveNodeEntity(node, network)
 
-        def _add_node_to_component():
+        async def _add_node_to_component():
             if hass.data[DATA_DEVICES].get(entity.unique_id):
                 return
 
@@ -355,10 +365,10 @@ async def async_setup_entry(hass, config_entry):
                 return
 
             hass.data[DATA_DEVICES][entity.unique_id] = entity
-            component.add_entities([entity])
+            await platform.async_add_entities([entity])
 
         if entity.unique_id:
-            _add_node_to_component()
+            hass.async_add_job(_add_node_to_component())
             return
 
         @callback
@@ -377,6 +387,25 @@ async def async_setup_entry(hass, config_entry):
 
         hass.add_job(check_has_unique_id, entity, _on_ready, _on_timeout,
                      hass.loop)
+
+    def node_removed(node):
+        node_id = node.node_id
+        node_key = 'node-{}'.format(node_id)
+        _LOGGER.info("Node Removed: %s",
+                     hass.data[DATA_DEVICES][node_key])
+        for key in list(hass.data[DATA_DEVICES]):
+            if not key.startswith('{}-'.format(node_id)):
+                continue
+
+            entity = hass.data[DATA_DEVICES][key]
+            _LOGGER.info('Removing Entity - value: %s - entity_id: %s',
+                         key, entity.entity_id)
+            hass.add_job(entity.node_removed())
+            del hass.data[DATA_DEVICES][key]
+
+        entity = hass.data[DATA_DEVICES][node_key]
+        hass.add_job(entity.node_removed())
+        del hass.data[DATA_DEVICES][node_key]
 
     def network_ready():
         """Handle the query of all awake nodes."""
@@ -401,6 +430,8 @@ async def async_setup_entry(hass, config_entry):
         value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED, weak=False)
     dispatcher.connect(
         node_added, ZWaveNetwork.SIGNAL_NODE_ADDED, weak=False)
+    dispatcher.connect(
+        node_removed, ZWaveNetwork.SIGNAL_NODE_REMOVED, weak=False)
     dispatcher.connect(
         network_ready, ZWaveNetwork.SIGNAL_AWAKE_NODES_QUERIED, weak=False)
     dispatcher.connect(
@@ -524,10 +555,16 @@ async def async_setup_entry(hass, config_entry):
                 .values()):
             if value.index != param:
                 continue
-            if value.type in [const.TYPE_LIST, const.TYPE_BOOL]:
+            if value.type == const.TYPE_BOOL:
+                value.data = int(selection == 'True')
+                _LOGGER.info("Setting config parameter %s on Node %s "
+                             "with bool selection %s", param, node_id,
+                             str(selection))
+                return
+            if value.type == const.TYPE_LIST:
                 value.data = str(selection)
                 _LOGGER.info("Setting config parameter %s on Node %s "
-                             "with list/bool selection %s", param, node_id,
+                             "with list selection %s", param, node_id,
                              str(selection))
                 return
             if value.type == const.TYPE_BUTTON:
@@ -690,7 +727,7 @@ async def async_setup_entry(hass, config_entry):
                         network.state_str)
                     break
                 else:
-                    await asyncio.sleep(1, loop=hass.loop)
+                    await asyncio.sleep(1)
 
             hass.async_add_job(_finalize_start)
 
@@ -908,7 +945,9 @@ class ZWaveDeviceEntityValues():
         if polling_intensity:
             self.primary.enable_poll(polling_intensity)
 
-        platform = get_platform(self._hass, component, DOMAIN)
+        platform = import_module('.{}'.format(component),
+                                 __name__)
+
         device = platform.get_device(
             node=self._node, values=self,
             node_config=node_config, hass=self._hass)
@@ -1030,14 +1069,25 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
     @property
     def device_info(self):
         """Return device information."""
-        return {
-            'identifiers': {
-                (DOMAIN, self.node_id)
-            },
+        info = {
             'manufacturer': self.node.manufacturer_name,
             'model': self.node.product_name,
-            'name': node_name(self.node),
         }
+        if self.values.primary.instance > 1:
+            info['name'] = '{} ({})'.format(
+                node_name(self.node), self.values.primary.instance)
+            info['identifiers'] = {
+                (DOMAIN, self.node_id, self.values.primary.instance, ),
+            }
+            info['via_hub'] = (DOMAIN, self.node_id, )
+        else:
+            info['name'] = node_name(self.node)
+            info['identifiers'] = {
+                (DOMAIN, self.node_id),
+            }
+            if self.node_id > 1:
+                info['via_hub'] = (DOMAIN, 1, )
+        return info
 
     @property
     def name(self):

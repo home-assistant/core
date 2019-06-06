@@ -15,8 +15,6 @@ from . import (
     EVENT_KEY_UNIT, SIGNAL_AVAILABILITY, SIGNAL_HANDLE_EVENT, TMP_ENTITY,
     RflinkDevice, remove_deprecated)
 
-DEPENDENCIES = ['rflink']
-
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_ICONS = {

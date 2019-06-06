@@ -11,8 +11,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['python-gitlab==1.6.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_BUILD_BRANCH = 'build branch'
@@ -32,7 +30,7 @@ DEFAULT_URL = 'https://gitlab.com'
 
 ICON_HAPPY = 'mdi:emoticon-happy'
 ICON_OTHER = 'mdi:git'
-ICON_SAD = 'mdi:emoticon-happy'
+ICON_SAD = 'mdi:emoticon-sad'
 
 SCAN_INTERVAL = timedelta(seconds=300)
 

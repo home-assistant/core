@@ -15,8 +15,6 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['raspihats']
-
 DEFAULT_INVERT_LOGIC = False
 DEFAULT_DEVICE_CLASS = None
 

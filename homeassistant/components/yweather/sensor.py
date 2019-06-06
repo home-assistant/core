@@ -12,8 +12,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['yahooweather==0.10']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Weather details provided by Yahoo! Inc."

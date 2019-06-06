@@ -5,6 +5,6 @@
   "requirements": [
     "websocket-client==0.54.0"
   ],
-  "dependencies": [],
+  "dependencies": ["configurator"],
   "codeowners": []
 }

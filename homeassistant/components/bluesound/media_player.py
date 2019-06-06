@@ -29,8 +29,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['xmltodict==0.11.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MASTER = 'master'
@@ -257,7 +255,7 @@ class BluesoundPlayer(MediaPlayerDevice):
                 BluesoundPlayer._TimeoutException):
             _LOGGER.info("Node %s is offline, retrying later", self._name)
             await asyncio.sleep(
-                NODE_OFFLINE_CHECK_TIMEOUT, loop=self._hass.loop)
+                NODE_OFFLINE_CHECK_TIMEOUT)
             self.start_polling()
 
         except CancelledError:
@@ -320,7 +318,7 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         try:
             websession = async_get_clientsession(self._hass)
-            with async_timeout.timeout(10, loop=self._hass.loop):
+            with async_timeout.timeout(10):
                 response = await websession.get(url)
 
             if response.status == 200:
@@ -363,7 +361,7 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         try:
 
-            with async_timeout.timeout(125, loop=self._hass.loop):
+            with async_timeout.timeout(125):
                 response = await self._polling_session.get(
                     url, headers={CONNECTION: KEEP_ALIVE})
 
@@ -380,7 +378,7 @@ class BluesoundPlayer(MediaPlayerDevice):
                     self._group_name = group_name
                     # the sleep is needed to make sure that the
                     # devices is synced
-                    await asyncio.sleep(1, loop=self._hass.loop)
+                    await asyncio.sleep(1)
                     await self.async_trigger_sync_on_all()
                 elif self.is_grouped:
                     # when player is grouped we need to fetch volume from

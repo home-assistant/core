@@ -12,7 +12,6 @@ from . import CONF_ADS_VAR, CONF_ADS_VAR_BRIGHTNESS, DATA_ADS, \
     AdsEntity, STATE_KEY_BRIGHTNESS, STATE_KEY_STATE
 
 _LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = ['ads']
 DEFAULT_NAME = 'ADS Light'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADS_VAR): cv.string,

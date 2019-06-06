@@ -11,9 +11,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['envirophat==0.0.6',
-                'smbus-cffi==0.5.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'envirophat'

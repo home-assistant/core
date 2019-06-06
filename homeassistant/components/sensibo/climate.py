@@ -21,8 +21,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.temperature import convert as convert_temperature
 
-REQUIREMENTS = ['pysensibo==1.0.3']
-
 _LOGGER = logging.getLogger(__name__)
 
 ALL = ['all']
@@ -103,7 +101,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                 update_tasks.append(climate.async_update_ha_state(True))
 
             if update_tasks:
-                await asyncio.wait(update_tasks, loop=hass.loop)
+                await asyncio.wait(update_tasks)
         hass.services.async_register(
             DOMAIN, SERVICE_ASSUME_STATE, async_assume_state,
             schema=ASSUME_STATE_SCHEMA)

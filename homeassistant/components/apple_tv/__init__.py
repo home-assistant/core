@@ -11,8 +11,6 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyatv==0.3.12']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'apple_tv'
@@ -169,7 +167,7 @@ async def async_setup(hass, config):
 
     tasks = [_setup_atv(hass, config, conf) for conf in config.get(DOMAIN, [])]
     if tasks:
-        await asyncio.wait(tasks, loop=hass.loop)
+        await asyncio.wait(tasks)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SCAN, async_service_handler,

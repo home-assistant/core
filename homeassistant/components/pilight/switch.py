@@ -21,8 +21,6 @@ CONF_UNIT = 'unit'
 CONF_UNITCODE = 'unitcode'
 CONF_ECHO = 'echo'
 
-DEPENDENCIES = ['pilight']
-
 COMMAND_SCHEMA = vol.Schema({
     vol.Optional(CONF_PROTOCOL): cv.string,
     vol.Optional('on'): cv.positive_int,

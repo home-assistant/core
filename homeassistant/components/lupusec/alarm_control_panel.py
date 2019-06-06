@@ -8,8 +8,6 @@ from homeassistant.const import (
 
 from . import DOMAIN as LUPUSEC_DOMAIN, LupusecDevice
 
-DEPENDENCIES = ['lupusec']
-
 ICON = 'mdi:security'
 
 SCAN_INTERVAL = timedelta(seconds=2)

@@ -11,11 +11,9 @@ from homeassistant.const import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
-    ATTRIBUTION, DOMAIN as LOGI_CIRCLE_DOMAIN, LED_MODE_KEY,
+    ATTRIBUTION, DEVICE_BRAND, DOMAIN as LOGI_CIRCLE_DOMAIN, LED_MODE_KEY,
     RECORDING_MODE_KEY, SIGNAL_LOGI_CIRCLE_RECONFIGURE,
     SIGNAL_LOGI_CIRCLE_RECORD, SIGNAL_LOGI_CIRCLE_SNAPSHOT)
-
-DEPENDENCIES = ['logi_circle', 'ffmpeg']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,6 +97,19 @@ class LogiCam(Camera):
     def supported_features(self):
         """Logi Circle camera's support turning on and off ("soft" switch)."""
         return SUPPORT_ON_OFF
+
+    @property
+    def device_info(self):
+        """Return information about the device."""
+        return {
+            'name': self._camera.name,
+            'identifiers': {
+                (LOGI_CIRCLE_DOMAIN, self._camera.id)
+            },
+            'model': self._camera.model_name,
+            'sw_version': self._camera.firmware,
+            'manufacturer': DEVICE_BRAND
+        }
 
     @property
     def device_state_attributes(self):

@@ -5,7 +5,6 @@ from homeassistant.helpers.entity import Entity
 
 from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS, XS1DeviceEntity
 
-DEPENDENCIES = ['xs1']
 _LOGGER = logging.getLogger(__name__)
 
 

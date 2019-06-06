@@ -12,8 +12,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.exceptions import PlatformNotReady
 
-REQUIREMENTS = ['aioftp==0.12.0']
-DEPENDENCIES = ['ffmpeg']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_BRAND = 'YI Home Camera'
@@ -79,7 +77,7 @@ class YiCamera(Camera):
         """Retrieve the latest video file from the customized Yi FTP server."""
         from aioftp import Client, StatusCodeError
 
-        ftp = Client(loop=self.hass.loop)
+        ftp = Client()
         try:
             await ftp.connect(self.host)
             await ftp.login(self.user, self.passwd)

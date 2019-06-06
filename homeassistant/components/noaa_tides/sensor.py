@@ -10,8 +10,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['py_noaa==0.3.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_STATION_ID = 'station_id'

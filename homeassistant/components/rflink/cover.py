@@ -13,8 +13,6 @@ from . import (
     CONF_GROUP, CONF_GROUP_ALIASES, CONF_NOGROUP_ALIASES,
     CONF_SIGNAL_REPETITIONS, DEVICE_DEFAULTS_SCHEMA, RflinkCommand)
 
-DEPENDENCIES = ['rflink']
-
 _LOGGER = logging.getLogger(__name__)
 
 

@@ -12,12 +12,10 @@ from .const import COVER_TYPES, NEW_GROUP, NEW_LIGHT, SWITCH_TYPES
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
-DEPENDENCIES = ['deconz']
-
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up deCONZ lights and group."""
+    """Old way of setting up deCONZ platforms."""
     pass
 
 
@@ -167,6 +165,8 @@ class DeconzLight(DeconzDevice, Light):
         """Return the device state attributes."""
         attributes = {}
         attributes['is_deconz_group'] = self._device.type == 'LightGroup'
+
         if self._device.type == 'LightGroup':
             attributes['all_on'] = self._device.all_on
+
         return attributes

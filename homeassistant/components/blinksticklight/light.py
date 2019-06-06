@@ -10,8 +10,6 @@ from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
-REQUIREMENTS = ['blinkstick==1.1.8']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SERIAL = 'serial'

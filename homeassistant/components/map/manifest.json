@@ -3,6 +3,8 @@
   "name": "Map",
   "documentation": "https://www.home-assistant.io/components/map",
   "requirements": [],
-  "dependencies": [],
+  "dependencies": [
+    "frontend"
+  ],
   "codeowners": []
 }

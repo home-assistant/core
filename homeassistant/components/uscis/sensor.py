@@ -13,8 +13,6 @@ from homeassistant.const import CONF_FRIENDLY_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['uscisstatus==0.1.1']
-
 DEFAULT_NAME = "USCIS"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

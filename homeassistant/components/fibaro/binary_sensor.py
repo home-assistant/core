@@ -7,8 +7,6 @@ from homeassistant.const import CONF_DEVICE_CLASS, CONF_ICON
 
 from . import FIBARO_DEVICES, FibaroDevice
 
-DEPENDENCIES = ['fibaro']
-
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {

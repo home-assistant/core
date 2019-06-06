@@ -3,8 +3,8 @@ import asyncio
 
 from homeassistant import data_entry_flow
 from homeassistant.components.heos.config_flow import HeosFlowHandler
-from homeassistant.components.heos.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.components.heos.const import DATA_DISCOVERED_HOSTS, DOMAIN
+from homeassistant.const import CONF_HOST, CONF_NAME
 
 
 async def test_flow_aborts_already_setup(hass, config_entry):
@@ -58,41 +58,51 @@ async def test_create_entry_when_host_valid(hass, controller):
     assert controller.disconnect.call_count == 1
 
 
-async def test_create_entry_with_discovery(hass, controller, discovery_data):
-    """Test discovery creates entry."""
+async def test_create_entry_when_friendly_name_valid(hass, controller):
+    """Test result type is create entry when friendly name is valid."""
+    hass.data[DATA_DISCOVERED_HOSTS] = {"Office (127.0.0.1)": "127.0.0.1"}
+    flow = HeosFlowHandler()
+    flow.hass = hass
+    data = {CONF_HOST: "Office (127.0.0.1)"}
+    result = await flow.async_step_user(data)
+    assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result['title'] == 'Controller (127.0.0.1)'
+    assert result['data'] == {CONF_HOST: "127.0.0.1"}
+    assert controller.connect.call_count == 1
+    assert controller.disconnect.call_count == 1
+    assert DATA_DISCOVERED_HOSTS not in hass.data
+
+
+async def test_discovery_shows_create_form(hass, controller, discovery_data):
+    """Test discovery shows form to confirm setup and subsequent abort."""
     await hass.config_entries.flow.async_init(
                 DOMAIN, context={'source': 'discovery'},
                 data=discovery_data)
     await hass.async_block_till_done()
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].data == {CONF_HOST: discovery_data[CONF_HOST]}
-    assert entries[0].title == 'Controller (127.0.0.1)'
+    assert len(hass.config_entries.flow.async_progress()) == 1
+    assert hass.data[DATA_DISCOVERED_HOSTS] == {
+        "Office (127.0.0.1)": "127.0.0.1"
+    }
+
+    discovery_data[CONF_HOST] = "127.0.0.2"
+    discovery_data[CONF_NAME] = "Bedroom"
+    await hass.config_entries.flow.async_init(
+                DOMAIN, context={'source': 'discovery'},
+                data=discovery_data)
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.flow.async_progress()) == 1
+    assert hass.data[DATA_DISCOVERED_HOSTS] == {
+        "Office (127.0.0.1)": "127.0.0.1",
+        "Bedroom (127.0.0.2)": "127.0.0.2"
+    }
 
 
-async def test_entry_already_exists_discovery(
+async def test_disovery_flow_aborts_already_setup(
         hass, controller, discovery_data, config_entry):
-    """Test discovery does not create multiple entries when already setup."""
+    """Test discovery flow aborts when entry already setup."""
     config_entry.add_to_hass(hass)
-    await hass.config_entries.flow.async_init(
-                DOMAIN, context={'source': 'discovery'},
-                data=discovery_data)
-    await hass.async_block_till_done()
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-
-
-async def test_multiple_discovery_creates_single_entry(
-        hass, controller, discovery_data):
-    """Test discovery of multiple devices creates a single entry."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={'source': 'discovery'},
-            data={CONF_HOST: discovery_data}))
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={'source': 'discovery'},
-            data={CONF_HOST: discovery_data}))
-    await hass.async_block_till_done()
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
+    flow = HeosFlowHandler()
+    flow.hass = hass
+    result = await flow.async_step_discovery(discovery_data)
+    assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result['reason'] == 'already_setup'

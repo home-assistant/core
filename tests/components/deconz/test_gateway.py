@@ -223,7 +223,8 @@ async def test_update_event():
     remote.name = 'Name'
 
     event = gateway.DeconzEvent(hass, remote)
-    event.async_update_callback({'state': True})
+    remote.changed_keys = {'state': True}
+    event.async_update_callback()
 
     assert len(hass.bus.async_fire.mock_calls) == 1
 

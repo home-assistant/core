@@ -12,8 +12,6 @@ from homeassistant.const import (
     CONF_NAME, ATTR_LONGITUDE, ATTR_LATITUDE, CONF_SHOW_ON_MAP)
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyiss==1.0.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ISS_NEXT_RISE = 'next_rise'

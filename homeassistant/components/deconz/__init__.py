@@ -13,8 +13,6 @@ from .const import (
     CONF_MASTER_GATEWAY, DEFAULT_PORT, DOMAIN, _LOGGER)
 from .gateway import DeconzGateway
 
-REQUIREMENTS = ['pydeconz==54']
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_API_KEY): cv.string,
@@ -166,6 +164,7 @@ async def async_unload_entry(hass, config_entry):
     if not hass.data[DOMAIN]:
         hass.services.async_remove(DOMAIN, SERVICE_DECONZ)
         hass.services.async_remove(DOMAIN, SERVICE_DEVICE_REFRESH)
+
     elif gateway.master:
         await async_populate_options(hass, config_entry)
         new_master_gateway = next(iter(hass.data[DOMAIN].values()))

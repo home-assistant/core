@@ -7,8 +7,6 @@ from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['http']
-
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):

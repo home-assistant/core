@@ -12,8 +12,6 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_NAME
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pencompy==0.0.3']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BOARDS = 'boards'

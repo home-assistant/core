@@ -9,9 +9,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME, DEVICE_CLASS_ILLUMINANCE
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['i2csense==0.0.4',
-                'smbus-cffi==0.5.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_I2C_ADDRESS = 'i2c_address'

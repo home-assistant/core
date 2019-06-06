@@ -8,8 +8,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['steamodd==4.21']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ACCOUNTS = 'accounts'

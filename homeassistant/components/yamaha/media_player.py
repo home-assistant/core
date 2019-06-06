@@ -18,8 +18,6 @@ from homeassistant.const import (
     STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['rxv==0.6.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ENABLED = 'enabled'

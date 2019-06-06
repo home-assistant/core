@@ -9,8 +9,6 @@ from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
 from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_SSL)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['quantum-gateway==0.0.5']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = 'myfiosgateway.com'

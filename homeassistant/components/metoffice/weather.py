@@ -10,8 +10,6 @@ from homeassistant.helpers import config_validation as cv
 
 from .sensor import ATTRIBUTION, CONDITION_CLASSES, MetOfficeCurrentData
 
-REQUIREMENTS = ['datapoint==0.4.3']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Met Office"

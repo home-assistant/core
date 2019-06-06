@@ -10,15 +10,19 @@ class MockAioSession:
 
     def __init__(self, *args, **kwargs):
         """Init a mock session."""
+        self.get_user = CoroutineMock()
+        self.invoke = CoroutineMock()
+        self.publish = CoroutineMock()
+        self.send_message = CoroutineMock()
 
     def create_client(self, *args, **kwargs):  # pylint: disable=no-self-use
         """Create a mocked client."""
         return MagicMock(
             __aenter__=CoroutineMock(return_value=CoroutineMock(
-                get_user=CoroutineMock(),      # iam
-                invoke=CoroutineMock(),        # lambda
-                publish=CoroutineMock(),       # sns
-                send_message=CoroutineMock(),  # sqs
+                get_user=self.get_user,            # iam
+                invoke=self.invoke,                # lambda
+                publish=self.publish,              # sns
+                send_message=self.send_message,    # sqs
             )),
             __aexit__=CoroutineMock()
         )
@@ -35,7 +39,10 @@ async def test_empty_config(hass):
     sessions = hass.data[aws.DATA_SESSIONS]
     assert sessions is not None
     assert len(sessions) == 1
-    assert isinstance(sessions.get('default'), MockAioSession)
+    session = sessions.get('default')
+    assert isinstance(session, MockAioSession)
+    # we don't validate auto-created default profile
+    session.get_user.assert_not_awaited()
 
 
 async def test_empty_credential(hass):
@@ -55,7 +62,8 @@ async def test_empty_credential(hass):
     sessions = hass.data[aws.DATA_SESSIONS]
     assert sessions is not None
     assert len(sessions) == 1
-    assert isinstance(sessions.get('default'), MockAioSession)
+    session = sessions.get('default')
+    assert isinstance(session, MockAioSession)
 
     assert hass.services.has_service('notify', 'new_lambda_test') is True
     await hass.services.async_call(
@@ -64,6 +72,7 @@ async def test_empty_credential(hass):
         {'message': 'test', 'target': 'ARN'},
         blocking=True
     )
+    session.invoke.assert_awaited_once()
 
 
 async def test_profile_credential(hass):
@@ -88,7 +97,8 @@ async def test_profile_credential(hass):
     sessions = hass.data[aws.DATA_SESSIONS]
     assert sessions is not None
     assert len(sessions) == 1
-    assert isinstance(sessions.get('test'), MockAioSession)
+    session = sessions.get('test')
+    assert isinstance(session, MockAioSession)
 
     assert hass.services.has_service('notify', 'sns_test') is True
     await hass.services.async_call(
@@ -97,6 +107,7 @@ async def test_profile_credential(hass):
         {'title': 'test', 'message': 'test', 'target': 'ARN'},
         blocking=True
     )
+    session.publish.assert_awaited_once()
 
 
 async def test_access_key_credential(hass):
@@ -128,7 +139,8 @@ async def test_access_key_credential(hass):
     sessions = hass.data[aws.DATA_SESSIONS]
     assert sessions is not None
     assert len(sessions) == 2
-    assert isinstance(sessions.get('key'), MockAioSession)
+    session = sessions.get('key')
+    assert isinstance(session, MockAioSession)
 
     assert hass.services.has_service('notify', 'sns_test') is True
     await hass.services.async_call(
@@ -137,6 +149,7 @@ async def test_access_key_credential(hass):
         {'title': 'test', 'message': 'test', 'target': 'ARN'},
         blocking=True
     )
+    session.publish.assert_awaited_once()
 
 
 async def test_notify_credential(hass):
@@ -197,3 +210,28 @@ async def test_notify_credential_profile(hass):
         {'message': 'test', 'target': 'ARN'},
         blocking=True
     )
+
+
+async def test_credential_skip_validate(hass):
+    """Test credential can skip validate."""
+    with async_patch('aiobotocore.AioSession', new=MockAioSession):
+        await async_setup_component(hass, 'aws', {
+            'aws': {
+                'credentials': [
+                    {
+                        'name': 'key',
+                        'aws_access_key_id': 'not-valid',
+                        'aws_secret_access_key': 'dont-care',
+                        'validate': False
+                    },
+                ],
+            }
+        })
+        await hass.async_block_till_done()
+
+    sessions = hass.data[aws.DATA_SESSIONS]
+    assert sessions is not None
+    assert len(sessions) == 1
+    session = sessions.get('key')
+    assert isinstance(session, MockAioSession)
+    session.get_user.assert_not_awaited()

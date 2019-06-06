@@ -3,7 +3,7 @@
   "name": "Otp",
   "documentation": "https://www.home-assistant.io/components/otp",
   "requirements": [
-    "pyotp==2.2.6"
+    "pyotp==2.2.7"
   ],
   "dependencies": [],
   "codeowners": []

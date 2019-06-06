@@ -12,8 +12,6 @@ from homeassistant.helpers.dispatcher import (
 
 from . import DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities
 
-DEPENDENCIES = [ELK_DOMAIN]
-
 SIGNAL_ARM_ENTITY = 'elkm1_arm'
 SIGNAL_DISPLAY_MESSAGE = 'elkm1_display_message'
 

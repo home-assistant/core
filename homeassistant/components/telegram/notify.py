@@ -12,8 +12,6 @@ from homeassistant.components.notify import (
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'telegram_bot'
-DEPENDENCIES = [DOMAIN]
-
 ATTR_KEYBOARD = 'keyboard'
 ATTR_INLINE_KEYBOARD = 'inline_keyboard'
 ATTR_PHOTO = 'photo'

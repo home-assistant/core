@@ -8,8 +8,6 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['eebrightbox==0.0.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_VERSION = 'version'

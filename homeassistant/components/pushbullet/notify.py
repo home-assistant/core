@@ -11,8 +11,6 @@ from homeassistant.components.notify import (
     ATTR_DATA, ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
     BaseNotificationService)
 
-REQUIREMENTS = ['pushbullet.py==0.11.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_URL = 'url'

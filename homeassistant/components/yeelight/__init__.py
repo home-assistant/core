@@ -4,6 +4,7 @@ import logging
 from datetime import timedelta
 
 import voluptuous as vol
+from yeelight import Bulb, BulbException
 from homeassistant.components.discovery import SERVICE_YEELIGHT
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_SCAN_INTERVAL, \
     CONF_HOST, ATTR_ENTITY_ID
@@ -15,8 +16,6 @@ from homeassistant.helpers.discovery import load_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
-
-REQUIREMENTS = ['yeelight==0.4.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -186,15 +185,13 @@ class YeelightDevice:
     def bulb(self):
         """Return bulb device."""
         if self._bulb_device is None:
-            import yeelight
             try:
-                self._bulb_device = yeelight.Bulb(self._ipaddr,
-                                                  model=self._model)
+                self._bulb_device = Bulb(self._ipaddr, model=self._model)
                 # force init for type
                 self.update()
 
                 self._available = True
-            except yeelight.BulbException as ex:
+            except BulbException as ex:
                 self._available = False
                 _LOGGER.error("Failed to connect to bulb %s, %s: %s",
                               self._ipaddr, self._name, ex)
@@ -241,8 +238,6 @@ class YeelightDevice:
 
     def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None):
         """Turn on device."""
-        from yeelight import BulbException
-
         try:
             self.bulb.turn_on(duration=duration, light_type=light_type)
         except BulbException as ex:
@@ -251,8 +246,6 @@ class YeelightDevice:
 
     def turn_off(self, duration=DEFAULT_TRANSITION, light_type=None):
         """Turn off device."""
-        from yeelight import BulbException
-
         try:
             self.bulb.turn_off(duration=duration, light_type=light_type)
         except BulbException as ex:
@@ -261,8 +254,6 @@ class YeelightDevice:
 
     def update(self):
         """Read new properties from the device."""
-        from yeelight import BulbException
-
         if not self.bulb:
             return
 

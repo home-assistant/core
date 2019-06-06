@@ -11,8 +11,6 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT, CONF_SSL, CONF_METHOD)
 
-REQUIREMENTS = ['librouteros==2.2.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 MTK_DEFAULT_API_PORT = '8728'
@@ -57,13 +55,13 @@ class MikrotikScanner(DeviceScanner):
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
         self.method = config.get(CONF_METHOD)
+        self.encoding = config[CONF_ENCODING]
 
         self.connected = False
         self.success_init = False
         self.client = None
         self.wireless_exist = None
         self.success_init = self.connect_to_device()
-        self.encoding = config[CONF_ENCODING]
 
         if self.success_init:
             _LOGGER.info("Start polling Mikrotik (%s) router...", self.host)

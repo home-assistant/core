@@ -5,6 +5,6 @@
   "requirements": [
     "pyatv==0.3.12"
   ],
-  "dependencies": [],
+  "dependencies": ["configurator"],
   "codeowners": []
 }

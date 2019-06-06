@@ -8,8 +8,6 @@ from homeassistant.const import (
 from homeassistant.const import CONF_PORT
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['PyMata==2.14']
-
 _LOGGER = logging.getLogger(__name__)
 
 BOARD = None

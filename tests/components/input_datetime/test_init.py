@@ -199,6 +199,39 @@ def test_restore_state(hass):
     assert state_bogus.state == str(initial)
 
 
+@asyncio.coroutine
+def test_default_value(hass):
+    """Test default value if none has been set via inital or restore state."""
+    yield from async_setup_component(hass, DOMAIN, {
+        DOMAIN: {
+            'test_time': {
+                'has_time': True,
+                'has_date': False
+            },
+            'test_date': {
+                'has_time': False,
+                'has_date': True
+            },
+            'test_datetime': {
+                'has_time': True,
+                'has_date': True
+            },
+        }})
+
+    dt_obj = datetime.datetime(1970, 1, 1, 0, 0)
+    state_time = hass.states.get('input_datetime.test_time')
+    assert state_time.state == str(dt_obj.time())
+    assert state_time.attributes.get('timestamp') is not None
+
+    state_date = hass.states.get('input_datetime.test_date')
+    assert state_date.state == str(dt_obj.date())
+    assert state_date.attributes.get('timestamp') is not None
+
+    state_datetime = hass.states.get('input_datetime.test_datetime')
+    assert state_datetime.state == str(dt_obj)
+    assert state_datetime.attributes.get('timestamp') is not None
+
+
 async def test_input_datetime_context(hass, hass_admin_user):
     """Test that input_datetime context works."""
     assert await async_setup_component(hass, 'input_datetime', {

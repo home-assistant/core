@@ -18,7 +18,6 @@ from homeassistant.components import websocket_api
 ATTR_NAME = 'name'
 
 DOMAIN = 'shopping_list'
-DEPENDENCIES = ['http']
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
 EVENT = 'shopping_list_updated'
@@ -118,7 +117,7 @@ def async_setup(hass, config):
         'What is on my shopping list'
     ])
 
-    yield from hass.components.frontend.async_register_built_in_panel(
+    hass.components.frontend.async_register_built_in_panel(
         'shopping-list', 'shopping_list', 'mdi:cart')
 
     hass.components.websocket_api.async_register_command(

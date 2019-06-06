@@ -2,16 +2,20 @@
 import logging
 
 from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.components.device_tracker import (
-    YAML_DEVICES, CONF_TRACK_NEW, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL,
-    load_config, SOURCE_TYPE_BLUETOOTH_LE
+from homeassistant.components.device_tracker.legacy import (
+    YAML_DEVICES, async_load_config
 )
+from homeassistant.components.device_tracker.const import (
+    CONF_TRACK_NEW, CONF_SCAN_INTERVAL, SCAN_INTERVAL, SOURCE_TYPE_BLUETOOTH_LE
+)
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 import homeassistant.util.dt as dt_util
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pygatt[GATTTOOL]==3.2.0']
-
+DATA_BLE = 'BLE'
+DATA_BLE_ADAPTER = 'ADAPTER'
 BLE_PREFIX = 'BLE_'
 MIN_SEEN_NEW = 5
 
@@ -21,6 +25,17 @@ def setup_scanner(hass, config, see, discovery_info=None):
     # pylint: disable=import-error
     import pygatt
     new_devices = {}
+    hass.data.setdefault(DATA_BLE, {DATA_BLE_ADAPTER: None})
+
+    def handle_stop(event):
+        """Try to shut down the bluetooth child process nicely."""
+        # These should never be unset at the point this runs, but just for
+        # safety's sake, use `get`.
+        adapter = hass.data.get(DATA_BLE, {}).get(DATA_BLE_ADAPTER)
+        if adapter is not None:
+            adapter.kill()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop)
 
     def see_device(address, name, new_device=False):
         """Mark a device as seen."""
@@ -50,6 +65,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
         _LOGGER.debug("Discovering Bluetooth LE devices")
         try:
             adapter = pygatt.GATTToolBackend()
+            hass.data[DATA_BLE][DATA_BLE_ADAPTER] = adapter
             devs = adapter.scan()
 
             devices = {x['address']: x['name'] for x in devs}
@@ -66,7 +82,10 @@ def setup_scanner(hass, config, see, discovery_info=None):
     # Load all known devices.
     # We just need the devices so set consider_home and home range
     # to 0
-    for device in load_config(yaml_path, hass, 0):
+    for device in run_coroutine_threadsafe(
+            async_load_config(yaml_path, hass, 0),
+            hass.loop
+    ).result():
         # check if device is a valid bluetooth device
         if device.mac and device.mac[:4].upper() == BLE_PREFIX:
             if device.track:
@@ -84,7 +103,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
         _LOGGER.warning("No Bluetooth LE devices to track!")
         return False
 
-    interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
 
     def update_ble(now):
         """Lookup Bluetooth LE devices and update status."""

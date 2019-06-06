@@ -3,7 +3,7 @@
   "name": "Switchbot",
   "documentation": "https://www.home-assistant.io/components/switchbot",
   "requirements": [
-    "PySwitchbot==0.5"
+    "PySwitchbot==0.6.2"
   ],
   "dependencies": [],
   "codeowners": [

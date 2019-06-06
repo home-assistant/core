@@ -18,8 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_DEVICE_CLASS = 'power'
 DEFAULT_NAME = 'Vultr {}'
-DEPENDENCIES = ['vultr']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SUBSCRIPTION): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string

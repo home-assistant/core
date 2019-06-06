@@ -8,8 +8,6 @@ from . import (
     CONF_ZONE_RFID, CONF_ZONE_TYPE, CONF_ZONES, SIGNAL_REL_MESSAGE,
     SIGNAL_RFX_MESSAGE, SIGNAL_ZONE_FAULT, SIGNAL_ZONE_RESTORE, ZONE_SCHEMA)
 
-DEPENDENCIES = ['alarmdecoder']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_RF_BIT0 = 'rf_bit0'

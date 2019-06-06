@@ -25,7 +25,6 @@ CONF_AZURE_REGION = 'azure_region'
 
 DATA_MICROSOFT_FACE = 'microsoft_face'
 DEFAULT_TIMEOUT = 10
-DEPENDENCIES = ['camera']
 DOMAIN = 'microsoft_face'
 
 FACE_API_URL = "api.cognitive.microsoft.com/face/v1.0/{0}"
@@ -278,7 +277,7 @@ class MicrosoftFace:
             tasks.append(self._entities[g_id].async_update_ha_state())
 
         if tasks:
-            await asyncio.wait(tasks, loop=self.hass.loop)
+            await asyncio.wait(tasks)
 
     async def call_api(self, method, function, data=None, binary=False,
                        params=None):
@@ -298,7 +297,7 @@ class MicrosoftFace:
                 payload = None
 
         try:
-            with async_timeout.timeout(self.timeout, loop=self.hass.loop):
+            with async_timeout.timeout(self.timeout):
                 response = await getattr(self.websession, method)(
                     url, data=payload, headers=headers, params=params)
 

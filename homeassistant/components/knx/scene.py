@@ -11,8 +11,6 @@ from . import ATTR_DISCOVER_DEVICES, DATA_KNX
 CONF_SCENE_NUMBER = 'scene_number'
 
 DEFAULT_NAME = 'KNX SCENE'
-DEPENDENCIES = ['knx']
-
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'knx',
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

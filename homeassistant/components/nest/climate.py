@@ -16,7 +16,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DATA_NEST, DOMAIN as NEST_DOMAIN, SIGNAL_NEST_UPDATE
 
-DEPENDENCIES = ['nest']
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

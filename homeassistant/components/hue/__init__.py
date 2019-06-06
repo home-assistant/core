@@ -14,8 +14,6 @@ from .bridge import HueBridge
 # Loading the config flow file will register the flow
 from .config_flow import configured_hosts
 
-REQUIREMENTS = ['aiohue==1.9.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BRIDGES = "bridges"

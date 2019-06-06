@@ -10,8 +10,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import async_generate_entity_id
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['aiopvapi==1.6.14']
-
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 HUB_ADDRESS = 'address'
 

@@ -19,8 +19,6 @@ from homeassistant.util import Throttle, slugify
 
 from .const import ATTR_SMHI_CLOUDINESS, ENTITY_ID_SENSOR_FORMAT
 
-DEPENDENCIES = ['smhi']
-
 _LOGGER = logging.getLogger(__name__)
 
 # Used to map condition from API results
@@ -109,7 +107,7 @@ class SmhiWeather(WeatherEntity):
                     RETRY_TIMEOUT, self.retry_update())
 
         try:
-            with async_timeout.timeout(10, loop=self.hass.loop):
+            with async_timeout.timeout(10):
                 self._forecasts = await self.get_weather_forecast()
                 self._fail_count = 0
 

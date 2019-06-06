@@ -15,8 +15,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['spotcrime==1.0.3']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DAYS = 'days'

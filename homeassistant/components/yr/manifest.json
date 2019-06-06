@@ -3,8 +3,10 @@
   "name": "Yr",
   "documentation": "https://www.home-assistant.io/components/yr",
   "requirements": [
-    "xmltodict==0.11.0"
+    "xmltodict==0.12.0"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@danielhiversen"
+  ]
 }

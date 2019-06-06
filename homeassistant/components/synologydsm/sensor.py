@@ -13,8 +13,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['python-synology==0.2.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = 'Data provided by Synology'

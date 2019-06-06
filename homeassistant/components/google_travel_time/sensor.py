@@ -15,8 +15,6 @@ from homeassistant.helpers import location
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['googlemaps==2.5.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DESTINATION = 'destination'

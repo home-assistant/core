@@ -12,7 +12,6 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle, slugify
 
-REQUIREMENTS = ['py17track==2.2.2']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DESTINATION_COUNTRY = 'destination_country'
@@ -33,6 +32,8 @@ DATA_SUMMARY = 'summary_data'
 
 DEFAULT_ATTRIBUTION = 'Data provided by 17track.net'
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
+
+ENTITY_ID_TEMPLATE = 'package_{0}_{1}'
 
 NOTIFICATION_DELIVERED_ID_SCAFFOLD = 'package_delivered_{0}'
 NOTIFICATION_DELIVERED_TITLE = 'Package Delivered'
@@ -72,8 +73,8 @@ async def async_setup_platform(
     scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     data = SeventeenTrackData(
-        client, async_add_entities, scan_interval, config[CONF_SHOW_ARCHIVED],
-        config[CONF_SHOW_DELIVERED])
+        hass, client, async_add_entities, scan_interval,
+        config[CONF_SHOW_ARCHIVED], config[CONF_SHOW_DELIVERED])
     await data.async_update()
 
     sensors = []
@@ -209,7 +210,7 @@ class SeventeenTrackPackageSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return 'package_{0}_{1}'.format(
+        return ENTITY_ID_TEMPLATE.format(
             self._data.account_id, self._tracking_number)
 
     async def async_update(self):
@@ -228,11 +229,13 @@ class SeventeenTrackPackageSensor(Entity):
             # delete this entity:
             _LOGGER.info(
                 'Deleting entity for stale package: %s', self._tracking_number)
+            reg = await self.hass.helpers.entity_registry.async_get_registry()
+            self.hass.async_create_task(reg.async_remove(self.entity_id))
             self.hass.async_create_task(self.async_remove())
             return
 
         # If the user has elected to not see delivered packages and one gets
-        # delivered, post a notification and delete the entity:
+        # delivered, post a notification:
         if package.status == VALUE_DELIVERED and not self._data.show_delivered:
             _LOGGER.info('Package delivered: %s', self._tracking_number)
             self.hass.components.persistent_notification.create(
@@ -245,7 +248,6 @@ class SeventeenTrackPackageSensor(Entity):
                 title=NOTIFICATION_DELIVERED_TITLE,
                 notification_id=NOTIFICATION_DELIVERED_ID_SCAFFOLD.format(
                     self._tracking_number))
-            self.hass.async_create_task(self.async_remove())
             return
 
         self._attrs.update({
@@ -259,11 +261,12 @@ class SeventeenTrackData:
     """Define a data handler for 17track.net."""
 
     def __init__(
-            self, client, async_add_entities, scan_interval, show_archived,
-            show_delivered):
+            self, hass, client, async_add_entities, scan_interval,
+            show_archived, show_delivered):
         """Initialize."""
         self._async_add_entities = async_add_entities
         self._client = client
+        self._hass = hass
         self._scan_interval = scan_interval
         self._show_archived = show_archived
         self.account_id = client.profile.account_id
@@ -292,6 +295,18 @@ class SeventeenTrackData:
                     SeventeenTrackPackageSensor(self, package)
                     for package in to_add
                 ], True)
+
+            # Remove archived packages from the entity registry:
+            to_remove = set(self.packages) - set(packages)
+            reg = await self._hass.helpers.entity_registry.async_get_registry()
+            for package in to_remove:
+                entity_id = reg.async_get_entity_id(
+                    'sensor', 'seventeentrack',
+                    ENTITY_ID_TEMPLATE.format(
+                        self.account_id, package.tracking_number))
+                if not entity_id:
+                    continue
+                self._hass.async_create_task(reg.async_remove(entity_id))
 
             self.packages = packages
         except SeventeenTrackError as err:

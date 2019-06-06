@@ -21,9 +21,13 @@ async def test_bridge_setup():
         assert await hue_bridge.async_setup() is True
 
     assert hue_bridge.api is api
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 1
-    assert hass.config_entries.async_forward_entry_setup.mock_calls[0][1] == \
-        (entry, 'light')
+    forward_entries = set(
+        c[1][1]
+        for c in
+        hass.config_entries.async_forward_entry_setup.mock_calls
+        )
+    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 3
+    assert forward_entries == set(['light', 'binary_sensor', 'sensor'])
 
 
 async def test_bridge_setup_invalid_username():
@@ -84,11 +88,11 @@ async def test_reset_unloads_entry_if_setup():
         assert await hue_bridge.async_setup() is True
 
     assert len(hass.services.async_register.mock_calls) == 1
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 1
+    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 3
 
     hass.config_entries.async_forward_entry_unload.return_value = \
         mock_coro(True)
     assert await hue_bridge.async_reset()
 
-    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 1
+    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 3
     assert len(hass.services.async_remove.mock_calls) == 1

@@ -9,8 +9,6 @@ from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['python-whois==0.7.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DOMAIN = 'domain'

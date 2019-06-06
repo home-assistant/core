@@ -9,7 +9,6 @@ from .const import CONF_GATEWAY_ID
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['tradfri']
 IKEA = 'IKEA of Sweden'
 TRADFRI_SWITCH_MANAGER = 'Tradfri Switch Manager'
 

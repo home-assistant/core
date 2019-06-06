@@ -12,7 +12,7 @@ from homeassistant.core import callback
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_COMPONENT_LOADED)
 import homeassistant.config as config_util
-from homeassistant import setup, loader
+from homeassistant import setup
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
@@ -108,37 +108,6 @@ class TestSetup:
             'platform_conf.whatever',
             MockPlatform(platform_schema=platform_schema))
 
-        with assert_setup_component(1):
-            assert setup.setup_component(self.hass, 'platform_conf', {
-                'platform_conf': {
-                    'platform': 'whatever',
-                    'hello': 'world',
-                    'invalid': 'extra',
-                }
-            })
-            assert caplog.text.count('Your configuration contains '
-                                     'extra keys') == 1
-
-        self.hass.data.pop(setup.DATA_SETUP)
-        self.hass.config.components.remove('platform_conf')
-
-        with assert_setup_component(2):
-            assert setup.setup_component(self.hass, 'platform_conf', {
-                'platform_conf': {
-                    'platform': 'whatever',
-                    'hello': 'world',
-                },
-                'platform_conf 2': {
-                    'platform': 'whatever',
-                    'invalid': True
-                }
-            })
-            assert caplog.text.count('Your configuration contains '
-                                     'extra keys') == 2
-
-        self.hass.data.pop(setup.DATA_SETUP)
-        self.hass.config.components.remove('platform_conf')
-
         with assert_setup_component(0):
             assert setup.setup_component(self.hass, 'platform_conf', {
                 'platform_conf': {
@@ -208,21 +177,6 @@ class TestSetup:
 
         with assert_setup_component(1):
             assert setup.setup_component(self.hass, 'platform_conf', {
-                # fail: no extra keys allowed in platform schema
-                'platform_conf': {
-                    'platform': 'whatever',
-                    'hello': 'world',
-                    'invalid': 'extra',
-                }
-            })
-            assert caplog.text.count('Your configuration contains '
-                                     'extra keys') == 1
-
-        self.hass.data.pop(setup.DATA_SETUP)
-        self.hass.config.components.remove('platform_conf')
-
-        with assert_setup_component(1):
-            assert setup.setup_component(self.hass, 'platform_conf', {
                 # pass
                 'platform_conf': {
                     'platform': 'whatever',
@@ -234,9 +188,6 @@ class TestSetup:
                     'hello': 'there'
                 }
             })
-
-        self.hass.data.pop(setup.DATA_SETUP)
-        self.hass.config.components.remove('platform_conf')
 
     def test_validate_platform_config_3(self, caplog):
         """Test fallback to component PLATFORM_SCHEMA."""
@@ -260,20 +211,6 @@ class TestSetup:
 
         with assert_setup_component(1):
             assert setup.setup_component(self.hass, 'platform_conf', {
-                'platform_conf': {
-                    'platform': 'whatever',
-                    'hello': 'world',
-                    'invalid': 'extra',
-                }
-            })
-            assert caplog.text.count('Your configuration contains '
-                                     'extra keys') == 1
-
-        self.hass.data.pop(setup.DATA_SETUP)
-        self.hass.config.components.remove('platform_conf')
-
-        with assert_setup_component(1):
-            assert setup.setup_component(self.hass, 'platform_conf', {
                 # pass
                 'platform_conf': {
                     'platform': 'whatever',
@@ -285,9 +222,6 @@ class TestSetup:
                     'hello': 'there'
                 }
             })
-
-        self.hass.data.pop(setup.DATA_SETUP)
-        self.hass.config.components.remove('platform_conf')
 
     def test_validate_platform_config_4(self):
         """Test entity_namespace in PLATFORM_SCHEMA."""
@@ -317,7 +251,7 @@ class TestSetup:
 
     def test_component_not_found(self):
         """setup_component should not crash if component doesn't exist."""
-        assert setup.setup_component(self.hass, 'non_existing') is False
+        assert setup.setup_component(self.hass, 'non_existing', {}) is False
 
     def test_component_not_double_initialized(self):
         """Test we do not set up a component twice."""
@@ -327,12 +261,12 @@ class TestSetup:
             self.hass,
             MockModule('comp', setup=mock_setup))
 
-        assert setup.setup_component(self.hass, 'comp')
+        assert setup.setup_component(self.hass, 'comp', {})
         assert mock_setup.called
 
         mock_setup.reset_mock()
 
-        assert setup.setup_component(self.hass, 'comp')
+        assert setup.setup_component(self.hass, 'comp', {})
         assert not mock_setup.called
 
     @mock.patch('homeassistant.util.package.install_package',
@@ -344,7 +278,7 @@ class TestSetup:
             self.hass,
             MockModule('comp', requirements=['package==0.0.1']))
 
-        assert not setup.setup_component(self.hass, 'comp')
+        assert not setup.setup_component(self.hass, 'comp', {})
         assert 'comp' not in self.hass.config.components
 
     def test_component_not_setup_twice_if_loaded_during_other_setup(self):
@@ -362,11 +296,11 @@ class TestSetup:
 
         def setup_component():
             """Set up the component."""
-            setup.setup_component(self.hass, 'comp')
+            setup.setup_component(self.hass, 'comp', {})
 
         thread = threading.Thread(target=setup_component)
         thread.start()
-        setup.setup_component(self.hass, 'comp')
+        setup.setup_component(self.hass, 'comp', {})
 
         thread.join()
 
@@ -493,8 +427,7 @@ class TestSetup:
             self.hass,
             MockModule('disabled_component', setup=lambda hass, config: None))
 
-        assert not setup.setup_component(self.hass, 'disabled_component')
-        assert loader.get_component(self.hass, 'disabled_component') is None
+        assert not setup.setup_component(self.hass, 'disabled_component', {})
         assert 'disabled_component' not in self.hass.config.components
 
         self.hass.data.pop(setup.DATA_SETUP)
@@ -502,9 +435,7 @@ class TestSetup:
             self.hass,
             MockModule('disabled_component', setup=lambda hass, config: False))
 
-        assert not setup.setup_component(self.hass, 'disabled_component')
-        assert loader.get_component(
-            self.hass, 'disabled_component') is not None
+        assert not setup.setup_component(self.hass, 'disabled_component', {})
         assert 'disabled_component' not in self.hass.config.components
 
         self.hass.data.pop(setup.DATA_SETUP)
@@ -512,9 +443,7 @@ class TestSetup:
             self.hass,
             MockModule('disabled_component', setup=lambda hass, config: True))
 
-        assert setup.setup_component(self.hass, 'disabled_component')
-        assert loader.get_component(
-            self.hass, 'disabled_component') is not None
+        assert setup.setup_component(self.hass, 'disabled_component', {})
         assert 'disabled_component' in self.hass.config.components
 
     def test_all_work_done_before_start(self):
@@ -523,10 +452,10 @@ class TestSetup:
 
         def component1_setup(hass, config):
             """Set up mock component."""
-            discovery.discover(hass, 'test_component2',
-                               component='test_component2')
-            discovery.discover(hass, 'test_component3',
-                               component='test_component3')
+            discovery.discover(
+                hass, 'test_component2', {}, 'test_component2', {})
+            discovery.discover(
+                hass, 'test_component3', {}, 'test_component3', {})
             return True
 
         def component_track_setup(hass, config):

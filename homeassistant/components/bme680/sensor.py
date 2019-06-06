@@ -13,9 +13,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
-REQUIREMENTS = ['bme680==1.0.5',
-                'smbus-cffi==0.5.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_I2C_ADDRESS = 'i2c_address'

@@ -16,8 +16,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['PyXiaomiGateway==0.12.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_GW_MAC = 'gw_mac'
@@ -296,11 +294,16 @@ class XiaomiDevice(Entity):
 
     def parse_voltage(self, data):
         """Parse battery level data sent by gateway."""
-        if 'voltage' not in data:
+        if 'voltage' in data:
+            voltage_key = 'voltage'
+        elif 'battery_voltage' in data:
+            voltage_key = 'battery_voltage'
+        else:
             return False
+
         max_volt = 3300
         min_volt = 2800
-        voltage = data['voltage']
+        voltage = data[voltage_key]
         voltage = min(voltage, max_volt)
         voltage = max(voltage, min_volt)
         percent = ((voltage - min_volt) / (max_volt - min_volt)) * 100

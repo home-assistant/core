@@ -9,8 +9,6 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import ATTR_DISCOVER_DEVICES, HM_ATTRIBUTE_SUPPORT, HMDevice
 
-DEPENDENCIES = ['homematic']
-
 _LOGGER = logging.getLogger(__name__)
 
 STATE_BOOST = 'boost'

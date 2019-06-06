@@ -9,8 +9,6 @@ from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, STATE_CLOSED,
                                  STATE_OPENING, STATE_CLOSING, STATE_OPEN)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['aladdin_connect==0.3']
-
 _LOGGER = logging.getLogger(__name__)
 
 NOTIFICATION_ID = 'aladdin_notification'

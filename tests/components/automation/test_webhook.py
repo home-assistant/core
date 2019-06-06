@@ -82,3 +82,37 @@ async def test_webhook_post(hass, aiohttp_client):
 
     assert len(events) == 1
     assert events[0].data['hello'] == 'yo world'
+
+
+async def test_webhook_query(hass, aiohttp_client):
+    """Test triggering with a query POST webhook."""
+    events = []
+
+    @callback
+    def store_event(event):
+        """Helepr to store events."""
+        events.append(event)
+
+    hass.bus.async_listen('test_success', store_event)
+
+    assert await async_setup_component(hass, 'automation', {
+        'automation': {
+            'trigger': {
+                'platform': 'webhook',
+                'webhook_id': 'query_webhook'
+            },
+            'action': {
+                'event': 'test_success',
+                'event_data_template': {
+                    'hello': 'yo {{ trigger.query.hello }}',
+                }
+            }
+        }
+    })
+
+    client = await aiohttp_client(hass.http.app)
+
+    await client.post('/api/webhook/query_webhook?hello=world')
+
+    assert len(events) == 1
+    assert events[0].data['hello'] == 'yo world'

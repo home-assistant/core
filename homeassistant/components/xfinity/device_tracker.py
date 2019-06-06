@@ -9,8 +9,6 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST
 
-REQUIREMENTS = ['xfinity-gateway==0.0.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = '10.0.0.1'

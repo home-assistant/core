@@ -13,8 +13,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['beautifulsoup4==4.7.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 URL = 'http://www.sytadin.fr/sys/barometres_de_la_circulation.jsp.html'

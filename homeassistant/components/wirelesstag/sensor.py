@@ -12,8 +12,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import (
     DOMAIN as WIRELESSTAG_DOMAIN, SIGNAL_TAG_UPDATE, WirelessTagBaseSensor)
 
-DEPENDENCIES = ['wirelesstag']
-
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TEMPERATURE = 'temperature'

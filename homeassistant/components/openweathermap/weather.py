@@ -14,8 +14,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.util.pressure import convert as convert_pressure
-REQUIREMENTS = ['pyowm==2.10.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = 'Data provided by OpenWeatherMap'

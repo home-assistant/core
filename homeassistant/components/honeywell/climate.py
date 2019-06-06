@@ -15,8 +15,6 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_TEMPERATURE, CONF_REGION)
 
-REQUIREMENTS = ['evohomeclient==0.3.2', 'somecomfort==0.5.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_FAN = 'fan'
@@ -54,6 +52,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if region == 'us':
         return _setup_us(username, password, config, add_entities)
+
+    _LOGGER.warning(
+        "The honeywell component is deprecated for EU (i.e. non-US) systems, "
+        "this functionality will be removed in version 0.96. "
+        "Please switch to the evohome component, "
+        "see: https://home-assistant.io/components/evohome")
 
     return _setup_round(username, password, config, add_entities)
 

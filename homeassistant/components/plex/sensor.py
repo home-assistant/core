@@ -11,8 +11,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['plexapi==3.0.6']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SERVER = 'server'

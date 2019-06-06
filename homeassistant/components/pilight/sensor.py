@@ -15,8 +15,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_VARIABLE = 'variable'
 
 DEFAULT_NAME = 'Pilight Sensor'
-DEPENDENCIES = ['pilight']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_VARIABLE): cv.string,
     vol.Required(CONF_PAYLOAD): vol.Schema(dict),

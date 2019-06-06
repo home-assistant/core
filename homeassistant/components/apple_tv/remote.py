@@ -4,8 +4,6 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 
 from . import ATTR_ATV, ATTR_POWER, DATA_APPLE_TV
 
-DEPENDENCIES = ['apple_tv']
-
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):

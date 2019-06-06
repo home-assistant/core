@@ -18,8 +18,6 @@ from homeassistant.const import (
     STATE_PAUSED, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['denonavr==0.7.8']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_SOUND_MODE_RAW = 'sound_mode_raw'

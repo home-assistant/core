@@ -142,7 +142,7 @@ class TestComponentZone(unittest.TestCase):
             ]
         })
         self.hass.block_till_done()
-        active = zone.zone.active_zone(self.hass, 32.880600, -117.237561)
+        active = zone.async_active_zone(self.hass, 32.880600, -117.237561)
         assert active is None
 
     def test_active_zone_skips_passive_zones_2(self):
@@ -158,7 +158,7 @@ class TestComponentZone(unittest.TestCase):
             ]
         })
         self.hass.block_till_done()
-        active = zone.zone.active_zone(self.hass, 32.880700, -117.237561)
+        active = zone.async_active_zone(self.hass, 32.880700, -117.237561)
         assert 'zone.active_zone' == active.entity_id
 
     def test_active_zone_prefers_smaller_zone_if_same_distance(self):
@@ -182,7 +182,7 @@ class TestComponentZone(unittest.TestCase):
             ]
         })
 
-        active = zone.zone.active_zone(self.hass, latitude, longitude)
+        active = zone.async_active_zone(self.hass, latitude, longitude)
         assert 'zone.small_zone' == active.entity_id
 
     def test_active_zone_prefers_smaller_zone_if_same_distance_2(self):
@@ -200,7 +200,7 @@ class TestComponentZone(unittest.TestCase):
             ]
         })
 
-        active = zone.zone.active_zone(self.hass, latitude, longitude)
+        active = zone.async_active_zone(self.hass, latitude, longitude)
         assert 'zone.smallest_zone' == active.entity_id
 
     def test_in_zone_works_for_passive_zones(self):
@@ -221,3 +221,24 @@ class TestComponentZone(unittest.TestCase):
 
         assert zone.zone.in_zone(self.hass.states.get('zone.passive_zone'),
                                  latitude, longitude)
+
+
+async def test_core_config_update(hass):
+    """Test updating core config will update home zone."""
+    assert await setup.async_setup_component(hass, 'zone', {})
+
+    home = hass.states.get('zone.home')
+
+    await hass.config.async_update(
+        location_name='Updated Name',
+        latitude=10,
+        longitude=20,
+    )
+    await hass.async_block_till_done()
+
+    home_updated = hass.states.get('zone.home')
+
+    assert home is not home_updated
+    assert home_updated.name == 'Updated Name'
+    assert home_updated.attributes['latitude'] == 10
+    assert home_updated.attributes['longitude'] == 20

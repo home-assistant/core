@@ -13,12 +13,14 @@ from homeassistant.components import (
     lock,
     scene,
     script,
+    sensor,
     switch,
     vacuum,
 )
 from homeassistant.components.climate import const as climate
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_DEVICE_CLASS,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_LOCKED,
@@ -29,11 +31,20 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     ATTR_ASSUMED_STATE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.util import color as color_util, temperature as temp_util
-from .const import ERR_VALUE_OUT_OF_RANGE
-from .helpers import SmartHomeError
+from .const import (
+    ERR_VALUE_OUT_OF_RANGE,
+    ERR_NOT_SUPPORTED,
+    ERR_FUNCTION_NOT_SUPPORTED,
+    ERR_CHALLENGE_NOT_SETUP,
+    CHALLENGE_ACK_NEEDED,
+    CHALLENGE_PIN_NEEDED,
+    CHALLENGE_FAILED_PIN_NEEDED,
+)
+from .error import SmartHomeError, ChallengeNeeded
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +61,7 @@ TRAIT_LOCKUNLOCK = PREFIX_TRAITS + 'LockUnlock'
 TRAIT_FANSPEED = PREFIX_TRAITS + 'FanSpeed'
 TRAIT_MODES = PREFIX_TRAITS + 'Modes'
 TRAIT_OPENCLOSE = PREFIX_TRAITS + 'OpenClose'
+TRAIT_VOLUME = PREFIX_TRAITS + 'Volume'
 
 PREFIX_COMMANDS = 'action.devices.commands.'
 COMMAND_ONOFF = PREFIX_COMMANDS + 'OnOff'
@@ -69,6 +81,8 @@ COMMAND_LOCKUNLOCK = PREFIX_COMMANDS + 'LockUnlock'
 COMMAND_FANSPEED = PREFIX_COMMANDS + 'SetFanSpeed'
 COMMAND_MODES = PREFIX_COMMANDS + 'SetModes'
 COMMAND_OPENCLOSE = PREFIX_COMMANDS + 'OpenClose'
+COMMAND_SET_VOLUME = PREFIX_COMMANDS + 'setVolume'
+COMMAND_VOLUME_RELATIVE = PREFIX_COMMANDS + 'volumeRelative'
 
 TRAITS = []
 
@@ -91,6 +105,11 @@ class _Trait:
 
     commands = []
 
+    @staticmethod
+    def might_2fa(domain, features, device_class):
+        """Return if the trait might ask for 2FA."""
+        return False
+
     def __init__(self, hass, state, config):
         """Initialize a trait for a state."""
         self.hass = hass
@@ -109,7 +128,7 @@ class _Trait:
         """Test if command can be executed."""
         return command in self.commands
 
-    async def execute(self, command, data, params):
+    async def execute(self, command, data, params, challenge):
         """Execute a trait command."""
         raise NotImplementedError
 
@@ -131,8 +150,6 @@ class BrightnessTrait(_Trait):
         """Test if state is supported."""
         if domain == light.DOMAIN:
             return features & light.SUPPORT_BRIGHTNESS
-        if domain == media_player.DOMAIN:
-            return features & media_player.SUPPORT_VOLUME_SET
 
         return False
 
@@ -150,16 +167,9 @@ class BrightnessTrait(_Trait):
             if brightness is not None:
                 response['brightness'] = int(100 * (brightness / 255))
 
-        elif domain == media_player.DOMAIN:
-            level = self.state.attributes.get(
-                media_player.ATTR_MEDIA_VOLUME_LEVEL)
-            if level is not None:
-                # Convert 0.0-1.0 to 0-255
-                response['brightness'] = int(level * 100)
-
         return response
 
-    async def execute(self, command, data, params):
+    async def execute(self, command, data, params, challenge):
         """Execute a brightness command."""
         domain = self.state.domain
 
@@ -168,13 +178,6 @@ class BrightnessTrait(_Trait):
                 light.DOMAIN, light.SERVICE_TURN_ON, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     light.ATTR_BRIGHTNESS_PCT: params['brightness']
-                }, blocking=True, context=data.context)
-        elif domain == media_player.DOMAIN:
-            await self.hass.services.async_call(
-                media_player.DOMAIN, media_player.SERVICE_VOLUME_SET, {
-                    ATTR_ENTITY_ID: self.state.entity_id,
-                    media_player.ATTR_MEDIA_VOLUME_LEVEL:
-                    params['brightness'] / 100
                 }, blocking=True, context=data.context)
 
 
@@ -214,7 +217,7 @@ class CameraStreamTrait(_Trait):
         """Return camera stream attributes."""
         return self.stream_info or {}
 
-    async def execute(self, command, data, params):
+    async def execute(self, command, data, params, challenge):
         """Execute a get camera stream command."""
         url = await self.hass.components.camera.async_request_stream(
             self.state.entity_id, 'hls')
@@ -255,7 +258,7 @@ class OnOffTrait(_Trait):
         """Return OnOff query attributes."""
         return {'on': self.state.state != STATE_OFF}
 
-    async def execute(self, command, data, params):
+    async def execute(self, command, data, params, challenge):
         """Execute an OnOff command."""
         domain = self.state.domain
 
@@ -348,7 +351,7 @@ class ColorSettingTrait(_Trait):
 
         return response
 
-    async def execute(self, command, data, params):
+    async def execute(self, command, data, params, challenge):
         """Execute a color temperature command."""
         if 'temperature' in params['color']:
             temp = color_util.color_temperature_kelvin_to_mired(
@@ -419,7 +422,7 @@ class SceneTrait(_Trait):
         """Return scene query attributes."""
         return {}
 
-    async def execute(self, command, data, params):
+    async def execute(self, command, data, params, challenge):
         """Execute a scene command."""
         # Don't block for scripts as they can be slow.
         await self.hass.services.async_call(
@@ -454,7 +457,7 @@ class DockTrait(_Trait):
         """Return dock query attributes."""
         return {'isDocked': self.state.state == vacuum.STATE_DOCKED}
 
-    async def execute(self, command, data, params):
+    async def execute(self, command, data, params, challenge):
         """Execute a dock command."""
         await self.hass.services.async_call(
             self.state.domain, vacuum.SERVICE_RETURN_TO_BASE, {
@@ -493,7 +496,7 @@ class StartStopTrait(_Trait):
             'isPaused': self.state.state == vacuum.STATE_PAUSED,
         }
 
-    async def execute(self, command, data, params):
+    async def execute(self, command, data, params, challenge):
         """Execute a StartStop command."""
         if command == COMMAND_STARTSTOP:
             if params['start']:
@@ -548,89 +551,126 @@ class TemperatureSettingTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class):
         """Test if state is supported."""
-        if domain != climate.DOMAIN:
-            return False
+        if domain == climate.DOMAIN:
+            return features & climate.SUPPORT_OPERATION_MODE
 
-        return features & climate.SUPPORT_OPERATION_MODE
+        return (domain == sensor.DOMAIN
+                and device_class == sensor.DEVICE_CLASS_TEMPERATURE)
 
     def sync_attributes(self):
         """Return temperature point and modes attributes for a sync request."""
-        modes = []
-        supported = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
-
-        if supported & climate.SUPPORT_ON_OFF != 0:
-            modes.append(STATE_OFF)
-            modes.append(STATE_ON)
-
-        if supported & climate.SUPPORT_OPERATION_MODE != 0:
-            for mode in self.state.attributes.get(climate.ATTR_OPERATION_LIST,
-                                                  []):
-                google_mode = self.hass_to_google.get(mode)
-                if google_mode and google_mode not in modes:
-                    modes.append(google_mode)
-
-        return {
-            'availableThermostatModes': ','.join(modes),
-            'thermostatTemperatureUnit': _google_temp_unit(
-                self.hass.config.units.temperature_unit)
-        }
-
-    def query_attributes(self):
-        """Return temperature point and modes query attributes."""
-        attrs = self.state.attributes
         response = {}
+        attrs = self.state.attributes
+        domain = self.state.domain
+        response['thermostatTemperatureUnit'] = _google_temp_unit(
+            self.hass.config.units.temperature_unit)
 
-        operation = attrs.get(climate.ATTR_OPERATION_MODE)
-        supported = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        if domain == sensor.DOMAIN:
+            device_class = attrs.get(ATTR_DEVICE_CLASS)
+            if device_class == sensor.DEVICE_CLASS_TEMPERATURE:
+                response["queryOnlyTemperatureSetting"] = True
 
-        if (supported & climate.SUPPORT_ON_OFF
-                and self.state.state == STATE_OFF):
-            response['thermostatMode'] = 'off'
-        elif (supported & climate.SUPPORT_OPERATION_MODE and
-              operation in self.hass_to_google):
-            response['thermostatMode'] = self.hass_to_google[operation]
-        elif supported & climate.SUPPORT_ON_OFF:
-            response['thermostatMode'] = 'on'
+        elif domain == climate.DOMAIN:
+            modes = []
+            supported = attrs.get(ATTR_SUPPORTED_FEATURES)
 
-        unit = self.hass.config.units.temperature_unit
+            if supported & climate.SUPPORT_ON_OFF != 0:
+                modes.append(STATE_OFF)
+                modes.append(STATE_ON)
 
-        current_temp = attrs.get(climate.ATTR_CURRENT_TEMPERATURE)
-        if current_temp is not None:
-            response['thermostatTemperatureAmbient'] = \
-                round(temp_util.convert(current_temp, unit, TEMP_CELSIUS), 1)
-
-        current_humidity = attrs.get(climate.ATTR_CURRENT_HUMIDITY)
-        if current_humidity is not None:
-            response['thermostatHumidityAmbient'] = current_humidity
-
-        if operation == climate.STATE_AUTO:
-            if (supported & climate.SUPPORT_TARGET_TEMPERATURE_HIGH and
-                    supported & climate.SUPPORT_TARGET_TEMPERATURE_LOW):
-                response['thermostatTemperatureSetpointHigh'] = \
-                    round(temp_util.convert(
-                        attrs[climate.ATTR_TARGET_TEMP_HIGH],
-                        unit, TEMP_CELSIUS), 1)
-                response['thermostatTemperatureSetpointLow'] = \
-                    round(temp_util.convert(
-                        attrs[climate.ATTR_TARGET_TEMP_LOW],
-                        unit, TEMP_CELSIUS), 1)
-            else:
-                target_temp = attrs.get(ATTR_TEMPERATURE)
-                if target_temp is not None:
-                    target_temp = round(
-                        temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1)
-                    response['thermostatTemperatureSetpointHigh'] = target_temp
-                    response['thermostatTemperatureSetpointLow'] = target_temp
-        else:
-            target_temp = attrs.get(ATTR_TEMPERATURE)
-            if target_temp is not None:
-                response['thermostatTemperatureSetpoint'] = round(
-                    temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1)
+            if supported & climate.SUPPORT_OPERATION_MODE != 0:
+                for mode in attrs.get(climate.ATTR_OPERATION_LIST, []):
+                    google_mode = self.hass_to_google.get(mode)
+                    if google_mode and google_mode not in modes:
+                        modes.append(google_mode)
+            response['availableThermostatModes'] = ','.join(modes)
 
         return response
 
-    async def execute(self, command, data, params):
+    def query_attributes(self):
+        """Return temperature point and modes query attributes."""
+        response = {}
+        attrs = self.state.attributes
+        domain = self.state.domain
+        unit = self.hass.config.units.temperature_unit
+        if domain == sensor.DOMAIN:
+            device_class = attrs.get(ATTR_DEVICE_CLASS)
+            if device_class == sensor.DEVICE_CLASS_TEMPERATURE:
+                current_temp = self.state.state
+                if current_temp is not None:
+                    response['thermostatTemperatureAmbient'] = \
+                        round(temp_util.convert(
+                            float(current_temp),
+                            unit,
+                            TEMP_CELSIUS
+                        ), 1)
+
+        elif domain == climate.DOMAIN:
+            operation = attrs.get(climate.ATTR_OPERATION_MODE)
+            supported = attrs.get(ATTR_SUPPORTED_FEATURES)
+
+            if (supported & climate.SUPPORT_ON_OFF
+                    and self.state.state == STATE_OFF):
+                response['thermostatMode'] = 'off'
+            elif (supported & climate.SUPPORT_OPERATION_MODE
+                  and operation in self.hass_to_google):
+                response['thermostatMode'] = self.hass_to_google[operation]
+            elif supported & climate.SUPPORT_ON_OFF:
+                response['thermostatMode'] = 'on'
+
+            current_temp = attrs.get(climate.ATTR_CURRENT_TEMPERATURE)
+            if current_temp is not None:
+                response['thermostatTemperatureAmbient'] = \
+                    round(temp_util.convert(
+                        current_temp,
+                        unit,
+                        TEMP_CELSIUS
+                    ), 1)
+
+            current_humidity = attrs.get(climate.ATTR_CURRENT_HUMIDITY)
+            if current_humidity is not None:
+                response['thermostatHumidityAmbient'] = current_humidity
+
+            if operation == climate.STATE_AUTO:
+                if (supported & climate.SUPPORT_TARGET_TEMPERATURE_HIGH and
+                        supported & climate.SUPPORT_TARGET_TEMPERATURE_LOW):
+                    response['thermostatTemperatureSetpointHigh'] = \
+                        round(temp_util.convert(
+                            attrs[climate.ATTR_TARGET_TEMP_HIGH],
+                            unit, TEMP_CELSIUS), 1)
+                    response['thermostatTemperatureSetpointLow'] = \
+                        round(temp_util.convert(
+                            attrs[climate.ATTR_TARGET_TEMP_LOW],
+                            unit, TEMP_CELSIUS), 1)
+                else:
+                    target_temp = attrs.get(ATTR_TEMPERATURE)
+                    if target_temp is not None:
+                        target_temp = round(
+                            temp_util.convert(
+                                target_temp,
+                                unit,
+                                TEMP_CELSIUS
+                            ), 1)
+                        response['thermostatTemperatureSetpointHigh'] = \
+                            target_temp
+                        response['thermostatTemperatureSetpointLow'] = \
+                            target_temp
+            else:
+                target_temp = attrs.get(ATTR_TEMPERATURE)
+                if target_temp is not None:
+                    response['thermostatTemperatureSetpoint'] = round(
+                        temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1)
+
+        return response
+
+    async def execute(self, command, data, params, challenge):
         """Execute a temperature point or mode command."""
+        domain = self.state.domain
+        if domain == sensor.DOMAIN:
+            raise SmartHomeError(
+                ERR_NOT_SUPPORTED,
+                'Execute is not supported by sensor')
+
         # All sent in temperatures are always in Celsius
         unit = self.hass.config.units.temperature_unit
         min_temp = self.state.attributes[climate.ATTR_MIN_TEMP]
@@ -685,8 +725,8 @@ class TemperatureSettingTrait(_Trait):
                 ATTR_ENTITY_ID: self.state.entity_id,
             }
 
-            if(supported & climate.SUPPORT_TARGET_TEMPERATURE_HIGH and
-               supported & climate.SUPPORT_TARGET_TEMPERATURE_LOW):
+            if(supported & climate.SUPPORT_TARGET_TEMPERATURE_HIGH
+               and supported & climate.SUPPORT_TARGET_TEMPERATURE_LOW):
                 svc_data[climate.ATTR_TARGET_TEMP_HIGH] = temp_high
                 svc_data[climate.ATTR_TARGET_TEMP_LOW] = temp_low
             else:
@@ -735,6 +775,11 @@ class LockUnlockTrait(_Trait):
         """Test if state is supported."""
         return domain == lock.DOMAIN
 
+    @staticmethod
+    def might_2fa(domain, features, device_class):
+        """Return if the trait might ask for 2FA."""
+        return True
+
     def sync_attributes(self):
         """Return LockUnlock attributes for a sync request."""
         return {}
@@ -743,16 +788,12 @@ class LockUnlockTrait(_Trait):
         """Return LockUnlock query attributes."""
         return {'isLocked': self.state.state == STATE_LOCKED}
 
-    def can_execute(self, command, params):
-        """Test if command can be executed."""
-        allowed_unlock = not params['lock'] and self.config.allow_unlock
-        return params['lock'] or allowed_unlock
-
-    async def execute(self, command, data, params):
+    async def execute(self, command, data, params, challenge):
         """Execute an LockUnlock command."""
         if params['lock']:
             service = lock.SERVICE_LOCK
         else:
+            _verify_pin_challenge(data, self.state, challenge)
             service = lock.SERVICE_UNLOCK
 
         await self.hass.services.async_call(lock.DOMAIN, service, {
@@ -827,7 +868,7 @@ class FanSpeedTrait(_Trait):
 
         return response
 
-    async def execute(self, command, data, params):
+    async def execute(self, command, data, params, challenge):
         """Execute an SetFanSpeed command."""
         await self.hass.services.async_call(
             fan.DOMAIN, fan.SERVICE_SET_SPEED, {
@@ -1001,7 +1042,7 @@ class ModesTrait(_Trait):
 
         return response
 
-    async def execute(self, command, data, params):
+    async def execute(self, command, data, params, challenge):
         """Execute an SetModes command."""
         settings = params.get('updateModeSettings')
         requested_source = settings.get(
@@ -1028,10 +1069,15 @@ class OpenCloseTrait(_Trait):
     https://developers.google.com/actions/smarthome/traits/openclose
     """
 
+    # Cover device classes that require 2FA
+    COVER_2FA = (cover.DEVICE_CLASS_DOOR, cover.DEVICE_CLASS_GARAGE)
+
     name = TRAIT_OPENCLOSE
     commands = [
         COMMAND_OPENCLOSE
     ]
+
+    override_position = None
 
     @staticmethod
     def supported(domain, features, device_class):
@@ -1047,35 +1093,50 @@ class OpenCloseTrait(_Trait):
             binary_sensor.DEVICE_CLASS_WINDOW,
         )
 
+    @staticmethod
+    def might_2fa(domain, features, device_class):
+        """Return if the trait might ask for 2FA."""
+        return (domain == cover.DOMAIN and
+                device_class in OpenCloseTrait.COVER_2FA)
+
     def sync_attributes(self):
         """Return opening direction."""
-        attrs = {}
+        response = {}
         if self.state.domain == binary_sensor.DOMAIN:
-            attrs['queryOnlyOpenClose'] = True
-        return attrs
+            response['queryOnlyOpenClose'] = True
+        return response
 
     def query_attributes(self):
         """Return state query attributes."""
         domain = self.state.domain
         response = {}
 
-        if domain == cover.DOMAIN:
-            # When it's an assumed state, we will always report it as 50%
-            # Google will not issue an open command if the assumed state is
-            # open, even if that is currently incorrect.
-            if self.state.attributes.get(ATTR_ASSUMED_STATE):
-                response['openPercent'] = 50
-            else:
-                position = self.state.attributes.get(
-                    cover.ATTR_CURRENT_POSITION
-                )
+        if self.override_position is not None:
+            response['openPercent'] = self.override_position
 
-                if position is not None:
-                    response['openPercent'] = position
-                elif self.state.state != cover.STATE_CLOSED:
-                    response['openPercent'] = 100
-                else:
-                    response['openPercent'] = 0
+        elif domain == cover.DOMAIN:
+            # When it's an assumed state, we will return that querying state
+            # is not supported.
+            if self.state.attributes.get(ATTR_ASSUMED_STATE):
+                raise SmartHomeError(
+                    ERR_NOT_SUPPORTED,
+                    'Querying state is not supported')
+
+            if self.state.state == STATE_UNKNOWN:
+                raise SmartHomeError(
+                    ERR_NOT_SUPPORTED,
+                    'Querying state is not supported')
+
+            position = self.override_position or self.state.attributes.get(
+                cover.ATTR_CURRENT_POSITION
+            )
+
+            if position is not None:
+                response['openPercent'] = position
+            elif self.state.state != cover.STATE_CLOSED:
+                response['openPercent'] = 100
+            else:
+                response['openPercent'] = 0
 
         elif domain == binary_sensor.DOMAIN:
             if self.state.state == STATE_ON:
@@ -1085,28 +1146,137 @@ class OpenCloseTrait(_Trait):
 
         return response
 
-    async def execute(self, command, data, params):
+    async def execute(self, command, data, params, challenge):
         """Execute an Open, close, Set position command."""
         domain = self.state.domain
 
         if domain == cover.DOMAIN:
-            position = self.state.attributes.get(cover.ATTR_CURRENT_POSITION)
-            if position is not None:
-                await self.hass.services.async_call(
-                    cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION, {
-                        ATTR_ENTITY_ID: self.state.entity_id,
-                        cover.ATTR_POSITION: params['openPercent']
-                    }, blocking=True, context=data.context)
+            svc_params = {ATTR_ENTITY_ID: self.state.entity_id}
+
+            if params['openPercent'] == 0:
+                service = cover.SERVICE_CLOSE_COVER
+                should_verify = False
+            elif params['openPercent'] == 100:
+                service = cover.SERVICE_OPEN_COVER
+                should_verify = True
+            elif (self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) &
+                  cover.SUPPORT_SET_POSITION):
+                service = cover.SERVICE_SET_COVER_POSITION
+                should_verify = True
+                svc_params[cover.ATTR_POSITION] = params['openPercent']
             else:
-                if self.state.state != cover.STATE_CLOSED:
-                    if params['openPercent'] < 100:
-                        await self.hass.services.async_call(
-                            cover.DOMAIN, cover.SERVICE_CLOSE_COVER, {
-                                ATTR_ENTITY_ID: self.state.entity_id
-                            }, blocking=True, context=data.context)
-                else:
-                    if params['openPercent'] > 0:
-                        await self.hass.services.async_call(
-                            cover.DOMAIN, cover.SERVICE_OPEN_COVER, {
-                                ATTR_ENTITY_ID: self.state.entity_id
-                            }, blocking=True, context=data.context)
+                raise SmartHomeError(
+                    ERR_FUNCTION_NOT_SUPPORTED,
+                    'Setting a position is not supported')
+
+            if (should_verify and
+                    self.state.attributes.get(ATTR_DEVICE_CLASS)
+                    in OpenCloseTrait.COVER_2FA):
+                _verify_pin_challenge(data, self.state, challenge)
+
+            await self.hass.services.async_call(
+                cover.DOMAIN, service, svc_params,
+                blocking=True, context=data.context)
+
+            if (self.state.attributes.get(ATTR_ASSUMED_STATE) or
+                    self.state.state == STATE_UNKNOWN):
+                self.override_position = params['openPercent']
+
+
+@register_trait
+class VolumeTrait(_Trait):
+    """Trait to control brightness of a device.
+
+    https://developers.google.com/actions/smarthome/traits/volume
+    """
+
+    name = TRAIT_VOLUME
+    commands = [
+        COMMAND_SET_VOLUME,
+        COMMAND_VOLUME_RELATIVE,
+    ]
+
+    @staticmethod
+    def supported(domain, features, device_class):
+        """Test if state is supported."""
+        if domain == media_player.DOMAIN:
+            return features & media_player.SUPPORT_VOLUME_SET
+
+        return False
+
+    def sync_attributes(self):
+        """Return brightness attributes for a sync request."""
+        return {}
+
+    def query_attributes(self):
+        """Return brightness query attributes."""
+        response = {}
+
+        level = self.state.attributes.get(
+            media_player.ATTR_MEDIA_VOLUME_LEVEL)
+        muted = self.state.attributes.get(
+            media_player.ATTR_MEDIA_VOLUME_MUTED)
+        if level is not None:
+            # Convert 0.0-1.0 to 0-100
+            response['currentVolume'] = int(level * 100)
+            response['isMuted'] = bool(muted)
+
+        return response
+
+    async def _execute_set_volume(self, data, params):
+        level = params['volumeLevel']
+
+        await self.hass.services.async_call(
+            media_player.DOMAIN,
+            media_player.SERVICE_VOLUME_SET, {
+                ATTR_ENTITY_ID: self.state.entity_id,
+                media_player.ATTR_MEDIA_VOLUME_LEVEL:
+                level / 100
+            }, blocking=True, context=data.context)
+
+    async def _execute_volume_relative(self, data, params):
+        # This could also support up/down commands using relativeSteps
+        relative = params['volumeRelativeLevel']
+        current = self.state.attributes.get(
+            media_player.ATTR_MEDIA_VOLUME_LEVEL)
+
+        await self.hass.services.async_call(
+            media_player.DOMAIN, media_player.SERVICE_VOLUME_SET, {
+                ATTR_ENTITY_ID: self.state.entity_id,
+                media_player.ATTR_MEDIA_VOLUME_LEVEL:
+                current + relative / 100
+            }, blocking=True, context=data.context)
+
+    async def execute(self, command, data, params, challenge):
+        """Execute a brightness command."""
+        if command == COMMAND_SET_VOLUME:
+            await self._execute_set_volume(data, params)
+        elif command == COMMAND_VOLUME_RELATIVE:
+            await self._execute_volume_relative(data, params)
+        else:
+            raise SmartHomeError(
+                ERR_NOT_SUPPORTED, 'Command not supported')
+
+
+def _verify_pin_challenge(data, state, challenge):
+    """Verify a pin challenge."""
+    if not data.config.should_2fa(state):
+        return
+
+    if not data.config.secure_devices_pin:
+        raise SmartHomeError(
+            ERR_CHALLENGE_NOT_SETUP, 'Challenge is not set up')
+
+    if not challenge:
+        raise ChallengeNeeded(CHALLENGE_PIN_NEEDED)
+
+    pin = challenge.get('pin')
+
+    if pin != data.config.secure_devices_pin:
+        raise ChallengeNeeded(CHALLENGE_FAILED_PIN_NEEDED)
+
+
+def _verify_ack_challenge(data, state, challenge):
+    """Verify a pin challenge."""
+    if not challenge or not challenge.get('ack'):
+        raise ChallengeNeeded(CHALLENGE_ACK_NEEDED)

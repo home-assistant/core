@@ -9,8 +9,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (PLATFORM_SCHEMA,
                                              BaseNotificationService)
 
-REQUIREMENTS = ['Mastodon.py==1.3.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BASE_URL = 'base_url'

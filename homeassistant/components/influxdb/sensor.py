@@ -18,8 +18,6 @@ from . import CONF_DB_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['influxdb==5.2.0']
-
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8086
 DEFAULT_DATABASE = 'home_assistant'

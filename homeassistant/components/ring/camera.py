@@ -16,8 +16,6 @@ from . import ATTRIBUTION, DATA_RING, NOTIFICATION_ID
 
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 
-DEPENDENCIES = ['ring', 'ffmpeg']
-
 FORCE_REFRESH_INTERVAL = timedelta(minutes=45)
 
 _LOGGER = logging.getLogger(__name__)
@@ -118,7 +116,7 @@ class RingCam(Camera):
 
         image = await asyncio.shield(ffmpeg.get_image(
             self._video_url, output_format=IMAGE_JPEG,
-            extra_cmd=self._ffmpeg_arguments), loop=self.hass.loop)
+            extra_cmd=self._ffmpeg_arguments))
         return image
 
     async def handle_async_mjpeg_stream(self, request):

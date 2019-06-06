@@ -15,8 +15,6 @@ import homeassistant.helpers.config_validation as cv
 
 from . import ATTR_EVENT, DOMAIN as IFTTT_DOMAIN, SERVICE_TRIGGER
 
-DEPENDENCIES = ['ifttt']
-
 _LOGGER = logging.getLogger(__name__)
 
 ALLOWED_STATES = [

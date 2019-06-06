@@ -12,8 +12,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['pyenvisalink==3.8']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'envisalink'
@@ -108,7 +106,7 @@ async def async_setup(hass, config):
     zones = conf.get(CONF_ZONES)
     partitions = conf.get(CONF_PARTITIONS)
     connection_timeout = conf.get(CONF_TIMEOUT)
-    sync_connect = asyncio.Future(loop=hass.loop)
+    sync_connect = asyncio.Future()
 
     controller = EnvisalinkAlarmPanel(
         host, port, panel_type, version, user, password, zone_dump,

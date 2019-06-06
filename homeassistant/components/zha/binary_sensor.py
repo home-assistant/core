@@ -14,8 +14,6 @@ from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['zha']
-
 # Zigbee Cluster Library Zone Type to Home Assistant device class
 CLASS_MAPPING = {
     0x000d: 'motion',

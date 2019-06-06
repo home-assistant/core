@@ -8,8 +8,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyedimax==0.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Edimax Smart Plug'

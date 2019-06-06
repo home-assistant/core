@@ -5,8 +5,6 @@ from homeassistant.components.cover import CoverDevice
 
 from . import DOMAIN as ABODE_DOMAIN, AbodeDevice
 
-DEPENDENCIES = ['abode']
-
 _LOGGER = logging.getLogger(__name__)
 
 

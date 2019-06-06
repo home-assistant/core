@@ -14,8 +14,6 @@ from . import CONF_ADS_FACTOR, CONF_ADS_TYPE, CONF_ADS_VAR, \
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "ADS sensor"
-DEPENDENCIES = ['ads']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADS_VAR): cv.string,
     vol.Optional(CONF_ADS_FACTOR): cv.positive_int,

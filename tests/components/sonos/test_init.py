@@ -35,7 +35,9 @@ async def test_configuring_sonos_creates_entry(hass):
             patch('pysonos.discover', return_value=True):
         await async_setup_component(hass, sonos.DOMAIN, {
             'sonos': {
-                'some_config': 'to_trigger_import'
+                'media_player': {
+                    'interface_addr': '127.0.0.1',
+                }
             }
         })
         await hass.async_block_till_done()

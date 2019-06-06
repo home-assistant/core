@@ -24,7 +24,6 @@ from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
 
 DOMAIN = 'light'
-DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=30)
 
 GROUP_NAME_ALL_LIGHTS = 'all lights'
@@ -304,7 +303,7 @@ async def async_setup(hass, config):
                 light.async_update_ha_state(True))
 
         if update_tasks:
-            await asyncio.wait(update_tasks, loop=hass.loop)
+            await asyncio.wait(update_tasks)
 
     # Listen for light on and light off service calls.
     hass.services.async_register(

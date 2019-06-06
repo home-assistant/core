@@ -17,8 +17,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, HTTP_HEADER_X_REQUESTED_WITH)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['tplink==0.2.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 HTTP_HEADER_NO_CACHE = 'no-cache'
@@ -43,6 +41,12 @@ def get_scanner(hass, config):
     should be gradually migrated in the pypi package
 
     """
+    _LOGGER.warning("TP-Link device tracker is unmaintained and will be "
+                    "removed in the future releases if no maintainer is "
+                    "found. If you have interest in this integration, "
+                    "feel free to create a pull request to move this code "
+                    "to a new 'tplink_router' integration and refactoring "
+                    "the device-specific parts to the tplink library")
     for cls in [
             TplinkDeviceScanner, Tplink5DeviceScanner, Tplink4DeviceScanner,
             Tplink3DeviceScanner, Tplink2DeviceScanner, Tplink1DeviceScanner

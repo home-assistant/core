@@ -9,8 +9,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['PyGithub==1.43.5']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_REPOS = 'repositories'

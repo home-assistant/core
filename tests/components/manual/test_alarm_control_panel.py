@@ -42,8 +42,7 @@ async def test_arm_home_no_pending(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_arm_home(hass, CODE)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_home(hass, CODE)
 
     assert STATE_ALARM_ARMED_HOME == \
         hass.states.get(entity_id).state
@@ -66,8 +65,7 @@ async def test_arm_home_with_pending(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_arm_home(hass, CODE, entity_id)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_home(hass, CODE, entity_id)
 
     assert STATE_ALARM_PENDING == \
         hass.states.get(entity_id).state
@@ -102,8 +100,7 @@ async def test_arm_home_with_invalid_code(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_arm_home(hass, CODE + '2')
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_home(hass, CODE + '2')
 
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
@@ -126,8 +123,7 @@ async def test_arm_away_no_pending(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_arm_away(hass, CODE, entity_id)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_away(hass, CODE, entity_id)
 
     assert STATE_ALARM_ARMED_AWAY == \
         hass.states.get(entity_id).state
@@ -150,8 +146,7 @@ async def test_arm_home_with_template_code(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_arm_home(hass, 'abc')
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_home(hass, 'abc')
 
     state = hass.states.get(entity_id)
     assert STATE_ALARM_ARMED_HOME == state.state
@@ -174,8 +169,7 @@ async def test_arm_away_with_pending(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_arm_away(hass, CODE)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_away(hass, CODE)
 
     assert STATE_ALARM_PENDING == \
         hass.states.get(entity_id).state
@@ -210,8 +204,7 @@ async def test_arm_away_with_invalid_code(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_arm_away(hass, CODE + '2')
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_away(hass, CODE + '2')
 
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
@@ -234,8 +227,7 @@ async def test_arm_night_no_pending(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_arm_night(hass, CODE)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_night(hass, CODE)
 
     assert STATE_ALARM_ARMED_NIGHT == \
         hass.states.get(entity_id).state
@@ -258,8 +250,7 @@ async def test_arm_night_with_pending(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_arm_night(hass, CODE, entity_id)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_night(hass, CODE, entity_id)
 
     assert STATE_ALARM_PENDING == \
         hass.states.get(entity_id).state
@@ -278,8 +269,7 @@ async def test_arm_night_with_pending(hass):
     assert state.state == STATE_ALARM_ARMED_NIGHT
 
     # Do not go to the pending state when updating to the same state
-    common.async_alarm_arm_night(hass, CODE, entity_id)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_night(hass, CODE, entity_id)
 
     assert STATE_ALARM_ARMED_NIGHT == \
         hass.states.get(entity_id).state
@@ -302,8 +292,7 @@ async def test_arm_night_with_invalid_code(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_arm_night(hass, CODE + '2')
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_night(hass, CODE + '2')
 
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
@@ -325,8 +314,7 @@ async def test_trigger_no_pending(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_trigger(hass, entity_id=entity_id)
-    await hass.async_block_till_done()
+    await common.async_alarm_trigger(hass, entity_id=entity_id)
 
     assert STATE_ALARM_PENDING == \
         hass.states.get(entity_id).state
@@ -359,14 +347,12 @@ async def test_trigger_with_delay(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_arm_away(hass, CODE)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_away(hass, CODE)
 
     assert STATE_ALARM_ARMED_AWAY == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_trigger(hass, entity_id=entity_id)
-    await hass.async_block_till_done()
+    await common.async_alarm_trigger(hass, entity_id=entity_id)
 
     state = hass.states.get(entity_id)
     assert STATE_ALARM_PENDING == state.state
@@ -400,8 +386,7 @@ async def test_trigger_zero_trigger_time(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_trigger(hass)
-    await hass.async_block_till_done()
+    await common.async_alarm_trigger(hass)
 
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
@@ -424,8 +409,7 @@ async def test_trigger_zero_trigger_time_with_pending(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_trigger(hass)
-    await hass.async_block_till_done()
+    await common.async_alarm_trigger(hass)
 
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
@@ -448,8 +432,7 @@ async def test_trigger_with_pending(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_trigger(hass)
-    await hass.async_block_till_done()
+    await common.async_alarm_trigger(hass)
 
     assert STATE_ALARM_PENDING == \
         hass.states.get(entity_id).state
@@ -497,14 +480,12 @@ async def test_trigger_with_unused_specific_delay(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_arm_away(hass, CODE)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_away(hass, CODE)
 
     assert STATE_ALARM_ARMED_AWAY == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_trigger(hass, entity_id=entity_id)
-    await hass.async_block_till_done()
+    await common.async_alarm_trigger(hass, entity_id=entity_id)
 
     state = hass.states.get(entity_id)
     assert STATE_ALARM_PENDING == state.state
@@ -542,14 +523,12 @@ async def test_trigger_with_specific_delay(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_arm_away(hass, CODE)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_away(hass, CODE)
 
     assert STATE_ALARM_ARMED_AWAY == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_trigger(hass, entity_id=entity_id)
-    await hass.async_block_till_done()
+    await common.async_alarm_trigger(hass, entity_id=entity_id)
 
     state = hass.states.get(entity_id)
     assert STATE_ALARM_PENDING == state.state
@@ -587,14 +566,12 @@ async def test_trigger_with_pending_and_delay(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_arm_away(hass, CODE)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_away(hass, CODE)
 
     assert STATE_ALARM_ARMED_AWAY == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_trigger(hass, entity_id=entity_id)
-    await hass.async_block_till_done()
+    await common.async_alarm_trigger(hass, entity_id=entity_id)
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ALARM_PENDING
@@ -644,14 +621,12 @@ async def test_trigger_with_pending_and_specific_delay(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_arm_away(hass, CODE)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_away(hass, CODE)
 
     assert STATE_ALARM_ARMED_AWAY == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_trigger(hass, entity_id=entity_id)
-    await hass.async_block_till_done()
+    await common.async_alarm_trigger(hass, entity_id=entity_id)
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ALARM_PENDING
@@ -692,8 +667,7 @@ async def test_armed_home_with_specific_pending(hass):
 
     entity_id = 'alarm_control_panel.test'
 
-    common.async_alarm_arm_home(hass)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_home(hass)
 
     assert STATE_ALARM_PENDING == \
         hass.states.get(entity_id).state
@@ -723,8 +697,7 @@ async def test_armed_away_with_specific_pending(hass):
 
     entity_id = 'alarm_control_panel.test'
 
-    common.async_alarm_arm_away(hass)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_away(hass)
 
     assert STATE_ALARM_PENDING == \
         hass.states.get(entity_id).state
@@ -754,8 +727,7 @@ async def test_armed_night_with_specific_pending(hass):
 
     entity_id = 'alarm_control_panel.test'
 
-    common.async_alarm_arm_night(hass)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_night(hass)
 
     assert STATE_ALARM_PENDING == \
         hass.states.get(entity_id).state
@@ -787,8 +759,7 @@ async def test_trigger_with_specific_pending(hass):
 
     entity_id = 'alarm_control_panel.test'
 
-    common.async_alarm_trigger(hass)
-    await hass.async_block_till_done()
+    await common.async_alarm_trigger(hass)
 
     assert STATE_ALARM_PENDING == \
         hass.states.get(entity_id).state
@@ -829,8 +800,7 @@ async def test_trigger_with_disarm_after_trigger(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_trigger(hass, entity_id=entity_id)
-    await hass.async_block_till_done()
+    await common.async_alarm_trigger(hass, entity_id=entity_id)
 
     assert STATE_ALARM_TRIGGERED == \
         hass.states.get(entity_id).state
@@ -865,8 +835,7 @@ async def test_trigger_with_zero_specific_trigger_time(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_trigger(hass, entity_id=entity_id)
-    await hass.async_block_till_done()
+    await common.async_alarm_trigger(hass, entity_id=entity_id)
 
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
@@ -892,8 +861,7 @@ async def test_trigger_with_unused_zero_specific_trigger_time(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_trigger(hass, entity_id=entity_id)
-    await hass.async_block_till_done()
+    await common.async_alarm_trigger(hass, entity_id=entity_id)
 
     assert STATE_ALARM_TRIGGERED == \
         hass.states.get(entity_id).state
@@ -927,8 +895,7 @@ async def test_trigger_with_specific_trigger_time(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_trigger(hass, entity_id=entity_id)
-    await hass.async_block_till_done()
+    await common.async_alarm_trigger(hass, entity_id=entity_id)
 
     assert STATE_ALARM_TRIGGERED == \
         hass.states.get(entity_id).state
@@ -960,14 +927,12 @@ async def test_trigger_with_no_disarm_after_trigger(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_arm_away(hass, CODE, entity_id)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_away(hass, CODE, entity_id)
 
     assert STATE_ALARM_ARMED_AWAY == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_trigger(hass, entity_id=entity_id)
-    await hass.async_block_till_done()
+    await common.async_alarm_trigger(hass, entity_id=entity_id)
 
     assert STATE_ALARM_TRIGGERED == \
         hass.states.get(entity_id).state
@@ -999,14 +964,12 @@ async def test_back_to_back_trigger_with_no_disarm_after_trigger(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_arm_away(hass, CODE, entity_id)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_away(hass, CODE, entity_id)
 
     assert STATE_ALARM_ARMED_AWAY == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_trigger(hass, entity_id=entity_id)
-    await hass.async_block_till_done()
+    await common.async_alarm_trigger(hass, entity_id=entity_id)
 
     assert STATE_ALARM_TRIGGERED == \
         hass.states.get(entity_id).state
@@ -1020,8 +983,7 @@ async def test_back_to_back_trigger_with_no_disarm_after_trigger(hass):
     assert STATE_ALARM_ARMED_AWAY == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_trigger(hass, entity_id=entity_id)
-    await hass.async_block_till_done()
+    await common.async_alarm_trigger(hass, entity_id=entity_id)
 
     assert STATE_ALARM_TRIGGERED == \
         hass.states.get(entity_id).state
@@ -1052,14 +1014,12 @@ async def test_disarm_while_pending_trigger(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_trigger(hass)
-    await hass.async_block_till_done()
+    await common.async_alarm_trigger(hass)
 
     assert STATE_ALARM_PENDING == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_disarm(hass, entity_id=entity_id)
-    await hass.async_block_till_done()
+    await common.async_alarm_disarm(hass, entity_id=entity_id)
 
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
@@ -1091,14 +1051,12 @@ async def test_disarm_during_trigger_with_invalid_code(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_trigger(hass)
-    await hass.async_block_till_done()
+    await common.async_alarm_trigger(hass)
 
     assert STATE_ALARM_PENDING == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_disarm(hass, entity_id=entity_id)
-    await hass.async_block_till_done()
+    await common.async_alarm_disarm(hass, entity_id=entity_id)
 
     assert STATE_ALARM_PENDING == \
         hass.states.get(entity_id).state
@@ -1131,20 +1089,17 @@ async def test_disarm_with_template_code(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_arm_home(hass, 'def')
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_home(hass, 'def')
 
     state = hass.states.get(entity_id)
     assert STATE_ALARM_ARMED_HOME == state.state
 
-    common.async_alarm_disarm(hass, 'def')
-    await hass.async_block_till_done()
+    await common.async_alarm_disarm(hass, 'def')
 
     state = hass.states.get(entity_id)
     assert STATE_ALARM_ARMED_HOME == state.state
 
-    common.async_alarm_disarm(hass, 'abc')
-    await hass.async_block_till_done()
+    await common.async_alarm_disarm(hass, 'abc')
 
     state = hass.states.get(entity_id)
     assert STATE_ALARM_DISARMED == state.state
@@ -1167,8 +1122,7 @@ async def test_arm_custom_bypass_no_pending(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_arm_custom_bypass(hass, CODE)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_custom_bypass(hass, CODE)
 
     assert STATE_ALARM_ARMED_CUSTOM_BYPASS == \
         hass.states.get(entity_id).state
@@ -1191,8 +1145,7 @@ async def test_arm_custom_bypass_with_pending(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_arm_custom_bypass(hass, CODE, entity_id)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_custom_bypass(hass, CODE, entity_id)
 
     assert STATE_ALARM_PENDING == \
         hass.states.get(entity_id).state
@@ -1228,8 +1181,7 @@ async def test_arm_custom_bypass_with_invalid_code(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_arm_custom_bypass(hass, CODE + '2')
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_custom_bypass(hass, CODE + '2')
 
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
@@ -1250,8 +1202,7 @@ async def test_armed_custom_bypass_with_specific_pending(hass):
 
     entity_id = 'alarm_control_panel.test'
 
-    common.async_alarm_arm_custom_bypass(hass)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_custom_bypass(hass)
 
     assert STATE_ALARM_PENDING == \
         hass.states.get(entity_id).state
@@ -1290,8 +1241,7 @@ async def test_arm_away_after_disabled_disarmed(hass):
     assert STATE_ALARM_DISARMED == \
         hass.states.get(entity_id).state
 
-    common.async_alarm_arm_away(hass, CODE)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_away(hass, CODE)
 
     state = hass.states.get(entity_id)
     assert STATE_ALARM_PENDING == state.state
@@ -1300,8 +1250,7 @@ async def test_arm_away_after_disabled_disarmed(hass):
     assert STATE_ALARM_ARMED_AWAY == \
         state.attributes['post_pending_state']
 
-    common.async_alarm_trigger(hass, entity_id=entity_id)
-    await hass.async_block_till_done()
+    await common.async_alarm_trigger(hass, entity_id=entity_id)
 
     state = hass.states.get(entity_id)
     assert STATE_ALARM_PENDING == state.state
@@ -1319,8 +1268,7 @@ async def test_arm_away_after_disabled_disarmed(hass):
         state = hass.states.get(entity_id)
         assert STATE_ALARM_ARMED_AWAY == state.state
 
-        common.async_alarm_trigger(hass, entity_id=entity_id)
-        await hass.async_block_till_done()
+        await common.async_alarm_trigger(hass, entity_id=entity_id)
 
         state = hass.states.get(entity_id)
         assert STATE_ALARM_PENDING == state.state

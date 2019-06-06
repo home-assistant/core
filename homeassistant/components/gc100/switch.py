@@ -8,8 +8,6 @@ from homeassistant.helpers.entity import ToggleEntity
 
 from . import CONF_PORTS, DATA_GC100
 
-DEPENDENCIES = ['gc100']
-
 _SWITCH_SCHEMA = vol.Schema({
     cv.string: cv.string,
 })

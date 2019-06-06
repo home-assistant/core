@@ -10,8 +10,6 @@ from homeassistant.components.light import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
-REQUIREMENTS = ['tikteck==0.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_TIKTECK_LED = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR)

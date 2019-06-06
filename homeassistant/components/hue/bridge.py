@@ -1,6 +1,7 @@
 """Code to handle a Hue bridge."""
 import asyncio
 
+import aiohue
 import async_timeout
 import voluptuous as vol
 
@@ -59,6 +60,7 @@ class HueBridge:
             return False
 
         except CannotConnect:
+            LOGGER.error("Error connecting to the Hue bridge at %s", host)
             raise ConfigEntryNotReady
 
         except Exception:  # pylint: disable=broad-except
@@ -68,6 +70,10 @@ class HueBridge:
 
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             self.config_entry, 'light'))
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
+            self.config_entry, 'binary_sensor'))
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
+            self.config_entry, 'sensor'))
 
         hass.services.async_register(
             DOMAIN, SERVICE_HUE_SCENE, self.hue_activate_scene,
@@ -93,8 +99,16 @@ class HueBridge:
 
         # If setup was successful, we set api variable, forwarded entry and
         # register service
-        return await self.hass.config_entries.async_forward_entry_unload(
-            self.config_entry, 'light')
+        results = await asyncio.gather(
+            self.hass.config_entries.async_forward_entry_unload(
+                self.config_entry, 'light'),
+            self.hass.config_entries.async_forward_entry_unload(
+                self.config_entry, 'binary_sensor'),
+            self.hass.config_entries.async_forward_entry_unload(
+                self.config_entry, 'sensor')
+            )
+        # None and True are OK
+        return False not in results
 
     async def hue_activate_scene(self, call, updated=False):
         """Service to call directly into bridge to set scenes."""
@@ -133,15 +147,13 @@ class HueBridge:
 
 async def get_bridge(hass, host, username=None):
     """Create a bridge object and verify authentication."""
-    import aiohue
-
     bridge = aiohue.Bridge(
         host, username=username,
         websession=aiohttp_client.async_get_clientsession(hass)
     )
 
     try:
-        with async_timeout.timeout(5):
+        with async_timeout.timeout(10):
             # Create username if we don't have one
             if not username:
                 await bridge.create_user('home-assistant')
@@ -150,10 +162,8 @@ async def get_bridge(hass, host, username=None):
 
         return bridge
     except (aiohue.LinkButtonNotPressed, aiohue.Unauthorized):
-        LOGGER.warning("Connected to Hue at %s but not registered.", host)
         raise AuthenticationRequired
     except (asyncio.TimeoutError, aiohue.RequestError):
-        LOGGER.error("Error connecting to the Hue bridge at %s", host)
         raise CannotConnect
     except aiohue.AiohueException:
         LOGGER.exception('Unknown Hue linking error occurred')

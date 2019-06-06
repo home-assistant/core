@@ -17,7 +17,6 @@ ATTR_DIMMER = 'dimmer'
 ATTR_HUE = 'hue'
 ATTR_SAT = 'saturation'
 ATTR_TRANSITION_TIME = 'transition_time'
-DEPENDENCIES = ['tradfri']
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA
 IKEA = 'IKEA of Sweden'
 TRADFRI_LIGHT_MANAGER = 'Tradfri Light Manager'

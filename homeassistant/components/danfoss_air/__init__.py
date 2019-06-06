@@ -9,8 +9,6 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pydanfossair==0.0.7']
-
 _LOGGER = logging.getLogger(__name__)
 
 DANFOSS_AIR_PLATFORMS = ['sensor', 'binary_sensor', 'switch']
@@ -87,5 +85,9 @@ class DanfossAir:
             = self._client.command(ReadCommand.boost)
         self._data[ReadCommand.battery_percent] \
             = self._client.command(ReadCommand.battery_percent)
+        self._data[ReadCommand.bypass] \
+            = self._client.command(ReadCommand.bypass)
+        self._data[ReadCommand.automatic_bypass] \
+            = self._client.command(ReadCommand.automatic_bypass)
 
         _LOGGER.debug("Done fetching data from Danfoss Air CCM module")

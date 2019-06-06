@@ -12,8 +12,6 @@ from homeassistant.components.ffmpeg import (
     CONF_INITIAL_STATE)
 from homeassistant.const import CONF_NAME
 
-DEPENDENCIES = ['ffmpeg']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PEAK = 'peak'

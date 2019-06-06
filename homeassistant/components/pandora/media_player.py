@@ -16,7 +16,6 @@ from homeassistant.const import (
     SERVICE_MEDIA_PLAY_PAUSE, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_UP,
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 
-REQUIREMENTS = ['pexpect==4.6.0']
 _LOGGER = logging.getLogger(__name__)
 
 # SUPPORT_VOLUME_SET is close to available but we need volume up/down

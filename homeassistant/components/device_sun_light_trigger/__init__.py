@@ -17,8 +17,6 @@ from homeassistant.helpers.sun import is_up, get_astral_event_next
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'device_sun_light_trigger'
-DEPENDENCIES = ['light', 'device_tracker', 'group']
-
 CONF_DEVICE_GROUP = 'device_group'
 CONF_DISABLE_TURN_OFF = 'disable_turn_off'
 CONF_LIGHT_GROUP = 'light_group'

@@ -14,8 +14,6 @@ from homeassistant.util import Throttle
 from homeassistant.util import slugify
 from homeassistant.util.dt import now, parse_date
 
-REQUIREMENTS = ['fedexdeliverymanager==1.0.6']
-
 _LOGGER = logging.getLogger(__name__)
 
 COOKIE = 'fedexdeliverymanager_cookies.pickle'

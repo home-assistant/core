@@ -12,8 +12,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['pyRFXtrx==0.23']
-
 DOMAIN = 'rfxtrx'
 
 DEFAULT_SIGNAL_REPETITIONS = 1
@@ -46,7 +44,24 @@ DATA_TYPES = OrderedDict([
     ('Sound', ''),
     ('Sensor Status', ''),
     ('Counter value', ''),
-    ('UV', 'uv')])
+    ('UV', 'uv'),
+    ('Humidity status', ''),
+    ('Forecast', ''),
+    ('Forecast numeric', ''),
+    ('Rain total', ''),
+    ('Wind average speed', ''),
+    ('Wind gust', ''),
+    ('Chill', ''),
+    ('Total usage', ''),
+    ('Count', ''),
+    ('Current Ch. 1', ''),
+    ('Current Ch. 2', ''),
+    ('Current Ch. 3', ''),
+    ('Energy usage', ''),
+    ('Voltage', ''),
+    ('Current', ''),
+    ('Battery numeric', ''),
+    ('Rssi numeric', '')])
 
 RECEIVED_EVT_SUBSCRIBERS = []
 RFX_DEVICES = {}

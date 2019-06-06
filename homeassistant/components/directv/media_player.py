@@ -15,8 +15,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['directpy==0.5']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MEDIA_CURRENTLY_RECORDING = 'media_currently_recording'

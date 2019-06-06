@@ -13,8 +13,6 @@ from homeassistant.const import (
     STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['anthemav==1.1.10']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'anthemav'
@@ -49,7 +47,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         hass.async_create_task(device.async_update_ha_state())
 
     avr = await anthemav.Connection.create(
-        host=host, port=port, loop=hass.loop,
+        host=host, port=port,
         update_callback=async_anthemav_update_callback)
 
     device = AnthemAVR(avr, name)

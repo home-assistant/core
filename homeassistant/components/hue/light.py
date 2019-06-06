@@ -5,6 +5,7 @@ import logging
 from time import monotonic
 import random
 
+import aiohue
 import async_timeout
 
 from homeassistant.components import hue
@@ -16,7 +17,6 @@ from homeassistant.components.light import (
     Light)
 from homeassistant.util import color
 
-DEPENDENCIES = ['hue']
 SCAN_INTERVAL = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
@@ -153,8 +153,6 @@ async def async_update_items(hass, bridge, async_add_entities,
                              request_bridge_update, is_group, current,
                              progress_waiting):
     """Update either groups or lights from the bridge."""
-    import aiohue
-
     if is_group:
         api_type = 'group'
         api = bridge.api.groups
@@ -314,6 +312,8 @@ class HueLight(Light):
     @property
     def effect_list(self):
         """Return the list of supported effects."""
+        if self.is_osram:
+            return [EFFECT_RANDOM]
         return [EFFECT_COLORLOOP, EFFECT_RANDOM]
 
     @property
@@ -373,15 +373,15 @@ class HueLight(Light):
         else:
             command['alert'] = 'none'
 
-        effect = kwargs.get(ATTR_EFFECT)
-
-        if effect == EFFECT_COLORLOOP:
-            command['effect'] = 'colorloop'
-        elif effect == EFFECT_RANDOM:
-            command['hue'] = random.randrange(0, 65535)
-            command['sat'] = random.randrange(150, 254)
-        elif self.is_philips:
-            command['effect'] = 'none'
+        if ATTR_EFFECT in kwargs:
+            effect = kwargs[ATTR_EFFECT]
+            if effect == EFFECT_COLORLOOP:
+                command['effect'] = 'colorloop'
+            elif effect == EFFECT_RANDOM:
+                command['hue'] = random.randrange(0, 65535)
+                command['sat'] = random.randrange(150, 254)
+            else:
+                command['effect'] = 'none'
 
         if self.is_group:
             await self.light.set_action(**command)

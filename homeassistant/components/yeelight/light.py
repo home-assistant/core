@@ -2,6 +2,8 @@
 import logging
 
 import voluptuous as vol
+from yeelight import (RGBTransition, SleepTransition, Flow, BulbException)
+from yeelight.enums import PowerMode, LightType, BulbType
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service import extract_entity_ids
 from homeassistant.util.color import (
@@ -21,8 +23,6 @@ from . import (
     YEELIGHT_SERVICE_SCHEMA, DOMAIN, ATTR_TRANSITIONS,
     YEELIGHT_FLOW_TRANSITION_SCHEMA, ACTION_RECOVER, CONF_FLOW_PARAMS,
     ATTR_ACTION, ATTR_COUNT)
-
-DEPENDENCIES = ['yeelight']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,12 +94,10 @@ def _transitions_config_parser(transitions):
 
 
 def _parse_custom_effects(effects_config):
-    import yeelight
-
     effects = {}
     for config in effects_config:
         params = config[CONF_FLOW_PARAMS]
-        action = yeelight.Flow.actions[params[ATTR_ACTION]]
+        action = Flow.actions[params[ATTR_ACTION]]
         transitions = _transitions_config_parser(
             params[ATTR_TRANSITIONS])
 
@@ -115,11 +113,10 @@ def _parse_custom_effects(effects_config):
 def _cmd(func):
     """Define a wrapper to catch exceptions from the bulb."""
     def _wrap(self, *args, **kwargs):
-        import yeelight
         try:
             _LOGGER.debug("Calling %s with %s %s", func, args, kwargs)
             return func(self, *args, **kwargs)
-        except yeelight.BulbException as ex:
+        except BulbException as ex:
             _LOGGER.error("Error when calling %s: %s", func, ex)
 
     return _wrap
@@ -127,8 +124,6 @@ def _cmd(func):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yeelight bulbs."""
-    from yeelight.enums import PowerMode
-
     data_key = '{}_lights'.format(DATA_YEELIGHT)
 
     if not discovery_info:
@@ -189,8 +184,6 @@ class YeelightLight(Light):
 
     def __init__(self, device, custom_effects=None):
         """Initialize the Yeelight light."""
-        from yeelight.enums import LightType
-
         self.config = device.config
         self._device = device
 
@@ -349,15 +342,13 @@ class YeelightLight(Light):
 
     def update(self) -> None:
         """Update properties from the bulb."""
-        import yeelight
         bulb_type = self._bulb.bulb_type
 
-        if bulb_type == yeelight.BulbType.Color:
+        if bulb_type == BulbType.Color:
             self._supported_features = SUPPORT_YEELIGHT_RGB
-        elif self.light_type == yeelight.enums.LightType.Ambient:
+        elif self.light_type == LightType.Ambient:
             self._supported_features = SUPPORT_YEELIGHT_RGB
-        elif bulb_type in (yeelight.BulbType.WhiteTemp,
-                           yeelight.BulbType.WhiteTempMood):
+        elif bulb_type in (BulbType.WhiteTemp, BulbType.WhiteTempMood):
             if self._is_nightlight_enabled:
                 self._supported_features = SUPPORT_YEELIGHT
             else:
@@ -370,7 +361,7 @@ class YeelightLight(Light):
             self._max_mireds = \
                 kelvin_to_mired(model_specs['color_temp']['min'])
 
-        if bulb_type == yeelight.BulbType.WhiteTempMood:
+        if bulb_type == BulbType.WhiteTempMood:
             self._is_on = self._get_property('main_power') == 'on'
         else:
             self._is_on = self._get_property('power') == 'on'
@@ -426,8 +417,6 @@ class YeelightLight(Light):
     def set_flash(self, flash) -> None:
         """Activate flash."""
         if flash:
-            from yeelight import (RGBTransition, SleepTransition, Flow,
-                                  BulbException)
             if self._bulb.last_properties["color_mode"] != 1:
                 _LOGGER.error("Flash supported currently only in RGB mode.")
                 return
@@ -461,7 +450,6 @@ class YeelightLight(Light):
     def set_effect(self, effect) -> None:
         """Activate effect."""
         if effect:
-            from yeelight import (Flow, BulbException)
             from yeelight.transitions import (disco, temp, strobe, pulse,
                                               strobe_color, alarm, police,
                                               police2, christmas, rgb,
@@ -505,7 +493,6 @@ class YeelightLight(Light):
 
     def turn_on(self, **kwargs) -> None:
         """Turn the bulb on."""
-        import yeelight
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         colortemp = kwargs.get(ATTR_COLOR_TEMP)
         hs_color = kwargs.get(ATTR_HS_COLOR)
@@ -522,7 +509,7 @@ class YeelightLight(Light):
         if self.config[CONF_MODE_MUSIC] and not self._bulb.music_mode:
             try:
                 self.set_music_mode(self.config[CONF_MODE_MUSIC])
-            except yeelight.BulbException as ex:
+            except BulbException as ex:
                 _LOGGER.error("Unable to turn on music mode,"
                               "consider disabling it: %s", ex)
 
@@ -533,7 +520,7 @@ class YeelightLight(Light):
             self.set_brightness(brightness, duration)
             self.set_flash(flash)
             self.set_effect(effect)
-        except yeelight.BulbException as ex:
+        except BulbException as ex:
             _LOGGER.error("Unable to set bulb properties: %s", ex)
             return
 
@@ -543,7 +530,7 @@ class YeelightLight(Light):
                                                  or rgb):
             try:
                 self.set_default()
-            except yeelight.BulbException as ex:
+            except BulbException as ex:
                 _LOGGER.error("Unable to set the defaults: %s", ex)
                 return
         self.device.update()
@@ -559,27 +546,23 @@ class YeelightLight(Light):
 
     def set_mode(self, mode: str):
         """Set a power mode."""
-        import yeelight
-
         try:
-            self._bulb.set_power_mode(yeelight.enums.PowerMode[mode.upper()])
+            self._bulb.set_power_mode(PowerMode[mode.upper()])
             self.device.update()
-        except yeelight.BulbException as ex:
+        except BulbException as ex:
             _LOGGER.error("Unable to set the power mode: %s", ex)
 
     def start_flow(self, transitions, count=0, action=ACTION_RECOVER):
         """Start flow."""
-        import yeelight
-
         try:
-            flow = yeelight.Flow(
+            flow = Flow(
                 count=count,
-                action=yeelight.Flow.actions[action],
+                action=Flow.actions[action],
                 transitions=transitions)
 
             self._bulb.start_flow(flow, light_type=self.light_type)
             self.device.update()
-        except yeelight.BulbException as ex:
+        except BulbException as ex:
             _LOGGER.error("Unable to set effect: %s", ex)
 
 
@@ -593,8 +576,6 @@ class YeelightAmbientLight(YeelightLight):
 
     def __init__(self, *args, **kwargs):
         """Initialize the Yeelight Ambient light."""
-        from yeelight.enums import LightType
-
         super().__init__(*args, **kwargs)
         self._min_mireds = kelvin_to_mired(6500)
         self._max_mireds = kelvin_to_mired(1700)

@@ -12,8 +12,6 @@ from homeassistant.core import split_entity_id
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['numpy==1.16.2', 'pillow==5.4.1', 'protobuf==3.6.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MATCHES = 'matches'

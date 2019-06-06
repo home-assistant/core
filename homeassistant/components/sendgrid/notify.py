@@ -10,8 +10,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 
-REQUIREMENTS = ['sendgrid==5.6.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SENDER_NAME = 'sender_name'
@@ -44,7 +42,7 @@ class SendgridNotificationService(BaseNotificationService):
         self.sender_name = config[CONF_SENDER_NAME]
         self.recipient = config[CONF_RECIPIENT]
 
-        self._sg = SendGridAPIClient(apikey=self.api_key)
+        self._sg = SendGridAPIClient(self.api_key)
 
     def send_message(self, message='', **kwargs):
         """Send an email to a user via SendGrid."""

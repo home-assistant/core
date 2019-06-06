@@ -8,8 +8,6 @@ from homeassistant.const import (
     CONF_DEVICES, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME)
 from homeassistant.helpers import discovery
 
-REQUIREMENTS = ['libpurecool==0.5.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_LANGUAGE = 'language'
@@ -18,6 +16,7 @@ CONF_RETRY = 'retry'
 DEFAULT_TIMEOUT = 5
 DEFAULT_RETRY = 10
 DYSON_DEVICES = 'dyson_devices'
+DYSON_PLATFORMS = ['sensor', 'fan', 'vacuum', 'climate', 'air_quality']
 
 DOMAIN = 'dyson'
 
@@ -93,9 +92,7 @@ def setup(hass, config):
     # Start fan/sensors components
     if hass.data[DYSON_DEVICES]:
         _LOGGER.debug("Starting sensor/fan components")
-        discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
-        discovery.load_platform(hass, "fan", DOMAIN, {}, config)
-        discovery.load_platform(hass, "vacuum", DOMAIN, {}, config)
-        discovery.load_platform(hass, "climate", DOMAIN, {}, config)
+        for platform in DYSON_PLATFORMS:
+            discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
     return True

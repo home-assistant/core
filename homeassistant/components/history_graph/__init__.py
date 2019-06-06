@@ -8,8 +8,6 @@ from homeassistant.const import CONF_ENTITIES, CONF_NAME, ATTR_ENTITY_ID
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
-DEPENDENCIES = ['history']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'history_graph'

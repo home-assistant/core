@@ -15,8 +15,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle, slugify
 from homeassistant.util.dt import now, parse_date
 
-REQUIREMENTS = ['upsmychoice==1.0.6']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'ups'

@@ -9,8 +9,6 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_DOMAIN
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['defusedxml==0.5.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'namecheapdns'

@@ -13,8 +13,6 @@ from homeassistant.helpers.event import (
     async_call_later, async_track_utc_time_change)
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pyMetno==0.4.6']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Weather forecast from met.no, delivered by the Norwegian " \

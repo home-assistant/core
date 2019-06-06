@@ -25,8 +25,6 @@ from . import migration, purge
 from .const import DATA_INSTANCE
 from .util import session_scope
 
-REQUIREMENTS = ['sqlalchemy==1.3.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'recorder'
@@ -143,7 +141,7 @@ class Recorder(threading.Thread):
         self.queue = queue.Queue()  # type: Any
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
-        self.async_db_ready = asyncio.Future(loop=hass.loop)
+        self.async_db_ready = asyncio.Future()
         self.engine = None  # type: Any
         self.run_info = None  # type: Any
 

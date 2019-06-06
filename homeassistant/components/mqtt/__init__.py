@@ -40,8 +40,6 @@ from .const import (
     CONF_BROKER, CONF_DISCOVERY, DEFAULT_DISCOVERY, CONF_STATE_TOPIC,
     ATTR_DISCOVERY_HASH)
 
-REQUIREMENTS = ['paho-mqtt==1.4.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'mqtt'
@@ -71,6 +69,7 @@ CONF_AVAILABILITY_TOPIC = 'availability_topic'
 CONF_PAYLOAD_AVAILABLE = 'payload_available'
 CONF_PAYLOAD_NOT_AVAILABLE = 'payload_not_available'
 CONF_JSON_ATTRS_TOPIC = 'json_attributes_topic'
+CONF_JSON_ATTRS_TEMPLATE = 'json_attributes_template'
 CONF_QOS = 'qos'
 CONF_RETAIN = 'retain'
 
@@ -244,6 +243,7 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(vol.Schema({
 
 MQTT_JSON_ATTRS_SCHEMA = vol.Schema({
     vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
+    vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
 })
 
 MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(SCHEMA_BASE)
@@ -651,7 +651,7 @@ class MQTT:
         self.birth_message = birth_message
         self.connected = False
         self._mqttc = None  # type: mqtt.Client
-        self._paho_lock = asyncio.Lock(loop=hass.loop)
+        self._paho_lock = asyncio.Lock()
 
         if protocol == PROTOCOL_31:
             proto = mqtt.MQTTv31  # type: int
@@ -910,10 +910,18 @@ class MqttAttributes(Entity):
         """(Re)Subscribe to topics."""
         from .subscription import async_subscribe_topics
 
+        attr_tpl = self._attributes_config.get(CONF_JSON_ATTRS_TEMPLATE)
+        if attr_tpl is not None:
+            attr_tpl.hass = self.hass
+
         @callback
         def attributes_message_received(msg: Message) -> None:
             try:
-                json_dict = json.loads(msg.payload)
+                payload = msg.payload
+                if attr_tpl is not None:
+                    payload = attr_tpl.async_render_with_possible_json_value(
+                        payload)
+                json_dict = json.loads(payload)
                 if isinstance(json_dict, dict):
                     self._attributes = json_dict
                     self.async_write_ha_state()
@@ -921,7 +929,7 @@ class MqttAttributes(Entity):
                     _LOGGER.warning("JSON result was not a dictionary")
                     self._attributes = None
             except ValueError:
-                _LOGGER.warning("Erroneous JSON: %s", msg.payload)
+                _LOGGER.warning("Erroneous JSON: %s", payload)
                 self._attributes = None
 
         self._attributes_sub_state = await async_subscribe_topics(

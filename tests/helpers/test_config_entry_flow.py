@@ -3,9 +3,11 @@ from unittest.mock import patch, Mock
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow, loader, setup
+from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.helpers import config_entry_flow
-from tests.common import MockConfigEntry, MockModule, mock_coro
+from tests.common import (
+    MockConfigEntry, MockModule, mock_coro, mock_integration,
+    mock_entity_platform)
 
 
 @pytest.fixture
@@ -73,24 +75,26 @@ async def test_user_has_confirmation(hass, discovery_flow_conf):
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
 
 
-async def test_discovery_single_instance(hass, discovery_flow_conf):
-    """Test we ask for confirmation via discovery."""
+@pytest.mark.parametrize('source', ['discovery', 'ssdp', 'zeroconf'])
+async def test_discovery_single_instance(hass, discovery_flow_conf, source):
+    """Test we not allow duplicates."""
     flow = config_entries.HANDLERS['test']()
     flow.hass = hass
 
     MockConfigEntry(domain='test').add_to_hass(hass)
-    result = await flow.async_step_discovery({})
+    result = await getattr(flow, "async_step_{}".format(source))({})
 
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
     assert result['reason'] == 'single_instance_allowed'
 
 
-async def test_discovery_confirmation(hass, discovery_flow_conf):
+@pytest.mark.parametrize('source', ['discovery', 'ssdp', 'zeroconf'])
+async def test_discovery_confirmation(hass, discovery_flow_conf, source):
     """Test we ask for confirmation via discovery."""
     flow = config_entries.HANDLERS['test']()
     flow.hass = hass
 
-    result = await flow.async_step_discovery({})
+    result = await getattr(flow, "async_step_{}".format(source))({})
 
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'confirm'
@@ -101,7 +105,7 @@ async def test_discovery_confirmation(hass, discovery_flow_conf):
 
 async def test_multiple_discoveries(hass, discovery_flow_conf):
     """Test we only create one instance for multiple discoveries."""
-    loader.set_component(hass, 'test', MockModule('test'))
+    mock_entity_platform(hass, 'config_flow.test', None)
 
     result = await hass.config_entries.flow.async_init(
         'test', context={'source': config_entries.SOURCE_DISCOVERY}, data={})
@@ -115,7 +119,7 @@ async def test_multiple_discoveries(hass, discovery_flow_conf):
 
 async def test_only_one_in_progress(hass, discovery_flow_conf):
     """Test a user initialized one will finish and cancel discovered one."""
-    loader.set_component(hass, 'test', MockModule('test'))
+    mock_entity_platform(hass, 'config_flow.test', None)
 
     # Discovery starts flow
     result = await hass.config_entries.flow.async_init(
@@ -202,12 +206,13 @@ async def test_webhook_create_cloudhook(hass, webhook_flow_conf):
     async_setup_entry = Mock(return_value=mock_coro(True))
     async_unload_entry = Mock(return_value=mock_coro(True))
 
-    loader.set_component(hass, 'test_single', MockModule(
+    mock_integration(hass, MockModule(
         'test_single',
         async_setup_entry=async_setup_entry,
         async_unload_entry=async_unload_entry,
         async_remove_entry=config_entry_flow.webhook_async_remove_entry,
     ))
+    mock_entity_platform(hass, 'config_flow.test_single', None)
 
     result = await hass.config_entries.flow.async_init(
         'test_single', context={'source': config_entries.SOURCE_USER})

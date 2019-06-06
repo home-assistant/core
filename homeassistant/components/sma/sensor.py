@@ -14,8 +14,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
-REQUIREMENTS = ['pysma==0.3.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CUSTOM = 'custom'
@@ -143,7 +141,7 @@ async def async_setup_platform(
             if task:
                 tasks.append(task)
         if tasks:
-            await asyncio.wait(tasks, loop=hass.loop)
+            await asyncio.wait(tasks)
 
     interval = config.get(CONF_SCAN_INTERVAL) or timedelta(seconds=5)
     async_track_time_interval(hass, async_sma, interval)

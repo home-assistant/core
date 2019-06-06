@@ -2,6 +2,7 @@
 import argparse
 import os
 
+from homeassistant.core import HomeAssistant
 import homeassistant.config as config_util
 
 
@@ -28,6 +29,14 @@ def run(args):
         print('Creating directory', config_dir)
         os.makedirs(config_dir)
 
-    config_path = config_util.ensure_config_exists(config_dir)
+    hass = HomeAssistant()
+    config_path = hass.loop.run_until_complete(async_run(hass, config_dir))
     print('Configuration file:', config_path)
     return 0
+
+
+async def async_run(hass, config_dir):
+    """Make sure config exists."""
+    path = await config_util.async_ensure_config_exists(hass, config_dir)
+    await hass.async_stop(force=True)
+    return path

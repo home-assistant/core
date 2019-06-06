@@ -11,8 +11,6 @@ from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['libpyfoscam==1.0']
-
 CONF_IP = 'ip'
 CONF_RTSP_PORT = 'rtsp_port'
 
@@ -79,8 +77,7 @@ class FoscamCam(Camera):
             return SUPPORT_STREAM
         return 0
 
-    @property
-    def stream_source(self):
+    async def stream_source(self):
         """Return the stream source."""
         if self._rtsp_port:
             return 'rtsp://{}:{}@{}:{}/videoMain'.format(

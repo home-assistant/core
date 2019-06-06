@@ -10,8 +10,6 @@ from homeassistant.const import (
     CONF_IP_ADDRESS, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pygogogate2==0.1.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'gogogate2'

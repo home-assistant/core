@@ -5,8 +5,6 @@ from homeassistant.helpers.entity import Entity
 from . import IHC_CONTROLLER, IHC_DATA, IHC_INFO
 from .ihcdevice import IHCDevice
 
-DEPENDENCIES = ['ihc']
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the IHC sensor platform."""

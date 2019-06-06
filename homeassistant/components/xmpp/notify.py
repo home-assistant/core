@@ -17,8 +17,6 @@ import homeassistant.helpers.template as template_helper
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 
-REQUIREMENTS = ['slixmpp==1.4.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DATA = 'data'

@@ -9,8 +9,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyubee==0.5']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_MODEL = 'model'
@@ -20,7 +18,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_MODEL, default=DEFAULT_MODEL): cv.string
+    vol.Optional(CONF_MODEL, default=DEFAULT_MODEL):
+        vol.Any(
+            'EVW32C-0N',
+            'EVW320B',
+            'EVW3200-Wifi',
+            'EVW3226@UPC',
+        ),
 })
 
 

@@ -9,14 +9,12 @@ from .const import COVER_TYPES, DAMPERS, NEW_LIGHT, WINDOW_COVERS
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
-DEPENDENCIES = ['deconz']
-
 ZIGBEE_SPEC = ['lumi.curtain']
 
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
-    """Unsupported way of setting up deCONZ covers."""
+    """Old way of setting up deCONZ platforms."""
     pass
 
 
@@ -90,9 +88,11 @@ class DeconzCover(DeconzDevice, CoverDevice):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         data = {'on': False}
+
         if position > 0:
             data['on'] = True
             data['bri'] = int(position / 100 * 255)
+
         await self._device.async_set_state(data)
 
     async def async_open_cover(self, **kwargs):
@@ -128,7 +128,9 @@ class DeconzCoverZigbeeSpec(DeconzCover):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         data = {'on': False}
+
         if position < 100:
             data['on'] = True
             data['bri'] = 255 - int(position / 100 * 255)
+
         await self._device.async_set_state(data)

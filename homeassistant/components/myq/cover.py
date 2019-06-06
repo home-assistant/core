@@ -11,7 +11,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-REQUIREMENTS = ['pymyq==1.2.0']
 _LOGGER = logging.getLogger(__name__)
 
 MYQ_TO_HASS = {

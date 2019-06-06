@@ -19,7 +19,6 @@ from homeassistant.components import group
 ATTR_CHANGED_BY = 'changed_by'
 
 DOMAIN = 'lock'
-DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_ALL_LOCKS = group.ENTITY_ID_FORMAT.format('all_locks')

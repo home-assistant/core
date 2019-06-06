@@ -11,8 +11,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import DOMAIN as DOORBIRD_DOMAIN
 
-DEPENDENCIES = ['doorbird']
-
 _CAMERA_LAST_VISITOR = "{} Last Ring"
 _CAMERA_LAST_MOTION = "{} Last Motion"
 _CAMERA_LIVE = "{} Live"
@@ -59,8 +57,7 @@ class DoorBirdCamera(Camera):
         self._last_update = datetime.datetime.min
         super().__init__()
 
-    @property
-    def stream_source(self):
+    async def stream_source(self):
         """Return the stream source."""
         return self._stream_url
 
@@ -83,7 +80,7 @@ class DoorBirdCamera(Camera):
 
         try:
             websession = async_get_clientsession(self.hass)
-            with async_timeout.timeout(_TIMEOUT, loop=self.hass.loop):
+            with async_timeout.timeout(_TIMEOUT):
                 response = await websession.get(self._url)
 
             self._last_image = await response.read()

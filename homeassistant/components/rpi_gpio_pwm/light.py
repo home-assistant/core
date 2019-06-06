@@ -11,8 +11,6 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 from homeassistant.helpers.restore_state import RestoreEntity
 
-REQUIREMENTS = ['pwmled==1.4.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_LEDS = 'leds'

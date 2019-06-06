@@ -9,8 +9,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 
-REQUIREMENTS = ['simplepush==1.1.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ENCRYPTED = 'encrypted'

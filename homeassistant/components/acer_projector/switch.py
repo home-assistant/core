@@ -9,8 +9,6 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_UNKNOWN, CONF_NAME, CONF_FILENAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyserial==3.1.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_TIMEOUT = 'timeout'

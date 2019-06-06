@@ -7,8 +7,6 @@ import voluptuous as vol
 from homeassistant.const import CONF_MAC
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['wakeonlan==1.1.6']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'wake_on_lan'

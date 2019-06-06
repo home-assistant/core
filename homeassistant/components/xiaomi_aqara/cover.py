@@ -9,6 +9,9 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_CURTAIN_LEVEL = 'curtain_level'
 
+DATA_KEY_PROTO_V1 = 'status'
+DATA_KEY_PROTO_V2 = 'curtain_status'
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Perform the setup for Xiaomi devices."""
@@ -18,9 +21,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             model = device['model']
             if model == 'curtain':
                 if 'proto' not in device or int(device['proto'][0:1]) == 1:
-                    data_key = 'status'
+                    data_key = DATA_KEY_PROTO_V1
                 else:
-                    data_key = 'curtain_status'
+                    data_key = DATA_KEY_PROTO_V2
                 devices.append(XiaomiGenericCover(device, "Curtain",
                                                   data_key, gateway))
     add_entities(devices)
@@ -60,7 +63,12 @@ class XiaomiGenericCover(XiaomiDevice, CoverDevice):
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         position = kwargs.get(ATTR_POSITION)
-        self._write_to_hub(self._sid, **{ATTR_CURTAIN_LEVEL: str(position)})
+        if self._data_key == DATA_KEY_PROTO_V2:
+            self._write_to_hub(
+                self._sid, **{ATTR_CURTAIN_LEVEL: position})
+        else:
+            self._write_to_hub(
+                self._sid, **{ATTR_CURTAIN_LEVEL: str(position)})
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""

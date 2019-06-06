@@ -23,8 +23,6 @@ DEFAULT_RELAY_TIME = .2
 DEFAULT_STATE_PULL_MODE = 'UP'
 DEFAULT_INVERT_STATE = False
 DEFAULT_INVERT_RELAY = False
-DEPENDENCIES = ['rpi_gpio']
-
 _COVERS_SCHEMA = vol.All(
     cv.ensure_list,
     [

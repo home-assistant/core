@@ -21,8 +21,6 @@ from homeassistant.util import Throttle
 from homeassistant.exceptions import PlatformNotReady
 
 
-REQUIREMENTS = ['pyebox==1.1.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 GIGABITS = 'Gb'  # type: str

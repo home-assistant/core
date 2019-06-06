@@ -14,16 +14,15 @@ from . import const, decorators, messages
 
 
 @callback
-def async_register_commands(hass):
+def async_register_commands(hass, async_reg):
     """Register commands."""
-    async_reg = hass.components.websocket_api.async_register_command
-    async_reg(handle_subscribe_events)
-    async_reg(handle_unsubscribe_events)
-    async_reg(handle_call_service)
-    async_reg(handle_get_states)
-    async_reg(handle_get_services)
-    async_reg(handle_get_config)
-    async_reg(handle_ping)
+    async_reg(hass, handle_subscribe_events)
+    async_reg(hass, handle_unsubscribe_events)
+    async_reg(hass, handle_call_service)
+    async_reg(hass, handle_get_states)
+    async_reg(hass, handle_get_services)
+    async_reg(hass, handle_get_config)
+    async_reg(hass, handle_ping)
 
 
 def pong_message(iden):
@@ -121,17 +120,21 @@ async def handle_call_service(hass, connection, msg):
             msg['domain'], msg['service'], msg.get('service_data'), blocking,
             connection.context(msg))
         connection.send_message(messages.result_message(msg['id']))
-    except ServiceNotFound:
-        connection.send_message(messages.error_message(
-            msg['id'], const.ERR_NOT_FOUND, 'Service not found.'))
+    except ServiceNotFound as err:
+        if err.domain == msg['domain'] and err.service == msg['service']:
+            connection.send_message(messages.error_message(
+                msg['id'], const.ERR_NOT_FOUND, 'Service not found.'))
+        else:
+            connection.send_message(messages.error_message(
+                msg['id'], const.ERR_HOME_ASSISTANT_ERROR, str(err)))
     except HomeAssistantError as err:
         connection.logger.exception(err)
         connection.send_message(messages.error_message(
-            msg['id'], const.ERR_HOME_ASSISTANT_ERROR, '{}'.format(err)))
+            msg['id'], const.ERR_HOME_ASSISTANT_ERROR, str(err)))
     except Exception as err:  # pylint: disable=broad-except
         connection.logger.exception(err)
         connection.send_message(messages.error_message(
-            msg['id'], const.ERR_UNKNOWN_ERROR, '{}'.format(err)))
+            msg['id'], const.ERR_UNKNOWN_ERROR, str(err)))
 
 
 @callback
@@ -143,11 +146,14 @@ def handle_get_states(hass, connection, msg):
 
     Async friendly.
     """
-    entity_perm = connection.user.permissions.check_entity
-    states = [
-        state for state in hass.states.async_all()
-        if entity_perm(state.entity_id, 'read')
-    ]
+    if connection.user.permissions.access_all_entities('read'):
+        states = hass.states.async_all()
+    else:
+        entity_perm = connection.user.permissions.check_entity
+        states = [
+            state for state in hass.states.async_all()
+            if entity_perm(state.entity_id, 'read')
+        ]
 
     connection.send_message(messages.result_message(
         msg['id'], states))

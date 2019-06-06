@@ -33,8 +33,6 @@ ATTR_REQUIRES_API_PASSWORD = 'requires_api_password'
 ATTR_VERSION = 'version'
 
 DOMAIN = 'api'
-DEPENDENCIES = ['http']
-
 STREAM_PING_PAYLOAD = 'ping'
 STREAM_PING_INTERVAL = 50  # seconds
 
@@ -84,7 +82,7 @@ class APIEventStream(HomeAssistantView):
             raise Unauthorized()
         hass = request.app['hass']
         stop_obj = object()
-        to_write = asyncio.Queue(loop=hass.loop)
+        to_write = asyncio.Queue()
 
         restrict = request.query.get('restrict')
         if restrict:
@@ -121,8 +119,7 @@ class APIEventStream(HomeAssistantView):
 
             while True:
                 try:
-                    with async_timeout.timeout(STREAM_PING_INTERVAL,
-                                               loop=hass.loop):
+                    with async_timeout.timeout(STREAM_PING_INTERVAL):
                         payload = await to_write.get()
 
                     if payload is stop_obj:

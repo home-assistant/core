@@ -11,8 +11,6 @@ from .const import (
     SENSOR_BASE_STATION, SENSOR_HEART_RATE, SENSOR_MOVEMENT,
     SENSOR_OXYGEN_LEVEL)
 
-REQUIREMENTS = ['pyowlet==1.0.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'owlet'

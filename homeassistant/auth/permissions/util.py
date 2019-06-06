@@ -3,6 +3,7 @@ from functools import wraps
 
 from typing import Callable, Dict, List, Optional, Union, cast  # noqa: F401
 
+from .const import SUBCAT_ALL
 from .models import PermissionLookup
 from .types import CategoryType, SubCategoryDict, ValueType
 
@@ -96,3 +97,16 @@ def _gen_dict_test_func(
         return schema.get(key)
 
     return test_value
+
+
+def test_all(policy: CategoryType, key: str) -> bool:
+    """Test if a policy has an ALL access for a specific key."""
+    if not isinstance(policy, dict):
+        return bool(policy)
+
+    all_policy = policy.get(SUBCAT_ALL)
+
+    if not isinstance(all_policy, dict):
+        return bool(all_policy)
+
+    return all_policy.get(key, False)

@@ -10,8 +10,6 @@ from . import DOMAIN as ASTERISK_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['asterisk_mbox']
-
 SIGNAL_MESSAGE_REQUEST = 'asterisk_mbox.message_request'
 SIGNAL_MESSAGE_UPDATE = 'asterisk_mbox.message_updated'
 

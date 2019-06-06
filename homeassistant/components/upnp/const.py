@@ -7,5 +7,5 @@ CONF_HASS = 'hass'
 CONF_LOCAL_IP = 'local_ip'
 CONF_PORTS = 'ports'
 DOMAIN = 'upnp'
-LOGGER = logging.getLogger('.')
+LOGGER = logging.getLogger(__package__)
 SIGNAL_REMOVE_SENSOR = 'upnp_remove_sensor'

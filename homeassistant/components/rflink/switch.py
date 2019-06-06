@@ -13,8 +13,6 @@ from . import (
     CONF_NOGROUP_ALIASES, CONF_NOGROUP_ALIASSES, CONF_SIGNAL_REPETITIONS,
     DEVICE_DEFAULTS_SCHEMA, SwitchableRflinkDevice, remove_deprecated)
 
-DEPENDENCIES = ['rflink']
-
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

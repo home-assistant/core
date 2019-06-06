@@ -13,8 +13,6 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import sanitize_filename
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['restrictedpython==4.0b8']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'python_script'

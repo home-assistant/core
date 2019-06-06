@@ -19,11 +19,7 @@ from .worker import stream_worker
 from .hls import async_setup_hls
 from .recorder import async_setup_recorder
 
-REQUIREMENTS = ['av==6.1.2']
-
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['http']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({}),
@@ -57,6 +53,7 @@ def request_stream(hass, stream_source, *, fmt='hls',
     if isinstance(stream_source, str) \
             and stream_source[:7] == 'rtsp://' and not options:
         options['rtsp_flags'] = 'prefer_tcp'
+        options['stimeout'] = '5000000'
 
     try:
         streams = hass.data[DOMAIN][ATTR_STREAMS]

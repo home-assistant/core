@@ -4,14 +4,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_DEVICE, CONF_NAME, CONF_TRIGGER_TIME, EVENT_HOMEASSISTANT_STOP)
+    CONF_DEVICE, CONF_MAC, CONF_NAME, CONF_TRIGGER_TIME,
+    EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 
 from .config_flow import DEVICE_SCHEMA
 from .const import CONF_CAMERA, CONF_EVENTS, DEFAULT_TRIGGER_TIME, DOMAIN
 from .device import AxisNetworkDevice, get_device
-
-REQUIREMENTS = ['axis==19']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: cv.schema_with_slug_keys(DEVICE_SCHEMA),
@@ -57,14 +56,17 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
+async def async_unload_entry(hass, config_entry):
+    """Unload Axis device config entry."""
+    device = hass.data[DOMAIN].pop(config_entry.data[CONF_MAC])
+    return await device.async_reset()
+
+
 async def async_populate_options(hass, config_entry):
     """Populate default options for device."""
-    from axis.vapix import VAPIX_IMAGE_FORMAT
-
     device = await get_device(hass, config_entry.data[CONF_DEVICE])
 
-    supported_formats = device.vapix.get_param(VAPIX_IMAGE_FORMAT)
-
+    supported_formats = device.vapix.params.image_format
     camera = bool(supported_formats)
 
     options = {

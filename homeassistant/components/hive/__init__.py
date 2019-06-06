@@ -8,8 +8,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
-REQUIREMENTS = ['pyhiveapi==0.2.17']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'hive'

@@ -17,8 +17,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
 
-REQUIREMENTS = ['fitbit==0.3.0']
-
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,8 +29,6 @@ ATTR_LAST_SAVED_AT = 'last_saved_at'
 CONF_MONITORED_RESOURCES = 'monitored_resources'
 CONF_CLOCK_FORMAT = 'clock_format'
 ATTRIBUTION = 'Data provided by Fitbit.com'
-
-DEPENDENCIES = ['http']
 
 FITBIT_AUTH_CALLBACK_PATH = '/api/fitbit/callback'
 FITBIT_AUTH_START = '/api/fitbit'

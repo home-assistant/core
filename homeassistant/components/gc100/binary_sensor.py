@@ -8,8 +8,6 @@ import homeassistant.helpers.config_validation as cv
 
 from . import CONF_PORTS, DATA_GC100
 
-DEPENDENCIES = ['gc100']
-
 _SENSORS_SCHEMA = vol.Schema({
     cv.string: cv.string,
 })

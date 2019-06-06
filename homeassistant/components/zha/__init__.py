@@ -17,16 +17,7 @@ from .core.const import (
     CONF_RADIO_TYPE, CONF_USB_PATH, DATA_ZHA, DATA_ZHA_CONFIG,
     DATA_ZHA_CORE_COMPONENT, DATA_ZHA_DISPATCHERS, DATA_ZHA_GATEWAY,
     DEFAULT_BAUDRATE, DEFAULT_RADIO_TYPE, DOMAIN, ENABLE_QUIRKS, RadioType)
-from .core.patches import apply_cluster_listener_patch
 from .core.registries import establish_device_mappings
-
-REQUIREMENTS = [
-    'bellows-homeassistant==0.7.2',
-    'zigpy-homeassistant==0.3.1',
-    'zigpy-xbee-homeassistant==0.1.3',
-    'zha-quirks==0.0.7',
-    'zigpy-deconz==0.1.3'
-]
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
     vol.Optional(ha_const.CONF_TYPE): cv.string,
@@ -98,10 +89,6 @@ async def async_setup_entry(hass, config_entry):
         # before zhaquirks is imported
         # pylint: disable=W0611, W0612
         import zhaquirks  # noqa
-
-    # patch zigpy listener to prevent flooding logs with warnings due to
-    # how zigpy implemented its listeners
-    apply_cluster_listener_patch()
 
     zha_gateway = ZHAGateway(hass, config)
     await zha_gateway.async_initialize(config_entry)

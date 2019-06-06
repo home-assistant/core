@@ -20,8 +20,6 @@ from .const import (
     RECORDING_MODE_KEY, SIGNAL_LOGI_CIRCLE_RECONFIGURE,
     SIGNAL_LOGI_CIRCLE_RECORD, SIGNAL_LOGI_CIRCLE_SNAPSHOT)
 
-REQUIREMENTS = ['logi_circle==0.2.2']
-
 NOTIFICATION_ID = 'logi_circle_notification'
 NOTIFICATION_TITLE = 'Logi Circle Setup'
 
@@ -120,7 +118,7 @@ async def async_setup_entry(hass, entry):
         return False
 
     try:
-        with async_timeout.timeout(_TIMEOUT, loop=hass.loop):
+        with async_timeout.timeout(_TIMEOUT):
             # Ensure the cameras property returns the same Camera objects for
             # all devices. Performs implicit login and session validation.
             await logi_circle.synchronize_cameras()

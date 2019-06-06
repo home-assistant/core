@@ -22,7 +22,6 @@ SENSOR_TYPES = {
         ['Light', 'lx', None, DEVICE_CLASS_ILLUMINANCE]
 }
 
-DEPENDENCIES = ['fibaro']
 _LOGGER = logging.getLogger(__name__)
 
 

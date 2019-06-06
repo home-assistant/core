@@ -12,8 +12,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.util.temperature import celsius_to_fahrenheit
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pmsensor==0.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SERIAL_DEVICE = 'serial_device'

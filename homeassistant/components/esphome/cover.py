@@ -1,6 +1,8 @@
 """Support for ESPHome covers."""
 import logging
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
+
+from aioesphomeapi import CoverInfo, CoverState
 
 from homeassistant.components.cover import (
     ATTR_POSITION, ATTR_TILT_POSITION, SUPPORT_CLOSE, SUPPORT_CLOSE_TILT,
@@ -9,22 +11,14 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import EsphomeEntity, platform_async_setup_entry
+from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
-if TYPE_CHECKING:
-    # pylint: disable=unused-import
-    from aioesphomeapi import CoverInfo, CoverState  # noqa
-
-DEPENDENCIES = ['esphome']
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistantType,
                             entry: ConfigEntry, async_add_entities) -> None:
     """Set up ESPHome covers based on a config entry."""
-    # pylint: disable=redefined-outer-name
-    from aioesphomeapi import CoverInfo, CoverState  # noqa
-
     await platform_async_setup_entry(
         hass, entry, async_add_entities,
         component_key='cover',
@@ -37,7 +31,7 @@ class EsphomeCover(EsphomeEntity, CoverDevice):
     """A cover implementation for ESPHome."""
 
     @property
-    def _static_info(self) -> 'CoverInfo':
+    def _static_info(self) -> CoverInfo:
         return super()._static_info
 
     @property
@@ -52,7 +46,7 @@ class EsphomeCover(EsphomeEntity, CoverDevice):
         return flags
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return self._static_info.device_class
 
@@ -62,44 +56,38 @@ class EsphomeCover(EsphomeEntity, CoverDevice):
         return self._static_info.assumed_state
 
     @property
-    def _state(self) -> Optional['CoverState']:
+    def _state(self) -> Optional[CoverState]:
         return super()._state
 
-    @property
+    @esphome_state_property
     def is_closed(self) -> Optional[bool]:
         """Return if the cover is closed or not."""
-        if self._state is None:
-            return None
         # Check closed state with api version due to a protocol change
         return self._state.is_closed(self._client.api_version)
 
-    @property
-    def is_opening(self):
+    @esphome_state_property
+    def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         from aioesphomeapi import CoverOperation
-        if self._state is None:
-            return None
         return self._state.current_operation == CoverOperation.IS_OPENING
 
-    @property
-    def is_closing(self):
+    @esphome_state_property
+    def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         from aioesphomeapi import CoverOperation
-        if self._state is None:
-            return None
         return self._state.current_operation == CoverOperation.IS_CLOSING
 
-    @property
+    @esphome_state_property
     def current_cover_position(self) -> Optional[float]:
         """Return current position of cover. 0 is closed, 100 is open."""
-        if self._state is None or not self._static_info.supports_position:
+        if not self._static_info.supports_position:
             return None
         return self._state.position * 100.0
 
-    @property
+    @esphome_state_property
     def current_cover_tilt_position(self) -> Optional[float]:
         """Return current position of cover tilt. 0 is closed, 100 is open."""
-        if self._state is None or not self._static_info.supports_tilt:
+        if not self._static_info.supports_tilt:
             return None
         return self._state.tilt * 100.0
 

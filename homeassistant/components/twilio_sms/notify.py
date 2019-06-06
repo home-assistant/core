@@ -10,8 +10,6 @@ from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA,
                                              BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = ["twilio"]
-
 
 CONF_FROM_NUMBER = "from_number"
 

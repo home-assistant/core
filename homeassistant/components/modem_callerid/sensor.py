@@ -9,8 +9,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['basicmodem==0.7']
-
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'Modem CallerID'
 ICON = 'mdi:phone-classic'

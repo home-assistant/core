@@ -12,9 +12,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
-REQUIREMENTS = ['i2csense==0.0.4',
-                'smbus-cffi==0.5.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_I2C_BUS = 'i2c_bus'

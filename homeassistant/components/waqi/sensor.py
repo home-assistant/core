@@ -14,8 +14,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['waqiasync==1.0.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DOMINENTPOL = 'dominentpol'

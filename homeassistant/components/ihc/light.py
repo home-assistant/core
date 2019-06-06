@@ -9,8 +9,6 @@ from .const import CONF_DIMMABLE, CONF_OFF_ID, CONF_ON_ID
 from .ihcdevice import IHCDevice
 from .util import async_pulse, async_set_bool, async_set_int
 
-DEPENDENCIES = ['ihc']
-
 _LOGGER = logging.getLogger(__name__)
 
 

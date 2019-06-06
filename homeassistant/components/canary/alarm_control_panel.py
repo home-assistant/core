@@ -8,8 +8,6 @@ from homeassistant.const import (
 
 from . import DATA_CANARY
 
-DEPENDENCIES = ['canary']
-
 _LOGGER = logging.getLogger(__name__)
 
 

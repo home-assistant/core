@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 _UNDEF = object()
 
 DATA_REGISTRY = 'device_registry'
-
+EVENT_DEVICE_REGISTRY_UPDATED = 'device_registry_updated'
 STORAGE_KEY = 'core.device_registry'
 STORAGE_VERSION = 1
 SAVE_DELAY = 10
@@ -42,6 +42,8 @@ class DeviceEntry:
     area_id = attr.ib(type=str, default=None)
     name_by_user = attr.ib(type=str, default=None)
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
+    # This value is not stored, just used to keep track of events to fire.
+    is_new = attr.ib(type=bool, default=False)
 
 
 def format_mac(mac):
@@ -111,7 +113,7 @@ class DeviceRegistry:
         device = self.async_get_device(identifiers, connections)
 
         if device is None:
-            device = DeviceEntry()
+            device = DeviceEntry(is_new=True)
             self.devices[device.id] = device
 
         if via_hub is not None:
@@ -134,16 +136,19 @@ class DeviceRegistry:
 
     @callback
     def async_update_device(
-            self, device_id, *, area_id=_UNDEF, name_by_user=_UNDEF):
+            self, device_id, *, area_id=_UNDEF, name_by_user=_UNDEF,
+            new_identifiers=_UNDEF):
         """Update properties of a device."""
         return self._async_update_device(
-            device_id, area_id=area_id, name_by_user=name_by_user)
+            device_id, area_id=area_id, name_by_user=name_by_user,
+            new_identifiers=new_identifiers)
 
     @callback
     def _async_update_device(self, device_id, *, add_config_entry_id=_UNDEF,
                              remove_config_entry_id=_UNDEF,
                              merge_connections=_UNDEF,
                              merge_identifiers=_UNDEF,
+                             new_identifiers=_UNDEF,
                              manufacturer=_UNDEF,
                              model=_UNDEF,
                              name=_UNDEF,
@@ -178,6 +183,9 @@ class DeviceRegistry:
             if value is not _UNDEF and not value.issubset(old_value):
                 changes[attr_name] = old_value | value
 
+        if new_identifiers is not _UNDEF:
+            changes['identifiers'] = new_identifiers
+
         for attr_name, value in (
                 ('manufacturer', manufacturer),
                 ('model', model),
@@ -195,12 +203,29 @@ class DeviceRegistry:
                 name_by_user != old.name_by_user):
             changes['name_by_user'] = name_by_user
 
+        if old.is_new:
+            changes['is_new'] = False
+
         if not changes:
             return old
 
         new = self.devices[device_id] = attr.evolve(old, **changes)
         self.async_schedule_save()
+
+        self.hass.bus.async_fire(EVENT_DEVICE_REGISTRY_UPDATED, {
+            'action': 'create' if 'is_new' in changes else 'update',
+            'device_id': new.id,
+        })
+
         return new
+
+    def _async_remove_device(self, device_id):
+        del self.devices[device_id]
+        self.hass.bus.async_fire(EVENT_DEVICE_REGISTRY_UPDATED, {
+            'action': 'remove',
+            'device_id': device_id,
+        })
+        self.async_schedule_save()
 
     async def async_load(self):
         """Load the device registry."""
@@ -261,10 +286,15 @@ class DeviceRegistry:
     @callback
     def async_clear_config_entry(self, config_entry_id):
         """Clear config entry from registry entries."""
+        remove = []
         for dev_id, device in self.devices.items():
-            if config_entry_id in device.config_entries:
+            if device.config_entries == {config_entry_id}:
+                remove.append(dev_id)
+            else:
                 self._async_update_device(
                     dev_id, remove_config_entry_id=config_entry_id)
+        for dev_id in remove:
+            self._async_remove_device(dev_id)
 
     @callback
     def async_clear_area_id(self, area_id: str) -> None:

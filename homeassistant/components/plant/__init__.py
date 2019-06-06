@@ -89,8 +89,6 @@ PLANT_SCHEMA = vol.Schema({
 })
 
 DOMAIN = 'plant'
-DEPENDENCIES = ['zone', 'group']
-
 GROUP_NAME_ALL_PLANTS = 'all plants'
 ENTITY_ID_ALL_PLANTS = group.ENTITY_ID_FORMAT.format('all_plants')
 

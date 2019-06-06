@@ -10,8 +10,6 @@ from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pushetta==1.0.15']
-
 
 CONF_CHANNEL_NAME = 'channel_name'
 CONF_SEND_TEST_MSG = 'send_test_msg'

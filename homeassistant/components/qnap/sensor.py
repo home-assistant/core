@@ -13,8 +13,6 @@ from homeassistant.util import Throttle
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['qnapstats==0.2.7']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DRIVE = 'Drive'

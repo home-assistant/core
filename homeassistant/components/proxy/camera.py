@@ -12,8 +12,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.util.async_ import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pillow==5.4.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CACHE_IMAGES = 'cache_images'

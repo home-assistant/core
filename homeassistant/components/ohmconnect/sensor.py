@@ -11,8 +11,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['defusedxml==0.5.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ID = 'id'
