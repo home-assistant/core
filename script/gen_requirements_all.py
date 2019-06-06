@@ -42,15 +42,16 @@ COMMENT_REQUIREMENTS = (
 )
 
 TEST_REQUIREMENTS = (
+    'adguardhome',
     'ambiclimate',
     'aioambient',
     'aioautomatic',
     'aiobotocore',
+    'aioesphomeapi',
     'aiohttp_cors',
     'aiohue',
     'aiounifi',
     'aioswitcher',
-    'aiozeroconf',
     'apns2',
     'av',
     'axis',
@@ -149,6 +150,7 @@ TEST_REQUIREMENTS = (
     'vultr',
     'YesssSMS',
     'ruamel.yaml',
+    'zeroconf',
     'zigpy-homeassistant',
     'bellows-homeassistant',
 )

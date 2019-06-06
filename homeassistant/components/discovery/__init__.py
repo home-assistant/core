@@ -25,16 +25,13 @@ DOMAIN = 'discovery'
 SCAN_INTERVAL = timedelta(seconds=300)
 SERVICE_APPLE_TV = 'apple_tv'
 SERVICE_DAIKIN = 'daikin'
-SERVICE_DECONZ = 'deconz'
 SERVICE_DLNA_DMR = 'dlna_dmr'
 SERVICE_ENIGMA2 = 'enigma2'
 SERVICE_FREEBOX = 'freebox'
 SERVICE_HASS_IOS_APP = 'hass_ios'
 SERVICE_HASSIO = 'hassio'
-SERVICE_HOMEKIT = 'homekit'
 SERVICE_HEOS = 'heos'
 SERVICE_IGD = 'igd'
-SERVICE_IKEA_TRADFRI = 'ikea_tradfri'
 SERVICE_KONNECTED = 'konnected'
 SERVICE_MOBILE_APP = 'hass_mobile_app'
 SERVICE_NETGEAR = 'netgear_router'
@@ -50,21 +47,17 @@ SERVICE_XIAOMI_GW = 'xiaomi_gw'
 
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_DAIKIN: 'daikin',
-    SERVICE_DECONZ: 'deconz',
     'google_cast': 'cast',
     SERVICE_HEOS: 'heos',
     SERVICE_TELLDUSLIVE: 'tellduslive',
-    SERVICE_IKEA_TRADFRI: 'tradfri',
     'sonos': 'sonos',
     SERVICE_IGD: 'upnp',
-    SERVICE_HOMEKIT: 'homekit_controller',
 }
 
 SERVICE_HANDLERS = {
     SERVICE_MOBILE_APP: ('mobile_app', None),
     SERVICE_HASS_IOS_APP: ('ios', None),
     SERVICE_NETGEAR: ('device_tracker', None),
-    SERVICE_WEMO: ('wemo', None),
     SERVICE_HASSIO: ('hassio', None),
     SERVICE_APPLE_TV: ('apple_tv', None),
     SERVICE_ENIGMA2: ('media_player', 'enigma2'),
@@ -100,8 +93,20 @@ OPTIONAL_SERVICE_HANDLERS = {
     SERVICE_DLNA_DMR: ('media_player', 'dlna_dmr'),
 }
 
-DEFAULT_ENABLED = list(CONFIG_ENTRY_HANDLERS) + list(SERVICE_HANDLERS)
-DEFAULT_DISABLED = list(OPTIONAL_SERVICE_HANDLERS)
+MIGRATED_SERVICE_HANDLERS = [
+    'axis',
+    'deconz',
+    'esphome',
+    'ikea_tradfri',
+    'homekit',
+    'philips_hue',
+    SERVICE_WEMO,
+]
+
+DEFAULT_ENABLED = list(CONFIG_ENTRY_HANDLERS) + list(SERVICE_HANDLERS) + \
+    MIGRATED_SERVICE_HANDLERS
+DEFAULT_DISABLED = list(OPTIONAL_SERVICE_HANDLERS) + \
+    MIGRATED_SERVICE_HANDLERS
 
 CONF_IGNORE = 'ignore'
 CONF_ENABLE = 'enable'
@@ -148,6 +153,9 @@ async def async_setup(hass, config):
 
     async def new_service_found(service, info):
         """Handle a new service if one is found."""
+        if service in MIGRATED_SERVICE_HANDLERS:
+            return
+
         if service in ignored_platforms:
             logger.info("Ignoring service: %s %s", service, info)
             return

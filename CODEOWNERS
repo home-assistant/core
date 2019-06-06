@@ -17,6 +17,7 @@ virtualization/Docker/* @home-assistant/docker
 homeassistant/scripts/check_config.py @kellerza
 
 # Integrations
+homeassistant/components/adguard/* @frenck
 homeassistant/components/airvisual/* @bachya
 homeassistant/components/alarm_control_panel/* @colinodell
 homeassistant/components/alpha_vantage/* @fabaff
@@ -30,6 +31,7 @@ homeassistant/components/asuswrt/* @kennedyshead
 homeassistant/components/auth/* @home-assistant/core
 homeassistant/components/automatic/* @armills
 homeassistant/components/automation/* @home-assistant/core
+homeassistant/components/awair/* @danielsjf
 homeassistant/components/aws/* @awarecan @robbiet480
 homeassistant/components/axis/* @kane610
 homeassistant/components/azure_event_hub/* @eavanvalkenburg
@@ -70,6 +72,7 @@ homeassistant/components/eight_sleep/* @mezz64
 homeassistant/components/emby/* @mezz64
 homeassistant/components/enigma2/* @fbradyirl
 homeassistant/components/enocean/* @bdurrer
+homeassistant/components/environment_canada/* @michaeldavie
 homeassistant/components/ephember/* @ttroy50
 homeassistant/components/epsonworkforce/* @ThaStealth
 homeassistant/components/eq3btsmart/* @rytilahti
@@ -90,6 +93,7 @@ homeassistant/components/geniushub/* @zxdavb
 homeassistant/components/gitter/* @fabaff
 homeassistant/components/glances/* @fabaff
 homeassistant/components/gntp/* @robbiet480
+homeassistant/components/google_cloud/* @lufton
 homeassistant/components/google_translate/* @awarecan
 homeassistant/components/google_travel_time/* @robbiet480
 homeassistant/components/googlehome/* @ludeeus
@@ -150,6 +154,7 @@ homeassistant/components/mcp23017/* @jardiamj
 homeassistant/components/mediaroom/* @dgomes
 homeassistant/components/melissa/* @kennedyshead
 homeassistant/components/met/* @danielhiversen
+homeassistant/components/meteo_france/* @victorcerutti
 homeassistant/components/meteoalarm/* @rolfberkenbosch
 homeassistant/components/miflora/* @danielhiversen @ChristianKuehnel
 homeassistant/components/mill/* @danielhiversen
@@ -194,6 +199,7 @@ homeassistant/components/qwikswitch/* @kellerza
 homeassistant/components/raincloud/* @vanstinator
 homeassistant/components/rainmachine/* @bachya
 homeassistant/components/random/* @fabaff
+homeassistant/components/repetier/* @MTrab
 homeassistant/components/rfxtrx/* @danielhiversen
 homeassistant/components/rmvtransport/* @cgtobi
 homeassistant/components/roomba/* @pschmitt
@@ -201,6 +207,7 @@ homeassistant/components/ruter/* @ludeeus
 homeassistant/components/scene/* @home-assistant/core
 homeassistant/components/scrape/* @fabaff
 homeassistant/components/script/* @home-assistant/core
+homeassistant/components/sense/* @kbickar
 homeassistant/components/sensibo/* @andrey-git
 homeassistant/components/serial/* @fabaff
 homeassistant/components/seventeentrack/* @bachya
@@ -212,6 +219,7 @@ homeassistant/components/sma/* @kellerza
 homeassistant/components/smarthab/* @outadoc
 homeassistant/components/smartthings/* @andrewsayre
 homeassistant/components/smtp/* @fabaff
+homeassistant/components/solaredge_local/* @drobtravels
 homeassistant/components/solax/* @squishykid
 homeassistant/components/sonos/* @amelchio
 homeassistant/components/spaceapi/* @fabaff
@@ -275,6 +283,7 @@ homeassistant/components/yeelight/* @rytilahti @zewelor
 homeassistant/components/yeelightsunflower/* @lindsaymarkward
 homeassistant/components/yessssms/* @flowolf
 homeassistant/components/yi/* @bachya
+homeassistant/components/yr/* @danielhiversen
 homeassistant/components/zeroconf/* @robbiet480 @Kane610
 homeassistant/components/zha/* @dmulcahey @adminiuga
 homeassistant/components/zone/* @home-assistant/core

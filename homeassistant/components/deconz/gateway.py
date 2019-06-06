@@ -2,6 +2,9 @@
 import asyncio
 import async_timeout
 
+from pydeconz import DeconzSession, errors
+from pydeconz.sensor import Switch
+
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.const import CONF_EVENT, CONF_HOST, CONF_ID
 from homeassistant.core import EventOrigin, callback
@@ -126,8 +129,7 @@ class DeconzGateway:
     def async_connection_status_callback(self, available):
         """Handle signals of gateway connection status."""
         self.available = available
-        async_dispatcher_send(self.hass, self.event_reachable,
-                              {'state': True, 'attr': 'reachable'})
+        async_dispatcher_send(self.hass, self.event_reachable, True)
 
     @callback
     def async_event_new_device(self, device_type):
@@ -145,9 +147,8 @@ class DeconzGateway:
     @callback
     def async_add_remote(self, sensors):
         """Set up remote from deCONZ."""
-        from pydeconz.sensor import SWITCH as DECONZ_REMOTE
         for sensor in sensors:
-            if sensor.type in DECONZ_REMOTE and \
+            if sensor.type in Switch.ZHATYPE and \
                not (not self.allow_clip_sensor and
                     sensor.type.startswith('CLIP')):
                 self.events.append(DeconzEvent(self.hass, sensor))
@@ -187,8 +188,6 @@ class DeconzGateway:
 async def get_gateway(hass, config, async_add_device_callback,
                       async_connection_status_callback):
     """Create a gateway object and verify configuration."""
-    from pydeconz import DeconzSession, errors
-
     session = aiohttp_client.async_get_clientsession(hass)
 
     deconz = DeconzSession(hass.loop, session, **config,
@@ -232,8 +231,8 @@ class DeconzEvent:
         self._device = None
 
     @callback
-    def async_update_callback(self, reason):
+    def async_update_callback(self, force_update=False):
         """Fire the event if reason is that state is updated."""
-        if reason['state']:
+        if 'state' in self._device.changed_keys:
             data = {CONF_ID: self._id, CONF_EVENT: self._device.state}
             self._hass.bus.async_fire(self._event, data, EventOrigin.remote)

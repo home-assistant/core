@@ -1,10 +1,16 @@
 {
   "domain": "wemo",
   "name": "Wemo",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/wemo",
   "requirements": [
     "pywemo==0.4.34"
   ],
+  "ssdp": {
+    "manufacturer": [
+      "Belkin International Inc."
+    ]
+  },
   "dependencies": [],
   "codeowners": [
     "@sqldiablo"

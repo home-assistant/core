@@ -19,7 +19,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_SELECT_SOURCE,
     SUPPORT_SHUFFLE_SET, SUPPORT_STOP, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
 from homeassistant.const import (
-    ENTITY_MATCH_ALL, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
+    ENTITY_MATCH_ALL, STATE_IDLE, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.dt import utcnow
 
@@ -117,6 +117,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             pysonos.discover_thread(
                 _discovered_player,
                 interface_addr=config.get(CONF_INTERFACE_ADDR))
+
+        for entity in hass.data[DATA_SONOS].entities:
+            entity.check_unseen()
 
         hass.helpers.event.call_later(DISCOVERY_INTERVAL, _discovery)
 
@@ -307,8 +310,6 @@ class SonosEntity(MediaPlayerDevice):
             return STATE_PAUSED
         if self._status in ('PLAYING', 'TRANSITIONING'):
             return STATE_PLAYING
-        if self._status == 'OFF':
-            return STATE_OFF
         return STATE_IDLE
 
     @property
@@ -330,14 +331,35 @@ class SonosEntity(MediaPlayerDevice):
         """Record that this player was seen right now."""
         self._seen = time.monotonic()
 
+        if self._available:
+            return
+
+        self._available = True
+        self._set_basic_information()
+        self._subscribe_to_player_events()
+        self.schedule_update_ha_state()
+
+    def check_unseen(self):
+        """Make this player unavailable if it was not seen recently."""
+        if not self._available:
+            return
+
+        if self._seen < time.monotonic() - 2*DISCOVERY_INTERVAL:
+            self._available = False
+
+            def _unsub(subscriptions):
+                for subscription in subscriptions:
+                    subscription.unsubscribe()
+            self.hass.add_job(_unsub, self._subscriptions)
+
+            self._subscriptions = []
+
+            self.schedule_update_ha_state()
+
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
-
-    def _check_available(self):
-        """Check that we saw the player recently."""
-        return self._seen > time.monotonic() - 2*DISCOVERY_INTERVAL
 
     def _set_basic_information(self):
         """Set initial entity information."""
@@ -352,7 +374,9 @@ class SonosEntity(MediaPlayerDevice):
 
     def _set_favorites(self):
         """Set available favorites."""
-        self._favorites = self.soco.music_library.get_sonos_favorites()
+        favorites = self.soco.music_library.get_sonos_favorites()
+        # Exclude favorites that are non-playable due to no linked resources
+        self._favorites = [f for f in favorites if f.reference.resources]
 
     def _radio_artwork(self, url):
         """Return the private URL with artwork for a radio stream."""
@@ -390,30 +414,7 @@ class SonosEntity(MediaPlayerDevice):
 
     def update(self):
         """Retrieve latest state."""
-        available = self._check_available()
-        if self._available != available:
-            self._available = available
-            if available:
-                self._set_basic_information()
-                self._subscribe_to_player_events()
-            else:
-                for subscription in self._subscriptions:
-                    subscription.unsubscribe()
-                self._subscriptions = []
-
-                self._player_volume = None
-                self._player_muted = None
-                self._status = 'OFF'
-                self._coordinator = None
-                self._media_duration = None
-                self._media_position = None
-                self._media_position_updated_at = None
-                self._media_image_url = None
-                self._media_artist = None
-                self._media_album_name = None
-                self._media_title = None
-                self._source_name = None
-        elif available and not self._receives_events:
+        if self._available and not self._receives_events:
             try:
                 self.update_groups()
                 self.update_volume()
@@ -801,16 +802,6 @@ class SonosEntity(MediaPlayerDevice):
             sources += [SOURCE_TV]
 
         return sources
-
-    @soco_error()
-    def turn_on(self):
-        """Turn the media player on."""
-        self.media_play()
-
-    @soco_error()
-    def turn_off(self):
-        """Turn off media player."""
-        self.media_stop()
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
     @soco_coordinator

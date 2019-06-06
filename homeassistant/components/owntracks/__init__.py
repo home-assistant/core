@@ -192,6 +192,7 @@ class OwnTracksContext:
         self.region_mapping = region_mapping
         self.events_only = events_only
         self.mqtt_topic = mqtt_topic
+        self._pending_msg = []
 
     @callback
     def async_valid_accuracy(self, message):
@@ -223,9 +224,18 @@ class OwnTracksContext:
         return True
 
     @callback
+    def set_async_see(self, func):
+        """Set a new async_see function."""
+        self.async_see = func
+        for msg in self._pending_msg:
+            func(**msg)
+        self._pending_msg.clear()
+
+    # pylint: disable=method-hidden
+    @callback
     def async_see(self, **data):
         """Send a see message to the device tracker."""
-        raise NotImplementedError
+        self._pending_msg.append(data)
 
     @callback
     def async_see_beacons(self, hass, dev_id, kwargs_param):

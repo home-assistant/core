@@ -14,6 +14,7 @@ from homeassistant.components import (
     media_player,
     scene,
     script,
+    sensor,
     switch,
     vacuum,
     group,
@@ -843,6 +844,8 @@ async def test_lock_unlock_lock(hass):
     assert helpers.get_google_type(lock.DOMAIN, None) is not None
     assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN,
                                            None)
+    assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, lock.SUPPORT_OPEN,
+                                           None)
 
     trt = trait.LockUnlockTrait(hass,
                                 State('lock.front_door', lock.STATE_LOCKED),
@@ -921,6 +924,13 @@ async def test_lock_unlock_unlock(hass):
             trait.COMMAND_LOCKUNLOCK, BASIC_DATA, {'lock': False}, {})
     assert len(calls) == 1
     assert err.value.code == const.ERR_CHALLENGE_NOT_SETUP
+
+    # Test with 2FA override
+    with patch('homeassistant.components.google_assistant.helpers'
+               '.Config.should_2fa', return_value=False):
+        await trt.execute(
+            trait.COMMAND_LOCKUNLOCK, BASIC_DATA, {'lock': False}, {})
+    assert len(calls) == 2
 
 
 async def test_fan_speed(hass):
@@ -1216,6 +1226,8 @@ async def test_openclose_cover_secure(hass, device_class):
     assert helpers.get_google_type(cover.DOMAIN, device_class) is not None
     assert trait.OpenCloseTrait.supported(
         cover.DOMAIN, cover.SUPPORT_SET_POSITION, device_class)
+    assert trait.OpenCloseTrait.might_2fa(
+        cover.DOMAIN, cover.SUPPORT_SET_POSITION, device_class)
 
     trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
         ATTR_DEVICE_CLASS: device_class,
@@ -1369,3 +1381,35 @@ async def test_volume_media_player_relative(hass):
         ATTR_ENTITY_ID: 'media_player.bla',
         media_player.ATTR_MEDIA_VOLUME_LEVEL: .5
     }
+
+
+async def test_temperature_setting_sensor(hass):
+    """Test TemperatureSetting trait support for temperature sensor."""
+    assert helpers.get_google_type(sensor.DOMAIN,
+                                   sensor.DEVICE_CLASS_TEMPERATURE) is not None
+    assert not trait.TemperatureSettingTrait.supported(
+        sensor.DOMAIN,
+        0,
+        sensor.DEVICE_CLASS_HUMIDITY
+    )
+    assert trait.TemperatureSettingTrait.supported(
+        sensor.DOMAIN,
+        0,
+        sensor.DEVICE_CLASS_TEMPERATURE
+    )
+
+    hass.config.units.temperature_unit = TEMP_FAHRENHEIT
+
+    trt = trait.TemperatureSettingTrait(hass, State('sensor.test', "70", {
+        ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TEMPERATURE,
+    }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {
+        'queryOnlyTemperatureSetting': True,
+        'thermostatTemperatureUnit': 'F',
+    }
+
+    assert trt.query_attributes() == {
+        'thermostatTemperatureAmbient': 21.1
+    }
+    hass.config.units.temperature_unit = TEMP_CELSIUS
