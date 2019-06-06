@@ -1,4 +1,5 @@
 """Support for Leaf Spy."""
+import hmac
 import logging
 
 from aiohttp.web import Response
@@ -71,7 +72,7 @@ class LeafSpyView(HomeAssistantView):
         try:
             message = request.query
 
-            if message['pass'] != context.secret:
+            if hmac.compare_digest(message['pass'], context.secret):
                 raise Exception("Invalid password")
 
             hass.helpers.dispatcher.async_dispatcher_send(
