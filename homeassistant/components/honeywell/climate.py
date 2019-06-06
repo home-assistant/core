@@ -1,4 +1,4 @@
-"""Support for Honeywell Round Connected and Honeywell Evohome thermostats."""
+"""Support for Honeywell TCC-accessible thermostats."""
 import datetime
 import logging
 from typing import Dict, Optional, List
@@ -7,7 +7,6 @@ import requests
 import voluptuous as vol
 import somecomfort
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     FAN_AUTO, FAN_DIFFUSE, FAN_ON,
@@ -20,6 +19,8 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_TEMPERATURE, CONF_REGION)
+import homeassistant.helpers.config_validation as cv
+from homeassistant.util.temperature import celsius_to_fahrenheit
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,21 +28,17 @@ ATTR_FAN = 'fan'
 ATTR_SYSTEM_MODE = 'system_mode'
 ATTR_CURRENT_OPERATION = 'equipment_output_status'
 
-CONF_AWAY_TEMPERATURE = 'away_temperature'
 CONF_COOL_AWAY_TEMPERATURE = 'away_cool_temperature'
 CONF_HEAT_AWAY_TEMPERATURE = 'away_heat_temperature'
 
-DEFAULT_AWAY_TEMPERATURE = 16  # in C, for eu regions, the others are F/us
-DEFAULT_COOL_AWAY_TEMPERATURE = 88
-DEFAULT_HEAT_AWAY_TEMPERATURE = 61
+DEFAULT_COOL_AWAY_TEMPERATURE = 30
+DEFAULT_HEAT_AWAY_TEMPERATURE = 16
 DEFAULT_REGION = 'eu'
 REGIONS = ['eu', 'us']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_AWAY_TEMPERATURE,
-                 default=DEFAULT_AWAY_TEMPERATURE): vol.Coerce(float),
     vol.Optional(CONF_COOL_AWAY_TEMPERATURE,
                  default=DEFAULT_COOL_AWAY_TEMPERATURE): vol.Coerce(int),
     vol.Optional(CONF_HEAT_AWAY_TEMPERATURE,
@@ -119,9 +116,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class HoneywellUSThermostat(ClimateDevice):
     """Representation of a Honeywell US Thermostat."""
 
-    def turn_aux_heat_off(self) -> None:
-        """Turn auxiliary heater off."""
-        self._device.system_mode = 'auto'
+    def __init__(self, client, device, cool_away_temp,
+                 heat_away_temp, username, password):
+        """Initialize the thermostat."""
+        self._client = client
+        self._device = device
+        self._cool_away_temp = round(celsius_to_fahrenheit(cool_away_temp))
+        self._heat_away_temp = round(celsius_to_fahrenheit(heat_away_temp))
+        self._away = False
+        self._username = username
+        self._password = password
 
         _LOGGER.debug("uiData = ", device._data['uiData'])
 
