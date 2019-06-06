@@ -123,6 +123,8 @@ class HoneywellUSThermostat(ClimateDevice):
         """Turn auxiliary heater off."""
         self._device.system_mode = 'auto'
 
+        _LOGGER.debug("uiData = ", device._data['uiData'])
+
         self._supported_features = (SUPPORT_HVAC_ACTION |
                                     SUPPORT_PRESET_MODE |
                                     SUPPORT_TARGET_TEMPERATURE)
@@ -279,7 +281,7 @@ class HoneywellUSThermostat(ClimateDevice):
     def device_state_attributes(self) -> Dict:
         """Return the device specific state attributes."""
         # pylint: disable=protected-access
-        data = {'uiData': self._device._data['uiData']}  # TODO: ?or: {}
+        data = {}
         if self._device._data['hasFan']:
             data['fan_action'] = \
                 'running' if self._device.fan_running else 'idle'
@@ -325,7 +327,6 @@ class HoneywellUSThermostat(ClimateDevice):
 
     def update(self):
         """Update the state."""
-        _LOGGER.error("SomeComfort update...")
         retries = 3
         while retries > 0:
             try:
