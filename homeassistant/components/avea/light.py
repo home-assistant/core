@@ -94,4 +94,4 @@ class AveaLight(Light):
             else:
                 self._state = True
             bright_percent = round((brightness/4095)*100)
-            self._brightness = round(255 * (bright_percent / 100))
+            self._brightness = round(255 * (brightness / 4095))
