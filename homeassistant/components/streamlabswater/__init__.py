@@ -7,8 +7,6 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['streamlabswater==1.0.1']
-
 DOMAIN = 'streamlabswater'
 
 _LOGGER = logging.getLogger(__name__)
