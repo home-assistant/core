@@ -7,8 +7,6 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import (DOMAIN, SIGNAL_UPDATE_SMARTY)
 
-DEPENDENCIES = ['smarty']
-
 _LOGGER = logging.getLogger(__name__)
 
 
