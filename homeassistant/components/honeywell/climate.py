@@ -250,16 +250,6 @@ class HoneywellUSThermostat(ClimateDevice):
         return None
 
     @property
-    def target_temperature_high(self) -> Optional[float]:
-        """Return the highbound target temperature we try to reach."""
-        return self._device.setpoint_heat
-
-    @property
-    def target_temperature_low(self) -> Optional[float]:
-        """Return the lowbound target temperature we try to reach."""
-        return self._device.setpoint_cool
-
-    @property
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
         return HW_MODE_TO_HVAC_MODE[self._device.system_mode]
