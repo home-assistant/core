@@ -1358,10 +1358,24 @@ pysher==1.0.1
 # homeassistant.components.sensor.sma
 pysma==0.3.1
 
+<<<<<<< HEAD
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp
 # homeassistant.components.switch.snmp
 pysnmp==4.4.8
+=======
+# homeassistant.components.smartthings
+pysmartapp==0.3.2
+
+# homeassistant.components.smartthings
+pysmartthings==0.6.8
+
+# homeassistant.components.smarty
+pysmarty==0.8
+
+# homeassistant.components.snmp
+pysnmp==4.4.9
+>>>>>>> Support for Salda Smarty XV/XP Ventilation Unit (#21491)
 
 # homeassistant.components.sonos
 <<<<<<< HEAD
