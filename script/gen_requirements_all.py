@@ -108,6 +108,7 @@ TEST_REQUIREMENTS = (
     'pyhomematic',
     'pyiqvia',
     'pylitejet',
+    'pymfy',
     'pymonoprice',
     'pynx584',
     'pyopenuv',
