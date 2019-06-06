@@ -298,7 +298,7 @@ pytradfri[async]==6.0.1
 pywebpush==1.9.2
 
 # homeassistant.components.rainmachine
-regenmaschine==1.4.0
+regenmaschine==1.5.1
 
 # homeassistant.components.python_script
 restrictedpython==4.0b8
