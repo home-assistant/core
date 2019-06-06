@@ -160,8 +160,8 @@ class ZHAGateway:
         self._device_registry.pop(device.ieee, None)
         if zha_device is not None:
             device_info = async_get_device_info(self._hass, zha_device)
-            self._hass.async_create_task(zha_device.async_unsub_dispatcher())
-            self._hass.async_create_task(self._async_remove_device(zha_device))
+            zha_device.async_unsub_dispatcher()
+            asyncio.ensure_future(self._async_remove_device(zha_device))
             async_dispatcher_send(
                 self._hass,
                 "{}_{}".format(SIGNAL_REMOVE, str(zha_device.ieee))
