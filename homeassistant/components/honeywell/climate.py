@@ -176,10 +176,6 @@ class HoneywellUSThermostat(ClimateDevice):
         """
         return HW_MODE_TO_HA_HVAC_ACTION[self._device.equipment_output_status]
 
-    def set_hvac_mode(self, hvac_mode: str) -> None:
-        """Set new target hvac mode."""
-        self._device.system_mode = self._hvac_mode_map[hvac_mode]
-
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
@@ -328,6 +324,10 @@ class HoneywellUSThermostat(ClimateDevice):
             self._device.hold_heat = False
         except somecomfort.SomeComfortError:
             _LOGGER.error('Can not stop hold mode')
+
+    def set_hvac_mode(self, hvac_mode: str) -> None:
+        """Set new target hvac mode."""
+        self._device.system_mode = self._hvac_mode_map[hvac_mode]
 
     def update(self):
         """Update the state."""
