@@ -377,8 +377,9 @@ async def test_setting_location(hass):
     """Test setting the location."""
     await async_setup_component(hass, 'homeassistant', {})
     events = async_capture_events(hass, EVENT_CORE_CONFIG_UPDATE)
-    assert hass.config.latitude != 10
-    assert hass.config.longitude != 20
+    # Just to make sure that we are updating values.
+    assert hass.config.latitude != 30
+    assert hass.config.longitude != 40
     await hass.services.async_call('homeassistant', 'set_location', {
         'latitude': 30,
         'longitude': 40,
