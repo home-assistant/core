@@ -222,6 +222,7 @@ async def setup_controller(hass, mock_controller):
         1, unifi.DOMAIN, 'Mock Title', ENTRY_CONFIG, 'test',
         config_entries.CONN_CLASS_LOCAL_POLL)
     mock_controller.config_entry = config_entry
+    # Done in setup
     await mock_controller.api.clients.update()
     await mock_controller.api.devices.update()
     await hass.config_entries.async_forward_entry_setup(config_entry, 'switch')
