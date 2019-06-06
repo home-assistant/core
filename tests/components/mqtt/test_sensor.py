@@ -693,7 +693,7 @@ async def test_entity_device_info_with_hub(hass, mqtt_mock):
         'state_topic': 'test-topic',
         'device': {
             'identifiers': ['helloworld'],
-            'via_hub': 'hub-id',
+            'via_device': 'hub-id',
         },
         'unique_id': 'veryunique'
     })

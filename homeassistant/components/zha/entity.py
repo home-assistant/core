@@ -109,7 +109,8 @@ class ZhaEntity(RestoreEntity, entity.Entity):
             ATTR_MANUFACTURER: zha_device_info[ATTR_MANUFACTURER],
             MODEL: zha_device_info[MODEL],
             NAME: zha_device_info[NAME],
-            'via_hub': (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
+            'via_device': (
+                DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
         }
 
     @property

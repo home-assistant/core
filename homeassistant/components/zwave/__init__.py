@@ -1079,14 +1079,14 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
             info['identifiers'] = {
                 (DOMAIN, self.node_id, self.values.primary.instance, ),
             }
-            info['via_hub'] = (DOMAIN, self.node_id, )
+            info['via_device'] = (DOMAIN, self.node_id, )
         else:
             info['name'] = node_name(self.node)
             info['identifiers'] = {
                 (DOMAIN, self.node_id),
             }
             if self.node_id > 1:
-                info['via_hub'] = (DOMAIN, 1, )
+                info['via_device'] = (DOMAIN, 1, )
         return info
 
     @property
