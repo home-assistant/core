@@ -603,6 +603,39 @@ async def test_tilt_via_topic(hass, mqtt_mock):
     assert current_cover_tilt_position == 50
 
 
+async def test_tilt_via_topic_template(hass, mqtt_mock):
+    """Test tilt by updating status via MQTT and template."""
+    assert await async_setup_component(hass, cover.DOMAIN, {
+        cover.DOMAIN: {
+            'platform': 'mqtt',
+            'name': 'test',
+            'state_topic': 'state-topic',
+            'command_topic': 'command-topic',
+            'qos': 0,
+            'payload_open': 'OPEN',
+            'payload_close': 'CLOSE',
+            'payload_stop': 'STOP',
+            'tilt_command_topic': 'tilt-command-topic',
+            'tilt_status_topic': 'tilt-status-topic',
+            'tilt_status_template': '{{ (value | multiply(0.01)) | int }}',
+            'tilt_opened_value': 400,
+            'tilt_closed_value': 125
+        }
+    })
+
+    async_fire_mqtt_message(hass, 'tilt-status-topic', '99')
+
+    current_cover_tilt_position = hass.states.get(
+        'cover.test').attributes['current_tilt_position']
+    assert current_cover_tilt_position == 0
+
+    async_fire_mqtt_message(hass, 'tilt-status-topic', '5000')
+
+    current_cover_tilt_position = hass.states.get(
+        'cover.test').attributes['current_tilt_position']
+    assert current_cover_tilt_position == 50
+
+
 async def test_tilt_via_topic_altered_range(hass, mqtt_mock):
     """Test tilt status via MQTT with altered tilt range."""
     assert await async_setup_component(hass, cover.DOMAIN, {
@@ -637,6 +670,47 @@ async def test_tilt_via_topic_altered_range(hass, mqtt_mock):
     assert current_cover_tilt_position == 100
 
     async_fire_mqtt_message(hass, 'tilt-status-topic', '25')
+
+    current_cover_tilt_position = hass.states.get(
+        'cover.test').attributes['current_tilt_position']
+    assert current_cover_tilt_position == 50
+
+
+async def test_tilt_via_topic_template_altered_range(hass, mqtt_mock):
+    """Test tilt status via MQTT and template with altered tilt range."""
+    assert await async_setup_component(hass, cover.DOMAIN, {
+        cover.DOMAIN: {
+            'platform': 'mqtt',
+            'name': 'test',
+            'state_topic': 'state-topic',
+            'command_topic': 'command-topic',
+            'qos': 0,
+            'payload_open': 'OPEN',
+            'payload_close': 'CLOSE',
+            'payload_stop': 'STOP',
+            'tilt_command_topic': 'tilt-command-topic',
+            'tilt_status_topic': 'tilt-status-topic',
+            'tilt_status_template': '{{ (value | multiply(0.01)) | int }}',
+            'tilt_opened_value': 400,
+            'tilt_closed_value': 125,
+            'tilt_min': 0,
+            'tilt_max': 50
+        }
+    })
+
+    async_fire_mqtt_message(hass, 'tilt-status-topic', '99')
+
+    current_cover_tilt_position = hass.states.get(
+        'cover.test').attributes['current_tilt_position']
+    assert current_cover_tilt_position == 0
+
+    async_fire_mqtt_message(hass, 'tilt-status-topic', '5000')
+
+    current_cover_tilt_position = hass.states.get(
+        'cover.test').attributes['current_tilt_position']
+    assert current_cover_tilt_position == 100
+
+    async_fire_mqtt_message(hass, 'tilt-status-topic', '2500')
 
     current_cover_tilt_position = hass.states.get(
         'cover.test').attributes['current_tilt_position']
