@@ -777,8 +777,12 @@ meteofrance==0.2.7
 meteoalertapi==0.1.3
 
 # homeassistant.components.meteo_france
+<<<<<<< HEAD
 meteofrance==0.3.4
 >>>>>>> Change meteoalertapi to version 0.1.3 (#24307)
+=======
+meteofrance==0.3.7
+>>>>>>> Meteofrance fix 24244 (#24315)
 
 # homeassistant.components.sensor.mfi
 # homeassistant.components.switch.mfi
