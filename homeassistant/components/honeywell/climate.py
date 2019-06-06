@@ -11,8 +11,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     FAN_AUTO, FAN_DIFFUSE, FAN_ON,
-    SUPPORT_FAN_MODE, SUPPORT_HVAC_ACTION, SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_AUX_HEAT, SUPPORT_FAN_MODE, SUPPORT_HVAC_ACTION,
+    SUPPORT_PRESET_MODE, SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_TEMPERATURE,
     CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, CURRENT_HVAC_OFF,
     HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_AUTO,
     PRESET_AWAY,
@@ -49,13 +49,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_REGION, default=DEFAULT_REGION): vol.In(REGIONS),
 })
 
-HA_HVAC_MODE_TO_HW_MODE = {
-    HVAC_MODE_OFF: 'off',
-    HVAC_MODE_HEAT: 'heat',
-    HVAC_MODE_COOL: 'cool',
-    HVAC_MODE_AUTO: 'auto'
+HVAC_MODE_TO_HW_MODE = {
+    'xSwitchOffAllowed': {HVAC_MODE_OFF: 'off'},
+    'SwitchAutoAllowed': {HVAC_MODE_AUTO: 'auto'},
+    'SwitchCoolAllowed': {HVAC_MODE_COOL: 'cool'},
+    'SwitchHeatAllowed': {HVAC_MODE_HEAT: 'heat'},
+    # witchEmergencyHeatAllowed': {HVAC_MODE_???: 'emheat'},
 }
-HW_MODE_TO_HA_HVAC_MODE = {
+HW_MODE_TO_HVAC_MODE = {
     'off': HVAC_MODE_OFF,
     'emheat': HVAC_MODE_HEAT,
     'heat': HVAC_MODE_HEAT,
@@ -134,12 +135,20 @@ class HoneywellUSThermostat(ClimateDevice):
                                     SUPPORT_PRESET_MODE |
                                     SUPPORT_TARGET_TEMPERATURE)
 
-        # these are intentionally not using: self._data['uiData'].get('xxx')
         # pylint: disable=protected-access
+        # these are intentionally not using: self._data['uiData'].get('xxx')
         if device._data['hasFan']:
             self._supported_features |= SUPPORT_FAN_MODE
         if device._data['canControlHumidification']:
             self._supported_features |= SUPPORT_TARGET_HUMIDITY
+        if device._data['SwitchEmergencyHeatAllowed']:
+            self._supported_features |= SUPPORT_AUX_HEAT
+
+        # not all honeywell devices upport all modes
+        temp_list = [v for k, v in HVAC_MODE_TO_HW_MODE.items()
+                     if k in device._data['uiData']]
+        self._hvac_mode_map = {k: v for d in temp_list for k, v in d.items()}
+        self._hvac_modes = list(self._hvac_mode_map)
 
     @property
     def supported_features(self):
@@ -152,7 +161,7 @@ class HoneywellUSThermostat(ClimateDevice):
 
         Need to be one of HVAC_MODE_*.
         """
-        return HW_MODE_TO_HA_HVAC_MODE[self._device.system_mode]
+        return HW_MODE_TO_HVAC_MODE[self._device.system_mode]
 
     @property
     def hvac_modes(self) -> List[str]:
@@ -160,7 +169,7 @@ class HoneywellUSThermostat(ClimateDevice):
 
         Need to be a subset of HVAC_MODES.
         """
-        return list(HA_HVAC_MODE_TO_HW_MODE)
+        return self._hvac_modes
 
     @property
     def hvac_action(self) -> Optional[str]:
@@ -173,7 +182,7 @@ class HoneywellUSThermostat(ClimateDevice):
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
         self._device.system_mode = \
-            somecomfort.SYSTEM_MODES.index(HA_HVAC_MODE_TO_HW_MODE[hvac_mode])
+            somecomfort.SYSTEM_MODES.index(self._hvac_mode_map[hvac_mode])
 
     @property
     def preset_mode(self) -> Optional[str]:
@@ -272,11 +281,9 @@ class HoneywellUSThermostat(ClimateDevice):
     @property
     def device_state_attributes(self) -> Dict:
         """Return the device specific state attributes."""
-        data = {
-            'fan_mode_xxx': self._device.fan_mode,
-            'operation_mode_xxx': self._device.system_mode,
-        }
-        if self._data['hasFan']:  # pylint: disable=no-member
+        # pylint: disable=protected-access
+        data = {'uiData': self._device._data['uiData']}  # TODO: ?or: {}
+        if self._device._data['hasFan']:
             data['fan_action'] = \
                 'running' if self._device.fan_running else 'idle'
         return data
