@@ -18,8 +18,6 @@ from homeassistant.const import (
 
 import homeassistant.components.switch as switch
 
-from tests.common import mock_coro
-
 CLIENT_1 = {
     'hostname': 'client_1',
     'ip': '10.0.0.1',
