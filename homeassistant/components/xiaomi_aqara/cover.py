@@ -64,9 +64,11 @@ class XiaomiGenericCover(XiaomiDevice, CoverDevice):
         """Move the cover to a specific position."""
         position = kwargs.get(ATTR_POSITION)
         if self._data_key == DATA_KEY_PROTO_V2:
-            self._write_to_hub(self._sid, **{ATTR_CURTAIN_LEVEL: position})
+            self._write_to_hub(
+                self._sid, **{ATTR_CURTAIN_LEVEL: position})
         else:
-            self._write_to_hub(self._sid, **{ATTR_CURTAIN_LEVEL: str(position)})
+            self._write_to_hub(
+                self._sid, **{ATTR_CURTAIN_LEVEL: str(position)})
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
