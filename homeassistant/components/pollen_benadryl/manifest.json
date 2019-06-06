@@ -1,0 +1,8 @@
+{
+  "domain": "pollen_benadryl",
+  "name": "Benadryl Social Pollen Count",
+  "documentation": "https://www.home-assistant.io/components/pollen_benadryl",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}
