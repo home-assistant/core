@@ -12,8 +12,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from . import (DOMAIN, SIGNAL_UPDATE_SMARTY)
 
-DEPENDENCIES = ['smarty']
-
 _LOGGER = logging.getLogger(__name__)
 
 
