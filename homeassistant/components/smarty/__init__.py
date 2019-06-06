@@ -12,7 +12,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['pysmarty==0.8']
 DOMAIN = 'smarty'
 DATA_SMARTY = 'smarty'
 SMARTY_NAME = 'Smarty'
