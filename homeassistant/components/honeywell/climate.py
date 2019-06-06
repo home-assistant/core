@@ -177,11 +177,6 @@ class HoneywellUSThermostat(ClimateDevice):
         return HW_MODE_TO_HA_HVAC_ACTION[self._device.equipment_output_status]
 
     @property
-    def preset_mode(self) -> Optional[str]:
-        """Return the current preset mode, e.g., home, away, temp."""
-        return PRESET_AWAY if self._away else None
-
-    @property
     def preset_modes(self) -> Optional[List[str]]:
         """Return a list of available preset modes."""
         return [PRESET_AWAY]
@@ -286,6 +281,11 @@ class HoneywellUSThermostat(ClimateDevice):
             data['fan_action'] = \
                 'running' if self._device.fan_running else 'idle'
         return data
+
+    @property
+    def preset_mode(self) -> Optional[str]:
+        """Return the current preset mode, e.g., home, away, temp."""
+        return PRESET_AWAY if self._away else None
 
     def _turn_away_mode_on(self):
         """Turn away on.
