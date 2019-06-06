@@ -1,13 +1,16 @@
 """Support for track controls on the Sisyphus Kinetic Art Table."""
 import logging
 
+import aiohttp
+
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SHUFFLE_SET, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
+    CONF_HOST, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
+from homeassistant.exceptions import PlatformNotReady
 
 from . import DATA_SISYPHUS
 
@@ -27,12 +30,18 @@ SUPPORTED_FEATURES = SUPPORT_VOLUME_MUTE \
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities,
+                               discovery_info=None):
     """Set up a media player entity for a Sisyphus table."""
-    name = discovery_info[CONF_NAME]
     host = discovery_info[CONF_HOST]
+    try:
+        table_holder = hass.data[DATA_SISYPHUS][host]
+        table = await table_holder.get_table()
+    except aiohttp.ClientError:
+        raise PlatformNotReady()
+
     add_entities(
-        [SisyphusPlayer(name, host, hass.data[DATA_SISYPHUS][name])], True)
+        [SisyphusPlayer(table_holder.name, host, table)], True)
 
 
 class SisyphusPlayer(MediaPlayerDevice):
@@ -48,6 +57,16 @@ class SisyphusPlayer(MediaPlayerDevice):
         """Add listeners after this object has been initialized."""
         self._table.add_listener(
             lambda: self.async_schedule_update_ha_state(False))
+
+    @property
+    def unique_id(self):
+        """Return the UUID of the table."""
+        return self._table.id
+
+    @property
+    def available(self):
+        """Return true if the table is responding to heartbeats."""
+        return self._table.is_connected
 
     @property
     def name(self):
