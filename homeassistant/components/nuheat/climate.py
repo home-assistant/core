@@ -1,9 +1,4 @@
-"""
-Support for NuHeat thermostats.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.nuheat/
-"""
+"""Support for NuHeat thermostats."""
 from datetime import timedelta
 import logging
 
@@ -19,8 +14,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 from . import DOMAIN as NUHEAT_DOMAIN
-
-DEPENDENCIES = ["nuheat"]
 
 _LOGGER = logging.getLogger(__name__)
 

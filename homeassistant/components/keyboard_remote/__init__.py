@@ -11,8 +11,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['evdev==0.6.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEVICE_DESCRIPTOR = 'device_descriptor'

@@ -9,8 +9,6 @@ from homeassistant.const import (
     CONF_TYPE, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pymodbus==1.5.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ADDRESS = 'address'

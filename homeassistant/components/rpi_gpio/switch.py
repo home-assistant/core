@@ -11,8 +11,6 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['rpi_gpio']
-
 CONF_PULL_MODE = 'pull_mode'
 CONF_PORTS = 'ports'
 CONF_INVERT_LOGIC = 'invert_logic'

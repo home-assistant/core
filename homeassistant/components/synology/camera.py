@@ -1,9 +1,4 @@
-"""
-Support for Synology Surveillance Station Cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.synology/
-"""
+"""Support for Synology Surveillance Station Cameras."""
 import logging
 
 import requests
@@ -18,8 +13,6 @@ from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_web,
     async_get_clientsession)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['py-synology==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 

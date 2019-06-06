@@ -1,5 +1,9 @@
 """The test for the Trend sensor platform."""
+from datetime import timedelta
+from unittest.mock import patch
+
 from homeassistant import setup
+import homeassistant.util.dt as dt_util
 
 from tests.common import get_test_home_assistant, assert_setup_component
 
@@ -46,7 +50,7 @@ class TestTrendBinarySensor:
                 'sensors': {
                     'test_trend_sensor': {
                         'entity_id': "sensor.test_state",
-                        'sample_duration': 300,
+                        'sample_duration': 10000,
                         'min_gradient': 1,
                         'max_samples': 25,
                     }
@@ -54,16 +58,22 @@ class TestTrendBinarySensor:
             }
         })
 
-        for val in [1, 0, 2, 3]:
-            self.hass.states.set('sensor.test_state', val)
+        now = dt_util.utcnow()
+        for val in [10, 0, 20, 30]:
+            with patch('homeassistant.util.dt.utcnow', return_value=now):
+                self.hass.states.set('sensor.test_state', val)
             self.hass.block_till_done()
+            now += timedelta(seconds=2)
 
         state = self.hass.states.get('binary_sensor.test_trend_sensor')
         assert state.state == 'on'
 
-        for val in [0, 1, 0, 0]:
-            self.hass.states.set('sensor.test_state', val)
+        # have to change state value, otherwise sample will lost
+        for val in [0, 30, 1, 0]:
+            with patch('homeassistant.util.dt.utcnow', return_value=now):
+                self.hass.states.set('sensor.test_state', val)
             self.hass.block_till_done()
+            now += timedelta(seconds=2)
 
         state = self.hass.states.get('binary_sensor.test_trend_sensor')
         assert state.state == 'off'
@@ -76,7 +86,7 @@ class TestTrendBinarySensor:
                 'sensors': {
                     'test_trend_sensor': {
                         'entity_id': "sensor.test_state",
-                        'sample_duration': 300,
+                        'sample_duration': 10000,
                         'min_gradient': 1,
                         'max_samples': 25,
                         'invert': 'Yes'
@@ -85,16 +95,21 @@ class TestTrendBinarySensor:
             }
         })
 
-        for val in [3, 2, 3, 1]:
-            self.hass.states.set('sensor.test_state', val)
+        now = dt_util.utcnow()
+        for val in [30, 20, 30, 10]:
+            with patch('homeassistant.util.dt.utcnow', return_value=now):
+                self.hass.states.set('sensor.test_state', val)
             self.hass.block_till_done()
+            now += timedelta(seconds=2)
 
         state = self.hass.states.get('binary_sensor.test_trend_sensor')
         assert state.state == 'on'
 
-        for val in [4, 2, 4, 4]:
-            self.hass.states.set('sensor.test_state', val)
+        for val in [30, 0, 45, 50]:
+            with patch('homeassistant.util.dt.utcnow', return_value=now):
+                self.hass.states.set('sensor.test_state', val)
             self.hass.block_till_done()
+            now += timedelta(seconds=2)
 
         state = self.hass.states.get('binary_sensor.test_trend_sensor')
         assert state.state == 'off'

@@ -1,9 +1,4 @@
-"""
-Support for showing random numbers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.random/
-"""
+"""Support for showing random numbers."""
 import logging
 
 import voluptuous as vol

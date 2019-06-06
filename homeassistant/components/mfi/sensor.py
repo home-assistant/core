@@ -1,9 +1,4 @@
-"""
-Support for Ubiquiti mFi sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.mfi/
-"""
+"""Support for Ubiquiti mFi sensors."""
 import logging
 
 import requests
@@ -15,8 +10,6 @@ from homeassistant.const import (
     CONF_SSL, CONF_VERIFY_SSL, CONF_PORT)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['mficlient==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 

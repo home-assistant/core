@@ -1,9 +1,4 @@
-"""
-Support for GTFS (Google/General Transport Format Schema).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.gtfs/
-"""
+"""Support for GTFS (Google/General Transport Format Schema)."""
 import datetime
 import logging
 import os
@@ -21,8 +16,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
-
-REQUIREMENTS = ['pygtfs==0.1.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -268,9 +261,8 @@ def get_next_departure(schedule: Any, start_station_id: Any,
                 timetable[idx] = {**row, **extras}
 
     # Flag last departures.
-    for idx in [yesterday_last, today_last]:
-        if idx is not None:
-            timetable[idx]['last'] = True
+    for idx in filter(None, [yesterday_last, today_last]):
+        timetable[idx]['last'] = True
 
     _LOGGER.debug("Timetable: %s", sorted(timetable.keys()))
 

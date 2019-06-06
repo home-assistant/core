@@ -1,9 +1,4 @@
-"""
-Stride platform for notify component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.stride/
-"""
+"""Stride platform for notify component."""
 import logging
 
 import voluptuous as vol
@@ -14,8 +9,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (ATTR_DATA, ATTR_TARGET,
                                              PLATFORM_SCHEMA,
                                              BaseNotificationService)
-
-REQUIREMENTS = ['pystride==0.1.7']
 
 _LOGGER = logging.getLogger(__name__)
 

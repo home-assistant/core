@@ -10,8 +10,6 @@ from homeassistant.const import (
     CONF_DEVICES)
 from homeassistant.components.remote import PLATFORM_SCHEMA
 
-REQUIREMENTS = ['pyitachip2ir==0.0.7']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PORT = 4998

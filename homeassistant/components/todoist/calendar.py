@@ -1,9 +1,4 @@
-"""
-Support for Todoist task management (https://todoist.com).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/calendar.todoist/
-"""
+"""Support for Todoist task management (https://todoist.com)."""
 from datetime import datetime, timedelta
 import logging
 
@@ -16,8 +11,6 @@ from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import Throttle, dt
-
-REQUIREMENTS = ['todoist-python==7.0.17']
 
 _LOGGER = logging.getLogger(__name__)
 

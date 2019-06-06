@@ -1,9 +1,4 @@
-"""
-Support for UPC ConnectBox router.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.upc_connect/
-"""
+"""Support for UPC ConnectBox router."""
 import asyncio
 import logging
 
@@ -17,8 +12,6 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, HTTP_HEADER_X_REQUESTED_WITH
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['defusedxml==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,7 +81,7 @@ class UPCDeviceScanner(DeviceScanner):
         """Get first token."""
         try:
             # get first token
-            with async_timeout.timeout(10, loop=self.hass.loop):
+            with async_timeout.timeout(10):
                 response = await self.websession.get(
                     "http://{}/common_page/login.html".format(self.host),
                     headers=self.headers)
@@ -106,7 +99,7 @@ class UPCDeviceScanner(DeviceScanner):
     async def _async_ws_function(self, function):
         """Execute a command on UPC firmware webservice."""
         try:
-            with async_timeout.timeout(10, loop=self.hass.loop):
+            with async_timeout.timeout(10):
                 # The 'token' parameter has to be first, and 'fun' second
                 # or the UPC firmware will return an error
                 response = await self.websession.post(

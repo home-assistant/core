@@ -1,9 +1,4 @@
-"""
-Support for interfacing with the XBMC/Kodi JSON-RPC API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.kodi/
-"""
+"""Support for interfacing with the XBMC/Kodi JSON-RPC API."""
 import asyncio
 from collections import OrderedDict
 from functools import wraps
@@ -35,8 +30,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.template import Template
 from homeassistant.util.yaml import dump
 import homeassistant.util.dt as dt_util
-
-REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -238,7 +231,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                 update_tasks.append(update_coro)
 
         if update_tasks:
-            await asyncio.wait(update_tasks, loop=hass.loop)
+            await asyncio.wait(update_tasks)
 
     if hass.services.has_service(DOMAIN, SERVICE_ADD_MEDIA):
         return

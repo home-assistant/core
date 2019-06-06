@@ -1,0 +1,10 @@
+{
+  "domain": "evohome",
+  "name": "Evohome",
+  "documentation": "https://www.home-assistant.io/components/evohome",
+  "requirements": [
+    "evohomeclient==0.3.2"
+  ],
+  "dependencies": [],
+  "codeowners": ["@zxdavb"]
+}

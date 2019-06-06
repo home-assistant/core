@@ -1,9 +1,4 @@
-"""
-Switches on Zigbee Home Automation networks.
-
-For more details on this platform, please refer to the documentation
-at https://home-assistant.io/components/switch.zha/
-"""
+"""Switches on Zigbee Home Automation networks."""
 import logging
 
 from homeassistant.components.switch import DOMAIN, SwitchDevice
@@ -17,8 +12,6 @@ from .core.const import (
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['zha']
 
 
 async def async_setup_platform(hass, config, async_add_entities,

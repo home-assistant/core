@@ -1,0 +1,8 @@
+{
+  "domain": "lannouncer",
+  "name": "Lannouncer",
+  "documentation": "https://www.home-assistant.io/components/lannouncer",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

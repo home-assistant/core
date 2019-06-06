@@ -12,8 +12,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = [DOMAIN]
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEFAULT_CONVERSATIONS): [TARGETS_SCHEMA]
 })

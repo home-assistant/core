@@ -1,0 +1,12 @@
+{
+  "domain": "updater",
+  "name": "Updater",
+  "documentation": "https://www.home-assistant.io/components/updater",
+  "requirements": [
+    "distro==1.4.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

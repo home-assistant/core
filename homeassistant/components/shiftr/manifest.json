@@ -1,0 +1,12 @@
+{
+  "domain": "shiftr",
+  "name": "Shiftr",
+  "documentation": "https://www.home-assistant.io/components/shiftr",
+  "requirements": [
+    "paho-mqtt==1.4.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

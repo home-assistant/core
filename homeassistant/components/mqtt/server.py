@@ -1,9 +1,4 @@
-"""
-Support for a local MQTT broker.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mqtt/#use-the-embedded-broker
-"""
+"""Support for a local MQTT broker."""
 import asyncio
 import logging
 import tempfile
@@ -13,11 +8,7 @@ import voluptuous as vol
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['hbmqtt==0.9.4']
-
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['http']
 
 # None allows custom config to be created through generate_config
 HBMQTT_CONFIG_SCHEMA = vol.Any(None, vol.Schema({

@@ -9,8 +9,6 @@ from homeassistant.const import TEMP_CELSIUS, CONF_ID, CONF_NAME
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-DEPENDENCIES = ['tellstick']
-
 _LOGGER = logging.getLogger(__name__)
 
 DatatypeDescription = namedtuple('DatatypeDescription', ['name', 'unit'])

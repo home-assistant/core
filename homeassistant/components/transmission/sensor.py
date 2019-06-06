@@ -9,8 +9,6 @@ from homeassistant.helpers.entity import Entity
 
 from . import DATA_TRANSMISSION, DATA_UPDATED, SENSOR_TYPES
 
-DEPENDENCIES = ['transmission']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Transmission'

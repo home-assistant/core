@@ -21,8 +21,6 @@ from .const import (
     SERVICE_SET_RUNTIME_VALUE_FLOAT, SERVICE_SET_RUNTIME_VALUE_INT)
 from .util import async_pulse
 
-REQUIREMENTS = ['ihcsdk==2.3.0', 'defusedxml==0.5.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 AUTO_SETUP_YAML = 'ihc_auto_setup.yaml'

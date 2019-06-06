@@ -1,9 +1,4 @@
-"""
-Support for monitoring an OpenEVSE Charger.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.openevse/
-"""
+"""Support for monitoring an OpenEVSE Charger."""
 import logging
 
 from requests import RequestException
@@ -15,8 +10,6 @@ from homeassistant.const import (
     TEMP_CELSIUS, CONF_HOST, ENERGY_KILO_WATT_HOUR,
     CONF_MONITORED_VARIABLES)
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['openevsewifi==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 

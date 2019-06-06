@@ -1,0 +1,10 @@
+{
+  "domain": "speedtestdotnet",
+  "name": "Speedtestdotnet",
+  "documentation": "https://www.home-assistant.io/components/speedtestdotnet",
+  "requirements": [
+    "speedtest-cli==2.1.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

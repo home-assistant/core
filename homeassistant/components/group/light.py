@@ -1,9 +1,4 @@
-"""
-This platform allows several lights to be grouped into one light.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.group/
-"""
+"""This platform allows several lights to be grouped into one light."""
 from collections import Counter
 import itertools
 import logging

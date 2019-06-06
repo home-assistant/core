@@ -1,9 +1,4 @@
-"""
-Support for the Automatic platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.automatic/
-"""
+"""Support for the Automatic platform."""
 import asyncio
 from datetime import timedelta
 import json
@@ -23,8 +18,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 
-REQUIREMENTS = ['aioautomatic==0.6.5']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_FUEL_LEVEL = 'fuel_level'
@@ -39,8 +32,6 @@ DATA_CONFIGURING = 'automatic_configurator_clients'
 DATA_REFRESH_TOKEN = 'refresh_token'
 DEFAULT_SCOPE = ['location', 'trip', 'vehicle:events', 'vehicle:profile']
 DEFAULT_TIMEOUT = 5
-DEPENDENCIES = ['http']
-
 EVENT_AUTOMATIC_UPDATE = 'automatic_update'
 
 FULL_SCOPE = DEFAULT_SCOPE + ['current_location']

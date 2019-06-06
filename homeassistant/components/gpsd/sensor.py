@@ -1,9 +1,4 @@
-"""
-Support for GPSD.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.gpsd/
-"""
+"""Support for GPSD."""
 import logging
 
 import voluptuous as vol
@@ -14,8 +9,6 @@ from homeassistant.const import (
     CONF_NAME)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['gps3==0.33.3']
 
 _LOGGER = logging.getLogger(__name__)
 

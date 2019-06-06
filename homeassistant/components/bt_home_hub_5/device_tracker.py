@@ -1,9 +1,4 @@
-"""
-Support for BT Home Hub 5.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.bt_home_hub_5/
-"""
+"""Support for BT Home Hub 5."""
 import logging
 
 import voluptuous as vol
@@ -12,8 +7,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
                                                      DeviceScanner)
 from homeassistant.const import CONF_HOST
-
-REQUIREMENTS = ['bthomehub5-devicelist==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 

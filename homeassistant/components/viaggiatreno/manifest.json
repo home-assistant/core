@@ -1,0 +1,8 @@
+{
+  "domain": "viaggiatreno",
+  "name": "Viaggiatreno",
+  "documentation": "https://www.home-assistant.io/components/viaggiatreno",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

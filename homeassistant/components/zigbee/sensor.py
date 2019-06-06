@@ -16,8 +16,6 @@ CONF_TYPE = 'type'
 CONF_MAX_VOLTS = 'max_volts'
 
 DEFAULT_VOLTS = 1.2
-DEPENDENCIES = ['zigbee']
-
 TYPES = ['analog', 'temperature']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

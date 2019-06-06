@@ -18,11 +18,9 @@ from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.loader import bind_hass
-from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util.dt import utcnow
 
 DOMAIN = 'automation'
-DEPENDENCIES = ['group']
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 GROUP_NAME_ALL_AUTOMATIONS = 'all automations'
@@ -126,7 +124,7 @@ async def async_setup(hass, config):
                 context=service_call.context))
 
         if tasks:
-            await asyncio.wait(tasks, loop=hass.loop)
+            await asyncio.wait(tasks)
 
     async def turn_onoff_service_handler(service_call):
         """Handle automation turn on/off service calls."""
@@ -136,7 +134,7 @@ async def async_setup(hass, config):
             tasks.append(getattr(entity, method)())
 
         if tasks:
-            await asyncio.wait(tasks, loop=hass.loop)
+            await asyncio.wait(tasks)
 
     async def toggle_service_handler(service_call):
         """Handle automation toggle service calls."""
@@ -148,7 +146,7 @@ async def async_setup(hass, config):
                 tasks.append(entity.async_turn_on())
 
         if tasks:
-            await asyncio.wait(tasks, loop=hass.loop)
+            await asyncio.wait(tasks)
 
     async def reload_service_handler(service_call):
         """Remove all automations and load new ones from config."""
@@ -416,11 +414,8 @@ async def _async_process_trigger(hass, config, trigger_configs, name, action):
     }
 
     for conf in trigger_configs:
-        platform = await async_prepare_setup_platform(
-            hass, config, DOMAIN, conf.get(CONF_PLATFORM))
-
-        if platform is None:
-            return None
+        platform = importlib.import_module('.{}'.format(conf[CONF_PLATFORM]),
+                                           __name__)
 
         remove = await platform.async_trigger(hass, conf, action, info)
 

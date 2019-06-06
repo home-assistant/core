@@ -4,7 +4,9 @@ from collections import OrderedDict
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_SCAN_INTERVAL, CONF_SHOW_ON_MAP
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL,
+    CONF_SENSORS, CONF_SHOW_ON_MAP)
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
@@ -76,6 +78,13 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow):
 
         if not valid:
             return self._show_form({CONF_SENSOR_ID: 'invalid_sensor'})
+
+        available_sensors = [x for x in luftdaten.values
+                             if luftdaten.values[x] is not None]
+
+        if available_sensors:
+            user_input.update({
+                CONF_SENSORS: {CONF_MONITORED_CONDITIONS: available_sensors}})
 
         scan_interval = user_input.get(
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)

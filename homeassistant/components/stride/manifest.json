@@ -1,0 +1,10 @@
+{
+  "domain": "stride",
+  "name": "Stride",
+  "documentation": "https://www.home-assistant.io/components/stride",
+  "requirements": [
+    "pystride==0.1.7"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,12 @@
+{
+  "domain": "cover",
+  "name": "Cover",
+  "documentation": "https://www.home-assistant.io/components/cover",
+  "requirements": [],
+  "dependencies": [
+    "group"
+  ],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

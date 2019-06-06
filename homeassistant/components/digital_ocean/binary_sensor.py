@@ -17,8 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Droplet'
 DEFAULT_DEVICE_CLASS = 'moving'
-DEPENDENCIES = ['digital_ocean']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DROPLETS): vol.All(cv.ensure_list, [cv.string]),
 })

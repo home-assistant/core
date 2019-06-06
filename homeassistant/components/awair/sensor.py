@@ -1,9 +1,4 @@
-"""
-Support for the Awair indoor air quality monitor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.awair/
-"""
+"""Support for the Awair indoor air quality monitor."""
 
 from datetime import timedelta
 import logging
@@ -19,8 +14,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle, dt
-
-REQUIREMENTS = ['python_awair==0.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -226,6 +219,6 @@ class AwairData:
         # The air_data_latest call only returns one item, so this should
         # be safe to only process one entry.
         for sensor in resp[0][ATTR_SENSORS]:
-            self.data[sensor[ATTR_COMPONENT]] = sensor[ATTR_VALUE]
+            self.data[sensor[ATTR_COMPONENT]] = round(sensor[ATTR_VALUE], 1)
 
         _LOGGER.debug("Got Awair Data for %s: %s", self._uuid, self.data)

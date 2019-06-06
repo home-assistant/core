@@ -1,9 +1,4 @@
-"""
-Support for LaCrosse sensor components.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.lacrosse/
-"""
+"""Support for LaCrosse sensor components."""
 from datetime import timedelta
 import logging
 
@@ -18,8 +13,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
-
-REQUIREMENTS = ['pylacrosse==0.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 

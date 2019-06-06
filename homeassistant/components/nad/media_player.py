@@ -1,9 +1,4 @@
-"""
-Support for interfacing with NAD receivers through RS-232.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.nad/
-"""
+"""Support for interfacing with NAD receivers through RS-232."""
 import logging
 
 import voluptuous as vol
@@ -15,8 +10,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
 from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON, CONF_HOST
-
-REQUIREMENTS = ['nad_receiver==0.0.11']
 
 _LOGGER = logging.getLogger(__name__)
 

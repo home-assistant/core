@@ -1,9 +1,4 @@
-"""
-Platform for retrieving energy data from SRP.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/sensor.srp_energy/
-"""
+"""Platform for retrieving energy data from SRP."""
 from datetime import datetime, timedelta
 import logging
 
@@ -18,8 +13,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['srpenergy==1.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 

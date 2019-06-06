@@ -6,8 +6,6 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
-DEPENDENCIES = ['smartthings']
-
 CAPABILITY_TO_ATTRIB = {
     'accelerationSensor': 'acceleration',
     'contactSensor': 'contact',

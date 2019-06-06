@@ -1,9 +1,4 @@
-"""
-Twilio SMS platform for notify component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.twilio_sms/
-"""
+"""Twilio SMS platform for notify component."""
 import logging
 
 import voluptuous as vol
@@ -15,8 +10,6 @@ from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA,
                                              BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = ["twilio"]
-
 
 CONF_FROM_NUMBER = "from_number"
 

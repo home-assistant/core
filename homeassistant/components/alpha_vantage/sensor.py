@@ -1,9 +1,4 @@
-"""
-Stock market information from Alpha Vantage.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.alpha_vantage/
-"""
+"""Stock market information from Alpha Vantage."""
 from datetime import timedelta
 import logging
 
@@ -14,8 +9,6 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_API_KEY, CONF_CURRENCY, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['alpha_vantage==2.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 

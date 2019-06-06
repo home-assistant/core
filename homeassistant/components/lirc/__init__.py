@@ -9,8 +9,6 @@ import voluptuous as vol
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START)
 
-REQUIREMENTS = ['python-lirc==1.2.3']
-
 _LOGGER = logging.getLogger(__name__)
 
 BUTTON_NAME = 'button_name'

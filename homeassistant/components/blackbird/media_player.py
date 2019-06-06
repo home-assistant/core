@@ -1,9 +1,4 @@
-"""
-Support for interfacing with Monoprice Blackbird 4k 8x8 HDBaseT Matrix.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.blackbird
-"""
+"""Support for interfacing with Monoprice Blackbird 4k 8x8 HDBaseT Matrix."""
 import logging
 import socket
 
@@ -18,8 +13,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE, STATE_OFF,
     STATE_ON)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pyblackbird==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 

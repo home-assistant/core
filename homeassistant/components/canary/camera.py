@@ -1,9 +1,4 @@
-"""
-Support for Canary camera.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.canary/
-"""
+"""Support for Canary camera."""
 import asyncio
 from datetime import timedelta
 import logging
@@ -18,16 +13,15 @@ from homeassistant.util import Throttle
 
 from . import DATA_CANARY, DEFAULT_TIMEOUT
 
-CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
-
-DEPENDENCIES = ['canary', 'ffmpeg']
-
 _LOGGER = logging.getLogger(__name__)
+
+CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
+DEFAULT_ARGUMENTS = '-pred 1'
 
 MIN_TIME_BETWEEN_SESSION_RENEW = timedelta(seconds=90)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
+    vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
 })
 
 
@@ -85,7 +79,7 @@ class CanaryCamera(Camera):
         image = await asyncio.shield(ffmpeg.get_image(
             self._live_stream_session.live_stream_url,
             output_format=IMAGE_JPEG,
-            extra_cmd=self._ffmpeg_arguments), loop=self.hass.loop)
+            extra_cmd=self._ffmpeg_arguments))
         return image
 
     async def handle_async_mjpeg_stream(self, request):

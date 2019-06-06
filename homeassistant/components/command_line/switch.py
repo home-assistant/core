@@ -1,9 +1,4 @@
-"""
-Support for custom shell commands to turn a switch on/off.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.command_line/
-"""
+"""Support for custom shell commands to turn a switch on/off."""
 import logging
 import subprocess
 

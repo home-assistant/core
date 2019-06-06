@@ -1,9 +1,4 @@
-"""
-Demo platform that has a couple of fake sensors.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo platform that has a couple of fake sensors."""
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, TEMP_CELSIUS, DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE)

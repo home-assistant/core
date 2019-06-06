@@ -1,9 +1,4 @@
-"""
-Support for Radio Thermostat wifi-enabled home thermostats.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.radiotherm/
-"""
+"""Support for Radio Thermostat wifi-enabled home thermostats."""
 import datetime
 import logging
 
@@ -18,8 +13,6 @@ from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_HOST, PRECISION_HALVES, TEMP_FAHRENHEIT, STATE_ON,
     STATE_OFF)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['radiotherm==2.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 

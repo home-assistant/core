@@ -1,9 +1,4 @@
-"""
-Support for currencylayer.com exchange rates service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.currencylayer/
-"""
+"""Support for currencylayer.com exchange rates service."""
 from datetime import timedelta
 import logging
 

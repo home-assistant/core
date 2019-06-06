@@ -1,9 +1,4 @@
-"""
-Demo platform for the vacuum component.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo platform for the vacuum component."""
 import logging
 
 from homeassistant.components.vacuum import (

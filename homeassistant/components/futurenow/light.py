@@ -1,9 +1,4 @@
-"""
-Support for FutureNow Ethernet unit outputs as Lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.futurenow/
-"""
+"""Support for FutureNow Ethernet unit outputs as Lights."""
 
 import logging
 
@@ -15,8 +10,6 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light,
     PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pyfnip==0.2']
 
 _LOGGER = logging.getLogger(__name__)
 

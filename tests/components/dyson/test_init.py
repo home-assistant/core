@@ -43,7 +43,7 @@ class DysonTest(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @mock.patch('libpurecoollink.dyson.DysonAccount.login', return_value=False)
+    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=False)
     def test_dyson_login_failed(self, mocked_login):
         """Test if Dyson connection failed."""
         dyson.setup(self.hass, {dyson.DOMAIN: {
@@ -53,8 +53,8 @@ class DysonTest(unittest.TestCase):
         }})
         assert mocked_login.call_count == 1
 
-    @mock.patch('libpurecoollink.dyson.DysonAccount.devices', return_value=[])
-    @mock.patch('libpurecoollink.dyson.DysonAccount.login', return_value=True)
+    @mock.patch('libpurecool.dyson.DysonAccount.devices', return_value=[])
+    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
     def test_dyson_login(self, mocked_login, mocked_devices):
         """Test valid connection to dyson web service."""
         dyson.setup(self.hass, {dyson.DOMAIN: {
@@ -67,9 +67,9 @@ class DysonTest(unittest.TestCase):
         assert len(self.hass.data[dyson.DYSON_DEVICES]) == 0
 
     @mock.patch('homeassistant.helpers.discovery.load_platform')
-    @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
+    @mock.patch('libpurecool.dyson.DysonAccount.devices',
                 return_value=[_get_dyson_account_device_available()])
-    @mock.patch('libpurecoollink.dyson.DysonAccount.login', return_value=True)
+    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
     def test_dyson_custom_conf(self, mocked_login, mocked_devices,
                                mocked_discovery):
         """Test device connection using custom configuration."""
@@ -87,11 +87,11 @@ class DysonTest(unittest.TestCase):
         assert mocked_login.call_count == 1
         assert mocked_devices.call_count == 1
         assert len(self.hass.data[dyson.DYSON_DEVICES]) == 1
-        assert mocked_discovery.call_count == 4
+        assert mocked_discovery.call_count == 5
 
-    @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
+    @mock.patch('libpurecool.dyson.DysonAccount.devices',
                 return_value=[_get_dyson_account_device_not_available()])
-    @mock.patch('libpurecoollink.dyson.DysonAccount.login', return_value=True)
+    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
     def test_dyson_custom_conf_device_not_available(self, mocked_login,
                                                     mocked_devices):
         """Test device connection with an invalid device."""
@@ -110,9 +110,9 @@ class DysonTest(unittest.TestCase):
         assert mocked_devices.call_count == 1
         assert len(self.hass.data[dyson.DYSON_DEVICES]) == 0
 
-    @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
+    @mock.patch('libpurecool.dyson.DysonAccount.devices',
                 return_value=[_get_dyson_account_device_error()])
-    @mock.patch('libpurecoollink.dyson.DysonAccount.login', return_value=True)
+    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
     def test_dyson_custom_conf_device_error(self, mocked_login,
                                             mocked_devices):
         """Test device connection with device raising an exception."""
@@ -132,9 +132,9 @@ class DysonTest(unittest.TestCase):
         assert len(self.hass.data[dyson.DYSON_DEVICES]) == 0
 
     @mock.patch('homeassistant.helpers.discovery.load_platform')
-    @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
+    @mock.patch('libpurecool.dyson.DysonAccount.devices',
                 return_value=[_get_dyson_account_device_available()])
-    @mock.patch('libpurecoollink.dyson.DysonAccount.login', return_value=True)
+    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
     def test_dyson_custom_conf_with_unknown_device(self, mocked_login,
                                                    mocked_devices,
                                                    mocked_discovery):
@@ -156,9 +156,9 @@ class DysonTest(unittest.TestCase):
         assert mocked_discovery.call_count == 0
 
     @mock.patch('homeassistant.helpers.discovery.load_platform')
-    @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
+    @mock.patch('libpurecool.dyson.DysonAccount.devices',
                 return_value=[_get_dyson_account_device_available()])
-    @mock.patch('libpurecoollink.dyson.DysonAccount.login', return_value=True)
+    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
     def test_dyson_discovery(self, mocked_login, mocked_devices,
                              mocked_discovery):
         """Test device connection using discovery."""
@@ -172,11 +172,11 @@ class DysonTest(unittest.TestCase):
         assert mocked_login.call_count == 1
         assert mocked_devices.call_count == 1
         assert len(self.hass.data[dyson.DYSON_DEVICES]) == 1
-        assert mocked_discovery.call_count == 4
+        assert mocked_discovery.call_count == 5
 
-    @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
+    @mock.patch('libpurecool.dyson.DysonAccount.devices',
                 return_value=[_get_dyson_account_device_not_available()])
-    @mock.patch('libpurecoollink.dyson.DysonAccount.login', return_value=True)
+    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
     def test_dyson_discovery_device_not_available(self, mocked_login,
                                                   mocked_devices):
         """Test device connection with discovery and invalid device."""

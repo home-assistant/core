@@ -1,9 +1,4 @@
-"""
-Support for monitoring an AVM Fritz!Box router.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.fritzbox_netmonitor/
-"""
+"""Support for monitoring an AVM Fritz!Box router."""
 import logging
 from datetime import timedelta
 from requests.exceptions import RequestException
@@ -15,8 +10,6 @@ from homeassistant.const import (CONF_NAME, CONF_HOST, STATE_UNAVAILABLE)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['fritzconnection==0.6.5']
 
 _LOGGER = logging.getLogger(__name__)
 

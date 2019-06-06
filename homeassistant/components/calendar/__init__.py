@@ -22,8 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'calendar'
 
-DEPENDENCIES = ['http']
-
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -38,7 +36,7 @@ async def async_setup(hass, config):
     hass.http.register_view(CalendarEventView(component))
 
     # Doesn't work in prod builds of the frontend: home-assistant-polymer#1289
-    # await hass.components.frontend.async_register_built_in_panel(
+    # hass.components.frontend.async_register_built_in_panel(
     #     'calendar', 'calendar', 'hass:calendar')
 
     await component.async_setup(config)

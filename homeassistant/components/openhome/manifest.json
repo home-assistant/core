@@ -1,0 +1,10 @@
+{
+  "domain": "openhome",
+  "name": "Openhome",
+  "documentation": "https://www.home-assistant.io/components/openhome",
+  "requirements": [
+    "openhomedevice==0.4.2"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

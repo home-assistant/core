@@ -1,0 +1,10 @@
+{
+  "domain": "light",
+  "name": "Light",
+  "documentation": "https://www.home-assistant.io/components/light",
+  "requirements": [],
+  "dependencies": [
+    "group"
+  ],
+  "codeowners": []
+}

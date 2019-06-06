@@ -10,8 +10,6 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['sucks==0.9.3']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "ecovacs"

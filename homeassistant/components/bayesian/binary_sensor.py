@@ -1,9 +1,4 @@
-"""
-Use Bayesian Inference to trigger a binary sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.bayesian/
-"""
+"""Use Bayesian Inference to trigger a binary sensor."""
 from collections import OrderedDict
 
 import voluptuous as vol

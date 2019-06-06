@@ -3,8 +3,6 @@ from homeassistant.components.cover import ATTR_POSITION, CoverDevice
 
 from . import DOMAIN, WinkDevice
 
-DEPENDENCIES = ['wink']
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink cover platform."""

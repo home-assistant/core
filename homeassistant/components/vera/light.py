@@ -10,8 +10,6 @@ from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['vera']
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Vera lights."""

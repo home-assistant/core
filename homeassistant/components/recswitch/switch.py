@@ -1,9 +1,4 @@
-"""
-Support for Ankuoo RecSwitch MS6126 devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.recswitch/
-"""
+"""Support for Ankuoo RecSwitch MS6126 devices."""
 
 import logging
 
@@ -15,8 +10,6 @@ import homeassistant.helpers.config_validation as cv
 
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['pyrecswitch==1.0.2']
 
 DEFAULT_NAME = 'RecSwitch {0}'
 
@@ -40,7 +33,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     if not hass.data.get(DATA_RSN):
         hass.data[DATA_RSN] = RSNetwork()
-        job = hass.data[DATA_RSN].create_datagram_endpoint(loop=hass.loop)
+        job = hass.data[DATA_RSN].create_datagram_endpoint()
         hass.async_create_task(job)
 
     device = hass.data[DATA_RSN].register_device(mac_address, host)

@@ -1,9 +1,4 @@
-"""
-Support for Dutch Smart Meter (also known as Smartmeter or P1 port).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.dsmr/
-"""
+"""Support for Dutch Smart Meter (also known as Smartmeter or P1 port)."""
 import asyncio
 from datetime import timedelta
 from functools import partial
@@ -19,8 +14,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['dsmr_parser==0.12']
 
 CONF_DSMR_VERSION = 'dsmr_version'
 CONF_RECONNECT_INTERVAL = 'reconnect_interval'
@@ -230,8 +223,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                 update_entities_telegram({})
 
                 # throttle reconnect attempts
-                await asyncio.sleep(config[CONF_RECONNECT_INTERVAL],
-                                    loop=hass.loop)
+                await asyncio.sleep(config[CONF_RECONNECT_INTERVAL])
 
     # Can't be hass.async_add_job because job runs forever
     hass.loop.create_task(connect_and_reconnect())

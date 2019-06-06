@@ -1,9 +1,4 @@
-"""
-Prowl notification service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.prowl/
-"""
+"""Prowl notification service."""
 import asyncio
 import logging
 
@@ -57,7 +52,7 @@ class ProwlNotificationService(BaseNotificationService):
         session = async_get_clientsession(self._hass)
 
         try:
-            with async_timeout.timeout(10, loop=self._hass.loop):
+            with async_timeout.timeout(10):
                 response = await session.post(url, data=payload)
                 result = await response.text()
 

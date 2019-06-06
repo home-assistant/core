@@ -1,9 +1,4 @@
-"""
-Support for showing the date and the time.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.time_date/
-"""
+"""Support for showing the date and the time."""
 from datetime import timedelta
 import logging
 

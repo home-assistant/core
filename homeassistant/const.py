@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 92
+MINOR_VERSION = 94
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -147,11 +147,6 @@ CONF_TTL = 'ttl'
 CONF_TYPE = 'type'
 CONF_UNIT_OF_MEASUREMENT = 'unit_of_measurement'
 CONF_UNIT_SYSTEM = 'unit_system'
-
-# Deprecated in 0.88.0, invalidated in 0.91.0, remove in 0.92.0
-CONF_UPDATE_INTERVAL = 'update_interval'
-CONF_UPDATE_INTERVAL_INVALIDATION_VERSION = '0.91.0'
-
 CONF_URL = 'url'
 CONF_USERNAME = 'username'
 CONF_VALUE_TEMPLATE = 'value_template'
@@ -165,29 +160,33 @@ CONF_XY = 'xy'
 CONF_ZONE = 'zone'
 
 # #### EVENTS ####
+EVENT_AUTOMATION_TRIGGERED = 'automation_triggered'
+EVENT_CALL_SERVICE = 'call_service'
+EVENT_COMPONENT_LOADED = 'component_loaded'
+EVENT_CORE_CONFIG_UPDATE = 'core_config_updated'
+EVENT_HOMEASSISTANT_CLOSE = 'homeassistant_close'
 EVENT_HOMEASSISTANT_START = 'homeassistant_start'
 EVENT_HOMEASSISTANT_STOP = 'homeassistant_stop'
-EVENT_HOMEASSISTANT_CLOSE = 'homeassistant_close'
-EVENT_STATE_CHANGED = 'state_changed'
-EVENT_TIME_CHANGED = 'time_changed'
-EVENT_CALL_SERVICE = 'call_service'
+EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 EVENT_PLATFORM_DISCOVERED = 'platform_discovered'
-EVENT_COMPONENT_LOADED = 'component_loaded'
+EVENT_SCRIPT_STARTED = 'script_started'
 EVENT_SERVICE_REGISTERED = 'service_registered'
 EVENT_SERVICE_REMOVED = 'service_removed'
-EVENT_LOGBOOK_ENTRY = 'logbook_entry'
+EVENT_STATE_CHANGED = 'state_changed'
 EVENT_THEMES_UPDATED = 'themes_updated'
 EVENT_TIMER_OUT_OF_SYNC = 'timer_out_of_sync'
-EVENT_AUTOMATION_TRIGGERED = 'automation_triggered'
-EVENT_SCRIPT_STARTED = 'script_started'
+EVENT_TIME_CHANGED = 'time_changed'
+
 
 # #### DEVICE CLASSES ####
 DEVICE_CLASS_BATTERY = 'battery'
 DEVICE_CLASS_HUMIDITY = 'humidity'
 DEVICE_CLASS_ILLUMINANCE = 'illuminance'
+DEVICE_CLASS_SIGNAL_STRENGTH = 'signal_strength'
 DEVICE_CLASS_TEMPERATURE = 'temperature'
 DEVICE_CLASS_TIMESTAMP = 'timestamp'
 DEVICE_CLASS_PRESSURE = 'pressure'
+DEVICE_CLASS_POWER = 'power'
 
 # #### STATES ####
 STATE_ON = 'on'

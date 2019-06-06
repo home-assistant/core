@@ -3,8 +3,6 @@ from homeassistant.components.switch import SwitchDevice
 
 from . import DATA_HIVE, DOMAIN
 
-DEPENDENCIES = ['hive']
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Hive switches."""

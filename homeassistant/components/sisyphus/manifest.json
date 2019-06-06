@@ -1,0 +1,10 @@
+{
+  "domain": "sisyphus",
+  "name": "Sisyphus",
+  "documentation": "https://www.home-assistant.io/components/sisyphus",
+  "requirements": [
+    "sisyphus-control==2.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

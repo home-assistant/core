@@ -10,8 +10,7 @@ DEMO_DEVICES = [{
     },
     'traits': [
         'action.devices.traits.OnOff', 'action.devices.traits.Brightness',
-        'action.devices.traits.ColorSpectrum',
-        'action.devices.traits.ColorTemperature'
+        'action.devices.traits.ColorSetting',
     ],
     'type':
     'action.devices.types.LIGHT',
@@ -50,8 +49,7 @@ DEMO_DEVICES = [{
     },
     'traits': [
         'action.devices.traits.OnOff', 'action.devices.traits.Brightness',
-        'action.devices.traits.ColorSpectrum',
-        'action.devices.traits.ColorTemperature'
+        'action.devices.traits.ColorSetting',
     ],
     'type':
     'action.devices.types.LIGHT',
@@ -65,8 +63,7 @@ DEMO_DEVICES = [{
     },
     'traits': [
         'action.devices.traits.OnOff', 'action.devices.traits.Brightness',
-        'action.devices.traits.ColorSpectrum',
-        'action.devices.traits.ColorTemperature'
+        'action.devices.traits.ColorSetting',
     ],
     'type':
     'action.devices.types.LIGHT',
@@ -119,7 +116,7 @@ DEMO_DEVICES = [{
     },
     'traits': ['action.devices.traits.OpenClose'],
     'type':
-    'action.devices.types.BLINDS',
+    'action.devices.types.GARAGE',
     'willReportState': False
 }, {
     'id': 'cover.kitchen_window',
@@ -146,7 +143,7 @@ DEMO_DEVICES = [{
     },
     'traits':
         [
-            'action.devices.traits.OnOff', 'action.devices.traits.Brightness',
+            'action.devices.traits.OnOff', 'action.devices.traits.Volume',
             'action.devices.traits.Modes'
         ],
     'type':
@@ -161,7 +158,7 @@ DEMO_DEVICES = [{
     },
     'traits':
         [
-            'action.devices.traits.OnOff', 'action.devices.traits.Brightness',
+            'action.devices.traits.OnOff', 'action.devices.traits.Volume',
             'action.devices.traits.Modes'
         ],
     'type':
@@ -183,7 +180,7 @@ DEMO_DEVICES = [{
         'name': 'Walkman'
     },
     'traits':
-    ['action.devices.traits.OnOff', 'action.devices.traits.Brightness'],
+    ['action.devices.traits.OnOff', 'action.devices.traits.Volume'],
     'type':
     'action.devices.types.SWITCH',
     'willReportState':

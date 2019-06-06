@@ -1,9 +1,4 @@
-"""
-Sensor for Xbox Live account status.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.xbox_live/
-"""
+"""Sensor for Xbox Live account status."""
 import logging
 
 import voluptuous as vol
@@ -12,8 +7,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_API_KEY, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['xboxapi==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 

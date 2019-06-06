@@ -25,7 +25,6 @@ DEFAULT_DIST_TO_ZONE = 'not set'
 DEFAULT_NEAREST = 'not set'
 DEFAULT_PROXIMITY_ZONE = 'home'
 DEFAULT_TOLERANCE = 1
-DEPENDENCIES = ['zone', 'device_tracker']
 DOMAIN = 'proximity'
 
 UNITS = ['km', 'm', 'mi', 'ft']

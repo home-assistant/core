@@ -4,9 +4,7 @@ import logging
 from homeassistant.components.switch import ToggleEntity
 from homeassistant.const import CONF_NAME
 
-from . import DATA_DEVICE_REGISTER, DOMAIN as HLK_SW16, SW16Device
-
-DEPENDENCIES = [HLK_SW16]
+from . import DATA_DEVICE_REGISTER, SW16Device
 
 _LOGGER = logging.getLogger(__name__)
 

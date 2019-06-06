@@ -11,8 +11,6 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START, CONF_SCAN_INTERVAL
 from homeassistant.helpers.event import track_time_interval
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['feedparser-homeassistant==5.2.2.dev1']
-
 _LOGGER = getLogger(__name__)
 
 CONF_URLS = 'urls'

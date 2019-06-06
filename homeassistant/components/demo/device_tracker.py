@@ -1,9 +1,4 @@
-"""
-Demo platform for the Device tracker component.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo platform for the Device tracker component."""
 import random
 
 from homeassistant.components.device_tracker import DOMAIN

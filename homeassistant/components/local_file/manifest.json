@@ -1,0 +1,8 @@
+{
+  "domain": "local_file",
+  "name": "Local file",
+  "documentation": "https://www.home-assistant.io/components/local_file",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

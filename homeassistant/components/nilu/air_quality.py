@@ -1,9 +1,4 @@
-"""
-Sensor for checking the air quality around Norway.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/air_quality.nilu/
-"""
+"""Sensor for checking the air quality around Norway."""
 from datetime import timedelta
 import logging
 
@@ -15,8 +10,6 @@ from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_SHOW_ON_MAP)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['niluclient==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 

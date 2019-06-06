@@ -1,0 +1,10 @@
+{
+  "domain": "asterisk_mbox",
+  "name": "Asterisk mbox",
+  "documentation": "https://www.home-assistant.io/components/asterisk_mbox",
+  "requirements": [
+    "asterisk_mbox==0.5.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

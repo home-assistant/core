@@ -1,9 +1,4 @@
-"""
-Support for NX584 alarm control panels.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.nx584/
-"""
+"""Support for NX584 alarm control panels."""
 import logging
 
 import requests
@@ -15,8 +10,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pynx584==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 

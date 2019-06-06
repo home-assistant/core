@@ -1,0 +1,12 @@
+{
+  "domain": "arlo",
+  "name": "Arlo",
+  "documentation": "https://www.home-assistant.io/components/arlo",
+  "requirements": [
+    "pyarlo==0.2.3"
+  ],
+  "dependencies": [
+    "ffmpeg"
+  ],
+  "codeowners": []
+}

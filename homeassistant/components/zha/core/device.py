@@ -17,9 +17,10 @@ from .const import (
     ATTR_CLUSTER_ID, ATTR_ATTRIBUTE, ATTR_VALUE, ATTR_COMMAND, SERVER,
     ATTR_COMMAND_TYPE, ATTR_ARGS, CLIENT_COMMANDS, SERVER_COMMANDS,
     ATTR_ENDPOINT_ID, IEEE, MODEL, NAME, UNKNOWN, QUIRK_APPLIED,
-    QUIRK_CLASS, ZDO_CHANNEL, MANUFACTURER_CODE, POWER_SOURCE
+    QUIRK_CLASS, ZDO_CHANNEL, MANUFACTURER_CODE, POWER_SOURCE, MAINS_POWERED,
+    BATTERY_OR_UNKNOWN
 )
-from .channels import EventRelayChannel, ZDOChannel
+from .channels import EventRelayChannel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +69,6 @@ class ZHADevice:
             self._zigpy_device.__class__.__module__,
             self._zigpy_device.__class__.__name__
         )
-        self._power_source = None
         self.status = DeviceStatus.CREATED
 
     @property
@@ -92,6 +92,13 @@ class ZHADevice:
         return self._model
 
     @property
+    def manufacturer_code(self):
+        """Return the manufacturer code for the device."""
+        if self._zigpy_device.node_desc.is_valid:
+            return self._zigpy_device.node_desc.manufacturer_code
+        return None
+
+    @property
     def nwk(self):
         """Return nwk for device."""
         return self._zigpy_device.nwk
@@ -112,20 +119,29 @@ class ZHADevice:
         return self._zigpy_device.last_seen
 
     @property
-    def manufacturer_code(self):
-        """Return manufacturer code for device."""
-        if ZDO_CHANNEL in self.cluster_channels:
-            return self.cluster_channels.get(ZDO_CHANNEL).manufacturer_code
-        return None
+    def is_mains_powered(self):
+        """Return true if device is mains powered."""
+        return self._zigpy_device.node_desc.is_mains_powered
 
     @property
     def power_source(self):
         """Return the power source for the device."""
-        if self._power_source is not None:
-            return self._power_source
-        if ZDO_CHANNEL in self.cluster_channels:
-            return self.cluster_channels.get(ZDO_CHANNEL).power_source
-        return None
+        return MAINS_POWERED if self.is_mains_powered else BATTERY_OR_UNKNOWN
+
+    @property
+    def is_router(self):
+        """Return true if this is a routing capable device."""
+        return self._zigpy_device.node_desc.is_router
+
+    @property
+    def is_coordinator(self):
+        """Return true if this device represents the coordinator."""
+        return self._zigpy_device.node_desc.is_coordinator
+
+    @property
+    def is_end_device(self):
+        """Return true if this device is an end device."""
+        return self._zigpy_device.node_desc.is_end_device
 
     @property
     def gateway(self):
@@ -150,10 +166,6 @@ class ZHADevice:
     def set_available(self, available):
         """Set availability from restore and prevent signals."""
         self._available = available
-
-    def set_power_source(self, power_source):
-        """Set the power source."""
-        self._power_source = power_source
 
     def update_available(self, available):
         """Set sensor availability."""
@@ -183,7 +195,7 @@ class ZHADevice:
             QUIRK_APPLIED: self.quirk_applied,
             QUIRK_CLASS: self.quirk_class,
             MANUFACTURER_CODE: self.manufacturer_code,
-            POWER_SOURCE: ZDOChannel.POWER_SOURCES.get(self.power_source)
+            POWER_SOURCE: self.power_source
         }
 
     def add_cluster_channel(self, cluster_channel):
@@ -200,10 +212,50 @@ class ZHADevice:
             self.cluster_channels[cluster_channel.name] = cluster_channel
             self._all_channels.append(cluster_channel)
 
+    def get_channels_to_configure(self):
+        """Get a deduped list of channels for configuration.
+
+        This goes through all channels and gets a unique list of channels to
+        configure. It first assembles a unique list of channels that are part
+        of entities while stashing relay channels off to the side. It then
+        takse the stashed relay channels and adds them to the list of channels
+        that will be returned if there isn't a channel in the list for that
+        cluster already. This is done to ensure each cluster is only configured
+        once.
+        """
+        channel_keys = []
+        channels = []
+        relay_channels = self._relay_channels.values()
+
+        def get_key(channel):
+            channel_key = "ZDO"
+            if hasattr(channel.cluster, 'cluster_id'):
+                channel_key = "{}_{}".format(
+                    channel.cluster.endpoint.endpoint_id,
+                    channel.cluster.cluster_id
+                )
+            return channel_key
+
+        # first we get all unique non event channels
+        for channel in self.all_channels:
+            c_key = get_key(channel)
+            if c_key not in channel_keys and channel not in relay_channels:
+                channel_keys.append(c_key)
+                channels.append(channel)
+
+        # now we get event channels that still need their cluster configured
+        for channel in relay_channels:
+            channel_key = get_key(channel)
+            if channel_key not in channel_keys:
+                channel_keys.append(channel_key)
+                channels.append(channel)
+        return channels
+
     async def async_configure(self):
         """Configure the device."""
         _LOGGER.debug('%s: started configuration', self.name)
-        await self._execute_channel_tasks('async_configure')
+        await self._execute_channel_tasks(
+            self.get_channels_to_configure(), 'async_configure')
         _LOGGER.debug('%s: completed configuration', self.name)
         entry = self.gateway.zha_storage.async_create_or_update(self)
         _LOGGER.debug('%s: stored in registry: %s', self.name, entry)
@@ -211,25 +263,27 @@ class ZHADevice:
     async def async_initialize(self, from_cache=False):
         """Initialize channels."""
         _LOGGER.debug('%s: started initialization', self.name)
-        await self._execute_channel_tasks('async_initialize', from_cache)
+        await self._execute_channel_tasks(
+            self.all_channels, 'async_initialize', from_cache)
         _LOGGER.debug(
             '%s: power source: %s',
             self.name,
-            ZDOChannel.POWER_SOURCES.get(self.power_source)
+            self.power_source
         )
         self.status = DeviceStatus.INITIALIZED
         _LOGGER.debug('%s: completed initialization', self.name)
 
-    async def _execute_channel_tasks(self, task_name, *args):
+    async def _execute_channel_tasks(self, channels, task_name, *args):
         """Gather and execute a set of CHANNEL tasks."""
         channel_tasks = []
         semaphore = asyncio.Semaphore(3)
         zdo_task = None
-        for channel in self.all_channels:
+        for channel in channels:
             if channel.name == ZDO_CHANNEL:
                 # pylint: disable=E1111
-                zdo_task = self._async_create_task(
-                    semaphore, channel, task_name, *args)
+                if zdo_task is None:  # We only want to do this once
+                    zdo_task = self._async_create_task(
+                        semaphore, channel, task_name, *args)
             else:
                 channel_tasks.append(
                     self._async_create_task(
@@ -279,15 +333,18 @@ class ZHADevice:
         }
 
     @callback
-    def async_get_zha_clusters(self):
-        """Get zigbee home automation clusters for this device."""
-        from zigpy.profiles.zha import PROFILE_ID
+    def async_get_std_clusters(self):
+        """Get ZHA and ZLL clusters for this device."""
+        from zigpy.profiles import zha, zll
         return {
             ep_id: {
                 IN: endpoint.in_clusters,
                 OUT: endpoint.out_clusters
             } for (ep_id, endpoint) in self._zigpy_device.endpoints.items()
-            if ep_id != 0 and endpoint.profile_id == PROFILE_ID
+            if ep_id != 0 and endpoint.profile_id in (
+                zha.PROFILE_ID,
+                zll.PROFILE_ID
+            )
         }
 
     @callback

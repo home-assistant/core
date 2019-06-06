@@ -1,9 +1,4 @@
-"""
-Support for monitoring pyLoad.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.pyload/
-"""
+"""Support for monitoring pyLoad."""
 from datetime import timedelta
 import logging
 

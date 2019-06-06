@@ -11,8 +11,6 @@ from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['mochad']
-
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): mochad.DOMAIN,

@@ -1,9 +1,4 @@
-"""
-Support for interface with an Orange Livebox Play TV appliance.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.liveboxplaytv/
-"""
+"""Support for interface with an Orange Livebox Play TV appliance."""
 from datetime import timedelta
 import logging
 
@@ -22,8 +17,6 @@ from homeassistant.const import (
     STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-
-REQUIREMENTS = ['liveboxplaytv==2.0.2', 'pyteleloisirs==3.4']
 
 _LOGGER = logging.getLogger(__name__)
 

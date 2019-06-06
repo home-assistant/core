@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "connection_failure": "Impossibile connettersi all'host specificato."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Host"
+                },
+                "description": "Inserire il nome host o l'indirizzo IP di un dispositivo Heos (preferibilmente uno connesso alla rete tramite cavo).",
+                "title": "Connetti a Heos"
+            }
+        },
+        "title": "Heos"
+    }
+}

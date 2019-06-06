@@ -1,9 +1,4 @@
-"""
-Support for collecting data from the ARWN project.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.arwn/
-"""
+"""Support for collecting data from the ARWN project."""
 import json
 import logging
 
@@ -15,7 +10,6 @@ from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['mqtt']
 DOMAIN = 'arwn'
 
 DATA_ARWN = 'arwn'

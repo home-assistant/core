@@ -756,3 +756,65 @@ async def test_entity_picture_template(hass, calls):
     state = hass.states.get('cover.test_template_cover')
 
     assert state.attributes['entity_picture'] == '/local/cover.png'
+
+
+async def test_device_class(hass, calls):
+    """Test device class."""
+    with assert_setup_component(1, 'cover'):
+        assert await setup.async_setup_component(hass, 'cover', {
+            'cover': {
+                'platform': 'template',
+                'covers': {
+                    'test_template_cover': {
+                        'value_template':
+                            "{{ states.cover.test_state.state }}",
+                        'device_class': "door",
+                        'open_cover': {
+                            'service': 'cover.open_cover',
+                            'entity_id': 'cover.test_state'
+                        },
+                        'close_cover': {
+                            'service': 'cover.close_cover',
+                            'entity_id': 'cover.test_state'
+                        },
+                    }
+                }
+            }
+        })
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('cover.test_template_cover')
+    assert state.attributes.get('device_class') == 'door'
+
+
+async def test_invalid_device_class(hass, calls):
+    """Test device class."""
+    with assert_setup_component(0, 'cover'):
+        assert await setup.async_setup_component(hass, 'cover', {
+            'cover': {
+                'platform': 'template',
+                'covers': {
+                    'test_template_cover': {
+                        'value_template':
+                            "{{ states.cover.test_state.state }}",
+                        'device_class': "barnacle_bill",
+                        'open_cover': {
+                            'service': 'cover.open_cover',
+                            'entity_id': 'cover.test_state'
+                        },
+                        'close_cover': {
+                            'service': 'cover.close_cover',
+                            'entity_id': 'cover.test_state'
+                        },
+                    }
+                }
+            }
+        })
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('cover.test_template_cover')
+    assert not state

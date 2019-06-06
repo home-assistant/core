@@ -1,9 +1,4 @@
-"""
-Support for Yamaha Receivers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.yamaha/
-"""
+"""Support for Yamaha Receivers."""
 import logging
 
 import requests
@@ -22,8 +17,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, STATE_IDLE, STATE_OFF, STATE_ON,
     STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['rxv==0.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 

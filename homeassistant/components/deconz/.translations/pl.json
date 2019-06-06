@@ -3,12 +3,21 @@
         "abort": {
             "already_configured": "Mostek jest ju\u017c skonfigurowany",
             "no_bridges": "Nie odkryto mostk\u00f3w deCONZ",
-            "one_instance_only": "Komponent obs\u0142uguje tylko jedn\u0105 instancj\u0119 deCONZ"
+            "one_instance_only": "Komponent obs\u0142uguje tylko jedn\u0105 instancj\u0119 deCONZ",
+            "updated_instance": "Zaktualizowano instancj\u0119 deCONZ o nowy adres hosta"
         },
         "error": {
             "no_key": "Nie mo\u017cna uzyska\u0107 klucza API"
         },
         "step": {
+            "hassio_confirm": {
+                "data": {
+                    "allow_clip_sensor": "Zezwalaj na importowanie wirtualnych sensor\u00f3w",
+                    "allow_deconz_groups": "Zezw\u00f3l na importowanie grup deCONZ"
+                },
+                "description": "Czy chcesz skonfigurowa\u0107 Home Assistant'a, aby po\u0142\u0105czy\u0142 si\u0119 z bramk\u0105 deCONZ dostarczon\u0105 przez dodatek hass.io {addon}?",
+                "title": "Bramka deCONZ Zigbee przez dodatek Hass.io"
+            },
             "init": {
                 "data": {
                     "host": "Host",

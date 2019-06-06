@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Mo\u017cesz skonfigurowa\u0107 tylko jedno po\u0142\u0105czenie Heos, poniewa\u017c b\u0119dzie ono obs\u0142ugiwa\u0107 wszystkie urz\u0105dzenia w sieci."
+        },
+        "error": {
+            "connection_failure": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z okre\u015blonym hostem."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Host",
+                    "host": "Host"
+                },
+                "description": "Wprowad\u017a nazw\u0119 hosta lub adres IP urz\u0105dzenia Heos (preferowane po\u0142\u0105czenie kablowe, nie WiFi).",
+                "title": "Po\u0142\u0105cz si\u0119 z Heos"
+            }
+        },
+        "title": "Heos"
+    }
+}

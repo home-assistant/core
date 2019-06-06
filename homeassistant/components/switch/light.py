@@ -1,9 +1,4 @@
-"""
-Light support for switch entities.
-
-For more information about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.switch/
-"""
+"""Light support for switch entities."""
 import logging
 
 import voluptuous as vol

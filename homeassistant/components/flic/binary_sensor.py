@@ -1,9 +1,4 @@
-"""
-Support to use flic buttons as a binary sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.flic/
-"""
+"""Support to use flic buttons as a binary sensor."""
 import logging
 import threading
 
@@ -15,8 +10,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
-
-REQUIREMENTS = ['pyflic-homeassistant==0.4.dev0']
 
 _LOGGER = logging.getLogger(__name__)
 

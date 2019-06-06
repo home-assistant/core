@@ -8,8 +8,6 @@ from homeassistant.const import ATTR_ATTRIBUTION, CONF_ADDRESS, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['python-ripple-api==0.0.3']
-
 ATTRIBUTION = "Data provided by ripple.com"
 
 DEFAULT_NAME = 'Ripple Balance'

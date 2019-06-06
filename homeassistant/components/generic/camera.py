@@ -1,9 +1,4 @@
-"""
-Support for IP Cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.generic/
-"""
+"""Support for IP Cameras."""
 import asyncio
 import logging
 
@@ -132,7 +127,7 @@ class GenericCamera(Camera):
             try:
                 websession = async_get_clientsession(
                     self.hass, verify_ssl=self.verify_ssl)
-                with async_timeout.timeout(10, loop=self.hass.loop):
+                with async_timeout.timeout(10):
                     response = await websession.get(
                         url, auth=self._auth)
                 self._last_image = await response.read()
@@ -151,7 +146,6 @@ class GenericCamera(Camera):
         """Return the name of this device."""
         return self._name
 
-    @property
-    def stream_source(self):
+    async def stream_source(self):
         """Return the source of the stream."""
         return self._stream_source

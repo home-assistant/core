@@ -1,9 +1,4 @@
-"""
-Entity for Zigbee Home Automation.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zha/
-"""
+"""Entity for Zigbee Home Automation."""
 
 import logging
 import time
@@ -19,7 +14,6 @@ from .core.const import (
     DOMAIN, ATTR_MANUFACTURER, DATA_ZHA, DATA_ZHA_BRIDGE_ID, MODEL, NAME,
     SIGNAL_REMOVE
 )
-from .core.channels import MAINS_POWERED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -162,7 +156,7 @@ class ZhaEntity(RestoreEntity, entity.Entity):
                 time.time() - self._zha_device.last_seen <
                 RESTART_GRACE_PERIOD):
             self.async_set_available(True)
-            if self.zha_device.power_source != MAINS_POWERED:
+            if not self.zha_device.is_mains_powered:
                 # mains powered devices will get real time state
                 self.async_restore_last_state(last_state)
             self._zha_device.set_available(True)

@@ -64,7 +64,7 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
             tasks.append(hass.services.async_call(
                 domain, service.service, data, blocking))
 
-        await asyncio.wait(tasks, loop=hass.loop)
+        await asyncio.wait(tasks)
 
     hass.services.async_register(
         ha.DOMAIN, SERVICE_TURN_OFF, async_handle_turn_service)

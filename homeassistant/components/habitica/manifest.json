@@ -1,0 +1,10 @@
+{
+  "domain": "habitica",
+  "name": "Habitica",
+  "documentation": "https://www.home-assistant.io/components/habitica",
+  "requirements": [
+    "habitipy==0.2.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,9 +1,4 @@
-"""
-Support for Recollect Waste curbside collection pickup.
-
-For more details about this platform, please refer to the documentation at
-https://www.home-assistant.io/components/sensor.recollect_waste/
-"""
+"""Support for Recollect Waste curbside collection pickup."""
 import logging
 
 import voluptuous as vol
@@ -12,8 +7,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME)
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['recollect-waste==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 ATTR_PICKUP_TYPES = 'pickup_types'

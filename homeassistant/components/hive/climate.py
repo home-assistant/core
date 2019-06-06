@@ -8,8 +8,6 @@ from homeassistant.const import (
 
 from . import DATA_HIVE, DOMAIN
 
-DEPENDENCIES = ['hive']
-
 HIVE_TO_HASS_STATE = {
     'SCHEDULE': STATE_AUTO,
     'MANUAL': STATE_HEAT,

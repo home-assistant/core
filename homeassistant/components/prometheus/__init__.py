@@ -14,15 +14,11 @@ from homeassistant.helpers import entityfilter, state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.temperature import fahrenheit_to_celsius
 
-REQUIREMENTS = ['prometheus_client==0.2.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 API_ENDPOINT = '/api/prometheus'
 
 DOMAIN = 'prometheus'
-DEPENDENCIES = ['http']
-
 CONF_FILTER = 'filter'
 CONF_PROM_NAMESPACE = 'namespace'
 

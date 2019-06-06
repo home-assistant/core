@@ -13,6 +13,7 @@ _LOGGER = logging.getLogger('.')
 DOMAIN = 'hangouts'
 
 CONF_2FA = '2fa'
+CONF_AUTH_CODE = 'authorization_code'
 CONF_REFRESH_TOKEN = 'refresh_token'
 CONF_BOT = 'bot'
 

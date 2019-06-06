@@ -1,9 +1,4 @@
-"""
-Support for the Lyft API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.lyft/
-"""
+"""Support for the Lyft API."""
 import logging
 from datetime import timedelta
 
@@ -13,8 +8,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['lyft_rides==0.2']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,0 +1,10 @@
+{
+  "domain": "heatmiser",
+  "name": "Heatmiser",
+  "documentation": "https://www.home-assistant.io/components/heatmiser",
+  "requirements": [
+    "heatmiserV3==0.9.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

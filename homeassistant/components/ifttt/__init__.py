@@ -8,9 +8,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pyfttt==0.3']
-DEPENDENCIES = ['webhook']
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,8 +21,6 @@ ATTR_VALUE2 = 'value2'
 ATTR_VALUE3 = 'value3'
 
 CONF_KEY = 'key'
-
-DOMAIN = 'ifttt'
 
 SERVICE_TRIGGER = 'trigger'
 
@@ -108,11 +104,6 @@ async def async_unload_entry(hass, entry):
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
     return True
 
-config_entry_flow.register_webhook_flow(
-    DOMAIN,
-    'IFTTT Webhook',
-    {
-        'applet_url': 'https://ifttt.com/maker_webhooks',
-        'docs_url': 'https://www.home-assistant.io/components/ifttt/'
-    }
-)
+
+# pylint: disable=invalid-name
+async_remove_entry = config_entry_flow.webhook_async_remove_entry

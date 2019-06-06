@@ -1,9 +1,4 @@
-"""
-Support for the NOAA Tides and Currents API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.noaa_tides/
-"""
+"""Support for the NOAA Tides and Currents API."""
 from datetime import datetime, timedelta
 import logging
 
@@ -14,8 +9,6 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_NAME, CONF_TIME_ZONE, CONF_UNIT_SYSTEM)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['py_noaa==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 

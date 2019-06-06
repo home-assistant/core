@@ -1,9 +1,4 @@
-"""
-Switch logic for loading/unloading pulseaudio loopback modules.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.pulseaudio_loopback/
-"""
+"""Switch logic for loading/unloading pulseaudio loopback modules."""
 import logging
 import re
 import socket

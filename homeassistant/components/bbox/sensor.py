@@ -1,9 +1,4 @@
-"""
-Support for Bbox Bouygues Modem Router.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.bbox/
-"""
+"""Support for Bbox Bouygues Modem Router."""
 import logging
 from datetime import timedelta
 
@@ -16,8 +11,6 @@ from homeassistant.const import (
     CONF_NAME, CONF_MONITORED_VARIABLES, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['pybbox==0.0.5-alpha']
 
 _LOGGER = logging.getLogger(__name__)
 

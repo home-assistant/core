@@ -12,8 +12,6 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-REQUIREMENTS = ['iperf3==0.1.10']
-
 DOMAIN = 'iperf3'
 DATA_UPDATED = '{}_data_updated'.format(DOMAIN)
 

@@ -15,8 +15,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyotgw==0.4b3']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'opentherm_gw'

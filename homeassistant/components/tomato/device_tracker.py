@@ -1,9 +1,4 @@
-"""
-Support for Tomato routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.tomato/
-"""
+"""Support for Tomato routers."""
 import json
 import logging
 import re

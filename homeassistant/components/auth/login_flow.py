@@ -97,8 +97,7 @@ class AuthProvidersView(HomeAssistantView):
     async def get(self, request):
         """Get available auth providers."""
         hass = request.app['hass']
-
-        if not hass.components.onboarding.async_is_onboarded():
+        if not hass.components.onboarding.async_is_user_onboarded():
             return self.json_message(
                 message='Onboarding not finished',
                 status_code=400,

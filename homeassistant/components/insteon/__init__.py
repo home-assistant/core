@@ -13,8 +13,6 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['insteonplm==0.15.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'insteon'

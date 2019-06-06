@@ -1,9 +1,4 @@
-"""
-Support for exposing Concord232 elements as sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.concord232/
-"""
+"""Support for exposing Concord232 elements as sensors."""
 import datetime
 import logging
 
@@ -14,8 +9,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA, DEVICE_CLASSES)
 from homeassistant.const import (CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['concord232==0.15']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +72,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
             )
 
-        add_entities(sensors, True)
+    add_entities(sensors, True)
 
 
 def get_opening_type(zone):

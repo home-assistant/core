@@ -1,9 +1,4 @@
-"""
-Support for EE Brightbox router.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.ee_brightbox/
-"""
+"""Support for EE Brightbox router."""
 import logging
 
 import voluptuous as vol
@@ -12,8 +7,6 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['eebrightbox==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 

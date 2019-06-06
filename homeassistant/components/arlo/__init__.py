@@ -11,8 +11,6 @@ from homeassistant.const import (
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.dispatcher import dispatcher_send
 
-REQUIREMENTS = ['pyarlo==0.2.3']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by arlo.netgear.com"

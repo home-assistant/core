@@ -3,8 +3,6 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import DOMAIN as ZONEMINDER_DOMAIN
 
-DEPENDENCIES = ['zoneminder']
-
 
 async def async_setup_platform(
         hass, config, add_entities, discovery_info=None):

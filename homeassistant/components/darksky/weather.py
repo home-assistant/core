@@ -16,8 +16,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.util.pressure import convert as convert_pressure
-REQUIREMENTS = ['python-forecastio==1.4.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Powered by Dark Sky"
@@ -105,6 +103,8 @@ class DarkSkyWeather(WeatherEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
+        if self._dark_sky.units is None:
+            return None
         return TEMP_FAHRENHEIT if 'us' in self._dark_sky.units \
             else TEMP_CELSIUS
 

@@ -56,7 +56,7 @@ async def test_if_not_fires_using_wrong_at(hass, calls):
 
     This should break the before rule.
     """
-    with assert_setup_component(0):
+    with assert_setup_component(0, automation.DOMAIN):
         assert await async_setup_component(hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {

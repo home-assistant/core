@@ -1,9 +1,4 @@
-"""
-Support for IP Cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.mjpeg/
-"""
+"""Support for IP Cameras."""
 import asyncio
 import logging
 from contextlib import closing
@@ -117,7 +112,7 @@ class MjpegCamera(Camera):
             verify_ssl=self._verify_ssl
         )
         try:
-            with async_timeout.timeout(10, loop=self.hass.loop):
+            with async_timeout.timeout(10):
                 response = await websession.get(
                     self._still_image_url, auth=self._auth)
 

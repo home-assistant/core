@@ -81,6 +81,14 @@ class HassIO:
         return self.send_command(
             "/addons/{}/info".format(addon), method="get")
 
+    @_api_data
+    def get_ingress_panels(self):
+        """Return data for Add-on ingress panels.
+
+        This method return a coroutine.
+        """
+        return self.send_command("/ingress/panels", method="get")
+
     @_api_bool
     def restart_homeassistant(self):
         """Restart Home-Assistant container.
@@ -148,7 +156,7 @@ class HassIO:
         This method is a coroutine.
         """
         try:
-            with async_timeout.timeout(timeout, loop=self.loop):
+            with async_timeout.timeout(timeout):
                 request = await self.websession.request(
                     method, "http://{}{}".format(self._ip, command),
                     json=payload, headers={

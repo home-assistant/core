@@ -1,0 +1,10 @@
+{
+  "domain": "mitemp_bt",
+  "name": "Mitemp bt",
+  "documentation": "https://www.home-assistant.io/components/mitemp_bt",
+  "requirements": [
+    "mitemp_bt==0.0.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

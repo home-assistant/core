@@ -1,9 +1,4 @@
-"""
-Support for monitoring emoncms feeds.
-
-For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/sensor.emoncms/
-"""
+"""Support for monitoring emoncms feeds."""
 from datetime import timedelta
 import logging
 

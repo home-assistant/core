@@ -1,9 +1,4 @@
-"""
-Support for Sonarr.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.sonarr/
-"""
+"""Support for Sonarr."""
 import logging
 import time
 from datetime import datetime

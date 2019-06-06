@@ -1,0 +1,10 @@
+{
+  "domain": "deluge",
+  "name": "Deluge",
+  "documentation": "https://www.home-assistant.io/components/deluge",
+  "requirements": [
+    "deluge-client==1.4.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

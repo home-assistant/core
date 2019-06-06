@@ -1,0 +1,12 @@
+{
+  "domain": "auth",
+  "name": "Auth",
+  "documentation": "https://www.home-assistant.io/components/auth",
+  "requirements": [],
+  "dependencies": [
+    "http"
+  ],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

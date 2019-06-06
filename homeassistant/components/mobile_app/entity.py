@@ -6,11 +6,16 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import (ATTR_DEVICE_ID, ATTR_DEVICE_NAME, ATTR_MANUFACTURER,
-                    ATTR_MODEL, ATTR_OS_VERSION, ATTR_SENSOR_ATTRIBUTES,
+from .const import (ATTR_SENSOR_ATTRIBUTES,
                     ATTR_SENSOR_DEVICE_CLASS, ATTR_SENSOR_ICON,
                     ATTR_SENSOR_NAME, ATTR_SENSOR_TYPE, ATTR_SENSOR_UNIQUE_ID,
                     DOMAIN, SIGNAL_SENSOR_UPDATE)
+from .helpers import device_info
+
+
+def sensor_id(webhook_id, unique_id):
+    """Return a unique sensor ID."""
+    return "{}_{}".format(webhook_id, unique_id)
 
 
 class MobileAppEntity(Entity):
@@ -22,8 +27,8 @@ class MobileAppEntity(Entity):
         self._device = device
         self._entry = entry
         self._registration = entry.data
-        self._sensor_id = "{}_{}".format(self._registration[CONF_WEBHOOK_ID],
-                                         config[ATTR_SENSOR_UNIQUE_ID])
+        self._sensor_id = sensor_id(self._registration[CONF_WEBHOOK_ID],
+                                    config[ATTR_SENSOR_UNIQUE_ID])
         self._entity_type = config[ATTR_SENSOR_TYPE]
         self.unsub_dispatcher = None
 
@@ -71,17 +76,7 @@ class MobileAppEntity(Entity):
     @property
     def device_info(self):
         """Return device registry information for this entity."""
-        return {
-            'identifiers': {
-                (ATTR_DEVICE_ID, self._registration[ATTR_DEVICE_ID]),
-                (CONF_WEBHOOK_ID, self._registration[CONF_WEBHOOK_ID])
-            },
-            'manufacturer': self._registration[ATTR_MANUFACTURER],
-            'model': self._registration[ATTR_MODEL],
-            'device_name': self._registration[ATTR_DEVICE_NAME],
-            'sw_version': self._registration[ATTR_OS_VERSION],
-            'config_entries': self._device.config_entries
-        }
+        return device_info(self._registration)
 
     async def async_update(self):
         """Get the latest state of the sensor."""
@@ -94,5 +89,10 @@ class MobileAppEntity(Entity):
     @callback
     def _handle_update(self, data):
         """Handle async event updates."""
+        incoming_id = sensor_id(data[CONF_WEBHOOK_ID],
+                                data[ATTR_SENSOR_UNIQUE_ID])
+        if incoming_id != self._sensor_id:
+            return
+
         self._config = data
         self.async_schedule_update_ha_state()

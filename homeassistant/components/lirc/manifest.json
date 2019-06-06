@@ -1,0 +1,10 @@
+{
+  "domain": "lirc",
+  "name": "Lirc",
+  "documentation": "https://www.home-assistant.io/components/lirc",
+  "requirements": [
+    "python-lirc==1.2.3"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,9 +1,4 @@
-"""
-Support for Netgear routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.netgear/
-"""
+"""Support for Netgear routers."""
 import logging
 
 import voluptuous as vol
@@ -14,8 +9,6 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT, CONF_SSL,
     CONF_DEVICES, CONF_EXCLUDE)
-
-REQUIREMENTS = ['pynetgear==0.5.2']
 
 _LOGGER = logging.getLogger(__name__)
 

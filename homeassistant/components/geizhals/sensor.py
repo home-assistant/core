@@ -1,9 +1,4 @@
-"""
-Parse prices of a device from geizhals.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.geizhals/
-"""
+"""Parse prices of a device from geizhals."""
 import logging
 from datetime import timedelta
 
@@ -14,8 +9,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_NAME
-
-REQUIREMENTS = ['geizhals==0.0.9']
 
 _LOGGER = logging.getLogger(__name__)
 

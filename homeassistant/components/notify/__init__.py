@@ -1,9 +1,4 @@
-"""
-Provides functionality to notify people.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/notify/
-"""
+"""Provides functionality to notify people."""
 import asyncio
 import logging
 from functools import partial
@@ -144,7 +139,7 @@ async def async_setup(hass, config):
                    in config_per_platform(config, DOMAIN)]
 
     if setup_tasks:
-        await asyncio.wait(setup_tasks, loop=hass.loop)
+        await asyncio.wait(setup_tasks)
 
     async def async_platform_discovered(platform, info):
         """Handle for discovered platform."""

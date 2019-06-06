@@ -12,8 +12,6 @@ from . import (
     DEFAULT_WATERING_TIME, DEVICE_MAP, DEVICE_MAP_INDEX, SWITCHES,
     HydrawiseEntity)
 
-DEPENDENCIES = ['hydrawise']
-
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

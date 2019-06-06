@@ -18,8 +18,6 @@ from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['motorparts==1.1.0']
-
 DOMAIN = 'mopar'
 DATA_UPDATED = '{}_data_updated'.format(DOMAIN)
 
@@ -53,12 +51,13 @@ def setup(hass, config):
     """Set up the Mopar component."""
     import motorparts
 
+    conf = config[DOMAIN]
     cookie = hass.config.path(COOKIE_FILE)
     try:
         session = motorparts.get_session(
-            config[CONF_USERNAME],
-            config[CONF_PASSWORD],
-            config[CONF_PIN],
+            conf[CONF_USERNAME],
+            conf[CONF_PASSWORD],
+            conf[CONF_PIN],
             cookie_path=cookie
         )
     except motorparts.MoparError:
@@ -69,7 +68,7 @@ def setup(hass, config):
     data.update(now=None)
 
     track_time_interval(
-        hass, data.update, config[CONF_SCAN_INTERVAL]
+        hass, data.update, conf[CONF_SCAN_INTERVAL]
     )
 
     def handle_horn(call):

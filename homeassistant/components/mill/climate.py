@@ -1,9 +1,4 @@
-"""
-Support for mill wifi-enabled home heaters.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.mill/
-"""
+"""Support for mill wifi-enabled home heaters."""
 
 import logging
 
@@ -19,8 +14,6 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF, TEMP_CELSIUS)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-REQUIREMENTS = ['millheater==0.3.4']
 
 _LOGGER = logging.getLogger(__name__)
 

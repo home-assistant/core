@@ -1,9 +1,4 @@
-"""
-Support for French FAI Bouygues Bbox routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.bbox/
-"""
+"""Support for French FAI Bouygues Bbox routers."""
 from collections import namedtuple
 from datetime import timedelta
 import logging
@@ -16,8 +11,6 @@ from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
-
-REQUIREMENTS = ['pybbox==0.0.5-alpha']
 
 _LOGGER = logging.getLogger(__name__)
 

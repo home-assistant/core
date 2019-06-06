@@ -1,9 +1,4 @@
-"""
-Support for Taps Affs.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.tapsaff/
-"""
+"""Support for Taps Affs."""
 from datetime import timedelta
 import logging
 
@@ -13,8 +8,6 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA, BinarySensorDevice)
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['tapsaff==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 

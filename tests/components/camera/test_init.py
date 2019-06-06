@@ -157,7 +157,7 @@ def test_snapshot_service(hass, mock_camera):
 
 async def test_websocket_camera_thumbnail(hass, hass_ws_client, mock_camera):
     """Test camera_thumbnail websocket command."""
-    await async_setup_component(hass, 'camera')
+    await async_setup_component(hass, 'camera', {})
 
     client = await hass_ws_client(hass)
     await client.send_json({
@@ -179,7 +179,7 @@ async def test_websocket_camera_thumbnail(hass, hass_ws_client, mock_camera):
 async def test_websocket_stream_no_source(hass, hass_ws_client,
                                           mock_camera, mock_stream):
     """Test camera/stream websocket command."""
-    await async_setup_component(hass, 'camera')
+    await async_setup_component(hass, 'camera', {})
 
     with patch('homeassistant.components.camera.request_stream',
                return_value='http://home.assistant/playlist.m3u8') \
@@ -203,14 +203,13 @@ async def test_websocket_stream_no_source(hass, hass_ws_client,
 async def test_websocket_camera_stream(hass, hass_ws_client,
                                        mock_camera, mock_stream):
     """Test camera/stream websocket command."""
-    await async_setup_component(hass, 'camera')
+    await async_setup_component(hass, 'camera', {})
 
     with patch('homeassistant.components.camera.request_stream',
                return_value='http://home.assistant/playlist.m3u8'
                ) as mock_request_stream, \
         patch('homeassistant.components.demo.camera.DemoCamera.stream_source',
-              new_callable=PropertyMock) as mock_stream_source:
-        mock_stream_source.return_value = io.BytesIO()
+              return_value=mock_coro('http://example.com')):
         # Request playlist through WebSocket
         client = await hass_ws_client(hass)
         await client.send_json({
@@ -231,7 +230,7 @@ async def test_websocket_camera_stream(hass, hass_ws_client,
 async def test_websocket_get_prefs(hass, hass_ws_client,
                                    mock_camera):
     """Test get camera preferences websocket command."""
-    await async_setup_component(hass, 'camera')
+    await async_setup_component(hass, 'camera', {})
 
     # Request preferences through websocket
     client = await hass_ws_client(hass)
@@ -249,7 +248,7 @@ async def test_websocket_get_prefs(hass, hass_ws_client,
 async def test_websocket_update_prefs(hass, hass_ws_client,
                                       mock_camera, setup_camera_prefs):
     """Test updating preference."""
-    await async_setup_component(hass, 'camera')
+    await async_setup_component(hass, 'camera', {})
     assert setup_camera_prefs[PREF_PRELOAD_STREAM]
     client = await hass_ws_client(hass)
     await client.send_json({
@@ -281,7 +280,7 @@ async def test_play_stream_service_no_source(hass, mock_camera, mock_stream):
 
 async def test_handle_play_stream_service(hass, mock_camera, mock_stream):
     """Test camera play_stream service."""
-    await async_setup_component(hass, 'media_player')
+    await async_setup_component(hass, 'media_player', {})
     data = {
         ATTR_ENTITY_ID: 'camera.demo_camera',
         camera.ATTR_MEDIA_PLAYER: 'media_player.test'
@@ -289,8 +288,7 @@ async def test_handle_play_stream_service(hass, mock_camera, mock_stream):
     with patch('homeassistant.components.camera.request_stream'
                ) as mock_request_stream, \
         patch('homeassistant.components.demo.camera.DemoCamera.stream_source',
-              new_callable=PropertyMock) as mock_stream_source:
-        mock_stream_source.return_value = io.BytesIO()
+              return_value=mock_coro('http://example.com')):
         # Call service
         await hass.services.async_call(
             camera.DOMAIN, camera.SERVICE_PLAY_STREAM, data, blocking=True)
@@ -331,8 +329,7 @@ async def test_preload_stream(hass, mock_stream):
         patch('homeassistant.components.camera.prefs.CameraPreferences.get',
               return_value=demo_prefs), \
         patch('homeassistant.components.demo.camera.DemoCamera.stream_source',
-              new_callable=PropertyMock) as mock_stream_source:
-        mock_stream_source.return_value = io.BytesIO()
+              return_value=mock_coro("http://example.com")):
         await async_setup_component(hass, 'camera', {
             DOMAIN: {
                 'platform': 'demo'
@@ -364,12 +361,11 @@ async def test_record_service(hass, mock_camera, mock_stream):
     }
 
     with patch('homeassistant.components.demo.camera.DemoCamera.stream_source',
-               new_callable=PropertyMock) as mock_stream_source, \
+               return_value=mock_coro("http://example.com")), \
             patch(
                 'homeassistant.components.stream.async_handle_record_service',
                 return_value=mock_coro()) as mock_record_service, \
             patch.object(hass.config, 'is_allowed_path', return_value=True):
-        mock_stream_source.return_value = io.BytesIO()
         # Call service
         await hass.services.async_call(
             camera.DOMAIN, camera.SERVICE_RECORD, data, blocking=True)

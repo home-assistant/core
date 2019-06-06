@@ -1,9 +1,4 @@
-"""
-Support for HUAWEI routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.huawei_router/
-"""
+"""Support for HUAWEI routers."""
 import base64
 import logging
 import re

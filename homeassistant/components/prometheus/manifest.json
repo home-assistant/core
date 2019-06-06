@@ -1,0 +1,12 @@
+{
+  "domain": "prometheus",
+  "name": "Prometheus",
+  "documentation": "https://www.home-assistant.io/components/prometheus",
+  "requirements": [
+    "prometheus_client==0.2.0"
+  ],
+  "dependencies": [
+    "http"
+  ],
+  "codeowners": []
+}

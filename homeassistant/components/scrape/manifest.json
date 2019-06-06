@@ -1,0 +1,12 @@
+{
+  "domain": "scrape",
+  "name": "Scrape",
+  "documentation": "https://www.home-assistant.io/components/scrape",
+  "requirements": [
+    "beautifulsoup4==4.7.1"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

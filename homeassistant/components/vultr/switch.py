@@ -1,9 +1,4 @@
-"""
-Support for interacting with Vultr subscriptions.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.vultr/
-"""
+"""Support for interacting with Vultr subscriptions."""
 import logging
 
 import voluptuous as vol
@@ -21,8 +16,6 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Vultr {}'
-DEPENDENCIES = ['vultr']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SUBSCRIPTION): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

@@ -1,9 +1,4 @@
-"""
-Support for getting data from websites with scraping.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.scrape/
-"""
+"""Support for getting data from websites with scraping."""
 import logging
 
 import voluptuous as vol
@@ -19,8 +14,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['beautifulsoup4==4.7.1']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,9 +1,4 @@
-"""
-This component provides support to the Ring Door Bell camera.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.ring/
-"""
+"""This component provides support to the Ring Door Bell camera."""
 import asyncio
 from datetime import timedelta
 import logging
@@ -20,8 +15,6 @@ from homeassistant.util import dt as dt_util
 from . import ATTRIBUTION, DATA_RING, NOTIFICATION_ID
 
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
-
-DEPENDENCIES = ['ring', 'ffmpeg']
 
 FORCE_REFRESH_INTERVAL = timedelta(minutes=45)
 
@@ -123,7 +116,7 @@ class RingCam(Camera):
 
         image = await asyncio.shield(ffmpeg.get_image(
             self._video_url, output_format=IMAGE_JPEG,
-            extra_cmd=self._ffmpeg_arguments), loop=self.hass.loop)
+            extra_cmd=self._ffmpeg_arguments))
         return image
 
     async def handle_async_mjpeg_stream(self, request):

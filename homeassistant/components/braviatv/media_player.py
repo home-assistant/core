@@ -1,9 +1,4 @@
-"""
-Support for interface with a Sony Bravia TV.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.braviatv/
-"""
+"""Support for interface with a Sony Bravia TV."""
 import logging
 import re
 
@@ -19,8 +14,6 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
-
-REQUIREMENTS = ['braviarc-homeassistant==0.3.7.dev0']
 
 BRAVIA_CONFIG_FILE = 'bravia.conf'
 

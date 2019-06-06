@@ -1,9 +1,4 @@
-"""
-Component to make instant statistics about your history.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.history_stats/
-"""
+"""Component to make instant statistics about your history."""
 import datetime
 import logging
 import math
@@ -25,8 +20,6 @@ from homeassistant.helpers.event import async_track_state_change
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'history_stats'
-DEPENDENCIES = ['history']
-
 CONF_START = 'start'
 CONF_END = 'end'
 CONF_DURATION = 'duration'

@@ -1,9 +1,4 @@
-"""
-Platform for the opengarage.io cover component.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/cover.opengarage/
-"""
+"""Platform for the opengarage.io cover component."""
 import logging
 
 import requests

@@ -1,9 +1,4 @@
-"""
-Support for Blinkt! lights on Raspberry Pi.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.blinkt/
-"""
+"""Support for Blinkt! lights on Raspberry Pi."""
 import importlib
 import logging
 
@@ -15,8 +10,6 @@ from homeassistant.components.light import (
     Light, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_NAME
 import homeassistant.util.color as color_util
-
-REQUIREMENTS = ['blinkt==0.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 

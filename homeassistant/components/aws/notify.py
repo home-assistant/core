@@ -21,8 +21,6 @@ from .const import (
     DATA_SESSIONS,
 )
 
-DEPENDENCIES = ["aws"]
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -96,10 +94,10 @@ async def async_get_service(hass, config, discovery_info=None):
     if session is None:
         profile = aws_config.get(CONF_PROFILE_NAME)
         if profile is not None:
-            session = aiobotocore.AioSession(profile=profile, loop=hass.loop)
+            session = aiobotocore.AioSession(profile=profile)
             del aws_config[CONF_PROFILE_NAME]
         else:
-            session = aiobotocore.AioSession(loop=hass.loop)
+            session = aiobotocore.AioSession()
 
     aws_config[CONF_REGION] = region_name
 

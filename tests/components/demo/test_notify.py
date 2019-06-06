@@ -42,9 +42,10 @@ class TestNotifyDemo(unittest.TestCase):
         self.hass.stop()
 
     def _setup_notify(self):
-        with assert_setup_component(1) as config:
+        with assert_setup_component(1, notify.DOMAIN) as config:
             assert setup_component(self.hass, notify.DOMAIN, CONFIG)
         assert config[notify.DOMAIN]
+        self.hass.block_till_done()
 
     def test_setup(self):
         """Test setup."""
@@ -73,7 +74,7 @@ class TestNotifyDemo(unittest.TestCase):
         self.hass.block_till_done()
         assert notify.DOMAIN in self.hass.config.components
         assert mock_demo_get_service.called
-        assert mock_demo_get_service.call_args[0] == (
+        assert mock_demo_get_service.mock_calls[0][1] == (
             self.hass, {}, {'test_key': 'test_val'})
 
     @callback

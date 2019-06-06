@@ -1,19 +1,13 @@
-"""
-Support for OpenWRT (luci) routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.luci/
-"""
+"""Support for OpenWRT (luci) routers."""
 import logging
+
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import (
-    CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_SSL)
-
-REQUIREMENTS = ['openwrt-luci-rpc==1.0.5']
+    CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_USERNAME)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +17,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
 })
 
 
@@ -41,10 +35,9 @@ class LuciDeviceScanner(DeviceScanner):
         """Initialize the scanner."""
         from openwrt_luci_rpc import OpenWrtRpc
 
-        self.router = OpenWrtRpc(config[CONF_HOST],
-                                 config[CONF_USERNAME],
-                                 config[CONF_PASSWORD],
-                                 config[CONF_SSL])
+        self.router = OpenWrtRpc(
+            config[CONF_HOST], config[CONF_USERNAME], config[CONF_PASSWORD],
+            config[CONF_SSL])
 
         self.last_results = {}
         self.success_init = self.router.is_logged_in()
@@ -67,9 +60,9 @@ class LuciDeviceScanner(DeviceScanner):
         Get extra attributes of a device.
 
         Some known extra attributes that may be returned in the device tuple
-        include Mac Address (mac), Network Device (dev), Ip Address
-        (ip), reachable status (reachable), Associated router
-        (host), Hostname if known (hostname) among others.
+        include MAC address (mac), network device (dev), IP address
+        (ip), reachable status (reachable), associated router
+        (host), hostname if known (hostname) among others.
         """
         device = next((
             result for result in self.last_results
@@ -81,8 +74,7 @@ class LuciDeviceScanner(DeviceScanner):
         result = self.router.get_all_connected_devices(
             only_reachable=True)
 
-        _LOGGER.debug("Luci get_all_connected_devices returned:"
-                      " %s", result)
+        _LOGGER.debug("Luci get_all_connected_devices returned: %s", result)
 
         last_results = []
         for device in result:

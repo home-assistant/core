@@ -80,7 +80,7 @@ async def async_aiohttp_proxy_web(
         timeout: int = 10) -> Optional[web.StreamResponse]:
     """Stream websession request to aiohttp web response."""
     try:
-        with async_timeout.timeout(timeout, loop=hass.loop):
+        with async_timeout.timeout(timeout):
             req = await web_coro
 
     except asyncio.CancelledError:
@@ -120,7 +120,7 @@ async def async_aiohttp_proxy_stream(hass: HomeAssistantType,
 
     try:
         while True:
-            with async_timeout.timeout(timeout, loop=hass.loop):
+            with async_timeout.timeout(timeout):
                 data = await stream.read(buffer_size)
 
             if not data:
@@ -168,7 +168,10 @@ def _async_get_connector(hass: HomeAssistantType,
     else:
         ssl_context = False
 
-    connector = aiohttp.TCPConnector(loop=hass.loop, ssl=ssl_context)
+    connector = aiohttp.TCPConnector(loop=hass.loop,
+                                     enable_cleanup_closed=True,
+                                     ssl=ssl_context,
+                                     )
     hass.data[key] = connector
 
     async def _async_close_connector(event: Event) -> None:

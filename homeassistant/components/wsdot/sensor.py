@@ -1,9 +1,4 @@
-"""
-Support for Washington State Department of Transportation (WSDOT) data.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.wsdot/
-"""
+"""Support for Washington State Department of Transportation (WSDOT) data."""
 import logging
 import re
 from datetime import datetime, timezone, timedelta

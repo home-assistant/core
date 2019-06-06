@@ -8,8 +8,6 @@ from homeassistant.components.fan import (
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
-DEPENDENCIES = ['smartthings']
-
 VALUE_TO_SPEED = {
     0: SPEED_OFF,
     1: SPEED_LOW,

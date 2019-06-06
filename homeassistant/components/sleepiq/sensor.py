@@ -1,12 +1,6 @@
-"""
-Support for SleepIQ sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sleepiq/
-"""
+"""Support for SleepIQ sensors."""
 from homeassistant.components import sleepiq
 
-DEPENDENCIES = ['sleepiq']
 ICON = 'mdi:hotel'
 
 

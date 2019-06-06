@@ -1,9 +1,4 @@
-"""
-Support for Ubiquiti mFi switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.mfi/
-"""
+"""Support for Ubiquiti mFi switches."""
 import logging
 
 import requests
@@ -14,8 +9,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_PASSWORD, CONF_USERNAME, CONF_SSL,
     CONF_VERIFY_SSL)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['mficlient==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -18,8 +18,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['distro==1.4.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_RELEASE_NOTES = 'release_notes'
@@ -138,7 +136,7 @@ async def get_newest_version(hass, huuid, include_components):
 
     session = async_get_clientsession(hass)
     try:
-        with async_timeout.timeout(5, loop=hass.loop):
+        with async_timeout.timeout(5):
             req = await session.post(UPDATER_URL, json=info_object)
         _LOGGER.info(("Submitted analytics to Home Assistant servers. "
                       "Information submitted includes %s"), info_object)

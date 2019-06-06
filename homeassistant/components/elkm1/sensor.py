@@ -1,8 +1,6 @@
 """Support for control of ElkM1 sensors."""
 from . import DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities
 
-DEPENDENCIES = [ELK_DOMAIN]
-
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):

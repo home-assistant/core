@@ -13,7 +13,8 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up the Daikin sensors.
 
     Can only be called when a user accidentally mentions the platform in their
@@ -25,9 +26,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Daikin climate based on config_entry."""
     daikin_api = hass.data[DAIKIN_DOMAIN].get(entry.entry_id)
+    sensors = [ATTR_INSIDE_TEMPERATURE]
+    if daikin_api.device.support_outside_temperature:
+        sensors.append(ATTR_OUTSIDE_TEMPERATURE)
     async_add_entities([
         DaikinClimateSensor(daikin_api, sensor, hass.config.units)
-        for sensor in SENSOR_TYPES
+        for sensor in sensors
     ])
 
 

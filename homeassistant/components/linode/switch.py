@@ -13,8 +13,6 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['linode']
-
 DEFAULT_NAME = 'Node'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

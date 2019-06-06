@@ -5,8 +5,6 @@ from homeassistant.components.switch import SwitchDevice
 
 from . import DATA_FREEBOX
 
-DEPENDENCIES = ['freebox']
-
 _LOGGER = logging.getLogger(__name__)
 
 

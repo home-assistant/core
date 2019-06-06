@@ -6,8 +6,6 @@ from homeassistant.const import LENGTH_KILOMETERS
 
 from . import DOMAIN as BMW_DOMAIN
 
-DEPENDENCIES = ['bmw_connected_drive']
-
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {

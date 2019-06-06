@@ -5,7 +5,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import CoreState, EventOrigin
 
-LOGGER = logging.getLogger('.')
+LOGGER = logging.getLogger(__package__)
 
 EVENT_ROKU_COMMAND = 'roku_command'
 

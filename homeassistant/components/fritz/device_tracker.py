@@ -1,9 +1,4 @@
-"""
-Support for FRITZ!Box routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.fritz/
-"""
+"""Support for FRITZ!Box routers."""
 import logging
 
 import voluptuous as vol
@@ -12,8 +7,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-
-REQUIREMENTS = ['fritzconnection==0.6.5']
 
 _LOGGER = logging.getLogger(__name__)
 

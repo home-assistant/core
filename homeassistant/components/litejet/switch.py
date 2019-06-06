@@ -1,15 +1,8 @@
-"""
-Support for LiteJet switch.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.litejet/
-"""
+"""Support for LiteJet switch."""
 import logging
 
 from homeassistant.components import litejet
 from homeassistant.components.switch import SwitchDevice
-
-DEPENDENCIES = ['litejet']
 
 ATTR_NUMBER = 'number'
 

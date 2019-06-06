@@ -1,9 +1,4 @@
-"""
-Support for Buienradar.nl weather service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.buienradar/
-"""
+"""Support for Buienradar.nl weather service."""
 import asyncio
 from datetime import datetime, timedelta
 import logging
@@ -21,8 +16,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
-
-REQUIREMENTS = ['buienradar==0.91']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -395,7 +388,7 @@ class BrData:
                     tasks.append(dev.async_update_ha_state())
 
             if tasks:
-                await asyncio.wait(tasks, loop=self.hass.loop)
+                await asyncio.wait(tasks)
 
     async def schedule_update(self, minute=1):
         """Schedule an update after minute minutes."""
@@ -414,7 +407,7 @@ class BrData:
         resp = None
         try:
             websession = async_get_clientsession(self.hass)
-            with async_timeout.timeout(10, loop=self.hass.loop):
+            with async_timeout.timeout(10):
                 resp = await websession.get(url)
 
                 result[STATUS_CODE] = resp.status

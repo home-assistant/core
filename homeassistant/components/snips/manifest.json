@@ -1,0 +1,10 @@
+{
+  "domain": "snips",
+  "name": "Snips",
+  "documentation": "https://www.home-assistant.io/components/snips",
+  "requirements": [],
+  "dependencies": [
+    "mqtt"
+  ],
+  "codeowners": []
+}

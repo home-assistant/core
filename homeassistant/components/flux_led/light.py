@@ -1,9 +1,4 @@
-"""
-Support for Flux lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.flux_led/
-"""
+"""Support for Flux lights."""
 import logging
 import socket
 import random
@@ -19,8 +14,6 @@ from homeassistant.components.light import (
     SUPPORT_COLOR, SUPPORT_WHITE_VALUE, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
-
-REQUIREMENTS = ['flux_led==0.22']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -151,7 +144,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if ipaddr in light_ips:
             continue
         device['name'] = '{} {}'.format(device['id'], ipaddr)
-        device[ATTR_MODE] = MODE_RGBW
+        device[ATTR_MODE] = None
         device[CONF_PROTOCOL] = None
         device[CONF_CUSTOM_EFFECT] = None
         light = FluxLight(device)
@@ -258,16 +251,15 @@ class FluxLight(Light):
         for effect, code in EFFECT_MAP.items():
             if current_mode == code:
                 return effect
-
         return None
 
     async def async_turn_on(self, **kwargs):
         """Turn the specified or all lights on and wait for state."""
         await self.hass.async_add_executor_job(partial(self._turn_on,
                                                        **kwargs))
-        # The bulb needs a second to tell its new values,
-        # so we wait 2 seconds before updating
-        await sleep(2)
+        # The bulb needs a bit to tell its new values,
+        # so we wait 1 second before updating
+        await sleep(1)
 
     def _turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
@@ -278,55 +270,47 @@ class FluxLight(Light):
         effect = kwargs.get(ATTR_EFFECT)
         white = kwargs.get(ATTR_WHITE_VALUE)
 
-        # Show warning if effect set with rgb, brightness, or white level
-        if effect and (brightness or white or hs_color):
-            _LOGGER.warning("RGB, brightness and white level are ignored when"
-                            " an effect is specified for a flux bulb")
-
-        # Random color effect
-        if effect == EFFECT_RANDOM:
-            self._bulb.setRgb(random.randint(0, 255),
-                              random.randint(0, 255),
-                              random.randint(0, 255))
+        if all(item is None for item in [hs_color, brightness, effect, white]):
             return
-
-        if effect == EFFECT_CUSTOM:
-            if self._custom_effect:
-                self._bulb.setCustomPattern(
-                    self._custom_effect[CONF_COLORS],
-                    self._custom_effect[CONF_SPEED_PCT],
-                    self._custom_effect[CONF_TRANSITION])
-            return
-
-        # Effect selection
-        if effect in EFFECT_MAP:
-            self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
-            return
-
-        # Preserve current brightness on color/white level change
-        if brightness is None:
-            brightness = self.brightness
-
-        if hs_color:
-            self._color = (hs_color[0], hs_color[1], brightness / 255 * 100)
-        elif brightness and (hs_color is None) and self._mode != MODE_WHITE:
-            self._color = (self._color[0], self._color[1],
-                           brightness / 255 * 100)
 
         # handle W only mode (use brightness instead of white value)
         if self._mode == MODE_WHITE:
-            self._bulb.setRgbw(0, 0, 0, w=brightness)
-
+            if brightness is not None:
+                self._bulb.setWarmWhite255(brightness)
+            return
+        if effect is not None:
+            # Random color effect
+            if effect == EFFECT_RANDOM:
+                self._bulb.setRgb(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255))
+            elif effect == EFFECT_CUSTOM:
+                if self._custom_effect:
+                    self._bulb.setCustomPattern(
+                        self._custom_effect[CONF_COLORS],
+                        self._custom_effect[CONF_SPEED_PCT],
+                        self._custom_effect[CONF_TRANSITION])
+                # Effect selection
+            elif effect in EFFECT_MAP:
+                self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
+            return
+        # Preserve current brightness on color/white level change
+        if hs_color is not None:
+            if brightness is None:
+                brightness = self.brightness
+            color = (hs_color[0], hs_color[1], brightness / 255 * 100)
+        elif brightness is not None:
+            color = (self._color[0], self._color[1],
+                     brightness / 255 * 100)
         # handle RGBW mode
-        elif self._mode == MODE_RGBW:
+        if self._mode == MODE_RGBW:
             if white is None:
-                self._bulb.setRgbw(*color_util.color_hsv_to_RGB(*self._color))
+                self._bulb.setRgbw(*color_util.color_hsv_to_RGB(*color))
             else:
                 self._bulb.setRgbw(w=white)
         # handle RGB mode
         else:
-            self._bulb.setRgb(*color_util.color_hsv_to_RGB(*self._color))
-        return
+            self._bulb.setRgb(*color_util.color_hsv_to_RGB(*color))
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
@@ -338,10 +322,6 @@ class FluxLight(Light):
             try:
                 self._connect()
                 self._error_reported = False
-                if self._bulb.getRgb() != (0, 0, 0):
-                    color = self._bulb.getRgbw()
-                    self._color = color_util.color_RGB_to_hsv(*color[0:3])
-                    self._white_value = color[3]
             except socket.error:
                 self._disconnect()
                 if not self._error_reported:
@@ -350,7 +330,9 @@ class FluxLight(Light):
                     self._error_reported = True
                 return
         self._bulb.update_state(retry=2)
-        if self._bulb.getRgb() != (0, 0, 0):
+        if self._mode != MODE_WHITE and self._bulb.getRgb() != (0, 0, 0):
             color = self._bulb.getRgbw()
             self._color = color_util.color_RGB_to_hsv(*color[0:3])
             self._white_value = color[3]
+        elif self._mode == MODE_WHITE:
+            self._white_value = self._bulb.getRgbw()[3]

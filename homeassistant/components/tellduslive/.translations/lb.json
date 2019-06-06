@@ -5,7 +5,7 @@
             "already_setup": "TelldusLive ass scho konfigur\u00e9iert",
             "authorize_url_fail": "Onbekannte Feeler beim gener\u00e9ieren vun der Autorisatiouns URL.",
             "authorize_url_timeout": "Z\u00e4it Iwwerschreidung beim gener\u00e9ieren vun der Autorisatiouns URL.",
-            "unknown": "Onbekannten Fehler opgetrueden"
+            "unknown": "Onbekannten Feeler opgetrueden"
         },
         "error": {
             "auth_error": "Feeler bei der Authentifikatioun, prob\u00e9iert w.e.g. nach emol"

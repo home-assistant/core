@@ -1,9 +1,4 @@
-"""
-Support for manual alarms controllable via MQTT.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.manual_mqtt/
-"""
+"""Support for manual alarms controllable via MQTT."""
 import copy
 import datetime
 import logging
@@ -87,8 +82,6 @@ def _state_schema(state):
             cv.time_period, cv.positive_timedelta)
     return vol.Schema(schema)
 
-
-DEPENDENCIES = ['mqtt']
 
 PLATFORM_SCHEMA = vol.Schema(vol.All(mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PLATFORM): 'manual_mqtt',

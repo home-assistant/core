@@ -1,9 +1,4 @@
-"""
-Support for monitoring if a sensor value is below/above a threshold.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.threshold/
-"""
+"""Support for monitoring if a sensor value is below/above a threshold."""
 import logging
 
 import voluptuous as vol

@@ -18,8 +18,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['beacontools[scan]==1.2.3', 'construct==2.9.45']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BEACONS = 'beacons'

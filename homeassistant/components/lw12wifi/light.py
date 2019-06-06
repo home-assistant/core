@@ -1,9 +1,4 @@
-"""
-Support for Lagute LW-12 WiFi LED Controller.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.lw12wifi/
-"""
+"""Support for Lagute LW-12 WiFi LED Controller."""
 
 import logging
 
@@ -20,8 +15,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
-
-REQUIREMENTS = ['lw12==0.9.2']
 
 _LOGGER = logging.getLogger(__name__)
 

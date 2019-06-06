@@ -7,9 +7,13 @@ from jose import jwt
 from hass_nabucasa.auth import Unauthenticated, UnknownError
 from hass_nabucasa.const import STATE_CONNECTED
 
+from homeassistant.core import State
 from homeassistant.auth.providers import trusted_networks as tn_auth
 from homeassistant.components.cloud.const import (
-    PREF_ENABLE_GOOGLE, PREF_ENABLE_ALEXA, PREF_GOOGLE_ALLOW_UNLOCK, DOMAIN)
+    PREF_ENABLE_GOOGLE, PREF_ENABLE_ALEXA, PREF_GOOGLE_SECURE_DEVICES_PIN,
+    DOMAIN)
+from homeassistant.components.google_assistant.helpers import (
+    GoogleEntity, Config)
 
 from tests.common import mock_coro
 
@@ -31,7 +35,8 @@ def mock_cloud_login(hass, setup_api):
     """Mock cloud is logged in."""
     hass.data[DOMAIN].id_token = jwt.encode({
         'email': 'hello@home-assistant.io',
-        'custom:sub-exp': '2018-01-03'
+        'custom:sub-exp': '2018-01-03',
+        'cognito:username': 'abcdefghjkl',
     }, 'test')
 
 
@@ -335,7 +340,7 @@ async def test_websocket_status(hass, hass_ws_client, mock_cloud_fixture,
     client = await hass_ws_client(hass)
 
     with patch.dict(
-        'homeassistant.components.google_assistant.smart_home.'
+        'homeassistant.components.google_assistant.const.'
         'DOMAIN_TO_GOOGLE_TYPES', {'light': None}, clear=True
     ), patch.dict('homeassistant.components.alexa.smart_home.ENTITY_ADAPTERS',
                   {'switch': None}, clear=True):
@@ -348,7 +353,15 @@ async def test_websocket_status(hass, hass_ws_client, mock_cloud_fixture,
         'logged_in': True,
         'email': 'hello@home-assistant.io',
         'cloud': 'connected',
-        'prefs': mock_cloud_fixture,
+        'prefs': {
+            'alexa_enabled': True,
+            'cloud_user': None,
+            'cloudhooks': {},
+            'google_enabled': True,
+            'google_entity_configs': {},
+            'google_secure_devices_pin': None,
+            'remote_enabled': False,
+        },
         'alexa_entities': {
             'include_domains': [],
             'include_entities': ['light.kitchen', 'switch.ac'],
@@ -362,7 +375,6 @@ async def test_websocket_status(hass, hass_ws_client, mock_cloud_fixture,
             'exclude_domains': [],
             'exclude_entities': [],
         },
-        'google_domains': ['light'],
         'remote_domain': None,
         'remote_connected': False,
         'remote_certificate': None,
@@ -493,21 +505,21 @@ async def test_websocket_update_preferences(hass, hass_ws_client,
     """Test updating preference."""
     assert setup_api[PREF_ENABLE_GOOGLE]
     assert setup_api[PREF_ENABLE_ALEXA]
-    assert setup_api[PREF_GOOGLE_ALLOW_UNLOCK]
+    assert setup_api[PREF_GOOGLE_SECURE_DEVICES_PIN] is None
     client = await hass_ws_client(hass)
     await client.send_json({
         'id': 5,
         'type': 'cloud/update_prefs',
         'alexa_enabled': False,
         'google_enabled': False,
-        'google_allow_unlock': False,
+        'google_secure_devices_pin': '1234',
     })
     response = await client.receive_json()
 
     assert response['success']
     assert not setup_api[PREF_ENABLE_GOOGLE]
     assert not setup_api[PREF_ENABLE_ALEXA]
-    assert not setup_api[PREF_GOOGLE_ALLOW_UNLOCK]
+    assert setup_api[PREF_GOOGLE_SECURE_DEVICES_PIN] == '1234'
 
 
 async def test_enabling_webhook(hass, hass_ws_client, setup_api,
@@ -688,3 +700,52 @@ async def test_enabling_remote_trusted_networks_other(
     assert cloud.client.remote_autostart
 
     assert len(mock_connect.mock_calls) == 1
+
+
+async def test_list_google_entities(
+        hass, hass_ws_client, setup_api, mock_cloud_login):
+    """Test that we can list Google entities."""
+    client = await hass_ws_client(hass)
+    entity = GoogleEntity(hass, Config(lambda *_: False), State(
+        'light.kitchen', 'on'
+    ))
+    with patch('homeassistant.components.google_assistant.helpers'
+               '.async_get_entities', return_value=[entity]):
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/google_assistant/entities',
+        })
+        response = await client.receive_json()
+
+    assert response['success']
+    assert len(response['result']) == 1
+    assert response['result'][0] == {
+        'entity_id': 'light.kitchen',
+        'might_2fa': False,
+        'traits': ['action.devices.traits.OnOff'],
+    }
+
+
+async def test_update_google_entity(
+        hass, hass_ws_client, setup_api, mock_cloud_login):
+    """Test that we can update config of a Google entity."""
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        'id': 5,
+        'type': 'cloud/google_assistant/entities/update',
+        'entity_id': 'light.kitchen',
+        'should_expose': False,
+        'override_name': 'updated name',
+        'aliases': ['lefty', 'righty'],
+        'disable_2fa': False,
+    })
+    response = await client.receive_json()
+
+    assert response['success']
+    prefs = hass.data[DOMAIN].client.prefs
+    assert prefs.google_entity_configs['light.kitchen'] == {
+        'should_expose': False,
+        'override_name': 'updated name',
+        'aliases': ['lefty', 'righty'],
+        'disable_2fa': False,
+    }

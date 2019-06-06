@@ -19,8 +19,6 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'history'
-DEPENDENCIES = ['recorder', 'http']
-
 CONF_ORDER = 'use_include_order'
 
 CONFIG_SCHEMA = vol.Schema({
@@ -254,7 +252,7 @@ async def async_setup(hass, config):
     use_include_order = conf.get(CONF_ORDER)
 
     hass.http.register_view(HistoryPeriodView(filters, use_include_order))
-    await hass.components.frontend.async_register_built_in_panel(
+    hass.components.frontend.async_register_built_in_panel(
         'history', 'history', 'hass:poll-box')
 
     return True

@@ -1,9 +1,4 @@
-"""
-Support for Rain Bird Irrigation system LNK WiFi Module.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.rainbird/
-"""
+"""Support for Rain Bird Irrigation system LNK WiFi Module."""
 
 import logging
 
@@ -16,8 +11,6 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 
 from . import DATA_RAINBIRD
-
-DEPENDENCIES = ['rainbird']
 
 DOMAIN = 'rainbird'
 _LOGGER = logging.getLogger(__name__)

@@ -1,9 +1,4 @@
-"""
-Device entity for Zigbee Home Automation.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zha/
-"""
+"""Device entity for Zigbee Home Automation."""
 
 import logging
 import time
@@ -147,8 +142,8 @@ class ZhaDeviceEntity(ZhaEntity):
         """Get the latest battery reading from channels cache."""
         battery = await self._battery_channel.get_attribute_value(
             'battery_percentage_remaining')
-        if battery is not None:
-            # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
+        # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
+        if battery is not None and battery != -1:
             battery = battery / 2
             battery = int(round(battery))
             self._device_state_attributes['battery_level'] = battery

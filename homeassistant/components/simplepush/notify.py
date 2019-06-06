@@ -1,9 +1,4 @@
-"""
-Simplepush notification service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.simplepush/
-"""
+"""Simplepush notification service."""
 import logging
 
 import voluptuous as vol
@@ -13,8 +8,6 @@ import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
-
-REQUIREMENTS = ['simplepush==1.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 

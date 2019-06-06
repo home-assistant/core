@@ -1,0 +1,10 @@
+{
+  "domain": "avion",
+  "name": "Avion",
+  "documentation": "https://www.home-assistant.io/components/avion",
+  "requirements": [
+    "avion==0.10"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

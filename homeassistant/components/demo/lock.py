@@ -1,9 +1,4 @@
-"""
-Demo lock platform that has two fake locks.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo lock platform that has two fake locks."""
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 
 from homeassistant.components.lock import SUPPORT_OPEN, LockDevice

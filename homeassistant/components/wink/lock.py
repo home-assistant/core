@@ -10,8 +10,6 @@ import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN, WinkDevice
 
-DEPENDENCIES = ['wink']
-
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_SET_VACATION_MODE = 'wink_set_lock_vacation_mode'

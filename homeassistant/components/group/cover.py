@@ -1,9 +1,4 @@
-"""
-This platform allows several cover to be grouped into one cover.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.group/
-"""
+"""This platform allows several cover to be grouped into one cover."""
 import logging
 
 import voluptuous as vol

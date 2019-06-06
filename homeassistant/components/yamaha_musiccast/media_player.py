@@ -1,9 +1,4 @@
-"""
-Support for Yamaha MusicCast Receivers.
-
-For more details about this platform, please refer to the documentation at
-https://www.home-assistant.io/components/media_player.yamaha_musiccast/
-"""
+"""Support for Yamaha MusicCast Receivers."""
 import logging
 
 import voluptuous as vol
@@ -19,8 +14,6 @@ from homeassistant.const import (
     STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-
-REQUIREMENTS = ['pymusiccast==0.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 

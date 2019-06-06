@@ -6,8 +6,6 @@ from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
-DEPENDENCIES = ['ebusd']
-
 TIME_FRAME1_BEGIN = 'time_frame1_begin'
 TIME_FRAME1_END = 'time_frame1_end'
 TIME_FRAME2_BEGIN = 'time_frame2_begin'

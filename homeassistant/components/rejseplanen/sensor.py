@@ -19,7 +19,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['rjpl==0.3.5']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_STOP_ID = 'Stop ID'

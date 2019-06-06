@@ -1,0 +1,10 @@
+{
+  "domain": "vacuum",
+  "name": "Vacuum",
+  "documentation": "https://www.home-assistant.io/components/vacuum",
+  "requirements": [],
+  "dependencies": [
+    "group"
+  ],
+  "codeowners": []
+}

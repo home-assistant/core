@@ -1,10 +1,4 @@
-"""
-SmartApp functionality to receive cloud-push notifications.
-
-This module defines the functions to manage the SmartApp integration
-within the SmartThings ecosystem in order to receive real-time webhook-based
-callbacks when device states change.
-"""
+"""SmartApp functionality to receive cloud-push notifications."""
 import asyncio
 import functools
 import logging

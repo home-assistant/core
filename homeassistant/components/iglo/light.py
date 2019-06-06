@@ -1,9 +1,4 @@
-"""
-Support for lights under the iGlo brand.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.iglo/
-"""
+"""Support for lights under the iGlo brand."""
 import logging
 import math
 
@@ -16,8 +11,6 @@ from homeassistant.components.light import (
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
-
-REQUIREMENTS = ['iglo==1.2.7']
 
 _LOGGER = logging.getLogger(__name__)
 

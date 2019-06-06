@@ -1,9 +1,4 @@
-"""
-Support for Coinbase sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.coinbase/
-"""
+"""Support for Coinbase sensors."""
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 
@@ -22,7 +17,6 @@ DEFAULT_COIN_ICON = 'mdi:coin'
 ATTRIBUTION = "Data provided by coinbase.com"
 
 DATA_COINBASE = 'coinbase_cache'
-DEPENDENCIES = ['coinbase']
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

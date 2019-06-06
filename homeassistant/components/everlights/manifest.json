@@ -1,0 +1,10 @@
+{
+  "domain": "everlights",
+  "name": "Everlights",
+  "documentation": "https://www.home-assistant.io/components/everlights",
+  "requirements": [
+    "pyeverlights==0.1.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

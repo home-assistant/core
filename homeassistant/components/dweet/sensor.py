@@ -11,8 +11,6 @@ from homeassistant.const import (
     CONF_NAME, CONF_VALUE_TEMPLATE, CONF_UNIT_OF_MEASUREMENT, CONF_DEVICE)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['dweepy==0.3.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Dweet.io Sensor'

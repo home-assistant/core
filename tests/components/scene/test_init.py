@@ -3,9 +3,8 @@ import io
 import unittest
 
 from homeassistant.setup import setup_component
-from homeassistant import loader
 from homeassistant.components import light, scene
-from homeassistant.util import yaml
+from homeassistant.util.yaml import loader as yaml_loader
 
 from tests.common import get_test_home_assistant
 from tests.components.light import common as common_light
@@ -18,7 +17,7 @@ class TestScene(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        test_light = loader.get_component(self.hass, 'light.test')
+        test_light = getattr(self.hass.components, 'test.light')
         test_light.init()
 
         assert setup_component(self.hass, light.DOMAIN, {
@@ -91,7 +90,7 @@ class TestScene(unittest.TestCase):
                 self.light_1.entity_id, self.light_2.entity_id)
 
         with io.StringIO(config) as file:
-            doc = yaml.yaml.safe_load(file)
+            doc = yaml_loader.yaml.load(file)
 
         assert setup_component(self.hass, scene.DOMAIN, doc)
         common.activate(self.hass, 'scene.test')

@@ -20,8 +20,6 @@ from .const import (
     ATTR_LAST_DATA, CONF_APP_KEY, DATA_CLIENT, DOMAIN, TOPIC_UPDATE,
     TYPE_BINARY_SENSOR, TYPE_SENSOR)
 
-REQUIREMENTS = ['aioambient==0.1.3']
-
 _LOGGER = logging.getLogger(__name__)
 
 DATA_CONFIG = 'config'
@@ -329,6 +327,8 @@ class AmbientStation:
             """Define a handler to fire when the websocket is connected."""
             _LOGGER.info('Connected to websocket')
             _LOGGER.debug('Watchdog starting')
+            if self._watchdog_listener:
+                self._watchdog_listener()
             self._watchdog_listener = async_call_later(
                 self._hass, DEFAULT_WATCHDOG_SECONDS, _ws_reconnect)
 
@@ -417,9 +417,8 @@ class AmbientWeatherEntity(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return bool(
-            self._ambient.stations[self._mac_address][ATTR_LAST_DATA].get(
-                self._sensor_type))
+        return self._ambient.stations[self._mac_address][ATTR_LAST_DATA].get(
+            self._sensor_type) is not None
 
     @property
     def device_info(self):

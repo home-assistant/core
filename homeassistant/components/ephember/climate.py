@@ -1,9 +1,4 @@
-"""
-Support for the EPH Controls Ember themostats.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.ephember/
-"""
+"""Support for the EPH Controls Ember themostats."""
 import logging
 from datetime import timedelta
 import voluptuous as vol
@@ -15,8 +10,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_TEMPERATURE, TEMP_CELSIUS, CONF_USERNAME, CONF_PASSWORD, STATE_OFF)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pyephember==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 

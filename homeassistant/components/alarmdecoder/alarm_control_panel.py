@@ -13,8 +13,6 @@ from . import DATA_AD, SIGNAL_PANEL_MESSAGE
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['alarmdecoder']
-
 SERVICE_ALARM_TOGGLE_CHIME = 'alarmdecoder_alarm_toggle_chime'
 ALARM_TOGGLE_CHIME_SCHEMA = vol.Schema({
     vol.Required(ATTR_CODE): cv.string,

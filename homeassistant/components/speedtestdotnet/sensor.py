@@ -9,8 +9,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .const import (
     DATA_UPDATED, DOMAIN as SPEEDTESTDOTNET_DOMAIN, SENSOR_TYPES)
 
-DEPENDENCIES = ['speedtestdotnet']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_BYTES_RECEIVED = 'bytes_received'

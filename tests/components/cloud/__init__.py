@@ -26,7 +26,7 @@ def mock_cloud_prefs(hass, prefs={}):
     prefs_to_set = {
         const.PREF_ENABLE_ALEXA: True,
         const.PREF_ENABLE_GOOGLE: True,
-        const.PREF_GOOGLE_ALLOW_UNLOCK: True,
+        const.PREF_GOOGLE_SECURE_DEVICES_PIN: None,
     }
     prefs_to_set.update(prefs)
     hass.data[cloud.DOMAIN].client._prefs._prefs = prefs_to_set

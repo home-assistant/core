@@ -1,0 +1,13 @@
+{
+  "domain": "yeelight",
+  "name": "Yeelight",
+  "documentation": "https://www.home-assistant.io/components/yeelight",
+  "requirements": [
+    "yeelight==0.5.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@rytilahti",
+    "@zewelor"
+  ]
+}

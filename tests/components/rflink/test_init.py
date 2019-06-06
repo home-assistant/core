@@ -42,7 +42,9 @@ async def mock_rflink(hass, config, domain, monkeypatch, failures=None,
         'rflink.protocol.create_rflink_connection',
         mock_create)
 
+    await async_setup_component(hass, 'rflink', config)
     await async_setup_component(hass, domain, config)
+    await hass.async_block_till_done()
 
     # hook into mock config for injecting events
     event_callback = mock_create.call_args_list[0][1]['event_callback']

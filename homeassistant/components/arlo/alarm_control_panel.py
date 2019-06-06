@@ -22,8 +22,6 @@ CONF_HOME_MODE_NAME = 'home_mode_name'
 CONF_AWAY_MODE_NAME = 'away_mode_name'
 CONF_NIGHT_MODE_NAME = 'night_mode_name'
 
-DEPENDENCIES = ['arlo']
-
 DISARMED = 'disarmed'
 
 ICON = 'mdi:security'

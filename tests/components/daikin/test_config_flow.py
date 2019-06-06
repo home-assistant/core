@@ -24,9 +24,14 @@ def init_config_flow(hass):
 
 @pytest.fixture
 def mock_daikin():
-    """Mock tellduslive."""
+    """Mock pydaikin."""
+    async def mock_daikin_init():
+        """Mock the init function in pydaikin."""
+        pass
+
     with MockDependency('pydaikin.appliance') as mock_daikin_:
         mock_daikin_.Appliance().values.get.return_value = 'AABBCCDDEEFF'
+        mock_daikin_.Appliance().init = mock_daikin_init
         yield mock_daikin_
 
 

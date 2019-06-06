@@ -1,9 +1,4 @@
-"""
-Support for the YesssSMS platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.yessssms/
-"""
+"""Support for the YesssSMS platform."""
 import logging
 
 import voluptuous as vol
@@ -13,8 +8,6 @@ import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (PLATFORM_SCHEMA,
                                              BaseNotificationService)
-
-REQUIREMENTS = ['YesssSMS==0.2.3']
 
 _LOGGER = logging.getLogger(__name__)
 

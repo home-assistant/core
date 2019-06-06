@@ -13,7 +13,7 @@ from homeassistant.components.light import (
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.util.color as color_util
 
-DEPENDENCIES = ['wemo']
+from . import SUBSCRIPTION_REGISTRY
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
@@ -226,7 +226,7 @@ class WemoDimmer(Light):
         # Define inside async context so we know our event loop
         self._update_lock = asyncio.Lock()
 
-        registry = self.hass.components.wemo.SUBSCRIPTION_REGISTRY
+        registry = SUBSCRIPTION_REGISTRY
         await self.hass.async_add_executor_job(registry.register, self.wemo)
         registry.on(self.wemo, None, self._subscription_callback)
 

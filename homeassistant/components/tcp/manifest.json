@@ -1,0 +1,8 @@
+{
+  "domain": "tcp",
+  "name": "Tcp",
+  "documentation": "https://www.home-assistant.io/components/tcp",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

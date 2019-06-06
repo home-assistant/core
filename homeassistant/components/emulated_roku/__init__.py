@@ -11,8 +11,6 @@ from .const import (
     CONF_ADVERTISE_IP, CONF_ADVERTISE_PORT, CONF_HOST_IP, CONF_LISTEN_PORT,
     CONF_SERVERS, CONF_UPNP_BIND_MULTICAST, DOMAIN)
 
-REQUIREMENTS = ['emulated_roku==0.1.8']
-
 SERVER_CONFIG_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_LISTEN_PORT): cv.port,

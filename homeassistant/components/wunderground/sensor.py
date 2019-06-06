@@ -1,9 +1,4 @@
-"""
-Support for WUnderground weather service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.wunderground/
-"""
+"""Support for WUnderground weather service."""
 import asyncio
 from datetime import timedelta
 import logging
@@ -812,7 +807,7 @@ class WUndergroundData:
     async def async_update(self):
         """Get the latest data from WUnderground."""
         try:
-            with async_timeout.timeout(10, loop=self._hass.loop):
+            with async_timeout.timeout(10):
                 response = await self._session.get(self._build_url())
             result = await response.json()
             if "error" in result['response']:

@@ -10,8 +10,6 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['plumlightpad==0.0.11']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'plum_lightpad'

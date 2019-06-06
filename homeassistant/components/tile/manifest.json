@@ -1,0 +1,12 @@
+{
+  "domain": "tile",
+  "name": "Tile",
+  "documentation": "https://www.home-assistant.io/components/tile",
+  "requirements": [
+    "pytile==2.0.6"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@bachya"
+  ]
+}

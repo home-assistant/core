@@ -1,0 +1,10 @@
+{
+  "domain": "linky",
+  "name": "Linky",
+  "documentation": "https://www.home-assistant.io/components/linky",
+  "requirements": [
+    "pylinky==0.3.3"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,9 +1,4 @@
-"""
-This component provides support for RainMachine programs and zones.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.rainmachine/
-"""
+"""This component provides support for RainMachine programs and zones."""
 from datetime import datetime
 import logging
 
@@ -16,8 +11,6 @@ from homeassistant.helpers.dispatcher import (
 from . import (
     DATA_CLIENT, DOMAIN as RAINMACHINE_DOMAIN, PROGRAM_UPDATE_TOPIC,
     ZONE_UPDATE_TOPIC, RainMachineEntity)
-
-DEPENDENCIES = ['rainmachine']
 
 _LOGGER = logging.getLogger(__name__)
 

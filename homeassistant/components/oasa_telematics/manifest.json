@@ -1,0 +1,10 @@
+{
+    "domain": "oasa_telematics",
+    "name": "OASA Telematics",
+    "documentation": "https://www.home-assistant.io/components/oasa_telematics/",
+    "requirements": [
+      "oasatelematics==0.3"
+    ],
+    "dependencies": [],
+    "codeowners": []
+}

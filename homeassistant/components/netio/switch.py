@@ -1,9 +1,4 @@
-"""
-The Netio switch component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.netio/
-"""
+"""The Netio switch component."""
 import logging
 from collections import namedtuple
 from datetime import timedelta
@@ -19,8 +14,6 @@ from homeassistant.const import (
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pynetio==0.1.9.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_START_DATE = 'start_date'
@@ -30,7 +23,6 @@ CONF_OUTLETS = 'outlets'
 
 DEFAULT_PORT = 1234
 DEFAULT_USERNAME = 'admin'
-DEPENDENCIES = ['http']
 Device = namedtuple('device', ['netio', 'entities'])
 DEVICES = {}
 

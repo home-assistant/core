@@ -1,9 +1,4 @@
-"""
-SMA Solar Webconnect interface.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.sma/
-"""
+"""SMA Solar Webconnect interface."""
 import asyncio
 from datetime import timedelta
 import logging
@@ -18,8 +13,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-
-REQUIREMENTS = ['pysma==0.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -148,7 +141,7 @@ async def async_setup_platform(
             if task:
                 tasks.append(task)
         if tasks:
-            await asyncio.wait(tasks, loop=hass.loop)
+            await asyncio.wait(tasks)
 
     interval = config.get(CONF_SCAN_INTERVAL) or timedelta(seconds=5)
     async_track_time_interval(hass, async_sma, interval)

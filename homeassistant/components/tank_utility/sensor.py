@@ -1,9 +1,4 @@
-"""
-Support for the Tank Utility propane monitor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.tank_utility/
-"""
+"""Support for the Tank Utility propane monitor."""
 
 import datetime
 import logging
@@ -16,10 +11,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_DEVICES, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.entity import Entity
 
-
-REQUIREMENTS = [
-    "tank_utility==1.4.0"
-]
 
 _LOGGER = logging.getLogger(__name__)
 

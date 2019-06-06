@@ -1,0 +1,10 @@
+{
+  "domain": "google_maps",
+  "name": "Google maps",
+  "documentation": "https://www.home-assistant.io/components/google_maps",
+  "requirements": [
+    "locationsharinglib==3.0.11"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

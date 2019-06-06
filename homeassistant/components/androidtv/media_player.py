@@ -1,9 +1,4 @@
-"""
-Support for functionality to interact with Android TV and Fire TV devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.androidtv/
-"""
+"""Support for functionality to interact with Android TV / Fire TV devices."""
 import functools
 import logging
 import voluptuous as vol
@@ -22,8 +17,6 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
 ANDROIDTV_DOMAIN = 'androidtv'
-
-REQUIREMENTS = ['androidtv==0.0.14']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,20 +90,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if CONF_ADB_SERVER_IP not in config:
         # Use "python-adb" (Python ADB implementation)
+        adb_log = "using Python ADB implementation "
         if CONF_ADBKEY in config:
             aftv = setup(host, config[CONF_ADBKEY],
                          device_class=config[CONF_DEVICE_CLASS])
-            adb_log = " using adbkey='{0}'".format(config[CONF_ADBKEY])
+            adb_log += "with adbkey='{0}'".format(config[CONF_ADBKEY])
 
         else:
             aftv = setup(host, device_class=config[CONF_DEVICE_CLASS])
-            adb_log = ""
+            adb_log += "without adbkey authentication"
     else:
         # Use "pure-python-adb" (communicate with ADB server)
         aftv = setup(host, adb_server_ip=config[CONF_ADB_SERVER_IP],
                      adb_server_port=config[CONF_ADB_SERVER_PORT],
                      device_class=config[CONF_DEVICE_CLASS])
-        adb_log = " using ADB server at {0}:{1}".format(
+        adb_log = "using ADB server at {0}:{1}".format(
             config[CONF_ADB_SERVER_IP], config[CONF_ADB_SERVER_PORT])
 
     if not aftv.available:
@@ -124,7 +118,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         else:
             device_name = 'Android TV / Fire TV device'
 
-        _LOGGER.warning("Could not connect to %s at %s%s",
+        _LOGGER.warning("Could not connect to %s at %s %s",
                         device_name, host, adb_log)
         raise PlatformNotReady
 
@@ -163,10 +157,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for target_device in target_devices:
             output = target_device.adb_command(cmd)
 
-            # log the output if there is any
-            if output and (not isinstance(output, str) or output.strip()):
+            # log the output, if there is any
+            if output:
                 _LOGGER.info("Output of command '%s' from '%s': %s",
-                             cmd, target_device.entity_id, repr(output))
+                             cmd, target_device.entity_id, output)
 
     hass.services.register(ANDROIDTV_DOMAIN, SERVICE_ADB_COMMAND,
                            service_adb_command,
@@ -231,6 +225,7 @@ class ADBDevice(MediaPlayerDevice):
             self.exceptions = (ConnectionResetError, RuntimeError)
 
         # Property attributes
+        self._adb_response = None
         self._available = self.aftv.available
         self._current_app = None
         self._state = None
@@ -249,6 +244,11 @@ class ADBDevice(MediaPlayerDevice):
     def available(self):
         """Return whether or not the ADB connection is valid."""
         return self._available
+
+    @property
+    def device_state_attributes(self):
+        """Provide the last ADB command's response as an attribute."""
+        return {'adb_response': self._adb_response}
 
     @property
     def name(self):
@@ -299,24 +299,36 @@ class ADBDevice(MediaPlayerDevice):
     @adb_decorator()
     def media_previous_track(self):
         """Send previous track command (results in rewind)."""
-        self.aftv.media_previous()
+        self.aftv.media_previous_track()
 
     @adb_decorator()
     def media_next_track(self):
         """Send next track command (results in fast-forward)."""
-        self.aftv.media_next()
+        self.aftv.media_next_track()
 
     @adb_decorator()
     def adb_command(self, cmd):
         """Send an ADB command to an Android TV / Fire TV device."""
         key = self._keys.get(cmd)
         if key:
-            return self.aftv.adb_shell('input keyevent {}'.format(key))
+            self.aftv.adb_shell('input keyevent {}'.format(key))
+            self._adb_response = None
+            self.schedule_update_ha_state()
+            return
 
         if cmd == 'GET_PROPERTIES':
-            return self.aftv.get_properties_dict()
+            self._adb_response = str(self.aftv.get_properties_dict())
+            self.schedule_update_ha_state()
+            return self._adb_response
 
-        return self.aftv.adb_shell(cmd)
+        response = self.aftv.adb_shell(cmd)
+        if isinstance(response, str) and response.strip():
+            self._adb_response = response.strip()
+        else:
+            self._adb_response = None
+
+        self.schedule_update_ha_state()
+        return self._adb_response
 
 
 class AndroidTVDevice(ADBDevice):
@@ -329,11 +341,10 @@ class AndroidTVDevice(ADBDevice):
                          turn_off_command)
 
         self._device = None
-        self._muted = None
         self._device_properties = self.aftv.device_properties
-        self._unique_id = 'androidtv-{}-{}'.format(
-            name, self._device_properties['serialno'])
-        self._volume = None
+        self._is_volume_muted = None
+        self._unique_id = self._device_properties.get('serialno')
+        self._volume_level = None
 
     @adb_decorator(override_available=True)
     def update(self):
@@ -350,16 +361,16 @@ class AndroidTVDevice(ADBDevice):
         if not self._available:
             return
 
-        # Get the `state`, `current_app`, and `running_apps`.
-        state, self._current_app, self._device, self._muted, self._volume = \
-            self.aftv.update()
+        # Get the updated state and attributes.
+        state, self._current_app, self._device, self._is_volume_muted, \
+            self._volume_level = self.aftv.update()
 
         self._state = ANDROIDTV_STATES[state]
 
     @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
-        return self._muted
+        return self._is_volume_muted
 
     @property
     def source(self):
@@ -379,7 +390,7 @@ class AndroidTVDevice(ADBDevice):
     @property
     def volume_level(self):
         """Return the volume level."""
-        return self._volume
+        return self._volume_level
 
     @adb_decorator()
     def media_stop(self):
@@ -394,12 +405,12 @@ class AndroidTVDevice(ADBDevice):
     @adb_decorator()
     def volume_down(self):
         """Send volume down command."""
-        self.aftv.volume_down()
+        self._volume_level = self.aftv.volume_down(self._volume_level)
 
     @adb_decorator()
     def volume_up(self):
         """Send volume up command."""
-        self.aftv.volume_up()
+        self._volume_level = self.aftv.volume_up(self._volume_level)
 
 
 class FireTVDevice(ADBDevice):

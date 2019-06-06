@@ -1,9 +1,4 @@
-"""
-Platform to retrieve Jewish calendar information for Home Assistant.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.jewish_calendar/
-"""
+"""Platform to retrieve Jewish calendar information for Home Assistant."""
 import logging
 
 import voluptuous as vol
@@ -15,8 +10,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
-
-REQUIREMENTS = ['hdate==0.8.7']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -14,8 +14,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_LIGHTS, CONF_EXCLUDE)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyvera==0.2.45']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'vera'

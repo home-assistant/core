@@ -1,9 +1,4 @@
-"""
-Support for Start.ca Bandwidth Monitor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.startca/
-"""
+"""Support for Start.ca Bandwidth Monitor."""
 from datetime import timedelta
 from xml.parsers.expat import ExpatError
 import logging
@@ -18,8 +13,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['xmltodict==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -145,7 +138,7 @@ class StartcaData:
         _LOGGER.debug("Updating Start.ca usage data")
         url = 'https://www.start.ca/support/usage/api?key=' + \
               self.api_key
-        with async_timeout.timeout(REQUEST_TIMEOUT, loop=self.loop):
+        with async_timeout.timeout(REQUEST_TIMEOUT):
             req = await self.websession.get(url)
         if req.status != 200:
             _LOGGER.error("Request failed with status: %u", req.status)

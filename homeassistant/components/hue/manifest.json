@@ -1,0 +1,18 @@
+{
+  "domain": "hue",
+  "name": "Philips Hue",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/components/hue",
+  "requirements": [
+    "aiohue==1.9.1"
+  ],
+  "ssdp": {
+    "manufacturer": [
+      "Royal Philips Electronics"
+    ]
+  },
+  "dependencies": [],
+  "codeowners": [
+    "@balloob"
+  ]
+}

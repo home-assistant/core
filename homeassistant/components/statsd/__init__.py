@@ -8,8 +8,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import state as state_helper
 
-REQUIREMENTS = ['statsd==3.2.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ATTR = 'log_attributes'

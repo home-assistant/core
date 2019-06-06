@@ -1,9 +1,4 @@
-"""
-Sensor platform for Brottsplatskartan information.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.brottsplatskartan/
-"""
+"""Sensor platform for Brottsplatskartan information."""
 from collections import defaultdict
 from datetime import timedelta
 import logging
@@ -16,8 +11,6 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['brottsplatskartan==0.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 

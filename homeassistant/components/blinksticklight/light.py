@@ -1,9 +1,4 @@
-"""
-Support for Blinkstick lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.blinksticklight/
-"""
+"""Support for Blinkstick lights."""
 import logging
 
 import voluptuous as vol
@@ -14,8 +9,6 @@ from homeassistant.components.light import (
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
-
-REQUIREMENTS = ['blinkstick==1.1.8']
 
 _LOGGER = logging.getLogger(__name__)
 

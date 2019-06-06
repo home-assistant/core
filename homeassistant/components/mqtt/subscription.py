@@ -1,9 +1,4 @@
-"""
-Helper to handle a set of topics to subscribe to.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mqtt/
-"""
+"""Helper to handle a set of topics to subscribe to."""
 import logging
 from typing import Any, Callable, Dict, Optional
 

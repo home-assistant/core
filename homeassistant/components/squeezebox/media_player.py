@@ -1,9 +1,4 @@
-"""
-Support for interfacing to the Logitech SqueezeBox API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.squeezebox/
-"""
+"""Support for interfacing to the Logitech SqueezeBox API."""
 import asyncio
 import json
 import logging
@@ -133,7 +128,7 @@ async def async_setup_platform(hass, config, async_add_entities,
             update_tasks.append(player.async_update_ha_state(True))
 
         if update_tasks:
-            await asyncio.wait(update_tasks, loop=hass.loop)
+            await asyncio.wait(update_tasks)
 
     for service in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[service]['schema']
@@ -184,7 +179,7 @@ class LogitechMediaServer:
 
         try:
             websession = async_get_clientsession(self.hass)
-            with async_timeout.timeout(TIMEOUT, loop=self.hass.loop):
+            with async_timeout.timeout(TIMEOUT):
                 response = await websession.post(
                     url,
                     data=data,

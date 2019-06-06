@@ -1,0 +1,11 @@
+{
+  "domain": "verisure",
+  "name": "Verisure",
+  "documentation": "https://www.home-assistant.io/components/verisure",
+  "requirements": [
+    "jsonpath==0.75",
+    "vsure==1.5.2"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

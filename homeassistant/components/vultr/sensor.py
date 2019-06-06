@@ -1,9 +1,4 @@
-"""
-Support for monitoring the state of Vultr Subscriptions.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.vultr/
-"""
+"""Support for monitoring the state of Vultr Subscriptions."""
 import logging
 
 import voluptuous as vol
@@ -20,8 +15,6 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Vultr {} {}'
-DEPENDENCIES = ['vultr']
-
 MONITORED_CONDITIONS = {
     ATTR_CURRENT_BANDWIDTH_USED: ['Current Bandwidth Used', 'GB',
                                   'mdi:chart-histogram'],

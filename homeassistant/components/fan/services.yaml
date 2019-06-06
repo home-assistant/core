@@ -54,16 +54,6 @@ set_direction:
       description: The direction to rotate. Either 'forward' or 'reverse'
       example: 'forward'
 
-dyson_set_night_mode:
-  description: Set the fan in night mode.
-  fields:
-    entity_id:
-      description: Name(s) of the entities to enable/disable night mode
-      example: 'fan.living_room'
-    night_mode:
-      description: Night mode status
-      example: true
-
 xiaomi_miio_set_buzzer_on:
   description: Turn the buzzer on.
   fields:

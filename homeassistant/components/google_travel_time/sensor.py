@@ -1,9 +1,4 @@
-"""
-Support for Google travel time sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.google_travel_time/
-"""
+"""Support for Google travel time sensors."""
 import logging
 from datetime import datetime
 from datetime import timedelta
@@ -19,8 +14,6 @@ from homeassistant.const import (
 from homeassistant.helpers import location
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['googlemaps==2.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 

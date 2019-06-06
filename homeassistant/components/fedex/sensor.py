@@ -1,27 +1,18 @@
-"""
-Sensor for Fedex packages.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.fedex/
-"""
-from collections import defaultdict
+"""Sensor for Fedex packages."""
 import logging
+from collections import defaultdict
 from datetime import timedelta
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
-                                 ATTR_ATTRIBUTION, CONF_UPDATE_INTERVAL,
-                                 CONF_SCAN_INTERVAL,
-                                 CONF_UPDATE_INTERVAL_INVALIDATION_VERSION)
+                                 ATTR_ATTRIBUTION, CONF_SCAN_INTERVAL)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import slugify
 from homeassistant.util import Throttle
+from homeassistant.util import slugify
 from homeassistant.util.dt import now, parse_date
-import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['fedexdeliverymanager==1.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,21 +26,11 @@ STATUS_DELIVERED = 'delivered'
 
 SCAN_INTERVAL = timedelta(seconds=1800)
 
-PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_UPDATE_INTERVAL):
-            vol.All(cv.time_period, cv.positive_timedelta),
-    }),
-    cv.deprecated(
-        CONF_UPDATE_INTERVAL,
-        replacement_key=CONF_SCAN_INTERVAL,
-        invalidation_version=CONF_UPDATE_INTERVAL_INVALIDATION_VERSION,
-        default=SCAN_INTERVAL
-    )
-)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
+})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

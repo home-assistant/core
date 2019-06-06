@@ -8,8 +8,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['py-cpuinfo==5.0.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_BRAND = 'Brand'

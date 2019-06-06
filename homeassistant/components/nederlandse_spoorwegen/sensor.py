@@ -1,9 +1,4 @@
-"""
-Support for Nederlandse Spoorwegen public transport.
-
-For more details on this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.nederlandse_spoorwegen/
-"""
+"""Support for Nederlandse Spoorwegen public transport."""
 from datetime import datetime, timedelta
 import logging
 
@@ -16,8 +11,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['nsapi==2.7.4']
 
 _LOGGER = logging.getLogger(__name__)
 

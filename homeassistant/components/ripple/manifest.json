@@ -1,0 +1,10 @@
+{
+  "domain": "ripple",
+  "name": "Ripple",
+  "documentation": "https://www.home-assistant.io/components/ripple",
+  "requirements": [
+    "python-ripple-api==0.0.3"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

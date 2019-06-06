@@ -1,9 +1,4 @@
-"""
-Support for MQTT sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.mqtt/
-"""
+"""Support for MQTT sensors."""
 from datetime import timedelta
 import json
 import logging
@@ -37,20 +32,16 @@ CONF_JSON_ATTRS = 'json_attributes'
 
 DEFAULT_NAME = 'MQTT Sensor'
 DEFAULT_FORCE_UPDATE = False
-DEPENDENCIES = ['mqtt']
-
 PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_ICON): cv.icon,
+    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-    vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
     vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-    # Integrations should never expose unique_id through configuration.
-    # This is an exception because MQTT is a message transport, not a protocol.
+    vol.Optional(CONF_ICON): cv.icon,
+    vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIQUE_ID): cv.string,
-    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
     mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 
@@ -151,7 +142,7 @@ class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 self._expiration_trigger = async_track_point_in_utc_time(
                     self.hass, self.value_is_expired, expiration_at)
 
-            json_attributes = set(self._config.get(CONF_JSON_ATTRS))
+            json_attributes = set(self._config[CONF_JSON_ATTRS])
             if json_attributes:
                 self._attributes = {}
                 try:
@@ -174,9 +165,9 @@ class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state,
-            {'state_topic': {'topic': self._config.get(CONF_STATE_TOPIC),
+            {'state_topic': {'topic': self._config[CONF_STATE_TOPIC],
                              'msg_callback': message_received,
-                             'qos': self._config.get(CONF_QOS)}})
+                             'qos': self._config[CONF_QOS]}})
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
@@ -200,7 +191,7 @@ class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._config.get(CONF_NAME)
+        return self._config[CONF_NAME]
 
     @property
     def unit_of_measurement(self):
@@ -210,7 +201,7 @@ class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     @property
     def force_update(self):
         """Force update."""
-        return self._config.get(CONF_FORCE_UPDATE)
+        return self._config[CONF_FORCE_UPDATE]
 
     @property
     def state(self):

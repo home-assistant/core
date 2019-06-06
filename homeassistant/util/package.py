@@ -5,6 +5,12 @@ import os
 from subprocess import PIPE, Popen
 import sys
 from typing import Optional
+from urllib.parse import urlparse
+from pathlib import Path
+
+import pkg_resources
+from importlib_metadata import version, PackageNotFoundError
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,9 +22,35 @@ def is_virtual_env() -> bool:
             hasattr(sys, 'real_prefix'))
 
 
+def is_docker_env() -> bool:
+    """Return True if we run in a docker env."""
+    return Path("/.dockerenv").exists()
+
+
+def is_installed(package: str) -> bool:
+    """Check if a package is installed and will be loaded when we import it.
+
+    Returns True when the requirement is met.
+    Returns False when the package is not installed or doesn't meet req.
+    """
+    try:
+        req = pkg_resources.Requirement.parse(package)
+    except ValueError:
+        # This is a zip file. We no longer use this in Home Assistant,
+        # leaving it in for custom components.
+        req = pkg_resources.Requirement.parse(urlparse(package).fragment)
+
+    try:
+        return version(req.project_name) in req
+    except PackageNotFoundError:
+        return False
+
+
 def install_package(package: str, upgrade: bool = True,
                     target: Optional[str] = None,
-                    constraints: Optional[str] = None) -> bool:
+                    constraints: Optional[str] = None,
+                    find_links: Optional[str] = None,
+                    no_cache_dir: Optional[bool] = False) -> bool:
     """Install a package on PyPi. Accepts pip compatible package strings.
 
     Return boolean if install successful.
@@ -27,10 +59,14 @@ def install_package(package: str, upgrade: bool = True,
     _LOGGER.info('Attempting install of %s', package)
     env = os.environ.copy()
     args = [sys.executable, '-m', 'pip', 'install', '--quiet', package]
+    if no_cache_dir:
+        args.append('--no-cache-dir')
     if upgrade:
         args.append('--upgrade')
     if constraints is not None:
         args += ['--constraint', constraints]
+    if find_links is not None:
+        args += ['--find-links', find_links]
     if target:
         assert not is_virtual_env()
         # This only works if not running in venv

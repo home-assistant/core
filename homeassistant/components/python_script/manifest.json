@@ -1,0 +1,10 @@
+{
+  "domain": "python_script",
+  "name": "Python script",
+  "documentation": "https://www.home-assistant.io/components/python_script",
+  "requirements": [
+    "restrictedpython==4.0b8"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -10,8 +10,6 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT
 from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['py-canary==0.5.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 NOTIFICATION_ID = 'canary_notification'

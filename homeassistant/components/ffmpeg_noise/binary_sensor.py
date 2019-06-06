@@ -1,9 +1,4 @@
-"""
-Provides a binary sensor which is a collection of ffmpeg tools.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.ffmpeg_noise/
-"""
+"""Provides a binary sensor which is a collection of ffmpeg tools."""
 import logging
 
 import voluptuous as vol
@@ -16,8 +11,6 @@ from homeassistant.components.ffmpeg import (
     DATA_FFMPEG, CONF_INPUT, CONF_OUTPUT, CONF_EXTRA_ARGUMENTS,
     CONF_INITIAL_STATE)
 from homeassistant.const import CONF_NAME
-
-DEPENDENCIES = ['ffmpeg']
 
 _LOGGER = logging.getLogger(__name__)
 

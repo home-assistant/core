@@ -1,9 +1,4 @@
-"""
-Support for Adafruit DHT temperature and humidity sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.dht/
-"""
+"""Support for Adafruit DHT temperature and humidity sensor."""
 import logging
 from datetime import timedelta
 
@@ -16,8 +11,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
-
-REQUIREMENTS = ['Adafruit-DHT==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 

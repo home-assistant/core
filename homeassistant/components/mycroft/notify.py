@@ -1,14 +1,7 @@
-"""
-Mycroft AI notification platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.mycroft/
-"""
+"""Mycroft AI notification platform."""
 import logging
 
 from homeassistant.components.notify import BaseNotificationService
-
-DEPENDENCIES = ['mycroft']
 
 
 _LOGGER = logging.getLogger(__name__)

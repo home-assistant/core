@@ -1,9 +1,4 @@
-"""
-A platform which allows you to get information from Tautulli.
-
-For more details about this platform, please refer to the documentation at
-https://www.home-assistant.io/components/sensor.tautulli/
-"""
+"""A platform which allows you to get information from Tautulli."""
 from datetime import timedelta
 import logging
 
@@ -18,8 +13,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['pytautulli==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -125,6 +118,11 @@ class TautulliSensor(Entity):
     def icon(self):
         """Return the icon of the sensor."""
         return 'mdi:plex'
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit this state is expressed in."""
+        return "Watching"
 
     @property
     def device_state_attributes(self):

@@ -10,7 +10,7 @@ executors:
     parameters:
       tag:
         type: string
-        default: latest  
+        default: latest
     docker:
       - image: circleci/python:<< parameters.tag >>
       - image: circleci/buildpack-deps:stretch
@@ -52,10 +52,12 @@ commands:
           command: |
             python3 -m venv venv
             . venv/bin/activate
-            pip install -U pip
+            pip install -q -U pip
+            pip install -q -U setuptools
             <<# parameters.all >>pip install -q --progress-bar off -r requirements_all.txt -c homeassistant/package_constraints.txt<</ parameters.all>>
             <<# parameters.test >>pip install -q --progress-bar off -r requirements_test.txt -c homeassistant/package_constraints.txt<</ parameters.test>>
             <<# parameters.test_all >>pip install -q --progress-bar off -r requirements_test_all.txt -c homeassistant/package_constraints.txt<</ parameters.test_all>>
+          no_output_timeout: 15m
       - save_cache:
           paths:
             - ./venv
@@ -68,29 +70,43 @@ commands:
           name: install
           command: |
             . venv/bin/activate
-            pip install --progress-bar off -e .
+            pip install -q --progress-bar off -e .
 
 jobs:
 
   static-check:
     executor:
       name: python
-      tag: 3.7-stretch
+      tag: 3.5.5-stretch
 
     steps:
       - checkout
       - docker-prereqs
+      - install-requirements:
+          python: 3.5.5-stretch
+          test: true
 
       - run:
           name: run static check
           command: |
-            python3 -m venv venv
             . venv/bin/activate
-            pip install -U pip
-            pip install --progress-bar off flake8
-            flake8
+            flake8 homeassistant tests script
+
+      - run:
+          name: run static type check
+          command: |
+            . venv/bin/activate
+            TYPING_FILES=$(cat mypyrc)
+            mypy $TYPING_FILES
 
       - install
+
+      - run:
+          name: validate manifests
+          command: |
+            . venv/bin/activate
+            python -m script.hassfest validate
+
       - run:
           name: run gen_requirements_all
           command: |
@@ -100,27 +116,27 @@ jobs:
   pre-install-all-requirements:
     executor:
       name: python
-      tag: 3.7-stretch
+      tag: 3.5.5-stretch
 
     steps:
       - checkout
       - docker-prereqs
       - install-requirements:
-          python: 3.7-stretch
+          python: 3.5.5-stretch
           all: true
           test: true
 
   pylint:
     executor:
       name: python
-      tag: 3.7-stretch
-    parallelism: 3
+      tag: 3.5.5-stretch
+    parallelism: 2
 
     steps:
       - checkout
       - docker-prereqs
       - install-requirements:
-          python: 3.7-stretch
+          python: 3.5.5-stretch
           all: true
           test: true
       - install
@@ -131,6 +147,7 @@ jobs:
             . venv/bin/activate
             PYFILES=$(circleci tests glob "homeassistant/**/*.py" | circleci tests split)
             pylint ${PYFILES}
+          no_output_timeout: 15m
 
   pre-test:
     parameters:
@@ -154,7 +171,7 @@ jobs:
     executor:
       name: python
       tag: << parameters.python >>
-    parallelism: 3
+    parallelism: 2
 
     steps:
       - checkout
@@ -165,14 +182,14 @@ jobs:
       - install
 
       - run:
-          name: run tests
+          name: run tests with code coverage
           command: |
             . venv/bin/activate
+            CC_SWITCH="--cov --cov-report="
             TESTFILES=$(circleci tests glob "tests/**/test_*.py" | circleci tests split --split-by=timings)
-            if [ -z "$CODE_COVERAGE" ]; then CC_SWITCH=""; else CC_SWITCH="--cov --cov-report html:htmlcov"; fi
-            pytest --timeout=9 --duration=10 --junitxml=test-reports/homeassistant/results.xml -qq -o junit_family=xunit2 -o junit_suite_name=homeassistant -o console_output_style=count -p no:sugar $CC_SWITCH -- ${TESTFILES}
+            pytest --timeout=9 --durations=10 --junitxml=test-reports/homeassistant/results.xml -qq -o junit_family=xunit2 -o junit_suite_name=homeassistant -o console_output_style=count -p no:sugar $CC_SWITCH -- ${TESTFILES}
             script/check_dirty
-          when: always
+            codecov
 
       - store_test_results:
           path: test-reports
@@ -185,23 +202,48 @@ jobs:
           path: test-reports
           destination: test-reports
 
+  # This job use machine executor, e.g. classic CircleCI VM because we need both lokalise-cli and a Python runtime.
+  # Classic CircleCI included python 2.7.12 and python 3.5.2 managed by pyenv, the Python version may need change if
+  # CircleCI changed its VM in future.
+  upload-translations:
+    machine: true
+
+    steps:
+      - checkout
+
+      - run:
+          name: upload english translations
+          command: |
+            pyenv versions
+            pyenv global 3.5.2
+            docker pull lokalise/lokalise-cli@sha256:2198814ebddfda56ee041a4b427521757dd57f75415ea9693696a64c550cef21
+            script/translations_upload
+
 workflows:
   version: 2
   build:
     jobs:
       - static-check
-      - pre-install-all-requirements
+      - pre-install-all-requirements:
+          requires:
+            - static-check
       - pylint:
           requires:
             - pre-install-all-requirements
       - pre-test:
           name: pre-test 3.5.5
+          requires:
+            - static-check
           python: 3.5.5-stretch
       - pre-test:
           name: pre-test 3.6
+          requires:
+            - static-check
           python: 3.6-stretch
       - pre-test:
           name: pre-test 3.7
+          requires:
+            - static-check
           python: 3.7-stretch
       - test:
           name: test 3.5.5
@@ -222,3 +264,9 @@ workflows:
       # - test:
       #     name: test 3.8
       #     python: 3.8-rc-stretch
+      - upload-translations:
+          requires:
+            - static-check
+          filters:
+            branches:
+              only: dev

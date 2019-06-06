@@ -4,8 +4,6 @@ import logging
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['Adafruit_BBIO==1.0.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'bbb_gpio'

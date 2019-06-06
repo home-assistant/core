@@ -20,7 +20,6 @@ CONF_LOGGER = 'logger'
 DATA_SYSTEM_LOG = 'system_log'
 DEFAULT_MAX_ENTRIES = 50
 DEFAULT_FIRE_EVENT = False
-DEPENDENCIES = ['http']
 DOMAIN = 'system_log'
 
 EVENT_SYSTEM_LOG = 'system_log_event'

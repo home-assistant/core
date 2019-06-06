@@ -13,8 +13,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
     CONF_PORT, CONF_SSL, CONF_VERIFY_SSL)
 
-REQUIREMENTS = ['synology-srm==0.0.6']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_USERNAME = 'admin'
@@ -82,7 +80,7 @@ class SynologySrmDeviceScanner(DeviceScanner):
         """Check the router for connected devices."""
         _LOGGER.debug("Scanning for connected devices")
 
-        devices = self.client.mesh.network_wifidevice()
+        devices = self.client.core.network_nsm_device({'is_online': True})
         last_results = []
 
         for device in devices:

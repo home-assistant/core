@@ -1,9 +1,4 @@
-"""
-Support for interacting with Snapcast clients.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.snapcast/
-"""
+"""Support for interacting with Snapcast clients."""
 import logging
 import socket
 
@@ -18,8 +13,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, STATE_IDLE, STATE_OFF, STATE_ON,
     STATE_PLAYING, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['snapcast==2.0.9']
 
 _LOGGER = logging.getLogger(__name__)
 

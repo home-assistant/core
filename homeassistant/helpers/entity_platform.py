@@ -45,7 +45,7 @@ class EntityPlatform:
         self._async_unsub_polling = None
         # Method to cancel the retry of setup
         self._async_cancel_retry_setup = None
-        self._process_updates = asyncio.Lock(loop=hass.loop)
+        self._process_updates = None
 
         # Platform is None for the EntityComponent "catch-all" EntityPlatform
         # which powers entity_component.add_entities
@@ -122,8 +122,8 @@ class EntityPlatform:
             task = async_create_setup_task()
 
             await asyncio.wait_for(
-                asyncio.shield(task, loop=hass.loop),
-                SLOW_SETUP_MAX_WAIT, loop=hass.loop)
+                asyncio.shield(task),
+                SLOW_SETUP_MAX_WAIT)
 
             # Block till all entities are done
             if self._tasks:
@@ -132,7 +132,7 @@ class EntityPlatform:
 
                 if pending:
                     await asyncio.wait(
-                        pending, loop=self.hass.loop)
+                        pending)
 
             hass.config.components.add(full_name)
             return True
@@ -218,7 +218,7 @@ class EntityPlatform:
         if not tasks:
             return
 
-        await asyncio.wait(tasks, loop=self.hass.loop)
+        await asyncio.wait(tasks)
         self.async_entities_added_callback()
 
         if self._async_unsub_polling is not None or \
@@ -379,7 +379,7 @@ class EntityPlatform:
         tasks = [self.async_remove_entity(entity_id)
                  for entity_id in self.entities]
 
-        await asyncio.wait(tasks, loop=self.hass.loop)
+        await asyncio.wait(tasks)
 
         if self._async_unsub_polling is not None:
             self._async_unsub_polling()
@@ -404,6 +404,8 @@ class EntityPlatform:
 
         This method must be run in the event loop.
         """
+        if self._process_updates is None:
+            self._process_updates = asyncio.Lock()
         if self._process_updates.locked():
             self.logger.warning(
                 "Updating %s %s took longer than the scheduled update "
@@ -419,4 +421,4 @@ class EntityPlatform:
                 tasks.append(entity.async_update_ha_state(True))
 
             if tasks:
-                await asyncio.wait(tasks, loop=self.hass.loop)
+                await asyncio.wait(tasks)

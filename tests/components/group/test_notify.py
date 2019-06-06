@@ -29,7 +29,7 @@ class TestNotifyGroup(unittest.TestCase):
                 return self.service1
             return self.service2
 
-        with assert_setup_component(2), \
+        with assert_setup_component(2, notify.DOMAIN), \
                 patch.object(demo, 'get_service', mock_get_service):
             setup_component(self.hass, notify.DOMAIN, {
                 'notify': [{

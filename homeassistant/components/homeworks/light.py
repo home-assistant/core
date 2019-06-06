@@ -11,8 +11,6 @@ from . import (
     CONF_ADDR, CONF_DIMMERS, CONF_RATE, ENTITY_SIGNAL, HOMEWORKS_CONTROLLER,
     HomeworksDevice)
 
-DEPENDENCIES = ['homeworks']
-
 _LOGGER = logging.getLogger(__name__)
 
 

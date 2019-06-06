@@ -1,9 +1,4 @@
-"""
-Demo platform that has two fake binary sensors.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo platform that has two fake binary sensors."""
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 

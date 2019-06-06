@@ -1,9 +1,4 @@
-"""
-Support for switch controlled using a telnet connection.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.telnet/
-"""
+"""Support for switch controlled using a telnet connection."""
 from datetime import timedelta
 import logging
 import telnetlib

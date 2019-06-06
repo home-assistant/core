@@ -1,26 +1,17 @@
-"""
-Support for the Broadlink RM2 Pro (only temperature) and A1 devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.broadlink/
-"""
-from datetime import timedelta
+"""Support for the Broadlink RM2 Pro (only temperature) and A1 devices."""
 import binascii
 import logging
-import socket
+from datetime import timedelta
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_MAC, CONF_MONITORED_CONDITIONS, CONF_NAME, TEMP_CELSIUS,
-    CONF_TIMEOUT, CONF_UPDATE_INTERVAL, CONF_SCAN_INTERVAL,
-    CONF_UPDATE_INTERVAL_INVALIDATION_VERSION)
+    CONF_TIMEOUT, CONF_SCAN_INTERVAL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['broadlink==0.9.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,24 +27,14 @@ SENSOR_TYPES = {
     'noise': ['Noise', ' '],
 }
 
-PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend({
-        vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
-            vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-        vol.Optional(CONF_UPDATE_INTERVAL):
-            vol.All(cv.time_period, cv.positive_timedelta),
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_MAC): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
-    }),
-    cv.deprecated(
-        CONF_UPDATE_INTERVAL,
-        replacement_key=CONF_SCAN_INTERVAL,
-        invalidation_version=CONF_UPDATE_INTERVAL_INVALIDATION_VERSION,
-        default=SCAN_INTERVAL
-    )
-)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_MAC): cv.string,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
+})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -78,6 +59,7 @@ class BroadlinkSensor(Entity):
         """Initialize the sensor."""
         self._name = '{} {}'.format(name, SENSOR_TYPES[sensor_type][0])
         self._state = None
+        self._is_available = False
         self._type = sensor_type
         self._broadlink_data = broadlink_data
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
@@ -93,6 +75,11 @@ class BroadlinkSensor(Entity):
         return self._state
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._is_available
+
+    @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
@@ -101,8 +88,11 @@ class BroadlinkSensor(Entity):
         """Get the latest data from the sensor."""
         self._broadlink_data.update()
         if self._broadlink_data.data is None:
+            self._state = None
+            self._is_available = False
             return
         self._state = self._broadlink_data.data[self._type]
+        self._is_available = True
 
 
 class BroadlinkData:
@@ -137,8 +127,9 @@ class BroadlinkData:
             if data is not None:
                 self.data = self._schema(data)
                 return
-        except socket.timeout as error:
+        except OSError as error:
             if retry < 1:
+                self.data = None
                 _LOGGER.error(error)
                 return
         except (vol.Invalid, vol.MultipleInvalid):
@@ -149,7 +140,7 @@ class BroadlinkData:
     def _auth(self, retry=3):
         try:
             auth = self._device.auth()
-        except socket.timeout:
+        except OSError:
             auth = False
         if not auth and retry > 0:
             self._connect()

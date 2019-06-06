@@ -1,9 +1,4 @@
-"""
-Support for ZhongHong HVAC Controller.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.zhong_hong/
-"""
+"""Support for ZhongHong HVAC Controller."""
 import logging
 
 import voluptuous as vol
@@ -18,8 +13,6 @@ from homeassistant.const import (ATTR_TEMPERATURE, CONF_HOST, CONF_PORT,
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
                                               async_dispatcher_send)
-
-REQUIREMENTS = ['zhong_hong_hvac==1.0.9']
 
 _LOGGER = logging.getLogger(__name__)
 

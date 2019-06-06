@@ -1,9 +1,4 @@
-"""
-Support for Sytadin Traffic, French Traffic Supervision.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.sytadin/
-"""
+"""Support for Sytadin Traffic, French Traffic Supervision."""
 import logging
 import re
 from datetime import timedelta
@@ -17,8 +12,6 @@ from homeassistant.const import (
     LENGTH_KILOMETERS, CONF_MONITORED_CONDITIONS, CONF_NAME, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['beautifulsoup4==4.7.1']
 
 _LOGGER = logging.getLogger(__name__)
 

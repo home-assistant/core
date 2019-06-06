@@ -1,9 +1,4 @@
-"""
-Allows to configure custom shell commands to turn a value for a sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.command_line/
-"""
+"""Allows to configure custom shell commands to turn a value for a sensor."""
 import collections
 from datetime import timedelta
 import json
@@ -170,7 +165,7 @@ class CommandSensorData:
             command = str(' '.join([prog] + shlex.split(rendered_args)))
             shell = True
         try:
-            _LOGGER.info("Running command: %s", command)
+            _LOGGER.debug("Running command: %s", command)
             return_value = subprocess.check_output(
                 command, shell=shell, timeout=self.timeout)
             self.value = return_value.strip().decode('utf-8')

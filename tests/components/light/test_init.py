@@ -7,7 +7,7 @@ from io import StringIO
 
 import pytest
 
-from homeassistant import core, loader
+from homeassistant import core
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import (
@@ -121,7 +121,7 @@ class TestLight(unittest.TestCase):
 
     def test_services(self):
         """Test the provided services."""
-        platform = loader.get_component(self.hass, 'light.test')
+        platform = getattr(self.hass.components, 'test.light')
 
         platform.init()
         assert setup_component(self.hass, light.DOMAIN,
@@ -308,7 +308,7 @@ class TestLight(unittest.TestCase):
 
     def test_broken_light_profiles(self):
         """Test light profiles."""
-        platform = loader.get_component(self.hass, 'light.test')
+        platform = getattr(self.hass.components, 'test.light')
         platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
@@ -323,7 +323,7 @@ class TestLight(unittest.TestCase):
 
     def test_light_profiles(self):
         """Test light profiles."""
-        platform = loader.get_component(self.hass, 'light.test')
+        platform = getattr(self.hass.components, 'test.light')
         platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
@@ -362,7 +362,7 @@ class TestLight(unittest.TestCase):
 
     def test_default_profiles_group(self):
         """Test default turn-on light profile for all lights."""
-        platform = loader.get_component(self.hass, 'light.test')
+        platform = getattr(self.hass.components, 'test.light')
         platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
@@ -374,10 +374,10 @@ class TestLight(unittest.TestCase):
                 return True
             return real_isfile(path)
 
-        def _mock_open(path):
+        def _mock_open(path, *args, **kwargs):
             if path == user_light_file:
                 return StringIO(profile_data)
-            return real_open(path)
+            return real_open(path, *args, **kwargs)
 
         profile_data = "id,x,y,brightness\n" +\
                        "group.all_lights.default,.4,.6,99\n"
@@ -400,7 +400,7 @@ class TestLight(unittest.TestCase):
 
     def test_default_profiles_light(self):
         """Test default turn-on light profile for a specific light."""
-        platform = loader.get_component(self.hass, 'light.test')
+        platform = getattr(self.hass.components, 'test.light')
         platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
@@ -412,10 +412,10 @@ class TestLight(unittest.TestCase):
                 return True
             return real_isfile(path)
 
-        def _mock_open(path):
+        def _mock_open(path, *args, **kwargs):
             if path == user_light_file:
                 return StringIO(profile_data)
-            return real_open(path)
+            return real_open(path, *args, **kwargs)
 
         profile_data = "id,x,y,brightness\n" +\
                        "group.all_lights.default,.3,.5,200\n" +\

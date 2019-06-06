@@ -1,9 +1,4 @@
-"""
-Support for Ubiquiti's UVC cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.uvc/
-"""
+"""Support for Ubiquiti's UVC cameras."""
 import logging
 import socket
 
@@ -14,8 +9,6 @@ from homeassistant.const import CONF_PORT, CONF_SSL
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
-
-REQUIREMENTS = ['uvcclient==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 

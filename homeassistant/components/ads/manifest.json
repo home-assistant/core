@@ -1,0 +1,10 @@
+{
+  "domain": "ads",
+  "name": "Ads",
+  "documentation": "https://www.home-assistant.io/components/ads",
+  "requirements": [
+    "pyads==3.0.7"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -61,7 +61,7 @@ async def setup_gateway(hass, data):
     gateway = deconz.DeconzGateway(hass, config_entry)
     gateway.api = DeconzSession(loop, session, **config_entry.data)
     gateway.api.config = Mock()
-    hass.data[deconz.DOMAIN] = gateway
+    hass.data[deconz.DOMAIN] = {gateway.bridgeid: gateway}
 
     with patch('pydeconz.DeconzSession.async_get_state',
                return_value=mock_coro(data)):
@@ -70,6 +70,7 @@ async def setup_gateway(hass, data):
     await hass.config_entries.async_forward_entry_setup(config_entry, 'cover')
     # To flush out the service call to update the group
     await hass.async_block_till_done()
+    return gateway
 
 
 async def test_platform_manually_configured(hass):
@@ -84,8 +85,8 @@ async def test_platform_manually_configured(hass):
 
 async def test_no_covers(hass):
     """Test that no cover entities are created."""
-    await setup_gateway(hass, {})
-    assert len(hass.data[deconz.DOMAIN].deconz_ids) == 0
+    gateway = await setup_gateway(hass, {})
+    assert not hass.data[deconz.DOMAIN][gateway.bridgeid].deconz_ids
     assert len(hass.states.async_all()) == 0
 
 
@@ -93,8 +94,8 @@ async def test_cover(hass):
     """Test that all supported cover entities are created."""
     with patch('pydeconz.DeconzSession.async_put_state',
                return_value=mock_coro(True)):
-        await setup_gateway(hass, {"lights": SUPPORTED_COVERS})
-    assert "cover.cover_1_name" in hass.data[deconz.DOMAIN].deconz_ids
+        gateway = await setup_gateway(hass, {"lights": SUPPORTED_COVERS})
+    assert "cover.cover_1_name" in gateway.deconz_ids
     assert len(SUPPORTED_COVERS) == len(COVER_TYPES)
     assert len(hass.states.async_all()) == 3
 
@@ -102,7 +103,7 @@ async def test_cover(hass):
     assert cover_1 is not None
     assert cover_1.state == 'closed'
 
-    hass.data[deconz.DOMAIN].api.lights['1'].async_update({})
+    gateway.api.lights['1'].async_update({})
 
     await hass.services.async_call('cover', 'open_cover', {
         'entity_id': 'cover.cover_1_name'
@@ -122,14 +123,15 @@ async def test_cover(hass):
 async def test_add_new_cover(hass):
     """Test successful creation of cover entity."""
     data = {}
-    await setup_gateway(hass, data)
+    gateway = await setup_gateway(hass, data)
     cover = Mock()
     cover.name = 'name'
     cover.type = "Level controllable output"
     cover.register_async_callback = Mock()
-    async_dispatcher_send(hass, 'deconz_new_light', [cover])
+    async_dispatcher_send(
+        hass, gateway.async_event_new_device('light'), [cover])
     await hass.async_block_till_done()
-    assert "cover.name" in hass.data[deconz.DOMAIN].deconz_ids
+    assert "cover.name" in gateway.deconz_ids
 
 
 async def test_unsupported_cover(hass):
@@ -140,8 +142,8 @@ async def test_unsupported_cover(hass):
 
 async def test_unload_cover(hass):
     """Test that it works to unload switch entities."""
-    await setup_gateway(hass, {"lights": SUPPORTED_COVERS})
+    gateway = await setup_gateway(hass, {"lights": SUPPORTED_COVERS})
 
-    await hass.data[deconz.DOMAIN].async_reset()
+    await gateway.async_reset()
 
     assert len(hass.states.async_all()) == 1

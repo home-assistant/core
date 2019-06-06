@@ -17,7 +17,9 @@ from homeassistant.util.aiohttp import MockRequest
 
 from . import utils
 from .const import (
-    CONF_ENTITY_CONFIG, CONF_FILTER, DOMAIN, DISPATCHER_REMOTE_UPDATE)
+    CONF_ENTITY_CONFIG, CONF_FILTER, DOMAIN, DISPATCHER_REMOTE_UPDATE,
+    PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE,
+    PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA)
 from .prefs import CloudPreferences
 
 
@@ -98,13 +100,34 @@ class CloudClient(Interface):
                 if entity.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
                     return False
 
-                return google_conf['filter'](entity.entity_id)
+                if not google_conf['filter'].empty_filter:
+                    return google_conf['filter'](entity.entity_id)
+
+                entity_configs = self.prefs.google_entity_configs
+                entity_config = entity_configs.get(entity.entity_id, {})
+                return entity_config.get(
+                    PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE)
+
+            def should_2fa(entity):
+                """If an entity should be checked for 2FA."""
+                entity_configs = self.prefs.google_entity_configs
+                entity_config = entity_configs.get(entity.entity_id, {})
+                return not entity_config.get(
+                    PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA)
+
+            username = self._hass.data[DOMAIN].claims["cognito:username"]
 
             self._google_config = ga_h.Config(
                 should_expose=should_expose,
-                allow_unlock=self._prefs.google_allow_unlock,
+                should_2fa=should_2fa,
+                secure_devices_pin=self._prefs.google_secure_devices_pin,
                 entity_config=google_conf.get(CONF_ENTITY_CONFIG),
+                agent_user_id=username,
             )
+
+        # Set it to the latest.
+        self._google_config.secure_devices_pin = \
+            self._prefs.google_secure_devices_pin
 
         return self._google_config
 
@@ -145,15 +168,9 @@ class CloudClient(Interface):
         if not self._prefs.google_enabled:
             return ga.turned_off_response(payload)
 
-        answer = await ga.async_handle_message(
+        return await ga.async_handle_message(
             self._hass, self.google_config, self.prefs.cloud_user, payload
         )
-
-        # Fix AgentUserId
-        cloud = self._hass.data[DOMAIN]
-        answer['payload']['agentUserId'] = cloud.claims['cognito:username']
-
-        return answer
 
     async def async_webhook_message(
             self, payload: Dict[Any, Any]) -> Dict[Any, Any]:

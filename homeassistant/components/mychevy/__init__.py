@@ -11,8 +11,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['mychevy==1.2.0']
-
 DOMAIN = 'mychevy'
 UPDATE_TOPIC = DOMAIN
 ERROR_TOPIC = DOMAIN + "_error"

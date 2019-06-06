@@ -1,9 +1,4 @@
-"""
-Component to interface with various switches that can be controlled remotely.
-
-For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/switch/
-"""
+"""Component to interface with switches that can be controlled remotely."""
 from datetime import timedelta
 import logging
 
@@ -21,7 +16,6 @@ from homeassistant.const import (
 from homeassistant.components import group
 
 DOMAIN = 'switch'
-DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=30)
 
 GROUP_NAME_ALL_SWITCHES = 'all switches'
@@ -38,6 +32,16 @@ PROP_TO_ATTR = {
     'current_power_w': ATTR_CURRENT_POWER_W,
     'today_energy_kwh': ATTR_TODAY_ENERGY_KWH,
 }
+
+DEVICE_CLASS_OUTLET = 'outlet'
+DEVICE_CLASS_SWITCH = 'switch'
+
+DEVICE_CLASSES = [
+    DEVICE_CLASS_OUTLET,
+    DEVICE_CLASS_SWITCH,
+]
+
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 SWITCH_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
@@ -119,3 +123,8 @@ class SwitchDevice(ToggleEntity):
                 data[attr] = value
 
         return data
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return None

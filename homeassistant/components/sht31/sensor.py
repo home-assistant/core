@@ -1,9 +1,4 @@
-"""
-Support for Sensirion SHT31 temperature and humidity sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.sht31/
-"""
+"""Support for Sensirion SHT31 temperature and humidity sensor."""
 
 from datetime import timedelta
 import logging
@@ -20,9 +15,6 @@ from homeassistant.helpers.temperature import display_temp
 from homeassistant.const import PRECISION_TENTHS
 from homeassistant.util import Throttle
 
-
-REQUIREMENTS = ['Adafruit-GPIO==1.0.3',
-                'Adafruit-SHT31==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 

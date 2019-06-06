@@ -5,18 +5,16 @@ from homeassistant.components.cover import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import (
-    COVER_TYPES, DAMPERS, DOMAIN as DECONZ_DOMAIN, NEW_LIGHT, WINDOW_COVERS)
+from .const import COVER_TYPES, DAMPERS, NEW_LIGHT, WINDOW_COVERS
 from .deconz_device import DeconzDevice
-
-DEPENDENCIES = ['deconz']
+from .gateway import get_gateway_from_config_entry
 
 ZIGBEE_SPEC = ['lumi.curtain']
 
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
-    """Unsupported way of setting up deCONZ covers."""
+    """Old way of setting up deCONZ platforms."""
     pass
 
 
@@ -25,22 +23,26 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     Covers are based on same device class as lights in deCONZ.
     """
-    gateway = hass.data[DECONZ_DOMAIN]
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
     @callback
     def async_add_cover(lights):
         """Add cover from deCONZ."""
         entities = []
+
         for light in lights:
+
             if light.type in COVER_TYPES:
                 if light.modelid in ZIGBEE_SPEC:
                     entities.append(DeconzCoverZigbeeSpec(light, gateway))
+
                 else:
                     entities.append(DeconzCover(light, gateway))
+
         async_add_entities(entities, True)
 
-    gateway.listeners.append(
-        async_dispatcher_connect(hass, NEW_LIGHT, async_add_cover))
+    gateway.listeners.append(async_dispatcher_connect(
+        hass, gateway.async_event_new_device(NEW_LIGHT), async_add_cover))
 
     async_add_cover(gateway.api.lights.values())
 
@@ -86,9 +88,11 @@ class DeconzCover(DeconzDevice, CoverDevice):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         data = {'on': False}
+
         if position > 0:
             data['on'] = True
             data['bri'] = int(position / 100 * 255)
+
         await self._device.async_set_state(data)
 
     async def async_open_cover(self, **kwargs):
@@ -124,7 +128,9 @@ class DeconzCoverZigbeeSpec(DeconzCover):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         data = {'on': False}
+
         if position < 100:
             data['on'] = True
             data['bri'] = 255 - int(position / 100 * 255)
+
         await self._device.async_set_state(data)

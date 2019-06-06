@@ -1,9 +1,4 @@
-"""
-Support for the voicerss speech service.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts.voicerss/
-"""
+"""Support for the voicerss speech service."""
 import asyncio
 import logging
 
@@ -121,7 +116,7 @@ class VoiceRSSProvider(Provider):
         form_data['hl'] = language
 
         try:
-            with async_timeout.timeout(10, loop=self.hass.loop):
+            with async_timeout.timeout(10):
                 request = await websession.post(
                     VOICERSS_API_URL, data=form_data
                 )

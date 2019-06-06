@@ -1,9 +1,4 @@
-"""
-Support gathering system information of hosts which are running netdata.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.netdata/
-"""
+"""Support gathering system information of hosts which are running netdata."""
 from datetime import timedelta
 import logging
 
@@ -17,8 +12,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['netdata==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 

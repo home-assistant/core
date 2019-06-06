@@ -1,9 +1,4 @@
-"""
-Support for ComEd Hourly Pricing data.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.comed_hourly_pricing/
-"""
+"""Support for ComEd Hourly Pricing data."""
 import asyncio
 from datetime import timedelta
 import json
@@ -111,7 +106,7 @@ class ComedHourlyPricingSensor(Entity):
                 else:
                     url_string += '?type=currenthouraverage'
 
-                with async_timeout.timeout(60, loop=self.loop):
+                with async_timeout.timeout(60):
                     response = await self.websession.get(url_string)
                     # The API responds with MIME type 'text/html'
                     text = await response.text()

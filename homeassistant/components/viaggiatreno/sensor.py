@@ -1,9 +1,4 @@
-"""
-Support for information about the Italian train system using ViaggiaTreno API.
-
-For more details about this platform please refer to the documentation at
-https://home-assistant.io/components/sensor.viaggiatreno
-"""
+"""Support for the Italian train system using ViaggiaTreno API."""
 import asyncio
 import logging
 
@@ -72,7 +67,7 @@ async def async_http_request(hass, uri):
     """Perform actual request."""
     try:
         session = hass.helpers.aiohttp_client.async_get_clientsession(hass)
-        with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
+        with async_timeout.timeout(REQUEST_TIMEOUT):
             req = await session.get(uri)
         if req.status != 200:
             return {'error': req.status}

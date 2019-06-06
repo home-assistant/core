@@ -1,9 +1,4 @@
-"""
-Support for the MaryTTS service.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts.marytts/
-"""
+"""Support for the MaryTTS service."""
 import asyncio
 import logging
 import re
@@ -80,7 +75,7 @@ class MaryTTSProvider(Provider):
         actual_language = re.sub('-', '_', language)
 
         try:
-            with async_timeout.timeout(10, loop=self.hass.loop):
+            with async_timeout.timeout(10):
                 url = 'http://{}:{}/process?'.format(self._host, self._port)
 
                 audio = self._codec.upper()

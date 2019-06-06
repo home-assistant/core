@@ -1,9 +1,4 @@
-"""
-Demo platform that has two fake alarm control panels.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo platform that has two fake alarm control panels."""
 import datetime
 from homeassistant.components.manual.alarm_control_panel import ManualAlarm
 from homeassistant.const import (
