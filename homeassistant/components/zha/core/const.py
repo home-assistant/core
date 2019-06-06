@@ -104,6 +104,8 @@ QUIRK_APPLIED = 'quirk_applied'
 QUIRK_CLASS = 'quirk_class'
 MANUFACTURER_CODE = 'manufacturer_code'
 POWER_SOURCE = 'power_source'
+MAINS_POWERED = 'Mains'
+BATTERY_OR_UNKNOWN = 'Battery or Unknown'
 
 BELLOWS = 'bellows'
 ZHA = 'homeassistant.components.zha'
