@@ -525,7 +525,20 @@ gntp==1.0.3
 # homeassistant.components.google
 google-api-python-client==1.6.4
 
+<<<<<<< HEAD
 # homeassistant.components.sensor.google_travel_time
+=======
+# homeassistant.components.google_pubsub
+google-cloud-pubsub==0.39.1
+
+# homeassistant.components.google_cloud
+google-cloud-texttospeech==0.4.0
+
+# homeassistant.components.googlehome
+googledevices==1.0.2
+
+# homeassistant.components.google_travel_time
+>>>>>>> Google Cloud Platform component (TTS) (#23629)
 googlemaps==2.5.1
 
 # homeassistant.components.sensor.gpsd
