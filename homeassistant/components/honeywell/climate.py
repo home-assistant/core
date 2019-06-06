@@ -11,9 +11,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     FAN_AUTO, FAN_DIFFUSE, FAN_ON,
-    SUPPORT_AUX_HEAT, SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE,
+    SUPPORT_FAN_MODE, SUPPORT_HVAC_ACTION, SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_TEMPERATURE,
-    CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, CURRENT_HVAC_OFF,
     HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_AUTO,
     PRESET_AWAY,
 )
@@ -63,7 +63,7 @@ HW_MODE_TO_HA_HVAC_MODE = {
     'auto': HVAC_MODE_AUTO,
 }
 HW_MODE_TO_HA_HVAC_ACTION = {
-    'off': CURRENT_HVAC_IDLE,
+    'off': CURRENT_HVAC_OFF,
     'fan': CURRENT_HVAC_IDLE,
     'heat': CURRENT_HVAC_HEAT,
     'cool': CURRENT_HVAC_COOL,
@@ -123,13 +123,15 @@ class HoneywellUSThermostat(ClimateDevice):
         """Turn auxiliary heater off."""
         self._device.system_mode = 'auto'
 
-        self._supported_features = (SUPPORT_TARGET_TEMPERATURE |
-                                    SUPPORT_PRESET_MODE)
+        self._supported_features = (SUPPORT_HVAC_ACTION |
+                                    SUPPORT_PRESET_MODE |
+                                    SUPPORT_TARGET_TEMPERATURE)
+
         # these are intentionally not using: self._data['uiData'].get('xxx')
-        # pylint: disable=no-member
-        if self._data['uiData']['hasFan']:
+        # pylint: disable=protected-access
+        if device._data['hasFan']:
             self._supported_features |= SUPPORT_FAN_MODE
-        if self._data['uiData']['canControlHumidification']:
+        if device._data['canControlHumidification']:
             self._supported_features |= SUPPORT_TARGET_HUMIDITY
 
     @property
@@ -264,10 +266,12 @@ class HoneywellUSThermostat(ClimateDevice):
     def device_state_attributes(self) -> Dict:
         """Return the device specific state attributes."""
         data = {
-            'fan': (self._device.fan_running and 'running' or 'idle'),
-            'fan_mode': self._device.fan_mode,
-            'operation_mode': self._device.system_mode,
+            'fan_mode_xxx': self._device.fan_mode,
+            'operation_mode_xxx': self._device.system_mode,
         }
+        if self._data['hasFan']:  # pylint: disable=no-member
+            data['fan_action'] = \
+                'running' if self._device.fan_running else 'idle'
         return data
 
     def _turn_away_mode_on(self):
@@ -310,6 +314,7 @@ class HoneywellUSThermostat(ClimateDevice):
 
     def update(self):
         """Update the state."""
+        _LOGGER.error("SomeComfort update...")
         retries = 3
         while retries > 0:
             try:
