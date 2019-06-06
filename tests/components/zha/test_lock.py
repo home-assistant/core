@@ -69,8 +69,8 @@ async def async_lock(hass, cluster, entity_id):
             'entity_id': entity_id
         }, blocking=True)
         assert cluster.request.call_count == 1
-        assert cluster.request.call_args == call(
-            False, LOCK_DOOR, (), expect_reply=True, manufacturer=None)
+        assert cluster.request.call_args[0][0] is False
+        assert cluster.request.call_args[0][1] == LOCK_DOOR
 
 
 async def async_unlock(hass, cluster, entity_id):
@@ -84,5 +84,5 @@ async def async_unlock(hass, cluster, entity_id):
             'entity_id': entity_id
         }, blocking=True)
         assert cluster.request.call_count == 1
-        assert cluster.request.call_args == call(
-            False, UNLOCK_DOOR, (), expect_reply=True, manufacturer=None)
+        assert cluster.request.call_args[0][0] is False
+        assert cluster.request.call_args[0][1] == UNLOCK_DOOR
