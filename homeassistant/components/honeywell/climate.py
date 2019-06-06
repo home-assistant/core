@@ -159,11 +159,6 @@ class HoneywellUSThermostat(ClimateDevice):
         return self._supported_features
 
     @property
-    def hvac_mode(self) -> str:
-        """Return hvac operation ie. heat, cool mode."""
-        return HW_MODE_TO_HVAC_MODE[self._device.system_mode]
-
-    @property
     def hvac_modes(self) -> List[str]:
         """Return the list of available hvac operation modes."""
         return list(self._hvac_mode_map)
@@ -244,6 +239,11 @@ class HoneywellUSThermostat(ClimateDevice):
         elif self.hvac_mode != HVAC_MODE_OFF:
             return self._device.setpoint_heat
         return None
+
+    @property
+    def hvac_mode(self) -> str:
+        """Return hvac operation ie. heat, cool mode."""
+        return HW_MODE_TO_HVAC_MODE[self._device.system_mode]
 
     def set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
