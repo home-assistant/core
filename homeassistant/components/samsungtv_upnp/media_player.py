@@ -138,11 +138,11 @@ async def async_setup_platform(
             hass, server_host, server_port, requester, callback_url_override)
 
     # create upnp device
-    from async_upnp_client import UpnpFactory
+    from async_upnp_client import (UpnpFactory, UpnpError)
     factory = UpnpFactory(requester, disable_state_variable_validation=True)
     try:
         upnp_device = await factory.async_create_device(url)
-    except (asyncio.TimeoutError, aiohttp.ClientError):
+    except (asyncio.TimeoutError, aiohttp.ClientError, UpnpError):
         raise PlatformNotReady()
 
     # wrap with UpnpProfileDevice
@@ -257,8 +257,6 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
 
     async def async_select_source(self, source):
         """Select playback device."""
-        from async_upnp_client import UpnpError
-
         if source not in self._source_list:
             _LOGGER.debug('Unsupported source')
             return
