@@ -50,11 +50,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 HVAC_MODE_TO_HW_MODE = {
-    'xSwitchOffAllowed': {HVAC_MODE_OFF: 'off'},
+    'SwitchOffAllowed': {HVAC_MODE_OFF: 'off'},
     'SwitchAutoAllowed': {HVAC_MODE_AUTO: 'auto'},
     'SwitchCoolAllowed': {HVAC_MODE_COOL: 'cool'},
     'SwitchHeatAllowed': {HVAC_MODE_HEAT: 'heat'},
-    # witchEmergencyHeatAllowed': {HVAC_MODE_???: 'emheat'},
 }
 HW_MODE_TO_HVAC_MODE = {
     'off': HVAC_MODE_OFF,
@@ -69,10 +68,10 @@ HW_MODE_TO_HA_HVAC_ACTION = {
     'heat': CURRENT_HVAC_HEAT,
     'cool': CURRENT_HVAC_COOL,
 }
-HA_FAN_MODE_TO_HW = {
-    FAN_ON: 'on',
-    FAN_AUTO: 'auto',
-    FAN_DIFFUSE: 'circulate'
+FAN_MODE_TO_HW = {
+    'fanModeOnAllowed': {FAN_ON: 'on'},
+    'fanModeAutoAllowed': {FAN_AUTO: 'auto'},
+    'fanModeCirculateAllowed': {FAN_DIFFUSE: 'circulate'},
 }
 HW_FAN_MODE_TO_HA = {
     'on': FAN_ON,
@@ -136,19 +135,24 @@ class HoneywellUSThermostat(ClimateDevice):
                                     SUPPORT_TARGET_TEMPERATURE)
 
         # pylint: disable=protected-access
-        # these are intentionally not using: self._data['uiData'].get('xxx')
-        if device._data['hasFan']:
-            self._supported_features |= SUPPORT_FAN_MODE
+        # not all honeywell HVACs upport all modes
+        mappings = [v for k, v in HVAC_MODE_TO_HW_MODE.items()
+                    if k in device._data['uiData']]
+        self._hvac_mode_map = {k: v for d in mappings for k, v in d.items()}
+
         if device._data['canControlHumidification']:
             self._supported_features |= SUPPORT_TARGET_HUMIDITY
-        if device._data['SwitchEmergencyHeatAllowed']:
+        if device._data['uiData']['SwitchEmergencyHeatAllowed']:
             self._supported_features |= SUPPORT_AUX_HEAT
 
-        # not all honeywell devices upport all modes
-        temp_list = [v for k, v in HVAC_MODE_TO_HW_MODE.items()
-                     if k in device._data['uiData']]
-        self._hvac_mode_map = {k: v for d in temp_list for k, v in d.items()}
-        self._hvac_modes = list(self._hvac_mode_map)
+        if not device._data['hasFan']:
+            return
+
+        self._supported_features |= SUPPORT_FAN_MODE
+        # not all honeywell fans support all modes
+        mappings = [v for k, v in FAN_MODE_TO_HW.items()
+                    if k in device._data['fanData']]
+        self._fan_mode_map = {k: v for d in mappings for k, v in d.items()}
 
     @property
     def supported_features(self):
@@ -157,19 +161,13 @@ class HoneywellUSThermostat(ClimateDevice):
 
     @property
     def hvac_mode(self) -> str:
-        """Return hvac operation ie. heat, cool mode.
-
-        Need to be one of HVAC_MODE_*.
-        """
+        """Return hvac operation ie. heat, cool mode."""
         return HW_MODE_TO_HVAC_MODE[self._device.system_mode]
 
     @property
     def hvac_modes(self) -> List[str]:
-        """Return the list of available hvac operation modes.
-
-        Need to be a subset of HVAC_MODES.
-        """
-        return self._hvac_modes
+        """Return the list of available hvac operation modes."""
+        return list(self._hvac_mode_map)
 
     @property
     def hvac_action(self) -> Optional[str]:
@@ -181,8 +179,7 @@ class HoneywellUSThermostat(ClimateDevice):
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        self._device.system_mode = \
-            somecomfort.SYSTEM_MODES.index(self._hvac_mode_map[hvac_mode])
+        self._device.system_mode = hvac_mode
 
     @property
     def preset_mode(self) -> Optional[str]:
@@ -206,6 +203,14 @@ class HoneywellUSThermostat(ClimateDevice):
         """Return true if aux heater."""
         return self._device.system_mode == 'emheat'
 
+    def turn_aux_heat_on(self) -> None:
+        """Turn auxiliary heater on."""
+        self._device.system_mode = 'emheat'
+
+    def turn_aux_heat_off(self) -> None:
+        """Turn auxiliary heater off."""
+        self._device.system_mode = 'auto'
+
     @property
     def fan_mode(self) -> Optional[str]:
         """Return the fan setting."""
@@ -214,12 +219,11 @@ class HoneywellUSThermostat(ClimateDevice):
     @property
     def fan_modes(self) -> Optional[List[str]]:
         """Return the list of available fan modes."""
-        return list(HA_FAN_MODE_TO_HW)
+        return list(self._fan_mode_map)
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        self._device.fan_mode = \
-            somecomfort.FAN_MODES.index(HA_FAN_MODE_TO_HW[fan_mode])
+        self._device.fan_mode = fan_mode
 
     @property
     def name(self) -> Optional[str]:
