@@ -12,8 +12,13 @@ pip>=8.0.3
 python-slugify==1.2.6
 pytz>=2018.07
 pyyaml>=3.13,<4
+<<<<<<< HEAD
 requests==2.21.0
 ruamel.yaml==0.15.85
+=======
+requests==2.22.0
+ruamel.yaml==0.15.97
+>>>>>>> Upgrade ruamel.yaml to 0.15.97 (#24350)
 voluptuous==0.11.5
 voluptuous-serialize==2.0.0
 
