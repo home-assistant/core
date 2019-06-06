@@ -17,12 +17,14 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
 # define configuration parameters
-PLATFORM_SCHEMA = vol.Schema({
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.All(cv.ensure_list, vol.Schema([{
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_SCAN_INTERVAL,
                      default=DEFAULT_SCAN_INTERVAL): cv.time_period,
-})
+    }]))
+}, extra=vol.ALLOW_EXTRA)
 
 N26_COMPONENTS = [
     'sensor',
