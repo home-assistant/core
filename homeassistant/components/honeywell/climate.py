@@ -236,9 +236,28 @@ class HoneywellUSThermostat(ClimateDevice):
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVAC_MODE_COOL:
             return self._device.setpoint_cool
-        elif self.hvac_mode != HVAC_MODE_OFF:
+
+        elif self.hvac_mode != HVAC_MODE_HEAT:
             return self._device.setpoint_heat
+
+        elif self.hvac_mode != HVAC_MODE_AUTO:
+            if self.hvac_action == CURRENT_HVAC_HEAT:
+                return self._device.setpoint_heat
+
+            elif self.hvac_action == CURRENT_HVAC_COOL:
+                return self._device.setpoint_cool
+
         return None
+
+    @property
+    def target_temperature_high(self) -> Optional[float]:
+        """Return the highbound target temperature we try to reach."""
+        return self._device.setpoint_heat
+
+    @property
+    def target_temperature_low(self) -> Optional[float]:
+        """Return the lowbound target temperature we try to reach."""
+        return self._device.setpoint_cool
 
     @property
     def hvac_mode(self) -> str:
