@@ -127,12 +127,10 @@ class UniFiSwitch(SwitchDevice):
         """Enable POE for client."""
         await self.device.async_set_port_poe_mode(
             self.client.sw_port, self.poe_mode)
-        self.hass.async_create_task(self.controller.request_update())
 
     async def async_turn_off(self, **kwargs):
         """Disable POE for client."""
         await self.device.async_set_port_poe_mode(self.client.sw_port, 'off')
-        self.hass.async_create_task(self.controller.request_update())
 
     @property
     def device_state_attributes(self):

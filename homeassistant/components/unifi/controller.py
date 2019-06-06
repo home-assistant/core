@@ -43,10 +43,10 @@ class UniFiController:
     async def request_update(self):
         """Request an update."""
         if self.progress is not None:
-            return
+            return await self.progress
 
-        self.progress = True
-        await self.async_update()
+        self.progress = asyncio.ensure_future(self.async_update())
+        await self.progress
 
         self.progress = None
 
