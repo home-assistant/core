@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import location
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['WazeRouteCalculator==0.10']
+REQUIREMENTS = ['WazeRouteCalculator==0.9']
 
 _LOGGER = logging.getLogger(__name__)
 
