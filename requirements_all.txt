@@ -1610,7 +1610,11 @@ raincloudy==0.0.5
 raspyrfm-client==1.2.8
 
 # homeassistant.components.rainmachine
+<<<<<<< HEAD
 regenmaschine==1.1.0
+=======
+regenmaschine==1.5.1
+>>>>>>> Bump regenmaschine to 1.5.1 (#24358)
 
 # homeassistant.components.python_script
 restrictedpython==4.0b7
