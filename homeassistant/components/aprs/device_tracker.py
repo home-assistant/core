@@ -10,7 +10,6 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP)
-from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
 
@@ -44,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST,
                  default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_TIMEOUT,
-                 default=DEFAULT_TIMEOUT): vol.Coerce(float)
+                 default=DEFAULT_TIMEOUT): vol.Coerce(float),
 })
 
 
@@ -97,10 +96,12 @@ def setup_scanner(hass, config, see, discovery_info=None):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, aprs_disconnect)
 
     if not aprs_listener.start_event.wait(timeout):
-        raise PlatformNotReady("Timeout waiting for APRS to connect.")
+        _LOGGER.error("Timeout waiting for APRS to connect.")
+        return
 
     if not aprs_listener.start_success:
-        raise PlatformNotReady(aprs_listener.start_message)
+        _LOGGER.error(aprs_listener.start_message)
+        return
 
     _LOGGER.debug(aprs_listener.start_message)
     return True
