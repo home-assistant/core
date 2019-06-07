@@ -5,6 +5,11 @@ To update, run python3 -m hassfest
 
 
 FLOWS = [
+    "ais_dom_device",
+    "ais_drives_service",
+    "ais_host",
+    "ais_spotify_service",
+    "ais_wifi_service",
     "ambiclimate",
     "ambient_station",
     "axis",

@@ -80,7 +80,7 @@ def configured_service(hass):
     return set('ais_wifi_service' for entry in hass.config_entries.async_entries(DOMAIN))
 
 
-@config_entries.HANDLERS.register(DOMAIN)
+@config_entries.HANDLERS.register('ais_wifi_service')
 class AisWiFilowHandler(config_entries.ConfigFlow):
     """AIS WiFi config flow."""
 

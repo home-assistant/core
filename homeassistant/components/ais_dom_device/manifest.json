@@ -1,0 +1,9 @@
+{
+  "domain": "ais_dom_device",
+  "name": "AIS Dodanie nowego urządzenia",
+  "config_flow": true,
+  "documentation": "https://www.ai-speaker.com",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

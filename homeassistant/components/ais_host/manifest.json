@@ -1,6 +1,6 @@
 {
-  "domain": "ais_wifi_service",
-  "name": "AIS Konfiguracja połączenia",
+  "domain": "ais_host",
+  "name": "AIS Konfiguracja nazwy hosta",
   "config_flow": true,
   "documentation": "https://ai-speaker.com",
   "requirements": [],

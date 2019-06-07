@@ -1,7 +1,7 @@
 {
-  "domain": "ais_wifi_service",
-  "name": "AIS Konfiguracja połączenia",
-  "config_flow": true,
+  "domain": "ais_yt_service",
+  "name": "AIS YouTube",
+  "config_flow": false,
   "documentation": "https://ai-speaker.com",
   "requirements": [],
   "dependencies": [],

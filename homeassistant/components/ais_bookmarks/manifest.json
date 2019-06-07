@@ -1,0 +1,9 @@
+{
+  "domain": "ais_bookmarks",
+  "name": "AIS Bookmarks",
+  "config_flow": false,
+  "documentation": "https://www.ai-speaker.com",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

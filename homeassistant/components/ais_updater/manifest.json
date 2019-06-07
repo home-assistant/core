@@ -1,0 +1,9 @@
+{
+  "domain": "ais_updater",
+  "name": "AIS Updater",
+  "config_flow": false,
+  "documentation": "https://www.ai-speaker.com",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,9 @@
+{
+  "domain": "ais_drives_service",
+  "name": "AIS Dodanie nowego dysku",
+  "config_flow": true,
+  "documentation": "https://www.ai-speaker.com",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}
