@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from pysuez.client import PySuezError
     from pysuez import SuezClient
 
-    username = config.get(CONF_USERNAME)
+    username = config[CONF_USERNAME]
     password = config.get(CONF_PASSWORD)
     counter_id = config.get(CONF_COUNTER_ID)
 
