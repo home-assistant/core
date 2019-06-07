@@ -15,11 +15,11 @@ variables:
 
 jobs:
 
-- job: 'Pip_Install_Demo'
+- job: 'Check_Python'
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
-    maxParallel: 1
+    maxParallel: 2
     matrix:
       Python35:
         python.version: '3.5'
