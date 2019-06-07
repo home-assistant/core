@@ -36,18 +36,14 @@ _LOGGER = logging.getLogger(__name__)
 CONF_RESOLUTION = 'resolution'
 CONF_STREAM_SOURCE = 'stream_source'
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
-CONF_MAX_ERRORS = 'max_errors'
-CONF_RECHECK_INTERVAL = 'recheck_interval'
 CONF_CONTROL_LIGHT = 'control_light'
 
 DEFAULT_NAME = 'Amcrest Camera'
 DEFAULT_PORT = 80
 DEFAULT_RESOLUTION = 'high'
 DEFAULT_ARGUMENTS = '-pred 1'
-MIN_MAX_ERRORS = 3
-DEFAULT_MAX_ERRORS = 5
-MIN_RECHECK_INTERVAL = timedelta(seconds=15)
-DEFAULT_RECHECK_INTERVAL = timedelta(minutes=1)
+MAX_ERRORS = 5
+RECHECK_INTERVAL = timedelta(minutes=1)
 
 NOTIFICATION_ID = 'amcrest_notification'
 NOTIFICATION_TITLE = 'Amcrest Camera Setup'
@@ -115,10 +111,6 @@ AMCREST_SCHEMA = vol.All(
                     _deprecated_sensor_values),
         vol.Optional(CONF_SWITCHES):
             vol.All(cv.ensure_list, [vol.In(SWITCHES)]),
-        vol.Optional(CONF_MAX_ERRORS, default=DEFAULT_MAX_ERRORS):
-            vol.All(vol.Coerce(int), vol.Range(min=MIN_MAX_ERRORS)),
-        vol.Optional(CONF_RECHECK_INTERVAL, default=DEFAULT_RECHECK_INTERVAL):
-            vol.All(cv.time_period, vol.Range(min=MIN_RECHECK_INTERVAL)),
         vol.Optional(CONF_CONTROL_LIGHT, default=True): cv.boolean,
     }),
     _deprecated_switches
@@ -129,72 +121,67 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
+# pylint: disable=too-many-ancestors
+class AmcrestChecker(Http):
+    """amcrest.Http wrapper for catching errors."""
+
+    def __init__(self, hass, name, host, port, user, password):
+        """Initialize."""
+        self._hass = hass
+        self._wrap_name = name
+        self._wrap_errors = 0
+        self._wrap_lock = threading.Lock()
+        self._unsub_recheck = None
+        super().__init__(host, port, user, password, retries_connection=1,
+                         timeout_protocol=3.05)
+
+    @property
+    def available(self):
+        """Return if camera's API is responding."""
+        return self._wrap_errors <= MAX_ERRORS
+
+    def command(self, cmd, retries=None, timeout_cmd=None, stream=False):
+        """amcrest.Http.command wrapper to catch errors."""
+        try:
+            ret = super().command(cmd, retries, timeout_cmd, stream)
+        except AmcrestError:
+            with self._wrap_lock:
+                was_online = self.available
+                self._wrap_errors += 1
+                _LOGGER.debug('%s camera errs: %i', self._wrap_name,
+                              self._wrap_errors)
+                offline = not self.available
+            if offline and was_online:
+                _LOGGER.error(
+                    '%s camera offline: Too many errors', self._wrap_name)
+                dispatcher_send(
+                    self._hass,
+                    service_signal(SERVICE_UPDATE, self._wrap_name))
+                self._unsub_recheck = track_time_interval(
+                    self._hass, self._wrap_test_online, RECHECK_INTERVAL)
+            raise
+        with self._wrap_lock:
+            was_offline = not self.available
+            self._wrap_errors = 0
+        if was_offline:
+            self._unsub_recheck()
+            self._unsub_recheck = None
+            _LOGGER.error('%s camera back online', self._wrap_name)
+            dispatcher_send(
+                self._hass, service_signal(SERVICE_UPDATE, self._wrap_name))
+        return ret
+
+    def _wrap_test_online(self, now):
+        """Test if camera is back online."""
+        try:
+            self.current_time
+        except AmcrestError:
+            pass
+
+
 def setup(hass, config):
     """Set up the Amcrest IP Camera component."""
     hass.data.setdefault(DATA_AMCREST, {DEVICES: {}, CAMERAS: []})
-
-    # pylint: disable=too-many-ancestors
-    class AmcrestChecker(Http):
-        """amcrest.Http wrapper for catching errors."""
-
-        def __init__(self, host, port, user,
-                     password, verbose=True, protocol='http',
-                     retries_connection=None, timeout_protocol=None,
-                     name='', max_errors=DEFAULT_MAX_ERRORS,
-                     recheck_interval=DEFAULT_RECHECK_INTERVAL):
-            self._wrap_name = name
-            self._wrap_max_errors = max_errors
-            self._wrap_recheck_interval = recheck_interval
-            self._wrap_failures = 0
-            self._wrap_lock = threading.Lock()
-            self._unsub_recheck = None
-            super().__init__(
-                host, port, user, password, verbose, protocol,
-                retries_connection, timeout_protocol)
-
-        @property
-        def available(self):
-            """Return if camera's API is responding."""
-            return self._wrap_failures <= self._wrap_max_errors
-
-        def command(self, cmd, retries=None, timeout_cmd=None, stream=False):
-            """amcrest.Http.command wrapper to catch errors."""
-            try:
-                ret = super().command(cmd, retries, timeout_cmd, stream)
-            except AmcrestError:
-                with self._wrap_lock:
-                    was_online = self.available
-                    self._wrap_failures += 1
-                    _LOGGER.debug(
-                        '%s camera errs: %i', self._wrap_name,
-                        self._wrap_failures)
-                    offline = not self.available
-                if offline and was_online:
-                    _LOGGER.error(
-                        '%s camera offline: Too many errors', self._wrap_name)
-                    dispatcher_send(
-                        hass, service_signal(SERVICE_UPDATE, self._wrap_name))
-                    self._unsub_recheck = track_time_interval(
-                        hass, self.wrap_test_online,
-                        self._wrap_recheck_interval)
-                raise
-            with self._wrap_lock:
-                was_offline = not self.available
-                self._wrap_failures = 0
-            if was_offline:
-                self._unsub_recheck()
-                self._unsub_recheck = None
-                _LOGGER.error('%s camera back online', self._wrap_name)
-                dispatcher_send(
-                    hass, service_signal(SERVICE_UPDATE, self._wrap_name))
-            return ret
-
-        def wrap_test_online(self, now):
-            """Test if camera is back online."""
-            try:
-                self.current_time
-            except AmcrestError:
-                pass
 
     for device in config[DOMAIN]:
         name = device[CONF_NAME]
@@ -203,15 +190,9 @@ def setup(hass, config):
 
         try:
             api = AmcrestChecker(
-                device[CONF_HOST],
-                device[CONF_PORT],
-                username,
-                password,
-                retries_connection=1,
-                timeout_protocol=3.05,
-                name=name,
-                max_errors=device[CONF_MAX_ERRORS],
-                recheck_interval=device[CONF_RECHECK_INTERVAL])
+                hass, name,
+                device[CONF_HOST], device[CONF_PORT],
+                username, password)
 
         except LoginError as ex:
             _LOGGER.error("Login error for %s camera: %s", name, ex)

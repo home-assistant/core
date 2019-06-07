@@ -179,7 +179,7 @@ class AmcrestCam(Camera):
 
         False if entity pushes its state to HA.
         """
-        return self._api.available and not self._update_succeeded
+        return True
 
     @property
     def name(self):
@@ -266,7 +266,9 @@ class AmcrestCam(Camera):
 
     def update(self):
         """Update entity status."""
-        if not self.available:
+        if not self.available or self._update_succeeded:
+            if not self.available:
+                self._update_succeeded = False
             return
         _LOGGER.debug('Updating %s camera', self.name)
         try:
