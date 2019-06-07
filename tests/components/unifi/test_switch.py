@@ -298,7 +298,6 @@ async def test_new_client_discovered(hass, mock_controller):
     await hass.services.async_call('switch', 'turn_off', {
         'entity_id': 'switch.client_1'
     }, blocking=True)
-    await hass.async_block_till_done()
     # 2x light update, 1 turn on request
     assert len(mock_controller.mock_requests) == 5
     assert len(hass.states.async_all()) == 3
@@ -333,7 +332,6 @@ async def test_failed_update_failed_login(hass, mock_controller):
     assert len(mock_controller.mock_requests) == 0
 
     assert mock_controller.available is False
-    assert False
 
 
 async def test_failed_update_unreachable_controller(hass, mock_controller):
