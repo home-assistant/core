@@ -44,7 +44,6 @@ def decorate_command(channel, command):
     """Wrap a cluster command to make it safe."""
     @wraps(command)
     async def wrapper(*args, **kwds):
-        from zigpy.zcl.foundation import Status
         from zigpy.exceptions import DeliveryError
         try:
             result = await command(*args, **kwds)
@@ -54,9 +53,8 @@ def decorate_command(channel, command):
                           "{}: {}".format("with args", args),
                           "{}: {}".format("with kwargs", kwds),
                           "{}: {}".format("and result", result))
-            if isinstance(result, bool):
-                return result
-            return result[1] is Status.SUCCESS
+            return result
+
         except (DeliveryError, Timeout) as ex:
             _LOGGER.debug(
                 "%s: command failed: %s exception: %s",
@@ -64,7 +62,7 @@ def decorate_command(channel, command):
                 command.__name__,
                 str(ex)
             )
-            return False
+            return ex
     return wrapper
 
 
