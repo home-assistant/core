@@ -224,11 +224,15 @@ async-upnp-client==0.14.0
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 axis==16
 =======
 =======
 >>>>>>> Axis - Handle Vapix error messages (#24215)
 axis==24
+=======
+axis==25
+>>>>>>> Bump dependency (#24376)
 =======
 axis==25
 >>>>>>> Bump dependency (#24376)
