@@ -36,26 +36,39 @@ jobs:
       sudo add-apt-repository ppa:jonathonf/ffmpeg-4
       sudo apt-get update
       sudo apt-get install -y --no-install-recommends \
-        libudev-dev libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev libswscale-dev libswresample-dev libavfilter-dev
+        libudev libavformat libavcodec libavdevice libavutil libswscale libswresample libavfilter
+
+      echo "$(python.version)" > .python
     displayName: 'Set up docker prerequisite requirement'
 
   - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreCacheV1.RestoreCache@1
     displayName: 'Restore artifacts based on Requirements'
     inputs:
-      keyfile: 'requirements_all.txt'
-      targetfolder: ./venv
+      keyfile: 'requirements_test_all.txt, .python'
+      targetfolder: './venv'
       vstsFeed: '$(ArtifactFeed)' 
 
   - script: |
+      # Install build env
+      sudo apt-get install -y --no-install-recommends \
+        libudev-dev libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev libswscale-dev libswresample-dev libavfilter-dev
+
+      # Setup venv
       python3 -m venv venv
       . venv/bin/activate
       pip install -U pip setuptools
-      pip3 install -r requirements_all.txt -c homeassistant/package_constraints.txt
+      pip3 install -r requirements_test_all.txt -c homeassistant/package_constraints.txt
     displayName: 'Create Virtual Environment & Install Requirements'
+    condition: ne(variables['CacheRestored'], 'true')
 
   - task: 1ESLighthouseEng.PipelineArtifactCaching.SaveCacheV1.SaveCache@1
     displayName: 'Save artifacts based on Requirements'
     inputs:
-      keyfile: 'requirements_all.txt'
-      targetfolder: ./venv
-      vstsFeed: '$(ArtifactFeed)'
+      keyfile: 'requirements_test_all.txt, .python'
+      targetfolder: './venv'
+      vstsFeed: '$(ArtifactFeed)' 
+  
+  - script: |
+      ./venv/bin/py.test --timeout=9 --durations=10 -qq -o console_output_style=count -p no:sugar
+      ./script/check_dirty
+    displayName: 'Run py.test with python $(python.version)'
