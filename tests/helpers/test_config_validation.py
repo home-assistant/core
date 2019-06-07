@@ -18,7 +18,7 @@ def test_boolean():
     schema = vol.Schema(cv.boolean)
 
     for value in (
-            'T', 'negative', 'lock', 'tr  ue',
+            None, 'T', 'negative', 'lock', 'tr  ue',
             [], [1, 2], {'one': 'two'}, test_boolean):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
@@ -27,7 +27,7 @@ def test_boolean():
                   'enable', 1, 50, True, 0.1):
         assert schema(value)
 
-    for value in (None, 'false', 'Off', '0', 'NO', 'disable', 0, False):
+    for value in ('false', 'Off', '0', 'NO', 'disable', 0, False):
         assert not schema(value)
 
 
