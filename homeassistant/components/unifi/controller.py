@@ -12,7 +12,8 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import CONF_CONTROLLER, CONF_POE_CONTROL, LOGGER
+from .const import (
+    CONF_CONTROLLER, CONF_POE_CONTROL, CONF_SITE_ID, CONTROLLER_ID, LOGGER)
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -40,6 +41,14 @@ class UniFiController:
                 return client.mac
         return None
 
+    @property
+    def event_update(self):
+        """Controller specific event to signal new data."""
+        return 'unifi-update-{}'.format(
+            CONTROLLER_ID.format(
+                host=self.host,
+                site=self.config_entry.data[CONF_CONTROLLER][CONF_SITE_ID]))
+
     async def request_update(self):
         """Request an update."""
         if self.progress is not None:
@@ -52,6 +61,8 @@ class UniFiController:
 
     async def async_update(self):
         """Update UniFi controller information."""
+        failed = False
+
         try:
             with async_timeout.timeout(4):
                 await self.api.clients.update()
@@ -61,24 +72,24 @@ class UniFiController:
             try:
                 with async_timeout.timeout(5):
                     await self.api.login()
+
             except (asyncio.TimeoutError, aiounifi.AiounifiException):
+                failed = True
                 if self.available:
+                    LOGGER.error('Unable to reach controller %s', self.host)
                     self.available = False
-                    async_dispatcher_send(self.hass, 'unifi-update-event')
-                return
 
         except (asyncio.TimeoutError, aiounifi.AiounifiException):
+            failed = True
             if self.available:
                 LOGGER.error('Unable to reach controller %s', self.host)
                 self.available = False
-                async_dispatcher_send(self.hass, 'unifi-update-event')
-            return
 
-        if not self.available:
+        if not failed and not self.available:
             LOGGER.info('Reconnected to controller %s', self.host)
             self.available = True
 
-        async_dispatcher_send(self.hass, 'unifi-update-event')
+        async_dispatcher_send(self.hass, self.event_update)
 
     async def async_setup(self):
         """Set up a UniFi controller."""

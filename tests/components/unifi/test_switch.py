@@ -4,6 +4,8 @@ from unittest.mock import Mock
 
 import pytest
 
+from tests.common import mock_coro
+
 import aiounifi
 from aiounifi.clients import Clients
 from aiounifi.devices import Devices
@@ -220,9 +222,8 @@ async def setup_controller(hass, mock_controller):
         1, unifi.DOMAIN, 'Mock Title', ENTRY_CONFIG, 'test',
         config_entries.CONN_CLASS_LOCAL_POLL)
     mock_controller.config_entry = config_entry
-    # Done in setup
-    await mock_controller.api.clients.update()
-    await mock_controller.api.devices.update()
+
+    await mock_controller.async_update()
     await hass.config_entries.async_forward_entry_setup(config_entry, 'switch')
     # To flush out the service call to update the group
     await hass.async_block_till_done()
@@ -305,6 +306,34 @@ async def test_new_client_discovered(hass, mock_controller):
     switch = hass.states.get('switch.client_2')
     assert switch is not None
     assert switch.state == 'on'
+
+
+async def test_failed_update_successful_login(hass, mock_controller):
+    """Running update can login when requested."""
+    mock_controller.available = False
+    mock_controller.api.clients.update = Mock()
+    mock_controller.api.clients.update.side_effect = aiounifi.LoginRequired
+    mock_controller.api.login = Mock()
+    mock_controller.api.login.return_value = mock_coro()
+
+    await setup_controller(hass, mock_controller)
+    assert len(mock_controller.mock_requests) == 0
+
+    assert mock_controller.available is True
+
+
+async def test_failed_update_failed_login(hass, mock_controller):
+    """Running update can handle a failed login."""
+    mock_controller.api.clients.update = Mock()
+    mock_controller.api.clients.update.side_effect = aiounifi.LoginRequired
+    mock_controller.api.login = Mock()
+    mock_controller.api.login.side_effect = aiounifi.AiounifiException
+
+    await setup_controller(hass, mock_controller)
+    assert len(mock_controller.mock_requests) == 0
+
+    assert mock_controller.available is False
+    assert False
 
 
 async def test_failed_update_unreachable_controller(hass, mock_controller):
