@@ -1,10 +1,10 @@
 """Support for the Netatmo Weather Service."""
 import logging
-import requests
 import threading
 from datetime import timedelta
 from time import time
 
+import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -535,20 +535,20 @@ class NetatmoData:
         if time() < self._next_update or \
                 not self._update_in_progress.acquire(False):
             return
+        try:
+            from pyatmo import NoDevice
+            try:
+                self.station_data = self.data_class(self.auth)
+                _LOGGER.debug("%s detected!", str(self.data_class.__name__))
+            except NoDevice:
+                _LOGGER.warning("No Weather or HomeCoach devices found for %s",
+                                str(self.station)
+                                )
+                return
+            except requests.exceptions.Timeout:
+                _LOGGER.warning("Timed out when connecting to Netatmo server.")
+                return
 
-        from pyatmo import NoDevice
-        try:
-            self.station_data = self.data_class(self.auth)
-            _LOGGER.debug("%s detected!", str(self.data_class.__name__))
-        except NoDevice:
-            _LOGGER.warning("No Weather or HomeCoach devices found for %s",
-                            str(self.station)
-                            )
-            return
-        except requests.exceptions.Timeout:
-            _LOGGER.warning("Timed out when connecting to Netatmo server.")
-            return
-        try:
             if self.station is not None:
                 data = self.station_data.lastData(
                     station=self.station, exclude=3600)
