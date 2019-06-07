@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.warning("Wrong username and/or password")
 
     except PySuezError:
-        _LOGGER.warning("Error creatin a Suez Client")
+        _LOGGER.warning("Unable to create Suez Client")
         return False
 
 
