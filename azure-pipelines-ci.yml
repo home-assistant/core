@@ -54,7 +54,7 @@ jobs:
         libudev-dev libsqlite3-dev libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev libswscale-dev libswresample-dev libavfilter-dev
 
       # Setup venv
-      python3 -m venv venv
+      python -m venv venv
       
       . venv/bin/activate
       pip install -U pip setuptools
