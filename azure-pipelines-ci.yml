@@ -14,6 +14,7 @@ jobs:
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
+    maxParallel: 1
     matrix:
       Python35:
         python.version: '3.5'
