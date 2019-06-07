@@ -1,0 +1,11 @@
+{
+  "domain": "ais_wifi_service",
+  "name": "AIS Konfiguracja połączenia",
+  "config_flow": true,
+  "documentation": "https://www.sviete.pl",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@ai-speaker.com"
+  ]
+}

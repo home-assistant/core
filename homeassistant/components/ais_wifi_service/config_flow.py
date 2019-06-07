@@ -1,4 +1,4 @@
-"""Config flow to configure the AIS Spotify Service component."""
+"""Config flow to configure the AIS WIFI Service component."""
 
 from homeassistant import config_entries
 from homeassistant.core import callback
@@ -13,6 +13,18 @@ import asyncio
 G_WIFI_NETWORKS = []
 _LOGGER = logging.getLogger(__name__)
 
+DATA_AIS_WIFI_SERVICE_IMPL = 'ais_wifi_service_flow_implementation'
+
+@callback
+def register_flow_implementation(hass, client_name, client_secret):
+    """Register a ais wifi service implementation.
+    """
+    hass.data.setdefault(DATA_AIS_WIFI_SERVICE_IMPL, {})
+
+    hass.data[DATA_AIS_WIFI_SERVICE_IMPL] = {
+        CONF_NAME: client_name,
+        CONF_PASSWORD: client_secret,
+    }
 
 @callback
 def configured_connections(hass):

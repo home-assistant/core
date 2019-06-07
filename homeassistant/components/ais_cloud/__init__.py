@@ -43,9 +43,9 @@ def async_setup(hass, config):
 
     # add "Console" panel to the menu list
     my_ip = ais_global.get_my_global_ip()
-    yield from hass.components.frontend.async_register_built_in_panel(
+    hass.components.frontend.async_register_built_in_panel(
             'iframe', "Konsola", "mdi:console",
-            "console", {'url': 'http://' + my_ip + ':8888'})
+            "console", {'url': 'http://' + my_ip + ':8888'}, require_admin=True)
     #
     hass.states.async_set("sensor.radiolist", -1, {})
     hass.states.async_set("sensor.podcastlist", -1, {})
