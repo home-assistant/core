@@ -43,7 +43,7 @@ class UniFiController:
 
     @property
     def event_update(self):
-        """Controller specific event to signal new data."""
+        """Event specific per UniFi entry to signal new data."""
         return 'unifi-update-{}'.format(
             CONTROLLER_ID.format(
                 host=self.host,
