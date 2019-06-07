@@ -12,8 +12,7 @@ from aiounifi.devices import Devices
 
 from homeassistant import config_entries
 from homeassistant.components import unifi
-from homeassistant.components.unifi.const import (
-    CONF_POE_CONTROL, CONF_CONTROLLER, CONF_SITE_ID)
+from homeassistant.components.unifi.const import CONF_CONTROLLER, CONF_SITE_ID
 from homeassistant.setup import async_setup_component
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL)
@@ -180,8 +179,7 @@ CONTROLLER_DATA = {
 }
 
 ENTRY_CONFIG = {
-    CONF_CONTROLLER: CONTROLLER_DATA,
-    CONF_POE_CONTROL: True
+    CONF_CONTROLLER: CONTROLLER_DATA
 }
 
 CONTROLLER_ID = unifi.CONTROLLER_ID.format(host='mock-host', site='mock-site')

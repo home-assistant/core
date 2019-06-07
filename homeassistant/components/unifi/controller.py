@@ -12,8 +12,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import (
-    CONF_CONTROLLER, CONF_POE_CONTROL, CONF_SITE_ID, CONTROLLER_ID, LOGGER)
+from .const import CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID, LOGGER
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -108,10 +107,9 @@ class UniFiController:
                 'Unknown error connecting with UniFi controller.')
             return False
 
-        if self.config_entry.data[CONF_POE_CONTROL]:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, 'switch'))
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(
+                self.config_entry, 'switch'))
 
         return True
 
@@ -125,10 +123,8 @@ class UniFiController:
         if self.api is None:
             return True
 
-        if self.config_entry.data[CONF_POE_CONTROL]:
-            return await self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, 'switch')
-        return True
+        return await self.hass.config_entries.async_forward_entry_unload(
+            self.config_entry, 'switch')
 
 
 async def get_controller(
