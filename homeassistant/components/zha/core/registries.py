@@ -146,6 +146,10 @@ def establish_device_mappings():
         zcl.clusters.general.AnalogInput.cluster_id: SENSOR
     })
 
+    SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS.update({
+        zcl.clusters.general.OnOff: BINARY_SENSOR,
+    })
+
     SENSOR_TYPES.update({
         zcl.clusters.measurement.RelativeHumidity.cluster_id: HUMIDITY,
         SMARTTHINGS_HUMIDITY_CLUSTER: HUMIDITY,
