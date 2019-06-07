@@ -1,5 +1,5 @@
 """Test zha lock."""
-from unittest.mock import call, patch
+from unittest.mock import patch
 from homeassistant.const import (
     STATE_LOCKED, STATE_UNLOCKED, STATE_UNAVAILABLE)
 from homeassistant.components.lock import DOMAIN
