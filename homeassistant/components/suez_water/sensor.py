@@ -48,8 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class SuezSensor(Entity):
     """Representation of a Sensor."""
 
-    #def __init__(self, username, password, counter_id, client):
-    def __init__(self, client):    
+    def __init__(self, client):
         """Initialize the data object."""
         self._name = "Suez Water Client"
         self._attributes = {}
