@@ -2,12 +2,16 @@
 import logging
 import time
 
+from pyHS100 import SmartDeviceException, SmartPlug
+
 from homeassistant.components.switch import (
     ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH, SwitchDevice)
 from homeassistant.const import ATTR_VOLTAGE
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.typing import HomeAssistantType
 
 from . import CONF_SWITCH, DOMAIN as TPLINK_DOMAIN
+from .common import async_add_entities_retry
 
 PARALLEL_UPDATES = 0
 
@@ -27,13 +31,31 @@ async def async_setup_platform(hass, config, add_entities,
                     'convert to use the tplink component.')
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up discovered switches."""
-    devs = []
-    for dev in hass.data[TPLINK_DOMAIN][CONF_SWITCH]:
-        devs.append(SmartPlugSwitch(dev))
+def add_entity(device: SmartPlug, async_add_entities):
+    """Check if device is online and add the entity."""
+    # Attempt to get the sysinfo. If it fails, it will raise an
+    # exception that is caught by async_add_entities_retry which
+    # will try again later.
+    device.get_sysinfo()
 
-    async_add_entities(devs, True)
+    async_add_entities(
+        [SmartPlugSwitch(device)],
+        update_before_add=True
+    )
+
+
+async def async_setup_entry(
+        hass: HomeAssistantType,
+        config_entry,
+        async_add_entities
+):
+    """Set up switches."""
+    await async_add_entities_retry(
+        hass,
+        async_add_entities,
+        hass.data[TPLINK_DOMAIN][CONF_SWITCH],
+        add_entity
+    )
 
     return True
 
@@ -41,7 +63,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SmartPlugSwitch(SwitchDevice):
     """Representation of a TPLink Smart Plug switch."""
 
-    def __init__(self, smartplug):
+    def __init__(self, smartplug: SmartPlug):
         """Initialize the switch."""
         self.smartplug = smartplug
         self._sysinfo = None
@@ -50,25 +72,29 @@ class SmartPlugSwitch(SwitchDevice):
         # Set up emeter cache
         self._emeter_params = {}
 
+        self._mac = None
+        self._alias = None
+        self._model = None
+
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._sysinfo["mac"]
+        return self._mac
 
     @property
     def name(self):
         """Return the name of the Smart Plug."""
-        return self._sysinfo["alias"]
+        return self._alias
 
     @property
     def device_info(self):
         """Return information about the device."""
         return {
-            "name": self.name,
-            "model": self._sysinfo["model"],
+            "name": self._alias,
+            "model": self._model,
             "manufacturer": 'TP-Link',
             "connections": {
-                (dr.CONNECTION_NETWORK_MAC, self._sysinfo["mac"])
+                (dr.CONNECTION_NETWORK_MAC, self._mac)
             },
             "sw_version": self._sysinfo["sw_ver"],
         }
@@ -98,10 +124,12 @@ class SmartPlugSwitch(SwitchDevice):
 
     def update(self):
         """Update the TP-Link switch's state."""
-        from pyHS100 import SmartDeviceException
         try:
             if not self._sysinfo:
                 self._sysinfo = self.smartplug.sys_info
+                self._mac = self.smartplug.mac
+                self._alias = self.smartplug.alias
+                self._model = self.smartplug.model
 
             self._state = self.smartplug.state == \
                 self.smartplug.SWITCH_STATE_ON

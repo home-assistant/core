@@ -11,6 +11,11 @@ _LOGGER = logging.getLogger(__name__)
 RESULT_TYPE_FORM = 'form'
 RESULT_TYPE_CREATE_ENTRY = 'create_entry'
 RESULT_TYPE_ABORT = 'abort'
+RESULT_TYPE_EXTERNAL_STEP = 'external'
+RESULT_TYPE_EXTERNAL_STEP_DONE = 'external_done'
+
+# Event that is fired when a flow is progressed via external source.
+EVENT_DATA_ENTRY_FLOW_PROGRESSED = 'data_entry_flow_progressed'
 
 
 class FlowError(HomeAssistantError):
@@ -53,6 +58,8 @@ class FlowManager:
                          context: Optional[Dict] = None,
                          data: Any = None) -> Any:
         """Start a configuration flow."""
+        if context is None:
+            context = {}
         flow = await self._async_create_flow(
             handler, context=context, data=data)
         flow.hass = self.hass
@@ -71,13 +78,31 @@ class FlowManager:
         if flow is None:
             raise UnknownFlow
 
-        step_id, data_schema = flow.cur_step
+        cur_step = flow.cur_step
 
-        if data_schema is not None and user_input is not None:
-            user_input = data_schema(user_input)
+        if cur_step.get('data_schema') is not None and user_input is not None:
+            user_input = cur_step['data_schema'](user_input)
 
-        return await self._async_handle_step(
-            flow, step_id, user_input)
+        result = await self._async_handle_step(
+            flow, cur_step['step_id'], user_input)
+
+        if cur_step['type'] == RESULT_TYPE_EXTERNAL_STEP:
+            if result['type'] not in (RESULT_TYPE_EXTERNAL_STEP,
+                                      RESULT_TYPE_EXTERNAL_STEP_DONE):
+                raise ValueError("External step can only transition to "
+                                 "external step or external step done.")
+
+            # If the result has changed from last result, fire event to update
+            # the frontend.
+            if cur_step['step_id'] != result.get('step_id'):
+                # Tell frontend to reload the flow state.
+                self.hass.bus.async_fire(EVENT_DATA_ENTRY_FLOW_PROGRESSED, {
+                    'handler': flow.handler,
+                    'flow_id': flow_id,
+                    'refresh': True
+                })
+
+        return result
 
     @callback
     def async_abort(self, flow_id: str) -> None:
@@ -97,13 +122,15 @@ class FlowManager:
 
         result = await getattr(flow, method)(user_input)  # type: Dict
 
-        if result['type'] not in (RESULT_TYPE_FORM, RESULT_TYPE_CREATE_ENTRY,
-                                  RESULT_TYPE_ABORT):
+        if result['type'] not in (RESULT_TYPE_FORM, RESULT_TYPE_EXTERNAL_STEP,
+                                  RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_ABORT,
+                                  RESULT_TYPE_EXTERNAL_STEP_DONE):
             raise ValueError(
                 'Handler returned incorrect type: {}'.format(result['type']))
 
-        if result['type'] == RESULT_TYPE_FORM:
-            flow.cur_step = (result['step_id'], result['data_schema'])
+        if result['type'] in (RESULT_TYPE_FORM, RESULT_TYPE_EXTERNAL_STEP,
+                              RESULT_TYPE_EXTERNAL_STEP_DONE):
+            flow.cur_step = result
             return result
 
         # We pass a copy of the result because we're mutating our version
@@ -111,7 +138,7 @@ class FlowManager:
 
         # _async_finish_flow may change result type, check it again
         if result['type'] == RESULT_TYPE_FORM:
-            flow.cur_step = (result['step_id'], result['data_schema'])
+            flow.cur_step = result
             return result
 
         # Abort and Success results both finish the flow
@@ -179,4 +206,28 @@ class FlowHandler:
             'handler': self.handler,
             'reason': reason,
             'description_placeholders': description_placeholders,
+        }
+
+    @callback
+    def async_external_step(self, *, step_id: str, url: str,
+                            description_placeholders: Optional[Dict] = None) \
+            -> Dict:
+        """Return the definition of an external step for the user to take."""
+        return {
+            'type': RESULT_TYPE_EXTERNAL_STEP,
+            'flow_id': self.flow_id,
+            'handler': self.handler,
+            'step_id': step_id,
+            'url': url,
+            'description_placeholders': description_placeholders,
+        }
+
+    @callback
+    def async_external_step_done(self, *, next_step_id: str) -> Dict:
+        """Return the definition of an external step for the user to take."""
+        return {
+            'type': RESULT_TYPE_EXTERNAL_STEP_DONE,
+            'flow_id': self.flow_id,
+            'handler': self.handler,
+            'step_id': next_step_id,
         }

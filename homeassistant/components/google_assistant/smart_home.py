@@ -1,17 +1,17 @@
 """Support for Google Assistant Smart Home API."""
+import asyncio
 from itertools import product
 import logging
 
 from homeassistant.util.decorator import Registry
 
-from homeassistant.const import (
-    CLOUD_NEVER_EXPOSED_ENTITIES, ATTR_ENTITY_ID)
+from homeassistant.const import ATTR_ENTITY_ID
 
 from .const import (
     ERR_PROTOCOL_ERROR, ERR_DEVICE_OFFLINE, ERR_UNKNOWN_ERROR,
     EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED, EVENT_QUERY_RECEIVED
 )
-from .helpers import RequestData, GoogleEntity
+from .helpers import RequestData, GoogleEntity, async_get_entities
 from .error import SmartHomeError
 
 HANDLERS = Registry()
@@ -81,25 +81,14 @@ async def async_devices_sync(hass, data, payload):
         {'request_id': data.request_id},
         context=data.context)
 
-    devices = []
-    for state in hass.states.async_all():
-        if state.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
-            continue
-
-        if not data.config.should_expose(state):
-            continue
-
-        entity = GoogleEntity(hass, data.config, state)
-        serialized = await entity.sync_serialize()
-
-        if serialized is None:
-            _LOGGER.debug("No mapping for %s domain", entity.state)
-            continue
-
-        devices.append(serialized)
+    devices = await asyncio.gather(*[
+        entity.sync_serialize() for entity in
+        async_get_entities(hass, data.config)
+        if data.config.should_expose(entity.state)
+    ])
 
     response = {
-        'agentUserId': data.context.user_id,
+        'agentUserId': data.config.agent_user_id or data.context.user_id,
         'devices': devices,
     }
 

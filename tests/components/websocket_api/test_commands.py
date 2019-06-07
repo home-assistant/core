@@ -67,6 +67,30 @@ async def test_call_service_not_found(hass, websocket_client):
     assert msg['error']['code'] == const.ERR_NOT_FOUND
 
 
+async def test_call_service_child_not_found(hass, websocket_client):
+    """Test not reporting not found errors if it's not the called service."""
+    async def serv_handler(call):
+        await hass.services.async_call('non', 'existing')
+
+    hass.services.async_register('domain_test', 'test_service', serv_handler)
+
+    await websocket_client.send_json({
+        'id': 5,
+        'type': 'call_service',
+        'domain': 'domain_test',
+        'service': 'test_service',
+        'service_data': {
+            'hello': 'world'
+        }
+    })
+
+    msg = await websocket_client.receive_json()
+    assert msg['id'] == 5
+    assert msg['type'] == const.TYPE_RESULT
+    assert not msg['success']
+    assert msg['error']['code'] == const.ERR_HOME_ASSISTANT_ERROR
+
+
 async def test_call_service_error(hass, websocket_client):
     """Test call service command with error."""
     @callback
@@ -134,7 +158,7 @@ async def test_subscribe_unsubscribe_events(hass, websocket_client):
     hass.bus.async_fire('test_event', {'hello': 'world'})
     hass.bus.async_fire('ignore_event')
 
-    with timeout(3, loop=hass.loop):
+    with timeout(3):
         msg = await websocket_client.receive_json()
 
     assert msg['id'] == 5
@@ -365,7 +389,7 @@ async def test_subscribe_unsubscribe_events_whitelist(
 
     hass.bus.async_fire('themes_updated')
 
-    with timeout(3, loop=hass.loop):
+    with timeout(3):
         msg = await websocket_client.receive_json()
 
     assert msg['id'] == 6

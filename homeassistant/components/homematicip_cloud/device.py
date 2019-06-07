@@ -10,7 +10,6 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_LOW_BATTERY = 'low_battery'
 ATTR_MODEL_TYPE = 'model_type'
 # RSSI HAP -> Device
 ATTR_RSSI_DEVICE = 'rssi_device'
@@ -51,9 +50,9 @@ class HomematicipGenericDevice(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self._device.on_update(self._device_changed)
+        self._device.on_update(self._async_device_changed)
 
-    def _device_changed(self, *args, **kwargs):
+    def _async_device_changed(self, *args, **kwargs):
         """Handle device state changes."""
         _LOGGER.debug("Event %s (%s)", self.name, self._device.modelType)
         self.async_schedule_update_ha_state()
@@ -96,8 +95,6 @@ class HomematicipGenericDevice(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the generic device."""
         attr = {ATTR_MODEL_TYPE: self._device.modelType}
-        if hasattr(self._device, 'lowBat') and self._device.lowBat:
-            attr[ATTR_LOW_BATTERY] = self._device.lowBat
         if hasattr(self._device, 'sabotage') and self._device.sabotage:
             attr[ATTR_SABOTAGE] = self._device.sabotage
         if hasattr(self._device, 'rssiDeviceValue') and \

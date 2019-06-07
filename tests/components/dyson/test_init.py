@@ -87,7 +87,7 @@ class DysonTest(unittest.TestCase):
         assert mocked_login.call_count == 1
         assert mocked_devices.call_count == 1
         assert len(self.hass.data[dyson.DYSON_DEVICES]) == 1
-        assert mocked_discovery.call_count == 4
+        assert mocked_discovery.call_count == 5
 
     @mock.patch('libpurecool.dyson.DysonAccount.devices',
                 return_value=[_get_dyson_account_device_not_available()])
@@ -172,7 +172,7 @@ class DysonTest(unittest.TestCase):
         assert mocked_login.call_count == 1
         assert mocked_devices.call_count == 1
         assert len(self.hass.data[dyson.DYSON_DEVICES]) == 1
-        assert mocked_discovery.call_count == 4
+        assert mocked_discovery.call_count == 5
 
     @mock.patch('libpurecool.dyson.DysonAccount.devices',
                 return_value=[_get_dyson_account_device_not_available()])

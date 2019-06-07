@@ -312,6 +312,8 @@ class HueLight(Light):
     @property
     def effect_list(self):
         """Return the list of supported effects."""
+        if self.is_osram:
+            return [EFFECT_RANDOM]
         return [EFFECT_COLORLOOP, EFFECT_RANDOM]
 
     @property
@@ -371,15 +373,15 @@ class HueLight(Light):
         else:
             command['alert'] = 'none'
 
-        effect = kwargs.get(ATTR_EFFECT)
-
-        if effect == EFFECT_COLORLOOP:
-            command['effect'] = 'colorloop'
-        elif effect == EFFECT_RANDOM:
-            command['hue'] = random.randrange(0, 65535)
-            command['sat'] = random.randrange(150, 254)
-        elif self.is_philips:
-            command['effect'] = 'none'
+        if ATTR_EFFECT in kwargs:
+            effect = kwargs[ATTR_EFFECT]
+            if effect == EFFECT_COLORLOOP:
+                command['effect'] = 'colorloop'
+            elif effect == EFFECT_RANDOM:
+                command['hue'] = random.randrange(0, 65535)
+                command['sat'] = random.randrange(150, 254)
+            else:
+                command['effect'] = 'none'
 
         if self.is_group:
             await self.light.set_action(**command)

@@ -124,26 +124,30 @@ def air_conditioner_fixture(device_factory):
         capabilities=[
             Capability.air_conditioner_mode,
             Capability.demand_response_load_control,
-            Capability.fan_speed,
+            Capability.air_conditioner_fan_mode,
             Capability.power_consumption_report,
             Capability.switch,
             Capability.temperature_measurement,
             Capability.thermostat_cooling_setpoint],
         status={
             Attribute.air_conditioner_mode: 'auto',
+            Attribute.supported_ac_modes:
+                ["cool", "dry", "wind", "auto", "heat", "fanOnly"],
             Attribute.drlc_status: {
                 "duration": 0,
                 "drlcLevel": -1,
                 "start": "1970-01-01T00:00:00Z",
                 "override": False
-            },
-            Attribute.fan_speed: 2,
+                },
+            Attribute.fan_mode: 'medium',
+            Attribute.supported_ac_fan_modes:
+                ["auto", "low", "medium", "high", "turbo"],
             Attribute.power_consumption: {
                 "start": "2019-02-24T21:03:04Z",
                 "power": 0,
                 "energy": 500,
                 "end": "2019-02-26T02:05:55Z"
-            },
+                },
             Attribute.switch: 'on',
             Attribute.cooling_setpoint: 23}
     )

@@ -84,8 +84,16 @@ class AmcrestSensor(Entity):
             self._state = self._api.ptz_presets_count
 
         elif self._sensor_type == 'sdcard':
-            sd_used = self._api.storage_used
-            sd_total = self._api.storage_total
-            self._attrs['Total'] = '{0} {1}'.format(*sd_total)
-            self._attrs['Used'] = '{0} {1}'.format(*sd_used)
-            self._state = self._api.storage_used_percent
+            storage = self._api.storage_all
+            try:
+                self._attrs['Total'] = '{:.2f} {}'.format(*storage['total'])
+            except ValueError:
+                self._attrs['Total'] = '{} {}'.format(*storage['total'])
+            try:
+                self._attrs['Used'] = '{:.2f} {}'.format(*storage['used'])
+            except ValueError:
+                self._attrs['Used'] = '{} {}'.format(*storage['used'])
+            try:
+                self._state = '{:.2f}'.format(storage['used_percent'])
+            except ValueError:
+                self._state = storage['used_percent']

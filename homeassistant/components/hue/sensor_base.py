@@ -13,7 +13,7 @@ from homeassistant.util.dt import utcnow
 
 
 CURRENT_SENSORS = 'current_sensors'
-SENSOR_MANAGER = 'sensor_manager'
+SENSOR_MANAGER_FORMAT = '{}_sensor_manager'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,10 +32,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities,
     bridge = hass.data[hue.DOMAIN][config_entry.data['host']]
     hass.data[hue.DOMAIN].setdefault(CURRENT_SENSORS, {})
 
-    manager = hass.data[hue.DOMAIN].get(SENSOR_MANAGER)
+    sm_key = SENSOR_MANAGER_FORMAT.format(config_entry.data['host'])
+    manager = hass.data[hue.DOMAIN].get(sm_key)
     if manager is None:
         manager = SensorManager(hass, bridge)
-        hass.data[hue.DOMAIN][SENSOR_MANAGER] = manager
+        hass.data[hue.DOMAIN][sm_key] = manager
 
     manager.register_component(binary, async_add_entities)
     await manager.start()

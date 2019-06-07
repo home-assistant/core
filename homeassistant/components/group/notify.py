@@ -65,4 +65,4 @@ class GroupNotifyPlatform(BaseNotificationService):
                 DOMAIN, entity.get(ATTR_SERVICE), sending_payload))
 
         if tasks:
-            await asyncio.wait(tasks, loop=self.hass.loop)
+            await asyncio.wait(tasks)

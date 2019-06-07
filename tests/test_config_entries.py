@@ -53,6 +53,7 @@ async def test_call_setup_entry(hass):
         hass,
         MockModule('comp', async_setup_entry=mock_setup_entry,
                    async_migrate_entry=mock_migrate_entry))
+    mock_entity_platform(hass, 'config_flow.comp', None)
 
     result = await async_setup_component(hass, 'comp', {})
     assert result
@@ -74,6 +75,7 @@ async def test_call_async_migrate_entry(hass):
         hass,
         MockModule('comp', async_setup_entry=mock_setup_entry,
                    async_migrate_entry=mock_migrate_entry))
+    mock_entity_platform(hass, 'config_flow.comp', None)
 
     result = await async_setup_component(hass, 'comp', {})
     assert result
@@ -95,6 +97,7 @@ async def test_call_async_migrate_entry_failure_false(hass):
         hass,
         MockModule('comp', async_setup_entry=mock_setup_entry,
                    async_migrate_entry=mock_migrate_entry))
+    mock_entity_platform(hass, 'config_flow.comp', None)
 
     result = await async_setup_component(hass, 'comp', {})
     assert result
@@ -117,6 +120,7 @@ async def test_call_async_migrate_entry_failure_exception(hass):
         hass,
         MockModule('comp', async_setup_entry=mock_setup_entry,
                    async_migrate_entry=mock_migrate_entry))
+    mock_entity_platform(hass, 'config_flow.comp', None)
 
     result = await async_setup_component(hass, 'comp', {})
     assert result
@@ -139,6 +143,7 @@ async def test_call_async_migrate_entry_failure_not_bool(hass):
         hass,
         MockModule('comp', async_setup_entry=mock_setup_entry,
                    async_migrate_entry=mock_migrate_entry))
+    mock_entity_platform(hass, 'config_flow.comp', None)
 
     result = await async_setup_component(hass, 'comp', {})
     assert result
@@ -158,6 +163,7 @@ async def test_call_async_migrate_entry_failure_not_supported(hass):
     mock_integration(
         hass,
         MockModule('comp', async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, 'config_flow.comp', None)
 
     result = await async_setup_component(hass, 'comp', {})
     assert result
@@ -201,6 +207,7 @@ async def test_remove_entry(hass, manager):
     mock_entity_platform(
         hass, 'light.test',
         MockPlatform(async_setup_entry=mock_setup_entry_platform))
+    mock_entity_platform(hass, 'config_flow.test', None)
 
     MockConfigEntry(
         domain='test_other', entry_id='test1'
@@ -254,9 +261,9 @@ async def test_remove_entry(hass, manager):
     # Just Group all_lights
     assert len(hass.states.async_all()) == 1
 
-    # Check that entity registry entry no longer references config_entry_id
-    entity_entry = list(ent_reg.entities.values())[0]
-    assert entity_entry.config_entry_id is None
+    # Check that entity registry entry has been removed
+    entity_entry_list = list(ent_reg.entities.values())
+    assert not entity_entry_list
 
 
 async def test_remove_entry_handles_callback_error(hass, manager):
@@ -361,6 +368,7 @@ def test_add_entry_calls_setup_entry(hass, manager):
     mock_integration(
         hass,
         MockModule('comp', async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, 'config_flow.comp', None)
 
     class TestFlow(config_entries.ConfigFlow):
 
@@ -416,6 +424,7 @@ async def test_saving_and_loading(hass):
     """Test that we're saving and loading correctly."""
     mock_integration(hass, MockModule(
         'test', async_setup_entry=lambda *args: mock_coro(True)))
+    mock_entity_platform(hass, 'config_flow.test', None)
 
     class TestFlow(config_entries.ConfigFlow):
         VERSION = 5
@@ -511,6 +520,7 @@ async def test_forward_entry_does_not_setup_entry_if_setup_fails(hass):
 async def test_discovery_notification(hass):
     """Test that we create/dismiss a notification when source is discovery."""
     mock_integration(hass, MockModule('test'))
+    mock_entity_platform(hass, 'config_flow.test', None)
     await async_setup_component(hass, 'persistent_notification', {})
 
     class TestFlow(config_entries.ConfigFlow):
@@ -548,6 +558,7 @@ async def test_discovery_notification(hass):
 async def test_discovery_notification_not_created(hass):
     """Test that we not create a notification when discovery is aborted."""
     mock_integration(hass, MockModule('test'))
+    mock_entity_platform(hass, 'config_flow.test', None)
     await async_setup_component(hass, 'persistent_notification', {})
 
     class TestFlow(config_entries.ConfigFlow):
@@ -629,6 +640,7 @@ async def test_setup_raise_not_ready(hass, caplog):
     mock_setup_entry = MagicMock(side_effect=ConfigEntryNotReady)
     mock_integration(
         hass, MockModule('test', async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, 'config_flow.test', None)
 
     with patch('homeassistant.helpers.event.async_call_later') as mock_call:
         await entry.async_setup(hass)
@@ -655,6 +667,7 @@ async def test_setup_retrying_during_unload(hass):
     mock_setup_entry = MagicMock(side_effect=ConfigEntryNotReady)
     mock_integration(
         hass, MockModule('test', async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, 'config_flow.test', None)
 
     with patch('homeassistant.helpers.event.async_call_later') as mock_call:
         await entry.async_setup(hass)
@@ -720,6 +733,7 @@ async def test_entry_setup_succeed(hass, manager):
         async_setup=mock_setup,
         async_setup_entry=mock_setup_entry
     ))
+    mock_entity_platform(hass, 'config_flow.comp', None)
 
     assert await manager.async_setup(entry.entry_id)
     assert len(mock_setup.mock_calls) == 1
@@ -848,6 +862,7 @@ async def test_entry_reload_succeed(hass, manager):
         async_setup_entry=async_setup_entry,
         async_unload_entry=async_unload_entry
     ))
+    mock_entity_platform(hass, 'config_flow.comp', None)
 
     assert await manager.async_reload(entry.entry_id)
     assert len(async_unload_entry.mock_calls) == 1
@@ -879,6 +894,7 @@ async def test_entry_reload_not_loaded(hass, manager, state):
         async_setup_entry=async_setup_entry,
         async_unload_entry=async_unload_entry
     ))
+    mock_entity_platform(hass, 'config_flow.comp', None)
 
     assert await manager.async_reload(entry.entry_id)
     assert len(async_unload_entry.mock_calls) == 0

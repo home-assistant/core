@@ -25,6 +25,7 @@ from .typing import HomeAssistantType
 
 PATH_REGISTRY = 'entity_registry.yaml'
 DATA_REGISTRY = 'entity_registry'
+EVENT_ENTITY_REGISTRY_UPDATED = 'entity_registry_updated'
 SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
 _UNDEF = object()
@@ -150,28 +151,39 @@ class EntityRegistry:
         _LOGGER.info('Registered new %s.%s entity: %s',
                      domain, platform, entity_id)
         self.async_schedule_save()
+
+        self.hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, {
+            'action': 'create',
+            'entity_id': entity_id
+        })
+
         return entity
 
     @callback
     def async_remove(self, entity_id):
         """Remove an entity from registry."""
         self.entities.pop(entity_id)
+        self.hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, {
+            'action': 'remove',
+            'entity_id': entity_id
+        })
         self.async_schedule_save()
 
     @callback
     def async_update_entity(self, entity_id, *, name=_UNDEF,
-                            new_entity_id=_UNDEF):
+                            new_entity_id=_UNDEF, new_unique_id=_UNDEF):
         """Update properties of an entity."""
         return self._async_update_entity(
             entity_id,
             name=name,
-            new_entity_id=new_entity_id
+            new_entity_id=new_entity_id,
+            new_unique_id=new_unique_id
         )
 
     @callback
     def _async_update_entity(self, entity_id, *, name=_UNDEF,
                              config_entry_id=_UNDEF, new_entity_id=_UNDEF,
-                             device_id=_UNDEF):
+                             device_id=_UNDEF, new_unique_id=_UNDEF):
         """Private facing update properties method."""
         old = self.entities[entity_id]
 
@@ -201,6 +213,17 @@ class EntityRegistry:
             self.entities.pop(entity_id)
             entity_id = changes['entity_id'] = new_entity_id
 
+        if new_unique_id is not _UNDEF:
+            conflict = next((entity for entity in self.entities.values()
+                             if entity.unique_id == new_unique_id
+                             and entity.domain == old.domain
+                             and entity.platform == old.platform), None)
+            if conflict:
+                raise ValueError(
+                    "Unique id '{}' is already in use by '{}'".format(
+                        new_unique_id, conflict.entity_id))
+            changes['unique_id'] = new_unique_id
+
         if not changes:
             return old
 
@@ -221,6 +244,11 @@ class EntityRegistry:
             new.update_listeners.remove(ref)
 
         self.async_schedule_save()
+
+        self.hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, {
+            'action': 'update',
+            'entity_id': entity_id
+        })
 
         return new
 
@@ -274,9 +302,11 @@ class EntityRegistry:
     @callback
     def async_clear_config_entry(self, config_entry):
         """Clear config entry from registry entries."""
-        for entity_id, entry in self.entities.items():
-            if config_entry == entry.config_entry_id:
-                self._async_update_entity(entity_id, config_entry_id=None)
+        for entity_id in [
+                entity_id
+                for entity_id, entry in self.entities.items()
+                if config_entry == entry.config_entry_id]:
+            self.async_remove(entity_id)
 
 
 @bind_hass

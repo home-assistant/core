@@ -1,14 +1,8 @@
 """Helpers for managing a pairing with a HomeKit accessory or bridge."""
 import asyncio
 import logging
-import os
 
-from homeassistant.helpers import discovery
-
-from .const import (
-    CONTROLLER, DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, KNOWN_DEVICES,
-    PAIRING_FILE, HOMEKIT_DIR, ENTITY_MAP
-)
+from .const import HOMEKIT_ACCESSORY_DISPATCH, ENTITY_MAP
 
 
 RETRY_INTERVAL = 60  # seconds
@@ -53,65 +47,58 @@ def get_accessory_name(accessory_info):
 class HKDevice():
     """HomeKit device."""
 
-    def __init__(self, hass, host, port, model, hkid, config_num, config):
+    def __init__(self, hass, config_entry, pairing_data):
         """Initialise a generic HomeKit device."""
-        _LOGGER.info("Setting up Homekit device %s", model)
-        self.hass = hass
-        self.controller = hass.data[CONTROLLER]
+        from homekit.controller.ip_implementation import IpPairing
 
-        self.host = host
-        self.port = port
-        self.model = model
-        self.hkid = hkid
-        self.config_num = config_num
-        self.config = config
-        self.configurator = hass.components.configurator
+        self.hass = hass
+        self.config_entry = config_entry
+
+        # We copy pairing_data because homekit_python may mutate it, but we
+        # don't want to mutate a dict owned by a config entry.
+        self.pairing_data = pairing_data.copy()
+
+        self.pairing = IpPairing(self.pairing_data)
+
         self.accessories = {}
+        self.config_num = 0
+
+        # A list of callbacks that turn HK service metadata into entities
+        self.listeners = []
+
+        # The platorms we have forwarded the config entry so far. If a new
+        # accessory is added to a bridge we may have to load additional
+        # platforms. We don't want to load all platforms up front if its just
+        # a lightbulb. And we dont want to forward a config entry twice
+        # (triggers a Config entry already set up error)
+        self.platforms = set()
 
         # This just tracks aid/iid pairs so we know if a HK service has been
         # mapped to a HA entity.
         self.entities = []
 
-        self.pairing_lock = asyncio.Lock(loop=hass.loop)
+        # There are multiple entities sharing a single connection - only
+        # allow one entity to use pairing at once.
+        self.pairing_lock = asyncio.Lock()
 
-        self.pairing = self.controller.pairings.get(hkid)
-
-        hass.data[KNOWN_DEVICES][hkid] = self
-
-    def setup(self):
+    async def async_setup(self):
         """Prepare to use a paired HomeKit device in homeassistant."""
-        if self.pairing is None:
-            self.configure()
-            return
-
-        self.pairing.pairing_data['AccessoryIP'] = self.host
-        self.pairing.pairing_data['AccessoryPort'] = self.port
-
         cache = self.hass.data[ENTITY_MAP].get_map(self.unique_id)
-        if not cache or cache['config_num'] < self.config_num:
-            return self.refresh_entity_map(self.config_num)
+        if not cache:
+            return await self.async_refresh_entity_map(self.config_num)
 
         self.accessories = cache['accessories']
+        self.config_num = cache['config_num']
 
         # Ensure the Pairing object has access to the latest version of the
         # entity map.
         self.pairing.pairing_data['accessories'] = self.accessories
 
+        self.async_load_platforms()
+
         self.add_entities()
 
         return True
-
-    def refresh_entity_map(self, config_num):
-        """
-        Handle setup of a HomeKit accessory.
-
-        The sync version will be removed when homekit_controller migrates to
-        config flow.
-        """
-        self.hass.add_job(
-            self.async_refresh_entity_map,
-            config_num,
-        )
 
     async def async_refresh_entity_map(self, config_num):
         """Handle setup of a HomeKit accessory."""
@@ -119,9 +106,10 @@ class HKDevice():
         from homekit.exceptions import AccessoryDisconnectedError
 
         try:
-            self.accessories = await self.hass.async_add_executor_job(
-                self.pairing.list_accessories_and_characteristics,
-            )
+            async with self.pairing_lock:
+                self.accessories = await self.hass.async_add_executor_job(
+                    self.pairing.list_accessories_and_characteristics
+                )
         except AccessoryDisconnectedError:
             # If we fail to refresh this data then we will naturally retry
             # later when Bonjour spots c# is still not up to date.
@@ -139,94 +127,62 @@ class HKDevice():
         # aid/iid to GATT characteristics. So push it to there as well.
         self.pairing.pairing_data['accessories'] = self.accessories
 
-        # Register add new entities that are available
-        await self.hass.async_add_executor_job(self.add_entities)
+        self.async_load_platforms()
+
+        # Register and add new entities that are available
+        self.add_entities()
 
         return True
 
+    def add_listener(self, add_entities_cb):
+        """Add a callback to run when discovering new entities."""
+        self.listeners.append(add_entities_cb)
+        self._add_new_entities([add_entities_cb])
+
     def add_entities(self):
         """Process the entity map and create HA entities."""
-        # pylint: disable=import-error
+        self._add_new_entities(self.listeners)
+
+    def _add_new_entities(self, callbacks):
         from homekit.model.services import ServicesTypes
 
         for accessory in self.accessories:
             aid = accessory['aid']
             for service in accessory['services']:
                 iid = service['iid']
+                stype = ServicesTypes.get_short(service['type'].upper())
+                service['stype'] = stype
+
                 if (aid, iid) in self.entities:
                     # Don't add the same entity again
                     continue
 
-                devtype = ServicesTypes.get_short(service['type'])
-                _LOGGER.debug("Found %s", devtype)
-                service_info = {'serial': self.hkid,
-                                'aid': aid,
-                                'iid': service['iid'],
-                                'model': self.model,
-                                'device-type': devtype}
-                component = HOMEKIT_ACCESSORY_DISPATCH.get(devtype, None)
-                if component is not None:
-                    discovery.load_platform(self.hass, component, DOMAIN,
-                                            service_info, self.config)
-                    self.entities.append((aid, iid))
+                for listener in callbacks:
+                    if listener(aid, service):
+                        self.entities.append((aid, iid))
+                        break
 
-    def device_config_callback(self, callback_data):
-        """Handle initial pairing."""
-        import homekit  # pylint: disable=import-error
-        code = callback_data.get('code').strip()
-        try:
-            self.controller.perform_pairing(self.hkid, self.hkid, code)
-        except homekit.UnavailableError:
-            error_msg = "This accessory is already paired to another device. \
-                         Please reset the accessory and try again."
-            _configurator = self.hass.data[DOMAIN+self.hkid]
-            self.configurator.notify_errors(_configurator, error_msg)
-            return
-        except homekit.AuthenticationError:
-            error_msg = "Incorrect HomeKit code for {}. Please check it and \
-                         try again.".format(self.model)
-            _configurator = self.hass.data[DOMAIN+self.hkid]
-            self.configurator.notify_errors(_configurator, error_msg)
-            return
-        except homekit.UnknownError:
-            error_msg = "Received an unknown error. Please file a bug."
-            _configurator = self.hass.data[DOMAIN+self.hkid]
-            self.configurator.notify_errors(_configurator, error_msg)
-            raise
+    def async_load_platforms(self):
+        """Load any platforms needed by this HomeKit device."""
+        from homekit.model.services import ServicesTypes
 
-        self.pairing = self.controller.pairings.get(self.hkid)
-        if self.pairing is not None:
-            pairing_dir = os.path.join(
-                self.hass.config.path(),
-                HOMEKIT_DIR,
-            )
-            if not os.path.exists(pairing_dir):
-                os.makedirs(pairing_dir)
-            pairing_file = os.path.join(
-                pairing_dir,
-                PAIRING_FILE,
-            )
-            self.controller.save_data(pairing_file)
-            _configurator = self.hass.data[DOMAIN+self.hkid]
-            self.configurator.request_done(_configurator)
-            self.setup()
-        else:
-            error_msg = "Unable to pair, please try again"
-            _configurator = self.hass.data[DOMAIN+self.hkid]
-            self.configurator.notify_errors(_configurator, error_msg)
+        for accessory in self.accessories:
+            for service in accessory['services']:
+                stype = ServicesTypes.get_short(service['type'].upper())
+                if stype not in HOMEKIT_ACCESSORY_DISPATCH:
+                    continue
 
-    def configure(self):
-        """Obtain the pairing code for a HomeKit device."""
-        description = "Please enter the HomeKit code for your {}".format(
-            self.model)
-        self.hass.data[DOMAIN+self.hkid] = \
-            self.configurator.request_config(self.model,
-                                             self.device_config_callback,
-                                             description=description,
-                                             submit_caption="submit",
-                                             fields=[{'id': 'code',
-                                                      'name': 'HomeKit code',
-                                                      'type': 'string'}])
+                platform = HOMEKIT_ACCESSORY_DISPATCH[stype]
+                if platform in self.platforms:
+                    continue
+
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_forward_entry_setup(
+                        self.config_entry,
+                        platform,
+                    )
+                )
+                self.platforms.add(platform)
 
     async def get_characteristics(self, *args, **kwargs):
         """Read latest state from homekit accessory."""
@@ -261,4 +217,14 @@ class HKDevice():
 
         This id is random and will change if a device undergoes a hard reset.
         """
-        return self.hkid
+        return self.pairing_data['AccessoryPairingID']
+
+    @property
+    def connection_info(self):
+        """Return accessory information for the main accessory."""
+        return get_bridge_information(self.accessories)
+
+    @property
+    def name(self):
+        """Name of the bridge accessory."""
+        return get_accessory_name(self.connection_info) or self.unique_id

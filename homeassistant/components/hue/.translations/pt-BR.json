@@ -6,6 +6,7 @@
             "cannot_connect": "N\u00e3o \u00e9 poss\u00edvel conectar-se \u00e0 ponte",
             "discover_timeout": "Incapaz de descobrir pontes Hue",
             "no_bridges": "N\u00e3o h\u00e1 pontes Philips Hue descobertas",
+            "not_hue_bridge": "N\u00e3o \u00e9 uma ponte Hue",
             "unknown": "Ocorreu um erro desconhecido"
         },
         "error": {

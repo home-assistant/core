@@ -8,9 +8,10 @@ from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent, template, config_entry_flow
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
-DOMAIN = 'dialogflow'
+
+_LOGGER = logging.getLogger(__name__)
 
 SOURCE = "Home Assistant Dialogflow"
 
@@ -81,16 +82,6 @@ async def async_unload_entry(hass, entry):
 
 # pylint: disable=invalid-name
 async_remove_entry = config_entry_flow.webhook_async_remove_entry
-
-
-config_entry_flow.register_webhook_flow(
-    DOMAIN,
-    'Dialogflow Webhook',
-    {
-        'dialogflow_url': 'https://dialogflow.com/docs/fulfillment#webhook',
-        'docs_url': 'https://www.home-assistant.io/components/dialogflow/'
-    }
-)
 
 
 def dialogflow_error_response(message, error):

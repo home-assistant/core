@@ -3,7 +3,7 @@
 import os
 import pytest
 
-from homeassistant.components import device_tracker
+from homeassistant.components.device_tracker.legacy import YAML_DEVICES
 from homeassistant.components.tplink.device_tracker import Tplink4DeviceScanner
 from homeassistant.const import (CONF_PLATFORM, CONF_PASSWORD, CONF_USERNAME,
                                  CONF_HOST)
@@ -13,7 +13,7 @@ import requests_mock
 @pytest.fixture(autouse=True)
 def setup_comp(hass):
     """Initialize components."""
-    yaml_devices = hass.config.path(device_tracker.YAML_DEVICES)
+    yaml_devices = hass.config.path(YAML_DEVICES)
     yield
     if os.path.isfile(yaml_devices):
         os.remove(yaml_devices)

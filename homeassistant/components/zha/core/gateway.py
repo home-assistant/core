@@ -18,7 +18,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_component import EntityComponent
 
 from ..api import async_get_device_info
-from .channels import MAINS_POWERED, ZDOChannel
 from .const import (
     ADD_DEVICE_RELAY_LOGGERS, ATTR_MANUFACTURER, BELLOWS, CONF_BAUDRATE,
     CONF_DATABASE, CONF_RADIO_TYPE, CONF_USB_PATH, CONTROLLER, CURRENT,
@@ -93,6 +92,8 @@ class ZHAGateway:
 
         init_tasks = []
         for device in self.application_controller.devices.values():
+            if device.nwk == 0x0000:
+                continue
             init_tasks.append(self.async_device_initialized(device, False))
         await asyncio.gather(*init_tasks)
 
@@ -114,6 +115,8 @@ class ZHAGateway:
 
     def raw_device_initialized(self, device):
         """Handle a device initialization without quirks loaded."""
+        if device.nwk == 0x0000:
+            return
         endpoint_ids = device.endpoints.keys()
         ept_id = next((ept_id for ept_id in endpoint_ids if ept_id != 0), None)
         manufacturer = 'Unknown'
@@ -230,7 +233,6 @@ class ZHAGateway:
         if not is_new_join:
             entry = self.zha_storage.async_get_or_create(zha_device)
             zha_device.async_update_last_seen(entry.last_seen)
-            zha_device.set_power_source(entry.power_source)
         return zha_device
 
     @callback
@@ -257,6 +259,9 @@ class ZHAGateway:
 
     async def async_device_initialized(self, device, is_new_join):
         """Handle device joined and basic information discovered (async)."""
+        if device.nwk == 0x0000:
+            return
+
         zha_device = self._async_get_or_create_device(device, is_new_join)
 
         is_rejoin = False
@@ -283,16 +288,13 @@ class ZHAGateway:
             # configure the device
             await zha_device.async_configure()
             zha_device.update_available(True)
-        elif zha_device.power_source is not None\
-                and zha_device.power_source == MAINS_POWERED:
+        elif zha_device.is_mains_powered:
             # the device isn't a battery powered device so we should be able
             # to update it now
             _LOGGER.debug(
                 "attempting to request fresh state for %s %s",
                 zha_device.name,
-                "with power source: {}".format(
-                    ZDOChannel.POWER_SOURCES.get(zha_device.power_source)
-                )
+                "with power source: {}".format(zha_device.power_source)
             )
             await zha_device.async_initialize(from_cache=False)
         else:

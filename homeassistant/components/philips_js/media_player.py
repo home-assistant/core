@@ -197,7 +197,7 @@ class PhilipsTV(MediaPlayerDevice):
 
     def mute_volume(self, mute):
         """Send mute command."""
-        self._tv.setVolume(self._tv.volume, mute)
+        self._tv.setVolume(None, mute)
         self._update_soon(DELAY_ACTION_DEFAULT)
 
     def set_volume_level(self, volume):
@@ -270,8 +270,6 @@ class PhilipsTV(MediaPlayerDevice):
     def update(self):
         """Get the latest data and update device state."""
         self._tv.update()
-        self._tv.getChannelId()
-        self._tv.getChannels()
 
         self._sources = {
             srcid: source['name'] or "Source {}".format(srcid)

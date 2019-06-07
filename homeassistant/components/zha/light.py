@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from zigpy.zcl.foundation import Status
 from homeassistant.components import light
 from homeassistant.const import STATE_ON
 from homeassistant.core import callback
@@ -14,7 +15,6 @@ from .const import (
     )
 from .entity import ZhaEntity
 
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_DURATION = 5
@@ -24,6 +24,7 @@ CAPABILITIES_COLOR_TEMP = 0x10
 
 UNSUPPORTED_ATTRIBUTE = 0x86
 SCAN_INTERVAL = timedelta(minutes=60)
+PARALLEL_UPDATES = 5
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -172,12 +173,12 @@ class Light(ZhaEntity, light.Light):
                 level = min(254, brightness)
             else:
                 level = self._brightness or 254
-            success = await self._level_channel.move_to_level_with_on_off(
+            result = await self._level_channel.move_to_level_with_on_off(
                 level,
                 duration
             )
-            t_log['move_to_level_with_on_off'] = success
-            if not success:
+            t_log['move_to_level_with_on_off'] = result
+            if not isinstance(result, list) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
                 return
             self._state = bool(level)
@@ -185,9 +186,9 @@ class Light(ZhaEntity, light.Light):
                 self._brightness = level
 
         if brightness is None or brightness:
-            success = await self._on_off_channel.on()
-            t_log['on_off'] = success
-            if not success:
+            result = await self._on_off_channel.on()
+            t_log['on_off'] = result
+            if not isinstance(result, list) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
                 return
             self._state = True
@@ -195,10 +196,10 @@ class Light(ZhaEntity, light.Light):
         if light.ATTR_COLOR_TEMP in kwargs and \
                 self.supported_features & light.SUPPORT_COLOR_TEMP:
             temperature = kwargs[light.ATTR_COLOR_TEMP]
-            success = await self._color_channel.move_to_color_temp(
+            result = await self._color_channel.move_to_color_temp(
                 temperature, duration)
-            t_log['move_to_color_temp'] = success
-            if not success:
+            t_log['move_to_color_temp'] = result
+            if not isinstance(result, list) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
                 return
             self._color_temp = temperature
@@ -207,13 +208,13 @@ class Light(ZhaEntity, light.Light):
                 self.supported_features & light.SUPPORT_COLOR:
             hs_color = kwargs[light.ATTR_HS_COLOR]
             xy_color = color_util.color_hs_to_xy(*hs_color)
-            success = await self._color_channel.move_to_color(
+            result = await self._color_channel.move_to_color(
                 int(xy_color[0] * 65535),
                 int(xy_color[1] * 65535),
                 duration,
             )
-            t_log['move_to_color'] = success
-            if not success:
+            t_log['move_to_color'] = result
+            if not isinstance(result, list) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
                 return
             self._hs_color = hs_color
@@ -226,14 +227,14 @@ class Light(ZhaEntity, light.Light):
         duration = kwargs.get(light.ATTR_TRANSITION)
         supports_level = self.supported_features & light.SUPPORT_BRIGHTNESS
         if duration and supports_level:
-            success = await self._level_channel.move_to_level_with_on_off(
+            result = await self._level_channel.move_to_level_with_on_off(
                 0,
                 duration*10
             )
         else:
-            success = await self._on_off_channel.off()
-        self.debug("turned off: %s", success)
-        if not success:
+            result = await self._on_off_channel.off()
+        self.debug("turned off: %s", result)
+        if not isinstance(result, list) or result[1] is not Status.SUCCESS:
             return
         self._state = False
         self.async_schedule_update_ha_state()
@@ -245,6 +246,7 @@ class Light(ZhaEntity, light.Light):
 
     async def async_get_state(self, from_cache=True):
         """Attempt to retrieve on off state from the light."""
+        self.debug("polling current state")
         if self._on_off_channel:
             self._state = await self._on_off_channel.get_attribute_value(
                 'on_off', from_cache=from_cache)

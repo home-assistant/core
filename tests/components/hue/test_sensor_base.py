@@ -321,9 +321,8 @@ SENSOR_RESPONSE = {
 }
 
 
-@pytest.fixture
-def mock_bridge(hass):
-    """Mock a Hue bridge."""
+def create_mock_bridge():
+    """Create a mock Hue bridge."""
     bridge = Mock(
         available=True,
         allow_unreachable=False,
@@ -348,8 +347,13 @@ def mock_bridge(hass):
 
     bridge.api.config.apiversion = '9.9.9'
     bridge.api.sensors = Sensors({}, mock_request)
-
     return bridge
+
+
+@pytest.fixture
+def mock_bridge(hass):
+    """Mock a Hue bridge."""
+    return create_mock_bridge()
 
 
 @pytest.fixture
@@ -358,12 +362,14 @@ def increase_scan_interval(hass):
     hue_sensor_base.SensorManager.SCAN_INTERVAL = datetime.timedelta(days=365)
 
 
-async def setup_bridge(hass, mock_bridge):
+async def setup_bridge(hass, mock_bridge, hostname=None):
     """Load the Hue platform with the provided bridge."""
+    if hostname is None:
+        hostname = 'mock-host'
     hass.config.components.add(hue.DOMAIN)
-    hass.data[hue.DOMAIN] = {'mock-host': mock_bridge}
+    hass.data[hue.DOMAIN] = {hostname: mock_bridge}
     config_entry = config_entries.ConfigEntry(1, hue.DOMAIN, 'Mock Title', {
-        'host': 'mock-host'
+        'host': hostname
     }, 'test', config_entries.CONN_CLASS_LOCAL_POLL)
     await hass.config_entries.async_forward_entry_setup(
         config_entry, 'binary_sensor')
@@ -380,6 +386,24 @@ async def test_no_sensors(hass, mock_bridge):
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 1
     assert len(hass.states.async_all()) == 0
+
+
+async def test_sensors_with_multiple_bridges(hass, mock_bridge):
+    """Test the update_items function with some sensors."""
+    mock_bridge_2 = create_mock_bridge()
+    mock_bridge_2.mock_sensor_responses.append({
+        "1": PRESENCE_SENSOR_3_PRESENT,
+        "2": LIGHT_LEVEL_SENSOR_3,
+        "3": TEMPERATURE_SENSOR_3,
+    })
+    mock_bridge.mock_sensor_responses.append(SENSOR_RESPONSE)
+    await setup_bridge(hass, mock_bridge)
+    await setup_bridge(hass, mock_bridge_2, hostname='mock-bridge-2')
+
+    assert len(mock_bridge.mock_requests) == 1
+    assert len(mock_bridge_2.mock_requests) == 1
+    # 3 "physical" sensors with 3 virtual sensors each
+    assert len(hass.states.async_all()) == 9
 
 
 async def test_sensors(hass, mock_bridge):
@@ -450,7 +474,8 @@ async def test_new_sensor_discovered(hass, mock_bridge):
     mock_bridge.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
-    sm = hass.data[hue.DOMAIN][hue_sensor_base.SENSOR_MANAGER]
+    sm_key = hue_sensor_base.SENSOR_MANAGER_FORMAT.format('mock-host')
+    sm = hass.data[hue.DOMAIN][sm_key]
     await sm.async_update_items()
 
     # To flush out the service call to update the group

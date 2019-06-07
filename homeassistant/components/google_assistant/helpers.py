@@ -1,17 +1,18 @@
 """Helper classes for Google Assistant integration."""
 from asyncio import gather
 from collections.abc import Mapping
+from typing import List
 
 from homeassistant.core import Context, callback
 from homeassistant.const import (
     CONF_NAME, STATE_UNAVAILABLE, ATTR_SUPPORTED_FEATURES,
-    ATTR_DEVICE_CLASS
+    ATTR_DEVICE_CLASS, CLOUD_NEVER_EXPOSED_ENTITIES
 )
 
 from . import trait
 from .const import (
     DOMAIN_TO_GOOGLE_TYPES, CONF_ALIASES, ERR_FUNCTION_NOT_SUPPORTED,
-    DEVICE_CLASS_TO_GOOGLE_TYPES, CONF_ROOM_HINT,
+    DEVICE_CLASS_TO_GOOGLE_TYPES, CONF_ROOM_HINT
 )
 from .error import SmartHomeError
 
@@ -20,11 +21,20 @@ class Config:
     """Hold the configuration for Google Assistant."""
 
     def __init__(self, should_expose,
-                 entity_config=None, secure_devices_pin=None):
+                 entity_config=None, secure_devices_pin=None,
+                 agent_user_id=None, should_2fa=None):
         """Initialize the configuration."""
         self.should_expose = should_expose
         self.entity_config = entity_config or {}
         self.secure_devices_pin = secure_devices_pin
+        self._should_2fa = should_2fa
+
+        # Agent User Id to use for query responses
+        self.agent_user_id = agent_user_id
+
+    def should_2fa(self, state):
+        """If an entity should have 2FA checked."""
+        return self._should_2fa is None or self._should_2fa(state)
 
 
 class RequestData:
@@ -75,6 +85,22 @@ class GoogleEntity:
                         if Trait.supported(domain, features, device_class)]
         return self._traits
 
+    @callback
+    def is_supported(self) -> bool:
+        """Return if the entity is supported by Google."""
+        return self.state.state != STATE_UNAVAILABLE and bool(self.traits())
+
+    @callback
+    def might_2fa(self) -> bool:
+        """Return if the entity might encounter 2FA."""
+        state = self.state
+        domain = state.domain
+        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+
+        return any(trait.might_2fa(domain, features, device_class)
+                   for trait in self.traits())
+
     async def sync_serialize(self):
         """Serialize entity for a SYNC response.
 
@@ -82,26 +108,12 @@ class GoogleEntity:
         """
         state = self.state
 
-        # When a state is unavailable, the attributes that describe
-        # capabilities will be stripped. For example, a light entity will miss
-        # the min/max mireds. Therefore they will be excluded from a sync.
-        if state.state == STATE_UNAVAILABLE:
-            return None
-
         entity_config = self.config.entity_config.get(state.entity_id, {})
         name = (entity_config.get(CONF_NAME) or state.name).strip()
         domain = state.domain
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
-        # If an empty string
-        if not name:
-            return None
-
         traits = self.traits()
-
-        # Found no supported traits for this entity
-        if not traits:
-            return None
 
         device_type = get_google_type(domain,
                                       device_class)
@@ -209,3 +221,19 @@ def deep_update(target, source):
         else:
             target[key] = value
     return target
+
+
+@callback
+def async_get_entities(hass, config) -> List[GoogleEntity]:
+    """Return all entities that are supported by Google."""
+    entities = []
+    for state in hass.states.async_all():
+        if state.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
+            continue
+
+        entity = GoogleEntity(hass, config, state)
+
+        if entity.is_supported():
+            entities.append(entity)
+
+    return entities
