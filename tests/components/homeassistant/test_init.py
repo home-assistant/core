@@ -10,7 +10,7 @@ from homeassistant import config
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF, SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    SERVICE_TOGGLE)
+    SERVICE_TOGGLE, EVENT_CORE_CONFIG_UPDATE)
 import homeassistant.components as comps
 from homeassistant.setup import async_setup_component
 from homeassistant.components.homeassistant import (
@@ -22,7 +22,7 @@ from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from tests.common import (
     get_test_home_assistant, mock_service, patch_yaml_files, mock_coro,
-    async_mock_service)
+    async_mock_service, async_capture_events)
 
 
 def turn_on(hass, entity_id=None, **service_data):
@@ -371,3 +371,19 @@ async def test_entity_update(hass):
 
     assert len(mock_update.mock_calls) == 1
     assert mock_update.mock_calls[0][1][1] == 'light.kitchen'
+
+
+async def test_setting_location(hass):
+    """Test setting the location."""
+    await async_setup_component(hass, 'homeassistant', {})
+    events = async_capture_events(hass, EVENT_CORE_CONFIG_UPDATE)
+    # Just to make sure that we are updating values.
+    assert hass.config.latitude != 30
+    assert hass.config.longitude != 40
+    await hass.services.async_call('homeassistant', 'set_location', {
+        'latitude': 30,
+        'longitude': 40,
+    }, blocking=True)
+    assert len(events) == 1
+    assert hass.config.latitude == 30
+    assert hass.config.longitude == 40
