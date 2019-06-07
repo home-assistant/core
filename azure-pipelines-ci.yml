@@ -15,7 +15,7 @@ variables:
 
 jobs:
 
-- job: 'Check_Python'
+- job: 'Check'
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
@@ -76,5 +76,5 @@ jobs:
   
   - script: | 
       . venv/bin/activate
-      pytest --timeout=9 --durations=10 -qq -o console_output_style=count -p no:sugar
+      pytest --timeout=9 --durations=10 tests
     displayName: 'Run pytest for python $(python.version)'
