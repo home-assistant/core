@@ -110,17 +110,11 @@ def establish_device_mappings():
     BINDABLE_CLUSTERS.append(zcl.clusters.lighting.Color.cluster_id)
 
     DEVICE_CLASS[zha.PROFILE_ID].update({
-        zha.DeviceType.ON_OFF_SWITCH: BINARY_SENSOR,
-        zha.DeviceType.LEVEL_CONTROL_SWITCH: BINARY_SENSOR,
-        zha.DeviceType.REMOTE_CONTROL: BINARY_SENSOR,
         zha.DeviceType.SMART_PLUG: SWITCH,
         zha.DeviceType.LEVEL_CONTROLLABLE_OUTPUT: LIGHT,
         zha.DeviceType.ON_OFF_LIGHT: LIGHT,
         zha.DeviceType.DIMMABLE_LIGHT: LIGHT,
-        zha.DeviceType.COLOR_DIMMABLE_LIGHT: LIGHT,
-        zha.DeviceType.ON_OFF_LIGHT_SWITCH: BINARY_SENSOR,
-        zha.DeviceType.DIMMER_SWITCH: BINARY_SENSOR,
-        zha.DeviceType.COLOR_DIMMER_SWITCH: BINARY_SENSOR,
+        zha.DeviceType.COLOR_DIMMABLE_LIGHT: LIGHT
     })
 
     DEVICE_CLASS[zll.PROFILE_ID].update({
@@ -130,12 +124,7 @@ def establish_device_mappings():
         zll.DeviceType.DIMMABLE_PLUGIN_UNIT: LIGHT,
         zll.DeviceType.COLOR_LIGHT: LIGHT,
         zll.DeviceType.EXTENDED_COLOR_LIGHT: LIGHT,
-        zll.DeviceType.COLOR_TEMPERATURE_LIGHT: LIGHT,
-        zll.DeviceType.COLOR_CONTROLLER: BINARY_SENSOR,
-        zll.DeviceType.COLOR_SCENE_CONTROLLER: BINARY_SENSOR,
-        zll.DeviceType.CONTROLLER: BINARY_SENSOR,
-        zll.DeviceType.SCENE_CONTROLLER: BINARY_SENSOR,
-        zll.DeviceType.ON_OFF_SENSOR: BINARY_SENSOR,
+        zll.DeviceType.COLOR_TEMPERATURE_LIGHT: LIGHT
     })
 
     SINGLE_INPUT_CLUSTER_DEVICE_CLASS.update({
@@ -285,7 +274,6 @@ def establish_device_mappings():
     })
 
     BINARY_SENSOR_CLUSTERS.add(zcl.clusters.general.OnOff.cluster_id)
-    BINARY_SENSOR_CLUSTERS.add(zcl.clusters.general.LevelControl.cluster_id)
     BINARY_SENSOR_CLUSTERS.add(zcl.clusters.security.IasZone.cluster_id)
     BINARY_SENSOR_CLUSTERS.add(
         zcl.clusters.measurement.OccupancySensing.cluster_id)
