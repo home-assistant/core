@@ -28,6 +28,7 @@ jobs:
     inputs:
       versionSpec: '$(python.version)'
   - script: |
+      sudo add-apt-repository ppa:jonathonf/ffmpeg-4
       sudo apt-get update
       sudo apt-get install -y --no-install-recommends \
         libudev-dev libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev libswscale-dev libswresample-dev libavfilter-dev
