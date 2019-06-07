@@ -79,7 +79,7 @@ class SuezSensor(Entity):
         return VOLUME_LITERS
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
 
