@@ -55,7 +55,7 @@ async def test_lock(hass, config_entry, zha_gateway):
     await async_lock(hass, cluster, entity_id)
 
     # unlock from HA
-    await async_lock(hass, cluster, entity_id)
+    await async_unlock(hass, cluster, entity_id)
 
 
 async def async_lock(hass, cluster, entity_id):
