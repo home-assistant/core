@@ -1,1 +1,1 @@
-"""France Suez Water Consumption Sensor."""
+"""France Suez Water integration."""
