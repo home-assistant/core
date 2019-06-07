@@ -51,7 +51,7 @@ class LcnClimate(LcnDevice, ClimateDevice):
 
         self._current_temperature = None
         self._target_temperature = None
-        self._is_on = True
+        self._is_on = None
 
         self.support = const.SUPPORT_TARGET_TEMPERATURE
         if self.is_lockable:
@@ -130,10 +130,12 @@ class LcnClimate(LcnDevice, ClimateDevice):
             return
 
         if input_obj.get_var() == self.variable:
-            self._current_temperature = (
-                input_obj.get_value().to_var_unit(self.unit))
-        elif self._is_on and input_obj.get_var() == self.setpoint:
-            self._target_temperature = (
-                input_obj.get_value().to_var_unit(self.unit))
+            self._current_temperature = \
+                input_obj.get_value().to_var_unit(self.unit)
+        elif input_obj.get_var() == self.setpoint:
+            self._is_on = not input_obj.get_value().is_locked_regulator()
+            if self.is_on:
+                self._target_temperature = \
+                    input_obj.get_value().to_var_unit(self.unit)
 
         self.async_schedule_update_ha_state()
