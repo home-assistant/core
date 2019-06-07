@@ -40,8 +40,22 @@ Adafruit-SHT31==1.0.2
 # homeassistant.components.homekit
 HAP-python==2.4.2
 
+<<<<<<< HEAD
 # homeassistant.components.notify.mastodon
 Mastodon.py==1.3.1
+=======
+# homeassistant.components.mastodon
+Mastodon.py==1.4.3
+
+# homeassistant.components.orangepi_gpio
+OPi.GPIO==0.3.6
+
+# homeassistant.components.essent
+PyEssent==0.12
+
+# homeassistant.components.github
+PyGithub==1.43.5
+>>>>>>> Upgrade Mastodon.py to 1.4.3 (#24374)
 
 # homeassistant.components.isy994
 PyISY==1.1.0
