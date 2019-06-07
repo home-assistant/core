@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_COUNTER_ID = 'counter_id'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(hours=12)
-SCAN_INTERVAL = timedelta(minutes=720)
+SCAN_INTERVAL = timedelta(hours=12)
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -29,17 +29,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from pysuez import SuezClient
 
     username = config[CONF_USERNAME]
-    password = config.get(CONF_PASSWORD)
-    counter_id = config.get(CONF_COUNTER_ID)
-
+    password = config[CONF_PASSWORD]
+    counter_id = config[CONF_COUNTER_ID]
     try:
         client = SuezClient(
             username, password, counter_id)
-        test = client.check_credentials()
 
-        if test:
-            _LOGGER.warning("Username and password OK")
-            add_devices([SuezHAClient(username, password, counter_id)], True)
+        if client.check_credentials():
+            add_devices([SuezSensor(client)], True)
         else:
             _LOGGER.warning("Wrong username and/or password")
 
@@ -51,17 +48,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class SuezSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, username, password, counter_id):
+    #def __init__(self, username, password, counter_id, client):
+    def __init__(self, client):    
         """Initialize the data object."""
         self._name = "Suez Water Client"
-        self._username = username
-        self._password = password
-        self._counter_id = counter_id
         self._attributes = {}
         self.success = False
-        self._state = 0
+        self._state = None
         self._icon = 'mdi:water-pump'
-        self.client = None
+        self.client = client
 
     @property
     def name(self):
@@ -91,11 +86,8 @@ class SuezSensor(Entity):
     def _fetch_data(self):
         """Fetch latest data from Suez."""
         from pysuez.client import PySuezError
-        from pysuez import SuezClient
 
         try:
-            self.client = SuezClient(
-                self._username, self._password, self._counter_id)
             self.client.update()
 
             self._state = self.client.state
