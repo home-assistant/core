@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
 
-class SuezHAClient(Entity):
+class SuezSensor(Entity):
     """Representation of a Sensor."""
 
     def __init__(self, username, password, counter_id):
