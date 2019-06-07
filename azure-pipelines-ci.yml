@@ -8,6 +8,11 @@ trigger:
 pr: none 
 
 
+variables:
+  - name: ArtifactFeed
+    value: '2df3ae11-3bf6-49bc-a809-ba0d340d6a6d'
+
+
 jobs:
 
 - job: 'Pip_Install_Demo'
@@ -44,8 +49,8 @@ jobs:
   - script: |
       python3 -m venv venv
       . venv/bin/activate
-      pip install -q -U pip setuptools
-      pip3 install -q -r requirements_all.txt -c homeassistant/package_constraints.txt
+      pip install -U pip setuptools
+      pip3 install -r requirements_all.txt -c homeassistant/package_constraints.txt
     displayName: 'Create Virtual Environment & Install Requirements'
 
   - task: 1ESLighthouseEng.PipelineArtifactCaching.SaveCacheV1.SaveCache@1
