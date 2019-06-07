@@ -1,6 +1,7 @@
 """Device entity for Zigbee Home Automation."""
 
 import logging
+import numbers
 import time
 
 from homeassistant.core import callback
@@ -104,11 +105,10 @@ class ZhaDeviceEntity(ZhaEntity):
     def async_update_state_attribute(self, key, value):
         """Update a single device state attribute."""
         if key == 'battery_level':
-            if value is not None and value != -1:
-                value = value / 2
-                value = int(round(value))
-            else:
+            if not isinstance(value, numbers.Number) or value == -1:
                 return
+            value = value / 2
+            value = int(round(value))
         self._device_state_attributes.update({
             key: value
         })
