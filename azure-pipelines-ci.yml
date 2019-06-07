@@ -36,7 +36,7 @@ jobs:
       sudo add-apt-repository ppa:jonathonf/ffmpeg-4
       sudo apt-get update
       sudo apt-get install -y --no-install-recommends \
-        libudev libavformat libavcodec libavdevice libavutil libswscale libswresample libavfilter
+        libudev libsqlite3 libavformat libavcodec libavdevice libavutil libswscale libswresample libavfilter
 
       echo "$(python.version)" > .cache
     displayName: 'Set up docker prerequisite requirement'
@@ -51,7 +51,7 @@ jobs:
   - script: |
       # Install build env
       sudo apt-get install -y --no-install-recommends \
-        libudev-dev libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev libswscale-dev libswresample-dev libavfilter-dev
+        libudev-dev libsqlite3-dev libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev libswscale-dev libswresample-dev libavfilter-dev
 
       # Setup venv
       python3 -m venv venv
