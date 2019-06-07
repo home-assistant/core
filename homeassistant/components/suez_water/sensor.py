@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 CONF_COUNTER_ID = 'counter_id'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=720)
+MIN_TIME_BETWEEN_UPDATES = timedelta(hours=12)
 SCAN_INTERVAL = timedelta(minutes=720)
 
 
