@@ -124,6 +124,10 @@ class NetatmoThermostat(ClimateDevice):
         self._module_type = None
         self._support_flags = None
 
+        _LOGGER.debug(
+            "Setting up thermostat %s in %s (%s).",
+            self._name, self._room_name, self._room_id
+        )
         try:
             self._module_type = self._data.room_status[room_id]['module_type']
         except KeyError:
