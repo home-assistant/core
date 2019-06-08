@@ -13,9 +13,7 @@ from .connection import get_bridge_information, get_accessory_name
 
 
 HOMEKIT_IGNORE = [
-    'BSB002',
     'Home Assistant Bridge',
-    'TRADFRI gateway',
 ]
 HOMEKIT_DIR = '.homekit'
 PAIRING_FILE = 'pairing.json'
