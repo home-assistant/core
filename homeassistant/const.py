@@ -2,6 +2,7 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
 <<<<<<< HEAD
+<<<<<<< HEAD
 MINOR_VERSION = 93
 PATCH_VERSION = '2'
 =======
@@ -48,6 +49,10 @@ PATCH_VERSION = '0'
 =======
 PATCH_VERSION = '1'
 >>>>>>> Bumped version to 0.94.1
+=======
+MINOR_VERSION = 95
+PATCH_VERSION = '0.dev0'
+>>>>>>> Bump version to 0.95.0.dev0
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 5, 3)
