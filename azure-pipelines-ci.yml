@@ -23,20 +23,23 @@ jobs:
     matrix:
       Python35:
         python.version: '3.5'
+        python.container: 'python:3.5'
       Python36:
         python.version: '3.6'
+        python.container: 'python:3.6'
       Python37:
         python.version: '3.7'
+        python.container: 'python:3.7'
+  container: $[ variables['python.container'] ]
   steps:
   - task: UsePythonVersion@0
     displayName: 'Use Python $(python.version)'
     inputs:
       versionSpec: '$(python.version)'
   - script: |
-      sudo add-apt-repository ppa:jonathonf/ffmpeg-4
       sudo apt-get update
       sudo apt-get install -y --no-install-recommends \
-        libudev libsqlite3 libavformat libavcodec libavdevice libavutil libswscale libswresample libavfilter
+        libudev libavformat libavcodec libavdevice libavutil libswscale libswresample libavfilter
 
       echo "$(python.version)" > .cache
     displayName: 'Set up docker prerequisite requirement'
@@ -51,7 +54,7 @@ jobs:
   - script: |
       # Install build env
       sudo apt-get install -y --no-install-recommends \
-        libudev-dev libsqlite3-dev libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev libswscale-dev libswresample-dev libavfilter-dev
+        libudev-dev libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev libswscale-dev libswresample-dev libavfilter-dev
 
       # Setup venv
       python -m venv venv
