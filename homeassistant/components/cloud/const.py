@@ -38,3 +38,7 @@ DISPATCHER_REMOTE_UPDATE = 'cloud_remote_update'
 
 class InvalidTrustedNetworks(Exception):
     """Raised when invalid trusted networks config."""
+
+
+class InvalidTrustedProxies(Exception):
+    """Raised when invalid trusted proxies config."""
