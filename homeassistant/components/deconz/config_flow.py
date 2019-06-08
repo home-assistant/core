@@ -153,7 +153,8 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered deCONZ bridge."""
-        from homeassistant.components.ssdp import ATTR_MANUFACTURERURL, ATTR_SERIAL
+        from homeassistant.components.ssdp import (
+            ATTR_MANUFACTURERURL, ATTR_SERIAL)
 
         if discovery_info[ATTR_MANUFACTURERURL] != DECONZ_MANUFACTURERURL:
             return self.async_abort(reason='not_deconz_bridge')
