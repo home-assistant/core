@@ -287,15 +287,18 @@ class HoneywellUSThermostat(ClimateDevice):
     def set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         if {HVAC_MODE_COOL, HVAC_MODE_HEAT} & set(self._hvac_mode_map):
-            _set_temperature(**kwargs)
+            self._set_temperature(**kwargs)
 
-        if HVAC_MODE_HEAT_COOL in self._hvac_mode_map:
-            temperature = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-            if temperature:
-                self._device.setpoint_cool = temperature
-            temperature = kwargs.get(ATTR_TARGET_TEMP_LOW)
-            if temperature:
-                self._device.setpoint_heat = temperature
+        try:
+            if HVAC_MODE_HEAT_COOL in self._hvac_mode_map:
+                temperature = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+                if temperature:
+                    self._device.setpoint_cool = temperature
+                temperature = kwargs.get(ATTR_TARGET_TEMP_LOW)
+                if temperature:
+                    self._device.setpoint_heat = temperature
+        except somecomfort.SomeComfortError as err:
+            _LOGGER.error("Invalid temperature %s: %s", temperature, err)
 
     @property
     def device_state_attributes(self) -> Dict:
