@@ -1163,7 +1163,11 @@ pydaikin==0.9
 
 # homeassistant.components.deconz
 <<<<<<< HEAD
+<<<<<<< HEAD
 pydeconz==47
+=======
+pydeconz==60
+>>>>>>> deCONZ fix retry set state(#24410)
 =======
 pydeconz==60
 >>>>>>> deCONZ fix retry set state(#24410)
