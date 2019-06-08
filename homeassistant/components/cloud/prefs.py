@@ -6,7 +6,7 @@ from .const import (
     PREF_GOOGLE_SECURE_DEVICES_PIN, PREF_CLOUDHOOKS, PREF_CLOUD_USER,
     PREF_GOOGLE_ENTITY_CONFIGS, PREF_OVERRIDE_NAME, PREF_DISABLE_2FA,
     PREF_ALIASES, PREF_SHOULD_EXPOSE,
-    InvalidTrustedNetworks)
+    InvalidTrustedNetworks, InvalidTrustedProxies)
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
@@ -58,6 +58,9 @@ class CloudPreferences:
 
         if remote_enabled is True and self._has_local_trusted_network:
             raise InvalidTrustedNetworks
+
+        if remote_enabled is True and self._has_local_trusted_proxies:
+            raise InvalidTrustedProxies
 
         await self._store.async_save(self._prefs)
 
@@ -112,7 +115,7 @@ class CloudPreferences:
         if not enabled:
             return False
 
-        if self._has_local_trusted_network:
+        if self._has_local_trusted_network or self._has_local_trusted_proxies:
             return False
 
         return True
@@ -160,5 +163,20 @@ class CloudPreferences:
             for network in prv.trusted_networks:
                 if local4 in network or local6 in network:
                     return True
+
+        return False
+
+    @property
+    def _has_local_trusted_proxies(self) -> bool:
+        """Return if we allow localhost to be a proxy and use its data."""
+        if not hasattr(self._hass, 'http'):
+            return False
+
+        local4 = ip_address('127.0.0.1')
+        local6 = ip_address('::1')
+
+        if any(local4 in nwk or local6 in nwk
+               for nwk in self._hass.http.trusted_proxies):
+            return True
 
         return False
