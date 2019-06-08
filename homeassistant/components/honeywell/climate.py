@@ -12,27 +12,25 @@ from homeassistant.components.climate.const import (
     FAN_AUTO, FAN_DIFFUSE, FAN_ON,
     SUPPORT_AUX_HEAT, SUPPORT_FAN_MODE, SUPPORT_HVAC_ACTION,
     SUPPORT_PRESET_MODE, SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
     CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, CURRENT_HVAC_OFF,
-    HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_AUTO,
+    HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_HEAT_COOL,
     PRESET_AWAY,
 )
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_TEMPERATURE, CONF_REGION)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.temperature import celsius_to_fahrenheit
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_FAN = 'fan'
-ATTR_SYSTEM_MODE = 'system_mode'
-ATTR_CURRENT_OPERATION = 'equipment_output_status'
+ATTR_FAN_ACTION = 'fan_action'
 
 CONF_COOL_AWAY_TEMPERATURE = 'away_cool_temperature'
 CONF_HEAT_AWAY_TEMPERATURE = 'away_heat_temperature'
 
-DEFAULT_COOL_AWAY_TEMPERATURE = 30
-DEFAULT_HEAT_AWAY_TEMPERATURE = 16
+DEFAULT_COOL_AWAY_TEMPERATURE = 86
+DEFAULT_HEAT_AWAY_TEMPERATURE = 61
 DEFAULT_REGION = 'eu'
 REGIONS = ['eu', 'us']
 
@@ -48,7 +46,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 HVAC_MODE_TO_HW_MODE = {
     'SwitchOffAllowed': {HVAC_MODE_OFF: 'off'},
-    'SwitchAutoAllowed': {HVAC_MODE_AUTO: 'auto'},
+    'SwitchAutoAllowed': {HVAC_MODE_HEAT_COOL: 'auto'},
     'SwitchCoolAllowed': {HVAC_MODE_COOL: 'cool'},
     'SwitchHeatAllowed': {HVAC_MODE_HEAT: 'heat'},
 }
@@ -57,7 +55,7 @@ HW_MODE_TO_HVAC_MODE = {
     'emheat': HVAC_MODE_HEAT,
     'heat': HVAC_MODE_HEAT,
     'cool': HVAC_MODE_COOL,
-    'auto': HVAC_MODE_AUTO,
+    'auto': HVAC_MODE_HEAT_COOL,
 }
 HW_MODE_TO_HA_HVAC_ACTION = {
     'off': CURRENT_HVAC_OFF,
@@ -121,8 +119,8 @@ class HoneywellUSThermostat(ClimateDevice):
         """Initialize the thermostat."""
         self._client = client
         self._device = device
-        self._cool_away_temp = round(celsius_to_fahrenheit(cool_away_temp))
-        self._heat_away_temp = round(celsius_to_fahrenheit(heat_away_temp))
+        self._cool_away_temp = cool_away_temp
+        self._heat_away_temp = heat_away_temp
         self._away = False
         self._username = username
         self._password = password
@@ -156,7 +154,10 @@ class HoneywellUSThermostat(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return self._supported_features
+        if self.hvac_mode == HVAC_MODE_HEAT_COOL:
+            return self._supported_features | SUPPORT_TARGET_TEMPERATURE_RANGE
+        else:
+            return self._supported_features
 
     @property
     def hvac_modes(self) -> List[str]:
@@ -236,18 +237,19 @@ class HoneywellUSThermostat(ClimateDevice):
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVAC_MODE_COOL:
             return self._device.setpoint_cool
-
         elif self.hvac_mode != HVAC_MODE_HEAT:
             return self._device.setpoint_heat
-
-        elif self.hvac_mode != HVAC_MODE_AUTO:
-            if self.hvac_action == CURRENT_HVAC_HEAT:
-                return self._device.setpoint_heat
-
-            elif self.hvac_action == CURRENT_HVAC_COOL:
-                return self._device.setpoint_cool
-
         return None
+
+    @property
+    def target_temperature_high(self) -> Optional[float]:
+        """Return the highbound target temperature we try to reach."""
+        return self._device.setpoint_cool
+
+    @property
+    def target_temperature_low(self) -> Optional[float]:
+        """Return the lowbound target temperature we try to reach."""
+        return self._device.setpoint_heat
 
     @property
     def hvac_mode(self) -> str:
@@ -287,7 +289,7 @@ class HoneywellUSThermostat(ClimateDevice):
         # pylint: disable=protected-access
         data = {}
         if self._device._data['hasFan']:
-            data['fan_action'] = \
+            data[ATTR_FAN_ACTION] = \
                 'running' if self._device.fan_running else 'idle'
         return data
 
