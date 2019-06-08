@@ -190,6 +190,7 @@ omit =
     homeassistant/components/familyhub/camera.py
     homeassistant/components/fastdotcom/*
     homeassistant/components/fedex/sensor.py
+    homeassistant/components/ferienapidotde/binary_sensor.py
     homeassistant/components/ffmpeg/camera.py
     homeassistant/components/fibaro/*
     homeassistant/components/filesize/sensor.py

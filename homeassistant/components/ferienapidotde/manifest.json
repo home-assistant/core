@@ -1,0 +1,12 @@
+{
+    "domain": "ferienapidotde",
+    "name": "Ferienapidotde",
+    "documentation": "https://www.home-assistant.io/components/ferienapidotde",
+    "dependencies": [],
+    "codeowners": [
+        "@HazardDede"
+    ],
+    "requirements": [
+        "ferien-api==0.3.4"
+    ]
+  }
