@@ -1007,7 +1007,11 @@ protobuf==3.6.1
 psutil==5.4.8
 
 # homeassistant.components.wink
+<<<<<<< HEAD
 pubnubsub-handler==1.0.3
+=======
+pubnubsub-handler==1.0.7
+>>>>>>> Updated pubnubsub-handler to 1.0.7 to fix crash on slow startup (#24388)
 
 # homeassistant.components.notify.pushbullet
 # homeassistant.components.sensor.pushbullet
