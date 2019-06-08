@@ -12,13 +12,19 @@
     ]
   },
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> Add more HomeKit models for discovery (#24391)
   "homekit": {
     "models": [
       "Wemo"
     ]
   },
+<<<<<<< HEAD
 =======
 >>>>>>> Add a discovery config flow to Wemo (#24208)
+=======
+>>>>>>> Add more HomeKit models for discovery (#24391)
   "dependencies": [],
   "codeowners": [
     "@sqldiablo"

@@ -45,10 +45,14 @@ def generate_and_validate(integrations: Dict[str, Integration]):
             with open(str(integration.path / "config_flow.py")) as fp:
                 content = fp.read()
 <<<<<<< HEAD
+<<<<<<< HEAD
                 if (' async_step_ssdp' not in content and
 =======
                 if (' async_step_ssdp(' not in content and
 >>>>>>> Add a discovery config flow to Wemo (#24208)
+=======
+                if (' async_step_ssdp' not in content and
+>>>>>>> Add more HomeKit models for discovery (#24391)
                         'register_discovery_flow' not in content):
                     integration.add_error(
                         'ssdp', 'Config flow has no async_step_ssdp')
