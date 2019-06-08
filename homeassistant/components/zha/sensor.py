@@ -20,6 +20,7 @@ from .entity import ZhaEntity
 PARALLEL_UPDATES = 5
 _LOGGER = logging.getLogger(__name__)
 
+
 # Formatter functions
 def pass_through_formatter(value):
     """No op update function."""
