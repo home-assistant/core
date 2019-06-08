@@ -111,36 +111,40 @@ class NetatmoThermostat(ClimateDevice):
 
     def __init__(self, data, room_id):
         """Initialize the sensor."""
+        self._data = data
+        self._state = None
+        self._room_id = room_id
+        self._room_name = self._data.homedata.rooms[
+            self._data.home][room_id]['name']
+        self._name = 'netatmo_{}'.format(self._room_name)
+        self._target_temperature = None
+        self._away = None
+        self._operation_mode = None
+        self.update_without_throttle = False
+        self._module_type = None
+        self._support_flags = None
+
         try:
-            self._data = data
-            self._state = None
-            self._room_id = room_id
-            self._room_name = self._data.homedata.rooms[
-                self._data.home][room_id]['name']
-            self._name = 'netatmo_{}'.format(self._room_name)
-            self._target_temperature = None
-            self._away = None
             self._module_type = self._data.room_status[room_id]['module_type']
-            if self._module_type == NA_VALVE:
-                self._operation_list = [
-                    DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
-                    DICT_NETATMO_TO_HA[STATE_NETATMO_MANUAL],
-                    DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY],
-                    DICT_NETATMO_TO_HA[STATE_NETATMO_HG]]
-                self._support_flags = SUPPORT_FLAGS
-            elif self._module_type == NA_THERM:
-                self._operation_list = [
-                    DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
-                    DICT_NETATMO_TO_HA[STATE_NETATMO_MANUAL],
-                    DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY],
-                    DICT_NETATMO_TO_HA[STATE_NETATMO_HG],
-                    DICT_NETATMO_TO_HA[STATE_NETATMO_MAX],
-                    DICT_NETATMO_TO_HA[STATE_NETATMO_OFF]]
-                self._support_flags = SUPPORT_FLAGS | SUPPORT_ON_OFF
-            self._operation_mode = None
-            self.update_without_throttle = False
         except KeyError:
             _LOGGER.error("Thermostat in %s not available.", room_id)
+
+        if self._module_type == NA_VALVE:
+            self._operation_list = [
+                DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
+                DICT_NETATMO_TO_HA[STATE_NETATMO_MANUAL],
+                DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY],
+                DICT_NETATMO_TO_HA[STATE_NETATMO_HG]]
+            self._support_flags = SUPPORT_FLAGS
+        elif self._module_type == NA_THERM:
+            self._operation_list = [
+                DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
+                DICT_NETATMO_TO_HA[STATE_NETATMO_MANUAL],
+                DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY],
+                DICT_NETATMO_TO_HA[STATE_NETATMO_HG],
+                DICT_NETATMO_TO_HA[STATE_NETATMO_MAX],
+                DICT_NETATMO_TO_HA[STATE_NETATMO_OFF]]
+            self._support_flags = SUPPORT_FLAGS | SUPPORT_ON_OFF
 
     @property
     def supported_features(self):
