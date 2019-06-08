@@ -937,14 +937,14 @@ async def test_automation_restore_last_triggered_with_initial_state(hass):
     state = hass.states.get('automation.hello')
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes.get('last_triggered') is None
+    assert state.attributes['last_triggered'] is None
 
     state = hass.states.get('automation.bye')
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes.get('last_triggered') == time
+    assert state.attributes['last_triggered'] == time
 
     state = hass.states.get('automation.solong')
     assert state
     assert state.state == STATE_ON
-    assert state.attributes.get('last_triggered') == time
+    assert state.attributes['last_triggered'] == time
