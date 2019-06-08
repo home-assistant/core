@@ -895,8 +895,7 @@ async def test_automation_with_error_in_script(hass, caplog):
     await hass.async_block_till_done()
     assert 'Service not found' in caplog.text
 
-@asyncio.coroutine
-def test_automation_restore_last_triggered_with_initial_state(hass):
+async def test_automation_restore_last_triggered_with_initial_state(hass):
     """Ensure last_triggered is restored, even when initial state is set."""
     time = dt_util.utcnow()
 
@@ -932,7 +931,7 @@ def test_automation_restore_last_triggered_with_initial_state(hass):
         'action': {'service': 'test.automation'}
     }]}
 
-    assert (yield from async_setup_component(hass, automation.DOMAIN, config))
+    await async_setup_component(hass, automation.DOMAIN, config)
 
     state = hass.states.get('automation.hello')
     assert state
