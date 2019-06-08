@@ -118,6 +118,11 @@ class VlcDevice(MediaPlayerDevice):
         return self._state
 
     @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._vlc is not None
+
+    @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
         return self._volume
