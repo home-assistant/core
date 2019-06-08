@@ -9,6 +9,7 @@ import somecomfort
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
+    ATTR_HVAC_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     FAN_AUTO, FAN_DIFFUSE, FAN_ON,
     SUPPORT_AUX_HEAT, SUPPORT_FAN_MODE, SUPPORT_HVAC_ACTION,
     SUPPORT_PRESET_MODE, SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_TEMPERATURE,
@@ -256,7 +257,7 @@ class HoneywellUSThermostat(ClimateDevice):
         """Return hvac operation ie. heat, cool mode."""
         return HW_MODE_TO_HVAC_MODE[self._device.system_mode]
 
-    def set_temperature(self, **kwargs) -> None:
+    def _set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
@@ -282,6 +283,19 @@ class HoneywellUSThermostat(ClimateDevice):
                     temperature)
         except somecomfort.SomeComfortError:
             _LOGGER.error("Temperature %.1f out of range", temperature)
+
+    def set_temperature(self, **kwargs) -> None:
+        """Set new target temperature."""
+        if {HVAC_MODE_COOL, HVAC_MODE_HEAT} & set(self._hvac_mode_map):
+            _set_temperature(**kwargs)
+
+        if HVAC_MODE_HEAT_COOL in self._hvac_mode_map:
+            temperature = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+            if temperature:
+                self._device.setpoint_cool = temperature
+            temperature = kwargs.get(ATTR_TARGET_TEMP_LOW)
+            if temperature:
+                self._device.setpoint_heat = temperature
 
     @property
     def device_state_attributes(self) -> Dict:
