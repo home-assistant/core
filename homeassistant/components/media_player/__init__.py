@@ -107,6 +107,7 @@ MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
     vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
     vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
+    vol.Optional(ATTR_MEDIA_SHUFFLE): cv.boolean,
 })
 
 MEDIA_PLAYER_SET_SHUFFLE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
@@ -252,7 +253,8 @@ async def async_setup(hass, config):
         lambda entity, call: entity.async_play_media(
             media_type=call.data[ATTR_MEDIA_CONTENT_TYPE],
             media_id=call.data[ATTR_MEDIA_CONTENT_ID],
-            enqueue=call.data.get(ATTR_MEDIA_ENQUEUE)
+            enqueue=call.data.get(ATTR_MEDIA_ENQUEUE),
+            shuffle=call.data.get(ATTR_MEDIA_SHUFFLE)
         ), [SUPPORT_PLAY_MEDIA]
     )
     component.async_register_entity_service(

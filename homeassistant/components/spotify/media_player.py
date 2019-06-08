@@ -1,6 +1,7 @@
 """Support for interacting with Spotify Connect."""
 from datetime import timedelta
 import logging
+import random
 
 import voluptuous as vol
 
@@ -238,7 +239,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             self._player.transfer_playback(self._devices[source],
                                            self._state == STATE_PLAYING)
 
-    def play_media(self, media_type, media_id, **kwargs):
+    def play_media(self, media_type, media_id, shuffle=False,**kwargs):
         """Play media."""
         kwargs = {}
         if media_type == MEDIA_TYPE_MUSIC:
@@ -251,6 +252,14 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         if not media_id.startswith('spotify:'):
             _LOGGER.error("media id must be spotify uri")
             return
+
+        if media_type == MEDIA_TYPE_PLAYLIST and shuffle:
+            results = self._player.user_playlist_tracks("me", media_id)
+            position = random.randint(0, results['total'] - 1)            
+            offset = {}
+            offset['position'] = position
+            kwargs['offset'] =  offset   
+
         self._player.start_playback(**kwargs)
 
     @property

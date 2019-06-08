@@ -133,6 +133,9 @@ play_media:
     media_content_type:
       description: The type of the content to play. Must be one of image, music, tvshow, video, episode, channel or playlist
       example: 'music'
+    shuffle:
+      description: Start a random music in case of playlist media type
+      example: true  
 
 select_source:
   description: Send the media player the command to change input source.
