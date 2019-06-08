@@ -1,5 +1,4 @@
 """The tests for the Event automation."""
-import asyncio
 from unittest.mock import patch, Mock
 
 from homeassistant.core import CoreState

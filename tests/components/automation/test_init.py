@@ -1,5 +1,4 @@
 """The tests for the automation component."""
-import asyncio
 from datetime import timedelta
 from unittest.mock import patch, Mock
 
