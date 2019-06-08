@@ -895,6 +895,7 @@ async def test_automation_with_error_in_script(hass, caplog):
     await hass.async_block_till_done()
     assert 'Service not found' in caplog.text
 
+
 async def test_automation_restore_last_triggered_with_initial_state(hass):
     """Ensure last_triggered is restored, even when initial state is set."""
     time = dt_util.utcnow()
