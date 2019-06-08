@@ -115,9 +115,9 @@ class NetatmoThermostat(ClimateDevice):
             self._data = data
             self._state = None
             self._room_id = room_id
-            room_name = self._data.homedata.rooms[
+            self._room_name = self._data.homedata.rooms[
                 self._data.home][room_id]['name']
-            self._name = 'netatmo_{}'.format(room_name)
+            self._name = 'netatmo_{}'.format(self._room_name)
             self._target_temperature = None
             self._away = None
             self._module_type = self._data.room_status[room_id]['module_type']
@@ -140,8 +140,7 @@ class NetatmoThermostat(ClimateDevice):
             self._operation_mode = None
             self.update_without_throttle = False
         except KeyError:
-            _LOGGER.error("Thermostat in %s (%s) not available.",
-                          room_name, room_id)
+            _LOGGER.error("Thermostat in %s (%s) not available.", room_id)
 
     @property
     def supported_features(self):
@@ -161,7 +160,16 @@ class NetatmoThermostat(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self._data.room_status[self._room_id]['current_temperature']
+        try:
+            return self._data.room_status[self._room_id]['current_temperature']
+        except KeyError:
+            _LOGGER.error(
+                "Current temperature could not be retrieved "
+                "for %s in %s (%s)",
+                self._name,
+                self._room_name,
+                self._room_id
+            )
 
     @property
     def target_temperature(self):
