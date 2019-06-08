@@ -58,7 +58,6 @@ SERVICE_HANDLERS = {
     SERVICE_MOBILE_APP: ('mobile_app', None),
     SERVICE_HASS_IOS_APP: ('ios', None),
     SERVICE_NETGEAR: ('device_tracker', None),
-    SERVICE_WEMO: ('wemo', None),
     SERVICE_HASSIO: ('hassio', None),
     SERVICE_APPLE_TV: ('apple_tv', None),
     SERVICE_ENIGMA2: ('media_player', 'enigma2'),
@@ -94,19 +93,20 @@ OPTIONAL_SERVICE_HANDLERS = {
     SERVICE_DLNA_DMR: ('media_player', 'dlna_dmr'),
 }
 
-MIGRATED_SERVICE_HANDLERS = {
-    'axis': None,
-    'deconz': None,
-    'esphome': None,
-    'ikea_tradfri': None,
-    'homekit': None,
-    'philips_hue': None
-}
+MIGRATED_SERVICE_HANDLERS = [
+    'axis',
+    'deconz',
+    'esphome',
+    'ikea_tradfri',
+    'homekit',
+    'philips_hue',
+    SERVICE_WEMO,
+]
 
 DEFAULT_ENABLED = list(CONFIG_ENTRY_HANDLERS) + list(SERVICE_HANDLERS) + \
-    list(MIGRATED_SERVICE_HANDLERS)
+    MIGRATED_SERVICE_HANDLERS
 DEFAULT_DISABLED = list(OPTIONAL_SERVICE_HANDLERS) + \
-    list(MIGRATED_SERVICE_HANDLERS)
+    MIGRATED_SERVICE_HANDLERS
 
 CONF_IGNORE = 'ignore'
 CONF_ENABLE = 'enable'

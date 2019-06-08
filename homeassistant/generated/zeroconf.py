@@ -20,5 +20,8 @@ ZEROCONF = {
 }
 
 HOMEKIT = {
-    "LIFX ": "lifx"
+    "BSB002": "hue",
+    "LIFX": "lifx",
+    "TRADFRI": "tradfri",
+    "Wemo": "wemo"
 }
