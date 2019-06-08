@@ -174,7 +174,7 @@ class NetatmoThermostat(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self._data.room_status[self._room_id]['target_temperature']
+        return self._target_temperature
 
     @property
     def current_operation(self):
