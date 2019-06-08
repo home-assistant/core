@@ -9,7 +9,7 @@ import somecomfort
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    ATTR_HVAC_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
+    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     FAN_AUTO, FAN_DIFFUSE, FAN_ON,
     SUPPORT_AUX_HEAT, SUPPORT_FAN_MODE, SUPPORT_HVAC_ACTION,
     SUPPORT_PRESET_MODE, SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_TEMPERATURE,
@@ -126,13 +126,13 @@ class HoneywellUSThermostat(ClimateDevice):
         self._username = username
         self._password = password
 
-        _LOGGER.debug("uiData = ", device._data['uiData'])
-
         self._supported_features = (SUPPORT_HVAC_ACTION |
                                     SUPPORT_PRESET_MODE |
                                     SUPPORT_TARGET_TEMPERATURE)
 
         # pylint: disable=protected-access
+        _LOGGER.debug("uiData = %s ", device._data['uiData'])
+
         # not all honeywell HVACs upport all modes
         mappings = [v for k, v in HVAC_MODE_TO_HW_MODE.items()
                     if k in device._data['uiData']]
@@ -157,8 +157,7 @@ class HoneywellUSThermostat(ClimateDevice):
         """Return the list of supported features."""
         if self.hvac_mode == HVAC_MODE_HEAT_COOL:
             return self._supported_features | SUPPORT_TARGET_TEMPERATURE_RANGE
-        else:
-            return self._supported_features
+        return self._supported_features
 
     @property
     def hvac_modes(self) -> List[str]:
