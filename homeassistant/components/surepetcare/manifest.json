@@ -1,0 +1,8 @@
+{
+    "domain": "surepetcare",
+    "name": "Sure Petcare",
+    "documentation": "https://www.example.com",
+    "dependencies": [],
+    "codeowners": ["@benleb"],
+    "requirements": ["surepy==0.1.3"]
+  }
