@@ -672,7 +672,7 @@ async def test_initial_value_off(hass):
     """Test initial value off."""
     calls = async_mock_service(hass, 'test', 'automation')
 
-    res = await async_setup_component(hass, automation.DOMAIN, {
+    assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'alias': 'hello',
             'initial_state': 'off',
@@ -686,7 +686,6 @@ async def test_initial_value_off(hass):
             }
         }
     })
-    assert res
     assert not automation.is_on(hass, 'automation.hello')
 
     hass.bus.async_fire('test_event')
@@ -758,7 +757,7 @@ async def test_initial_value_on_but_restore_off(hass):
         State('automation.hello', STATE_OFF),
     ))
 
-    res = await  async_setup_component(hass, automation.DOMAIN, {
+    assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'alias': 'hello',
             'initial_state': 'on',
@@ -772,7 +771,6 @@ async def test_initial_value_on_but_restore_off(hass):
             }
         }
     })
-    assert res
     assert automation.is_on(hass, 'automation.hello')
 
     hass.bus.async_fire('test_event')
@@ -787,7 +785,7 @@ async def test_no_initial_value_and_restore_off(hass):
         State('automation.hello', STATE_OFF),
     ))
 
-    res = await async_setup_component(hass, automation.DOMAIN, {
+    assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'alias': 'hello',
             'trigger': {
@@ -800,7 +798,6 @@ async def test_no_initial_value_and_restore_off(hass):
             }
         }
     })
-    assert res
     assert not automation.is_on(hass, 'automation.hello')
 
     hass.bus.async_fire('test_event')
@@ -812,7 +809,7 @@ async def test_automation_is_on_if_no_initial_state_or_restore(hass):
     """Test initial value is on when no initial state or restored state."""
     calls = async_mock_service(hass, 'test', 'automation')
 
-    res = await async_setup_component(hass, automation.DOMAIN, {
+    assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'alias': 'hello',
             'trigger': {
@@ -825,7 +822,6 @@ async def test_automation_is_on_if_no_initial_state_or_restore(hass):
             }
         }
     })
-    assert res
     assert automation.is_on(hass, 'automation.hello')
 
     hass.bus.async_fire('test_event')
@@ -838,7 +834,7 @@ async def test_automation_not_trigger_on_bootstrap(hass):
     hass.state = CoreState.not_running
     calls = async_mock_service(hass, 'test', 'automation')
 
-    res = await async_setup_component(hass, automation.DOMAIN, {
+    assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'alias': 'hello',
             'trigger': {
@@ -851,7 +847,6 @@ async def test_automation_not_trigger_on_bootstrap(hass):
             }
         }
     })
-    assert res
     assert automation.is_on(hass, 'automation.hello')
 
     hass.bus.async_fire('test_event')
