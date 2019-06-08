@@ -42,13 +42,13 @@ def generate_and_validate(integrations: Dict[str, Integration]):
                 uses_discovery_flow = 'register_discovery_flow' in content
 
                 if (service_types and not uses_discovery_flow and
-                        ' async_step_zeroconf(' not in content):
+                        ' async_step_zeroconf' not in content):
                     integration.add_error(
                         'zeroconf', 'Config flow has no async_step_zeroconf')
                     continue
 
                 if (homekit_models and not uses_discovery_flow and
-                        ' async_step_homekit(' not in content):
+                        ' async_step_homekit' not in content):
                     integration.add_error(
                         'zeroconf', 'Config flow has no async_step_homekit')
                     continue
@@ -64,9 +64,6 @@ def generate_and_validate(integrations: Dict[str, Integration]):
             service_type_dict[service_type].append(domain)
 
         for model in homekit_models:
-            # We add a space, as we want to test for it to be model + space.
-            model += " "
-
             if model in homekit_dict:
                 integration.add_error(
                     'zeroconf',
