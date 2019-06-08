@@ -1,4 +1,4 @@
-"""Support for Honeywell Round Connected and Honeywell Evohome thermostats."""
+"""Support for Honeywell Total Connect Comfort climate systems."""
 import logging
 import datetime
 
