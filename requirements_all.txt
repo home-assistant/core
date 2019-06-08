@@ -449,11 +449,11 @@ fastdotcom==0.0.3
 # homeassistant.components.fedex
 fedexdeliverymanager==1.0.6
 
-# homeassistant.components.ferienapidotde
-ferien-api==0.3.3
-
 # homeassistant.components.feedreader
 feedparser-homeassistant==5.2.2.dev1
+
+# homeassistant.components.ferienapidotde
+ferien-api==0.3.4
 
 # homeassistant.components.fibaro
 fiblary3==0.1.7

@@ -1,5 +1,5 @@
 {
-    "domain": "binary_sensor",
+    "domain": "ferienapidotde",
     "name": "Ferienapidotde",
     "documentation": "https://www.home-assistant.io/components/ferienapidotde",
     "dependencies": [],
