@@ -283,7 +283,7 @@ async def test_discovery_ignored_model(hass):
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
-            'md': 'BSB002',
+            'md': config_flow.HOMEKIT_IGNORE[0],
             'id': '00:00:00:00:00:00',
             'c#': 1,
             'sf': 1,
