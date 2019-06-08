@@ -42,13 +42,13 @@ def generate_and_validate(integrations: Dict[str, Integration]):
                 uses_discovery_flow = 'register_discovery_flow' in content
 
                 if (service_types and not uses_discovery_flow and
-                        ' async_step_zeroconf(' not in content):
+                        ' async_step_zeroconf' not in content):
                     integration.add_error(
                         'zeroconf', 'Config flow has no async_step_zeroconf')
                     continue
 
                 if (homekit_models and not uses_discovery_flow and
-                        ' async_step_homekit(' not in content):
+                        ' async_step_homekit' not in content):
                     integration.add_error(
                         'zeroconf', 'Config flow has no async_step_homekit')
                     continue
