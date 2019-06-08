@@ -140,7 +140,7 @@ class NetatmoThermostat(ClimateDevice):
             self._operation_mode = None
             self.update_without_throttle = False
         except KeyError:
-            _LOGGER.error("Thermostat in %s (%s) not available.", room_id)
+            _LOGGER.error("Thermostat in %s not available.", room_id)
 
     @property
     def supported_features(self):
