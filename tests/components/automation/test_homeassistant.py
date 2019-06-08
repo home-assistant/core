@@ -29,7 +29,7 @@ def test_if_fires_on_hass_start(hass):
 
     res = yield from async_setup_component(hass, automation.DOMAIN, config)
     assert res
-    assert not automation.is_on(hass, 'automation.hello')
+    assert automation.is_on(hass, 'automation.hello')
     assert len(calls) == 0
 
     yield from hass.async_start()
@@ -64,7 +64,7 @@ def test_if_fires_on_hass_shutdown(hass):
         }
     })
     assert res
-    assert not automation.is_on(hass, 'automation.hello')
+    assert automation.is_on(hass, 'automation.hello')
     assert len(calls) == 0
 
     yield from hass.async_start()
