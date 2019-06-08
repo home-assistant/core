@@ -2,6 +2,8 @@
 import logging
 import voluptuous as vol
 
+from python_telnet_vlc import VLCTelnet, ConnectionError as ConnErr
+
 from homeassistant.components.media_player import (
     MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.components.media_player.const import (
@@ -18,7 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'vlc_telnet'
 
-DEFAULT_NAME = 'VLC Telnet'
+DEFAULT_NAME = 'VLC-TELNET'
+DEFAULT_PORT = 4212
 
 SUPPORT_VLC = SUPPORT_PAUSE | SUPPORT_SEEK | SUPPORT_VOLUME_SET \
               | SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK \
@@ -26,10 +29,10 @@ SUPPORT_VLC = SUPPORT_PAUSE | SUPPORT_SEEK | SUPPORT_VOLUME_SET \
               | SUPPORT_CLEAR_PLAYLIST | SUPPORT_PLAY \
               | SUPPORT_SHUFFLE_SET
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default='127.0.0.1'): cv.string,
-    vol.Optional(CONF_PORT, default='4212'): cv.positive_int,
-    vol.Required(CONF_PASSWORD, default='test'): cv.string,
-    vol.Optional(CONF_NAME, default='VLC-TELNET'): cv.string,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.positive_int,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
@@ -64,8 +67,6 @@ class VlcDevice(MediaPlayerDevice):
 
     def update(self):
         """Get the latest details from the device."""
-        from python_telnet_vlc import VLCTelnet, ConnectionError as ConnErr
-
         if self._vlc is None:
             try:
                 self._vlc = VLCTelnet(self._host, self._password, self._port)
