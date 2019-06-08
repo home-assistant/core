@@ -186,7 +186,14 @@ alpha_vantage==2.1.0
 ambient_api==1.5.2
 
 # homeassistant.components.amcrest
+<<<<<<< HEAD
 amcrest==1.2.3
+=======
+amcrest==1.5.3
+
+# homeassistant.components.androidtv
+androidtv==0.0.15
+>>>>>>> Improve amcrest error handling and bump amcrest package to 1.5.3 (#24262)
 
 # homeassistant.components.switch.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
