@@ -4,7 +4,6 @@ import logging
 from datetime import datetime
 from datetime import timedelta
 
-import aiohttp
 import adal
 import voluptuous as vol
 
@@ -54,7 +53,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Initialize the Azure DNS component."""
-
     async_get_clientsession(hass)
 
     # Acquire the Azure AD token.
@@ -89,7 +87,6 @@ async def async_setup(hass, config):
 
 async def _update_azuredns(config, credentials):
     """Update the Azure DNS Record with the external IP address."""
-
     # Get the external IP address of the Home Assistant instance.
     try:
         ipv4address = ip_query()['ip']
