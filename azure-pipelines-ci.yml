@@ -32,10 +32,6 @@ jobs:
         python.container: 'python:3.7'
   container: $[ variables['python.container'] ]
   steps:
-  - task: UsePythonVersion@0
-    displayName: 'Use Python $(python.version)'
-    inputs:
-      versionSpec: '$(python.version)'
   - script: |
       sudo apt-get update
       sudo apt-get install -y --no-install-recommends \
