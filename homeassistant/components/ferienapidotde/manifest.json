@@ -7,6 +7,6 @@
         "@HazardDede"
     ],
     "requirements": [
-        "ferien-api==0.3.3"
+        "ferien-api==0.3.4"
     ]
   }
