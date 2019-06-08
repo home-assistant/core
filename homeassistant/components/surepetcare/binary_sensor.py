@@ -1,6 +1,5 @@
 """Support for Sure PetCare Flaps binary sensors."""
 import logging
-import pprint
 
 import homeassistant.helpers.device_registry as dr
 from homeassistant.components.binary_sensor import BinarySensorDevice
