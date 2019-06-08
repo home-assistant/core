@@ -13,7 +13,7 @@ from .connection import get_bridge_information, get_accessory_name
 
 
 HOMEKIT_IGNORE = [
-    'BSB002',
+    'BSB002',  # Philips Hue
     'Home Assistant Bridge',
     'TRADFRI gateway',
 ]
