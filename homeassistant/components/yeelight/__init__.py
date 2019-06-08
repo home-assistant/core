@@ -43,6 +43,8 @@ ACTION_RECOVER = 'recover'
 ACTION_STAY = 'stay'
 ACTION_OFF = 'off'
 
+ACTIVE_MODE_NIGHTLIGHT = '1'
+
 SCAN_INTERVAL = timedelta(seconds=30)
 
 YEELIGHT_RGB_TRANSITION = 'RGBTransition'
@@ -224,7 +226,7 @@ class YeelightDevice:
         if self.bulb is None:
             return False
 
-        return self._active_mode == '1'
+        return self._active_mode == ACTIVE_MODE_NIGHTLIGHT
 
     @property
     def is_nightlight_supported(self) -> bool:

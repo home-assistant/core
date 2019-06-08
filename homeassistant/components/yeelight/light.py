@@ -307,7 +307,7 @@ class YeelightGenericLight(Light):
 
     # F821: https://github.com/PyCQA/pyflakes/issues/373
     @property
-    def _bulb(self) -> 'yeelight.Bulb':  # noqa: F821
+    def _bulb(self) -> 'Bulb':  # noqa: F821
         return self.device.bulb
 
     @property
