@@ -61,6 +61,7 @@ class VlcDevice(MediaPlayerDevice):
         self._port = port
         self._password = passwd
         self._vlc = None
+        self._available = False
         self._volume_bkp = 0
         self._media_artist = ""
         self._media_title = ""
@@ -71,8 +72,9 @@ class VlcDevice(MediaPlayerDevice):
             try:
                 self._vlc = VLCTelnet(self._host, self._password, self._port)
                 self._state = STATE_IDLE
+                self._available = True
             except (ConnErr, EOFError):
-                self._state = STATE_UNAVAILABLE
+                self._available = False
                 self._vlc = None
         else:
             try:
@@ -102,7 +104,7 @@ class VlcDevice(MediaPlayerDevice):
                     self._media_title = info[0].get('title')
 
             except (ConnErr, EOFError):
-                self._state = STATE_UNAVAILABLE
+                self._available = False
                 self._vlc = None
 
         return True
@@ -120,7 +122,7 @@ class VlcDevice(MediaPlayerDevice):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._vlc is not None
+        return self._available
 
     @property
     def volume_level(self):
