@@ -11,6 +11,11 @@
       "Belkin International Inc."
     ]
   },
+  "homekit": {
+    "models": [
+      "Wemo"
+    ]
+  },
   "dependencies": [],
   "codeowners": [
     "@sqldiablo"
