@@ -371,3 +371,38 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(hass):
     # We did not process the result of this entry but already removed the old
     # ones. So we should have 0 entries.
     assert len(hass.config_entries.async_entries('hue')) == 0
+
+
+async def test_bridge_homekit(hass):
+    """Test a bridge being discovered via HomeKit."""
+    flow = config_flow.HueFlowHandler()
+    flow.hass = hass
+    flow.context = {}
+
+    with patch.object(config_flow, 'get_bridge',
+                      side_effect=errors.AuthenticationRequired):
+        result = await flow.async_step_homekit({
+            'host': '0.0.0.0',
+            'serial': '1234',
+            'manufacturerURL': config_flow.HUE_MANUFACTURERURL
+        })
+
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'link'
+
+
+async def test_bridge_homekit_already_configured(hass):
+    """Test if a HomeKit discovered bridge has already been configured."""
+    MockConfigEntry(domain='hue', data={
+        'host': '0.0.0.0'
+    }).add_to_hass(hass)
+
+    flow = config_flow.HueFlowHandler()
+    flow.hass = hass
+    flow.context = {}
+
+    result = await flow.async_step_homekit({
+        'host': '0.0.0.0',
+    })
+
+    assert result['type'] == 'abort'
