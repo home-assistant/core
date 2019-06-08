@@ -68,6 +68,7 @@ class MpdDevice(MediaPlayerDevice):
         self._currentsong = None
         self._playlists = None
         self._currentplaylist = None
+        self._currentplaylistsongs = None
         self._is_connected = False
         self._muted = False
         self._muted_volume = 0
@@ -222,12 +223,20 @@ class MpdDevice(MediaPlayerDevice):
 
     @property
     def source_list(self):
-        """Return the list of available input sources."""
+        """Return the list of songs or list of playlists."""
+        if self._currentplaylistsongs:
+            return self._currentplaylistsongs
         return self._playlists
 
     def select_source(self, source):
-        """Choose a different available playlist and play it."""
-        self.play_media(MEDIA_TYPE_PLAYLIST, source)
+        """Choose a different available playlist or song and play it."""
+        if source == '..':
+            self._currentplaylistsongs.clear()
+        elif self._currentplaylistsongs:
+            self.play_media(MEDIA_TYPE_MUSIC, source)
+        else:
+            self._currentplaylistsongs = ['..'] + self.list_playlist(source)
+            self.play_media(MEDIA_TYPE_PLAYLIST, source)
 
     @Throttle(PLAYLIST_UPDATE_INTERVAL)
     def _update_playlists(self, **kwargs):
@@ -294,8 +303,8 @@ class MpdDevice(MediaPlayerDevice):
             self._muted = mute
 
     def play_media(self, media_type, media_id, **kwargs):
-        """Send the media player the command for playing a playlist."""
-        _LOGGER.debug("Playing playlist: %s", media_id)
+        """Send the media player the command for playing an item."""
+        _LOGGER.debug("Playing: %s", media_id)
         if media_type == MEDIA_TYPE_PLAYLIST:
             if media_id in self._playlists:
                 self._currentplaylist = media_id
@@ -335,3 +344,7 @@ class MpdDevice(MediaPlayerDevice):
     def media_seek(self, position):
         """Send seek command."""
         self._client.seekcur(position)
+
+    def list_playlist(self, name):
+        """List of songs from playlist."""
+        return self._client.listplaylist(name)
