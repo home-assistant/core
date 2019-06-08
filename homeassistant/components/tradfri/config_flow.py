@@ -87,6 +87,8 @@ class FlowHandler(config_entries.ConfigFlow):
         self._host = user_input['host']
         return await self.async_step_auth()
 
+    async_step_homekit = async_step_zeroconf
+
     async def async_step_import(self, user_input):
         """Import a config entry."""
         for entry in self._async_current_entries():
