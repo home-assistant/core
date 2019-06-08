@@ -207,14 +207,18 @@ def test_recorder_setup_failure():
 
 async def test_defaults_set(hass):
     """Test the config defaults are set."""
+    recorder_config = None
+
     async def mock_setup(hass, config):
         """Mock setup."""
-        config = config['recorder']
-        assert config['purge_keep_days'] == 10
-        assert config['purge_interval'] == 1
+        nonlocal recorder_config
+        recorder_config = config['recorder']
         return True
 
     with patch('homeassistant.components.recorder.async_setup',
                side_effect=mock_setup):
         assert await async_setup_component(hass, 'history', {})
 
+    assert recorder_config is not None
+    assert recorder_config['purge_keep_days'] == 10
+    assert recorder_config['purge_interval'] == 1
