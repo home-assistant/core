@@ -27,6 +27,7 @@ FLOWS = [
     "ipma",
     "iqvia",
     "leafspy",
+    "life360",
     "lifx",
     "locative",
     "logi_circle",

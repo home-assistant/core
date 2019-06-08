@@ -73,7 +73,7 @@ apns2==0.3.0
 av==6.1.2
 
 # homeassistant.components.axis
-axis==24
+axis==25
 
 # homeassistant.components.zha
 bellows-homeassistant==0.8.0
@@ -242,7 +242,7 @@ pydispatcher==2.0.5
 pyheos==0.5.2
 
 # homeassistant.components.homematic
-pyhomematic==0.1.58
+pyhomematic==0.1.59
 
 # homeassistant.components.iqvia
 pyiqvia==0.2.1
@@ -298,7 +298,7 @@ pytradfri[async]==6.0.1
 pywebpush==1.9.2
 
 # homeassistant.components.rainmachine
-regenmaschine==1.4.0
+regenmaschine==1.5.1
 
 # homeassistant.components.python_script
 restrictedpython==4.0b8

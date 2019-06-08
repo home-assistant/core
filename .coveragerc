@@ -319,6 +319,7 @@ omit =
     homeassistant/components/leafspy/*
     homeassistant/components/lg_netcast/media_player.py
     homeassistant/components/lg_soundbar/media_player.py
+    homeassistant/components/life360/*
     homeassistant/components/lifx/*
     homeassistant/components/lifx_cloud/scene.py
     homeassistant/components/lifx_legacy/light.py
@@ -551,6 +552,7 @@ omit =
     homeassistant/components/slack/notify.py
     homeassistant/components/sma/sensor.py
     homeassistant/components/smappee/*
+    homeassistant/components/smarty/*
     homeassistant/components/smarthab/*
     homeassistant/components/smtp/notify.py
     homeassistant/components/snapcast/media_player.py
