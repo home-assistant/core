@@ -175,6 +175,22 @@ class HueFlowHandler(config_entries.ConfigFlow):
             'path': 'phue-{}.conf'.format(serial)
         })
 
+    async def async_step_homekit(self, homekit_info):
+        """Handle HomeKit discovery."""
+        # pylint: disable=unsupported-assignment-operation
+        host = self.context['host'] = homekit_info.get('host')
+
+        if any(host == flow['context']['host']
+               for flow in self._async_in_progress()):
+            return self.async_abort(reason='already_in_progress')
+
+        if host in configured_hosts(self.hass):
+            return self.async_abort(reason='already_configured')
+
+        return await self.async_step_import({
+            'host': host,
+        })
+
     async def async_step_import(self, import_info):
         """Import a new bridge as a config entry.
 

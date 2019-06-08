@@ -696,12 +696,12 @@ def test_initial_value_off(hass):
     assert len(calls) == 0
 
 
-@asyncio.coroutine
-def test_initial_value_on(hass):
+async def test_initial_value_on(hass):
     """Test initial value on."""
+    hass.state = CoreState.not_running
     calls = async_mock_service(hass, 'test', 'automation')
 
-    res = yield from async_setup_component(hass, automation.DOMAIN, {
+    assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'alias': 'hello',
             'initial_state': 'on',
@@ -715,23 +715,23 @@ def test_initial_value_on(hass):
             }
         }
     })
-    assert res
     assert automation.is_on(hass, 'automation.hello')
 
+    await hass.async_start()
     hass.bus.async_fire('test_event')
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert len(calls) == 1
 
 
-@asyncio.coroutine
-def test_initial_value_off_but_restore_on(hass):
+async def test_initial_value_off_but_restore_on(hass):
     """Test initial value off and restored state is turned on."""
+    hass.state = CoreState.not_running
     calls = async_mock_service(hass, 'test', 'automation')
     mock_restore_cache(hass, (
         State('automation.hello', STATE_ON),
     ))
 
-    res = yield from async_setup_component(hass, automation.DOMAIN, {
+    await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'alias': 'hello',
             'initial_state': 'off',
@@ -745,11 +745,11 @@ def test_initial_value_off_but_restore_on(hass):
             }
         }
     })
-    assert res
     assert not automation.is_on(hass, 'automation.hello')
 
+    await hass.async_start()
     hass.bus.async_fire('test_event')
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert len(calls) == 0
 
 
@@ -858,7 +858,7 @@ def test_automation_not_trigger_on_bootstrap(hass):
         }
     })
     assert res
-    assert not automation.is_on(hass, 'automation.hello')
+    assert automation.is_on(hass, 'automation.hello')
 
     hass.bus.async_fire('test_event')
     yield from hass.async_block_till_done()
