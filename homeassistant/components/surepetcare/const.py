@@ -74,7 +74,7 @@ class SureEventID(IntEnum):
     CURFEW = 20
 
 
-class SureThingTypeID(IntEnum):
+class SureThingID(IntEnum):
     """Sure Petcare thing Types."""
 
     HUB = 0

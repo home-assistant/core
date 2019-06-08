@@ -1,5 +1,6 @@
 """Support for Sure PetCare Flaps binary sensors."""
 import logging
+import pprint
 
 import homeassistant.helpers.device_registry as dr
 from homeassistant.components.binary_sensor import BinarySensorDevice
@@ -7,33 +8,34 @@ from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import (CONF_HOUSEHOLD_ID, DATA_SURE_PETCARE, DEFAULT_DEVICE_CLASS,
-                    DEFAULT_ICON, SURE_IDS, TOPIC_UPDATE, SureLocationID,
-                    SureLockStateID, SureProductID, SureThingTypeID)
+from .const import (CONF_HOUSEHOLD_ID, DATA_SURE_PETCARE, DATA_SUREPY,
+                    DEFAULT_DEVICE_CLASS, DEFAULT_ICON, SURE_IDS, TOPIC_UPDATE,
+                    SureLocationID, SureLockStateID, SureProductID,
+                    SureThingID)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+# async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up Sure PetCare Flaps sensors based on a config entry."""
-    hass.data[DATA_SURE_PETCARE][CONF_HOUSEHOLD_ID] = entry.data[
-        CONF_HOUSEHOLD_ID]
-    hass.data[DATA_SURE_PETCARE][SureThingTypeID.FLAP.name] = dict()
-    hass.data[DATA_SURE_PETCARE][SureThingTypeID.PET.name] = dict()
+    from surepy import SurePetcare
 
     entities = list()
+    surepy: SurePetcare = hass.data[DATA_SURE_PETCARE][DATA_SUREPY]
 
     for thing in hass.data[DATA_SURE_PETCARE][SURE_IDS]:
         sure_id = thing[CONF_ID]
         sure_type = thing[CONF_TYPE]
 
         if sure_id not in hass.data[DATA_SURE_PETCARE][sure_type]:
-            hass.data[DATA_SURE_PETCARE][sure_type][sure_id] = None
 
-        if sure_type == SureThingTypeID.FLAP.name:
-            entities.append(Flap(sure_id, thing[CONF_NAME], hass=hass))
-        elif sure_type == SureThingTypeID.PET.name:
-            entities.append(Pet(sure_id, thing[CONF_NAME], hass=hass))
+            if sure_type == SureThingID.FLAP.name:
+                hass.data[DATA_SURE_PETCARE][sure_type][sure_id] = await surepy.get_flap_data(sure_id)
+                entities.append(Flap(sure_id, thing[CONF_NAME], hass=hass))
+            elif sure_type == SureThingID.PET.name:
+                hass.data[DATA_SURE_PETCARE][sure_type][sure_id] = await surepy.get_pet_data(sure_id)
+                entities.append(Pet(sure_id, thing[CONF_NAME], hass=hass))
 
     async_add_entities(entities, True)
 
@@ -73,19 +75,6 @@ class SurePetcareBinarySensor(BinarySensorDevice):
         return self._name
 
     @property
-    def device_info(self):
-        """Return information about the device."""
-        return {
-            "name": self._name,
-            "model": SureProductID.PET_FLAP,
-            "manufacturer": 'Sure Petcare',
-            "connections": {
-                (dr.CONNECTION_NETWORK_MAC, "38B9A8FEF31180D8")
-            },
-            "sw_version": 0,
-        }
-
-    @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         return self._state
@@ -113,9 +102,7 @@ class SurePetcareBinarySensor(BinarySensorDevice):
             self._state = self._hass.data[
                 DATA_SURE_PETCARE][self._sure_type][self._id]
         except (AttributeError, KeyError, TypeError) as error:
-            # _LOGGER.debug(f"error while updating: {error}")
-            _LOGGER.debug("error while updating: %s", error)
-            pass
+            _LOGGER.debug("async_update error: %s", error)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -144,7 +131,7 @@ class Flap(SurePetcareBinarySensor):
             f"Flap {name.capitalize()}",
             icon="mdi:lock",
             device_class="lock",
-            sure_type=SureThingTypeID.FLAP.name,
+            sure_type=SureThingID.FLAP.name,
             hass=hass,
         )
 
@@ -155,39 +142,43 @@ class Flap(SurePetcareBinarySensor):
             return bool(
                 self._state["locking"]["mode"] == SureLockStateID.UNLOCKED)
         except (KeyError, TypeError):
-            # return False
             return "unknown"
 
     @property
     def device_info(self):
         """Return information about the device."""
-        return {
-            "name": self._name,
-            "model": SureProductID.PET_FLAP,
-            "manufacturer": 'Sure Petcare',
-            "connections": {
-                (dr.CONNECTION_NETWORK_MAC, "38B953FEFF3980D8")
-            },
-            "sw_version": 0,
-        }
+        try:
+            device_info = {
+                "name": self._name,
+                "model": SureProductID.PET_FLAP,
+                "manufacturer": 'Sure Petcare',
+                "connections": {
+                    (dr.CONNECTION_NETWORK_MAC, self._state["mac_address"] or "DEAD1337BEEF1337")
+                },
+                "sw_version": self._state["version"] or 0,
+            }
+        except TypeError as error:
+            device_info = None
+            _LOGGER.debug("error while getting device info from %s: %s\n\n%s", self._name, error, self._state)
+
+
+        return device_info
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        if self._state:
+        try:
             attributes = dict(
                 battery_voltage=self._state["battery"] / 4,
                 locking_mode=self._state["locking"]["mode"],
                 device_rssi=self._state["signal"]["device_rssi"],
                 hub_rssi=self._state["signal"]["hub_rssi"],
-                device_hw_version=self._state["version"]["device"]["hardware"],
-                device_fw_version=self._state["version"]["device"]["firmware"],
-                lcd_hw_version=self._state["version"]["lcd"]["hardware"],
-                lcd_fw_version=self._state["version"]["lcd"]["firmware"],
-                rf_hw_version=self._state["version"]["rf"]["hardware"],
-                rf_fw_version=self._state["version"]["rf"]["firmware"],
+                mac_address=self._state["mac_address"],
+                version=self._state["version"],
             )
-        else:
+
+        except (KeyError, TypeError) as error:
+            _LOGGER.debug("error while getting device state attributes from %s: %s\n\n%s", self._name, error, self._state)
             attributes = dict(error=self._state)
 
         return attributes
@@ -203,7 +194,7 @@ class Pet(SurePetcareBinarySensor):
             f"Pet {name.capitalize()}",
             icon="mdi:cat",
             device_class="presence",
-            sure_type=SureThingTypeID.PET.name,
+            sure_type=SureThingID.PET.name,
             hass=hass,
         )
 
