@@ -51,6 +51,7 @@ omit =
     homeassistant/components/august/*
     homeassistant/components/automatic/device_tracker.py
     homeassistant/components/avion/light.py
+    homeassistant/components/azuredns/*
     homeassistant/components/azure_event_hub/*
     homeassistant/components/baidu/tts.py
     homeassistant/components/bbb_gpio/*

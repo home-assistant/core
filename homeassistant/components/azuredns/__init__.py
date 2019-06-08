@@ -12,6 +12,8 @@ from azure.mgmt.dns import DnsManagementClient
 from msrestazure.azure_active_directory import AdalAuthentication
 from msrestazure.azure_cloud import AZURE_PUBLIC_CLOUD
 
+from ip_query import ip_query
+
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_HOST, CONF_DOMAIN
 from homeassistant.helpers.event import async_track_time_interval
@@ -90,16 +92,11 @@ async def _update_azuredns(config, credentials):
 
     # Get the external IP address of the Home Assistant instance.
     try:
-        aiotimeout = aiohttp.ClientTimeout(total=config[DOMAIN][CONF_TIMEOUT])
-
-        async with aiohttp.ClientSession(timeout=aiotimeout) as aiosession:
-            async with aiosession.get('https://api.ipify.org') as aioresp:
-                ipv4address = (await aioresp.text())
-
+        ipv4address = ip_query()['ip']
         _LOGGER.debug("External IP address is: %s", ipv4address)
 
-    except Exception:
-        _LOGGER.error("Failed to get external IP address: %s", Exception)
+    except ConnectionError:
+        _LOGGER.error("Unable to reach ipify service: %s", ConnectionError)
         return False
 
     # Create the request.

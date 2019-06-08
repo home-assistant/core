@@ -4,7 +4,8 @@
   "documentation": "https://www.home-assistant.io/components/azuredns",
   "requirements": [
     "adal==1.2.1",
-    "azure-mgmt-dns==2.1.0"
+    "azure-mgmt-dns==2.1.0",
+    "ip-query==4.3.0"
   ],
   "dependencies": [],
   "codeowners": [
