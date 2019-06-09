@@ -4,23 +4,23 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_NEXT_PASSAGE = 'nextpassage'
 CONF_STOP_ID = 'stop_id'
-CONF_SUB_KEY = 'sub_key'
+CONF_API_KEY = 'api_key'
 CONF_MAX_PASSAGES = 'max_passages'
 
 DEFAULT_NAME = 'De Lijn'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SUB_KEY): cv.string,
+    vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_NEXT_PASSAGE): [{
         vol.Required(CONF_STOP_ID): cv.string,
         vol.Optional(CONF_MAX_PASSAGES, default=5): cv.positive_int}]
@@ -32,7 +32,7 @@ async def async_setup_platform(
     """Create the sensor."""
     from pydelijn.api import Passages
 
-    sub_key = config.get(CONF_SUB_KEY)
+    api_key = config.get(CONF_API_KEY)
     name = DEFAULT_NAME
 
     session = async_get_clientsession(hass)
@@ -41,7 +41,7 @@ async def async_setup_platform(
     for nextpassage in config.get(CONF_NEXT_PASSAGE):
         stop_id = nextpassage[CONF_STOP_ID]
         max_passages = nextpassage[CONF_MAX_PASSAGES]
-        line = Passages(hass.loop, stop_id, max_passages, sub_key, session)
+        line = Passages(hass.loop, stop_id, max_passages, api_key, session)
         sensors.append(DeLijnPublicTransportSensor(line, name))
 
     tasks = [sensor.async_update() for sensor in sensors]
@@ -67,7 +67,7 @@ class DeLijnPublicTransportSensor(Entity):
         """Get the latest data from the De Lijn API."""
         await self.line.get_passages()
         if self.line.passages is None:
-            _LOGGER.error("No data recieved from De Lijn.")
+            _LOGGER.error("No data recieved from De Lijn")
             return
         try:
             attributes = {}
