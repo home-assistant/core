@@ -76,8 +76,15 @@ class Envoy(Entity):
         """Icon to use in the frontend, if any."""
         return ICON
 
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes"""
+        if self._type == "production":
+            return self._attributes
+
     def update(self):
         """Get the energy production data from the Enphase Envoy."""
         from envoy_reader import EnvoyReader
 
         self._state = getattr(EnvoyReader(self._ip_address), self._type)()
+        self._attributes = EnvoyReader(self._ip_address).inverters_production()
