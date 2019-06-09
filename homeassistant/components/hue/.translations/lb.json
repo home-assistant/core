@@ -20,7 +20,7 @@
                 "title": "Hue Bridge auswielen"
             },
             "link": {
-                "description": "Dr\u00e9ckt de Kn\u00e4ppchen un der Bridge fir den Philips Hue mam Home Assistant ze registr\u00e9ieren.\n\n![Kn\u00e4ppchen un der Bridge](/static/images/config_philips_hue.jpg)",
+                "description": "Dr\u00e9ckt de Kn\u00e4ppchen un der Bridge fir den Philips Hue mam Home Assistant ze registr\u00e9ieren.\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)",
                 "title": "Link Hub"
             }
         },

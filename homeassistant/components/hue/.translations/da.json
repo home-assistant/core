@@ -20,7 +20,7 @@
                 "title": "V\u00e6lg Hue bridge"
             },
             "link": {
-                "description": "Tryk p\u00e5 knappen p\u00e5 bridgen for at registrere Philips Hue med Home Assistant. \n\n ! [Placering af knap p\u00e5 bro] (/static/images/config_philips_hue.jpg)",
+                "description": "Tryk p\u00e5 knappen p\u00e5 bridgen for at registrere Philips Hue med Home Assistant.\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)",
                 "title": "Link Hub"
             }
         },
