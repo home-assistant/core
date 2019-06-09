@@ -111,7 +111,7 @@ jobs:
   - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreCacheV1.RestoreCache@1
     displayName: 'Restore artifacts based on Requirements'
     inputs:
-      keyfile: 'requirements_all.txt, .cache'
+      keyfile: 'requirements_all.txt, requirements_test.txt, .cache'
       targetfolder: './venv'
       vstsFeed: '$(ArtifactFeed)' 
 
@@ -122,13 +122,14 @@ jobs:
       . venv/bin/activate
       pip install -U pip setuptools
       pip install -r requirements_all.txt -c homeassistant/package_constraints.txt
+      pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
     displayName: 'Create Virtual Environment & Install Requirements'
     condition: and(succeeded(), ne(variables['CacheRestored'], 'true'))
 
   - task: 1ESLighthouseEng.PipelineArtifactCaching.SaveCacheV1.SaveCache@1
     displayName: 'Save artifacts based on Requirements'
     inputs:
-      keyfile: 'requirements_all.txt, .cache'
+      keyfile: 'requirements_all.txt, requirements_test.txt, .cache'
       targetfolder: './venv'
       vstsFeed: '$(ArtifactFeed)'
 
@@ -139,8 +140,6 @@ jobs:
   
   - script: |
       . venv/bin/activate
-      pip install -r requirements_all.txt -c homeassistant/package_constraints.txt
-
       pylint homeassistant
     displayName: 'Run pylint'
 
