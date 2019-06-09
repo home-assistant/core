@@ -50,7 +50,7 @@ class HueLightLevel(GenericHueGaugeSensorEntity):
             "lightlevel": self.sensor.lightlevel,
             "daylight": self.sensor.daylight,
             "dark": self.sensor.dark,
-            "threshold_dark": self.sensor.tholddark,    
+            "threshold_dark": self.sensor.tholddark,
             "threshold_offset": self.sensor.tholdoffset,
         })
         return attributes
