@@ -112,4 +112,4 @@ jobs:
 
       pylint homeassistant
     displayName: 'Run pylint'
-    condition: eq($(python.container), $(PythonMain))
+    condition: eq(variables['python.container'], variables['PythonMain'])
