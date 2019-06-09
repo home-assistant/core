@@ -32,7 +32,7 @@ jobs:
   container: $[ variables['PythonMain'] ]
   steps:
   - script: |
-      pip install flake8
+      pip install -user flake8
       flake8 homeassistant tests script
     displayName: 'Run flake8'
 
