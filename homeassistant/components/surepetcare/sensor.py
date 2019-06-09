@@ -3,15 +3,16 @@ import logging
 import pprint
 
 import homeassistant.helpers.device_registry as dr
-from homeassistant.const import ATTR_VOLTAGE, CONF_ID, CONF_NAME, CONF_TYPE
+from homeassistant.const import (ATTR_VOLTAGE, CONF_ID, CONF_NAME, CONF_TYPE,
+                                 DEVICE_CLASS_BATTERY)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import (BATTERY_DEFAULT_DEVICE_CLASS, BATTERY_DEFAULT_ICON,
-                    CONF_HOUSEHOLD_ID, DATA_SURE_PETCARE, DATA_SUREPY,
-                    SURE_BATT_VOLTAGE_DIFF, SURE_BATT_VOLTAGE_LOW, SURE_IDS,
-                    TOPIC_UPDATE, SureProductID, SureThingID)
+from .const import (BATTERY_ICON, CONF_HOUSEHOLD_ID,
+                    DATA_SURE_PETCARE, DATA_SUREPY, SURE_BATT_VOLTAGE_DIFF,
+                    SURE_BATT_VOLTAGE_LOW, SURE_IDS, TOPIC_UPDATE,
+                    SureProductID, SureThingID)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,8 +51,8 @@ class FlapBattery(Entity):
         self._hass = hass
         self._name = f"Flap {name.capitalize()} Battery Level"
         self._unit_of_measurement = "%"
-        self._icon = BATTERY_DEFAULT_ICON
-        self._device_class = BATTERY_DEFAULT_DEVICE_CLASS
+        self._icon = BATTERY_ICON
+        self._device_class = DEVICE_CLASS_BATTERY
 
         self._household_id = hass.data[DATA_SURE_PETCARE][CONF_HOUSEHOLD_ID]
 

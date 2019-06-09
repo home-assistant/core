@@ -1,31 +1,26 @@
-"""Constants used by the Sure Petcare component."""
+"""Constants for the Sure Petcare component."""
 from datetime import timedelta
 from enum import IntEnum
 
 DOMAIN = "surepetcare"
-
 DEFAULT_DEVICE_CLASS = "lock"
 DEFAULT_ICON = "mdi:cat"
-
-BATTERY_DEFAULT_DEVICE_CLASS = "battery"
-BATTERY_DEFAULT_ICON = "mdi:battery"
-
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=3)
-DEFAULT_TIMEOUT = 10
+
+DATA_SURE_PETCARE = f"data_{DOMAIN}"
+DATA_SUREPY = "surepy"
 
 CONF_HOUSEHOLD_ID = "household_id"
 CONF_FLAPS = "flaps"
 CONF_PETS = "pets"
 
-TOPIC_UPDATE = f"{DOMAIN}_data_update"
-
-DATA_SURE_PETCARE = f"data_{DOMAIN}"
-DATA_SURE_HOUSEHOLD_NAME = "household_name"
-DATA_SURE_LISTENER = "listener"
-DATA_SUREPY = "surepy"
-
 SURE_IDS = "sure_ids"
 
+# platforms
+TOPIC_UPDATE = f"{DOMAIN}_data_update"
+
+# flap
+BATTERY_ICON = "mdi:battery"
 SURE_BATT_VOLTAGE_FULL = 1.6  # voltage
 SURE_BATT_VOLTAGE_LOW = 1.25  # voltage
 SURE_BATT_VOLTAGE_DIFF = SURE_BATT_VOLTAGE_FULL - SURE_BATT_VOLTAGE_LOW
@@ -61,16 +56,16 @@ class SureLockStateID(IntEnum):
     CURFEW_UNKNOWN = -3
 
 
-class SureEventID(IntEnum):
-    """Sure Petcare API Event IDs."""
+# class SureEventID(IntEnum):
+#     """Sure Petcare API Event IDs."""
 
-    MOVE = 0
-    MOVE_UNKNOWN_ANIMAL = 7     # movement of unknown animal
-    BATTERY_WARNING = 1
-    LOCK_ST = 6
-    USR_IFO = 12
-    USR_NEW = 17
-    CURFEW = 20
+#     MOVE = 0
+#     MOVE_UNKNOWN_ANIMAL = 7     # movement of unknown animal
+#     BATTERY_WARNING = 1
+#     LOCK_ST = 6
+#     USR_IFO = 12
+#     USR_NEW = 17
+#     CURFEW = 20
 
 
 class SureThingID(IntEnum):

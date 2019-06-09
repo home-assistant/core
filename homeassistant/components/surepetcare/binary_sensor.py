@@ -183,7 +183,7 @@ class Flap(SurePetcareBinarySensor):
 
         except (KeyError, TypeError) as error:
             _LOGGER.debug(
-                "error  getting device state attributes from %s: %s\n\n%s",
+                "error getting device state attributes from %s: %s\n\n%s",
                 self._name, error, self._state)
             attributes = dict(error=self._state)
 

@@ -69,7 +69,7 @@ async def async_setup(hass, config):
         hass.loop, async_get_clientsession(hass), debug=True)
 
     # add flaps
-    hass.data[DATA_SURE_PETCARE][SURE_IDS]: list = [
+    hass.data[DATA_SURE_PETCARE][SURE_IDS] = [
         {
             CONF_NAME: flap[CONF_NAME],
             CONF_ID: flap[CONF_ID],
