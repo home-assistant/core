@@ -54,6 +54,7 @@ FLOWS = [
     "twilio",
     "unifi",
     "upnp",
+    "wemo",
     "zha",
     "zone",
     "zwave"
