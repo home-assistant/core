@@ -7,21 +7,11 @@ trigger:
     - dev
 pr: none
 
-resources:
-  containers:
-  - container: 35
-    image: python:3.5
-  - container: 36
-    image: python:3.6
-  - container: 37
-    image: python:3.7
-
-
 variables:
   - name: ArtifactFeed
     value: '2df3ae11-3bf6-49bc-a809-ba0d340d6a6d'
   - name: PythonMain
-    value: '35'
+    value: '3.5'
 
 
 jobs:
@@ -29,8 +19,11 @@ jobs:
 - job: 'Lint'
   pool:
     vmImage: 'ubuntu-latest'
-  container: $[ variables['PythonMain'] ]
+  
   steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(PythonMain)'
   - script: |
       python -m venv lint
       
@@ -51,19 +44,19 @@ jobs:
     matrix:
       Python35:
         python.version: '3.5'
-        python.container: '35'
       Python36:
         python.version: '3.6'
-        python.container: '36'
       Python37:
         python.version: '3.7'
-        python.container: '37'
-  container: $[ variables['python.container'] ]
   steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
   - script: |
-      apt-get update
-      apt-get install -y --no-install-recommends \
-        libudev libavformat libavcodec libavdevice libavutil libswscale libswresample libavfilter
+      sudo add-apt-repository ppa:jonathonf/ffmpeg-4
+      sudo apt-get update
+      sudo apt-get install -y --no-install-recommends \
+        libudev libsqlite3 libavformat libavcodec libavdevice libavutil libswscale libswresample libavfilter
 
       echo "$(python.version)" > .cache
     displayName: 'Set up docker prerequisite requirement'
@@ -77,8 +70,8 @@ jobs:
 
   - script: |
       # Install build env
-      apt-get install -y --no-install-recommends \
-        libudev-dev libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev libswscale-dev libswresample-dev libavfilter-dev
+      sudo apt-get install -y --no-install-recommends \
+        libudev-dev libsqlite3-dev libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev libswscale-dev libswresample-dev libavfilter-dev
 
       # Setup venv
       python -m venv venv
@@ -112,4 +105,4 @@ jobs:
 
       pylint homeassistant
     displayName: 'Run pylint'
-    condition: eq(variables['python.container'], variables['PythonMain'])
+    condition: eq(variables['python.version'], variables['PythonMain'])
