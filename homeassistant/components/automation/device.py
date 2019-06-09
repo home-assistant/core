@@ -5,8 +5,6 @@ from homeassistant.const import CONF_DOMAIN, CONF_PLATFORM
 from homeassistant.loader import async_get_integration
 
 
-
-
 TRIGGER_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'device',
     vol.Required(CONF_DOMAIN): str,
