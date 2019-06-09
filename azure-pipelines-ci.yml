@@ -53,6 +53,8 @@ jobs:
     inputs:
       versionSpec: '$(python.version)'
   - script: |
+      set -e
+
       sudo add-apt-repository ppa:jonathonf/ffmpeg-4
       sudo apt-get update
       sudo apt-get install -y --no-install-recommends \
@@ -69,13 +71,15 @@ jobs:
       vstsFeed: '$(ArtifactFeed)' 
 
   - script: |
+      set -e
+
       # Install build env
       sudo apt-get install -y --no-install-recommends \
         libudev-dev libsqlite3-dev libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev libswscale-dev libswresample-dev libavfilter-dev
 
       # Setup venv
       python -m venv venv
-      
+
       . venv/bin/activate
       pip install -U pip setuptools
       pip install -r requirements_test_all.txt -c homeassistant/package_constraints.txt
