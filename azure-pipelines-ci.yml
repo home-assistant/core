@@ -32,7 +32,10 @@ jobs:
   container: $[ variables['PythonMain'] ]
   steps:
   - script: |
-      pip install --user flake8
+      python -m venv lint
+      
+      . lint/bin/activate
+      pip install flake8
       flake8 homeassistant tests script
     displayName: 'Run flake8'
 
