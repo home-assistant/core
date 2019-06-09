@@ -56,8 +56,6 @@ jobs:
 
       sudo add-apt-repository ppa:jonathonf/ffmpeg-4
       sudo apt-get update
-      sudo apt-get install -y --no-install-recommends \
-        libudev libsqlite3 libavformat libavcodec libavdevice libavutil libswscale libswresample libavfilter
 
       echo "$(python.version)" > .cache
     displayName: 'Set up docker prerequisite requirement'
