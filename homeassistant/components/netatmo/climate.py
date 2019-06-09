@@ -299,12 +299,18 @@ class NetatmoThermostat(ClimateDevice):
             _LOGGER.error("NetatmoThermostat::update() "
                           "got exception.")
             return
-        self._target_temperature = \
-            self._data.room_status[self._room_id]['target_temperature']
-        self._operation_mode = DICT_NETATMO_TO_HA[
-            self._data.room_status[self._room_id]['setpoint_mode']]
-        self._away = self._operation_mode == DICT_NETATMO_TO_HA[
-            STATE_NETATMO_AWAY]
+        try:
+            self._target_temperature = \
+                self._data.room_status[self._room_id]['target_temperature']
+            self._operation_mode = DICT_NETATMO_TO_HA[
+                self._data.room_status[self._room_id]['setpoint_mode']]
+            self._away = self._operation_mode == DICT_NETATMO_TO_HA[
+                STATE_NETATMO_AWAY]
+        except KeyError:
+            _LOGGER.error(
+                "The thermostat in room %s seems to be out of reach.",
+                self._room_id
+            )
 
 
 class HomeData:
