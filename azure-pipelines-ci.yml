@@ -62,7 +62,7 @@ jobs:
   steps:
   - script: |
       echo "$(python.version)" > .cache
-    displayName: 'Set up docker prerequisite requirement'
+    displayName: 'Set python $(python.version) for requirement cache'
 
   - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreCacheV1.RestoreCache@1
     displayName: 'Restore artifacts based on Requirements'
