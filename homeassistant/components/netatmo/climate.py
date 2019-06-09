@@ -225,7 +225,9 @@ class NetatmoThermostat(ClimateDevice):
     @property
     def is_on(self):
         """Return true if on."""
-        return self.target_temperature > 0
+        if self.target_temperature:
+            return self.target_temperature > 0
+        return None
 
     def turn_away_mode_on(self):
         """Turn away on."""
