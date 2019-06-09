@@ -1,4 +1,5 @@
 """Helpers for device automations."""
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -20,10 +21,30 @@ async def async_setup(hass, config):
     return True
 
 
+async def _async_get_device_automation_triggers(hass, domain, device_id):
+    """List device triggers."""
+    integration = None
+    try:
+        integration = await async_get_integration(hass, domain)
+    except IntegrationNotFound:
+        _LOGGER.warning('Integration %s not found', domain)
+        return None
+
+    try:
+        platform = integration.get_platform('device_automation')
+    except ImportError:
+        # The domain does not have device automations
+        return None
+
+    if hasattr(platform, 'async_get_triggers'):
+        return await platform.async_get_triggers(hass, device_id)
+
+
 async def async_get_device_automation_triggers(hass, device_id):
     """List device triggers."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    device_registry, entity_registry = await asyncio.gather(
+        hass.helpers.device_registry.async_get_registry(),
+        hass.helpers.entity_registry.async_get_registry())
 
     domains = set()
     triggers = []
@@ -36,22 +57,13 @@ async def async_get_device_automation_triggers(hass, device_id):
     for entity in entities:
         domains.add(split_entity_id(entity.entity_id)[0])
 
-    for domain in domains:
-        integration = None
-        try:
-            integration = await async_get_integration(hass, domain)
-        except IntegrationNotFound:
-            _LOGGER.exception('Integration %s not found', domain)
-            continue
-
-        try:
-            platform = integration.get_platform('device_automation')
-        except ImportError:
-            # The domain does not have device automations, continue
-            continue
-
-        if hasattr(platform, 'async_get_triggers'):
-            triggers.extend(await platform.async_get_triggers(hass, device_id))
+    device_triggers = await asyncio.gather(*[
+        _async_get_device_automation_triggers(hass, domain, device_id)
+        for domain in domains
+    ])
+    for device_trigger in device_triggers:
+        if device_trigger is not None:
+            triggers.extend(device_trigger)
 
     return triggers
 
