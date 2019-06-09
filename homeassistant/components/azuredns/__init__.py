@@ -67,8 +67,8 @@ async def async_setup(hass, config):
             config[DOMAIN][CONF_CLIENTSECRET]
         )
 
-    except Exception:
-        _LOGGER.error("Failed to acquire Azure AD Credential: %s", Exception)
+    except adal.AdalError as error:
+        _LOGGER.error("Failed to acquire Azure AD Credential: %s", error)
         return False
 
     result = await _update_azuredns(config, credentials)
@@ -120,8 +120,8 @@ async def _update_azuredns(config, credentials):
                 ]
             }
         )
-    except Exception:
-        _LOGGER.error("Failed to create or update DNS record: %s", Exception)
+    except dns_client.CloudError as error:
+        _LOGGER.error("Failed to create or update DNS record: %s", error)
         return False
 
     return True
