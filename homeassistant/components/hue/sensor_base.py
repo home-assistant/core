@@ -280,5 +280,7 @@ class GenericZLLSensor(GenericHueSensor):
     def device_state_attributes(self):
         """Return the device state attributes."""
         return {
-            "battery_level": self.sensor.battery
+            "battery_level": self.sensor.battery,
+            "last_updated": self.sensor.state['lastupdated'],
+            "hue_id": self.sensor.id
         }
