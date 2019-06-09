@@ -20,7 +20,7 @@
                 "title": "Dewiswch bont Hue"
             },
             "link": {
-                "description": "Pwyswch y botwm ar y bont i gofrestru Philips Hue gyda Cynorthwydd Cartref.\n\n![Lleoliad botwm ar bont](/static/images/config_philips_hue.jpg)",
+                "description": "Pwyswch y botwm ar y bont i gofrestru Philips Hue gyda Cynorthwydd Cartref.\n\n![Location of button on bridge] (/static/images/config_philips_hue.jpg)",
                 "title": "Hwb cyswllt"
             }
         },

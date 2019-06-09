@@ -3,6 +3,7 @@
         "abort": {
             "all_configured": "\u6240\u6709 Philips Hue Bridge \u7686\u5df2\u8a2d\u5b9a\u5b8c\u6210",
             "already_configured": "Bridge \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_in_progress": "Bridge \u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d\u3002",
             "cannot_connect": "\u7121\u6cd5\u9023\u7dda\u81f3 Bridge",
             "discover_timeout": "\u7121\u6cd5\u641c\u5c0b\u5230 Hue Bridge",
             "no_bridges": "\u672a\u641c\u5c0b\u5230 Philips Hue Bridge",
@@ -20,7 +21,7 @@
                 "title": "\u9078\u64c7 Hue Bridge"
             },
             "link": {
-                "description": "\u6309\u4e0b Bridge \u4e0a\u7684\u6309\u9215\uff0c\u4ee5\u5c07 Philips Hue \u8a3b\u518a\u81f3 Home Assistant\u3002\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)",
+                "description": "\u6309\u4e0b Bridge \u4e0a\u7684\u6309\u9215\uff0c\u4ee5\u5c07 Philips Hue \u8a3b\u518a\u81f3 Home Assistant\u3002 \n\n ![Location of button on bridge] (/static/images/config_philips_hue.jpg)",
                 "title": "\u9023\u7d50 Hub"
             }
         },
