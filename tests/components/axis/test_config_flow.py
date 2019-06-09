@@ -169,7 +169,7 @@ async def test_zeroconf_flow(hass):
             data={
                 config_flow.CONF_HOST: '1.2.3.4',
                 config_flow.CONF_PORT: 80,
-                'properties': {'macaddress': '1234'}
+                'properties': {'macaddress': '00408C12345'}
             },
             context={'source': 'zeroconf'}
         )
@@ -184,7 +184,7 @@ async def test_zeroconf_flow_known_device(hass):
     This is legacy support from devices registered with configurator.
     """
     with patch('homeassistant.components.axis.config_flow.load_json',
-               return_value={'1234ABCD': {
+               return_value={'00408C12345': {
                    config_flow.CONF_HOST: '2.3.4.5',
                    config_flow.CONF_USERNAME: 'user',
                    config_flow.CONF_PASSWORD: 'pass',
@@ -208,7 +208,7 @@ async def test_zeroconf_flow_known_device(hass):
                 config_flow.CONF_HOST: '1.2.3.4',
                 config_flow.CONF_PORT: 80,
                 'hostname': 'name',
-                'properties': {'macaddress': '1234ABCD'}
+                'properties': {'macaddress': '00408C12345'}
             },
             context={'source': 'zeroconf'}
         )
@@ -221,7 +221,7 @@ async def test_zeroconf_flow_already_configured(hass):
     entry = MockConfigEntry(
         domain=axis.DOMAIN,
         data={axis.CONF_DEVICE: {axis.config_flow.CONF_HOST: '1.2.3.4'},
-              axis.config_flow.CONF_MAC: '1234ABCD'}
+              axis.config_flow.CONF_MAC: '00408C12345'}
     )
     entry.add_to_hass(hass)
 
@@ -233,7 +233,7 @@ async def test_zeroconf_flow_already_configured(hass):
             config_flow.CONF_PASSWORD: 'pass',
             config_flow.CONF_PORT: 80,
             'hostname': 'name',
-            'properties': {'macaddress': '1234ABCD'}
+            'properties': {'macaddress': '00408C12345'}
         },
         context={'source': 'zeroconf'}
     )
@@ -242,11 +242,29 @@ async def test_zeroconf_flow_already_configured(hass):
     assert result['reason'] == 'already_configured'
 
 
+async def test_zeroconf_flow_ignore_non_axis_device(hass):
+    """Test that zeroconf doesn't setup devices with link local addresses."""
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        data={
+            config_flow.CONF_HOST: '169.254.3.4',
+            'properties': {'macaddress': '01234567890'}
+        },
+        context={'source': 'zeroconf'}
+    )
+
+    assert result['type'] == 'abort'
+    assert result['reason'] == 'not_axis_device'
+
+
 async def test_zeroconf_flow_ignore_link_local_address(hass):
     """Test that zeroconf doesn't setup devices with link local addresses."""
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        data={config_flow.CONF_HOST: '169.254.3.4'},
+        data={
+            config_flow.CONF_HOST: '169.254.3.4',
+            'properties': {'macaddress': '00408C12345'}
+        },
         context={'source': 'zeroconf'}
     )
 
@@ -257,7 +275,7 @@ async def test_zeroconf_flow_ignore_link_local_address(hass):
 async def test_zeroconf_flow_bad_config_file(hass):
     """Test that zeroconf discovery with bad config files abort."""
     with patch('homeassistant.components.axis.config_flow.load_json',
-               return_value={'1234ABCD': {
+               return_value={'00408C12345': {
                    config_flow.CONF_HOST: '2.3.4.5',
                    config_flow.CONF_USERNAME: 'user',
                    config_flow.CONF_PASSWORD: 'pass',
@@ -268,7 +286,7 @@ async def test_zeroconf_flow_bad_config_file(hass):
             config_flow.DOMAIN,
             data={
                 config_flow.CONF_HOST: '1.2.3.4',
-                'properties': {'macaddress': '1234ABCD'}
+                'properties': {'macaddress': '00408C12345'}
             },
             context={'source': 'zeroconf'}
         )
