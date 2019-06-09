@@ -83,7 +83,7 @@ jobs:
       pip install -U pip setuptools
       pip install -r requirements_test_all.txt -c homeassistant/package_constraints.txt
     displayName: 'Create Virtual Environment & Install Requirements'
-    condition: ne(variables['CacheRestored'], 'true')
+    condition: and(succeeded(), ne(variables['CacheRestored'], 'true'))
 
   - task: 1ESLighthouseEng.PipelineArtifactCaching.SaveCacheV1.SaveCache@1
     displayName: 'Save artifacts based on Requirements'
@@ -108,4 +108,4 @@ jobs:
 
       pylint homeassistant
     displayName: 'Run pylint'
-    condition: eq(variables['python.version'], variables['PythonMain'])
+    condition: and(succeeded(), eq(variables['python.version'], variables['PythonMain']))
