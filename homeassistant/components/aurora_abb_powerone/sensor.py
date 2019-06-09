@@ -4,7 +4,7 @@ import logging
 from homeassistant.const import POWER_WATT, CONF_NAME, CONF_ADDRESS, \
             DEVICE_CLASS_POWER
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import CONFIG_SCHEMA
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -13,7 +13,7 @@ CONF_COMPORT = 'rs485'
 DEFAULT_ADDRESS = 2
 TEST_MODE = False
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+CONFIG_SCHEMA = CONFIG_SCHEMA.extend({
     vol.Required(CONF_COMPORT): cv.string,
     vol.Optional(CONF_ADDRESS, default=DEFAULT_ADDRESS): cv.positive_int,
 })
