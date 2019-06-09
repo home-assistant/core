@@ -31,8 +31,10 @@ class HuePresence(GenericZLLSensor, BinarySensorDevice):
     def device_state_attributes(self):
         """Return the device state attributes."""
         attributes = super().device_state_attributes
-        if 'sensitivity' in self.sensor.config : 
-            attributes.update({"sensitivity":self.sensor.config['sensitivity']})
-        if 'sensitivitymax' in self.sensor.config : 
-            attributes.update({"sensitivity_max":self.sensor.config['sensitivitymax']})
+        if 'sensitivity' in self.sensor.config:
+            attributes.update(
+                {"sensitivity": self.sensor.config['sensitivity']})
+        if 'sensitivitymax' in self.sensor.config:
+            attributes.update(
+                {"sensitivity_max": self.sensor.config['sensitivitymax']})
         return attributes
