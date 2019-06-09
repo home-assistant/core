@@ -10,6 +10,7 @@ import voluptuous as vol
 from azure.mgmt.dns import DnsManagementClient
 from msrestazure.azure_active_directory import AdalAuthentication
 from msrestazure.azure_cloud import AZURE_PUBLIC_CLOUD
+from msrestazure.azure_exceptions import CloudError
 
 from ip_query import ip_query
 
@@ -120,7 +121,7 @@ async def _update_azuredns(config, credentials):
                 ]
             }
         )
-    except dns_client.CloudError as error:
+    except CloudError as error:
         _LOGGER.error("Failed to create or update DNS record: %s", error)
         return False
 
