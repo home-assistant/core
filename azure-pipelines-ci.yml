@@ -19,7 +19,6 @@ jobs:
 - job: 'Lint'
   pool:
     vmImage: 'ubuntu-latest'
-  
   steps:
   - task: UsePythonVersion@0
     inputs:
