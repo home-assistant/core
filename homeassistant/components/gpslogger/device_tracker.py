@@ -19,10 +19,8 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from . import DOMAIN as GPL_DOMAIN, TRACKER_UPDATE
 from .const import (
-    ATTR_ACCURACY,
     ATTR_ACTIVITY,
     ATTR_ALTITUDE,
-    ATTR_DEVICE,
     ATTR_DIRECTION,
     ATTR_PROVIDER,
     ATTR_SPEED,
@@ -151,7 +149,7 @@ class GPSLoggerEntity(DeviceTrackerEntity, RestoreEntity):
             # XXX: first restore after upgrade fill with dummy data;
             # is there a better way to handle this?
             self._location = (0, 0)
-            self._accuracy = 1e100
+            self._accuracy = 1
             self._attributes = {
                 ATTR_ALTITUDE: None,
                 ATTR_ACTIVITY: None,
@@ -176,7 +174,6 @@ class GPSLoggerEntity(DeviceTrackerEntity, RestoreEntity):
             ATTR_SPEED: attr.get(ATTR_SPEED),
         }
         self._battery = attr.get(ATTR_BATTERY_LEVEL)
-
 
     async def async_will_remove_from_hass(self):
         """Clean up after entity before removal."""
