@@ -72,5 +72,5 @@ class DeconzDevice(Entity):
             'model': self._device.modelid,
             'name': self._device.name,
             'sw_version': self._device.swversion,
-            'via_hub': (DECONZ_DOMAIN, bridgeid),
+            'via_device': (DECONZ_DOMAIN, bridgeid),
         }
