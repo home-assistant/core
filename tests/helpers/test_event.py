@@ -24,9 +24,6 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
     async_track_utc_time_change,
 )
-from homeassistant.helpers.sun import (
-    get_astral_event_next, SUN_EVENT_SUNRISE
-)
 from homeassistant.helpers.template import Template
 from homeassistant.components import sun
 import homeassistant.util.dt as dt_util
