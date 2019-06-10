@@ -85,11 +85,6 @@ SENSOR_TYPES = {
     'maxrain_3d': ['Maximum rain 3d', 'mm', 'mdi:weather-pouring'],                 # new in json api (>1.0.0)
     'maxrain_4d': ['Maximum rain 4d', 'mm', 'mdi:weather-pouring'],                 # new in json api (>1.0.0)
     'maxrain_5d': ['Maximum rain 5d', 'mm', 'mdi:weather-pouring'],                 # new in json api (>1.0.0)
-    #'snow_1d': ['Snow 1d', 'cm', 'mdi:snowflake'],                                 # no longer part of json api
-    #'snow_2d': ['Snow 2d', 'cm', 'mdi:snowflake'],                                 # no longer part of json api
-    #'snow_3d': ['Snow 3d', 'cm', 'mdi:snowflake'],                                 # no longer part of json api
-    #'snow_4d': ['Snow 4d', 'cm', 'mdi:snowflake'],                                 # no longer part of json api
-    #'snow_5d': ['Snow 5d', 'cm', 'mdi:snowflake'],                                 # no longer part of json api
     'rainchance_1d': ['Rainchance 1d', '%', 'mdi:weather-pouring'],
     'rainchance_2d': ['Rainchance 2d', '%', 'mdi:weather-pouring'],
     'rainchance_3d': ['Rainchance 3d', '%', 'mdi:weather-pouring'],

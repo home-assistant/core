@@ -6,5 +6,7 @@
     "buienradar==1.0.1"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@mjj4791"
+  ]
 }
