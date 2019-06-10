@@ -156,24 +156,29 @@ class BrWeather(WeatherEntity):
                                           MIN_TEMP, MAX_TEMP, WINDAZIMUTH,
                                           WINDSPEED)
 
-        if self._forecast:
-            fcdata_out = []
-            cond = self.hass.data[DATA_CONDITION]
-            if self._data.forecast:
-                for data_in in self._data.forecast:
-                    # remap keys from external library to
-                    # keys understood by the weather component:
-                    data_out = {}
-                    condcode = data_in.get(CONDITION, []).get(CONDCODE)
+        if not self._forecast:
+            return
 
-                    data_out[ATTR_FORECAST_TIME] = data_in.get(DATETIME)
-                    data_out[ATTR_FORECAST_CONDITION] = cond[condcode]
-                    data_out[ATTR_FORECAST_TEMP_LOW] = data_in.get(MIN_TEMP)
-                    data_out[ATTR_FORECAST_TEMP] = data_in.get(MAX_TEMP)
-                    data_out[ATTR_FORECAST_PRECIPITATION] = data_in.get(RAIN)
-                    data_out[ATTR_FORECAST_WIND_BEARING] = data_in.get(WINDAZIMUTH)
-                    data_out[ATTR_FORECAST_WIND_SPEED] = data_in.get(WINDSPEED)
+        fcdata_out = []
+        cond = self.hass.data[DATA_CONDITION]
 
-                    fcdata_out.append(data_out)
+        if not self._data.forecast:
+            return
 
-            return fcdata_out
+        for data_in in self._data.forecast:
+            # remap keys from external library to
+            # keys understood by the weather component:
+            data_out = {}
+            condcode = data_in.get(CONDITION, []).get(CONDCODE)
+
+            data_out[ATTR_FORECAST_TIME] = data_in.get(DATETIME)
+            data_out[ATTR_FORECAST_CONDITION] = cond[condcode]
+            data_out[ATTR_FORECAST_TEMP_LOW] = data_in.get(MIN_TEMP)
+            data_out[ATTR_FORECAST_TEMP] = data_in.get(MAX_TEMP)
+            data_out[ATTR_FORECAST_PRECIPITATION] = data_in.get(RAIN)
+            data_out[ATTR_FORECAST_WIND_BEARING] = data_in.get(WINDAZIMUTH)
+            data_out[ATTR_FORECAST_WIND_SPEED] = data_in.get(WINDSPEED)
+
+            fcdata_out.append(data_out)
+
+        return fcdata_out

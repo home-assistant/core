@@ -32,9 +32,12 @@ SCHEDULE_NOK = 2
 # Key: ['label', unit, icon]
 SENSOR_TYPES = {
     'stationname': ['Stationname', None, None],
-    'barometerfc': ['Barometer value', None, 'mdi:gauge'],  # new in json api (>1.0.0)
-    'barometerfcname': ['Barometer', None, 'mdi:gauge'],    # new in json api (>1.0.0)
-    'barometerfcnamenl': ['Barometer', None, 'mdi:gauge'],  # new in json api (>1.0.0)
+    # new in json api (>1.0.0):
+    'barometerfc': ['Barometer value', None, 'mdi:gauge'],
+    # new in json api (>1.0.0):
+    'barometerfcname': ['Barometer', None, 'mdi:gauge'],
+    # new in json api (>1.0.0):
+    'barometerfcnamenl': ['Barometer', None, 'mdi:gauge'],
     'condition': ['Condition', None, None],
     'conditioncode': ['Condition code', None, None],
     'conditiondetailed': ['Detailed condition', None, None],
@@ -438,7 +441,7 @@ class BrData:
     async def get_data(self, url):
         """Load data from specified url."""
         from buienradar.constants import (CONTENT,
-                                           MESSAGE, STATUS_CODE, SUCCESS)
+                                          MESSAGE, STATUS_CODE, SUCCESS)
 
         _LOGGER.debug("Calling url: %s...", url)
         result = {SUCCESS: False, MESSAGE: None}
