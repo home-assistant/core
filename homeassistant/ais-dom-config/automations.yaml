@@ -1,5 +1,5 @@
 - id: '201807081853001'
-  alias: 'Asystent domowy Witamy'
+  alias: 'AIS Asystent domowy Witamy'
   initial_state: True
   trigger:
   - event: start
@@ -72,7 +72,7 @@
    - service: ais_updater.check_version
 
 - id: '201807081858006'
-  alias: 'Get RSS Help Items For Selected Topic'
+  alias: 'AIS Get RSS Help Items For Selected Topic'
   initial_state: True
   hide_entity: True
   trigger:
@@ -84,7 +84,7 @@
         rss_help_topic: "{{ states('input_select.ais_rss_help_topic') }}"
 
 - id: '201807081905011'
-  alias: 'Ask The Question'
+  alias: 'AIS Ask The Question'
   initial_state: True
   hide_entity: True
   trigger:
@@ -99,7 +99,7 @@
         text: "{{ states('input_text.ais_knowledge_query') }}"
 
 - id: '201807081905012'
-  alias: 'Search YouTube Tracks'
+  alias: 'AIS Search YouTube Tracks'
   initial_state: True
   hide_entity: True
   trigger:
@@ -111,7 +111,7 @@
         query: "{{ states('input_text.ais_music_query') }}"
 
 - id: '2018070819050123'
-  alias: 'Search Spotify Tracks'
+  alias: 'AIS Search Spotify Tracks'
   initial_state: True
   hide_entity: True
   trigger:
@@ -123,7 +123,7 @@
         query: "{{ states('input_text.ais_spotify_query') }}"
 
 - id: '201807081916015'
-  alias: 'Get RSS News Channels'
+  alias: 'AIS Get RSS News Channels'
   initial_state: True
   hide_entity: True
   trigger:
@@ -135,7 +135,7 @@
         rss_news_category: "{{ states('input_select.rss_news_category') }}"
 
 - id: '201807081916016'
-  alias: 'Get RSS News Items'
+  alias: 'AIS Get RSS News Items'
   initial_state: True
   hide_entity: True
   trigger:
@@ -147,7 +147,7 @@
         rss_news_channel: "{{ states('input_select.rss_news_channel') }}"
 
 - id: '201807081919019'
-  alias: 'Get Podcast Names'
+  alias: 'AIS Get Podcast Names'
   initial_state: True
   hide_entity: True
   trigger:
@@ -159,7 +159,7 @@
         podcast_type: "{{ states('input_select.podcast_type') }}"
 
 - id: '201807081923022'
-  alias: 'Get Radio Names'
+  alias: 'AIS Get Radio Names'
   initial_state: True
   hide_entity: True
   trigger:
@@ -171,7 +171,7 @@
         radio_type: "{{ states('input_select.radio_type') }}"
 
 - id: '201807081923024'
-  alias: 'Select Radio Player'
+  alias: 'AIS Select Radio Player'
   initial_state: True
   hide_entity: True
   trigger:
@@ -183,7 +183,7 @@
         media_player_type: "Radio"
 
 - id: '201807081923025'
-  alias: 'Change Player Speed'
+  alias: 'AIS Change Player Speed'
   initial_state: True
   hide_entity: True
   trigger:
@@ -196,7 +196,7 @@
         val: "{{ states('input_number.media_player_speed') }}"
 
 - id: '201808231617123'
-  alias: 'Select Device To Add'
+  alias: 'AIS Select Device To Add'
   initial_state: True
   hide_entity: True
   trigger:
@@ -211,7 +211,7 @@
         iot: "{{ states('input_select.ais_iot_devices_in_network') }}"
 
 - id: '201809171610123'
-  alias: 'Select Bookmark To Play'
+  alias: 'AIS Select Bookmark To Play'
   initial_state: True
   hide_entity: True
   trigger:
@@ -226,7 +226,7 @@
         bookmark: "{{ states('input_select.ais_bookmark_last_played') }}"
 
 - id: '201809291519123'
-  alias: 'Flush logs'
+  alias: 'AIS Flush logs'
   initial_state: True
   hide_entity: True
   trigger:
@@ -237,7 +237,7 @@
 
 
 - id: '20181205122942123'
-  alias: 'Execute process command web hook'
+  alias: 'AIS Execute process command web hook'
   initial_state: True
   hide_entity: true
   trigger:
@@ -249,7 +249,7 @@
         web_hook_json: '{{ trigger.json }}'
 
 - id: '201901210208123'
-  alias: 'Select Wifi Network'
+  alias: 'AIS Select Wifi Network'
   initial_state: True
   hide_entity: True
   trigger:
@@ -262,7 +262,7 @@
         value: ""
 
 - id: '201902030742123'
-  alias: 'Change remote web access'
+  alias: 'AIS Change remote web access'
   initial_state: True
   hide_entity: True
   trigger:
@@ -272,7 +272,7 @@
     - service: ais_shell_command.change_remote_access
 
 - id: '201994281100123'
-  alias: 'Discovery info to dom devices'
+  alias: 'AIS Discovery info to dom devices'
   initial_state: True
   hide_entity: True
   trigger:
@@ -287,7 +287,7 @@
     - service: ais_ai_service.prepare_remote_menu
 
 - id: '201905201824123'
-  alias: 'Check WiFi Connection'
+  alias: 'AIS Check WiFi Connection'
   initial_state: True
   hide_entity: True
   trigger:

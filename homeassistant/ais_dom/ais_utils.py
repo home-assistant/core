@@ -32,12 +32,7 @@ def dict_merge(dct, merge_dct):
                     else:
                         _LOGGER.info("dct is empty, no need to merge ")
                 else:
-                    if str(k) in ['name']:
-                        # do not allow to overwrite some Nodes
-                        _LOGGER.warning(str(k) + " new value: " + str(v)
-                                        + " we are NOT overwriting the ais dom value: " + str(dct[k]))
-                        # dct[k] = dct[k]
-                    elif str(k) in ['automation', 'script']:
+                    if str(k) in ['automation', 'script']:
                         # concatenate the Nodes, type -> homeassistant.util.yaml.NodeListClass
                         dct[k] = dct[k] + merge_dct[k]
                     else:
