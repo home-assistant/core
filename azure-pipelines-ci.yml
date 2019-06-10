@@ -94,9 +94,14 @@ jobs:
   
   - script: | 
       . venv/bin/activate
-      pytest --timeout=9 --durations=10 -qq -o console_output_style=count -p no:sugar tests
+      pytest --timeout=9 --durations=10 --junitxml=junit/test-results.xml -qq -o console_output_style=count -p no:sugar tests
     displayName: 'Run pytest for python $(python.version)'
 
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFiles: '**/test-*.xml'
+      testRunTitle: 'Publish test results for Python $(python.version)'
 
 - job: 'FullCheck'
   dependsOn:
