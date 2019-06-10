@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_HOMES = 'homes'
 CONF_ROOMS = 'rooms'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
 HOME_CONFIG_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
@@ -227,7 +227,7 @@ class NetatmoThermostat(ClimateDevice):
         """Return true if on."""
         if self.target_temperature:
             return self.target_temperature > 0
-        return None
+        return False
 
     def turn_away_mode_on(self):
         """Turn away on."""
