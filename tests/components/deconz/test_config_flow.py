@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 import asyncio
 
 from homeassistant.components.deconz import config_flow
+from homeassistant.components.ssdp import ATTR_MANUFACTURERURL, ATTR_SERIAL
 from tests.common import MockConfigEntry
 
 import pydeconz
@@ -175,8 +176,8 @@ async def test_bridge_ssdp_discovery(hass):
         data={
             config_flow.CONF_HOST: '1.2.3.4',
             config_flow.CONF_PORT: 80,
-            config_flow.ATTR_SERIAL: 'id',
-            config_flow.ATTR_MANUFACTURERURL:
+            ATTR_SERIAL: 'id',
+            ATTR_MANUFACTURERURL:
                 config_flow.DECONZ_MANUFACTURERURL,
             config_flow.ATTR_UUID: 'uuid:1234'
         },
@@ -192,7 +193,7 @@ async def test_bridge_ssdp_discovery_not_deconz_bridge(hass):
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         data={
-            config_flow.ATTR_MANUFACTURERURL: 'not deconz bridge'
+            ATTR_MANUFACTURERURL: 'not deconz bridge'
         },
         context={'source': 'ssdp'}
     )
@@ -217,8 +218,8 @@ async def test_bridge_discovery_update_existing_entry(hass):
         config_flow.DOMAIN,
         data={
             config_flow.CONF_HOST: 'mock-deconz',
-            config_flow.ATTR_SERIAL: 'id',
-            config_flow.ATTR_MANUFACTURERURL:
+            ATTR_SERIAL: 'id',
+            ATTR_MANUFACTURERURL:
                 config_flow.DECONZ_MANUFACTURERURL,
             config_flow.ATTR_UUID: 'uuid:1234'
         },
