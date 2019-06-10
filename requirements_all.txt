@@ -178,7 +178,7 @@ alpha_vantage==2.1.0
 ambiclimate==0.1.2
 
 # homeassistant.components.amcrest
-amcrest==1.4.0
+amcrest==1.5.3
 
 # homeassistant.components.androidtv
 androidtv==0.0.15
@@ -930,7 +930,7 @@ psutil==5.6.2
 ptvsd==4.2.8
 
 # homeassistant.components.wink
-pubnubsub-handler==1.0.6
+pubnubsub-handler==1.0.7
 
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
@@ -1057,7 +1057,7 @@ pydaikin==1.4.6
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==59
+pydeconz==60
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5

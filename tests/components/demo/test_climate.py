@@ -203,7 +203,8 @@ class TestDemoClimate(unittest.TestCase):
         """Test setting the away mode without required attribute."""
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert 'on' == state.attributes.get('away_mode')
-        common.set_away_mode(self.hass, None, ENTITY_CLIMATE)
+        with pytest.raises(vol.Invalid):
+            common.set_away_mode(self.hass, None, ENTITY_CLIMATE)
         self.hass.block_till_done()
         assert 'on' == state.attributes.get('away_mode')
 
@@ -246,7 +247,8 @@ class TestDemoClimate(unittest.TestCase):
         """Test setting the auxiliary heater without required attribute."""
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert 'off' == state.attributes.get('aux_heat')
-        common.set_aux_heat(self.hass, None, ENTITY_CLIMATE)
+        with pytest.raises(vol.Invalid):
+            common.set_aux_heat(self.hass, None, ENTITY_CLIMATE)
         self.hass.block_till_done()
         assert 'off' == state.attributes.get('aux_heat')
 

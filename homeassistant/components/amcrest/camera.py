@@ -1,6 +1,8 @@
 """Support for Amcrest IP cameras."""
 import asyncio
+from datetime import timedelta
 import logging
+from urllib3.exceptions import HTTPError
 
 from amcrest import AmcrestError
 import voluptuous as vol
@@ -15,10 +17,13 @@ from homeassistant.helpers.aiohttp_client import (
     async_get_clientsession)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import CAMERA_WEB_SESSION_TIMEOUT, DATA_AMCREST
-from .helpers import service_signal
+from .const import (
+    CAMERA_WEB_SESSION_TIMEOUT, CAMERAS, DATA_AMCREST, DEVICES, SERVICE_UPDATE)
+from .helpers import log_update_error, service_signal
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(seconds=15)
 
 STREAM_SOURCE_LIST = [
     'snapshot',
@@ -77,7 +82,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         return
 
     name = discovery_info[CONF_NAME]
-    device = hass.data[DATA_AMCREST]['devices'][name]
+    device = hass.data[DATA_AMCREST][DEVICES][name]
     async_add_entities([
         AmcrestCam(name, device, hass.data[DATA_FFMPEG])], True)
 
@@ -106,23 +111,25 @@ class AmcrestCam(Camera):
         self._rtsp_url = None
         self._snapshot_lock = asyncio.Lock()
         self._unsub_dispatcher = []
+        self._update_succeeded = False
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-        if not self.is_on:
-            _LOGGER.error(
-                'Attempt to take snaphot when %s camera is off', self.name)
+        available = self.available
+        if not available or not self.is_on:
+            _LOGGER.warning(
+                'Attempt to take snaphot when %s camera is %s', self.name,
+                'offline' if not available else 'off')
             return None
         async with self._snapshot_lock:
             try:
                 # Send the request to snap a picture and return raw jpg data
                 response = await self.hass.async_add_executor_job(
-                    self._api.snapshot, self._resolution)
+                    self._api.snapshot)
                 return response.data
-            except AmcrestError as error:
-                _LOGGER.error(
-                    'Could not get image from %s camera due to error: %s',
-                    self.name, error)
+            except (AmcrestError, HTTPError) as error:
+                log_update_error(
+                    _LOGGER, 'get image from', self.name, 'camera', error)
                 return None
 
     async def handle_async_mjpeg_stream(self, request):
@@ -130,6 +137,12 @@ class AmcrestCam(Camera):
         # The snapshot implementation is handled by the parent class
         if self._stream_source == 'snapshot':
             return await super().handle_async_mjpeg_stream(request)
+
+        if not self.available:
+            _LOGGER.warning(
+                'Attempt to stream %s when %s camera is offline',
+                self._stream_source, self.name)
+            return None
 
         if self._stream_source == 'mjpeg':
             # stream an MJPEG image stream directly from the camera
@@ -161,6 +174,14 @@ class AmcrestCam(Camera):
     # Entity property overrides
 
     @property
+    def should_poll(self) -> bool:
+        """Return True if entity has to be polled for state.
+
+        False if entity pushes its state to HA.
+        """
+        return True
+
+    @property
     def name(self):
         """Return the name of this camera."""
         return self._name
@@ -177,6 +198,11 @@ class AmcrestCam(Camera):
         if self._color_bw is not None:
             attr[_ATTR_COLOR_BW] = self._color_bw
         return attr
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._api.available
 
     @property
     def supported_features(self):
@@ -216,6 +242,10 @@ class AmcrestCam(Camera):
 
     # Other Entity method overrides
 
+    async def async_on_demand_update(self):
+        """Update state."""
+        self.async_schedule_update_ha_state(True)
+
     async def async_added_to_hass(self):
         """Subscribe to signals and add camera to list."""
         for service, params in CAMERA_SERVICES.items():
@@ -223,38 +253,37 @@ class AmcrestCam(Camera):
                 self.hass,
                 service_signal(service, self.entity_id),
                 getattr(self, params[1])))
-        self.hass.data[DATA_AMCREST]['cameras'].append(self.entity_id)
+        self._unsub_dispatcher.append(async_dispatcher_connect(
+            self.hass, service_signal(SERVICE_UPDATE, self._name),
+            self.async_on_demand_update))
+        self.hass.data[DATA_AMCREST][CAMERAS].append(self.entity_id)
 
     async def async_will_remove_from_hass(self):
         """Remove camera from list and disconnect from signals."""
-        self.hass.data[DATA_AMCREST]['cameras'].remove(self.entity_id)
+        self.hass.data[DATA_AMCREST][CAMERAS].remove(self.entity_id)
         for unsub_dispatcher in self._unsub_dispatcher:
             unsub_dispatcher()
 
     def update(self):
         """Update entity status."""
-        _LOGGER.debug('Pulling data from %s camera', self.name)
-        if self._brand is None:
-            try:
+        if not self.available or self._update_succeeded:
+            if not self.available:
+                self._update_succeeded = False
+            return
+        _LOGGER.debug('Updating %s camera', self.name)
+        try:
+            if self._brand is None:
                 resp = self._api.vendor_information.strip()
                 if resp.startswith('vendor='):
                     self._brand = resp.split('=')[-1]
                 else:
                     self._brand = 'unknown'
-            except AmcrestError as error:
-                _LOGGER.error(
-                    'Could not get %s camera brand due to error: %s',
-                    self.name, error)
-                self._brand = 'unknwown'
-        if self._model is None:
-            try:
-                self._model = self._api.device_type.split('=')[-1].strip()
-            except AmcrestError as error:
-                _LOGGER.error(
-                    'Could not get %s camera model due to error: %s',
-                    self.name, error)
-                self._model = 'unknown'
-        try:
+            if self._model is None:
+                resp = self._api.device_type.strip()
+                if resp.startswith('type='):
+                    self._model = resp.split('=')[-1]
+                else:
+                    self._model = 'unknown'
             self.is_streaming = self._api.video_enabled
             self._is_recording = self._api.record_mode == 'Manual'
             self._motion_detection_enabled = (
@@ -265,9 +294,11 @@ class AmcrestCam(Camera):
             self._color_bw = _CBW[self._api.day_night_color]
             self._rtsp_url = self._api.rtsp_url(typeno=self._resolution)
         except AmcrestError as error:
-            _LOGGER.error(
-                'Could not get %s camera attributes due to error: %s',
-                self.name, error)
+            log_update_error(
+                _LOGGER, 'get', self.name, 'camera attributes', error)
+            self._update_succeeded = False
+        else:
+            self._update_succeeded = True
 
     # Other Camera method overrides
 
@@ -343,9 +374,9 @@ class AmcrestCam(Camera):
         try:
             self._api.video_enabled = enable
         except AmcrestError as error:
-            _LOGGER.error(
-                'Could not %s %s camera video stream due to error: %s',
-                'enable' if enable else 'disable', self.name, error)
+            log_update_error(
+                _LOGGER, 'enable' if enable else 'disable', self.name,
+                'camera video stream', error)
         else:
             self.is_streaming = enable
             self.schedule_update_ha_state()
@@ -364,9 +395,9 @@ class AmcrestCam(Camera):
             self._api.record_mode = rec_mode[
                 'Manual' if enable else 'Automatic']
         except AmcrestError as error:
-            _LOGGER.error(
-                'Could not %s %s camera recording due to error: %s',
-                'enable' if enable else 'disable', self.name, error)
+            log_update_error(
+                _LOGGER, 'enable' if enable else 'disable', self.name,
+                'camera recording', error)
         else:
             self._is_recording = enable
             self.schedule_update_ha_state()
@@ -376,9 +407,9 @@ class AmcrestCam(Camera):
         try:
             self._api.motion_detection = str(enable).lower()
         except AmcrestError as error:
-            _LOGGER.error(
-                'Could not %s %s camera motion detection due to error: %s',
-                'enable' if enable else 'disable', self.name, error)
+            log_update_error(
+                _LOGGER, 'enable' if enable else 'disable', self.name,
+                'camera motion detection', error)
         else:
             self._motion_detection_enabled = enable
             self.schedule_update_ha_state()
@@ -388,9 +419,9 @@ class AmcrestCam(Camera):
         try:
             self._api.audio_enabled = enable
         except AmcrestError as error:
-            _LOGGER.error(
-                'Could not %s %s camera audio stream due to error: %s',
-                'enable' if enable else 'disable', self.name, error)
+            log_update_error(
+                _LOGGER, 'enable' if enable else 'disable', self.name,
+                'camera audio stream', error)
         else:
             self._audio_enabled = enable
             self.schedule_update_ha_state()
@@ -404,18 +435,18 @@ class AmcrestCam(Camera):
                 'configManager.cgi?action=setConfig&LightGlobal[0].Enable={}'
                 .format(str(enable).lower()))
         except AmcrestError as error:
-            _LOGGER.error(
-                'Could not %s %s camera indicator light due to error: %s',
-                'enable' if enable else 'disable', self.name, error)
+            log_update_error(
+                _LOGGER, 'enable' if enable else 'disable', self.name,
+                'indicator light', error)
 
     def _enable_motion_recording(self, enable):
         """Enable or disable motion recording."""
         try:
             self._api.motion_recording = str(enable).lower()
         except AmcrestError as error:
-            _LOGGER.error(
-                'Could not %s %s camera motion recording due to error: %s',
-                'enable' if enable else 'disable', self.name, error)
+            log_update_error(
+                _LOGGER, 'enable' if enable else 'disable', self.name,
+                'camera motion recording', error)
         else:
             self._motion_recording_enabled = enable
             self.schedule_update_ha_state()
@@ -426,18 +457,18 @@ class AmcrestCam(Camera):
             self._api.go_to_preset(
                 action='start', preset_point_number=preset)
         except AmcrestError as error:
-            _LOGGER.error(
-                'Could not move %s camera to preset %i due to error: %s',
-                self.name, preset, error)
+            log_update_error(
+                _LOGGER, 'move', self.name,
+                'camera to preset {}'.format(preset), error)
 
     def _set_color_bw(self, cbw):
         """Set camera color mode."""
         try:
             self._api.day_night_color = _CBW.index(cbw)
         except AmcrestError as error:
-            _LOGGER.error(
-                'Could not set %s camera color mode to %s due to error: %s',
-                self.name, cbw, error)
+            log_update_error(
+                _LOGGER, 'set', self.name,
+                'camera color mode to {}'.format(cbw), error)
         else:
             self._color_bw = cbw
             self.schedule_update_ha_state()
@@ -447,6 +478,6 @@ class AmcrestCam(Camera):
         try:
             self._api.tour(start=start)
         except AmcrestError as error:
-            _LOGGER.error(
-                'Could not %s %s camera tour due to error: %s',
-                'start' if start else 'stop', self.name, error)
+            log_update_error(
+                _LOGGER, 'start' if start else 'stop', self.name,
+                'camera tour', error)

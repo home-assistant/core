@@ -18,6 +18,7 @@ from .const import CONF_BRIDGEID, DEFAULT_PORT, DOMAIN
 
 DECONZ_MANUFACTURERURL = 'http://www.dresden-elektronik.de'
 CONF_SERIAL = 'serial'
+ATTR_UUID = 'udn'
 
 
 @callback
@@ -156,25 +157,28 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
         if discovery_info[ATTR_MANUFACTURERURL] != DECONZ_MANUFACTURERURL:
             return self.async_abort(reason='not_deconz_bridge')
 
-        bridgeid = discovery_info[ATTR_SERIAL]
-        gateway_entries = configured_gateways(self.hass)
+        uuid = discovery_info[ATTR_UUID].replace('uuid:', '')
+        gateways = {
+            gateway.api.config.uuid: gateway
+            for gateway in self.hass.data.get(DOMAIN, {}).values()
+        }
 
-        if bridgeid in gateway_entries:
-            entry = gateway_entries[bridgeid]
+        if uuid in gateways:
+            entry = gateways[uuid].config_entry
             await self._update_entry(entry, discovery_info[CONF_HOST])
             return self.async_abort(reason='updated_instance')
 
-        # pylint: disable=unsupported-assignment-operation
-        self.context[ATTR_SERIAL] = bridgeid
-
-        if any(bridgeid == flow['context'][ATTR_SERIAL]
+        bridgeid = discovery_info[ATTR_SERIAL]
+        if any(bridgeid == flow['context'][CONF_BRIDGEID]
                for flow in self._async_in_progress()):
             return self.async_abort(reason='already_in_progress')
+
+        # pylint: disable=unsupported-assignment-operation
+        self.context[CONF_BRIDGEID] = bridgeid
 
         deconz_config = {
             CONF_HOST: discovery_info[CONF_HOST],
             CONF_PORT: discovery_info[CONF_PORT],
-            CONF_BRIDGEID: bridgeid
         }
 
         return await self.async_step_import(deconz_config)
