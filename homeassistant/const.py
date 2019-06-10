@@ -1,8 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 95
-PATCH_VERSION = '0.dev0'
+MINOR_VERSION = 94
+PATCH_VERSION = '2'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 5, 3)
@@ -59,7 +59,6 @@ CONF_CUSTOMIZE_GLOB = 'customize_glob'
 CONF_DELAY_TIME = 'delay_time'
 CONF_DEVICE = 'device'
 CONF_DEVICE_CLASS = 'device_class'
-CONF_DEVICE_ID = 'device_id'
 CONF_DEVICES = 'devices'
 CONF_DISARM_AFTER_TRIGGER = 'disarm_after_trigger'
 CONF_DISCOVERY = 'discovery'
