@@ -44,7 +44,8 @@ class HomematicipGenericDevice(Entity):
                 'manufacturer': self._device.oem,
                 'model': self._device.modelType,
                 'sw_version': self._device.firmwareVersion,
-                'via_hub': (homematicip_cloud.DOMAIN, self._device.homeId),
+                'via_device': (
+                    homematicip_cloud.DOMAIN, self._device.homeId),
             }
         return None
 
