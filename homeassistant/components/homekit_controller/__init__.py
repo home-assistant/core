@@ -156,11 +156,12 @@ class HomeKitEntity(Entity):
             'sw_version': self._accessory_info.get('firmware.revision', ''),
         }
 
-        # Some devices only have a single accessory - we don't add a via_hub
-        # otherwise it would be self referential.
+        # Some devices only have a single accessory - we don't add a
+        # via_device otherwise it would be self referential.
         bridge_serial = self._accessory.connection_info['serial-number']
         if accessory_serial != bridge_serial:
-            device_info['via_hub'] = (DOMAIN, 'serial-number', bridge_serial)
+            device_info['via_device'] = (
+                DOMAIN, 'serial-number', bridge_serial)
 
         return device_info
 

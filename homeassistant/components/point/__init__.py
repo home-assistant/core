@@ -300,7 +300,7 @@ class MinutPointEntity(Entity):
             'model': 'Point v{}'.format(device['hardware_version']),
             'name': device['description'],
             'sw_version': device['firmware']['installed'],
-            'via_hub': (DOMAIN, device['home']),
+            'via_device': (DOMAIN, device['home']),
         }
 
     @property
