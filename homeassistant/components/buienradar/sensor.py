@@ -32,15 +32,16 @@ SCHEDULE_NOK = 2
 # Key: ['label', unit, icon]
 SENSOR_TYPES = {
     'stationname': ['Stationname', None, None],
-    'barometerfc': ['Barometer value', None, 'mdi:gauge'],                          # new in json api (>1.0.0)
-    'barometerfcname': ['Barometer', None, 'mdi:gauge'],                            # new in json api (>1.0.0)
-    'barometerfcnamenl': ['Barometer', None, 'mdi:gauge'],                          # new in json api (>1.0.0)
+    'barometerfc': ['Barometer value', None, 'mdi:gauge'],  # new in json api (>1.0.0)
+    'barometerfcname': ['Barometer', None, 'mdi:gauge'],    # new in json api (>1.0.0)
+    'barometerfcnamenl': ['Barometer', None, 'mdi:gauge'],  # new in json api (>1.0.0)
     'condition': ['Condition', None, None],
     'conditioncode': ['Condition code', None, None],
     'conditiondetailed': ['Detailed condition', None, None],
     'conditionexact': ['Full condition', None, None],
     'symbol': ['Symbol', None, None],
-    'feeltemperature': ['Feel temperature', TEMP_CELSIUS, 'mdi:thermometer'],      # new in json api (>1.0.0)
+    # new in json api (>1.0.0):
+    'feeltemperature': ['Feel temperature', TEMP_CELSIUS, 'mdi:thermometer'],
     'humidity': ['Humidity', '%', 'mdi:water-percent'],
     'temperature': ['Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
     'groundtemperature': ['Ground temperature', TEMP_CELSIUS,
@@ -58,8 +59,10 @@ SENSOR_TYPES = {
                                        'mm/h', 'mdi:weather-pouring'],
     'precipitation_forecast_total': ['Precipitation forecast total',
                                      'mm', 'mdi:weather-pouring'],
-    'rainlast24hour': ['Rain last 24h', 'mm', 'mdi:weather-pouring'],               # new in json api (>1.0.0)
-    'rainlasthour': ['Rain last hour', 'mm', 'mdi:weather-pouring'],                # new in json api (>1.0.0)
+    # new in json api (>1.0.0):
+    'rainlast24hour': ['Rain last 24h', 'mm', 'mdi:weather-pouring'],
+    # new in json api (>1.0.0):
+    'rainlasthour': ['Rain last hour', 'mm', 'mdi:weather-pouring'],
     'temperature_1d': ['Temperature 1d', TEMP_CELSIUS, 'mdi:thermometer'],
     'temperature_2d': ['Temperature 2d', TEMP_CELSIUS, 'mdi:thermometer'],
     'temperature_3d': ['Temperature 3d', TEMP_CELSIUS, 'mdi:thermometer'],
@@ -75,16 +78,18 @@ SENSOR_TYPES = {
     'rain_3d': ['Rain 3d', 'mm', 'mdi:weather-pouring'],
     'rain_4d': ['Rain 4d', 'mm', 'mdi:weather-pouring'],
     'rain_5d': ['Rain 5d', 'mm', 'mdi:weather-pouring'],
-    'minrain_1d': ['Minimum rain 1d', 'mm', 'mdi:weather-pouring'],                 # new in json api (>1.0.0)
-    'minrain_2d': ['Minimum rain 2d', 'mm', 'mdi:weather-pouring'],                 # new in json api (>1.0.0)
-    'minrain_3d': ['Minimum rain 3d', 'mm', 'mdi:weather-pouring'],                 # new in json api (>1.0.0)
-    'minrain_4d': ['Minimum rain 4d', 'mm', 'mdi:weather-pouring'],                 # new in json api (>1.0.0)
-    'minrain_5d': ['Minimum rain 5d', 'mm', 'mdi:weather-pouring'],                 # new in json api (>1.0.0)
-    'maxrain_1d': ['Maximum rain 1d', 'mm', 'mdi:weather-pouring'],                 # new in json api (>1.0.0)
-    'maxrain_2d': ['Maximum rain 2d', 'mm', 'mdi:weather-pouring'],                 # new in json api (>1.0.0)
-    'maxrain_3d': ['Maximum rain 3d', 'mm', 'mdi:weather-pouring'],                 # new in json api (>1.0.0)
-    'maxrain_4d': ['Maximum rain 4d', 'mm', 'mdi:weather-pouring'],                 # new in json api (>1.0.0)
-    'maxrain_5d': ['Maximum rain 5d', 'mm', 'mdi:weather-pouring'],                 # new in json api (>1.0.0)
+    # new in json api (>1.0.0):
+    'minrain_1d': ['Minimum rain 1d', 'mm', 'mdi:weather-pouring'],
+    'minrain_2d': ['Minimum rain 2d', 'mm', 'mdi:weather-pouring'],
+    'minrain_3d': ['Minimum rain 3d', 'mm', 'mdi:weather-pouring'],
+    'minrain_4d': ['Minimum rain 4d', 'mm', 'mdi:weather-pouring'],
+    'minrain_5d': ['Minimum rain 5d', 'mm', 'mdi:weather-pouring'],
+    # new in json api (>1.0.0):
+    'maxrain_1d': ['Maximum rain 1d', 'mm', 'mdi:weather-pouring'],
+    'maxrain_2d': ['Maximum rain 2d', 'mm', 'mdi:weather-pouring'],
+    'maxrain_3d': ['Maximum rain 3d', 'mm', 'mdi:weather-pouring'],
+    'maxrain_4d': ['Maximum rain 4d', 'mm', 'mdi:weather-pouring'],
+    'maxrain_5d': ['Maximum rain 5d', 'mm', 'mdi:weather-pouring'],
     'rainchance_1d': ['Rainchance 1d', '%', 'mdi:weather-pouring'],
     'rainchance_2d': ['Rainchance 2d', '%', 'mdi:weather-pouring'],
     'rainchance_3d': ['Rainchance 3d', '%', 'mdi:weather-pouring'],
@@ -110,11 +115,16 @@ SENSOR_TYPES = {
     'winddirection_3d': ['Wind direction 3d', None, 'mdi:compass-outline'],
     'winddirection_4d': ['Wind direction 4d', None, 'mdi:compass-outline'],
     'winddirection_5d': ['Wind direction 5d', None, 'mdi:compass-outline'],
-    'windazimuth_1d': ['Wind direction azimuth 1d', '°', 'mdi:compass-outline'],
-    'windazimuth_2d': ['Wind direction azimuth 2d', '°', 'mdi:compass-outline'],
-    'windazimuth_3d': ['Wind direction azimuth 3d', '°', 'mdi:compass-outline'],
-    'windazimuth_4d': ['Wind direction azimuth 4d', '°', 'mdi:compass-outline'],
-    'windazimuth_5d': ['Wind direction azimuth 5d', '°', 'mdi:compass-outline'],
+    'windazimuth_1d': ['Wind direction azimuth 1d', '°',
+                       'mdi:compass-outline'],
+    'windazimuth_2d': ['Wind direction azimuth 2d', '°',
+                       'mdi:compass-outline'],
+    'windazimuth_3d': ['Wind direction azimuth 3d', '°',
+                       'mdi:compass-outline'],
+    'windazimuth_4d': ['Wind direction azimuth 4d', '°',
+                       'mdi:compass-outline'],
+    'windazimuth_5d': ['Wind direction azimuth 5d', '°',
+                       'mdi:compass-outline'],
     'condition_1d': ['Condition 1d', None, None],
     'condition_2d': ['Condition 2d', None, None],
     'condition_3d': ['Condition 3d', None, None],
@@ -225,10 +235,10 @@ class BrSensor(Entity):
         """Load the sensor with relevant data."""
         # Find sensor
         from buienradar.constants import (ATTRIBUTION, CONDITION, CONDCODE,
-                                           DETAILED, EXACT, EXACTNL, FORECAST,
-                                           IMAGE, MEASURED,
-                                           PRECIPITATION_FORECAST, STATIONNAME,
-                                           TIMEFRAME)
+                                          DETAILED, EXACT, EXACTNL, FORECAST,
+                                          IMAGE, MEASURED,
+                                          PRECIPITATION_FORECAST, STATIONNAME,
+                                          TIMEFRAME)
 
         # Check if we have a new measurement,
         # otherwise we do not have to update the sensor
@@ -455,9 +465,11 @@ class BrData:
 
     async def async_update(self, *_):
         """Update the data from buienradar."""
-        from buienradar.constants import (CONTENT, DATA, MESSAGE, STATUS_CODE, SUCCESS)
+        from buienradar.constants import (CONTENT, DATA, MESSAGE,
+                                          STATUS_CODE, SUCCESS)
         from buienradar.buienradar import (parse_data)
-        from buienradar.urls import (JSON_FEED_URL, json_precipitation_forecast_url)
+        from buienradar.urls import (JSON_FEED_URL,
+                                     json_precipitation_forecast_url)
 
         content = await self.get_data(JSON_FEED_URL)
 
@@ -472,7 +484,9 @@ class BrData:
             return
 
         # rounding coordinates prevents unnecessary redirects/calls
-        rainurl = json_precipitation_forecast_url(self.coordinates[CONF_LATITUDE], round(self.coordinates[CONF_LONGITUDE]))
+        lat = self.coordinates[CONF_LATITUDE]
+        lon = round(self.coordinates[CONF_LONGITUDE])
+        rainurl = json_precipitation_forecast_url(lat, lon)
         raincontent = await self.get_data(rainurl)
 
         if raincontent.get(SUCCESS) is not True:
