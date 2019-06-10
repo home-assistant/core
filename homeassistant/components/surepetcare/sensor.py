@@ -9,15 +9,13 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import (BATTERY_ICON, CONF_HOUSEHOLD_ID,
-                    DATA_SURE_PETCARE, DATA_SUREPY, SURE_BATT_VOLTAGE_DIFF,
-                    SURE_BATT_VOLTAGE_LOW, SURE_IDS, TOPIC_UPDATE,
-                    SureProductID, SureThingID)
+from .const import (BATTERY_ICON, CONF_HOUSEHOLD_ID, DATA_SURE_PETCARE,
+                    DATA_SUREPY, SURE_BATT_VOLTAGE_DIFF, SURE_BATT_VOLTAGE_LOW,
+                    SURE_IDS, TOPIC_UPDATE, SureProductID, SureThingID)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-# async def async_setup_entry(hass, entry, async_add_entities):
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up Sure PetCare Flaps sensors based on a config entry."""
@@ -58,6 +56,11 @@ class FlapBattery(Entity):
 
         self._state = dict()
         self._data = hass.data[DATA_SURE_PETCARE][SureThingID.FLAP.name]
+
+    @property
+    def should_poll(self):
+        """Return true."""
+        return False
 
     @property
     def name(self):
