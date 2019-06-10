@@ -63,12 +63,11 @@ async def async_setup_entry(
     async_add_entities(
         [
             ArcamFmj(
-                client,
+                State(client, zone),
                 zone_config.get(
                     CONF_NAME,
                     "{} ({}:{}) - {}".format(DEFAULT_NAME, host, port, zone),
                 ),
-                zone,
                 zone_config.get(SERVICE_TURN_ON),
             )
             for zone, zone_config in config[CONF_ZONE].items()
@@ -82,12 +81,11 @@ class ArcamFmj(MediaPlayerDevice):
     """Representation of a media device."""
 
     def __init__(
-        self, client: Client, name: str, zone: int, turn_on: ConfigType
+        self, state: State, name: str, turn_on: Optional[ConfigType]
     ):
         """Initialize device."""
         super().__init__()
-        self._client = client
-        self._state = State(client, zone)
+        self._state = state
         self._name = name
         self._turn_on = turn_on
         self._support = (
@@ -97,7 +95,7 @@ class ArcamFmj(MediaPlayerDevice):
             | SUPPORT_VOLUME_STEP
             | SUPPORT_TURN_OFF
         )
-        if zone == 1:
+        if state.zn == 1:
             self._support |= SUPPORT_SELECT_SOUND_MODE
 
     def _get_2ch(self):
@@ -116,14 +114,14 @@ class ArcamFmj(MediaPlayerDevice):
     def unique_id(self) -> Optional[str]:
         """Return a unique ID."""
         return "{}_{}_{}".format(
-            self._client.host, self._client.port, self._state.zn
+            self._state.client.host, self._state.client.port, self._state.zn
         )
 
     @property
     def device_info(self):
         """Return a device description for device registry."""
         return {
-            "identifiers": {(DOMAIN, self._client.host, self._client.port)},
+            "identifiers": {(DOMAIN, self._state.client.host, self._state.client.port)},
             "model": "FMJ",
             "manufacturer": "Arcam",
         }
@@ -159,15 +157,15 @@ class ArcamFmj(MediaPlayerDevice):
         await self._state.start()
 
         def _data(host):
-            if host == self._client.host:
+            if host == self._state.client.host:
                 self.async_schedule_update_ha_state()
 
         def _started(host):
-            if host == self._client.host:
+            if host == self._state.client.host:
                 self.async_schedule_update_ha_state(force_refresh=True)
 
         def _stopped(host):
-            if host == self._client.host:
+            if host == self._state.client.host:
                 self.async_schedule_update_ha_state(force_refresh=True)
 
         self.hass.helpers.dispatcher.async_dispatcher_connect(
