@@ -140,13 +140,13 @@ class HassIO:
                                        payload=options)
 
     @_api_bool
-    def update_hass_timezone(self, core_config):
+    def update_hass_timezone(self, timezone):
         """Update Home-Assistant timezone data on Hass.io.
 
         This method return a coroutine.
         """
         return self.send_command("/supervisor/options", payload={
-            'timezone': core_config.get(CONF_TIME_ZONE)
+            'timezone': timezone
         })
 
     async def send_command(self, command, method="post", payload=None,
