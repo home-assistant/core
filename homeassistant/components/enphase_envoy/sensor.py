@@ -55,6 +55,7 @@ class Envoy(Entity):
         self._unit_of_measurement = unit
         self._type = sensor_type
         self._state = None
+        self._attributes = {}
 
     @property
     def name(self):
