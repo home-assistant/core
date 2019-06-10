@@ -17,13 +17,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Avea platform."""
     import avea
 
-    nearby_bulbs = avea.discover_avea_bulbs()
     try:
+        nearby_bulbs = avea.discover_avea_bulbs()
         for bulb in nearby_bulbs:
             bulb.get_name()
             bulb.get_brightness()
-    except Exception:
-        raise PlatformNotReady
+    except OSError as err:
+        raise PlatformNotReady from err
 
     add_devices(AveaLight(bulb) for bulb in nearby_bulbs)
 
@@ -93,5 +93,4 @@ class AveaLight(Light):
                 self._state = False
             else:
                 self._state = True
-            bright_percent = round((brightness/4095)*100)
             self._brightness = round(255 * (brightness / 4095))
