@@ -72,7 +72,7 @@ class LeafSpyView(HomeAssistantView):
         try:
             message = request.query
 
-            if hmac.compare_digest(message['pass'], context.secret):
+            if not hmac.compare_digest(message['pass'], context.secret):
                 raise Exception("Invalid password")
 
             hass.helpers.dispatcher.async_dispatcher_send(
