@@ -488,7 +488,7 @@ class BrData:
 
         # rounding coordinates prevents unnecessary redirects/calls
         lat = self.coordinates[CONF_LATITUDE]
-        lon = round(self.coordinates[CONF_LONGITUDE])
+        lon = self.coordinates[CONF_LONGITUDE]
         rainurl = json_precipitation_forecast_url(lat, lon)
         raincontent = await self.get_data(rainurl)
 
