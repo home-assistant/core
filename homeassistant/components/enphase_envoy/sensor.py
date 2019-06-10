@@ -1,4 +1,4 @@
-_"""Support for Enphase Envoy solar energy monitor."""
+"""Support for Enphase Envoy solar energy monitor."""
 import logging
 
 import voluptuous as vol
