@@ -305,8 +305,12 @@ braviarc-homeassistant==0.3.7.dev0
 broadlink==0.9.0
 =======
 # homeassistant.components.broadlink
+<<<<<<< HEAD
 broadlink==0.11.0
 >>>>>>> upgrade broadlink library, Use cryptography instead of pycryptodome (#24186)
+=======
+broadlink==0.11.1
+>>>>>>> Upgrade broadlink library (#24450)
 
 # homeassistant.components.sensor.brottsplatskartan
 brottsplatskartan==0.0.1
