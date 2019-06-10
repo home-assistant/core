@@ -1,4 +1,4 @@
-"""Support for Enphase Envoy solar energy monitor."""
+_"""Support for Enphase Envoy solar energy monitor."""
 import logging
 
 import voluptuous as vol
@@ -78,7 +78,7 @@ class Envoy(Entity):
 
     @property
     def device_state_attributes(self):
-        """Return device specific state attributes"""
+        """Return device specific state attributes."""
         if self._type == "production":
             return self._attributes
 
