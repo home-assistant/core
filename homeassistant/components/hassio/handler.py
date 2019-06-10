@@ -11,7 +11,7 @@ from homeassistant.components.http import (
     CONF_SERVER_PORT,
     CONF_SSL_CERTIFICATE,
 )
-from homeassistant.const import CONF_TIME_ZONE, SERVER_PORT
+from homeassistant.const import SERVER_PORT
 
 from .const import X_HASSIO
 
