@@ -182,8 +182,13 @@ alarmdecoder==1.13.2
 # homeassistant.components.sensor.alpha_vantage
 alpha_vantage==2.1.0
 
+<<<<<<< HEAD
 # homeassistant.components.sensor.ambient_station
 ambient_api==1.5.2
+=======
+# homeassistant.components.ambiclimate
+ambiclimate==0.1.3
+>>>>>>> Upgrade ambiclimate library (#24449)
 
 # homeassistant.components.amcrest
 <<<<<<< HEAD
