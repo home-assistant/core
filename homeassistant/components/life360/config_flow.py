@@ -82,9 +82,6 @@ class Life360ConfigFlow(config_entries.ConfigFlow):
         """Import a config flow from configuration."""
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
-        if username in self.configured_usernames:
-            _LOGGER.warning('%s already configured', username)
-            return self.async_abort(reason='user_already_configured')
         try:
             authorization = self._api.get_authorization(username, password)
         except LoginError:

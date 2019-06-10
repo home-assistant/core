@@ -121,11 +121,36 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up integration."""
     conf = config.get(DOMAIN, LIFE360_SCHEMA({}))
-    hass.data[DOMAIN] = {'config': conf, 'apis': []}
+    hass.data[DOMAIN] = {'config': conf, 'apis': {}}
     discovery.load_platform(hass, DEVICE_TRACKER, DOMAIN, None, config)
 
-    if CONF_ACCOUNTS in conf:
+    if CONF_ACCOUNTS not in conf:
+        return True
+
+    # Check existing config entries. For any that correspond to an entry in
+    # configuration.yaml, and whose password has not changed, nothing needs to
+    # be done with that config entry or that account from configuration.yaml.
+    # But if the config entry was created by import and the account no longer
+    # exists in configuration.yaml, or if the password has changed, then delete
+    # that out-of-date config entry.
+    already_configured = []
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        # Find corresponding configuration.yaml entry and its password.
+        password = None
         for account in conf[CONF_ACCOUNTS]:
+            if account[CONF_USERNAME] == entry.data[CONF_USERNAME]:
+                password = account[CONF_PASSWORD]
+        if password == entry.data[CONF_PASSWORD]:
+            already_configured.append(entry.data[CONF_USERNAME])
+            continue
+        if (not password and entry.source == config_entries.SOURCE_IMPORT
+                or password and password != entry.data[CONF_PASSWORD]):
+            hass.async_create_task(hass.config_entries.async_remove(
+                entry.entry_id))
+
+    # Create config entries for accounts listed in configuration.
+    for account in conf[CONF_ACCOUNTS]:
+        if account[CONF_USERNAME] not in already_configured:
             hass.async_create_task(hass.config_entries.flow.async_init(
                 DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
                 data=account))
@@ -134,6 +159,15 @@ def setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up config entry."""
-    hass.data[DOMAIN]['apis'].append(
-        get_api(entry.data[CONF_AUTHORIZATION]))
+    hass.data[DOMAIN]['apis'][entry.data[CONF_USERNAME]] = get_api(
+        entry.data[CONF_AUTHORIZATION])
     return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unload config entry."""
+    try:
+        hass.data[DOMAIN]['apis'].pop(entry.data[CONF_USERNAME])
+        return True
+    except KeyError:
+        return False
