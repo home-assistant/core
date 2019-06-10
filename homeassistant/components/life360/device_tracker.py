@@ -305,7 +305,7 @@ class Life360Scanner:
         circles_updated = []
         members_updated = []
 
-        for api in self._apis:
+        for api in self._apis.values():
             err_key = 'get_circles'
             try:
                 circles = api.get_circles()
