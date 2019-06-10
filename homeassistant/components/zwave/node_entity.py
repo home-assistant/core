@@ -133,7 +133,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             'name': node_name(self.node)
         }
         if self.node_id > 1:
-            info['via_hub'] = (DOMAIN, 1)
+            info['via_device'] = (DOMAIN, 1)
         return info
 
     def network_node_changed(self, node=None, value=None, args=None):
