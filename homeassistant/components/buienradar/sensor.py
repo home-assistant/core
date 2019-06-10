@@ -32,11 +32,19 @@ SCHEDULE_NOK = 2
 # Key: ['label', unit, icon]
 SENSOR_TYPES = {
     'stationname': ['Stationname', None, None],
+    # new in json api (>1.0.0):
+    'barometerfc': ['Barometer value', None, 'mdi:gauge'],
+    # new in json api (>1.0.0):
+    'barometerfcname': ['Barometer', None, 'mdi:gauge'],
+    # new in json api (>1.0.0):
+    'barometerfcnamenl': ['Barometer', None, 'mdi:gauge'],
     'condition': ['Condition', None, None],
     'conditioncode': ['Condition code', None, None],
     'conditiondetailed': ['Detailed condition', None, None],
     'conditionexact': ['Full condition', None, None],
     'symbol': ['Symbol', None, None],
+    # new in json api (>1.0.0):
+    'feeltemperature': ['Feel temperature', TEMP_CELSIUS, 'mdi:thermometer'],
     'humidity': ['Humidity', '%', 'mdi:water-percent'],
     'temperature': ['Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
     'groundtemperature': ['Ground temperature', TEMP_CELSIUS,
@@ -54,6 +62,10 @@ SENSOR_TYPES = {
                                        'mm/h', 'mdi:weather-pouring'],
     'precipitation_forecast_total': ['Precipitation forecast total',
                                      'mm', 'mdi:weather-pouring'],
+    # new in json api (>1.0.0):
+    'rainlast24hour': ['Rain last 24h', 'mm', 'mdi:weather-pouring'],
+    # new in json api (>1.0.0):
+    'rainlasthour': ['Rain last hour', 'mm', 'mdi:weather-pouring'],
     'temperature_1d': ['Temperature 1d', TEMP_CELSIUS, 'mdi:thermometer'],
     'temperature_2d': ['Temperature 2d', TEMP_CELSIUS, 'mdi:thermometer'],
     'temperature_3d': ['Temperature 3d', TEMP_CELSIUS, 'mdi:thermometer'],
@@ -69,11 +81,18 @@ SENSOR_TYPES = {
     'rain_3d': ['Rain 3d', 'mm', 'mdi:weather-pouring'],
     'rain_4d': ['Rain 4d', 'mm', 'mdi:weather-pouring'],
     'rain_5d': ['Rain 5d', 'mm', 'mdi:weather-pouring'],
-    'snow_1d': ['Snow 1d', 'cm', 'mdi:snowflake'],
-    'snow_2d': ['Snow 2d', 'cm', 'mdi:snowflake'],
-    'snow_3d': ['Snow 3d', 'cm', 'mdi:snowflake'],
-    'snow_4d': ['Snow 4d', 'cm', 'mdi:snowflake'],
-    'snow_5d': ['Snow 5d', 'cm', 'mdi:snowflake'],
+    # new in json api (>1.0.0):
+    'minrain_1d': ['Minimum rain 1d', 'mm', 'mdi:weather-pouring'],
+    'minrain_2d': ['Minimum rain 2d', 'mm', 'mdi:weather-pouring'],
+    'minrain_3d': ['Minimum rain 3d', 'mm', 'mdi:weather-pouring'],
+    'minrain_4d': ['Minimum rain 4d', 'mm', 'mdi:weather-pouring'],
+    'minrain_5d': ['Minimum rain 5d', 'mm', 'mdi:weather-pouring'],
+    # new in json api (>1.0.0):
+    'maxrain_1d': ['Maximum rain 1d', 'mm', 'mdi:weather-pouring'],
+    'maxrain_2d': ['Maximum rain 2d', 'mm', 'mdi:weather-pouring'],
+    'maxrain_3d': ['Maximum rain 3d', 'mm', 'mdi:weather-pouring'],
+    'maxrain_4d': ['Maximum rain 4d', 'mm', 'mdi:weather-pouring'],
+    'maxrain_5d': ['Maximum rain 5d', 'mm', 'mdi:weather-pouring'],
     'rainchance_1d': ['Rainchance 1d', '%', 'mdi:weather-pouring'],
     'rainchance_2d': ['Rainchance 2d', '%', 'mdi:weather-pouring'],
     'rainchance_3d': ['Rainchance 3d', '%', 'mdi:weather-pouring'],
@@ -89,6 +108,26 @@ SENSOR_TYPES = {
     'windforce_3d': ['Wind force 3d', 'Bft', 'mdi:weather-windy'],
     'windforce_4d': ['Wind force 4d', 'Bft', 'mdi:weather-windy'],
     'windforce_5d': ['Wind force 5d', 'Bft', 'mdi:weather-windy'],
+    'windspeed_1d': ['Wind speed 1d', 'm/s', 'mdi:weather-windy'],
+    'windspeed_2d': ['Wind speed 2d', 'm/s', 'mdi:weather-windy'],
+    'windspeed_3d': ['Wind speed 3d', 'm/s', 'mdi:weather-windy'],
+    'windspeed_4d': ['Wind speed 4d', 'm/s', 'mdi:weather-windy'],
+    'windspeed_5d': ['Wind speed 5d', 'm/s', 'mdi:weather-windy'],
+    'winddirection_1d': ['Wind direction 1d', None, 'mdi:compass-outline'],
+    'winddirection_2d': ['Wind direction 2d', None, 'mdi:compass-outline'],
+    'winddirection_3d': ['Wind direction 3d', None, 'mdi:compass-outline'],
+    'winddirection_4d': ['Wind direction 4d', None, 'mdi:compass-outline'],
+    'winddirection_5d': ['Wind direction 5d', None, 'mdi:compass-outline'],
+    'windazimuth_1d': ['Wind direction azimuth 1d', '°',
+                       'mdi:compass-outline'],
+    'windazimuth_2d': ['Wind direction azimuth 2d', '°',
+                       'mdi:compass-outline'],
+    'windazimuth_3d': ['Wind direction azimuth 3d', '°',
+                       'mdi:compass-outline'],
+    'windazimuth_4d': ['Wind direction azimuth 4d', '°',
+                       'mdi:compass-outline'],
+    'windazimuth_5d': ['Wind direction azimuth 5d', '°',
+                       'mdi:compass-outline'],
     'condition_1d': ['Condition 1d', None, None],
     'condition_2d': ['Condition 2d', None, None],
     'condition_3d': ['Condition 3d', None, None],
@@ -113,7 +152,7 @@ SENSOR_TYPES = {
     'symbol_2d': ['Symbol 2d', None, None],
     'symbol_3d': ['Symbol 3d', None, None],
     'symbol_4d': ['Symbol 4d', None, None],
-    'symbol_5d': ['Symbol 5d', None, None],
+    'symbol_5d': ['Symbol 5d', None, None]
 }
 
 CONF_TIMEFRAME = 'timeframe'
@@ -168,7 +207,7 @@ class BrSensor(Entity):
 
     def __init__(self, sensor_type, client_name, coordinates):
         """Initialize the sensor."""
-        from buienradar.buienradar import (PRECIPITATION_FORECAST, CONDITION)
+        from buienradar.constants import (PRECIPITATION_FORECAST, CONDITION)
 
         self.client_name = client_name
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -198,11 +237,11 @@ class BrSensor(Entity):
     def load_data(self, data):
         """Load the sensor with relevant data."""
         # Find sensor
-        from buienradar.buienradar import (ATTRIBUTION, CONDITION, CONDCODE,
-                                           DETAILED, EXACT, EXACTNL, FORECAST,
-                                           IMAGE, MEASURED,
-                                           PRECIPITATION_FORECAST, STATIONNAME,
-                                           TIMEFRAME)
+        from buienradar.constants import (ATTRIBUTION, CONDITION, CONDCODE,
+                                          DETAILED, EXACT, EXACTNL, FORECAST,
+                                          IMAGE, MEASURED,
+                                          PRECIPITATION_FORECAST, STATIONNAME,
+                                          TIMEFRAME)
 
         # Check if we have a new measurement,
         # otherwise we do not have to update the sensor
@@ -219,6 +258,7 @@ class BrSensor(Entity):
            self.type.endswith('_4d') or \
            self.type.endswith('_5d'):
 
+            # update forcasting sensors:
             fcday = 0
             if self.type.endswith('_2d'):
                 fcday = 1
@@ -229,7 +269,7 @@ class BrSensor(Entity):
             if self.type.endswith('_5d'):
                 fcday = 4
 
-            # update all other sensors
+            # update weather symbol & status text
             if self.type.startswith(SYMBOL) or self.type.startswith(CONDITION):
                 try:
                     condition = data.get(FORECAST)[fcday].get(CONDITION)
@@ -256,6 +296,7 @@ class BrSensor(Entity):
                         return True
                 return False
 
+            # update all other sensors
             try:
                 self._state = data.get(FORECAST)[fcday].get(self.type[:-3])
                 return True
@@ -331,7 +372,7 @@ class BrSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        from buienradar.buienradar import (PRECIPITATION_FORECAST)
+        from buienradar.constants import (PRECIPITATION_FORECAST)
 
         if self.type.startswith(PRECIPITATION_FORECAST):
             result = {ATTR_ATTRIBUTION: self._attribution}
@@ -399,8 +440,8 @@ class BrData:
 
     async def get_data(self, url):
         """Load data from specified url."""
-        from buienradar.buienradar import (CONTENT,
-                                           MESSAGE, STATUS_CODE, SUCCESS)
+        from buienradar.constants import (CONTENT,
+                                          MESSAGE, STATUS_CODE, SUCCESS)
 
         _LOGGER.debug("Calling url: %s...", url)
         result = {SUCCESS: False, MESSAGE: None}
@@ -427,16 +468,17 @@ class BrData:
 
     async def async_update(self, *_):
         """Update the data from buienradar."""
-        from buienradar.buienradar import (parse_data, CONTENT,
-                                           DATA, MESSAGE, STATUS_CODE, SUCCESS)
+        from buienradar.constants import (CONTENT, DATA, MESSAGE,
+                                          STATUS_CODE, SUCCESS)
+        from buienradar.buienradar import (parse_data)
+        from buienradar.urls import (JSON_FEED_URL,
+                                     json_precipitation_forecast_url)
 
-        content = await self.get_data('http://xml.buienradar.nl')
-        if not content.get(SUCCESS, False):
-            content = await self.get_data('http://api.buienradar.nl')
+        content = await self.get_data(JSON_FEED_URL)
 
         if content.get(SUCCESS) is not True:
             # unable to get the data
-            _LOGGER.warning("Unable to retrieve xml data from Buienradar."
+            _LOGGER.warning("Unable to retrieve json data from Buienradar."
                             "(Msg: %s, status: %s,)",
                             content.get(MESSAGE),
                             content.get(STATUS_CODE),)
@@ -445,11 +487,9 @@ class BrData:
             return
 
         # rounding coordinates prevents unnecessary redirects/calls
-        rainurl = 'http://gadgets.buienradar.nl/data/raintext/?lat={}&lon={}'
-        rainurl = rainurl.format(
-            round(self.coordinates[CONF_LATITUDE], 2),
-            round(self.coordinates[CONF_LONGITUDE], 2)
-            )
+        lat = self.coordinates[CONF_LATITUDE]
+        lon = round(self.coordinates[CONF_LONGITUDE])
+        rainurl = json_precipitation_forecast_url(lat, lon)
         raincontent = await self.get_data(rainurl)
 
         if raincontent.get(SUCCESS) is not True:
@@ -466,7 +506,8 @@ class BrData:
                             raincontent.get(CONTENT),
                             self.coordinates[CONF_LATITUDE],
                             self.coordinates[CONF_LONGITUDE],
-                            self.timeframe)
+                            self.timeframe,
+                            False)
 
         _LOGGER.debug("Buienradar parsed data: %s", result)
         if result.get(SUCCESS) is not True:
@@ -484,25 +525,25 @@ class BrData:
     @property
     def attribution(self):
         """Return the attribution."""
-        from buienradar.buienradar import ATTRIBUTION
+        from buienradar.constants import ATTRIBUTION
         return self.data.get(ATTRIBUTION)
 
     @property
     def stationname(self):
         """Return the name of the selected weatherstation."""
-        from buienradar.buienradar import STATIONNAME
+        from buienradar.constants import STATIONNAME
         return self.data.get(STATIONNAME)
 
     @property
     def condition(self):
         """Return the condition."""
-        from buienradar.buienradar import CONDITION
+        from buienradar.constants import CONDITION
         return self.data.get(CONDITION)
 
     @property
     def temperature(self):
         """Return the temperature, or None."""
-        from buienradar.buienradar import TEMPERATURE
+        from buienradar.constants import TEMPERATURE
         try:
             return float(self.data.get(TEMPERATURE))
         except (ValueError, TypeError):
@@ -511,7 +552,7 @@ class BrData:
     @property
     def pressure(self):
         """Return the pressure, or None."""
-        from buienradar.buienradar import PRESSURE
+        from buienradar.constants import PRESSURE
         try:
             return float(self.data.get(PRESSURE))
         except (ValueError, TypeError):
@@ -520,7 +561,7 @@ class BrData:
     @property
     def humidity(self):
         """Return the humidity, or None."""
-        from buienradar.buienradar import HUMIDITY
+        from buienradar.constants import HUMIDITY
         try:
             return int(self.data.get(HUMIDITY))
         except (ValueError, TypeError):
@@ -529,7 +570,7 @@ class BrData:
     @property
     def visibility(self):
         """Return the visibility, or None."""
-        from buienradar.buienradar import VISIBILITY
+        from buienradar.constants import VISIBILITY
         try:
             return int(self.data.get(VISIBILITY))
         except (ValueError, TypeError):
@@ -538,7 +579,7 @@ class BrData:
     @property
     def wind_speed(self):
         """Return the windspeed, or None."""
-        from buienradar.buienradar import WINDSPEED
+        from buienradar.constants import WINDSPEED
         try:
             return float(self.data.get(WINDSPEED))
         except (ValueError, TypeError):
@@ -547,7 +588,7 @@ class BrData:
     @property
     def wind_bearing(self):
         """Return the wind bearing, or None."""
-        from buienradar.buienradar import WINDAZIMUTH
+        from buienradar.constants import WINDAZIMUTH
         try:
             return int(self.data.get(WINDAZIMUTH))
         except (ValueError, TypeError):
@@ -556,5 +597,5 @@ class BrData:
     @property
     def forecast(self):
         """Return the forecast data."""
-        from buienradar.buienradar import FORECAST
+        from buienradar.constants import FORECAST
         return self.data.get(FORECAST)

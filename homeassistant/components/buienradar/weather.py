@@ -6,7 +6,8 @@ import voluptuous as vol
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION, ATTR_FORECAST_TEMP, ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME, PLATFORM_SCHEMA, WeatherEntity,
-    ATTR_FORECAST_PRECIPITATION)
+    ATTR_FORECAST_PRECIPITATION, ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_WIND_SPEED)
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS)
 from homeassistant.helpers import config_validation as cv
@@ -104,7 +105,8 @@ class BrWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        from buienradar.buienradar import (CONDCODE)
+        from buienradar.constants import (CONDCODE)
+
         if self._data and self._data.condition:
             ccode = self._data.condition.get(CONDCODE)
             if ccode:
@@ -150,25 +152,33 @@ class BrWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        from buienradar.buienradar import (CONDITION, CONDCODE, RAIN, DATETIME,
-                                           MIN_TEMP, MAX_TEMP)
+        from buienradar.constants import (CONDITION, CONDCODE, RAIN, DATETIME,
+                                          MIN_TEMP, MAX_TEMP, WINDAZIMUTH,
+                                          WINDSPEED)
 
-        if self._forecast:
-            fcdata_out = []
-            cond = self.hass.data[DATA_CONDITION]
-            if self._data.forecast:
-                for data_in in self._data.forecast:
-                    # remap keys from external library to
-                    # keys understood by the weather component:
-                    data_out = {}
-                    condcode = data_in.get(CONDITION, []).get(CONDCODE)
+        if not self._forecast:
+            return
 
-                    data_out[ATTR_FORECAST_TIME] = data_in.get(DATETIME)
-                    data_out[ATTR_FORECAST_CONDITION] = cond[condcode]
-                    data_out[ATTR_FORECAST_TEMP_LOW] = data_in.get(MIN_TEMP)
-                    data_out[ATTR_FORECAST_TEMP] = data_in.get(MAX_TEMP)
-                    data_out[ATTR_FORECAST_PRECIPITATION] = data_in.get(RAIN)
+        fcdata_out = []
+        cond = self.hass.data[DATA_CONDITION]
 
-                    fcdata_out.append(data_out)
+        if not self._data.forecast:
+            return
 
-            return fcdata_out
+        for data_in in self._data.forecast:
+            # remap keys from external library to
+            # keys understood by the weather component:
+            data_out = {}
+            condcode = data_in.get(CONDITION, []).get(CONDCODE)
+
+            data_out[ATTR_FORECAST_TIME] = data_in.get(DATETIME)
+            data_out[ATTR_FORECAST_CONDITION] = cond[condcode]
+            data_out[ATTR_FORECAST_TEMP_LOW] = data_in.get(MIN_TEMP)
+            data_out[ATTR_FORECAST_TEMP] = data_in.get(MAX_TEMP)
+            data_out[ATTR_FORECAST_PRECIPITATION] = data_in.get(RAIN)
+            data_out[ATTR_FORECAST_WIND_BEARING] = data_in.get(WINDAZIMUTH)
+            data_out[ATTR_FORECAST_WIND_SPEED] = data_in.get(WINDSPEED)
+
+            fcdata_out.append(data_out)
+
+        return fcdata_out

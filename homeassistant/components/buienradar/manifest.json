@@ -3,8 +3,14 @@
   "name": "Buienradar",
   "documentation": "https://www.home-assistant.io/components/buienradar",
   "requirements": [
-    "buienradar==0.91"
+    "buienradar==1.0.1"
   ],
   "dependencies": [],
+<<<<<<< HEAD
   "codeowners": ["@ties"]
+=======
+  "codeowners": [
+    "@mjj4791"
+  ]
+>>>>>>> Update to json api; and additional sensors
 }
