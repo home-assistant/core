@@ -34,9 +34,9 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_HOUSEHOLD_ID): cv.positive_int,
-        vol.Optional(CONF_FLAPS): vol.Schema(
+        vol.Required(CONF_FLAPS): vol.Schema(
             vol.All(cv.ensure_list, [FLAP_SCHEMA])),
-        vol.Optional(CONF_PETS): vol.Schema(
+        vol.Required(CONF_PETS): vol.Schema(
             vol.All(cv.ensure_list, [PET_SCHEMA])),
         vol.Optional(CONF_DEVICE_CLASS, default="door"): cv.string,
         vol.Optional(CONF_ICON, default="mdi:door"): cv.string,
@@ -52,11 +52,6 @@ async def async_setup(hass, config):
 
     # config file data
     conf = config.get(DOMAIN, dict())
-
-    # User has configured household or flaps
-    if CONF_HOUSEHOLD_ID not in conf:
-        _LOGGER.debug("missing household id in config: %s", conf)
-        return False
 
     # shared data
     hass.data[DOMAIN] = {}
