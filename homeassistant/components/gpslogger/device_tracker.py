@@ -146,10 +146,8 @@ class GPSLoggerEntity(DeviceTrackerEntity, RestoreEntity):
 
         state = await self.async_get_last_state()
         if state is None:
-            # XXX: first restore after upgrade fill with dummy data;
-            # is there a better way to handle this?
-            self._location = (0, 0)
-            self._accuracy = 1
+            self._location = (None, None)
+            self._accuracy = None
             self._attributes = {
                 ATTR_ALTITUDE: None,
                 ATTR_ACTIVITY: None,
