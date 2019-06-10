@@ -15,7 +15,6 @@ from .const import (CONF_HOUSEHOLD_ID, DATA_SURE_PETCARE, DATA_SUREPY,
 _LOGGER = logging.getLogger(__name__)
 
 
-# async def async_setup_entry(hass, entry, async_add_entities):
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up Sure PetCare Flaps sensors based on a config entry."""
