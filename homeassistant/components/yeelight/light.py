@@ -80,6 +80,19 @@ YEELIGHT_EFFECT_LIST = [
     EFFECT_TWITTER,
     EFFECT_STOP]
 
+MODEL_TO_DEVICE_TYPE = {
+    'mono': BulbType.White,
+    'mono1': BulbType.White,
+    'color': BulbType.Color,
+    'color1': BulbType.Color,
+    'color2': BulbType.Color,
+    'strip1': BulbType.Color,
+    'bslamp1': BulbType.Color,
+    'ceiling1': BulbType.WhiteTemp,
+    'ceiling2': BulbType.WhiteTemp,
+    'ceiling3': BulbType.WhiteTemp,
+    'ceiling4': BulbType.WhiteTempMood}
+
 
 def _transitions_config_parser(transitions):
     """Parse transitions config into initialized objects."""
@@ -135,23 +148,25 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     device = hass.data[DATA_YEELIGHT][discovery_info[CONF_HOST]]
     _LOGGER.debug("Adding %s", device.name)
 
-    model = device.model
     custom_effects = _parse_custom_effects(discovery_info[CONF_CUSTOM_EFFECTS])
 
     lights = []
 
+    if device.model:
+        device_type = MODEL_TO_DEVICE_TYPE.get(device.model, None)
+    else:
+        device_type = device.type
+
     def _lights_setup_helper(klass):
         lights.append(klass(device, custom_effects=custom_effects))
 
-    if model in ('mono', 'mono1') or device.type == BulbType.White:
+    if device_type == BulbType.White:
         _lights_setup_helper(YeelightGenericLight)
-    elif model in ('color', 'color1', 'color2', 'strip1', 'bslamp1') or \
-            device.type == BulbType.Color:
+    elif device_type == BulbType.Color:
         _lights_setup_helper(YeelightColorLight)
-    elif model in ('ceiling1', 'ceiling2', 'ceiling3') or \
-            device.type == BulbType.WhiteTemp:
+    elif device_type == BulbType.WhiteTemp:
         _lights_setup_helper(YeelightWhiteTempLight)
-    elif model == 'ceiling4' or device.type == BulbType.WhiteTempMood:
+    elif device_type == BulbType.WhiteTempMood:
         _lights_setup_helper(YeelightWithAmbientLight)
         _lights_setup_helper(YeelightAmbientLight)
     else:
