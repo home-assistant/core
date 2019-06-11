@@ -212,6 +212,9 @@ apcaccess==0.0.13
 # homeassistant.components.notify.apns
 apns2==0.3.0
 
+# homeassistant.components.aprs
+aprslib==0.6.46
+
 # homeassistant.components.aqualogic
 aqualogic==1.0
 
@@ -555,8 +558,16 @@ geizhals==0.0.9
 # homeassistant.components.geo_location.usgs_earthquakes_feed
 geojson_client==0.3
 
+<<<<<<< HEAD
 # homeassistant.components.sensor.geo_rss_events
 georss_client==0.5
+=======
+# homeassistant.components.aprs
+geopy==1.19.0
+
+# homeassistant.components.geo_rss_events
+georss_generic_client==0.2
+>>>>>>> Add APRS device tracker component (#22469)
 
 # homeassistant.components.device_tracker.googlehome
 ghlocalapi==0.3.5
