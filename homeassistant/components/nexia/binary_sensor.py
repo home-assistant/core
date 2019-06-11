@@ -32,8 +32,7 @@ class NexiaBinarySensor(BinarySensorDevice):
     def __init__(self, device, scan_interval, thermostat_id, sensor_call, sensor_name, sensor_class):
         """Initialize the Ecobee sensor."""
         self._device = device
-        self._name = sensor_name
-        self.sensor_name = self._device.get_thermostat_name(thermostat_id) + " " + sensor_name
+        self._name = self._device.get_thermostat_name(thermostat_id) + " " + sensor_name
         self._thermostat_id = thermostat_id
         self._call = sensor_call
         self._state = None
