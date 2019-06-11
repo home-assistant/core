@@ -3,7 +3,7 @@
   "name": "Velux",
   "documentation": "https://www.home-assistant.io/components/velux",
   "requirements": [
-    "pyvlx==0.2.10"
+    "pyvlx==0.2.11"
   ],
   "dependencies": [],
   "codeowners": [

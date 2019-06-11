@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Mostek jest ju\u017c skonfigurowany",
             "no_bridges": "Nie odkryto mostk\u00f3w deCONZ",
-            "one_instance_only": "Komponent obs\u0142uguje tylko jedn\u0105 instancj\u0119 deCONZ"
+            "one_instance_only": "Komponent obs\u0142uguje tylko jedn\u0105 instancj\u0119 deCONZ",
+            "updated_instance": "Zaktualizowano instancj\u0119 deCONZ o nowy adres hosta"
         },
         "error": {
             "no_key": "Nie mo\u017cna uzyska\u0107 klucza API"

@@ -10,7 +10,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SEEK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET)
+    SUPPORT_VOLUME_SET, SUPPORT_SHUFFLE_SET)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, CONF_SSL, STATE_IDLE, STATE_OFF, STATE_ON,
     STATE_PAUSED, STATE_PLAYING)
@@ -26,7 +26,7 @@ DOMAIN = 'itunes'
 
 SUPPORT_ITUNES = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK | \
-    SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_TURN_OFF
+    SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_TURN_OFF | SUPPORT_SHUFFLE_SET
 
 SUPPORT_AIRPLAY = SUPPORT_VOLUME_SET | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
@@ -95,6 +95,11 @@ class Itunes:
     def set_muted(self, muted):
         """Mute and returns the current state, muted True or False."""
         return self._request('PUT', '/mute', {'muted': muted})
+
+    def set_shuffle(self, shuffle):
+        """Set the shuffle mode, shuffle True or False."""
+        return self._request('PUT', '/shuffle',
+                             {'mode': ('songs' if shuffle else 'off')})
 
     def play(self):
         """Set playback to play and returns the current state."""
@@ -183,6 +188,7 @@ class ItunesDevice(MediaPlayerDevice):
 
         self.current_volume = None
         self.muted = None
+        self.shuffled = None
         self.current_title = None
         self.current_album = None
         self.current_artist = None
@@ -206,6 +212,9 @@ class ItunesDevice(MediaPlayerDevice):
         self.current_artist = state_hash.get('artist', None)
         self.current_playlist = state_hash.get('playlist', None)
         self.content_id = state_hash.get('id', None)
+
+        _shuffle = state_hash.get('shuffle', None)
+        self.shuffled = (_shuffle == 'songs')
 
     @property
     def name(self):
@@ -307,6 +316,11 @@ class ItunesDevice(MediaPlayerDevice):
         return self.current_playlist
 
     @property
+    def shuffle(self):
+        """Boolean if shuffle is enabled."""
+        return self.shuffled
+
+    @property
     def supported_features(self):
         """Flag media player features that are supported."""
         return SUPPORT_ITUNES
@@ -319,6 +333,11 @@ class ItunesDevice(MediaPlayerDevice):
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         response = self.client.set_muted(mute)
+        self.update_state(response)
+
+    def set_shuffle(self, shuffle):
+        """Shuffle (true) or no shuffle (false) media player."""
+        response = self.client.set_shuffle(shuffle)
         self.update_state(response)
 
     def media_play(self):

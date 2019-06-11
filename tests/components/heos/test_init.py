@@ -1,13 +1,14 @@
 """Tests for the init module."""
 import asyncio
 
-from asynctest import patch
+from asynctest import Mock, patch
 from pyheos import CommandError, const
 import pytest
 
-from homeassistant.components.heos import async_setup_entry, async_unload_entry
+from homeassistant.components.heos import (
+    ControllerManager, async_setup_entry, async_unload_entry)
 from homeassistant.components.heos.const import (
-    DATA_CONTROLLER, DATA_SOURCE_MANAGER, DOMAIN)
+    DATA_CONTROLLER_MANAGER, DATA_SOURCE_MANAGER, DOMAIN)
 from homeassistant.components.media_player.const import (
     DOMAIN as MEDIA_PLAYER_DOMAIN)
 from homeassistant.const import CONF_HOST
@@ -74,7 +75,7 @@ async def test_async_setup_entry_loads_platforms(
         assert controller.get_favorites.call_count == 1
         assert controller.get_input_sources.call_count == 1
         controller.disconnect.assert_not_called()
-    assert hass.data[DOMAIN][DATA_CONTROLLER] == controller
+    assert hass.data[DOMAIN][DATA_CONTROLLER_MANAGER].controller == controller
     assert hass.data[DOMAIN][MEDIA_PLAYER_DOMAIN] == controller.players
     assert hass.data[DOMAIN][DATA_SOURCE_MANAGER].favorites == favorites
     assert hass.data[DOMAIN][DATA_SOURCE_MANAGER].inputs == input_sources
@@ -97,12 +98,13 @@ async def test_async_setup_entry_not_signed_in_loads_platforms(
         assert controller.get_favorites.call_count == 0
         assert controller.get_input_sources.call_count == 1
         controller.disconnect.assert_not_called()
-    assert hass.data[DOMAIN][DATA_CONTROLLER] == controller
+    assert hass.data[DOMAIN][DATA_CONTROLLER_MANAGER].controller == controller
     assert hass.data[DOMAIN][MEDIA_PLAYER_DOMAIN] == controller.players
     assert hass.data[DOMAIN][DATA_SOURCE_MANAGER].favorites == {}
     assert hass.data[DOMAIN][DATA_SOURCE_MANAGER].inputs == input_sources
-    assert "127.0.0.1 is not logged in to your HEOS account and will be " \
-           "unable to retrieve your favorites" in caplog.text
+    assert "127.0.0.1 is not logged in to a HEOS account and will be unable " \
+           "to retrieve HEOS favorites: Use the 'heos.sign_in' service to " \
+           "sign-in to a HEOS account" in caplog.text
 
 
 async def test_async_setup_entry_connect_failure(
@@ -139,12 +141,13 @@ async def test_async_setup_entry_player_failure(
 
 async def test_unload_entry(hass, config_entry, controller):
     """Test entries are unloaded correctly."""
-    hass.data[DOMAIN] = {DATA_CONTROLLER: controller}
+    controller_manager = Mock(ControllerManager)
+    hass.data[DOMAIN] = {DATA_CONTROLLER_MANAGER: controller_manager}
     with patch.object(hass.config_entries, 'async_forward_entry_unload',
                       return_value=True) as unload:
         assert await async_unload_entry(hass, config_entry)
         await hass.async_block_till_done()
-        assert controller.disconnect.call_count == 1
+        assert controller_manager.disconnect.call_count == 1
         assert unload.call_count == 1
     assert DOMAIN not in hass.data
 

@@ -3,8 +3,8 @@
   "name": "Wink",
   "documentation": "https://www.home-assistant.io/components/wink",
   "requirements": [
-    "pubnubsub-handler==1.0.3",
-    "python-wink==1.10.3"
+    "pubnubsub-handler==1.0.7",
+    "python-wink==1.10.5"
   ],
   "dependencies": ["configurator"],
   "codeowners": []

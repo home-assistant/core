@@ -167,8 +167,9 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
         # Try to find region automatically.
         if not self.location:
-            self.location = await self.hass.async_add_executor_job(
-                location.detect_location_info)
+            self.location = await location.async_detect_location_info(
+                self.hass.helpers.aiohttp_client.async_get_clientsession()
+            )
         if self.location:
             country = self.location.country_name
             if country in COUNTRIES:

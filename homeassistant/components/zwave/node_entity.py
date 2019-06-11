@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.core import callback
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_WAKEUP, ATTR_ENTITY_ID
+from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.entity import Entity
 
 from .const import (
@@ -74,6 +75,16 @@ class ZWaveBaseEntity(Entity):
         if self.hass and self.platform:
             self.hass.add_job(_async_remove_and_add)
 
+    async def node_removed(self):
+        """Call when a node is removed from the Z-Wave network."""
+        await self.async_remove()
+
+        registry = await async_get_registry(self.hass)
+        if self.entity_id not in registry.entities:
+            return
+
+        registry.async_remove(self.entity_id)
+
 
 class ZWaveNodeEntity(ZWaveBaseEntity):
     """Representation of a Z-Wave node."""
@@ -113,7 +124,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
     @property
     def device_info(self):
         """Return device information."""
-        return {
+        info = {
             'identifiers': {
                 (DOMAIN, self.node_id)
             },
@@ -121,6 +132,9 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             'model': self.node.product_name,
             'name': node_name(self.node)
         }
+        if self.node_id > 1:
+            info['via_device'] = (DOMAIN, 1)
+        return info
 
     def network_node_changed(self, node=None, value=None, args=None):
         """Handle a changed node on the network."""

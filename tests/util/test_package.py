@@ -6,12 +6,19 @@ import sys
 from subprocess import PIPE
 from unittest.mock import MagicMock, call, patch
 
+import pkg_resources
 import pytest
 
 import homeassistant.util.package as package
 
 
+RESOURCE_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '..', 'resources'))
+
 TEST_NEW_REQ = 'pyhelloworld3==1.0.0'
+
+TEST_ZIP_REQ = 'file://{}#{}' \
+    .format(os.path.join(RESOURCE_DIR, 'pyhelloworld3.zip'), TEST_NEW_REQ)
 
 
 @pytest.fixture
@@ -160,6 +167,23 @@ def test_install_constraint(mock_sys, mock_popen, mock_env_copy, mock_venv):
     assert mock_popen.return_value.communicate.call_count == 1
 
 
+def test_install_find_links(mock_sys, mock_popen, mock_env_copy, mock_venv):
+    """Test install with find-links on not installed package."""
+    env = mock_env_copy()
+    link = 'https://wheels-repository'
+    assert package.install_package(
+        TEST_NEW_REQ, False, find_links=link)
+    assert mock_popen.call_count == 1
+    assert (
+        mock_popen.call_args ==
+        call([
+            mock_sys.executable, '-m', 'pip', 'install', '--quiet',
+            TEST_NEW_REQ, '--find-links', link
+        ], stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
+    )
+    assert mock_popen.return_value.communicate.call_count == 1
+
+
 @asyncio.coroutine
 def test_async_get_user_site(mock_env_copy):
     """Test async get user site directory."""
@@ -176,3 +200,14 @@ def test_async_get_user_site(mock_env_copy):
         stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL,
         env=env)
     assert ret == os.path.join(deps_dir, 'lib_dir')
+
+
+def test_check_package_global():
+    """Test for an installed package."""
+    installed_package = list(pkg_resources.working_set)[0].project_name
+    assert package.is_installed(installed_package)
+
+
+def test_check_package_zip():
+    """Test for an installed zip package."""
+    assert not package.is_installed(TEST_ZIP_REQ)

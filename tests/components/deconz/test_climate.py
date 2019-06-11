@@ -1,4 +1,5 @@
 """deCONZ climate platform tests."""
+from copy import deepcopy
 from unittest.mock import Mock, patch
 
 import asynctest
@@ -18,9 +19,9 @@ SENSOR = {
         "id": "Climate 1 id",
         "name": "Climate 1 name",
         "type": "ZHAThermostat",
-        "state": {"on": True, "temperature": 2260},
+        "state": {"on": True, "temperature": 2260, "valve": 30},
         "config": {"battery": 100, "heatsetpoint": 2200, "mode": "auto",
-                   "offset": 10, "reachable": True, "valve": 30},
+                   "offset": 10, "reachable": True},
         "uniqueid": "00:00:00:00:00:00:00:00-00"
     },
     "2": {
@@ -97,7 +98,7 @@ async def test_no_sensors(hass):
 
 async def test_climate_devices(hass):
     """Test successful creation of sensor entities."""
-    gateway = await setup_gateway(hass, {"sensors": SENSOR})
+    gateway = await setup_gateway(hass, {"sensors": deepcopy(SENSOR)})
     assert "climate.climate_1_name" in gateway.deconz_ids
     assert "sensor.sensor_2_name" not in gateway.deconz_ids
     assert len(hass.states.async_all()) == 1
@@ -138,7 +139,7 @@ async def test_climate_devices(hass):
 
 async def test_verify_state_update(hass):
     """Test that state update properly."""
-    gateway = await setup_gateway(hass, {"sensors": SENSOR})
+    gateway = await setup_gateway(hass, {"sensors": deepcopy(SENSOR)})
     assert "climate.climate_1_name" in gateway.deconz_ids
 
     thermostat = hass.states.get('climate.climate_1_name')
@@ -149,7 +150,7 @@ async def test_verify_state_update(hass):
         "e": "changed",
         "r": "sensors",
         "id": "1",
-        "config": {"on": False}
+        "state": {"on": False}
     }
     gateway.api.async_event_handler(state_update)
 
@@ -158,6 +159,8 @@ async def test_verify_state_update(hass):
 
     thermostat = hass.states.get('climate.climate_1_name')
     assert thermostat.state == 'off'
+    assert gateway.api.sensors['1'].changed_keys == \
+        {'state', 'r', 't', 'on', 'e', 'id'}
 
 
 async def test_add_new_climate_device(hass):

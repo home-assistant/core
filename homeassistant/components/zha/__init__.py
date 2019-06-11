@@ -17,7 +17,6 @@ from .core.const import (
     CONF_RADIO_TYPE, CONF_USB_PATH, DATA_ZHA, DATA_ZHA_CONFIG,
     DATA_ZHA_CORE_COMPONENT, DATA_ZHA_DISPATCHERS, DATA_ZHA_GATEWAY,
     DEFAULT_BAUDRATE, DEFAULT_RADIO_TYPE, DOMAIN, ENABLE_QUIRKS, RadioType)
-from .core.patches import apply_cluster_listener_patch
 from .core.registries import establish_device_mappings
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
@@ -90,10 +89,6 @@ async def async_setup_entry(hass, config_entry):
         # before zhaquirks is imported
         # pylint: disable=W0611, W0612
         import zhaquirks  # noqa
-
-    # patch zigpy listener to prevent flooding logs with warnings due to
-    # how zigpy implemented its listeners
-    apply_cluster_listener_patch()
 
     zha_gateway = ZHAGateway(hass, config)
     await zha_gateway.async_initialize(config_entry)

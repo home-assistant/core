@@ -6,7 +6,7 @@ import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
 
-from . import CONF_ALARM, CONF_CODE_DIGITS, HUB as hub
+from . import CONF_ALARM, CONF_CODE_DIGITS, CONF_GIID, HUB as hub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +45,14 @@ class VerisureAlarm(alarm.AlarmControlPanel):
     @property
     def name(self):
         """Return the name of the device."""
+        giid = hub.config.get(CONF_GIID)
+        if giid is not None:
+            aliass = {i['giid']: i['alias'] for i in hub.session.installations}
+            if giid in aliass.keys():
+                return '{} alarm'.format(aliass[giid])
+
+            _LOGGER.error('Verisure installation giid not found: %s', giid)
+
         return '{} alarm'.format(hub.session.installations[0]['alias'])
 
     @property

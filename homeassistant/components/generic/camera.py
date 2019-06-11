@@ -127,7 +127,7 @@ class GenericCamera(Camera):
             try:
                 websession = async_get_clientsession(
                     self.hass, verify_ssl=self.verify_ssl)
-                with async_timeout.timeout(10, loop=self.hass.loop):
+                with async_timeout.timeout(10):
                     response = await websession.get(
                         url, auth=self._auth)
                 self._last_image = await response.read()
@@ -146,7 +146,6 @@ class GenericCamera(Camera):
         """Return the name of this device."""
         return self._name
 
-    @property
-    def stream_source(self):
+    async def stream_source(self):
         """Return the source of the stream."""
         return self._stream_source

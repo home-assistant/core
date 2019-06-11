@@ -147,7 +147,7 @@ DEMO_DEVICES = [{
             'action.devices.traits.Modes'
         ],
     'type':
-    'action.devices.types.MEDIA',
+    'action.devices.types.SWITCH',
     'willReportState':
     False
 }, {
@@ -162,7 +162,7 @@ DEMO_DEVICES = [{
             'action.devices.traits.Modes'
         ],
     'type':
-    'action.devices.types.MEDIA',
+    'action.devices.types.SWITCH',
     'willReportState':
     False
 }, {
@@ -171,7 +171,7 @@ DEMO_DEVICES = [{
         'name': 'Lounge room'
     },
     'traits': ['action.devices.traits.OnOff', 'action.devices.traits.Modes'],
-    'type': 'action.devices.types.MEDIA',
+    'type': 'action.devices.types.SWITCH',
     'willReportState': False
 }, {
     'id':
@@ -182,7 +182,7 @@ DEMO_DEVICES = [{
     'traits':
     ['action.devices.traits.OnOff', 'action.devices.traits.Volume'],
     'type':
-    'action.devices.types.MEDIA',
+    'action.devices.types.SWITCH',
     'willReportState':
     False
 }, {

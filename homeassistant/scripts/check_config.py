@@ -17,7 +17,8 @@ from homeassistant.config import (
     CONF_PACKAGES, merge_packages_config, _format_config_error,
     find_config_file, load_yaml_config_file,
     extract_domain_configs, config_per_platform)
-from homeassistant.util import yaml
+
+import homeassistant.util.yaml.loader as yaml_loader
 from homeassistant.exceptions import HomeAssistantError
 
 REQUIREMENTS = ('colorlog==4.0.2',)
@@ -25,12 +26,14 @@ REQUIREMENTS = ('colorlog==4.0.2',)
 _LOGGER = logging.getLogger(__name__)
 # pylint: disable=protected-access
 MOCKS = {
-    'load': ("homeassistant.util.yaml.load_yaml", yaml.load_yaml),
-    'load*': ("homeassistant.config.load_yaml", yaml.load_yaml),
-    'secrets': ("homeassistant.util.yaml.secret_yaml", yaml.secret_yaml),
+    'load': ("homeassistant.util.yaml.loader.load_yaml",
+             yaml_loader.load_yaml),
+    'load*': ("homeassistant.config.load_yaml", yaml_loader.load_yaml),
+    'secrets': ("homeassistant.util.yaml.loader.secret_yaml",
+                yaml_loader.secret_yaml),
 }
 SILENCE = (
-    'homeassistant.scripts.check_config.yaml.clear_secret_cache',
+    'homeassistant.scripts.check_config.yaml_loader.clear_secret_cache',
 )
 
 PATCHES = {}
@@ -195,7 +198,8 @@ def check(config_dir, secrets=False):
 
     if secrets:
         # Ensure !secrets point to the patched function
-        yaml.yaml.SafeLoader.add_constructor('!secret', yaml.secret_yaml)
+        yaml_loader.yaml.SafeLoader.add_constructor('!secret',
+                                                    yaml_loader.secret_yaml)
 
     try:
         hass = core.HomeAssistant()
@@ -203,7 +207,7 @@ def check(config_dir, secrets=False):
 
         res['components'] = hass.loop.run_until_complete(
             check_ha_config_file(hass))
-        res['secret_cache'] = OrderedDict(yaml.__SECRET_CACHE)
+        res['secret_cache'] = OrderedDict(yaml_loader.__SECRET_CACHE)
 
         for err in res['components'].errors:
             domain = err.domain or ERROR_STR
@@ -221,7 +225,8 @@ def check(config_dir, secrets=False):
             pat.stop()
         if secrets:
             # Ensure !secrets point to the original function
-            yaml.yaml.SafeLoader.add_constructor('!secret', yaml.secret_yaml)
+            yaml_loader.yaml.SafeLoader.add_constructor(
+                '!secret', yaml_loader.secret_yaml)
         bootstrap.clear_secret_cache()
 
     return res
@@ -239,7 +244,7 @@ def line_info(obj, **kwargs):
 def dump_dict(layer, indent_count=3, listi=False, **kwargs):
     """Display a dict.
 
-    A friendly version of print yaml.yaml.dump(config).
+    A friendly version of print yaml_loader.yaml.dump(config).
     """
     def sort_dict_key(val):
         """Return the dict key for sorting."""
@@ -307,11 +312,13 @@ async def check_ha_config_file(hass):
             return result.add_error("File configuration.yaml not found.")
         config = await hass.async_add_executor_job(
             load_yaml_config_file, config_path)
+    except FileNotFoundError:
+        return result.add_error("File not found: {}".format(config_path))
     except HomeAssistantError as err:
         return result.add_error(
             "Error loading {}: {}".format(config_path, err))
     finally:
-        yaml.clear_secret_cache()
+        yaml_loader.clear_secret_cache()
 
     # Extract and validate core [homeassistant] config
     try:
@@ -338,17 +345,17 @@ async def check_ha_config_file(hass):
             result.add_error("Integration not found: {}".format(domain))
             continue
 
-        try:
-            component = integration.get_component()
-        except ImportError:
-            result.add_error("Component not found: {}".format(domain))
-            continue
-
         if (not hass.config.skip_pip and integration.requirements and
                 not await requirements.async_process_requirements(
                     hass, integration.domain, integration.requirements)):
             result.add_error("Unable to install all requirements: {}".format(
                 ', '.join(integration.requirements)))
+            continue
+
+        try:
+            component = integration.get_component()
+        except ImportError:
+            result.add_error("Component not found: {}".format(domain))
             continue
 
         if hasattr(component, 'CONFIG_SCHEMA'):

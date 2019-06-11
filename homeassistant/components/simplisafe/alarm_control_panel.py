@@ -119,8 +119,6 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
         """Update alarm status."""
         from simplipy.system import SystemStates
 
-        await self._system.update()
-
         self._attrs[ATTR_ALARM_ACTIVE] = self._system.alarm_going_off
         if self._system.temperature:
             self._attrs[ATTR_TEMPERATURE] = self._system.temperature
