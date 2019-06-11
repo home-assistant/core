@@ -4,8 +4,9 @@ All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
 from homeassistant.components.remote import (
-    ATTR_ACTIVITY, ATTR_COMMAND, ATTR_DELAY_SECS, ATTR_DEVICE,
-    ATTR_NUM_REPEATS, DOMAIN, SERVICE_SEND_COMMAND)
+    ATTR_ACTIVITY, ATTR_ALTERNATIVE, ATTR_COMMAND, ATTR_DELAY_SECS,
+    ATTR_DEVICE, ATTR_NUM_REPEATS, ATTR_TIMEOUT, DOMAIN,
+    SERVICE_LEARN_COMMAND, SERVICE_SEND_COMMAND)
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
 from homeassistant.loader import bind_hass
@@ -53,3 +54,26 @@ def send_command(hass, command, entity_id=None, device=None,
         data[ATTR_DELAY_SECS] = delay_secs
 
     hass.services.call(DOMAIN, SERVICE_SEND_COMMAND, data)
+
+
+@bind_hass
+def learn_command(hass, entity_id=None, device=None, command=None,
+                  alternative=None, timeout=None):
+    """Learn a command from a device."""
+    data = {}
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    if device:
+        data[ATTR_DEVICE] = device
+
+    if command:
+        data[ATTR_COMMAND] = command
+
+    if alternative:
+        data[ATTR_ALTERNATIVE] = alternative
+
+    if timeout:
+        data[ATTR_TIMEOUT] = timeout
+
+    hass.services.call(DOMAIN, SERVICE_LEARN_COMMAND, data)

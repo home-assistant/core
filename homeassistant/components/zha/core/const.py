@@ -5,6 +5,7 @@ import logging
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
+from homeassistant.components.lock import DOMAIN as LOCK
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
 
@@ -27,6 +28,7 @@ COMPONENTS = (
     BINARY_SENSOR,
     FAN,
     LIGHT,
+    LOCK,
     SENSOR,
     SWITCH,
 )
@@ -92,6 +94,7 @@ ZONE_CHANNEL = ZONE = 'ias_zone'
 ELECTRICAL_MEASUREMENT_CHANNEL = 'electrical_measurement'
 POWER_CONFIGURATION_CHANNEL = 'power'
 EVENT_RELAY_CHANNEL = 'event_relay'
+DOORLOCK_CHANNEL = 'door_lock'
 
 SIGNAL_ATTR_UPDATED = 'attribute_updated'
 SIGNAL_MOVE_LEVEL = "move_level"
@@ -104,6 +107,8 @@ QUIRK_APPLIED = 'quirk_applied'
 QUIRK_CLASS = 'quirk_class'
 MANUFACTURER_CODE = 'manufacturer_code'
 POWER_SOURCE = 'power_source'
+MAINS_POWERED = 'Mains'
+BATTERY_OR_UNKNOWN = 'Battery or Unknown'
 
 BELLOWS = 'bellows'
 ZHA = 'homeassistant.components.zha'

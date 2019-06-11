@@ -2,6 +2,7 @@
 import json
 from typing import List, Dict, Any
 import pathlib
+import importlib
 
 import attr
 
@@ -92,3 +93,10 @@ class Integration:
             return
 
         self.manifest = manifest
+
+    def import_pkg(self, platform=None):
+        """Import the Python file."""
+        pkg = "homeassistant.components.{}".format(self.domain)
+        if platform is not None:
+            pkg += ".{}".format(platform)
+        return importlib.import_module(pkg)

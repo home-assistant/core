@@ -2,15 +2,19 @@
 import logging
 import time
 
+from pyHS100 import SmartBulb, SmartDeviceException
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR, SUPPORT_COLOR_TEMP, Light)
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_mired_to_kelvin as mired_to_kelvin)
 
 from . import CONF_LIGHT, DOMAIN as TPLINK_DOMAIN
+from .common import async_add_entities_retry
 
 PARALLEL_UPDATES = 0
 
@@ -31,15 +35,33 @@ async def async_setup_platform(hass, config, add_entities,
                     'convert to use the tplink component.')
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up discovered switches."""
-    devs = []
-    for dev in hass.data[TPLINK_DOMAIN][CONF_LIGHT]:
-        devs.append(TPLinkSmartBulb(dev))
-
-    async_add_entities(devs, True)
+async def async_setup_entry(
+        hass: HomeAssistantType,
+        config_entry,
+        async_add_entities
+):
+    """Set up switches."""
+    await async_add_entities_retry(
+        hass,
+        async_add_entities,
+        hass.data[TPLINK_DOMAIN][CONF_LIGHT],
+        add_entity
+    )
 
     return True
+
+
+def add_entity(device: SmartBulb, async_add_entities):
+    """Check if device is online and add the entity."""
+    # Attempt to get the sysinfo. If it fails, it will raise an
+    # exception that is caught by async_add_entities_retry which
+    # will try again later.
+    device.get_sysinfo()
+
+    async_add_entities(
+        [TPLinkSmartBulb(device)],
+        update_before_add=True
+    )
 
 
 def brightness_to_percentage(byt):
@@ -55,7 +77,7 @@ def brightness_from_percentage(percent):
 class TPLinkSmartBulb(Light):
     """Representation of a TPLink Smart Bulb."""
 
-    def __init__(self, smartbulb) -> None:
+    def __init__(self, smartbulb: SmartBulb) -> None:
         """Initialize the bulb."""
         self.smartbulb = smartbulb
         self._sysinfo = None
@@ -69,25 +91,29 @@ class TPLinkSmartBulb(Light):
         self._max_mireds = None
         self._emeter_params = {}
 
+        self._mac = None
+        self._alias = None
+        self._model = None
+
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._sysinfo["mac"]
+        return self._mac
 
     @property
     def name(self):
         """Return the name of the Smart Bulb."""
-        return self._sysinfo["alias"]
+        return self._alias
 
     @property
     def device_info(self):
         """Return information about the device."""
         return {
-            "name": self.name,
-            "model": self._sysinfo["model"],
+            "name": self._alias,
+            "model": self._model,
             "manufacturer": 'TP-Link',
             "connections": {
-                (dr.CONNECTION_NETWORK_MAC, self._sysinfo["mac"])
+                (dr.CONNECTION_NETWORK_MAC, self._mac)
             },
             "sw_version": self._sysinfo["sw_ver"],
         }
@@ -104,7 +130,6 @@ class TPLinkSmartBulb(Light):
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
-        from pyHS100 import SmartBulb
         self.smartbulb.state = SmartBulb.BULB_STATE_ON
 
         if ATTR_COLOR_TEMP in kwargs:
@@ -122,7 +147,6 @@ class TPLinkSmartBulb(Light):
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
-        from pyHS100 import SmartBulb
         self.smartbulb.state = SmartBulb.BULB_STATE_OFF
 
     @property
@@ -157,7 +181,6 @@ class TPLinkSmartBulb(Light):
 
     def update(self):
         """Update the TP-Link Bulb's state."""
-        from pyHS100 import SmartDeviceException, SmartBulb
         try:
             if self._supported_features is None:
                 self.get_features()
@@ -212,6 +235,9 @@ class TPLinkSmartBulb(Light):
         """Determine all supported features in one go."""
         self._sysinfo = self.smartbulb.sys_info
         self._supported_features = 0
+        self._mac = self.smartbulb.mac
+        self._alias = self.smartbulb.alias
+        self._model = self.smartbulb.model
 
         if self.smartbulb.is_dimmable:
             self._supported_features += SUPPORT_BRIGHTNESS

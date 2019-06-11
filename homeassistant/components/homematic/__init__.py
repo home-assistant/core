@@ -1,5 +1,5 @@
 """Support for HomeMatic devices."""
-from datetime import timedelta
+from datetime import timedelta, datetime
 from functools import partial
 import logging
 
@@ -27,14 +27,14 @@ DISCOVER_BINARY_SENSORS = 'homematic.binary_sensor'
 DISCOVER_COVER = 'homematic.cover'
 DISCOVER_CLIMATE = 'homematic.climate'
 DISCOVER_LOCKS = 'homematic.locks'
-DISCOVER_BUTTONS = 'homematic.binary_sensor'
+DISCOVER_BATTERY = 'homematic.battery'
 
 ATTR_DISCOVER_DEVICES = 'devices'
-ATTR_BATTERY_DEVICES = 'battery_devices'
 ATTR_PARAM = 'param'
 ATTR_CHANNEL = 'channel'
 ATTR_ADDRESS = 'address'
 ATTR_VALUE = 'value'
+ATTR_VALUE_TYPE = 'value_type'
 ATTR_INTERFACE = 'interface'
 ATTR_ERRORCODE = 'error'
 ATTR_MESSAGE = 'message'
@@ -43,6 +43,9 @@ ATTR_TIME = 'time'
 ATTR_UNIQUE_ID = 'unique_id'
 ATTR_PARAMSET_KEY = 'paramset_key'
 ATTR_PARAMSET = 'paramset'
+ATTR_DISCOVERY_TYPE = 'discovery_type'
+ATTR_LOW_BAT = 'LOW_BAT'
+ATTR_LOWBAT = 'LOWBAT'
 
 
 EVENT_KEYPRESS = 'homematic.keypress'
@@ -87,8 +90,7 @@ HM_DEVICE_TYPES = {
         'SmartwareMotion', 'IPWeatherSensorPlus', 'MotionIPV2', 'WaterIP',
         'IPMultiIO', 'TiltIP', 'IPShutterContactSabotage'],
     DISCOVER_COVER: ['Blind', 'KeyBlind', 'IPKeyBlind', 'IPKeyBlindTilt'],
-    DISCOVER_LOCKS: ['KeyMatic'],
-    DISCOVER_BUTTONS: ['HmIP-WRC6', 'HmIP-RC8']
+    DISCOVER_LOCKS: ['KeyMatic']
 }
 
 HM_IGNORE_DISCOVERY_NODE = [
@@ -234,6 +236,10 @@ SCHEMA_SERVICE_SET_DEVICE_VALUE = vol.Schema({
     vol.Required(ATTR_CHANNEL): vol.Coerce(int),
     vol.Required(ATTR_PARAM): vol.All(cv.string, vol.Upper),
     vol.Required(ATTR_VALUE): cv.match_all,
+    vol.Optional(ATTR_VALUE_TYPE): vol.In([
+        'boolean', 'dateTime.iso8601',
+        'double', 'int', 'string'
+    ]),
     vol.Optional(ATTR_INTERFACE): cv.string,
 })
 
@@ -378,6 +384,22 @@ def setup(hass, config):
         channel = service.data.get(ATTR_CHANNEL)
         param = service.data.get(ATTR_PARAM)
         value = service.data.get(ATTR_VALUE)
+        value_type = service.data.get(ATTR_VALUE_TYPE)
+
+        # Convert value into correct XML-RPC Type.
+        # https://docs.python.org/3/library/xmlrpc.client.html#xmlrpc.client.ServerProxy
+        if value_type:
+            if value_type == 'int':
+                value = int(value)
+            elif value_type == 'double':
+                value = float(value)
+            elif value_type == 'boolean':
+                value = bool(value)
+            elif value_type == 'dateTime.iso8601':
+                value = datetime.strptime(value, '%Y%m%dT%H:%M:%S')
+            else:
+                # Default is 'string'
+                value = str(value)
 
         # Device not found
         hmdevice = _device_from_servicecall(hass, service)
@@ -465,7 +487,7 @@ def _system_callback_handler(hass, config, src, *args):
                     ('sensor', DISCOVER_SENSORS),
                     ('climate', DISCOVER_CLIMATE),
                     ('lock', DISCOVER_LOCKS),
-                    ('binary_sensor', DISCOVER_SWITCHES)):
+                    ('binary_sensor', DISCOVER_BATTERY)):
                 # Get all devices of a specific type
                 found_devices = _get_devices(
                     hass, discovery_type, addresses, interface)
@@ -473,21 +495,10 @@ def _system_callback_handler(hass, config, src, *args):
                 # When devices of this type are found
                 # they are setup in HASS and a discovery event is fired
                 if found_devices:
-                    discovery_info = {ATTR_DISCOVER_DEVICES: found_devices,
-                                      ATTR_BATTERY_DEVICES: False}
-
-                    # Switches are skipped as a component. They will only
-                    # appear in hass as a battery device.
-                    if not discovery_type == DISCOVER_SWITCHES:
-                        discovery.load_platform(hass, component_name, DOMAIN,
-                                                discovery_info, config)
-
-                    # Pass all devices to binary sensor discovery,
-                    # check whether they are battery operated and
-                    # add them as a battery operated binary sensor device.
-                    discovery_info[ATTR_BATTERY_DEVICES] = True
-                    discovery.load_platform(hass, 'binary_sensor', DOMAIN,
-                                            discovery_info, config)
+                    discovery.load_platform(hass, component_name, DOMAIN, {
+                        ATTR_DISCOVER_DEVICES: found_devices,
+                        ATTR_DISCOVERY_TYPE: discovery_type,
+                    }, config)
 
     # Homegear error message
     elif src == 'error':
@@ -509,7 +520,8 @@ def _get_devices(hass, discovery_type, keys, interface):
         metadata = {}
 
         # Class not supported by discovery type
-        if class_name not in HM_DEVICE_TYPES[discovery_type]:
+        if discovery_type != DISCOVER_BATTERY and \
+                class_name not in HM_DEVICE_TYPES[discovery_type]:
             continue
 
         # Load metadata needed to generate a parameter list
@@ -517,6 +529,15 @@ def _get_devices(hass, discovery_type, keys, interface):
             metadata.update(device.SENSORNODE)
         elif discovery_type == DISCOVER_BINARY_SENSORS:
             metadata.update(device.BINARYNODE)
+        elif discovery_type == DISCOVER_BATTERY:
+            if ATTR_LOWBAT in device.ATTRIBUTENODE:
+                metadata.update(
+                    {ATTR_LOWBAT: device.ATTRIBUTENODE[ATTR_LOWBAT]})
+            elif ATTR_LOW_BAT in device.ATTRIBUTENODE:
+                metadata.update(
+                    {ATTR_LOW_BAT: device.ATTRIBUTENODE[ATTR_LOW_BAT]})
+            else:
+                continue
         else:
             metadata.update({None: device.ELEMENT})
 

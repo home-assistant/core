@@ -73,7 +73,6 @@ async def async_migrate_entry(hass, entry):
 
                 # Remove old entity entry.
                 registry.async_remove(entity_id)
-                await hass.async_block_till_done()
 
                 # Format old unique_id.
                 unique_id = format_unique_id(entry.data[CONF_TOKEN], unique_id)

@@ -159,7 +159,7 @@ async def async_unload_entry(hass, entry):
 
 
 class CoverDevice(Entity):
-    """Representation a cover."""
+    """Representation of a cover."""
 
     @property
     def current_cover_position(self):

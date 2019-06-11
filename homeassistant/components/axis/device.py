@@ -83,19 +83,23 @@ class AxisNetworkDevice:
         self.product_type = self.api.vapix.params.prodtype
 
         if self.config_entry.options[CONF_CAMERA]:
+
             self.hass.async_create_task(
                 self.hass.config_entries.async_forward_entry_setup(
                     self.config_entry, 'camera'))
 
         if self.config_entry.options[CONF_EVENTS]:
-            task = self.hass.async_create_task(
-                self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, 'binary_sensor'))
 
             self.api.stream.connection_status_callback = \
                 self.async_connection_status_callback
             self.api.enable_events(event_callback=self.async_event_callback)
-            task.add_done_callback(self.start)
+
+            platform_tasks = [
+                self.hass.config_entries.async_forward_entry_setup(
+                    self.config_entry, platform)
+                for platform in ['binary_sensor', 'switch']
+            ]
+            self.hass.async_create_task(self.start(platform_tasks))
 
         self.config_entry.add_update_listener(self.async_new_address_callback)
 
@@ -145,9 +149,9 @@ class AxisNetworkDevice:
         if action == 'add':
             async_dispatcher_send(self.hass, self.event_new_sensor, event_id)
 
-    @callback
-    def start(self, fut):
-        """Start the event stream."""
+    async def start(self, platform_tasks):
+        """Start the event stream when all platforms are loaded."""
+        await asyncio.gather(*platform_tasks)
         self.api.start()
 
     @callback
@@ -157,15 +161,22 @@ class AxisNetworkDevice:
 
     async def async_reset(self):
         """Reset this device to default state."""
-        self.api.stop()
+        platform_tasks = []
 
         if self.config_entry.options[CONF_CAMERA]:
-            await self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, 'camera')
+            platform_tasks.append(
+                self.hass.config_entries.async_forward_entry_unload(
+                    self.config_entry, 'camera'))
 
         if self.config_entry.options[CONF_EVENTS]:
-            await self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, 'binary_sensor')
+            self.api.stop()
+            platform_tasks += [
+                self.hass.config_entries.async_forward_entry_unload(
+                    self.config_entry, platform)
+                for platform in ['binary_sensor', 'switch']
+            ]
+
+        await asyncio.gather(*platform_tasks)
 
         for unsub_dispatcher in self.listeners:
             unsub_dispatcher()
@@ -185,13 +196,22 @@ async def get_device(hass, config):
         port=config[CONF_PORT], web_proto='http')
 
     device.vapix.initialize_params(preload_data=False)
+    device.vapix.initialize_ports()
 
     try:
         with async_timeout.timeout(15):
-            await hass.async_add_executor_job(
-                device.vapix.params.update_brand)
-            await hass.async_add_executor_job(
-                device.vapix.params.update_properties)
+
+            await asyncio.gather(
+                hass.async_add_executor_job(
+                    device.vapix.params.update_brand),
+
+                hass.async_add_executor_job(
+                    device.vapix.params.update_properties),
+
+                hass.async_add_executor_job(
+                    device.vapix.ports.update)
+            )
+
         return device
 
     except axis.Unauthorized:

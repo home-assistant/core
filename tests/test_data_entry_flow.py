@@ -21,16 +21,13 @@ def manager():
             raise data_entry_flow.UnknownHandler
 
         flow = handler()
-        flow.init_step = context.get('init_step', 'init') \
-            if context is not None else 'init'
-        flow.source = context.get('source') \
-            if context is not None else 'user_input'
+        flow.init_step = context.get('init_step', 'init')
+        flow.source = context.get('source')
         return flow
 
     async def async_add_entry(flow, result):
         if result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
-            result['source'] = flow.context.get('source') \
-                if flow.context is not None else 'user'
+            result['source'] = flow.context.get('source')
             entries.append(result)
         return result
 
@@ -173,7 +170,7 @@ async def test_create_saves_data(manager):
     assert entry['handler'] == 'test'
     assert entry['title'] == 'Test Title'
     assert entry['data'] == 'Test Data'
-    assert entry['source'] == 'user'
+    assert entry['source'] is None
 
 
 async def test_discovery_init_flow(manager):

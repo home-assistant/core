@@ -4,6 +4,7 @@ import logging
 import requests
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components.discovery import SERVICE_WEMO
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
@@ -68,7 +69,20 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up for WeMo devices."""
+    hass.data[DOMAIN] = config
+
+    if DOMAIN in config:
+        hass.async_create_task(hass.config_entries.flow.async_init(
+            DOMAIN, context={'source': config_entries.SOURCE_IMPORT}))
+
+    return True
+
+
+async def async_setup_entry(hass, entry):
+    """Set up a wemo config entry."""
     import pywemo
+
+    config = hass.data[DOMAIN]
 
     # Keep track of WeMo devices
     devices = []
@@ -76,14 +90,14 @@ def setup(hass, config):
     # Keep track of WeMo device subscriptions for push updates
     global SUBSCRIPTION_REGISTRY
     SUBSCRIPTION_REGISTRY = pywemo.SubscriptionRegistry()
-    SUBSCRIPTION_REGISTRY.start()
+    await hass.async_add_executor_job(SUBSCRIPTION_REGISTRY.start)
 
     def stop_wemo(event):
         """Shutdown Wemo subscriptions and subscription thread on exit."""
         _LOGGER.debug("Shutting down WeMo event subscriptions")
         SUBSCRIPTION_REGISTRY.stop()
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_wemo)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_wemo)
 
     def setup_url_for_device(device):
         """Determine setup.xml url for given device."""
@@ -119,7 +133,7 @@ def setup(hass, config):
         discovery.load_platform(
             hass, component, DOMAIN, discovery_info, config)
 
-    discovery.listen(hass, SERVICE_WEMO, discovery_dispatch)
+    discovery.async_listen(hass, SERVICE_WEMO, discovery_dispatch)
 
     def discover_wemo_devices(now):
         """Run discovery for WeMo devices."""
@@ -145,7 +159,7 @@ def setup(hass, config):
                     if d[1].serialnumber == device.serialnumber]:
                 devices.append((url, device))
 
-        if config.get(DOMAIN, {}).get(CONF_DISCOVERY):
+        if config.get(DOMAIN, {}).get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
             _LOGGER.debug("Scanning network for WeMo devices...")
             for device in pywemo.discover_devices():
                 if not [d[1] for d in devices
@@ -168,6 +182,7 @@ def setup(hass, config):
 
         _LOGGER.debug("WeMo device discovery has finished")
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, discover_wemo_devices)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_START, discover_wemo_devices)
 
     return True
