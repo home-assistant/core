@@ -117,7 +117,6 @@ class PS4Device(MediaPlayerDevice):
     @callback
     def status_callback(self):
         """Handle status callback. Parse status."""
-        _LOGGER.warning("Status Changed for Ps4")
         self._parse_status()
 
     @callback
