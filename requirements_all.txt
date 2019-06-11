@@ -1624,8 +1624,13 @@ pytradfri[async]==6.0.1
 pytrafikverket==0.1.5.8
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
+=======
+# homeassistant.components.ubee
+pyubee==0.7
+>>>>>>> Bump pyubee to 0.7 to support more models (#24477)
 
 # homeassistant.components.binary_sensor.uptimerobot
 =======
