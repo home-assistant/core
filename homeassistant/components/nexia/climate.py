@@ -2,7 +2,7 @@
 import logging
 import datetime
 
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_FAN_MODE, ATTR_FAN_LIST, ATTR_OPERATION_MODE, ATTR_OPERATION_LIST, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_STEP, ATTR_CURRENT_HUMIDITY, ATTR_MIN_HUMIDITY, ATTR_MAX_HUMIDITY, ATTR_HUMIDITY,
@@ -135,7 +135,6 @@ class NexiaZone(ClimateDevice):
         else:
             return "idle"
 
-
     @property
     def operation_mode(self):
         """Return current operation ie. heat, cool, idle."""
@@ -237,10 +236,10 @@ class NexiaZone(ClimateDevice):
         self._device.set_emergency_heat(True, self._thermostat_id)
 
     def turn_off(self):
-        self.set_operation_mode(self._device.OPERATION_MODE_OFF, self._thermostat_id)
+        self.set_operation_mode(self._device.OPERATION_MODE_OFF)
 
     def turn_on(self):
-        self.set_operation_mode(self._device.OPERATION_MODE_AUTO, self._thermostat_id)
+        self.set_operation_mode(self._device.OPERATION_MODE_AUTO)
 
     def set_swing_mode(self, swing_mode):
         raise NotImplementedError("set_swing_mode is not supported by this device")

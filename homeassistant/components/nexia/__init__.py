@@ -72,7 +72,8 @@ def setup(hass, config):
     scan_interval = timedelta(seconds=conf.get(CONF_SCAN_INTERVAL, NexiaThermostat.DEFAULT_UPDATE_RATE))
 
     try:
-        thermostat = NexiaThermostat(username=username, password=password, house_id=house_id, update_rate=NexiaThermostat.DISABLE_AUTO_UPDATE)
+        thermostat = NexiaThermostat(username=username, password=password, house_id=house_id,
+                                     update_rate=NexiaThermostat.DISABLE_AUTO_UPDATE)
         hass.data[DATA_NEXIA] = {NEXIA_DEVICE: thermostat, NEXIA_SCAN_INTERVAL: scan_interval}
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Nexia service: %s", str(ex))

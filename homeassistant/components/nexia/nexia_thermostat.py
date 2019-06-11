@@ -573,7 +573,7 @@ class NexiaThermostat:
         :return: (int, int)
         """
         return (self._get_thermostat_key("temperature_low_limit", thermostat_id),
-               self._get_thermostat_key("temperature_high_limit", thermostat_id))
+                self._get_thermostat_key("temperature_high_limit", thermostat_id))
 
     def get_variable_fan_speed_limits(self, thermostat_id=None):
         """

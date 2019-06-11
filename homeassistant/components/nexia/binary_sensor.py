@@ -16,9 +16,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensors = list()
     for thermostat_id in thermostat.get_thermostat_ids():
 
-        sensors.append(NexiaBinarySensor(thermostat, scan_interval, thermostat_id, "is_blower_active", "Blower Active", None))
+        sensors.append(NexiaBinarySensor(thermostat, scan_interval, thermostat_id, "is_blower_active",
+                                         "Blower Active", None))
         if thermostat.has_emergency_heat():
-            sensors.append(NexiaBinarySensor(thermostat, scan_interval, thermostat_id, "is_emergency_heat_active", "Emergency Heat Active", None))
+            sensors.append(NexiaBinarySensor(thermostat, scan_interval, thermostat_id, "is_emergency_heat_active",
+                                             "Emergency Heat Active", None))
 
     add_entities(sensors, True)
 
@@ -40,7 +42,6 @@ class NexiaBinarySensor(BinarySensorDevice):
         self._device_class = sensor_class
         self._scan_interval = scan_interval
         self.update = Throttle(scan_interval)(self._update)
-
 
     @property
     def name(self):

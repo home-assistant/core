@@ -17,21 +17,26 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensors = list()
 
     for thermostat_id in thermostat.get_thermostat_ids():
-        sensors.append(NexiaSensor(thermostat, scan_interval, thermostat_id, "get_system_status", "System Status", None, None))
+        sensors.append(NexiaSensor(thermostat, scan_interval, thermostat_id, "get_system_status",
+                                   "System Status", None, None))
 
         if thermostat.has_variable_speed_compressor():
-            sensors.append(NexiaSensor(thermostat, scan_interval, thermostat_id, "get_current_compressor_speed", "Current Compressor Speed", None, "%",
+            sensors.append(NexiaSensor(thermostat, scan_interval, thermostat_id, "get_current_compressor_speed",
+                                       "Current Compressor Speed", None, "%",
                                        percent_conv))
-            sensors.append(NexiaSensor(thermostat, scan_interval, thermostat_id, "get_requested_compressor_speed", "Requested Compressor Speed", None,
+            sensors.append(NexiaSensor(thermostat, scan_interval, thermostat_id, "get_requested_compressor_speed",
+                                       "Requested Compressor Speed", None,
                                        "%", percent_conv))
 
         if thermostat.has_outdoor_temperature():
             unit = (TEMP_CELSIUS if thermostat.get_unit() == thermostat.UNIT_CELSIUS else TEMP_FAHRENHEIT)
-            sensors.append(NexiaSensor(thermostat, scan_interval, thermostat_id, "get_outdoor_temperature", "Outdoor Temperature",
+            sensors.append(NexiaSensor(thermostat, scan_interval, thermostat_id, "get_outdoor_temperature",
+                                       "Outdoor Temperature",
                                        DEVICE_CLASS_TEMPERATURE, unit))
 
         if thermostat.has_relative_humidity():
-            sensors.append(NexiaSensor(thermostat, scan_interval, thermostat_id, "get_relative_humidity", "Relative Humidity", DEVICE_CLASS_HUMIDITY,
+            sensors.append(NexiaSensor(thermostat, scan_interval, thermostat_id, "get_relative_humidity",
+                                       "Relative Humidity", DEVICE_CLASS_HUMIDITY,
                                        "%", percent_conv))
 
         for zone in thermostat.get_zone_ids(thermostat_id):
@@ -44,11 +49,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             sensors.append(NexiaZoneSensor(thermostat, scan_interval, thermostat_id, zone, "get_zone_setpoint_status",
                                            f"{name} Zone Setpoint Status", None, None))
 
-
-
-
     add_entities(sensors, True)
-
 
 
 def percent_conv(val):
@@ -56,7 +57,8 @@ def percent_conv(val):
 
 
 class NexiaSensor(Entity):
-    def __init__(self, device, scan_interval, thermostat_id, sensor_call, sensor_name, sensor_class, sensor_unit, modifier=None):
+    def __init__(self, device, scan_interval, thermostat_id, sensor_call, sensor_name, sensor_class, sensor_unit,
+                 modifier=None):
         """Initialize the sensor."""
         self._device = device
         self._thermostat_id = thermostat_id
@@ -68,7 +70,6 @@ class NexiaSensor(Entity):
         self._modifier = modifier
         self._scan_interval = scan_interval
         self.update = Throttle(scan_interval)(self._update)
-
 
     @property
     def name(self):
@@ -114,8 +115,10 @@ class NexiaSensor(Entity):
 
 
 class NexiaZoneSensor(NexiaSensor):
-    def __init__(self, device, scan_interval, thermostat_id, zone, sensor_call, sensor_name, sensor_class, sensor_unit, modifier=None):
-        super().__init__(device, scan_interval, thermostat_id, sensor_call, sensor_name, sensor_class, sensor_unit, modifier)
+    def __init__(self, device, scan_interval, thermostat_id, zone, sensor_call, sensor_name, sensor_class, sensor_unit,
+                 modifier=None):
+        super().__init__(device, scan_interval, thermostat_id, sensor_call, sensor_name, sensor_class, sensor_unit,
+                         modifier)
         self._zone = zone
 
     @property
