@@ -35,6 +35,7 @@ CUSTOM_CLUSTER_MAPPINGS = {}
 EVENT_RELAY_CLUSTERS = []
 NO_SENSOR_CLUSTERS = []
 BINDABLE_CLUSTERS = []
+INPUT_BIND_ONLY_CLUSTERS = []
 BINARY_SENSOR_CLUSTERS = set()
 LIGHT_CLUSTERS = set()
 SWITCH_CLUSTERS = set()
@@ -109,6 +110,10 @@ def establish_device_mappings():
     BINDABLE_CLUSTERS.append(zcl.clusters.general.LevelControl.cluster_id)
     BINDABLE_CLUSTERS.append(zcl.clusters.general.OnOff.cluster_id)
     BINDABLE_CLUSTERS.append(zcl.clusters.lighting.Color.cluster_id)
+
+    INPUT_BIND_ONLY_CLUSTERS.append(
+        zcl.clusters.lightlink.LightLink.cluster_id
+    )
 
     DEVICE_CLASS[zha.PROFILE_ID].update({
         zha.DeviceType.SMART_PLUG: SWITCH,

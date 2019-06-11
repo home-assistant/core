@@ -172,6 +172,7 @@ def _async_handle_single_cluster_matches(hass, endpoint, zha_device,
                     cluster,
                     is_new_join,
                 ))
+            continue
 
         if cluster.cluster_id not in profile_clusters:
             cluster_match_results.append(_async_handle_single_cluster_match(
