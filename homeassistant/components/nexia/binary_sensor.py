@@ -17,7 +17,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for thermostat_id in thermostat.get_thermostat_ids():
 
         sensors.append(NexiaBinarySensor(thermostat, scan_interval, thermostat_id, "is_blower_active", "Blower Active", None))
-        if thermostat.has_emergency_heat():
+        if thermostat.has_emergency_heat(thermostat_id):
             sensors.append(NexiaBinarySensor(thermostat, scan_interval, thermostat_id, "is_emergency_heat_active", "Emergency Heat Active", None))
 
     add_entities(sensors, True)
