@@ -1,6 +1,7 @@
 """Constants for PlayStation 4."""
 DEFAULT_NAME = "PlayStation 4"
 DEFAULT_REGION = "United States"
+DEFAULT_ALIAS = 'Home-Assistant'
 DOMAIN = 'ps4'
 PS4_DATA = 'ps4_data'
 
