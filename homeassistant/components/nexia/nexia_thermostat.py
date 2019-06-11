@@ -581,7 +581,7 @@ class NexiaThermostat:
         :param thermostat_id: int - the ID of the thermostat to use
         :return: (float, float)
         """
-        if self.has_variable_fan_speed:
+        if self.has_variable_fan_speed(thermostat_id):
             return self._get_thermostat_key("min_fan_speed", thermostat_id), \
                    self._get_thermostat_key("max_fan_speed", thermostat_id)
         else:
@@ -788,7 +788,7 @@ class NexiaThermostat:
         :param thermostat_id: int - the ID of the thermostat to use
         :return: None
         """
-        if self.has_emergency_heat():
+        if self.has_emergency_heat(thermostat_id):
             url = self._get_thermostat_put_url("emergency_heat", thermostat_id)
             data = {"emergency_heat_active": True if emergency_heat_on else False}
             self._put_url(url, data)
@@ -804,7 +804,7 @@ class NexiaThermostat:
         :param thermostat_id: int - the ID of the thermostat to use
         :return: None
         """
-        if self.has_relative_humidity():
+        if self.has_relative_humidity(thermostat_id):
             (min_humidity, max_humidity) = self.get_humidity_setpoint_limits(thermostat_id)
 
             if min_humidity <= dehumidify_setpoint <= max_humidity:

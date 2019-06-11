@@ -1,4 +1,4 @@
-"""Support for Honeywell Round Connected and Honeywell Evohome thermostats."""
+"""Support for Nexia / Trane XL thermostats."""
 import logging
 import datetime
 
@@ -181,14 +181,14 @@ class NexiaZone(ClimateDevice):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
 
-        (min_temp, max_temp) = self._device.get_setpoint_limits()
+        (min_temp, max_temp) = self._device.get_setpoint_limits(self._thermostat_id)
         data = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_FAN_MODE: self._device.get_fan_mode(self._thermostat_id),
             ATTR_OPERATION_MODE: self.mode,
             ATTR_TARGET_TEMP_HIGH: self._device.get_zone_cooling_setpoint(self._thermostat_id, self._zone),
             ATTR_TARGET_TEMP_LOW: self._device.get_zone_heating_setpoint(self._thermostat_id, self._zone),
-            ATTR_TARGET_TEMP_STEP: 1.0 if self._device.get_unit() == self._device.UNIT_FAHRENHEIT else 0.5,
+            ATTR_TARGET_TEMP_STEP: 1.0 if self._device.get_unit(self._thermostat_id) == self._device.UNIT_FAHRENHEIT else 0.5,
             ATTR_MIN_TEMP: min_temp,
             ATTR_MAX_TEMP: max_temp,
             ATTR_FAN_LIST: self._device.FAN_MODES,
@@ -259,5 +259,3 @@ class NexiaZone(ClimateDevice):
         """Update the state."""
         if self._device.last_update is None or datetime.datetime.now() - self._device.last_update > self._scan_interval:
             self._device.update()
-
-
