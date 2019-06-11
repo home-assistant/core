@@ -1,5 +1,6 @@
 """Support for PlayStation 4 consoles."""
 import logging
+import asyncio
 
 import voluptuous as vol
 
@@ -73,16 +74,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up PS4 Platform."""
-    import pyps4_homeassistant as pyps4
+    import pyps4_homeassistant.ps4 as pyps4
     games_file = hass.config.path(GAMES_FILE)
     creds = config.data[CONF_TOKEN]
     device_list = []
-    handler = hass.data[PS4_DATA].handler
     for device in config.data['devices']:
         host = device[CONF_HOST]
         region = device[CONF_REGION]
         name = device[CONF_NAME]
-        ps4 = pyps4.Ps4(host, creds, client=handler)
+        ps4 = pyps4.Ps4Async(host, creds, device_name='Home-Assistant')
         device_list.append(PS4Device(
             config, name, host, region, ps4, creds, games_file))
     async_add_entities(device_list, update_before_add=True)
@@ -113,31 +113,23 @@ class PS4Device(MediaPlayerDevice):
         self._info = None
         self._unique_id = None
         self._power_on = False
-        self._handler = None
-
-        self._scheduler = self._no_scheduler
 
     @callback
     def status_callback(self):
-        """Handle status callback. Schedule Update."""
+        """Handle status callback. Parse status."""
+        _LOGGER.warning("Status Changed for Ps4")
+        self._parse_status()
+
+    @callback
+    def schedule_update(self):
+        """Schedules update with HA."""
         self.async_schedule_update_ha_state()
 
     @callback
-    def add_to_handler(self):
-        """Add entity and callback to status handler."""
-        self._handler = self.hass.data[PS4_DATA].handler
-        self._handler.add_callback(self._ps4, self.status_callback)
-
-    @callback
-    def start_listener(self):
-        """Start listener."""
-        self._handler.start_listener(self._ps4)
-        self._scheduler = self._handler.schedule_task
-
-    @callback
-    def _no_scheduler(self, *args):
-        """Show error message if scheduler is not set."""
-        _LOGGER.error("PS4 @ %s is not ready for commands yet", self._host)
+    def subscribe_to_protocol(self):
+        """Notify protocol to callback with update changes."""
+        self.hass.data[PS4_DATA].protocol.add_callback(
+            self._ps4, self.status_callback)
 
     async def async_added_to_hass(self):
         """Subscribe PS4 events."""
@@ -145,25 +137,28 @@ class PS4Device(MediaPlayerDevice):
 
     async def async_update(self):
         """Retrieve the latest data."""
-        # Start listener on 2nd update. Allow HA to startup asap.
-        if self._handler is not None:
-            if not self._handler.listeners[self._ps4].running:
-                self.start_listener()
+        if self._ps4.ddp_protocol is not None:
+            # Request Status with asyncio transport.
+            # Status is written to ps4.status by ddp_protocol.
+            self._ps4.get_status()
+            if not self._ps4.connected and not self._ps4.is_standby:
+                await self._ps4.async_connect()
 
-            status = self._ps4.status
+        # Try to ensure correct status is set for device info.
+        if self._ps4.ddp_protocol is None:
+            await self.hass.async_add_executor_job(self._ps4.get_status)
+            self._ps4.ddp_protocol = self.hass.data[PS4_DATA].protocol
+            self.subscribe_to_protocol()
 
-        # On Startup get status directly.
-        if self._handler is None:
-            status = await self.hass.async_add_executor_job(
-                self._ps4.get_status)
+            if self._ps4.status is not None:
+                if self._info is None:
+                    # Add entity to registry.
+                    await self.async_get_device_info(self._ps4.status)
+                self._parse_status()
 
-            # Handler will now write status to the ps4.status attribute.
-            self.add_to_handler()
-
-        if self._info is None:
-            # Add entity to registry.
-            await self.async_get_device_info(status)
-
+    def _parse_status(self):
+        status = self._ps4.status
+        _LOGGER.error(status)
         if status is not None:
             self._games = self.load_games()
             if self._games is not None:
@@ -177,28 +172,21 @@ class PS4Device(MediaPlayerDevice):
             self._retry = 0
             self._disconnected = False
             if status.get('status') == 'Ok':
-                # Check if only 1 device in Hass.
-                if len(self.hass.data[PS4_DATA].devices) == 1:
-                    # Enable keep alive feature for PS4 Connection.
-                    # Only 1 device is supported, Since have to use port 997.
-                    self._ps4.keep_alive = True
-                else:
-                    self._ps4.keep_alive = False
-                if self._power_on:
-                    # Auto Login after Turn On.
-                    self._ps4.open()
-                    self._power_on = False
                 title_id = status.get('running-app-titleid')
                 name = status.get('running-app-name')
                 if title_id and name is not None:
                     self._state = STATE_PLAYING
                     if self._media_content_id != title_id:
                         self._media_content_id = title_id
-                        await self.async_get_title_data(title_id, name)
+                        asyncio.ensure_future(
+                            self.async_get_title_data(title_id, name))
                 else:
                     self.idle()
+                    self.schedule_update()
             else:
                 self.state_off()
+                self.schedule_update()
+
         elif self._retry > 5:
             self.state_unknown()
         else:
@@ -240,6 +228,9 @@ class PS4Device(MediaPlayerDevice):
                 name, title_id, self._region)
         except PSDataIncomplete:
             title = None
+        except asyncio.TimeoutError:
+            title = None
+            _LOGGER.error("PS Store Search Timed out")
         else:
             if title is not None:
                 app_name = title.name
@@ -259,6 +250,7 @@ class PS4Device(MediaPlayerDevice):
             else:
                 self._media_type = MEDIA_TYPE_APP
             self.update_list()
+            self.schedule_update()
 
     def update_list(self):
         """Update Game List, Correct data if different."""
@@ -307,8 +299,9 @@ class PS4Device(MediaPlayerDevice):
         """Set device info for registry."""
         # If cannot get status on startup, assume info from registry.
         if status is None:
-            e_registry = await entity_registry.async_get_registry()
-            d_registry = await device_registry.async_get_registry()
+            _LOGGER.info("Assuming status from registry")
+            e_registry = await entity_registry.async_get_registry(self.hass)
+            d_registry = await device_registry.async_get_registry(self.hass)
             for entity_id, entry in e_registry.entities.items():
                 if entry.config_entry_id == self._entry_id:
                     self._unique_id = entry.unique_id
@@ -345,8 +338,7 @@ class PS4Device(MediaPlayerDevice):
         """Remove Entity from Hass."""
         # Close TCP Socket, Stop listener.
         if self._ps4.connected:
-            await self.hass.async_add_executor_job(self._ps4.close)
-        self._handler.remove_listener(self._ps4)
+            await self._ps4.close()
         self.hass.data[PS4_DATA].devices.remove(self)
 
     @property
@@ -423,12 +415,12 @@ class PS4Device(MediaPlayerDevice):
 
     async def async_turn_off(self):
         """Turn off media player."""
-        self._scheduler(self._ps4, self._ps4.standby)
+        await self._ps4.standby()
 
     async def async_turn_on(self):
         """Turn on the media player."""
         self._power_on = True
-        self._scheduler(self._ps4, self._ps4.wakeup)
+        self._ps4.wakeup()
 
     async def async_media_pause(self):
         """Send keypress ps to return to menu."""
@@ -444,13 +436,14 @@ class PS4Device(MediaPlayerDevice):
             if source.lower().encode(encoding='utf-8') == \
                game.lower().encode(encoding='utf-8') \
                or source == title_id:
+
                 _LOGGER.debug(
                     "Starting PS4 game %s (%s) using source %s",
                     game, title_id, source)
-                self._scheduler(
-                    self._ps4, self._ps4.start_title,
-                    title_id, self._media_content_id)
+
+                await self._ps4.start_title(title_id, self._media_content_id)
                 return
+
         _LOGGER.warning(
             "Could not start title. '%s' is not in source list", source)
         return
@@ -461,4 +454,4 @@ class PS4Device(MediaPlayerDevice):
 
     async def async_send_remote_control(self, command):
         """Send RC command."""
-        self._scheduler(self._ps4, self._ps4.remote_control, command)
+        await self._ps4.remote_control(command)
