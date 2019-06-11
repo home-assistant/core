@@ -143,6 +143,7 @@ homeassistant/components/life360/* @pnbruckner
 homeassistant/components/lifx/* @amelchio
 homeassistant/components/lifx_cloud/* @amelchio
 homeassistant/components/lifx_legacy/* @amelchio
+homeassistant/components/linky/* @tiste @Quentame
 homeassistant/components/linux_battery/* @fabaff
 homeassistant/components/liveboxplaytv/* @pschmitt
 homeassistant/components/logger/* @home-assistant/core
