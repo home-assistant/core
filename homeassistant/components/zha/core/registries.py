@@ -115,7 +115,16 @@ def establish_device_mappings():
         zha.DeviceType.LEVEL_CONTROLLABLE_OUTPUT: LIGHT,
         zha.DeviceType.ON_OFF_LIGHT: LIGHT,
         zha.DeviceType.DIMMABLE_LIGHT: LIGHT,
-        zha.DeviceType.COLOR_DIMMABLE_LIGHT: LIGHT
+        zha.DeviceType.COLOR_DIMMABLE_LIGHT: LIGHT,
+        zha.DeviceType.ON_OFF_LIGHT_SWITCH: SWITCH,
+        zha.DeviceType.DIMMER_SWITCH: LIGHT,
+        zha.DeviceType.COLOR_DIMMER_SWITCH: LIGHT,
+        zha.DeviceType.ON_OFF_BALLAST: SWITCH,
+        zha.DeviceType.DIMMABLE_BALLAST: LIGHT,
+        zha.DeviceType.ON_OFF_PLUG_IN_UNIT: SWITCH,
+        zha.DeviceType.DIMMABLE_PLUG_IN_UNIT: LIGHT,
+        zha.DeviceType.COLOR_TEMPERATURE_LIGHT: LIGHT,
+        zha.DeviceType.EXTENDED_COLOR_LIGHT: LIGHT
     })
 
     DEVICE_CLASS[zll.PROFILE_ID].update({
