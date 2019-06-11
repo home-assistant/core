@@ -4,7 +4,8 @@ from homeassistant.const import (ATTR_ATTRIBUTION)
 from homeassistant.components.binary_sensor import (BinarySensorDevice)
 from homeassistant.util import Throttle
 
-from . import (DATA_NEXIA, ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTRIBUTION, NEXIA_DEVICE, NEXIA_SCAN_INTERVAL)
+from . import (DATA_NEXIA, ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTR_THERMOSTAT_ID, ATTRIBUTION,
+               NEXIA_DEVICE, NEXIA_SCAN_INTERVAL)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -54,7 +55,8 @@ class NexiaBinarySensor(BinarySensorDevice):
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_MODEL: self._device.get_thermostat_model(self._thermostat_id),
             ATTR_FIRMWARE: self._device.get_thermostat_firmware(self._thermostat_id),
-            ATTR_THERMOSTAT_NAME: self._device.get_thermostat_name(self._thermostat_id)
+            ATTR_THERMOSTAT_NAME: self._device.get_thermostat_name(self._thermostat_id),
+            ATTR_THERMOSTAT_ID: self._thermostat_id
         }
         return data
 

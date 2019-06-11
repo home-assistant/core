@@ -11,8 +11,8 @@ from homeassistant.components.climate.const import (
     STATE_COOL, STATE_HEAT, STATE_IDLE)
 from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_ATTRIBUTION, ATTR_TEMPERATURE, STATE_OFF)
 from homeassistant.util import Throttle
-from . import (ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTR_SETPOINT_STATUS, ATTR_ZONE_STATUS, ATTRIBUTION,
-               DATA_NEXIA, NEXIA_DEVICE, NEXIA_SCAN_INTERVAL)
+from . import (ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTR_SETPOINT_STATUS, ATTR_ZONE_STATUS,
+               ATTR_THERMOSTAT_ID, ATTR_ZONE_ID, ATTRIBUTION, DATA_NEXIA, NEXIA_DEVICE, NEXIA_SCAN_INTERVAL)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -200,7 +200,9 @@ class NexiaZone(ClimateDevice):
             ATTR_FIRMWARE: self._device.get_thermostat_firmware(self._thermostat_id),
             ATTR_THERMOSTAT_NAME: self._device.get_thermostat_name(self._thermostat_id),
             ATTR_SETPOINT_STATUS: self._device.get_zone_setpoint_status(self._thermostat_id, self._zone),
-            ATTR_ZONE_STATUS: self._device.get_zone_status(self._thermostat_id, self._zone)
+            ATTR_ZONE_STATUS: self._device.get_zone_status(self._thermostat_id, self._zone),
+            ATTR_THERMOSTAT_ID: self._thermostat_id,
+            ATTR_ZONE_ID: self._zone
         }
 
         if self._device.has_emergency_heat(self._thermostat_id):

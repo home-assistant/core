@@ -5,8 +5,8 @@ from homeassistant.const import (DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from . import (ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTRIBUTION, DATA_NEXIA, NEXIA_DEVICE,
-               NEXIA_SCAN_INTERVAL)
+from . import (ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTR_THERMOSTAT_ID, ATTR_ZONE_ID, ATTRIBUTION,
+               DATA_NEXIA, NEXIA_DEVICE, NEXIA_SCAN_INTERVAL)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -83,7 +83,8 @@ class NexiaSensor(Entity):
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_MODEL: self._device.get_thermostat_model(self._thermostat_id),
             ATTR_FIRMWARE: self._device.get_thermostat_firmware(self._thermostat_id),
-            ATTR_THERMOSTAT_NAME: self._device.get_thermostat_name(self._thermostat_id)
+            ATTR_THERMOSTAT_NAME: self._device.get_thermostat_name(self._thermostat_id),
+            ATTR_THERMOSTAT_ID: self._thermostat_id
         }
         return data
 
@@ -116,6 +117,12 @@ class NexiaZoneSensor(NexiaSensor):
     def __init__(self, device, scan_interval, thermostat_id, zone, sensor_call, sensor_name, sensor_class, sensor_unit, modifier=None):
         super().__init__(device, scan_interval, thermostat_id, sensor_call, sensor_name, sensor_class, sensor_unit, modifier)
         self._zone = zone
+
+    @property
+    def device_state_attributes(self):
+        data = super().device_state_attributes
+        data.update({ATTR_ZONE_ID: self._zone})
+        return data
 
     @property
     def state(self):
