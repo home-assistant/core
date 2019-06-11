@@ -250,6 +250,9 @@ pyiqvia==0.2.1
 # homeassistant.components.litejet
 pylitejet==0.1
 
+# homeassistant.components.somfy
+pymfy==0.5.2
+
 # homeassistant.components.monoprice
 pymonoprice==0.3
 
