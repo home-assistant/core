@@ -18,21 +18,18 @@ class PS4Data():
     def __init__(self):
         """Init Class."""
         self.devices = []
-        self.handler = None
+        self.protocol = None
 
 
 async def async_setup(hass, config):
     """Set up the PS4 Component."""
-    from pyps4_homeassistant.client import PS4Client
+    from pyps4_homeassistant.ddp import async_create_ddp_endpoint
+
     hass.data[PS4_DATA] = PS4Data()
 
-    """Initialize PS4 Handler.
-    Handler manages listeners which are threads
-    which queues synchronous network IO
-    with low-level sockets, such as status updates over UDP,
-    as well as manages TCP connections and tasks/commands.
-    """
-    hass.data[PS4_DATA].handler = PS4Client()
+    transport, protocol = await async_create_ddp_endpoint()
+    hass.data[PS4_DATA].protocol = protocol
+    _LOGGER.debug("PS4 DDP endpoint created: %s, %s", transport, protocol)
     return True
 
 
