@@ -5,26 +5,24 @@ import logging
 from aiohttp.web import Response
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.http.view import HomeAssistantView
-
+from homeassistant.core import callback
 
 from .config_flow import CONF_SECRET, DOMAIN, URL_LEAFSPY_PATH
+from .device_tracker import async_handle_message
 
 _LOGGER = logging.getLogger(__name__)
 
+# No config schema - only configuration entry
 CONFIG_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
     """Initialize Leaf Spy component."""
-    hass.data[DOMAIN] = {}
-    if not hass.config_entries.async_entries(DOMAIN):
-        hass.async_create_task(hass.config_entries.flow.async_init(
-            DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
-            data={}
-        ))
-
+    hass.data[DOMAIN] = {
+        'devices': {},
+        'unsub': None,
+    }
     return True
 
 
@@ -41,6 +39,18 @@ async def async_setup_entry(hass, entry):
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(
         entry, 'device_tracker'))
 
+    hass.data[DOMAIN]['unsub'] = \
+        hass.helpers.dispatcher.async_dispatcher_connect(
+            DOMAIN, async_handle_message)
+
+    return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unload an OwnTracks config entry."""
+    await hass.config_entries.async_forward_entry_unload(
+        entry, 'device_tracker')
+    hass.data[DOMAIN]['unsub']()
     return True
 
 
@@ -51,10 +61,21 @@ class LeafSpyContext:
         """Initialize a Leaf Spy context."""
         self.hass = hass
         self.secret = secret
+        self._pending_msg = []
 
-    async def async_see(self, **data):
+    @callback
+    def set_async_see(self, func):
+        """Set a new async_see function."""
+        self.async_see = func
+        for msg in self._pending_msg:
+            func(**msg)
+        self._pending_msg.clear()
+
+    # pylint: disable=method-hidden
+    @callback
+    def async_see(self, **data):
         """Send a see message to the device tracker."""
-        raise NotImplementedError
+        self._pending_msg.append(data)
 
 
 class LeafSpyView(HomeAssistantView):
