@@ -14,6 +14,8 @@ from .const import CONF_MODEL, DOMAIN
 from .device import get_device
 from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
 
+AXIS_OUI = {'00408C', 'ACCC8E', 'B8A44F'}
+
 CONFIG_FILE = 'axis.conf'
 
 EVENT_TYPES = ['motion', 'vmd3', 'pir', 'sound',
@@ -151,10 +153,14 @@ class AxisFlowHandler(config_entries.ConfigFlow):
 
         This flow is triggered by the discovery component.
         """
+        serialnumber = discovery_info['properties']['macaddress']
+
+        if serialnumber[:6] not in AXIS_OUI:
+            return self.async_abort(reason='not_axis_device')
+
         if discovery_info[CONF_HOST].startswith('169.254'):
             return self.async_abort(reason='link_local_address')
 
-        serialnumber = discovery_info['properties']['macaddress']
         # pylint: disable=unsupported-assignment-operation
         self.context['macaddress'] = serialnumber
 
