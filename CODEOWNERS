@@ -143,6 +143,7 @@ homeassistant/components/ipma/* @dgomes
 homeassistant/components/iqvia/* @bachya
 homeassistant/components/irish_rail_transport/* @ttroy50
 homeassistant/components/jewish_calendar/* @tsvi
+homeassistant/components/keba/* @dannerph
 homeassistant/components/knx/* @Julius2342
 homeassistant/components/kodi/* @armills
 homeassistant/components/konnected/* @heythisisnate

@@ -1,0 +1,28 @@
+# Describes the format for available services for KEBA charging staitons
+
+authorize:
+  description: >
+    Starts a charging process with the predefined RFID tag of the configuration file
+
+deauthorize:
+  description: >
+    Stops the charging process of the predefined RFID tag of the configuration file
+
+set_energy:
+  description: Sets the energy target after which the charging process stops
+  fields:
+    energy:
+      description: >
+        The energy target to stop charging in kWh. Setting 0 disables the limit.
+      example: 10.0
+
+set_curr:
+  description: Sets the maximum current for charging processes.
+  fields:
+    current:
+      description: >
+        The maximum current used for the charging process in A. Allowed are values between
+        6 A and 63 A. Invalid values are discardedand the default is set to 6 A.
+        The value is also depending on the DIP-switchsettings and the used cable of the
+        charging station
+      example: 16
