@@ -1319,7 +1319,14 @@ pymailgunner==1.4
 # homeassistant.components.media_player.mediaroom
 pymediaroom==0.6.4
 
+<<<<<<< HEAD
 # homeassistant.components.media_player.xiaomi_tv
+=======
+# homeassistant.components.somfy
+pymfy==0.5.2
+
+# homeassistant.components.xiaomi_tv
+>>>>>>> Somfy open api (#19548)
 pymitv==1.4.3
 
 # homeassistant.components.mochad
