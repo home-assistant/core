@@ -3,10 +3,12 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_ICON, CONF_RADIUS)
+    CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_ICON, CONF_RADIUS,
+    EVENT_CORE_CONFIG_UPDATE)
 from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.util import slugify
@@ -90,12 +92,24 @@ async def async_setup(hass, config):
             hass.async_create_task(zone.async_update_ha_state())
             entities.add(zone.entity_id)
 
-    if ENTITY_ID_HOME not in entities and HOME_ZONE not in zone_entries:
-        zone = Zone(hass, hass.config.location_name,
-                    hass.config.latitude, hass.config.longitude,
-                    DEFAULT_RADIUS, ICON_HOME, False)
-        zone.entity_id = ENTITY_ID_HOME
-        hass.async_create_task(zone.async_update_ha_state())
+    if ENTITY_ID_HOME in entities or HOME_ZONE in zone_entries:
+        return True
+
+    zone = Zone(hass, hass.config.location_name,
+                hass.config.latitude, hass.config.longitude,
+                DEFAULT_RADIUS, ICON_HOME, False)
+    zone.entity_id = ENTITY_ID_HOME
+    hass.async_create_task(zone.async_update_ha_state())
+
+    @callback
+    def core_config_updated(_):
+        """Handle core config updated."""
+        zone.name = hass.config.location_name
+        zone.latitude = hass.config.latitude
+        zone.longitude = hass.config.longitude
+        zone.async_write_ha_state()
+
+    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, core_config_updated)
 
     return True
 
