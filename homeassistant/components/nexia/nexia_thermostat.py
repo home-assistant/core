@@ -975,9 +975,9 @@ class NexiaThermostat:
         (min_temperature, max_temperature) = self.get_setpoint_limits(thermostat_id)
 
         if heat_temperature is not None:
-            heat_temperature = self.round_temp(heat_temperature)
+            heat_temperature = self.round_temp(heat_temperature, thermostat_id)
         if cool_temperature is not None:
-            cool_temperature = self.round_temp(cool_temperature)
+            cool_temperature = self.round_temp(cool_temperature, thermostat_id)
 
         if heat_temperature is not None and cool_temperature is not None and not heat_temperature < cool_temperature:
             raise AttributeError(f"The heat setpoint ({heat_temperature}) must be less than the cool setpoint "
@@ -1113,31 +1113,31 @@ class NexiaThermostat:
 
         if set_temperature is None:
             if heat_temperature:
-                heat_temperature = self.round_temp(heat_temperature)
+                heat_temperature = self.round_temp(heat_temperature, thermostat_id)
             else:
                 heat_temperature = min(self.get_zone_heating_setpoint(thermostat_id=thermostat_id, zone_id=zone_id),
-                                       self.round_temp(cool_temperature) - deadband)
+                                       self.round_temp(cool_temperature, thermostat_id) - deadband)
 
             if cool_temperature:
-                cool_temperature = self.round_temp(cool_temperature)
+                cool_temperature = self.round_temp(cool_temperature, thermostat_id)
             else:
                 cool_temperature = max(self.get_zone_cooling_setpoint(thermostat_id=thermostat_id, zone_id=zone_id),
-                                       self.round_temp(heat_temperature) + deadband)
+                                       self.round_temp(heat_temperature, thermostat_id) + deadband)
 
         else:
             # This will smartly select either the ceiling of the floor temp depending on the current operating mode.
             zone_mode = self.get_zone_current_mode(thermostat_id=thermostat_id, zone_id=zone_id)
             if zone_mode == self.OPERATION_MODE_COOL:
-                cool_temperature = self.round_temp(set_temperature)
+                cool_temperature = self.round_temp(set_temperature, thermostat_id)
                 heat_temperature = min(self.get_zone_heating_setpoint(thermostat_id=thermostat_id, zone_id=zone_id),
-                                       self.round_temp(cool_temperature) - deadband)
+                                       self.round_temp(cool_temperature, thermostat_id) - deadband)
             elif zone_mode == self.OPERATION_MODE_HEAT:
                 cool_temperature = max(self.get_zone_cooling_setpoint(thermostat_id=thermostat_id, zone_id=zone_id),
-                                       self.round_temp(heat_temperature) + deadband)
-                heat_temperature = self.round_temp(set_temperature)
+                                       self.round_temp(heat_temperature, thermostat_id) + deadband)
+                heat_temperature = self.round_temp(set_temperature, thermostat_id)
             else:
-                cool_temperature = self.round_temp(set_temperature) + math.ceil(deadband / 2)
-                heat_temperature = self.round_temp(set_temperature) - math.ceil(deadband / 2)
+                cool_temperature = self.round_temp(set_temperature, thermostat_id) + math.ceil(deadband / 2)
+                heat_temperature = self.round_temp(set_temperature, thermostat_id) - math.ceil(deadband / 2)
 
         zone_mode = self.get_zone_requested_mode(thermostat_id=thermostat_id, zone_id=zone_id)
         if zone_mode != self.OPERATION_MODE_OFF:
@@ -1200,13 +1200,13 @@ class NexiaThermostat:
         else:
             raise KeyError(f"Invalid mode \"{mode}\". Select one of the following: {self.OPERATION_MODES}")
 
-    def round_temp(self, temperature: float):
+    def round_temp(self, temperature: float, thermostat_id=None):
         """
         Rounds the temperature to the nearest 1/2 degree for C and neareast 1 degree for F
         :param temperature: temperature to round
         :return: float rounded temperature
         """
-        if self.get_unit() == self.UNIT_CELSIUS:
+        if self.get_unit(thermostat_id) == self.UNIT_CELSIUS:
             temperature *= 2
             temperature = round(temperature)
             temperature /= 2
