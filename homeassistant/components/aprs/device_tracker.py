@@ -5,9 +5,9 @@ import threading
 
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import (
-    ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE, PLATFORM_SCHEMA)
+from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.const import (
+    ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE,
     CONF_HOST, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
