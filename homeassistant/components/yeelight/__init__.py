@@ -271,6 +271,8 @@ class YeelightDevice:
         try:
             self.bulb.get_properties(UPDATE_REQUEST_PROPERTIES)
             self._available = True
+            if not self._initialized:
+                self._initialize_device()
         except BulbException as ex:
             if self._available:  # just inform once
                 _LOGGER.error("Unable to update device %s, %s: %s",
@@ -279,21 +281,19 @@ class YeelightDevice:
 
         return self._available
 
-    def _initialize_if_not_already(self):
-        if self._initialized:
-            return
-
+    def _initialize_device(self):
         self._initialized = True
         dispatcher_send(self._hass, DEVICE_INITIALIZED, self.ipaddr)
 
     def update(self):
         """Update device properties and send data updated signal."""
-        if self._update_properties():
-            self._initialize_if_not_already()
-
+        self._update_properties()
         dispatcher_send(self._hass, DATA_UPDATED.format(self._ipaddr))
 
     def setup(self):
-        """Initialize device and send initialized signal."""
-        if self._update_properties() or self.model:
-            self._initialize_if_not_already()
+        """Fetch initial device properties."""
+        initial_update = self._update_properties()
+
+        if not initial_update and self.model:
+            """We can build correct class anyway."""
+            self._initialize_device()
