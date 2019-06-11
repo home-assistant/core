@@ -4,6 +4,7 @@ import datetime
 import json
 import math
 import pprint
+from threading import Lock
 
 GLOBAL_LOGIN_ATTEMPTS = 4
 global_login_attempts_left = GLOBAL_LOGIN_ATTEMPTS
@@ -14,7 +15,8 @@ class NexiaThermostat:
     ROOT_URL = "https://www.mynexia.com"
     AUTH_FAILED_STRING = "https://www.mynexia.com/login"
     AUTH_FORGOTTEN_PASSWORD_STRING = "https://www.mynexia.com/account/forgotten_credentials"
-    UPDATE_RATE = 120  # 2 minutes
+    DEFAULT_UPDATE_RATE = 120  # 2 minutes
+    DISABLE_AUTO_UPDATE = "Disable"
 
     HOLD_PERMANENT = "permanent"
     HOLD_DURATION = "duration"
@@ -31,10 +33,13 @@ class NexiaThermostat:
     OPERATION_MODE_OFF = "OFF"
     OPERATION_MODES = [OPERATION_MODE_AUTO, OPERATION_MODE_COOL, OPERATION_MODE_HEAT, OPERATION_MODE_OFF]
 
+
+    # The order of these is important as it maps to preset#
     PRESET_MODE_HOME = "home"
     PRESET_MODE_AWAY = "away"
     PRESET_MODE_SLEEP = "sleep"
-    PRESET_MODES = [PRESET_MODE_HOME, PRESET_MODE_AWAY, PRESET_MODE_SLEEP]
+    PRESET_MODE_NONE = "none"
+    PRESET_MODES = [PRESET_MODE_HOME, PRESET_MODE_AWAY, PRESET_MODE_SLEEP, PRESET_MODE_NONE]
 
     DAMPER_MODE_OPEN = 'Damper Open'
     DAMPER_MODE_CLOSED = 'Damper Closed'
@@ -76,10 +81,13 @@ class NexiaThermostat:
         self.last_csrf = None
         self.thermostat_json = None
         self.last_update = None
+        self.mutex = Lock()
 
         # Control the update rate
         if update_rate is None:
-            self.update_rate = datetime.timedelta(seconds=self.UPDATE_RATE)
+            self.update_rate = datetime.timedelta(seconds=self.DEFAULT_UPDATE_RATE)
+        elif update_rate == self.DISABLE_AUTO_UPDATE:
+            self.update_rate = self.DISABLE_AUTO_UPDATE
         else:
             self.update_rate = datetime.timedelta(seconds=update_rate)
 
@@ -90,6 +98,7 @@ class NexiaThermostat:
         # Login if requested
         if auto_login:
             self.login()
+            self.update()
 
     def _get_authenticity_token(self, url: str):
         """
@@ -218,28 +227,32 @@ class NexiaThermostat:
         Returns True if an update is needed
         :return: bool
         """
-        if self.last_update is None:
+        if self.update_rate == self.DISABLE_AUTO_UPDATE:
+            return False
+        elif self.last_update is None:
             return True
         else:
             return datetime.datetime.now() - self.last_update > self.update_rate
 
-    def _get_thermostat_json(self):
+    def _get_thermostat_json(self, force_update=False):
         """
         Returns the thermostat's JSON data. It's either cached, or returned directly from the internet
+        :param force_update: bool - Forces an update
         :return: dict(thermostat_jason)
         """
-        if self.thermostat_json is None or self._needs_update():
-            r = self._get_url("/houses/" + str(self.house_id) + "/xxl_thermostats")
-            if r and r.status_code == 200:
-                ts = json.loads(r.text)
-                if len(ts):
-                    self.thermostat_json = ts[0]
-                    self.last_update = datetime.datetime.now()
+        with self.mutex:
+            if self.thermostat_json is None or self._needs_update() or force_update is True:
+                r = self._get_url("/houses/" + str(self.house_id) + "/xxl_thermostats")
+                if r and r.status_code == 200:
+                    ts = json.loads(r.text)
+                    if len(ts):
+                        self.thermostat_json = ts[0]
+                        self.last_update = datetime.datetime.now()
+                    else:
+                        raise Exception("Nothing in the JSON")
                 else:
-                    raise Exception("Nothing in the JSON")
-            else:
-                self._check_response("Failed to get thermostat JSON, session probably timed out", r)
-        return self.thermostat_json
+                    self._check_response("Failed to get thermostat JSON, session probably timed out", r)
+            return self.thermostat_json
 
     def _get_thermostat_key(self, key):
         """
@@ -343,10 +356,10 @@ class NexiaThermostat:
     def get_last_update(self):
         """
         Returns a string indicating the ISO formatted time string of the last update
-        :return: The ISO formatted time string of the last update
+        :return: The ISO formatted time string of the last update, datetime.datetime.min if never updated
         """
         if self.last_update is None:
-            return "Never"
+            return datetime.datetime.isoformat(datetime.datetime.min)
         else:
             return datetime.datetime.isoformat(self.last_update)
 
@@ -355,8 +368,7 @@ class NexiaThermostat:
         Forces a status update
         :return: None
         """
-        self.thermostat_json = None
-        self._get_thermostat_json()
+        self._get_thermostat_json(force_update=True)
 
     ########################################################################
     # Print Functions
@@ -562,10 +574,10 @@ class NexiaThermostat:
     def get_outdoor_temperature(self):
         """
         Returns the outdoor temperature.
-        :return:
+        :return: float
         """
         if self.has_outdoor_temperature():
-            return self._get_thermostat_key('outdoor_temperature')
+            return float(self._get_thermostat_key('outdoor_temperature'))
         else:
             raise Exception("This system does not have an outdoor temperature sensor")
 
@@ -622,6 +634,13 @@ class NexiaThermostat:
         :return: str
         """
         return self._get_thermostat_key("system_status")
+
+    def get_air_cleaner_mode(self):
+        """
+        Returns the system's air cleaner mode
+        :return: str
+        """
+        return self._get_thermostat_key("air_cleaner_mode")
 
     ########################################################################
     # System Universal Set Methods
@@ -814,9 +833,12 @@ class NexiaThermostat:
         :param zone_id: The index of the zone, defaults to 0.
         :return: (int, int)
         """
-        index = self.get_zone_presets(zone_id).index(preset) + 1
-        return(self._get_zone_key(f"preset_cool{index}", zone_id=zone_id),
-               self._get_zone_key(f"preset_heat{index}", zone_id=zone_id))
+        if preset != self.PRESET_MODE_NONE:
+            index = self.get_zone_presets(zone_id).index(preset) + 1
+            return(self._get_zone_key(f"preset_cool{index}", zone_id=zone_id),
+                   self._get_zone_key(f"preset_heat{index}", zone_id=zone_id))
+        else:
+            raise KeyError(f"'{self.PRESET_MODE_NONE}'' preset mode does not have any preset values.")
 
     def get_zone_status(self, zone_id=0):
         """
@@ -996,23 +1018,23 @@ class NexiaThermostat:
             if cool_temperature:
                 cool_temperature =self.round_temp(cool_temperature)
             else:
-                cool_temperature = max(self.get_zone_cooling_setpoint(zone_id),self.round_temp(heat_temperature)+deadband)
+                cool_temperature = max(self.get_zone_cooling_setpoint(zone_id), self.round_temp(heat_temperature)+deadband)
 
         else:
             # This will smartly select either the ceiling of the floor temp depending on the current operating mode.
             zone_mode = self.get_zone_current_mode(zone_id)
             if zone_mode == self.OPERATION_MODE_COOL:
                 cool_temperature =self.round_temp(set_temperature)
-                heat_temperature = min(self.get_zone_heating_setpoint(zone_id),self.round_temp(cool_temperature)-deadband)
+                heat_temperature = min(self.get_zone_heating_setpoint(zone_id), self.round_temp(cool_temperature)-deadband)
             elif zone_mode == self.OPERATION_MODE_HEAT:
-                cool_temperature = max(self.get_zone_cooling_setpoint(zone_id),self.round_temp(heat_temperature)+deadband)
+                cool_temperature = max(self.get_zone_cooling_setpoint(zone_id), self.round_temp(heat_temperature)+deadband)
                 heat_temperature =self.round_temp(set_temperature)
             else:
                 cool_temperature =self.round_temp(set_temperature) + math.ceil(deadband/2)
                 heat_temperature =self.round_temp(set_temperature) - math.ceil(deadband/2)
 
         zone_mode = self.get_zone_requested_mode(zone_id=zone_id)
-        if zone_mode == self.OPERATION_MODE_AUTO:
+        if zone_mode != self.OPERATION_MODE_OFF:
             self.check_heat_cool_setpoints(heat_temperature, cool_temperature)
             url = self._get_zone_put_url("setpoints", zone_id)
             data = {
@@ -1022,25 +1044,6 @@ class NexiaThermostat:
                 'heating_integer': str(heat_temperature)
             }
             self._put_url(url, data)
-
-        elif zone_mode == self.OPERATION_MODE_HEAT:
-            self.check_heat_cool_setpoints(heat_temperature=heat_temperature)
-            url = self._get_zone_put_url("setpoints", zone_id)
-            data = {
-                'heating_setpoint': heat_temperature,
-                'heating_integer': str(heat_temperature)
-            }
-            self._put_url(url, data)
-
-        elif zone_mode == self.OPERATION_MODE_COOL:
-            self.check_heat_cool_setpoints(cool_temperature=cool_temperature)
-            url = self._get_zone_put_url("setpoints", zone_id)
-            data = {
-                'cooling_setpoint': cool_temperature,
-                'cooling_integer': str(cool_temperature),
-            }
-            self._put_url(url, data)
-
         else:
             # The system mode must be off
             pass

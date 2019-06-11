@@ -10,27 +10,29 @@ from homeassistant.components.climate.const import (
     STATE_COOL, STATE_HEAT, STATE_IDLE)
 from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_ATTRIBUTION, ATTR_TEMPERATURE, STATE_OFF)
 from homeassistant.util import Throttle
-from . import (DATA_NEXIA, ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTR_HOLD_MODES,
-               ATTR_SETPOINT_STATUS, ATTR_ZONE_STATUS, ATTRIBUTION)
+from . import (ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTR_SETPOINT_STATUS, ATTR_ZONE_STATUS, ATTRIBUTION,
+               DATA_NEXIA, NEXIA_DEVICE, NEXIA_SCAN_INTERVAL)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up climate zones for a Nexia device."""
-    thermostat = hass.data[DATA_NEXIA]
-    zones = [NexiaZone(thermostat, zone_id) for zone_id in thermostat.get_zone_ids()]
+    thermostat = hass.data[DATA_NEXIA][NEXIA_DEVICE]
+    scan_interval = hass.data[DATA_NEXIA][NEXIA_SCAN_INTERVAL]
+
+    zones = [NexiaZone(thermostat, scan_interval, zone_id) for zone_id in thermostat.get_zone_ids()]
     add_entities(zones, True)
 
 
 class NexiaZone(ClimateDevice):
     """Representation of Nexia Climate Zone."""
 
-    def __init__(self, device, zone):
+    def __init__(self, device, scan_interval, zone):
         """Initialize the thermostat."""
         self._device = device
         self._zone = zone
-        self.update = Throttle(self._device.update_rate)(self._update)
+        self.update = Throttle(scan_interval)(self._update)
 
     @property
     def supported_features(self):

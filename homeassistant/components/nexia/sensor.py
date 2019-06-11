@@ -2,39 +2,41 @@ from homeassistant.const import (DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE
                                  ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-from . import (DATA_NEXIA, ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTRIBUTION, )
+from . import (ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTRIBUTION, DATA_NEXIA, NEXIA_DEVICE,
+               NEXIA_SCAN_INTERVAL)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up sensors for a Nexia device."""
-    thermostat = hass.data[DATA_NEXIA]
+    thermostat = hass.data[DATA_NEXIA][NEXIA_DEVICE]
+    scan_interval = hass.data[DATA_NEXIA][NEXIA_SCAN_INTERVAL]
 
     sensors = list()
 
-    sensors.append(NexiaSensor(thermostat, "get_system_status", "System Status", None, None))
+    sensors.append(NexiaSensor(thermostat, scan_interval, "get_system_status", "System Status", None, None))
 
     if thermostat.has_variable_speed_compressor():
-        sensors.append(NexiaSensor(thermostat, "get_current_compressor_speed", "Current Compressor Speed", None, "%",
+        sensors.append(NexiaSensor(thermostat, scan_interval, "get_current_compressor_speed", "Current Compressor Speed", None, "%",
                                    percent_conv))
-        sensors.append(NexiaSensor(thermostat, "get_requested_compressor_speed", "Requested Compressor Speed", None,
+        sensors.append(NexiaSensor(thermostat, scan_interval, "get_requested_compressor_speed", "Requested Compressor Speed", None,
                                    "%", percent_conv))
 
     if thermostat.has_outdoor_temperature():
         unit = (TEMP_CELSIUS if thermostat.get_unit() == thermostat.UNIT_CELSIUS else TEMP_FAHRENHEIT)
-        sensors.append(NexiaSensor(thermostat, "get_outdoor_temperature", "Outdoor Temperature",
+        sensors.append(NexiaSensor(thermostat, scan_interval, "get_outdoor_temperature", "Outdoor Temperature",
                                    DEVICE_CLASS_TEMPERATURE, unit))
 
     if thermostat.has_relative_humidity():
-        sensors.append(NexiaSensor(thermostat, "get_relative_humidity", "Relative Humidity", DEVICE_CLASS_HUMIDITY,
+        sensors.append(NexiaSensor(thermostat, scan_interval, "get_relative_humidity", "Relative Humidity", DEVICE_CLASS_HUMIDITY,
                                    "%", percent_conv))
 
     for zone in thermostat.get_zone_ids():
         name = thermostat.get_zone_name(zone)
         unit = (TEMP_CELSIUS if thermostat.get_unit() == thermostat.UNIT_CELSIUS else TEMP_FAHRENHEIT)
-        sensors.append(NexiaZoneSensor(thermostat, zone, "get_zone_temperature", f"{name} Temperature",
+        sensors.append(NexiaZoneSensor(thermostat, scan_interval, zone, "get_zone_temperature", f"{name} Temperature",
                                        DEVICE_CLASS_TEMPERATURE, unit, None))
-        sensors.append(NexiaZoneSensor(thermostat, zone, "get_zone_status", f"{name} Zone Status", None, None))
-        sensors.append(NexiaZoneSensor(thermostat, zone, "get_zone_setpoint_status", f"{name} Zone Setpoint Status",
+        sensors.append(NexiaZoneSensor(thermostat, scan_interval, zone, "get_zone_status", f"{name} Zone Status", None, None))
+        sensors.append(NexiaZoneSensor(thermostat, scan_interval, zone, "get_zone_setpoint_status", f"{name} Zone Setpoint Status",
                                        None, None))
 
 
@@ -49,7 +51,7 @@ def percent_conv(val):
 
 
 class NexiaSensor(Entity):
-    def __init__(self, device, sensor_call, sensor_name, sensor_class, sensor_unit, modifier=None):
+    def __init__(self, device, scan_interval, sensor_call, sensor_name, sensor_class, sensor_unit, modifier=None):
         """Initialize the sensor."""
         self._device = device
         self._call = sensor_call
@@ -58,7 +60,7 @@ class NexiaSensor(Entity):
         self._state = None
         self._unit_of_measurement = sensor_unit
         self._modifier = modifier
-        self.update = Throttle(self._device.update_rate)(self._update)
+        self.update = Throttle(scan_interval)(self._update)
 
 
     @property
@@ -103,8 +105,8 @@ class NexiaSensor(Entity):
 
 
 class NexiaZoneSensor(NexiaSensor):
-    def __init__(self, device, zone, sensor_call, sensor_name, sensor_class, sensor_unit, modifier=None):
-        super().__init__(device, sensor_call, sensor_name, sensor_class, sensor_unit, modifier)
+    def __init__(self, device, scan_interval, zone, sensor_call, sensor_name, sensor_class, sensor_unit, modifier=None):
+        super().__init__(device, scan_interval, sensor_call, sensor_name, sensor_class, sensor_unit, modifier)
         self.zone = zone
 
     @property

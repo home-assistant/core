@@ -1,18 +1,19 @@
 from homeassistant.const import (ATTR_ATTRIBUTION)
 from homeassistant.components.binary_sensor import (BinarySensorDevice)
 from homeassistant.util import Throttle
-from . import (DATA_NEXIA, ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTRIBUTION)
+from . import (DATA_NEXIA, ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTRIBUTION, NEXIA_DEVICE, NEXIA_SCAN_INTERVAL)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a sensor for a Nexia device."""
-    thermostat = hass.data[DATA_NEXIA]
+    thermostat = hass.data[DATA_NEXIA][NEXIA_DEVICE]
+    scan_interval = hass.data[DATA_NEXIA][NEXIA_SCAN_INTERVAL]
 
     sensors = list()
 
-    sensors.append(NexiaBinarySensor(thermostat, "is_blower_active", "Blower Active", None))
+    sensors.append(NexiaBinarySensor(thermostat, scan_interval, "is_blower_active", "Blower Active", None))
     if thermostat.has_emergency_heat():
-        sensors.append(NexiaBinarySensor(thermostat, "is_emergency_heat_active", "Emergency Heat Active", None))
+        sensors.append(NexiaBinarySensor(thermostat, scan_interval, "is_emergency_heat_active", "Emergency Heat Active", None))
 
     add_entities(sensors, True)
 
@@ -23,7 +24,7 @@ def percent_conv(val):
 
 class NexiaBinarySensor(BinarySensorDevice):
 
-    def __init__(self, device, sensor_call, sensor_name, sensor_class):
+    def __init__(self, device, scan_interval, sensor_call, sensor_name, sensor_class):
         """Initialize the Ecobee sensor."""
         self._device = device
         self._name = sensor_name
@@ -31,7 +32,7 @@ class NexiaBinarySensor(BinarySensorDevice):
         self._call = sensor_call
         self._state = None
         self._device_class = sensor_class
-        self.update = Throttle(self._device.update_rate)(self._update)
+        self.update = Throttle(scan_interval)(self._update)
 
 
     @property
