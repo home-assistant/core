@@ -1925,9 +1925,12 @@ tuyapy==0.1.3
 # homeassistant.components.twilio
 twilio==6.19.1
 
+<<<<<<< HEAD
 # homeassistant.components.sensor.uber
 uber_rides==0.6.0
 
+=======
+>>>>>>> Uber API is going away on June 13, 2019, remove component (#24468)
 # homeassistant.components.upcloud
 upcloud-api==0.4.3
 
