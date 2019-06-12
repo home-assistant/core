@@ -1,23 +1,25 @@
-"""Support for (EMEA/EU-based) Honeywell evohome systems."""
-# Glossary:
-#   TCS - temperature control system (a.k.a. Controller, Parent), which can
-#   have up to 13 Children:
-#     0-12 Heating zones (a.k.a. Zone), and
-#     0-1 DHW controller, (a.k.a. Boiler)
-# The TCS & Zones are implemented as Climate devices, Boiler as a WaterHeater
+"""Support for (EMEA/EU-based) Honeywell evohome systems.
+
+Glossary:
+TCS - temperature control system (a.k.a. Controller, Parent), which can have up
+to 13 Children:
+- 0-12 Heating zones (a.k.a. Zone), Climate devices, and
+- 0-1 DHW controller (a.k.a. Boiler), a WaterHeater device
+"""
 from datetime import datetime, timedelta
 import logging
+from typing import Any, Awaitable, Dict, Optional, List
 
 import requests.exceptions
 import voluptuous as vol
-
 import evohomeclient2
 
 from homeassistant.const import (
     CONF_SCAN_INTERVAL, CONF_USERNAME, CONF_PASSWORD,
     EVENT_HOMEASSISTANT_START,
     HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS,
-    PRECISION_HALVES, TEMP_CELSIUS)
+    PRECISION_HALVES, TEMP_CELSIUS,
+    CONF_ACCESS_TOKEN, CONF_ACCESS_TOKEN_EXPIRES, CONF_REFRESH_TOKEN)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -26,7 +28,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 
 from .const import (
-    DOMAIN, DATA_EVOHOME, DISPATCHER_EVOHOME, GWS, TCS)
+    DOMAIN, DATA_EVOHOME, STORAGE_VERSION, STORAGE_KEY, GWS, TCS)  # TOD: leave TCS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,19 +47,12 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 CONF_SECRETS = [
-    CONF_USERNAME, CONF_PASSWORD,
-]
-
-# bit masks for dispatcher packets
-EVO_PARENT = 0x01
-EVO_CHILD = 0x02
+    CONF_PASSWORD,
+]  # CONF_USERNAME,  # TODO: fixme
 
 
-def setup(hass, hass_config):
-    """Create a (EMEA/EU-based) Honeywell evohome system.
-
-    Currently, only the Controller and the Zones are implemented here.
-    """
+async def async_setup(hass, hass_config):
+    """Create a (EMEA/EU-based) Honeywell evohome system."""
     evo_data = hass.data[DATA_EVOHOME] = {}
     evo_data['timers'] = {}
 
@@ -66,17 +61,41 @@ def setup(hass, hass_config):
     scan_interval = evo_data['params'][CONF_SCAN_INTERVAL]
     scan_interval = timedelta(
         minutes=(scan_interval.total_seconds() + 59) // 60)
+    scan_interval = timedelta(seconds=30)                                        # TODO: for testing only
+
+    store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+    app_storage = await store.async_load()
+
+    if app_storage.get(CONF_USERNAME) == evo_data['params'][CONF_USERNAME]:
+        refresh_token = app_storage.get(CONF_REFRESH_TOKEN)
+        access_token = app_storage.get(CONF_ACCESS_TOKEN)
+        access_token_expires = app_storage.get(CONF_ACCESS_TOKEN_EXPIRES)
+        if access_token_expires:
+            access_token_expires = datetime.strptime(
+                access_token_expires, '%Y-%m-%d %H:%M:%S')
+    else:
+        refresh_token = access_token = access_token_expires = None
+        _LOGGER.warn("account switch, old=%s, new=%s", app_storage.get(
+            CONF_USERNAME), evo_data['params'][CONF_USERNAME])
+
+    _LOGGER.warn("refresh_token %s", refresh_token)                              # TODO: for testing only
+    _LOGGER.warn("access_token %s", access_token)                                # TODO: for testing only
+    _LOGGER.warn("access_token_expires %s", access_token_expires)                # TODO: for testing only
 
     try:
-        client = evo_data['client'] = evohomeclient2.EvohomeClient(
+        client = evo_data['client'] = await hass.async_add_executor_job(
+            evohomeclient2.EvohomeClient,
             evo_data['params'][CONF_USERNAME],
             evo_data['params'][CONF_PASSWORD],
-            debug=False
-        )
+            False,
+            refresh_token,
+            access_token,
+            access_token_expires
+        )                                                                        # TODO: partial() from functools
 
     except evohomeclient2.AuthenticationError as err:
         _LOGGER.error(
-            "setup(): Failed to authenticate with the vendor's server. "
+            "Failed to authenticate with the vendor's server. "
             "Check your username and password are correct. "
             "Resolve any errors and restart HA. Message is: %s",
             err
@@ -85,7 +104,7 @@ def setup(hass, hass_config):
 
     except requests.exceptions.ConnectionError:
         _LOGGER.error(
-            "setup(): Unable to connect with the vendor's server. "
+            "Unable to connect with the vendor's server. "
             "Check your network and the vendor's status page. "
             "Resolve any errors and restart HA."
         )
@@ -95,6 +114,18 @@ def setup(hass, hass_config):
         for parameter in CONF_SECRETS:
             evo_data['params'][parameter] = 'REDACTED' \
                 if evo_data['params'][parameter] else None
+
+    _LOGGER.warn("refresh_token %s", client.refresh_token)                       # TODO: for testing only
+    _LOGGER.warn("access_token %s", client.access_token)                         # TODO: for testing only
+    _LOGGER.warn("access_token_expires %s",
+                 client.access_token_expires.strftime('%Y-%m-%d %H:%M:%S'))      # TODO: for testing only
+
+    app_storage[CONF_USERNAME] = evo_data['params'][CONF_USERNAME]
+    app_storage[CONF_REFRESH_TOKEN] = client.refresh_token
+    app_storage[CONF_ACCESS_TOKEN] = client.access_token
+    app_storage[CONF_ACCESS_TOKEN_EXPIRES] = client.access_token_expires.strftime(
+        '%Y-%m-%d %H:%M:%S')
+    await store.async_save(app_storage)
 
     evo_data['status'] = {}
 
@@ -113,7 +144,7 @@ def setup(hass, hass_config):
 
     except IndexError:
         _LOGGER.error(
-            "setup(): config error, '%s' = %s, but its valid range is 0-%s. "
+            "Config error: '%s' = %s, but its valid range is 0-%s. "
             "Unable to continue. Fix any configuration errors and restart HA.",
             CONF_LOCATION_IDX, loc_idx, len(client.installation_info) - 1
         )
@@ -123,25 +154,20 @@ def setup(hass, hass_config):
         tmp_loc = dict(evo_data['config'])
         tmp_loc['locationInfo']['postcode'] = 'REDACTED'
 
-        if 'dhw' in tmp_loc[GWS][0][TCS][0]:  # if this location has DHW...
-            tmp_loc[GWS][0][TCS][0]['dhw'] = '...'
-
-        _LOGGER.debug("setup(): evo_data['config']=%s", tmp_loc)
+        _LOGGER.debug("evo_data['config']=%s", tmp_loc)
 
     load_platform(hass, 'climate', DOMAIN, {}, hass_config)
 
-    if 'dhw' in evo_data['config'][GWS][0][TCS][0]:
-        _LOGGER.warning(
-            "setup(): DHW found, but this component doesn't support DHW."
-        )
+    # if 'dhw' in evo_data['config'][GWS][0][TCS][0]:
+    #     load_platform(hass, 'water_heater', DOMAIN, {}, hass_config)
 
     @callback
     def _first_update(event):
         """When HA has started, the hub knows to retrieve it's first update."""
-        pkt = {'sender': 'setup()', 'signal': 'refresh', 'to': EVO_PARENT}
-        async_dispatcher_send(hass, DISPATCHER_EVOHOME, pkt)
+        async_dispatcher_send(hass, DOMAIN, {'signal': 'first_update'})
+        # _LOGGER.warn("_first_update(): fired")                                 # TODO: remove me
 
-    hass.bus.listen(EVENT_HOMEASSISTANT_START, _first_update)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _first_update)
 
     return True
 
@@ -153,14 +179,14 @@ class EvoDevice(Entity):
     (optionally) a DHW controller.
     """
 
-    def __init__(self, evo_data, client, obj_ref):
+    def __init__(self, evo_data, client, evo_device):
         """Initialize the evohome entity."""
         self._client = client
-        self._obj = obj_ref
+        self._evo_device = evo_device
 
+        self._id = None
         self._name = None
         self._icon = None
-        self._type = None
 
         self._supported_features = None
         self._operation_list = None
@@ -172,8 +198,8 @@ class EvoDevice(Entity):
         self._available = False  # should become True after first update()
 
     @callback
-    def _connect(self, packet):
-        if packet['to'] & self._type and packet['signal'] == 'refresh':
+    def _refresh(self, packet):
+        if packet['signal'] == 'refresh':
             self.async_schedule_update_ha_state(force_refresh=True)
 
     def _handle_exception(self, err):
@@ -213,35 +239,24 @@ class EvoDevice(Entity):
             else:
                 raise  # we don't expect/handle any other HTTPErrors
 
-    # These properties, methods are from the Entity class
-    async def async_added_to_hass(self):
-        """Run when entity about to be added."""
-        async_dispatcher_connect(self.hass, DISPATCHER_EVOHOME, self._connect)
-
+    # These are from the Entity class
     @property
     def should_poll(self) -> bool:
-        """Most evohome devices push their state to HA.
-
-        Only the Controller should be polled.
-        """
+        """Only the Evohome Controller should be polled."""
         return False
 
     @property
-    def name(self) -> str:
-        """Return the name to use in the frontend UI."""
+    def name(self) -> str:  # TODO: not Optional[str] make DHW name optional?
+        """Return the name of the Evohome entity."""
         return self._name
 
     @property
-    def device_state_attributes(self):
-        """Return the device state attributes of the evohome device.
-
-        This is state data that is not available otherwise, due to the
-        restrictions placed upon ClimateDevice properties, etc. by HA.
-        """
+    def device_state_attributes(self) -> Dict[str, Any]:
+        """Return the Evohome-specific state attributes."""
         return {'status': self._status}
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon to use in the frontend UI."""
         return self._icon
 
@@ -251,22 +266,22 @@ class EvoDevice(Entity):
         return self._available
 
     @property
-    def supported_features(self):
-        """Get the list of supported features of the device."""
+    def supported_features(self) -> int:
+        """Get the flag of supported features of the device."""
+        _LOGGER.warn("supported_features(%s) = %s", self._id, self._supported_features)  #TODO: deleteme
         return self._supported_features
 
-    # These properties are common to ClimateDevice, WaterHeaterDevice classes
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
+
+    # These are from the ClimateDevice, WaterHeaterDevice classes
     @property
-    def precision(self):
+    def precision(self) -> float:  # TODO: use self._precision??
         """Return the temperature precision to use in the frontend UI."""
         return PRECISION_HALVES
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the temperature unit to use in the frontend UI."""
         return TEMP_CELSIUS
-
-    @property
-    def operation_list(self):
-        """Return the list of available operations."""
-        return self._operation_list
