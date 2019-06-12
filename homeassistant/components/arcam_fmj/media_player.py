@@ -192,16 +192,26 @@ class ArcamFmj(MediaPlayerDevice):
 
     async def async_select_source(self, source):
         """Select a specific source."""
-        value = SourceCodes[source]
+        try:
+            value = SourceCodes[source]
+        except KeyError:
+            _LOGGER.error("Unsupported source %s", source)
+            return
+
         await self._state.set_source(value)
         self.async_schedule_update_ha_state()
 
     async def async_select_sound_mode(self, sound_mode):
         """Select a specific source."""
-        if self._get_2ch():
-            await self._state.set_decode_mode_2ch(DecodeMode2CH[sound_mode])
-        else:
-            await self._state.set_decode_mode_mch(DecodeModeMCH[sound_mode])
+        try:
+            if self._get_2ch():
+                await self._state.set_decode_mode_2ch(DecodeMode2CH[sound_mode])
+            else:
+                await self._state.set_decode_mode_mch(DecodeModeMCH[sound_mode])
+        except KeyError:
+            _LOGGER.error("Unsupported sound_mode %s", sound_mode)
+            return
+
         self.async_schedule_update_ha_state()
 
     async def async_set_volume_level(self, volume):
