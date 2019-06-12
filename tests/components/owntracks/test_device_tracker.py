@@ -411,6 +411,19 @@ async def test_location_update(hass, context):
     """Test the update of a location."""
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
 
+    assert_location_source_type(hass, 'gps')
+    assert_location_latitude(hass, LOCATION_MESSAGE['lat'])
+    assert_location_accuracy(hass, LOCATION_MESSAGE['acc'])
+    assert_location_state(hass, 'outer')
+
+
+async def test_location_update_no_t_key(hass, context):
+    """Test the update of a location when message does not contain 't'."""
+    message = LOCATION_MESSAGE.copy()
+    message.pop('t')
+    await send_message(hass, LOCATION_TOPIC, message)
+
+    assert_location_source_type(hass, 'gps')
     assert_location_latitude(hass, LOCATION_MESSAGE['lat'])
     assert_location_accuracy(hass, LOCATION_MESSAGE['acc'])
     assert_location_state(hass, 'outer')
