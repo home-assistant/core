@@ -1130,7 +1130,11 @@ pyalarmdotcom==0.3.2
 pyarlo==0.2.3
 
 # homeassistant.components.netatmo
+<<<<<<< HEAD
 pyatmo==1.4
+=======
+pyatmo==2.0.0
+>>>>>>> Bump pyatmo to 2.00 (#24505)
 
 # homeassistant.components.apple_tv
 pyatv==0.3.12
