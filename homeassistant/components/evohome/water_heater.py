@@ -8,11 +8,11 @@ from homeassistant.components.water_heater import (
     SUPPORT_OPERATION_MODE,
     WaterHeaterDevice)
 from homeassistant.const import (
-    STATE_OFF, STATE_ON)
+    PRECISION_WHOLE, STATE_OFF, STATE_ON)
 
 from . import (EvoDevice, CONF_LOCATION_IDX)
 from .const import (
-    DATA_EVOHOME, GWS, TCS,
+    DOMAIN, GWS, TCS,
     EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER)
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     """Create the DHW controller."""
     _LOGGER.warn("setup_platform(HEATER): started")                              # TODO: delete me
 
-    evo_data = hass.data[DATA_EVOHOME]
+    evo_data = hass.data[DOMAIN]
 
     client = evo_data['client']
     loc_idx = evo_data['params'][CONF_LOCATION_IDX]
@@ -57,6 +57,7 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         self._id = evo_dhw_ref.dhwId
         self._name = "DHW controller"
         self._icon = "mdi:oil-temperature"
+        self._precision = PRECISION_WHOLE
 
         self._config = evo_data['config'][GWS][0][TCS][0]['dhw']
 
@@ -66,11 +67,11 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
     async def async_update(self):
         """Process the evohome Zone's state data."""
         _LOGGER.warn("async_update(DHW=%s)", self._id)
-        self._status = self.hass.data[DATA_EVOHOME]['status']['dhw']
+        self._status = self.hass.data[DOMAIN]['status']['dhw']
         self._available = self._status['temperatureStatus']['isAvailable']
 
 
-# These properties, methods are from the WaterHeater class
+# These properties, methods are from the WaterHeater class  # TODO: remove me
     @property
     def current_operation(self) -> str:
         """Return the current operating mode (On, or Off)."""

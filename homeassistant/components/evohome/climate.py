@@ -17,7 +17,7 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 
 from . import (EvoDevice, CONF_LOCATION_IDX)
 from .const import (
-    DATA_EVOHOME, DOMAIN, GWS, TCS,
+    DOMAIN, DOMAIN, GWS, TCS,
     EVO_RESET, EVO_AUTO, EVO_AUTOECO, EVO_AWAY, EVO_DAYOFF, EVO_CUSTOM,
     EVO_HEATOFF, EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER)
 
@@ -57,7 +57,7 @@ ZONE_OP_LIST = list(HA_STATE_TO_ZONE)
 async def async_setup_platform(hass, hass_config, async_add_entities,
                                discovery_info=None):
     """Create the evohome Controller, and its Zones, if any."""
-    evo_data = hass.data[DATA_EVOHOME]
+    evo_data = hass.data[DOMAIN]
 
     client = evo_data['client']
     loc_idx = evo_data['params'][CONF_LOCATION_IDX]
@@ -116,7 +116,7 @@ class EvoZone(EvoDevice, ClimateDevice):
         The evohome Zones that are in 'FollowSchedule' mode inherit their
         actual operating mode from the Controller.
         """
-        evo_data = self.hass.data[DATA_EVOHOME]
+        evo_data = self.hass.data[DOMAIN]
 
         system_mode = evo_data['status']['systemModeStatus']['mode']
         setpoint_mode = self._status['setpointStatus']['setpointMode']
@@ -252,7 +252,7 @@ class EvoZone(EvoDevice, ClimateDevice):
 
     def update(self):
         """Process the evohome Zone's state data."""
-        evo_data = self.hass.data[DATA_EVOHOME]
+        evo_data = self.hass.data[DOMAIN]
 
         for _zone in evo_data['status']['zones']:
             if _zone['zoneId'] == self._id:
