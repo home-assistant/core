@@ -22,7 +22,7 @@ class HeosFlowHandler(config_entries.ConfigFlow):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
-    async def async_step_discovery(self, discovery_info):
+    async def async_step_ssdp(self, discovery_info):
         """Handle a discovered Heos device."""
         # Store discovered host
         friendly_name = "{} ({})".format(
