@@ -23,11 +23,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dlib Face detection platform."""
-
     entities = []
     for camera in config[CONF_SOURCE]:
         entities.append(DlibFaceIdentifyEntity(
-            camera[CONF_ENTITY_ID], config[CONF_FACES], camera.get(CONF_NAME), config[CONF_CONFIDENCE]
+            camera[CONF_ENTITY_ID], config[CONF_FACES], camera.get(CONF_NAME),
+            config[CONF_CONFIDENCE]
         ))
 
     add_entities(entities)
@@ -86,7 +86,8 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
         found = []
         for unknown_face in unknowns:
             for name, face in self._faces.items():
-                result = face_recognition.compare_faces([face], unknown_face, tolerance=self._tolerance)
+                result = face_recognition.compare_faces([face], unknown_face,
+                    tolerance=self._tolerance)
                 if result[0]:
                     found.append({
                         ATTR_NAME: name
