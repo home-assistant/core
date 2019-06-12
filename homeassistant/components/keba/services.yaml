@@ -2,14 +2,14 @@
 
 authorize:
   description: >
-    Starts a charging process with the predefined RFID tag of the configuration file
+    Authorizes a charging process with the predefined RFID tag of the configuration file.
 
 deauthorize:
   description: >
-    Stops the charging process of the predefined RFID tag of the configuration file
+    Deauthorizes the running charging process with the predefined RFID tag of the configuration file.
 
 set_energy:
-  description: Sets the energy target after which the charging process stops
+  description: Sets the energy target after which the charging process stops.
   fields:
     energy:
       description: >
@@ -26,3 +26,10 @@ set_curr:
         The value is also depending on the DIP-switchsettings and the used cable of the
         charging station
       example: 16
+start:
+  description: >
+    Starts a charging process if charging station is authorized.
+
+stop:
+  description: >
+    Stops the charging process if charging station is authorized.

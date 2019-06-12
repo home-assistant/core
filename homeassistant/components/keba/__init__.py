@@ -28,10 +28,12 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 _SERVICE_MAP = {
-    'authorize ': 'async_start',
-    'deauthorize ': 'async_stop',
+    'authorize ': 'async_authorize',
+    'deauthorize ': 'async_deauthorize',
     'set_energy ': 'async_set_energy',
-    'set_curr': 'async_set_max_current'
+    'set_curr': 'async_set_max_current',
+    'start': 'async_start',
+    'stop': 'async_stop'
 }
 
 
@@ -230,15 +232,25 @@ class KebaProtocol(asyncio.DatagramProtocol):
         _LOGGER.debug("Send %s", payload)
         self._transport.sendto(payload.encode())
 
-    async def async_start(self, *_):
+    async def async_authorize(self, *_):
         """Authorize a charging process with predefined RFID tag."""
         _LOGGER.debug("Authorize charging rfid: %s", self.rfid)
         self.send("start " + self.rfid)
 
-    async def async_stop(self, *_):
+    async def async_deauthorize(self, *_):
         """Deauthorize a charging process with predefined RFID tag."""
         _LOGGER.debug("Deauthorize charging rfid: %s", self.rfid)
         self.send("stop " + self.rfid)
+
+    async def async_start(self, *_):
+        """Start a charging process."""
+        _LOGGER.debug("ena 1")
+        self.send("ena 1")
+
+    async def async_stop(self, *_):
+        """Stop a charging process."""
+        _LOGGER.debug("ena 0")
+        self.send("ena 0")
 
     async def async_set_energy(self, energy, *_):
         """Set energy target."""
