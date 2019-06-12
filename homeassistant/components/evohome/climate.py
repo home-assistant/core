@@ -11,30 +11,17 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO, STATE_ECO, STATE_MANUAL, SUPPORT_AWAY_MODE, SUPPORT_ON_OFF,
     SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_OFF)
 from homeassistant.const import (
-    CONF_SCAN_INTERVAL)
+    CONF_SCAN_INTERVAL, STATE_OFF,)
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import dispatcher_send
 
-from . import (
-    EvoDevice,
-    CONF_LOCATION_IDX, EVO_CHILD, EVO_PARENT)
+from . import (EvoDevice, CONF_LOCATION_IDX)
 from .const import (
-    DATA_EVOHOME, DISPATCHER_EVOHOME, GWS, TCS)
+    DATA_EVOHOME, DOMAIN, GWS, TCS,
+    EVO_RESET, EVO_AUTO, EVO_AUTOECO, EVO_AWAY, EVO_DAYOFF, EVO_CUSTOM,
+    EVO_HEATOFF, EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER)
 
 _LOGGER = logging.getLogger(__name__)
-
-# The Controller's opmode/state and the zone's (inherited) state
-EVO_RESET = 'AutoWithReset'
-EVO_AUTO = 'Auto'
-EVO_AUTOECO = 'AutoWithEco'
-EVO_AWAY = 'Away'
-EVO_DAYOFF = 'DayOff'
-EVO_CUSTOM = 'Custom'
-EVO_HEATOFF = 'HeatingOff'
-
-# These are for Zones' opmode, and state
-EVO_FOLLOW = 'FollowSchedule'
-EVO_TEMPOVER = 'TemporaryOverride'
-EVO_PERMOVER = 'PermanentOverride'
 
 # For the Controller. NB: evohome treats Away mode as a mode in/of itself,
 # where HA considers it to 'override' the exising operating mode
@@ -53,11 +40,6 @@ HA_STATE_TO_TCS = {
     HVAC_MODE_OFF: EVO_HEATOFF
 }
 TCS_OP_LIST = list(HA_STATE_TO_TCS)
-
-# the Zones' opmode; their state is usually 'inherited' from the TCS
-EVO_FOLLOW = 'FollowSchedule'
-EVO_TEMPOVER = 'TemporaryOverride'
-EVO_PERMOVER = 'PermanentOverride'
 
 # for the Zones...
 ZONE_STATE_TO_HA = {
@@ -114,7 +96,6 @@ class EvoZone(EvoDevice, ClimateDevice):
         self._id = obj_ref.zoneId
         self._name = obj_ref.name
         self._icon = "mdi:radiator"
-        self._type = EVO_CHILD
 
         for _zone in evo_data['config'][GWS][0][TCS][0]['zones']:
             if _zone['zoneId'] == self._id:
@@ -198,7 +179,7 @@ class EvoZone(EvoDevice, ClimateDevice):
           - None for PermanentOverride (i.e. indefinitely)
         """
         try:
-            self._obj.set_temperature(temperature, until)
+            self._evo_device.set_temperature(temperature, until)
         except (requests.exceptions.RequestException,
                 evohomeclient2.AuthenticationError) as err:
             self._handle_exception(err)
@@ -225,7 +206,7 @@ class EvoZone(EvoDevice, ClimateDevice):
     def _set_operation_mode(self, operation_mode):
         if operation_mode == EVO_FOLLOW:
             try:
-                self._obj.cancel_temp_override()
+                self._evo_device.cancel_temp_override()
             except (requests.exceptions.RequestException,
                     evohomeclient2.AuthenticationError) as err:
                 self._handle_exception(err)
@@ -295,7 +276,6 @@ class EvoController(EvoDevice, ClimateDevice):
         self._id = obj_ref.systemId
         self._name = '_{}'.format(obj_ref.location.name)
         self._icon = "mdi:thermostat"
-        self._type = EVO_PARENT
 
         self._config = evo_data['config'][GWS][0][TCS][0]
         self._status = evo_data['status']
@@ -305,6 +285,12 @@ class EvoController(EvoDevice, ClimateDevice):
         self._supported_features = \
             \
             SUPPORT_AWAY_MODE
+
+    @callback
+    def _refresh(self, packet):
+        if packet['signal'] == 'first_update':
+            self.async_schedule_update_ha_state(force_refresh=True)
+            # _LOGGER.warn("_refresh(EvoTCS): first_update")                       # TODO: delete me
 
     @property
     def device_state_attributes(self):
@@ -393,7 +379,7 @@ class EvoController(EvoDevice, ClimateDevice):
 
     def _set_operation_mode(self, operation_mode):
         try:
-            self._obj._set_status(operation_mode)  # noqa: E501; pylint: disable=protected-access
+            self._evo_device._set_status(operation_mode)  # noqa: E501; pylint: disable=protected-access
         except (requests.exceptions.RequestException,
                 evohomeclient2.AuthenticationError) as err:
             self._handle_exception(err)
@@ -453,5 +439,4 @@ class EvoController(EvoDevice, ClimateDevice):
         _LOGGER.debug("Status = %s", self._status)
 
         # inform the child devices that state data has been updated
-        pkt = {'sender': 'controller', 'signal': 'refresh', 'to': EVO_CHILD}
-        dispatcher_send(self.hass, DISPATCHER_EVOHOME, pkt)
+        dispatcher_send(self.hass, DOMAIN, {'signal': 'refresh'})

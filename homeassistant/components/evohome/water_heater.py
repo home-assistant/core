@@ -10,13 +10,10 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import (
     STATE_OFF, STATE_ON)
 
-from . import (
-    EvoDevice,
-    CONF_LOCATION_IDX)
+from . import (EvoDevice, CONF_LOCATION_IDX)
 from .const import (
-    DATA_EVOHOME,
-    EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER,
-    GWS, TCS)
+    DATA_EVOHOME, GWS, TCS,
+    EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER)
 
 _LOGGER = logging.getLogger(__name__)
 

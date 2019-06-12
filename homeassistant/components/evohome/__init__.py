@@ -28,7 +28,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 
 from .const import (
-    DOMAIN, DATA_EVOHOME, STORAGE_VERSION, STORAGE_KEY, GWS, TCS)  # TOD: leave TCS
+    DOMAIN, DATA_EVOHOME, STORAGE_VERSION, STORAGE_KEY, GWS, TCS)  # TODO: leave TCS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,11 +76,11 @@ async def async_setup(hass, hass_config):
     else:
         refresh_token = access_token = access_token_expires = None
         _LOGGER.warn("account switch, old=%s, new=%s", app_storage.get(
-            CONF_USERNAME), evo_data['params'][CONF_USERNAME])
+            CONF_USERNAME), evo_data['params'][CONF_USERNAME])                   # TODO: for testing only
 
-    _LOGGER.warn("refresh_token %s", refresh_token)                              # TODO: for testing only
-    _LOGGER.warn("access_token %s", access_token)                                # TODO: for testing only
-    _LOGGER.warn("access_token_expires %s", access_token_expires)                # TODO: for testing only
+    _LOGGER.warn("%s %s", CONF_REFRESH_TOKEN, refresh_token)                     # TODO: for testing only
+    _LOGGER.warn("%s %s", CONF_ACCESS_TOKEN, access_token)                       # TODO: for testing only
+    _LOGGER.warn("%s %s", CONF_ACCESS_TOKEN_EXPIRES, access_token_expires)       # TODO: for testing only
 
     try:
         client = evo_data['client'] = await hass.async_add_executor_job(
@@ -115,16 +115,15 @@ async def async_setup(hass, hass_config):
             evo_data['params'][parameter] = 'REDACTED' \
                 if evo_data['params'][parameter] else None
 
-    _LOGGER.warn("refresh_token %s", client.refresh_token)                       # TODO: for testing only
-    _LOGGER.warn("access_token %s", client.access_token)                         # TODO: for testing only
-    _LOGGER.warn("access_token_expires %s",
+    _LOGGER.warn("%s %s", CONF_REFRESH_TOKEN, client.refresh_token)              # TODO: for testing only
+    _LOGGER.warn("%s %s", CONF_ACCESS_TOKEN, client.access_token)                # TODO: for testing only
+    _LOGGER.warn("%s %s", CONF_ACCESS_TOKEN_EXPIRES,
                  client.access_token_expires.strftime('%Y-%m-%d %H:%M:%S'))      # TODO: for testing only
 
     app_storage[CONF_USERNAME] = evo_data['params'][CONF_USERNAME]
     app_storage[CONF_REFRESH_TOKEN] = client.refresh_token
     app_storage[CONF_ACCESS_TOKEN] = client.access_token
-    app_storage[CONF_ACCESS_TOKEN_EXPIRES] = client.access_token_expires.strftime(
-        '%Y-%m-%d %H:%M:%S')
+    app_storage[CONF_ACCESS_TOKEN_EXPIRES] = client.access_token_expires.strftime('%Y-%m-%d %H:%M:%S')
     await store.async_save(app_storage)
 
     evo_data['status'] = {}
@@ -158,8 +157,8 @@ async def async_setup(hass, hass_config):
 
     load_platform(hass, 'climate', DOMAIN, {}, hass_config)
 
-    # if 'dhw' in evo_data['config'][GWS][0][TCS][0]:
-    #     load_platform(hass, 'water_heater', DOMAIN, {}, hass_config)
+    if 'dhw' in evo_data['config'][GWS][0][TCS][0]:
+        load_platform(hass, 'water_heater', DOMAIN, {}, hass_config)
 
     @callback
     def _first_update(event):
@@ -285,3 +284,8 @@ class EvoDevice(Entity):
     def temperature_unit(self) -> str:
         """Return the temperature unit to use in the frontend UI."""
         return TEMP_CELSIUS
+
+    @property
+    def operation_list(self):
+        """Return the list of available operations."""
+        return self._operation_list
