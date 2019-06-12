@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u8bbe\u5907\u5df2\u914d\u7f6e\u5b8c\u6210",
+            "device_fail": "\u521b\u5efa\u8bbe\u5907\u65f6\u51fa\u73b0\u610f\u5916\u9519\u8bef\u3002",
+            "device_timeout": "\u8fde\u63a5\u8bbe\u5907\u8d85\u65f6\u3002"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u673a"
+                },
+                "description": "\u8f93\u5165\u60a8\u7684 Daikin \u7a7a\u8c03\u7684 IP \u5730\u5740\u3002",
+                "title": "\u914d\u7f6e Daikin \u7a7a\u8c03"
+            }
+        },
+        "title": "Daikin \u7a7a\u8c03"
+    }
+}

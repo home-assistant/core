@@ -1,0 +1,10 @@
+{
+  "domain": "volkszaehler",
+  "name": "Volkszaehler",
+  "documentation": "https://www.home-assistant.io/components/volkszaehler",
+  "requirements": [
+    "volkszaehler==0.1.2"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

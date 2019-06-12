@@ -1,0 +1,8 @@
+# Describes the format for available scene services
+
+turn_on:
+  description: Activate a scene.
+  fields:
+    entity_id:
+      description: Name(s) of scenes to turn on
+      example: 'scene.romantic'

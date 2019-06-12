@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "V\u0161echny Philips Hue p\u0159emost\u011bn\u00ed jsou ji\u017e nakonfigurov\u00e1ny",
+            "already_configured": "P\u0159emost\u011bn\u00ed je ji\u017e nakonfigurov\u00e1no",
+            "cannot_connect": "Nelze se p\u0159ipojit k p\u0159emost\u011bn\u00ed",
+            "discover_timeout": "Nelze nal\u00e9zt p\u0159emost\u011bn\u00ed Hue",
+            "no_bridges": "Nebyly nalezeny \u017e\u00e1dn\u00e9 p\u0159emost\u011bn\u00ed Philips Hue",
+            "unknown": "Do\u0161lo k nezn\u00e1m\u00e9 chyb\u011b"
+        },
+        "error": {
+            "linking": "Do\u0161lo k nezn\u00e1m\u00e9 chyb\u011b propojen\u00ed.",
+            "register_failed": "Registrace se nezda\u0159ila, zkuste to pros\u00edm znovu"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Hostitel"
+                },
+                "title": "Vybrat Hue p\u0159emost\u011bn\u00ed"
+            },
+            "link": {
+                "description": "Stiskn\u011bte tla\u010d\u00edtko na p\u0159emost\u011bn\u00ed k registraci Philips Hue v Home Assistant.\n\n! [Um\u00edst\u011bn\u00ed tla\u010d\u00edtka na p\u0159emost\u011bn\u00ed] (/ static/images/config_philips_hue.jpg)",
+                "title": "P\u0159ipojit Hub"
+            }
+        },
+        "title": "Philips Hue"
+    }
+}

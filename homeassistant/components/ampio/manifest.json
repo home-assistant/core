@@ -1,0 +1,10 @@
+{
+  "domain": "ampio",
+  "name": "Ampio",
+  "documentation": "https://www.home-assistant.io/components/ampio",
+  "requirements": [
+    "asmog==0.0.6"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,10 @@
+{
+  "domain": "hlk_sw16",
+  "name": "Hlk sw16",
+  "documentation": "https://www.home-assistant.io/components/hlk_sw16",
+  "requirements": [
+    "hlk-sw16==0.0.7"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

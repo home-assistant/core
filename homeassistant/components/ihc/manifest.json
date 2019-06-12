@@ -1,0 +1,11 @@
+{
+  "domain": "ihc",
+  "name": "Ihc",
+  "documentation": "https://www.home-assistant.io/components/ihc",
+  "requirements": [
+    "defusedxml==0.6.0",
+    "ihcsdk==2.3.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

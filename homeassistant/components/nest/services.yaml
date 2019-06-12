@@ -1,0 +1,16 @@
+set_mode:
+  description: 'Set the home/away mode for a Nest structure. Set to away mode will
+    also set Estimated Arrival Time if provided. Set ETA will cause the thermostat
+    to begin warming or cooling the home before the user arrives. After ETA set other
+    Automation can read ETA sensor as a signal to prepare the home for the user''s
+    arrival.
+
+    '
+  fields:
+    eta: {description: Optional Estimated Arrival Time from now., example: '0:10'}
+    eta_window: {description: Optional ETA window. Default is 1 minute., example: '0:5'}
+    home_mode: {description: home or away, example: home}
+    structure: {description: Optional structure name. Default set all structures managed
+        by Home Assistant., example: My Home}
+    trip_id: {description: Optional identity of a trip. Using the same trip_ID will
+        update the estimation., example: trip_back_home}

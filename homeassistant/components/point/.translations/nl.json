@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "U kunt alleen een Point-account configureren.",
+            "authorize_url_fail": "Onbekende fout bij het genereren van een autoriseer-URL.",
+            "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
+            "external_setup": "Punt succesvol geconfigureerd vanuit een andere stroom.",
+            "no_flows": "U moet Point configureren voordat u zich ermee kunt verifi\u00ebren. [Gelieve de instructies te lezen](https://www.home-assistant.io/components/nest/)."
+        },
+        "create_entry": {
+            "default": "Succesvol geverifieerd met Minut voor uw Point appara(a)t(en)"
+        },
+        "error": {
+            "follow_link": "Volg de link en verifieer voordat je op Verzenden klikt",
+            "no_token": "Niet geverifieerd met Minut"
+        },
+        "step": {
+            "auth": {
+                "description": "Ga naar onderstaande link en <b>Accepteer</b> toegang tot je Minut account, kom dan hier terug en klik op <b>Verzenden</b> hier onder.\n\n[Link]({authorization_url})",
+                "title": "Verificatie Point"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Leverancier"
+                },
+                "title": "Authenticatieleverancier"
+            }
+        },
+        "title": "Minut Point"
+    }
+}

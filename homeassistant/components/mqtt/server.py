@@ -1,82 +1,66 @@
-"""
-Support for a local MQTT broker.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mqtt/#use-the-embedded-broker
-"""
+"""Support for a local MQTT broker."""
 import asyncio
 import logging
 import tempfile
-import threading
 
-from homeassistant.components.mqtt import PROTOCOL_311
+import voluptuous as vol
+
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['hbmqtt==0.7.1']
-DEPENDENCIES = ['http']
+_LOGGER = logging.getLogger(__name__)
+
+# None allows custom config to be created through generate_config
+HBMQTT_CONFIG_SCHEMA = vol.Any(None, vol.Schema({
+    vol.Optional('auth'): vol.Schema({
+        vol.Optional('password-file'): cv.isfile,
+    }, extra=vol.ALLOW_EXTRA),
+    vol.Optional('listeners'): vol.Schema({
+        vol.Required('default'): vol.Schema(dict),
+        str: vol.Schema(dict)
+    })
+}, extra=vol.ALLOW_EXTRA))
 
 
 @asyncio.coroutine
-def broker_coro(loop, config):
-    """Start broker coroutine."""
-    from hbmqtt.broker import Broker
-    broker = Broker(config, loop)
-    yield from broker.start()
-    return broker
+def async_start(hass, password, server_config):
+    """Initialize MQTT Server.
 
+    This method is a coroutine.
+    """
+    from hbmqtt.broker import Broker, BrokerException
 
-def loop_run(loop, broker, shutdown_complete):
-    """Run broker and clean up when done."""
-    loop.run_forever()
-    # run_forever ends when stop is called because we're shutting down
-    loop.run_until_complete(broker.shutdown())
-    loop.close()
-    shutdown_complete.set()
+    passwd = tempfile.NamedTemporaryFile()
 
-
-def start(hass, server_config):
-    """Initialize MQTT Server."""
-    from hbmqtt.broker import BrokerException
-
-    loop = asyncio.new_event_loop()
+    gen_server_config, client_config = generate_config(hass, passwd, password)
 
     try:
-        passwd = tempfile.NamedTemporaryFile()
-
         if server_config is None:
-            server_config, client_config = generate_config(hass, passwd)
-        else:
-            client_config = None
+            server_config = gen_server_config
 
-        start_server = asyncio.gather(broker_coro(loop, server_config),
-                                      loop=loop)
-        loop.run_until_complete(start_server)
-        # Result raises exception if one was raised during startup
-        broker = start_server.result()[0]
+        broker = Broker(server_config, hass.loop)
+        yield from broker.start()
     except BrokerException:
-        logging.getLogger(__name__).exception('Error initializing MQTT server')
-        loop.close()
+        _LOGGER.exception("Error initializing MQTT server")
         return False, None
     finally:
         passwd.close()
 
-    shutdown_complete = threading.Event()
+    @asyncio.coroutine
+    def async_shutdown_mqtt_server(event):
+        """Shut down the MQTT server."""
+        yield from broker.shutdown()
 
-    def shutdown(event):
-        """Gracefully shutdown MQTT broker."""
-        loop.call_soon_threadsafe(loop.stop)
-        shutdown_complete.wait()
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
-
-    threading.Thread(target=loop_run, args=(loop, broker, shutdown_complete),
-                     name="MQTT-server").start()
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, async_shutdown_mqtt_server)
 
     return True, client_config
 
 
-def generate_config(hass, passwd):
+def generate_config(hass, passwd, password):
     """Generate a configuration based on current Home Assistant instance."""
+    from . import PROTOCOL_311
+
     config = {
         'listeners': {
             'default': {
@@ -90,29 +74,30 @@ def generate_config(hass, passwd):
             },
         },
         'auth': {
-            'allow-anonymous': hass.config.api.api_password is None
+            'allow-anonymous': password is None
         },
         'plugins': ['auth_anonymous'],
+        'topic-check': {
+            'enabled': True,
+            'plugins': ['topic_taboo'],
+        },
     }
 
-    if hass.config.api.api_password:
+    if password:
         username = 'homeassistant'
-        password = hass.config.api.api_password
 
         # Encrypt with what hbmqtt uses to verify
         from passlib.apps import custom_app_context
 
         passwd.write(
             'homeassistant:{}\n'.format(
-                custom_app_context.encrypt(
-                    hass.config.api.api_password)).encode('utf-8'))
+                custom_app_context.encrypt(password)).encode('utf-8'))
         passwd.flush()
 
         config['auth']['password-file'] = passwd.name
         config['plugins'].append('auth_file')
     else:
         username = None
-        password = None
 
     client_config = ('localhost', 1883, username, password, None, PROTOCOL_311)
 

@@ -1,0 +1,10 @@
+{
+  "domain": "starlingbank",
+  "name": "Starlingbank",
+  "documentation": "https://www.home-assistant.io/components/starlingbank",
+  "requirements": [
+    "starlingbank==3.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

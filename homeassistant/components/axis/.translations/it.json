@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "bad_config_file": "Dati errati dal file di configurazione"
+        },
+        "error": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "device_unavailable": "Il dispositivo non \u00e8 disponibile",
+            "faulty_credentials": "Credenziali utente non valide"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Porta",
+                    "username": "Nome utente"
+                },
+                "title": "Impostazione del dispositivo Axis"
+            }
+        },
+        "title": "Dispositivo Axis"
+    }
+}

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheden er allerede konfigureret"
+        },
+        "error": {
+            "already_configured": "Enheden er allerede konfigureret",
+            "device_unavailable": "Enheden er ikke tilg\u00e6ngelig",
+            "faulty_credentials": "Ugyldige legitimationsoplysninger"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e6rt",
+                    "password": "Adgangskode",
+                    "port": "Port",
+                    "username": "Brugernavn"
+                },
+                "title": "Konfigurer Axis enhed"
+            }
+        },
+        "title": "Axis enhed"
+    }
+}

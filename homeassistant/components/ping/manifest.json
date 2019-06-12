@@ -1,0 +1,8 @@
+{
+  "domain": "ping",
+  "name": "Ping",
+  "documentation": "https://www.home-assistant.io/components/ping",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

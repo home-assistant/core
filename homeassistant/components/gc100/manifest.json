@@ -1,0 +1,10 @@
+{
+  "domain": "gc100",
+  "name": "Gc100",
+  "documentation": "https://www.home-assistant.io/components/gc100",
+  "requirements": [
+    "python-gc100==1.0.3a"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

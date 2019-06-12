@@ -1,0 +1,12 @@
+{
+  "domain": "switchmate",
+  "name": "Switchmate",
+  "documentation": "https://www.home-assistant.io/components/switchmate",
+  "requirements": [
+    "pySwitchmate==0.4.5"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@danielhiversen"
+  ]
+}

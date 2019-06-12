@@ -1,0 +1,10 @@
+{
+  "domain": "configurator",
+  "name": "Configurator",
+  "documentation": "https://www.home-assistant.io/components/configurator",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "S\u00f3lo puedes configurar una \u00fanica cuenta de Nest.",
+            "authorize_url_fail": "Error desconocido generando la url de autorizaci\u00f3n",
+            "authorize_url_timeout": "Tiempo de espera agotado generando la url de autorizaci\u00f3n.",
+            "no_flows": "Debes configurar Nest antes de poder autenticarte con \u00e9l. [Lee las instrucciones](https://www.home-assistant.io/components/nest/)."
+        },
+        "error": {
+            "internal_error": "Error interno validando el c\u00f3digo",
+            "invalid_code": "C\u00f3digo inv\u00e1lido",
+            "timeout": "Tiempo de espera agotado validando el c\u00f3digo",
+            "unknown": "Error desconocido validando el c\u00f3digo"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Proveedor"
+                },
+                "description": "Elija a trav\u00e9s de qu\u00e9 proveedor de autenticaci\u00f3n desea autenticarse con Nest.",
+                "title": "Proveedor de autenticaci\u00f3n"
+            },
+            "link": {
+                "data": {
+                    "code": "C\u00f3digo PIN"
+                },
+                "description": "Para vincular tu cuenta de Nest, [autoriza tu cuenta]({url}).\n\nDespu\u00e9s de la autorizaci\u00f3n, copia y pega el c\u00f3digo pin a continuaci\u00f3n.",
+                "title": "Vincular cuenta de Nest"
+            }
+        },
+        "title": "Nest"
+    }
+}

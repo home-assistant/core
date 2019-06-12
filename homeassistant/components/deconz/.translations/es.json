@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El puente ya esta configurado",
+            "no_bridges": "No se han descubierto puentes deCONZ",
+            "one_instance_only": "El componente solo admite una instancia de deCONZ",
+            "updated_instance": "Instancia deCONZ actualizada con nueva direcci\u00f3n de host"
+        },
+        "error": {
+            "no_key": "No se pudo obtener una clave API"
+        },
+        "step": {
+            "hassio_confirm": {
+                "data": {
+                    "allow_clip_sensor": "Permitir importar sensores virtuales",
+                    "allow_deconz_groups": "Permite importar grupos de deCONZ"
+                },
+                "description": "\u00bfQuieres configurar Home Assistant para que se conecte al gateway de deCONZ proporcionado por el add-on {addon} de hass.io?",
+                "title": "Add-on deCONZ Zigbee v\u00eda Hass.io"
+            },
+            "init": {
+                "data": {
+                    "host": "Host",
+                    "port": "Puerto"
+                },
+                "title": "Definir pasarela deCONZ"
+            },
+            "link": {
+                "description": "Desbloquea tu gateway de deCONZ para registrarte con Home Assistant.\n\n1. Dir\u00edgete a deCONZ Settings -> Gateway -> Advanced\n2. Pulsa el bot\u00f3n \"Authenticate app\"",
+                "title": "Enlazar con deCONZ"
+            },
+            "options": {
+                "data": {
+                    "allow_clip_sensor": "Permitir importar sensores virtuales",
+                    "allow_deconz_groups": "Permitir la importaci\u00f3n de grupos deCONZ"
+                },
+                "title": "Opciones de configuraci\u00f3n adicionales para deCONZ"
+            }
+        },
+        "title": "Pasarela Zigbee deCONZ"
+    }
+}

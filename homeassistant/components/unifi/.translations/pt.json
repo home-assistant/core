@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O site do controlador j\u00e1 se encontra configurado",
+            "user_privilege": "Utilizador tem que ser administrador"
+        },
+        "error": {
+            "faulty_credentials": "Credenciais do utilizador erradas",
+            "service_unavailable": "Nenhum servi\u00e7o dispon\u00edvel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Servidor",
+                    "password": "Palavra-passe",
+                    "port": "Porto",
+                    "site": "Site ID",
+                    "username": "Nome do utilizador",
+                    "verify_ssl": "Controlador com certificados adequados"
+                },
+                "title": "Configurar o controlador UniFi"
+            }
+        },
+        "title": "Controlador UniFi"
+    }
+}

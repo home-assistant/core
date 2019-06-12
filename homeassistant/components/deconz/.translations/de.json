@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Bridge ist bereits konfiguriert",
+            "no_bridges": "Keine deCON-Bridges entdeckt",
+            "one_instance_only": "Komponente unterst\u00fctzt nur eine deCONZ-Instanz",
+            "updated_instance": "deCONZ-Instanz mit neuer Host-Adresse aktualisiert"
+        },
+        "error": {
+            "no_key": "Es konnte kein API-Schl\u00fcssel abgerufen werden"
+        },
+        "step": {
+            "hassio_confirm": {
+                "data": {
+                    "allow_clip_sensor": "Import virtueller Sensoren zulassen",
+                    "allow_deconz_groups": "Import von deCONZ-Gruppen zulassen"
+                },
+                "description": "M\u00f6chtest du Home Assistant so konfigurieren, dass er eine Verbindung mit dem deCONZ gateway herstellt, der vom Add-on hass.io {addon} bereitgestellt wird?",
+                "title": "deCONZ Zigbee Gateway \u00fcber das Hass.io Add-on"
+            },
+            "init": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "title": "Definiere das deCONZ-Gateway"
+            },
+            "link": {
+                "description": "Entsperre dein deCONZ-Gateway, um es bei Home Assistant zu registrieren. \n\n 1. Gehe in die deCONZ-Systemeinstellungen \n 2. Dr\u00fccke die Taste \"Gateway entsperren\"",
+                "title": "Mit deCONZ verbinden"
+            },
+            "options": {
+                "data": {
+                    "allow_clip_sensor": "Import virtueller Sensoren zulassen",
+                    "allow_deconz_groups": "Import von deCONZ-Gruppen zulassen"
+                },
+                "title": "Weitere Konfigurationsoptionen f\u00fcr deCONZ"
+            }
+        },
+        "title": "deCONZ Zigbee Gateway"
+    }
+}

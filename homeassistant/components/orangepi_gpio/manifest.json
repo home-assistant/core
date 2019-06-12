@@ -1,0 +1,12 @@
+{
+  "domain": "orangepi_gpio",
+  "name": "Orangepi GPIO",
+  "documentation": "https://www.home-assistant.io/components/orangepi_gpio",
+  "requirements": [
+    "OPi.GPIO==0.3.6"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@pascallj"
+  ]
+}

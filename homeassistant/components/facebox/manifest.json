@@ -1,0 +1,8 @@
+{
+  "domain": "facebox",
+  "name": "Facebox",
+  "documentation": "https://www.home-assistant.io/components/facebox",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

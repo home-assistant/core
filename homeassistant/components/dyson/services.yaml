@@ -1,0 +1,64 @@
+# Describes the format for available fan services
+
+set_night_mode:
+  description: Set the fan in night mode.
+  fields:
+    entity_id:
+      description: Name(s) of the entities to enable/disable night mode
+      example: 'fan.living_room'
+    night_mode:
+      description: Night mode status
+      example: true
+
+set_auto_mode:
+  description: Set the fan in auto mode.
+  fields:
+    entity_id:
+      description: Name(s) of the entities to enable/disable auto mode
+      example: 'fan.living_room'
+    auto_mode:
+      description: Auto mode status
+      example: true
+
+set_angle:
+  description: Set the oscillation angle of the selected fan(s).
+  fields:
+    entity_id:
+      description: Name(s) of the entities for which to set the angle
+      example: 'fan.living_room'
+    angle_low:
+      description: The angle at which the oscillation should start
+      example: 1
+    angle_high:
+      description: The angle at which the oscillation should end
+      example: 255
+
+flow_direction_front:
+  description: Set the fan flow direction.
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set frontal flow direction for
+      example: 'fan.living_room'
+    flow_direction_front:
+      description: Frontal flow direction
+      example: true
+
+set_timer:
+  description: Set the sleep timer.
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set the sleep timer for
+      example: 'fan.living_room'
+    timer:
+      description: The value in minutes to set the timer to, 0 to disable it
+      example: 30
+
+set_speed:
+  description: Set the exact speed of the fan.
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set the speed for
+      example: 'fan.living_room'
+    timer:
+      description: Speed
+      example: 1

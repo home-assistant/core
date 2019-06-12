@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "A Home Assistant rendszerednek el\u00e9rhet\u0151nek kell lennie az internetr\u0151l a Mailgun \u00fczenetek fogad\u00e1s\u00e1hoz.",
+            "one_instance_allowed": "Csak egyetlen konfigur\u00e1ci\u00f3 sz\u00fcks\u00e9ges."
+        },
+        "step": {
+            "user": {
+                "description": "Biztosan be szeretn\u00e9d \u00e1ll\u00edtani a Mailgunt?",
+                "title": "Mailgun Webhook be\u00e1ll\u00edt\u00e1sa"
+            }
+        },
+        "title": "Mailgun"
+    }
+}

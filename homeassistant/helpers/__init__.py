@@ -1,14 +1,8 @@
 """Helper methods for components within Home Assistant."""
 import re
-
 from typing import Any, Iterable, Tuple, Sequence, Dict
 
 from homeassistant.const import CONF_PLATFORM
-
-# Typing Imports and TypeAlias
-# pylint: disable=using-constant-test,unused-import,wrong-import-order
-if False:
-    from logging import Logger  # NOQA
 
 # pylint: disable=invalid-name
 ConfigType = Dict[str, Any]
@@ -16,7 +10,7 @@ ConfigType = Dict[str, Any]
 
 def config_per_platform(config: ConfigType,
                         domain: str) -> Iterable[Tuple[Any, Any]]:
-    """Generator to break a component config into different platforms.
+    """Break a component config into different platforms.
 
     For example, will find 'switch', 'switch 2', 'switch 3', .. etc
     Async friendly.

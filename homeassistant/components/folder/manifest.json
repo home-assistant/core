@@ -1,0 +1,8 @@
+{
+  "domain": "folder",
+  "name": "Folder",
+  "documentation": "https://www.home-assistant.io/components/folder",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

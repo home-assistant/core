@@ -1,30 +1,35 @@
 """Helpers for config validation using voluptuous."""
-from collections import OrderedDict
-from datetime import timedelta
+import inspect
+import logging
 import os
 import re
-from urllib.parse import urlparse
+from datetime import (timedelta, datetime as datetime_sys,
+                      time as time_sys, date as date_sys)
 from socket import _GLOBAL_DEFAULT_TIMEOUT
-
-from typing import Any, Union, TypeVar, Callable, Sequence, Dict
+from numbers import Number
+from typing import Any, Union, TypeVar, Callable, Sequence, Dict, Optional
+from urllib.parse import urlparse
+from uuid import UUID
 
 import voluptuous as vol
+from pkg_resources import parse_version
 
-from homeassistant.loader import get_platform
-from homeassistant.const import (
-    CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
-    CONF_CONDITION, CONF_BELOW, CONF_ABOVE, SUN_EVENT_SUNSET,
-    SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
-from homeassistant.core import valid_entity_id
-from homeassistant.exceptions import TemplateError
 import homeassistant.util.dt as dt_util
+from homeassistant.const import (
+    CONF_ABOVE, CONF_ALIAS, CONF_BELOW, CONF_CONDITION, CONF_ENTITY_ID,
+    CONF_ENTITY_NAMESPACE, CONF_PLATFORM, CONF_SCAN_INTERVAL,
+    CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC, CONF_VALUE_TEMPLATE,
+    CONF_TIMEOUT, ENTITY_MATCH_ALL, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, WEEKDAYS, __version__)
+from homeassistant.core import valid_entity_id, split_entity_id
+from homeassistant.exceptions import TemplateError
+from homeassistant.helpers.logging import KeywordStyleAdapter
 from homeassistant.util import slugify as util_slugify
-from homeassistant.helpers import template as template_helper
 
 # pylint: disable=invalid-name
 
 TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM' or 'HH:MM:SS'"
+
 
 # Home Assistant types
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
@@ -34,6 +39,7 @@ latitude = vol.All(vol.Coerce(float), vol.Range(min=-90, max=90),
                    msg='invalid latitude')
 longitude = vol.All(vol.Coerce(float), vol.Range(min=-180, max=180),
                     msg='invalid longitude')
+gps = vol.ExactSequence([latitude, longitude])
 sun_event = vol.All(vol.Lower, vol.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE))
 port = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
 
@@ -44,7 +50,7 @@ T = TypeVar('T')
 # Adapted from:
 # https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
 def has_at_least_one_key(*keys: str) -> Callable:
-    """Validator that at least one key exists."""
+    """Validate that at least one key exists."""
     def validate(obj: Dict) -> Dict:
         """Test keys exist in dict."""
         if not isinstance(obj, dict):
@@ -58,16 +64,74 @@ def has_at_least_one_key(*keys: str) -> Callable:
     return validate
 
 
+def has_at_most_one_key(*keys: str) -> Callable:
+    """Validate that zero keys exist or one key exists."""
+    def validate(obj: Dict) -> Dict:
+        """Test zero keys exist or one key exists in dict."""
+        if not isinstance(obj, dict):
+            raise vol.Invalid('expected dictionary')
+
+        if len(set(keys) & set(obj)) > 1:
+            raise vol.Invalid(
+                'must contain at most one of {}.'.format(', '.join(keys))
+            )
+        return obj
+
+    return validate
+
+
 def boolean(value: Any) -> bool:
     """Validate and coerce a boolean value."""
+    if isinstance(value, bool):
+        return value
     if isinstance(value, str):
-        value = value.lower()
+        value = value.lower().strip()
         if value in ('1', 'true', 'yes', 'on', 'enable'):
             return True
         if value in ('0', 'false', 'no', 'off', 'disable'):
             return False
-        raise vol.Invalid('invalid boolean value {}'.format(value))
-    return bool(value)
+    elif isinstance(value, Number):
+        return value != 0
+    raise vol.Invalid('invalid boolean value {}'.format(value))
+
+
+def isdevice(value):
+    """Validate that value is a real device."""
+    try:
+        os.stat(value)
+        return str(value)
+    except OSError:
+        raise vol.Invalid('No device at {} found'.format(value))
+
+
+def matches_regex(regex):
+    """Validate that the value is a string that matches a regex."""
+    regex = re.compile(regex)
+
+    def validator(value: Any) -> str:
+        """Validate that value matches the given regex."""
+        if not isinstance(value, str):
+            raise vol.Invalid('not a string value: {}'.format(value))
+
+        if not regex.match(value):
+            raise vol.Invalid('value {} does not match regular expression {}'
+                              .format(value, regex.pattern))
+
+        return value
+    return validator
+
+
+def is_regex(value):
+    """Validate that a string is a valid regular expression."""
+    try:
+        r = re.compile(value)
+        return r
+    except TypeError:
+        raise vol.Invalid("value {} is of the wrong type for a regular "
+                          "expression".format(value))
+    except re.error:
+        raise vol.Invalid("value {} is not a valid regular expression".format(
+            value))
 
 
 def isfile(value: Any) -> str:
@@ -83,8 +147,23 @@ def isfile(value: Any) -> str:
     return file_in
 
 
+def isdir(value: Any) -> str:
+    """Validate that the value is an existing dir."""
+    if value is None:
+        raise vol.Invalid('not a directory')
+    dir_in = os.path.expanduser(str(value))
+
+    if not os.path.isdir(dir_in):
+        raise vol.Invalid('not a directory')
+    if not os.access(dir_in, os.R_OK):
+        raise vol.Invalid('directory not readable')
+    return dir_in
+
+
 def ensure_list(value: Union[T, Sequence[T]]) -> Sequence[T]:
     """Wrap value in list if it is not one."""
+    if value is None:
+        return []
     return value if isinstance(value, list) else [value]
 
 
@@ -93,6 +172,7 @@ def entity_id(value: Any) -> str:
     value = string(value).lower()
     if valid_entity_id(value):
         return value
+
     raise vol.Invalid('Entity ID {} is an invalid entity id'.format(value))
 
 
@@ -106,6 +186,35 @@ def entity_ids(value: Union[str, Sequence]) -> Sequence[str]:
     return [entity_id(ent_id) for ent_id in value]
 
 
+comp_entity_ids = vol.Any(
+    vol.All(vol.Lower, ENTITY_MATCH_ALL),
+    entity_ids
+)
+
+
+def entity_domain(domain: str):
+    """Validate that entity belong to domain."""
+    def validate(value: Any) -> str:
+        """Test if entity domain is domain."""
+        ent_domain = entities_domain(domain)
+        return ent_domain(value)[0]
+    return validate
+
+
+def entities_domain(domain: str):
+    """Validate that entities belong to domain."""
+    def validate(values: Union[str, Sequence]) -> Sequence[str]:
+        """Test if entity domain is domain."""
+        values = entity_ids(values)
+        for ent_id in values:
+            if split_entity_id(ent_id)[0] != domain:
+                raise vol.Invalid(
+                    "Entity ID '{}' does not belong to domain '{}'"
+                    .format(ent_id, domain))
+        return values
+    return validate
+
+
 def enum(enumClass):
     """Create validator for specified enum."""
     return vol.All(vol.In(enumClass.__members__), enumClass.__getitem__)
@@ -115,10 +224,10 @@ def icon(value):
     """Validate icon."""
     value = str(value)
 
-    if value.startswith('mdi:'):
+    if ':' in value:
         return value
 
-    raise vol.Invalid('Icons should start with prefix "mdi:"')
+    raise vol.Invalid('Icons should be specifed on the form "prefix:name"')
 
 
 time_period_dict = vol.All(
@@ -134,11 +243,43 @@ time_period_dict = vol.All(
     lambda value: timedelta(**value))
 
 
+def time(value) -> time_sys:
+    """Validate and transform a time."""
+    if isinstance(value, time_sys):
+        return value
+
+    try:
+        time_val = dt_util.parse_time(value)
+    except TypeError:
+        raise vol.Invalid('Not a parseable type')
+
+    if time_val is None:
+        raise vol.Invalid('Invalid time specified: {}'.format(value))
+
+    return time_val
+
+
+def date(value) -> date_sys:
+    """Validate and transform a date."""
+    if isinstance(value, date_sys):
+        return value
+
+    try:
+        date_val = dt_util.parse_date(value)
+    except TypeError:
+        raise vol.Invalid('Not a parseable type')
+
+    if date_val is None:
+        raise vol.Invalid("Could not parse date")
+
+    return date_val
+
+
 def time_period_str(value: str) -> timedelta:
     """Validate and transform time offset."""
     if isinstance(value, int):
         raise vol.Invalid('Make sure you wrap time values in quotes')
-    elif not isinstance(value, str):
+    if not isinstance(value, str):
         raise vol.Invalid(TIME_PERIOD_ERROR.format(value))
 
     negative_offset = False
@@ -182,21 +323,8 @@ time_period = vol.Any(time_period_str, time_period_seconds, timedelta,
 
 
 def match_all(value):
-    """Validator that matches all values."""
+    """Validate that matches all values."""
     return value
-
-
-def platform_validator(domain):
-    """Validate if platform exists for given domain."""
-    def validator(value):
-        """Test if platform exists."""
-        if value is None:
-            raise vol.Invalid('platform cannot be None')
-        if get_platform(domain, str(value)):
-            return value
-        raise vol.Invalid(
-            'platform {} does not exist for {}'.format(value, domain))
-    return validator
 
 
 def positive_timedelta(value: timedelta) -> timedelta:
@@ -204,6 +332,11 @@ def positive_timedelta(value: timedelta) -> timedelta:
     if value < timedelta(0):
         raise vol.Invalid('Time period should be positive')
     return value
+
+
+def remove_falsy(value: Sequence[T]) -> Sequence[T]:
+    """Remove falsy values from a list."""
+    return [v for v in value if v]
 
 
 def service(value):
@@ -215,7 +348,27 @@ def service(value):
                       .format(value))
 
 
-def slug(value):
+def schema_with_slug_keys(value_schema: Union[T, Callable]) -> Callable:
+    """Ensure dicts have slugs as keys.
+
+    Replacement of vol.Schema({cv.slug: value_schema}) to prevent misleading
+    "Extra keys" errors from voluptuous.
+    """
+    schema = vol.Schema({str: value_schema})
+
+    def verify(value: Dict) -> Dict:
+        """Validate all keys are slugs and then the value_schema."""
+        if not isinstance(value, dict):
+            raise vol.Invalid('expected dictionary')
+
+        for key in value.keys():
+            slug(key)
+
+        return schema(value)
+    return verify
+
+
+def slug(value: Any) -> str:
     """Validate value is a valid slug."""
     if value is None:
         raise vol.Invalid('Slug should not be None')
@@ -226,21 +379,24 @@ def slug(value):
     raise vol.Invalid('invalid slug {} (try {})'.format(value, slg))
 
 
-def slugify(value):
+def slugify(value: Any) -> str:
     """Coerce a value to a slug."""
     if value is None:
         raise vol.Invalid('Slug should not be None')
     slg = util_slugify(str(value))
-    if len(slg) > 0:
+    if slg:
         return slg
     raise vol.Invalid('Unable to slugify {}'.format(value))
 
 
 def string(value: Any) -> str:
     """Coerce value to string, except for None."""
-    if value is not None:
-        return str(value)
-    raise vol.Invalid('string value is None')
+    if value is None:
+        raise vol.Invalid('string value is None')
+    if isinstance(value, (list, dict)):
+        raise vol.Invalid('value should be a string')
+
+    return str(value)
 
 
 def temperature_unit(value) -> str:
@@ -248,7 +404,7 @@ def temperature_unit(value) -> str:
     value = str(value).upper()
     if value == 'C':
         return TEMP_CELSIUS
-    elif value == 'F':
+    if value == 'F':
         return TEMP_FAHRENHEIT
     raise vol.Invalid('invalid temperature unit (expected C or F)')
 
@@ -259,9 +415,11 @@ unit_system = vol.All(vol.Lower, vol.Any(CONF_UNIT_SYSTEM_METRIC,
 
 def template(value):
     """Validate a jinja2 template."""
+    from homeassistant.helpers import template as template_helper
+
     if value is None:
         raise vol.Invalid('template value is None')
-    elif isinstance(value, (list, dict, template_helper.Template)):
+    if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid('template value should be a string')
 
     value = template_helper.Template(str(value))
@@ -276,25 +434,33 @@ def template(value):
 def template_complex(value):
     """Validate a complex jinja2 template."""
     if isinstance(value, list):
-        for idx, element in enumerate(value):
-            value[idx] = template_complex(element)
-        return value
+        return_value = value.copy()
+        for idx, element in enumerate(return_value):
+            return_value[idx] = template_complex(element)
+        return return_value
     if isinstance(value, dict):
-        for key, element in value.items():
-            value[key] = template_complex(element)
-        return value
+        return_value = value.copy()
+        for key, element in return_value.items():
+            return_value[key] = template_complex(element)
+        return return_value
 
     return template(value)
 
 
-def time(value):
-    """Validate time."""
-    time_val = dt_util.parse_time(value)
+def datetime(value):
+    """Validate datetime."""
+    if isinstance(value, datetime_sys):
+        return value
 
-    if time_val is None:
-        raise vol.Invalid('Invalid time specified: {}'.format(value))
+    try:
+        date_val = dt_util.parse_datetime(value)
+    except TypeError:
+        date_val = None
 
-    return time_val
+    if date_val is None:
+        raise vol.Invalid('Invalid datetime specified: {}'.format(value))
+
+    return date_val
 
 
 def time_zone(value):
@@ -304,6 +470,7 @@ def time_zone(value):
     raise vol.Invalid(
         'Invalid time zone passed in. Valid options can be found here: '
         'http://en.wikipedia.org/wiki/List_of_tz_database_time_zones')
+
 
 weekdays = vol.All(ensure_list, [vol.In(WEEKDAYS)])
 
@@ -315,15 +482,14 @@ def socket_timeout(value):
     """
     if value is None:
         return _GLOBAL_DEFAULT_TIMEOUT
-    else:
-        try:
-            float_value = float(value)
-            if float_value > 0.0:
-                return float_value
-            raise vol.Invalid('Invalid socket timeout value.'
-                              ' float > 0.0 required.')
-        except Exception as _:
-            raise vol.Invalid('Invalid socket timeout: {err}'.format(err=_))
+    try:
+        float_value = float(value)
+        if float_value > 0.0:
+            return float_value
+        raise vol.Invalid('Invalid socket timeout value.'
+                          ' float > 0.0 required.')
+    except Exception as _:
+        raise vol.Invalid('Invalid socket timeout: {err}'.format(err=_))
 
 
 # pylint: disable=no-value-for-parameter
@@ -345,23 +511,101 @@ def x10_address(value):
     return str(value).lower()
 
 
-def ordered_dict(value_validator, key_validator=match_all):
-    """Validate an ordered dict validator that maintains ordering.
+def uuid4_hex(value):
+    """Validate a v4 UUID in hex format."""
+    try:
+        result = UUID(value, version=4)
+    except (ValueError, AttributeError, TypeError) as error:
+        raise vol.Invalid('Invalid Version4 UUID', error_message=str(error))
 
-    value_validator will be applied to each value of the dictionary.
-    key_validator (optional) will be applied to each key of the dictionary.
+    if result.hex != value.lower():
+        # UUID() will create a uuid4 if input is invalid
+        raise vol.Invalid('Invalid Version4 UUID')
+
+    return result.hex
+
+
+def ensure_list_csv(value: Any) -> Sequence:
+    """Ensure that input is a list or make one from comma-separated string."""
+    if isinstance(value, str):
+        return [member.strip() for member in value.split(',')]
+    return ensure_list(value)
+
+
+def deprecated(key: str,
+               replacement_key: Optional[str] = None,
+               invalidation_version: Optional[str] = None,
+               default: Optional[Any] = None):
     """
-    item_validator = vol.Schema({key_validator: value_validator})
+    Log key as deprecated and provide a replacement (if exists).
 
-    def validator(value):
-        """Validate ordered dict."""
-        config = OrderedDict()
+    Expected behavior:
+        - Outputs the appropriate deprecation warning if key is detected
+        - Processes schema moving the value from key to replacement_key
+        - Processes schema changing nothing if only replacement_key provided
+        - No warning if only replacement_key provided
+        - No warning if neither key nor replacement_key are provided
+            - Adds replacement_key with default value in this case
+        - Once the invalidation_version is crossed, raises vol.Invalid if key
+        is detected
+    """
+    module_name = inspect.getmodule(inspect.stack()[1][0]).__name__
 
-        for key, val in value.items():
-            v_res = item_validator({key: val})
-            config.update(v_res)
+    if replacement_key and invalidation_version:
+        warning = ("The '{key}' option (with value '{value}') is"
+                   " deprecated, please replace it with '{replacement_key}'."
+                   " This option will become invalid in version"
+                   " {invalidation_version}")
+    elif replacement_key:
+        warning = ("The '{key}' option (with value '{value}') is"
+                   " deprecated, please replace it with '{replacement_key}'")
+    elif invalidation_version:
+        warning = ("The '{key}' option (with value '{value}') is"
+                   " deprecated, please remove it from your configuration."
+                   " This option will become invalid in version"
+                   " {invalidation_version}")
+    else:
+        warning = ("The '{key}' option (with value '{value}') is"
+                   " deprecated, please remove it from your configuration")
 
-        return config
+    def check_for_invalid_version(value: Optional[Any]):
+        """Raise error if current version has reached invalidation."""
+        if not invalidation_version:
+            return
+
+        if parse_version(__version__) >= parse_version(invalidation_version):
+            raise vol.Invalid(
+                warning.format(
+                    key=key,
+                    value=value,
+                    replacement_key=replacement_key,
+                    invalidation_version=invalidation_version
+                )
+            )
+
+    def validator(config: Dict):
+        """Check if key is in config and log warning."""
+        if key in config:
+            value = config[key]
+            check_for_invalid_version(value)
+            KeywordStyleAdapter(logging.getLogger(module_name)).warning(
+                warning,
+                key=key,
+                value=value,
+                replacement_key=replacement_key,
+                invalidation_version=invalidation_version
+            )
+            if replacement_key:
+                config.pop(key)
+        else:
+            value = default
+        if (replacement_key
+                and (replacement_key not in config
+                     or default == config.get(replacement_key))
+                and value is not None):
+            config[replacement_key] = value
+
+        return has_at_most_one_key(key, replacement_key)(config)
 
     return validator
 
@@ -383,17 +627,20 @@ def key_dependency(key, dependency):
 
 
 # Schemas
-
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): string,
-    vol.Optional(CONF_SCAN_INTERVAL):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_ENTITY_NAMESPACE): string,
+    vol.Optional(CONF_SCAN_INTERVAL): time_period
+})
+
+PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({
 }, extra=vol.ALLOW_EXTRA)
 
 EVENT_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): string,
     vol.Required('event'): string,
     vol.Optional('event_data'): dict,
+    vol.Optional('event_data_template'): {match_all: template_complex}
 })
 
 SERVICE_SCHEMA = vol.All(vol.Schema({
@@ -402,7 +649,7 @@ SERVICE_SCHEMA = vol.All(vol.Schema({
     vol.Exclusive('service_template', 'service name'): template,
     vol.Optional('data'): dict,
     vol.Optional('data_template'): {match_all: template_complex},
-    vol.Optional(CONF_ENTITY_ID): entity_ids,
+    vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
 }), has_at_least_one_key('service', 'service_template'))
 
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(vol.Schema({
@@ -427,7 +674,8 @@ SUN_CONDITION_SCHEMA = vol.All(vol.Schema({
     vol.Required(CONF_CONDITION): 'sun',
     vol.Optional('before'): sun_event,
     vol.Optional('before_offset'): time_period,
-    vol.Optional('after'): vol.All(vol.Lower, vol.Any('sunset', 'sunrise')),
+    vol.Optional('after'): vol.All(vol.Lower, vol.Any(
+        SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE)),
     vol.Optional('after_offset'): time_period,
 }), has_at_least_one_key('before', 'after'))
 
@@ -485,11 +733,18 @@ _SCRIPT_DELAY_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): string,
     vol.Required("delay"): vol.Any(
         vol.All(time_period, positive_timedelta),
-        template)
+        template, template_complex)
+})
+
+_SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema({
+    vol.Optional(CONF_ALIAS): string,
+    vol.Required("wait_template"): template,
+    vol.Optional(CONF_TIMEOUT): vol.All(time_period, positive_timedelta),
+    vol.Optional("continue_on_timeout"): boolean,
 })
 
 SCRIPT_SCHEMA = vol.All(
     ensure_list,
-    [vol.Any(SERVICE_SCHEMA, _SCRIPT_DELAY_SCHEMA, EVENT_SCHEMA,
-             CONDITION_SCHEMA)],
+    [vol.Any(SERVICE_SCHEMA, _SCRIPT_DELAY_SCHEMA,
+             _SCRIPT_WAIT_TEMPLATE_SCHEMA, EVENT_SCHEMA, CONDITION_SCHEMA)],
 )

@@ -1,0 +1,11 @@
+{
+  "domain": "qrcode",
+  "name": "Qrcode",
+  "documentation": "https://www.home-assistant.io/components/qrcode",
+  "requirements": [
+    "pillow==5.4.1",
+    "pyzbar==0.1.7"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

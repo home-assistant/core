@@ -1,383 +1,242 @@
 """Test the bootstrapping."""
 # pylint: disable=protected-access
-from unittest import mock
-import threading
+import asyncio
+import os
+from unittest.mock import Mock, patch
 import logging
 
-import voluptuous as vol
-
-from homeassistant import bootstrap, loader
+import homeassistant.config as config_util
+from homeassistant import bootstrap
 import homeassistant.util.dt as dt_util
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 
-from tests.common import \
-    get_test_home_assistant, MockModule, MockPlatform, \
-    assert_setup_component, patch_yaml_files
+from tests.common import (
+    patch_yaml_files, get_test_config_dir, mock_coro, mock_integration,
+    MockModule)
 
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
+VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class TestBootstrap:
-    """Test the bootstrap utils."""
+# prevent .HA_VERSION file from being written
+@patch(
+    'homeassistant.bootstrap.conf_util.process_ha_config_upgrade', Mock())
+@patch('homeassistant.util.location.async_detect_location_info',
+       Mock(return_value=mock_coro(None)))
+@patch('os.path.isfile', Mock(return_value=True))
+@patch('os.access', Mock(return_value=True))
+@patch('homeassistant.bootstrap.async_enable_logging',
+       Mock(return_value=True))
+def test_from_config_file(hass):
+    """Test with configuration file."""
+    components = set(['browser', 'conversation', 'script'])
+    files = {
+        'config.yaml': ''.join('{}:\n'.format(comp) for comp in components)
+    }
 
-    hass = None
-    backup_cache = None
+    with patch_yaml_files(files, True):
+        yield from bootstrap.async_from_config_file('config.yaml', hass)
 
-    # pylint: disable=invalid-name, no-self-use
-    def setup_method(self, method):
-        """Setup the test."""
-        self.backup_cache = loader._COMPONENT_CACHE
+    assert components == hass.config.components
 
-        if method == self.test_from_config_file:
-            return
 
-        self.hass = get_test_home_assistant()
-
-    def teardown_method(self, method):
-        """Clean up."""
-        if method == self.test_from_config_file:
-            return
-
-        dt_util.DEFAULT_TIME_ZONE = ORIG_TIMEZONE
-        self.hass.stop()
-        loader._COMPONENT_CACHE = self.backup_cache
-
-    @mock.patch(
-        # prevent .HA_VERISON file from being written
-        'homeassistant.bootstrap.conf_util.process_ha_config_upgrade',
-        autospec=True)
-    @mock.patch('homeassistant.util.location.detect_location_info',
-                autospec=True, return_value=None)
-    def test_from_config_file(self, mock_upgrade, mock_detect):
-        """Test with configuration file."""
-        components = ['browser', 'conversation', 'script']
-        files = {
-            'config.yaml': ''.join(
-                '{}:\n'.format(comp)
-                for comp in components
-            )
+@patch('homeassistant.bootstrap.async_enable_logging', Mock())
+@asyncio.coroutine
+def test_home_assistant_core_config_validation(hass):
+    """Test if we pass in wrong information for HA conf."""
+    # Extensive HA conf validation testing is done
+    result = yield from bootstrap.async_from_config_dict({
+        'homeassistant': {
+            'latitude': 'some string'
         }
+    }, hass)
+    assert result is None
 
-        with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
-                mock.patch('os.access', mock.Mock(return_value=True)), \
-                patch_yaml_files(files, True):
-            self.hass = bootstrap.from_config_file('config.yaml')
 
-        components.append('group')
-        assert sorted(components) == sorted(self.hass.config.components)
+async def test_async_from_config_file_not_mount_deps_folder(loop):
+    """Test that we not mount the deps folder inside async_from_config_file."""
+    hass = Mock(
+        async_add_executor_job=Mock(side_effect=lambda *args: mock_coro()))
 
-    def test_handle_setup_circular_dependency(self):
-        """Test the setup of circular dependencies."""
-        loader.set_component('comp_b', MockModule('comp_b', ['comp_a']))
+    with patch('homeassistant.bootstrap.is_virtual_env', return_value=False), \
+        patch('homeassistant.bootstrap.async_enable_logging',
+              return_value=mock_coro()), \
+        patch('homeassistant.bootstrap.async_mount_local_lib_path',
+              return_value=mock_coro()) as mock_mount, \
+        patch('homeassistant.bootstrap.async_from_config_dict',
+              return_value=mock_coro()):
 
-        def setup_a(hass, config):
-            """Setup the another component."""
-            bootstrap.setup_component(hass, 'comp_b')
+        await bootstrap.async_from_config_file('mock-path', hass)
+        assert len(mock_mount.mock_calls) == 1
+
+    with patch('homeassistant.bootstrap.is_virtual_env', return_value=True), \
+        patch('homeassistant.bootstrap.async_enable_logging',
+              return_value=mock_coro()), \
+        patch('homeassistant.bootstrap.async_mount_local_lib_path',
+              return_value=mock_coro()) as mock_mount, \
+        patch('homeassistant.bootstrap.async_from_config_dict',
+              return_value=mock_coro()):
+
+        await bootstrap.async_from_config_file('mock-path', hass)
+        assert len(mock_mount.mock_calls) == 0
+
+
+async def test_load_hassio(hass):
+    """Test that we load Hass.io component."""
+    with patch.dict(os.environ, {}, clear=True):
+        assert bootstrap._get_domains(hass, {}) == set()
+
+    with patch.dict(os.environ, {'HASSIO': '1'}):
+        assert bootstrap._get_domains(hass, {}) == {'hassio'}
+
+
+async def test_empty_setup(hass):
+    """Test an empty set up loads the core."""
+    await bootstrap._async_set_up_integrations(hass, {})
+    for domain in bootstrap.CORE_INTEGRATIONS:
+        assert domain in hass.config.components, domain
+
+
+async def test_core_failure_aborts(hass, caplog):
+    """Test failing core setup aborts further setup."""
+    with patch('homeassistant.components.homeassistant.async_setup',
+               return_value=mock_coro(False)):
+        await bootstrap._async_set_up_integrations(hass, {
+            'group': {}
+        })
+
+    assert 'core failed to initialize' in caplog.text
+    # We aborted early, group not set up
+    assert 'group' not in hass.config.components
+
+
+async def test_setting_up_config(hass, caplog):
+    """Test we set up domains in config."""
+    await bootstrap._async_set_up_integrations(hass, {
+        'group hello': {},
+        'homeassistant': {}
+    })
+
+    assert 'group' in hass.config.components
+
+
+async def test_setup_after_deps_all_present(hass, caplog):
+    """Test after_dependencies when all present."""
+    caplog.set_level(logging.DEBUG)
+    order = []
+
+    def gen_domain_setup(domain):
+        async def async_setup(hass, config):
+            order.append(domain)
             return True
 
-        loader.set_component('comp_a', MockModule('comp_a', setup=setup_a))
+        return async_setup
 
-        bootstrap.setup_component(self.hass, 'comp_a')
-        assert ['comp_a'] == self.hass.config.components
+    mock_integration(hass, MockModule(
+        domain='root',
+        async_setup=gen_domain_setup('root')
+    ))
+    mock_integration(hass, MockModule(
+        domain='first_dep',
+        async_setup=gen_domain_setup('first_dep'),
+        partial_manifest={
+            'after_dependencies': ['root']
+        }
+    ))
+    mock_integration(hass, MockModule(
+        domain='second_dep',
+        async_setup=gen_domain_setup('second_dep'),
+        partial_manifest={
+            'after_dependencies': ['first_dep']
+        }
+    ))
 
-    def test_validate_component_config(self):
-        """Test validating component configuration."""
-        config_schema = vol.Schema({
-            'comp_conf': {
-                'hello': str
-            }
-        }, required=True)
-        loader.set_component(
-            'comp_conf', MockModule('comp_conf', config_schema=config_schema))
+    await bootstrap._async_set_up_integrations(hass, {
+        'root': {},
+        'first_dep': {},
+        'second_dep': {},
+    })
 
-        with assert_setup_component(0):
-            assert not bootstrap.setup_component(self.hass, 'comp_conf', {})
+    assert 'root' in hass.config.components
+    assert 'first_dep' in hass.config.components
+    assert 'second_dep' in hass.config.components
+    assert order == ['root', 'first_dep', 'second_dep']
 
-        with assert_setup_component(0):
-            assert not bootstrap.setup_component(self.hass, 'comp_conf', {
-                'comp_conf': None
-            })
 
-        with assert_setup_component(0):
-            assert not bootstrap.setup_component(self.hass, 'comp_conf', {
-                'comp_conf': {}
-            })
+async def test_setup_after_deps_not_trigger_load(hass, caplog):
+    """Test after_dependencies does not trigger loading it."""
+    caplog.set_level(logging.DEBUG)
+    order = []
 
-        with assert_setup_component(0):
-            assert not bootstrap.setup_component(self.hass, 'comp_conf', {
-                'comp_conf': {
-                    'hello': 'world',
-                    'invalid': 'extra',
-                }
-            })
+    def gen_domain_setup(domain):
+        async def async_setup(hass, config):
+            order.append(domain)
+            return True
 
-        with assert_setup_component(1):
-            assert bootstrap.setup_component(self.hass, 'comp_conf', {
-                'comp_conf': {
-                    'hello': 'world',
-                }
-            })
+        return async_setup
 
-    def test_validate_platform_config(self):
-        """Test validating platform configuration."""
-        platform_schema = PLATFORM_SCHEMA.extend({
-            'hello': str,
-        })
-        loader.set_component(
-            'platform_conf',
-            MockModule('platform_conf', platform_schema=platform_schema))
+    mock_integration(hass, MockModule(
+        domain='root',
+        async_setup=gen_domain_setup('root')
+    ))
+    mock_integration(hass, MockModule(
+        domain='first_dep',
+        async_setup=gen_domain_setup('first_dep'),
+        partial_manifest={
+            'after_dependencies': ['root']
+        }
+    ))
+    mock_integration(hass, MockModule(
+        domain='second_dep',
+        async_setup=gen_domain_setup('second_dep'),
+        partial_manifest={
+            'after_dependencies': ['first_dep']
+        }
+    ))
 
-        loader.set_component(
-            'platform_conf.whatever', MockPlatform('whatever'))
+    await bootstrap._async_set_up_integrations(hass, {
+        'root': {},
+        'second_dep': {},
+    })
 
-        with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'platform_conf', {
-                'platform_conf': {
-                    'hello': 'world',
-                    'invalid': 'extra',
-                }
-            })
+    assert 'root' in hass.config.components
+    assert 'first_dep' not in hass.config.components
+    assert 'second_dep' in hass.config.components
+    assert order == ['root', 'second_dep']
 
-        self.hass.config.components.remove('platform_conf')
 
-        with assert_setup_component(1):
-            assert bootstrap.setup_component(self.hass, 'platform_conf', {
-                'platform_conf': {
-                    'platform': 'whatever',
-                    'hello': 'world',
-                },
-                'platform_conf 2': {
-                    'invalid': True
-                }
-            })
+async def test_setup_after_deps_not_present(hass, caplog):
+    """Test after_dependencies when referenced integration doesn't exist."""
+    caplog.set_level(logging.DEBUG)
+    order = []
 
-        self.hass.config.components.remove('platform_conf')
+    def gen_domain_setup(domain):
+        async def async_setup(hass, config):
+            order.append(domain)
+            return True
 
-        with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'platform_conf', {
-                'platform_conf': {
-                    'platform': 'not_existing',
-                    'hello': 'world',
-                }
-            })
+        return async_setup
 
-        self.hass.config.components.remove('platform_conf')
+    mock_integration(hass, MockModule(
+        domain='root',
+        async_setup=gen_domain_setup('root')
+    ))
+    mock_integration(hass, MockModule(
+        domain='second_dep',
+        async_setup=gen_domain_setup('second_dep'),
+        partial_manifest={
+            'after_dependencies': ['first_dep']
+        }
+    ))
 
-        with assert_setup_component(1):
-            assert bootstrap.setup_component(self.hass, 'platform_conf', {
-                'platform_conf': {
-                    'platform': 'whatever',
-                    'hello': 'world',
-                }
-            })
+    await bootstrap._async_set_up_integrations(hass, {
+        'root': {},
+        'first_dep': {},
+        'second_dep': {},
+    })
 
-        self.hass.config.components.remove('platform_conf')
-
-        with assert_setup_component(1):
-            assert bootstrap.setup_component(self.hass, 'platform_conf', {
-                'platform_conf': [{
-                    'platform': 'whatever',
-                    'hello': 'world',
-                }]
-            })
-
-        self.hass.config.components.remove('platform_conf')
-
-        # Any falsey platform config will be ignored (None, {}, etc)
-        with assert_setup_component(0) as config:
-            assert bootstrap.setup_component(self.hass, 'platform_conf', {
-                'platform_conf': None
-            })
-            assert 'platform_conf' in self.hass.config.components
-            assert not config['platform_conf']  # empty
-
-            assert bootstrap.setup_component(self.hass, 'platform_conf', {
-                'platform_conf': {}
-            })
-            assert 'platform_conf' in self.hass.config.components
-            assert not config['platform_conf']  # empty
-
-    def test_component_not_found(self):
-        """setup_component should not crash if component doesn't exist."""
-        assert not bootstrap.setup_component(self.hass, 'non_existing')
-
-    def test_component_not_double_initialized(self):
-        """Test we do not setup a component twice."""
-        mock_setup = mock.MagicMock(return_value=True)
-
-        loader.set_component('comp', MockModule('comp', setup=mock_setup))
-
-        assert bootstrap.setup_component(self.hass, 'comp')
-        assert mock_setup.called
-
-        mock_setup.reset_mock()
-
-        assert bootstrap.setup_component(self.hass, 'comp')
-        assert not mock_setup.called
-
-    @mock.patch('homeassistant.util.package.install_package',
-                return_value=False)
-    def test_component_not_installed_if_requirement_fails(self, mock_install):
-        """Component setup should fail if requirement can't install."""
-        self.hass.config.skip_pip = False
-        loader.set_component(
-            'comp', MockModule('comp', requirements=['package==0.0.1']))
-
-        assert not bootstrap.setup_component(self.hass, 'comp')
-        assert 'comp' not in self.hass.config.components
-
-    def test_component_not_setup_twice_if_loaded_during_other_setup(self):
-        """Test component setup while waiting for lock is not setup twice."""
-        loader.set_component('comp', MockModule('comp'))
-
-        result = []
-
-        def setup_component():
-            """Setup the component."""
-            result.append(bootstrap.setup_component(self.hass, 'comp'))
-
-        thread = threading.Thread(target=setup_component)
-        thread.start()
-        self.hass.config.components.append('comp')
-
-        thread.join()
-
-        assert len(result) == 1
-        assert result[0]
-
-    def test_component_not_setup_missing_dependencies(self):
-        """Test we do not setup a component if not all dependencies loaded."""
-        deps = ['non_existing']
-        loader.set_component('comp', MockModule('comp', dependencies=deps))
-
-        assert not bootstrap.setup_component(self.hass, 'comp', {})
-        assert 'comp' not in self.hass.config.components
-
-        loader.set_component('non_existing', MockModule('non_existing'))
-
-        assert bootstrap.setup_component(self.hass, 'comp', {})
-
-    def test_component_failing_setup(self):
-        """Test component that fails setup."""
-        loader.set_component(
-            'comp', MockModule('comp', setup=lambda hass, config: False))
-
-        assert not bootstrap.setup_component(self.hass, 'comp', {})
-        assert 'comp' not in self.hass.config.components
-
-    def test_component_exception_setup(self):
-        """Test component that raises exception during setup."""
-        def exception_setup(hass, config):
-            """Setup that raises exception."""
-            raise Exception('fail!')
-
-        loader.set_component('comp', MockModule('comp', setup=exception_setup))
-
-        assert not bootstrap.setup_component(self.hass, 'comp', {})
-        assert 'comp' not in self.hass.config.components
-
-    def test_home_assistant_core_config_validation(self):
-        """Test if we pass in wrong information for HA conf."""
-        # Extensive HA conf validation testing is done in test_config.py
-        assert None is bootstrap.from_config_dict({
-            'homeassistant': {
-                'latitude': 'some string'
-            }
-        })
-
-    def test_component_setup_with_validation_and_dependency(self):
-        """Test all config is passed to dependencies."""
-        def config_check_setup(hass, config):
-            """Setup method that tests config is passed in."""
-            if config.get('comp_a', {}).get('valid', False):
-                return True
-            raise Exception('Config not passed in: {}'.format(config))
-
-        loader.set_component('comp_a',
-                             MockModule('comp_a', setup=config_check_setup))
-
-        loader.set_component('switch.platform_a', MockPlatform('comp_b',
-                                                               ['comp_a']))
-
-        bootstrap.setup_component(self.hass, 'switch', {
-            'comp_a': {
-                'valid': True
-            },
-            'switch': {
-                'platform': 'platform_a',
-            }
-        })
-        assert 'comp_a' in self.hass.config.components
-
-    def test_platform_specific_config_validation(self):
-        """Test platform that specifies config."""
-        platform_schema = PLATFORM_SCHEMA.extend({
-            'valid': True,
-        }, extra=vol.PREVENT_EXTRA)
-
-        mock_setup = mock.MagicMock(spec_set=True)
-
-        loader.set_component(
-            'switch.platform_a',
-            MockPlatform(platform_schema=platform_schema,
-                         setup_platform=mock_setup))
-
-        with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'switch', {
-                'switch': {
-                    'platform': 'platform_a',
-                    'invalid': True
-                }
-            })
-            assert mock_setup.call_count == 0
-
-        self.hass.config.components.remove('switch')
-
-        with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'switch', {
-                'switch': {
-                    'platform': 'platform_a',
-                    'valid': True,
-                    'invalid_extra': True,
-                }
-            })
-            assert mock_setup.call_count == 0
-
-        self.hass.config.components.remove('switch')
-
-        with assert_setup_component(1):
-            assert bootstrap.setup_component(self.hass, 'switch', {
-                'switch': {
-                    'platform': 'platform_a',
-                    'valid': True
-                }
-            })
-            assert mock_setup.call_count == 1
-
-    def test_disable_component_if_invalid_return(self):
-        """Test disabling component if invalid return."""
-        loader.set_component(
-            'disabled_component',
-            MockModule('disabled_component', setup=lambda hass, config: None))
-
-        assert not bootstrap.setup_component(self.hass, 'disabled_component')
-        assert loader.get_component('disabled_component') is None
-        assert 'disabled_component' not in self.hass.config.components
-
-        loader.set_component(
-            'disabled_component',
-            MockModule('disabled_component', setup=lambda hass, config: False))
-
-        assert not bootstrap.setup_component(self.hass, 'disabled_component')
-        assert loader.get_component('disabled_component') is not None
-        assert 'disabled_component' not in self.hass.config.components
-
-        loader.set_component(
-            'disabled_component',
-            MockModule('disabled_component', setup=lambda hass, config: True))
-
-        assert bootstrap.setup_component(self.hass, 'disabled_component')
-        assert loader.get_component('disabled_component') is not None
-        assert 'disabled_component' in self.hass.config.components
+    assert 'root' in hass.config.components
+    assert 'first_dep' not in hass.config.components
+    assert 'second_dep' in hass.config.components
+    assert order == ['root', 'second_dep']

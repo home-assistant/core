@@ -1,0 +1,11 @@
+{
+  "domain": "generic_thermostat",
+  "name": "Generic thermostat",
+  "documentation": "https://www.home-assistant.io/components/generic_thermostat",
+  "requirements": [],
+  "dependencies": [
+    "sensor",
+    "switch"
+  ],
+  "codeowners": []
+}

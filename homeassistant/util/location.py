@@ -3,16 +3,16 @@ Module with location helpers.
 
 detect_location_info and elevation are mocked by default during tests.
 """
+import asyncio
 import collections
 import math
 from typing import Any, Optional, Tuple, Dict
 
-import requests
+import aiohttp
 
-
-ELEVATION_URL = 'http://maps.googleapis.com/maps/api/elevation/json'
-FREEGEO_API = 'https://freegeoip.io/json/'
+ELEVATION_URL = 'https://api.open-elevation.com/api/v1/lookup'
 IP_API = 'http://ip-api.com/json'
+IPAPI = 'https://ipapi.co/json/'
 
 # Constants from https://github.com/maurycyp/vincenty
 # Earth ellipsoid according to WGS 84
@@ -34,12 +34,13 @@ LocationInfo = collections.namedtuple(
      'use_metric'])
 
 
-def detect_location_info():
+async def async_detect_location_info(session: aiohttp.ClientSession) \
+        -> Optional[LocationInfo]:
     """Detect location information."""
-    data = _get_freegeoip()
+    data = await _get_ipapi(session)
 
     if data is None:
-        data = _get_ip_api()
+        data = await _get_ip_api(session)
 
     if data is None:
         return None
@@ -50,44 +51,33 @@ def detect_location_info():
     return LocationInfo(**data)
 
 
-def distance(lat1, lon1, lat2, lon2):
-    """Calculate the distance in meters between two points."""
-    return vincenty((lat1, lon1), (lat2, lon2)) * 1000
+def distance(lat1: Optional[float], lon1: Optional[float],
+             lat2: float, lon2: float) -> Optional[float]:
+    """Calculate the distance in meters between two points.
 
-
-def elevation(latitude, longitude):
-    """Return elevation for given latitude and longitude."""
-    try:
-        req = requests.get(
-            ELEVATION_URL,
-            params={
-                'locations': '{},{}'.format(latitude, longitude),
-                'sensor': 'false',
-            },
-            timeout=10)
-    except requests.RequestException:
-        return 0
-
-    if req.status_code != 200:
-        return 0
-
-    try:
-        return int(float(req.json()['results'][0]['elevation']))
-    except (ValueError, KeyError):
-        return 0
+    Async friendly.
+    """
+    if lat1 is None or lon1 is None:
+        return None
+    result = vincenty((lat1, lon1), (lat2, lon2))
+    if result is None:
+        return None
+    return result * 1000
 
 
 # Author: https://github.com/maurycyp
 # Source: https://github.com/maurycyp/vincenty
 # License: https://github.com/maurycyp/vincenty/blob/master/LICENSE
-# pylint: disable=invalid-name, unused-variable
+# pylint: disable=invalid-name
 def vincenty(point1: Tuple[float, float], point2: Tuple[float, float],
-             miles: bool=False) -> Optional[float]:
+             miles: bool = False) -> Optional[float]:
     """
     Vincenty formula (inverse method) to calculate the distance.
 
     Result in kilometers or miles between two points on the surface of a
     spheroid.
+
+    Async friendly.
     """
     # short-circuit coincident points
     if point1[0] == point2[0] and point1[1] == point2[1]:
@@ -103,12 +93,12 @@ def vincenty(point1: Tuple[float, float], point2: Tuple[float, float],
     sinU2 = math.sin(U2)
     cosU2 = math.cos(U2)
 
-    for iteration in range(MAX_ITERATIONS):
+    for _ in range(MAX_ITERATIONS):
         sinLambda = math.sin(Lambda)
         cosLambda = math.cos(Lambda)
         sinSigma = math.sqrt((cosU2 * sinLambda) ** 2 +
                              (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda) ** 2)
-        if sinSigma == 0:
+        if sinSigma == 0.0:
             return 0.0  # coincident points
         cosSigma = sinU1 * sinU2 + cosU1 * cosU2 * cosLambda
         sigma = math.atan2(sinSigma, cosSigma)
@@ -142,41 +132,52 @@ def vincenty(point1: Tuple[float, float], point2: Tuple[float, float],
                                           (-3 + 4 * cos2SigmaM ** 2)))
     s = AXIS_B * A * (sigma - deltaSigma)
 
-    s /= 1000  # Converion of meters to kilometers
+    s /= 1000  # Conversion of meters to kilometers
     if miles:
         s *= MILES_PER_KILOMETER  # kilometers to miles
 
     return round(s, 6)
 
 
-def _get_freegeoip() -> Optional[Dict[str, Any]]:
-    """Query freegeoip.io for location data."""
+async def _get_ipapi(session: aiohttp.ClientSession) \
+        -> Optional[Dict[str, Any]]:
+    """Query ipapi.co for location data."""
     try:
-        raw_info = requests.get(FREEGEO_API, timeout=5).json()
-    except (requests.RequestException, ValueError):
+        resp = await session.get(IPAPI, timeout=5)
+    except (aiohttp.ClientError, asyncio.TimeoutError):
+        return None
+
+    try:
+        raw_info = await resp.json()
+    except (aiohttp.ClientError, ValueError):
         return None
 
     return {
         'ip': raw_info.get('ip'),
-        'country_code': raw_info.get('country_code'),
+        'country_code': raw_info.get('country'),
         'country_name': raw_info.get('country_name'),
         'region_code': raw_info.get('region_code'),
-        'region_name': raw_info.get('region_name'),
+        'region_name': raw_info.get('region'),
         'city': raw_info.get('city'),
-        'zip_code': raw_info.get('zip_code'),
-        'time_zone': raw_info.get('time_zone'),
+        'zip_code': raw_info.get('postal'),
+        'time_zone': raw_info.get('timezone'),
         'latitude': raw_info.get('latitude'),
         'longitude': raw_info.get('longitude'),
     }
 
 
-def _get_ip_api() -> Optional[Dict[str, Any]]:
+async def _get_ip_api(session: aiohttp.ClientSession) \
+        -> Optional[Dict[str, Any]]:
     """Query ip-api.com for location data."""
     try:
-        raw_info = requests.get(IP_API, timeout=5).json()
-    except (requests.RequestException, ValueError):
+        resp = await session.get(IP_API, timeout=5)
+    except (aiohttp.ClientError, asyncio.TimeoutError):
         return None
 
+    try:
+        raw_info = await resp.json()
+    except (aiohttp.ClientError, ValueError):
+        return None
     return {
         'ip': raw_info.get('query'),
         'country_code': raw_info.get('countryCode'),

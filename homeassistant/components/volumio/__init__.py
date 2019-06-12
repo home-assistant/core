@@ -1,0 +1,1 @@
+"""The volumio component."""

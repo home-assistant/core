@@ -1,0 +1,35 @@
+# Describes the format for available counter services
+
+decrement:
+  description: Decrement a counter.
+  fields:
+    entity_id:
+      description: Entity id of the counter to decrement.
+      example: 'counter.count0'
+increment:
+  description: Increment a counter.
+  fields:
+    entity_id:
+      description: Entity id of the counter to increment.
+      example: 'counter.count0'
+reset:
+  description: Reset a counter.
+  fields:
+    entity_id:
+      description: Entity id of the counter to reset.
+      example: 'counter.count0'
+configure:
+  description: Change counter parameters
+  fields:
+    entity_id:
+      description: Entity id of the counter to change.
+      example: 'counter.count0'
+    minimum:
+      description: New minimum value for the counter or None to remove minimum
+      example: 0
+    maximum:
+      description: New maximum value for the counter or None to remove maximum
+      example: 100
+    step:
+      description: New value for step
+      example: 2

@@ -1,0 +1,10 @@
+{
+  "domain": "logger",
+  "name": "Logger",
+  "documentation": "https://www.home-assistant.io/components/logger",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "domain": "xs1",
+  "name": "Xs1",
+  "documentation": "https://www.home-assistant.io/components/xs1",
+  "requirements": [
+    "xs1-api-client==2.3.5"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

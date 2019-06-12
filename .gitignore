@@ -1,15 +1,5 @@
 config/*
-!config/home-assistant.conf.default
-
-# There is not a better solution afaik..
-!config/custom_components
-config/custom_components/*
-!config/custom_components/example.py
-!config/custom_components/hello_world.py
-!config/custom_components/mqtt_example.py
-!config/panels
-config/panels/*
-!config/panels/react.html
+config2/*
 
 tests/testing_config/deps
 tests/testing_config/home-assistant.log
@@ -27,9 +17,12 @@ Icon
 # Thumbnails
 ._*
 
+# IntelliJ IDEA
 .idea
+*.iml
 
 # pytest
+.pytest_cache
 .cache
 
 # GITHUB Proposed Python stuff:
@@ -62,6 +55,8 @@ pip-log.txt
 .coverage
 .tox
 nosetests.xml
+htmlcov/
+test-reports/
 
 # Translations
 *.mo
@@ -83,11 +78,14 @@ pyvenv.cfg
 pip-selfcheck.json
 venv
 .venv
+Pipfile*
+share/*
+Scripts/
 
 # vimmy stuff
 *.swp
 *.swo
-
+tags
 ctags.tmp
 
 # vagrant stuff
@@ -103,3 +101,15 @@ docs/build
 
 # Windows Explorer
 desktop.ini
+/home-assistant.pyproj
+/home-assistant.sln
+/.vs/*
+
+# mypy
+/.mypy_cache/*
+
+# Secrets
+.lokalise_token
+
+# monkeytype
+monkeytype.sqlite3

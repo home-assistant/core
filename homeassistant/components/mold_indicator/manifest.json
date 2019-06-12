@@ -1,0 +1,8 @@
+{
+  "domain": "mold_indicator",
+  "name": "Mold indicator",
+  "documentation": "https://www.home-assistant.io/components/mold_indicator",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

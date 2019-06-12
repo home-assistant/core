@@ -1,0 +1,10 @@
+{
+  "domain": "mythicbeastsdns",
+  "name": "Mythicbeastsdns",
+  "documentation": "https://www.home-assistant.io/components/mythicbeastsdns",
+  "requirements": [
+    "mbddns==0.1.2"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

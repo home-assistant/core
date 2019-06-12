@@ -1,50 +1,77 @@
 #!/usr/bin/env python3
-import os
+"""Home Assistant setup script."""
+from datetime import datetime as dt
 from setuptools import setup, find_packages
-from homeassistant.const import (__version__, PROJECT_PACKAGE_NAME,
-                                 PROJECT_LICENSE, PROJECT_URL,
-                                 PROJECT_EMAIL, PROJECT_DESCRIPTION,
-                                 PROJECT_CLASSIFIERS, GITHUB_URL,
-                                 PROJECT_AUTHOR)
 
-HERE = os.path.abspath(os.path.dirname(__file__))
-DOWNLOAD_URL = ('{}/archive/'
-                '{}.zip'.format(GITHUB_URL, __version__))
+import homeassistant.const as hass_const
+
+PROJECT_NAME = 'Home Assistant'
+PROJECT_PACKAGE_NAME = 'homeassistant'
+PROJECT_LICENSE = 'Apache License 2.0'
+PROJECT_AUTHOR = 'The Home Assistant Authors'
+PROJECT_COPYRIGHT = ' 2013-{}, {}'.format(dt.now().year, PROJECT_AUTHOR)
+PROJECT_URL = 'https://home-assistant.io/'
+PROJECT_EMAIL = 'hello@home-assistant.io'
+
+PROJECT_GITHUB_USERNAME = 'home-assistant'
+PROJECT_GITHUB_REPOSITORY = 'home-assistant'
+
+PYPI_URL = 'https://pypi.python.org/pypi/{}'.format(PROJECT_PACKAGE_NAME)
+GITHUB_PATH = '{}/{}'.format(
+    PROJECT_GITHUB_USERNAME, PROJECT_GITHUB_REPOSITORY)
+GITHUB_URL = 'https://github.com/{}'.format(GITHUB_PATH)
+
+DOWNLOAD_URL = '{}/archive/{}.zip'.format(GITHUB_URL, hass_const.__version__)
+PROJECT_URLS = {
+    'Bug Reports': '{}/issues'.format(GITHUB_URL),
+    'Dev Docs': 'https://developers.home-assistant.io/',
+    'Discord': 'https://discordapp.com/invite/c5DvZ4e',
+    'Forum': 'https://community.home-assistant.io/',
+}
 
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
 REQUIRES = [
-    'requests>=2,<3',
-    'pyyaml>=3.11,<4',
-    'pytz>=2016.7',
-    'pip>=7.0.0',
-    'jinja2>=2.8',
-    'voluptuous==0.9.2',
-    'typing>=3,<4',
-    'aiohttp==1.0.5',
-    'async_timeout==1.0.0',
+    'aiohttp==3.5.4',
+    'astral==1.10.1',
+    'async_timeout==3.0.1',
+    'attrs==19.1.0',
+    'bcrypt==3.1.6',
+    'certifi>=2018.04.16',
+    'importlib-metadata==0.15',
+    'jinja2>=2.10',
+    'PyJWT==1.7.1',
+    # PyJWT has loose dependency. We want the latest one.
+    'cryptography==2.6.1',
+    'pip>=8.0.3',
+    'python-slugify==3.0.2',
+    'pytz>=2019.01',
+    'pyyaml>=3.13,<4',
+    'requests==2.22.0',
+    'ruamel.yaml==0.15.97',
+    'voluptuous==0.11.5',
+    'voluptuous-serialize==2.1.0',
 ]
+
+MIN_PY_VERSION = '.'.join(map(str, hass_const.REQUIRED_PYTHON_VER))
 
 setup(
     name=PROJECT_PACKAGE_NAME,
-    version=__version__,
-    license=PROJECT_LICENSE,
+    version=hass_const.__version__,
     url=PROJECT_URL,
     download_url=DOWNLOAD_URL,
+    project_urls=PROJECT_URLS,
     author=PROJECT_AUTHOR,
     author_email=PROJECT_EMAIL,
-    description=PROJECT_DESCRIPTION,
     packages=PACKAGES,
     include_package_data=True,
     zip_safe=False,
-    platforms='any',
     install_requires=REQUIRES,
+    python_requires='>={}'.format(MIN_PY_VERSION),
     test_suite='tests',
-    keywords=['home', 'automation'],
     entry_points={
         'console_scripts': [
             'hass = homeassistant.__main__:main'
         ]
     },
-    classifiers=PROJECT_CLASSIFIERS,
 )

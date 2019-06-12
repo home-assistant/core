@@ -1,0 +1,10 @@
+{
+  "domain": "plum_lightpad",
+  "name": "Plum lightpad",
+  "documentation": "https://www.home-assistant.io/components/plum_lightpad",
+  "requirements": [
+    "plumlightpad==0.0.11"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

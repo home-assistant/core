@@ -1,0 +1,10 @@
+{
+  "domain": "thinkingcleaner",
+  "name": "Thinkingcleaner",
+  "documentation": "https://www.home-assistant.io/components/thinkingcleaner",
+  "requirements": [
+    "pythinkingcleaner==0.0.3"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Det er kun n\u00f8dvendigt med en ops\u00e6tning"
+        },
+        "create_entry": {
+            "default": "\n\nP\u00e5 Android skal du \u00e5bne [OwnTracks applikationen]({android_url}), g\u00e5 til indstillinger -> forbindelse. Skift f\u00f8lgende indstillinger: \n - Tilstand: Privat HTTP\n - V\u00e6rt: {webhook_url}\n - Identifikation:\n   - Brugernavn: ` <Your name> ` \n   - Enheds-id: ` <Your device name> ` \n\nP\u00e5 iOS skal du \u00e5bne [OwnTracks applikationen]({ios_url}), tryk p\u00e5 (i) ikonet \u00f8verst til venstre -> indstillinger. Skift f\u00f8lgende indstillinger: \n - Tilstand: HTTP\n - URL: {webhook_url}\n - Aktiver godkendelse \n - Bruger ID: ` <Your name> ` \n\n {secret}\n \n Se [dokumentationen]({docs_url}) for at f\u00e5 flere oplysninger."
+        },
+        "step": {
+            "user": {
+                "description": "Er du sikker p\u00e5 at du vil konfigurere OwnTracks?",
+                "title": "Konfigurer OwnTracks"
+            }
+        },
+        "title": "OwnTracks"
+    }
+}

@@ -1,0 +1,10 @@
+{
+  "domain": "system_health",
+  "name": "System health",
+  "documentation": "https://www.home-assistant.io/components/system_health",
+  "requirements": [],
+  "dependencies": [
+    "http"
+  ],
+  "codeowners": []
+}

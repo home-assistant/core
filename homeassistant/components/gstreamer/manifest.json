@@ -1,0 +1,10 @@
+{
+  "domain": "gstreamer",
+  "name": "Gstreamer",
+  "documentation": "https://www.home-assistant.io/components/gstreamer",
+  "requirements": [
+    "gstreamer-player==1.1.2"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

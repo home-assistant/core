@@ -1,0 +1,10 @@
+{
+  "domain": "weblink",
+  "name": "Weblink",
+  "documentation": "https://www.home-assistant.io/components/weblink",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

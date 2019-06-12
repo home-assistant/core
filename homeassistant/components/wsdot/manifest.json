@@ -1,0 +1,8 @@
+{
+  "domain": "wsdot",
+  "name": "Wsdot",
+  "documentation": "https://www.home-assistant.io/components/wsdot",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

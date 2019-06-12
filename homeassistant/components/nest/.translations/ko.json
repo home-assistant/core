@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "\ud558\ub098\uc758 Nest \uacc4\uc815\ub9cc \uad6c\uc131 \ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4.",
+            "authorize_url_fail": "\uc778\uc99d url \uc0dd\uc131\uc5d0 \uc54c \uc218 \uc5c6\ub294 \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4.",
+            "authorize_url_timeout": "\uc778\uc99d url \uc0dd\uc131 \uc2dc\uac04\uc774 \ucd08\uacfc\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+            "no_flows": "Nest \ub97c \uc778\uc99d\ud558\ub824\uba74 \uba3c\uc800 Nest \ub97c \uad6c\uc131\ud574\uc57c \ud569\ub2c8\ub2e4. [\uc548\ub0b4](https://www.home-assistant.io/components/nest/) \ub97c \uc77d\uc5b4\ubcf4\uc138\uc694."
+        },
+        "error": {
+            "internal_error": "\ucf54\ub4dc \uc720\ud6a8\uc131 \uac80\uc0ac\uc5d0 \ub0b4\ubd80 \uc624\ub958 \ubc1c\uc0dd",
+            "invalid_code": "\uc798\ubabb\ub41c \ucf54\ub4dc",
+            "timeout": "\ucf54\ub4dc \uc720\ud6a8\uc131 \uac80\uc0ac \uc2dc\uac04 \ucd08\uacfc",
+            "unknown": "\ucf54\ub4dc \uc720\ud6a8\uc131 \uac80\uc0ac\uc5d0 \uc54c \uc218 \uc5c6\ub294 \uc624\ub958 \ubc1c\uc0dd"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "\uacf5\uae09\uc790"
+                },
+                "description": "Nest \ub97c \uc778\uc99d\ud558\uae30 \uc704\ud55c \uc778\uc99d \uacf5\uae09\uc790\ub97c \uc120\ud0dd\ud574\uc8fc\uc138\uc694.",
+                "title": "\uc778\uc99d \uacf5\uae09\uc790"
+            },
+            "link": {
+                "data": {
+                    "code": "\ud540 \ucf54\ub4dc"
+                },
+                "description": "Nest \uacc4\uc815\uc744 \uc5f0\uacb0\ud558\ub824\uba74, [\uacc4\uc815 \uc5f0\uacb0 \uc2b9\uc778]({url}) \uc744 \ud574\uc8fc\uc138\uc694.\n\n\uc2b9\uc778 \ud6c4, \uc544\ub798\uc758 \ud540 \ucf54\ub4dc\ub97c \ubcf5\uc0ac\ud558\uc5ec \ubd99\uc5ec\ub123\uc73c\uc138\uc694.",
+                "title": "Nest \uacc4\uc815 \uc5f0\uacb0"
+            }
+        },
+        "title": "Nest"
+    }
+}

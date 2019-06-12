@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Google Hangouts is already configured",
+            "unknown": "Unknown error occurred."
+        },
+        "error": {
+            "invalid_login": "Invalid Login, please try again.",
+            "invalid_2fa": "Invalid 2 Factor Authentication, please try again.",
+            "invalid_2fa_method": "Invalid 2FA Method (Verify on Phone)."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-Mail Address",
+                    "password": "Password",
+                    "authorization_code":  "Authorization Code (required for manual authentication)"
+                },
+                "title": "Google Hangouts Login"
+            },
+            "2fa": {
+                "data": {
+                  "2fa": "2FA Pin"
+                },
+                "title": "2-Factor-Authentication"
+            }
+        },
+        "title": "Google Hangouts"
+    }
+}

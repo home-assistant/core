@@ -1,0 +1,1 @@
+"""The hipchat component."""

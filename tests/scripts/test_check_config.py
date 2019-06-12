@@ -1,10 +1,10 @@
 """Test check_config script."""
-import asyncio
 import logging
-import os
-import unittest
+import os  # noqa: F401 pylint: disable=unused-import
+from unittest.mock import patch
 
 import homeassistant.scripts.check_config as check_config
+from homeassistant.config import YAML_CONFIG_FILE
 from tests.common import patch_yaml_files, get_test_config_dir
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,154 +20,152 @@ BASE_CONFIG = (
     '\n\n'
 )
 
+BAD_CORE_CONFIG = (
+    'homeassistant:\n'
+    '  unit_system: bad\n'
+    '\n\n'
+)
 
-def change_yaml_files(check_dict):
-    """Change the ['yaml_files'] property and remove the config path.
 
-    Also removes other files like service.yaml that gets loaded
-    """
+def normalize_yaml_files(check_dict):
+    """Remove configuration path from ['yaml_files']."""
     root = get_test_config_dir()
-    keys = check_dict['yaml_files'].keys()
-    check_dict['yaml_files'] = []
-    for key in sorted(keys):
-        if not key.startswith('/'):
-            check_dict['yaml_files'].append(key)
-        if key.startswith(root):
-            check_dict['yaml_files'].append('...' + key[len(root):])
+    return [key.replace(root, '...')
+            for key in sorted(check_dict['yaml_files'].keys())]
 
 
-def tearDownModule(self):  # pylint: disable=invalid-name
-    """Clean files."""
-    # .HA_VERSION created during bootstrap's config update
-    path = get_test_config_dir('.HA_VERSION')
-    if os.path.isfile(path):
-        os.remove(path)
+# pylint: disable=no-self-use,invalid-name
+@patch('os.path.isfile', return_value=True)
+def test_bad_core_config(isfile_patch, loop):
+    """Test a bad core config setup."""
+    files = {
+        YAML_CONFIG_FILE: BAD_CORE_CONFIG,
+    }
+    with patch_yaml_files(files):
+        res = check_config.check(get_test_config_dir())
+        assert res['except'].keys() == {'homeassistant'}
+        assert res['except']['homeassistant'][1] == {'unit_system': 'bad'}
 
 
-class TestCheckConfig(unittest.TestCase):
-    """Tests for the homeassistant.scripts.check_config module."""
+@patch('os.path.isfile', return_value=True)
+def test_config_platform_valid(isfile_patch, loop):
+    """Test a valid platform setup."""
+    files = {
+        YAML_CONFIG_FILE: BASE_CONFIG + 'light:\n  platform: demo',
+    }
+    with patch_yaml_files(files):
+        res = check_config.check(get_test_config_dir())
+        assert res['components'].keys() == {'homeassistant', 'light'}
+        assert res['components']['light'] == [{'platform': 'demo'}]
+        assert res['except'] == {}
+        assert res['secret_cache'] == {}
+        assert res['secrets'] == {}
+        assert len(res['yaml_files']) == 1
 
-    def setUp(self):
-        """Prepare the test."""
-        # Somewhere in the tests our event loop gets killed,
-        # this ensures we have one.
-        try:
-            asyncio.get_event_loop()
-        except (RuntimeError, AssertionError):
-            # Py35: RuntimeError
-            # Py34: AssertionError
-            asyncio.set_event_loop(asyncio.new_event_loop())
 
-    # pylint: disable=no-self-use,invalid-name
-    def test_config_platform_valid(self):
-        """Test a valid platform setup."""
-        files = {
-            'light.yaml': BASE_CONFIG + 'light:\n  platform: demo',
+@patch('os.path.isfile', return_value=True)
+def test_component_platform_not_found(isfile_patch, loop):
+    """Test errors if component or platform not found."""
+    # Make sure they don't exist
+    files = {
+        YAML_CONFIG_FILE: BASE_CONFIG + 'beer:',
+    }
+    with patch_yaml_files(files):
+        res = check_config.check(get_test_config_dir())
+        assert res['components'].keys() == {'homeassistant'}
+        assert res['except'] == {
+            check_config.ERROR_STR: ['Integration not found: beer']}
+        assert res['secret_cache'] == {}
+        assert res['secrets'] == {}
+        assert len(res['yaml_files']) == 1
+
+    files = {
+        YAML_CONFIG_FILE: BASE_CONFIG + 'light:\n  platform: beer',
+    }
+    with patch_yaml_files(files):
+        res = check_config.check(get_test_config_dir())
+        assert res['components'].keys() == {'homeassistant', 'light'}
+        assert res['components']['light'] == []
+        assert res['except'] == {
+            check_config.ERROR_STR: [
+                'Integration beer not found when trying to verify its '
+                'light platform.',
+            ]}
+        assert res['secret_cache'] == {}
+        assert res['secrets'] == {}
+        assert len(res['yaml_files']) == 1
+
+
+@patch('os.path.isfile', return_value=True)
+def test_secrets(isfile_patch, loop):
+    """Test secrets config checking method."""
+    secrets_path = get_test_config_dir('secrets.yaml')
+
+    files = {
+        get_test_config_dir(YAML_CONFIG_FILE): BASE_CONFIG + (
+            'http:\n'
+            '  api_password: !secret http_pw'),
+        secrets_path: (
+            'logger: debug\n'
+            'http_pw: abc123'),
+    }
+
+    with patch_yaml_files(files):
+
+        res = check_config.check(get_test_config_dir(), True)
+
+        assert res['except'] == {}
+        assert res['components'].keys() == {'homeassistant', 'http'}
+        assert res['components']['http'] == {
+            'api_password': 'abc123',
+            'cors_allowed_origins': [],
+            'ip_ban_enabled': True,
+            'login_attempts_threshold': -1,
+            'server_host': '0.0.0.0',
+            'server_port': 8123,
+            'trusted_networks': [],
+            'ssl_profile': 'modern',
         }
-        with patch_yaml_files(files):
-            res = check_config.check(get_test_config_dir('light.yaml'))
-            change_yaml_files(res)
-            self.assertDictEqual({
-                'components': {'light': [{'platform': 'demo'}]},
-                'except': {},
-                'secret_cache': {},
-                'secrets': {},
-                'yaml_files': ['.../light.yaml']
-            }, res)
+        assert res['secret_cache'] == {secrets_path: {'http_pw': 'abc123'}}
+        assert res['secrets'] == {'http_pw': 'abc123'}
+        assert normalize_yaml_files(res) == [
+            '.../configuration.yaml', '.../secrets.yaml']
 
-    def test_config_component_platform_fail_validation(self):
-        """Test errors if component & platform not found."""
-        files = {
-            'component.yaml': BASE_CONFIG + 'http:\n  password: err123',
-        }
-        with patch_yaml_files(files):
-            res = check_config.check(get_test_config_dir('component.yaml'))
-            change_yaml_files(res)
 
-            self.assertDictEqual({}, res['components'])
-            self.assertDictEqual(
-                {'http': {'password': 'err123'}},
-                res['except']
-            )
-            self.assertDictEqual({}, res['secret_cache'])
-            self.assertDictEqual({}, res['secrets'])
-            self.assertListEqual(['.../component.yaml'], res['yaml_files'])
+@patch('os.path.isfile', return_value=True)
+def test_package_invalid(isfile_patch, loop):
+    """Test a valid platform setup."""
+    files = {
+        YAML_CONFIG_FILE: BASE_CONFIG + (
+            '  packages:\n'
+            '    p1:\n'
+            '      group: ["a"]'),
+    }
+    with patch_yaml_files(files):
+        res = check_config.check(get_test_config_dir())
 
-        files = {
-            'platform.yaml': (BASE_CONFIG + 'mqtt:\n\n'
-                              'light:\n  platform: mqtt_json'),
-        }
-        with patch_yaml_files(files):
-            res = check_config.check(get_test_config_dir('platform.yaml'))
-            change_yaml_files(res)
-            self.assertDictEqual(
-                {'mqtt': {'keepalive': 60, 'port': 1883, 'protocol': '3.1.1'},
-                 'light': []},
-                res['components']
-            )
-            self.assertDictEqual(
-                {'light.mqtt_json': {'platform': 'mqtt_json'}},
-                res['except']
-            )
-            self.assertDictEqual({}, res['secret_cache'])
-            self.assertDictEqual({}, res['secrets'])
-            self.assertListEqual(['.../platform.yaml'], res['yaml_files'])
+        assert res['except'].keys() == {'homeassistant.packages.p1.group'}
+        assert res['except']['homeassistant.packages.p1.group'][1] == \
+            {'group': ['a']}
+        assert len(res['except']) == 1
+        assert res['components'].keys() == {'homeassistant'}
+        assert len(res['components']) == 1
+        assert res['secret_cache'] == {}
+        assert res['secrets'] == {}
+        assert len(res['yaml_files']) == 1
 
-    def test_component_platform_not_found(self):
-        """Test errors if component or platform not found."""
-        files = {
-            'badcomponent.yaml': BASE_CONFIG + 'beer:',
-            'badplatform.yaml': BASE_CONFIG + 'light:\n  platform: beer',
-        }
-        with patch_yaml_files(files):
-            res = check_config.check(get_test_config_dir('badcomponent.yaml'))
-            change_yaml_files(res)
-            self.assertDictEqual({}, res['components'])
-            self.assertDictEqual({check_config.ERROR_STR:
-                                  ['Component not found: beer']},
-                                 res['except'])
-            self.assertDictEqual({}, res['secret_cache'])
-            self.assertDictEqual({}, res['secrets'])
-            self.assertListEqual(['.../badcomponent.yaml'], res['yaml_files'])
 
-            res = check_config.check(get_test_config_dir('badplatform.yaml'))
-            change_yaml_files(res)
-            self.assertDictEqual({'light': []}, res['components'])
-            self.assertDictEqual({check_config.ERROR_STR:
-                                  ['Platform not found: light.beer']},
-                                 res['except'])
-            self.assertDictEqual({}, res['secret_cache'])
-            self.assertDictEqual({}, res['secrets'])
-            self.assertListEqual(['.../badplatform.yaml'], res['yaml_files'])
-
-    def test_secrets(self):
-        """Test secrets config checking method."""
-        files = {
-            get_test_config_dir('secret.yaml'): (
-                BASE_CONFIG +
-                'http:\n'
-                '  api_password: !secret http_pw'),
-            'secrets.yaml': ('logger: debug\n'
-                             'http_pw: abc123'),
-        }
-        self.maxDiff = None
-
-        with patch_yaml_files(files):
-            config_path = get_test_config_dir('secret.yaml')
-            secrets_path = get_test_config_dir('secrets.yaml')
-
-            res = check_config.check(config_path)
-            change_yaml_files(res)
-
-            # convert secrets OrderedDict to dict for assertequal
-            for key, val in res['secret_cache'].items():
-                res['secret_cache'][key] = dict(val)
-
-            self.assertDictEqual({
-                'components': {'http': {'api_password': 'abc123',
-                                        'server_port': 8123}},
-                'except': {},
-                'secret_cache': {secrets_path: {'http_pw': 'abc123'}},
-                'secrets': {'http_pw': 'abc123'},
-                'yaml_files': ['.../secret.yaml', '.../secrets.yaml']
-            }, res)
+def test_bootstrap_error(loop):
+    """Test a valid platform setup."""
+    files = {
+        YAML_CONFIG_FILE: BASE_CONFIG + 'automation: !include no.yaml',
+    }
+    with patch_yaml_files(files):
+        res = check_config.check(get_test_config_dir(YAML_CONFIG_FILE))
+        err = res['except'].pop(check_config.ERROR_STR)
+        assert len(err) == 1
+        assert res['except'] == {}
+        assert res['components'] == {}  # No components, load failed
+        assert res['secret_cache'] == {}
+        assert res['secrets'] == {}
+        assert res['yaml_files'] == {}

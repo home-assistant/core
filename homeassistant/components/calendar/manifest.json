@@ -1,0 +1,10 @@
+{
+  "domain": "calendar",
+  "name": "Calendar",
+  "documentation": "https://www.home-assistant.io/components/calendar",
+  "requirements": [],
+  "dependencies": [
+    "http"
+  ],
+  "codeowners": []
+}

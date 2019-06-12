@@ -1,0 +1,14 @@
+{
+  "domain": "yi",
+  "name": "Yi",
+  "documentation": "https://www.home-assistant.io/components/yi",
+  "requirements": [
+    "aioftp==0.12.0"
+  ],
+  "dependencies": [
+    "ffmpeg"
+  ],
+  "codeowners": [
+    "@bachya"
+  ]
+}

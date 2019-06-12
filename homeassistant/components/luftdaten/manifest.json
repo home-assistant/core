@@ -1,0 +1,13 @@
+{
+  "domain": "luftdaten",
+  "name": "Luftdaten",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/components/luftdaten",
+  "requirements": [
+    "luftdaten==0.3.4"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

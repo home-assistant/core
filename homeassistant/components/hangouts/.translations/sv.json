@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Google Hangouts \u00e4r redan inst\u00e4llt",
+            "unknown": "Ett ok\u00e4nt fel intr\u00e4ffade"
+        },
+        "error": {
+            "invalid_2fa": "Ogiltig 2FA autentisering, f\u00f6rs\u00f6k igen.",
+            "invalid_2fa_method": "Ogiltig 2FA-metod (Verifiera med telefon).",
+            "invalid_login": "Ogiltig inloggning, f\u00f6rs\u00f6k igen."
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "2FA Pinkod"
+                },
+                "description": "Missing english translation",
+                "title": "Tv\u00e5faktorsautentisering"
+            },
+            "user": {
+                "data": {
+                    "authorization_code": "Auktoriseringskod (kr\u00e4vs vid manuell verifiering)",
+                    "email": "E-postadress",
+                    "password": "L\u00f6senord"
+                },
+                "description": "Missing english translation",
+                "title": "Google Hangouts-inloggning"
+            }
+        },
+        "title": "Google Hangouts"
+    }
+}

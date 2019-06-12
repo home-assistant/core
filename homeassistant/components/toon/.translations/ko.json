@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "client_id": "\ud074\ub77c\uc774\uc5b8\ud2b8 ID \uac00 \uc720\ud6a8\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.",
+            "client_secret": "\ud074\ub77c\uc774\uc5b8\ud2b8 \ube44\ubc00\ubc88\ud638\uac00 \uc720\ud6a8\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.",
+            "no_agreements": "\uc774 \uacc4\uc815\uc5d0\ub294 Toon \ub514\uc2a4\ud50c\ub808\uc774\uac00 \uc5c6\uc2b5\ub2c8\ub2e4.",
+            "no_app": "Toon \uc744 \uc778\uc99d\ud558\ub824\uba74 \uba3c\uc800 Toon \uc744 \uad6c\uc131\ud574\uc57c \ud569\ub2c8\ub2e4. [\uc548\ub0b4](https://www.home-assistant.io/components/toon/) \ub97c \uc77d\uc5b4\ubcf4\uc138\uc694.",
+            "unknown_auth_fail": "\uc778\uc99d\ud558\ub294 \ub3d9\uc548 \uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4."
+        },
+        "error": {
+            "credentials": "\uc0ac\uc6a9\uc790 \uc774\ub984 \ud639\uc740 \ube44\ubc00\ubc88\ud638\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "display_exists": "\uc120\ud0dd\ub41c \ub514\uc2a4\ud50c\ub808\uc774\ub294 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+        },
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "tenant": "\uac70\uc8fc\uc790",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                },
+                "description": "Eneco Toon \uacc4\uc815\uc73c\ub85c \uc778\uc99d\ud574\uc8fc\uc138\uc694. (\uac1c\ubc1c\uc790 \uacc4\uc815 \uc544\ub2d8)",
+                "title": "Toon \uacc4\uc815 \uc5f0\uacb0"
+            },
+            "display": {
+                "data": {
+                    "display": "\ub514\uc2a4\ud50c\ub808\uc774 \uc120\ud0dd"
+                },
+                "description": "\uc5f0\uacb0\ud560 Toon \ub514\uc2a4\ud50c\ub808\uc774\ub97c \uc120\ud0dd\ud574\uc8fc\uc138\uc694.",
+                "title": "\ub514\uc2a4\ud50c\ub808\uc774 \uc120\ud0dd"
+            }
+        },
+        "title": "Toon"
+    }
+}
