@@ -15,5 +15,9 @@ SSDP = {
             "hue"
         ]
     },
-    "st": {}
+    "st": {
+        "urn:schemas-upnp-org:device:ZonePlayer:1": [
+            "sonos"
+        ]
+    }
 }
