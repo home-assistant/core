@@ -61,7 +61,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
         if user_input is not None:
             try:
                 self.creds = await self.hass.async_add_executor_job(
-                    self.helper.get_creds)
+                    self.helper.get_creds, DEFAULT_ALIAS)
                 if self.creds is not None:
                     return await self.async_step_mode()
                 return self.async_abort(reason='credential_error')
