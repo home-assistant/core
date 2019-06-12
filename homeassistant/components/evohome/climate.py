@@ -17,7 +17,7 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 
 from . import (EvoDevice, CONF_LOCATION_IDX)
 from .const import (
-    DOMAIN, DOMAIN, GWS, TCS,
+    DOMAIN, GWS, TCS,
     EVO_RESET, EVO_AUTO, EVO_AUTOECO, EVO_AWAY, EVO_DAYOFF, EVO_CUSTOM,
     EVO_HEATOFF, EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER)
 
@@ -290,7 +290,7 @@ class EvoController(EvoDevice, ClimateDevice):
     def _refresh(self, packet):
         if packet['signal'] == 'first_update':
             self.async_schedule_update_ha_state(force_refresh=True)
-            # _LOGGER.warn("_refresh(EvoTCS): first_update")                       # TODO: delete me
+            _LOGGER.warn("_refresh(EvoTCS): first_update")                       # TODO: delete me
 
     @property
     def device_state_attributes(self):

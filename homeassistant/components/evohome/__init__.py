@@ -224,6 +224,7 @@ class EvoBroker:
     def update(self):
         _LOGGER.warn("update()")
 
+
 class EvoDevice(Entity):
     """Base for any Honeywell evohome device.
 
