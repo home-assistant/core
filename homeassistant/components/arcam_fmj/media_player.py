@@ -298,9 +298,9 @@ class ArcamFmj(MediaPlayerDevice):
     @property
     def volume_level(self):
         value = self._state.get_volume()
-        if value:
-            return value / 99.0
-        return None
+        if value is None:
+            return None
+        return value / 99.0
 
     @property
     def media_content_type(self):
