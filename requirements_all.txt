@@ -1922,7 +1922,11 @@ tikteck==0.4
 todoist-python==7.0.17
 
 # homeassistant.components.toon
+<<<<<<< HEAD
 toonlib==1.1.3
+=======
+toonapilib==3.2.4
+>>>>>>> Version bump for toonapilib to include new API call for fetching thermostat states, which was sometimes missing causing errors in the library (#24459)
 
 <<<<<<< HEAD
 # homeassistant.components.alarm_control_panel.totalconnect
