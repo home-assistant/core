@@ -15,5 +15,9 @@ SSDP = {
             "hue"
         ]
     },
-    "st": {}
+    "st": {
+        "urn:schemas-denon-com:device:ACT-Denon:1": [
+            "heos"
+        ]
+    }
 }
