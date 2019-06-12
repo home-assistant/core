@@ -86,8 +86,10 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
         found = []
         for unknown_face in unknowns:
             for name, face in self._faces.items():
-                result = face_recognition.compare_faces([face], unknown_face,
-                    tolerance=self._tolerance)
+                result = face_recognition.compare_faces(
+                            [face],
+                            unknown_face,
+                            tolerance=self._tolerance)
                 if result[0]:
                     found.append({
                         ATTR_NAME: name
