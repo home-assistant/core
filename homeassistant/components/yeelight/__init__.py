@@ -294,6 +294,6 @@ class YeelightDevice:
         """Fetch initial device properties."""
         initial_update = self._update_properties()
 
+        # We can build correct class anyway.
         if not initial_update and self.model:
-            """We can build correct class anyway."""
             self._initialize_device()
