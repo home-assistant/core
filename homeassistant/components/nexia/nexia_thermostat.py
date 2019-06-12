@@ -644,7 +644,7 @@ class NexiaThermostat:
         :param thermostat_id: int - the ID of the thermostat to use
         :return: float
         """
-        if self.has_outdoor_temperature():
+        if self.has_outdoor_temperature(thermostat_id):
             return float(self._get_thermostat_key('outdoor_temperature', thermostat_id))
         else:
             raise Exception("This system does not have an outdoor temperature sensor")
@@ -655,7 +655,7 @@ class NexiaThermostat:
         :param thermostat_id: int - the ID of the thermostat to use
         :return: float
         """
-        if self.has_relative_humidity():
+        if self.has_relative_humidity(thermostat_id):
             return self._get_thermostat_key("current_relative_humidity", thermostat_id)
         else:
             raise Exception("This system does not have a relative humidity sensor.")
@@ -666,7 +666,7 @@ class NexiaThermostat:
         :param thermostat_id: int - the ID of the thermostat to use
         :return: float
         """
-        if self.has_variable_speed_compressor():
+        if self.has_variable_speed_compressor(thermostat_id):
             return self._get_thermostat_key("compressor_speed", thermostat_id)
         else:
             raise Exception("This system does not have a variable speed compressor.", thermostat_id)
@@ -677,7 +677,7 @@ class NexiaThermostat:
         :param thermostat_id: int - the ID of the thermostat to use
         :return: float
         """
-        if self.has_variable_speed_compressor():
+        if self.has_variable_speed_compressor(thermostat_id):
             return self._get_thermostat_key("requested_compressor_speed", thermostat_id)
         else:
             raise Exception("This system does not have a variable speed compressor.")
@@ -688,7 +688,7 @@ class NexiaThermostat:
         :param thermostat_id: int - the ID of the thermostat to use
         :return: float
         """
-        if self.has_variable_fan_speed():
+        if self.has_variable_fan_speed(thermostat_id):
             return self._get_thermostat_key("fan_speed", thermostat_id)
         else:
             raise AttributeError("This system does not have variable fan speed.")

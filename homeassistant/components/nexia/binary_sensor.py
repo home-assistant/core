@@ -18,7 +18,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         sensors.append(NexiaBinarySensor(thermostat, scan_interval, thermostat_id, "is_blower_active",
                                          "Blower Active", None))
-        if thermostat.has_emergency_heat():
+        if thermostat.has_emergency_heat(thermostat_id):
             sensors.append(NexiaBinarySensor(thermostat, scan_interval, thermostat_id, "is_emergency_heat_active",
                                              "Emergency Heat Active", None))
 
@@ -34,8 +34,7 @@ class NexiaBinarySensor(BinarySensorDevice):
     def __init__(self, device, scan_interval, thermostat_id, sensor_call, sensor_name, sensor_class):
         """Initialize the Ecobee sensor."""
         self._device = device
-        self._name = sensor_name
-        self.sensor_name = self._device.get_thermostat_name(thermostat_id) + " " + sensor_name
+        self._name = self._device.get_thermostat_name(thermostat_id) + " " + sensor_name
         self._thermostat_id = thermostat_id
         self._call = sensor_call
         self._state = None
