@@ -18,6 +18,9 @@ SSDP = {
     "st": {
         "urn:schemas-denon-com:device:ACT-Denon:1": [
             "heos"
+        ],
+        "urn:schemas-upnp-org:device:ZonePlayer:1": [
+            "sonos"
         ]
     }
 }

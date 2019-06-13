@@ -48,7 +48,6 @@ SERVICE_XIAOMI_GW = 'xiaomi_gw'
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_DAIKIN: 'daikin',
     SERVICE_TELLDUSLIVE: 'tellduslive',
-    'sonos': 'sonos',
     SERVICE_IGD: 'upnp',
 }
 
@@ -104,6 +103,7 @@ MIGRATED_SERVICE_HANDLERS = [
     'homekit',
     'ikea_tradfri',
     'philips_hue',
+    'sonos',
     SERVICE_WEMO,
 ]
 <<<<<<< HEAD
