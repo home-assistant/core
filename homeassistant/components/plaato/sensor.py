@@ -40,7 +40,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entities = []
             sensors = get_device_sensors(device_id)
 
-            for sensor_type in sensors.items():
+            for sensor_type in sensors:
                 entities.append(PlaatoSensor(device_id, sensor_type))
 
             devices[device_id] = entities
@@ -124,6 +124,11 @@ class PlaatoSensor(Entity):
             return '%'
 
         return ''
+
+    @property
+    def should_poll(self):
+        """Return the polling state."""
+        return False
 
     async def async_update(self):
         """Fetch new state data for the sensor."""
