@@ -128,22 +128,31 @@ class PS4Device(MediaPlayerDevice):
         """Notify protocol to callback with update changes."""
         self.hass.data[PS4_DATA].protocol.add_callback(
             self._ps4, self.status_callback)
+        
+    def check_region(self):
+        # Non-Breaking although data returned may be inaccurate.
+        if self._region in deprecated_regions:
+            _LOGGER.info("""Region: %s has been deprecated.
+                            Please remove PS4 integration
+                            and Re-configure again to utilize
+                            current regions""", self._region)
 
     async def async_added_to_hass(self):
         """Subscribe PS4 events."""
         self.hass.data[PS4_DATA].devices.append(self)
+        self.check_region()
 
     async def async_update(self):
         """Retrieve the latest data."""
         if self._ps4.ddp_protocol is not None:
             # Request Status with asyncio transport.
-            # Status is written to ps4.status by ddp_protocol.
             self._ps4.get_status()
             if not self._ps4.connected and not self._ps4.is_standby:
                 await self._ps4.async_connect()
 
-        # Try to ensure correct status is set for device info.
+        # Try to ensure correct status is set on startup for device info.
         if self._ps4.ddp_protocol is None:
+            # Use socket.socket.
             await self.hass.async_add_executor_job(self._ps4.get_status)
             self._ps4.ddp_protocol = self.hass.data[PS4_DATA].protocol
             self.subscribe_to_protocol()
@@ -155,18 +164,13 @@ class PS4Device(MediaPlayerDevice):
                 self._parse_status()
 
     def _parse_status(self):
+        """Parse status."""
         status = self._ps4.status
-        _LOGGER.error(status)
+
         if status is not None:
             self._games = self.load_games()
             if self._games is not None:
                 self._source_list = list(sorted(self._games.values()))
-            # Non-Breaking although data returned may be inaccurate.
-            if self._region in deprecated_regions:
-                _LOGGER.info("""Region: %s has been deprecated.
-                                Please remove PS4 integration
-                                and Re-configure again to utilize
-                                current regions""", self._region)
             self._retry = 0
             self._disconnected = False
             if status.get('status') == 'Ok':
@@ -235,6 +239,7 @@ class PS4Device(MediaPlayerDevice):
         except asyncio.TimeoutError:
             title = None
             _LOGGER.error("PS Store Search Timed out")
+
         else:
             if title is not None:
                 app_name = title.name
@@ -249,7 +254,7 @@ class PS4Device(MediaPlayerDevice):
             self._source = self._media_title
             self._media_image = art or None
 
-            # Assume media type is game if search fails.
+            # Also assume media type is game if search fails.
             if title.game_type != 'App' or title is None:
                 self._media_type = MEDIA_TYPE_GAME
             else:
@@ -263,9 +268,11 @@ class PS4Device(MediaPlayerDevice):
             store = self._games[self._media_content_id]
             if store != self._media_title:
                 self._games.pop(self._media_content_id)
+
         if self._media_content_id not in self._games:
             self.add_games(self._media_content_id, self._media_title)
             self._games = self.load_games()
+
         self._source_list = list(sorted(self._games.values()))
 
     def load_games(self):
@@ -424,7 +431,6 @@ class PS4Device(MediaPlayerDevice):
 
     async def async_turn_on(self):
         """Turn on the media player."""
-        self._power_on = True
         self._ps4.wakeup()
 
     async def async_media_pause(self):
