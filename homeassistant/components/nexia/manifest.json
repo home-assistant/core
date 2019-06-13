@@ -1,8 +1,8 @@
 {
   "domain": "nexia",
   "name": "Nexia",
-  "documentation": "https://www.example.com",
+  "documentation": "https://www.home-assistant.io/components/nexia/",
   "requirements": ["requests", "bs4", "html5lib"],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["ryannazaretian"]
 }
