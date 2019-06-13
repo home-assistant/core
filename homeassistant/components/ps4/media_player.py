@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.util.json import load_json, save_json
 
-from .const import (DOMAIN as PS4_DOMAIN, PS4_DATA,
+from .const import (DEFAULT_ALIAS, DOMAIN as PS4_DOMAIN, PS4_DATA,
                     REGIONS as deprecated_regions)
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ async def async_setup_platform(
         host = device[CONF_HOST]
         region = device[CONF_REGION]
         name = device[CONF_NAME]
-        ps4 = pyps4.Ps4Async(host, creds, device_name='Home-Assistant')
+        ps4 = pyps4.Ps4Async(host, creds, device_name=DEFAULT_ALIAS)
         device_list.append(PS4Device(
             config, name, host, region, ps4, creds, games_file))
     async_add_entities(device_list, update_before_add=True)
@@ -112,7 +112,6 @@ class PS4Device(MediaPlayerDevice):
         self._disconnected = False
         self._info = None
         self._unique_id = None
-        self._power_on = False
 
     @callback
     def status_callback(self):
@@ -225,6 +224,12 @@ class PS4Device(MediaPlayerDevice):
         try:
             title = await self._ps4.async_get_ps_store_data(
                 name, title_id, self._region)
+
+            # Search all databases.
+            if title is None:
+                title = await self._ps4.async_search_all_ps_data(
+                    name, title_id, timeout=10)
+
         except PSDataIncomplete:
             title = None
         except asyncio.TimeoutError:
@@ -238,6 +243,7 @@ class PS4Device(MediaPlayerDevice):
                 _LOGGER.error(
                     "Could not find data in region: %s for PS ID: %s",
                     self._region, title_id)
+
         finally:
             self._media_title = app_name or name
             self._source = self._media_title
