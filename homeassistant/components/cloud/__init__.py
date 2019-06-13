@@ -61,7 +61,6 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_MODE, default=DEFAULT_MODE):
             vol.In([MODE_DEV, MODE_PROD]),
-        # Change to optional when we include real servers
         vol.Optional(CONF_COGNITO_CLIENT_ID): str,
         vol.Optional(CONF_USER_POOL_ID): str,
         vol.Optional(CONF_REGION): str,

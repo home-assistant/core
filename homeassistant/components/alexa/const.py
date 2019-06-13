@@ -48,8 +48,6 @@ API_CHANGE = 'change'
 CONF_DESCRIPTION = 'description'
 CONF_DISPLAY_CATEGORIES = 'display_categories'
 
-AUTH_KEY = "alexa.smart_home.auth"
-
 API_TEMP_UNITS = {
     TEMP_FAHRENHEIT: 'FAHRENHEIT',
     TEMP_CELSIUS: 'CELSIUS',
