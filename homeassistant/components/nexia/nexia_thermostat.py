@@ -1186,21 +1186,17 @@ class NexiaThermostat:
                 heat_temperature = self.round_temp(set_temperature, thermostat_id) - math.ceil(
                     deadband / 2)
 
-        zone_mode = self.get_zone_requested_mode(thermostat_id=thermostat_id, zone_id=zone_id)
-        if zone_mode != self.OPERATION_MODE_OFF:
-            self.check_heat_cool_setpoints(heat_temperature, cool_temperature,
-                                           thermostat_id=thermostat_id)
-            url = self._get_zone_put_url("setpoints", thermostat_id=thermostat_id, zone_id=zone_id)
-            data = {
-                'cooling_setpoint': cool_temperature,
-                'cooling_integer': str(cool_temperature),
-                'heating_setpoint': heat_temperature,
-                'heating_integer': str(heat_temperature)
-            }
-            self._put_url(url, data)
-        else:
-            # The system mode must be off
-            pass
+        self.check_heat_cool_setpoints(heat_temperature, cool_temperature,
+                                       thermostat_id=thermostat_id)
+        url = self._get_zone_put_url("setpoints", thermostat_id=thermostat_id, zone_id=zone_id)
+        data = {
+            'cooling_setpoint': cool_temperature,
+            'cooling_integer': str(cool_temperature),
+            'heating_setpoint': heat_temperature,
+            'heating_integer': str(heat_temperature)
+        }
+        self._put_url(url, data)
+
 
     def set_zone_preset(self, preset, thermostat_id=None, zone_id=0):
         """
