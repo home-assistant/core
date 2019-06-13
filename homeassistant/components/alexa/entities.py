@@ -139,7 +139,6 @@ class AlexaEntity:
         return self.default_display_categories()
 
     def default_display_categories(self):
-        """Return the display categories for this entity."""
         """Return a list of default display categories.
 
         This can be overridden by the user in the Home Assistant configuration.
@@ -156,7 +155,6 @@ class AlexaEntity:
         pass
 
     def interfaces(self):
-        """Yield the supported interfaces."""
         """Return a list of supported interfaces.
 
         Used for discovery. The list should contain AlexaInterface instances.
@@ -197,8 +195,6 @@ def async_get_entities(hass, config) -> List[AlexaEntity]:
 @ENTITY_ADAPTERS.register(group.DOMAIN)
 @ENTITY_ADAPTERS.register(input_boolean.DOMAIN)
 class GenericCapabilities(AlexaEntity):
-    """Class to represent Generic capabilities."""
-
     """A generic, on/off device.
 
     The choice of last resort.
