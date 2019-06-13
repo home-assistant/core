@@ -68,7 +68,7 @@ _MONITORED_CONDITIONS = list(_UTILISATION_MON_COND.keys()) + \
     list(_STORAGE_DSK_MON_COND.keys())
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cs.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_SSL, default=True): cv.boolean,
@@ -152,7 +152,8 @@ class SynoApi:
 class SynoNasSensor(Entity):
     """Representation of a Synology NAS Sensor."""
 
-    def __init__(self, api, name, variable, variable_info, monitor_device=None):
+    def __init__(self, api, name, variable, variable_info,
+                 monitor_device=None):
         """Initialize the sensor."""
         self.var_id = variable
         self.var_name = "{}_{}".format(name, variable_info[0])
