@@ -7,7 +7,8 @@ import pytest
 
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
-from homeassistant.components.cloud import DOMAIN
+from homeassistant.components.cloud import (
+    DOMAIN, ALEXA_SCHEMA, prefs, client)
 from homeassistant.components.cloud.const import (
     PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE)
 from tests.components.alexa import test_smart_home as test_alexa
@@ -251,3 +252,20 @@ async def test_google_config_should_2fa(
     )
 
     assert not cloud_client.google_config.should_2fa(state)
+
+
+async def test_alexa_config_expose_entity_prefs(hass):
+    """Test Alexa config should expose using prefs."""
+    cloud_prefs = prefs.CloudPreferences(hass)
+    await cloud_prefs.async_initialize()
+    entity_conf = {
+        'should_expose': False
+    }
+    await cloud_prefs.async_update(alexa_entity_configs={
+        'light.kitchen': entity_conf
+    })
+    conf = client.AlexaConfig(ALEXA_SCHEMA({}), cloud_prefs)
+
+    assert not conf.should_expose('light.kitchen')
+    entity_conf['should_expose'] = True
+    assert conf.should_expose('light.kitchen')
