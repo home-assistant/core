@@ -343,7 +343,7 @@ async def test_websocket_status(hass, hass_ws_client, mock_cloud_fixture,
     with patch.dict(
         'homeassistant.components.google_assistant.const.'
         'DOMAIN_TO_GOOGLE_TYPES', {'light': None}, clear=True
-    ), patch.dict('homeassistant.components.alexa.smart_home.ENTITY_ADAPTERS',
+    ), patch.dict('homeassistant.components.alexa.entities.ENTITY_ADAPTERS',
                   {'switch': None}, clear=True):
         await client.send_json({
             'id': 5,
