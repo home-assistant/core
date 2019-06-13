@@ -905,11 +905,16 @@ myusps==1.3.2
 # homeassistant.components.media_player.nad
 nad_receiver==0.0.11
 
+<<<<<<< HEAD
 # homeassistant.components.light.nanoleaf_aurora
 nanoleaf==0.4.1
 
 # homeassistant.components.device_tracker.keenetic_ndms2
 ndms2_client==0.0.6
+=======
+# homeassistant.components.keenetic_ndms2
+ndms2_client==0.0.8
+>>>>>>> Bumping Keenetic NDMS2 client to 0.0.8 (#24469)
 
 # homeassistant.components.ness_alarm
 nessclient==0.9.9
