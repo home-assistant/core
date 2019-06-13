@@ -184,11 +184,11 @@ class PS4Device(MediaPlayerDevice):
                         asyncio.ensure_future(
                             self.async_get_title_data(title_id, name))
                 else:
-                    self.idle()
+                    if self._state != STATE_IDLE:
+                        self.idle()
             else:
-                self.state_off()
-
-            self.schedule_update()
+                if self._state != STATE_OFF:
+                    self.state_off()
 
         elif self._retry > 5:
             self.state_unknown()
@@ -199,11 +199,13 @@ class PS4Device(MediaPlayerDevice):
         """Set states for state idle."""
         self.reset_title()
         self._state = STATE_IDLE
+        self.schedule_update()
 
     def state_off(self):
         """Set states for state off."""
         self.reset_title()
         self._state = STATE_OFF
+        self.schedule_update()
 
     def state_unknown(self):
         """Set states for state unknown."""
