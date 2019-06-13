@@ -84,10 +84,8 @@ async def handle_webhook(hass, webhook_id, request):
     try:
         data = WEBHOOK_SCHEMA(await request.json())
     except vol.MultipleInvalid as error:
-        return web.Response(
-            body=error.error_message,
-            status=HTTP_UNPROCESSABLE_ENTITY
-        )
+        _LOGGER.warning("An error occurred when parsing webhook data <%s>", error)
+        return
 
     device_id = _device_id(data)
 
