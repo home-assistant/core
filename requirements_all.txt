@@ -394,9 +394,14 @@ datapoint==0.4.3
 # homeassistant.components.sensor.ohmconnect
 defusedxml==0.5.0
 
+<<<<<<< HEAD
 # homeassistant.components.sensor.deluge
 # homeassistant.components.switch.deluge
 deluge-client==1.4.0
+=======
+# homeassistant.components.deluge
+deluge-client==1.7.1
+>>>>>>> Update DelugeClient to 1.7.1 (#24518)
 
 <<<<<<< HEAD
 # homeassistant.components.media_player.denonavr
