@@ -47,7 +47,6 @@ SERVICE_XIAOMI_GW = 'xiaomi_gw'
 
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_DAIKIN: 'daikin',
-    SERVICE_HEOS: 'heos',
     SERVICE_TELLDUSLIVE: 'tellduslive',
     SERVICE_IGD: 'upnp',
 }
@@ -96,6 +95,7 @@ MIGRATED_SERVICE_HANDLERS = [
     'deconz',
     'esphome',
     'google_cast',
+    SERVICE_HEOS,
     'homekit',
     'ikea_tradfri',
     'philips_hue',

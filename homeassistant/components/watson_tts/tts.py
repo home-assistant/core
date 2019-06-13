@@ -23,7 +23,7 @@ SUPPORTED_VOICES = [
     "de-DE_BirgitVoice",
     "de-DE_BirgitV2Voice",
     "de-DE_DieterVoice",
-    "de-DE_DieterV2Voice"
+    "de-DE_DieterV2Voice",
     "en-GB_KateVoice",
     "en-US_AllisonVoice",
     "en-US_AllisonV2Voice",
