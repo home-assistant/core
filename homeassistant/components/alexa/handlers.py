@@ -31,7 +31,6 @@ from homeassistant.components import cover, fan, group, light, media_player
 from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import (
-    AUTH_KEY,
     API_TEMP_UNITS,
     API_THERMOSTAT_MODES,
     Cause,
@@ -86,8 +85,8 @@ async def async_api_accept_grant(hass, config, directive, context):
     auth_code = directive.payload['grant']['code']
     _LOGGER.debug("AcceptGrant code: %s", auth_code)
 
-    if AUTH_KEY in hass.data:
-        await hass.data[AUTH_KEY].async_do_auth(auth_code)
+    if config.supports_auth:
+        await config.async_accept_grant(auth_code)
         await async_enable_proactive_mode(hass, config)
 
     return directive.response(
