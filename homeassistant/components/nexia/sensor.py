@@ -29,9 +29,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                                        "%", percent_conv))
 
         if thermostat.has_outdoor_temperature(thermostat_id):
-            unit = (TEMP_CELSIUS if thermostat.get_unit() == thermostat.UNIT_CELSIUS else TEMP_FAHRENHEIT)
-            sensors.append(NexiaSensor(thermostat, scan_interval, thermostat_id, "get_outdoor_temperature",
-                                       "Outdoor Temperature",
+            unit = (TEMP_CELSIUS if thermostat.get_unit(thermostat_id) == thermostat.UNIT_CELSIUS else TEMP_FAHRENHEIT)
+            sensors.append(NexiaSensor(thermostat, scan_interval, thermostat_id, "get_outdoor_temperature", "Outdoor Temperature",
                                        DEVICE_CLASS_TEMPERATURE, unit))
 
         if thermostat.has_relative_humidity(thermostat_id):
