@@ -361,6 +361,7 @@ async def test_websocket_status(hass, hass_ws_client, mock_cloud_fixture,
             'google_enabled': True,
             'google_entity_configs': {},
             'google_secure_devices_pin': None,
+            'alexa_entity_configs': {},
             'remote_enabled': False,
         },
         'alexa_entities': {

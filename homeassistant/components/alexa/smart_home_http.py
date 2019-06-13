@@ -73,7 +73,7 @@ async def async_setup(hass, config):
     smart_home_config = AlexaConfig(hass, config)
     hass.http.register_view(SmartHomeView(smart_home_config))
 
-    if AUTH_KEY in hass.data:
+    if smart_home_config.supports_auth:
         await async_enable_proactive_mode(hass, smart_home_config)
 
 

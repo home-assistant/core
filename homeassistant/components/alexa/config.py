@@ -21,6 +21,7 @@ class AbstractConfig:
 
     def should_expose(self, entity_id):
         """If an entity should be exposed."""
+        # pylint: disable=no-self-use
         return False
 
     async def async_get_access_token(self):
