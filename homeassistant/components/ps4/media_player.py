@@ -162,7 +162,7 @@ class PS4Device(MediaPlayerDevice):
                 if self._info is None:
                     # Add entity to registry.
                     await self.async_get_device_info(self._ps4.status)
-                self._parse_status()
+        self._parse_status()
 
     def _parse_status(self):
         """Parse status."""
@@ -185,10 +185,10 @@ class PS4Device(MediaPlayerDevice):
                             self.async_get_title_data(title_id, name))
                 else:
                     self.idle()
-                    self.schedule_update()
             else:
                 self.state_off()
-                self.schedule_update()
+
+            self.schedule_update()
 
         elif self._retry > 5:
             self.state_unknown()
