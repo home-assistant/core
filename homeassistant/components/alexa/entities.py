@@ -108,6 +108,7 @@ class AlexaEntity:
     """
 
     def __init__(self, hass, config, entity):
+        """Initialize Alexa Entity."""
         self.hass = hass
         self.config = config
         self.entity = entity
@@ -358,6 +359,7 @@ class SceneCapabilities(AlexaEntity):
     """Class to represent Scene capabilities."""
 
     def description(self):
+        """Return the description of the entity."""
         # Required description as per Amazon Scene docs
         scene_fmt = '{} (Scene connected via Home Assistant)'
         return scene_fmt.format(AlexaEntity.description(self))

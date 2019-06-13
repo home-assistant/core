@@ -8,7 +8,7 @@ from homeassistant.components.alexa import const as alexa_const
 from homeassistant.components.google_assistant import const as ga_c
 from homeassistant.const import (
     CONF_MODE, CONF_NAME, CONF_REGION, EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP, CONF_NAME)
+    EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entityfilter
