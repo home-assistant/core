@@ -143,7 +143,8 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
             self.host = user_input[CONF_IP_ADDRESS]
 
             is_ready, is_login = await self.hass.async_add_executor_job(
-                self.helper.link, self.host, self.creds, self.pin, DEFAULT_ALIAS)
+                self.helper.link, self.host,
+                self.creds, self.pin, DEFAULT_ALIAS)
 
             if is_ready is False:
                 errors['base'] = 'not_ready'
