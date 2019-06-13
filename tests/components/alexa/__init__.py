@@ -10,15 +10,35 @@ TEST_URL = "https://api.amazonalexa.com/v3/events"
 TEST_TOKEN_URL = "https://api.amazon.com/auth/o2/token"
 
 
-async def get_access_token():
-    """Return a test access token."""
-    return "thisisnotanacesstoken"
+class MockConfig(config.AbstractConfig):
+    """Mock Alexa config."""
+
+    entity_config = {}
+
+    @property
+    def supports_auth(self):
+        """Return if config supports auth."""
+        return True
+
+    @property
+    def endpoint(self):
+        """Endpoint for report state."""
+        return TEST_URL
+
+    def should_expose(self, entity_id):
+        """If an entity should be exposed."""
+        return True
+
+    async def async_get_access_token(self):
+        """Get an access token."""
+        return "thisisnotanacesstoken"
+
+    async def async_accept_grant(self, code):
+        """Accept a grant."""
+        pass
 
 
-DEFAULT_CONFIG = config.Config(
-    endpoint=TEST_URL,
-    async_get_access_token=get_access_token,
-    should_expose=lambda entity_id: True)
+DEFAULT_CONFIG = MockConfig()
 
 
 def get_new_request(namespace, name, endpoint=None):

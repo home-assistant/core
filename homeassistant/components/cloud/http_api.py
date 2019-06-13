@@ -90,6 +90,9 @@ async def async_setup(hass):
     hass.components.websocket_api.async_register_command(
         google_assistant_update)
 
+    hass.components.websocket_api.async_register_command(alexa_list)
+    hass.components.websocket_api.async_register_command(alexa_update)
+
     hass.http.register_view(GoogleActionsSyncView)
     hass.http.register_view(CloudLoginView)
     hass.http.register_view(CloudLogoutView)
@@ -420,7 +423,7 @@ def _account_data(cloud):
         'cloud': cloud.iot.state,
         'prefs': client.prefs.as_dict(),
         'google_entities': client.google_user_config['filter'].config,
-        'alexa_entities': client.alexa_config.should_expose.config,
+        'alexa_entities': client.alexa_user_config['filter'].config,
         'alexa_domains': list(alexa_entities.ENTITY_ADAPTERS),
         'remote_domain': remote.instance_domain,
         'remote_connected': remote.is_connected,
@@ -508,3 +511,52 @@ async def google_assistant_update(hass, connection, msg):
     connection.send_result(
         msg['id'],
         cloud.client.prefs.google_entity_configs.get(msg['entity_id']))
+
+
+@websocket_api.require_admin
+@_require_cloud_login
+@websocket_api.async_response
+@_ws_handle_cloud_errors
+@websocket_api.websocket_command({
+    'type': 'cloud/alexa/entities'
+})
+async def alexa_list(hass, connection, msg):
+    """List all alexa entities."""
+    cloud = hass.data[DOMAIN]
+    entities = alexa_entities.async_get_entities(
+        hass, cloud.client.alexa_config
+    )
+
+    result = []
+
+    for entity in entities:
+        result.append({
+            'entity_id': entity.entity_id,
+            'display_categories': entity.default_display_categories(),
+            'interfaces': [ifc.name() for ifc in entity.interfaces()],
+        })
+
+    connection.send_result(msg['id'], result)
+
+
+@websocket_api.require_admin
+@_require_cloud_login
+@websocket_api.async_response
+@_ws_handle_cloud_errors
+@websocket_api.websocket_command({
+    'type': 'cloud/alexa/entities/update',
+    'entity_id': str,
+    vol.Optional('should_expose'): bool,
+})
+async def alexa_update(hass, connection, msg):
+    """Update alexa entity config."""
+    cloud = hass.data[DOMAIN]
+    changes = dict(msg)
+    changes.pop('type')
+    changes.pop('id')
+
+    await cloud.client.prefs.async_update_alexa_entity_config(**changes)
+
+    connection.send_result(
+        msg['id'],
+        cloud.client.prefs.alexa_entity_configs.get(msg['entity_id']))

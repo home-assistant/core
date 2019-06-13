@@ -15,6 +15,7 @@ from homeassistant.components.cloud.const import (
     DOMAIN)
 from homeassistant.components.google_assistant.helpers import (
     GoogleEntity, Config)
+from homeassistant.components.alexa.entities import LightCapabilities
 
 from tests.common import mock_coro
 
@@ -361,6 +362,7 @@ async def test_websocket_status(hass, hass_ws_client, mock_cloud_fixture,
             'google_enabled': True,
             'google_entity_configs': {},
             'google_secure_devices_pin': None,
+            'alexa_entity_configs': {},
             'remote_enabled': False,
         },
         'alexa_entities': {
@@ -800,3 +802,46 @@ async def test_enabling_remote_trusted_proxies_local6(
         'Remote UI not compatible with 127.0.0.1/::1 as trusted proxies.'
 
     assert len(mock_connect.mock_calls) == 0
+
+
+async def test_list_alexa_entities(
+        hass, hass_ws_client, setup_api, mock_cloud_login):
+    """Test that we can list Alexa entities."""
+    client = await hass_ws_client(hass)
+    entity = LightCapabilities(hass, MagicMock(entity_config={}), State(
+        'light.kitchen', 'on'
+    ))
+    with patch('homeassistant.components.alexa.entities'
+               '.async_get_entities', return_value=[entity]):
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/alexa/entities',
+        })
+        response = await client.receive_json()
+
+    assert response['success']
+    assert len(response['result']) == 1
+    assert response['result'][0] == {
+        'entity_id': 'light.kitchen',
+        'display_categories': ['LIGHT'],
+        'interfaces': ['Alexa.PowerController', 'Alexa.EndpointHealth'],
+    }
+
+
+async def test_update_alexa_entity(
+        hass, hass_ws_client, setup_api, mock_cloud_login):
+    """Test that we can update config of an Alexa entity."""
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        'id': 5,
+        'type': 'cloud/alexa/entities/update',
+        'entity_id': 'light.kitchen',
+        'should_expose': False,
+    })
+    response = await client.receive_json()
+
+    assert response['success']
+    prefs = hass.data[DOMAIN].client.prefs
+    assert prefs.alexa_entity_configs['light.kitchen'] == {
+        'should_expose': False,
+    }
