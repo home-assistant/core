@@ -1,5 +1,5 @@
-import requests
-from bs4 import BeautifulSoup
+""" Nexia Climate Device Access """
+
 import datetime
 import json
 import math
@@ -7,11 +7,15 @@ import pprint
 from threading import Lock
 import time
 
+import requests
+from bs4 import BeautifulSoup
+
 GLOBAL_LOGIN_ATTEMPTS = 4
-global_login_attempts_left = GLOBAL_LOGIN_ATTEMPTS
+GLOBAL_LOGIN_ATTEMPTS_LEFT = GLOBAL_LOGIN_ATTEMPTS
 
 
 class NexiaThermostat:
+    """ Nexia Climate Device Access Class """
     ROOT_URL = "https://www.mynexia.com"
     AUTH_FAILED_STRING = "https://www.mynexia.com/login"
     AUTH_FORGOTTEN_PASSWORD_STRING = "https://www.mynexia.com/account/forgotten_credentials"
@@ -32,7 +36,8 @@ class NexiaThermostat:
     OPERATION_MODE_COOL = "COOL"
     OPERATION_MODE_HEAT = "HEAT"
     OPERATION_MODE_OFF = "OFF"
-    OPERATION_MODES = [OPERATION_MODE_AUTO, OPERATION_MODE_COOL, OPERATION_MODE_HEAT, OPERATION_MODE_OFF]
+    OPERATION_MODES = [OPERATION_MODE_AUTO, OPERATION_MODE_COOL, OPERATION_MODE_HEAT,
+                       OPERATION_MODE_OFF]
 
     # The order of these is important as it maps to preset#
     PRESET_MODE_HOME = "home"
@@ -65,16 +70,20 @@ class NexiaThermostat:
 
     ALL_IDS = "all"
 
-    def __init__(self, house_id: int, username=None, password=None, auto_login=True, update_rate=None):
+    def __init__(self, house_id: int, username=None, password=None, auto_login=True,
+                 update_rate=None):
         """
-        Connects to and provides the ability to get and set parameters of your Nexia connected thermostat.
+        Connects to and provides the ability to get and set parameters of your Nexia connected
+        thermostat.
 
-        :param house_id: int - Your house_id. You can get this from logging in and looking at the url once you're
+        :param house_id: int - Your house_id. You can get this from logging in and looking at the
+        url once you're
         looking at your climate device. https://www.mynexia.com/houses/<house_id>/climate
         :param username: str - Your login email address
         :param password: str - Your login password
         :param auto_login: bool - Default is True, Login now (True), or login manually later (False)
-        :param update_rate: int - How many seconds between requesting a new JSON update. Default is 300s.
+        :param update_rate: int - How many seconds between requesting a new JSON update. Default is
+        300s.
         """
 
         self.username = username
@@ -108,9 +117,9 @@ class NexiaThermostat:
         :param url: str
         :return: dict with "token" and "param" keys
         """
-        r = self._get_url(url)
-        self._check_response("Failed to get authenticity token", r)
-        soup = BeautifulSoup(r.text, 'html5lib')
+        request = self._get_url(url)
+        self._check_response("Failed to get authenticity token", request)
+        soup = BeautifulSoup(request.text, 'html5lib')
         param = soup.find("meta", attrs={'name': "csrf-param"})
         token = soup.find("meta", attrs={'name': "csrf-token"})
         if token and param:
@@ -141,20 +150,20 @@ class NexiaThermostat:
         # except requests.RequestException as e:
         #     print("Error putting url", str(e))
         #     return None
-        r = self.session.put(request_url, payload, headers=headers, allow_redirects=False)
+        request = self.session.put(request_url, payload, headers=headers, allow_redirects=False)
 
-        if r.status_code == 302:
+        if request.status_code == 302:
             # assuming its redirecting to login
             self.login()
-            r = self._put_url(url, payload)
+            request = self._put_url(url, payload)
 
-        self._check_response(f"Failed PUT Request:\n  Url: {url}\n  Payload {payload}", r)
+        self._check_response(f"Failed PUT Request:\n  Url: {url}\n  Payload {payload}", request)
 
         # Assume something change, so update the thermostat's JSON
         time.sleep(self.PUT_UPDATE_DELAY)
         self.update()
 
-        return r
+        return request
 
     def _post_url(self, url: str, payload: dict):
         """
@@ -171,9 +180,9 @@ class NexiaThermostat:
         # except requests.RequestException as e:
         #     print("Error posting url", str(e))
         #     return None
-        r = self.session.post(request_url, payload)
+        request = self.session.post(request_url, payload)
 
-        if r.status_code == 302:
+        if request.status_code == 302:
             # assuming its redirecting to login
             self.login()
             return self._post_url(url, payload)
@@ -182,8 +191,8 @@ class NexiaThermostat:
         time.sleep(self.PUT_UPDATE_DELAY)
         self.update()
 
-        self._check_response("Failed to POST url", r)
-        return r
+        self._check_response("Failed to POST url", request)
+        return request
 
     def _get_url(self, url):
         """
@@ -199,32 +208,31 @@ class NexiaThermostat:
         # except requests.RequestException as e:
         #     print("Error getting url", str(e))
         #     return None
-        r = self.session.get(request_url, allow_redirects=False)
+        request = self.session.get(request_url, allow_redirects=False)
 
-        if r.status_code == 302:
+        if request.status_code == 302:
             # assuming its redirecting to login
             self.login()
             return self._get_url(url)
 
-        self._check_response("Failed to GET url", r)
-        return r
+        self._check_response("Failed to GET url", request)
+        return request
 
     @staticmethod
-    def _check_response(error_text, r):
+    def _check_response(error_text, request):
         """
         Checks the request response, throws exception with the description text
         :param error_text: str
-        :param r: response
+        :param request: response
         :return: None
         """
-        if r is None or r.status_code != 200:
-            if r is not None:
+        if request is None or request.status_code != 200:
+            if request is not None:
                 response = ""
-                for key in r.__attrs__:
-                    response += f"  {key}: {getattr(r, key)}\n"
+                for key in request.__attrs__:
+                    response += f"  {key}: {getattr(request, key)}\n"
                 raise Exception(f"{error_text}\n{response}")
-            else:
-                raise Exception(f"No response from session. {error_text}")
+            raise Exception(f"No response from session. {error_text}")
 
     def _needs_update(self):
         """
@@ -233,47 +241,46 @@ class NexiaThermostat:
         """
         if self.update_rate == self.DISABLE_AUTO_UPDATE:
             return False
-        elif self.last_update is None:
+        if self.last_update is None:
             return True
-        else:
-            return datetime.datetime.now() - self.last_update > self.update_rate
+        return datetime.datetime.now() - self.last_update > self.update_rate
 
     def _get_thermostat_json(self, thermostat_id=None, force_update=False):
         """
-        Returns the thermostat's JSON data. It's either cached, or returned directly from the internet
+        Returns the thermostat's JSON data. It's either cached, or returned directly from the
+        internet
         :param force_update: bool - Forces an update
         :return: dict(thermostat_jason)
         """
         with self.mutex:
             if self.thermostat_json is None or self._needs_update() or force_update is True:
-                r = self._get_url("/houses/" + str(self.house_id) + "/xxl_thermostats")
-                if r and r.status_code == 200:
-                    ts = json.loads(r.text)
-                    if len(ts):
-                        self.thermostat_json = ts
+                request = self._get_url("/houses/" + str(self.house_id) + "/xxl_thermostats")
+                if request and request.status_code == 200:
+                    ts_json = json.loads(request.text)
+                    if ts_json:
+                        self.thermostat_json = ts_json
                         self.last_update = datetime.datetime.now()
                     else:
                         raise Exception("Nothing in the JSON")
                 else:
-                    self._check_response("Failed to get thermostat JSON, session probably timed out", r)
+                    self._check_response(
+                        "Failed to get thermostat JSON, session probably timed out", request)
 
         if thermostat_id == self.ALL_IDS:
             return self.thermostat_json
-        elif thermostat_id is not None:
+        if thermostat_id is not None:
             thermostat_json_dict = dict()
             for thermostat in self.thermostat_json:
                 thermostat_json_dict.update({thermostat['id']: thermostat})
 
             if thermostat_id in thermostat_json_dict:
                 return thermostat_json_dict[thermostat_id]
-            else:
-                raise KeyError(f"Thermostat ID {thermostat_id} does not exist. Available IDs: "
-                               f"{thermostat_json_dict.keys()}")
-        elif len(self.thermostat_json) == 1:
+            raise KeyError(f"Thermostat ID {thermostat_id} does not exist. Available IDs: "
+                           f"{thermostat_json_dict.keys()}")
+        if len(self.thermostat_json) == 1:
             return self.thermostat_json[0]
 
-        else:
-            raise IndexError("More than one thermostat detected. You must provide a thermostat_id")
+        raise IndexError("More than one thermostat detected. You must provide a thermostat_id")
 
     def _get_thermostat_key(self, key, thermostat_id=None):
         """
@@ -344,7 +351,8 @@ class NexiaThermostat:
         :return: str
         """
         zone_id = self._get_zone_key('id', thermostat_id, zone_id)
-        return "/houses/" + str(self.house_id) + "/xxl_zones/" + str(zone_id) + ("/" + text if text else "")
+        return "/houses/" + str(self.house_id) + "/xxl_zones/" + str(zone_id) + (
+            "/" + text if text else "")
 
     ########################################################################
     # Session Methods
@@ -359,8 +367,8 @@ class NexiaThermostat:
         - house_id - (int) Your house id
         :return: None
         """
-        global GLOBAL_LOGIN_ATTEMPTS, global_login_attempts_left
-        if global_login_attempts_left > 0:
+        global GLOBAL_LOGIN_ATTEMPTS, GLOBAL_LOGIN_ATTEMPTS_LEFT
+        if GLOBAL_LOGIN_ATTEMPTS_LEFT > 0:
             token = self._get_authenticity_token("/login")
             if token:
                 payload = {
@@ -370,31 +378,33 @@ class NexiaThermostat:
                 }
                 self.last_csrf = token['token']
 
-                r = self._post_url("/session", payload)
+                request = self._post_url("/session", payload)
 
-                if r is None or r.status_code != 200 and r.status_code != 302:
-                    global_login_attempts_left -= 1
-                self._check_response("Failed to login", r)
+                if request is None or request.status_code != 200 and request.status_code != 302:
+                    GLOBAL_LOGIN_ATTEMPTS_LEFT -= 1
+                self._check_response("Failed to login", request)
 
-                if r.url == self.AUTH_FORGOTTEN_PASSWORD_STRING:
-                    raise Exception(f"Failed to login, getting redirected to {r.url}. Try to login manually on the "
-                                    f"website.")
+                if request.url == self.AUTH_FORGOTTEN_PASSWORD_STRING:
+                    raise Exception(
+                        f"Failed to login, getting redirected to {request.url}. Try to login "
+                        f"manually on the website.")
 
             else:
                 raise Exception("Failed to get csrf token")
         else:
-            raise Exception(f"Failed to login after {GLOBAL_LOGIN_ATTEMPTS} attempts! Any more attempts may lock your "
-                            f"account!")
+            raise Exception(
+                f"Failed to login after {GLOBAL_LOGIN_ATTEMPTS} attempts! Any more attempts may "
+                f"lock your account!")
 
     def get_last_update(self):
         """
         Returns a string indicating the ISO formatted time string of the last update
-        :return: The ISO formatted time string of the last update, datetime.datetime.min if never updated
+        :return: The ISO formatted time string of the last update, datetime.datetime.min if never
+        updated
         """
         if self.last_update is None:
             return datetime.datetime.isoformat(datetime.datetime.min)
-        else:
-            return datetime.datetime.isoformat(self.last_update)
+        return datetime.datetime.isoformat(self.last_update)
 
     def update(self):
         """
@@ -559,8 +569,9 @@ class NexiaThermostat:
 
     def get_deadband(self, thermostat_id=None):
         """
-        Returns the deadband of the thermostat. This is the minimum number of degrees between the heat and cool
-        setpoints in the number of degrees in the temperature unit selected by the thermostat.
+        Returns the deadband of the thermostat. This is the minimum number of degrees between the
+        heat and cool setpoints in the number of degrees in the temperature unit selected by the
+        thermostat.
         :param thermostat_id: int - the ID of the thermostat to use
         :return: int
         """
@@ -568,7 +579,8 @@ class NexiaThermostat:
 
     def get_setpoint_limits(self, thermostat_id=None):
         """
-        Returns a tuple of the minimum and maximum temperature that can be set on any zone. This is in the temperature
+        Returns a tuple of the minimum and maximum temperature that can be set on any zone. This is
+        in the temperature
         unit selected by the thermostat.
         :return: (int, int)
         """
@@ -584,8 +596,7 @@ class NexiaThermostat:
         if self.has_variable_fan_speed:
             return self._get_thermostat_key("min_fan_speed", thermostat_id), \
                    self._get_thermostat_key("max_fan_speed", thermostat_id)
-        else:
-            raise AttributeError("This thermostat does not support fan speeds")
+        raise AttributeError("This thermostat does not support fan speeds")
 
     def get_unit(self, thermostat_id=None):
         """
@@ -599,8 +610,10 @@ class NexiaThermostat:
         """
         Returns the humidity setpoint limits of the thermostat.
 
-        This is a hard-set limit in this code that I believe is universal to all TraneXl thermostats.
-        :param thermostat_id: int - the ID of the thermostat to use (unused, but kept for consistency)
+        This is a hard-set limit in this code that I believe is universal to all TraneXl
+        thermostats.
+        :param thermostat_id: int - the ID of the thermostat to use (unused, but kept for
+        consistency)
         :return: (float, float)
         """
         return self.HUMIDITY_MIN, self.HUMIDITY_MAX
@@ -624,8 +637,7 @@ class NexiaThermostat:
         """
         if self.has_emergency_heat():
             return self._get_thermostat_key("emergency_heat_active", thermostat_id)
-        else:
-            raise Exception("This system does not support emergency heat")
+        raise Exception("This system does not support emergency heat")
 
     ########################################################################
     # System Universal Get Methods
@@ -646,8 +658,7 @@ class NexiaThermostat:
         """
         if self.has_outdoor_temperature(thermostat_id):
             return float(self._get_thermostat_key('outdoor_temperature', thermostat_id))
-        else:
-            raise Exception("This system does not have an outdoor temperature sensor")
+        raise Exception("This system does not have an outdoor temperature sensor")
 
     def get_relative_humidity(self, thermostat_id=None):
         """
@@ -657,8 +668,7 @@ class NexiaThermostat:
         """
         if self.has_relative_humidity(thermostat_id):
             return self._get_thermostat_key("current_relative_humidity", thermostat_id)
-        else:
-            raise Exception("This system does not have a relative humidity sensor.")
+        raise Exception("This system does not have a relative humidity sensor.")
 
     def get_current_compressor_speed(self, thermostat_id=None):
         """
@@ -668,8 +678,7 @@ class NexiaThermostat:
         """
         if self.has_variable_speed_compressor(thermostat_id):
             return self._get_thermostat_key("compressor_speed", thermostat_id)
-        else:
-            raise Exception("This system does not have a variable speed compressor.", thermostat_id)
+        raise Exception("This system does not have a variable speed compressor.", thermostat_id)
 
     def get_requested_compressor_speed(self, thermostat_id=None):
         """
@@ -679,8 +688,7 @@ class NexiaThermostat:
         """
         if self.has_variable_speed_compressor(thermostat_id):
             return self._get_thermostat_key("requested_compressor_speed", thermostat_id)
-        else:
-            raise Exception("This system does not have a variable speed compressor.")
+        raise Exception("This system does not have a variable speed compressor.")
 
     def get_fan_speed_setpoint(self, thermostat_id=None):
         """
@@ -690,8 +698,7 @@ class NexiaThermostat:
         """
         if self.has_variable_fan_speed(thermostat_id):
             return self._get_thermostat_key("fan_speed", thermostat_id)
-        else:
-            raise AttributeError("This system does not have variable fan speed.")
+        raise AttributeError("This system does not have variable fan speed.")
 
     def get_dehumidify_setpoint(self, thermostat_id=None):
         """
@@ -735,8 +742,8 @@ class NexiaThermostat:
         else:
             raise KeyError("Invalid fan mode specified")
 
-    # TODO: Figure out what the PUT url is... I can't seem to set the fan speed from the website, but the capability
-    #       exists in the Nexia app for iOS.
+    # TODO: Figure out what the PUT url is... I can't seem to set the fan speed from the website,
+    #  but the capability exists in the Nexia app for iOS.
     # def set_fan_setpoint(self, fan_setpoint: float):
     #     """
     #     Sets the fan's setpoint speed as a percent in range. You can see the limits by calling
@@ -753,7 +760,8 @@ class NexiaThermostat:
     #         data = {"fan_mode": self.get_fan_mode(), "fan_speed": fan_setpoint}
     #         self._put_url(url, data)
     #     else:
-    #         raise ValueError(f"The fan setpoint, {fan_setpoint} is not between {min_speed} and {max_speed}.")
+    #         raise ValueError(f"The fan setpoint, {fan_setpoint} is not between {min_speed} and \
+    #         {max_speed}.")
 
     def set_air_cleaner(self, air_cleaner_mode: str, thermostat_id):
         """
@@ -790,7 +798,7 @@ class NexiaThermostat:
         """
         if self.has_emergency_heat():
             url = self._get_thermostat_put_url("emergency_heat", thermostat_id)
-            data = {"emergency_heat_active": True if emergency_heat_on else False}
+            data = {"emergency_heat_active": bool(emergency_heat_on)}
             self._put_url(url, data)
         else:
             raise Exception("This thermostat does not support emergency heat.")
@@ -820,7 +828,8 @@ class NexiaThermostat:
         else:
             raise Exception("Setting target humidity is not supported on this thermostat.")
 
-    # TODO - Do any system's actually support humidifying? I.e. putting moisture into a controlled space?
+    # TODO - Do any system's actually support humidifying? I.e. putting moisture into a controlled
+    #  space?
 
     ########################################################################
     # Zone Get Methods
@@ -831,7 +840,8 @@ class NexiaThermostat:
         :param thermostat_id: int - the ID of the thermostat to use
         :return: list(int)
         """
-        # The zones are in a list, so there are no keys to pull out. I have to create a new list of IDs.
+        # The zones are in a list, so there are no keys to pull out. I have to create a new list of
+        # IDs.
         return list(range(len(self._get_thermostat_key("zones", thermostat_id))))
 
     def get_zone_name(self, thermostat_id=None, zone_id=0):
@@ -868,17 +878,20 @@ class NexiaThermostat:
         :param zone_id: The index of the zone, defaults to 0.
         :return: str
         """
-        return self._get_zone_key("last_zone_mode", thermostat_id=thermostat_id, zone_id=zone_id).upper()
+        return self._get_zone_key("last_zone_mode", thermostat_id=thermostat_id,
+                                  zone_id=zone_id).upper()
 
     def get_zone_requested_mode(self, thermostat_id=None, zone_id=0):
         """
-        Returns the requested mode of the zone. This should match the zone's mode on the thermostat. Available options
+        Returns the requested mode of the zone. This should match the zone's mode on the thermostat.
+        Available options
         can be found in NexiaThermostat.OPERATION_MODES
         :param thermostat_id: int - the ID of the thermostat to use
         :param zone_id: The index of the zone, defaults to 0.
         :return: str
         """
-        return self._get_zone_key("requested_zone_mode", thermostat_id=thermostat_id, zone_id=zone_id).upper()
+        return self._get_zone_key("requested_zone_mode", thermostat_id=thermostat_id,
+                                  zone_id=zone_id).upper()
 
     def get_zone_temperature(self, thermostat_id=None, zone_id=0):
         """
@@ -891,9 +904,9 @@ class NexiaThermostat:
 
     def get_zone_presets(self, thermostat_id=None, zone_id=0):
         """
-        Supposed to return the zone presets. For some reason, most of the time, my unit only returns "AWAY", but I can
-        set the other modes. There is the capability to add additional zone presets on the main thermostat, so this
-        may not work as expected.
+        Supposed to return the zone presets. For some reason, most of the time, my unit only returns
+        "AWAY", but I can set the other modes. There is the capability to add additional zone
+        presets on the main thermostat, so this may not work as expected.
 
         TODO: Try to get this working more reliably
         :param thermostat_id: int - Doesn't do anythign as of the current implementation
@@ -902,8 +915,8 @@ class NexiaThermostat:
         :return:
         """
         # return self._get_zone_key("presets", zone_id=zone_id)
-        # Can't get Nexia to return all of the presets occasionally, but I don't think there would be any other
-        # "presets" available anyway...
+        # Can't get Nexia to return all of the presets occasionally, but I don't think there would
+        # be any other "presets" available anyway...
         return self.PRESET_MODES
 
     def get_zone_preset(self, thermostat_id=None, zone_id=0):
@@ -925,11 +938,17 @@ class NexiaThermostat:
         :return: (int, int)
         """
         if preset != self.PRESET_MODE_NONE:
-            index = self.get_zone_presets(thermostat_id=thermostat_id, zone_id=zone_id).index(preset) + 1
-            return (self._get_zone_key(f"preset_cool{index}", thermostat_id=thermostat_id, zone_id=zone_id),
-                    self._get_zone_key(f"preset_heat{index}", thermostat_id=thermostat_id, zone_id=zone_id))
-        else:
-            raise KeyError(f"'{self.PRESET_MODE_NONE}'' preset mode does not have any preset values.")
+            index = self.get_zone_presets(thermostat_id=thermostat_id, zone_id=zone_id).index(
+                preset) + 1
+            return (
+                self._get_zone_key(f"preset_cool{index}",
+                                   thermostat_id=thermostat_id,
+                                   zone_id=zone_id),
+                self._get_zone_key(f"preset_heat{index}",
+                                   thermostat_id=thermostat_id,
+                                   zone_id=zone_id)
+            )
+        raise KeyError(f"'{self.PRESET_MODE_NONE}'' preset mode does not have any preset values.")
 
     def get_zone_status(self, thermostat_id=None, zone_id=0):
         """
@@ -956,13 +975,14 @@ class NexiaThermostat:
         :param zone_id: The index of the zone, defaults to 0.
         :return: bool
         """
-        return True if self._get_zone_key("on_off_code", thermostat_id=thermostat_id,
-                                          zone_id=zone_id) == "CALL" else False
+        return self._get_zone_key("on_off_code", thermostat_id=thermostat_id,
+                                  zone_id=zone_id) == "CALL"
 
-    def check_heat_cool_setpoints(self, heat_temperature=None, cool_temperature=None, thermostat_id=None):
+    def check_heat_cool_setpoints(self, heat_temperature=None, cool_temperature=None,
+                                  thermostat_id=None):
         """
-        Checks the heat and cool setpoints to check if they are within the appropriate range and within the deadband
-        limits.
+        Checks the heat and cool setpoints to check if they are within the appropriate range and
+        within the deadband limits.
 
         Will throw exception if not valid.
         :param heat_temperature: int
@@ -979,21 +999,24 @@ class NexiaThermostat:
         if cool_temperature is not None:
             cool_temperature = self.round_temp(cool_temperature)
 
-        if heat_temperature is not None and cool_temperature is not None and not heat_temperature < cool_temperature:
-            raise AttributeError(f"The heat setpoint ({heat_temperature}) must be less than the cool setpoint "
-                                 f"({cool_temperature}).")
-        elif heat_temperature is not None and cool_temperature is not None and \
+        if heat_temperature is not None and cool_temperature is not None and not heat_temperature \
+                                                                                 < cool_temperature:
+            raise AttributeError(
+                f"The heat setpoint ({heat_temperature}) must be less than the cool setpoint "
+                f"({cool_temperature}).")
+        if heat_temperature is not None and cool_temperature is not None and \
                 not cool_temperature - heat_temperature >= deadband:
-            raise AttributeError(f"The heat and cool setpoints must be at least {deadband} degrees different.")
-        elif heat_temperature is not None and not heat_temperature <= max_temperature:
-            raise AttributeError(f"The heat setpoint ({heat_temperature} must be less than the maximum temperature of "
-                                 f"{max_temperature} degrees.")
-        elif cool_temperature is not None and not cool_temperature >= min_temperature:
-            raise AttributeError(f"The cool setpoint ({cool_temperature}) must be greater than the minimum temperature "
-                                 f"of {min_temperature} degrees.")
-        else:
-            # The heat and cool setpoints appear to be valid.
-            return
+            raise AttributeError(
+                f"The heat and cool setpoints must be at least {deadband} degrees different.")
+        if heat_temperature is not None and not heat_temperature <= max_temperature:
+            raise AttributeError(
+                f"The heat setpoint ({heat_temperature} must be less than the maximum temperature "
+                f"of {max_temperature} degrees.")
+        if cool_temperature is not None and not cool_temperature >= min_temperature:
+            raise AttributeError(
+                f"The cool setpoint ({cool_temperature}) must be greater than the minimum "
+                f"temperature of {min_temperature} degrees.")
+        # The heat and cool setpoints appear to be valid.
 
     ########################################################################
     # Zone Set Methods
@@ -1007,11 +1030,13 @@ class NexiaThermostat:
         """
 
         # Set the thermostat
-        url = self._get_zone_put_url("return_to_schedule", thermostat_id=thermostat_id, zone_id=zone_id)
+        url = self._get_zone_put_url("return_to_schedule", thermostat_id=thermostat_id,
+                                     zone_id=zone_id)
         data = {}
         self._put_url(url, data)
 
-    def call_permanent_hold(self, heat_temperature=None, cool_temperature=None, thermostat_id=None, zone_id=0):
+    def call_permanent_hold(self, heat_temperature=None, cool_temperature=None, thermostat_id=None,
+                            zone_id=0):
         """
         Tells the zone to call a permanent hold. Optionally can provide the temperatures.
         :param heat_temperature:
@@ -1023,18 +1048,22 @@ class NexiaThermostat:
 
         if heat_temperature is None and cool_temperature is None:
             # Just calling permanent hold on the current temperature
-            heat_temperature = self.get_zone_heating_setpoint(thermostat_id=thermostat_id, zone_id=zone_id)
-            cool_temperature = self.get_zone_cooling_setpoint(thermostat_id=thermostat_id, zone_id=zone_id)
+            heat_temperature = self.get_zone_heating_setpoint(thermostat_id=thermostat_id,
+                                                              zone_id=zone_id)
+            cool_temperature = self.get_zone_cooling_setpoint(thermostat_id=thermostat_id,
+                                                              zone_id=zone_id)
         elif heat_temperature is not None and cool_temperature is not None:
             # Both heat and cool setpoints provided, continue
             pass
         else:
-            # Not sure how I want to handle only one temperature provided, but this definitely assumes you're using
-            # auto mode.
-            raise AttributeError("Must either provide both heat and cool setpoints, or don't provide either")
+            # Not sure how I want to handle only one temperature provided, but this definitely
+            # assumes you're using auto mode.
+            raise AttributeError(
+                "Must either provide both heat and cool setpoints, or don't provide either")
 
         # Check that the setpoints are valid
-        self.check_heat_cool_setpoints(heat_temperature, cool_temperature, thermostat_id=thermostat_id)
+        self.check_heat_cool_setpoints(heat_temperature, cool_temperature,
+                                       thermostat_id=thermostat_id)
 
         # Set the thermostat
         url = self._get_zone_put_url("permanent_hold", thermostat_id=thermostat_id, zone_id=zone_id)
@@ -1050,10 +1079,12 @@ class NexiaThermostat:
         }
         self._put_url(url, data)
 
-    def call_temporary_hold(self, heat_temperature=None, cool_temperature=None, holdtime=0, thermostat_id=None,
+    def call_temporary_hold(self, heat_temperature=None, cool_temperature=None, holdtime=0,
+                            thermostat_id=None,
                             zone_id=0):
         """
-        Call a temporary hold. If the holdtime is 0, it will simply hold until the next scheduled time.
+        Call a temporary hold. If the holdtime is 0, it will simply hold until the next scheduled
+        time.
         :param heat_temperature: int
         :param cool_temperature: int
         :param holdtime: int
@@ -1068,21 +1099,26 @@ class NexiaThermostat:
 
         if heat_temperature is None and cool_temperature is None:
             # Just calling permanent hold on the current temperature
-            heat_temperature = self.get_zone_heating_setpoint(thermostat_id=thermostat_id, zone_id=zone_id)
-            cool_temperature = self.get_zone_cooling_setpoint(thermostat_id=thermostat_id, zone_id=zone_id)
+            heat_temperature = self.get_zone_heating_setpoint(thermostat_id=thermostat_id,
+                                                              zone_id=zone_id)
+            cool_temperature = self.get_zone_cooling_setpoint(thermostat_id=thermostat_id,
+                                                              zone_id=zone_id)
         elif heat_temperature is not None and cool_temperature is not None:
             # Both heat and cool setpoints provided, continue
             pass
         else:
-            # Not sure how I want to handle only one temperature provided, but this definitely assumes you're using
-            # auto mode.
-            raise AttributeError("Must either provide both heat and cool setpoints, or don't provide either")
+            # Not sure how I want to handle only one temperature provided, but this definitely
+            # assumes you're using auto mode.
+            raise AttributeError(
+                "Must either provide both heat and cool setpoints, or don't provide either")
 
         # Check that the setpoints are valid
-        self.check_heat_cool_setpoints(heat_temperature, cool_temperature, thermostat_id=thermostat_id)
+        self.check_heat_cool_setpoints(heat_temperature, cool_temperature,
+                                       thermostat_id=thermostat_id)
 
         # Set the thermostat
-        url = self._get_zone_put_url("hold_time_and_setpoints", thermostat_id=thermostat_id, zone_id=zone_id)
+        url = self._get_zone_put_url("hold_time_and_setpoints", thermostat_id=thermostat_id,
+                                     zone_id=zone_id)
         data = {
             "hold_cooling_setpoint": cool_temperature,
             "hold_heating_setpoint": heat_temperature,
@@ -1096,11 +1132,13 @@ class NexiaThermostat:
 
         self._put_url(url, data)
 
-    def set_zone_heat_cool_temp(self, heat_temperature=None, cool_temperature=None, set_temperature=None,
+    def set_zone_heat_cool_temp(self, heat_temperature=None, cool_temperature=None,
+                                set_temperature=None,
                                 thermostat_id=None, zone_id=0):
         """
-        Sets the heat and cool temperatures of the zone. You must provide either heat and cool temperatures, or just
-        the set_temperature. This method will add deadband to the heat and cool temperature from the set temperature.
+        Sets the heat and cool temperatures of the zone. You must provide either heat and cool
+        temperatures, or just the set_temperature. This method will add deadband to the heat and
+        cool temperature from the set temperature.
 
         :param heat_temperature: int or None
         :param cool_temperature: int or None
@@ -1115,25 +1153,30 @@ class NexiaThermostat:
             if heat_temperature:
                 heat_temperature = self.round_temp(heat_temperature)
             else:
-                heat_temperature = min(self.get_zone_heating_setpoint(thermostat_id=thermostat_id, zone_id=zone_id),
-                                       self.round_temp(cool_temperature) - deadband)
+                heat_temperature = min(
+                    self.get_zone_heating_setpoint(thermostat_id=thermostat_id, zone_id=zone_id),
+                    self.round_temp(cool_temperature) - deadband)
 
             if cool_temperature:
                 cool_temperature = self.round_temp(cool_temperature)
             else:
-                cool_temperature = max(self.get_zone_cooling_setpoint(thermostat_id=thermostat_id, zone_id=zone_id),
-                                       self.round_temp(heat_temperature) + deadband)
+                cool_temperature = max(
+                    self.get_zone_cooling_setpoint(thermostat_id=thermostat_id, zone_id=zone_id),
+                    self.round_temp(heat_temperature) + deadband)
 
         else:
-            # This will smartly select either the ceiling of the floor temp depending on the current operating mode.
+            # This will smartly select either the ceiling of the floor temp depending on the current
+            # operating mode.
             zone_mode = self.get_zone_current_mode(thermostat_id=thermostat_id, zone_id=zone_id)
             if zone_mode == self.OPERATION_MODE_COOL:
                 cool_temperature = self.round_temp(set_temperature)
-                heat_temperature = min(self.get_zone_heating_setpoint(thermostat_id=thermostat_id, zone_id=zone_id),
-                                       self.round_temp(cool_temperature) - deadband)
+                heat_temperature = min(
+                    self.get_zone_heating_setpoint(thermostat_id=thermostat_id, zone_id=zone_id),
+                    self.round_temp(cool_temperature) - deadband)
             elif zone_mode == self.OPERATION_MODE_HEAT:
-                cool_temperature = max(self.get_zone_cooling_setpoint(thermostat_id=thermostat_id, zone_id=zone_id),
-                                       self.round_temp(heat_temperature) + deadband)
+                cool_temperature = max(
+                    self.get_zone_cooling_setpoint(thermostat_id=thermostat_id, zone_id=zone_id),
+                    self.round_temp(heat_temperature) + deadband)
                 heat_temperature = self.round_temp(set_temperature)
             else:
                 cool_temperature = self.round_temp(set_temperature) + math.ceil(deadband / 2)
@@ -1141,7 +1184,8 @@ class NexiaThermostat:
 
         zone_mode = self.get_zone_requested_mode(thermostat_id=thermostat_id, zone_id=zone_id)
         if zone_mode != self.OPERATION_MODE_OFF:
-            self.check_heat_cool_setpoints(heat_temperature, cool_temperature, thermostat_id=thermostat_id)
+            self.check_heat_cool_setpoints(heat_temperature, cool_temperature,
+                                           thermostat_id=thermostat_id)
             url = self._get_zone_put_url("setpoints", thermostat_id=thermostat_id, zone_id=zone_id)
             data = {
                 'cooling_setpoint': cool_temperature,
@@ -1198,7 +1242,8 @@ class NexiaThermostat:
             data = {"requested_zone_mode": mode}
             self._put_url(url, data)
         else:
-            raise KeyError(f"Invalid mode \"{mode}\". Select one of the following: {self.OPERATION_MODES}")
+            raise KeyError(
+                f"Invalid mode \"{mode}\". Select one of the following: {self.OPERATION_MODES}")
 
     def round_temp(self, temperature: float):
         """
