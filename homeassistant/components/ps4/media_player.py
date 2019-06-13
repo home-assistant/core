@@ -181,6 +181,9 @@ class PS4Device(MediaPlayerDevice):
                     self._state = STATE_PLAYING
                     if self._media_content_id != title_id:
                         self._media_content_id = title_id
+                        self._media_title = name
+                        self._source = self._media_title
+                        self._media_type = None
                         asyncio.ensure_future(
                             self.async_get_title_data(title_id, name))
                 else:
@@ -228,14 +231,10 @@ class PS4Device(MediaPlayerDevice):
         from pyps4_homeassistant.errors import PSDataIncomplete
         app_name = None
         art = None
+        media_type = None
         try:
             title = await self._ps4.async_get_ps_store_data(
                 name, title_id, self._region)
-
-            # Search all databases.
-            if title is None:
-                title = await self._ps4.async_search_all_ps_data(
-                    name, title_id, timeout=10)
 
         except PSDataIncomplete:
             title = None
@@ -247,6 +246,11 @@ class PS4Device(MediaPlayerDevice):
             if title is not None:
                 app_name = title.name
                 art = title.cover_art
+                # Also assume media type is game if search fails.
+                if title.game_type != 'App':
+                    media_type = MEDIA_TYPE_GAME
+                else:
+                    media_type = MEDIA_TYPE_APP
             else:
                 _LOGGER.error(
                     "Could not find data in region: %s for PS ID: %s",
@@ -256,12 +260,8 @@ class PS4Device(MediaPlayerDevice):
             self._media_title = app_name or name
             self._source = self._media_title
             self._media_image = art or None
+            self._media_type = media_type
 
-            # Also assume media type is game if search fails.
-            if title.game_type != 'App' or title is None:
-                self._media_type = MEDIA_TYPE_GAME
-            else:
-                self._media_type = MEDIA_TYPE_APP
             self.update_list()
             self.schedule_update()
 
