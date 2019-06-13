@@ -4,7 +4,6 @@ import pytest
 from homeassistant.core import Context, callback
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.components.alexa import (
-    config,
     smart_home,
     messages,
 )
@@ -14,6 +13,7 @@ from tests.common import async_mock_service
 
 from . import (
     get_new_request,
+    MockConfig,
     DEFAULT_CONFIG,
     assert_request_calls_service,
     assert_request_fails,
@@ -1012,15 +1012,13 @@ async def test_exclude_filters(hass):
     hass.states.async_set(
         'cover.deny', 'off', {'friendly_name': "Blocked cover"})
 
-    alexa_config = config.Config(
-        endpoint=None,
-        async_get_access_token=None,
-        should_expose=entityfilter.generate_filter(
-            include_domains=[],
-            include_entities=[],
-            exclude_domains=['script'],
-            exclude_entities=['cover.deny'],
-        ))
+    alexa_config = MockConfig()
+    alexa_config.should_expose = entityfilter.generate_filter(
+        include_domains=[],
+        include_entities=[],
+        exclude_domains=['script'],
+        exclude_entities=['cover.deny'],
+    )
 
     msg = await smart_home.async_handle_message(hass, alexa_config, request)
     await hass.async_block_till_done()
@@ -1047,15 +1045,13 @@ async def test_include_filters(hass):
     hass.states.async_set(
         'group.allow', 'off', {'friendly_name': "Allowed group"})
 
-    alexa_config = config.Config(
-        endpoint=None,
-        async_get_access_token=None,
-        should_expose=entityfilter.generate_filter(
-            include_domains=['automation', 'group'],
-            include_entities=['script.deny'],
-            exclude_domains=[],
-            exclude_entities=[],
-        ))
+    alexa_config = MockConfig()
+    alexa_config.should_expose = entityfilter.generate_filter(
+        include_domains=['automation', 'group'],
+        include_entities=['script.deny'],
+        exclude_domains=[],
+        exclude_entities=[],
+    )
 
     msg = await smart_home.async_handle_message(hass, alexa_config, request)
     await hass.async_block_till_done()
@@ -1076,15 +1072,13 @@ async def test_never_exposed_entities(hass):
     hass.states.async_set(
         'group.allow', 'off', {'friendly_name': "Allowed group"})
 
-    alexa_config = config.Config(
-        endpoint=None,
-        async_get_access_token=None,
-        should_expose=entityfilter.generate_filter(
-            include_domains=['group'],
-            include_entities=[],
-            exclude_domains=[],
-            exclude_entities=[],
-        ))
+    alexa_config = MockConfig()
+    alexa_config.should_expose = entityfilter.generate_filter(
+        include_domains=['group'],
+        include_entities=[],
+        exclude_domains=[],
+        exclude_entities=[],
+    )
 
     msg = await smart_home.async_handle_message(hass, alexa_config, request)
     await hass.async_block_till_done()
@@ -1161,18 +1155,14 @@ async def test_entity_config(hass):
     hass.states.async_set(
         'light.test_1', 'on', {'friendly_name': "Test light 1"})
 
-    alexa_config = config.Config(
-        endpoint=None,
-        async_get_access_token=None,
-        should_expose=lambda entity_id: True,
-        entity_config={
-            'light.test_1': {
-                'name': 'Config name',
-                'display_categories': 'SWITCH',
-                'description': 'Config description'
-            }
+    alexa_config = MockConfig()
+    alexa_config.entity_config = {
+        'light.test_1': {
+            'name': 'Config name',
+            'display_categories': 'SWITCH',
+            'description': 'Config description'
         }
-    )
+    }
 
     msg = await smart_home.async_handle_message(
         hass, alexa_config, request)

@@ -1,13 +1,32 @@
 """Config helpers for Alexa."""
 
 
-class Config:
+class AbstractConfig:
     """Hold the configuration for Alexa."""
 
-    def __init__(self, endpoint, async_get_access_token, should_expose,
-                 entity_config=None):
-        """Initialize the configuration."""
-        self.endpoint = endpoint
-        self.async_get_access_token = async_get_access_token
-        self.should_expose = should_expose
-        self.entity_config = entity_config or {}
+    @property
+    def supports_auth(self):
+        """Return if config supports auth."""
+        return False
+
+    @property
+    def endpoint(self):
+        """Endpoint for report state."""
+        return None
+
+    @property
+    def entity_config(self):
+        """Return entity config."""
+        return {}
+
+    def should_expose(self, entity_id):
+        """If an entity should be exposed."""
+        return False
+
+    async def async_get_access_token(self):
+        """Get an access token."""
+        raise NotImplementedError
+
+    async def async_accept_grant(self, code):
+        """Accept a grant."""
+        raise NotImplementedError

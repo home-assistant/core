@@ -5,9 +5,8 @@ from homeassistant import core
 from homeassistant.components.http.view import HomeAssistantView
 
 from .auth import Auth
-from .config import Config
+from .config import AbstractConfig
 from .const import (
-    AUTH_KEY,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_ENDPOINT,
@@ -21,6 +20,47 @@ _LOGGER = logging.getLogger(__name__)
 SMART_HOME_HTTP_ENDPOINT = '/api/alexa/smart_home'
 
 
+class AlexaConfig(AbstractConfig):
+    """Alexa config."""
+
+    def __init__(self, hass, config):
+        """Initialize Alexa config."""
+        self._config = config
+
+        if config.get(CONF_CLIENT_ID) and config.get(CONF_CLIENT_SECRET):
+            self._auth = Auth(hass, config[CONF_CLIENT_ID],
+                              config[CONF_CLIENT_SECRET])
+        else:
+            self._auth = None
+
+    @property
+    def supports_auth(self):
+        """Return if config supports auth."""
+        return self._auth is not None
+
+    @property
+    def endpoint(self):
+        """Endpoint for report state."""
+        return self._config.get(CONF_ENDPOINT)
+
+    @property
+    def entity_config(self):
+        """Return entity config."""
+        return self._config.get(CONF_ENTITY_CONFIG, {})
+
+    def should_expose(self, entity_id):
+        """If an entity should be exposed."""
+        return self._config[CONF_FILTER](entity_id)
+
+    async def async_get_access_token(self):
+        """Get an access token."""
+        return await self._auth.async_get_access_token()
+
+    async def async_accept_grant(self, code):
+        """Accept a grant."""
+        return await self._auth.async_do_auth(code)
+
+
 async def async_setup(hass, config):
     """Activate Smart Home functionality of Alexa component.
 
@@ -30,20 +70,7 @@ async def async_setup(hass, config):
     Even if that's disabled, the functionality in this module may still be used
     by the cloud component which will call async_handle_message directly.
     """
-    if config.get(CONF_CLIENT_ID) and config.get(CONF_CLIENT_SECRET):
-        hass.data[AUTH_KEY] = Auth(hass, config[CONF_CLIENT_ID],
-                                   config[CONF_CLIENT_SECRET])
-
-    async_get_access_token = \
-        hass.data[AUTH_KEY].async_get_access_token if AUTH_KEY in hass.data \
-        else None
-
-    smart_home_config = Config(
-        endpoint=config.get(CONF_ENDPOINT),
-        async_get_access_token=async_get_access_token,
-        should_expose=config[CONF_FILTER],
-        entity_config=config.get(CONF_ENTITY_CONFIG),
-    )
+    smart_home_config = AlexaConfig(hass, config)
     hass.http.register_view(SmartHomeView(smart_home_config))
 
     if AUTH_KEY in hass.data:
