@@ -128,7 +128,7 @@ class PS4Device(MediaPlayerDevice):
         """Notify protocol to callback with update changes."""
         self.hass.data[PS4_DATA].protocol.add_callback(
             self._ps4, self.status_callback)
-        
+
     def check_region(self):
         # Non-Breaking although data returned may be inaccurate.
         if self._region in deprecated_regions:
