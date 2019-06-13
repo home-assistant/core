@@ -784,7 +784,7 @@ n26==0.2.7
 nad_receiver==0.0.11
 
 # homeassistant.components.keenetic_ndms2
-ndms2_client==0.0.7
+ndms2_client==0.0.8
 
 # homeassistant.components.ness_alarm
 nessclient==0.9.15
