@@ -13,7 +13,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import (
     RequestDataValidator)
 from homeassistant.components import websocket_api
-from homeassistant.components.alexa import smart_home as alexa_sh
+from homeassistant.components.alexa import entities as alexa_entities
 from homeassistant.components.google_assistant import helpers as google_helpers
 
 from .const import (
@@ -421,7 +421,7 @@ def _account_data(cloud):
         'prefs': client.prefs.as_dict(),
         'google_entities': client.google_user_config['filter'].config,
         'alexa_entities': client.alexa_config.should_expose.config,
-        'alexa_domains': list(alexa_sh.ENTITY_ADAPTERS),
+        'alexa_domains': list(alexa_entities.ENTITY_ADAPTERS),
         'remote_domain': remote.instance_domain,
         'remote_connected': remote.is_connected,
         'remote_certificate': certificate,
@@ -497,7 +497,7 @@ async def google_assistant_list(hass, connection, msg):
     vol.Optional('disable_2fa'): bool,
 })
 async def google_assistant_update(hass, connection, msg):
-    """List all google assistant entities."""
+    """Update google assistant config."""
     cloud = hass.data[DOMAIN]
     changes = dict(msg)
     changes.pop('type')
