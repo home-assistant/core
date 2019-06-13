@@ -130,6 +130,7 @@ class PS4Device(MediaPlayerDevice):
             self._ps4, self.status_callback)
 
     def check_region(self):
+        """Display logger msg if region is deprecated."""
         # Non-Breaking although data returned may be inaccurate.
         if self._region in deprecated_regions:
             _LOGGER.info("""Region: %s has been deprecated.
