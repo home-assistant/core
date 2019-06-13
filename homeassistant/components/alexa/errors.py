@@ -29,8 +29,6 @@ class AlexaError(Exception):
 
 
 class AlexaInvalidEndpointError(AlexaError):
-    """Class to represent InvalidEndpoint errors."""
-
     """The endpoint in the request does not exist."""
 
     namespace = 'Alexa'

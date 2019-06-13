@@ -31,12 +31,12 @@ class CloudClient(Interface):
 
     def __init__(self, hass: HomeAssistantType, prefs: CloudPreferences,
                  websession: aiohttp.ClientSession,
-                 alexa_config: Dict[str, Any], google_config: Dict[str, Any]):
+                 alexa_cfg: Dict[str, Any], google_config: Dict[str, Any]):
         """Initialize client interface to Cloud."""
         self._hass = hass
         self._prefs = prefs
         self._websession = websession
-        self._alexa_user_config = alexa_config
+        self._alexa_user_config = alexa_cfg
         self._google_user_config = google_config
 
         self._alexa_config = None
