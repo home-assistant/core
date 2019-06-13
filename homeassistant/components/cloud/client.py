@@ -7,7 +7,10 @@ import aiohttp
 from hass_nabucasa.client import CloudClient as Interface
 
 from homeassistant.core import callback
-from homeassistant.components.alexa import smart_home as alexa_sh
+from homeassistant.components.alexa import (
+    config as alexa_config,
+    smart_home as alexa_sh,
+)
 from homeassistant.components.google_assistant import (
     helpers as ga_h, smart_home as ga)
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
@@ -75,12 +78,12 @@ class CloudClient(Interface):
         return self._prefs.remote_enabled
 
     @property
-    def alexa_config(self) -> alexa_sh.Config:
+    def alexa_config(self) -> alexa_config.Config:
         """Return Alexa config."""
         if not self._alexa_config:
             alexa_conf = self._alexa_user_config
 
-            self._alexa_config = alexa_sh.Config(
+            self._alexa_config = alexa_config.Config(
                 endpoint=None,
                 async_get_access_token=None,
                 should_expose=alexa_conf[CONF_FILTER],
