@@ -355,7 +355,7 @@ datapoint==0.4.3
 defusedxml==0.6.0
 
 # homeassistant.components.deluge
-deluge-client==1.4.0
+deluge-client==1.7.1
 
 # homeassistant.components.denonavr
 denonavr==0.7.9
