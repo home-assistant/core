@@ -1,10 +1,12 @@
+"""Support for Nexia / Trane XL Thermostats."""
 import datetime
 
 from homeassistant.const import (ATTR_ATTRIBUTION)
 from homeassistant.components.binary_sensor import (BinarySensorDevice)
 from homeassistant.util import Throttle
 
-from . import (DATA_NEXIA, ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTR_THERMOSTAT_ID, ATTRIBUTION,
+from . import (DATA_NEXIA, ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTR_THERMOSTAT_ID,
+               ATTRIBUTION,
                NEXIA_DEVICE, NEXIA_SCAN_INTERVAL)
 
 
@@ -16,22 +18,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensors = list()
     for thermostat_id in thermostat.get_thermostat_ids():
 
-        sensors.append(NexiaBinarySensor(thermostat, scan_interval, thermostat_id, "is_blower_active",
-                                         "Blower Active", None))
+        sensors.append(
+            NexiaBinarySensor(thermostat, scan_interval, thermostat_id, "is_blower_active",
+                              "Blower Active", None))
         if thermostat.has_emergency_heat(thermostat_id):
-            sensors.append(NexiaBinarySensor(thermostat, scan_interval, thermostat_id, "is_emergency_heat_active",
+            sensors.append(NexiaBinarySensor(thermostat, scan_interval, thermostat_id,
+                                             "is_emergency_heat_active",
                                              "Emergency Heat Active", None))
 
     add_entities(sensors, True)
 
 
-def percent_conv(val):
-    return val * 100.0
-
-
 class NexiaBinarySensor(BinarySensorDevice):
+    """ Nexia BinarySensor Support """
 
-    def __init__(self, device, scan_interval, thermostat_id, sensor_call, sensor_name, sensor_class):
+    def __init__(self, device, scan_interval, thermostat_id, sensor_call, sensor_name,
+                 sensor_class):
         """Initialize the Ecobee sensor."""
         self._device = device
         self._name = self._device.get_thermostat_name(thermostat_id) + " " + sensor_name
@@ -72,5 +74,6 @@ class NexiaBinarySensor(BinarySensorDevice):
 
     def _update(self):
         """Get the latest state of the sensor."""
-        if self._device.last_update is None or datetime.datetime.now() - self._device.last_update > self._scan_interval:
+        if self._device.last_update is None or \
+                datetime.datetime.now() - self._device.last_update > self._scan_interval:
             self._device.update()
