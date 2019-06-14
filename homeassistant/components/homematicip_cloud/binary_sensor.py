@@ -23,6 +23,7 @@ from .device import ATTR_GROUP_MEMBER_UNREACHABLE
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_LOW_BATTERY = 'low_battery'
 ATTR_MOTIONDETECTED = 'motion detected'
 ATTR_PRESENCEDETECTED = 'presence detected'
 ATTR_POWERMAINSFAILURE = 'power mains failure'
@@ -312,7 +313,8 @@ class HomematicipSecuritySensorGroup(HomematicipSecurityZoneSensorGroup,
             attr[ATTR_MOISTUREDETECTED] = True
         if self._device.waterlevelDetected:
             attr[ATTR_WATERLEVELDETECTED] = True
-
+        if self._device.lowBat:
+            attr[ATTR_LOW_BATTERY] = True
         if self._device.smokeDetectorAlarmType is not None and \
                 self._device.smokeDetectorAlarmType != \
                 SmokeDetectorAlarmType.IDLE_OFF:

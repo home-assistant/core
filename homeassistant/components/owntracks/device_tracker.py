@@ -9,7 +9,7 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
 )
 from homeassistant.components.device_tracker.const import (
-    ENTITY_ID_FORMAT, ATTR_SOURCE_TYPE)
+    ENTITY_ID_FORMAT, ATTR_SOURCE_TYPE, SOURCE_TYPE_GPS)
 from homeassistant.components.device_tracker.config_entry import (
     DeviceTrackerEntity
 )
@@ -36,7 +36,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         )
         async_add_entities([entity])
 
-    hass.data[OT_DOMAIN]['context'].async_see = _receive_data
+    hass.data[OT_DOMAIN]['context'].set_async_see(_receive_data)
 
     # Restore previously loaded devices
     dev_reg = await device_registry.async_get_registry(hass)
@@ -127,7 +127,7 @@ class OwnTracksEntity(DeviceTrackerEntity, RestoreEntity):
     @property
     def source_type(self):
         """Return the source type, eg gps or router, of the device."""
-        return self._data.get('source_type')
+        return self._data.get('source_type', SOURCE_TYPE_GPS)
 
     @property
     def device_info(self):

@@ -14,7 +14,6 @@ from .core.const import (
     DOMAIN, ATTR_MANUFACTURER, DATA_ZHA, DATA_ZHA_BRIDGE_ID, MODEL, NAME,
     SIGNAL_REMOVE
 )
-from .core.channels import MAINS_POWERED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -109,7 +108,8 @@ class ZhaEntity(RestoreEntity, entity.Entity):
             ATTR_MANUFACTURER: zha_device_info[ATTR_MANUFACTURER],
             MODEL: zha_device_info[MODEL],
             NAME: zha_device_info[NAME],
-            'via_hub': (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
+            'via_device': (
+                DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
         }
 
     @property
@@ -157,7 +157,7 @@ class ZhaEntity(RestoreEntity, entity.Entity):
                 time.time() - self._zha_device.last_seen <
                 RESTART_GRACE_PERIOD):
             self.async_set_available(True)
-            if self.zha_device.power_source != MAINS_POWERED:
+            if not self.zha_device.is_mains_powered:
                 # mains powered devices will get real time state
                 self.async_restore_last_state(last_state)
             self._zha_device.set_available(True)

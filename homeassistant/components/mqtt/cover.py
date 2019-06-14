@@ -30,6 +30,7 @@ CONF_SET_POSITION_TEMPLATE = 'set_position_template'
 CONF_SET_POSITION_TOPIC = 'set_position_topic'
 CONF_TILT_COMMAND_TOPIC = 'tilt_command_topic'
 CONF_TILT_STATUS_TOPIC = 'tilt_status_topic'
+CONF_TILT_STATUS_TEMPLATE = 'tilt_status_template'
 
 CONF_PAYLOAD_CLOSE = 'payload_close'
 CONF_PAYLOAD_OPEN = 'payload_open'
@@ -110,6 +111,7 @@ PLATFORM_SCHEMA = vol.All(mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TILT_STATE_OPTIMISTIC,
                  default=DEFAULT_TILT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_TILT_STATUS_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_TILT_STATUS_TEMPLATE): cv.template,
     vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
@@ -203,17 +205,26 @@ class MqttCover(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         set_position_template = self._config.get(CONF_SET_POSITION_TEMPLATE)
         if set_position_template is not None:
             set_position_template.hass = self.hass
+        tilt_status_template = self._config.get(CONF_TILT_STATUS_TEMPLATE)
+        if tilt_status_template is not None:
+            tilt_status_template.hass = self.hass
 
         topics = {}
 
         @callback
         def tilt_updated(msg):
             """Handle tilt updates."""
-            if (msg.payload.isnumeric() and
-                    (self._config[CONF_TILT_MIN] <= int(msg.payload) <=
+            payload = msg.payload
+            if tilt_status_template is not None:
+                payload = \
+                    tilt_status_template.async_render_with_possible_json_value(
+                        payload)
+
+            if (payload.isnumeric() and
+                    (self._config[CONF_TILT_MIN] <= int(payload) <=
                      self._config[CONF_TILT_MAX])):
 
-                level = self.find_percentage_in_range(float(msg.payload))
+                level = self.find_percentage_in_range(float(payload))
                 self._tilt_value = level
                 self.async_write_ha_state()
 

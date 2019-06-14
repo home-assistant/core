@@ -38,7 +38,7 @@ class DeviceEntry:
     model = attr.ib(type=str, default=None)
     name = attr.ib(type=str, default=None)
     sw_version = attr.ib(type=str, default=None)
-    hub_device_id = attr.ib(type=str, default=None)
+    via_device_id = attr.ib(type=str, default=None)
     area_id = attr.ib(type=str, default=None)
     name_by_user = attr.ib(type=str, default=None)
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
@@ -93,7 +93,7 @@ class DeviceRegistry:
     def async_get_or_create(self, *, config_entry_id, connections=None,
                             identifiers=None, manufacturer=_UNDEF,
                             model=_UNDEF, name=_UNDEF, sw_version=_UNDEF,
-                            via_hub=None):
+                            via_device=None):
         """Get device. Create if it doesn't exist."""
         if not identifiers and not connections:
             return None
@@ -116,16 +116,16 @@ class DeviceRegistry:
             device = DeviceEntry(is_new=True)
             self.devices[device.id] = device
 
-        if via_hub is not None:
-            hub_device = self.async_get_device({via_hub}, set())
-            hub_device_id = hub_device.id if hub_device else _UNDEF
+        if via_device is not None:
+            via = self.async_get_device({via_device}, set())
+            via_device_id = via.id if via else _UNDEF
         else:
-            hub_device_id = _UNDEF
+            via_device_id = _UNDEF
 
         return self._async_update_device(
             device.id,
             add_config_entry_id=config_entry_id,
-            hub_device_id=hub_device_id,
+            via_device_id=via_device_id,
             merge_connections=connections or _UNDEF,
             merge_identifiers=identifiers or _UNDEF,
             manufacturer=manufacturer,
@@ -153,7 +153,7 @@ class DeviceRegistry:
                              model=_UNDEF,
                              name=_UNDEF,
                              sw_version=_UNDEF,
-                             hub_device_id=_UNDEF,
+                             via_device_id=_UNDEF,
                              area_id=_UNDEF,
                              name_by_user=_UNDEF):
         """Update device attributes."""
@@ -191,7 +191,7 @@ class DeviceRegistry:
                 ('model', model),
                 ('name', name),
                 ('sw_version', sw_version),
-                ('hub_device_id', hub_device_id),
+                ('via_device_id', via_device_id),
         ):
             if value is not _UNDEF and value != getattr(old, attr_name):
                 changes[attr_name] = value
@@ -247,7 +247,10 @@ class DeviceRegistry:
                     sw_version=device['sw_version'],
                     id=device['id'],
                     # Introduced in 0.79
-                    hub_device_id=device.get('hub_device_id'),
+                    # renamed in 0.95
+                    via_device_id=(
+                        device.get('via_device_id')
+                        or device.get('hub_device_id')),
                     # Introduced in 0.87
                     area_id=device.get('area_id'),
                     name_by_user=device.get('name_by_user')
@@ -275,7 +278,7 @@ class DeviceRegistry:
                 'name': entry.name,
                 'sw_version': entry.sw_version,
                 'id': entry.id,
-                'hub_device_id': entry.hub_device_id,
+                'via_device_id': entry.via_device_id,
                 'area_id': entry.area_id,
                 'name_by_user': entry.name_by_user
             } for entry in self.devices.values()

@@ -8,6 +8,7 @@ https://home-assistant.io/components/zha/
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
+from homeassistant.components.lock import DOMAIN as LOCK
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
 
@@ -110,17 +111,20 @@ def establish_device_mappings():
     BINDABLE_CLUSTERS.append(zcl.clusters.lighting.Color.cluster_id)
 
     DEVICE_CLASS[zha.PROFILE_ID].update({
-        zha.DeviceType.ON_OFF_SWITCH: BINARY_SENSOR,
-        zha.DeviceType.LEVEL_CONTROL_SWITCH: BINARY_SENSOR,
-        zha.DeviceType.REMOTE_CONTROL: BINARY_SENSOR,
         zha.DeviceType.SMART_PLUG: SWITCH,
         zha.DeviceType.LEVEL_CONTROLLABLE_OUTPUT: LIGHT,
         zha.DeviceType.ON_OFF_LIGHT: LIGHT,
         zha.DeviceType.DIMMABLE_LIGHT: LIGHT,
         zha.DeviceType.COLOR_DIMMABLE_LIGHT: LIGHT,
-        zha.DeviceType.ON_OFF_LIGHT_SWITCH: BINARY_SENSOR,
-        zha.DeviceType.DIMMER_SWITCH: BINARY_SENSOR,
-        zha.DeviceType.COLOR_DIMMER_SWITCH: BINARY_SENSOR,
+        zha.DeviceType.ON_OFF_LIGHT_SWITCH: SWITCH,
+        zha.DeviceType.DIMMER_SWITCH: LIGHT,
+        zha.DeviceType.COLOR_DIMMER_SWITCH: LIGHT,
+        zha.DeviceType.ON_OFF_BALLAST: SWITCH,
+        zha.DeviceType.DIMMABLE_BALLAST: LIGHT,
+        zha.DeviceType.ON_OFF_PLUG_IN_UNIT: SWITCH,
+        zha.DeviceType.DIMMABLE_PLUG_IN_UNIT: LIGHT,
+        zha.DeviceType.COLOR_TEMPERATURE_LIGHT: LIGHT,
+        zha.DeviceType.EXTENDED_COLOR_LIGHT: LIGHT
     })
 
     DEVICE_CLASS[zll.PROFILE_ID].update({
@@ -130,12 +134,7 @@ def establish_device_mappings():
         zll.DeviceType.DIMMABLE_PLUGIN_UNIT: LIGHT,
         zll.DeviceType.COLOR_LIGHT: LIGHT,
         zll.DeviceType.EXTENDED_COLOR_LIGHT: LIGHT,
-        zll.DeviceType.COLOR_TEMPERATURE_LIGHT: LIGHT,
-        zll.DeviceType.COLOR_CONTROLLER: BINARY_SENSOR,
-        zll.DeviceType.COLOR_SCENE_CONTROLLER: BINARY_SENSOR,
-        zll.DeviceType.CONTROLLER: BINARY_SENSOR,
-        zll.DeviceType.SCENE_CONTROLLER: BINARY_SENSOR,
-        zll.DeviceType.ON_OFF_SENSOR: BINARY_SENSOR,
+        zll.DeviceType.COLOR_TEMPERATURE_LIGHT: LIGHT
     })
 
     SINGLE_INPUT_CLUSTER_DEVICE_CLASS.update({
@@ -154,7 +153,8 @@ def establish_device_mappings():
         zcl.clusters.hvac.Fan: FAN,
         SMARTTHINGS_ACCELERATION_CLUSTER: BINARY_SENSOR,
         zcl.clusters.general.MultistateInput.cluster_id: SENSOR,
-        zcl.clusters.general.AnalogInput.cluster_id: SENSOR
+        zcl.clusters.general.AnalogInput.cluster_id: SENSOR,
+        zcl.clusters.closures.DoorLock: LOCK
     })
 
     SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS.update({
@@ -282,10 +282,13 @@ def establish_device_mappings():
             'attr': 'fan_mode',
             'config': REPORT_CONFIG_OP
         }],
+        zcl.clusters.closures.DoorLock.cluster_id: [{
+            'attr': 'lock_state',
+            'config': REPORT_CONFIG_IMMEDIATE
+        }],
     })
 
     BINARY_SENSOR_CLUSTERS.add(zcl.clusters.general.OnOff.cluster_id)
-    BINARY_SENSOR_CLUSTERS.add(zcl.clusters.general.LevelControl.cluster_id)
     BINARY_SENSOR_CLUSTERS.add(zcl.clusters.security.IasZone.cluster_id)
     BINARY_SENSOR_CLUSTERS.add(
         zcl.clusters.measurement.OccupancySensing.cluster_id)

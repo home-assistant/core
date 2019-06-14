@@ -25,6 +25,7 @@ homeassistant/components/amazon_polly/* @robbiet480
 homeassistant/components/ambiclimate/* @danielhiversen
 homeassistant/components/ambient_station/* @bachya
 homeassistant/components/api/* @home-assistant/core
+homeassistant/components/aprs/* @PhilRW
 homeassistant/components/arduino/* @fabaff
 homeassistant/components/arest/* @fabaff
 homeassistant/components/asuswrt/* @kennedyshead
@@ -43,11 +44,12 @@ homeassistant/components/braviatv/* @robbiet480
 homeassistant/components/broadlink/* @danielhiversen
 homeassistant/components/brunt/* @eavanvalkenburg
 homeassistant/components/bt_smarthub/* @jxwolstenholme
+homeassistant/components/buienradar/* @ties
 homeassistant/components/cisco_ios/* @fbradyirl
 homeassistant/components/cisco_mobility_express/* @fbradyirl
 homeassistant/components/cisco_webex_teams/* @fbradyirl
 homeassistant/components/ciscospark/* @fbradyirl
-homeassistant/components/cloud/* @home-assistant/core
+homeassistant/components/cloud/* @home-assistant/cloud
 homeassistant/components/cloudflare/* @ludeeus
 homeassistant/components/config/* @home-assistant/core
 homeassistant/components/configurator/* @home-assistant/core
@@ -61,6 +63,7 @@ homeassistant/components/daikin/* @fredrike @rofrantz
 homeassistant/components/darksky/* @fabaff
 homeassistant/components/deconz/* @kane610
 homeassistant/components/demo/* @home-assistant/core
+homeassistant/components/device_automation/* @home-assistant/core
 homeassistant/components/digital_ocean/* @fabaff
 homeassistant/components/discogs/* @thibmaek
 homeassistant/components/doorbird/* @oblogic7
@@ -72,6 +75,7 @@ homeassistant/components/eight_sleep/* @mezz64
 homeassistant/components/emby/* @mezz64
 homeassistant/components/enigma2/* @fbradyirl
 homeassistant/components/enocean/* @bdurrer
+homeassistant/components/environment_canada/* @michaeldavie
 homeassistant/components/ephember/* @ttroy50
 homeassistant/components/epsonworkforce/* @ThaStealth
 homeassistant/components/eq3btsmart/* @rytilahti
@@ -92,6 +96,7 @@ homeassistant/components/geniushub/* @zxdavb
 homeassistant/components/gitter/* @fabaff
 homeassistant/components/glances/* @fabaff
 homeassistant/components/gntp/* @robbiet480
+homeassistant/components/google_cloud/* @lufton
 homeassistant/components/google_translate/* @awarecan
 homeassistant/components/google_travel_time/* @robbiet480
 homeassistant/components/googlehome/* @ludeeus
@@ -135,9 +140,11 @@ homeassistant/components/konnected/* @heythisisnate
 homeassistant/components/lametric/* @robbiet480
 homeassistant/components/launch_library/* @ludeeus
 homeassistant/components/lcn/* @alengwenus
+homeassistant/components/life360/* @pnbruckner
 homeassistant/components/lifx/* @amelchio
 homeassistant/components/lifx_cloud/* @amelchio
 homeassistant/components/lifx_legacy/* @amelchio
+homeassistant/components/linky/* @tiste @Quentame
 homeassistant/components/linux_battery/* @fabaff
 homeassistant/components/liveboxplaytv/* @pschmitt
 homeassistant/components/logger/* @home-assistant/core
@@ -151,6 +158,7 @@ homeassistant/components/mcp23017/* @jardiamj
 homeassistant/components/mediaroom/* @dgomes
 homeassistant/components/melissa/* @kennedyshead
 homeassistant/components/met/* @danielhiversen
+homeassistant/components/meteo_france/* @victorcerutti
 homeassistant/components/meteoalarm/* @rolfberkenbosch
 homeassistant/components/miflora/* @danielhiversen @ChristianKuehnel
 homeassistant/components/mill/* @danielhiversen
@@ -214,8 +222,11 @@ homeassistant/components/simplisafe/* @bachya
 homeassistant/components/sma/* @kellerza
 homeassistant/components/smarthab/* @outadoc
 homeassistant/components/smartthings/* @andrewsayre
+homeassistant/components/smarty/* @z0mbieprocess
 homeassistant/components/smtp/* @fabaff
+homeassistant/components/solaredge_local/* @drobtravels
 homeassistant/components/solax/* @squishykid
+homeassistant/components/somfy/* @tetienne
 homeassistant/components/sonos/* @amelchio
 homeassistant/components/spaceapi/* @fabaff
 homeassistant/components/spider/* @peternijssen
@@ -251,7 +262,6 @@ homeassistant/components/tradfri/* @ggravlingen
 homeassistant/components/tts/* @robbiet480
 homeassistant/components/twilio_call/* @robbiet480
 homeassistant/components/twilio_sms/* @robbiet480
-homeassistant/components/uber/* @robbiet480
 homeassistant/components/unifi/* @kane610
 homeassistant/components/upcloud/* @scop
 homeassistant/components/updater/* @home-assistant/core
