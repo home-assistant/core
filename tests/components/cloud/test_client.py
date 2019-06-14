@@ -254,18 +254,41 @@ async def test_google_config_should_2fa(
     assert not cloud_client.google_config.should_2fa(state)
 
 
-async def test_alexa_config_expose_entity_prefs(hass):
+async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs):
     """Test Alexa config should expose using prefs."""
-    cloud_prefs = prefs.CloudPreferences(hass)
-    await cloud_prefs.async_initialize()
     entity_conf = {
         'should_expose': False
     }
     await cloud_prefs.async_update(alexa_entity_configs={
         'light.kitchen': entity_conf
     })
-    conf = client.AlexaConfig(ALEXA_SCHEMA({}), cloud_prefs)
+    conf = client.AlexaConfig(hass, ALEXA_SCHEMA({}), cloud_prefs, None)
 
     assert not conf.should_expose('light.kitchen')
     entity_conf['should_expose'] = True
     assert conf.should_expose('light.kitchen')
+
+
+async def test_alexa_config_report_state(hass, cloud_prefs):
+    """Test Alexa config should expose using prefs."""
+    conf = client.AlexaConfig(hass, ALEXA_SCHEMA({}), cloud_prefs, None)
+
+    assert cloud_prefs.alexa_report_state is False
+    assert conf.should_report_state is False
+    assert conf.is_reporting_states is False
+
+    with patch.object(conf, 'async_get_access_token',
+                      return_value=mock_coro("hello")):
+        await cloud_prefs.async_update(alexa_report_state=True)
+        await hass.async_block_till_done()
+
+    assert cloud_prefs.alexa_report_state is True
+    assert conf.should_report_state is True
+    assert conf.is_reporting_states is True
+
+    await cloud_prefs.async_update(alexa_report_state=False)
+    await hass.async_block_till_done()
+
+    assert cloud_prefs.alexa_report_state is False
+    assert conf.should_report_state is False
+    assert conf.is_reporting_states is False

@@ -39,6 +39,11 @@ class AlexaConfig(AbstractConfig):
         return self._auth is not None
 
     @property
+    def should_report_state(self):
+        """Return if we should proactively report states."""
+        return self._auth is not None
+
+    @property
     def endpoint(self):
         """Endpoint for report state."""
         return self._config.get(CONF_ENDPOINT)
@@ -73,7 +78,7 @@ async def async_setup(hass, config):
     smart_home_config = AlexaConfig(hass, config)
     hass.http.register_view(SmartHomeView(smart_home_config))
 
-    if smart_home_config.supports_auth:
+    if smart_home_config.should_report_state:
         await async_enable_proactive_mode(hass, smart_home_config)
 
 

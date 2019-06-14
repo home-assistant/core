@@ -19,7 +19,7 @@ from homeassistant.components.google_assistant import helpers as google_helpers
 from .const import (
     DOMAIN, REQUEST_TIMEOUT, PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE,
     PREF_GOOGLE_SECURE_DEVICES_PIN, InvalidTrustedNetworks,
-    InvalidTrustedProxies)
+    InvalidTrustedProxies, PREF_ALEXA_REPORT_STATE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -363,6 +363,7 @@ async def websocket_subscription(hass, connection, msg):
     vol.Required('type'): 'cloud/update_prefs',
     vol.Optional(PREF_ENABLE_GOOGLE): bool,
     vol.Optional(PREF_ENABLE_ALEXA): bool,
+    vol.Optional(PREF_ALEXA_REPORT_STATE): bool,
     vol.Optional(PREF_GOOGLE_SECURE_DEVICES_PIN): vol.Any(None, str),
 })
 async def websocket_update_prefs(hass, connection, msg):
@@ -424,7 +425,6 @@ def _account_data(cloud):
         'prefs': client.prefs.as_dict(),
         'google_entities': client.google_user_config['filter'].config,
         'alexa_entities': client.alexa_user_config['filter'].config,
-        'alexa_domains': list(alexa_entities.ENTITY_ADAPTERS),
         'remote_domain': remote.instance_domain,
         'remote_connected': remote.is_connected,
         'remote_certificate': certificate,

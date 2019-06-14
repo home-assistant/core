@@ -38,7 +38,7 @@ class MockConfig(config.AbstractConfig):
         pass
 
 
-DEFAULT_CONFIG = MockConfig()
+DEFAULT_CONFIG = MockConfig(None)
 
 
 def get_new_request(namespace, name, endpoint=None):

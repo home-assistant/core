@@ -2,8 +2,11 @@
 import asyncio
 from pathlib import Path
 from typing import Any, Dict
+from datetime import timedelta
+import logging
 
 import aiohttp
+from hass_nabucasa import cloud_api
 from hass_nabucasa.client import CloudClient as Interface
 
 from homeassistant.core import callback
@@ -17,22 +20,41 @@ from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.aiohttp import MockRequest
+from homeassistant.util.dt import utcnow
 
 from . import utils
 from .const import (
     CONF_ENTITY_CONFIG, CONF_FILTER, DOMAIN, DISPATCHER_REMOTE_UPDATE,
     PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE,
-    PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA)
+    PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA, RequireRelink)
 from .prefs import CloudPreferences
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class AlexaConfig(alexa_config.AbstractConfig):
     """Alexa Configuration."""
 
-    def __init__(self, config, prefs):
+    def __init__(self, hass, config, prefs, cloud):
         """Initialize the Alexa config."""
+        super().__init__(hass)
         self._config = config
         self._prefs = prefs
+        self._cloud = cloud
+        self._token = None
+        self._token_valid = None
+        prefs.async_listen_updates(self.async_prefs_updated)
+
+    @property
+    def supports_auth(self):
+        """Return if config supports auth."""
+        return True
+
+    @property
+    def should_report_state(self):
+        """Return if states should be proactively reported."""
+        return self._prefs.alexa_report_state
 
     @property
     def endpoint(self):
@@ -57,6 +79,34 @@ class AlexaConfig(alexa_config.AbstractConfig):
         return entity_config.get(
             PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE)
 
+    async def async_get_access_token(self):
+        """Get an access token."""
+        if self._token_valid is not None and self._token_valid < utcnow():
+            return self._token
+
+        resp = await cloud_api.async_alexa_access_token(self._cloud)
+        body = await resp.json()
+
+        if resp.status == 400:
+            if body['reason'] in ('RefreshTokenNotFound', 'UnknownRegion'):
+                raise RequireRelink
+
+            return None
+
+        self._token = body['access_token']
+        self._token_valid = utcnow() + timedelta(seconds=body['expires_in'])
+        return self._token
+
+    async def async_prefs_updated(self, prefs):
+        """Handle updated preferences."""
+        if self.should_report_state == self.is_reporting_states:
+            return
+
+        if self.should_report_state:
+            await self.async_enable_proactive_mode()
+        else:
+            await self.async_disable_proactive_mode()
+
 
 class CloudClient(Interface):
     """Interface class for Home Assistant Cloud."""
@@ -70,9 +120,9 @@ class CloudClient(Interface):
         self._websession = websession
         self.google_user_config = google_config
         self.alexa_user_config = alexa_cfg
-
-        self.alexa_config = AlexaConfig(alexa_cfg, prefs)
+        self._alexa_config = None
         self._google_config = None
+        self.cloud = None
 
     @property
     def base_path(self) -> Path:
@@ -108,6 +158,15 @@ class CloudClient(Interface):
     def remote_autostart(self) -> bool:
         """Return true if we want start a remote connection."""
         return self._prefs.remote_enabled
+
+    @property
+    def alexa_config(self) -> AlexaConfig:
+        """Return Alexa config."""
+        if self._alexa_config is None:
+            self._alexa_config = AlexaConfig(
+                self._hass, self.alexa_user_config, self._prefs, self.cloud)
+
+        return self._alexa_config
 
     @property
     def google_config(self) -> ga_h.Config:
@@ -150,6 +209,13 @@ class CloudClient(Interface):
             self._prefs.google_secure_devices_pin
 
         return self._google_config
+
+    async def async_initialize(self, cloud) -> None:
+        """Initialize the client."""
+        self.cloud = cloud
+
+        if self.alexa_config.should_report_state:
+            await self.alexa_config.async_enable_proactive_mode()
 
     async def cleanups(self) -> None:
         """Cleanup some stuff after logout."""
