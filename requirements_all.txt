@@ -9,6 +9,7 @@ jinja2>=2.10
 PyJWT==1.6.4
 cryptography==2.3.1
 pip>=8.0.3
+<<<<<<< HEAD
 python-slugify==1.2.6
 pytz>=2018.07
 pyyaml>=3.13,<4
@@ -16,6 +17,11 @@ pyyaml>=3.13,<4
 requests==2.21.0
 ruamel.yaml==0.15.85
 =======
+=======
+python-slugify==3.0.2
+pytz>=2019.01
+pyyaml==5.1
+>>>>>>> Pyyaml5.1 (#24529)
 requests==2.22.0
 ruamel.yaml==0.15.97
 >>>>>>> Upgrade ruamel.yaml to 0.15.97 (#24350)
