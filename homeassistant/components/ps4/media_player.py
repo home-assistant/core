@@ -129,6 +129,12 @@ class PS4Device(MediaPlayerDevice):
         self.hass.data[PS4_DATA].protocol.add_callback(
             self._ps4, self.status_callback)
 
+    @callback
+    def unsubscribe_to_protocol(self):
+        """Notify protocol to remove callback."""
+        self.hass.data[PS4_DATA].protocol.remove_callback(
+            self._ps4, self.status_callback)
+
     def check_region(self):
         """Display logger msg if region is deprecated."""
         # Non-Breaking although data returned may be inaccurate.
@@ -246,7 +252,7 @@ class PS4Device(MediaPlayerDevice):
             if title is not None:
                 app_name = title.name
                 art = title.cover_art
-                # Also assume media type is game if search fails.
+                # Assume media type is game if not app.
                 if title.game_type != 'App':
                     media_type = MEDIA_TYPE_GAME
                 else:
