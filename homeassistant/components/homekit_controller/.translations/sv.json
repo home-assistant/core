@@ -18,7 +18,7 @@
             "unable_to_pair": "Det g\u00e5r inte att para ihop, f\u00f6rs\u00f6k igen.",
             "unknown_error": "Enheten rapporterade ett ok\u00e4nt fel. Parning misslyckades."
         },
-        "flow_title": "HomeKit-tillbeh\u00f6r: {namn}",
+        "flow_title": "HomeKit-tillbeh\u00f6r: {name}",
         "step": {
             "pair": {
                 "data": {
