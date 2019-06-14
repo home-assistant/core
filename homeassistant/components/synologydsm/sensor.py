@@ -156,7 +156,7 @@ class SynoNasSensor(Entity):
                  monitor_device=None):
         """Initialize the sensor."""
         self.var_id = variable
-        self.var_name = "{}_{}".format(name, variable_info[0])
+        self.var_name = "{} {}".format(name, variable_info[0])
         self.var_units = variable_info[1]
         self.var_icon = variable_info[2]
         self.monitor_device = monitor_device
