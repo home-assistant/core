@@ -1435,8 +1435,13 @@ pypjlink2==1.2.0
 # homeassistant.components.point
 pypoint==1.0.6
 
+<<<<<<< HEAD
 # homeassistant.components.sensor.pollen
 pypollencom==2.2.2
+=======
+# homeassistant.components.ps4
+pyps4-homeassistant==0.8.2
+>>>>>>> WIP Ps4 Convert entity to Async / Fix entity name changing (#24101)
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.8
