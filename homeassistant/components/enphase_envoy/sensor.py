@@ -94,7 +94,8 @@ class Envoy(Entity):
             self._state = "Unknown"
 
         if (self._type == "production"):
-            _attributes = await EnvoyReader(self._ip_address).inverters_production()
+            _attributes = await (EnvoyReader(self._ip_address)
+                                 .inverters_production())
             if (type(_attributes is dict)):
                 self._attributes = _attributes
             else:
