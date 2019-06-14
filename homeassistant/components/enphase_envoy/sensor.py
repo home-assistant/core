@@ -80,12 +80,22 @@ class Envoy(Entity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        if self._type == "production":
-            return self._attributes
+        return self._attributes
 
-    def update(self):
+    async def async_update(self):
         """Get the energy production data from the Enphase Envoy."""
         from envoy_reader import EnvoyReader
 
-        self._state = getattr(EnvoyReader(self._ip_address), self._type)()
-        self._attributes = EnvoyReader(self._ip_address).inverters_production()
+        _state = await getattr(EnvoyReader(self._ip_address), self._type)()
+        if (type(_state) is int):
+            self._state = _state
+        else:
+            _LOGGER.error(_state)
+            self._state = "Unknown"
+
+        if (self._type == "production"):
+            _attributes = await EnvoyReader(self._ip_address).inverters_production()
+            if (type(_attributes is dict)):
+                self._attributes = _attributes
+            else:
+                self._attributes = None
