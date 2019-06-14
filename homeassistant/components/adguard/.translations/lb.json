@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "N\u00ebmmen eng eenzeg Konfiguratioun vun AdGuard Home ass erlaabt."
+        },
+        "error": {
+            "connection_error": "Feeler beim verbannen."
+        },
+        "step": {
+            "hassio_confirm": {
+                "title": "AdGuard Home via Hass.io add-on"
+            },
+            "user": {
+                "data": {
+                    "host": "Apparat",
+                    "password": "Passwuert",
+                    "port": "Port",
+                    "ssl": "AdGuard Home benotzt een SSL Zertifikat",
+                    "username": "Benotzernumm",
+                    "verify_ssl": "AdGuard Home benotzt een eegenen Zertifikat"
+                },
+                "title": "Verbannt \u00e4ren AdGuard Home"
+            }
+        },
+        "title": "AdGuard Home"
+    }
+}
