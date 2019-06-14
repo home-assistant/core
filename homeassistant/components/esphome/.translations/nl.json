@@ -8,6 +8,7 @@
             "invalid_password": "Ongeldig wachtwoord!",
             "resolve_error": "Kan het adres van de ESP niet vinden. Als deze fout aanhoudt, stel dan een statisch IP-adres in: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
+        "flow_title": "ESPHome: {name}",
         "step": {
             "authenticate": {
                 "data": {
