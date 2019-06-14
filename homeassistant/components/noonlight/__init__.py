@@ -16,6 +16,8 @@ import homeassistant.util.dt as dt_util
 
 DOMAIN = 'noonlight'
 
+EVENT_NOONLIGHT_TOKEN_REFRESHED = 'noonlight_token_refreshed'
+
 TOKEN_CHECK_INTERVAL = timedelta(minutes=15)
 
 CONF_SECRET = 'secret'
@@ -134,6 +136,9 @@ class NoonlightPlatform():
                     _LOGGER.debug("token renewed, expires at {0} ({1:.1f}h)" \
                         .format(self.access_token_expiry,
                                 self.access_token_expires_in.total_seconds()/3600.0))
+                    self.hass.bus.fire(EVENT_NOONLIGHT_TOKEN_REFRESHED, {
+                            'token': self.client._token
+                        })
                     return True
                 raise Exception("unexpected token_response: {}" \
                     .format(token_response))

@@ -6,7 +6,7 @@ from datetime import timedelta
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.helpers.event import async_track_time_interval
 
-from . import DOMAIN
+from . import DOMAIN, EVENT_NOONLIGHT_TOKEN_REFRESHED
 
 DEFAULT_NAME = 'noonlight_switch'
 
@@ -21,6 +21,11 @@ async def async_setup_platform(
     noonlight_platform = hass.data[DOMAIN]
     noonlight_switch = NoonlightSwitch(noonlight_platform)
     async_add_entities([noonlight_switch])
+    
+    def noonlight_token_refreshed(event):
+        noonlight_switch.schedule_update_ha_state()
+    
+    hass.bus.async_listen(EVENT_NOONLIGHT_TOKEN_REFRESHED, noonlight_token_refreshed)
 
 
 class NoonlightSwitch(SwitchDevice):
