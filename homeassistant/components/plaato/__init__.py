@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.const import (
-    CONF_WEBHOOK_ID, HTTP_OK, HTTP_UNPROCESSABLE_ENTITY,
+    CONF_WEBHOOK_ID, HTTP_OK,
     TEMP_CELSIUS, TEMP_FAHRENHEIT, VOLUME_GALLONS, VOLUME_LITERS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -84,7 +84,8 @@ async def handle_webhook(hass, webhook_id, request):
     try:
         data = WEBHOOK_SCHEMA(await request.json())
     except vol.MultipleInvalid as error:
-        _LOGGER.warning("An error occurred when parsing webhook data <%s>", error)
+        _LOGGER.warning("An error occurred when parsing webhook data <%s>",
+                        error)
         return
 
     device_id = _device_id(data)
