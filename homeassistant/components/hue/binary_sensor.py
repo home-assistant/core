@@ -34,5 +34,6 @@ class HuePresence(GenericZLLSensor, BinarySensorDevice):
         if 'sensitivity' in self.sensor.config:
             attributes['sensitivity'] = self.sensor.config['sensitivity']
         if 'sensitivitymax' in self.sensor.config:
-            attributes['sensitivity_max'] = self.sensor.config['sensitivitymax']
+            attributes['sensitivity_max'] = \
+                self.sensor.config['sensitivitymax']
         return attributes
