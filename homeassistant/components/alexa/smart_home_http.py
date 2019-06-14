@@ -25,6 +25,7 @@ class AlexaConfig(AbstractConfig):
 
     def __init__(self, hass, config):
         """Initialize Alexa config."""
+        super().__init__(hass)
         self._config = config
 
         if config.get(CONF_CLIENT_ID) and config.get(CONF_CLIENT_SECRET):
