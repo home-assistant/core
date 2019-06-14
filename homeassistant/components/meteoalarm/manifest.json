@@ -3,7 +3,7 @@
   "name": "meteoalarm",
   "documentation": "https://www.home-assistant.io/components/meteoalarm",
   "requirements": [
-    "meteoalertapi==0.1.3"
+    "meteoalertapi==0.1.5"
   ],
   "dependencies": [],
   "codeowners": ["@rolfberkenbosch"]
