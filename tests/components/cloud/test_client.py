@@ -8,7 +8,7 @@ import pytest
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 from homeassistant.components.cloud import (
-    DOMAIN, ALEXA_SCHEMA, prefs, client)
+    DOMAIN, ALEXA_SCHEMA, client)
 from homeassistant.components.cloud.const import (
     PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE)
 from tests.components.alexa import test_smart_home as test_alexa
