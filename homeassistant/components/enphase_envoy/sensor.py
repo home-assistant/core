@@ -87,16 +87,16 @@ class Envoy(Entity):
         from envoy_reader import EnvoyReader
 
         _state = await getattr(EnvoyReader(self._ip_address), self._type)()
-        if (type(_state) is int):
+        if isinstance(_state, int):
             self._state = _state
         else:
             _LOGGER.error(_state)
             self._state = "Unknown"
 
-        if (self._type == "production"):
+        if self._type == "production":
             _attributes = await (EnvoyReader(self._ip_address)
                                  .inverters_production())
-            if (type(_attributes is dict)):
+            if isinstance(_attributes, dict):
                 self._attributes = _attributes
             else:
                 self._attributes = None
