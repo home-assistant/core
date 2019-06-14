@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Il Bridge \u00e8 gi\u00e0 configurato",
             "no_bridges": "Nessun bridge deCONZ rilevato",
-            "one_instance_only": "Il componente supporto solo un'istanza di deCONZ"
+            "one_instance_only": "Il componente supporto solo un'istanza di deCONZ",
+            "updated_instance": "Istanza deCONZ aggiornata con nuovo indirizzo host"
         },
         "error": {
             "no_key": "Impossibile ottenere una API key"

@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "invalid_credentials": "B\u0142\u0119dne dane uwierzytelniaj\u0105ce",
+            "user_already_configured": "Konto ju\u017c zosta\u0142o skonfigurowane."
+        },
+        "create_entry": {
+            "default": "Aby ustawi\u0107 zaawansowane opcje, udaj si\u0119 do  [Dokumentacja Life360] ( {docs_url} ). \n"
+        },
+        "error": {
+            "invalid_credentials": "B\u0142\u0119dne dane uwierzytelniaj\u0105ce",
+            "invalid_username": "Nieprawid\u0142owa nazwa u\u017cytkownika ",
+            "user_already_configured": "Konto ju\u017c zosta\u0142o skonfigurowane."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Aby ustawi\u0107 zaawansowane opcje, udaj si\u0119 do  [Dokumentacja Life360] ( {docs_url} ). \n Mo\u017cesz to zrobi\u0107 przed dodaniem kont.",
+                "title": "Informacje o koncie Life360"
+            }
+        },
+        "title": "Life360"
+    }
+}
