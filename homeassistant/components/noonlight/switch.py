@@ -66,7 +66,7 @@ class NoonlightSwitch(SwitchDevice):
                 body={
                     'location.coordinates': {
                         'lat':self.noonlight.latitude,
-                        'lng':self.noonlight.latitude,
+                        'lng':self.noonlight.longitude,
                         'accuracy': 5
                     }
                 }
