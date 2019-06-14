@@ -1440,8 +1440,12 @@ pypoint==1.0.6
 pypollencom==2.2.2
 =======
 # homeassistant.components.ps4
+<<<<<<< HEAD
 pyps4-homeassistant==0.8.2
 >>>>>>> WIP Ps4 Convert entity to Async / Fix entity name changing (#24101)
+=======
+pyps4-homeassistant==0.8.3
+>>>>>>> PS4  bump to 0.8.3 (#24527)
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.8
