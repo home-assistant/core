@@ -1,13 +1,17 @@
 """Create a switch to trigger an alarm in Noonlight"""
 import logging
 
+from datetime import timedelta
+
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.helpers.event import async_track_time_interval
 
 from . import DOMAIN
 
 DEFAULT_NAME = 'noonlight_switch'
 
-
+CONST_ALARM_STATUS_ACTIVE = 'ACTIVE'
+CONST_ALARM_STATUS_CANCELED = 'CANCELED'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +47,10 @@ class NoonlightSwitch(SwitchDevice):
     def is_on(self):
         """Return the status of the switch."""
         return self._state
+        
+    async def update_alarm_status(self):
+        if self._alarm is not None:
+            return await self._alarm.get_status()
 
     async def async_turn_on(self, **kwargs):
         """Activate an alarm"""
@@ -58,13 +66,34 @@ class NoonlightSwitch(SwitchDevice):
                     }
                 }
             )
-            if self._alarm and self._alarm.status == 'ACTIVE':
+            if self._alarm and self._alarm.status == CONST_ALARM_STATUS_ACTIVE:
+                _LOGGER.debug(
+                        'noonlight alarm has been initiated. '
+                        'id: {id} status: {status}'.format(
+                            id=self._alarm.id, 
+                            status=self._alarm.status))
                 self._state = True
+                cancel_interval = None
+                async def check_alarm_status_interval(now):
+                    _LOGGER.debug('checking alarm status...')
+                    if await self.update_alarm_status() == CONST_ALARM_STATUS_CANCELED:
+                        _LOGGER.debug(
+                                'alarm {id} has been canceled!'.format(
+                                    id=self._alarm.id))
+                        if cancel_interval:
+                            cancel_interval()
+                        await self.async_turn_off()
+                        self.schedule_update_ha_state()
+                cancel_interval = async_track_time_interval(
+                        self.hass, 
+                        check_alarm_status_interval, 
+                        timedelta(seconds = 15)
+                    )
 
     async def async_turn_off(self, **kwargs):
-        """Send a command to cancel the active alarm"""
+        """Turn off the switch if the active alarm is canceled"""
         if self._alarm is not None:
-            response = await self._alarm.cancel()
-            if response:
+            if self._alarm.status == CONST_ALARM_STATUS_CANCELED:
                 self._alarm = None
-                self._state = False
+        if self._alarm is None:
+            self._state = False
