@@ -124,6 +124,12 @@ adguardhome==0.2.1
 >>>>>>> Adds AdGuard Home integration (#24219)
 afsapi==0.0.4
 
+<<<<<<< HEAD
+=======
+# homeassistant.components.ambient_station
+aioambient==0.3.1
+
+>>>>>>> Fix a bug with Ambient PWS reconnection (#24540)
 # homeassistant.components.asuswrt
 aioasuswrt==1.1.17
 

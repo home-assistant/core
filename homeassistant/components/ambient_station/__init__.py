@@ -327,7 +327,7 @@ class AmbientStation:
             """Define a handler to fire when the websocket is connected."""
             _LOGGER.info('Connected to websocket')
             _LOGGER.debug('Watchdog starting')
-            if self._watchdog_listener:
+            if self._watchdog_listener is not None:
                 self._watchdog_listener()
             self._watchdog_listener = async_call_later(
                 self._hass, DEFAULT_WATCHDOG_SECONDS, _ws_reconnect)
