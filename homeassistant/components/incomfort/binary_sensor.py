@@ -15,7 +15,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     ])
 
 
-class IncomfortFailed(IncomfortBinarySensor):
+class IncomfortFailed(BinarySensorDevice):
     """Representation of an InComfort Failed sensor."""
 
     def __init__(self, client, boiler):
