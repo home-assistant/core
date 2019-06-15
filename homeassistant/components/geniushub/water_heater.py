@@ -95,10 +95,9 @@ class GeniusWaterHeater(WaterHeaterDevice):
     def current_temperature(self):
         """Return the current temperature."""
         try:
-            temp = self._boiler.temperature
+            return self._boiler.temperature
         except AttributeError:
-            temp = None
-        return temp
+            return None
 
     @property
     def target_temperature(self):
