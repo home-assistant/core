@@ -1,15 +1,13 @@
 """Support for devices connected to UniFi POE."""
-import asyncio
 from datetime import timedelta
 import logging
-
-import async_timeout
 
 from homeassistant.components import unifi
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID
 
@@ -36,79 +34,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     controller = hass.data[unifi.DOMAIN][controller_id]
     switches = {}
 
-    progress = None
-    update_progress = set()
-
-    async def request_update(object_id):
-        """Request an update."""
-        nonlocal progress
-        update_progress.add(object_id)
-
-        if progress is not None:
-            return await progress
-
-        progress = asyncio.ensure_future(update_controller())
-        result = await progress
-        progress = None
-        update_progress.clear()
-        return result
-
-    async def update_controller():
-        """Update the values of the controller."""
-        tasks = [async_update_items(
-            controller, async_add_entities, request_update,
-            switches, update_progress
-        )]
-        await asyncio.wait(tasks)
-
-    await update_controller()
-
-
-async def async_update_items(controller, async_add_entities,
-                             request_controller_update, switches,
-                             progress_waiting):
-    """Update POE port state from the controller."""
-    import aiounifi
-
     @callback
-    def update_switch_state():
-        """Tell switches to reload state."""
-        for client_id, client in switches.items():
-            if client_id not in progress_waiting:
-                client.async_schedule_update_ha_state()
+    def update_controller():
+        """Update the values of the controller."""
+        update_items(controller, async_add_entities, switches)
 
-    try:
-        with async_timeout.timeout(4):
-            await controller.api.clients.update()
-            await controller.api.devices.update()
+    async_dispatcher_connect(hass, controller.event_update, update_controller)
 
-    except aiounifi.LoginRequired:
-        try:
-            with async_timeout.timeout(5):
-                await controller.api.login()
-        except (asyncio.TimeoutError, aiounifi.AiounifiException):
-            if controller.available:
-                controller.available = False
-                update_switch_state()
-            return
+    update_controller()
 
-    except (asyncio.TimeoutError, aiounifi.AiounifiException):
-        if controller.available:
-            LOGGER.error('Unable to reach controller %s', controller.host)
-            controller.available = False
-            update_switch_state()
-        return
 
-    if not controller.available:
-        LOGGER.info('Reconnected to controller %s', controller.host)
-        controller.available = True
-
+@callback
+def update_items(controller, async_add_entities, switches):
+    """Update POE port state from the controller."""
     new_switches = []
     devices = controller.api.devices
-    for client_id in controller.api.clients:
 
-        if client_id in progress_waiting:
-            continue
+    for client_id in controller.api.clients:
 
         if client_id in switches:
             LOGGER.debug("Updating UniFi switch %s (%s)",
@@ -137,8 +79,7 @@ async def async_update_items(controller, async_add_entities,
         if multi_clients_on_port:
             continue
 
-        switches[client_id] = UniFiSwitch(
-            client, controller, request_controller_update)
+        switches[client_id] = UniFiSwitch(client, controller)
         new_switches.append(switches[client_id])
         LOGGER.debug("New UniFi switch %s (%s)", client.hostname, client.mac)
 
@@ -149,18 +90,17 @@ async def async_update_items(controller, async_add_entities,
 class UniFiSwitch(SwitchDevice):
     """Representation of a client that uses POE."""
 
-    def __init__(self, client, controller, request_controller_update):
+    def __init__(self, client, controller):
         """Set up switch."""
         self.client = client
         self.controller = controller
         self.poe_mode = None
         if self.port.poe_mode != 'off':
             self.poe_mode = self.port.poe_mode
-        self.async_request_controller_update = request_controller_update
 
     async def async_update(self):
         """Synchronize state with controller."""
-        await self.async_request_controller_update(self.client.mac)
+        await self.controller.request_update()
 
     @property
     def name(self):
