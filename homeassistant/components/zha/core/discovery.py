@@ -88,6 +88,12 @@ def async_process_endpoint(
 def _async_create_cluster_channel(cluster, zha_device, is_new_join,
                                   channels=None, channel_class=None):
     """Create a cluster channel and attach it to a device."""
+    # really ugly hack to deal with xiaomi using the door lock cluster
+    # incorrectly.
+    if hasattr(cluster, 'ep_attribute') and\
+            cluster.ep_attribute == 'multistate_input':
+        channel_class = AttributeListeningChannel
+    # end of ugly hack
     if channel_class is None:
         channel_class = ZIGBEE_CHANNEL_REGISTRY.get(cluster.cluster_id,
                                                     AttributeListeningChannel)
