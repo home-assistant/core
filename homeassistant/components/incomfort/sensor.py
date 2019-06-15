@@ -1,6 +1,4 @@
 """Support for an Intergas boiler via an InComfort/InTouch Lan2RF gateway."""
-import logging
-
 from homeassistant.const import (
     PRESSURE_BAR, TEMP_CELSIUS,
     DEVICE_CLASS_PRESSURE, DEVICE_CLASS_TEMPERATURE)
@@ -18,6 +16,7 @@ INTOUCH_MAP_ATTRS = {
     INTOUCH_HEATER_TEMP: ['heater_temp', 'is_pumping'],
     INTOUCH_TAP_TEMP: ['tap_temp', 'is_tapping'],
 }
+
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):

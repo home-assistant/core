@@ -50,4 +50,3 @@ class IncomfortFailed(BinarySensorDevice):
     def should_poll(self) -> bool:
         """Return False as this device should never be polled."""
         return False
-
