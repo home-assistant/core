@@ -37,9 +37,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_AWAY_TEMPERATURE,
                  default=DEFAULT_AWAY_TEMPERATURE): vol.Coerce(float),
     vol.Optional(CONF_COOL_AWAY_TEMPERATURE,
-                 default=DEFAULT_COOL_AWAY_TEMPERATURE): vol.Coerce(float),
+                 default=DEFAULT_COOL_AWAY_TEMPERATURE): vol.Coerce(int),
     vol.Optional(CONF_HEAT_AWAY_TEMPERATURE,
-                 default=DEFAULT_HEAT_AWAY_TEMPERATURE): vol.Coerce(float),
+                 default=DEFAULT_HEAT_AWAY_TEMPERATURE): vol.Coerce(int),
     vol.Optional(CONF_REGION, default=DEFAULT_REGION): vol.In(REGIONS),
 })
 
