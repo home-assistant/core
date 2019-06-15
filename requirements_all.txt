@@ -766,7 +766,14 @@ ibmiotf==0.3.4
 iglo==1.2.7
 
 # homeassistant.components.ihc
+<<<<<<< HEAD
 ihcsdk==2.2.0
+=======
+ihcsdk==2.3.0
+
+# homeassistant.components.incomfort
+incomfort-client==0.3.0
+>>>>>>> Fix incomfort issue #24478 & bump client (#24548)
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
