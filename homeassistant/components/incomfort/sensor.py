@@ -2,16 +2,22 @@
 import logging
 
 from homeassistant.const import (
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_SIGNAL_STRENGTH)
+    PRESSURE_BAR, TEMP_CELSIUS,
+    DEVICE_CLASS_PRESSURE, DEVICE_CLASS_TEMPERATURE)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+INTOUCH_HEATER_TEMP = 'CV Temp'
+INTOUCH_PRESSURE = 'CV Pressure'
+INTOUCH_TAP_TEMP = 'Tap Temp'
 
+INTOUCH_MAP_ATTRS = {
+    INTOUCH_HEATER_TEMP: ['heater_temp', 'is_pumping'],
+    INTOUCH_TAP_TEMP: ['tap_temp', 'is_tapping'],
+}
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
@@ -20,8 +26,9 @@ async def async_setup_platform(hass, config, async_add_entities,
     heater = hass.data[DOMAIN]['heater']
 
     async_add_entities([
-        IncomfortSignal(client, heater),
-        IncomfortPressure(client, heater)
+        IncomfortPressure(client, heater),
+        IncomfortTemperature(client, heater, INTOUCH_HEATER_TEMP),
+        IncomfortTemperature(client, heater, INTOUCH_TAP_TEMP)
     ])
 
 
@@ -73,39 +80,34 @@ class IncomfortPressure(IncomfortSensor):
         """Initialize the sensor."""
         super().__init__(client, boiler)
 
-        self._name = 'CV Pressure'
+        self._name = INTOUCH_PRESSURE
         self._device_class = DEVICE_CLASS_PRESSURE
-        self._unit_of_measurement = 'bar'
+        self._unit_of_measurement = PRESSURE_BAR
 
     @property
     def state(self):
         """Return the state/value of the sensor."""
         return self._boiler.status['pressure']
 
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        keys = ['is_pumping', 'heater_temp']
-        return {k: self._boiler.status[k] for k in keys}
 
+class IncomfortTemperature(IncomfortSensor):
+    """Representation of an InTouch Temperature sensor."""
 
-class IncomfortSignal(IncomfortSensor):
-    """Representation of an InTouch Signal strength sensor."""
-
-    def __init__(self, client, boiler):
+    def __init__(self, client, boiler, name):
         """Initialize the signal strength sensor."""
         super().__init__(client, boiler)
 
-        self._name = 'RF Signal'
-        self._device_class = DEVICE_CLASS_SIGNAL_STRENGTH
-        self._unit_of_measurement = 'dBm'
+        self._name = name
+        self._device_class = DEVICE_CLASS_TEMPERATURE
+        self._unit_of_measurement = TEMP_CELSIUS
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._boiler.status['rf_message_rssi']
+        return self._boiler.status[INTOUCH_MAP_ATTRS[self._name][0]]
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        return {k: self._boiler.status[k] for k in ['nodenr', 'rfstatus_cntr']}
+        key = INTOUCH_MAP_ATTRS[self._name][1]
+        return {key: self._boiler.status[key]}

@@ -13,9 +13,6 @@ async def async_setup_platform(hass, config, async_add_entities,
     heater = hass.data[DOMAIN]['heater']
 
     async_add_entities([
-        IncomfortBurning(client, heater),
-        IncomfortPumping(client, heater),
-        IncomfortTapping(client, heater),
         IncomfortFailed(client, heater)
     ])
 
@@ -62,26 +59,6 @@ class IncomfortBinarySensor(BinarySensorDevice):
         return False
 
 
-class IncomfortBurning(IncomfortBinarySensor):
-    """Representation of an InComfort Burning sensor."""
-
-    def __init__(self, client, boiler):
-        """Initialize the binary sensor."""
-        super().__init__(client, boiler)
-
-        self._name = 'Burning'
-        self._is_on_key = 'is_burning'
-
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        if self._boiler.status['is_tapping']:
-            value = self._boiler.status['tap_temp']
-        else:
-            value = self._boiler.status['heater_temp']
-        return {'water_temp': value}
-
-
 class IncomfortFailed(IncomfortBinarySensor):
     """Representation of an InComfort Failed sensor."""
 
@@ -92,27 +69,3 @@ class IncomfortFailed(IncomfortBinarySensor):
         self._name = 'Failed'
         self._is_on_key = 'is_failed'
         self._other_key = 'fault_code'
-
-
-class IncomfortPumping(IncomfortBinarySensor):
-    """Representation of an InComfort Pumping sensor."""
-
-    def __init__(self, client, boiler):
-        """Initialize the binary sensor."""
-        super().__init__(client, boiler)
-
-        self._name = 'Pumping'
-        self._is_on_key = 'is_pumping'
-        self._other_key = 'heater_temp'
-
-
-class IncomfortTapping(IncomfortBinarySensor):
-    """Representation of an InComfort Tapping sensor."""
-
-    def __init__(self, client, boiler):
-        """Initialize the binary sensor."""
-        super().__init__(client, boiler)
-
-        self._name = 'Tapping'
-        self._is_on_key = 'is_tapping'
-        self._other_key = 'tap_temp'
