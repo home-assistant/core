@@ -30,6 +30,7 @@ SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {}
 SENSOR_TYPES = {}
 RADIO_TYPES = {}
 BINARY_SENSOR_TYPES = {}
+REMOTE_DEVICE_TYPES = {}
 CLUSTER_REPORT_CONFIGS = {}
 CUSTOM_CLUSTER_MAPPINGS = {}
 EVENT_RELAY_CLUSTERS = []
@@ -60,6 +61,11 @@ def establish_device_mappings():
         DEVICE_CLASS[zha.PROFILE_ID] = {}
     if zll.PROFILE_ID not in DEVICE_CLASS:
         DEVICE_CLASS[zll.PROFILE_ID] = {}
+
+    if zha.PROFILE_ID not in REMOTE_DEVICE_TYPES:
+        REMOTE_DEVICE_TYPES[zha.PROFILE_ID] = []
+    if zll.PROFILE_ID not in REMOTE_DEVICE_TYPES:
+        REMOTE_DEVICE_TYPES[zll.PROFILE_ID] = []
 
     def get_ezsp_radio():
         import bellows.ezsp
@@ -188,6 +194,21 @@ def establish_device_mappings():
         zcl.clusters.general.OnOff.cluster_id: OPENING,
         SMARTTHINGS_ACCELERATION_CLUSTER: ACCELERATION,
     })
+
+    zhap = zha.PROFILE_ID
+    REMOTE_DEVICE_TYPES[zhap].append(zha.DeviceType.NON_COLOR_SCENE_CONTROLLER)
+    REMOTE_DEVICE_TYPES[zhap].append(zha.DeviceType.NON_COLOR_CONTROLLER)
+    REMOTE_DEVICE_TYPES[zhap].append(zha.DeviceType.COLOR_SCENE_CONTROLLER)
+    REMOTE_DEVICE_TYPES[zhap].append(zha.DeviceType.COLOR_CONTROLLER)
+    REMOTE_DEVICE_TYPES[zhap].append(zha.DeviceType.REMOTE_CONTROL)
+    REMOTE_DEVICE_TYPES[zhap].append(zha.DeviceType.SCENE_SELECTOR)
+
+    zllp = zll.PROFILE_ID
+    REMOTE_DEVICE_TYPES[zllp].append(zll.DeviceType.COLOR_CONTROLLER)
+    REMOTE_DEVICE_TYPES[zllp].append(zll.DeviceType.COLOR_SCENE_CONTROLLER)
+    REMOTE_DEVICE_TYPES[zllp].append(zll.DeviceType.CONTROLLER)
+    REMOTE_DEVICE_TYPES[zllp].append(zll.DeviceType.SCENE_CONTROLLER)
+    REMOTE_DEVICE_TYPES[zllp].append(zll.DeviceType.CONTROL_BRIDGE)
 
     CLUSTER_REPORT_CONFIGS.update({
         zcl.clusters.general.Alarms.cluster_id: [],

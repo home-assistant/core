@@ -24,7 +24,7 @@ from .registries import (
     BINARY_SENSOR_TYPES, CHANNEL_ONLY_CLUSTERS, EVENT_RELAY_CLUSTERS,
     SENSOR_TYPES, DEVICE_CLASS, COMPONENT_CLUSTERS,
     SINGLE_INPUT_CLUSTER_DEVICE_CLASS, SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS,
-    OUTPUT_CHANNEL_ONLY_CLUSTERS
+    OUTPUT_CHANNEL_ONLY_CLUSTERS, REMOTE_DEVICE_TYPES
 )
 from ..device_entity import ZhaDeviceEntity
 
@@ -168,6 +168,7 @@ def _async_handle_single_cluster_matches(hass, endpoint, zha_device,
                                          profile_clusters, device_key,
                                          is_new_join):
     """Dispatch single cluster matches to HA components."""
+    from zigpy.zcl.clusters.general import OnOff
     cluster_matches = []
     cluster_match_results = []
     for cluster in endpoint.in_clusters.values():
@@ -200,15 +201,24 @@ def _async_handle_single_cluster_matches(hass, endpoint, zha_device,
                 ))
             continue
 
+        device_type = cluster.endpoint.device_type
+        profile_id = cluster.endpoint.profile_id
+
         if cluster.cluster_id not in profile_clusters:
-            cluster_match_results.append(_async_handle_single_cluster_match(
-                hass,
-                zha_device,
-                cluster,
-                device_key,
-                SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS,
-                is_new_join,
-            ))
+            # prevent remotes and controllers from getting entities
+            if not (cluster.cluster_id == OnOff.cluster_id and profile_id in
+                    REMOTE_DEVICE_TYPES and device_type in
+                    REMOTE_DEVICE_TYPES[profile_id]):
+                cluster_match_results.append(
+                    _async_handle_single_cluster_match(
+                        hass,
+                        zha_device,
+                        cluster,
+                        device_key,
+                        SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS,
+                        is_new_join,
+                    )
+                )
 
         if cluster.cluster_id in EVENT_RELAY_CLUSTERS:
             _async_create_cluster_channel(
