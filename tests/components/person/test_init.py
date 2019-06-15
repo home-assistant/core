@@ -6,7 +6,7 @@ import pytest
 from homeassistant.components.device_tracker import (
     ATTR_SOURCE_TYPE, SOURCE_TYPE_GPS, SOURCE_TYPE_ROUTER)
 from homeassistant.components.person import (
-    ATTR_SOURCE, ATTR_USER_ID, DOMAIN, PersonManager)
+    ATTR_DEVICE_TRACKERS, ATTR_SOURCE, ATTR_USER_ID, DOMAIN, PersonManager)
 from homeassistant.const import (
     ATTR_GPS_ACCURACY, ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE,
     EVENT_HOMEASSISTANT_START, STATE_UNKNOWN)
@@ -123,6 +123,7 @@ async def test_setup_tracker(hass, hass_admin_user):
     assert state.attributes.get(ATTR_LONGITUDE) is None
     assert state.attributes.get(ATTR_SOURCE) is None
     assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [DEVICE_TRACKER]
 
     hass.states.async_set(DEVICE_TRACKER, 'home')
     await hass.async_block_till_done()
@@ -140,6 +141,7 @@ async def test_setup_tracker(hass, hass_admin_user):
     assert state.attributes.get(ATTR_LONGITUDE) is None
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [DEVICE_TRACKER]
 
     hass.states.async_set(
         DEVICE_TRACKER, 'not_home', {
@@ -156,6 +158,7 @@ async def test_setup_tracker(hass, hass_admin_user):
     assert state.attributes.get(ATTR_GPS_ACCURACY) == 10
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [DEVICE_TRACKER]
 
 
 async def test_setup_two_trackers(hass, hass_admin_user):
@@ -175,6 +178,8 @@ async def test_setup_two_trackers(hass, hass_admin_user):
     assert state.attributes.get(ATTR_LONGITUDE) is None
     assert state.attributes.get(ATTR_SOURCE) is None
     assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [
+        DEVICE_TRACKER, DEVICE_TRACKER_2]
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -190,6 +195,8 @@ async def test_setup_two_trackers(hass, hass_admin_user):
     assert state.attributes.get(ATTR_GPS_ACCURACY) is None
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [
+        DEVICE_TRACKER, DEVICE_TRACKER_2]
 
     hass.states.async_set(
         DEVICE_TRACKER_2, 'not_home', {
@@ -210,6 +217,8 @@ async def test_setup_two_trackers(hass, hass_admin_user):
     assert state.attributes.get(ATTR_GPS_ACCURACY) == 12
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER_2
     assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [
+        DEVICE_TRACKER, DEVICE_TRACKER_2]
 
     hass.states.async_set(
         DEVICE_TRACKER_2, 'zone1', {ATTR_SOURCE_TYPE: SOURCE_TYPE_GPS})
@@ -294,6 +303,7 @@ async def test_restore_home_state(hass, hass_admin_user):
     # When restoring state the entity_id of the person will be used as source.
     assert state.attributes.get(ATTR_SOURCE) == 'person.tracked_person'
     assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [DEVICE_TRACKER]
 
 
 async def test_duplicate_ids(hass, hass_admin_user):
@@ -347,6 +357,7 @@ async def test_load_person_storage(hass, hass_admin_user, storage_setup):
     assert state.attributes.get(ATTR_LONGITUDE) is None
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == hass_admin_user.id
+    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [DEVICE_TRACKER]
 
 
 async def test_load_person_storage_two_nonlinked(hass, hass_storage):

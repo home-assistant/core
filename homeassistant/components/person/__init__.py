@@ -26,6 +26,7 @@ from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_DEVICE_TRACKERS = 'device_trackers'
 ATTR_EDITABLE = 'editable'
 ATTR_SOURCE = 'source'
 ATTR_USER_ID = 'user_id'
@@ -329,6 +330,7 @@ class Person(RestoreEntity):
         user_id = self._config.get(CONF_USER_ID)
         if user_id is not None:
             data[ATTR_USER_ID] = user_id
+        data[ATTR_DEVICE_TRACKERS] = self._config.get(CONF_DEVICE_TRACKERS, [])
         return data
 
     @property
