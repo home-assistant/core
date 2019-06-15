@@ -7,7 +7,10 @@ import aiohttp
 from hass_nabucasa.client import CloudClient as Interface
 
 from homeassistant.core import callback
-from homeassistant.components.alexa import smart_home as alexa_sh
+from homeassistant.components.alexa import (
+    config as alexa_config,
+    smart_home as alexa_sh,
+)
 from homeassistant.components.google_assistant import (
     helpers as ga_h, smart_home as ga)
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
@@ -17,8 +20,42 @@ from homeassistant.util.aiohttp import MockRequest
 
 from . import utils
 from .const import (
-    CONF_ENTITY_CONFIG, CONF_FILTER, DOMAIN, DISPATCHER_REMOTE_UPDATE)
+    CONF_ENTITY_CONFIG, CONF_FILTER, DOMAIN, DISPATCHER_REMOTE_UPDATE,
+    PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE,
+    PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA)
 from .prefs import CloudPreferences
+
+
+class AlexaConfig(alexa_config.AbstractConfig):
+    """Alexa Configuration."""
+
+    def __init__(self, config, prefs):
+        """Initialize the Alexa config."""
+        self._config = config
+        self._prefs = prefs
+
+    @property
+    def endpoint(self):
+        """Endpoint for report state."""
+        return None
+
+    @property
+    def entity_config(self):
+        """Return entity config."""
+        return self._config.get(CONF_ENTITY_CONFIG, {})
+
+    def should_expose(self, entity_id):
+        """If an entity should be exposed."""
+        if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
+            return False
+
+        if not self._config[CONF_FILTER].empty_filter:
+            return self._config[CONF_FILTER](entity_id)
+
+        entity_configs = self._prefs.alexa_entity_configs
+        entity_config = entity_configs.get(entity_id, {})
+        return entity_config.get(
+            PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE)
 
 
 class CloudClient(Interface):
@@ -26,15 +63,15 @@ class CloudClient(Interface):
 
     def __init__(self, hass: HomeAssistantType, prefs: CloudPreferences,
                  websession: aiohttp.ClientSession,
-                 alexa_config: Dict[str, Any], google_config: Dict[str, Any]):
+                 alexa_cfg: Dict[str, Any], google_config: Dict[str, Any]):
         """Initialize client interface to Cloud."""
         self._hass = hass
         self._prefs = prefs
         self._websession = websession
-        self._alexa_user_config = alexa_config
-        self._google_user_config = google_config
+        self.google_user_config = google_config
+        self.alexa_user_config = alexa_cfg
 
-        self._alexa_config = None
+        self.alexa_config = AlexaConfig(alexa_cfg, prefs)
         self._google_config = None
 
     @property
@@ -73,37 +110,36 @@ class CloudClient(Interface):
         return self._prefs.remote_enabled
 
     @property
-    def alexa_config(self) -> alexa_sh.Config:
-        """Return Alexa config."""
-        if not self._alexa_config:
-            alexa_conf = self._alexa_user_config
-
-            self._alexa_config = alexa_sh.Config(
-                endpoint=None,
-                async_get_access_token=None,
-                should_expose=alexa_conf[CONF_FILTER],
-                entity_config=alexa_conf.get(CONF_ENTITY_CONFIG),
-            )
-
-        return self._alexa_config
-
-    @property
     def google_config(self) -> ga_h.Config:
         """Return Google config."""
         if not self._google_config:
-            google_conf = self._google_user_config
+            google_conf = self.google_user_config
 
             def should_expose(entity):
                 """If an entity should be exposed."""
                 if entity.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
                     return False
 
-                return google_conf['filter'](entity.entity_id)
+                if not google_conf['filter'].empty_filter:
+                    return google_conf['filter'](entity.entity_id)
+
+                entity_configs = self.prefs.google_entity_configs
+                entity_config = entity_configs.get(entity.entity_id, {})
+                return entity_config.get(
+                    PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE)
+
+            def should_2fa(entity):
+                """If an entity should be checked for 2FA."""
+                entity_configs = self.prefs.google_entity_configs
+                entity_config = entity_configs.get(entity.entity_id, {})
+                return not entity_config.get(
+                    PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA)
 
             username = self._hass.data[DOMAIN].claims["cognito:username"]
 
             self._google_config = ga_h.Config(
                 should_expose=should_expose,
+                should_2fa=should_2fa,
                 secure_devices_pin=self._prefs.google_secure_devices_pin,
                 entity_config=google_conf.get(CONF_ENTITY_CONFIG),
                 agent_user_id=username,
@@ -115,14 +151,8 @@ class CloudClient(Interface):
 
         return self._google_config
 
-    @property
-    def google_user_config(self) -> Dict[str, Any]:
-        """Return google action user config."""
-        return self._google_user_config
-
     async def cleanups(self) -> None:
         """Cleanup some stuff after logout."""
-        self._alexa_config = None
         self._google_config = None
 
     @callback

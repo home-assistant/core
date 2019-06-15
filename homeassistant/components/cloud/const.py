@@ -8,6 +8,14 @@ PREF_ENABLE_REMOTE = 'remote_enabled'
 PREF_GOOGLE_SECURE_DEVICES_PIN = 'google_secure_devices_pin'
 PREF_CLOUDHOOKS = 'cloudhooks'
 PREF_CLOUD_USER = 'cloud_user'
+PREF_GOOGLE_ENTITY_CONFIGS = 'google_entity_configs'
+PREF_ALEXA_ENTITY_CONFIGS = 'alexa_entity_configs'
+PREF_OVERRIDE_NAME = 'override_name'
+PREF_DISABLE_2FA = 'disable_2fa'
+PREF_ALIASES = 'aliases'
+PREF_SHOULD_EXPOSE = 'should_expose'
+DEFAULT_SHOULD_EXPOSE = True
+DEFAULT_DISABLE_2FA = False
 
 CONF_ALEXA = 'alexa'
 CONF_ALIASES = 'aliases'
@@ -31,3 +39,7 @@ DISPATCHER_REMOTE_UPDATE = 'cloud_remote_update'
 
 class InvalidTrustedNetworks(Exception):
     """Raised when invalid trusted networks config."""
+
+
+class InvalidTrustedProxies(Exception):
+    """Raised when invalid trusted proxies config."""

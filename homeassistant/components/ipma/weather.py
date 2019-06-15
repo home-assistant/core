@@ -82,7 +82,7 @@ async def async_get_station(hass, latitude, longitude):
     from pyipma import Station
 
     websession = async_get_clientsession(hass)
-    with async_timeout.timeout(10, loop=hass.loop):
+    with async_timeout.timeout(10):
         station = await Station.get(websession, float(latitude),
                                     float(longitude))
 
@@ -106,7 +106,7 @@ class IPMAWeather(WeatherEntity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Update Condition and Forecast."""
-        with async_timeout.timeout(10, loop=self.hass.loop):
+        with async_timeout.timeout(10):
             _new_condition = await self._station.observation()
             if _new_condition is None:
                 _LOGGER.warning("Could not update weather conditions")

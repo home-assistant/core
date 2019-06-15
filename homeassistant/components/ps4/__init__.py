@@ -7,13 +7,29 @@ from homeassistant.helpers import entity_registry
 from homeassistant.util import location
 
 from .config_flow import PlayStation4FlowHandler  # noqa: pylint: disable=unused-import
-from .const import DOMAIN  # noqa: pylint: disable=unused-import
+from .const import DOMAIN, PS4_DATA  # noqa: pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 
+class PS4Data():
+    """Init Data Class."""
+
+    def __init__(self):
+        """Init Class."""
+        self.devices = []
+        self.protocol = None
+
+
 async def async_setup(hass, config):
     """Set up the PS4 Component."""
+    from pyps4_homeassistant.ddp import async_create_ddp_endpoint
+
+    hass.data[PS4_DATA] = PS4Data()
+
+    transport, protocol = await async_create_ddp_endpoint()
+    hass.data[PS4_DATA].protocol = protocol
+    _LOGGER.debug("PS4 DDP endpoint created: %s, %s", transport, protocol)
     return True
 
 
@@ -48,7 +64,9 @@ async def async_migrate_entry(hass, entry):
 
     # Migrate Version 1 -> Version 2: New region codes.
     if version == 1:
-        loc = await hass.async_add_executor_job(location.detect_location_info)
+        loc = await location.async_detect_location_info(
+            hass.helpers.aiohttp_client.async_get_clientsession()
+        )
         if loc:
             country = loc.country_name
             if country in COUNTRIES:
@@ -71,7 +89,6 @@ async def async_migrate_entry(hass, entry):
 
                 # Remove old entity entry.
                 registry.async_remove(entity_id)
-                await hass.async_block_till_done()
 
                 # Format old unique_id.
                 unique_id = format_unique_id(entry.data[CONF_TOKEN], unique_id)

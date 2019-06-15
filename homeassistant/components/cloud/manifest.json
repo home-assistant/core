@@ -3,13 +3,13 @@
   "name": "Cloud",
   "documentation": "https://www.home-assistant.io/components/cloud",
   "requirements": [
-    "hass-nabucasa==0.12"
+    "hass-nabucasa==0.14"
   ],
   "dependencies": [
     "http",
     "webhook"
   ],
   "codeowners": [
-    "@home-assistant/core"
+    "@home-assistant/cloud"
   ]
 }

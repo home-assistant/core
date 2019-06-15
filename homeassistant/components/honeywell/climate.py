@@ -55,8 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     _LOGGER.warning(
         "The honeywell component is deprecated for EU (i.e. non-US) systems, "
-        "this functionality will be removed in version 0.96.")
-    _LOGGER.warning(
+        "this functionality will be removed in version 0.96. "
         "Please switch to the evohome component, "
         "see: https://home-assistant.io/components/evohome")
 

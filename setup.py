@@ -38,6 +38,7 @@ REQUIRES = [
     'attrs==19.1.0',
     'bcrypt==3.1.6',
     'certifi>=2018.04.16',
+    'importlib-metadata==0.15',
     'jinja2>=2.10',
     'PyJWT==1.7.1',
     # PyJWT has loose dependency. We want the latest one.
@@ -45,9 +46,9 @@ REQUIRES = [
     'pip>=8.0.3',
     'python-slugify==3.0.2',
     'pytz>=2019.01',
-    'pyyaml>=3.13,<4',
-    'requests==2.21.0',
-    'ruamel.yaml==0.15.94',
+    'pyyaml==5.1',
+    'requests==2.22.0',
+    'ruamel.yaml==0.15.97',
     'voluptuous==0.11.5',
     'voluptuous-serialize==2.1.0',
 ]

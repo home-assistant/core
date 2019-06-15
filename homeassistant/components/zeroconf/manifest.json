@@ -3,12 +3,13 @@
   "name": "Zeroconf",
   "documentation": "https://www.home-assistant.io/components/zeroconf",
   "requirements": [
-    "zeroconf==0.21.3"
+    "zeroconf==0.23.0"
   ],
   "dependencies": [
     "api"
   ],
   "codeowners": [
-    "@robbiet480"
+    "@robbiet480",
+    "@Kane610"
   ]
 }

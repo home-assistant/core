@@ -1,437 +1,317 @@
-"""The tests for the google calendar component."""
-# pylint: disable=protected-access
-import logging
-import unittest
-from unittest.mock import patch, Mock
+"""The tests for the google calendar platform."""
+import copy
+from unittest.mock import Mock, patch
 
+import httplib2
 import pytest
 
-import homeassistant.components.calendar as calendar_base
-from homeassistant.components.google import calendar
-import homeassistant.util.dt as dt_util
-from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
+from homeassistant.components.google import (
+    CONF_CAL_ID, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_DEVICE_ID,
+    CONF_ENTITIES, CONF_NAME, CONF_TRACK, DEVICE_SCHEMA,
+    SERVICE_SCAN_CALENDARS, do_setup)
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.template import DATE_STR_FORMAT
-from tests.common import get_test_home_assistant, MockDependency
+from homeassistant.setup import async_setup_component
+from homeassistant.util import slugify
+import homeassistant.util.dt as dt_util
 
-TEST_PLATFORM = {calendar_base.DOMAIN: {CONF_PLATFORM: 'test'}}
+from tests.common import async_mock_service
 
-_LOGGER = logging.getLogger(__name__)
+GOOGLE_CONFIG = {
+    CONF_CLIENT_ID: 'client_id',
+    CONF_CLIENT_SECRET: 'client_secret',
+}
+TEST_ENTITY = 'calendar.we_are_we_are_a_test_calendar'
+TEST_ENTITY_NAME = 'We are, we are, a... Test Calendar'
+
+TEST_EVENT = {
+    'summary': 'Test All Day Event',
+    'start': {
+    },
+    'end': {
+    },
+    'location': 'Test Cases',
+    'description': 'test event',
+    'kind': 'calendar#event',
+    'created': '2016-06-23T16:37:57.000Z',
+    'transparency': 'transparent',
+    'updated': '2016-06-24T01:57:21.045Z',
+    'reminders': {'useDefault': True},
+    'organizer': {
+        'email': 'uvrttabwegnui4gtia3vyqb@import.calendar.google.com',
+        'displayName': 'Organizer Name',
+        'self': True
+    },
+    'sequence': 0,
+    'creator': {
+        'email': 'uvrttabwegnui4gtia3vyqb@import.calendar.google.com',
+        'displayName': 'Organizer Name',
+        'self': True
+    },
+    'id': '_c8rinwq863h45qnucyoi43ny8',
+    'etag': '"2933466882090000"',
+    'htmlLink': 'https://www.google.com/calendar/event?eid=*******',
+    'iCalUID': 'cydrevtfuybguinhomj@google.com',
+    'status': 'confirmed'
+}
 
 
-class TestComponentsGoogleCalendar(unittest.TestCase):
-    """Test the Google calendar."""
+def get_calendar_info(calendar):
+    """Convert data from Google into DEVICE_SCHEMA."""
+    calendar_info = DEVICE_SCHEMA({
+        CONF_CAL_ID: calendar['id'],
+        CONF_ENTITIES: [{
+            CONF_TRACK: calendar['track'],
+            CONF_NAME: calendar['summary'],
+            CONF_DEVICE_ID: slugify(calendar['summary']),
+        }]
+    })
+    return calendar_info
 
-    hass = None  # HomeAssistant
 
-    # pylint: disable=invalid-name
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.hass.http = Mock()
+@pytest.fixture(autouse=True)
+def mock_google_setup(hass, test_calendar):
+    """Mock the google set up functions."""
+    hass.loop.run_until_complete(
+        async_setup_component(hass, 'group', {'group': {}}))
+    calendar = get_calendar_info(test_calendar)
+    calendars = {calendar[CONF_CAL_ID]: calendar}
+    patch_google_auth = patch(
+        'homeassistant.components.google.do_authentication',
+        side_effect=do_setup)
+    patch_google_load = patch(
+        'homeassistant.components.google.load_config',
+        return_value=calendars)
+    patch_google_services = patch(
+        'homeassistant.components.google.setup_services')
+    async_mock_service(hass, 'google', SERVICE_SCAN_CALENDARS)
 
-        # Set our timezone to CST/Regina so we can check calculations
-        # This keeps UTC-6 all year round
-        dt_util.set_default_time_zone(dt_util.get_time_zone('America/Regina'))
+    with patch_google_auth, patch_google_load, patch_google_services:
+        yield
 
-    # pylint: disable=invalid-name
-    def tearDown(self):
-        """Stop everything that was started."""
-        dt_util.set_default_time_zone(dt_util.get_time_zone('UTC'))
 
-        self.hass.stop()
+@pytest.fixture(autouse=True)
+def mock_http(hass):
+    """Mock the http component."""
+    hass.http = Mock()
 
-    @patch('homeassistant.components.google.calendar.GoogleCalendarData')
-    def test_all_day_event(self, mock_next_event):
-        """Test that we can create an event trigger on device."""
-        week_from_today = dt_util.dt.date.today() \
-            + dt_util.dt.timedelta(days=7)
-        event = {
-            'summary': 'Test All Day Event',
-            'start': {
-                'date': week_from_today.isoformat()
-            },
-            'end': {
-                'date': (week_from_today + dt_util.dt.timedelta(days=1))
-                .isoformat()
-            },
-            'location': 'Test Cases',
-            'description': 'We\'re just testing that all day events get setup '
-                           'correctly',
-            'kind': 'calendar#event',
-            'created': '2016-06-23T16:37:57.000Z',
-            'transparency': 'transparent',
-            'updated': '2016-06-24T01:57:21.045Z',
-            'reminders': {'useDefault': True},
-            'organizer': {
-                'email': 'uvrttabwegnui4gtia3vyqb@import.calendar.google.com',
-                'displayName': 'Organizer Name',
-                'self': True
-            },
-            'sequence': 0,
-            'creator': {
-                'email': 'uvrttabwegnui4gtia3vyqb@import.calendar.google.com',
-                'displayName': 'Organizer Name',
-                'self': True
-            },
-            'id': '_c8rinwq863h45qnucyoi43ny8',
-            'etag': '"2933466882090000"',
-            'htmlLink': 'https://www.google.com/calendar/event?eid=*******',
-            'iCalUID': 'cydrevtfuybguinhomj@google.com',
-            'status': 'confirmed'
-        }
 
-        mock_next_event.return_value.event = event
+@pytest.fixture(autouse=True)
+def set_time_zone():
+    """Set the time zone for the tests."""
+    # Set our timezone to CST/Regina so we can check calculations
+    # This keeps UTC-6 all year round
+    dt_util.set_default_time_zone(dt_util.get_time_zone('America/Regina'))
+    yield
+    dt_util.set_default_time_zone(dt_util.get_time_zone('UTC'))
 
-        device_name = 'Test All Day'
 
-        cal = calendar.GoogleCalendarEventDevice(self.hass, None,
-                                                 '', {'name': device_name})
+@pytest.fixture(name='google_service')
+def mock_google_service():
+    """Mock google service."""
+    patch_google_service = patch(
+        'homeassistant.components.google.calendar.GoogleCalendarService')
+    with patch_google_service as mock_service:
+        yield mock_service
 
-        assert cal.name == device_name
 
-        assert cal.state == STATE_OFF
+async def test_all_day_event(hass, mock_next_event):
+    """Test that we can create an event trigger on device."""
+    week_from_today = (
+        dt_util.dt.date.today() + dt_util.dt.timedelta(days=7))
+    end_event = week_from_today + dt_util.dt.timedelta(days=1)
+    event = copy.deepcopy(TEST_EVENT)
+    start = week_from_today.isoformat()
+    end = end_event.isoformat()
+    event['start']['date'] = start
+    event['end']['date'] = end
+    mock_next_event.return_value.event = event
 
-        assert not cal.offset_reached()
+    assert await async_setup_component(
+        hass, 'google', {'google': GOOGLE_CONFIG})
+    await hass.async_block_till_done()
 
-        assert cal.device_state_attributes == {
-            'message': event['summary'],
-            'all_day': True,
-            'offset_reached': False,
-            'start_time': '{} 00:00:00'.format(event['start']['date']),
-            'end_time': '{} 00:00:00'.format(event['end']['date']),
-            'location': event['location'],
-            'description': event['description'],
-        }
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        'friendly_name': TEST_ENTITY_NAME,
+        'message': event['summary'],
+        'all_day': True,
+        'offset_reached': False,
+        'start_time': week_from_today.strftime(DATE_STR_FORMAT),
+        'end_time': end_event.strftime(DATE_STR_FORMAT),
+        'location': event['location'],
+        'description': event['description'],
+    }
 
-    @patch('homeassistant.components.google.calendar.GoogleCalendarData')
-    def test_future_event(self, mock_next_event):
-        """Test that we can create an event trigger on device."""
-        one_hour_from_now = dt_util.now() \
-            + dt_util.dt.timedelta(minutes=30)
-        event = {
-            'start': {
-                'dateTime': one_hour_from_now.isoformat()
-            },
-            'end': {
-                'dateTime': (one_hour_from_now
-                             + dt_util.dt.timedelta(minutes=60))
-                .isoformat()
-            },
-            'summary': 'Test Event in 30 minutes',
-            'reminders': {'useDefault': True},
-            'id': 'aioehgni435lihje',
-            'status': 'confirmed',
-            'updated': '2016-11-05T15:52:07.329Z',
-            'organizer': {
-                'email': 'uvrttabwegnui4gtia3vyqb@import.calendar.google.com',
-                'displayName': 'Organizer Name',
-                'self': True,
-            },
-            'created': '2016-11-05T15:52:07.000Z',
-            'iCalUID': 'dsfohuygtfvgbhnuju@google.com',
-            'sequence': 0,
-            'creator': {
-                'email': 'uvrttabwegnui4gtia3vyqb@import.calendar.google.com',
-                'displayName': 'Organizer Name',
-            },
-            'etag': '"2956722254658000"',
-            'kind': 'calendar#event',
-            'htmlLink': 'https://www.google.com/calendar/event?eid=*******',
-        }
-        mock_next_event.return_value.event = event
 
-        device_name = 'Test Future Event'
-        device_id = 'test_future_event'
+async def test_future_event(hass, mock_next_event):
+    """Test that we can create an event trigger on device."""
+    one_hour_from_now = dt_util.now() + dt_util.dt.timedelta(minutes=30)
+    end_event = one_hour_from_now + dt_util.dt.timedelta(minutes=60)
+    start = one_hour_from_now.isoformat()
+    end = end_event.isoformat()
+    event = copy.deepcopy(TEST_EVENT)
+    event['start']['dateTime'] = start
+    event['end']['dateTime'] = end
+    mock_next_event.return_value.event = event
 
-        cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
-                                                 {'name': device_name})
+    assert await async_setup_component(
+        hass, 'google', {'google': GOOGLE_CONFIG})
+    await hass.async_block_till_done()
 
-        assert cal.name == device_name
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        'friendly_name': TEST_ENTITY_NAME,
+        'message': event['summary'],
+        'all_day': False,
+        'offset_reached': False,
+        'start_time': one_hour_from_now.strftime(DATE_STR_FORMAT),
+        'end_time': end_event.strftime(DATE_STR_FORMAT),
+        'location': event['location'],
+        'description': event['description'],
+    }
 
-        assert cal.state == STATE_OFF
 
-        assert not cal.offset_reached()
+async def test_in_progress_event(hass, mock_next_event):
+    """Test that we can create an event trigger on device."""
+    middle_of_event = dt_util.now() - dt_util.dt.timedelta(minutes=30)
+    end_event = middle_of_event + dt_util.dt.timedelta(minutes=60)
+    start = middle_of_event.isoformat()
+    end = end_event.isoformat()
+    event = copy.deepcopy(TEST_EVENT)
+    event['start']['dateTime'] = start
+    event['end']['dateTime'] = end
+    mock_next_event.return_value.event = event
 
-        assert cal.device_state_attributes == {
-            'message': event['summary'],
-            'all_day': False,
-            'offset_reached': False,
-            'start_time': one_hour_from_now.strftime(DATE_STR_FORMAT),
-            'end_time':
-                (one_hour_from_now + dt_util.dt.timedelta(minutes=60))
-                .strftime(DATE_STR_FORMAT),
-            'location': '',
-            'description': '',
-        }
+    assert await async_setup_component(
+        hass, 'google', {'google': GOOGLE_CONFIG})
+    await hass.async_block_till_done()
 
-    @patch('homeassistant.components.google.calendar.GoogleCalendarData')
-    def test_in_progress_event(self, mock_next_event):
-        """Test that we can create an event trigger on device."""
-        middle_of_event = dt_util.now() \
-            - dt_util.dt.timedelta(minutes=30)
-        event = {
-            'start': {
-                'dateTime': middle_of_event.isoformat()
-            },
-            'end': {
-                'dateTime': (middle_of_event + dt_util.dt
-                             .timedelta(minutes=60))
-                .isoformat()
-            },
-            'summary': 'Test Event in Progress',
-            'reminders': {'useDefault': True},
-            'id': 'aioehgni435lihje',
-            'status': 'confirmed',
-            'updated': '2016-11-05T15:52:07.329Z',
-            'organizer': {
-                'email': 'uvrttabwegnui4gtia3vyqb@import.calendar.google.com',
-                'displayName': 'Organizer Name',
-                'self': True,
-            },
-            'created': '2016-11-05T15:52:07.000Z',
-            'iCalUID': 'dsfohuygtfvgbhnuju@google.com',
-            'sequence': 0,
-            'creator': {
-                'email': 'uvrttabwegnui4gtia3vyqb@import.calendar.google.com',
-                'displayName': 'Organizer Name',
-            },
-            'etag': '"2956722254658000"',
-            'kind': 'calendar#event',
-            'htmlLink': 'https://www.google.com/calendar/event?eid=*******',
-        }
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_ON
+    assert dict(state.attributes) == {
+        'friendly_name': TEST_ENTITY_NAME,
+        'message': event['summary'],
+        'all_day': False,
+        'offset_reached': False,
+        'start_time': middle_of_event.strftime(DATE_STR_FORMAT),
+        'end_time': end_event.strftime(DATE_STR_FORMAT),
+        'location': event['location'],
+        'description': event['description'],
+    }
 
-        mock_next_event.return_value.event = event
 
-        device_name = 'Test Event in Progress'
-        device_id = 'test_event_in_progress'
+async def test_offset_in_progress_event(hass, mock_next_event):
+    """Test that we can create an event trigger on device."""
+    middle_of_event = dt_util.now() + dt_util.dt.timedelta(minutes=14)
+    end_event = middle_of_event + dt_util.dt.timedelta(minutes=60)
+    start = middle_of_event.isoformat()
+    end = end_event.isoformat()
+    event_summary = 'Test Event in Progress'
+    event = copy.deepcopy(TEST_EVENT)
+    event['start']['dateTime'] = start
+    event['end']['dateTime'] = end
+    event['summary'] = '{} !!-15'.format(event_summary)
+    mock_next_event.return_value.event = event
 
-        cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
-                                                 {'name': device_name})
+    assert await async_setup_component(
+        hass, 'google', {'google': GOOGLE_CONFIG})
+    await hass.async_block_till_done()
 
-        assert cal.name == device_name
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        'friendly_name': TEST_ENTITY_NAME,
+        'message': event_summary,
+        'all_day': False,
+        'offset_reached': True,
+        'start_time': middle_of_event.strftime(DATE_STR_FORMAT),
+        'end_time': end_event.strftime(DATE_STR_FORMAT),
+        'location': event['location'],
+        'description': event['description'],
+    }
 
-        assert cal.state == STATE_ON
 
-        assert not cal.offset_reached()
+@pytest.mark.skip
+async def test_all_day_offset_in_progress_event(hass, mock_next_event):
+    """Test that we can create an event trigger on device."""
+    tomorrow = dt_util.dt.date.today() + dt_util.dt.timedelta(days=1)
+    end_event = tomorrow + dt_util.dt.timedelta(days=1)
+    start = tomorrow.isoformat()
+    end = end_event.isoformat()
+    event_summary = 'Test All Day Event Offset In Progress'
+    event = copy.deepcopy(TEST_EVENT)
+    event['start']['date'] = start
+    event['end']['date'] = end
+    event['summary'] = '{} !!-25:0'.format(event_summary)
+    mock_next_event.return_value.event = event
 
-        assert cal.device_state_attributes == {
-            'message': event['summary'],
-            'all_day': False,
-            'offset_reached': False,
-            'start_time': middle_of_event.strftime(DATE_STR_FORMAT),
-            'end_time':
-                (middle_of_event + dt_util.dt.timedelta(minutes=60))
-                .strftime(DATE_STR_FORMAT),
-            'location': '',
-            'description': '',
-        }
+    assert await async_setup_component(
+        hass, 'google', {'google': GOOGLE_CONFIG})
+    await hass.async_block_till_done()
 
-    @patch('homeassistant.components.google.calendar.GoogleCalendarData')
-    def test_offset_in_progress_event(self, mock_next_event):
-        """Test that we can create an event trigger on device."""
-        middle_of_event = dt_util.now() \
-            + dt_util.dt.timedelta(minutes=14)
-        event_summary = 'Test Event in Progress'
-        event = {
-            'start': {
-                'dateTime': middle_of_event.isoformat()
-            },
-            'end': {
-                'dateTime': (middle_of_event + dt_util.dt
-                             .timedelta(minutes=60))
-                .isoformat()
-            },
-            'summary': '{} !!-15'.format(event_summary),
-            'reminders': {'useDefault': True},
-            'id': 'aioehgni435lihje',
-            'status': 'confirmed',
-            'updated': '2016-11-05T15:52:07.329Z',
-            'organizer': {
-                'email': 'uvrttabwegnui4gtia3vyqb@import.calendar.google.com',
-                'displayName': 'Organizer Name',
-                'self': True,
-            },
-            'created': '2016-11-05T15:52:07.000Z',
-            'iCalUID': 'dsfohuygtfvgbhnuju@google.com',
-            'sequence': 0,
-            'creator': {
-                'email': 'uvrttabwegnui4gtia3vyqb@import.calendar.google.com',
-                'displayName': 'Organizer Name',
-            },
-            'etag': '"2956722254658000"',
-            'kind': 'calendar#event',
-            'htmlLink': 'https://www.google.com/calendar/event?eid=*******',
-        }
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        'friendly_name': TEST_ENTITY_NAME,
+        'message': event_summary,
+        'all_day': True,
+        'offset_reached': True,
+        'start_time': tomorrow.strftime(DATE_STR_FORMAT),
+        'end_time': end_event.strftime(DATE_STR_FORMAT),
+        'location': event['location'],
+        'description': event['description'],
+    }
 
-        mock_next_event.return_value.event = event
 
-        device_name = 'Test Event in Progress'
-        device_id = 'test_event_in_progress'
+async def test_all_day_offset_event(hass, mock_next_event):
+    """Test that we can create an event trigger on device."""
+    tomorrow = dt_util.dt.date.today() + dt_util.dt.timedelta(days=2)
+    end_event = tomorrow + dt_util.dt.timedelta(days=1)
+    start = tomorrow.isoformat()
+    end = end_event.isoformat()
+    offset_hours = (1 + dt_util.now().hour)
+    event_summary = 'Test All Day Event Offset'
+    event = copy.deepcopy(TEST_EVENT)
+    event['start']['date'] = start
+    event['end']['date'] = end
+    event['summary'] = '{} !!-{}:0'.format(event_summary, offset_hours)
+    mock_next_event.return_value.event = event
 
-        cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
-                                                 {'name': device_name})
+    assert await async_setup_component(
+        hass, 'google', {'google': GOOGLE_CONFIG})
+    await hass.async_block_till_done()
 
-        assert cal.name == device_name
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        'friendly_name': TEST_ENTITY_NAME,
+        'message': event_summary,
+        'all_day': True,
+        'offset_reached': False,
+        'start_time': tomorrow.strftime(DATE_STR_FORMAT),
+        'end_time': end_event.strftime(DATE_STR_FORMAT),
+        'location': event['location'],
+        'description': event['description'],
+    }
 
-        assert cal.state == STATE_OFF
 
-        assert cal.offset_reached()
+async def test_update_false(hass, google_service):
+    """Test that the calendar handles a server error."""
+    google_service.return_value.get = Mock(
+        side_effect=httplib2.ServerNotFoundError("unit test"))
+    assert await async_setup_component(
+        hass, 'google', {'google': GOOGLE_CONFIG})
+    await hass.async_block_till_done()
 
-        assert cal.device_state_attributes == {
-            'message': event_summary,
-            'all_day': False,
-            'offset_reached': True,
-            'start_time': middle_of_event.strftime(DATE_STR_FORMAT),
-            'end_time':
-                (middle_of_event + dt_util.dt.timedelta(minutes=60))
-                .strftime(DATE_STR_FORMAT),
-            'location': '',
-            'description': '',
-        }
-
-    @pytest.mark.skip
-    @patch('homeassistant.components.google.calendar.GoogleCalendarData')
-    def test_all_day_offset_in_progress_event(self, mock_next_event):
-        """Test that we can create an event trigger on device."""
-        tomorrow = dt_util.dt.date.today() \
-            + dt_util.dt.timedelta(days=1)
-
-        event_summary = 'Test All Day Event Offset In Progress'
-        event = {
-            'summary': '{} !!-25:0'.format(event_summary),
-            'start': {
-                'date': tomorrow.isoformat()
-            },
-            'end': {
-                'date': (tomorrow + dt_util.dt.timedelta(days=1))
-                .isoformat()
-            },
-            'location': 'Test Cases',
-            'description': 'We\'re just testing that all day events get setup '
-                           'correctly',
-            'kind': 'calendar#event',
-            'created': '2016-06-23T16:37:57.000Z',
-            'transparency': 'transparent',
-            'updated': '2016-06-24T01:57:21.045Z',
-            'reminders': {'useDefault': True},
-            'organizer': {
-                'email': 'uvrttabwegnui4gtia3vyqb@import.calendar.google.com',
-                'displayName': 'Organizer Name',
-                'self': True
-            },
-            'sequence': 0,
-            'creator': {
-                'email': 'uvrttabwegnui4gtia3vyqb@import.calendar.google.com',
-                'displayName': 'Organizer Name',
-                'self': True
-            },
-            'id': '_c8rinwq863h45qnucyoi43ny8',
-            'etag': '"2933466882090000"',
-            'htmlLink': 'https://www.google.com/calendar/event?eid=*******',
-            'iCalUID': 'cydrevtfuybguinhomj@google.com',
-            'status': 'confirmed'
-        }
-
-        mock_next_event.return_value.event = event
-
-        device_name = 'Test All Day Offset In Progress'
-        device_id = 'test_all_day_offset_in_progress'
-
-        cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
-                                                 {'name': device_name})
-
-        assert cal.name == device_name
-
-        assert cal.state == STATE_OFF
-
-        assert cal.offset_reached()
-
-        assert cal.device_state_attributes == {
-            'message': event_summary,
-            'all_day': True,
-            'offset_reached': True,
-            'start_time': '{} 06:00:00'.format(event['start']['date']),
-            'end_time': '{} 06:00:00'.format(event['end']['date']),
-            'location': event['location'],
-            'description': event['description'],
-        }
-
-    @patch('homeassistant.components.google.calendar.GoogleCalendarData')
-    def test_all_day_offset_event(self, mock_next_event):
-        """Test that we can create an event trigger on device."""
-        tomorrow = dt_util.dt.date.today() \
-            + dt_util.dt.timedelta(days=2)
-
-        offset_hours = (1 + dt_util.now().hour)
-        event_summary = 'Test All Day Event Offset'
-        event = {
-            'summary': '{} !!-{}:0'.format(event_summary, offset_hours),
-            'start': {
-                'date': tomorrow.isoformat()
-            },
-            'end': {
-                'date': (tomorrow + dt_util.dt.timedelta(days=1))
-                .isoformat()
-            },
-            'location': 'Test Cases',
-            'description': 'We\'re just testing that all day events get setup '
-                           'correctly',
-            'kind': 'calendar#event',
-            'created': '2016-06-23T16:37:57.000Z',
-            'transparency': 'transparent',
-            'updated': '2016-06-24T01:57:21.045Z',
-            'reminders': {'useDefault': True},
-            'organizer': {
-                'email': 'uvrttabwegnui4gtia3vyqb@import.calendar.google.com',
-                'displayName': 'Organizer Name',
-                'self': True
-            },
-            'sequence': 0,
-            'creator': {
-                'email': 'uvrttabwegnui4gtia3vyqb@import.calendar.google.com',
-                'displayName': 'Organizer Name',
-                'self': True
-            },
-            'id': '_c8rinwq863h45qnucyoi43ny8',
-            'etag': '"2933466882090000"',
-            'htmlLink': 'https://www.google.com/calendar/event?eid=*******',
-            'iCalUID': 'cydrevtfuybguinhomj@google.com',
-            'status': 'confirmed'
-        }
-
-        mock_next_event.return_value.event = event
-
-        device_name = 'Test All Day Offset'
-        device_id = 'test_all_day_offset'
-
-        cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
-                                                 {'name': device_name})
-
-        assert cal.name == device_name
-
-        assert cal.state == STATE_OFF
-
-        assert not cal.offset_reached()
-
-        assert cal.device_state_attributes == {
-            'message': event_summary,
-            'all_day': True,
-            'offset_reached': False,
-            'start_time': '{} 00:00:00'.format(event['start']['date']),
-            'end_time': '{} 00:00:00'.format(event['end']['date']),
-            'location': event['location'],
-            'description': event['description'],
-        }
-
-    @MockDependency("httplib2")
-    def test_update_false(self, mock_httplib2):
-        """Test that the update returns False upon Error."""
-        mock_service = Mock()
-        mock_service.get = Mock(
-            side_effect=mock_httplib2.ServerNotFoundError("unit test"))
-
-        cal = calendar.GoogleCalendarEventDevice(self.hass, mock_service, None,
-                                                 {'name': "test"})
-        result = cal.data.update()
-
-        assert not result
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == 'off'

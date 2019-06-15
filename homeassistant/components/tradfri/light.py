@@ -175,7 +175,7 @@ class TradfriLight(Light):
             'manufacturer': info.manufacturer,
             'model': info.model_number,
             'sw_version': info.firmware_version,
-            'via_hub': (TRADFRI_DOMAIN, self._gateway_id),
+            'via_device': (TRADFRI_DOMAIN, self._gateway_id),
         }
 
     @property

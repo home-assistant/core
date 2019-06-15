@@ -2,9 +2,13 @@
 from unittest.mock import patch, MagicMock
 
 from aiohttp import web
+import jwt
 import pytest
 
+from homeassistant.core import State
 from homeassistant.setup import async_setup_component
+from homeassistant.components.cloud import (
+    DOMAIN, ALEXA_SCHEMA, prefs, client)
 from homeassistant.components.cloud.const import (
     PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE)
 from tests.components.alexa import test_smart_home as test_alexa
@@ -17,6 +21,25 @@ from . import mock_cloud_prefs
 def mock_cloud():
     """Mock cloud class."""
     return MagicMock(subscription_expired=False)
+
+
+@pytest.fixture
+async def mock_cloud_setup(hass):
+    """Set up the cloud."""
+    with patch('hass_nabucasa.Cloud.start', return_value=mock_coro()):
+        assert await async_setup_component(hass, 'cloud', {
+            'cloud': {}
+        })
+
+
+@pytest.fixture
+def mock_cloud_login(hass, mock_cloud_setup):
+    """Mock cloud is logged in."""
+    hass.data[DOMAIN].id_token = jwt.encode({
+        'email': 'hello@home-assistant.io',
+        'custom:sub-exp': '2018-01-03',
+        'cognito:username': 'abcdefghjkl',
+    }, 'test')
 
 
 async def test_handler_alexa(hass):
@@ -197,3 +220,52 @@ async def test_webhook_msg(hass):
     assert await received[0].json() == {
         'hello': 'world'
     }
+
+
+async def test_google_config_expose_entity(
+        hass, mock_cloud_setup, mock_cloud_login):
+    """Test Google config exposing entity method uses latest config."""
+    cloud_client = hass.data[DOMAIN].client
+    state = State('light.kitchen', 'on')
+
+    assert cloud_client.google_config.should_expose(state)
+
+    await cloud_client.prefs.async_update_google_entity_config(
+        entity_id='light.kitchen',
+        should_expose=False,
+    )
+
+    assert not cloud_client.google_config.should_expose(state)
+
+
+async def test_google_config_should_2fa(
+        hass, mock_cloud_setup, mock_cloud_login):
+    """Test Google config disabling 2FA method uses latest config."""
+    cloud_client = hass.data[DOMAIN].client
+    state = State('light.kitchen', 'on')
+
+    assert cloud_client.google_config.should_2fa(state)
+
+    await cloud_client.prefs.async_update_google_entity_config(
+        entity_id='light.kitchen',
+        disable_2fa=True,
+    )
+
+    assert not cloud_client.google_config.should_2fa(state)
+
+
+async def test_alexa_config_expose_entity_prefs(hass):
+    """Test Alexa config should expose using prefs."""
+    cloud_prefs = prefs.CloudPreferences(hass)
+    await cloud_prefs.async_initialize()
+    entity_conf = {
+        'should_expose': False
+    }
+    await cloud_prefs.async_update(alexa_entity_configs={
+        'light.kitchen': entity_conf
+    })
+    conf = client.AlexaConfig(ALEXA_SCHEMA({}), cloud_prefs)
+
+    assert not conf.should_expose('light.kitchen')
+    entity_conf['should_expose'] = True
+    assert conf.should_expose('light.kitchen')

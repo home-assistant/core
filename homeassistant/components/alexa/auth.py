@@ -9,7 +9,6 @@ import async_timeout
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.util import dt
-from .const import DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +38,7 @@ class Auth:
         self._prefs = None
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
-        self._get_token_lock = asyncio.Lock(loop=hass.loop)
+        self._get_token_lock = asyncio.Lock()
 
     async def async_do_auth(self, accept_grant_code):
         """Do authentication with an AcceptGrant code."""
@@ -97,7 +96,7 @@ class Auth:
 
         try:
             session = aiohttp_client.async_get_clientsession(self.hass)
-            with async_timeout.timeout(DEFAULT_TIMEOUT, loop=self.hass.loop):
+            with async_timeout.timeout(10):
                 response = await session.post(LWA_TOKEN_URI,
                                               headers=LWA_HEADERS,
                                               data=lwa_params,

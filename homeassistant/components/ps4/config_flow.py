@@ -9,7 +9,7 @@ from homeassistant.const import (
     CONF_CODE, CONF_HOST, CONF_IP_ADDRESS, CONF_NAME, CONF_REGION, CONF_TOKEN)
 from homeassistant.util import location
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_ALIAS, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
         if user_input is not None:
             try:
                 self.creds = await self.hass.async_add_executor_job(
-                    self.helper.get_creds)
+                    self.helper.get_creds, DEFAULT_ALIAS)
                 if self.creds is not None:
                     return await self.async_step_mode()
                 return self.async_abort(reason='credential_error')
@@ -143,7 +143,8 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
             self.host = user_input[CONF_IP_ADDRESS]
 
             is_ready, is_login = await self.hass.async_add_executor_job(
-                self.helper.link, self.host, self.creds, self.pin)
+                self.helper.link, self.host,
+                self.creds, self.pin, DEFAULT_ALIAS)
 
             if is_ready is False:
                 errors['base'] = 'not_ready'
@@ -167,8 +168,9 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
         # Try to find region automatically.
         if not self.location:
-            self.location = await self.hass.async_add_executor_job(
-                location.detect_location_info)
+            self.location = await location.async_detect_location_info(
+                self.hass.helpers.aiohttp_client.async_get_clientsession()
+            )
         if self.location:
             country = self.location.country_name
             if country in COUNTRIES:

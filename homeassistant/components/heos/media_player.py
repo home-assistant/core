@@ -5,6 +5,8 @@ import logging
 from operator import ior
 from typing import Sequence
 
+from pyheos import CommandError, const as heos_const
+
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST,
@@ -18,12 +20,26 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
 
 from .const import (
-    DATA_SOURCE_MANAGER, DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_SOURCES_UPDATED)
+    DATA_SOURCE_MANAGER, DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_UPDATED)
 
 BASE_SUPPORTED_FEATURES = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
                           SUPPORT_VOLUME_STEP | SUPPORT_CLEAR_PLAYLIST | \
                           SUPPORT_SHUFFLE_SET | SUPPORT_SELECT_SOURCE | \
                           SUPPORT_PLAY_MEDIA
+
+PLAY_STATE_TO_STATE = {
+    heos_const.PLAY_STATE_PLAY: STATE_PLAYING,
+    heos_const.PLAY_STATE_STOP: STATE_IDLE,
+    heos_const.PLAY_STATE_PAUSE: STATE_PAUSED
+}
+
+CONTROL_TO_SUPPORT = {
+    heos_const.CONTROL_PLAY: SUPPORT_PLAY,
+    heos_const.CONTROL_PAUSE: SUPPORT_PAUSE,
+    heos_const.CONTROL_STOP: SUPPORT_STOP,
+    heos_const.CONTROL_PLAY_PREVIOUS: SUPPORT_PREVIOUS_TRACK,
+    heos_const.CONTROL_PLAY_NEXT: SUPPORT_NEXT_TRACK
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +63,6 @@ def log_command_error(command: str):
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
-            from pyheos import CommandError
             try:
                 await func(*args, **kwargs)
             except (CommandError, asyncio.TimeoutError, ConnectionError,
@@ -62,72 +77,34 @@ class HeosMediaPlayer(MediaPlayerDevice):
 
     def __init__(self, player):
         """Initialize."""
-        from pyheos import const
         self._media_position_updated_at = None
         self._player = player
         self._signals = []
         self._supported_features = BASE_SUPPORTED_FEATURES
         self._source_manager = None
-        self._play_state_to_state = {
-            const.PLAY_STATE_PLAY: STATE_PLAYING,
-            const.PLAY_STATE_STOP: STATE_IDLE,
-            const.PLAY_STATE_PAUSE: STATE_PAUSED
-        }
-        self._control_to_support = {
-            const.CONTROL_PLAY: SUPPORT_PLAY,
-            const.CONTROL_PAUSE: SUPPORT_PAUSE,
-            const.CONTROL_STOP: SUPPORT_STOP,
-            const.CONTROL_PLAY_PREVIOUS: SUPPORT_PREVIOUS_TRACK,
-            const.CONTROL_PLAY_NEXT: SUPPORT_NEXT_TRACK
-        }
-
-    async def _controller_event(self, event, data):
-        """Handle controller event."""
-        from pyheos import const
-        if event == const.EVENT_PLAYERS_CHANGED:
-            await self.async_update_ha_state(True)
-
-    async def _heos_event(self, event):
-        """Handle connection event."""
-        from pyheos import CommandError, const
-        if event == const.EVENT_CONNECTED:
-            try:
-                await self._player.refresh()
-            except (CommandError, asyncio.TimeoutError, ConnectionError) as ex:
-                _LOGGER.error("Unable to refresh player %s: %s",
-                              self._player, ex)
-        await self.async_update_ha_state(True)
 
     async def _player_update(self, player_id, event):
         """Handle player attribute updated."""
-        from pyheos import const
         if self._player.player_id != player_id:
             return
-        if event == const.EVENT_PLAYER_NOW_PLAYING_PROGRESS:
+        if event == heos_const.EVENT_PLAYER_NOW_PLAYING_PROGRESS:
             self._media_position_updated_at = utcnow()
         await self.async_update_ha_state(True)
 
-    async def _sources_updated(self):
+    async def _heos_updated(self):
         """Handle sources changed."""
         await self.async_update_ha_state(True)
 
     async def async_added_to_hass(self):
         """Device added to hass."""
-        from pyheos import const
         self._source_manager = self.hass.data[HEOS_DOMAIN][DATA_SOURCE_MANAGER]
         # Update state when attributes of the player change
         self._signals.append(self._player.heos.dispatcher.connect(
-            const.SIGNAL_PLAYER_EVENT, self._player_update))
-        # Update state when available players change
-        self._signals.append(self._player.heos.dispatcher.connect(
-            const.SIGNAL_CONTROLLER_EVENT, self._controller_event))
-        # Update state upon connect/disconnects
-        self._signals.append(self._player.heos.dispatcher.connect(
-            const.SIGNAL_HEOS_EVENT, self._heos_event))
-        # Update state when sources change
+            heos_const.SIGNAL_PLAYER_EVENT, self._player_update))
+        # Update state when heos changes
         self._signals.append(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_HEOS_SOURCES_UPDATED, self._sources_updated))
+                SIGNAL_HEOS_UPDATED, self._heos_updated))
 
     @log_command_error("clear playlist")
     async def async_clear_playlist(self):
@@ -186,14 +163,13 @@ class HeosMediaPlayer(MediaPlayerDevice):
             return
 
         if media_type == MEDIA_TYPE_PLAYLIST:
-            from pyheos import const
             playlists = await self._player.heos.get_playlists()
             playlist = next((p for p in playlists if p.name == media_id), None)
             if not playlist:
                 raise ValueError("Invalid playlist '{}'".format(media_id))
-            add_queue_option = const.ADD_QUEUE_ADD_TO_END \
+            add_queue_option = heos_const.ADD_QUEUE_ADD_TO_END \
                 if kwargs.get(ATTR_MEDIA_ENQUEUE) \
-                else const.ADD_QUEUE_REPLACE_AND_PLAY
+                else heos_const.ADD_QUEUE_REPLACE_AND_PLAY
             await self._player.add_to_queue(playlist, add_queue_option)
             return
 
@@ -231,7 +207,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
     async def async_update(self):
         """Update supported features of the player."""
         controls = self._player.now_playing_media.supported_controls
-        current_support = [self._control_to_support[control]
+        current_support = [CONTROL_TO_SUPPORT[control]
                            for control in controls]
         self._supported_features = reduce(ior, current_support,
                                           BASE_SUPPORTED_FEATURES)
@@ -252,7 +228,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
         """Get attributes about the device."""
         return {
             'identifiers': {
-                (DOMAIN, self._player.player_id)
+                (HEOS_DOMAIN, self._player.player_id)
             },
             'name': self._player.name,
             'model': self._player.model,
@@ -366,7 +342,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
     @property
     def state(self) -> str:
         """State of the player."""
-        return self._play_state_to_state[self._player.state]
+        return PLAY_STATE_TO_STATE[self._player.state]
 
     @property
     def supported_features(self) -> int:
