@@ -3,21 +3,14 @@
 import argparse
 import logging
 import os
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict
 from glob import glob
 from typing import Dict, List, Sequence
 from unittest.mock import patch
 
-import attr
-import voluptuous as vol
-
-from homeassistant import bootstrap, core, loader, requirements
-from homeassistant.config import (
-    get_default_config_dir, CONF_CORE, CORE_CONFIG_SCHEMA,
-    CONF_PACKAGES, merge_packages_config, _format_config_error,
-    find_config_file, load_yaml_config_file,
-    extract_domain_configs, config_per_platform)
-
+from homeassistant import bootstrap, core
+from homeassistant.config import get_default_config_dir
+from homeassistant.helpers.check_config import async_check_ha_config_file
 import homeassistant.util.yaml.loader as yaml_loader
 from homeassistant.exceptions import HomeAssistantError
 
@@ -206,7 +199,7 @@ def check(config_dir, secrets=False):
         hass.config.config_dir = config_dir
 
         res['components'] = hass.loop.run_until_complete(
-            check_ha_config_file(hass))
+            async_check_ha_config_file(hass))
         res['secret_cache'] = OrderedDict(yaml_loader.__SECRET_CACHE)
 
         for err in res['components'].errors:
