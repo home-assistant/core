@@ -53,7 +53,7 @@ class UniFiController:
         if self.progress is not None:
             return await self.progress
 
-        self.progress = asyncio.ensure_future(self.async_update())
+        self.progress = self.hass.async_create_task(self.async_update())
         await self.progress
 
         self.progress = None
