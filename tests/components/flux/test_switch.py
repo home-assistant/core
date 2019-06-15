@@ -155,6 +155,52 @@ async def test_flux_before_sunrise(hass):
     assert call.data[light.ATTR_XY_COLOR] == [0.606, 0.379]
 
 
+async def test_flux_before_sunrise_known_location(hass):
+    """Test the flux switch before sunrise."""
+    platform = getattr(hass.components, 'test.light')
+    platform.init()
+    assert await async_setup_component(hass, light.DOMAIN, {
+        light.DOMAIN: {CONF_PLATFORM: 'test'}})
+
+    dev1 = platform.DEVICES[0]
+
+    # Verify initial state of light
+    state = hass.states.get(dev1.entity_id)
+    assert STATE_ON == state.state
+    assert state.attributes.get('xy_color') is None
+    assert state.attributes.get('brightness') is None
+
+    hass.config.latitude = 55.948372
+    hass.config.longitude = -3.199466
+    hass.config.elevation = 17
+    test_time = dt_util.utcnow().replace(
+        hour=2, minute=0, second=0, day=21, month=6, year=2019)
+
+    await hass.async_block_till_done()
+    with patch('homeassistant.components.flux.switch.dt_utcnow',
+               return_value=test_time):
+        assert await async_setup_component(hass, switch.DOMAIN, {
+            switch.DOMAIN: {
+                'platform': 'flux',
+                'name': 'flux',
+                'lights': [dev1.entity_id],
+                # 'brightness': 255,
+                # 'disable_brightness_adjust': True,
+                # 'mode': 'rgb',
+                # 'interval': 120
+            }
+        })
+        turn_on_calls = async_mock_service(
+            hass, light.DOMAIN, SERVICE_TURN_ON)
+        await common.async_turn_on(hass, 'switch.flux')
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, test_time)
+        await hass.async_block_till_done()
+    call = turn_on_calls[-1]
+    assert call.data[light.ATTR_BRIGHTNESS] == 112
+    assert call.data[light.ATTR_XY_COLOR] == [0.606, 0.379]
+
+
 # pylint: disable=invalid-name
 async def test_flux_after_sunrise_before_sunset(hass):
     """Test the flux switch after sunrise and before sunset."""
