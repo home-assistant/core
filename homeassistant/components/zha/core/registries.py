@@ -33,7 +33,8 @@ BINARY_SENSOR_TYPES = {}
 CLUSTER_REPORT_CONFIGS = {}
 CUSTOM_CLUSTER_MAPPINGS = {}
 EVENT_RELAY_CLUSTERS = []
-NO_SENSOR_CLUSTERS = []
+CHANNEL_ONLY_CLUSTERS = []
+OUTPUT_CHANNEL_ONLY_CLUSTERS = []
 BINDABLE_CLUSTERS = []
 INPUT_BIND_ONLY_CLUSTERS = []
 BINARY_SENSOR_CLUSTERS = set()
@@ -102,10 +103,12 @@ def establish_device_mappings():
     EVENT_RELAY_CLUSTERS.append(zcl.clusters.general.LevelControl.cluster_id)
     EVENT_RELAY_CLUSTERS.append(zcl.clusters.general.OnOff.cluster_id)
 
-    NO_SENSOR_CLUSTERS.append(zcl.clusters.general.Basic.cluster_id)
-    NO_SENSOR_CLUSTERS.append(
+    CHANNEL_ONLY_CLUSTERS.append(zcl.clusters.general.Basic.cluster_id)
+    CHANNEL_ONLY_CLUSTERS.append(
         zcl.clusters.general.PowerConfiguration.cluster_id)
-    NO_SENSOR_CLUSTERS.append(zcl.clusters.lightlink.LightLink.cluster_id)
+    CHANNEL_ONLY_CLUSTERS.append(zcl.clusters.lightlink.LightLink.cluster_id)
+
+    OUTPUT_CHANNEL_ONLY_CLUSTERS.append(zcl.clusters.general.Scenes.cluster_id)
 
     BINDABLE_CLUSTERS.append(zcl.clusters.general.LevelControl.cluster_id)
     BINDABLE_CLUSTERS.append(zcl.clusters.general.OnOff.cluster_id)

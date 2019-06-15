@@ -21,9 +21,10 @@ from .const import (
     SENSOR_TYPE, UNKNOWN, GENERIC, POWER_CONFIGURATION_CHANNEL
 )
 from .registries import (
-    BINARY_SENSOR_TYPES, NO_SENSOR_CLUSTERS, EVENT_RELAY_CLUSTERS,
+    BINARY_SENSOR_TYPES, CHANNEL_ONLY_CLUSTERS, EVENT_RELAY_CLUSTERS,
     SENSOR_TYPES, DEVICE_CLASS, COMPONENT_CLUSTERS,
-    SINGLE_INPUT_CLUSTER_DEVICE_CLASS, SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS
+    SINGLE_INPUT_CLUSTER_DEVICE_CLASS, SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS,
+    OUTPUT_CHANNEL_ONLY_CLUSTERS
 )
 from ..device_entity import ZhaDeviceEntity
 
@@ -164,8 +165,7 @@ def _async_handle_single_cluster_matches(hass, endpoint, zha_device,
     cluster_matches = []
     cluster_match_results = []
     for cluster in endpoint.in_clusters.values():
-        # don't let profiles prevent these channels from being created
-        if cluster.cluster_id in NO_SENSOR_CLUSTERS:
+        if cluster.cluster_id in CHANNEL_ONLY_CLUSTERS:
             cluster_match_results.append(
                 _async_handle_channel_only_cluster_match(
                     zha_device,
@@ -185,6 +185,15 @@ def _async_handle_single_cluster_matches(hass, endpoint, zha_device,
             ))
 
     for cluster in endpoint.out_clusters.values():
+        if cluster.cluster_id in OUTPUT_CHANNEL_ONLY_CLUSTERS:
+            cluster_match_results.append(
+                _async_handle_channel_only_cluster_match(
+                    zha_device,
+                    cluster,
+                    is_new_join,
+                ))
+            continue
+
         if cluster.cluster_id not in profile_clusters:
             cluster_match_results.append(_async_handle_single_cluster_match(
                 hass,
