@@ -56,14 +56,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
                                          websession)
 
     try:
-        _token_info = await oauth.refresh_access_token(token_info)
+        token_info = await oauth.refresh_access_token(token_info)
     except ambiclimate.AmbiclimateOauthError:
+        token_info = None
+
+    if not token_info:
         _LOGGER.error("Failed to refresh access token")
         return
 
-    if _token_info:
-        await store.async_save(_token_info)
-        token_info = _token_info
+    await store.async_save(token_info)
 
     data_connection = ambiclimate.AmbiclimateConnection(oauth,
                                                         token_info=token_info,
