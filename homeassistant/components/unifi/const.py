@@ -8,3 +8,5 @@ CONTROLLER_ID = '{host}-{site}'
 
 CONF_CONTROLLER = 'controller'
 CONF_SITE_ID = 'site'
+
+UNIFI_CONFIG = 'unifi_config'

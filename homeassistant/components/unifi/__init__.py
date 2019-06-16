@@ -1,13 +1,32 @@
 """Support for devices connected to UniFi POE."""
+from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-from .const import CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID, DOMAIN
+from .const import (
+    CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID, DOMAIN, UNIFI_CONFIG)
 from .controller import UniFiController
+from .device_tracker import PLATFORM_SCHEMA as DEVICE_TRACKER_SCHEMA
 
 
 async def async_setup(hass, config):
     """Component doesn't support configuration through configuration.yaml."""
+    unifi_config = []
+
+    if 'device_tracker' in config:
+        for dt_conf in config['device_tracker']:
+            if dt_conf['platform'] == DOMAIN:
+                unifi_config.append(DEVICE_TRACKER_SCHEMA(dt_conf))
+
+    hass.data[UNIFI_CONFIG] = unifi_config
+
+    if not hass.config_entries.async_entries(DOMAIN):
+        for unifi in unifi_config:
+            hass.async_create_task(hass.config_entries.flow.async_init(
+                DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
+                data=unifi
+            ))
+
     return True
 
 
