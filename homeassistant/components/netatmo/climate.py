@@ -122,7 +122,7 @@ class NetatmoThermostat(ClimateDevice):
         self._operation_mode = None
         self.update_without_throttle = False
         self._module_type = None
-        self._support_flags = None
+        self._support_flags = SUPPORT_FLAGS
 
         _LOGGER.debug(
             "Setting up thermostat %s in %s (%s).",
@@ -139,7 +139,6 @@ class NetatmoThermostat(ClimateDevice):
                 DICT_NETATMO_TO_HA[STATE_NETATMO_MANUAL],
                 DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY],
                 DICT_NETATMO_TO_HA[STATE_NETATMO_HG]]
-            self._support_flags = SUPPORT_FLAGS
         elif self._module_type == NA_THERM:
             self._operation_list = [
                 DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
