@@ -35,7 +35,7 @@ SUPPORT_YEELIGHT_WHITE_TEMP = (SUPPORT_YEELIGHT |
                                SUPPORT_COLOR_TEMP)
 
 SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT_WHITE_TEMP |
-                        SUPPORT_COLOR_TEMP)
+                        SUPPORT_COLOR)
 
 ATTR_MODE = 'mode'
 
