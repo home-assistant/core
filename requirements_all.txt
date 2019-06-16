@@ -205,8 +205,12 @@ alpha_vantage==2.1.0
 ambient_api==1.5.2
 =======
 # homeassistant.components.ambiclimate
+<<<<<<< HEAD
 ambiclimate==0.1.3
 >>>>>>> Upgrade ambiclimate library (#24449)
+=======
+ambiclimate==0.2.0
+>>>>>>> Update ambiclimate library (#24562)
 
 # homeassistant.components.amcrest
 <<<<<<< HEAD
