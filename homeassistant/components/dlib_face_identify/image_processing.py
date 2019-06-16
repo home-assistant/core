@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
     """Dlib Face API entity for identify."""
 
-    def __init__(self, camera_entity, faces, name=None, tolerance=0.6):
+    def __init__(self, camera_entity, faces, name, tolerance):
         """Initialize Dlib face identify entry."""
         # pylint: disable=import-error
         import face_recognition
