@@ -1544,10 +1544,14 @@ pysnmp==4.4.9
 
 # homeassistant.components.sonos
 <<<<<<< HEAD
+<<<<<<< HEAD
 pysonos==0.0.5
 =======
 pysonos==0.0.14
 >>>>>>> Update pysonos to 0.0.14 (#24185)
+=======
+pysonos==0.0.15
+>>>>>>> Update pysonos to 0.0.15 (#24565)
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0

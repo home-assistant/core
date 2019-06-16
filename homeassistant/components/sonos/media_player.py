@@ -227,10 +227,10 @@ def _timespan_secs(timespan):
 
 
 def _is_radio_uri(uri):
-    """Return whether the URI is a radio stream."""
+    """Return whether the URI is a stream (not a playlist)."""
     radio_schemes = (
         'x-rincon-mp3radio:', 'x-sonosapi-stream:', 'x-sonosapi-radio:',
-        'x-sonosapi-hls:', 'hls-radio:')
+        'x-sonosapi-hls:', 'hls-radio:', 'x-rincon-stream:')
     return uri.startswith(radio_schemes)
 
 
