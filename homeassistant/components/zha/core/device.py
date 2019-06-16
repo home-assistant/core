@@ -391,7 +391,7 @@ class ZHADevice:
                 manufacturer=manufacturer
             )
             _LOGGER.debug(
-                'set: %s for attr: %s to cluster: %s for entity: %s - res: %s',
+                'set: %s for attr: %s to cluster: %s for ept: %s - res: %s',
                 value,
                 attribute,
                 cluster_id,
