@@ -1,7 +1,6 @@
 """Provides the constants needed for evohome."""
 
 DOMAIN = 'evohome'
-DATA_EVOHOME = 'data_' + DOMAIN
 
 STORAGE_VERSION = 1
 STORAGE_KEY = DOMAIN
