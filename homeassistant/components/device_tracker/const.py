@@ -13,6 +13,7 @@ PLATFORM_TYPE_ENTITY = 'entity_platform'
 SOURCE_TYPE_GPS = 'gps'
 SOURCE_TYPE_ROUTER = 'router'
 SOURCE_TYPE_BLUETOOTH = 'bluetooth'
+SOURCE_TYPE_ZIGBEE = 'zigbee'
 SOURCE_TYPE_BLUETOOTH_LE = 'bluetooth_le'
 
 CONF_SCAN_INTERVAL = 'interval_seconds'
