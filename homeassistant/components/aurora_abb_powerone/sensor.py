@@ -89,8 +89,8 @@ class AuroraABBSolarPVMonitorSensor(Entity):
             # with timeout vs other comms errors.
             # This means the (normal) situation of no response during darkness
             # raises an exception.
-            # aurorapy pull request made May 2019, if accepted, this could be 
-            # modified to :
+            # aurorapy (gitlab) pull request merged 29/5/2019. When >0.2.6 is
+            # released, this could be modified to :
             # except AuroraTimeoutError as e:
             # Workaround: look at the text of the exception
             if "No response after" in str(e):
