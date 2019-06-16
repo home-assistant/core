@@ -17,7 +17,7 @@ CONF_FACES = 'faces'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_FACES): {cv.string: cv.isfile},
-    vol.Optional(CONF_CONFIDENCE, default=0.6): cv.string,
+    vol.Optional(CONF_CONFIDENCE, default=0.6): vol.Coerce(float),
 })
 
 
