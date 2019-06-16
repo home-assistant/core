@@ -18,7 +18,7 @@ from .const import (
     ATTR_COMMAND_TYPE, ATTR_ARGS, CLIENT_COMMANDS, SERVER_COMMANDS,
     ATTR_ENDPOINT_ID, IEEE, MODEL, NAME, UNKNOWN, QUIRK_APPLIED,
     QUIRK_CLASS, ZDO_CHANNEL, MANUFACTURER_CODE, POWER_SOURCE, MAINS_POWERED,
-    BATTERY_OR_UNKNOWN
+    BATTERY_OR_UNKNOWN, NWK
 )
 from .channels import EventRelayChannel
 
@@ -189,6 +189,7 @@ class ZHADevice:
         ieee = str(self.ieee)
         return {
             IEEE: ieee,
+            NWK: self.nwk,
             ATTR_MANUFACTURER: self.manufacturer,
             MODEL: self.model,
             NAME: self.name or ieee,
@@ -390,7 +391,7 @@ class ZHADevice:
                 manufacturer=manufacturer
             )
             _LOGGER.debug(
-                'set: %s for attr: %s to cluster: %s for entity: %s - res: %s',
+                'set: %s for attr: %s to cluster: %s for ept: %s - res: %s',
                 value,
                 attribute,
                 cluster_id,
