@@ -13,7 +13,7 @@ from homeassistant.const import CONF_EXCLUDE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .constants import DOMAIN, DATA_CONFIG
+from .const import DOMAIN, DATA_CONFIG
 from .discovery import (
     async_start_discovery_service, async_stop_discovery_service)
 

@@ -1,26 +1,20 @@
-"""
-Support for the iZone HVAC.
-
-For more details about this platform, please refer to the documentation at
-https://github.com/Swamp-Ig/izone_custom_component
-"""
+"""Support for the iZone HVAC."""
 import logging
-from typing import cast
 
-from pizone import Zone, Controller
+from pizone import Zone, Controller, Listener
 
-from ..climate import ClimateDevice
-from ..climate.const import (
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
     STATE_AUTO, STATE_COOL, STATE_DRY, STATE_FAN_ONLY, STATE_HEAT,
     STATE_ECO, SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
-from ...const import (
+from homeassistant.const import (
     ATTR_TEMPERATURE, PRECISION_HALVES, TEMP_CELSIUS,
     STATE_OFF, STATE_ON)
-from ...helpers.temperature import display_temp as show_temp
-from ...helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.temperature import display_temp as show_temp
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .constants import DATA_ADD_ENTRIES, DATA_DISCOVERY_SERVICE, DOMAIN
+from .const import DATA_ADD_ENTRIES, DATA_DISCOVERY_SERVICE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,12 +34,21 @@ async def async_setup_entry(hass: HomeAssistantType, config: ConfigType,
     return True
 
 
+def init_controller(controller: Controller,
+                    async_add_entries):
+    """Register the controller device and the containing zones."""
+    device = ControllerDevice(controller)
+    async_add_entries([device])
+    async_add_entries(device.zones.values())
+    _LOGGER.info("Controller UID=%s added.", controller.device_uid)
+
+
 class ControllerDevice(ClimateDevice):
     """Representation of iZone Controller."""
 
-    def __init__(self, controller, async_add_entities) -> None:
+    def __init__(self, controller: Controller) -> None:
         """Initialise ControllerDevice."""
-        self._controller = cast(Controller, controller)
+        self._controller = controller
 
         self._supported_features = (SUPPORT_OPERATION_MODE |
                                     SUPPORT_FAN_MODE | SUPPORT_ON_OFF)
@@ -67,6 +70,7 @@ class ControllerDevice(ClimateDevice):
         self._fan_to_pizone = {}
         for fan in controller.fan_modes:
             self._fan_to_pizone[fan.name.title()] = fan
+        self._available = True
 
         self._device_info = {
             'identifiers': {
@@ -76,18 +80,40 @@ class ControllerDevice(ClimateDevice):
             'manufacturer': 'IZone',
             'model': self._controller.sys_type,
         }
-        async_add_entities([self], True)
 
         # Create the zones
         self.zones = {}
         for zone in controller.zones:
             self.zones[zone] = ZoneDevice(self, zone)
 
-        async_add_entities(self.zones.values(), True)
+        # Register for connect/disconnect/update events
+        device = self
 
-        self._available = True
+        class ControllerListener(Listener):
+            """Listener for controller related events."""
 
-        _LOGGER.info("Controller UID=%s is ready", controller.device_uid)
+            def controller_disconnected(self, ctrl: Controller,
+                                        ex: Exception) -> None:
+                """Disconnected from contrller."""
+                if ctrl is not controller:
+                    return
+                device.set_available(False, ex)
+
+            def controller_reconnected(self, ctrl: Controller) -> None:
+                """Reconnected to controller."""
+                if ctrl is not controller:
+                    return
+                device.set_available(True)
+
+            def controller_update(self, ctrl: Controller) -> None:
+                """Handle controller data updates."""
+                if ctrl is not controller:
+                    return
+                device.async_schedule_update_ha_state()
+        listener = ControllerListener()
+        controller.discovery.add_listener(listener)
+        self.async_on_remove(
+            lambda: controller.discovery.remove_listener(listener))
 
     @property
     def available(self) -> bool:
@@ -97,9 +123,9 @@ class ControllerDevice(ClimateDevice):
     @property
     def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
-        return not self._available
+        return False
 
-    def set_available(self, available: bool) -> None:
+    def set_available(self, available: bool, ex: Exception = None) -> None:
         """
         Set availability for the controller.
 
@@ -109,15 +135,18 @@ class ControllerDevice(ClimateDevice):
             return
 
         if available:
-            _LOGGER.error(
+            _LOGGER.info(
                 "Reconnected controller %s ",
                 self._controller.device_uid)
         else:
-            _LOGGER.error(
-                "Unable to contact controller %s",
-                self._controller.device_uid)
+            _LOGGER.info(
+                "Controller %s disconnected due to exception: %s",
+                self._controller.device_uid, ex)
 
         self._available = available
+        self.async_schedule_update_ha_state()
+        for zone in self.zones.values():
+            zone.async_schedule_update_ha_state()
 
     @property
     def device_info(self):
@@ -183,13 +212,11 @@ class ControllerDevice(ClimateDevice):
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        return [STATE_OFF] + list(self._state_to_pizone.keys())
+        return [STATE_OFF, *self._state_to_pizone]
 
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        if not self._available:
-            return None
         if self._controller.mode == Controller.Mode.FREE_AIR:
             return self._controller.temp_supply
         return self._controller.temp_return
@@ -239,9 +266,10 @@ class ControllerDevice(ClimateDevice):
     async def _wrap_and_catch(self, coro):
         try:
             await coro
+        except ConnectionError as ex:
+            self.set_available(False, ex)
+        else:
             self.set_available(True)
-        except ConnectionError:
-            self.set_available(False)
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature.
@@ -252,8 +280,8 @@ class ControllerDevice(ClimateDevice):
             self.async_schedule_update_ha_state(True)
             return
         temp = kwargs.get(ATTR_TEMPERATURE)
-        if temp:
-            return self._wrap_and_catch(
+        if temp is not None:
+            await self._wrap_and_catch(
                 self._controller.set_temp_setpoint(temp))
 
     async def async_set_fan_mode(self, fan_mode):
@@ -296,10 +324,11 @@ class ControllerDevice(ClimateDevice):
 class ZoneDevice(ClimateDevice):
     """Representation of iZone Zone."""
 
-    def __init__(self, controller: ControllerDevice, zone) -> None:
+    def __init__(self, controller: ControllerDevice, zone: Zone) -> None:
         """Initialise ZoneDevice."""
         self._controller = controller
-        self._zone = cast(Zone, zone)
+        self._zone = zone
+        self._name = zone.name.title()
 
         self._supported_features = (SUPPORT_ON_OFF |
                                     SUPPORT_OPERATION_MODE)
@@ -326,6 +355,26 @@ class ZoneDevice(ClimateDevice):
             'model': zone.type.name.title(),
         }
 
+        device = self
+
+        # pylint: disable=protected-access
+        class ZoneListener(Listener):
+            """Listener for controller related events."""
+
+            def zone_update(
+                    self, ctrl: Controller,
+                    zone: Zone) -> None:
+                """Handle zone data updates."""
+                if zone is not device._zone:
+                    return
+                device._name = zone.name.title()
+                device.async_schedule_update_ha_state()
+
+        listener = ZoneListener()
+        controller._controller.discovery.add_listener(listener)
+        self.async_on_remove(
+            lambda: controller._controller.discovery.remove_listener(listener))
+
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
@@ -344,13 +393,13 @@ class ZoneDevice(ClimateDevice):
     @property
     def unique_id(self):
         """Return the ID of the controller device."""
-        return (self._controller.unique_id + '_z' +
-                str(self._zone.index+1))
+        return "{}_z{}".format(
+            self._controller.unique_id, self._zone.index+1)
 
     @property
     def name(self) -> str:
         """Return the name of the entity."""
-        return self._zone.name.title()
+        return self._name
 
     @property
     def should_poll(self) -> bool:
@@ -363,9 +412,12 @@ class ZoneDevice(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        if self._zone.mode == Zone.Mode.AUTO:
-            return self._supported_features
-        return self._supported_features & ~SUPPORT_TARGET_TEMPERATURE
+        try:
+            if self._zone.mode == Zone.Mode.AUTO:
+                return self._supported_features
+            return self._supported_features & ~SUPPORT_TARGET_TEMPERATURE
+        except ConnectionError:
+            return 0
 
     @property
     def temperature_unit(self):
@@ -426,7 +478,7 @@ class ZoneDevice(ClimateDevice):
         if self._zone.mode != Zone.Mode.AUTO:
             return
         temp = kwargs.get(ATTR_TEMPERATURE)
-        if temp:
+        if temp is not None:
             await self._controller._wrap_and_catch(  # pylint: disable=W0212
                 self._zone.set_temp_setpoint(temp))
 

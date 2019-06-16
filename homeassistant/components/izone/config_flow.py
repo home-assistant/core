@@ -7,7 +7,7 @@ from async_timeout import timeout
 from homeassistant import config_entries
 from homeassistant.helpers import config_entry_flow
 
-from .constants import DOMAIN
+from .const import DOMAIN
 
 
 _LOGGER = logging.getLogger(__name__)
