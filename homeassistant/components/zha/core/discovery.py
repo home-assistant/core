@@ -90,7 +90,7 @@ def _async_create_cluster_channel(cluster, zha_device, is_new_join,
     """Create a cluster channel and attach it to a device."""
     # really ugly hack to deal with xiaomi using the door lock cluster
     # incorrectly.
-    if hasattr(cluster, 'ep_attribute') and\
+    if hasattr(cluster, 'ep_attribute') and \
             cluster.ep_attribute == 'multistate_input':
         channel_class = AttributeListeningChannel
     # end of ugly hack

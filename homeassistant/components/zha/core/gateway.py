@@ -274,7 +274,7 @@ class ZHAGateway:
                 )
                 if endpoint_id != 0:
                     for cluster in endpoint.in_clusters.values():
-                        cluster.bind_only =\
+                        cluster.bind_only = \
                             cluster.cluster_id in INPUT_BIND_ONLY_CLUSTERS
                     for cluster in endpoint.out_clusters.values():
                         # output clusters are always bind only
