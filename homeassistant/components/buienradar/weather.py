@@ -157,27 +157,27 @@ class BrWeather(WeatherEntity):
                                           WINDSPEED)
 
         if not self._forecast:
-            return
+            return None
 
         fcdata_out = []
         cond = self.hass.data[DATA_CONDITION]
 
         if not self._data.forecast:
-            return
+            return None
 
         for data_in in self._data.forecast:
             # remap keys from external library to
             # keys understood by the weather component:
-            data_out = {}
             condcode = data_in.get(CONDITION, []).get(CONDCODE)
-
-            data_out[ATTR_FORECAST_TIME] = data_in.get(DATETIME)
-            data_out[ATTR_FORECAST_CONDITION] = cond[condcode]
-            data_out[ATTR_FORECAST_TEMP_LOW] = data_in.get(MIN_TEMP)
-            data_out[ATTR_FORECAST_TEMP] = data_in.get(MAX_TEMP)
-            data_out[ATTR_FORECAST_PRECIPITATION] = data_in.get(RAIN)
-            data_out[ATTR_FORECAST_WIND_BEARING] = data_in.get(WINDAZIMUTH)
-            data_out[ATTR_FORECAST_WIND_SPEED] = data_in.get(WINDSPEED)
+            data_out = {
+                ATTR_FORECAST_TIME: data_in.get(DATETIME),
+                ATTR_FORECAST_CONDITION: cond[condcode],
+                ATTR_FORECAST_TEMP_LOW: data_in.get(MIN_TEMP),
+                ATTR_FORECAST_TEMP: data_in.get(MAX_TEMP),
+                ATTR_FORECAST_PRECIPITATION: data_in.get(RAIN),
+                ATTR_FORECAST_WIND_BEARING: data_in.get(WINDAZIMUTH),
+                ATTR_FORECAST_WIND_SPEED: data_in.get(WINDSPEED)
+            }
 
             fcdata_out.append(data_out)
 
