@@ -1,3 +1,4 @@
+"""Support for Aurora ABB PowerOne Solar Photvoltaic (PV) inverter."""
 import voluptuous as vol
 
 import logging
@@ -20,19 +21,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Aurora ABB PowerOne device."""
-    
+
     from aurorapy.client import AuroraSerialClient
-    
+
     devices = []
     _LOGGER.debug("Setting up AuroraABBPowerone")
     comport = config.get(CONF_COMPORT)
     name = config.get(CONF_NAME, "Solar PV")
     address = config.get(CONF_ADDRESS, 1)
-    
-    _LOGGER.debug("Intitialising com port={} address={}".format(comport, 
-                      address))
+
+    _LOGGER.debug("Intitialising com port={} address={}".format(
+        comport, address))
     client = AuroraSerialClient(address, comport, parity='N', timeout=1)
-    
+
     devices.append(AuroraABBSolarPVMonitorSensor(client, name, 'Power'))
     add_devices(devices, True)
 
@@ -76,7 +77,7 @@ class AuroraABBSolarPVMonitorSensor(Entity):
         try:
             if TEST_MODE:    # For testing the code at night
                 import random
-                power_watts = random.randint(1,3601)
+                power_watts = random.randint(1, 3601)
             else:
                 self.client.connect()
                 # Read ADC channel 3 (grid power output)
