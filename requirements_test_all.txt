@@ -64,7 +64,7 @@ aioswitcher==2019.4.26
 aiounifi==6
 
 # homeassistant.components.ambiclimate
-ambiclimate==0.1.3
+ambiclimate==0.2.0
 
 # homeassistant.components.apns
 apns2==0.3.0
