@@ -1,12 +1,13 @@
 """Support for Aurora ABB PowerOne Solar Photvoltaic (PV) inverter."""
+import logging
+
 import voluptuous as vol
 
-import logging
-from homeassistant.const import POWER_WATT, CONF_NAME, CONF_ADDRESS, \
-            DEVICE_CLASS_POWER
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_ADDRESS, CONF_NAME, DEVICE_CLASS_POWER, POWER_WATT)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
