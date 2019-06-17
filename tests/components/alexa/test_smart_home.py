@@ -1012,7 +1012,7 @@ async def test_exclude_filters(hass):
     hass.states.async_set(
         'cover.deny', 'off', {'friendly_name': "Blocked cover"})
 
-    alexa_config = MockConfig()
+    alexa_config = MockConfig(hass)
     alexa_config.should_expose = entityfilter.generate_filter(
         include_domains=[],
         include_entities=[],
@@ -1045,7 +1045,7 @@ async def test_include_filters(hass):
     hass.states.async_set(
         'group.allow', 'off', {'friendly_name': "Allowed group"})
 
-    alexa_config = MockConfig()
+    alexa_config = MockConfig(hass)
     alexa_config.should_expose = entityfilter.generate_filter(
         include_domains=['automation', 'group'],
         include_entities=['script.deny'],
@@ -1072,7 +1072,7 @@ async def test_never_exposed_entities(hass):
     hass.states.async_set(
         'group.allow', 'off', {'friendly_name': "Allowed group"})
 
-    alexa_config = MockConfig()
+    alexa_config = MockConfig(hass)
     alexa_config.should_expose = entityfilter.generate_filter(
         include_domains=['group'],
         include_entities=[],
@@ -1155,7 +1155,7 @@ async def test_entity_config(hass):
     hass.states.async_set(
         'light.test_1', 'on', {'friendly_name': "Test light 1"})
 
-    alexa_config = MockConfig()
+    alexa_config = MockConfig(hass)
     alexa_config.entity_config = {
         'light.test_1': {
             'name': 'Config name',
