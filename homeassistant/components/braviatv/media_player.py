@@ -1,6 +1,5 @@
 """Support for interface with a Sony Bravia TV."""
 import logging
-import re
 
 import voluptuous as vol
 
@@ -14,6 +13,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
+from homeassistant.util.network import get_mac_address
 
 BRAVIA_CONFIG_FILE = 'bravia.conf'
 
@@ -38,19 +38,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
-
-
-def _get_mac_address(ip_address):
-    """Get the MAC address of the device."""
-    from subprocess import Popen, PIPE
-
-    pid = Popen(["arp", "-n", ip_address], stdout=PIPE)
-    pid_component = pid.communicate()[0]
-    match = re.search(r"(([a-f\d]{1,2}\:){5}[a-f\d]{1,2})".encode('UTF-8'),
-                      pid_component)
-    if match is not None:
-        return match.groups()[0]
-    return None
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -84,9 +71,7 @@ def setup_bravia(config, pin, hass, add_entities):
         request_configuration(config, hass, add_entities)
         return
 
-    mac = _get_mac_address(host)
-    if mac is not None:
-        mac = mac.decode('utf8')
+    mac = get_mac_address(host)
     # If we came here and configuring this host, mark as done
     if host in _CONFIGURING:
         request_id = _CONFIGURING.pop(host)
