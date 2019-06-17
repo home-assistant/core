@@ -282,7 +282,6 @@ class MqttCover(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         if self._config.get(CONF_TILT_STATUS_TOPIC) is None:
             self._tilt_optimistic = True
         else:
-            self._tilt_optimistic = False
             self._tilt_value = STATE_UNKNOWN
             topics['tilt_status_topic'] = {
                 'topic': self._config.get(CONF_TILT_STATUS_TOPIC),
@@ -405,7 +404,8 @@ class MqttCover(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                            self._config[CONF_QOS],
                            self._config[CONF_RETAIN])
         if self._tilt_optimistic:
-            self._tilt_value = self._config[CONF_TILT_OPEN_POSITION]
+            self._tilt_value = self.find_percentage_in_range(
+                float(self._config[CONF_TILT_OPEN_POSITION]))
             self.async_write_ha_state()
 
     async def async_close_cover_tilt(self, **kwargs):
@@ -416,7 +416,8 @@ class MqttCover(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                            self._config[CONF_QOS],
                            self._config[CONF_RETAIN])
         if self._tilt_optimistic:
-            self._tilt_value = self._config[CONF_TILT_CLOSED_POSITION]
+            self._tilt_value = self.find_percentage_in_range(
+                float(self._config[CONF_TILT_CLOSED_POSITION]))
             self.async_write_ha_state()
 
     async def async_set_cover_tilt_position(self, **kwargs):
@@ -463,6 +464,19 @@ class MqttCover(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                     self._config[CONF_POSITION_CLOSED]
                 self._position = percentage_position
                 self.async_write_ha_state()
+
+    async def async_toggle_tilt(self, **kwargs):
+        """Toggle the entity."""
+        if self.is_tilt_closed():
+            await self.async_open_cover_tilt(**kwargs)
+        else:
+            await self.async_close_cover_tilt(**kwargs)
+
+    def is_tilt_closed(self):
+        """Return if the cover is tilted closed."""
+        return self._tilt_value == \
+            self.find_percentage_in_range(
+                float(self._config[CONF_TILT_CLOSED_POSITION]))
 
     def find_percentage_in_range(self, position, range_type=TILT_PAYLOAD):
         """Find the 0-100% value within the specified range."""
