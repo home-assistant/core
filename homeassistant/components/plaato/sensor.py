@@ -103,7 +103,19 @@ class PlaatoSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        sensors = self.get_sensors()
+        if sensors is False:
+            _LOGGER.debug("Device with name %s has no sensors.", self.name)
+            return 0
+
+        if self._type == ATTR_ABV:
+            return round(sensors.get(self._type), 2)
+        elif self._type == ATTR_TEMP:
+            return round(sensors.get(self._type), 1)
+        elif self._type == ATTR_CO2_VOLUME:
+            return round(sensors.get(self._type), 2)
+        else:
+            return sensors.get(self._type)
 
     @property
     def device_state_attributes(self):
@@ -129,19 +141,3 @@ class PlaatoSensor(Entity):
     def should_poll(self):
         """Return the polling state."""
         return False
-
-    async def async_update(self):
-        """Fetch new state data for the sensor."""
-        sensors = self.get_sensors()
-        if sensors is False:
-            _LOGGER.debug("Device with name %s has no sensors.", self.name)
-            return
-
-        if self._type == ATTR_ABV:
-            self._state = round(sensors.get(self._type), 2)
-        elif self._type == ATTR_TEMP:
-            self._state = round(sensors.get(self._type), 1)
-        elif self._type == ATTR_CO2_VOLUME:
-            self._state = round(sensors.get(self._type), 2)
-        else:
-            self._state = sensors.get(self._type)
