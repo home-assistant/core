@@ -54,6 +54,8 @@ def async_setup(hass, config):
     hass.states.async_set("sensor.spotifysearchlist", -1, {})
     hass.states.async_set("sensor.spotifylist", -1, {})
     hass.states.async_set("sensor.rssnewslist", -1, {})
+    hass.states.async_set("sensor.audiobookslist", -1, {})
+    hass.states.async_set("sensor.audiobookschapterslist", -1, {})
     hass.states.async_set("sensor.rssnewstext", "", {"text": ""})
     hass.states.async_set("sensor.aisrsshelptext", "", {"text": ""})
     hass.states.async_set("sensor.aisknowledgeanswer", "", {"text": ""})
@@ -625,6 +627,10 @@ class AisColudData:
                 track_list = 'sensor.podcastlist'
             elif media_source == ais_global.G_AN_NEWS:
                 track_list = 'sensor.rssnewslist'
+            elif media_source == ais_global.G_AN_AUDIOBOOK:
+                track_list = 'sensor.audiobookslist'
+            elif media_source == ais_global.G_AN_AUDIOBOOK_CHAPTER:
+                track_list = 'sensor.audiobookschapterslist'
             elif media_source == ais_global.G_AN_BOOKMARK:
                 track_list = 'sensor.aisbookmarkslist'
             elif media_source == ais_global.G_AN_FAVORITE:

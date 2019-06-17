@@ -82,9 +82,10 @@ def async_setup(hass, config):
     gate_id = ais_global.get_sercure_android_id_dom()
     _LOGGER.info("gate_id: " + str(gate_id))
 
+    j_state = json.dumps({"gate_id": gate_id, "real_ip": "real_ip_place", "flow_id": "flow_id_place"})
     oauth = spotipy.oauth2.SpotifyOAuth(
         spotify_client_id, spotify_client_secret, spotify_redirect_url, scope=spotify_scope, cache_path=cache,
-        state={"gate_id": gate_id, "real_ip": "real_ip_place", "flow_id": "flow_id_place"})
+        state=j_state)
 
     setUrl(oauth.get_authorize_url())
     token_info = oauth.get_cached_token()

@@ -14,13 +14,6 @@ input_select:
     options:
      - "-"
     icon: mdi:bookmark-music
-  # odtwarzacze
-  book_player:
-    name: 'Głośnik:'
-    options:
-     - Podłączony głośnik
-    icon: mdi:speaker-wireless
-# OPTIONAL
 group:
   audiobooks_player:
     name: Audio Książki Online

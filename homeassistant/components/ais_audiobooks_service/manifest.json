@@ -1,0 +1,9 @@
+{
+  "domain": "ais_audiobooks_service",
+  "name": "AIS Audiobooks",
+  "config_flow": false,
+  "documentation": "https://www.ai-speaker.com",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

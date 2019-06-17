@@ -1,10 +1,4 @@
 homeassistant:
-  #name: Asystent domowy
-  #unit_system: metric
-  #time_zone: Europe/Warsaw
-  #latitude: 52.298519
-  #longitude: 20.838871
-  #elevation: 134
   customize: !include customize.yaml
   packages: !include_dir_named ais_packages/
   auth_providers:
@@ -39,7 +33,6 @@ conversation:
 # Show links to resources in log and frontend
 introduction:
 
-
 # for restore_state on input_select (radio stations etc.)
 recorder:
   purge_keep_days: 3
@@ -61,6 +54,8 @@ recorder:
       - sensor.spotifysearchlist
       - sensor.spotifylist
       - sensor.rssnewslist
+      - sensor.audiobookslist
+      - sensor.audiobookschapterslist
       - sensor.podcastnamelist
       - sensor.aisbookmarkslist
       - sensor.aisfavoriteslist
@@ -86,6 +81,8 @@ history:
       - sensor.spotifysearchlist
       - sensor.spotifylist
       - sensor.rssnewslist
+      - sensor.audiobookslist
+      - sensor.audiobookschapterslist
       - sensor.podcastnamelist
       - sensor.aisbookmarkslist
       - sensor.aisfavoriteslist
@@ -126,7 +123,8 @@ ais_mdns:
 
 #
 # ais_gm_service:
-
+#
+ais_audiobooks_service:
 #
 ais_spotify_service:
 ais_wifi_service:

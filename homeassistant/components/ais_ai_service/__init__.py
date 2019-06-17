@@ -464,7 +464,8 @@ def set_curr_group(hass, group):
     # set display context for mega audio plauer
     if CURR_GROUP['entity_id'] in (
             'group.radio_player', 'group.podcast_player', 'group.music_player', "group.ais_bookmarks",
-            'group.ais_rss_news_remote',  'group.local_audio', "sensor.ais_drives", "group.ais_favorites"):
+            'group.ais_rss_news_remote',  'group.local_audio', "sensor.ais_drives", "group.ais_favorites",
+            'group.audiobooks_player'):
         hass.states.async_set("sensor.ais_player_mode", CURR_GROUP['entity_id'].replace('group.', ''))
 
 
@@ -704,6 +705,10 @@ def say_curr_entity(hass):
                 info = "Lista ulubionych pozycji  "
             elif entity_id == 'sensor.aisbookmarkslist':
                 info = "Lista zakładek  "
+            elif entity_id == 'sensor.audiobookslist':
+                info = "Lista książek  "
+            elif entity_id == 'sensor.audiobookschapterslist':
+                info = "Lista rozdziałów  "
             else:
                 info = "Pozycja "
 
@@ -772,6 +777,11 @@ def commit_current_position(hass):
             hass.services.call('ais_cloud', 'play_audio', {"id": idx, "media_source": ais_global.G_AN_MUSIC})
         elif CURR_ENTITIE == "sensor.rssnewslist":
             hass.services.call('ais_cloud', 'play_audio', {"id": idx, "media_source": ais_global.G_AN_NEWS})
+        elif CURR_ENTITIE == "sensor.audiobookslist":
+            hass.services.call('ais_cloud', 'play_audio', {"id": idx, "media_source": ais_global.G_AN_AUDIOBOOK})
+        elif CURR_ENTITIE == "sensor.audiobookschapterslist":
+            hass.services.call('ais_cloud', 'play_audio',
+                               {"id": idx, "media_source": ais_global.G_AN_AUDIOBOOK_CHAPTER})
         elif CURR_ENTITIE == "sensor.aisbookmarkslist":
             hass.services.call('ais_cloud', 'play_audio', {"id": idx, "media_source": ais_global.G_AN_BOOKMARK})
         elif CURR_ENTITIE == "sensor.aisfavoriteslist":

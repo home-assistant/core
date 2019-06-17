@@ -298,3 +298,15 @@
       data:
         key: WifiConnectionInfo
         val: true
+
+- id: '201906171602001'
+  alias: 'Get Books'
+  initial_state: True
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_select.book_autor
+  action:
+    - service: ais_audiobooks_service.get_books
+      data_template:
+        author: "{{ states('input_select.book_autor') }}"
