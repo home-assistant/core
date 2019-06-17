@@ -10,8 +10,6 @@ import logging
 import requests
 import json
 import os.path
-from operator import itemgetter
-
 from homeassistant.components import ais_cloud
 from homeassistant.ais_dom import ais_global
 aisCloud = ais_cloud.AisCloudWS()
@@ -64,7 +62,7 @@ class AudioBooksData:
 
     def get_books(self, call):
         """Load books for the selected author."""
-        if ("author" not in call.data):
+        if "author" not in call.data:
             _LOGGER.error("No author")
             return []
 
@@ -94,10 +92,8 @@ class AudioBooksData:
                 list_idx = list_idx + 1
 
         self.hass.states.async_set("sensor.audiobookslist", 0, list_info)
+        self.hass.services.call('ais_audiobooks_service', 'get_chapters', {"id": 0})
 
-        self.hass.services.call(
-            'ais_audiobooks_service',
-            'get_chapters', {"book_url": list_info[0]["lookup_url"]})
         import homeassistant.components.ais_ai_service as ais_ai
         if ais_ai.CURR_ENTITIE == 'input_select.book_autor':
             ais_ai.set_curr_entity(self.hass, 'sensor.audiobookslist')
@@ -105,12 +101,17 @@ class AudioBooksData:
 
     def get_chapters(self, call):
         """Load chapters for the selected book."""
-        if "book_url" not in call.data:
-            _LOGGER.error("No book url")
+        if "id" not in call.data:
+            _LOGGER.error("No book id")
             return
 
+        state = self.hass.states.get("sensor.audiobookslist")
+        attr = state.attributes
+        track = attr.get(int(call.data['id']))
+        self.hass.states.async_set("sensor.audiobookslist", call.data['id'], attr)
+
         try:
-            ws_resp = requests.get(call.data["book_url"] + "?format=json", timeout=10)
+            ws_resp = requests.get(track["lookup_url"] + "?format=json", timeout=10)
             data = ws_resp.json()
 
         except Exception as e:
@@ -136,26 +137,25 @@ class AudioBooksData:
                 list_idx = list_idx + 1
 
         self.hass.states.async_set("sensor.audiobookschapterslist", 0, list_info)
-
-        self.hass.services.call('ais_audiobooks_service', 'select_chapter', {"book_chapter": 0})
+        self.hass.services.call('ais_audiobooks_service', 'select_chapter', {"id": 0})
 
         # check if the change was done form remote
         import homeassistant.components.ais_ai_service as ais_ai
         if ais_ai.CURR_ENTITIE == 'sensor.audiobookslist':
             ais_ai.set_curr_entity(self.hass, 'sensor.audiobookschapterslist')
-            self.hass.services.call('ais_ai_service', 'say_it', {"text": "Wybierz rozdział"})
+            self.hass.services.call('ais_ai_service', 'say_it', {"text": "Włączam pierwszy rozdział"})
 
     def select_chapter(self, call):
         """Get chapter stream url for the selected name."""
-        if "book_chapter" not in call.data:
-            _LOGGER.error("No book_chapter")
+        if "id" not in call.data:
+            _LOGGER.error("No book chapter id")
             return
 
         state = self.hass.states.get("sensor.audiobookschapterslist")
         attr = state.attributes
-        track = attr.get(int(call.data['book_chapter']))
+        track = attr.get(int(call.data['id']))
+        self.hass.states.async_set("sensor.audiobookschapterslist", call.data['id'], attr)
 
-        self.hass.states.async_set("sensor.audiobookschapterslist", call.data['book_chapter'], attr)
         # set stream uri, image and title
         _audio_info = json.dumps(
             {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": ais_global.G_AN_AUDIOBOOK,
@@ -164,30 +164,6 @@ class AudioBooksData:
                                 {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
                                  "media_content_type": "ais_content_info",
                                  "media_content_id": _audio_info})
-
-        # if call.data["book_chapter"] == ais_global.G_EMPTY_OPTION:
-        #     # stop all players
-        #     self.hass.services.call('media_player', 'media_stop', {"entity_id": "all"})
-        #     return
-        # book_chapter = call.data["book_chapter"]
-        # _url = None
-        # _audio_info = {}
-        # for ch in G_SELECTED_TRACKS:
-        #     if ch["name"] == book_chapter:
-        #         _url = ""
-        #         _audio_info = {"IMAGE_URL": ch["image"], "NAME": ch["name"],
-        #                        "MEDIA_SOURCE": ais_global.G_AN_AUDIOBOOK, "media_content_id": _url}
-        #         _audio_info = json.dumps(_audio_info)
-        #         break
-        # if _url is not None:
-        #     self.hass.services.call(
-        #         'media_player',
-        #         'play_media', {
-        #             "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-        #             "media_content_type": "ais_content_info",
-        #             "media_content_id": _audio_info
-        #         })
-
 
     @asyncio.coroutine
     def async_load_all_books(self):

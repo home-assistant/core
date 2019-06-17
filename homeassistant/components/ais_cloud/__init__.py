@@ -620,6 +620,12 @@ class AisColudData:
             elif media_source == ais_global.G_AN_MUSIC:
                 self.hass.services.call('ais_yt_service', 'select_track_uri', {"id": call.data['id']})
                 return
+            elif media_source == ais_global.G_AN_AUDIOBOOK:
+                self.hass.services.call('ais_audiobooks_service', 'get_chapters', {"id": call.data['id']})
+                return
+            elif media_source == ais_global.G_AN_AUDIOBOOK_CHAPTER:
+                self.hass.services.call('ais_audiobooks_service', 'select_chapter', {"id": call.data['id']})
+                return
             #
             if media_source == ais_global.G_AN_RADIO:
                 track_list = 'sensor.radiolist'
@@ -646,7 +652,7 @@ class AisColudData:
             if media_source == ais_global.G_AN_FAVORITE:
                 self.hass.states.async_set(track_list, int(call.data['id']), attr)
 
-            if media_source == ais_global.G_AN_NEWS:
+            elif media_source == ais_global.G_AN_NEWS:
                 self.hass.services.call('ais_cloud', 'select_rss_news_item', {"id": call.data['id']})
 
             elif media_source in (ais_global.G_AN_PODCAST_NAME, ais_global.G_AN_FAVORITE)\
