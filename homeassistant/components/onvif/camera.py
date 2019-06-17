@@ -146,62 +146,17 @@ class ONVIFHassCamera(Camera):
         Initializes the camera by obtaining the input uri and connecting to
         the camera. Also retrieves the ONVIF profiles.
         """
-        from aiohttp.client_exceptions import ClientConnectorError, ServerDisconnectedError
+        from aiohttp.client_exceptions import ClientConnectorError
         from homeassistant.exceptions import PlatformNotReady
         from zeep.exceptions import Fault
-        import homeassistant.util.dt as dt_util
 
         try:
             _LOGGER.debug("Updating service addresses")
-
             await self._camera.update_xaddrs()
 
-            _LOGGER.debug("Setting up the ONVIF device management service")
-
-            devicemgmt = self._camera.create_devicemgmt_service()
-
-            _LOGGER.debug("Retrieving current camera date/time")
-
-            try:
-                system_date = dt_util.utcnow()
-                device_time = await devicemgmt.GetSystemDateAndTime()
-                if device_time:
-                    cdate = device_time.UTCDateTime
-                    cam_date = dt.datetime(cdate.Date.Year, cdate.Date.Month,
-                                           cdate.Date.Day, cdate.Time.Hour,
-                                           cdate.Time.Minute, cdate.Time.Second,
-                                           0, dt_util.UTC)
-
-                    _LOGGER.debug("Camera date/time: %s",
-                                  cam_date)
-
-                    _LOGGER.debug("System date/time: %s",
-                                  system_date)
-
-                    dt_diff = cam_date - system_date
-                    dt_diff_seconds = dt_diff.total_seconds()
-
-                    if dt_diff_seconds > 5:
-                        _LOGGER.warning("The date/time on the camera is '%s', "
-                                        "which is different from the system '%s', "
-                                        "this could lead to authentication issues",
-                                        cam_date,
-                                        system_date)
-            except ServerDisconnectedError as err:
-                _LOGGER.warning("Couldn't get camera '%s' date/time. Error: %s",
-                                self._name, err)
-
-            _LOGGER.debug("Obtaining input uri")
-
+            await self.async_check_date_and_time()
             await self.async_obtain_input_uri()
-
-            _LOGGER.debug("Setting up the ONVIF PTZ service")
-
-            if self._camera.get_service('ptz', create=False) is None:
-                _LOGGER.warning("PTZ is not available on this camera")
-            else:
-                self._ptz_service = self._camera.create_ptz_service()
-                _LOGGER.debug("Completed set up of the ONVIF camera component")
+            await self.async_setup_ptz()
         except ClientConnectorError as err:
             _LOGGER.warning("Couldn't connect to camera '%s', but will "
                             "retry later. Error: %s",
@@ -213,10 +168,48 @@ class ONVIFHassCamera(Camera):
                           self._name, err)
         return
 
+    async def async_check_date_and_time(self):
+        from aiohttp.client_exceptions import ServerDisconnectedError
+        import homeassistant.util.dt as dt_util
+
+        _LOGGER.debug("Setting up the ONVIF device management service")
+        devicemgmt = self._camera.create_devicemgmt_service()
+
+        _LOGGER.debug("Retrieving current camera date/time")
+        try:
+            system_date = dt_util.utcnow()
+            device_time = await devicemgmt.GetSystemDateAndTime()
+            if device_time:
+                cdate = device_time.UTCDateTime
+                cam_date = dt.datetime(cdate.Date.Year, cdate.Date.Month,
+                                       cdate.Date.Day, cdate.Time.Hour,
+                                       cdate.Time.Minute, cdate.Time.Second,
+                                       0, dt_util.UTC)
+
+                _LOGGER.debug("Camera date/time: %s",
+                              cam_date)
+
+                _LOGGER.debug("System date/time: %s",
+                              system_date)
+
+                dt_diff = cam_date - system_date
+                dt_diff_seconds = dt_diff.total_seconds()
+
+                if dt_diff_seconds > 5:
+                    _LOGGER.warning("The date/time on the camera is '%s', "
+                                    "which is different from the system '%s', "
+                                    "this could lead to authentication issues",
+                                    cam_date,
+                                    system_date)
+        except ServerDisconnectedError as err:
+            _LOGGER.warning("Couldn't get camera '%s' date/time. Error: %s",
+                            self._name, err)
+
     async def async_obtain_input_uri(self):
         """Set the input uri for the camera."""
         from onvif import exceptions
 
+        _LOGGER.debug("Obtaining input uri")
         _LOGGER.debug("Connecting with ONVIF Camera: %s on port %s",
                       self._host, self._port)
 
@@ -261,6 +254,14 @@ class ONVIFHassCamera(Camera):
             _LOGGER.error("Couldn't setup camera '%s'. Error: %s",
                           self._name, err)
             return
+
+    async def async_setup_ptz(self):
+        _LOGGER.debug("Setting up the ONVIF PTZ service")
+        if self._camera.get_service('ptz', create=False) is None:
+            _LOGGER.warning("PTZ is not available on this camera")
+        else:
+            self._ptz_service = self._camera.create_ptz_service()
+            _LOGGER.debug("Completed set up of the ONVIF camera component")
 
     async def async_perform_ptz(self, pan, tilt, zoom):
         """Perform a PTZ action on the camera."""
