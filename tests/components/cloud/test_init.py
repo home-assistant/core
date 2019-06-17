@@ -164,6 +164,7 @@ async def test_on_connect(hass, mock_cloud_fixture):
 
     assert len(hass.states.async_entity_ids('binary_sensor')) == 0
 
+    assert 'async_setup' in str(cl.iot._on_connect[-1])
     await cl.iot._on_connect[-1]()
     await hass.async_block_till_done()
 
