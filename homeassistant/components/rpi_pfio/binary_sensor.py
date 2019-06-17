@@ -55,9 +55,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
             binary_sensors.append(RPiPFIOBinarySensor(
                 hass, port, name, settle_time, invert_logic, board))
-        add_entities(binary_sensors, True)
 
-        rpi_pfio.activate_listener(hass)
+    add_entities(binary_sensors, True)
+    rpi_pfio.activate_listener(hass)
 
 
 class RPiPFIOBinarySensor(BinarySensorDevice):
