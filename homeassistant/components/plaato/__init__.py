@@ -33,6 +33,7 @@ ATTR_CO2_VOLUME = 'co2_volume'
 ATTR_BATCH_VOLUME = 'batch_volume'
 
 SENSOR_UPDATE = '{}_sensor_update'.format(DOMAIN)
+SENSOR_DATA_KEY = '{}.{}'.format(DOMAIN, SENSOR)
 
 WEBHOOK_SCHEMA = vol.Schema({
     vol.Required(ATTR_DEVICE_NAME): cv.string,
@@ -74,6 +75,7 @@ async def async_setup_entry(hass, entry):
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
+    hass.data[SENSOR_DATA_KEY]()
 
     await hass.config_entries.async_forward_entry_unload(entry, SENSOR)
     return True

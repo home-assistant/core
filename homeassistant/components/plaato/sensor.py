@@ -8,12 +8,9 @@ from homeassistant.helpers.entity import Entity
 from . import (
     ATTR_ABV, ATTR_BATCH_VOLUME, ATTR_BPM, ATTR_CO2_VOLUME, ATTR_TEMP,
     ATTR_TEMP_UNIT, ATTR_VOLUME_UNIT, DOMAIN as PLAATO_DOMAIN,
-    PLAATO_DEVICE_ATTRS, PLAATO_DEVICE_SENSORS, SENSOR as SENSOR_DOMAIN,
-    SENSOR_UPDATE)
+    PLAATO_DEVICE_ATTRS, PLAATO_DEVICE_SENSORS, SENSOR_DATA_KEY, SENSOR_UPDATE)
 
 _LOGGER = logging.getLogger(__name__)
-
-DATA_KEY = '{}.{}'.format(PLAATO_DOMAIN, SENSOR_DOMAIN)
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -50,7 +47,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             for entity in devices[device_id]:
                 entity.async_schedule_update_ha_state()
 
-    hass.data[DATA_KEY] = async_dispatcher_connect(
+    hass.data[SENSOR_DATA_KEY] = async_dispatcher_connect(
         hass, SENSOR_UPDATE, _update_sensor
     )
 
