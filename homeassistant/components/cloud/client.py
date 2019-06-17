@@ -214,7 +214,7 @@ class CloudClient(Interface):
         """Initialize the client."""
         self.cloud = cloud
 
-        if self.alexa_config.should_report_state:
+        if self.alexa_config.should_report_state and self.cloud.is_logged_in:
             await self.alexa_config.async_enable_proactive_mode()
 
     async def cleanups(self) -> None:
