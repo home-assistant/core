@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             initial_state = port_entity[ATTR_INITIAL_STATE]
             switches.append(RPiPFIOSwitch(port, name, invert_logic,
                                           initial_state, board))
-        add_entities(switches)
+    add_entities(switches)
 
 
 class RPiPFIOSwitch(ToggleEntity):
