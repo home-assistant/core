@@ -146,7 +146,7 @@ class ONVIFHassCamera(Camera):
         Initializes the camera by obtaining the input uri and connecting to
         the camera. Also retrieves the ONVIF profiles.
         """
-        from aiohttp.client_exceptions import ClientConnectorError
+        from aiohttp.client_exceptions import ClientConnectorError, ServerDisconnectedError
         from homeassistant.exceptions import PlatformNotReady
         from zeep.exceptions import Fault
         import homeassistant.util.dt as dt_util
@@ -162,30 +162,34 @@ class ONVIFHassCamera(Camera):
 
             _LOGGER.debug("Retrieving current camera date/time")
 
-            system_date = dt_util.utcnow()
-            device_time = await devicemgmt.GetSystemDateAndTime()
-            if device_time:
-                cdate = device_time.UTCDateTime
-                cam_date = dt.datetime(cdate.Date.Year, cdate.Date.Month,
-                                       cdate.Date.Day, cdate.Time.Hour,
-                                       cdate.Time.Minute, cdate.Time.Second,
-                                       0, dt_util.UTC)
+            try:
+                system_date = dt_util.utcnow()
+                device_time = await devicemgmt.GetSystemDateAndTime()
+                if device_time:
+                    cdate = device_time.UTCDateTime
+                    cam_date = dt.datetime(cdate.Date.Year, cdate.Date.Month,
+                                           cdate.Date.Day, cdate.Time.Hour,
+                                           cdate.Time.Minute, cdate.Time.Second,
+                                           0, dt_util.UTC)
 
-                _LOGGER.debug("Camera date/time: %s",
-                              cam_date)
+                    _LOGGER.debug("Camera date/time: %s",
+                                  cam_date)
 
-                _LOGGER.debug("System date/time: %s",
-                              system_date)
+                    _LOGGER.debug("System date/time: %s",
+                                  system_date)
 
-                dt_diff = cam_date - system_date
-                dt_diff_seconds = dt_diff.total_seconds()
+                    dt_diff = cam_date - system_date
+                    dt_diff_seconds = dt_diff.total_seconds()
 
-                if dt_diff_seconds > 5:
-                    _LOGGER.warning("The date/time on the camera is '%s', "
-                                    "which is different from the system '%s', "
-                                    "this could lead to authentication issues",
-                                    cam_date,
-                                    system_date)
+                    if dt_diff_seconds > 5:
+                        _LOGGER.warning("The date/time on the camera is '%s', "
+                                        "which is different from the system '%s', "
+                                        "this could lead to authentication issues",
+                                        cam_date,
+                                        system_date)
+            except ServerDisconnectedError as err:
+                _LOGGER.warning("Couldn't get camera '%s' date/time. Error: %s",
+                                self._name, err)
 
             _LOGGER.debug("Obtaining input uri")
 
