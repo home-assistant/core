@@ -56,6 +56,7 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
         self.context['title_placeholders'] = {
             'name': self._name
         }
+        self.context['name'] = self._name
 
         # Only show authentication step if device uses password
         if device_info.uses_password:
@@ -98,9 +99,11 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
                     already_configured = data.device_info.name == node_name
 
             if already_configured:
-                return self.async_abort(
-                    reason='already_configured'
-                )
+                return self.async_abort(reason='already_configured')
+
+        for flow in self._async_in_progress():
+            if flow['context']['name'] == node_name:
+                return self.async_abort(reason='already_configured')
 
         return await self._async_authenticate_or_add(user_input={
             'host': address,
