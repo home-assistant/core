@@ -18,8 +18,9 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Set up the Genius Hub sensor entities."""
     client = hass.data[DOMAIN]['client']
 
+    devices = [d for d in client.hub.device_objs if d.type is not None]
     switches = [GeniusBinarySensor(client, d)
-                for d in client.hub.device_objs if d.type[:21] in GH_IS_SWITCH]
+                for d in devices if d.type[:21] in GH_IS_SWITCH]
 
     async_add_entities(switches)
 
