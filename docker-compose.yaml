@@ -1,7 +1,7 @@
 version: '3'
 services:
   server:
-    image: homeassistant/home-assistant
+    build: virtualization/Docker
     ports:
       - "8123:8123"
     volumes:
