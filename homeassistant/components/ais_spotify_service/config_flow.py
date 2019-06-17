@@ -1,19 +1,91 @@
 """Config flow to configure the AIS Spotify Service component."""
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import callback
+from homeassistant.components.http.view import HomeAssistantView
+import aiohttp
+import logging
 from .const import DOMAIN
-G_AUTH_URL = None
+G_SPOTIFY_AUTH_URL = None
+_LOGGER = logging.getLogger(__name__)
+
+IP_CALLBACK_PATH = '/api/ais_spotify_service/ip'
+IP_CALLBACK_NAME = 'ais_spotify_service:ip'
+AUTH_CALLBACK_PATH = '/api/ais_spotify_service/authorize'
+AUTH_CALLBACK_NAME = 'ais_spotify_service:authorize'
 
 
 def setUrl(url):
-    global G_AUTH_URL
-    G_AUTH_URL = url
+    global G_SPOTIFY_AUTH_URL
+    G_SPOTIFY_AUTH_URL = url
 
 @callback
 def configured_service(hass):
     """Return a set of the configured hosts."""
     return set('spotify' for entry in hass.config_entries.async_entries(DOMAIN))
+
+
+class AuthorizationCallbackView(HomeAssistantView):
+    """Handle callback with tokens."""
+
+    requires_auth = False
+    url = AUTH_CALLBACK_PATH
+    name = AUTH_CALLBACK_NAME
+
+    async def get(self, request):
+        hass = request.app['hass']
+
+        try:
+            hass.async_create_task(
+                hass.config_entries.flow.async_configure(
+                    flow_id=request.query['flow_id'],
+                    user_input="ok",
+                ))
+            return aiohttp.web_response.Response(
+                headers={
+                    'content-type': 'text/html'
+                },
+                text="<script>window.close()</script>"
+            )
+        except data_entry_flow.UnknownFlow:
+            return aiohttp.web_response.Response(
+                text="Unknown flow"
+            )
+
+
+class GetIpCallbackView(HomeAssistantView):
+    """Handle callback."""
+
+    requires_auth = False
+    url = IP_CALLBACK_PATH
+    name = IP_CALLBACK_NAME
+
+    async def get(self, request):
+        global G_SPOTIFY_AUTH_URL
+        hass = request.app['hass']
+        # remember the REAL_IP
+        real_ip = request.url.host
+        flow_id = request.query['flow_id']
+        _LOGGER.error(str(type(G_SPOTIFY_AUTH_URL)))
+        G_SPOTIFY_AUTH_URL.replace("real_ip_place", real_ip)
+        G_SPOTIFY_AUTH_URL.replace("flow_id_place", flow_id)
+        try:
+            hass.async_create_task(
+                hass.config_entries.flow.async_configure(
+                    flow_id=flow_id,
+                    user_input="ok",
+                ))
+
+            return aiohttp.web_response.Response(
+                headers={
+                    'content-type': 'text/html'
+                },
+                text="<script>window.close()</script>"
+            )
+        except data_entry_flow.UnknownFlow:
+            return aiohttp.web_response.Response(
+                text="Unknown flow"
+            )
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -54,18 +126,48 @@ class SpotifyFlowHandler(config_entries.ConfigFlow):
         """Handle a flow start."""
         errors = {}
         if user_input is not None:
-            return self.async_create_entry(
-                title="Dostęp do Spotify",
-                data=user_input
+            # return self.async_create_entry(
+            #     title="Dostęp do Spotify",
+            #     data=user_input
+            # )
+            _LOGGER.error("flow_id: " + str(self.flow_id))
+            _LOGGER.error("G_SPOTIFY_AUTH_URL " + G_SPOTIFY_AUTH_URL)
+            # self.hass.http.register_view(AuthorizationCallbackView)
+            self.hass.http.register_view(GetIpCallbackView)
+            return self.async_external_step(
+                step_id='ip',
+                url=IP_CALLBACK_PATH + "?flow_id={}".format(self.flow_id),
             )
+        # /api/ais_spotify_service/authorize?flow_id={}".format(self.flow_id)
 
         return self.async_show_form(
             step_id='init',
             errors=errors,
             description_placeholders={
-                'auth_url': G_AUTH_URL,
+                'auth_url': G_SPOTIFY_AUTH_URL,
             },
         )
 
+    async def async_step_ip(self, user_input=None):
+        """Received code for authentication."""
+        return self.async_external_step(
+            step_id='auth',
+            url=IP_CALLBACK_PATH + "?flow_id={}".format(self.flow_id),
+        )
 
+    async def async_step_auth(self, user_input=None):
+        """Received code for authentication."""
+        # Flow has been triggered from AIS-dom website
+        if user_input == "ok":
+            return self.async_external_step_done(next_step_id="creation")
+        return self.async_external_step(
+            step_id='auth',
+            url=G_SPOTIFY_AUTH_URL,
+        )
 
+    async def async_step_creation(self, user_input=None):
+        _LOGGER.info('Successfully authenticated Spotify')
+        return self.async_create_entry(
+            title="Dostęp do Spotify",
+            data=user_input
+        )

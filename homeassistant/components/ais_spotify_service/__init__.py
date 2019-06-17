@@ -81,8 +81,11 @@ def async_setup(hass, config):
     _LOGGER.info("take gate_id")
     gate_id = ais_global.get_sercure_android_id_dom()
     _LOGGER.info("gate_id: " + str(gate_id))
-    oauth = spotipy.oauth2.SpotifyOAuth(spotify_client_id, spotify_client_secret, spotify_redirect_url,
-                                        scope=spotify_scope, cache_path=cache, state=gate_id)
+
+    oauth = spotipy.oauth2.SpotifyOAuth(
+        spotify_client_id, spotify_client_secret, spotify_redirect_url, scope=spotify_scope, cache_path=cache,
+        state={"gate_id": gate_id, "real_ip": "real_ip_place", "flow_id": "flow_id_place"})
+
     setUrl(oauth.get_authorize_url())
     token_info = oauth.get_cached_token()
     if not token_info:
@@ -130,6 +133,7 @@ async def async_setup_entry(hass, config_entry):
     # setup the Spotify
     if AIS_SPOTIFY_TOKEN is None:
         await async_setup(hass, hass.config)
+
     return True
 
 
