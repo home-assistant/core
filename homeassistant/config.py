@@ -747,7 +747,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> Optional[str]:
     """
     import homeassistant.helpers.check_config as check_config
 
-    res = await check_config.async_check_ha_config_file(hass)  # type: ignore
+    res = await check_config.async_check_ha_config_file(hass)
 
     if not res.errors:
         return None
