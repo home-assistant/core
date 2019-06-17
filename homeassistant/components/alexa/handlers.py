@@ -87,7 +87,9 @@ async def async_api_accept_grant(hass, config, directive, context):
 
     if config.supports_auth:
         await config.async_accept_grant(auth_code)
-        await async_enable_proactive_mode(hass, config)
+
+        if config.should_report_state:
+            await async_enable_proactive_mode(hass, config)
 
     return directive.response(
         name='AcceptGrant.Response',

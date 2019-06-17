@@ -3,7 +3,7 @@
   "name": "Cloud",
   "documentation": "https://www.home-assistant.io/components/cloud",
   "requirements": [
-    "hass-nabucasa==0.14"
+    "hass-nabucasa==0.15"
   ],
   "dependencies": [
     "http",

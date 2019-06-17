@@ -670,6 +670,7 @@ hangups==0.4.9
 # homeassistant.components.cloud
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 hass-nabucasa==0.13
 <<<<<<< HEAD
 >>>>>>> Update hass-nabucasa (#24197)
@@ -682,6 +683,9 @@ hass-nabucasa==0.14
 # homeassistant.components.mqtt.server
 =======
 hass-nabucasa==0.14
+=======
+hass-nabucasa==0.15
+>>>>>>> Cloud: Add Alexa report state (#24536)
 
 # homeassistant.components.mqtt
 >>>>>>> Update hass-nabucasa to 0.14 (#24481)
