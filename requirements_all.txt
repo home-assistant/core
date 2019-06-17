@@ -584,9 +584,18 @@ gearbest_parser==1.0.7
 # homeassistant.components.sensor.geizhals
 geizhals==0.0.9
 
+<<<<<<< HEAD
 # homeassistant.components.geo_location.geo_json_events
 # homeassistant.components.geo_location.nsw_rural_fire_service_feed
 # homeassistant.components.geo_location.usgs_earthquakes_feed
+=======
+# homeassistant.components.geniushub
+geniushub-client==0.4.12
+
+# homeassistant.components.geo_json_events
+# homeassistant.components.nsw_rural_fire_service_feed
+# homeassistant.components.usgs_earthquakes_feed
+>>>>>>> Fix geniushub issue #24530 (via a client bump) & handle edge cases (#24546)
 geojson_client==0.3
 
 <<<<<<< HEAD
