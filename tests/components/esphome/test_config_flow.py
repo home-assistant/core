@@ -281,3 +281,30 @@ async def test_discovery_already_configured_name(hass, mock_client):
     result = await flow.async_step_zeroconf(user_input=service_info)
     assert result['type'] == 'abort'
     assert result['reason'] == 'already_configured'
+
+
+async def test_discovery_duplicate_data(hass, mock_client):
+    """Test discovery aborts if same mDNS packet arrives."""
+    service_info = {
+        'host': '192.168.43.183',
+        'port': 6053,
+        'hostname': 'test8266.local.',
+        'properties': {
+            "address": "test8266.local"
+        }
+    }
+
+    mock_client.device_info.return_value = mock_coro(
+        MockDeviceInfo(False, "test8266"))
+
+    result = await hass.config_entries.flow.async_init(
+        'esphome', data=service_info, context={'source': 'zeroconf'}
+    )
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'discovery_confirm'
+
+    result = await hass.config_entries.flow.async_init(
+        'esphome', data=service_info, context={'source': 'zeroconf'}
+    )
+    assert result['type'] == 'abort'
+    assert result['reason'] == 'already_configured'
