@@ -2,4 +2,6 @@
 
 umask 0000
 
-python -m homeassistant --config /config
+mkdir -p /usr/src/app/config
+
+python -m homeassistant --config /usr/src/app/config

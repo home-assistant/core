@@ -5,5 +5,4 @@ services:
     ports:
       - "8123:8123"
     volumes:
-      - ./config:/config
       - .:/usr/src/app
