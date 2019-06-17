@@ -25,6 +25,7 @@ class AlexaConfig(AbstractConfig):
 
     def __init__(self, hass, config):
         """Initialize Alexa config."""
+        super().__init__(hass)
         self._config = config
 
         if config.get(CONF_CLIENT_ID) and config.get(CONF_CLIENT_SECRET):
@@ -36,6 +37,11 @@ class AlexaConfig(AbstractConfig):
     @property
     def supports_auth(self):
         """Return if config supports auth."""
+        return self._auth is not None
+
+    @property
+    def should_report_state(self):
+        """Return if we should proactively report states."""
         return self._auth is not None
 
     @property
@@ -73,7 +79,7 @@ async def async_setup(hass, config):
     smart_home_config = AlexaConfig(hass, config)
     hass.http.register_view(SmartHomeView(smart_home_config))
 
-    if smart_home_config.supports_auth:
+    if smart_home_config.should_report_state:
         await async_enable_proactive_mode(hass, smart_home_config)
 
 

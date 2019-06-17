@@ -21,22 +21,21 @@ async def async_enable_proactive_mode(hass, smart_home_config):
 
     Proactive mode makes this component report state changes to Alexa.
     """
-    if smart_home_config.async_get_access_token is None:
-        # no function to call to get token
-        return
-
     if await smart_home_config.async_get_access_token() is None:
         # not ready yet
         return
 
     async def async_entity_state_listener(changed_entity, old_state,
                                           new_state):
-        if not smart_home_config.should_expose(changed_entity):
-            _LOGGER.debug("Not exposing %s because filtered by config",
-                          changed_entity)
+        if not new_state:
             return
 
         if new_state.domain not in ENTITY_ADAPTERS:
+            return
+
+        if not smart_home_config.should_expose(changed_entity):
+            _LOGGER.debug("Not exposing %s because filtered by config",
+                          changed_entity)
             return
 
         alexa_changed_entity = \
@@ -49,7 +48,7 @@ async def async_enable_proactive_mode(hass, smart_home_config):
                                                       alexa_changed_entity)
                 return
 
-    hass.helpers.event.async_track_state_change(
+    return hass.helpers.event.async_track_state_change(
         MATCH_ALL, async_entity_state_listener
     )
 
@@ -94,7 +93,7 @@ async def async_send_changereport_message(hass, config, alexa_entity):
                                           allow_redirects=True)
 
     except (asyncio.TimeoutError, aiohttp.ClientError):
-        _LOGGER.error("Timeout calling LWA to get auth token.")
+        _LOGGER.error("Timeout sending report to Alexa.")
         return None
 
     response_text = await response.text()
