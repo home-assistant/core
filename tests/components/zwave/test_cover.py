@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 from homeassistant.components.cover import SUPPORT_OPEN, SUPPORT_CLOSE
 from homeassistant.components.zwave import (
-    const, cover, CONF_INVERT_OPENCLOSE_BUTTONS)
+    const, cover, CONF_INVERT_OPENCLOSE_BUTTONS, CONF_INVERT_PERCENT)
 
 from tests.mock.zwave import (
     MockNode, MockValue, MockEntityValues, value_changed)
@@ -138,6 +138,34 @@ def test_roller_commands(hass, mock_openzwave):
     device.stop_cover()
     assert mock_network.manager.releaseButton.called
     value_id, = mock_network.manager.releaseButton.mock_calls.pop(0)[1]
+    assert value_id == open_value.value_id
+
+
+def test_roller_invert_percent(hass, mock_openzwave):
+    """Test position changed."""
+    mock_network = hass.data[const.DATA_NETWORK] = MagicMock()
+    node = MockNode()
+    value = MockValue(data=50, node=node,
+                      command_class=const.COMMAND_CLASS_SWITCH_MULTILEVEL)
+    open_value = MockValue(data=False, node=node)
+    close_value = MockValue(data=False, node=node)
+    values = MockEntityValues(primary=value, open=open_value,
+                              close=close_value, node=node)
+    device = cover.get_device(
+        hass=hass,
+        node=node,
+        values=values,
+        node_config={CONF_INVERT_PERCENT: True})
+
+    device.set_cover_position(position=25)
+    assert node.set_dimmer.called
+    value_id, brightness = node.set_dimmer.mock_calls[0][1]
+    assert value_id == value.value_id
+    assert brightness == 75
+
+    device.open_cover()
+    assert mock_network.manager.pressButton.called
+    value_id, = mock_network.manager.pressButton.mock_calls.pop(0)[1]
     assert value_id == open_value.value_id
 
 
