@@ -11,7 +11,7 @@ from homeassistant.const import (
     SERVICE_CLOSE_COVER_TILT, SERVICE_OPEN_COVER, SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION, SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER, STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE,
-    STATE_UNKNOWN)
+    SERVICE_TOGGLE, SERVICE_TOGGLE_COVER_TILT, STATE_UNKNOWN)
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -173,6 +173,26 @@ async def test_optimistic_state_change(hass, mqtt_mock):
     await hass.services.async_call(
         cover.DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: 'cover.test'},
         blocking=True)
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        'command-topic', 'CLOSE', 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get('cover.test')
+    assert STATE_CLOSED == state.state
+
+    await hass.services.async_call(
+        cover.DOMAIN, SERVICE_TOGGLE,
+        {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        'command-topic', 'OPEN', 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get('cover.test')
+    assert STATE_OPEN == state.state
+
+    await hass.services.async_call(
+        cover.DOMAIN, SERVICE_TOGGLE,
+        {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
 
     mqtt_mock.async_publish.assert_called_once_with(
         'command-topic', 'CLOSE', 0, False)
@@ -534,6 +554,36 @@ async def test_tilt_via_invocation_defaults(hass, mqtt_mock):
 
     mqtt_mock.async_publish.assert_called_once_with(
         'tilt-command-topic', 0, 0, False)
+    mqtt_mock.async_publish.reset_mock()
+
+    # Close tilt status would be received from device when non-optimistic
+    async_fire_mqtt_message(hass, 'tilt-status-topic', '0')
+
+    current_cover_tilt_position = hass.states.get(
+        'cover.test').attributes['current_tilt_position']
+    assert current_cover_tilt_position == 0
+
+    await hass.services.async_call(
+        cover.DOMAIN, SERVICE_TOGGLE_COVER_TILT,
+        {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        'tilt-command-topic', 100, 0, False)
+    mqtt_mock.async_publish.reset_mock()
+
+    # Open tilt status would be received from device when non-optimistic
+    async_fire_mqtt_message(hass, 'tilt-status-topic', '100')
+
+    current_cover_tilt_position = hass.states.get(
+        'cover.test').attributes['current_tilt_position']
+    assert current_cover_tilt_position == 100
+
+    await hass.services.async_call(
+        cover.DOMAIN, SERVICE_TOGGLE_COVER_TILT,
+        {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        'tilt-command-topic', 0, 0, False)
 
 
 async def test_tilt_given_value(hass, mqtt_mock):
@@ -550,25 +600,157 @@ async def test_tilt_given_value(hass, mqtt_mock):
             'payload_stop': 'STOP',
             'tilt_command_topic': 'tilt-command-topic',
             'tilt_status_topic': 'tilt-status-topic',
-            'tilt_opened_value': 400,
-            'tilt_closed_value': 125
+            'tilt_opened_value': 80,
+            'tilt_closed_value': 25
         }
     })
 
     await hass.services.async_call(
-        cover.DOMAIN, SERVICE_OPEN_COVER_TILT, {ATTR_ENTITY_ID: 'cover.test'},
-        blocking=True)
+        cover.DOMAIN, SERVICE_OPEN_COVER_TILT,
+        {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
 
     mqtt_mock.async_publish.assert_called_once_with(
-        'tilt-command-topic', 400, 0, False)
+        'tilt-command-topic', 80, 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        cover.DOMAIN, SERVICE_CLOSE_COVER_TILT, {ATTR_ENTITY_ID: 'cover.test'},
-        blocking=True)
+        cover.DOMAIN, SERVICE_CLOSE_COVER_TILT,
+        {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
 
     mqtt_mock.async_publish.assert_called_once_with(
-        'tilt-command-topic', 125, 0, False)
+        'tilt-command-topic', 25, 0, False)
+    mqtt_mock.async_publish.reset_mock()
+
+    # Close tilt status would be received from device when non-optimistic
+    async_fire_mqtt_message(hass, 'tilt-status-topic', '25')
+
+    current_cover_tilt_position = hass.states.get(
+        'cover.test').attributes['current_tilt_position']
+    assert current_cover_tilt_position == 25
+
+    await hass.services.async_call(
+        cover.DOMAIN, SERVICE_TOGGLE_COVER_TILT,
+        {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        'tilt-command-topic', 80, 0, False)
+    mqtt_mock.async_publish.reset_mock()
+
+    # Open tilt status would be received from device when non-optimistic
+    async_fire_mqtt_message(hass, 'tilt-status-topic', '80')
+
+    current_cover_tilt_position = hass.states.get(
+        'cover.test').attributes['current_tilt_position']
+    assert current_cover_tilt_position == 80
+
+    await hass.services.async_call(
+        cover.DOMAIN, SERVICE_TOGGLE_COVER_TILT,
+        {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        'tilt-command-topic', 25, 0, False)
+
+
+async def test_tilt_given_value_optimistic(hass, mqtt_mock):
+    """Test tilting to a given value."""
+    assert await async_setup_component(hass, cover.DOMAIN, {
+        cover.DOMAIN: {
+            'platform': 'mqtt',
+            'name': 'test',
+            'state_topic': 'state-topic',
+            'command_topic': 'command-topic',
+            'qos': 0,
+            'payload_open': 'OPEN',
+            'payload_close': 'CLOSE',
+            'payload_stop': 'STOP',
+            'tilt_command_topic': 'tilt-command-topic',
+            'tilt_status_topic': 'tilt-status-topic',
+            'tilt_opened_value': 80,
+            'tilt_closed_value': 25,
+            'tilt_optimistic': True
+        }
+    })
+
+    await hass.services.async_call(
+        cover.DOMAIN, SERVICE_OPEN_COVER_TILT,
+        {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+
+    current_cover_tilt_position = hass.states.get(
+        'cover.test').attributes['current_tilt_position']
+    assert current_cover_tilt_position == 80
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        'tilt-command-topic', 80, 0, False)
+    mqtt_mock.async_publish.reset_mock()
+
+    await hass.services.async_call(
+        cover.DOMAIN, SERVICE_CLOSE_COVER_TILT,
+        {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+
+    current_cover_tilt_position = hass.states.get(
+        'cover.test').attributes['current_tilt_position']
+    assert current_cover_tilt_position == 25
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        'tilt-command-topic', 25, 0, False)
+
+
+async def test_tilt_given_value_altered_range(hass, mqtt_mock):
+    """Test tilting to a given value."""
+    assert await async_setup_component(hass, cover.DOMAIN, {
+        cover.DOMAIN: {
+            'platform': 'mqtt',
+            'name': 'test',
+            'state_topic': 'state-topic',
+            'command_topic': 'command-topic',
+            'qos': 0,
+            'payload_open': 'OPEN',
+            'payload_close': 'CLOSE',
+            'payload_stop': 'STOP',
+            'tilt_command_topic': 'tilt-command-topic',
+            'tilt_status_topic': 'tilt-status-topic',
+            'tilt_opened_value': 25,
+            'tilt_closed_value': 0,
+            'tilt_min': 0,
+            'tilt_max': 50,
+            'tilt_optimistic': True
+        }
+    })
+
+    await hass.services.async_call(
+        cover.DOMAIN, SERVICE_OPEN_COVER_TILT,
+        {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+
+    current_cover_tilt_position = hass.states.get(
+        'cover.test').attributes['current_tilt_position']
+    assert current_cover_tilt_position == 50
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        'tilt-command-topic', 25, 0, False)
+    mqtt_mock.async_publish.reset_mock()
+
+    await hass.services.async_call(
+        cover.DOMAIN, SERVICE_CLOSE_COVER_TILT,
+        {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+
+    current_cover_tilt_position = hass.states.get(
+        'cover.test').attributes['current_tilt_position']
+    assert current_cover_tilt_position == 0
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        'tilt-command-topic', 0, 0, False)
+    mqtt_mock.async_publish.reset_mock()
+
+    await hass.services.async_call(
+        cover.DOMAIN, SERVICE_TOGGLE_COVER_TILT,
+        {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+
+    current_cover_tilt_position = hass.states.get(
+        'cover.test').attributes['current_tilt_position']
+    assert current_cover_tilt_position == 50
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        'tilt-command-topic', 25, 0, False)
 
 
 async def test_tilt_via_topic(hass, mqtt_mock):
@@ -584,9 +766,7 @@ async def test_tilt_via_topic(hass, mqtt_mock):
             'payload_close': 'CLOSE',
             'payload_stop': 'STOP',
             'tilt_command_topic': 'tilt-command-topic',
-            'tilt_status_topic': 'tilt-status-topic',
-            'tilt_opened_value': 400,
-            'tilt_closed_value': 125
+            'tilt_status_topic': 'tilt-status-topic'
         }
     })
 
@@ -650,8 +830,6 @@ async def test_tilt_via_topic_altered_range(hass, mqtt_mock):
             'payload_stop': 'STOP',
             'tilt_command_topic': 'tilt-command-topic',
             'tilt_status_topic': 'tilt-status-topic',
-            'tilt_opened_value': 400,
-            'tilt_closed_value': 125,
             'tilt_min': 0,
             'tilt_max': 50
         }
@@ -730,9 +908,7 @@ async def test_tilt_position(hass, mqtt_mock):
             'payload_close': 'CLOSE',
             'payload_stop': 'STOP',
             'tilt_command_topic': 'tilt-command-topic',
-            'tilt_status_topic': 'tilt-status-topic',
-            'tilt_opened_value': 400,
-            'tilt_closed_value': 125
+            'tilt_status_topic': 'tilt-status-topic'
         }
     })
 
