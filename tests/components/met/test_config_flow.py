@@ -1,7 +1,7 @@
 """Tests for Met.no config flow."""
 from unittest.mock import Mock, patch
 
-from tests.common import mock_coro
+from tests.common import MockConfigEntry, mock_coro
 
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.components.met import config_flow
@@ -105,8 +105,13 @@ async def test_flow_entry_config_entry_already_exists():
     in the config gui. Then the form should show with error
     """
     hass = Mock()
+
     flow = config_flow.MetFlowHandler()
     flow.hass = hass
+
+    first_entry = MockConfigEntry(domain='met')
+    first_entry.data['name'] = 'home'
+    first_entry.add_to_hass(hass)
 
     test_data = {
         'name': 'home',
@@ -115,12 +120,11 @@ async def test_flow_entry_config_entry_already_exists():
         CONF_ELEVATION: '0'
     }
 
-    # Test that entry created when user_input name not exists
     with \
         patch.object(flow, '_show_config_form',
                      return_value=mock_coro()) as config_form,\
         patch.object(flow.hass.config_entries, 'async_entries',
-                     return_value={'home': test_data}) as config_entries:
+                     return_value=[first_entry]) as config_entries:
 
         await flow.async_step_user(user_input=test_data)
 
