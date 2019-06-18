@@ -223,7 +223,7 @@ class SendKeys(LcnServiceCall):
 
     schema = LcnServiceCall.schema.extend({
         vol.Required(CONF_KEYS): vol.All(
-            vol.Upper, cv.matches_regex(r'^([a-dA-D][1-8])+$')),
+            vol.Upper, cv.matches_regex(r'^([A-D][1-8])+$')),
         vol.Optional(CONF_STATE, default='hit'):
             vol.All(vol.Upper, vol.In(SENDKEYCOMMANDS)),
         vol.Optional(CONF_TIME, default=0): vol.All(int, vol.Range(min=0)),
@@ -266,7 +266,8 @@ class LockKeys(LcnServiceCall):
     """Lock keys."""
 
     schema = LcnServiceCall.schema.extend({
-        vol.Optional(CONF_TABLE, default='a'): cv.matches_regex(r'^[a-dA-D]$'),
+        vol.Optional(CONF_TABLE, default='a'): vol.All(
+            vol.Upper, cv.matches_regex(r'^[A-D]$'),
         vol.Required(CONF_STATE): is_key_lock_states_string,
         vol.Optional(CONF_TIME, default=0): vol.All(int, vol.Range(min=0)),
         vol.Optional(CONF_TIME_UNIT, default='s'): vol.All(vol.Upper,
