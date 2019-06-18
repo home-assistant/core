@@ -37,7 +37,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     time_delta = config.get(CONF_TIME_DELTA)
     only_direct = config.get(CONF_ONLY_DIRECT)
 
-    add_entities([DeutscheBahnSensor(start, destination, time_delta, only_direct)], True)
+    add_entities([DeutscheBahnSensor(start, destination,
+                                     time_delta, only_direct)], True)
 
 
 class DeutscheBahnSensor(Entity):
@@ -99,7 +100,8 @@ class SchieneData:
     def update(self):
         """Update the connection data."""
         self.connections = self.schiene.connections(
-            self.start, self.goal, dt_util.as_local(dt_util.utcnow())+self.time_delta,
+            self.start, self.goal,
+            dt_util.as_local(dt_util.utcnow())+self.time_delta,
             self.only_direct)
 
         if not self.connections:
