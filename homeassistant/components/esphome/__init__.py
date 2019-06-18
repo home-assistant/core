@@ -6,14 +6,14 @@ from typing import Any, Callable, Dict, List, Optional
 
 from aioesphomeapi import (
     APIClient, APIConnectionError, DeviceInfo, EntityInfo, EntityState,
-    ServiceCall, UserService, UserServiceArgType)
+    HomeassistantServiceCall, UserService, UserServiceArgType)
 import voluptuous as vol
 
 from homeassistant import const
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.core import Event, State, callback
+from homeassistant.core import Event, State, callback, EventOrigin
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
@@ -98,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistantType,
         entry_data.async_update_state(hass, state)
 
     @callback
-    def async_on_service_call(service: ServiceCall) -> None:
+    def async_on_service_call(service: HomeassistantServiceCall) -> None:
         """Call service when user automation in ESPHome config is triggered."""
         domain, service_name = service.service.split('.', 1)
         service_data = service.data
@@ -114,8 +114,17 @@ async def async_setup_entry(hass: HomeAssistantType,
                 _LOGGER.error('Error rendering data template: %s', ex)
                 return
 
-        hass.async_create_task(hass.services.async_call(
-            domain, service_name, service_data, blocking=True))
+        if service.is_event:
+            # ESPHome uses servicecall packet for both events and service calls
+            # Ensure the user can only send events of form 'esphome.xyz'
+            if domain != 'esphome':
+                raise ValueError("Can only generate events under esphome "
+                                 "domain!")
+            hass.bus.async_fire(service.service, service_data,
+                                EventOrigin.remote)
+        else:
+            hass.async_create_task(hass.services.async_call(
+                domain, service_name, service_data, blocking=True))
 
     async def send_home_assistant_state(entity_id: str, _,
                                         new_state: Optional[State]) -> None:
@@ -239,7 +248,7 @@ async def _async_setup_device_registry(hass: HomeAssistantType,
                                        entry: ConfigEntry,
                                        device_info: DeviceInfo):
     """Set up device registry feature for a particular config entry."""
-    sw_version = device_info.esphome_core_version
+    sw_version = device_info.esphome_version
     if device_info.compilation_time:
         sw_version += ' ({})'.format(device_info.compilation_time)
     device_registry = await dr.async_get_registry(hass)
@@ -266,6 +275,10 @@ async def _register_service(hass: HomeAssistantType,
             UserServiceArgType.INT: vol.Coerce(int),
             UserServiceArgType.FLOAT: vol.Coerce(float),
             UserServiceArgType.STRING: cv.string,
+            UserServiceArgType.BOOL_ARRAY: [cv.boolean],
+            UserServiceArgType.INT_ARRAY: [vol.Coerce(int)],
+            UserServiceArgType.FLOAT_ARRAY: [vol.Coerce(float)],
+            UserServiceArgType.STRING_ARRAY: [cv.string],
         }[arg.type_]
 
     async def execute_service(call):
