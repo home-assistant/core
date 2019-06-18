@@ -1,11 +1,15 @@
 """Runtime entry data for ESPHome stored in hass.data."""
 import asyncio
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Set
 
 from aioesphomeapi import (
-    COMPONENT_TYPE_TO_INFO, DeviceInfo, EntityInfo, EntityState, UserService)
+    COMPONENT_TYPE_TO_INFO, DeviceInfo, EntityInfo, EntityState, UserService,
+    BinarySensorInfo,
+    CameraInfo, ClimateInfo, CoverInfo, FanInfo, LightInfo, SensorInfo,
+    SwitchInfo, TextSensorInfo)
 import attr
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType
@@ -16,6 +20,19 @@ DISPATCHER_REMOVE_ENTITY = 'esphome_{entry_id}_remove_{component_key}_{key}'
 DISPATCHER_ON_LIST = 'esphome_{entry_id}_on_list'
 DISPATCHER_ON_DEVICE_UPDATE = 'esphome_{entry_id}_on_device_update'
 DISPATCHER_ON_STATE = 'esphome_{entry_id}_on_state'
+
+# Mapping from ESPHome info type to HA platform
+INFO_TYPE_TO_PLATFORM = {
+    BinarySensorInfo: 'binary_sensor',
+    CameraInfo: 'camera',
+    ClimateInfo: 'climate',
+    CoverInfo: 'cover',
+    FanInfo: 'fan',
+    LightInfo: 'light',
+    SensorInfo: 'sensor',
+    SwitchInfo: 'switch',
+    TextSensorInfo: 'sensor',
+}
 
 
 @attr.s
@@ -33,6 +50,8 @@ class RuntimeEntryData:
     device_info = attr.ib(type=DeviceInfo, default=None)
     cleanup_callbacks = attr.ib(type=List[Callable[[], None]], factory=list)
     disconnect_callbacks = attr.ib(type=List[Callable[[], None]], factory=list)
+    loaded_platforms = attr.ib(type=Set[str], factory=set)
+    platform_load_lock = attr.ib(type=asyncio.Lock, factory=asyncio.Lock)
 
     def async_update_entity(self, hass: HomeAssistantType, component_key: str,
                             key: int) -> None:
@@ -48,9 +67,33 @@ class RuntimeEntryData:
             entry_id=self.entry_id, component_key=component_key, key=key)
         async_dispatcher_send(hass, signal)
 
-    def async_update_static_infos(self, hass: HomeAssistantType,
-                                  infos: List[EntityInfo]) -> None:
+    async def _ensure_platforms_loaded(self, hass: HomeAssistantType,
+                                       entry: ConfigEntry,
+                                       platforms: Set[str]):
+        async with self.platform_load_lock:
+            needed = platforms - self.loaded_platforms
+            tasks = []
+            for platform in needed:
+                tasks.append(hass.config_entries.async_forward_entry_setup(
+                    entry, platform))
+            if tasks:
+                await asyncio.wait(tasks)
+            self.loaded_platforms |= needed
+
+    async def async_update_static_infos(
+            self, hass: HomeAssistantType, entry: ConfigEntry,
+            infos: List[EntityInfo]) -> None:
         """Distribute an update of static infos to all platforms."""
+        # First, load all platforms
+        needed_platforms = set()
+        for info in infos:
+            for info_type, platform in INFO_TYPE_TO_PLATFORM.items():
+                if isinstance(info, info_type):
+                    needed_platforms.add(platform)
+                    break
+        await self._ensure_platforms_loaded(hass, entry, needed_platforms)
+
+        # Then send dispatcher event
         signal = DISPATCHER_ON_LIST.format(entry_id=self.entry_id)
         async_dispatcher_send(hass, signal, infos)
 
