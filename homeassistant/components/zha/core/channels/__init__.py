@@ -14,7 +14,7 @@ from random import uniform
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from ..helpers import (
-    bind_configure_reporting, construct_unique_id,
+    configure_reporting, construct_unique_id,
     safe_read, get_attr_id_by_name, bind_cluster)
 from ..const import (
     REPORT_CONFIG_DEFAULT, SIGNAL_ATTR_UPDATED, ATTRIBUTE_CHANNEL,
@@ -137,24 +137,21 @@ class ZigbeeChannel:
         if self._zha_device.manufacturer != 'LUMI':
             if self.cluster.cluster_id >= 0xfc00 and manufacturer_code:
                 manufacturer = manufacturer_code
-            if self.cluster.bind_only:
-                await bind_cluster(self._unique_id, self.cluster)
-            else:
-                skip_bind = False  # bind cluster only for the 1st attr
+            await bind_cluster(self._unique_id, self.cluster)
+            if not self.cluster.bind_only:
                 for report_config in self._report_config:
                     attr = report_config.get('attr')
                     min_report_interval, max_report_interval, change = \
                         report_config.get('config')
-                    await bind_configure_reporting(
+                    await configure_reporting(
                         self._unique_id, self.cluster, attr,
                         min_report=min_report_interval,
                         max_report=max_report_interval,
                         reportable_change=change,
-                        skip_bind=skip_bind,
                         manufacturer=manufacturer
                     )
-                    skip_bind = True
                     await asyncio.sleep(uniform(0.1, 0.5))
+
         _LOGGER.debug(
             "%s: finished channel configuration",
             self._unique_id
