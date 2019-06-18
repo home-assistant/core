@@ -8,6 +8,7 @@
         },
         "step": {
             "hassio_confirm": {
+                "description": "W\u00ebllt dir Home Assistant konfigur\u00e9iere fir sech mam AdGuard Home ze verbannen dee vum hass.io add-on {addon} bereet gestallt g\u00ebtt?",
                 "title": "AdGuard Home via Hass.io add-on"
             },
             "user": {
@@ -19,6 +20,7 @@
                     "username": "Benotzernumm",
                     "verify_ssl": "AdGuard Home benotzt een eegenen Zertifikat"
                 },
+                "description": "Konfigur\u00e9iert \u00e4r AdGuard Home Instanz fir d'Iwwerwaachung an d'Kontroll z'erlaben.",
                 "title": "Verbannt \u00e4ren AdGuard Home"
             }
         },
