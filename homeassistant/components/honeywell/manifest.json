@@ -7,5 +7,5 @@
     "somecomfort==0.5.2"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@zxdavb"]
 }
