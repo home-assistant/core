@@ -2,9 +2,9 @@
 import pypck
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_ADDRESS, CONF_BRIGHTNESS, CONF_STATE, CONF_UNIT_OF_MEASUREMENT)
-import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_CONNECTIONS, CONF_KEYS, CONF_LED, CONF_OUTPUT, CONF_PCK,
@@ -22,7 +22,7 @@ class LcnServiceCall():
 
     schema = vol.Schema({
         vol.Required(CONF_ADDRESS): is_address
-        })
+    })
 
     def __init__(self, hass):
         """Initialize service call."""
@@ -49,7 +49,7 @@ class OutputAbs(LcnServiceCall):
             vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
         vol.Optional(CONF_TRANSITION, default=0):
             vol.All(vol.Coerce(float), vol.Range(min=0., max=486.))
-        })
+    })
 
     def __call__(self, call):
         """Execute service call."""
@@ -69,7 +69,7 @@ class OutputRel(LcnServiceCall):
         vol.Required(CONF_OUTPUT): vol.All(vol.Upper, vol.In(OUTPUT_PORTS)),
         vol.Required(CONF_BRIGHTNESS):
             vol.All(vol.Coerce(int), vol.Range(min=-100, max=100))
-        })
+    })
 
     def __call__(self, call):
         """Execute service call."""
@@ -87,7 +87,7 @@ class OutputToggle(LcnServiceCall):
         vol.Required(CONF_OUTPUT): vol.All(vol.Upper, vol.In(OUTPUT_PORTS)),
         vol.Optional(CONF_TRANSITION, default=0):
             vol.All(vol.Coerce(float), vol.Range(min=0., max=486.))
-        })
+    })
 
     def __call__(self, call):
         """Execute service call."""
@@ -145,7 +145,7 @@ class VarAbs(LcnServiceCall):
             vol.All(vol.Coerce(int), vol.Range(min=0)),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT, default='native'):
             vol.All(vol.Upper, vol.In(VAR_UNITS))
-        })
+    })
 
     def __call__(self, call):
         """Execute service call."""
@@ -164,7 +164,7 @@ class VarReset(LcnServiceCall):
     schema = LcnServiceCall.schema.extend({
         vol.Required(CONF_VARIABLE): vol.All(vol.Upper,
                                              vol.In(VARIABLES + SETPOINTS))
-        })
+    })
 
     def __call__(self, call):
         """Execute service call."""
@@ -185,7 +185,7 @@ class VarRel(LcnServiceCall):
             vol.All(vol.Upper, vol.In(VAR_UNITS)),
         vol.Optional(CONF_RELVARREF, default='current'):
             vol.All(vol.Upper, vol.In(RELVARREF))
-        })
+    })
 
     def __call__(self, call):
         """Execute service call."""
@@ -206,7 +206,7 @@ class LockRegulator(LcnServiceCall):
     schema = LcnServiceCall.schema.extend({
         vol.Required(CONF_SETPOINT): vol.All(vol.Upper, vol.In(SETPOINTS)),
         vol.Optional(CONF_STATE, default=False): bool,
-        })
+    })
 
     def __call__(self, call):
         """Execute service call."""
@@ -222,13 +222,14 @@ class SendKeys(LcnServiceCall):
     """Sends keys (which executes bound commands)."""
 
     schema = LcnServiceCall.schema.extend({
-        vol.Required(CONF_KEYS): cv.matches_regex(r'^([a-dA-D][1-8])+$'),
+        vol.Required(CONF_KEYS): vol.All(
+            vol.Upper, cv.matches_regex(r'^([A-D][1-8])+$')),
         vol.Optional(CONF_STATE, default='hit'):
             vol.All(vol.Upper, vol.In(SENDKEYCOMMANDS)),
         vol.Optional(CONF_TIME, default=0): vol.All(int, vol.Range(min=0)),
         vol.Optional(CONF_TIME_UNIT, default='s'): vol.All(vol.Upper,
                                                            vol.In(TIME_UNITS))
-        })
+    })
 
     def __call__(self, call):
         """Execute service call."""
@@ -265,12 +266,13 @@ class LockKeys(LcnServiceCall):
     """Lock keys."""
 
     schema = LcnServiceCall.schema.extend({
-        vol.Optional(CONF_TABLE, default='a'): cv.matches_regex(r'^[a-dA-D]$'),
+        vol.Optional(CONF_TABLE, default='a'): vol.All(
+            vol.Upper, cv.matches_regex(r'^[A-D]$')),
         vol.Required(CONF_STATE): is_key_lock_states_string,
         vol.Optional(CONF_TIME, default=0): vol.All(int, vol.Range(min=0)),
         vol.Optional(CONF_TIME_UNIT, default='s'): vol.All(vol.Upper,
                                                            vol.In(TIME_UNITS))
-        })
+    })
 
     def __call__(self, call):
         """Execute service call."""
@@ -301,7 +303,7 @@ class DynText(LcnServiceCall):
     schema = LcnServiceCall.schema.extend({
         vol.Required(CONF_ROW): vol.All(int, vol.Range(min=1, max=4)),
         vol.Required(CONF_TEXT): vol.All(str, vol.Length(max=60))
-        })
+    })
 
     def __call__(self, call):
         """Execute service call."""
@@ -317,7 +319,7 @@ class Pck(LcnServiceCall):
 
     schema = LcnServiceCall.schema.extend({
         vol.Required(CONF_PCK): str
-        })
+    })
 
     def __call__(self, call):
         """Execute service call."""
