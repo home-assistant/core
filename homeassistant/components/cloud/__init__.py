@@ -191,8 +191,16 @@ async def async_setup(hass, config):
     hass.helpers.service.async_register_admin_service(
         DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler)
 
+    loaded_binary_sensor = False
+
     async def _on_connect():
         """Discover RemoteUI binary sensor."""
+        nonlocal loaded_binary_sensor
+
+        if loaded_binary_sensor:
+            return
+
+        loaded_binary_sensor = True
         hass.async_create_task(hass.helpers.discovery.async_load_platform(
             'binary_sensor', DOMAIN, {}, config))
 
