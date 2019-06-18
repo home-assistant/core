@@ -101,7 +101,7 @@ class SchieneData:
         """Update the connection data."""
         self.connections = self.schiene.connections(
             self.start, self.goal,
-            dt_util.as_local(dt_util.utcnow())+self.offset,
+            dt_util.as_local(dt_util.utcnow()+self.offset),
             self.only_direct)
 
         if not self.connections:
