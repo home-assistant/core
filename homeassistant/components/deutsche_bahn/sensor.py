@@ -13,8 +13,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_DESTINATION = 'to'
 CONF_START = 'from'
-CONF_TIME_DELTA = 'offset'
-DEFAULT_TIME_DELTA = timedelta(minutes=0)
+CONF_OFFSET = 'offset'
+DEFAULT_OFFSET = timedelta(minutes=0)
 CONF_ONLY_DIRECT = 'only_direct'
 DEFAULT_ONLY_DIRECT = False
 
@@ -25,7 +25,7 @@ SCAN_INTERVAL = timedelta(minutes=2)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DESTINATION): cv.string,
     vol.Required(CONF_START): cv.string,
-    vol.Optional(CONF_TIME_DELTA, default=DEFAULT_TIME_DELTA): cv.time_period,
+    vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): cv.time_period,
     vol.Optional(CONF_ONLY_DIRECT, default=DEFAULT_ONLY_DIRECT): cv.boolean,
 })
 
@@ -34,20 +34,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Deutsche Bahn Sensor."""
     start = config.get(CONF_START)
     destination = config.get(CONF_DESTINATION)
-    time_delta = config.get(CONF_TIME_DELTA)
+    offset = config.get(CONF_OFFSET)
     only_direct = config.get(CONF_ONLY_DIRECT)
 
     add_entities([DeutscheBahnSensor(start, destination,
-                                     time_delta, only_direct)], True)
+                                     offset, only_direct)], True)
 
 
 class DeutscheBahnSensor(Entity):
     """Implementation of a Deutsche Bahn sensor."""
 
-    def __init__(self, start, goal, time_delta, only_direct):
+    def __init__(self, start, goal, offset, only_direct):
         """Initialize the sensor."""
         self._name = '{} to {}'.format(start, goal)
-        self.data = SchieneData(start, goal, time_delta, only_direct)
+        self.data = SchieneData(start, goal, offset, only_direct)
         self._state = None
 
     @property
@@ -86,13 +86,13 @@ class DeutscheBahnSensor(Entity):
 class SchieneData:
     """Pull data from the bahn.de web page."""
 
-    def __init__(self, start, goal, time_delta, only_direct):
+    def __init__(self, start, goal, offset, only_direct):
         """Initialize the sensor."""
         import schiene
 
         self.start = start
         self.goal = goal
-        self.time_delta = time_delta
+        self.offset = offset
         self.only_direct = only_direct
         self.schiene = schiene.Schiene()
         self.connections = [{}]
@@ -101,7 +101,7 @@ class SchieneData:
         """Update the connection data."""
         self.connections = self.schiene.connections(
             self.start, self.goal,
-            dt_util.as_local(dt_util.utcnow())+self.time_delta,
+            dt_util.as_local(dt_util.utcnow())+self.offset,
             self.only_direct)
 
         if not self.connections:
