@@ -32,6 +32,7 @@ FLOWS = [
     "logi_circle",
     "luftdaten",
     "mailgun",
+    "met",
     "mobile_app",
     "mqtt",
     "nest",
