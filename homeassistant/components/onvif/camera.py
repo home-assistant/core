@@ -22,6 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream)
 from homeassistant.helpers.service import extract_entity_ids
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -169,8 +170,8 @@ class ONVIFHassCamera(Camera):
         return
 
     async def async_check_date_and_time(self):
+        """Warns if camera and system date not synced."""
         from aiohttp.client_exceptions import ServerDisconnectedError
-        import homeassistant.util.dt as dt_util
 
         _LOGGER.debug("Setting up the ONVIF device management service")
         devicemgmt = self._camera.create_devicemgmt_service()
@@ -253,9 +254,9 @@ class ONVIFHassCamera(Camera):
         except exceptions.ONVIFError as err:
             _LOGGER.error("Couldn't setup camera '%s'. Error: %s",
                           self._name, err)
-            return
 
     async def async_setup_ptz(self):
+        """Setup PTZ if available."""
         _LOGGER.debug("Setting up the ONVIF PTZ service")
         if self._camera.get_service('ptz', create=False) is None:
             _LOGGER.warning("PTZ is not available on this camera")
