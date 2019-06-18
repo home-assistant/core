@@ -39,18 +39,6 @@ _LOGGER = logging.getLogger(__name__)
 STORAGE_KEY = 'esphome.{}'
 STORAGE_VERSION = 1
 
-# The HA component types this integration supports
-HA_COMPONENTS = [
-    'binary_sensor',
-    'camera',
-    'climate',
-    'cover',
-    'fan',
-    'light',
-    'sensor',
-    'switch',
-]
-
 # No config schema - only configuration entry
 CONFIG_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
@@ -144,7 +132,8 @@ async def async_setup_entry(hass: HomeAssistantType,
             entry_data.async_update_device_state(hass)
 
             entity_infos, services = await cli.list_entities_services()
-            entry_data.async_update_static_infos(hass, entity_infos)
+            await entry_data.async_update_static_infos(
+                hass, entry, entity_infos)
             await _setup_services(hass, entry_data, services)
             await cli.subscribe_states(async_on_state)
             await cli.subscribe_service_calls(async_on_service_call)
@@ -162,14 +151,8 @@ async def async_setup_entry(hass: HomeAssistantType,
 
     async def complete_setup() -> None:
         """Complete the config entry setup."""
-        tasks = []
-        for component in HA_COMPONENTS:
-            tasks.append(hass.config_entries.async_forward_entry_setup(
-                entry, component))
-        await asyncio.wait(tasks)
-
         infos, services = await entry_data.async_load_from_store()
-        entry_data.async_update_static_infos(hass, infos)
+        await entry_data.async_update_static_infos(hass, entry, infos)
         await _setup_services(hass, entry_data, services)
 
         # Create connection attempt outside of HA's tracked task in order
@@ -308,7 +291,7 @@ async def _setup_services(hass: HomeAssistantType,
 
 
 async def _cleanup_instance(hass: HomeAssistantType,
-                            entry: ConfigEntry) -> None:
+                            entry: ConfigEntry) -> RuntimeEntryData:
     """Cleanup the esphome client if it exists."""
     data = hass.data[DATA_KEY].pop(entry.entry_id)  # type: RuntimeEntryData
     if data.reconnect_task is not None:
@@ -318,19 +301,19 @@ async def _cleanup_instance(hass: HomeAssistantType,
     for cleanup_callback in data.cleanup_callbacks:
         cleanup_callback()
     await data.client.disconnect()
+    return data
 
 
 async def async_unload_entry(hass: HomeAssistantType,
                              entry: ConfigEntry) -> bool:
     """Unload an esphome config entry."""
-    await _cleanup_instance(hass, entry)
-
+    entry_data = await _cleanup_instance(hass, entry)
     tasks = []
-    for component in HA_COMPONENTS:
+    for platform in entry_data.loaded_platforms:
         tasks.append(hass.config_entries.async_forward_entry_unload(
-            entry, component))
-    await asyncio.wait(tasks)
-
+            entry, platform))
+    if tasks:
+        await asyncio.wait(tasks)
     return True
 
 
