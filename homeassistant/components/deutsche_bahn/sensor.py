@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_DESTINATION = 'to'
 CONF_START = 'from'
-CONF_TIME_DELTA = 'in'
+CONF_TIME_DELTA = 'offset'
 DEFAULT_TIME_DELTA = timedelta(minutes=0)
 CONF_ONLY_DIRECT = 'only_direct'
 DEFAULT_ONLY_DIRECT = False
