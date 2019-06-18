@@ -1917,8 +1917,16 @@ solaredge==0.0.2
 # homeassistant.components.climate.honeywell
 somecomfort==0.5.2
 
+<<<<<<< HEAD
 # homeassistant.components.sensor.speedtest
 speedtest-cli==2.0.2
+=======
+# homeassistant.components.somfy_mylink
+somfy-mylink-synergy==1.0.6
+
+# homeassistant.components.speedtestdotnet
+speedtest-cli==2.1.1
+>>>>>>> Bump base Somfy MyLink library version (#24587)
 
 # homeassistant.components.spider
 spiderpy==1.2.0
