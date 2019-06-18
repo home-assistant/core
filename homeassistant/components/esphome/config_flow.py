@@ -49,8 +49,8 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
 
     @_name.setter
     def _name(self, value):
-        self.context['name'] = value
         # pylint: disable=unsupported-assignment-operation
+        self.context['name'] = value
         self.context['title_placeholders'] = {
             'name': self._name
         }
