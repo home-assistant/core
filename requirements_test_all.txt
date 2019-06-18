@@ -48,7 +48,7 @@ aioautomatic==0.6.5
 aiobotocore==0.10.2
 
 # homeassistant.components.esphome
-aioesphomeapi==2.1.0
+aioesphomeapi==2.2.0
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -145,7 +145,7 @@ ha-ffmpeg==2.0
 hangups==0.4.9
 
 # homeassistant.components.cloud
-hass-nabucasa==0.14
+hass-nabucasa==0.15
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.4
@@ -157,7 +157,7 @@ hdate==0.8.7
 holidays==0.9.10
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190614.0
+home-assistant-frontend==20190618.0
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.14.0

@@ -129,7 +129,7 @@ aiobotocore==0.10.2
 aiodns==2.0.0
 
 # homeassistant.components.esphome
-aioesphomeapi==2.1.0
+aioesphomeapi==2.2.0
 
 # homeassistant.components.freebox
 aiofreepybox==0.0.8
@@ -562,7 +562,7 @@ habitipy==0.2.0
 hangups==0.4.9
 
 # homeassistant.components.cloud
-hass-nabucasa==0.14
+hass-nabucasa==0.15
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.4
@@ -592,7 +592,7 @@ hole==0.3.0
 holidays==0.9.10
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190614.0
+home-assistant-frontend==20190618.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.4
@@ -1692,7 +1692,7 @@ solax==0.0.3
 somecomfort==0.5.2
 
 # homeassistant.components.somfy_mylink
-somfy-mylink-synergy==1.0.4
+somfy-mylink-synergy==1.0.6
 
 # homeassistant.components.speedtestdotnet
 speedtest-cli==2.1.1
