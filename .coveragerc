@@ -265,6 +265,7 @@ omit =
     homeassistant/components/haveibeenpwned/sensor.py
     homeassistant/components/hdmi_cec/*
     homeassistant/components/heatmiser/climate.py
+    homeassistant/components/here_travel_time/sensor.py
     homeassistant/components/hikvision/binary_sensor.py
     homeassistant/components/hikvisioncam/switch.py
     homeassistant/components/hipchat/notify.py

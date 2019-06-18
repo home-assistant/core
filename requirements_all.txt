@@ -620,6 +620,9 @@ hdate==0.9.0
 # homeassistant.components.heatmiser
 heatmiserV3==0.9.1
 
+# homeassistant.components.here_travel_time
+herepy==0.6.0
+
 # homeassistant.components.hikvisioncam
 hikvision==0.4
 
