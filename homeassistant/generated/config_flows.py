@@ -37,6 +37,7 @@ FLOWS = [
     "nest",
     "openuv",
     "owntracks",
+    "plaato",
     "point",
     "ps4",
     "rainmachine",
