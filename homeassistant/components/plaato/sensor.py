@@ -107,12 +107,11 @@ class PlaatoSensor(Entity):
 
         if self._type == ATTR_ABV:
             return round(sensors.get(self._type), 2)
-        elif self._type == ATTR_TEMP:
+        if self._type == ATTR_TEMP:
             return round(sensors.get(self._type), 1)
-        elif self._type == ATTR_CO2_VOLUME:
+        if self._type == ATTR_CO2_VOLUME:
             return round(sensors.get(self._type), 2)
-        else:
-            return sensors.get(self._type)
+        return sensors.get(self._type)
 
     @property
     def device_state_attributes(self):
