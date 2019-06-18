@@ -167,7 +167,6 @@ class ONVIFHassCamera(Camera):
             _LOGGER.error("Couldn't connect to camera '%s', please verify "
                           "that the credentials are correct. Error: %s",
                           self._name, err)
-        return
 
     async def async_check_date_and_time(self):
         """Warns if camera and system date not synced."""
