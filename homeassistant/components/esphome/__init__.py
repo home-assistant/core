@@ -13,7 +13,7 @@ from homeassistant import const
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.core import Event, State, callback, EventOrigin
+from homeassistant.core import Event, State, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
