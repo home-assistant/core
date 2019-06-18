@@ -239,7 +239,8 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             self._player.transfer_playback(self._devices[source],
                                            self._state == STATE_PLAYING)
 
-    def play_media(self, media_type, media_id, start_random_position=False, **kwargs):
+    def play_media(self, media_type, media_id,
+                   start_random_position=False, **kwargs):
         """Play media."""
         kwargs = {}
         if media_type == MEDIA_TYPE_MUSIC:
@@ -255,7 +256,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
 
         if media_type == MEDIA_TYPE_PLAYLIST and start_random_position:
             results = self._player.user_playlist_tracks("me", media_id)
-            position = random.randint(0, results['total'] - 1)            
+            position = random.randint(0, results['total'] - 1)
             offset = {'position': position}
             kwargs['offset'] = offset
 

@@ -46,7 +46,7 @@ from .const import (
     SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_STOP, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP, ATTR_MEDIA_START_RANDOM_POSITION)
+    SUPPORT_VOLUME_STEP, ATTR_MEDIA_RANDOM_POSITION)
 from .reproduce_state import async_reproduce_states  # noqa
 
 _LOGGER = logging.getLogger(__name__)
@@ -107,7 +107,7 @@ MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
     vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
     vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
-    vol.Optional(ATTR_MEDIA_START_RANDOM_POSITION): cv.boolean,
+    vol.Optional(ATTR_MEDIA_RANDOM_POSITION): cv.boolean,
 })
 
 MEDIA_PLAYER_SET_SHUFFLE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
@@ -254,7 +254,7 @@ async def async_setup(hass, config):
             media_type=call.data[ATTR_MEDIA_CONTENT_TYPE],
             media_id=call.data[ATTR_MEDIA_CONTENT_ID],
             enqueue=call.data.get(ATTR_MEDIA_ENQUEUE),
-            start_random_position=call.data.get(ATTR_MEDIA_START_RANDOM_POSITION)
+            start_random_position=call.data.get(ATTR_MEDIA_RANDOM_POSITION)
         ), [SUPPORT_PLAY_MEDIA]
     )
     component.async_register_entity_service(
