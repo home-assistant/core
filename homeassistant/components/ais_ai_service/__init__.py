@@ -152,13 +152,113 @@ def async_register(hass, intent_type, utterances):
             conf.append(_create_matcher(utterance))
 
 
-def translate_state(info_data):
-    if not info_data:
-        info_data = ""
-    elif info_data == STATE_ON:
+def translate_state(state):
+    info_data = ""
+    device_class = ""
+    try:
+        info_data = state.state
+        domain = state.domain
+        if domain == "binary_sensor":
+            device_class = state.attributes.get("device_class", "")
+    except Exception as e:
+        _LOGGER.error("translate_state: " + str(e))
+
+    if info_data == STATE_ON:
         info_data = "włączone"
+        if device_class == "battery":
+            info_data = "niski"
+        elif device_class == "cold":
+            info_data = "zimno"
+        elif device_class == "connectivity":
+            info_data = "podłączone"
+        elif device_class == "door":
+            info_data = "otwarte"
+        elif device_class == "garage_door":
+            info_data = "otwarte"
+        elif device_class == "gas":
+            info_data = "gaz wykryty"
+        elif device_class == "heat":
+            info_data = "gorąco"
+        elif device_class == "light":
+            info_data = "wykryto światło"
+        elif device_class == "lock":
+            info_data = "otwarte (odblokowane)"
+        elif device_class == "moisture":
+            info_data = "wilgoć wykrytą (mokra)"
+        elif device_class == "motion":
+            info_data = "wykrycie ruchu"
+        elif device_class == "moving":
+            info_data = "wykrycie ruchu"
+        elif device_class == "occupancy":
+            info_data = "zajęty"
+        elif device_class == "opening":
+            info_data = "otwarte"
+        elif device_class == "plug":
+            info_data = "podłączone"
+        elif device_class == "power":
+            info_data = "wykrycie zasilania"
+        elif device_class == "presence":
+            info_data = "obecny"
+        elif device_class == "problem":
+            info_data = "wykryty problem"
+        elif device_class == "safety":
+            info_data = "niebezpiecznie"
+        elif device_class == "smoke":
+            info_data = "dym wykrywany"
+        elif device_class == "sound":
+            info_data = "dźwięk wykryty"
+        elif device_class == "vibration":
+            info_data = "wykrycie wibracji"
+        elif device_class == "window":
+            info_data = "otwarte"
     elif info_data == STATE_OFF:
         info_data = "wyłączone"
+        if device_class == "battery":
+            info_data = "normalny"
+        elif device_class == "cold":
+            info_data = "normalnie"
+        elif device_class == "connectivity":
+            info_data = "odłączone"
+        elif device_class == "door":
+            info_data = "zamknięte"
+        elif device_class == "garage_door":
+            info_data = "zamknięte"
+        elif device_class == "gas":
+            info_data = "brak gazu (czysto)"
+        elif device_class == "heat":
+            info_data = "normalnie"
+        elif device_class == "light":
+            info_data = "brak światła"
+        elif device_class == "lock":
+            info_data = "zamknięte (zablokowane)"
+        elif device_class == "moisture":
+            info_data = " brak wilgoci (sucha)"
+        elif device_class == "motion":
+            info_data = "brak ruchu"
+        elif device_class == "moving":
+            info_data = "brak ruchu"
+        elif device_class == "occupancy":
+            info_data = "wolne"
+        elif device_class == "opening":
+            info_data = "zamknięte"
+        elif device_class == "plug":
+            info_data = "odłączone"
+        elif device_class == "power":
+            info_data = "brak zasilania"
+        elif device_class == "presence":
+            info_data = "nieobecny"
+        elif device_class == "problem":
+            info_data = "brak problemu (OK)"
+        elif device_class == "safety":
+            info_data = "bezpiecznie"
+        elif device_class == "smoke":
+            info_data = "brak dymu"
+        elif device_class == "sound":
+            info_data = "brak dźwięku"
+        elif device_class == "vibration":
+            info_data = "brak wibracji"
+        elif device_class == "window":
+            info_data = "zamknięte"
     elif info_data == STATE_HOME:
         info_data = "w domu"
     elif info_data == STATE_NOT_HOME:
@@ -726,7 +826,7 @@ def say_curr_entity(hass):
     # decode None
     if not info_name:
         info_name = ""
-    info_data = translate_state(info_data)
+    info_data = translate_state(state)
     if not info_unit:
         info_unit = ""
     info = "%s %s %s" % (info_name, info_data, info_unit)
@@ -2643,8 +2743,7 @@ class StatusIntent(intent.IntentHandler):
             success = False
         else:
             unit = entity.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            state = entity.state
-            state = translate_state(state)
+            state = translate_state(entity)
             if unit is None:
                 value = state
             else:

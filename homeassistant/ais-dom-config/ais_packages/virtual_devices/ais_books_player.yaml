@@ -19,5 +19,5 @@ group:
     name: Audio Książki Online
     entities:
     - input_select.book_autor
-    - input_select.book_name
-    - input_select.book_chapter
+    - sensor.audiobookslist
+    - sensor.audiobookschapterslist

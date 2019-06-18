@@ -260,17 +260,17 @@ group.podcast_player:
   context_suffix: Podcast
   remote_group_view: Audio
   order: 6
-group.music_player:
-  context_key_words: youtube,muzyka,yt,tuba,spotify
-  context_answer: OK, powiedz jakiej muzyki chcesz posłuchać
-  context_suffix: Muzyka
-  remote_group_view: Audio
-  order: 7
 group.audiobooks_player:
   context_key_words: książki,książka,audiobook,audiobooks
   context_answer: OK, powiedz jakiej książki chcesz posłuchać lub wybierz pilotem
     autora, książkę i rozdział książki
   context_suffix: Książka
+  remote_group_view: Audio
+  order: 7
+group.music_player:
+  context_key_words: youtube,muzyka,yt,tuba,spotify
+  context_answer: OK, powiedz jakiej muzyki chcesz posłuchać
+  context_suffix: Muzyka
   remote_group_view: Audio
   order: 8
 

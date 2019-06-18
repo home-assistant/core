@@ -122,6 +122,8 @@ def async_setup(hass, config):
                 hass.states.async_set("sensor.youtubelist", -1, list_info)
             elif audio_source == ais_global.G_AN_SPOTIFY:
                 hass.states.async_set("sensor.spotifylist", -1, list_info)
+            elif audio_source == ais_global.G_AN_AUDIOBOOK:
+                hass.states.async_set("sensor.audiobookschapterslist", -1, list_info)
 
 
 

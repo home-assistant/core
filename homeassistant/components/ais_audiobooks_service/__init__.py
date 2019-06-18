@@ -92,12 +92,14 @@ class AudioBooksData:
                 list_idx = list_idx + 1
 
         self.hass.states.async_set("sensor.audiobookslist", 0, list_info)
-        self.hass.services.call('ais_audiobooks_service', 'get_chapters', {"id": 0})
-
         import homeassistant.components.ais_ai_service as ais_ai
         if ais_ai.CURR_ENTITIE == 'input_select.book_autor':
             ais_ai.set_curr_entity(self.hass, 'sensor.audiobookslist')
-            self.hass.services.call('ais_ai_service', 'say_it', {"text": "Wybierz książkę"})
+            if len(list_info) > 1:
+                self.hass.services.call(
+                    'ais_ai_service', 'say_it', {"text": "Mamy " + str(len(list_info)) + " , wybierz książkę"})
+            else:
+                self.hass.services.call('ais_audiobooks_service', 'get_chapters', {"id": 0})
 
     def get_chapters(self, call):
         """Load chapters for the selected book."""
@@ -143,7 +145,12 @@ class AudioBooksData:
         import homeassistant.components.ais_ai_service as ais_ai
         if ais_ai.CURR_ENTITIE == 'sensor.audiobookslist':
             ais_ai.set_curr_entity(self.hass, 'sensor.audiobookschapterslist')
-            self.hass.services.call('ais_ai_service', 'say_it', {"text": "Włączam pierwszy rozdział"})
+            if len(list_info) > 0:
+                self.hass.services.call(
+                    'ais_ai_service', 'say_it', {"text": "Włączam pierwszy rozdział z " + str(len(list_info))})
+            else:
+                self.hass.services.call(
+                    'ais_ai_service', 'say_it', {"text": "Odtwarzam " + str(len(list_info))})
 
     def select_chapter(self, call):
         """Get chapter stream url for the selected name."""
@@ -171,6 +178,9 @@ class AudioBooksData:
 
         def load():
             """Load the items synchronously."""
+            self.hass.services.call(
+                'ais_bookmarks', 'get_favorites', {"audio_source": ais_global.G_AN_AUDIOBOOK})
+
             path = self.hass.config.path() + PERSISTENCE_AUDIOBOOKS
             try:
                 ws_resp = requests.get(AUDIOBOOKS_WS_URL, timeout=10)
@@ -192,7 +202,7 @@ class AudioBooksData:
             #     b = {}
             #     self.all_books.append(b)
 
-            authors = [ais_global.G_EMPTY_OPTION]
+            authors = [ais_global.G_FAVORITE_OPTION]
             for item in self.all_books:
                 if item["author"] not in authors:
                     authors.append(item["author"])
@@ -200,6 +210,6 @@ class AudioBooksData:
                 'input_select',
                 'set_options', {
                     "entity_id": "input_select.book_autor",
-                    "options": sorted(authors)})
+                    "options": authors})
 
         yield from self.hass.async_add_job(load)

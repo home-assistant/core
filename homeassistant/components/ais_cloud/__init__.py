@@ -745,6 +745,9 @@ class AisColudData:
             track_list = 'sensor.aisbookmarkslist'
         elif media_source == ais_global.G_AN_FAVORITE:
             track_list = 'sensor.aisfavoriteslist'
+        elif media_source == ais_global.G_AN_AUDIOBOOK:
+            media_source = ais_global.G_AN_AUDIOBOOK_CHAPTER
+            track_list = 'sensor.audiobookschapterslist'
         else:
             return
 
@@ -780,6 +783,9 @@ class AisColudData:
             track_list = 'sensor.aisbookmarkslist'
         elif media_source == ais_global.G_AN_FAVORITE:
             track_list = 'sensor.aisfavoriteslist'
+        elif media_source == ais_global.G_AN_AUDIOBOOK:
+            media_source = ais_global.G_AN_AUDIOBOOK_CHAPTER
+            track_list = 'sensor.audiobookschapterslist'
         else:
             return
         # get next from list
