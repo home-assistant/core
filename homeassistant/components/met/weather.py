@@ -33,23 +33,43 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Met.no weather platform."""
-    elevation = config.get(CONF_ELEVATION, hass.config.elevation or 0)
+    _LOGGER.warning("Loading Met.no via platform config is deprecated")
+
+    name = config.get(CONF_NAME)
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    name = config.get(CONF_NAME)
+    elevation = config.get(CONF_ELEVATION, hass.config.elevation or 0)
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return
 
+    station = await async_get_station(
+        hass, name, latitude, longitude, elevation)
+    async_add_entities([station])
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Add a weather entity from a config_entry."""
+    name = config_entry.data.get(CONF_NAME)
+    latitude = config_entry.data[CONF_LATITUDE]
+    longitude = config_entry.data[CONF_LONGITUDE]
+    elevation = config_entry.data[CONF_ELEVATION]
+
+    station = await async_get_station(
+        hass, name, latitude, longitude, elevation)
+    async_add_entities([station])
+
+
+async def async_get_station(hass, name, latitude, longitude, elevation):
+    """Retrieve weather station, station name to be used as the entity name."""
     coordinates = {
         'lat': str(latitude),
         'lon': str(longitude),
         'msl': str(elevation),
     }
 
-    async_add_entities([MetWeather(
-        name, coordinates, async_get_clientsession(hass))])
+    return MetWeather(name, coordinates, async_get_clientsession(hass))
 
 
 class MetWeather(WeatherEntity):
