@@ -352,9 +352,9 @@ async def test_alexa_update_expose_trigger_sync(hass, cloud_prefs):
     assert to_remove == ['light.kitchen']
 
 
-async def test_alexa_entity_registry_sync(hass, cloud_prefs):
+async def test_alexa_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
     """Test Alexa config responds to entity registry."""
-    client.AlexaConfig(hass, ALEXA_SCHEMA({}), cloud_prefs, None)
+    client.AlexaConfig(hass, ALEXA_SCHEMA({}), cloud_prefs, hass.data['cloud'])
 
     with patch_sync_helper() as (to_update, to_remove):
         hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, {
