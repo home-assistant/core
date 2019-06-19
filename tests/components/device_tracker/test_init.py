@@ -322,7 +322,7 @@ async def test_see_service(mock_see, hass):
 
 
 async def test_see_service_guard_config_entry(hass, mock_device_tracker_conf):
-    """Test the gaurd if the device is registered in the entity registry."""
+    """Test the guard if the device is registered in the entity registry."""
     mock_entry = Mock()
     dev_id = 'test'
     entity_id = const.ENTITY_ID_FORMAT.format(dev_id)
