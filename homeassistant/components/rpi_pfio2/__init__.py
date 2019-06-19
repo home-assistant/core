@@ -12,18 +12,20 @@ DOMAIN = 'rpi_pfio2'
 
 DATA_PFIO_LISTENER = 'pfio_listener'
 
-BOARD_ADDRESSES = [0,1,2,3]
+BOARD_ADDRESSES = [0, 1, 2, 3]
+
 
 def setup(hass, config):
     """Set up the Raspberry PI PFIO component."""
     import pifacedigitalio as PFIO
-    pifacedigital={}
-    hass.data[DATA_PFIO_LISTENER]={}
+    pifacedigital = {}
+    hass.data[DATA_PFIO_LISTENER] = {}
     for address in BOARD_ADDRESSES:
         try:
             pifacedigital[address] = PFIO.PiFaceDigital(address)
-            hass.data[DATA_PFIO_LISTENER][address] = PFIO.InputEventListener(chip=pifacedigital[address])
-        except:
+            hass.data[DATA_PFIO_LISTENER][address] = PFIO.InputEventListener(
+                chip=pifacedigital[address])
+        except PFIO.core.NoPiFaceDigitalDetectedError:
             pass
 
     def cleanup_pfio(event):
