@@ -13,6 +13,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import (
     RequestDataValidator)
 from homeassistant.components import websocket_api
+from homeassistant.components.websocket_api import const as ws_const
 from homeassistant.components.alexa import entities as alexa_entities
 from homeassistant.components.google_assistant import helpers as google_helpers
 
@@ -92,6 +93,7 @@ async def async_setup(hass):
 
     hass.components.websocket_api.async_register_command(alexa_list)
     hass.components.websocket_api.async_register_command(alexa_update)
+    hass.components.websocket_api.async_register_command(alexa_sync)
 
     hass.http.register_view(GoogleActionsSyncView)
     hass.http.register_view(CloudLoginView)
@@ -560,3 +562,23 @@ async def alexa_update(hass, connection, msg):
     connection.send_result(
         msg['id'],
         cloud.client.prefs.alexa_entity_configs.get(msg['entity_id']))
+
+
+@websocket_api.require_admin
+@_require_cloud_login
+@websocket_api.async_response
+@websocket_api.websocket_command({
+    'type': 'cloud/alexa/sync',
+})
+async def alexa_sync(hass, connection, msg):
+    """Sync with Alexa."""
+    cloud = hass.data[DOMAIN]
+
+    with async_timeout.timeout(10):
+        success = await cloud.client.alexa_config.async_sync_entities()
+
+    if success:
+        connection.send_result(msg['id'])
+    else:
+        connection.send_error(
+            msg['id'], ws_const.ERR_UNKNOWN_ERROR, 'Unknown error')

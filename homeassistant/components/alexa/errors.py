@@ -12,8 +12,12 @@ class UnsupportedProperty(HomeAssistantError):
     """This entity does not support the requested Smart Home API property."""
 
 
+class NoTokenAvailable(HomeAssistantError):
+    """There is no access token available."""
+
+
 class AlexaError(Exception):
-    """Base class for errors that can be serialized by the Alexa API.
+    """Base class for errors that can be serialized for the Alexa API.
 
     A handler can raise subclasses of this to return an error to the request.
     """
