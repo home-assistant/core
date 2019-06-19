@@ -57,7 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 hass, port, name, settle_time, invert_logic, board))
     add_entities(binary_sensors, True)
 
-    rpi_pfio.activate_listener(hass)
+    rpi_pfio2.activate_listener(hass)
 
 
 class RPiPFIOBinarySensor(BinarySensorDevice):
@@ -73,9 +73,9 @@ class RPiPFIOBinarySensor(BinarySensorDevice):
 
         def read_pfio(port, hardware_addr=0):
             """Read state from PFIO."""
-            self._state = rpi_pfio.read_input(self._port, self._hardware_addr)
+            self._state = rpi_pfio2.read_input(self._port, self._hardware_addr)
             self.schedule_update_ha_state()
-        rpi_pfio.edge_detect(hass, self._port, read_pfio, settle_time, self._hardware_addr)
+        rpi_pfio2.edge_detect(hass, self._port, read_pfio, settle_time, self._hardware_addr)
 
     @property
     def should_poll(self):
@@ -99,4 +99,4 @@ class RPiPFIOBinarySensor(BinarySensorDevice):
 
     def update(self):
         """Update the PFIO state."""
-        self._state = rpi_pfio.read_input(self._port, self._hardware_addr)
+        self._state = rpi_pfio2.read_input(self._port, self._hardware_addr)

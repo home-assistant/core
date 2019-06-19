@@ -71,7 +71,7 @@ class RPiPFIOSwitch(ToggleEntity):
             state_to_set = 0
         else:
             state_to_set = 1
-        rpi_pfio.write_output(self._port, state_to_set , self._hardware_addr)
+        rpi_pfio2.write_output(self._port, state_to_set , self._hardware_addr)
 
     @property
     def name(self):
@@ -95,12 +95,12 @@ class RPiPFIOSwitch(ToggleEntity):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        rpi_pfio.write_output(self._port, 0 if self._invert_logic else 1, self._hardware_addr)
+        rpi_pfio2.write_output(self._port, 0 if self._invert_logic else 1, self._hardware_addr)
         self._state = True
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        rpi_pfio.write_output(self._port, 1 if self._invert_logic else 0, self._hardware_addr)
+        rpi_pfio2.write_output(self._port, 1 if self._invert_logic else 0, self._hardware_addr)
         self._state = False
         self.schedule_update_ha_state()
