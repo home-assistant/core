@@ -8,6 +8,7 @@ from homeassistant.const import (
     CONF_ACCESS_TOKEN, CONF_BINARY_SENSORS, CONF_FILENAME, CONF_ID,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS, CONF_SENSORS,
     CONF_STRUCTURE, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.components import persistent_notification
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -17,6 +18,10 @@ import homeassistant.util.dt as dt_util
 DOMAIN = 'noonlight'
 
 EVENT_NOONLIGHT_TOKEN_REFRESHED = 'noonlight_token_refreshed'
+
+NOTIFICATION_TOKEN_UPDATE_FAILURE = 'noonlight_token_update_failure'
+NOTIFICATION_TOKEN_UPDATE_SUCCESS = 'noonlight_token_update_success'
+NOTIFICATION_ALARM_CREATE_FAILURE = 'noonlight_alarm_create_failure'
 
 TOKEN_CHECK_INTERVAL = timedelta(minutes=15)
 
@@ -42,7 +47,6 @@ async def async_setup(hass, config):
 
     conf = config[DOMAIN]
 
-
     if DOMAIN not in hass.data:
         noonlight_platform = NoonlightPlatform(hass, conf)
         hass.data[DOMAIN] = noonlight_platform
@@ -56,10 +60,32 @@ async def async_setup(hass, config):
 
         if not result:
             _LOGGER.error("api token failed renewal, retrying in 3 min...")
+            check_api_token.fail_count += 1
+            persistent_notification.create(
+                    hass,
+                    "Noonlight API token failed to renew {} time{}!\n"
+                    "HomeAssistant will automatically attempt to renew the "
+                    "API token in 3 minutes.".format(
+                            check_api_token.fail_count,
+                            's' if check_api_token.fail_count > 1 else ''
+                            ),
+                    "Noonlight Token Renewal Failure",
+                    NOTIFICATION_TOKEN_UPDATE_FAILURE)
             next_check_interval = timedelta(minutes=3)
+        else:
+            if check_api_token.fail_count > 0:
+                persistent_notification.create(
+                        hass,
+                        "Noonlight API token has now been "
+                        "renewed successfully.",
+                        "Noonlight Token Renewal Success",
+                        NOTIFICATION_TOKEN_UPDATE_SUCCESS)
+            check_api_token.fail_count = 0
 
         async_track_point_in_utc_time(
             hass, check_api_token, dt_util.utcnow() + next_check_interval)
+
+    check_api_token.fail_count = 0
 
     @callback
     def schedule_first_token_check(event):
