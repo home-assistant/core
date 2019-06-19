@@ -15,6 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_AIS_WIFI_SERVICE_IMPL = 'ais_wifi_service_flow_implementation'
 
+
 @callback
 def register_flow_implementation(hass, client_name, client_secret):
     """Register a ais wifi service implementation.
@@ -25,6 +26,7 @@ def register_flow_implementation(hass, client_name, client_secret):
         CONF_NAME: client_name,
         CONF_PASSWORD: client_secret,
     }
+
 
 @callback
 def configured_connections(hass):
@@ -41,7 +43,7 @@ def scan_for_wifi(hass, loop) -> []:
         # reset the current status
         hass.services.call("script", "ais_scan_android_wifi_network")
     # wait
-    time.sleep(4)
+    time.sleep(3)
     # and check the answer
     wifi_networks = hass.states.get('input_select.ais_android_wifi_network')
     G_WIFI_NETWORKS = wifi_networks.attributes['options']
@@ -68,11 +70,12 @@ def check_wifi_connection(hass, loop) -> []:
     global G_WIFI_NETWORKS
     _LOGGER.info('check_wifi_connection, no of try: ' + str(loop))
     # wait
-    time.sleep(4)
+    time.sleep(3)
     # and check the answer
     net_info = hass.states.get('sensor.ais_wifi_service_current_network_info')
     ssid = net_info.attributes.get('ssid', '')
     return ssid
+
 
 @callback
 def configured_service(hass):
@@ -116,10 +119,19 @@ class AisWiFilowHandler(config_entries.ConfigFlow):
         """Step one"""
         errors = {}
         if user_input is not None:
-            return await self.async_step_search_wifi(user_input=None)
+            if 'connect_to_hidden_ssid' in user_input:
+                if user_input['connect_to_hidden_ssid']:
+                    return await self.async_step_connect_to_hidden_wifi(user_input=None)
+                else:
+                    return await self.async_step_search_wifi(user_input=None)
+
+        data_schema = vol.Schema({
+            vol.Optional('connect_to_hidden_ssid', default=False): bool,
+        })
         return self.async_show_form(
             step_id='one',
             errors=errors,
+            data_schema=data_schema,
         )
 
     async def async_step_search_wifi(self, user_input=None):
@@ -133,7 +145,7 @@ class AisWiFilowHandler(config_entries.ConfigFlow):
                     "entity_id": "input_select.ais_android_wifi_network",
                     "options": [ais_global.G_EMPTY_OPTION]})
         )
-        for x in range(0, 7):
+        for x in range(0, 9):
             result = await self.hass.async_add_executor_job(scan_for_wifi, self.hass, x)
             _LOGGER.info("Szukam sieci WiFi: " + str(result))
             if len(result) > 1:
@@ -141,9 +153,14 @@ class AisWiFilowHandler(config_entries.ConfigFlow):
             else:
                 errors = {'base': 'search_failed'}
         #
+
+        data_schema = vol.Schema({
+            vol.Optional('connect_to_hidden_ssid', default=False): bool,
+        })
         return self.async_show_form(
             step_id='one',
             errors=errors if errors else {},
+            data_schema=data_schema
         )
 
     async def async_step_connect_to_wifi(self, user_input=None):
@@ -158,23 +175,28 @@ class AisWiFilowHandler(config_entries.ConfigFlow):
 
         if len(networks) == 0:
             errors['general'] = 'wifi_error'
-            return self.async_abort(reason='add_failed', description_placeholders={
-                'error_info': "Nie udało się znaleść żadnej sieci WiFi."
-            })
+            return self.async_abort(reason='search_failed')
 
         if user_input is None:
             data_schema = vol.Schema({
                 vol.Required('networks', default=networks[0]): vol.In(list(networks)),
                 vol.Optional(CONF_PASSWORD): str,
+                vol.Optional('rescan_wifi', default=False): bool,
             })
 
         else:
+            # check if user want to rescan
+            if 'rescan_wifi' in user_input:
+                if user_input['rescan_wifi']:
+                    return await self.async_step_one(user_input=None)
+
             password = ''
             if CONF_PASSWORD in user_input:
                 password = user_input[CONF_PASSWORD]
             data_schema = vol.Schema({
                 vol.Required('networks', default=user_input['networks']): vol.In(list(networks)),
                 vol.Optional(CONF_PASSWORD, default=password): str,
+                vol.Optional('rescan_wifi', default=False): bool,
             })
 
             # try to connect
@@ -204,7 +226,84 @@ class AisWiFilowHandler(config_entries.ConfigFlow):
                     else:
                         errors = {'base': 'conn_failed'}
 
+        # check wifi list len - without empty option
+        l_net = str(len(networks) - 1)
+
         return self.async_show_form(
             step_id='connect_to_wifi',
             errors=errors if errors else {},
-            data_schema=data_schema)
+            data_schema=data_schema,
+            description_placeholders={'wifi_number_info': l_net}
+        )
+
+    async def async_step_connect_to_hidden_wifi(self, user_input=None):
+        """Step four - connect to hidden wifi"""
+        errors = {}
+        description_placeholders = {}
+        networks_types = ['WEP', 'WPA', 'WPA2', 'Open']
+
+        if user_input is None:
+            data_schema = vol.Schema({
+                vol.Required('networks_types', default='WPA'): vol.In(list(networks_types)),
+                vol.Required('hidden_ssid'): str,
+                vol.Optional(CONF_PASSWORD): str,
+                vol.Optional('rescan_wifi', default=False): bool,
+            })
+        else:
+            if user_input['rescan_wifi']:
+                return await self.async_step_one(user_input=None)
+            else:
+                network_type = user_input['networks_types']
+                password = ''
+                if CONF_PASSWORD in user_input:
+                    password = user_input[CONF_PASSWORD]
+
+                data_schema = vol.Schema({
+                    vol.Required('networks_types', default=user_input['networks_types']): vol.In(list(networks_types)),
+                    vol.Required('hidden_ssid', default=user_input['hidden_ssid']): str,
+                    vol.Optional(CONF_PASSWORD, default=password): str,
+                    vol.Optional('rescan_wifi', default=False): bool,
+                })
+
+                hidden_ssid = user_input['hidden_ssid']
+
+                # custom validation
+                # if the netowrk type is selected not Open then password need to be provided
+                if network_type != 'Open' and password == '':
+                    errors = {'base': 'no_password_to_protected_wifi'}
+                    description_placeholders = {'selected_net_type': network_type}
+
+                # try to connect
+                if errors == {}:
+                    # send a request to frame to add the new device
+                    text = "Łaczę z siecią " + hidden_ssid
+                    self.hass.async_run_job(
+                        self.hass.services.async_call('ais_ai_service', 'say_it', {"text": text})
+                    )
+
+                    wni = hidden_ssid + "; " + "moc mnieznana (-10); " + network_type + "; MAC: 00:00:00:00:00:00"
+                    await self.hass.async_add_executor_job(connect_to_wifi, wni, password)
+                    # request was correctly send, now check and wait for the answer
+                    for x in range(0, 9):
+                        result = await self.hass.async_add_executor_job(check_wifi_connection, self.hass, x)
+                        _LOGGER.info("Spawdzam połączenie z siecią WiFi: " + str(result))
+                        if result == hidden_ssid:
+                            # remove if exists
+                            exists_entries = [entry.entry_id for entry in self._async_current_entries()]
+                            if exists_entries:
+                                await asyncio.wait([self.hass.config_entries.async_remove(entry_id)
+                                                    for entry_id in exists_entries])
+                            # return await self.async_step_connect_to_wifi(user_input=None)
+                            return self.async_create_entry(
+                                title="WiFi",
+                                data=user_input,
+                            )
+                        else:
+                            errors = {'base': 'conn_failed'}
+
+        return self.async_show_form(
+            step_id='connect_to_hidden_wifi',
+            errors=errors if errors else {},
+            data_schema=data_schema,
+            description_placeholders=description_placeholders,
+        )
