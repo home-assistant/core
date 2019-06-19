@@ -170,6 +170,7 @@ class Sun(Entity):
             utc_point_in_time, 'dusk', PHASE_ASTRONOMICAL_TWILIGHT)
         self.next_midnight = self._check_event(
             utc_point_in_time, 'solar_midnight', None)
+        self.location.solar_depression = 'civil'
 
         # if the event was solar midday or midnight, phase will now
         # be None. Solar noon doesn't always happen when the sun is
