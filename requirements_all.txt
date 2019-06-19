@@ -838,6 +838,9 @@ onkyo-eiscp==1.2.4
 # homeassistant.components.onvif
 onvif-zeep-async==0.2.0
 
+# homeassistant.components.opencv
+# opencv-python-headless==4.1.0.25
+
 # homeassistant.components.openevse
 openevsewifi==0.4
 
