@@ -62,7 +62,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class RPiPFIOBinarySensor(BinarySensorDevice):
     """Represent a binary sensor that a PiFace Digital Input."""
 
-    def __init__(self, hass, port, name, settle_time, invert_logic, hardware_addr=0):
+    def __init__(self, hass, port, name, settle_time, invert_logic,
+                 hardware_addr=0):
         """Initialize the RPi binary sensor."""
         self._port = port
         self._name = name or DEVICE_DEFAULT_NAME
@@ -74,7 +75,8 @@ class RPiPFIOBinarySensor(BinarySensorDevice):
             """Read state from PFIO."""
             self._state = rpi_pfio2.read_input(self._port, self._hardware_addr)
             self.schedule_update_ha_state()
-        rpi_pfio2.edge_detect(hass, self._port, read_pfio, settle_time, self._hardware_addr)
+        rpi_pfio2.edge_detect(hass, self._port, read_pfio, settle_time,
+                              self._hardware_addr)
 
     @property
     def should_poll(self):
