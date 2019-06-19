@@ -876,9 +876,11 @@ pencompy==0.0.3
 pexpect==4.6.0
 
 # homeassistant.components.rpi_pfio
+# homeassistant.components.rpi_pfio2
 pifacecommon==4.2.2
 
 # homeassistant.components.rpi_pfio
+# homeassistant.components.rpi_pfio2
 pifacedigitalio==3.0.5
 
 # homeassistant.components.piglow
