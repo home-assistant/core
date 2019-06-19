@@ -1,7 +1,5 @@
 """Support for scanning a network with nmap."""
 import logging
-import re
-import subprocess
 from collections import namedtuple
 from datetime import timedelta
 
@@ -38,18 +36,6 @@ def get_scanner(hass, config):
 
 
 Device = namedtuple('Device', ['mac', 'name', 'ip', 'last_update'])
-
-
-def _arp(ip_address):
-    """Get the MAC address for a given IP."""
-    cmd = ['arp', '-n', ip_address]
-    arp = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    out, _ = arp.communicate()
-    match = re.search(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})', str(out))
-    if match:
-        return ':'.join([i.zfill(2) for i in match.group(0).split(':')])
-    _LOGGER.info('No MAC address found for %s', ip_address)
-    return None
 
 
 class NmapDeviceScanner(DeviceScanner):
@@ -126,14 +112,17 @@ class NmapDeviceScanner(DeviceScanner):
         except PortScannerError:
             return False
 
+        from getmac import get_mac_address
+
         now = dt_util.now()
         for ipv4, info in result['scan'].items():
             if info['status']['state'] != 'up':
                 continue
             name = info['hostnames'][0]['name'] if info['hostnames'] else ipv4
             # Mac address only returned if nmap ran as root
-            mac = info['addresses'].get('mac') or _arp(ipv4)
+            mac = info['addresses'].get('mac') or get_mac_address(ip=ipv4)
             if mac is None:
+                _LOGGER.info('No MAC address found for %s', ipv4)
                 continue
             last_results.append(Device(mac.upper(), name, ipv4, now))
 
