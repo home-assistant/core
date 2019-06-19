@@ -3,13 +3,14 @@ from datetime import timedelta
 import logging
 from typing import Optional
 
+from georss_qld_bushfire_alert_client import QldBushfireAlertFeedManager
 import voluptuous as vol
 
 from homeassistant.components.geo_location import (
     PLATFORM_SCHEMA, GeolocationEvent)
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE,
-    CONF_RADIUS, CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START)
+    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS,
+    CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -78,9 +79,6 @@ class QldBushfireFeedEntityManager:
     def __init__(self, hass, add_entities, scan_interval, coordinates,
                  radius_in_km, categories):
         """Initialize the Feed Entity Manager."""
-        from georss_qld_bushfire_alert_client import \
-            QldBushfireAlertFeedManager
-
         self._hass = hass
         self._feed_manager = QldBushfireAlertFeedManager(
             self._generate_entity, self._update_entity, self._remove_entity,
