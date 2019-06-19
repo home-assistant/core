@@ -100,3 +100,4 @@ class SmartPlugSwitch(SwitchDevice):
             if self._available:
                 _LOGGER.warning(
                     "Could not read state for %s: %s", self.name, ex)
+                self._available = False
