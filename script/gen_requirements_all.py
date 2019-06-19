@@ -90,6 +90,7 @@ TEST_REQUIREMENTS = (
     'libpurecool',
     'libsoundtouch',
     'luftdaten',
+    'pyMetno',
     'mbddns',
     'mficlient',
     'netdisco',
