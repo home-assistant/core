@@ -54,17 +54,7 @@ async def async_api_discovery(hass, config, directive, context):
     Async friendly.
     """
     discovery_endpoints = [
-        {
-            'displayCategories': alexa_entity.display_categories(),
-            'cookie': {},
-            'endpointId': alexa_entity.alexa_id(),
-            'friendlyName': alexa_entity.friendly_name(),
-            'description': alexa_entity.description(),
-            'manufacturerName': 'Home Assistant',
-            'capabilities': [
-                i.serialize_discovery() for i in alexa_entity.interfaces()
-            ]
-        }
+        alexa_entity.serialize_discovery()
         for alexa_entity in async_get_entities(hass, config)
         if config.should_expose(alexa_entity.entity_id)
     ]

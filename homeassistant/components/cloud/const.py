@@ -32,6 +32,7 @@ CONF_SUBSCRIPTION_INFO_URL = 'subscription_info_url'
 CONF_CLOUDHOOK_CREATE_URL = 'cloudhook_create_url'
 CONF_REMOTE_API_URL = 'remote_api_url'
 CONF_ACME_DIRECTORY_SERVER = 'acme_directory_server'
+CONF_ALEXA_ACCESS_TOKEN_URL = 'alexa_access_token_url'
 
 MODE_DEV = "development"
 MODE_PROD = "production"
