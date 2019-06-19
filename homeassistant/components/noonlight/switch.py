@@ -3,10 +3,12 @@ import logging
 
 from datetime import timedelta
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.helpers.event import async_track_time_interval
 
-from . import DOMAIN, EVENT_NOONLIGHT_TOKEN_REFRESHED
+from . import (DOMAIN, EVENT_NOONLIGHT_TOKEN_REFRESHED,
+        NOTIFICATION_ALARM_CREATE_FAILURE)
 
 DEFAULT_NAME = 'noonlight_switch'
 
@@ -62,15 +64,23 @@ class NoonlightSwitch(SwitchDevice):
         #[TODO] read list of monitored sensors, use sensor type to determine
         #   whether medical, fire, or police should be notified
         if self._alarm is None:
-            self._alarm = await self.noonlight.client.create_alarm(
-                body={
-                    'location.coordinates': {
-                        'lat':self.noonlight.latitude,
-                        'lng':self.noonlight.longitude,
-                        'accuracy': 5
+            try:
+                self._alarm = await self.noonlight.client.create_alarm(
+                    body={
+                        'location.coordinates': {
+                            'lat':self.noonlight.latitude,
+                            'lng':self.noonlight.longitude,
+                            'accuracy': 5
+                        }
                     }
-                }
-            )
+                )
+            except Exception as e:
+                persistent_notification.create(
+                        self.hass,
+                        "Failed to send an alarm to Noonlight!\n\n"
+                        "({}: {})".format(type(e).__name__,str(e)),
+                        "Noonlight Alarm Failure",
+                        NOTIFICATION_ALARM_CREATE_FAILURE)
             if self._alarm and self._alarm.status == CONST_ALARM_STATUS_ACTIVE:
                 _LOGGER.debug(
                         'noonlight alarm has been initiated. '
