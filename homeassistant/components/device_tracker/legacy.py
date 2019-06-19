@@ -140,7 +140,7 @@ class DeviceTracker:
                 await device.async_update_ha_state()
             return
 
-        # Guard from calling see on config entry entities.
+        # Guard from calling see on entity registry entities.
         entity_id = ENTITY_ID_FORMAT.format(dev_id)
         if registry.async_is_registered(entity_id):
             LOGGER.error(
