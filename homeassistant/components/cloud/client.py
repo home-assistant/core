@@ -116,7 +116,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
             if body['reason'] in ('RefreshTokenNotFound', 'UnknownRegion'):
                 raise RequireRelink
 
-            return alexa_errors.NoTokenAvailable
+            raise alexa_errors.NoTokenAvailable
 
         self._token = body['access_token']
         self._endpoint = body['event_endpoint']
@@ -239,7 +239,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
 
     async def _handle_entity_registry_updated(self, event):
         """Handle when entity registry updated."""
-        if not self.enabled:
+        if not self.enabled or not self._cloud.is_logged_in:
             return
 
         action = event.data['action']
