@@ -46,6 +46,11 @@ class IncomfortWaterHeater(WaterHeaterDevice):
         return HEATER_NAME
 
     @property
+    def icon(self):
+        """Return the icon of the water_heater device."""
+        return "mdi:oil-temperature"
+
+    @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         state = {k: self._heater.status[k]
