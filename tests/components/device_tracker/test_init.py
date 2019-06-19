@@ -321,7 +321,7 @@ async def test_see_service(mock_see, hass):
     assert mock_see.call_args == call(**params)
 
 
-async def test_see_service_gaurd_config_entry(hass, mock_device_tracker_conf):
+async def test_see_service_guard_config_entry(hass, mock_device_tracker_conf):
     """Test the gaurd if the device is registered in the entity registry."""
     mock_entry = Mock()
     dev_id = 'test'
