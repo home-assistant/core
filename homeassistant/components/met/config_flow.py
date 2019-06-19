@@ -7,7 +7,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, HOME_LOCATION_NAME
+from .const import DOMAIN, HOME_LOCATION_NAME, CONF_TRACK_HOME
 
 
 @callback
@@ -60,4 +60,13 @@ class MetFlowHandler(data_entry_flow.FlowHandler):
                 vol.Required(CONF_ELEVATION, default=elevation): int
             }),
             errors=self._errors,
+        )
+
+    async def async_step_onboarding(self, data=None):
+        """Handle a flow initialized by onboarding."""
+        return self.async_create_entry(
+            title=HOME_LOCATION_NAME,
+            data={
+                CONF_TRACK_HOME: True
+            }
         )
