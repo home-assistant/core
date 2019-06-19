@@ -1034,7 +1034,14 @@ onkyo-eiscp==1.2.4
 # homeassistant.components.camera.onvif
 onvif-py3==0.1.3
 
+<<<<<<< HEAD
 # homeassistant.components.sensor.openevse
+=======
+# homeassistant.components.opencv
+# opencv-python-headless==4.1.0.25
+
+# homeassistant.components.openevse
+>>>>>>> Add support for opencv wheels (#24620)
 openevsewifi==0.4
 
 # homeassistant.components.media_player.openhome
