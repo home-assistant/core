@@ -1,0 +1,13 @@
+{
+  "domain": "notion",
+  "name": "Notion",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/components/notion",
+  "requirements": [
+    "aionotion==1.0.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@bachya"
+  ]
+}
