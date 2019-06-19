@@ -1,10 +1,6 @@
-"""Support for (EMEA/EU-based) Honeywell evohome (TCC) systems.
+"""Support for (EMEA/EU-based) Honeywell TCC systems.
 
-Glossary:
-TCS - temperature control system (a.k.a. Controller, Parent), which can have up
-to 13 Children:
-- 0-12 Heating zones (a.k.a. Zone), Climate devices, and
-- 0-1 DHW controller (a.k.a. Boiler), a WaterHeater device
+Such systems include evohome, and Round Thermostat.
 """
 import asyncio
 from datetime import datetime, timedelta
@@ -125,10 +121,9 @@ class EvoBroker:
         else:
             await self._save_auth_tokens()
 
-        finally:  # Redact any config data that's not needed/not to be logged
+        finally:
             self.params[CONF_PASSWORD] = 'REDACTED'
 
-        # Pull down the installation configuration
         loc_idx = self.params[CONF_LOCATION_IDX]
         try:
             self.config = client.installation_info[loc_idx][GWS][0][TCS][0]
@@ -165,15 +160,21 @@ class EvoBroker:
 
         return (None, None, None)  # account switched: so tokens are not valid
 
-    async def _save_auth_tokens(self) -> None:
+    async def _save_auth_tokens(self, *args, **kwargs) -> None:
+        _LOGGER.warn("AAA expires = %s", self.client.access_token_expires)       # TODO: remove this
+        _LOGGER.warn("AAA time    = %s", datetime.now())
+
+        for arg in args:                                                         # TODO: remove this
+            _LOGGER.warn( "arg of *args: %s", arg)
+        if kwargs is not None:
+            for key, value in kwargs.items():
+                _LOGGER.warn("%s == %s", key, value)
+
         self._app_storage[CONF_USERNAME] = self.params[CONF_USERNAME]
         self._app_storage[CONF_REFRESH_TOKEN] = self.client.refresh_token
         self._app_storage[CONF_ACCESS_TOKEN] = self.client.access_token
         self._app_storage[CONF_ACCESS_TOKEN_EXPIRES] = \
             self.client.access_token_expires.strftime('%Y-%m-%d %H:%M:%S')
-
-        _LOGGER.warn("AAA expires = %s", self.client.access_token_expires)
-        _LOGGER.warn("AAA time    = %s", datetime.now())
 
         store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         await store.async_save(self._app_storage)
@@ -200,7 +201,7 @@ class EvoBroker:
         async_track_point_in_utc_time(                                           # TODO: add code to _save_auth_tokens
             self.hass,
             self._save_auth_tokens,
-            self.client.access_token_expires + timedelta(minutes=1)
+            self.client.access_token_expires + timedelta(seconds=10)
         )
 
         # inform the evohome devices that state data has been updated

@@ -1,4 +1,4 @@
-"""Provides the constants needed for evohome."""
+"""Provides the constants needed for this integration."""
 
 DOMAIN = 'evohome'
 

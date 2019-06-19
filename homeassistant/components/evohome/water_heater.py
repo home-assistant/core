@@ -1,4 +1,4 @@
-"""Support for WaterHeater devices of (EMEA/EU) Honeywell evohome systems."""
+"""Support for WaterHeater devices of (EMEA/EU) Honeywell TCC systems."""
 from datetime import datetime, timedelta
 import logging
 

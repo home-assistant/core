@@ -1,4 +1,4 @@
-"""Support for Climate devices of (EMEA/EU-based) Honeywell evohome systems."""
+"""Support for Climate devices of (EMEA/EU-based) Honeywell TCC systems."""
 from datetime import datetime, timedelta
 import logging
 
@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL, PRECISION_HALVES, PRECISION_TENTHS, STATE_OFF,)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.util.dt import utc_from_timestamp, utcnow
 
 from . import (EvoDevice, CONF_LOCATION_IDX)
 from .const import (
@@ -100,12 +101,12 @@ class EvoZone(EvoDevice, ClimateDevice):
 
         self._precision = \
             self._evo_device.setpointCapabilities['valueResolution']
-
         self._state_attributes = ZONE_STATE_ATTRIBUTES
-        self._operation_list = list(HA_STATE_TO_ZONE)
+
         self._supported_features = SUPPORT_OPERATION_MODE | \
             SUPPORT_TARGET_TEMPERATURE | \
             SUPPORT_ON_OFF
+        self._operation_list = list(HA_STATE_TO_ZONE)
 
     @property
     def hvac_mode(self):
@@ -117,7 +118,7 @@ class EvoZone(EvoDevice, ClimateDevice):
         system_mode = self._evo_tcs.systemModeStatus['mode']
         setpoint_mode = self._evo_device.setpointStatus['setpointMode']
 
-        if setpoint_mode == EVO_FOLLOW:
+        if system_mode == EVO_HEATOFF or setpoint_mode == EVO_FOLLOW:
             # then inherit state from the controller
             return TCS_STATE_TO_HA.get(system_mode)
         return ZONE_STATE_TO_HA.get(setpoint_mode)
@@ -270,11 +271,10 @@ class EvoController(EvoDevice, ClimateDevice):
         _LOGGER.warn("__init__(TCS): self._config = %s", self._config)           # TODO: remove
 
         self._precision = None
-
         self._state_attributes = TCS_STATE_ATTRIBUTES
+
+        self._supported_features = SUPPORT_OPERATION_MODE | SUPPORT_AWAY_MODE
         self._operation_list = list(HA_STATE_TO_TCS)
-        self._supported_features = SUPPORT_OPERATION_MODE | \
-            SUPPORT_AWAY_MODE
 
     @property
     def hvac_mode(self):
