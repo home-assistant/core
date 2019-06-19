@@ -1494,6 +1494,9 @@ pyotp==2.2.6
 # homeassistant.components.weather.openweathermap
 pyowm==2.10.0
 
+# homeassistant.components.elv
+pypca==0.0.4
+
 # homeassistant.components.lcn
 <<<<<<< HEAD
 pypck==0.5.9
