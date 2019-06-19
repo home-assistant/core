@@ -1820,6 +1820,9 @@ uvcclient==0.11.0
 # homeassistant.components.venstar
 venstarcolortouch==0.7
 
+# homeassistant.components.meteo_france
+vigilancemeteo==3.0.0
+
 # homeassistant.components.volkszaehler
 volkszaehler==0.1.2
 
