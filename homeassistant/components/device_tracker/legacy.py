@@ -14,6 +14,7 @@ from homeassistant.components.zone import async_active_zone
 from homeassistant.config import load_yaml_config_file, async_log_exception
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import GPSType, HomeAssistantType
 from homeassistant import util
@@ -83,6 +84,7 @@ class DeviceTracker:
         self.defaults = defaults
         self.group = None
         self._is_updating = asyncio.Lock()
+        self._registry_task = None
 
         for dev in devices:
             if self.devices[dev.dev_id] is not dev:
@@ -115,6 +117,10 @@ class DeviceTracker:
 
         This method is a coroutine.
         """
+        if not self._registry_task:
+            self._registry_task = self.hass.async_create_task(
+                async_get_registry(self.hass))
+        registry = await self._registry_task
         if mac is None and dev_id is None:
             raise HomeAssistantError('Neither mac or device id passed in')
         if mac is not None:
@@ -135,8 +141,6 @@ class DeviceTracker:
             return
 
         # Guard from calling see on config entry entities.
-        registry = await self.hass.helpers.entity_registry.async_get_registry()
-        # generate entity_id
         entity_id = ENTITY_ID_FORMAT.format(dev_id)
         if registry.async_is_registered(entity_id):
             LOGGER.error(
