@@ -24,7 +24,7 @@ COMMENT_REQUIREMENTS = (
     'face_recognition',
     'fritzconnection',
     'i2csense',
-    'opencv-python',
+    'opencv-python-headless',
     'py_noaa',
     'VL53L1X2',
     'pybluez',
