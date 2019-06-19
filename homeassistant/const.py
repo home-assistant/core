@@ -402,6 +402,7 @@ LENGTH_MILES = 'mi'  # type: str
 # Pressure units
 PRESSURE_PA = 'Pa'  # type: str
 PRESSURE_HPA = 'hPa'  # type: str
+PRESSURE_BAR = 'bar'  # type: str
 PRESSURE_MBAR = 'mbar'  # type: str
 PRESSURE_INHG = 'inHg'  # type: str
 PRESSURE_PSI = 'psi'  # type: str

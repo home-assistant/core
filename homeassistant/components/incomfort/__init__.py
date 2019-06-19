@@ -1,6 +1,7 @@
 """Support for an Intergas boiler via an InComfort/Intouch Lan2RF gateway."""
 import logging
 
+from aiohttp import ClientResponseError
 import voluptuous as vol
 from incomfortclient import Gateway as InComfortGateway
 
@@ -30,21 +31,20 @@ async def async_setup(hass, hass_config):
     credentials = dict(hass_config[DOMAIN])
     hostname = credentials.pop(CONF_HOST)
 
+    client = incomfort_data['client'] = InComfortGateway(
+        hostname, **credentials, session=async_get_clientsession(hass)
+    )
+
     try:
-        client = incomfort_data['client'] = InComfortGateway(
-            hostname, **credentials, session=async_get_clientsession(hass)
-        )
-
         heater = incomfort_data['heater'] = list(await client.heaters)[0]
-        await heater.update()
-
-    except AssertionError:  # assert response.status == HTTP_OK
+    except ClientResponseError as err:
         _LOGGER.warning(
-            "Setup failed, check your configuration.",
-            exc_info=True)
+            "Setup failed, check your configuration, message is: %s", err)
         return False
 
-    for platform in ['water_heater', 'climate']:
+    await heater.update()
+
+    for platform in ['water_heater', 'binary_sensor', 'sensor', 'climate']:
         hass.async_create_task(async_load_platform(
             hass, platform, DOMAIN, {}, hass_config))
 
