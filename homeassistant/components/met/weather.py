@@ -12,8 +12,7 @@ from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import (
-    async_call_later, async_track_utc_time_change)
+from homeassistant.helpers.event import async_call_later
 import homeassistant.util.dt as dt_util
 
 from .const import CONF_TRACK_HOME

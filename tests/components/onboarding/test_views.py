@@ -9,13 +9,13 @@ from homeassistant.components import onboarding
 from homeassistant.components.onboarding import const, views
 
 from tests.common import CLIENT_ID, register_auth_provider
-from tests.components.met.conftest import mock_weather
+from tests.components.met.conftest import mock_weather  # noqa
 
 from . import mock_storage
 
 
 @pytest.fixture(autouse=True)
-def always_mock_weather(mock_weather):
+def always_mock_weather(mock_weather):  # noqa
     """Mock the Met weather provider."""
     pass
 
