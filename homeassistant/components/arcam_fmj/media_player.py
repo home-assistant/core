@@ -1,4 +1,4 @@
-"""Arcam media player"""
+"""Arcam media player."""
 import logging
 from typing import Optional
 
@@ -8,7 +8,6 @@ from arcam.fmj import (
     IncomingAudioFormat,
     SourceCodes,
 )
-from arcam.fmj.client import Client
 from arcam.fmj.state import State
 
 from homeassistant import config_entries
@@ -52,7 +51,7 @@ async def async_setup_entry(
     config_entry: config_entries.ConfigEntry,
     async_add_entities,
 ):
-    """Setup platform."""
+    """Set up the configuration entry."""
     data = hass.data[DOMAIN_DATA_ENTRIES][config_entry.entry_id]
     client = data["client"]
     config = data["config"]
@@ -80,9 +79,7 @@ async def async_setup_entry(
 class ArcamFmj(MediaPlayerDevice):
     """Representation of a media device."""
 
-    def __init__(
-        self, state: State, name: str, turn_on: Optional[ConfigType]
-    ):
+    def __init__(self, state: State, name: str, turn_on: Optional[ConfigType]):
         """Initialize device."""
         super().__init__()
         self._state = state
@@ -99,7 +96,7 @@ class ArcamFmj(MediaPlayerDevice):
             self._support |= SUPPORT_SELECT_SOUND_MODE
 
     def _get_2ch(self):
-        """Return if source is 2 channel or not"""
+        """Return if source is 2 channel or not."""
         audio_format, _ = self._state.get_incoming_audio_format()
         return bool(
             audio_format
@@ -121,7 +118,9 @@ class ArcamFmj(MediaPlayerDevice):
     def device_info(self):
         """Return a device description for device registry."""
         return {
-            "identifiers": {(DOMAIN, self._state.client.host, self._state.client.port)},
+            "identifiers": {
+                (DOMAIN, self._state.client.host, self._state.client.port)
+            },
             "model": "FMJ",
             "manufacturer": "Arcam",
         }
@@ -153,7 +152,6 @@ class ArcamFmj(MediaPlayerDevice):
 
     async def async_added_to_hass(self):
         """Once registed add listener for events."""
-
         await self._state.start()
 
         def _data(host):
@@ -181,7 +179,7 @@ class ArcamFmj(MediaPlayerDevice):
         )
 
     async def async_update(self):
-        """Force update state"""
+        """Force update of state."""
         _LOGGER.info("Update state %s", self.name)
         await self._state.update()
 
@@ -205,9 +203,13 @@ class ArcamFmj(MediaPlayerDevice):
         """Select a specific source."""
         try:
             if self._get_2ch():
-                await self._state.set_decode_mode_2ch(DecodeMode2CH[sound_mode])
+                await self._state.set_decode_mode_2ch(
+                    DecodeMode2CH[sound_mode]
+                )
             else:
-                await self._state.set_decode_mode_mch(DecodeModeMCH[sound_mode])
+                await self._state.set_decode_mode_mch(
+                    DecodeModeMCH[sound_mode]
+                )
         except KeyError:
             _LOGGER.error("Unsupported sound_mode %s", sound_mode)
             return
@@ -297,6 +299,7 @@ class ArcamFmj(MediaPlayerDevice):
 
     @property
     def volume_level(self):
+        """Volume level of device."""
         value = self._state.get_volume()
         if value is None:
             return None

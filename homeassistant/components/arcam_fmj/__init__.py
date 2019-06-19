@@ -17,8 +17,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_ZONE,
     SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
 )
 from .const import (
     DOMAIN,
@@ -91,13 +89,15 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: config_entries.ConfigEntry
 ):
     """Set up an access point from a config entry."""
-
     client = Client(entry.data[CONF_HOST], entry.data[CONF_PORT])
 
     config = hass.data[DOMAIN_DATA_CONFIG].get(
         (entry.data[CONF_HOST], entry.data[CONF_PORT]),
         DEVICE_SCHEMA(
-            {CONF_HOST: entry.data[CONF_HOST], CONF_PORT: entry.data[CONF_PORT]}
+            {
+                CONF_HOST: entry.data[CONF_HOST],
+                CONF_PORT: entry.data[CONF_PORT],
+            }
         ),
     )
 
@@ -106,7 +106,9 @@ async def async_setup_entry(
         "config": config,
     }
 
-    asyncio.ensure_future(_run_client(hass, client, config[CONF_SCAN_INTERVAL]))
+    asyncio.ensure_future(
+        _run_client(hass, client, config[CONF_SCAN_INTERVAL])
+    )
 
     hass.async_add_job(
         hass.config_entries.async_forward_entry_setup(entry, "media_player")
