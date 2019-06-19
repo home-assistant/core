@@ -7,5 +7,7 @@
     "arcam-fmj==0.4.2"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@elupus"
+  ]
 }
