@@ -60,10 +60,6 @@ default_config:
 # http:
 #   base_url: example.duckdns.org:8123
 
-# Weather prediction
-weather:
-  - platform: met
-
 # Text to speech
 tts:
   - platform: google_translate
