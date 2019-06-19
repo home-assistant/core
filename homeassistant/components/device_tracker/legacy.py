@@ -84,7 +84,6 @@ class DeviceTracker:
         self.defaults = defaults
         self.group = None
         self._is_updating = asyncio.Lock()
-        self._registry_task = None
 
         for dev in devices:
             if self.devices[dev.dev_id] is not dev:
@@ -117,10 +116,7 @@ class DeviceTracker:
 
         This method is a coroutine.
         """
-        if not self._registry_task:
-            self._registry_task = self.hass.async_create_task(
-                async_get_registry(self.hass))
-        registry = await self._registry_task
+        registry = await async_get_registry(self.hass)
         if mac is None and dev_id is None:
             raise HomeAssistantError('Neither mac or device id passed in')
         if mac is not None:
