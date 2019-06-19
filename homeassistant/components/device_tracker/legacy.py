@@ -134,6 +134,16 @@ class DeviceTracker:
                 await device.async_update_ha_state()
             return
 
+        # Guard from calling see on config entry entities.
+        registry = await self.hass.helpers.entity_registry.async_get_registry()
+        # generate entity_id
+        entity_id = ENTITY_ID_FORMAT.format(dev_id)
+        if registry.async_is_registered(entity_id):
+            LOGGER.error(
+                "The see service is not supported for this entity %s",
+                entity_id)
+            return
+
         # If no device can be found, create it
         dev_id = util.ensure_unique_string(dev_id, self.devices.keys())
         device = Device(
