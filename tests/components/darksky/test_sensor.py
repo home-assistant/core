@@ -65,6 +65,18 @@ INVALID_CONFIG_LANG = {
     }
 }
 
+VALID_CONFIG_ALERTS = {
+    'sensor': {
+        'platform': 'darksky',
+        'api_key': 'foo',
+        'forecast': [1, 2],
+        'hourly_forecast': [1, 2],
+        'monitored_conditions': ['summary', 'icon', 'temperature_high',
+                                 'alerts'],
+        'scan_interval': timedelta(seconds=120),
+    }
+}
+
 
 def load_forecastMock(key, lat, lon,
                       units, lang):  # pylint: disable=invalid-name
@@ -150,6 +162,15 @@ class TestDarkSkySetup(unittest.TestCase):
         )
         assert not response
 
+    @MockDependency('forecastio')
+    @patch('forecastio.load_forecast', new=load_forecastMock)
+    def test_setup_with_alerts_config(self, mock_forecastio):
+        """Test the platform setup with language configuration."""
+        setup_component(self.hass, 'sensor', VALID_CONFIG_ALERTS)
+
+        state = self.hass.states.get('sensor.dark_sky_summary')
+        assert state is None
+
     @requests_mock.Mocker()
     @patch('forecastio.api.get_forecast', wraps=forecastio.api.get_forecast)
     def test_setup(self, mock_req, mock_get_forecast):
@@ -169,10 +190,3 @@ class TestDarkSkySetup(unittest.TestCase):
         assert state.state == 'Clear'
         assert state.attributes.get('friendly_name') == \
             'Dark Sky Summary'
-
-        state = self.hass.states.get('sensor.dark_sky_alerts')
-        assert state is not None
-        assert state.state == '2'
-        assert state.attributes.get('title_1') == \
-            "Red Flag Warning"
-        print(state)
