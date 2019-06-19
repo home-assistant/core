@@ -338,7 +338,7 @@ async def test_see_service_gaurd_config_entry(hass, mock_device_tracker_conf):
     common.async_see(hass, **params)
     await hass.async_block_till_done()
 
-    assert len(devices) == 0
+    assert not devices
 
 
 async def test_new_device_event_fired(hass, mock_device_tracker_conf):
