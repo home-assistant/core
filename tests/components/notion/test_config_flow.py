@@ -18,7 +18,7 @@ def mock_client_coro():
 
 @pytest.fixture
 def mock_aionotion(mock_client_coro):
-    """Mock the aioambient library."""
+    """Mock the aionotion library."""
     with MockDependency('aionotion') as mock_:
         mock_.async_get_client.return_value = mock_client_coro
         yield mock_

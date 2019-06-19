@@ -1,1 +1,1 @@
-"""Define tests for the Ambient PWS component."""
+"""Define tests for the Notion integration."""
