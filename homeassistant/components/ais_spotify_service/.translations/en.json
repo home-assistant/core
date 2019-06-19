@@ -3,7 +3,7 @@
         "title": "AIS Service Spotify",
         "step": {
             "init": {
-                "description": "To connect the Spotify account you need to Authorize **Asystent domowy**  click **SUBMIT** to continue. \n\n ![AIS logo](/static/icons/favicon-100x100.png)",
+                "description": "To connect the Spotify account you need to Authorize **Asystent domowy**  \n\n ![AIS logo](/static/icons/favicon-100x100.png) \n\n click **SUBMIT** to continue. ",
                 "title": "Authentication for Spotify"
             },
            "confirm": {

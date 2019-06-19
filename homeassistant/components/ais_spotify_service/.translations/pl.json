@@ -3,7 +3,7 @@
         "title": "AIS Serwis Spotify",
         "step": {
             "init": {
-                "description": "Aby po\u0142\u0105czy\u0107 konto Spotify wymagana jest autoryzacja **Asystenta domowego** na stronie Spotify \nkliknij **SUBMIT** by przejść do autoryzacji.\n\n ![AIS logo](/static/icons/favicon-100x100.png)",
+                "description": "Aby po\u0142\u0105czy\u0107 konto Spotify wymagana jest autoryzacja **Asystenta domowego** na stronie Spotify \n\n ![AIS logo](/static/icons/favicon-100x100.png) \n\nkliknij **SUBMIT** by przejść do autoryzacji.",
                 "title": "Uwierzytelnienie  na Spotify"
             },
            "confirm": {

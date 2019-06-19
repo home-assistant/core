@@ -37,10 +37,10 @@
         "search_failed": "Nie można znaleźć sieci WiFi, upewnij się, że urządzenie znajduje się w zasięgu sieci i spróbuj ponownie.",
         "conn_failed": "Nie udało się połączyć w wybraną siecią WiFi, proszę spróbuj ponownie.",
         "no_data_to_connect": "Nie wiem z którą siecią mam się połączyć. Wybierz z listy lub podaj nazwę dla ukrytej sieci.",
-        "no_password_to_protected_wifi": "By połączyć sie z wybranym typem sieci wymagane jest podanie hasła."
+        "no_password_to_protected_wifi": "Aby połączyć się z wybranym typem sieci wymagane jest podanie hasła."
       },
       "abort": {
-        "conn_failed": "Nie udało się połączyć w wybraną siecią WiFi, proszę sprawdz podane parametry i spróbuj ponownie.\n\n Informacja o błędzie: {error_info}"
+        "conn_failed": "Nie udało się połączyć w wybraną siecią WiFi, proszę sprawdzić podane parametry i spróbować ponownie."
       }
     }
 }
