@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from aiohttp import ClientResponseError
 from homeassistant.components.water_heater import WaterHeaterDevice
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -93,7 +94,7 @@ class IncomfortWaterHeater(WaterHeaterDevice):
         try:
             await self._heater.update()
 
-        except (AssertionError, asyncio.TimeoutError) as err:
-            _LOGGER.warning("Update failed, message: %s", err)
+        except (ClientResponseError, asyncio.TimeoutError) as err:
+            _LOGGER.warning("Update failed, message is: %s", err)
 
         async_dispatcher_send(self.hass, DOMAIN)

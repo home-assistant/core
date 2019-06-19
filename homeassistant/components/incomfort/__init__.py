@@ -37,9 +37,9 @@ async def async_setup(hass, hass_config):
 
     try:
         heater = incomfort_data['heater'] = list(await client.heaters)[0]
-    except ClientResponseError as exc:
+    except ClientResponseError as err:
         _LOGGER.warning(
-            "Setup failed, check your configuration, message is: %s", exc)
+            "Setup failed, check your configuration, message is: %s", err)
         return False
 
     await heater.update()
