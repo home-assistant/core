@@ -1,6 +1,7 @@
 """Support for VersaSense MicroPnP devices."""
 import logging
 
+import pyversasense as pyv
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST
@@ -8,12 +9,11 @@ from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
-from .const import (PERIPHERAL_CLASS_SENSOR, PERIPHERAL_CLASS_SENSOR_ACTUATOR)
+from .const import PERIPHERAL_CLASS_SENSOR, PERIPHERAL_CLASS_SENSOR_ACTUATOR
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "versasense"
-REQUIREMENTS = ['pyversasense==0.0.6']
 
 # Validation of the user's configuration
 CONFIG_SCHEMA = vol.Schema({
@@ -25,8 +25,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up the versasense component."""
-    import pyversasense as pyv
-
     session = aiohttp_client.async_get_clientsession(hass)
     consumer = pyv.Consumer(config[DOMAIN]['host'], session)
 
