@@ -1,7 +1,6 @@
 """Support for an Intergas boiler via an InComfort/InTouch Lan2RF gateway."""
 from homeassistant.const import (
-    PRESSURE_BAR, TEMP_CELSIUS,
-    DEVICE_CLASS_PRESSURE, DEVICE_CLASS_TEMPERATURE)
+    PRESSURE_BAR, TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -25,7 +24,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     heater = hass.data[DOMAIN]['heater']
 
     async_add_entities([
-        IncomfortPressure(client, heater),
+        IncomfortPressure(client, heater, INTOUCH_PRESSURE),
         IncomfortTemperature(client, heater, INTOUCH_HEATER_TEMP),
         IncomfortTemperature(client, heater, INTOUCH_TAP_TEMP)
     ])
@@ -75,12 +74,11 @@ class IncomfortSensor(Entity):
 class IncomfortPressure(IncomfortSensor):
     """Representation of an InTouch CV Pressure sensor."""
 
-    def __init__(self, client, boiler):
+    def __init__(self, client, boiler, name):
         """Initialize the sensor."""
         super().__init__(client, boiler)
 
-        self._name = INTOUCH_PRESSURE
-        self._device_class = DEVICE_CLASS_PRESSURE
+        self._name = name
         self._unit_of_measurement = PRESSURE_BAR
 
     @property
