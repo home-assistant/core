@@ -3,10 +3,12 @@
   "name": "Meteo france",
   "documentation": "https://www.home-assistant.io/components/meteo_france",
   "requirements": [
-    "meteofrance==0.3.7"
+    "meteofrance==0.3.7",
+    "vigilancemeteo==3.0.0"
   ],
   "dependencies": [],
   "codeowners": [
-    "@victorcerutti"
+    "@victorcerutti",
+    "@oncleben31"
   ]
 }
