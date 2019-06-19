@@ -48,7 +48,7 @@ class AlexaDirective:
         self.entity_id = _endpoint_id.replace('#', '.')
 
         self.entity = hass.states.get(self.entity_id)
-        if not self.entity:
+        if not self.entity or not config.should_expose(self.entity_id):
             raise AlexaInvalidEndpointError(_endpoint_id)
 
         self.endpoint = ENTITY_ADAPTERS[self.entity.domain](

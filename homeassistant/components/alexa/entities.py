@@ -168,6 +168,20 @@ class AlexaEntity:
             for prop in interface.serialize_properties():
                 yield prop
 
+    def serialize_discovery(self):
+        """Serialize the entity for discovery."""
+        return {
+            'displayCategories': self.display_categories(),
+            'cookie': {},
+            'endpointId': self.alexa_id(),
+            'friendlyName': self.friendly_name(),
+            'description': self.description(),
+            'manufacturerName': 'Home Assistant',
+            'capabilities': [
+                i.serialize_discovery() for i in self.interfaces()
+            ]
+        }
+
 
 @callback
 def async_get_entities(hass, config) -> List[AlexaEntity]:
