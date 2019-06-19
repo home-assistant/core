@@ -131,3 +131,19 @@ async def test_flow_entry_config_entry_already_exists():
         assert len(config_form.mock_calls) == 1
         assert len(config_entries.mock_calls) == 1
         assert len(flow._errors) == 1
+
+
+async def test_onboarding_step(hass, mock_weather):
+    """Test initializing via onboarding step."""
+    hass = Mock()
+
+    flow = config_flow.MetFlowHandler()
+    flow.hass = hass
+
+    result = await flow.async_step_onboarding({})
+
+    assert result['type'] == 'create_entry'
+    assert result['title'] == 'Home'
+    assert result['data'] == {
+        'track_home': True,
+    }
