@@ -19,6 +19,7 @@ MINOR_VERSION = 94
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 PATCH_VERSION = '0b0'
 >>>>>>> Bumped version to 0.94.0b0
 =======
@@ -61,6 +62,9 @@ PATCH_VERSION = '2'
 =======
 PATCH_VERSION = '3'
 >>>>>>> Bumped version to 0.94.3
+=======
+PATCH_VERSION = '4'
+>>>>>>> Bumped version to 0.94.4
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 5, 3)
