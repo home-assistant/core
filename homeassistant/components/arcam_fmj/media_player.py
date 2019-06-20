@@ -81,7 +81,6 @@ class ArcamFmj(MediaPlayerDevice):
 
     def __init__(self, state: State, name: str, turn_on: Optional[ConfigType]):
         """Initialize device."""
-        super().__init__()
         self._state = state
         self._name = name
         self._turn_on = turn_on
