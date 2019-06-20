@@ -3,6 +3,7 @@ import logging
 from collections import namedtuple
 from datetime import timedelta
 
+from getmac import get_mac_address
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -111,8 +112,6 @@ class NmapDeviceScanner(DeviceScanner):
                                   arguments=options)
         except PortScannerError:
             return False
-
-        from getmac import get_mac_address
 
         now = dt_util.now()
         for ipv4, info in result['scan'].items():

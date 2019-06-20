@@ -2,6 +2,7 @@
 import ipaddress
 import logging
 
+from getmac import get_mac_address
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -71,7 +72,6 @@ def setup_bravia(config, pin, hass, add_entities):
         request_configuration(config, hass, add_entities)
         return
 
-    from getmac import get_mac_address
     try:
         if ipaddress.ip_address(host).version == 6:
             mode = 'ip6'
