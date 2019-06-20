@@ -45,7 +45,7 @@ class NotionBinarySensor(NotionEntity, BinarySensorDevice):
     """Define a Notion sensor."""
 
     @property
-    def state(self):
+    def is_on(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -64,7 +64,7 @@ class NotionBinarySensor(NotionEntity, BinarySensorDevice):
         elif self._task['task_type'] == SENSOR_LEAK:
             self._state = new_data['status']['value'] != 'no_leak'
         elif self._task['task_type'] == SENSOR_MISSING:
-            self._state = new_data['status']['value'] != 'not_missing'
+            self._state = new_data['status']['value'] == 'not_missing'
         elif self._task['task_type'] == SENSOR_SAFE:
             self._state = new_data['status']['value'] != 'closed'
         elif self._task['task_type'] == SENSOR_SLIDING:
