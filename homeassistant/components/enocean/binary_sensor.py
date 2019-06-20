@@ -71,9 +71,9 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
         # Energy Bow
         pushed = None
 
-        if packet.data[6] == 0x30:
+        if packet.data[1] == 0x10:
             pushed = 1
-        elif packet.data[6] == 0x20:
+        elif packet.data[1] == 0x00:
             pushed = 0
 
         self.schedule_update_ha_state()
