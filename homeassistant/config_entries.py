@@ -257,7 +257,8 @@ class ConfigEntry:
                           self.title, self.domain)
             return False
         # Handler may be a partial
-        while isinstance(handler, functools.partial):
+        # type ignore: https://github.com/python/typeshed/pull/3077
+        while isinstance(handler, functools.partial):  # type: ignore
             handler = handler.func
 
         if self.version == handler.VERSION:
