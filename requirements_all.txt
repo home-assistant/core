@@ -630,6 +630,10 @@ ghlocalapi==0.3.5
 # homeassistant.components.qld_bushfire
 georss_qld_bushfire_alert_client==0.3
 
+# homeassistant.components.braviatv
+# homeassistant.components.nmap_tracker
+getmac==0.8.1
+
 # homeassistant.components.gitter
 >>>>>>> Queensland bushfire alert feed platform (#24473)
 gitterpy==0.1.7
