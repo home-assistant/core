@@ -8,21 +8,22 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as COMP_BINARY_SENSOR
 from homeassistant.components.climate import DOMAIN as COMP_CLIMATE
-from homeassistant.components.opentherm_gw.const import (
-    ATTR_GW_ID, ATTR_MODE, ATTR_LEVEL, BINARY_SENSOR_INFO, CONF_CLIMATE,
-    CONF_FLOOR_TEMP, CONF_PRECISION, DATA_GATEWAYS, DATA_OPENTHERM_GW,
-    SENSOR_INFO, SERVICE_RESET_GATEWAY, SERVICE_SET_CLOCK,
-    SERVICE_SET_CONTROL_SETPOINT, SERVICE_SET_GPIO_MODE, SERVICE_SET_LED_MODE,
-    SERVICE_SET_MAX_MOD, SERVICE_SET_OAT, SERVICE_SET_SB_TEMP)
 from homeassistant.components.sensor import DOMAIN as COMP_SENSOR
 from homeassistant.const import (
-    ATTR_DATE, ATTR_ID, ATTR_TEMPERATURE, ATTR_TIME, CONF_DEVICE,
-    CONF_MONITORED_VARIABLES, CONF_NAME, EVENT_HOMEASSISTANT_STOP,
-    PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE)
+    ATTR_DATE, ATTR_ID, ATTR_TEMPERATURE, ATTR_TIME, CONF_DEVICE, CONF_NAME,
+    EVENT_HOMEASSISTANT_STOP, PRECISION_HALVES, PRECISION_TENTHS,
+    PRECISION_WHOLE)
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 import homeassistant.helpers.config_validation as cv
+
+from .const import (
+    ATTR_GW_ID, ATTR_MODE, ATTR_LEVEL, CONF_CLIMATE, CONF_FLOOR_TEMP,
+    CONF_PRECISION, DATA_GATEWAYS, DATA_OPENTHERM_GW, SERVICE_RESET_GATEWAY,
+    SERVICE_SET_CLOCK, SERVICE_SET_CONTROL_SETPOINT, SERVICE_SET_GPIO_MODE,
+    SERVICE_SET_LED_MODE, SERVICE_SET_MAX_MOD, SERVICE_SET_OAT,
+    SERVICE_SET_SB_TEMP)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,8 +40,6 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: cv.schema_with_slug_keys({
         vol.Required(CONF_DEVICE): cv.string,
         vol.Optional(CONF_CLIMATE, default={}): CLIMATE_SCHEMA,
-        vol.Optional(CONF_MONITORED_VARIABLES, default=[]): [vol.Any(
-            vol.In(BINARY_SENSOR_INFO), vol.In(SENSOR_INFO))],
         vol.Optional(CONF_NAME): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -55,9 +54,10 @@ async def async_setup(hass, config):
         hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][gw_id] = gateway
         hass.async_create_task(async_load_platform(hass, COMP_CLIMATE, DOMAIN,
                                                    gw_id, config))
-        monitored_vars = cfg[CONF_MONITORED_VARIABLES]
-        if monitored_vars:
-            gateway.setup_monitored_vars(monitored_vars, config)
+        hass.async_create_task(async_load_platform(hass, COMP_BINARY_SENSOR,
+                                                   DOMAIN, gw_id, config))
+        hass.async_create_task(async_load_platform(hass, COMP_SENSOR, DOMAIN,
+                                                   gw_id, config))
         # Schedule directly on the loop to avoid blocking HA startup.
         hass.loop.create_task(gateway.connect_and_subscribe(cfg[CONF_DEVICE]))
     register_services(hass)
@@ -234,8 +234,6 @@ class OpenThermGatewayDevice():
         self.gw_id = gw_id
         self.name = config.get(CONF_NAME, gw_id)
         self.climate_config = config[CONF_CLIMATE]
-        self.binary_sensors = []
-        self.sensors = []
         self.status = {}
         self.update_signal = '{}_{}_update'.format(DATA_OPENTHERM_GW, gw_id)
         self.gateway = pyotgw.pyotgw()
@@ -257,18 +255,3 @@ class OpenThermGatewayDevice():
             self.status = status
             async_dispatcher_send(self.hass, self.update_signal, status)
         self.gateway.subscribe(handle_report)
-
-    def setup_monitored_vars(self, monitored_vars, hass_config):
-        """Set up requested sensors."""
-        for var in monitored_vars:
-            if var in BINARY_SENSOR_INFO:
-                self.binary_sensors.append(var)
-            else:
-                self.sensors.append(var)
-        if self.binary_sensors:
-            self.hass.async_create_task(async_load_platform(
-                self.hass, COMP_BINARY_SENSOR, DOMAIN, self.gw_id,
-                hass_config))
-        if self.sensors:
-            self.hass.async_create_task(async_load_platform(
-                self.hass, COMP_SENSOR, DOMAIN, self.gw_id, hass_config))

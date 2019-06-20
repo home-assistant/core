@@ -6,13 +6,15 @@ from pyotgw import vars as gw_vars
 from homeassistant.components.climate import ClimateDevice, ENTITY_ID_FORMAT
 from homeassistant.components.climate.const import (
     STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_TARGET_TEMPERATURE)
-from homeassistant.components.opentherm_gw.const import (
-    CONF_FLOOR_TEMP, CONF_PRECISION, DATA_GATEWAYS, DATA_OPENTHERM_GW)
 from homeassistant.const import (
     ATTR_TEMPERATURE, PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE,
     TEMP_CELSIUS)
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import async_generate_entity_id
+
+from .const import (
+    CONF_FLOOR_TEMP, CONF_PRECISION, DATA_GATEWAYS, DATA_OPENTHERM_GW)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,7 +56,8 @@ class OpenThermClimate(ClimateDevice):
         async_dispatcher_connect(self.hass, self._gateway.update_signal,
                                  self.receive_report)
 
-    async def receive_report(self, status):
+    @callback
+    def receive_report(self, status):
         """Receive and handle a new report from the Gateway."""
         ch_active = status.get(gw_vars.DATA_SLAVE_CH_ACTIVE)
         flame_on = status.get(gw_vars.DATA_SLAVE_FLAME_ON)

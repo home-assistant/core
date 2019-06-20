@@ -3,10 +3,12 @@ import logging
 
 from homeassistant.components.binary_sensor import (
     ENTITY_ID_FORMAT, BinarySensorDevice)
-from homeassistant.components.opentherm_gw.const import (
-    BINARY_SENSOR_INFO, DATA_GATEWAYS, DATA_OPENTHERM_GW)
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import async_generate_entity_id
+
+from .const import BINARY_SENSOR_INFO, DATA_GATEWAYS, DATA_OPENTHERM_GW
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,9 +20,9 @@ async def async_setup_platform(
         return
     gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][discovery_info]
     sensors = []
-    for var in gw_dev.binary_sensors:
-        device_class = BINARY_SENSOR_INFO[var][0]
-        friendly_name_format = BINARY_SENSOR_INFO[var][1]
+    for var, info in BINARY_SENSOR_INFO.items():
+        device_class = info[0]
+        friendly_name_format = info[1]
         sensors.append(OpenThermBinarySensor(gw_dev, var, device_class,
                                              friendly_name_format))
     async_add_entities(sensors)
@@ -47,6 +49,7 @@ class OpenThermBinarySensor(BinarySensorDevice):
         async_dispatcher_connect(self.hass, self._gateway.update_signal,
                                  self.receive_report)
 
+    @callback
     def receive_report(self, status):
         """Handle status updates from the component."""
         self._state = bool(status.get(self._var))

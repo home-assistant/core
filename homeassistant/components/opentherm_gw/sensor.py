@@ -1,11 +1,13 @@
 """Support for OpenTherm Gateway sensors."""
 import logging
 
-from homeassistant.components.opentherm_gw.const import (
-    DATA_GATEWAYS, DATA_OPENTHERM_GW, SENSOR_INFO)
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
+
+from .const import DATA_GATEWAYS, DATA_OPENTHERM_GW, SENSOR_INFO
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,15 +18,13 @@ async def async_setup_platform(
     if discovery_info is None:
         return
     gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][discovery_info]
-
     sensors = []
-    for var in gw_dev.sensors:
-        device_class = SENSOR_INFO[var][0]
-        unit = SENSOR_INFO[var][1]
-        friendly_name_format = SENSOR_INFO[var][2]
-        sensors.append(
-            OpenThermSensor(gw_dev, var, device_class, unit,
-                            friendly_name_format))
+    for var, info in SENSOR_INFO.items():
+        device_class = info[0]
+        unit = info[1]
+        friendly_name_format = info[2]
+        sensors.append(OpenThermSensor(gw_dev, var, device_class, unit,
+                                       friendly_name_format))
     async_add_entities(sensors)
 
 
@@ -49,7 +49,8 @@ class OpenThermSensor(Entity):
         async_dispatcher_connect(self.hass, self._gateway.update_signal,
                                  self.receive_report)
 
-    async def receive_report(self, status):
+    @callback
+    def receive_report(self, status):
         """Handle status updates from the component."""
         value = status.get(self._var)
         if isinstance(value, float):
