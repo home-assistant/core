@@ -9,7 +9,7 @@ from homeassistant.components import group
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
     ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT, CONF_SENSORS, STATE_OK,
-    STATE_PROBLEM, STATE_UNKNOWN, TEMP_CELSIUS)
+    STATE_PROBLEM, STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS)
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -185,7 +185,7 @@ class Plant(Entity):
         value = new_state.state
         _LOGGER.debug("Received callback from %s with value %s",
                       entity_id, value)
-        if value == STATE_UNKNOWN:
+        if value == STATE_UNAVAILABLE or value == STATE_UNKNOWN:
             return
 
         reading = self._sensormap[entity_id]
