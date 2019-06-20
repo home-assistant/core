@@ -17,10 +17,6 @@ import homeassistant.helpers.config_validation as cv
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['http']
-
-REQUIREMENTS = ['python-lyric==1.1.4']
-
 DOMAIN = 'lyric'
 
 DATA_LYRIC = 'lyric'
