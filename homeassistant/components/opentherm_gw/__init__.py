@@ -2,10 +2,18 @@
 import logging
 from datetime import datetime, date
 
+import pyotgw
+import pyotgw.vars as gw_vars
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as COMP_BINARY_SENSOR
 from homeassistant.components.climate import DOMAIN as COMP_CLIMATE
+from homeassistant.components.opentherm_gw.const import (
+    ATTR_GW_ID, ATTR_MODE, ATTR_LEVEL, BINARY_SENSOR_INFO, CONF_CLIMATE,
+    CONF_FLOOR_TEMP, CONF_PRECISION, DATA_GATEWAYS, DATA_OPENTHERM_GW,
+    SENSOR_INFO, SERVICE_RESET_GATEWAY, SERVICE_SET_CLOCK,
+    SERVICE_SET_CONTROL_SETPOINT, SERVICE_SET_GPIO_MODE, SERVICE_SET_LED_MODE,
+    SERVICE_SET_MAX_MOD, SERVICE_SET_OAT, SERVICE_SET_SB_TEMP)
 from homeassistant.components.sensor import DOMAIN as COMP_SENSOR
 from homeassistant.const import (
     ATTR_DATE, ATTR_ID, ATTR_TEMPERATURE, ATTR_TIME, CONF_DEVICE,
@@ -16,29 +24,10 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 import homeassistant.helpers.config_validation as cv
 
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'opentherm_gw'
-
-ATTR_GW_ID = 'gateway_id'
-ATTR_MODE = 'mode'
-ATTR_LEVEL = 'level'
-
-CONF_CLIMATE = 'climate'
-CONF_FLOOR_TEMP = 'floor_temperature'
-CONF_PRECISION = 'precision'
-
-DATA_GATEWAYS = 'gateways'
-DATA_OPENTHERM_GW = 'opentherm_gw'
-
-SERVICE_RESET_GATEWAY = 'reset_gateway'
-SERVICE_SET_CLOCK = 'set_clock'
-SERVICE_SET_CONTROL_SETPOINT = 'set_control_setpoint'
-SERVICE_SET_GPIO_MODE = 'set_gpio_mode'
-SERVICE_SET_LED_MODE = 'set_led_mode'
-SERVICE_SET_MAX_MOD = 'set_max_modulation'
-SERVICE_SET_OAT = 'set_outside_temperature'
-SERVICE_SET_SB_TEMP = 'set_setback_temperature'
 
 CLIMATE_SCHEMA = vol.Schema({
     vol.Optional(CONF_PRECISION): vol.In([PRECISION_TENTHS, PRECISION_HALVES,
@@ -50,7 +39,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: cv.schema_with_slug_keys({
         vol.Required(CONF_DEVICE): cv.string,
         vol.Optional(CONF_CLIMATE, default={}): CLIMATE_SCHEMA,
-        vol.Optional(CONF_MONITORED_VARIABLES, default=[]): [cv.string],
+        vol.Optional(CONF_MONITORED_VARIABLES, default=[]): [vol.Any(
+            vol.In(BINARY_SENSOR_INFO), vol.In(SENSOR_INFO))],
         vol.Optional(CONF_NAME): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -61,15 +51,21 @@ async def async_setup(hass, config):
     conf = config[DOMAIN]
     hass.data[DATA_OPENTHERM_GW] = {DATA_GATEWAYS: {}}
     for gw_id, cfg in conf.items():
-        gateway = OpenThermGatewayDevice(hass, gw_id, cfg, config)
+        gateway = OpenThermGatewayDevice(hass, gw_id, cfg)
         hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][gw_id] = gateway
-    hass.async_create_task(register_services(hass))
+        hass.async_create_task(async_load_platform(hass, COMP_CLIMATE, DOMAIN,
+                                                   gw_id, config))
+        monitored_vars = cfg[CONF_MONITORED_VARIABLES]
+        if monitored_vars:
+            gateway.setup_monitored_vars(monitored_vars, config)
+        # Schedule directly on the loop to avoid blocking HA startup.
+        hass.loop.create_task(gateway.connect_and_subscribe(cfg[CONF_DEVICE]))
+    register_services(hass)
     return True
 
 
-async def register_services(hass):
+def register_services(hass):
     """Register services for the component."""
-    import pyotgw.vars as gw_vars
     service_reset_schema = vol.Schema({
         vol.Required(ATTR_GW_ID): vol.All(
             cv.string, vol.In(hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS])),
@@ -232,9 +228,8 @@ async def register_services(hass):
 class OpenThermGatewayDevice():
     """OpenTherm Gateway device class."""
 
-    def __init__(self, hass, gw_id, config, hass_config):
+    def __init__(self, hass, gw_id, config):
         """Initialize the OpenTherm Gateway."""
-        import pyotgw
         self.hass = hass
         self.gw_id = gw_id
         self.name = config.get(CONF_NAME, gw_id)
@@ -244,15 +239,6 @@ class OpenThermGatewayDevice():
         self.status = {}
         self.update_signal = '{}_{}_update'.format(DATA_OPENTHERM_GW, gw_id)
         self.gateway = pyotgw.pyotgw()
-        self.vars = pyotgw.vars
-        hass.async_create_task(async_load_platform(hass, COMP_CLIMATE, DOMAIN,
-                                                   self.gw_id, hass_config))
-        monitored_vars = config[CONF_MONITORED_VARIABLES]
-        if monitored_vars:
-            hass.async_create_task(
-                self.setup_monitored_vars(monitored_vars, hass_config))
-        # Schedule directly on the loop to avoid blocking HA startup.
-        hass.loop.create_task(self.connect_and_subscribe(config[CONF_DEVICE]))
 
     async def connect_and_subscribe(self, device_path):
         """Connect to serial device and subscribe report handler."""
@@ -272,119 +258,13 @@ class OpenThermGatewayDevice():
             async_dispatcher_send(self.hass, self.update_signal, status)
         self.gateway.subscribe(handle_report)
 
-    async def setup_monitored_vars(self, monitored_vars, hass_config):
+    def setup_monitored_vars(self, monitored_vars, hass_config):
         """Set up requested sensors."""
-        sensor_type_map = {
-            COMP_BINARY_SENSOR: [
-                self.vars.DATA_MASTER_CH_ENABLED,
-                self.vars.DATA_MASTER_DHW_ENABLED,
-                self.vars.DATA_MASTER_COOLING_ENABLED,
-                self.vars.DATA_MASTER_OTC_ENABLED,
-                self.vars.DATA_MASTER_CH2_ENABLED,
-                self.vars.DATA_SLAVE_FAULT_IND,
-                self.vars.DATA_SLAVE_CH_ACTIVE,
-                self.vars.DATA_SLAVE_DHW_ACTIVE,
-                self.vars.DATA_SLAVE_FLAME_ON,
-                self.vars.DATA_SLAVE_COOLING_ACTIVE,
-                self.vars.DATA_SLAVE_CH2_ACTIVE,
-                self.vars.DATA_SLAVE_DIAG_IND,
-                self.vars.DATA_SLAVE_DHW_PRESENT,
-                self.vars.DATA_SLAVE_CONTROL_TYPE,
-                self.vars.DATA_SLAVE_COOLING_SUPPORTED,
-                self.vars.DATA_SLAVE_DHW_CONFIG,
-                self.vars.DATA_SLAVE_MASTER_LOW_OFF_PUMP,
-                self.vars.DATA_SLAVE_CH2_PRESENT,
-                self.vars.DATA_SLAVE_SERVICE_REQ,
-                self.vars.DATA_SLAVE_REMOTE_RESET,
-                self.vars.DATA_SLAVE_LOW_WATER_PRESS,
-                self.vars.DATA_SLAVE_GAS_FAULT,
-                self.vars.DATA_SLAVE_AIR_PRESS_FAULT,
-                self.vars.DATA_SLAVE_WATER_OVERTEMP,
-                self.vars.DATA_REMOTE_TRANSFER_DHW,
-                self.vars.DATA_REMOTE_TRANSFER_MAX_CH,
-                self.vars.DATA_REMOTE_RW_DHW,
-                self.vars.DATA_REMOTE_RW_MAX_CH,
-                self.vars.DATA_ROVRD_MAN_PRIO,
-                self.vars.DATA_ROVRD_AUTO_PRIO,
-                self.vars.OTGW_GPIO_A_STATE,
-                self.vars.OTGW_GPIO_B_STATE,
-                self.vars.OTGW_IGNORE_TRANSITIONS,
-                self.vars.OTGW_OVRD_HB,
-            ],
-            COMP_SENSOR: [
-                self.vars.DATA_CONTROL_SETPOINT,
-                self.vars.DATA_MASTER_MEMBERID,
-                self.vars.DATA_SLAVE_MEMBERID,
-                self.vars.DATA_SLAVE_OEM_FAULT,
-                self.vars.DATA_COOLING_CONTROL,
-                self.vars.DATA_CONTROL_SETPOINT_2,
-                self.vars.DATA_ROOM_SETPOINT_OVRD,
-                self.vars.DATA_SLAVE_MAX_RELATIVE_MOD,
-                self.vars.DATA_SLAVE_MAX_CAPACITY,
-                self.vars.DATA_SLAVE_MIN_MOD_LEVEL,
-                self.vars.DATA_ROOM_SETPOINT,
-                self.vars.DATA_REL_MOD_LEVEL,
-                self.vars.DATA_CH_WATER_PRESS,
-                self.vars.DATA_DHW_FLOW_RATE,
-                self.vars.DATA_ROOM_SETPOINT_2,
-                self.vars.DATA_ROOM_TEMP,
-                self.vars.DATA_CH_WATER_TEMP,
-                self.vars.DATA_DHW_TEMP,
-                self.vars.DATA_OUTSIDE_TEMP,
-                self.vars.DATA_RETURN_WATER_TEMP,
-                self.vars.DATA_SOLAR_STORAGE_TEMP,
-                self.vars.DATA_SOLAR_COLL_TEMP,
-                self.vars.DATA_CH_WATER_TEMP_2,
-                self.vars.DATA_DHW_TEMP_2,
-                self.vars.DATA_EXHAUST_TEMP,
-                self.vars.DATA_SLAVE_DHW_MAX_SETP,
-                self.vars.DATA_SLAVE_DHW_MIN_SETP,
-                self.vars.DATA_SLAVE_CH_MAX_SETP,
-                self.vars.DATA_SLAVE_CH_MIN_SETP,
-                self.vars.DATA_DHW_SETPOINT,
-                self.vars.DATA_MAX_CH_SETPOINT,
-                self.vars.DATA_OEM_DIAG,
-                self.vars.DATA_TOTAL_BURNER_STARTS,
-                self.vars.DATA_CH_PUMP_STARTS,
-                self.vars.DATA_DHW_PUMP_STARTS,
-                self.vars.DATA_DHW_BURNER_STARTS,
-                self.vars.DATA_TOTAL_BURNER_HOURS,
-                self.vars.DATA_CH_PUMP_HOURS,
-                self.vars.DATA_DHW_PUMP_HOURS,
-                self.vars.DATA_DHW_BURNER_HOURS,
-                self.vars.DATA_MASTER_OT_VERSION,
-                self.vars.DATA_SLAVE_OT_VERSION,
-                self.vars.DATA_MASTER_PRODUCT_TYPE,
-                self.vars.DATA_MASTER_PRODUCT_VERSION,
-                self.vars.DATA_SLAVE_PRODUCT_TYPE,
-                self.vars.DATA_SLAVE_PRODUCT_VERSION,
-                self.vars.OTGW_MODE,
-                self.vars.OTGW_DHW_OVRD,
-                self.vars.OTGW_ABOUT,
-                self.vars.OTGW_BUILD,
-                self.vars.OTGW_CLOCKMHZ,
-                self.vars.OTGW_LED_A,
-                self.vars.OTGW_LED_B,
-                self.vars.OTGW_LED_C,
-                self.vars.OTGW_LED_D,
-                self.vars.OTGW_LED_E,
-                self.vars.OTGW_LED_F,
-                self.vars.OTGW_GPIO_A,
-                self.vars.OTGW_GPIO_B,
-                self.vars.OTGW_SB_TEMP,
-                self.vars.OTGW_SETP_OVRD_MODE,
-                self.vars.OTGW_SMART_PWR,
-                self.vars.OTGW_THRM_DETECT,
-                self.vars.OTGW_VREF,
-            ]
-        }
         for var in monitored_vars:
-            if var in sensor_type_map[COMP_SENSOR]:
-                self.sensors.append(var)
-            elif var in sensor_type_map[COMP_BINARY_SENSOR]:
+            if var in BINARY_SENSOR_INFO:
                 self.binary_sensors.append(var)
             else:
-                _LOGGER.error("Monitored variable not supported: %s", var)
+                self.sensors.append(var)
         if self.binary_sensors:
             self.hass.async_create_task(async_load_platform(
                 self.hass, COMP_BINARY_SENSOR, DOMAIN, self.gw_id,

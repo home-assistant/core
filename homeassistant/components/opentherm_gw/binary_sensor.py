@@ -3,16 +3,12 @@ import logging
 
 from homeassistant.components.binary_sensor import (
     ENTITY_ID_FORMAT, BinarySensorDevice)
+from homeassistant.components.opentherm_gw.const import (
+    BINARY_SENSOR_INFO, DATA_GATEWAYS, DATA_OPENTHERM_GW)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import async_generate_entity_id
 
-from . import DATA_GATEWAYS, DATA_OPENTHERM_GW
-
 _LOGGER = logging.getLogger(__name__)
-
-DEVICE_CLASS_COLD = 'cold'
-DEVICE_CLASS_HEAT = 'heat'
-DEVICE_CLASS_PROBLEM = 'problem'
 
 
 async def async_setup_platform(
@@ -21,77 +17,10 @@ async def async_setup_platform(
     if discovery_info is None:
         return
     gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][discovery_info]
-    sensor_info = {
-        # [device_class, friendly_name format]
-        gw_dev.vars.DATA_MASTER_CH_ENABLED: [
-            None, "Thermostat Central Heating Enabled {}"],
-        gw_dev.vars.DATA_MASTER_DHW_ENABLED: [
-            None, "Thermostat Hot Water Enabled {}"],
-        gw_dev.vars.DATA_MASTER_COOLING_ENABLED: [
-            None, "Thermostat Cooling Enabled {}"],
-        gw_dev.vars.DATA_MASTER_OTC_ENABLED: [
-            None, "Thermostat Outside Temperature Correction Enabled {}"],
-        gw_dev.vars.DATA_MASTER_CH2_ENABLED: [
-            None, "Thermostat Central Heating 2 Enabled {}"],
-        gw_dev.vars.DATA_SLAVE_FAULT_IND: [
-            DEVICE_CLASS_PROBLEM, "Boiler Fault Indication {}"],
-        gw_dev.vars.DATA_SLAVE_CH_ACTIVE: [
-            DEVICE_CLASS_HEAT, "Boiler Central Heating Status {}"],
-        gw_dev.vars.DATA_SLAVE_DHW_ACTIVE: [
-            DEVICE_CLASS_HEAT, "Boiler Hot Water Status {}"],
-        gw_dev.vars.DATA_SLAVE_FLAME_ON: [
-            DEVICE_CLASS_HEAT, "Boiler Flame Status {}"],
-        gw_dev.vars.DATA_SLAVE_COOLING_ACTIVE: [
-            DEVICE_CLASS_COLD, "Boiler Cooling Status {}"],
-        gw_dev.vars.DATA_SLAVE_CH2_ACTIVE: [
-            DEVICE_CLASS_HEAT, "Boiler Central Heating 2 Status {}"],
-        gw_dev.vars.DATA_SLAVE_DIAG_IND: [
-            DEVICE_CLASS_PROBLEM, "Boiler Diagnostics Indication {}"],
-        gw_dev.vars.DATA_SLAVE_DHW_PRESENT: [
-            None, "Boiler Hot Water Present {}"],
-        gw_dev.vars.DATA_SLAVE_CONTROL_TYPE: [None, "Boiler Control Type {}"],
-        gw_dev.vars.DATA_SLAVE_COOLING_SUPPORTED: [
-            None, "Boiler Cooling Support {}"],
-        gw_dev.vars.DATA_SLAVE_DHW_CONFIG: [
-            None, "Boiler Hot Water Configuration {}"],
-        gw_dev.vars.DATA_SLAVE_MASTER_LOW_OFF_PUMP: [
-            None, "Boiler Pump Commands Support {}"],
-        gw_dev.vars.DATA_SLAVE_CH2_PRESENT: [
-            None, "Boiler Central Heating 2 Present {}"],
-        gw_dev.vars.DATA_SLAVE_SERVICE_REQ: [
-            DEVICE_CLASS_PROBLEM, "Boiler Service Required {}"],
-        gw_dev.vars.DATA_SLAVE_REMOTE_RESET: [
-            None, "Boiler Remote Reset Support {}"],
-        gw_dev.vars.DATA_SLAVE_LOW_WATER_PRESS: [
-            DEVICE_CLASS_PROBLEM, "Boiler Low Water Pressure {}"],
-        gw_dev.vars.DATA_SLAVE_GAS_FAULT: [
-            DEVICE_CLASS_PROBLEM, "Boiler Gas Fault {}"],
-        gw_dev.vars.DATA_SLAVE_AIR_PRESS_FAULT: [
-            DEVICE_CLASS_PROBLEM, "Boiler Air Pressure Fault {}"],
-        gw_dev.vars.DATA_SLAVE_WATER_OVERTEMP: [
-            DEVICE_CLASS_PROBLEM, "Boiler Water Overtemperature {}"],
-        gw_dev.vars.DATA_REMOTE_TRANSFER_DHW: [
-            None, "Remote Hot Water Setpoint Transfer Support {}"],
-        gw_dev.vars.DATA_REMOTE_TRANSFER_MAX_CH: [
-            None, "Remote Maximum Central Heating Setpoint Write Support {}"],
-        gw_dev.vars.DATA_REMOTE_RW_DHW: [
-            None, "Remote Hot Water Setpoint Write Support {}"],
-        gw_dev.vars.DATA_REMOTE_RW_MAX_CH: [
-            None, "Remote Central Heating Setpoint Write Support {}"],
-        gw_dev.vars.DATA_ROVRD_MAN_PRIO: [
-            None, "Remote Override Manual Change Priority {}"],
-        gw_dev.vars.DATA_ROVRD_AUTO_PRIO: [
-            None, "Remote Override Program Change Priority {}"],
-        gw_dev.vars.OTGW_GPIO_A_STATE: [None, "Gateway GPIO A State {}"],
-        gw_dev.vars.OTGW_GPIO_B_STATE: [None, "Gateway GPIO B State {}"],
-        gw_dev.vars.OTGW_IGNORE_TRANSITIONS: [
-            None, "Gateway Ignore Transitions {}"],
-        gw_dev.vars.OTGW_OVRD_HB: [None, "Gateway Override High Byte {}"],
-    }
     sensors = []
     for var in gw_dev.binary_sensors:
-        device_class = sensor_info[var][0]
-        friendly_name_format = sensor_info[var][1]
+        device_class = BINARY_SENSOR_INFO[var][0]
+        friendly_name_format = BINARY_SENSOR_INFO[var][1]
         sensors.append(OpenThermBinarySensor(gw_dev, var, device_class,
                                              friendly_name_format))
     async_add_entities(sensors)
@@ -118,7 +47,7 @@ class OpenThermBinarySensor(BinarySensorDevice):
         async_dispatcher_connect(self.hass, self._gateway.update_signal,
                                  self.receive_report)
 
-    async def receive_report(self, status):
+    def receive_report(self, status):
         """Handle status updates from the component."""
         self._state = bool(status.get(self._var))
         self.async_schedule_update_ha_state()
