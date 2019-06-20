@@ -8,6 +8,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,6 +24,7 @@ ATTR_PRINTER_TYPE = 'printer_type'
 ATTR_PRINTER_URI_SUPPORTED = 'printer_uri_supported'
 
 CONF_PRINTERS = 'printers'
+CONF_SERVERS = 'servers'
 
 DEFAULT_HOST = '127.0.0.1'
 DEFAULT_PORT = 631
@@ -38,34 +40,40 @@ PRINTER_STATES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PRINTERS): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Required(CONF_SERVERS):
+        vol.All(cv.ensure_list, [vol.Schema({
+            vol.Required(CONF_PRINTERS): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        })]),
 })
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the CUPS sensor."""
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    printers = config.get(CONF_PRINTERS)
+    servers = config.get(CONF_SERVERS)
 
-    try:
-        data = CupsData(host, port)
-        data.update()
-    except RuntimeError:
-        _LOGGER.error("Unable to connect to CUPS server: %s:%s", host, port)
-        return False
+    for server in servers:
+        host = server.get(CONF_HOST)
+        port = server.get(CONF_PORT)
+        printers = server.get(CONF_PRINTERS)
 
-    dev = []
-    for printer in printers:
-        if printer in data.printers:
-            dev.append(CupsSensor(data, printer))
-        else:
-            _LOGGER.error("Printer is not present: %s", printer)
-            continue
+        try:
+            data = CupsData(host, port)
+            data.update()
+        except RuntimeError:
+            _LOGGER.error("Unable to connect to CUPS server: %s:%s", host, port)
+            raise PlatformNotReady()
 
-    add_entities(dev, True)
+        dev = []
+        for printer in printers:
+            if printer in data.printers:
+                dev.append(CupsSensor(data, printer))
+            else:
+                _LOGGER.error("Printer is not present: %s", printer)
+                continue
+
+        add_entities(dev, True)
 
 
 class CupsSensor(Entity):
