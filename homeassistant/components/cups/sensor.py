@@ -62,7 +62,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             data = CupsData(host, port)
             data.update()
         except RuntimeError:
-            _LOGGER.error("Unable to connect to CUPS server: %s:%s", host, port)
+            _LOGGER.error("Unable to connect to CUPS server: %s:%s",
+                          host, port)
             raise PlatformNotReady()
 
         dev = []
