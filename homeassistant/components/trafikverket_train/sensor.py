@@ -46,24 +46,16 @@ async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up the departure sensor."""
     httpsession = async_get_clientsession(hass)
-    train_api = TrafikverketTrain(httpsession, config.get(CONF_API_KEY))
+    train_api = TrafikverketTrain(httpsession, config[CONF_API_KEY])
     sensors = []
     station_cache = {}
-    for train in config.get(CONF_TRAINS):
+    for train in config[CONF_TRAINS]:
         try:
-            if train.get(CONF_FROM) in station_cache:
-                from_station = station_cache.get(train.get(CONF_FROM))
-            else:
-                from_station = await train_api.async_get_train_station(
-                    train.get(CONF_FROM))
-                station_cache[train.get(CONF_FROM)] = from_station
-
-            if train.get(CONF_TO) in station_cache:
-                to_station = station_cache.get(train.get(CONF_TO))
-            else:
-                to_station = await train_api.async_get_train_station(
-                    train.get(CONF_TO))
-                station_cache[train.get(CONF_TO)] = to_station
+            trainstops = [train[CONF_FROM], train[CONF_TO]]
+            for station in trainstops:
+                if trainstops[station] not in station_cache:
+                    station_cache[trainstops[station]] = await \
+                        train_api.async_get_train_station(trainstops[station])
 
         except ValueError as station_error:
             station_error = str(station_error)
@@ -72,15 +64,15 @@ async def async_setup_platform(
                               station_error)
                 return
             _LOGGER.error("Problem when trying station %s to %s. Error: %s ",
-                          train.get(CONF_FROM), train.get(CONF_TO),
+                          train[CONF_FROM], train[CONF_TO],
                           station_error)
             continue
 
         sensor = TrainSensor(train_api,
-                             train.get(CONF_NAME),
-                             from_station,
-                             to_station,
-                             train.get(CONF_WEEKDAY),
+                             train[CONF_NAME],
+                             station_cache[train[CONF_FROM]],
+                             station_cache[train[CONF_TO]],
+                             train[CONF_WEEKDAY],
                              train.get(CONF_TIME))
         sensors.append(sensor)
 
