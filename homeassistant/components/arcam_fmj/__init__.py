@@ -138,7 +138,7 @@ async def _run_client(hass, client, interval):
         try:
             await asyncio.wait_for(client.start(), timeout=interval)
 
-            _LOGGER.info("Client connected %s", client.host)
+            _LOGGER.debug("Client connected %s", client.host)
             hass.helpers.dispatcher.async_dispatcher_send(
                 SIGNAL_CLIENT_STARTED, client.host
             )
@@ -149,7 +149,7 @@ async def _run_client(hass, client, interval):
             finally:
                 await client.stop()
 
-                _LOGGER.info("Client disconnected %s", client.host)
+                _LOGGER.debug("Client disconnected %s", client.host)
                 hass.helpers.dispatcher.async_dispatcher_send(
                     SIGNAL_CLIENT_STOPPED, client.host
                 )

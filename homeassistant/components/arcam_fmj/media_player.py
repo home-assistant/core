@@ -183,7 +183,7 @@ class ArcamFmj(MediaPlayerDevice):
 
     async def async_update(self):
         """Force update of state."""
-        _LOGGER.info("Update state %s", self.name)
+        _LOGGER.debug("Update state %s", self.name)
         await self._state.update()
 
     async def async_mute_volume(self, mute):
@@ -237,10 +237,10 @@ class ArcamFmj(MediaPlayerDevice):
     async def async_turn_on(self):
         """Turn the media player on."""
         if self._state.get_power() is not None:
-            _LOGGER.info("Turning on device using connection")
+            _LOGGER.debug("Turning on device using connection")
             await self._state.set_power(True)
         elif self._turn_on:
-            _LOGGER.info("Turning on device using service call")
+            _LOGGER.debug("Turning on device using service call")
             await async_call_from_config(
                 self.hass,
                 self._turn_on,
