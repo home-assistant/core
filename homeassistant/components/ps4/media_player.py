@@ -154,20 +154,20 @@ class PS4Device(MediaPlayerDevice):
         if self._ps4.ddp_protocol is not None:
             # Request Status with asyncio transport.
             self._ps4.get_status()
-            if not self._ps4.connected and not self._ps4.is_standby:
+            if not self._ps4.connected and not self._ps4.is_standby\
+                    and self._state is not None:
                 await self._ps4.async_connect()
 
         # Try to ensure correct status is set on startup for device info.
         if self._ps4.ddp_protocol is None:
             # Use socket.socket.
             await self.hass.async_add_executor_job(self._ps4.get_status)
+            if self._info is None:
+                # Add entity to registry.
+                await self.async_get_device_info(self._ps4.status)
             self._ps4.ddp_protocol = self.hass.data[PS4_DATA].protocol
             self.subscribe_to_protocol()
 
-            if self._ps4.status is not None:
-                if self._info is None:
-                    # Add entity to registry.
-                    await self.async_get_device_info(self._ps4.status)
         self._parse_status()
 
     def _parse_status(self):
