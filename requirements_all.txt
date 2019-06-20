@@ -311,7 +311,11 @@ bellows-homeassistant==0.8.1
 bimmer_connected==0.5.3
 
 # homeassistant.components.blink
+<<<<<<< HEAD
 blinkpy==0.11.1
+=======
+blinkpy==0.14.1
+>>>>>>> Upgrade blinkpy==0.14.1 for startup bugfix (#24656)
 
 # homeassistant.components.light.blinksticklight
 blinkstick==1.1.8
