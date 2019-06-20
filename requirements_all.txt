@@ -298,10 +298,14 @@ beautifulsoup4==4.7.1
 
 # homeassistant.components.zha
 <<<<<<< HEAD
+<<<<<<< HEAD
 bellows==0.7.0
 =======
 bellows-homeassistant==0.8.0
 >>>>>>> ZHA requirements version bump. (#24228)
+=======
+bellows-homeassistant==0.8.1
+>>>>>>> Bump ZHA dependencies. (#24637)
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.5.3
@@ -2222,12 +2226,16 @@ ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
 <<<<<<< HEAD
+<<<<<<< HEAD
 zigpy-xbee==0.1.1
 
 # homeassistant.components.zha
 zigpy==0.2.0
 =======
 zigpy-deconz==0.1.4
+=======
+zigpy-deconz==0.1.6
+>>>>>>> Bump ZHA dependencies. (#24637)
 
 # homeassistant.components.zha
 zigpy-homeassistant==0.5.0

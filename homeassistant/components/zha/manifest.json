@@ -4,9 +4,9 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/zha",
   "requirements": [
-    "bellows-homeassistant==0.8.0",
+    "bellows-homeassistant==0.8.1",
     "zha-quirks==0.0.14",
-    "zigpy-deconz==0.1.4",
+    "zigpy-deconz==0.1.6",
     "zigpy-homeassistant==0.5.0",
     "zigpy-xbee-homeassistant==0.3.0"
   ],
