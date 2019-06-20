@@ -133,10 +133,10 @@ class TestPlant(unittest.TestCase):
                              {ATTR_UNIT_OF_MEASUREMENT: 'us/cm'})
         self.hass.block_till_done()
         state = self.hass.states.get('plant.'+plant_name)
-        assert state.state == STATE_UNKNOWN
-        assert state.attributes[plant.READING_MOISTURE] is None
+        assert state.state == STATE_PROBLEM
+        assert state.attributes[plant.READING_MOISTURE] == STATE_UNAVAILABLE
 
-    def test_keep_old_state_if_unavailable(self):
+    def test_state_problem_if_unavailable(self):
         """Test updating the state with unavailable after setting it to valid value.
 
         Make sure that plant processes this correctly.
@@ -147,17 +147,18 @@ class TestPlant(unittest.TestCase):
                 plant_name: GOOD_CONFIG
             }
         })
-        self.hass.states.set(MOISTURE_ENTITY, 5,
+        self.hass.states.set(MOISTURE_ENTITY, 42,
                              {ATTR_UNIT_OF_MEASUREMENT: 'us/cm'})
         self.hass.block_till_done()
         state = self.hass.states.get('plant.' + plant_name)
-        assert state.attributes[plant.READING_MOISTURE] == 5
+        assert state.state == STATE_OK
+        assert state.attributes[plant.READING_MOISTURE] == 42
         self.hass.states.set(MOISTURE_ENTITY, STATE_UNAVAILABLE,
                              {ATTR_UNIT_OF_MEASUREMENT: 'us/cm'})
         self.hass.block_till_done()
         state = self.hass.states.get('plant.'+plant_name)
         assert state.state == STATE_PROBLEM
-        assert state.attributes[plant.READING_MOISTURE] == 5
+        assert state.attributes[plant.READING_MOISTURE] == STATE_UNAVAILABLE
 
     @pytest.mark.skipif(plant.ENABLE_LOAD_HISTORY is False,
                         reason="tests for loading from DB are unstable, thus"

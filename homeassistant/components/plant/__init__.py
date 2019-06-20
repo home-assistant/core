@@ -185,20 +185,30 @@ class Plant(Entity):
         value = new_state.state
         _LOGGER.debug("Received callback from %s with value %s",
                       entity_id, value)
-        if value == STATE_UNAVAILABLE or value == STATE_UNKNOWN:
+        if value == STATE_UNKNOWN:
             return
 
         reading = self._sensormap[entity_id]
         if reading == READING_MOISTURE:
-            self._moisture = int(float(value))
+            if value != STATE_UNAVAILABLE:
+                value = int(float(value))
+            self._moisture = value
         elif reading == READING_BATTERY:
-            self._battery = int(float(value))
+            if value != STATE_UNAVAILABLE:
+                value = int(float(value))
+            self._battery = value
         elif reading == READING_TEMPERATURE:
-            self._temperature = float(value)
+            if value != STATE_UNAVAILABLE:
+                value = float(value)
+            self._temperature = value
         elif reading == READING_CONDUCTIVITY:
-            self._conductivity = int(float(value))
+            if value != STATE_UNAVAILABLE:
+                value = int(float(value))
+            self._conductivity = value
         elif reading == READING_BRIGHTNESS:
-            self._brightness = int(float(value))
+            if value != STATE_UNAVAILABLE:
+                value = int(float(value))
+            self._brightness = value
             self._brightness_history.add_measurement(
                 self._brightness, new_state.last_updated)
         else:
@@ -216,12 +226,15 @@ class Plant(Entity):
             params = self.READINGS[sensor_name]
             value = getattr(self, '_{}'.format(sensor_name))
             if value is not None:
-                if sensor_name == READING_BRIGHTNESS:
-                    result.append(self._check_min(
-                        sensor_name, self._brightness_history.max, params))
+                if value == STATE_UNAVAILABLE:
+                    result.append('{} unavailable'.format(sensor_name))
                 else:
-                    result.append(self._check_min(sensor_name, value, params))
-                result.append(self._check_max(sensor_name, value, params))
+                    if sensor_name == READING_BRIGHTNESS:
+                        result.append(self._check_min(
+                            sensor_name, self._brightness_history.max, params))
+                    else:
+                        result.append(self._check_min(sensor_name, value, params))
+                    result.append(self._check_max(sensor_name, value, params))
 
         result = [r for r in result if r is not None]
 
