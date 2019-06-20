@@ -242,7 +242,7 @@ class NotionEntity(Entity):
                 (DOMAIN, self._sensor['hardware_id'])
             },
             'manufacturer': 'Notion',
-            'model': self._sensor['firmware_version'],
+            'model': self._sensor['hardware_revision'],
             'name': self._sensor['name'],
             'sw_version': self._sensor['firmware_version'],
             'via_device': (DOMAIN, self._bridge['hardware_id'])
