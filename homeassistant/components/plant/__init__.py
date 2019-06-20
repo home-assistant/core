@@ -233,7 +233,8 @@ class Plant(Entity):
                         result.append(self._check_min(
                             sensor_name, self._brightness_history.max, params))
                     else:
-                        result.append(self._check_min(sensor_name, value, params))
+                        result.append(self._check_min(sensor_name, value,
+                                                      params))
                     result.append(self._check_max(sensor_name, value, params))
 
         result = [r for r in result if r is not None]

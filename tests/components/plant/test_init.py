@@ -4,8 +4,8 @@ import unittest
 import pytest
 from datetime import datetime, timedelta
 
-from homeassistant.const import (ATTR_UNIT_OF_MEASUREMENT, STATE_UNAVAILABLE, STATE_UNKNOWN,
-                                 STATE_PROBLEM, STATE_OK)
+from homeassistant.const import (ATTR_UNIT_OF_MEASUREMENT, STATE_UNAVAILABLE,
+                                 STATE_UNKNOWN, STATE_PROBLEM, STATE_OK)
 from homeassistant.components import recorder
 import homeassistant.components.plant as plant
 from homeassistant.setup import setup_component
