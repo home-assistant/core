@@ -23,9 +23,8 @@ from homeassistant.helpers import device_registry
 from tests.common import (mock_device_registry, mock_registry,
                           mock_area_registry, mock_coro)
 
-BASIC_CONFIG = helpers.Config(
-    should_expose=lambda state: True,
-)
+from . import BASIC_CONFIG, MockConfig
+
 REQ_ID = 'ff36a3cc-ec34-11e6-b1a0-64510650abcf'
 
 
@@ -57,7 +56,7 @@ async def test_sync_message(hass):
     # Excluded via config
     hass.states.async_set('light.not_expose', 'on')
 
-    config = helpers.Config(
+    config = MockConfig(
         should_expose=lambda state: state.entity_id != 'light.not_expose',
         entity_config={
             'light.demo_light': {
@@ -145,7 +144,7 @@ async def test_sync_in_area(hass, registries):
     light.entity_id = entity.entity_id
     await light.async_update_ha_state()
 
-    config = helpers.Config(
+    config = MockConfig(
         should_expose=lambda _: True,
         entity_config={}
     )
