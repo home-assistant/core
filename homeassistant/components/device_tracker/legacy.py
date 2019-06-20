@@ -14,6 +14,7 @@ from homeassistant.components.zone import async_active_zone
 from homeassistant.config import load_yaml_config_file, async_log_exception
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import GPSType, HomeAssistantType
 from homeassistant import util
@@ -115,6 +116,7 @@ class DeviceTracker:
 
         This method is a coroutine.
         """
+        registry = await async_get_registry(self.hass)
         if mac is None and dev_id is None:
             raise HomeAssistantError('Neither mac or device id passed in')
         if mac is not None:
@@ -132,6 +134,14 @@ class DeviceTracker:
                 attributes, source_type, consider_home)
             if device.track:
                 await device.async_update_ha_state()
+            return
+
+        # Guard from calling see on entity registry entities.
+        entity_id = ENTITY_ID_FORMAT.format(dev_id)
+        if registry.async_is_registered(entity_id):
+            LOGGER.error(
+                "The see service is not supported for this entity %s",
+                entity_id)
             return
 
         # If no device can be found, create it
