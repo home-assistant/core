@@ -11,6 +11,7 @@ from arcam.fmj import (
 from arcam.fmj.state import State
 
 from homeassistant import config_entries
+from homeassistant.core import callback
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
@@ -153,14 +154,17 @@ class ArcamFmj(MediaPlayerDevice):
         """Once registed add listener for events."""
         await self._state.start()
 
+        @callback
         def _data(host):
             if host == self._state.client.host:
                 self.async_schedule_update_ha_state()
 
+        @callback
         def _started(host):
             if host == self._state.client.host:
                 self.async_schedule_update_ha_state(force_refresh=True)
 
+        @callback
         def _stopped(host):
             if host == self._state.client.host:
                 self.async_schedule_update_ha_state(force_refresh=True)
