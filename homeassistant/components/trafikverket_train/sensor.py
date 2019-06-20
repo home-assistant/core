@@ -53,9 +53,9 @@ async def async_setup_platform(
         try:
             trainstops = [train[CONF_FROM], train[CONF_TO]]
             for station in trainstops:
-                if trainstops[station] not in station_cache:
-                    station_cache[trainstops[station]] = await \
-                        train_api.async_get_train_station(trainstops[station])
+                if station not in station_cache:
+                    station_cache[station] = await \
+                        train_api.async_get_train_station(station)
 
         except ValueError as station_error:
             station_error = str(station_error)
