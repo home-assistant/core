@@ -192,6 +192,16 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
 
         self.maybe_schedule_update()
 
+    async def node_renamed(self, update_ids=False):
+        """Rename the node and update any IDs."""
+        self._name = node_name(self.node)
+        if update_ids:
+            await self.node_removed()
+            self.entity_id = None
+        else:
+            await self.async_remove()
+        await self.platform.async_add_entities([self])
+
     def network_node_event(self, node, value):
         """Handle a node activated event on the network."""
         if node.node_id == self.node.node_id:
