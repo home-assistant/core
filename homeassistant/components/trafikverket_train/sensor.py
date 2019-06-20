@@ -1,9 +1,9 @@
 """Train information for departures and delays, provided by Trafikverket."""
 
-import asyncio
 from datetime import date, datetime, timedelta
 import logging
 
+from pytrafikverket import TrafikverketTrain
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -42,25 +42,39 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the departure sensor."""
-    from pytrafikverket import TrafikverketTrain
     httpsession = async_get_clientsession(hass)
     train_api = TrafikverketTrain(httpsession, config.get(CONF_API_KEY))
     sensors = []
+    station_cache = {}
     for train in config.get(CONF_TRAINS):
         try:
-            from_station = yield from train_api.async_get_train_station(
-                train.get(CONF_FROM))
-            to_station = yield from train_api.async_get_train_station(
-                train.get(CONF_TO))
+            if train.get(CONF_FROM) in station_cache:
+                from_station = station_cache.get(train.get(CONF_FROM))
+            else:
+                from_station = await train_api.async_get_train_station(
+                    train.get(CONF_FROM))
+                station_cache[train.get(CONF_FROM)] = from_station
+
+            if train.get(CONF_TO) in station_cache:
+                to_station = station_cache.get(train.get(CONF_TO))
+            else:
+                to_station = await train_api.async_get_train_station(
+                    train.get(CONF_TO))
+                station_cache[train.get(CONF_TO)] = to_station
+
         except ValueError as station_error:
+            station_error = str(station_error)
+            if "Invalid authentication" in station_error:
+                _LOGGER.error("Unable to set up up component: %s",
+                              station_error)
+                return
             _LOGGER.error("Problem when trying station %s to %s. Error: %s ",
                           train.get(CONF_FROM), train.get(CONF_TO),
                           station_error)
-            return
+            continue
 
         sensor = TrainSensor(train_api,
                              train.get(CONF_NAME),
@@ -70,7 +84,7 @@ def async_setup_platform(
                              train.get(CONF_TIME))
         sensors.append(sensor)
 
-    async_add_devices(sensors, update_before_add=True)
+    async_add_entities(sensors, update_before_add=True)
 
 
 def next_weekday(fromdate, weekday):
@@ -110,14 +124,13 @@ class TrainSensor(Entity):
         self._departure_state = None
         self._delay_in_minutes = None
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Retrieve latest state."""
         if self._time is not None:
             departure_day = next_departuredate(self._weekday)
             when = datetime.combine(departure_day, self._time)
             try:
-                self._state = yield from \
+                self._state = await \
                     self._train_api.async_get_train_stop(
                         self._from_station, self._to_station, when)
             except ValueError as output_error:
@@ -125,7 +138,7 @@ class TrainSensor(Entity):
                               when, output_error)
         else:
             when = datetime.now()
-            self._state = yield from \
+            self._state = await \
                 self._train_api.async_get_next_train_stop(
                     self._from_station, self._to_station, when)
         self._departure_state = self._state.get_state().name
