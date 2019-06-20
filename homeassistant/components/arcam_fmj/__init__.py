@@ -71,7 +71,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
             (device[CONF_HOST], device[CONF_PORT])
         ] = device
 
-        hass.async_add_job(
+        hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": config_entries.SOURCE_IMPORT},
@@ -110,7 +110,7 @@ async def async_setup_entry(
         _run_client(hass, client, config[CONF_SCAN_INTERVAL])
     )
 
-    hass.async_add_job(
+    hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "media_player")
     )
 
