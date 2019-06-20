@@ -296,8 +296,10 @@ class TemplateVacuum(StateVacuumDevice):
         @callback
         def template_vacuum_startup(event):
             """Update template on startup."""
-            self.hass.helpers.event.async_track_state_change(
-                self._entities, template_vacuum_state_listener)
+            if self._entities != MATCH_ALL:
+                # Track state changes only for valid templates
+                self.hass.helpers.event.async_track_state_change(
+                    self._entities, template_vacuum_state_listener)
 
             self.async_schedule_update_ha_state(True)
 
