@@ -185,14 +185,9 @@ class TemplateVacuum(StateVacuumDevice):
         self._fan_speed = None
 
         if self._template:
-            self._template.hass = self.hass
             self._supported_features |= SUPPORT_STATE
         if self._battery_level_template:
-            self._battery_level_template.hass = self.hass
             self._supported_features |= SUPPORT_BATTERY
-        if self._fan_speed_template:
-            self._fan_speed_template.hass = self.hass
-            self._supported_features |= SUPPORT_FAN_SPEED
 
         self._entities = entity_ids
         # List of valid fan speeds

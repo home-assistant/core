@@ -271,6 +271,8 @@ async def test_unused_services(hass, calls):
     common.async_set_fan_speed(hass, 'medium', _TEST_VACUUM)
     await hass.async_block_till_done()
 
+    _verify(hass, STATE_UNKNOWN, None)
+
 
 async def test_clean_spot_service(hass, calls):
     """Test clean spot service."""
