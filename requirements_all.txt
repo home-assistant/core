@@ -1351,7 +1351,7 @@ pysma==0.3.1
 pysmartapp==0.3.2
 
 # homeassistant.components.smartthings
-pysmartthings==0.6.8
+pysmartthings==0.6.9
 
 # homeassistant.components.smarty
 pysmarty==0.8
