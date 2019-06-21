@@ -197,7 +197,9 @@ class NetatmoThermostat(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        module_type = self._data.room_status[self._room_id]['module_type']
+        if self._room_id not in self._data.room_status:
+            return {}
+        module_type = self._data.room_status[self._room_id].get('module_type')
         if module_type not in (NA_THERM, NA_VALVE):
             return {}
         state_attributes = {
