@@ -41,10 +41,12 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
 
     def __init__(self, dev_id, dev_name, device_class):
         """Initialize the EnOcean binary sensor."""
+        self._state = None
         super().__init__(dev_id, dev_name)
         self._device_class = device_class
         self.which = -1
         self.onoff = -1
+        self.pushed = -1
 
     @property
     def name(self):
@@ -55,6 +57,15 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
     def device_class(self):
         """Return the class of this sensor."""
         return self._device_class
+
+    @property
+    def is_on(self):
+        """Return true if sensor is on."""
+        return self._state
+
+    def update(self):
+        """Get the latest data and update the state."""
+        self._state = self.pushed
 
     def value_changed(self, packet):
         """Fire an event with the data that have changed.
@@ -68,15 +79,11 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
         - button released
             ['0xf6', '0x00', '0x00', '0x2d', '0xcf', '0x45', '0x20']
         """
-        # Energy Bow
-        pushed = None
 
         if packet.data[1] == 0x10:
-            pushed = 1
+            self.pushed = 1
         elif packet.data[1] == 0x00:
-            pushed = 0
-
-        self.schedule_update_ha_state()
+            self.pushed = 0
 
         action = packet.data[1]
         if action == 0x70:
@@ -97,8 +104,10 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
         elif action == 0x15:
             self.which = 10
             self.onoff = 1
+
         self.hass.bus.fire(EVENT_BUTTON_PRESSED,
                            {'id': self.dev_id,
-                            'pushed': pushed,
+                            'pushed': self.pushed,
                             'which': self.which,
                             'onoff': self.onoff})
+        self.schedule_update_ha_state(True)
