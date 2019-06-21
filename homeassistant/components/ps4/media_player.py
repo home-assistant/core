@@ -154,8 +154,7 @@ class PS4Device(MediaPlayerDevice):
         if self._ps4.ddp_protocol is not None:
             # Request Status with asyncio transport.
             self._ps4.get_status()
-            if not self._ps4.connected and not self._ps4.is_standby\
-                    and self._state is not None:
+            if not self._ps4.connected and not self._ps4.is_standby:
                 await self._ps4.async_connect()
 
         # Try to ensure correct status is set on startup for device info.
