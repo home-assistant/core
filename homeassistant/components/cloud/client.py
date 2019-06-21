@@ -12,10 +12,14 @@ from homeassistant.components.google_assistant import smart_home as ga
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.aiohttp import MockRequest
+<<<<<<< HEAD
 from homeassistant.components.alexa import (
     smart_home as alexa_sh,
     errors as alexa_errors,
 )
+=======
+from homeassistant.components.alexa import smart_home as alexa_sh
+>>>>>>> Clean up Google Config (#24663)
 
 from . import utils, alexa_config, google_config
 from .const import DISPATCHER_REMOTE_UPDATE
