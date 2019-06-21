@@ -8,7 +8,8 @@ import async_timeout
 from hass_nabucasa import cloud_api
 
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
-from homeassistant.helpers import entity_registry, event
+from homeassistant.helpers import entity_registry
+from homeassistant.helpers.event import async_call_later
 from homeassistant.util.dt import utcnow
 from homeassistant.components.alexa import (
     config as alexa_config,
@@ -128,7 +129,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
         if self._alexa_sync_unsub:
             self._alexa_sync_unsub()
 
-        self._alexa_sync_unsub = event.async_call_later(
+        self._alexa_sync_unsub = async_call_later(
             self.hass, SYNC_DELAY, self._sync_prefs)
 
     async def _sync_prefs(self, _now):
