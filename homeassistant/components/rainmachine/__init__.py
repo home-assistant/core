@@ -69,14 +69,15 @@ BINARY_SENSORS = {
 
 SENSORS = {
     TYPE_FLOW_SENSOR_CLICK_M3: (
-        'Flow Sensor Clicks', 'mdi:water-pump', 'clicks/m^3'),
+        'Flow Sensor Clicks', 'mdi:water-pump', 'clicks/m^3', None),
     TYPE_FLOW_SENSOR_CONSUMED_LITERS: (
-        'Flow Sensor Consumed Liters', 'mdi:water-pump', 'liter'),
+        'Flow Sensor Consumed Liters', 'mdi:water-pump', 'liter', None),
     TYPE_FLOW_SENSOR_START_INDEX: (
         'Flow Sensor Start Index', 'mdi:water-pump', None),
     TYPE_FLOW_SENSOR_WATERING_CLICKS: (
-        'Flow Sensor Clicks', 'mdi:water-pump', 'clicks'),
-    TYPE_FREEZE_TEMP: ('Freeze Protect Temperature', 'mdi:thermometer', '°C'),
+        'Flow Sensor Clicks', 'mdi:water-pump', 'clicks', None),
+    TYPE_FREEZE_TEMP: (
+        'Freeze Protect Temperature', 'mdi:thermometer', '°C', 'temperature'),
 }
 
 BINARY_SENSOR_SCHEMA = vol.Schema({
@@ -371,9 +372,15 @@ class RainMachineEntity(Entity):
     def __init__(self, rainmachine):
         """Initialize."""
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._device_class = None
         self._dispatcher_handlers = []
         self._name = None
         self.rainmachine = rainmachine
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        return self._device_class
 
     @property
     def device_info(self):
