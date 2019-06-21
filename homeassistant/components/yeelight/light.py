@@ -178,7 +178,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _lights_setup_helper(YeelightWithAmbientLight)
         _lights_setup_helper(YeelightAmbientLight)
     else:
-        _LOGGER.error("Cannot determine device type for %s, %s",
+        _lights_setup_helper(YeelightGenericLight)
+        _LOGGER.warn("Cannot determine device type for %s, %s\n"
+                     "Falling back to white only",
                       device.ipaddr, device.name)
 
     hass.data[data_key] += lights

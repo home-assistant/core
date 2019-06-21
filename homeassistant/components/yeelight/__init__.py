@@ -122,14 +122,11 @@ def setup(hass, config):
     def device_discovered(_, info):
         _LOGGER.debug("Adding autodetected %s", info['hostname'])
 
-        device_type = info['device_type']
-
-        name = "yeelight_%s_%s" % (device_type,
+        name = "yeelight_%s_%s" % (info['device_type'],
                                    info['properties']['mac'])
         ipaddr = info[CONF_HOST]
         device_config = DEVICE_SCHEMA({
             CONF_NAME: name,
-            CONF_MODEL: device_type
         })
 
         _setup_device(hass, config, ipaddr, device_config)
