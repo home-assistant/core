@@ -57,7 +57,7 @@ class NotionBinarySensor(NotionEntity, BinarySensorDevice):
             )
         except StopIteration:
             _LOGGER.error(
-                'Sensor or task missing (removed?): %s: %s',
+                'Task missing (was it removed?): %s: %s',
                 self._sensor['name'], self._task['task_type'])
             return
 
