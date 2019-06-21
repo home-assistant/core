@@ -517,6 +517,7 @@ omit =
     homeassistant/components/rpi_gpio/cover.py
     homeassistant/components/rpi_gpio_pwm/light.py
     homeassistant/components/rpi_pfio/*
+    homeassistant/components/rpi_pfio2/*
     homeassistant/components/rpi_rf/switch.py
     homeassistant/components/rtorrent/sensor.py
     homeassistant/components/russound_rio/media_player.py
