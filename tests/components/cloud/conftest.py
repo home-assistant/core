@@ -18,7 +18,7 @@ def mock_user_data():
 @pytest.fixture
 def mock_cloud_fixture(hass):
     """Fixture for cloud component."""
-    mock_cloud(hass)
+    hass.loop.run_until_complete(mock_cloud(hass))
     return mock_cloud_prefs(hass)
 
 

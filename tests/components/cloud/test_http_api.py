@@ -14,10 +14,11 @@ from homeassistant.components.cloud.const import (
     PREF_ENABLE_GOOGLE, PREF_ENABLE_ALEXA, PREF_GOOGLE_SECURE_DEVICES_PIN,
     DOMAIN)
 from homeassistant.components.google_assistant.helpers import (
-    GoogleEntity, Config)
+    GoogleEntity)
 from homeassistant.components.alexa.entities import LightCapabilities
 
 from tests.common import mock_coro
+from tests.components.google_assistant import MockConfig
 
 from . import mock_cloud, mock_cloud_prefs
 
@@ -45,7 +46,7 @@ def mock_cloud_login(hass, setup_api):
 @pytest.fixture(autouse=True)
 def setup_api(hass, aioclient_mock):
     """Initialize HTTP API."""
-    mock_cloud(hass, {
+    hass.loop.run_until_complete(mock_cloud(hass, {
         'mode': 'development',
         'cognito_client_id': 'cognito_client_id',
         'user_pool_id': 'user_pool_id',
@@ -63,7 +64,7 @@ def setup_api(hass, aioclient_mock):
                 'include_entities': ['light.kitchen', 'switch.ac']
             }
         }
-    })
+    }))
     return mock_cloud_prefs(hass)
 
 
@@ -709,9 +710,10 @@ async def test_list_google_entities(
         hass, hass_ws_client, setup_api, mock_cloud_login):
     """Test that we can list Google entities."""
     client = await hass_ws_client(hass)
-    entity = GoogleEntity(hass, Config(lambda *_: False), State(
-        'light.kitchen', 'on'
-    ))
+    entity = GoogleEntity(
+        hass, MockConfig(should_expose=lambda *_: False), State(
+            'light.kitchen', 'on'
+        ))
     with patch('homeassistant.components.google_assistant.helpers'
                '.async_get_entities', return_value=[entity]):
         await client.send_json({
