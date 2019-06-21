@@ -276,6 +276,7 @@ homeassistant/components/utility_meter/* @dgomes
 homeassistant/components/velux/* @Julius2342
 homeassistant/components/version/* @fabaff
 homeassistant/components/vizio/* @raman325
+homeassistant/components/vlc_telnet/* @rodripf
 homeassistant/components/waqi/* @andrey-git
 homeassistant/components/watson_tts/* @rutkai
 homeassistant/components/weather/* @fabaff
