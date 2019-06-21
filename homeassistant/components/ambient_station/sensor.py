@@ -22,12 +22,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
     sensor_list = []
     for mac_address, station in ambient.stations.items():
         for condition in ambient.monitored_conditions:
-            name, unit, kind, _ = SENSOR_TYPES[condition]
+            name, unit, kind, device_class = SENSOR_TYPES[condition]
             if kind == TYPE_SENSOR:
                 sensor_list.append(
                     AmbientWeatherSensor(
                         ambient, mac_address, station[ATTR_NAME], condition,
-                        name, unit))
+                        name, device_class, unit))
 
     async_add_entities(sensor_list, True)
 
@@ -37,10 +37,15 @@ class AmbientWeatherSensor(AmbientWeatherEntity):
 
     def __init__(
             self, ambient, mac_address, station_name, sensor_type, sensor_name,
-            unit):
+            device_class, unit):
         """Initialize the sensor."""
         super().__init__(
-            ambient, mac_address, station_name, sensor_type, sensor_name)
+            ambient,
+            mac_address,
+            station_name,
+            sensor_type,
+            sensor_name,
+            device_class)
 
         self._unit = unit
 
