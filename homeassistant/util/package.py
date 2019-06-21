@@ -66,7 +66,7 @@ def install_package(package: str, upgrade: bool = True,
     if constraints is not None:
         args += ['--constraint', constraints]
     if find_links is not None:
-        args += ['--find-links', find_links]
+        args += ['--find-links', find_links, '--prefer-binary']
     if target:
         assert not is_virtual_env()
         # This only works if not running in venv
