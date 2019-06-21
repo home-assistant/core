@@ -1,0 +1,15 @@
+// See https://aka.ms/vscode-remote/devcontainer.json for format details.
+{
+	"name": "Home Assistant Dev",
+	"context": "..",
+	"dockerFile": "Dockerfile",
+	"postCreateCommand": "pip3 install -e .",
+	"extensions": [
+		"ms-python.python"
+	],
+	"settings": {
+		"python.pythonPath": "/usr/local/bin/python",
+		"python.linting.pylintEnabled": true,
+		"python.linting.enabled": true
+	}
+}
