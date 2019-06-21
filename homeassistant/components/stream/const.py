@@ -2,6 +2,7 @@
 DOMAIN = 'stream'
 
 CONF_STREAM_SOURCE = 'stream_source'
+CONF_PROTOCOL = 'protocol'
 CONF_LOOKBACK = 'lookback'
 CONF_DURATION = 'duration'
 
