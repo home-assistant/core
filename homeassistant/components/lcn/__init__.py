@@ -4,12 +4,12 @@ import logging
 import pypck
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
 from homeassistant.const import (
     CONF_ADDRESS, CONF_BINARY_SENSORS, CONF_COVERS, CONF_HOST, CONF_LIGHTS,
     CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_SENSORS, CONF_SWITCHES,
     CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
 
@@ -102,7 +102,7 @@ CONNECTION_SCHEMA = vol.Schema({
     vol.Required(CONF_PORT): cv.port,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_SK_NUM_TRIES, default=3): cv.positive_int,
+    vol.Optional(CONF_SK_NUM_TRIES, default=0): cv.positive_int,
     vol.Optional(CONF_DIM_MODE, default='steps50'): vol.All(vol.Upper,
                                                             vol.In(DIM_MODES)),
     vol.Optional(CONF_NAME): cv.string
