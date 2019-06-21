@@ -123,6 +123,11 @@ class NetatmoThermostat(ClimateDevice):
         self.update_without_throttle = False
         self._module_type = None
         self._support_flags = SUPPORT_FLAGS
+        self._operation_list = [
+                DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
+                DICT_NETATMO_TO_HA[STATE_NETATMO_MANUAL],
+                DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY],
+                DICT_NETATMO_TO_HA[STATE_NETATMO_HG]]
 
         _LOGGER.debug(
             "Setting up thermostat %s in %s (%s).",
@@ -133,13 +138,7 @@ class NetatmoThermostat(ClimateDevice):
         except KeyError:
             _LOGGER.error("Thermostat in %s not available.", room_id)
 
-        if self._module_type == NA_VALVE:
-            self._operation_list = [
-                DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
-                DICT_NETATMO_TO_HA[STATE_NETATMO_MANUAL],
-                DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY],
-                DICT_NETATMO_TO_HA[STATE_NETATMO_HG]]
-        elif self._module_type == NA_THERM:
+        if self._module_type == NA_THERM:
             self._operation_list = [
                 DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
                 DICT_NETATMO_TO_HA[STATE_NETATMO_MANUAL],
