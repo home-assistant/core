@@ -564,13 +564,14 @@ async def ws_camera_stream(hass, connection, msg):
 
         async with async_timeout.timeout(10):
             source = await camera.stream_source()
+            protocol = await camera.stream_protocol()
 
         if not source:
             raise HomeAssistantError("{} does not support play stream service"
                                      .format(camera.entity_id))
 
         fmt = msg['format']
-        url = request_stream(hass, source, fmt=fmt,
+        url = request_stream(hass, source, protocol, fmt=fmt,
                              keepalive=camera_prefs.preload_stream)
         connection.send_result(msg['id'], {'url': url})
     except HomeAssistantError as ex:
@@ -646,6 +647,7 @@ async def async_handle_play_stream_service(camera, service_call):
     """Handle play stream services calls."""
     async with async_timeout.timeout(10):
         source = await camera.stream_source()
+        protocol = await camera.stream_protocol()
 
     if not source:
         raise HomeAssistantError("{} does not support play stream service"
@@ -656,7 +658,7 @@ async def async_handle_play_stream_service(camera, service_call):
     fmt = service_call.data[ATTR_FORMAT]
     entity_ids = service_call.data[ATTR_MEDIA_PLAYER]
 
-    url = request_stream(hass, source, fmt=fmt,
+    url = request_stream(hass, source, protocol, fmt=fmt,
                          keepalive=camera_prefs.preload_stream)
     data = {
         ATTR_ENTITY_ID: entity_ids,
@@ -673,6 +675,7 @@ async def async_handle_record_service(camera, call):
     """Handle stream recording service calls."""
     async with async_timeout.timeout(10):
         source = await camera.stream_source()
+        protocol = await camera.stream_protocol()
 
     if not source:
         raise HomeAssistantError("{} does not support record service"
