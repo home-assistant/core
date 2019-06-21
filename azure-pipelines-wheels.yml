@@ -68,7 +68,6 @@ jobs:
         sed -i "s|# pytradfri|pytradfri|g" ${requirement_file}
         sed -i "s|# pybluez|pybluez|g" ${requirement_file}
         sed -i "s|# bluepy|bluepy|g" ${requirement_file}
-        sed -i "s|# pygatt|pygatt|g" ${requirement_file}
         sed -i "s|# beacontools|beacontools|g" ${requirement_file}
         sed -i "s|# RPi.GPIO|RPi.GPIO|g" ${requirement_file}
         sed -i "s|# raspihats|raspihats|g" ${requirement_file}
