@@ -41,6 +41,7 @@ class AbstractConfig:
 
     def should_2fa(self, state):
         """If an entity should have 2FA checked."""
+        # pylint: disable=no-self-use
         return True
 
 
