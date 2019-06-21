@@ -33,11 +33,13 @@ SERVICE_START_REMOTE_CONTROL = 'xiaomi_remote_control_start'
 SERVICE_STOP_REMOTE_CONTROL = 'xiaomi_remote_control_stop'
 SERVICE_CLEAN_ZONE = 'xiaomi_clean_zone'
 
+# roborock.vacuum.s5 v3.3.9_001768 firmware (CRoboController::SetFanPower2Nav())
 FAN_SPEEDS = {
     'Quiet': 38,
     'Balanced': 60,
-    'Turbo': 77,
-    'Max': 90}
+    'Turbo': 75,
+    'Max': 100,
+    'Mop': 105}
 
 ATTR_CLEAN_START = 'clean_start'
 ATTR_CLEAN_STOP = 'clean_stop'
