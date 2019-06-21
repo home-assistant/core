@@ -199,7 +199,8 @@ class NetatmoThermostat(ClimateDevice):
         """Return device specific state attributes."""
         if self._room_id not in self._data.room_status:
             return {}
-        module_type = self._data.room_status[self._room_id].get('module_type')
+        room_status = self._data.room_status[self._room_id]
+        module_type = room_status.get('module_type')
         if module_type not in (NA_THERM, NA_VALVE):
             return {}
         state_attributes = {
@@ -210,13 +211,13 @@ class NetatmoThermostat(ClimateDevice):
             "hg_temperature": self._data.hg_temperature,
             "operation_mode": self._operation_mode,
             "module_type": module_type,
-            "module_id": self._data.room_status[self._room_id]['module_id']
+            "module_id": room_status['module_id']
         }
         if module_type == NA_THERM:
             state_attributes["boiler_status"] = self._data.boilerstatus
         elif module_type == NA_VALVE:
             state_attributes["heating_power_request"] = \
-                self._data.room_status[self._room_id]['heating_power_request']
+                room_status['heating_power_request']
         return state_attributes
 
     @property
