@@ -73,9 +73,19 @@ class NotionSensor(NotionEntity):
 
     async def async_update(self):
         """Fetch new state data for the sensor."""
-        task = next(
-            (t for t in self._notion.tasks if t['id'] == self._task['id'])
-        )
+        try:
+            new_data = next(
+                (t for t in self._notion.tasks if t['id'] == self._task['id'])
+            )
+        except StopIteration:
+            _LOGGER.error(
+                'Task missing (was it removed?): %s: %s',
+                self._sensor['name'], self._task['task_type'])
+            return
 
         if self._task['task_type'] == SENSOR_TEMPERATURE:
-            self._state = round(float(task['status']['value']), 1)
+            self._state = round(float(new_data['status']['value']), 1)
+        else:
+            _LOGGER.error(
+                'Unknown task type: %s: %s',
+                self._sensor['name'], self._task['task_type'])

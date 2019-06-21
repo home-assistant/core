@@ -51,9 +51,15 @@ class NotionBinarySensor(NotionEntity, BinarySensorDevice):
 
     async def async_update(self):
         """Fetch new state data for the sensor."""
-        new_data = next(
-            (t for t in self._notion.tasks if t['id'] == self._task['id'])
-        )
+        try:
+            new_data = next(
+                (t for t in self._notion.tasks if t['id'] == self._task['id'])
+            )
+        except StopIteration:
+            _LOGGER.error(
+                'Sensor or task missing (removed?): %s: %s',
+                self._sensor['name'], self._task['task_type'])
+            return
 
         if self._task['task_type'] == SENSOR_BATTERY:
             self._state = new_data['status']['value'] != 'battery_good'
@@ -77,4 +83,5 @@ class NotionBinarySensor(NotionEntity, BinarySensorDevice):
             self._state = new_data['status']['value'] != 'closed'
         else:
             _LOGGER.error(
-                'Unknown binary sensory type: %s', self._task['task_type'])
+                'Unknown task type: %s: %s',
+                self._sensor['name'], self._task['task_type'])
