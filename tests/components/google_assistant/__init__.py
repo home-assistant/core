@@ -7,6 +7,7 @@ class MockConfig(helpers.AbstractConfig):
 
     def __init__(self, *, secure_devices_pin=None, should_expose=None,
                  entity_config=None):
+        """Initialize config."""
         self._should_expose = should_expose
         self._secure_devices_pin = secure_devices_pin
         self._entity_config = entity_config or {}

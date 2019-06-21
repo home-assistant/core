@@ -1,8 +1,6 @@
 """Tests for the cloud component."""
 from unittest.mock import patch
 
-from jose import jwt
-
 from homeassistant.setup import async_setup_component
 from homeassistant.components import cloud
 from homeassistant.components.cloud import const
@@ -10,11 +8,11 @@ from homeassistant.components.cloud import const
 from tests.common import mock_coro
 
 
-async def mock_cloud(hass, config={}):
+async def mock_cloud(hass, config=None):
     """Mock cloud."""
     assert await async_setup_component(
         hass, cloud.DOMAIN, {
-            'cloud': config
+            'cloud': config or {}
         })
     cloud_inst = hass.data['cloud']
     with patch('hass_nabucasa.Cloud.run_executor', return_value=mock_coro()):

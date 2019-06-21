@@ -8,19 +8,14 @@ import aiohttp
 from hass_nabucasa.client import CloudClient as Interface
 
 from homeassistant.core import callback
-from homeassistant.components.google_assistant import (
-    helpers as ga_h, smart_home as ga)
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
+from homeassistant.components.google_assistant import smart_home as ga
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.aiohttp import MockRequest
 from homeassistant.components.alexa import smart_home as alexa_sh
 
 from . import utils, alexa_config, google_config
-from .const import (
-    CONF_ENTITY_CONFIG, DOMAIN, DISPATCHER_REMOTE_UPDATE,
-    PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE,
-    PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA)
+from .const import DISPATCHER_REMOTE_UPDATE
 from .prefs import CloudPreferences
 
 

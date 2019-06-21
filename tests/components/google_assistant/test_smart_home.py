@@ -11,7 +11,7 @@ from homeassistant.components.climate.const import (
     ATTR_MIN_TEMP, ATTR_MAX_TEMP, STATE_HEAT, SUPPORT_OPERATION_MODE
 )
 from homeassistant.components.google_assistant import (
-    const, trait, helpers, smart_home as sh,
+    const, trait, smart_home as sh,
     EVENT_COMMAND_RECEIVED, EVENT_QUERY_RECEIVED, EVENT_SYNC_RECEIVED)
 from homeassistant.components.demo.binary_sensor import DemoBinarySensor
 from homeassistant.components.demo.cover import DemoCover
