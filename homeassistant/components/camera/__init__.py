@@ -28,7 +28,7 @@ from homeassistant.components.media_player.const import (
     SERVICE_PLAY_MEDIA, DOMAIN as DOMAIN_MP)
 from homeassistant.components.stream import request_stream
 from homeassistant.components.stream.const import (
-    OUTPUT_FORMATS, FORMAT_CONTENT_TYPE, CONF_STREAM_SOURCE, CONF_LOOKBACK,
+    OUTPUT_FORMATS, FORMAT_CONTENT_TYPE, CONF_STREAM_SOURCE, CONF_PROTOCOL, CONF_LOOKBACK,
     CONF_DURATION, SERVICE_RECORD, DOMAIN as DOMAIN_STREAM)
 from homeassistant.components import websocket_api
 import homeassistant.helpers.config_validation as cv
@@ -109,12 +109,13 @@ async def async_request_stream(hass, entity_id, fmt):
 
     async with async_timeout.timeout(10):
         source = await camera.stream_source()
+        protocol = await camera.stream_protocol()
 
     if not source:
         raise HomeAssistantError("{} does not support play stream service"
                                  .format(camera.entity_id))
 
-    return request_stream(hass, source, fmt=fmt,
+    return request_stream(hass, source, protocol, fmt=fmt,
                           keepalive=camera_prefs.preload_stream)
 
 
@@ -229,11 +230,12 @@ async def async_setup(hass, config):
 
             async with async_timeout.timeout(10):
                 source = await camera.stream_source()
+                protocol = await camera.stream_protocol()
 
             if not source:
                 continue
 
-            request_stream(hass, source, keepalive=True)
+            request_stream(hass, source, protocol, keepalive=True)
 
     async_when_setup(hass, DOMAIN_STREAM, preload_stream)
 
@@ -341,6 +343,9 @@ class Camera(Entity):
 
     async def stream_source(self):
         """Return the source of the stream."""
+        return None
+    async def stream_protocol(self):
+        """Return the protocol of the stream."""
         return None
 
     def camera_image(self):
@@ -681,6 +686,7 @@ async def async_handle_record_service(camera, call):
 
     data = {
         CONF_STREAM_SOURCE: source,
+        CONF_PROTOCOL: protocol,
         CONF_FILENAME: video_path,
         CONF_DURATION: call.data[CONF_DURATION],
         CONF_LOOKBACK: call.data[CONF_LOOKBACK],
