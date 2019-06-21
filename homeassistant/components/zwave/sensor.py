@@ -51,8 +51,9 @@ class ZWaveSensor(ZWaveDeviceEntity):
 
     def update_properties(self):
         """Handle the data changes for node values."""
-        self._state = self.values.primary.data
-        self._units = self.values.primary.units
+        value = self.values.primary
+        self._state = value.data if value.is_set else None
+        self._units = value.units
 
     @property
     def force_update(self):
