@@ -10,9 +10,8 @@ RUN apt-get update \
 WORKDIR /workspace
 
 # Install Python dependencies from requirements.txt if it exists
-COPY requirements_test_all.txt /workspace/
-RUN pip3 install -r requirements_test_all.txt \
-    && pip install tox
+COPY requirements_test_all.txt homeassistant/package_constraints.txt /workspace/
+RUN pip3 install -r requirements_test_all.txt -c package_constraints.txt
 
 # Set the default shell to bash instead of sh
 ENV SHELL /bin/bash
