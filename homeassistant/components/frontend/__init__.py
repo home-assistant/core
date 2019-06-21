@@ -24,6 +24,8 @@ DOMAIN = 'frontend'
 CONF_THEMES = 'themes'
 CONF_EXTRA_HTML_URL = 'extra_html_url'
 CONF_EXTRA_HTML_URL_ES5 = 'extra_html_url_es5'
+CONF_EXTRA_MODULE_URL = 'extra_module_url'
+CONF_EXTRA_JS_URL_ES5 = 'extra_js_url_es5'
 CONF_FRONTEND_REPO = 'development_repo'
 CONF_JS_VERSION = 'javascript_version'
 EVENT_PANELS_UPDATED = 'panels_updated'
@@ -55,6 +57,8 @@ DATA_PANELS = 'frontend_panels'
 DATA_JS_VERSION = 'frontend_js_version'
 DATA_EXTRA_HTML_URL = 'frontend_extra_html_url'
 DATA_EXTRA_HTML_URL_ES5 = 'frontend_extra_html_url_es5'
+DATA_EXTRA_MODULE_URL = 'frontend_extra_module_url'
+DATA_EXTRA_JS_URL_ES5 = 'frontend_extra_js_url_es5'
 DATA_THEMES = 'frontend_themes'
 DATA_DEFAULT_THEME = 'frontend_default_theme'
 DEFAULT_THEME = 'default'
@@ -70,6 +74,10 @@ CONFIG_SCHEMA = vol.Schema({
             cv.string: {cv.string: cv.string}
         }),
         vol.Optional(CONF_EXTRA_HTML_URL):
+            vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_EXTRA_MODULE_URL):
+            vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_EXTRA_JS_URL_ES5):
             vol.All(cv.ensure_list, [cv.string]),
         # We no longer use these options.
         vol.Optional(CONF_EXTRA_HTML_URL_ES5): cv.match_all,
@@ -184,6 +192,15 @@ def add_extra_html_url(hass, url, es5=False):
     url_set.add(url)
 
 
+def add_extra_js_url(hass, url, es5=False):
+    """Register extra js or module url to load."""
+    key = DATA_EXTRA_JS_URL_ES5 if es5 else DATA_EXTRA_MODULE_URL
+    url_set = hass.data.get(key)
+    if url_set is None:
+        url_set = hass.data[key] = set()
+    url_set.add(url)
+
+
 def add_manifest_json_key(key, val):
     """Add a keyval to the manifest.json."""
     MANIFEST_JSON[key] = val
@@ -248,6 +265,18 @@ async def async_setup(hass, config):
 
     for url in conf.get(CONF_EXTRA_HTML_URL, []):
         add_extra_html_url(hass, url, False)
+
+    if DATA_EXTRA_MODULE_URL not in hass.data:
+        hass.data[DATA_EXTRA_MODULE_URL] = set()
+
+    for url in conf.get(CONF_EXTRA_MODULE_URL, []):
+        add_extra_js_url(hass, url)
+
+    if DATA_EXTRA_JS_URL_ES5 not in hass.data:
+        hass.data[DATA_EXTRA_JS_URL_ES5] = set()
+
+    for url in conf.get(CONF_EXTRA_JS_URL_ES5, []):
+        add_extra_js_url(hass, url, True)
 
     _async_setup_themes(hass, conf.get(CONF_THEMES))
 
@@ -396,6 +425,8 @@ class IndexView(web_urldispatcher.AbstractResource):
             text=template.render(
                 theme_color=MANIFEST_JSON['theme_color'],
                 extra_urls=hass.data[DATA_EXTRA_HTML_URL],
+                extra_modules=hass.data[DATA_EXTRA_MODULE_URL],
+                extra_js_es5=hass.data[DATA_EXTRA_JS_URL_ES5],
             ),
             content_type='text/html'
         )
