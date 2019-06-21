@@ -13,7 +13,7 @@ from homeassistant.loader import bind_hass
 
 from .const import (
     DOMAIN, ATTR_STREAMS, ATTR_ENDPOINTS, CONF_STREAM_SOURCE,
-    CONF_DURATION, CONF_LOOKBACK, SERVICE_RECORD)
+    CONF_DURATION, CONF_LOOKBACK, CONF_PROTOCOL, SERVICE_RECORD)
 from .core import PROVIDERS
 from .worker import stream_worker
 from .hls import async_setup_hls
@@ -27,6 +27,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 STREAM_SERVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_STREAM_SOURCE): cv.string,
+    vol.Required(CONF_PROTOCOL, default='tcp'): cv.string,
 })
 
 SERVICE_RECORD_SCHEMA = STREAM_SERVICE_SCHEMA.extend({
@@ -40,7 +41,7 @@ logging.getLogger('libav').setLevel(logging.ERROR)
 
 
 @bind_hass
-def request_stream(hass, stream_source, *, fmt='hls',
+def request_stream(hass, stream_source, stream_protocol, *, fmt='hls',
                    keepalive=False, options=None):
     """Set up stream with token."""
     if DOMAIN not in hass.config.components:
@@ -52,14 +53,18 @@ def request_stream(hass, stream_source, *, fmt='hls',
     # For RTSP streams, prefer TCP
     if isinstance(stream_source, str) \
             and stream_source[:7] == 'rtsp://' and not options:
-        options['rtsp_flags'] = 'prefer_tcp'
+        if stream_protocol == 'udp':
+        	options['rtsp_flags'] = 'prefer_upd'
+        else:
+        	options['rtsp_flags'] = 'prefer_tcp'
+
         options['stimeout'] = '5000000'
 
     try:
         streams = hass.data[DOMAIN][ATTR_STREAMS]
         stream = streams.get(stream_source)
         if not stream:
-            stream = Stream(hass, stream_source,
+            stream = Stream(hass, stream_source, stream_protocol,
                             options=options, keepalive=keepalive)
             streams[stream_source] = stream
         else:
@@ -114,10 +119,11 @@ async def async_setup(hass, config):
 class Stream:
     """Represents a single stream."""
 
-    def __init__(self, hass, source, options=None, keepalive=False):
+    def __init__(self, hass, source, protocol, options=None, keepalive=False):
         """Initialize a stream."""
         self.hass = hass
         self.source = source
+        self.protocol = protocol
         self.options = options
         self.keepalive = keepalive
         self.access_token = None
@@ -186,6 +192,7 @@ class Stream:
 async def async_handle_record_service(hass, call):
     """Handle save video service calls."""
     stream_source = call.data[CONF_STREAM_SOURCE]
+    stream_protocol = call.data[CONF_PROTOCOL]
     video_path = call.data[CONF_FILENAME]
     duration = call.data[CONF_DURATION]
     lookback = call.data[CONF_LOOKBACK]
@@ -199,7 +206,7 @@ async def async_handle_record_service(hass, call):
     streams = hass.data[DOMAIN][ATTR_STREAMS]
     stream = streams.get(stream_source)
     if not stream:
-        stream = Stream(hass, stream_source)
+        stream = Stream(hass, stream_source, stream_protocol)
         streams[stream_source] = stream
 
     # Add recorder
