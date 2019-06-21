@@ -9,7 +9,7 @@ import pytest
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 from homeassistant.components.cloud import (
-    DOMAIN, ALEXA_SCHEMA, client)
+    DOMAIN, ALEXA_SCHEMA, alexa_config)
 from homeassistant.components.cloud.const import (
     PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE)
 from homeassistant.util.dt import utcnow
@@ -17,11 +17,11 @@ from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from tests.components.alexa import test_smart_home as test_alexa
 from tests.common import mock_coro, async_fire_time_changed
 
-from . import mock_cloud_prefs
+from . import mock_cloud_prefs, mock_cloud
 
 
 @pytest.fixture
-def mock_cloud():
+def mock_cloud_inst():
     """Mock cloud class."""
     return MagicMock(subscription_expired=False)
 
@@ -29,10 +29,7 @@ def mock_cloud():
 @pytest.fixture
 async def mock_cloud_setup(hass):
     """Set up the cloud."""
-    with patch('hass_nabucasa.Cloud.start', return_value=mock_coro()):
-        assert await async_setup_component(hass, 'cloud', {
-            'cloud': {}
-        })
+    await mock_cloud(hass)
 
 
 @pytest.fixture
@@ -52,24 +49,20 @@ async def test_handler_alexa(hass):
     hass.states.async_set(
         'switch.test2', 'on', {'friendly_name': "Test switch 2"})
 
-    with patch('hass_nabucasa.Cloud.start', return_value=mock_coro()):
-        setup = await async_setup_component(hass, 'cloud', {
-            'cloud': {
-                'alexa': {
-                    'filter': {
-                        'exclude_entities': 'switch.test2'
-                    },
-                    'entity_config': {
-                        'switch.test': {
-                            'name': 'Config name',
-                            'description': 'Config description',
-                            'display_categories': 'LIGHT'
-                        }
-                    }
+    await mock_cloud(hass, {
+        'alexa': {
+            'filter': {
+                'exclude_entities': 'switch.test2'
+            },
+            'entity_config': {
+                'switch.test': {
+                    'name': 'Config name',
+                    'description': 'Config description',
+                    'display_categories': 'LIGHT'
                 }
             }
-        })
-        assert setup
+        }
+    })
 
     mock_cloud_prefs(hass)
     cloud = hass.data['cloud']
@@ -110,24 +103,20 @@ async def test_handler_google_actions(hass):
     hass.states.async_set(
         'group.all_locks', 'on', {'friendly_name': "Evil locks"})
 
-    with patch('hass_nabucasa.Cloud.start', return_value=mock_coro()):
-        setup = await async_setup_component(hass, 'cloud', {
-            'cloud': {
-                'google_actions': {
-                    'filter': {
-                        'exclude_entities': 'switch.test2'
-                    },
-                    'entity_config': {
-                        'switch.test': {
-                            'name': 'Config name',
-                            'aliases': 'Config alias',
-                            'room': 'living room'
-                        }
-                    }
+    await mock_cloud(hass, {
+        'google_actions': {
+            'filter': {
+                'exclude_entities': 'switch.test2'
+            },
+            'entity_config': {
+                'switch.test': {
+                    'name': 'Config name',
+                    'aliases': 'Config alias',
+                    'room': 'living room'
                 }
             }
-        })
-        assert setup
+        }
+    })
 
     mock_cloud_prefs(hass)
     cloud = hass.data['cloud']
@@ -265,7 +254,7 @@ async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs):
     await cloud_prefs.async_update(alexa_entity_configs={
         'light.kitchen': entity_conf
     })
-    conf = client.AlexaConfig(hass, ALEXA_SCHEMA({}), cloud_prefs, None)
+    conf = alexa_config.AlexaConfig(hass, ALEXA_SCHEMA({}), cloud_prefs, None)
 
     assert not conf.should_expose('light.kitchen')
     entity_conf['should_expose'] = True
@@ -274,7 +263,7 @@ async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs):
 
 async def test_alexa_config_report_state(hass, cloud_prefs):
     """Test Alexa config should expose using prefs."""
-    conf = client.AlexaConfig(hass, ALEXA_SCHEMA({}), cloud_prefs, None)
+    conf = alexa_config.AlexaConfig(hass, ALEXA_SCHEMA({}), cloud_prefs, None)
 
     assert cloud_prefs.alexa_report_state is False
     assert conf.should_report_state is False
@@ -307,9 +296,9 @@ def patch_sync_helper():
     to_remove = []
 
     with patch(
-            'homeassistant.components.cloud.client.SYNC_DELAY', 0
+            'homeassistant.components.cloud.alexa_config.SYNC_DELAY', 0
     ), patch(
-        'homeassistant.components.cloud.client.AlexaConfig._sync_helper',
+        'homeassistant.components.cloud.alexa_config.AlexaConfig._sync_helper',
         side_effect=mock_coro
     ) as mock_helper:
         yield to_update, to_remove
@@ -321,7 +310,7 @@ def patch_sync_helper():
 
 async def test_alexa_update_expose_trigger_sync(hass, cloud_prefs):
     """Test Alexa config responds to updating exposed entities."""
-    client.AlexaConfig(hass, ALEXA_SCHEMA({}), cloud_prefs, None)
+    alexa_config.AlexaConfig(hass, ALEXA_SCHEMA({}), cloud_prefs, None)
 
     with patch_sync_helper() as (to_update, to_remove):
         await cloud_prefs.async_update_alexa_entity_config(
@@ -354,7 +343,8 @@ async def test_alexa_update_expose_trigger_sync(hass, cloud_prefs):
 
 async def test_alexa_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
     """Test Alexa config responds to entity registry."""
-    client.AlexaConfig(hass, ALEXA_SCHEMA({}), cloud_prefs, hass.data['cloud'])
+    alexa_config.AlexaConfig(
+        hass, ALEXA_SCHEMA({}), cloud_prefs, hass.data['cloud'])
 
     with patch_sync_helper() as (to_update, to_remove):
         hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, {
