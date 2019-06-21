@@ -179,8 +179,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _lights_setup_helper(YeelightAmbientLight)
     else:
         _lights_setup_helper(YeelightGenericLight)
-        _LOGGER.warn("Cannot determine device type for %s, %s."
-                     "Falling back to white only", device.ipaddr, device.name)
+        _LOGGER.warning("Cannot determine device type for %s, %s. "
+                        "Falling back to white only", device.ipaddr,
+                        device.name)
 
     hass.data[data_key] += lights
     add_entities(lights, True)
