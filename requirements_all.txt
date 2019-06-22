@@ -252,8 +252,15 @@ aqualogic==1.0
 asterisk_mbox==0.5.0
 
 # homeassistant.components.upnp
+<<<<<<< HEAD
 # homeassistant.components.media_player.dlna_dmr
 async-upnp-client==0.14.0
+=======
+async-upnp-client==0.14.10
+
+# homeassistant.components.stream
+av==6.1.2
+>>>>>>> Upgrade to async_upnp_client==0.14.10 and increase search timeout (#24685)
 
 # homeassistant.components.light.avion
 # avion==0.10
