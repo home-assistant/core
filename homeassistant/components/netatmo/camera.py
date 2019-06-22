@@ -129,3 +129,53 @@ class NetatmoCamera(Camera):
         if self._localurl:
             return url.format(self._localurl, self._quality)
         return url.format(self._vpnurl, self._quality)
+
+   def is_on(self):
+        """Return true if on."""
+        return True
+
+    def turn_on(self):
+        """Turn off camera."""
+        try:
+            if self._localurl:
+                response = requests.get('{0}/command/changestatus?status=on'.format(
+                    self._localurl), timeout=10)
+            elif self._vpnurl:
+                response = requests.get('{0}/command/changestatus?status=on'.format(
+                    self._vpnurl), timeout=10, verify=self._verify_ssl)
+            else:
+                _LOGGER.error("Welcome VPN URL is None")
+                self._data.update()
+                (self._vpnurl, self._localurl) = \
+                    self._data.camera_data.cameraUrls(camera=self._camera_name)
+                return None
+        except requests.exceptions.RequestException as error:
+            _LOGGER.error("Welcome URL changed: %s", error)
+            self._data.update()
+            (self._vpnurl, self._localurl) = \
+                self._data.camera_data.cameraUrls(camera=self._camera_name)
+            return None
+        return response.content
+
+    def turn_off(self):
+        """Turn off camera."""
+        try:
+            if self._localurl:
+                response = requests.get('{0}/command/changestatus?status=off'.format(
+                    self._localurl), timeout=10)
+            elif self._vpnurl:
+                response = requests.get('{0}/command/changestatus?status=off'.format(
+                    self._vpnurl), timeout=10, verify=self._verify_ssl)
+            else:
+                _LOGGER.error("Welcome VPN URL is None")
+                self._data.update()
+                (self._vpnurl, self._localurl) = \
+                    self._data.camera_data.cameraUrls(camera=self._camera_name)
+                return None
+        except requests.exceptions.RequestException as error:
+            _LOGGER.error("Welcome URL changed: %s", error)
+            self._data.update()
+            (self._vpnurl, self._localurl) = \
+                self._data.camera_data.cameraUrls(camera=self._camera_name)
+            return None
+        return response.content
