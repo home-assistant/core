@@ -131,8 +131,6 @@ def establish_device_mappings():
         zha.DeviceType.DIMMABLE_LIGHT: LIGHT,
         zha.DeviceType.COLOR_DIMMABLE_LIGHT: LIGHT,
         zha.DeviceType.ON_OFF_LIGHT_SWITCH: SWITCH,
-        zha.DeviceType.DIMMER_SWITCH: LIGHT,
-        zha.DeviceType.COLOR_DIMMER_SWITCH: LIGHT,
         zha.DeviceType.ON_OFF_BALLAST: SWITCH,
         zha.DeviceType.DIMMABLE_BALLAST: LIGHT,
         zha.DeviceType.ON_OFF_PLUG_IN_UNIT: SWITCH,
@@ -202,6 +200,8 @@ def establish_device_mappings():
     REMOTE_DEVICE_TYPES[zhap].append(zha.DeviceType.COLOR_CONTROLLER)
     REMOTE_DEVICE_TYPES[zhap].append(zha.DeviceType.REMOTE_CONTROL)
     REMOTE_DEVICE_TYPES[zhap].append(zha.DeviceType.SCENE_SELECTOR)
+    REMOTE_DEVICE_TYPES[zhap].append(zha.DeviceType.DIMMER_SWITCH)
+    REMOTE_DEVICE_TYPES[zhap].append(zha.DeviceType.COLOR_DIMMER_SWITCH)
 
     zllp = zll.PROFILE_ID
     REMOTE_DEVICE_TYPES[zllp].append(zll.DeviceType.COLOR_CONTROLLER)
