@@ -270,8 +270,9 @@ class HomeAssistant:
 
         # Check for partials to properly determine if coroutine function
         check_target = target
-        while isinstance(check_target, functools.partial):
-            check_target = check_target.func
+        # type ignores: https://github.com/python/typeshed/pull/3077
+        while isinstance(check_target, functools.partial):  # type: ignore
+            check_target = check_target.func  # type: ignore
 
         if asyncio.iscoroutine(check_target):
             task = self.loop.create_task(target)  # type: ignore
@@ -946,8 +947,9 @@ class Service:
         self.func = func
         self.schema = schema
         # Properly detect wrapped functions
-        while isinstance(func, functools.partial):
-            func = func.func
+        # type ignores: https://github.com/python/typeshed/pull/3077
+        while isinstance(func, functools.partial):  # type: ignore
+            func = func.func  # type: ignore
         self.is_callback = is_callback(func)
         self.is_coroutinefunction = asyncio.iscoroutinefunction(func)
 
@@ -1288,10 +1290,7 @@ class Config:
                 unit_system: Optional[str] = None,
                 location_name: Optional[str] = None,
                 time_zone: Optional[str] = None) -> None:
-        """Update the configuration from a dictionary.
-
-        Async friendly.
-        """
+        """Update the configuration from a dictionary."""
         self.config_source = source
         if latitude is not None:
             self.latitude = latitude
@@ -1309,11 +1308,8 @@ class Config:
         if time_zone is not None:
             self.set_time_zone(time_zone)
 
-    async def update(self, **kwargs: Any) -> None:
-        """Update the configuration from a dictionary.
-
-        Async friendly.
-        """
+    async def async_update(self, **kwargs: Any) -> None:
+        """Update the configuration from a dictionary."""
         self._update(source=SOURCE_STORAGE, **kwargs)
         await self.async_store()
         self.hass.bus.async_fire(

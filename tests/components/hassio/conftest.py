@@ -29,11 +29,16 @@ def hassio_env():
 @pytest.fixture
 def hassio_stubs(hassio_env, hass, hass_client, aioclient_mock):
     """Create mock hassio http client."""
-    with patch('homeassistant.components.hassio.HassIO.update_hass_api',
-               Mock(return_value=mock_coro({"result": "ok"}))), \
-            patch('homeassistant.components.hassio.HassIO.'
-                  'get_homeassistant_info',
-                  Mock(side_effect=HassioAPIError())):
+    with patch(
+            'homeassistant.components.hassio.HassIO.update_hass_api',
+            return_value=mock_coro({"result": "ok"})
+    ), patch(
+        'homeassistant.components.hassio.HassIO.update_hass_timezone',
+        return_value=mock_coro({"result": "ok"})
+    ), patch(
+        'homeassistant.components.hassio.HassIO.get_homeassistant_info',
+        side_effect=HassioAPIError()
+    ):
         hass.state = CoreState.starting
         hass.loop.run_until_complete(async_setup_component(hass, 'hassio', {
             'http': {

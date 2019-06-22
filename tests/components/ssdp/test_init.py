@@ -1,5 +1,9 @@
 """Test the SSDP integration."""
+import asyncio
 from unittest.mock import patch, Mock
+
+import aiohttp
+import pytest
 
 from homeassistant.generated import ssdp as gn_ssdp
 from homeassistant.components import ssdp
@@ -76,3 +80,28 @@ async def test_scan_match_device_type(hass, aioclient_mock):
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == 'mock-domain'
     assert mock_init.mock_calls[0][2]['context'] == {'source': 'ssdp'}
+
+
+@pytest.mark.parametrize('exc', [asyncio.TimeoutError, aiohttp.ClientError])
+async def test_scan_description_fetch_fail(hass, aioclient_mock, exc):
+    """Test failing to fetch description."""
+    aioclient_mock.get('http://1.1.1.1', exc=exc)
+    scanner = ssdp.Scanner(hass)
+
+    with patch('netdisco.ssdp.scan', return_value=[
+            Mock(st="mock-st", location='http://1.1.1.1')
+    ]):
+        await scanner.async_scan(None)
+
+
+async def test_scan_description_parse_fail(hass, aioclient_mock):
+    """Test invalid XML."""
+    aioclient_mock.get('http://1.1.1.1', text="""
+<root>INVALIDXML
+    """)
+    scanner = ssdp.Scanner(hass)
+
+    with patch('netdisco.ssdp.scan', return_value=[
+            Mock(st="mock-st", location='http://1.1.1.1')
+    ]):
+        await scanner.async_scan(None)

@@ -31,6 +31,7 @@ from homeassistant.loader import (
     Integration, async_get_integration, IntegrationNotFound
 )
 from homeassistant.util.yaml import load_yaml, SECRET_YAML
+from homeassistant.util.package import is_docker_env
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 from homeassistant.helpers.entity_values import EntityValues
@@ -58,14 +59,6 @@ default_config:
 # Uncomment this if you are using SSL/TLS, running in Docker container, etc.
 # http:
 #   base_url: example.duckdns.org:8123
-
-# Discover some devices automatically
-discovery:
-
-# Sensors
-sensor:
-  # Weather prediction
-  - platform: yr
 
 # Text to speech
 tts:
@@ -336,13 +329,15 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
     _LOGGER.info("Upgrading configuration directory from %s to %s",
                  conf_version, __version__)
 
-    if LooseVersion(conf_version) < LooseVersion('0.50'):
+    version_obj = LooseVersion(conf_version)
+
+    if version_obj < LooseVersion('0.50'):
         # 0.50 introduced persistent deps dir.
         lib_path = hass.config.path('deps')
         if os.path.isdir(lib_path):
             shutil.rmtree(lib_path)
 
-    if LooseVersion(conf_version) < LooseVersion('0.92'):
+    if version_obj < LooseVersion('0.92'):
         # 0.92 moved google/tts.py to google_translate/tts.py
         config_path = find_config_file(hass.config.config_dir)
         assert config_path is not None
@@ -359,6 +354,13 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
             except IOError:
                 _LOGGER.exception("Migrating to google_translate tts failed")
                 pass
+
+    if version_obj < LooseVersion('0.94') and is_docker_env():
+        # In 0.94 we no longer install packages inside the deps folder when
+        # running inside a Docker container.
+        lib_path = hass.config.path('deps')
+        if os.path.isdir(lib_path):
+            shutil.rmtree(lib_path)
 
     with open(version_path, 'wt') as outp:
         outp.write(__version__)

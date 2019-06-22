@@ -154,3 +154,25 @@ async def test_setup_setup_cloud_user(hass, hass_storage):
 
     assert cloud_user
     assert cloud_user.groups[0].id == GROUP_ID_ADMIN
+
+
+async def test_on_connect(hass, mock_cloud_fixture):
+    """Test cloud on connect triggers."""
+    cl = hass.data['cloud']
+
+    assert len(cl.iot._on_connect) == 4
+
+    assert len(hass.states.async_entity_ids('binary_sensor')) == 0
+
+    assert 'async_setup' in str(cl.iot._on_connect[-1])
+    await cl.iot._on_connect[-1]()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids('binary_sensor')) == 1
+
+    with patch('homeassistant.helpers.discovery.async_load_platform',
+               side_effect=mock_coro) as mock_load:
+        await cl.iot._on_connect[-1]()
+        await hass.async_block_till_done()
+
+    assert len(mock_load.mock_calls) == 0

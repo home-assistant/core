@@ -23,6 +23,7 @@ ATTR_MODEL_NAME = 'model_name'
 ATTR_MODEL_NUMBER = 'model_number'
 ATTR_SERIAL = 'serial_number'
 ATTR_MANUFACTURER = 'manufacturer'
+ATTR_MANUFACTURERURL = 'manufacturerURL'
 ATTR_UDN = 'udn'
 ATTR_UPNP_DEVICE_TYPE = 'upnp_device_type'
 
@@ -85,13 +86,16 @@ class Scanner:
         if not to_load:
             return
 
-        for entry, info, domains in to_load:
+        tasks = []
 
+        for entry, info, domains in to_load:
             for domain in domains:
                 _LOGGER.debug("Discovered %s at %s", domain, entry.location)
-                await self.hass.config_entries.flow.async_init(
+                tasks.append(self.hass.config_entries.flow.async_init(
                     domain, context={'source': DOMAIN}, data=info
-                )
+                ))
+
+        await asyncio.wait(tasks)
 
     async def _process_entry(self, entry):
         """Process a single entry."""
@@ -135,15 +139,15 @@ class Scanner:
             if not xml:
                 resp = await session.get(xml_location, timeout=5)
                 xml = await resp.text()
-        except aiohttp.ClientError as err:
+        except (aiohttp.ClientError, asyncio.TimeoutError) as err:
             _LOGGER.debug("Error fetching %s: %s", xml_location, err)
-            return None
+            return {}
 
         try:
             tree = ElementTree.fromstring(xml)
         except ElementTree.ParseError as err:
             _LOGGER.debug("Error parsing %s: %s", xml_location, err)
-            return None
+            return {}
 
         return util.etree_to_dict(tree).get('root', {}).get('device', {})
 
@@ -164,6 +168,7 @@ def info_from_entry(entry, device_info):
         info[ATTR_MODEL_NUMBER] = device_info.get('modelNumber')
         info[ATTR_SERIAL] = device_info.get('serialNumber')
         info[ATTR_MANUFACTURER] = device_info.get('manufacturer')
+        info[ATTR_MANUFACTURERURL] = device_info.get('manufacturerURL')
         info[ATTR_UDN] = device_info.get('UDN')
         info[ATTR_UPNP_DEVICE_TYPE] = device_info.get('deviceType')
 

@@ -1,124 +1,4 @@
-"""The Config Manager is responsible for managing configuration for components.
-
-The Config Manager allows for creating config entries to be consumed by
-components. Each entry is created via a Config Flow Handler, as defined by each
-component.
-
-During startup, Home Assistant will setup the entries during the normal setup
-of a component. It will first call the normal setup and then call the method
-`async_setup_entry(hass, entry)` for each entry. The same method is called when
-Home Assistant is running while a config entry is created.  If the version of
-the config entry does not match that of the flow handler, setup will
-call the method `async_migrate_entry(hass, entry)` with the expectation that
-the entry be brought to the current version.  Return `True` to indicate
-migration was successful, otherwise `False`.
-
-## Config Flows
-
-A component needs to define a Config Handler to allow the user to create config
-entries for that component. A config flow will manage the creation of entries
-from user input, discovery or other sources (like hassio).
-
-When a config flow is started for a domain, the handler will be instantiated
-and receives a unique id. The instance of this handler will be reused for every
-interaction of the user with this flow. This makes it possible to store
-instance variables on the handler.
-
-Before instantiating the handler, Home Assistant will make sure to load all
-dependencies and install the requirements of the component.
-
-At a minimum, each config flow will have to define a version number and the
-'user' step.
-
-    @config_entries.HANDLERS.register(DOMAIN)
-    class ExampleConfigFlow(config_entries.ConfigFlow):
-
-        VERSION = 1
-        CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
-
-        async def async_step_user(self, user_input=None):
-            …
-
-The 'user' step is the first step of a flow and is called when a user
-starts a new flow. Each step has three different possible results: "Show Form",
-"Abort" and "Create Entry".
-
-> Note: prior 0.76, the default step is 'init' step, some config flows still
-keep 'init' step to avoid break localization. All new config flow should use
-'user' step.
-
-### Show Form
-
-This will show a form to the user to fill in. You define the current step,
-a title, a description and the schema of the data that needs to be returned.
-
-    async def async_step_init(self, user_input=None):
-        # Use OrderedDict to guarantee order of the form shown to the user
-        data_schema = OrderedDict()
-        data_schema[vol.Required('username')] = str
-        data_schema[vol.Required('password')] = str
-
-        return self.async_show_form(
-            step_id='user',
-            title='Account Info',
-            data_schema=vol.Schema(data_schema)
-        )
-
-After the user has filled in the form, the step method will be called again and
-the user input is passed in. If the validation of the user input fails , you
-can return a dictionary with errors. Each key in the dictionary refers to a
-field name that contains the error. Use the key 'base' if you want to show a
-generic error.
-
-    async def async_step_init(self, user_input=None):
-        errors = None
-        if user_input is not None:
-            # Validate user input
-            if valid:
-                return self.create_entry(…)
-
-            errors['base'] = 'Unable to reach authentication server.'
-
-        return self.async_show_form(…)
-
-If the user input passes validation, you can again return one of the three
-return values. If you want to navigate the user to the next step, return the
-return value of that step:
-
-    return await self.async_step_account()
-
-### Abort
-
-When the result is "Abort", a message will be shown to the user and the
-configuration flow is finished.
-
-    return self.async_abort(
-        reason='This device is not supported by Home Assistant.'
-    )
-
-### Create Entry
-
-When the result is "Create Entry", an entry will be created and stored in Home
-Assistant, a success message is shown to the user and the flow is finished.
-
-## Initializing a config flow from an external source
-
-You might want to initialize a config flow programmatically. For example, if
-we discover a device on the network that requires user interaction to finish
-setup. To do so, pass a source parameter and optional user input to the init
-method:
-
-    await hass.config_entries.flow.async_init(
-        'hue', context={'source': 'discovery'}, data=discovery_info)
-
-The config flow handler will need to add a step to support the source. The step
-should follow the same return values as a normal step.
-
-    async def async_step_discovery(info):
-
-If the result of the step is to show a form, the user will be able to continue
-the flow from the config panel.
-"""
+"""Manage config entries in Home Assistant."""
 import asyncio
 import logging
 import functools
@@ -377,7 +257,8 @@ class ConfigEntry:
                           self.title, self.domain)
             return False
         # Handler may be a partial
-        while isinstance(handler, functools.partial):
+        # type ignore: https://github.com/python/typeshed/pull/3077
+        while isinstance(handler, functools.partial):  # type: ignore
             handler = handler.func
 
         if self.version == handler.VERSION:
@@ -671,6 +552,14 @@ class ConfigEntries:
                 self.hass, handler_key)
         except loader.IntegrationNotFound:
             _LOGGER.error('Cannot find integration %s', handler_key)
+            raise data_entry_flow.UnknownHandler
+
+        # Our config flow list is based on built-in integrations. If overriden,
+        # we should not load it's config flow.
+        if not integration.is_built_in:
+            _LOGGER.error(
+                'Config flow is not supported for custom integration %s',
+                handler_key)
             raise data_entry_flow.UnknownHandler
 
         # Make sure requirements and dependencies of component are resolved

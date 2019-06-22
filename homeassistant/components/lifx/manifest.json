@@ -7,6 +7,11 @@
     "aiolifx==0.6.7",
     "aiolifx_effects==0.2.2"
   ],
+  "homekit": {
+    "models": [
+      "LIFX"
+    ]
+  },
   "dependencies": [],
   "codeowners": [
     "@amelchio"

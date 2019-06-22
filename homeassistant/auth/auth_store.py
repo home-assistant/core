@@ -547,7 +547,7 @@ class AuthStore:
 
     def _set_defaults(self) -> None:
         """Set default values for auth store."""
-        self._users = OrderedDict()  # type: Dict[str, models.User]
+        self._users = OrderedDict()
 
         groups = OrderedDict()  # type: Dict[str, models.Group]
         admin_group = _system_admin_group()

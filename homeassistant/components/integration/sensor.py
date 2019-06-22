@@ -40,7 +40,7 @@ UNIT_TIME = {'s': 1,
              'h': 60*60,
              'd': 24*60*60}
 
-ICON = 'mdi:char-histogram'
+ICON = 'mdi:chart-histogram'
 
 DEFAULT_ROUND = 3
 

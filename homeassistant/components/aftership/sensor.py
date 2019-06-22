@@ -177,6 +177,11 @@ class AfterShipSensor(Entity):
                 if track['title'] is None
                 else track['title']
             )
+            last_checkpoint = (
+                "Shipment pending"
+                if track['tag'] == "Pending"
+                else track['checkpoints'][-1]
+            )
             status_counts[status] = status_counts.get(status, 0) + 1
             trackings.append({
                 'name': name,
@@ -187,7 +192,7 @@ class AfterShipSensor(Entity):
                 'last_update': track['updated_at'],
                 'expected_delivery': track['expected_delivery'],
                 'status': track['tag'],
-                'last_checkpoint': track['checkpoints'][-1]
+                'last_checkpoint': last_checkpoint
             })
 
             if status not in status_to_ignore:

@@ -1,14 +1,18 @@
 """Support for exposing Home Assistant via Zeroconf."""
+# PyLint bug confuses absolute/relative imports
+# https://github.com/PyCQA/pylint/issues/1931
+# pylint: disable=no-name-in-module
 import logging
+import socket
 
 import ipaddress
 import voluptuous as vol
 
-from aiozeroconf import (
-    ServiceBrowser, ServiceInfo, ServiceStateChange, Zeroconf)
+from zeroconf import ServiceBrowser, ServiceInfo, ServiceStateChange, Zeroconf
 
+from homeassistant import util
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, __version__)
-from homeassistant.generated import zeroconf as zeroconf_manifest
+from homeassistant.generated.zeroconf import ZEROCONF, HOMEKIT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,13 +26,14 @@ ATTR_NAME = 'name'
 ATTR_PROPERTIES = 'properties'
 
 ZEROCONF_TYPE = '_home-assistant._tcp.local.'
+HOMEKIT_TYPE = '_hap._tcp.local.'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({}),
 }, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass, config):
+def setup(hass, config):
     """Set up Zeroconf and make Home Assistant discoverable."""
     zeroconf_name = '{}.{}'.format(hass.config.location_name, ZEROCONF_TYPE)
 
@@ -39,40 +44,85 @@ async def async_setup(hass, config):
         'requires_api_password': True,
     }
 
-    info = ServiceInfo(ZEROCONF_TYPE, zeroconf_name,
-                       port=hass.http.server_port, properties=params)
+    host_ip = util.get_local_ip()
 
-    zeroconf = Zeroconf(hass.loop)
+    try:
+        host_ip_pton = socket.inet_pton(socket.AF_INET, host_ip)
+    except socket.error:
+        host_ip_pton = socket.inet_pton(socket.AF_INET6, host_ip)
 
-    await zeroconf.register_service(info)
+    info = ServiceInfo(ZEROCONF_TYPE, zeroconf_name, None,
+                       addresses=[host_ip_pton], port=hass.http.server_port,
+                       properties=params)
 
-    async def new_service(service_type, name):
-        """Signal new service discovered."""
-        service_info = await zeroconf.get_service_info(service_type, name)
+    zeroconf = Zeroconf()
+
+    zeroconf.register_service(info)
+
+    def service_update(zeroconf, service_type, name, state_change):
+        """Service state changed."""
+        if state_change != ServiceStateChange.Added:
+            return
+
+        service_info = zeroconf.get_service_info(service_type, name)
         info = info_from_service(service_info)
         _LOGGER.debug("Discovered new device %s %s", name, info)
 
-        for domain in zeroconf_manifest.SERVICE_TYPES[service_type]:
-            await hass.config_entries.flow.async_init(
-                domain, context={'source': DOMAIN}, data=info
+        # If we can handle it as a HomeKit discovery, we do that here.
+        if service_type == HOMEKIT_TYPE and handle_homekit(hass, info):
+            return
+
+        for domain in ZEROCONF[service_type]:
+            hass.add_job(
+                hass.config_entries.flow.async_init(
+                    domain, context={'source': DOMAIN}, data=info
+                )
             )
 
-    def service_update(_, service_type, name, state_change):
-        """Service state changed."""
-        if state_change is ServiceStateChange.Added:
-            hass.async_create_task(new_service(service_type, name))
-
-    for service in zeroconf_manifest.SERVICE_TYPES:
+    for service in ZEROCONF:
         ServiceBrowser(zeroconf, service, handlers=[service_update])
 
-    async def stop_zeroconf(_):
-        """Stop Zeroconf."""
-        await zeroconf.unregister_service(info)
-        await zeroconf.close()
+    if HOMEKIT_TYPE not in ZEROCONF:
+        ServiceBrowser(zeroconf, HOMEKIT_TYPE, handlers=[service_update])
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_zeroconf)
+    def stop_zeroconf(_):
+        """Stop Zeroconf."""
+        zeroconf.unregister_service(info)
+        zeroconf.close()
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zeroconf)
 
     return True
+
+
+def handle_homekit(hass, info) -> bool:
+    """Handle a HomeKit discovery.
+
+    Return if discovery was forwarded.
+    """
+    model = None
+    props = info.get('properties', {})
+
+    for key in props:
+        if key.lower() == 'md':
+            model = props[key]
+            break
+
+    if model is None:
+        return False
+
+    for test_model in HOMEKIT:
+        if model != test_model and not model.startswith(test_model + " "):
+            continue
+
+        hass.add_job(
+            hass.config_entries.flow.async_init(
+                HOMEKIT[test_model], context={'source': 'homekit'}, data=info
+            )
+        )
+        return True
+
+    return False
 
 
 def info_from_service(service):
@@ -87,7 +137,7 @@ def info_from_service(service):
         except UnicodeDecodeError:
             _LOGGER.warning("Unicode decode error on %s: %s", key, value)
 
-    address = service.address or service.address6
+    address = service.addresses[0]
 
     info = {
         ATTR_HOST: str(ipaddress.ip_address(address)),

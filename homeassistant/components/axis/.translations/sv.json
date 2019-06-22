@@ -7,6 +7,7 @@
         },
         "error": {
             "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "already_in_progress": "Konfigurations fl\u00f6det f\u00f6r enheten p\u00e5g\u00e5r redan.",
             "device_unavailable": "Enheten \u00e4r inte tillg\u00e4nglig",
             "faulty_credentials": "Felaktiga anv\u00e4ndaruppgifter"
         },

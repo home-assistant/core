@@ -124,7 +124,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
     @property
     def device_info(self):
         """Return device information."""
-        return {
+        info = {
             'identifiers': {
                 (DOMAIN, self.node_id)
             },
@@ -132,6 +132,9 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             'model': self.node.product_name,
             'name': node_name(self.node)
         }
+        if self.node_id > 1:
+            info['via_device'] = (DOMAIN, 1)
+        return info
 
     def network_node_changed(self, node=None, value=None, args=None):
         """Handle a changed node on the network."""

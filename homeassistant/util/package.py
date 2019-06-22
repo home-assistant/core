@@ -6,6 +6,7 @@ from subprocess import PIPE, Popen
 import sys
 from typing import Optional
 from urllib.parse import urlparse
+from pathlib import Path
 
 import pkg_resources
 from importlib_metadata import version, PackageNotFoundError
@@ -19,6 +20,11 @@ def is_virtual_env() -> bool:
     # Check supports venv && virtualenv
     return (getattr(sys, 'base_prefix', sys.prefix) != sys.prefix or
             hasattr(sys, 'real_prefix'))
+
+
+def is_docker_env() -> bool:
+    """Return True if we run in a docker env."""
+    return Path("/.dockerenv").exists()
 
 
 def is_installed(package: str) -> bool:
@@ -42,7 +48,9 @@ def is_installed(package: str) -> bool:
 
 def install_package(package: str, upgrade: bool = True,
                     target: Optional[str] = None,
-                    constraints: Optional[str] = None) -> bool:
+                    constraints: Optional[str] = None,
+                    find_links: Optional[str] = None,
+                    no_cache_dir: Optional[bool] = False) -> bool:
     """Install a package on PyPi. Accepts pip compatible package strings.
 
     Return boolean if install successful.
@@ -51,10 +59,14 @@ def install_package(package: str, upgrade: bool = True,
     _LOGGER.info('Attempting install of %s', package)
     env = os.environ.copy()
     args = [sys.executable, '-m', 'pip', 'install', '--quiet', package]
+    if no_cache_dir:
+        args.append('--no-cache-dir')
     if upgrade:
         args.append('--upgrade')
     if constraints is not None:
         args += ['--constraint', constraints]
+    if find_links is not None:
+        args += ['--find-links', find_links, '--prefer-binary']
     if target:
         assert not is_virtual_env()
         # This only works if not running in venv

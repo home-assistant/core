@@ -8,6 +8,10 @@
             "no_sensors_or_port_mapping": "Schakel ten minste sensoren of poorttoewijzing in",
             "single_instance_allowed": "Er is slechts \u00e9\u00e9n configuratie van UPnP/IGD nodig."
         },
+        "error": {
+            "one": "Een",
+            "other": "Ander"
+        },
         "step": {
             "confirm": {
                 "description": "Wilt u UPnP/IGD instellen?",
