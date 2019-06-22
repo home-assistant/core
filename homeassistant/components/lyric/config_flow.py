@@ -94,7 +94,6 @@ class LyricFlowHandler(ConfigFlow):
 
     async def async_step_creation(self, user_input):
         """Create Lyric api and entries."""
-
         client_id = self.client_id
         client_secret = self.client_secret
         token_cache_file = self.hass.config.path(CONF_LYRIC_CONFIG_FILE)

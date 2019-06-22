@@ -4,24 +4,17 @@ Support for Honeywell Lyric devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/lyric
 """
-import asyncio
 import logging
 from typing import Any, Dict
 
 from lyric import Lyric
-import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant import config_entries
-from homeassistant.const import CONF_NAME, CONF_TOKEN
+from homeassistant.const import CONF_TOKEN
 
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.lyric import config_flow
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from .const import (AUTH_CALLBACK_PATH, DATA_LYRIC_CLIENT, DOMAIN,
+from .const import (DATA_LYRIC_CLIENT, DOMAIN,
                     CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_LYRIC_CONFIG_FILE)
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +29,6 @@ async def async_setup_entry(
         hass: HomeAssistantType, entry: ConfigEntry
 ) -> bool:
     """Set up Lyric from a config entry."""
-
     client_id = entry.data[CONF_CLIENT_ID]
     client_secret = entry.data[CONF_CLIENT_SECRET]
     token = entry.data[CONF_TOKEN]
