@@ -475,8 +475,12 @@ discogs_client==2.2.1
 discord.py==0.16.12
 =======
 # homeassistant.components.discord
+<<<<<<< HEAD
 discord.py==1.1.1
 >>>>>>> Upgrade discord.py to 1.1.1 (#24375)
+=======
+discord.py==1.2.2
+>>>>>>> Upgrade discord.py to 1.2.2 (#24695)
 
 # homeassistant.components.updater
 distro==1.3.0
