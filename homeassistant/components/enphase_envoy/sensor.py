@@ -26,7 +26,7 @@ SENSORS = {
                                ENERGY_WATT_HOUR),
     "lifetime_consumption": ("Envoy Lifetime Energy Consumption",
                              ENERGY_WATT_HOUR),
-    "inverters": ("Envoy Inverter \#", POWER_WATT)
+    "inverters": ("Envoy Inverter", POWER_WATT)
     }
 
 
