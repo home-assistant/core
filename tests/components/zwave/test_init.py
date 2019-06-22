@@ -436,6 +436,7 @@ async def test_value_entities(hass, mock_openzwave):
     device = dev_reg.async_get(node_dev_id)
     assert device is not None
     assert device.name == node.name
+    old_device = device
 
     # test renaming
     await hass.services.async_call('zwave', 'rename_node', {
@@ -452,6 +453,12 @@ async def test_value_entities(hass, mock_openzwave):
     entry = ent_reg.async_get('binary_sensor.new_node_mock_value')
     assert entry is not None
     assert entry.unique_id == '{}-{}'.format(node.node_id, value.object_id)
+
+    dev_reg = await get_dev_reg(hass)
+    device = dev_reg.async_get(node_dev_id)
+    assert device is not None
+    assert device.id == old_device.id
+    assert device.name == node.name
 
     await hass.services.async_call('zwave', 'rename_value', {
         const.ATTR_NODE_ID: node.node_id,

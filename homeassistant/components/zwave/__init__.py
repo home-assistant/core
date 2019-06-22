@@ -1056,11 +1056,20 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         """Rename the node and update any IDs."""
         self._name = _value_name(self.values.primary)
         if update_ids:
-            await self.node_removed()
-            self.entity_id = None
-        else:
-            await self.async_remove()
-        await self.platform.async_add_entities([self])
+            # Update entity ID.
+            ent_reg = await async_get_registry(self.hass)
+            new_entity_id = ent_reg.async_generate_entity_id(
+                self.platform.domain,
+                self._name,
+                self.platform.entities.keys() - {self.entity_id})
+            if new_entity_id != self.entity_id:
+                # Don't change the name attribute, it will be None unless
+                # customised and if it's been customised, keep the
+                # customisation.
+                ent_reg.async_update_entity(
+                    self.entity_id, new_entity_id=new_entity_id)
+                return
+        self.async_schedule_update_ha_state()
 
     async def async_added_to_hass(self):
         """Add device to dict."""
