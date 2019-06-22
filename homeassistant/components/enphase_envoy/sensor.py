@@ -49,10 +49,7 @@ async def async_setup_platform(hass, config, add_entities,
 
     # Iterate through the list of sensors
     for condition in monitored_conditions:
-        if condition != "inverters":
-            add_entities([Envoy(ip_address, condition, SENSORS[condition][0],
-                                SENSORS[condition][1])], True)
-        elif condition == "inverters":
+        if condition == "inverters":
             inverters = await EnvoyReader(ip_address).inverters_production()
             if isinstance(inverters, dict):
                 for inverter in inverters:
@@ -60,6 +57,9 @@ async def async_setup_platform(hass, config, add_entities,
                                         "{} {}".format(SENSORS[condition][0],
                                                        inverter),
                                         SENSORS[condition][1])], True)
+        else:
+            add_entities([Envoy(ip_address, condition, SENSORS[condition][0],
+                                SENSORS[condition][1])], True)
 
 
 class Envoy(Entity):
@@ -72,7 +72,6 @@ class Envoy(Entity):
         self._unit_of_measurement = unit
         self._type = sensor_type
         self._state = None
-        self._attributes = {}
 
     @property
     def name(self):
