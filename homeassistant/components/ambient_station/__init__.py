@@ -183,7 +183,7 @@ SENSOR_TYPES = {
     TYPE_SOILTEMP7F: ('Soil Temp 7', '°F', TYPE_SENSOR, 'temperature'),
     TYPE_SOILTEMP8F: ('Soil Temp 8', '°F', TYPE_SENSOR, 'temperature'),
     TYPE_SOILTEMP9F: ('Soil Temp 9', '°F', TYPE_SENSOR, 'temperature'),
-    TYPE_SOLARRADIATION: ('Solar Rad', 'W/m^2', TYPE_SENSOR, None),
+    TYPE_SOLARRADIATION: ('Solar Rad', 'lx', TYPE_SENSOR, 'illuminance'),
     TYPE_TEMP10F: ('Temp 10', '°F', TYPE_SENSOR, 'temperature'),
     TYPE_TEMP1F: ('Temp 1', '°F', TYPE_SENSOR, 'temperature'),
     TYPE_TEMP2F: ('Temp 2', '°F', TYPE_SENSOR, 'temperature'),
