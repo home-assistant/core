@@ -1538,10 +1538,14 @@ pypca==0.0.4
 
 # homeassistant.components.lcn
 <<<<<<< HEAD
+<<<<<<< HEAD
 pypck==0.5.9
 =======
 pypck==0.6.1
 >>>>>>> Bump to pypck==0.6.1 (#24356)
+=======
+pypck==0.6.2
+>>>>>>> Corrected number of default LCN segment coupler scan tryouts (#24678)
 
 # homeassistant.components.media_player.pjlink
 pypjlink2==1.2.0
