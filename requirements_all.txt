@@ -209,7 +209,7 @@ asterisk_mbox==0.5.0
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.upnp
-async-upnp-client==0.14.7
+async-upnp-client==0.14.10
 
 # homeassistant.components.stream
 av==6.1.2
