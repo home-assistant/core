@@ -18,7 +18,7 @@ from homeassistant.const import (
     STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
 from .const import DATA_LYRIC_CLIENT, DATA_LYRIC_DEVICES, DOMAIN
 
@@ -107,6 +107,14 @@ async def async_setup_entry(
     hass.services.async_register(
         DOMAIN, SERVICE_HOLD_TIME, hold_time_service,
         schema=HOLD_PERIOD_SCHEMA)
+
+
+async def async_unload_entry(
+        hass: HomeAssistantType, entry: ConfigType
+) -> bool:
+    """Unload Lyric thermostat config entry."""
+    hass.services.async_remove(DOMAIN, SERVICE_RESUME_PROGRAM)
+    hass.services.async_remove(DOMAIN, SERVICE_HOLD_TIME)
 
 
 class LyricThermostat(ClimateDevice):
