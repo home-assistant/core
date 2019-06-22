@@ -155,6 +155,6 @@ class LyricDeviceEntity(LyricEntity):
                 )
             },
             'name': self.device.name,
-            'via_device_id': self.device.macID,
+            'model': self.device.id,
             'manufacturer': 'Honeywell'
         }
