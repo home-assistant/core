@@ -7,7 +7,8 @@ from pytrafikverket import TrafikverketTrain
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
+from homeassistant.const import (
+    CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS, DEVICE_CLASS_TIMESTAMP)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -19,6 +20,7 @@ CONF_FROM = "from"
 CONF_TO = "to"
 CONF_TIME = "time"
 
+ATTR_DEPARTURE_STATE = "departure_state"
 ATTR_CANCELED = "canceled"
 ATTR_DELAY_TIME = "number_of_minutes_delayed"
 ATTR_PLANNED_TIME = "planned_time"
@@ -58,8 +60,7 @@ async def async_setup_platform(
                         train_api.async_get_train_station(station)
 
         except ValueError as station_error:
-            station_error = str(station_error)
-            if "Invalid authentication" in station_error:
+            if "Invalid authentication" in station_error.args[0]:
                 _LOGGER.error("Unable to set up up component: %s",
                               station_error)
                 return
@@ -151,13 +152,19 @@ class TrainSensor(Entity):
         if self._delay_in_minutes is not None:
             self._delay_in_minutes = \
                 self._delay_in_minutes.total_seconds() / 60
-        return {ATTR_CANCELED: state.canceled,
+        return {ATTR_DEPARTURE_STATE: self._departure_state,
+                ATTR_CANCELED: state.canceled,
                 ATTR_DELAY_TIME: self._delay_in_minutes,
                 ATTR_PLANNED_TIME: state.advertised_time_at_location,
                 ATTR_ESTIMATED_TIME: state.estimated_time_at_location,
                 ATTR_ACTUAL_TIME: state.time_at_location,
                 ATTR_OTHER_INFORMATION: other_information,
                 ATTR_DEVIATIONS: deviations}
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        return DEVICE_CLASS_TIMESTAMP
 
     @property
     def name(self):
@@ -172,6 +179,11 @@ class TrainSensor(Entity):
     @property
     def state(self):
         """Return the departure state."""
-        if self._state is not None:
-            return self._departure_state
+        state = self._state
+        if state is not None:
+            if state.time_at_location is not None:
+                return state.time_at_location
+            if state.estimated_time_at_location is not None:
+                return state.estimated_time_at_location
+            return state.advertised_time_at_location
         return None
