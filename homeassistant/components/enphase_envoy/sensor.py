@@ -7,21 +7,26 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_IP_ADDRESS, CONF_MONITORED_CONDITIONS, POWER_WATT)
+    CONF_IP_ADDRESS, CONF_MONITORED_CONDITIONS, POWER_WATT, ENERGY_WATT_HOUR)
 
 
 _LOGGER = logging.getLogger(__name__)
 
 SENSORS = {
     "production": ("Envoy Current Energy Production", POWER_WATT),
-    "daily_production": ("Envoy Today's Energy Production", "Wh"),
-    "seven_days_production": ("Envoy Last Seven Days Energy Production", "Wh"),
-    "lifetime_production": ("Envoy Lifetime Energy Production", "Wh"),
-    "consumption": ("Envoy Current Energy Consumption", "W"),
-    "daily_consumption": ("Envoy Today's Energy Consumption", "Wh"),
+    "daily_production": ("Envoy Today's Energy Production", ENERGY_WATT_HOUR),
+    "seven_days_production": ("Envoy Last Seven Days Energy Production",
+                              ENERGY_WATT_HOUR),
+    "lifetime_production": ("Envoy Lifetime Energy Production",
+                            ENERGY_WATT_HOUR),
+    "consumption": ("Envoy Current Energy Consumption", POWER_WATT),
+    "daily_consumption": ("Envoy Today's Energy Consumption",
+                          ENERGY_WATT_HOUR),
     "seven_days_consumption": ("Envoy Last Seven Days Energy Consumption",
-                               "Wh"),
-    "lifetime_consumption": ("Envoy Lifetime Energy Consumption", "Wh")
+                               ENERGY_WATT_HOUR),
+    "lifetime_consumption": ("Envoy Lifetime Energy Consumption",
+                             ENERGY_WATT_HOUR),
+    "inverters": ("Envoy Inverter \#", POWER_WATT)
     }
 
 
@@ -34,15 +39,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.In(list(SENSORS))])})
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities,
+                               discovery_info=None):
     """Set up the Enphase Envoy sensor."""
+    from envoy_reader.envoy_reader import EnvoyReader
+
     ip_address = config[CONF_IP_ADDRESS]
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
 
+    if "inverters" in monitored_conditions:
+        inverters = await EnvoyReader(ip_address).inverters_production()
+        for inverter in inverters:
+            add_entities([Envoy(ip_address, "inverters",
+                                "Envoy Inverter {}".format(inverter),
+                                POWER_WATT)], True)
+
     # Iterate through the list of sensors
     for condition in monitored_conditions:
-        add_entities([Envoy(ip_address, condition, SENSORS[condition][0],
-                            SENSORS[condition][1])], True)
+        if condition != "inverters":
+            add_entities([Envoy(ip_address, condition, SENSORS[condition][0],
+                                SENSORS[condition][1])], True)
 
 
 class Envoy(Entity):
@@ -77,28 +93,23 @@ class Envoy(Entity):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    @property
-    def device_state_attributes(self):
-        """Return device specific state attributes."""
-        return self._attributes
-
     async def async_update(self):
         """Get the energy production data from the Enphase Envoy."""
         from envoy_reader.envoy_reader import EnvoyReader
 
-        _state = await getattr(EnvoyReader(self._ip_address), self._type)()
-        if isinstance(_state, int):
-            self._state = _state
-        else:
-            _LOGGER.error(_state)
-            self._state = None
-
-        if self._type == "production":
-            _attributes = await (EnvoyReader(self._ip_address)
-                                 .inverters_production())
-            if isinstance(_attributes, dict):
-                self._attributes = _attributes
+        if self._type != "inverters":
+            _state = await getattr(EnvoyReader(self._ip_address), self._type)()
+            if isinstance(_state, int):
+                self._state = _state
             else:
-                self._attributes = None
-        else:
-            self._attributes = None
+                _LOGGER.error(_state)
+                self._state = None
+
+        elif self._type == "inverters":
+            inverters = await (EnvoyReader(self._ip_address)
+                               .inverters_production())
+            if isinstance(inverters, dict):
+                serial_number = self._name.split(" ")[2]
+                self._state = inverters[serial_number]
+            else:
+                self._state = None
