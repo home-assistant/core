@@ -57,7 +57,7 @@ def run(args: List) -> int:
             print('Aborting script, could not install dependency', req)
             return 1
 
-    return script.run(args[1:])  # type: ignore
+    return script.run(args[1:])
 
 
 def extract_config_dir(args=None) -> str:

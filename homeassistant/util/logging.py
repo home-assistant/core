@@ -141,8 +141,9 @@ def catch_log_exception(
 
     # Check for partials to properly determine if coroutine function
     check_func = func
-    while isinstance(check_func, partial):
-        check_func = check_func.func
+    # type ignores: https://github.com/python/typeshed/pull/3077
+    while isinstance(check_func, partial):  # type: ignore
+        check_func = check_func.func  # type: ignore
 
     wrapper_func = None
     if asyncio.iscoroutinefunction(check_func):
