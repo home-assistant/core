@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.lyric import LyricDeviceEntity
-from homeassistant.components.climate import PLATFORM_SCHEMA
+from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, STATE_AUTO, STATE_COOL,
     STATE_HEAT, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
@@ -118,7 +118,7 @@ async def async_unload_entry(
     hass.services.async_remove(DOMAIN, SERVICE_HOLD_TIME)
 
 
-class LyricThermostat(LyricDeviceEntity):
+class LyricThermostat(LyricDeviceEntity, ClimateDevice):
     """Representation of a Lyric thermostat."""
 
     def __init__(self, device, location, temp_unit, hass) -> None:
