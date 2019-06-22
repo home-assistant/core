@@ -405,21 +405,33 @@ async def test_value_entities(hass, mock_openzwave):
         mock_receivers[MockNetwork.SIGNAL_ALL_NODES_QUERIED])
     node = MockNode(node_id=11, generic=const.GENERIC_TYPE_SENSOR_BINARY)
     zwave_network.nodes = {node.node_id: node}
-    value = MockValue(data=False, node=node, index=12, instance=1,
-                      command_class=const.COMMAND_CLASS_SENSOR_BINARY,
-                      type=const.TYPE_BOOL, genre=const.GENRE_USER)
+    value = MockValue(
+        data=False, node=node, index=12, instance=1,
+        command_class=const.COMMAND_CLASS_SENSOR_BINARY,
+        type=const.TYPE_BOOL, genre=const.GENRE_USER)
     node.values = {'primary': value, value.value_id: value}
+    value2 = MockValue(
+        data=False, node=node, index=12, instance=2,
+        label="Mock Value B",
+        command_class=const.COMMAND_CLASS_SENSOR_BINARY,
+        type=const.TYPE_BOOL, genre=const.GENRE_USER)
+    node.values[value2.value_id] = value2
 
     hass.async_add_job(
         mock_receivers[MockNetwork.SIGNAL_NODE_ADDED], node)
     hass.async_add_job(
         mock_receivers[MockNetwork.SIGNAL_VALUE_ADDED], node, value)
+    hass.async_add_job(
+        mock_receivers[MockNetwork.SIGNAL_VALUE_ADDED], node, value2)
     await hass.async_block_till_done()
 
     assert hass.states.get(
         'binary_sensor.mock_node_mock_value').state == 'off'
+    assert hass.states.get(
+        'binary_sensor.mock_node_mock_value_b').state == 'off'
 
     ent_reg = await async_get_registry(hass)
+    dev_reg = await get_dev_reg(hass)
 
     entry = ent_reg.async_get('zwave.mock_node')
     assert entry is not None
@@ -432,11 +444,48 @@ async def test_value_entities(hass, mock_openzwave):
     assert entry.name is None
     assert entry.device_id == node_dev_id
 
-    dev_reg = await get_dev_reg(hass)
+    entry = ent_reg.async_get('binary_sensor.mock_node_mock_value_b')
+    assert entry is not None
+    assert entry.unique_id == '{}-{}'.format(node.node_id, value2.object_id)
+    assert entry.name is None
+    assert entry.device_id != node_dev_id
+    device_id_b = entry.device_id
+
     device = dev_reg.async_get(node_dev_id)
     assert device is not None
     assert device.name == node.name
     old_device = device
+
+    device = dev_reg.async_get(device_id_b)
+    assert device is not None
+    assert device.name == "{} ({})".format(node.name, value2.instance)
+
+    # test renaming without updating
+    await hass.services.async_call('zwave', 'rename_node', {
+        const.ATTR_NODE_ID: node.node_id,
+        const.ATTR_NAME: "Demo Node",
+    })
+    await hass.async_block_till_done()
+
+    assert node.name == "Demo Node"
+
+    entry = ent_reg.async_get('zwave.mock_node')
+    assert entry is not None
+
+    entry = ent_reg.async_get('binary_sensor.mock_node_mock_value')
+    assert entry is not None
+
+    entry = ent_reg.async_get('binary_sensor.mock_node_mock_value_b')
+    assert entry is not None
+
+    device = dev_reg.async_get(node_dev_id)
+    assert device is not None
+    assert device.id == old_device.id
+    assert device.name == node.name
+
+    device = dev_reg.async_get(device_id_b)
+    assert device is not None
+    assert device.name == "{} ({})".format(node.name, value2.instance)
 
     # test renaming
     await hass.services.async_call('zwave', 'rename_node', {
@@ -446,6 +495,8 @@ async def test_value_entities(hass, mock_openzwave):
     })
     await hass.async_block_till_done()
 
+    assert node.name == "New Node"
+
     entry = ent_reg.async_get('zwave.new_node')
     assert entry is not None
     assert entry.unique_id == 'node-{}'.format(node.node_id)
@@ -454,11 +505,14 @@ async def test_value_entities(hass, mock_openzwave):
     assert entry is not None
     assert entry.unique_id == '{}-{}'.format(node.node_id, value.object_id)
 
-    dev_reg = await get_dev_reg(hass)
     device = dev_reg.async_get(node_dev_id)
     assert device is not None
     assert device.id == old_device.id
     assert device.name == node.name
+
+    device = dev_reg.async_get(device_id_b)
+    assert device is not None
+    assert device.name == "{} ({})".format(node.name, value2.instance)
 
     await hass.services.async_call('zwave', 'rename_value', {
         const.ATTR_NODE_ID: node.node_id,
