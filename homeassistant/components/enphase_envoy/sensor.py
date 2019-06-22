@@ -84,7 +84,7 @@ class Envoy(Entity):
 
     async def async_update(self):
         """Get the energy production data from the Enphase Envoy."""
-        from envoy_reader import EnvoyReader
+        from envoy_reader.envoy_reader import EnvoyReader
 
         _state = await getattr(EnvoyReader(self._ip_address), self._type)()
         if isinstance(_state, int):
