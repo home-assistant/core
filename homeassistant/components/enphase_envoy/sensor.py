@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.In(list(SENSORS))])})
 
 
-async def async_setup_platform(hass, config, add_entities,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Enphase Envoy sensor."""
     from envoy_reader.envoy_reader import EnvoyReader
@@ -47,19 +47,21 @@ async def async_setup_platform(hass, config, add_entities,
     ip_address = config[CONF_IP_ADDRESS]
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
 
+    entities = []
     # Iterate through the list of sensors
     for condition in monitored_conditions:
         if condition == "inverters":
             inverters = await EnvoyReader(ip_address).inverters_production()
             if isinstance(inverters, dict):
                 for inverter in inverters:
-                    add_entities([Envoy(ip_address, condition,
-                                        "{} {}".format(SENSORS[condition][0],
-                                                       inverter),
-                                        SENSORS[condition][1])], True)
+                    entities.append(Envoy(ip_address, condition,
+                                          "{} {}".format(SENSORS[condition][0],
+                                                         inverter),
+                                          SENSORS[condition][1]))
         else:
-            add_entities([Envoy(ip_address, condition, SENSORS[condition][0],
-                                SENSORS[condition][1])], True)
+            entities.append(Envoy(ip_address, condition, SENSORS[condition][0],
+                                  SENSORS[condition][1]))
+    async_add_entities(entities)
 
 
 class Envoy(Entity):
