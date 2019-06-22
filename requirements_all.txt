@@ -367,7 +367,7 @@ directpy==0.5
 discogs_client==2.2.1
 
 # homeassistant.components.discord
-discord.py==1.1.1
+discord.py==1.2.2
 
 # homeassistant.components.updater
 distro==1.4.0
