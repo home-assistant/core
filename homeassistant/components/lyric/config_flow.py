@@ -32,7 +32,6 @@ class LyricFlowHandler(ConfigFlow):
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id='user',
-            # TODO: Secret should be protected in UI
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_CLIENT_ID): str,
