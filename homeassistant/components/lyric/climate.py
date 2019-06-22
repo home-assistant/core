@@ -8,7 +8,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.lyric import LyricDeviceEntity
+from homeassistant.components.climate import PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, STATE_AUTO, STATE_COOL,
     STATE_HEAT, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
@@ -20,7 +21,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
-from .const import DATA_LYRIC_CLIENT, DATA_LYRIC_DEVICES, DOMAIN
+from .const import (DATA_DEVICE_MAC_ADDRESS, DATA_LYRIC_CLIENT,
+                    DATA_LYRIC_DEVICES, DOMAIN)
 
 DEPENDENCIES = ['lyric']
 
@@ -63,7 +65,7 @@ async def async_setup_entry(
     hass.data[DOMAIN][DATA_LYRIC_DEVICES] = devices
 
     temp_unit = hass.config.units.temperature_unit
-    devices = [LyricThermostat(location, device, hass, temp_unit)
+    devices = [LyricThermostat(device, location, temp_unit, hass)
                for location, device in lyric.devices()]
 
     async_add_entities(devices, True)
@@ -117,28 +119,25 @@ async def async_unload_entry(
     hass.services.async_remove(DOMAIN, SERVICE_HOLD_TIME)
 
 
-class LyricThermostat(ClimateDevice):
+class LyricThermostat(LyricDeviceEntity):
     """Representation of a Lyric thermostat."""
 
-    def __init__(self, location, device, hass, temp_unit) -> None:
+    def __init__(self, device, location, temp_unit, hass) -> None:
         """Initialize the thermostat."""
-        self._unique_id = '{}_climate'.format(device.macID)
+        unique_id = '{}_climate'.format(device.macID)
         self._unit = temp_unit
-        self.location = location
-        self.device = device
-        self._hass = hass
 
         # Not all lyric devices support cooling and heating remove unused
         self._operation_list = [STATE_OFF]
 
         # Add supported lyric thermostat features
-        if self.device.can_heat:
+        if device.can_heat:
             self._operation_list.append(STATE_HEAT)
 
-        if self.device.can_cool:
+        if device.can_cool:
             self._operation_list.append(STATE_COOL)
 
-        if self.device.can_heat and self.device.can_cool:
+        if device.can_heat and device.can_cool:
             self._operation_list.append(STATE_AUTO)
 
         # data attributes
@@ -162,15 +161,7 @@ class LyricThermostat(ClimateDevice):
         self._current_schedule_period_day = None
         self._vacation_hold = None
 
-    @property
-    def name(self):
-        """Return the name of the lyric, if any."""
-        return self._name
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID for the thermostat."""
-        return self._unique_id
+        super().__init__(device, location, unique_id, None, None)
 
     @property
     def supported_features(self):
@@ -299,7 +290,7 @@ class LyricThermostat(ClimateDevice):
             attrs["temperature_scale"] = self._temperature_scale
         return attrs
 
-    def update(self):
+    async def _lyric_update(self) -> None:
         """Get values from lyric."""
         if self.device:
             self._location = self.device.where

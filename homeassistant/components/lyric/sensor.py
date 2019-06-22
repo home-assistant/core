@@ -8,6 +8,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.lyric import LyricDeviceEntity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntry
@@ -43,80 +44,61 @@ async def async_setup_entry(
     for location, device in lyric.devices():
         if device.indoorTemperature:
             devices.append(LyricSensor(
-                location, device, hass, 'indoorTemperature', 'Temperature',
+                device, location, hass, 'indoorTemperature', 'Temperature',
                 hass.config.units.temperature_unit, 'mdi:thermometer'))
         if device.indoorHumidity:
             devices.append(LyricSensor(
-                location, device, hass, 'indoorHumidity', 'Humidity',
+                device, location, hass, 'indoorHumidity', 'Humidity',
                 '%', 'mdi:water-percent'))
         if device.outdoorTemperature:
             devices.append(LyricSensor(
-                location, device, hass, 'outdoorTemperature',
+                device, location, hass, 'outdoorTemperature',
                 'Temperature Outside',
                 hass.config.units.temperature_unit, 'mdi:thermometer'))
         if device.displayedOutdoorHumidity:
             devices.append(LyricSensor(
-                location, device, hass, 'displayedOutdoorHumidity',
+                device, location, hass, 'displayedOutdoorHumidity',
                 'Humidity Outside', '%', 'mdi:water-percent'))
         if device.nextPeriodTime:
             devices.append(LyricSensor(
-                location, device, hass, 'nextPeriodTime',
+                device, location, hass, 'nextPeriodTime',
                 'Next Period Time', '', 'mdi:clock'))
         if device.thermostatSetpointStatus:
             devices.append(LyricSensor(
-                location, device, hass, 'thermostatSetpointStatus',
+                device, location, hass, 'thermostatSetpointStatus',
                 'Status', '', 'mdi:thermostat'))
 
     async_add_entities(devices, True)
 
 
-class LyricSensor(Entity):
+class LyricSensor(LyricDeviceEntity):
     """Representation of a Lyric thermostat."""
 
-    def __init__(self, location, device, hass, key, key_name,
+    def __init__(self, device, location, hass, key, key_name,
                  unit_of_measurement=None, icon=None) -> None:
         """Initialize the sensor."""
-        self._unique_id = '{}_{}'.format(
+        unique_id = '{}_{}'.format(
             device.macID, key_name.replace(" ", "_"))
-        self._name = '{} {}'.format(device.name, key_name)
         self._unit_of_measurement = unit_of_measurement
-        self._icon = icon
         self._state = None
         self._available = False
-        self.device = device
         self.key = key
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+        name = '{} {}'.format(device.name, key_name)
 
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID for the sensor."""
-        return self._unique_id
+        super().__init__(device, location, unique_id, name, icon)
 
     @property
     def state(self):
-        """Return the state of the sensor."""
+        """Return the state of the entity."""
         return self._state
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
 
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return self._icon
-
-    def update(self):
+    async def _lyric_update(self) -> None:
         """Get values from lyric."""
         if self.device:
             if self.key == 'thermostatSetpointStatus':

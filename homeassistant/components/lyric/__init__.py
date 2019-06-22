@@ -6,7 +6,7 @@ https://home-assistant.io/components/lyric
 """
 import asyncio
 import logging
-from functools import partial
+from typing import Any, Dict
 
 from lyric import Lyric
 import voluptuous as vol
@@ -19,8 +19,10 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.lyric import config_flow
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers import discovery
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from .const import (AUTH_CALLBACK_PATH, DATA_LYRIC_CLIENT, DOMAIN,
+from .const import (AUTH_CALLBACK_PATH, DATA_DEVICE_MAC_ADDRESS,
+                    DATA_LYRIC_CLIENT, DOMAIN,
                     CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_LYRIC_CONFIG_FILE)
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,3 +95,66 @@ class LyricClient:
         except TypeError:
             _LOGGER.error(
                 "Connection error logging into the Lyric web service.")
+
+
+class LyricEntity(Entity):
+    """Defines a base Lyric entity."""
+
+    def __init__(self, device, location,
+                 unique_id: str, name: str, icon: str) -> None:
+        """Initialize the Lyric entity."""
+        self._unique_id = unique_id
+        self._name = name
+        self._icon = icon
+        self._available = False
+        self.device = device
+        self.location = location
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique ID for the sensor."""
+        return self._unique_id
+
+    @property
+    def name(self) -> str:
+        """Return the name of the entity."""
+        return self._name
+
+    @property
+    def icon(self) -> str:
+        """Return the mdi icon of the entity."""
+        return self._icon
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._available
+
+    async def async_update(self) -> None:
+        """Update Lyric entity."""
+        await self._lyric_update()
+        self._available = True
+
+    async def _lyric_update(self) -> None:
+        """Update Lyric entity."""
+        raise NotImplementedError()
+
+
+class LyricDeviceEntity(LyricEntity):
+    """Defines a Lyric device entity."""
+
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return device information about this Lyric instance."""
+        mac_address = self.device.macID
+        return {
+            'identifiers': {
+                (
+                    DOMAIN,
+                    mac_address
+                )
+            },
+            'name': self.device.name,
+            'via_device_id': self.device.macID,
+            'manufacturer': 'Honeywell'
+        }
