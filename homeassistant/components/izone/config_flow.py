@@ -1,32 +1,38 @@
 """Config flow for izone."""
 
 import logging
+import asyncio
 
 from async_timeout import timeout
 
 from homeassistant import config_entries
 from homeassistant.helpers import config_entry_flow
 
-from .const import DOMAIN
+from .const import DOMAIN, TIMEOUT_DISCOVERY
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def _async_has_devices(hass):
-    from .discovery import async_start_discovery_service
+    from .discovery import (
+        async_start_discovery_service, async_stop_discovery_service)
 
     disco = await async_start_discovery_service(hass)
 
     try:
-        async with timeout(5):
+        async with timeout(TIMEOUT_DISCOVERY):
             await disco.controller_ready.wait()
-    except TimeoutError:
+    except asyncio.TimeoutError:
         pass
 
-    _LOGGER.debug("Controllers %s", disco.controllers)
+    if not disco.controllers:
+        await async_stop_discovery_service(hass)
+        _LOGGER.debug("No controllers found.")
+        return False
 
-    return len(disco.controllers) > 0
+    _LOGGER.debug("Controllers %s", disco.controllers)
+    return True
 
 
 config_entry_flow.register_discovery_flow(
