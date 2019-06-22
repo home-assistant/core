@@ -91,7 +91,7 @@ class Envoy(Entity):
             self._state = _state
         else:
             _LOGGER.error(_state)
-            self._state = "Unknown"
+            self._state = None
 
         if self._type == "production":
             _attributes = await (EnvoyReader(self._ip_address)
@@ -100,3 +100,5 @@ class Envoy(Entity):
                 self._attributes = _attributes
             else:
                 self._attributes = None
+        else:
+            self._attributes = None
