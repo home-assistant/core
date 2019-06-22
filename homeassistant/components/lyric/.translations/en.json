@@ -11,7 +11,6 @@
                 "title": "Link your Honeywell Lyric account",
                 "description": "Set up your Honeywell Lyric instance to allow monitoring and control.",
                 "data": {
-                    "name": "Name",
                     "client_id": "Client ID",
                     "client_secret": "Client Secret"
                 }

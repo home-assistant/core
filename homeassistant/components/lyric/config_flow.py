@@ -9,7 +9,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import (AUTH_CALLBACK_NAME, AUTH_CALLBACK_PATH, DOMAIN,
@@ -38,7 +37,6 @@ class LyricFlowHandler(ConfigFlow):
             # TODO: Secret should be protected in UI
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_NAME, default="Thermostat"): str,
                     vol.Required(CONF_CLIENT_ID): str,
                     vol.Required(CONF_CLIENT_SECRET): str
                 }
