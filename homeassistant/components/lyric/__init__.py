@@ -6,131 +6,72 @@ https://home-assistant.io/components/lyric
 """
 import asyncio
 import logging
+from functools import partial
 
+from lyric import Lyric
 import voluptuous as vol
 
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import CONF_SCAN_INTERVAL, HTTP_BAD_REQUEST
-from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant import config_entries
+from homeassistant.const import CONF_NAME, CONF_TOKEN
 
-_CONFIGURING = {}
+from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.lyric import config_flow
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers import discovery
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from .const import (AUTH_CALLBACK_PATH, DATA_LYRIC_CLIENT, DOMAIN,
+                    CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_LYRIC_CONFIG_FILE)
+
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'lyric'
 
-DATA_LYRIC = 'lyric'
-
-LYRIC_CONFIG_FILE = 'lyric.conf'
-CONF_CLIENT_ID = 'client_id'
-CONF_CLIENT_SECRET = 'client_secret'
-CONF_REDIRECT_URI = 'redirect_uri'
-
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_CLIENT_ID): cv.string,
-        vol.Required(CONF_CLIENT_SECRET): cv.string,
-        vol.Optional(CONF_REDIRECT_URI): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=270): cv.positive_int
-    })
-}, extra=vol.ALLOW_EXTRA)
-
-
-def request_configuration(lyric, hass, config):
-    """Request configuration steps from the user."""
-    configurator = hass.components.configurator
-    if 'lyric' in _CONFIGURING:
-        _LOGGER.warning("Honeywell Lyric configuration failed.")
-        configurator.notify_errors(
-            _CONFIGURING['lyric'], "Failed to configure, please try again.")
-        return
-
-    def lyric_configuration_callback(data):
-        """Run when the configuration callback is called."""
-        _LOGGER.debug("Configurator callback")
-        setup_lyric(hass, lyric, config)
-
-    hass.http.register_view(LyricAuthenticateView(lyric))
-
-    _CONFIGURING['lyric'] = configurator.request_config(
-        "Honeywell Lyric", lyric_configuration_callback,
-        description=('To configure Lyric, click Request Authorization below, '
-                     'then log into your Lyric account and authorize your'
-                     ' devices. Once you get a success message you can '
-                     ' click `Continue`.'),
-        link_name='Request Authorization',
-        link_url=lyric.getauthorize_url,
-        submit_caption="Continue",
-    )
-
-
-def setup_lyric(hass, lyric, config, url=None):
-    """Set up the Lyric devices."""
-    if url is not None:
-        _LOGGER.debug("url acquired, requesting access token")
-        lyric.authorization_response(url)
-
-    # pylint: disable=protected-access
-    if lyric._token is None:
-        _LOGGER.debug("No access_token, requesting configuration")
-        request_configuration(lyric, hass, config)
-        return
-
-    if 'lyric' in _CONFIGURING:
-        _LOGGER.debug("Configuration done")
-        configurator = hass.components.configurator
-        configurator.request_done(_CONFIGURING.pop('lyric'))
-
-    _LOGGER.debug("Proceeding with setup")
-    conf = config[DOMAIN]
-    hass.data[DATA_LYRIC] = LyricDevice(hass, conf, lyric)
-
-    _LOGGER.debug(hass.data[DATA_LYRIC].lyric.locations)
-    _LOGGER.debug("Proceeding with discovery of platforms")
-    conf.pop(CONF_CLIENT_ID)
-    conf.pop(CONF_CLIENT_SECRET)
-    discovery.load_platform(hass, 'climate', DOMAIN, conf, config)
-    discovery.load_platform(hass, 'sensor', DOMAIN, conf, config)
-    _LOGGER.debug("Setup done of component")
-
-    return True
-
-
-def setup(hass, config):
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the Lyric component."""
-    import lyric
+    return True
 
-    if 'lyric' in _CONFIGURING:
-        return
 
-    conf = config[DOMAIN]
-    client_id = conf[CONF_CLIENT_ID]
-    client_secret = conf[CONF_CLIENT_SECRET]
-    cache_ttl = conf[CONF_SCAN_INTERVAL]
-    filename = LYRIC_CONFIG_FILE
-    token_cache_file = hass.config.path(filename)
-    redirect_uri = conf.get(
-        CONF_REDIRECT_URI,
-        '{}/api/lyric/authenticate'.format(hass.config.api.base_url)
-    )
+async def async_setup_entry(
+        hass: HomeAssistantType, entry: ConfigEntry
+) -> bool:
+    """Set up Lyric from a config entry."""
 
-    lyric = lyric.Lyric(
-        token_cache_file=token_cache_file,
-        client_id=client_id, client_secret=client_secret,
-        app_name='Home Assistant', redirect_uri=redirect_uri,
-        cache_ttl=cache_ttl)
+    client_id = entry.data[CONF_CLIENT_ID]
+    client_secret = entry.data[CONF_CLIENT_SECRET]
+    token = entry.data[CONF_TOKEN]
+    token_cache_file = hass.config.path(CONF_LYRIC_CONFIG_FILE)
 
-    setup_lyric(hass, lyric, config)
+    lyric = Lyric(app_name='Home Assistant', client_id=client_id,
+                  client_secret=client_secret,
+                  token=token, token_cache_file=token_cache_file)
+
+    hass.data.setdefault(DOMAIN, {})[DATA_LYRIC_CLIENT] = LyricClient(lyric)
+
+    for component in 'climate', 'sensor':
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
 
     return True
 
 
-class LyricDevice:
+async def async_unload_entry(
+        hass: HomeAssistantType, entry: ConfigType
+) -> bool:
+    """Unload Lyric config entry."""
+    for component in 'climate', 'sensor':
+        await hass.config_entries.async_forward_entry_unload(entry, component)
+
+    del hass.data[DOMAIN]
+
+    return True
+
+
+class LyricClient:
     """Structure Lyric functions for hass."""
 
-    def __init__(self, hass, conf, lyric):
+    def __init__(self, lyric):
         """Init Lyric devices."""
-        self.hass = hass
         self.lyric = lyric
 
         if not lyric.locations:
@@ -139,7 +80,7 @@ class LyricDevice:
 
         self._location = [location.name for location in lyric.locations]
 
-    def thermostats(self):
+    def devices(self):
         """Generate a list of thermostats and their location."""
         try:
             for location in self.lyric.locations:
@@ -152,31 +93,3 @@ class LyricDevice:
         except TypeError:
             _LOGGER.error(
                 "Connection error logging into the Lyric web service.")
-
-
-class LyricAuthenticateView(HomeAssistantView):
-    """Handle redirects from lyric oauth2 api, to authenticate."""
-
-    url = '/api/lyric/authenticate'
-    name = 'api:lyric:authenticate'
-    requires_auth = False
-
-    def __init__(self, lyric):
-        """Initialize Lyric Setup url endpoints."""
-        self.lyric = lyric
-
-    @asyncio.coroutine
-    async def get(self, request):
-        """Handle a GET request."""
-        # hass = request.app['hass']
-        data = request.query
-
-        if 'code' not in data or 'state' not in data:
-            return self.json_message('Authentication failed, not the right '
-                                     'variables, try again.', HTTP_BAD_REQUEST)
-
-        self.lyric.authorization_code(code=data['code'], state=data['state'])
-
-        return self.json_message('Honeywell Lyric now authenticated. You can'
-                                 'now close this window/tab and click '
-                                 '`Continue` in the dialog.')

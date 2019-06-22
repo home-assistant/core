@@ -43,6 +43,7 @@ FLOWS = [
     "locative",
     "logi_circle",
     "luftdaten",
+    "lyric",
     "mailgun",
     "met",
     "mobile_app",

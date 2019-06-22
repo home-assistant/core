@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Only a single configuration of Honeywell Lyric is allowed."
+        },
+        "create_entry": {
+            "default": "Successfully authenticated with Honeywell Lyric."
+        },
+        "step": {
+            "user": {
+                "title": "Link your Honeywell Lyric account",
+                "description": "Set up your Honeywell Lyric instance to allow monitoring and control.",
+                "data": {
+                    "name": "Name",
+                    "client_id": "Client ID",
+                    "client_secret": "Client Secret"
+                }
+            }
+        },
+        "error": {
+            "connection_error": "Failed to connect."
+        },
+        "title": "Honeywell Lyric"
+    }
+}

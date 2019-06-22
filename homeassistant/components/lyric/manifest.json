@@ -1,10 +1,9 @@
 {
   "domain": "lyric",
   "name": "Honeywell Lyric",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/lyric",
-  "dependencies": [
-    "http"
-  ],
+  "dependencies": [],
   "codeowners": [
     "@timmo001"
   ],

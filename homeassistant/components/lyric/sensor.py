@@ -8,10 +8,13 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.lyric import DATA_LYRIC
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
+from .const import DATA_LYRIC_CLIENT, DATA_LYRIC_DEVICES, DOMAIN
 
 DEPENDENCIES = ['lyric']
 
@@ -23,15 +26,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Lyric thermostat."""
-    if discovery_info is None:
-        return
+async def async_setup_entry(
+        hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
+    """Set up Lyric sensor based on a config entry."""
+    lyric = hass.data[DOMAIN][DATA_LYRIC_CLIENT]
 
-    _LOGGER.debug('Set up Lyric sensor platform')
+    try:
+        devices = lyric.devices()
+    except Exception as exception:
+        raise PlatformNotReady from exception
+
+    hass.data[DOMAIN][DATA_LYRIC_DEVICES] = devices
 
     devices = []
-    for location, device in hass.data[DATA_LYRIC].thermostats():
+    for location, device in lyric.devices():
         if device.indoorTemperature:
             devices.append(LyricSensor(
                 location, device, hass, 'indoorTemperature', 'Temperature',
@@ -58,14 +67,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 location, device, hass, 'thermostatSetpointStatus',
                 'Status', '', 'mdi:thermostat'))
 
-    add_devices(devices, True)
+    async_add_entities(devices, True)
 
 
 class LyricSensor(Entity):
     """Representation of a Lyric thermostat."""
 
     def __init__(self, location, device, hass, key, key_name,
-                 unit_of_measurement=None, icon=None):
+                 unit_of_measurement=None, icon=None) -> None:
         """Initialize the sensor."""
         self._unique_id = '{}_{}'.format(
             device.macID, key_name.replace(" ", "_"))
@@ -83,7 +92,7 @@ class LyricSensor(Entity):
         return self._name
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique ID for the sensor."""
         return self._unique_id
 
@@ -98,7 +107,7 @@ class LyricSensor(Entity):
         return self._available
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return self._unit_of_measurement
 

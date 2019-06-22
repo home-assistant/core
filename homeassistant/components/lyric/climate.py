@@ -13,11 +13,14 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, STATE_AUTO, STATE_COOL,
     STATE_HEAT, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
-from homeassistant.components.lyric import DATA_LYRIC, DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, ATTR_TIME, CONF_SCAN_INTERVAL, STATE_OFF,
     STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.helpers.config_validation as cv
+from .const import DATA_LYRIC_CLIENT, DATA_LYRIC_DEVICES, DOMAIN
 
 DEPENDENCIES = ['lyric']
 
@@ -46,24 +49,26 @@ HOLD_PERIOD_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Lyric thermostat."""
-    if discovery_info is None:
-        return
+async def async_setup_entry(
+        hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
+    """Set up Lyric thermostat based on a config entry."""
+    lyric = hass.data[DOMAIN][DATA_LYRIC_CLIENT]
 
-    _LOGGER.debug("Climate discovery_info: %s", discovery_info)
-    _LOGGER.debug("Climate config: %s", config)
+    try:
+        devices = lyric.devices()
+    except Exception as exception:
+        raise PlatformNotReady from exception
+
+    hass.data[DOMAIN][DATA_LYRIC_DEVICES] = devices
 
     temp_unit = hass.config.units.temperature_unit
-
-    _LOGGER.debug('Set up Lyric climate platform')
-
     devices = [LyricThermostat(location, device, hass, temp_unit)
-               for location, device in hass.data[DATA_LYRIC].thermostats()]
+               for location, device in lyric.devices()]
 
-    add_devices(devices, True)
+    async_add_entities(devices, True)
 
-    def resume_program_service(service):
+    async def resume_program_service(service) -> None:
         """Resume the program on the target thermostats."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
 
@@ -78,7 +83,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for thermostat in target_thermostats:
             thermostat.set_hold_mode(HOLD_NO_HOLD)
 
-    def hold_time_service(service):
+    async def hold_time_service(service) -> None:
         """Set the time to hold until."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
         time = service.data.get(ATTR_TIME)
@@ -95,11 +100,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for thermostat in target_thermostats:
             thermostat.set_hold_period(time)
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_RESUME_PROGRAM, resume_program_service,
         schema=RESUME_PROGRAM_SCHEMA)
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_HOLD_TIME, hold_time_service,
         schema=HOLD_PERIOD_SCHEMA)
 
@@ -107,7 +112,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class LyricThermostat(ClimateDevice):
     """Representation of a Lyric thermostat."""
 
-    def __init__(self, location, device, hass, temp_unit):
+    def __init__(self, location, device, hass, temp_unit) -> None:
         """Initialize the thermostat."""
         self._unique_id = '{}_climate'.format(device.macID)
         self._unit = temp_unit
@@ -155,7 +160,7 @@ class LyricThermostat(ClimateDevice):
         return self._name
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique ID for the thermostat."""
         return self._unique_id
 
