@@ -130,7 +130,7 @@ class NetatmoCamera(Camera):
             return url.format(self._localurl, self._quality)
         return url.format(self._vpnurl, self._quality)
 
-   def is_on(self):
+    def is_on(self):
         """Return true if on."""
         return True
 
