@@ -221,7 +221,7 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) \
     if parameter is None or parameter == MATCH_ALL:
         res = [x for x in range(min_value, max_value + 1)]
     elif isinstance(parameter, str) and parameter.startswith('/'):
-        parameter = float(parameter[1:])
+        parameter = int(parameter[1:])
         res = [x for x in range(min_value, max_value + 1)
                if x % parameter == 0]
     elif not hasattr(parameter, '__iter__'):
@@ -302,7 +302,7 @@ def find_next_time_expression_time(now: dt.datetime,
     next_hour = _lower_bound(hours, result.hour)
     if next_hour != result.hour:
         # We're in the next hour. Seconds+minutes needs to be reset.
-        result.replace(second=seconds[0], minute=minutes[0])
+        result = result.replace(second=seconds[0], minute=minutes[0])
 
     if next_hour is None:
         # No minute to match in this day. Roll-over to next day.
