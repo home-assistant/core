@@ -9,7 +9,7 @@ from asyncio.futures import Future
 import asyncio
 from asyncio import ensure_future
 from typing import Any, Union, Coroutine, Callable, Generator, TypeVar, \
-                   Awaitable
+                   Awaitable, Optional
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,11 +92,11 @@ def _chain_future(
         raise TypeError('A future is required for destination argument')
     # pylint: disable=protected-access
     if isinstance(source, Future):
-        source_loop = source._loop  # type: ignore
+        source_loop = source._loop  # type: Optional[AbstractEventLoop]
     else:
         source_loop = None
     if isinstance(destination, Future):
-        dest_loop = destination._loop  # type: ignore
+        dest_loop = destination._loop  # type: Optional[AbstractEventLoop]
     else:
         dest_loop = None
 
