@@ -21,8 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
-from .const import (DATA_DEVICE_MAC_ADDRESS, DATA_LYRIC_CLIENT,
-                    DATA_LYRIC_DEVICES, DOMAIN)
+from .const import DATA_LYRIC_CLIENT, DATA_LYRIC_DEVICES, DOMAIN
 
 DEPENDENCIES = ['lyric']
 

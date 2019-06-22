@@ -6,7 +6,6 @@ AUTH_CALLBACK_PATH = '/auth/lyric/callback'
 
 DOMAIN = 'lyric'
 
-DATA_DEVICE_MAC_ADDRESS = 'device_mac_address'
 DATA_LYRIC_DEVICES = 'lyric_devices'
 DATA_LYRIC_CLIENT = 'lyric_client'
 

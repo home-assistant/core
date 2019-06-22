@@ -21,8 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from .const import (AUTH_CALLBACK_PATH, DATA_DEVICE_MAC_ADDRESS,
-                    DATA_LYRIC_CLIENT, DOMAIN,
+from .const import (AUTH_CALLBACK_PATH, DATA_LYRIC_CLIENT, DOMAIN,
                     CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_LYRIC_CONFIG_FILE)
 
 _LOGGER = logging.getLogger(__name__)
