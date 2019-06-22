@@ -27,6 +27,8 @@ class LyricFlowHandler(ConfigFlow):
 
     def __init__(self):
         """Initialize Lyric flow."""
+        self.client_id = None
+        self.client_secret = None
         pass
 
     async def _show_setup_form(self, errors=None):
@@ -56,8 +58,6 @@ class LyricFlowHandler(ConfigFlow):
 
     async def async_step_auth(self, user_input):
         """Create an entry for auth."""
-        _LOGGER.warning("Create an entry for auth...")
-
         # Flow has been triggered from Lyric api
         if isinstance(user_input, str):
             return await self.async_step_code(user_input)
@@ -72,9 +72,6 @@ class LyricFlowHandler(ConfigFlow):
         except asyncio.TimeoutError:
             return self.async_abort(reason='authorize_url_timeout')
 
-        _LOGGER.warning("URL:")
-        _LOGGER.warning(url)
-
         return self.async_external_step(
             step_id='auth',
             url=url
@@ -82,8 +79,6 @@ class LyricFlowHandler(ConfigFlow):
 
     async def _get_authorization_url(self, client_id, client_secret):
         """Get Lyric authorization url."""
-        _LOGGER.warning("Get Lyric authorization url...")
-
         redirect_uri = '{}{}'.format(
             self.hass.config.api.base_url, AUTH_CALLBACK_PATH)
         token_cache_file = self.hass.config.path(CONF_LYRIC_CONFIG_FILE)
@@ -100,13 +95,10 @@ class LyricFlowHandler(ConfigFlow):
 
     async def async_step_code(self, code):
         """Received code for authentication."""
-        _LOGGER.warning("Received code for authentication...")
-        self.code = code
         return self.async_external_step_done(next_step_id="creation")
 
     async def async_step_creation(self, user_input):
         """Create Lyric api and entries."""
-        _LOGGER.warning("Create Lyric api and entries...")
 
         client_id = self.client_id
         client_secret = self.client_secret
@@ -153,9 +145,6 @@ class LyricAuthCallbackView(HomeAssistantView):
                 flow_id=request.query['state'],
                 user_input=request.query['code']
             ))
-
-        _LOGGER.warning(request.url)
-        _LOGGER.warning(request.query)
 
         return web_response.Response(
             headers={
