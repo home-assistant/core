@@ -871,6 +871,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         if hass is None:
             return
 
+        # We mark these as a context functions to ensure they get
+        # evaluated fresh with every execution, rather than executed
+        # at compile time and the value stored. The context itself
+        # can be discarded, we only need to get at the hass object.
         def hassfunction(func):
             """Wrap function that depend on hass."""
             @wraps(func)
