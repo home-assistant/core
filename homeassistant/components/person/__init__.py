@@ -1,5 +1,6 @@
 """Support for tracking people."""
 from collections import OrderedDict
+from datetime import datetime
 from itertools import chain
 import logging
 from typing import Optional
@@ -23,6 +24,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.loader import bind_hass
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -507,8 +509,25 @@ async def ws_delete_person(hass: HomeAssistantType,
     connection.send_result(msg['id'])
 
 
+def _update_time(state: State):
+    """Return the time when the data actually changed at the source."""
+    # Some trackers have a last_seen attribute. Try to use it if possible.
+    last_seen = state.attributes.get('last_seen')
+    if last_seen:
+        # Some are datetimes.
+        if isinstance(last_seen, datetime):
+            return dt_util.as_utc(last_seen)
+        # Some are timestamps, possibly in string format.
+        try:
+            return dt_util.utc_from_timestamp(float(last_seen))
+        except (TypeError, ValueError):
+            pass
+    # For everything else just use the last state update time.
+    return state.last_updated
+
+
 def _get_latest(prev: Optional[State], curr: State):
     """Get latest state."""
-    if prev is None or curr.last_updated > prev.last_updated:
+    if prev is None or _update_time(curr) > _update_time(prev):
         return curr
     return prev
