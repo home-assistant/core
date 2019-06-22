@@ -1,7 +1,6 @@
 """Define constants for the Honeywell Lyric component."""
 
 AUTH_CALLBACK_NAME = 'auth:lyric:callback'
-# TODO: Change docs to use this url
 AUTH_CALLBACK_PATH = '/auth/lyric/callback'
 
 DOMAIN = 'lyric'
