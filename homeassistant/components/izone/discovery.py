@@ -79,8 +79,7 @@ async def async_start_discovery_service(hass: HomeAssistantType):
     await disco.pi_disco.start_discovery()
 
     async def shutdown_event(event):
-        await disco.pi_disco.close()
-        del hass.data[DATA_DISCOVERY_SERVICE]
+        await async_stop_discovery_service(hass)
 
     disco.stop_listener = hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, shutdown_event)
@@ -94,7 +93,10 @@ async def async_stop_discovery_service(hass: HomeAssistantType):
     if not disco:
         return
 
-    disco.stop_listener()
+    if disco.stop_listener:
+        disco.stop_listener()
     await disco.pi_disco.close()
-    del hass.data[DATA_DISCOVERY_SERVICE]
-    del hass.data[DATA_ADD_ENTRIES]
+    if DATA_DISCOVERY_SERVICE in hass.data:
+        del hass.data[DATA_DISCOVERY_SERVICE]
+    if DATA_ADD_ENTRIES in hass.data:
+        del hass.data[DATA_ADD_ENTRIES]

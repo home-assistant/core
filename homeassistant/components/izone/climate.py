@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistantType, config: ConfigType,
 
     # create any components not yet created
     for controller in disco.controllers.values():
-        disco.init_controller(controller, async_add_entities)
+        init_controller(controller, async_add_entities)
 
     # disco will use the register function to register any further components
     hass.data[DATA_ADD_ENTRIES] = async_add_entities
