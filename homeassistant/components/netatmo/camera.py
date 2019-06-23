@@ -189,7 +189,7 @@ class NetatmoCamera(Camera):
 
         False if entity pushes its state to HA.
         """
-        return False
+        return True
 
     @property
     def name(self):
