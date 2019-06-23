@@ -1921,7 +1921,7 @@ zengge==0.2
 zeroconf==0.23.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.14
+zha-quirks==0.0.15
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9
@@ -1933,7 +1933,7 @@ ziggo-mediabox-xl==1.1.0
 zigpy-deconz==0.1.6
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.5.0
+zigpy-homeassistant==0.6.1
 
 # homeassistant.components.zha
 zigpy-xbee-homeassistant==0.3.0
