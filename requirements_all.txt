@@ -209,7 +209,7 @@ asterisk_mbox==0.5.0
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.upnp
-async-upnp-client==0.14.10
+async-upnp-client==0.14.7
 
 # homeassistant.components.stream
 av==6.1.2
@@ -367,7 +367,7 @@ directpy==0.5
 discogs_client==2.2.1
 
 # homeassistant.components.discord
-discord.py==1.2.2
+discord.py==1.1.1
 
 # homeassistant.components.updater
 distro==1.4.0
@@ -512,10 +512,6 @@ georss_ign_sismologia_client==0.2
 
 # homeassistant.components.qld_bushfire
 georss_qld_bushfire_alert_client==0.3
-
-# homeassistant.components.braviatv
-# homeassistant.components.nmap_tracker
-getmac==0.8.1
 
 # homeassistant.components.gitter
 gitterpy==0.1.7
@@ -1022,7 +1018,7 @@ pyalarmdotcom==0.3.2
 pyarlo==0.2.3
 
 # homeassistant.components.netatmo
-pyatmo==2.1.0
+pyatmo==2.0.1
 
 # homeassistant.components.apple_tv
 pyatv==0.3.12
@@ -1298,7 +1294,7 @@ pyowm==2.10.0
 pypca==0.0.4
 
 # homeassistant.components.lcn
-pypck==0.6.2
+pypck==0.6.1
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.0
@@ -1307,7 +1303,7 @@ pypjlink2==1.2.0
 pypoint==1.1.1
 
 # homeassistant.components.ps4
-pyps4-homeassistant==0.8.5
+pyps4-homeassistant==0.8.3
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.93
@@ -1519,7 +1515,6 @@ pytrackr==0.0.5
 # homeassistant.components.tradfri
 pytradfri[async]==6.0.1
 
-# homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
 pytrafikverket==0.1.5.9
 
@@ -1598,7 +1593,7 @@ rflink==0.0.46
 # homeassistant.components.ring
 ring_doorbell==0.2.3
 
-# homeassistant.components.fleetgo
+# homeassistant.components.ritassist
 ritassist==0.9.2
 
 # homeassistant.components.rejseplanen
@@ -1703,7 +1698,7 @@ solaredge-local==0.1.4
 solaredge==0.0.2
 
 # homeassistant.components.solax
-solax==0.1.0
+solax==0.0.3
 
 # homeassistant.components.honeywell
 somecomfort==0.5.2
@@ -1913,7 +1908,7 @@ yeelight==0.5.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2019.06.08
+youtube_dl==2019.05.20
 
 # homeassistant.components.zengge
 zengge==0.2
@@ -1922,7 +1917,7 @@ zengge==0.2
 zeroconf==0.23.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.15
+zha-quirks==0.0.14
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9
@@ -1934,7 +1929,7 @@ ziggo-mediabox-xl==1.1.0
 zigpy-deconz==0.1.6
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.6.1
+zigpy-homeassistant==0.5.0
 
 # homeassistant.components.zha
 zigpy-xbee-homeassistant==0.3.0
