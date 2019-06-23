@@ -2004,7 +2004,14 @@ solaredge-local==0.1.4
 >>>>>>> SolarEdge Local Component (#23996)
 solaredge==0.0.2
 
+<<<<<<< HEAD
 # homeassistant.components.climate.honeywell
+=======
+# homeassistant.components.solax
+solax==0.1.0
+
+# homeassistant.components.honeywell
+>>>>>>> Solax update 0.1.0 (#24708)
 somecomfort==0.5.2
 
 <<<<<<< HEAD
