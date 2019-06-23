@@ -180,4 +180,5 @@ class NetatmoCamera(Camera):
             (self._vpnurl, self._localurl) = \
                 self._data.camera_data.cameraUrls(camera=self._camera_name)
             return None
+        self.schedule_update_ha_state()
         return response.content
