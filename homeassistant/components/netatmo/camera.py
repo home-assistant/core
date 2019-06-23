@@ -96,10 +96,10 @@ class NetatmoCamera(Camera):
             camera=camera_name, home=home
             )["alim_status"]
 
-        # Is locale
-        self._is_locale = self._data.camera_data.cameraByName(
+        # Is local
+        self._is_local = self._data.camera_data.cameraByName(
             camera=camera_name, home=home
-            )["is_locale"]
+            )["is_local"]
 
         # VPN URL
         self._vpn_url = self._data.camera_data.cameraByName(
@@ -167,7 +167,7 @@ class NetatmoCamera(Camera):
         attr['status'] = self._status
         attr['sd_status'] = self._sd_status
         attr['alim_status'] = self._alim_status
-        attr['is_locale'] = self._is_locale
+        attr['is_local'] = self._is_local
         attr['vpn_url'] = self._vpn_url
 
         return attr
