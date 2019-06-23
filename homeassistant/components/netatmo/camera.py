@@ -153,6 +153,22 @@ class NetatmoCamera(Camera):
         """Return supported features."""
         return SUPPORT_STREAM
 
+    @property
+    def is_recording(self):
+        """Return true if the device is recording."""
+        if self._status == 'on':            
+            return True
+        else:
+            return False
+
+    @property
+    def is_streaming(self):
+        """Return true if the device is streaming."""
+        if self._alim_status == 'on':            
+            return True
+        else:
+            return False        
+
     async def stream_source(self):
         """Return the stream source."""
         url = '{0}/live/files/{1}/index.m3u8'
