@@ -3,6 +3,8 @@ import copy
 import logging
 import voluptuous as vol
 
+from pyfronius import Fronius
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_RESOURCE, CONF_SENSOR_TYPE, CONF_DEVICE,
                                  CONF_MONITORED_CONDITIONS)
@@ -54,7 +56,7 @@ PLATFORM_SCHEMA = vol.Schema(vol.All(PLATFORM_SCHEMA.extend({
                 vol.Optional(CONF_DEVICE):
                     vol.All(vol.Coerce(int), vol.Range(min=0))
             }]
-    )
+        )
 }), _state_validator))
 
 
@@ -63,8 +65,6 @@ async def async_setup_platform(hass,
                                async_add_entities,
                                discovery_info=None):
     """Set up of Fronius platform."""
-    from pyfronius import Fronius
-
     session = async_get_clientsession(hass)
     fronius = Fronius(session, config[CONF_RESOURCE])
 
