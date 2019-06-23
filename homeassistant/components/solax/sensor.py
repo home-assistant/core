@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_IP_ADDRESS): cv.string,
-    vol.Optional(CONF_NAME, default='Solax'): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
 })
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -34,6 +34,11 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     api = solax.RealTimeAPI(config[CONF_IP_ADDRESS])
     endpoint = RealTimeDataEndpoint(hass, api)
+    serial = config.get(CONF_NAME, None)
+    if serial is None:
+        resp = await api.get_data()
+        serial = resp.serial_number
+
     hass.async_add_job(endpoint.async_refresh)
     async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
     devices = []
@@ -41,7 +46,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         unit = solax.INVERTER_SENSORS[sensor][1]
         if unit == 'C':
             unit = TEMP_CELSIUS
-        devices.append(Inverter(config[CONF_NAME], sensor, unit))
+        devices.append(Inverter(serial, sensor, unit))
     endpoint.sensors = devices
     async_add_entities(devices)
 
@@ -96,7 +101,7 @@ class Inverter(Entity):
     @property
     def name(self):
         """Name of this inverter attribute."""
-        return '{} {}'.format(self.inverter_name, self.key)
+        return 'Solax {} {}'.format(self.inverter_name, self.key)
 
     @property
     def unit_of_measurement(self):
