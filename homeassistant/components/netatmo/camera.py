@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 if config[CONF_CAMERAS] != [] and \
                    camera_name not in config[CONF_CAMERAS]:
                     continue
-            add_entities([NetatmoCamera(hass, auth, data, camera_name, home,
+            add_entities([NetatmoCamera(data, camera_name, home,
                                         camera_type, verify_ssl, quality)])
         data.get_persons()
     except pyatmo.NoDevice:
@@ -60,12 +60,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class NetatmoCamera(Camera):
     """Representation of the images published from a Netatmo camera."""
 
-    def __init__(self, hass, auth, data, camera_name, home, camera_type, verify_ssl,
+    def __init__(self, data, camera_name, home, camera_type, verify_ssl,
                  quality):
         """Set up for access to the Netatmo camera images."""
         super(NetatmoCamera, self).__init__()
-        self._hass = hass
-        self._auth = auth
         self._data = data
         self._camera_name = camera_name
         self._home = home
@@ -120,7 +118,7 @@ class NetatmoCamera(Camera):
     def update(self):
         """Update entity status."""
         # Refresh camera data.
-        self._data = CameraData(self._hass, self._auth, self._home)
+        self._data.update()
 
         # URLs.
         self._vpnurl, self._localurl = self._data.camera_data.cameraUrls(
