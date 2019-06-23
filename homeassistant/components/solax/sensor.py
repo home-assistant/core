@@ -19,7 +19,7 @@ from homeassistant.helpers.event import async_track_time_interval
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_IP_ADDRESS): cv.string
+    vol.Required(CONF_IP_ADDRESS): cv.string,
 })
 
 SCAN_INTERVAL = timedelta(seconds=30)
