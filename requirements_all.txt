@@ -2304,10 +2304,14 @@ zeroconf==0.23.0
 # homeassistant.components.zha
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 zha-quirks==0.0.6
 =======
 zha-quirks==0.0.14
 >>>>>>> ZHA requirements version bump. (#24228)
+=======
+zha-quirks==0.0.15
+>>>>>>> Update ZHA dependencies (#24718)
 =======
 zha-quirks==0.0.15
 >>>>>>> Update ZHA dependencies (#24718)
