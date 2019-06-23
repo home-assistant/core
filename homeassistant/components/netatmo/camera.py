@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.camera import (
     PLATFORM_SCHEMA, Camera, SUPPORT_STREAM)
-from homeassistant.const import CONF_VERIFY_SSL
+from homeassistant.const import (CONF_VERIFY_SSL, STATE_ON, STATE_OFF)
 from homeassistant.helpers import config_validation as cv
 
 from .const import DATA_NETATMO_AUTH
@@ -31,6 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.string, vol.In(VALID_QUALITIES)),
 })
 
+_BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up access to Netatmo cameras."""
@@ -75,9 +76,11 @@ class NetatmoCamera(Camera):
             camera=camera_name
             )
         self._cameratype = camera_type
-        self._motion_detection_enabled = self._data.camera_data.cameraByName(
+
+        camera_status = self._data.camera_data.cameraByName(
             camera=camera_name, home=home
             )["status"]
+        self._motion_detection_enabled = True if (camera_status == 'on') else False
 
     def camera_image(self):
         """Return a still image response from the camera."""
@@ -134,6 +137,14 @@ class NetatmoCamera(Camera):
         return url.format(self._vpnurl, self._quality)
 
     @property
+    def device_state_attributes(self):
+        """Return the Netatmo-specific camera state attributes."""
+        attr = {}
+        attr['motion_recording'] = _BOOL_TO_STATE.get(_motion_detection_enabled)
+
+        return attr
+
+    @property
     def motion_detection_enabled(self):
         """Return the camera motion detection status."""
         return self._motion_detection_enabled
@@ -149,15 +160,14 @@ class NetatmoCamera(Camera):
     def _enable_motion_detection(self, enable):
         """Enable or disable motion detection."""
         try:
-            status = 'on' if enable else 'off'
             if self._localurl:
                 response = requests.get('{0}/command/changestatus?status={1}'.format(
-                    self._localurl, status), timeout=10)
-                self._motion_detection_enabled = status
+                    self._localurl, _BOOL_TO_STATE.get(enable)), timeout=10)
+                self._motion_detection_enabled = enable
             elif self._vpnurl:
                 response = requests.get('{0}/command/changestatus?status={1}'.format(
-                    self._vpnurl, status), timeout=10, verify=self._verify_ssl)
-                self._motion_detection_enabled = status
+                    self._vpnurl, _BOOL_TO_STATE.get(enable)), timeout=10, verify=self._verify_ssl)
+                self._motion_detection_enabled = enable
             else:
                 _LOGGER.error("Welcome VPN URL is None")
                 self._data.update()
