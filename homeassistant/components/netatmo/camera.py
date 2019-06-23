@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 if config[CONF_CAMERAS] != [] and \
                    camera_name not in config[CONF_CAMERAS]:
                     continue
-            add_entities([NetatmoCamera(data, camera_name, home,
+            add_entities([NetatmoCamera(hass, auth, data, camera_name, home,
                                         camera_type, verify_ssl, quality)])
         data.get_persons()
     except pyatmo.NoDevice:
@@ -60,56 +60,106 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class NetatmoCamera(Camera):
     """Representation of the images published from a Netatmo camera."""
 
-    def __init__(self, data, camera_name, home, camera_type, verify_ssl,
+    def __init__(self, hass, auth, data, camera_name, home, camera_type, verify_ssl,
                  quality):
         """Set up for access to the Netatmo camera images."""
         super(NetatmoCamera, self).__init__()
+        self._hass = hass
+        self._auth = auth
         self._data = data
         self._camera_name = camera_name
-        self._verify_ssl = verify_ssl
-        self._quality = quality
+        self._home = home
         if home:
             self._name = home + ' / ' + camera_name
         else:
             self._name = camera_name
-        self._vpnurl, self._localurl = self._data.camera_data.cameraUrls(
-            camera=camera_name
-            )
         self._cameratype = camera_type
+        self._verify_ssl = verify_ssl
+        self._quality = quality
+
+        # URLs.
+        self._vpnurl, self._localurl = self._data.camera_data.cameraUrls(
+            camera=self._camera_name
+        )
 
         # Monitoring status.
         self._status = self._data.camera_data.cameraByName(
-            camera=camera_name, home=home
+            camera=self._camera_name, home=self._home
             )["status"]
-        if self._status == 'on':            
+        if self._status == 'on':
             self._motion_detection_enabled = True
         else:
             self._motion_detection_enabled = False
 
         # SD Card status
         self._sd_status = self._data.camera_data.cameraByName(
-            camera=camera_name, home=home
+            camera=self._camera_name, home=self._home
             )["sd_status"]
         
         # Power status
         self._alim_status = self._data.camera_data.cameraByName(
-            camera=camera_name, home=home
+            camera=self._camera_name, home=self._home
             )["alim_status"]
 
         # Is local
         self._is_local = self._data.camera_data.cameraByName(
-            camera=camera_name, home=home
+            camera=self._camera_name, home=self._home
             )["is_local"]
 
         # VPN URL
         self._vpn_url = self._data.camera_data.cameraByName(
-            camera=camera_name, home=home
+            camera=self._camera_name, home=self._home
             )["vpn_url"]
 
         if self._alim_status == 'on':            
             self.is_streaming = True
         else:
-            self.is_streaming = False                
+            self.is_streaming = False
+
+    # Entity method overrides
+    def update(self):
+        # Refresh camera data.
+        self._data = CameraData(self._hass, self._auth, self._home)
+
+        # URLs.
+        self._vpnurl, self._localurl = self._data.camera_data.cameraUrls(
+            camera=self._camera_name
+        )
+
+        # Monitoring status.
+        self._status = self._data.camera_data.cameraByName(
+            camera=self._camera_name, home=self._home
+            )["status"]
+        if self._status == 'on':
+            self._motion_detection_enabled = True
+        else:
+            self._motion_detection_enabled = False
+
+        # SD Card status
+        self._sd_status = self._data.camera_data.cameraByName(
+            camera=self._camera_name, home=self._home
+            )["sd_status"]
+        
+        # Power status
+        self._alim_status = self._data.camera_data.cameraByName(
+            camera=self._camera_name, home=self._home
+            )["alim_status"]
+
+        # Is local
+        self._is_local = self._data.camera_data.cameraByName(
+            camera=self._camera_name, home=self._home
+            )["is_local"]
+
+        # VPN URL
+        self._vpn_url = self._data.camera_data.cameraByName(
+            camera=self._camera_name, home=self._home
+            )["vpn_url"]
+
+        if self._alim_status == 'on':            
+            self.is_streaming = True
+        else:
+            self.is_streaming = False
+
 
     def camera_image(self):
         """Return a still image response from the camera."""
@@ -161,10 +211,7 @@ class NetatmoCamera(Camera):
     @property
     def is_recording(self):
         """Return true if the device is recording."""
-        if self._status == 'on':            
-            return True
-        else:
-            return False
+        return bool(self._status == 'on')
 
     async def stream_source(self):
         """Return the stream source."""
