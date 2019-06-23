@@ -75,6 +75,7 @@ class NetatmoCamera(Camera):
             camera=camera_name
             )
         self._cameratype = camera_type
+        self._camera_status = self._data.camera_data.cameraByName(camera=camera_name, home=home)["status"]
 
     def camera_image(self):
         """Return a still image response from the camera."""
@@ -132,18 +133,20 @@ class NetatmoCamera(Camera):
 
     def is_on(self):
         """Return true if on."""
-        return True
+        return self._camera_status
 
     def turn_on(self):
-        """Turn off camera."""
+        """Turn on camera."""
         try:
             if self._localurl:
                 response = requests.get('{0}/command/changestatus?status=on'.format(
                     self._localurl), timeout=10)
+                self._camera_status = "on"
             elif self._vpnurl:
                 response = requests.get('{0}/command/changestatus?status=on'.format(
                     self._vpnurl), timeout=10, verify=self._verify_ssl)
-            else:
+                self._camera_status = "on"
+           else:
                 _LOGGER.error("Welcome VPN URL is None")
                 self._data.update()
                 (self._vpnurl, self._localurl) = \
@@ -163,9 +166,11 @@ class NetatmoCamera(Camera):
             if self._localurl:
                 response = requests.get('{0}/command/changestatus?status=off'.format(
                     self._localurl), timeout=10)
+                self._camera_status = "off"
             elif self._vpnurl:
                 response = requests.get('{0}/command/changestatus?status=off'.format(
                     self._vpnurl), timeout=10, verify=self._verify_ssl)
+                self._camera_status = "off"
             else:
                 _LOGGER.error("Welcome VPN URL is None")
                 self._data.update()
