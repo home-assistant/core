@@ -41,7 +41,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         unit = solax.INVERTER_SENSORS[sensor][1]
         if unit == 'C':
             unit = TEMP_CELSIUS
-        sensor_name = f'{config[CONF_NAME]} {sensor}'
+        sensor_name = '{} {}'.format(config[CONF_NAME], sensor)
         devices.append(Inverter(sensor_name, unit))
     endpoint.sensors = devices
     async_add_entities(devices)
