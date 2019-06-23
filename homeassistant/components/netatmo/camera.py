@@ -231,6 +231,9 @@ class NetatmoCamera(Camera):
     @property
     def device_state_attributes(self):
         """Return the Netatmo-specific camera state attributes."""
+
+        self.update()
+
         attr = {}
         attr['status'] = self._status
         attr['sd_status'] = self._sd_status
