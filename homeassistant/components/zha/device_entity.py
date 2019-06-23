@@ -7,7 +7,7 @@ import time
 from homeassistant.core import callback
 from homeassistant.util import slugify
 from .entity import ZhaEntity
-from .const import POWER_CONFIGURATION_CHANNEL, SIGNAL_STATE_ATTR
+from .core.const import POWER_CONFIGURATION_CHANNEL, SIGNAL_STATE_ATTR
 
 _LOGGER = logging.getLogger(__name__)
 
