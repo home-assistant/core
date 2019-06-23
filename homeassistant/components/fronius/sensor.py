@@ -1,4 +1,5 @@
 """Support for Fronius devices."""
+import copy
 import logging
 import voluptuous as vol
 
@@ -22,11 +23,25 @@ SCOPE_SYSTEM = 'system'
 
 DEFAULT_SCOPE = SCOPE_DEVICE
 DEFAULT_DEVICE = 0
+DEFAULT_INVERTER = 1
 
 SENSOR_TYPES = [TYPE_INVERTER, TYPE_STORAGE, TYPE_METER, TYPE_POWER_FLOW]
 SCOPE_TYPES = [SCOPE_DEVICE, SCOPE_SYSTEM]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+
+def _state_validator(config):
+    """Ensure that inverters have default id 1"""
+    config = copy.deepcopy(config)
+    for cond in config[CONF_MONITORED_CONDITIONS]:
+        if CONF_DEVICE not in cond:
+            if cond[CONF_SENSOR_TYPE] == TYPE_INVERTER:
+                cond[CONF_DEVICE] = DEFAULT_INVERTER
+            else:
+                cond[CONF_DEVICE] = DEFAULT_DEVICE
+    return config
+
+
+PLATFORM_SCHEMA = vol.Schema(vol.All(PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE):
         cv.url,
     vol.Required(CONF_MONITORED_CONDITIONS):
@@ -36,11 +51,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                 vol.Required(CONF_SENSOR_TYPE): vol.In(SENSOR_TYPES),
                 vol.Optional(CONF_SCOPE, default=DEFAULT_SCOPE):
                     vol.In(SCOPE_TYPES),
-                vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE):
+                vol.Optional(CONF_DEVICE):
                     vol.All(vol.Coerce(int), vol.Range(min=0))
             }]
     )
-})
+}), _state_validator))
 
 
 async def async_setup_platform(hass,
@@ -57,9 +72,6 @@ async def async_setup_platform(hass,
     for condition in config[CONF_MONITORED_CONDITIONS]:
 
         device = condition[CONF_DEVICE]
-        if device == 0:
-            if condition[CONF_SENSOR_TYPE] == TYPE_INVERTER:
-                device = 1
         name = "Fronius {} {} {}".format(
             condition[CONF_SENSOR_TYPE].replace('_', ' ').capitalize(),
             device,
