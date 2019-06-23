@@ -51,7 +51,6 @@ class RealTimeDataEndpoint:
         """Initialize the sensor."""
         self.hass = hass
         self.api = api
-        self.data = {}
         self.ready = asyncio.Event()
         self.sensors = []
 
@@ -63,16 +62,17 @@ class RealTimeDataEndpoint:
         from solax import SolaxRequestError
 
         try:
-            self.data = await self.api.get_data()
+            api_response = await self.api.get_data()
             self.ready.set()
         except SolaxRequestError:
             if now is not None:
                 self.ready.clear()
             else:
                 raise PlatformNotReady
+        data = api_response.data
         for sensor in self.sensors:
-            if sensor.key in self.data:
-                sensor.value = self.data[sensor.key]
+            if sensor.key in data:
+                sensor.value = data[sensor.key]
                 sensor.async_schedule_update_ha_state()
 
 
