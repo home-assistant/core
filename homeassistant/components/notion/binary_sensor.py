@@ -47,7 +47,19 @@ class NotionBinarySensor(NotionEntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Return the state of the sensor."""
-        return self._state
+        if self._task['task_type'] == SENSOR_BATTERY:
+            return self._state != 'battery_good'
+        if self._task['task_type'] in (
+                SENSOR_DOOR, SENSOR_GARAGE_DOOR, SENSOR_SAFE, SENSOR_SLIDING,
+                SENSOR_WINDOW_HINGED_HORIZONTAL,
+                SENSOR_WINDOW_HINGED_VERTICAL):
+            return self._state != 'closed'
+        if self._task['task_type'] == SENSOR_LEAK:
+            return self._state != 'no_leak'
+        if self._task['task_type'] == SENSOR_MISSING:
+            return self._state == 'not_missing'
+        if self._task['task_type'] == SENSOR_SMOKE_CO:
+            return self._state != 'no_alarm'
 
     async def async_update(self):
         """Fetch new state data for the sensor."""
@@ -61,27 +73,4 @@ class NotionBinarySensor(NotionEntity, BinarySensorDevice):
                 self._sensor['name'], self._task['task_type'])
             return
 
-        if self._task['task_type'] == SENSOR_BATTERY:
-            self._state = new_data['status']['value'] != 'battery_good'
-        elif self._task['task_type'] == SENSOR_DOOR:
-            self._state = new_data['status']['value'] != 'closed'
-        elif self._task['task_type'] == SENSOR_GARAGE_DOOR:
-            self._state = new_data['status']['value'] != 'closed'
-        elif self._task['task_type'] == SENSOR_LEAK:
-            self._state = new_data['status']['value'] != 'no_leak'
-        elif self._task['task_type'] == SENSOR_MISSING:
-            self._state = new_data['status']['value'] == 'not_missing'
-        elif self._task['task_type'] == SENSOR_SAFE:
-            self._state = new_data['status']['value'] != 'closed'
-        elif self._task['task_type'] == SENSOR_SLIDING:
-            self._state = new_data['status']['value'] != 'closed'
-        elif self._task['task_type'] == SENSOR_SMOKE_CO:
-            self._state = new_data['status']['value'] != 'no_alarm'
-        elif self._task['task_type'] == SENSOR_WINDOW_HINGED_HORIZONTAL:
-            self._state = new_data['status']['value'] != 'closed'
-        elif self._task['task_type'] == SENSOR_WINDOW_HINGED_VERTICAL:
-            self._state = new_data['status']['value'] != 'closed'
-        else:
-            _LOGGER.error(
-                'Unknown task type: %s: %s',
-                self._sensor['name'], self._task['task_type'])
+        self._state = new_data['status']['value']
