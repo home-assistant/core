@@ -140,7 +140,7 @@ class NetatmoCamera(Camera):
     def device_state_attributes(self):
         """Return the Netatmo-specific camera state attributes."""
         attr = {}
-        attr['motion_recording'] = _BOOL_TO_STATE.get(_motion_detection_enabled)
+        attr['motion_recording'] = _BOOL_TO_STATE.get(self._motion_detection_enabled)
 
         return attr
 
