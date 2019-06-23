@@ -106,6 +106,11 @@ class NetatmoCamera(Camera):
             camera=camera_name, home=home
             )["vpn_url"]
 
+        if self._alim_status == 'on':            
+            self.is_streaming = True
+        else:
+            self.is_streaming = False                
+
     def camera_image(self):
         """Return a still image response from the camera."""
         try:
@@ -160,14 +165,6 @@ class NetatmoCamera(Camera):
             return True
         else:
             return False
-
-    @property
-    def is_streaming(self):
-        """Return true if the device is streaming."""
-        if self._alim_status == 'on':            
-            return True
-        else:
-            return False        
 
     async def stream_source(self):
         """Return the stream source."""
