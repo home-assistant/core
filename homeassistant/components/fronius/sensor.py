@@ -28,24 +28,24 @@ SCOPE_TYPES = [SCOPE_DEVICE, SCOPE_SYSTEM]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE):
-    cv.url,
+        cv.url,
     vol.Required(CONF_MONITORED_CONDITIONS):
-    vol.All(
-        cv.ensure_list,
-        [{
-            vol.Required(CONF_SENSOR_TYPE): vol.In(SENSOR_TYPES),
-            vol.Optional(CONF_SCOPE, default=DEFAULT_SCOPE):
-                vol.In(SCOPE_TYPES),
-            vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE):
-                vol.All(vol.Coerce(int), vol.Range(min=0))
-        }]
+        vol.All(
+            cv.ensure_list,
+            [{
+                vol.Required(CONF_SENSOR_TYPE): vol.In(SENSOR_TYPES),
+                vol.Optional(CONF_SCOPE, default=DEFAULT_SCOPE):
+                    vol.In(SCOPE_TYPES),
+                vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE):
+                    vol.All(vol.Coerce(int), vol.Range(min=0))
+            }]
     )
 })
 
 
 async def async_setup_platform(hass,
                                config,
-                               async_add_devices,
+                               async_add_entities,
                                discovery_info=None):
     """Set up of Fronius platform."""
     from pyfronius import Fronius
@@ -56,7 +56,7 @@ async def async_setup_platform(hass,
     sensors = []
     for condition in config[CONF_MONITORED_CONDITIONS]:
 
-        device = condition.get(CONF_DEVICE)
+        device = condition[CONF_DEVICE]
         if device == 0:
             if condition[CONF_SENSOR_TYPE] == TYPE_INVERTER:
                 device = 1
@@ -84,7 +84,7 @@ async def async_setup_platform(hass,
 
         sensors.append(sensor_cls(fronius, name, device))
 
-    async_add_devices(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class FroniusSensor(Entity):
@@ -109,7 +109,7 @@ class FroniusSensor(Entity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
 
@@ -121,7 +121,8 @@ class FroniusSensor(Entity):
         except ConnectionError:
             _LOGGER.error("Failed to update: connection error")
         except ValueError:
-            _LOGGER.error("Failed to update: invalid response returned")
+            _LOGGER.error("Failed to update: invalid response returned."
+                          "Maybe the configured device is not supported")
 
         if values:
             self._state = values['status']['Code']
@@ -131,7 +132,7 @@ class FroniusSensor(Entity):
                     attributes[key] = values[key].get('value', 0)
             self._attributes = attributes
 
-    def _update(self):
+    async def _update(self):
         """Function returning values of interest"""
         pass
 
