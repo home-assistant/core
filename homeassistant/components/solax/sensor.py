@@ -30,7 +30,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Platform setup."""
     import solax
 
-    api = solax.solax.RealTimeAPI(config[CONF_IP_ADDRESS])
+    api = solax.RealTimeAPI(config[CONF_IP_ADDRESS])
     endpoint = RealTimeDataEndpoint(hass, api)
     hass.async_add_job(endpoint.async_refresh)
     async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
@@ -51,7 +51,6 @@ class RealTimeDataEndpoint:
         """Initialize the sensor."""
         self.hass = hass
         self.api = api
-        self.data = {}
         self.ready = asyncio.Event()
         self.sensors = []
 
@@ -63,16 +62,17 @@ class RealTimeDataEndpoint:
         from solax import SolaxRequestError
 
         try:
-            self.data = await self.api.get_data()
+            api_response = await self.api.get_data()
             self.ready.set()
         except SolaxRequestError:
             if now is not None:
                 self.ready.clear()
             else:
                 raise PlatformNotReady
+        data = api_response.data
         for sensor in self.sensors:
-            if sensor.key in self.data:
-                sensor.value = self.data[sensor.key]
+            if sensor.key in data:
+                sensor.value = data[sensor.key]
                 sensor.async_schedule_update_ha_state()
 
 
