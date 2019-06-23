@@ -77,10 +77,34 @@ class NetatmoCamera(Camera):
             )
         self._cameratype = camera_type
 
-        camera_status = self._data.camera_data.cameraByName(
+        # Monitoring status.
+        self._status = self._data.camera_data.cameraByName(
             camera=camera_name, home=home
             )["status"]
-        self._motion_detection_enabled = True if (camera_status == 'on') else False
+        if self._status == 'on':            
+            self._motion_detection_enabled = True
+        else:
+            self._motion_detection_enabled = False
+
+        # SD Card status
+        self._sd_status = self._data.camera_data.cameraByName(
+            camera=camera_name, home=home
+            )["sd_status"]
+        
+        # Power status
+        self._alim_status = self._data.camera_data.cameraByName(
+            camera=camera_name, home=home
+            )["alim_status"]
+
+        # Is locale
+        self._is_locale = self._data.camera_data.cameraByName(
+            camera=camera_name, home=home
+            )["is_locale"]
+
+        # VPN URL
+        self._vpn_url = self._data.camera_data.cameraByName(
+            camera=camera_name, home=home
+            )["vpn_url"]
 
     def camera_image(self):
         """Return a still image response from the camera."""
@@ -140,7 +164,11 @@ class NetatmoCamera(Camera):
     def device_state_attributes(self):
         """Return the Netatmo-specific camera state attributes."""
         attr = {}
-        attr['motion_recording'] = _BOOL_TO_STATE.get(self._motion_detection_enabled)
+        attr['status'] = self._status
+        attr['sd_status'] = self._sd_status
+        attr['alim_status'] = self._alim_status
+        attr['is_locale'] = self._is_locale
+        attr['vpn_url'] = self._vpn_url
 
         return attr
 
