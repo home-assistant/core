@@ -2281,10 +2281,14 @@ zeroconf==0.23.0
 
 # homeassistant.components.zha
 <<<<<<< HEAD
+<<<<<<< HEAD
 zha-quirks==0.0.6
 =======
 zha-quirks==0.0.14
 >>>>>>> ZHA requirements version bump. (#24228)
+=======
+zha-quirks==0.0.15
+>>>>>>> Update ZHA dependencies (#24718)
 
 # homeassistant.components.climate.zhong_hong
 zhong_hong_hvac==1.0.9
@@ -2310,7 +2314,7 @@ zigpy-deconz==0.1.6
 >>>>>>> Bump ZHA dependencies. (#24637)
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.5.0
+zigpy-homeassistant==0.6.1
 
 # homeassistant.components.zha
 zigpy-xbee-homeassistant==0.3.0
