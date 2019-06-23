@@ -46,7 +46,7 @@ class NotionBinarySensor(NotionEntity, BinarySensorDevice):
 
     @property
     def is_on(self):
-        """Return the state of the sensor."""
+        """Return whether the sensor is on or off."""
         if self._task['task_type'] == SENSOR_BATTERY:
             return self._state != 'battery_good'
         if self._task['task_type'] in (
