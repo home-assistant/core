@@ -8,7 +8,8 @@ import voluptuous as vol
 
 from homeassistant.const import (
         TEMP_CELSIUS,
-        CONF_IP_ADDRESS
+        CONF_IP_ADDRESS,
+        CONF_NAME,
 )
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
@@ -20,6 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_IP_ADDRESS): cv.string,
+    vol.Optional(CONF_NAME, default='Solax'): cv.string,
 })
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -39,7 +41,8 @@ async def async_setup_platform(hass, config, async_add_entities,
         unit = solax.INVERTER_SENSORS[sensor][1]
         if unit == 'C':
             unit = TEMP_CELSIUS
-        devices.append(Inverter(sensor, unit))
+        sensor_name = f'{config[CONF_NAME]} {sensor}'
+        devices.append(Inverter(sensor_name, unit))
     endpoint.sensors = devices
     async_add_entities(devices)
 
