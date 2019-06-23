@@ -1567,11 +1567,15 @@ pypollencom==2.2.2
 =======
 # homeassistant.components.ps4
 <<<<<<< HEAD
+<<<<<<< HEAD
 pyps4-homeassistant==0.8.2
 >>>>>>> WIP Ps4 Convert entity to Async / Fix entity name changing (#24101)
 =======
 pyps4-homeassistant==0.8.3
 >>>>>>> PS4  bump to 0.8.3 (#24527)
+=======
+pyps4-homeassistant==0.8.5
+>>>>>>> Fix PS4 entities with shared host not updating and latency with multiple connections (#24642)
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.8
