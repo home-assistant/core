@@ -9,7 +9,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.color as color_util
-from .const import (
+from .core.const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, COLOR_CHANNEL,
     ON_OFF_CHANNEL, LEVEL_CHANNEL, SIGNAL_ATTR_UPDATED, SIGNAL_SET_LEVEL
     )
