@@ -136,6 +136,8 @@ class NetatmoCamera(Camera):
     def device_state_attributes(self):
         """Return the Netatmo-specific camera state attributes."""
 
+        _LOGGER.debug("Getting new attributes from camera netatmo '%s'", self._name)
+
         attr = {}
         attr['status'] = self._status
         attr['sd_status'] = self._sd_status
@@ -195,6 +197,9 @@ class NetatmoCamera(Camera):
 
     def update(self):
         """Update entity status."""
+
+        _LOGGER.debug("Updating camera netatmo '%s'", self._name)
+
         # Refresh camera data.
         self._data.update()
 
