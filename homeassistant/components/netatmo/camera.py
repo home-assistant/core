@@ -76,89 +76,23 @@ class NetatmoCamera(Camera):
         self._quality = quality
 
         # URLs.
-        self._vpnurl, self._localurl = self._data.camera_data.cameraUrls(
-            camera=self._camera_name
-        )
+        self._vpnurl = None
+        self._localurl = None
 
         # Monitoring status.
-        self._status = self._data.camera_data.cameraByName(
-            camera=self._camera_name, home=self._home
-            )["status"]
-        if self._status == 'on':
-            self._motion_detection_enabled = True
-        else:
-            self._motion_detection_enabled = False
+        self._status = None
 
         # SD Card status
-        self._sd_status = self._data.camera_data.cameraByName(
-            camera=self._camera_name, home=self._home
-            )["sd_status"]
+        self._sd_status = None
         
         # Power status
-        self._alim_status = self._data.camera_data.cameraByName(
-            camera=self._camera_name, home=self._home
-            )["alim_status"]
+        self._alim_status = None
 
         # Is local
-        self._is_local = self._data.camera_data.cameraByName(
-            camera=self._camera_name, home=self._home
-            )["is_local"]
+        self._is_local = None
 
         # VPN URL
-        self._vpn_url = self._data.camera_data.cameraByName(
-            camera=self._camera_name, home=self._home
-            )["vpn_url"]
-
-        if self._alim_status == 'on':            
-            self.is_streaming = True
-        else:
-            self.is_streaming = False
-
-    # Entity method overrides
-    def update(self):
-        """Update entity status."""
-        # Refresh camera data.
-        self._data.update()
-
-        # URLs.
-        self._vpnurl, self._localurl = self._data.camera_data.cameraUrls(
-            camera=self._camera_name
-        )
-
-        # Monitoring status.
-        self._status = self._data.camera_data.cameraByName(
-            camera=self._camera_name, home=self._home
-            )["status"]
-        if self._status == 'on':
-            self._motion_detection_enabled = True
-        else:
-            self._motion_detection_enabled = False
-
-        # SD Card status
-        self._sd_status = self._data.camera_data.cameraByName(
-            camera=self._camera_name, home=self._home
-            )["sd_status"]
-        
-        # Power status
-        self._alim_status = self._data.camera_data.cameraByName(
-            camera=self._camera_name, home=self._home
-            )["alim_status"]
-
-        # Is local
-        self._is_local = self._data.camera_data.cameraByName(
-            camera=self._camera_name, home=self._home
-            )["is_local"]
-
-        # VPN URL
-        self._vpn_url = self._data.camera_data.cameraByName(
-            camera=self._camera_name, home=self._home
-            )["vpn_url"]
-
-        if self._alim_status == 'on':            
-            self.is_streaming = True
-        else:
-            self.is_streaming = False
-
+        self._vpn_url = None
 
     def camera_image(self):
         """Return a still image response from the camera."""
@@ -183,6 +117,8 @@ class NetatmoCamera(Camera):
             return None
         return response.content
 
+    # Entity property overrides
+
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
@@ -195,37 +131,6 @@ class NetatmoCamera(Camera):
     def name(self):
         """Return the name of this Netatmo camera device."""
         return self._name
-
-    @property
-    def brand(self):
-        """Return the camera brand."""
-        return "Netatmo"
-
-    @property
-    def model(self):
-        """Return the camera model."""
-        if self._cameratype == "NOC":
-            return "Presence"
-        if self._cameratype == "NACamera":
-            return "Welcome"
-        return None
-
-    @property
-    def supported_features(self):
-        """Return supported features."""
-        return SUPPORT_STREAM
-
-    @property
-    def is_recording(self):
-        """Return true if the device is recording."""
-        return bool(self._status == 'on')
-
-    async def stream_source(self):
-        """Return the stream source."""
-        url = '{0}/live/files/{1}/index.m3u8'
-        if self._localurl:
-            return url.format(self._localurl, self._quality)
-        return url.format(self._vpnurl, self._quality)
 
     @property
     def device_state_attributes(self):
@@ -241,9 +146,91 @@ class NetatmoCamera(Camera):
         return attr
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return bool(self._alim_status == "on")
+
+    @property
+    def supported_features(self):
+        """Return supported features."""
+        return SUPPORT_STREAM
+
+    @property
+    def is_recording(self):
+        """Return true if the device is recording."""
+        return bool(self._status == 'on')
+
+    @property
+    def brand(self):
+        """Return the camera brand."""
+        return "Netatmo"
+
+    @property
     def motion_detection_enabled(self):
         """Return the camera motion detection status."""
-        return self._motion_detection_enabled
+        return bool(self._status == 'on')
+
+    @property
+    def is_on(self):
+        """Return true if on."""
+        return self.is_streaming
+
+    async def stream_source(self):
+        """Return the stream source."""
+        url = '{0}/live/files/{1}/index.m3u8'
+        if self._localurl:
+            return url.format(self._localurl, self._quality)
+        return url.format(self._vpnurl, self._quality)
+
+    @property
+    def model(self):
+        """Return the camera model."""
+        if self._cameratype == "NOC":
+            return "Presence"
+        if self._cameratype == "NACamera":
+            return "Welcome"
+        return None
+
+    # Other Entity method overrides
+
+    def update(self):
+        """Update entity status."""
+        # Refresh camera data.
+        self._data.update()
+
+        # URLs.
+        self._vpnurl, self._localurl = self._data.camera_data.cameraUrls(
+            camera=self._camera_name
+        )
+
+        # Monitoring status.
+        self._status = self._data.camera_data.cameraByName(
+            camera=self._camera_name, home=self._home
+            )["status"]
+
+        # SD Card status
+        self._sd_status = self._data.camera_data.cameraByName(
+            camera=self._camera_name, home=self._home
+            )["sd_status"]
+
+        # Power status
+        self._alim_status = self._data.camera_data.cameraByName(
+            camera=self._camera_name, home=self._home
+            )["alim_status"]
+
+        # Is local
+        self._is_local = self._data.camera_data.cameraByName(
+            camera=self._camera_name, home=self._home
+            )["is_local"]
+
+        # VPN URL
+        self._vpn_url = self._data.camera_data.cameraByName(
+            camera=self._camera_name, home=self._home
+            )["vpn_url"]
+
+        self.is_streaming = (self._alim_status == 'on')
+
+    # Camera method overrides
 
     def enable_motion_detection(self):
         """Enable motion detection in the camera."""
@@ -259,11 +246,9 @@ class NetatmoCamera(Camera):
             if self._localurl:
                 response = requests.get('{0}/command/changestatus?status={1}'.format(
                     self._localurl, _BOOL_TO_STATE.get(enable)), timeout=10)
-                self._motion_detection_enabled = enable
             elif self._vpnurl:
                 response = requests.get('{0}/command/changestatus?status={1}'.format(
                     self._vpnurl, _BOOL_TO_STATE.get(enable)), timeout=10, verify=self._verify_ssl)
-                self._motion_detection_enabled = enable
             else:
                 _LOGGER.error("Welcome VPN URL is None")
                 self._data.update()
