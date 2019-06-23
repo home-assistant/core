@@ -8,8 +8,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
         TEMP_CELSIUS,
-        CONF_IP_ADDRESS,
-        CONF_NAME,
+        CONF_IP_ADDRESS
 )
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
@@ -20,8 +19,7 @@ from homeassistant.helpers.event import async_track_time_interval
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_IP_ADDRESS): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
+    vol.Required(CONF_IP_ADDRESS): cv.string
 })
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -34,11 +32,8 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     api = solax.RealTimeAPI(config[CONF_IP_ADDRESS])
     endpoint = RealTimeDataEndpoint(hass, api)
-    serial = config.get(CONF_NAME, None)
-    if serial is None:
-        resp = await api.get_data()
-        serial = resp.serial_number
-
+    resp = await api.get_data()
+    serial = resp.serial_number
     hass.async_add_job(endpoint.async_refresh)
     async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
     devices = []
