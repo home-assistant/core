@@ -32,4 +32,8 @@ RUN pip3 install --no-cache-dir -r requirements_all.txt && \
 # Copy source
 COPY . .
 
+EXPOSE 8123
+EXPOSE 8300
+EXPOSE 51827
+
 CMD [ "python", "-m", "homeassistant", "--config", "/config" ]
