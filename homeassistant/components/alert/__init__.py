@@ -1,7 +1,7 @@
 """Support for repeating alerts when conditions are met."""
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -13,6 +13,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE, ATTR_ENTITY_ID)
 from homeassistant.helpers import service, event
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.util.dt import now
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,7 +118,7 @@ async def async_setup(hass, config):
 
     tasks = [alert.async_update_ha_state() for alert in entities]
     if tasks:
-        await asyncio.wait(tasks, loop=hass.loop)
+        await asyncio.wait(tasks)
 
     return True
 
@@ -222,7 +223,7 @@ class Alert(ToggleEntity):
     async def _schedule_notify(self):
         """Schedule a notification."""
         delay = self._delay[self._next_delay]
-        next_msg = datetime.now() + delay
+        next_msg = now() + delay
         self._cancel = \
             event.async_track_point_in_time(self.hass, self._notify, next_msg)
         self._next_delay = min(self._next_delay + 1, len(self._delay) - 1)

@@ -31,7 +31,7 @@ class DeconzDevice(Entity):
         self.unsub_dispatcher()
 
     @callback
-    def async_update_callback(self, reason):
+    def async_update_callback(self, force_update=False):
         """Update the device's state."""
         self.async_schedule_update_ha_state()
 
@@ -61,8 +61,10 @@ class DeconzDevice(Entity):
         if (self._device.uniqueid is None or
                 self._device.uniqueid.count(':') != 7):
             return None
+
         serial = self._device.uniqueid.split('-', 1)[0]
         bridgeid = self.gateway.api.config.bridgeid
+
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},
@@ -70,5 +72,5 @@ class DeconzDevice(Entity):
             'model': self._device.modelid,
             'name': self._device.name,
             'sw_version': self._device.swversion,
-            'via_hub': (DECONZ_DOMAIN, bridgeid),
+            'via_device': (DECONZ_DOMAIN, bridgeid),
         }

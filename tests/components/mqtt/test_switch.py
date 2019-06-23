@@ -74,8 +74,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mock_publish):
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    common.turn_on(hass, 'switch.test')
-    await hass.async_block_till_done()
+    await common.async_turn_on(hass, 'switch.test')
 
     mock_publish.async_publish.assert_called_once_with(
         'command-topic', 'beer on', 2, False)
@@ -83,9 +82,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mock_publish):
     state = hass.states.get('switch.test')
     assert state.state == STATE_ON
 
-    common.turn_off(hass, 'switch.test')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await common.async_turn_off(hass, 'switch.test')
 
     mock_publish.async_publish.assert_called_once_with(
         'command-topic', 'beer off', 2, False)

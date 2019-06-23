@@ -14,6 +14,7 @@ from homeassistant.components import (
     media_player,
     scene,
     script,
+    sensor,
     switch,
     vacuum,
     group,
@@ -28,10 +29,8 @@ from homeassistant.const import (
 from homeassistant.core import State, DOMAIN as HA_DOMAIN, EVENT_CALL_SERVICE
 from homeassistant.util import color
 from tests.common import async_mock_service, mock_coro
+from . import BASIC_CONFIG, MockConfig
 
-BASIC_CONFIG = helpers.Config(
-    should_expose=lambda state: True,
-)
 
 REQ_ID = 'ff36a3cc-ec34-11e6-b1a0-64510650abcf'
 
@@ -41,8 +40,7 @@ BASIC_DATA = helpers.RequestData(
     REQ_ID,
 )
 
-PIN_CONFIG = helpers.Config(
-    should_expose=lambda state: True,
+PIN_CONFIG = MockConfig(
     secure_devices_pin='1234'
 )
 
@@ -89,36 +87,6 @@ async def test_brightness_light(hass):
         'domain': 'light',
         'service': 'turn_on',
         'service_data': {'brightness_pct': 50, 'entity_id': 'light.bla'}
-    }
-
-
-async def test_brightness_media_player(hass):
-    """Test brightness trait support for media player domain."""
-    assert helpers.get_google_type(media_player.DOMAIN, None) is not None
-    assert trait.BrightnessTrait.supported(media_player.DOMAIN,
-                                           media_player.SUPPORT_VOLUME_SET,
-                                           None)
-
-    trt = trait.BrightnessTrait(hass, State(
-        'media_player.bla', media_player.STATE_PLAYING, {
-            media_player.ATTR_MEDIA_VOLUME_LEVEL: .3
-        }), BASIC_CONFIG)
-
-    assert trt.sync_attributes() == {}
-
-    assert trt.query_attributes() == {
-        'brightness': 30
-    }
-
-    calls = async_mock_service(
-        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_SET)
-    await trt.execute(
-        trait.COMMAND_BRIGHTNESS_ABSOLUTE, BASIC_DATA,
-        {'brightness': 60}, {})
-    assert len(calls) == 1
-    assert calls[0].data == {
-        ATTR_ENTITY_ID: 'media_player.bla',
-        media_player.ATTR_MEDIA_VOLUME_LEVEL: .6
     }
 
 
@@ -873,40 +841,24 @@ async def test_lock_unlock_lock(hass):
     assert helpers.get_google_type(lock.DOMAIN, None) is not None
     assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN,
                                            None)
+    assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, lock.SUPPORT_OPEN,
+                                           None)
 
     trt = trait.LockUnlockTrait(hass,
-                                State('lock.front_door', lock.STATE_UNLOCKED),
+                                State('lock.front_door', lock.STATE_LOCKED),
                                 PIN_CONFIG)
 
     assert trt.sync_attributes() == {}
 
     assert trt.query_attributes() == {
-        'isLocked': False
+        'isLocked': True
     }
 
     assert trt.can_execute(trait.COMMAND_LOCKUNLOCK, {'lock': True})
 
     calls = async_mock_service(hass, lock.DOMAIN, lock.SERVICE_LOCK)
 
-    # No challenge data
-    with pytest.raises(error.ChallengeNeeded) as err:
-        await trt.execute(
-            trait.COMMAND_LOCKUNLOCK, PIN_DATA, {'lock': True}, {})
-        assert len(calls) == 0
-        assert err.code == const.ERR_CHALLENGE_NEEDED
-        assert err.challenge_type == const.CHALLENGE_PIN_NEEDED
-
-    # invalid pin
-    with pytest.raises(error.ChallengeNeeded) as err:
-        await trt.execute(
-            trait.COMMAND_LOCKUNLOCK, PIN_DATA, {'lock': True},
-            {'pin': 9999})
-        assert len(calls) == 0
-        assert err.code == const.ERR_CHALLENGE_NEEDED
-        assert err.challenge_type == const.CHALLENGE_FAILED_PIN_NEEDED
-
-    await trt.execute(trait.COMMAND_LOCKUNLOCK, PIN_DATA, {'lock': True},
-                      {'pin': '1234'})
+    await trt.execute(trait.COMMAND_LOCKUNLOCK, PIN_DATA, {'lock': True}, {})
 
     assert len(calls) == 1
     assert calls[0].data == {
@@ -938,18 +890,18 @@ async def test_lock_unlock_unlock(hass):
     with pytest.raises(error.ChallengeNeeded) as err:
         await trt.execute(
             trait.COMMAND_LOCKUNLOCK, PIN_DATA, {'lock': False}, {})
-        assert len(calls) == 0
-        assert err.code == const.ERR_CHALLENGE_NEEDED
-        assert err.challenge_type == const.CHALLENGE_PIN_NEEDED
+    assert len(calls) == 0
+    assert err.value.code == const.ERR_CHALLENGE_NEEDED
+    assert err.value.challenge_type == const.CHALLENGE_PIN_NEEDED
 
     # invalid pin
     with pytest.raises(error.ChallengeNeeded) as err:
         await trt.execute(
             trait.COMMAND_LOCKUNLOCK, PIN_DATA, {'lock': False},
             {'pin': 9999})
-        assert len(calls) == 0
-        assert err.code == const.ERR_CHALLENGE_NEEDED
-        assert err.challenge_type == const.CHALLENGE_FAILED_PIN_NEEDED
+    assert len(calls) == 0
+    assert err.value.code == const.ERR_CHALLENGE_NEEDED
+    assert err.value.challenge_type == const.CHALLENGE_FAILED_PIN_NEEDED
 
     await trt.execute(
         trait.COMMAND_LOCKUNLOCK, PIN_DATA, {'lock': False}, {'pin': '1234'})
@@ -958,6 +910,24 @@ async def test_lock_unlock_unlock(hass):
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'lock.front_door'
     }
+
+    # Test without pin
+    trt = trait.LockUnlockTrait(hass,
+                                State('lock.front_door', lock.STATE_LOCKED),
+                                BASIC_CONFIG)
+
+    with pytest.raises(error.SmartHomeError) as err:
+        await trt.execute(
+            trait.COMMAND_LOCKUNLOCK, BASIC_DATA, {'lock': False}, {})
+    assert len(calls) == 1
+    assert err.value.code == const.ERR_CHALLENGE_NOT_SETUP
+
+    # Test with 2FA override
+    with patch('homeassistant.components.google_assistant.helpers'
+               '.AbstractConfig.should_2fa', return_value=False):
+        await trt.execute(
+            trait.COMMAND_LOCKUNLOCK, BASIC_DATA, {'lock': False}, {})
+    assert len(calls) == 2
 
 
 async def test_fan_speed(hass):
@@ -1139,36 +1109,9 @@ async def test_openclose_cover(hass):
     assert trait.OpenCloseTrait.supported(cover.DOMAIN,
                                           cover.SUPPORT_SET_POSITION, None)
 
-    # No position
     trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
-    }), BASIC_CONFIG)
-
-    assert trt.sync_attributes() == {}
-    assert trt.query_attributes() == {
-        'openPercent': 100
-    }
-
-    # No state
-    trt = trait.OpenCloseTrait(hass, State('cover.bla', STATE_UNKNOWN, {
-    }), BASIC_CONFIG)
-
-    assert trt.sync_attributes() == {}
-
-    with pytest.raises(helpers.SmartHomeError):
-        trt.query_attributes()
-
-    # Assumed state
-    trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
-        ATTR_ASSUMED_STATE: True,
-    }), BASIC_CONFIG)
-
-    assert trt.sync_attributes() == {}
-
-    with pytest.raises(helpers.SmartHomeError):
-        trt.query_attributes()
-
-    trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
-        cover.ATTR_CURRENT_POSITION: 75
+        cover.ATTR_CURRENT_POSITION: 75,
+        ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
     }), BASIC_CONFIG)
 
     assert trt.sync_attributes() == {}
@@ -1188,6 +1131,89 @@ async def test_openclose_cover(hass):
     }
 
 
+async def test_openclose_cover_unknown_state(hass):
+    """Test OpenClose trait support for cover domain with unknown state."""
+    assert helpers.get_google_type(cover.DOMAIN, None) is not None
+    assert trait.OpenCloseTrait.supported(cover.DOMAIN,
+                                          cover.SUPPORT_SET_POSITION, None)
+
+    # No state
+    trt = trait.OpenCloseTrait(hass, State('cover.bla', STATE_UNKNOWN, {
+    }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+
+    with pytest.raises(helpers.SmartHomeError):
+        trt.query_attributes()
+
+    calls = async_mock_service(
+        hass, cover.DOMAIN, cover.SERVICE_OPEN_COVER)
+    await trt.execute(
+        trait.COMMAND_OPENCLOSE, BASIC_DATA,
+        {'openPercent': 100}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'cover.bla',
+    }
+
+    assert trt.query_attributes() == {'openPercent': 100}
+
+
+async def test_openclose_cover_assumed_state(hass):
+    """Test OpenClose trait support for cover domain."""
+    assert helpers.get_google_type(cover.DOMAIN, None) is not None
+    assert trait.OpenCloseTrait.supported(cover.DOMAIN,
+                                          cover.SUPPORT_SET_POSITION, None)
+
+    trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
+        ATTR_ASSUMED_STATE: True,
+        ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
+    }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+
+    with pytest.raises(helpers.SmartHomeError):
+        trt.query_attributes()
+
+    calls = async_mock_service(
+        hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
+    await trt.execute(
+        trait.COMMAND_OPENCLOSE, BASIC_DATA,
+        {'openPercent': 40}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'cover.bla',
+        cover.ATTR_POSITION: 40
+    }
+
+    assert trt.query_attributes() == {'openPercent': 40}
+
+
+async def test_openclose_cover_no_position(hass):
+    """Test OpenClose trait support for cover domain."""
+    assert helpers.get_google_type(cover.DOMAIN, None) is not None
+    assert trait.OpenCloseTrait.supported(cover.DOMAIN,
+                                          cover.SUPPORT_SET_POSITION, None)
+
+    trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
+    }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+    assert trt.query_attributes() == {
+        'openPercent': 100
+    }
+
+    calls = async_mock_service(
+        hass, cover.DOMAIN, cover.SERVICE_CLOSE_COVER)
+    await trt.execute(
+        trait.COMMAND_OPENCLOSE, BASIC_DATA,
+        {'openPercent': 0}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'cover.bla',
+    }
+
+
 @pytest.mark.parametrize('device_class', (
     cover.DEVICE_CLASS_DOOR,
     cover.DEVICE_CLASS_GARAGE,
@@ -1197,9 +1223,12 @@ async def test_openclose_cover_secure(hass, device_class):
     assert helpers.get_google_type(cover.DOMAIN, device_class) is not None
     assert trait.OpenCloseTrait.supported(
         cover.DOMAIN, cover.SUPPORT_SET_POSITION, device_class)
+    assert trait.OpenCloseTrait.might_2fa(
+        cover.DOMAIN, cover.SUPPORT_SET_POSITION, device_class)
 
     trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
         ATTR_DEVICE_CLASS: device_class,
+        ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
         cover.ATTR_CURRENT_POSITION: 75
     }), PIN_CONFIG)
 
@@ -1216,18 +1245,18 @@ async def test_openclose_cover_secure(hass, device_class):
         await trt.execute(
             trait.COMMAND_OPENCLOSE, PIN_DATA,
             {'openPercent': 50}, {})
-        assert len(calls) == 0
-        assert err.code == const.ERR_CHALLENGE_NEEDED
-        assert err.challenge_type == const.CHALLENGE_PIN_NEEDED
+    assert len(calls) == 0
+    assert err.value.code == const.ERR_CHALLENGE_NEEDED
+    assert err.value.challenge_type == const.CHALLENGE_PIN_NEEDED
 
     # invalid pin
     with pytest.raises(error.ChallengeNeeded) as err:
         await trt.execute(
             trait.COMMAND_OPENCLOSE, PIN_DATA,
             {'openPercent': 50}, {'pin': '9999'})
-        assert len(calls) == 0
-        assert err.code == const.ERR_CHALLENGE_NEEDED
-        assert err.challenge_type == const.CHALLENGE_FAILED_PIN_NEEDED
+    assert len(calls) == 0
+    assert err.value.code == const.ERR_CHALLENGE_NEEDED
+    assert err.value.challenge_type == const.CHALLENGE_FAILED_PIN_NEEDED
 
     await trt.execute(
         trait.COMMAND_OPENCLOSE, PIN_DATA,
@@ -1236,6 +1265,17 @@ async def test_openclose_cover_secure(hass, device_class):
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'cover.bla',
         cover.ATTR_POSITION: 50
+    }
+
+    # no challenge on close
+    calls = async_mock_service(
+        hass, cover.DOMAIN, cover.SERVICE_CLOSE_COVER)
+    await trt.execute(
+        trait.COMMAND_OPENCLOSE, PIN_DATA,
+        {'openPercent': 0}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'cover.bla'
     }
 
 
@@ -1276,3 +1316,97 @@ async def test_openclose_binary_sensor(hass, device_class):
     assert trt.query_attributes() == {
         'openPercent': 0
     }
+
+
+async def test_volume_media_player(hass):
+    """Test volume trait support for media player domain."""
+    assert helpers.get_google_type(media_player.DOMAIN, None) is not None
+    assert trait.VolumeTrait.supported(media_player.DOMAIN,
+                                       media_player.SUPPORT_VOLUME_SET |
+                                       media_player.SUPPORT_VOLUME_MUTE,
+                                       None)
+
+    trt = trait.VolumeTrait(hass, State(
+        'media_player.bla', media_player.STATE_PLAYING, {
+            media_player.ATTR_MEDIA_VOLUME_LEVEL: .3,
+            media_player.ATTR_MEDIA_VOLUME_MUTED: False,
+        }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+
+    assert trt.query_attributes() == {
+        'currentVolume': 30,
+        'isMuted': False
+    }
+
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_SET)
+    await trt.execute(
+        trait.COMMAND_SET_VOLUME, BASIC_DATA,
+        {'volumeLevel': 60}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'media_player.bla',
+        media_player.ATTR_MEDIA_VOLUME_LEVEL: .6
+    }
+
+
+async def test_volume_media_player_relative(hass):
+    """Test volume trait support for media player domain."""
+    trt = trait.VolumeTrait(hass, State(
+        'media_player.bla', media_player.STATE_PLAYING, {
+            media_player.ATTR_MEDIA_VOLUME_LEVEL: .3,
+            media_player.ATTR_MEDIA_VOLUME_MUTED: False,
+        }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+
+    assert trt.query_attributes() == {
+        'currentVolume': 30,
+        'isMuted': False
+    }
+
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_SET)
+
+    await trt.execute(
+        trait.COMMAND_VOLUME_RELATIVE, BASIC_DATA,
+        {'volumeRelativeLevel': 20,
+         'relativeSteps': 2}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'media_player.bla',
+        media_player.ATTR_MEDIA_VOLUME_LEVEL: .5
+    }
+
+
+async def test_temperature_setting_sensor(hass):
+    """Test TemperatureSetting trait support for temperature sensor."""
+    assert helpers.get_google_type(sensor.DOMAIN,
+                                   sensor.DEVICE_CLASS_TEMPERATURE) is not None
+    assert not trait.TemperatureSettingTrait.supported(
+        sensor.DOMAIN,
+        0,
+        sensor.DEVICE_CLASS_HUMIDITY
+    )
+    assert trait.TemperatureSettingTrait.supported(
+        sensor.DOMAIN,
+        0,
+        sensor.DEVICE_CLASS_TEMPERATURE
+    )
+
+    hass.config.units.temperature_unit = TEMP_FAHRENHEIT
+
+    trt = trait.TemperatureSettingTrait(hass, State('sensor.test', "70", {
+        ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TEMPERATURE,
+    }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {
+        'queryOnlyTemperatureSetting': True,
+        'thermostatTemperatureUnit': 'F',
+    }
+
+    assert trt.query_attributes() == {
+        'thermostatTemperatureAmbient': 21.1
+    }
+    hass.config.units.temperature_unit = TEMP_CELSIUS

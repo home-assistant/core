@@ -18,6 +18,8 @@ _MAC_REGEX = re.compile(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})')
 
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
+CONF_WIRELESS_ONLY = 'wireless_only'
+DEFAULT_WIRELESS_ONLY = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -25,6 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    vol.Optional(CONF_WIRELESS_ONLY, default=DEFAULT_WIRELESS_ONLY): cv.boolean
 })
 
 
@@ -46,6 +49,7 @@ class DdWrtDeviceScanner(DeviceScanner):
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
+        self.wireless_only = config[CONF_WIRELESS_ONLY]
 
         self.last_results = {}
         self.mac2name = {}
@@ -103,8 +107,9 @@ class DdWrtDeviceScanner(DeviceScanner):
         """
         _LOGGER.info("Checking ARP")
 
-        url = '{}://{}/Status_Wireless.live.asp'.format(
-            self.protocol, self.host)
+        endpoint = 'Wireless' if self.wireless_only else 'Lan'
+        url = '{}://{}/Status_{}.live.asp'.format(
+            self.protocol, self.host, endpoint)
         data = self.get_ddwrt_data(url)
 
         if not data:
@@ -112,7 +117,10 @@ class DdWrtDeviceScanner(DeviceScanner):
 
         self.last_results = []
 
-        active_clients = data.get('active_wireless', None)
+        if self.wireless_only:
+            active_clients = data.get('active_wireless', None)
+        else:
+            active_clients = data.get('arp_table', None)
         if not active_clients:
             return False
 

@@ -142,7 +142,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                     message['error']['message'] == "learn timeout"):
                 await hass.async_add_executor_job(device.learn, slot)
 
-            await asyncio.sleep(1, loop=hass.loop)
+            await asyncio.sleep(1)
 
         _LOGGER.error("Timeout. No infrared command captured")
         hass.components.persistent_notification.async_create(

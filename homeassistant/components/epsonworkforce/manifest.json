@@ -4,6 +4,6 @@
   "documentation": "https://www.home-assistant.io/components/epsonworkforce",
   "dependencies": [],
   "codeowners": ["@ThaStealth"],
-  "requirements": ["epsonprinter==0.0.8"]
+  "requirements": ["epsonprinter==0.0.9"]
 }
 

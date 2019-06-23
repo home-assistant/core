@@ -51,8 +51,26 @@ async def test_is_onboarded():
     hass.data[onboarding.DOMAIN] = True
     assert onboarding.async_is_onboarded(hass)
 
-    hass.data[onboarding.DOMAIN] = False
+    hass.data[onboarding.DOMAIN] = {
+        'done': []
+    }
     assert not onboarding.async_is_onboarded(hass)
+
+
+async def test_is_user_onboarded():
+    """Test the is onboarded function."""
+    hass = Mock()
+    hass.data = {}
+
+    assert onboarding.async_is_user_onboarded(hass)
+
+    hass.data[onboarding.DOMAIN] = True
+    assert onboarding.async_is_user_onboarded(hass)
+
+    hass.data[onboarding.DOMAIN] = {
+        'done': []
+    }
+    assert not onboarding.async_is_user_onboarded(hass)
 
 
 async def test_having_owner_finishes_user_step(hass, hass_storage):
@@ -70,3 +88,15 @@ async def test_having_owner_finishes_user_step(hass, hass_storage):
 
     done = hass_storage[onboarding.STORAGE_KEY]['data']['done']
     assert onboarding.STEP_USER in done
+
+
+async def test_migration(hass, hass_storage):
+    """Test migrating onboarding to new version."""
+    hass_storage[onboarding.STORAGE_KEY] = {
+        'version': 1,
+        'data': {
+            'done': ["user"]
+        }
+    }
+    assert await async_setup_component(hass, 'onboarding', {})
+    assert onboarding.async_is_onboarded(hass)

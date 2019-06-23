@@ -21,7 +21,7 @@ async def test_fetch_auth_providers(hass, aiohttp_client):
 async def test_fetch_auth_providers_onboarding(hass, aiohttp_client):
     """Test fetching auth providers."""
     client = await async_setup_auth(hass, aiohttp_client)
-    with patch('homeassistant.components.onboarding.async_is_onboarded',
+    with patch('homeassistant.components.onboarding.async_is_user_onboarded',
                return_value=False):
         resp = await client.get('/auth/providers')
     assert resp.status == 400

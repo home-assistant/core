@@ -319,9 +319,9 @@ def test_execute_request(hass_fixture, assistant_client, auth_header):
                     }],
                     "execution": [{
                         "command":
-                        "action.devices.commands.BrightnessAbsolute",
+                        "action.devices.commands.setVolume",
                         "params": {
-                            "brightness": 70
+                            "volumeLevel": 70
                         }
                     }]
                 }, {

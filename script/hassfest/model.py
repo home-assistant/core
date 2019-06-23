@@ -2,6 +2,7 @@
 import json
 from typing import List, Dict, Any
 import pathlib
+import importlib
 
 import attr
 
@@ -46,6 +47,13 @@ class Integration:
             if fil.is_file() or fil.name == '__pycache__':
                 continue
 
+            init = fil / '__init__.py'
+            if not init.exists():
+                print("Warning: {} missing, skipping directory. "
+                      "If this is your development environment, "
+                      "you can safely delete this folder.".format(init))
+                continue
+
             integration = cls(fil)
             integration.load_manifest()
             integrations[integration.domain] = integration
@@ -85,3 +93,10 @@ class Integration:
             return
 
         self.manifest = manifest
+
+    def import_pkg(self, platform=None):
+        """Import the Python file."""
+        pkg = "homeassistant.components.{}".format(self.domain)
+        if platform is not None:
+            pkg += ".{}".format(platform)
+        return importlib.import_module(pkg)

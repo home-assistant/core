@@ -1,5 +1,4 @@
 """Integrates Native Apps to Home Assistant."""
-from homeassistant import config_entries
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.components.webhook import async_register as webhook_register
 from homeassistant.helpers import device_registry as dr, discovery
@@ -8,12 +7,14 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from .const import (ATTR_DEVICE_ID, ATTR_DEVICE_NAME,
                     ATTR_MANUFACTURER, ATTR_MODEL, ATTR_OS_VERSION,
                     DATA_BINARY_SENSOR, DATA_CONFIG_ENTRIES, DATA_DELETED_IDS,
-                    DATA_DEVICES, DATA_SENSOR, DATA_STORE, DOMAIN, STORAGE_KEY,
-                    STORAGE_VERSION)
+                    DATA_DEVICES, DATA_SENSOR, DATA_STORE,
+                    DOMAIN, STORAGE_KEY, STORAGE_VERSION)
 
 from .http_api import RegistrationsView
 from .webhook import handle_webhook
 from .websocket_api import register_websocket_handlers
+
+PLATFORMS = 'sensor', 'binary_sensor', 'device_tracker'
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
@@ -25,7 +26,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
             DATA_BINARY_SENSOR: {},
             DATA_CONFIG_ENTRIES: {},
             DATA_DELETED_IDS: [],
-            DATA_DEVICES: {},
             DATA_SENSOR: {}
         }
 
@@ -84,33 +84,8 @@ async def async_setup_entry(hass, entry):
     webhook_register(hass, DOMAIN, registration_name, webhook_id,
                      handle_webhook)
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry,
-                                                      DATA_BINARY_SENSOR))
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, DATA_SENSOR))
+    for domain in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, domain))
 
     return True
-
-
-@config_entries.HANDLERS.register(DOMAIN)
-class MobileAppFlowHandler(config_entries.ConfigFlow):
-    """Handle a Mobile App config flow."""
-
-    VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
-
-    async def async_step_user(self, user_input=None):
-        """Handle a flow initialized by the user."""
-        placeholders = {
-            'apps_url':
-                'https://www.home-assistant.io/components/mobile_app/#apps'
-        }
-
-        return self.async_abort(reason='install_app',
-                                description_placeholders=placeholders)
-
-    async def async_step_registration(self, user_input=None):
-        """Handle a flow initialized during registration."""
-        return self.async_create_entry(title=user_input[ATTR_DEVICE_NAME],
-                                       data=user_input)

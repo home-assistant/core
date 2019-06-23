@@ -63,10 +63,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     if not daikin_api:
         return False
     hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: daikin_api})
-    await asyncio.wait([
-        hass.config_entries.async_forward_entry_setup(entry, component)
-        for component in COMPONENT_TYPES
-    ])
+    for component in COMPONENT_TYPES:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(
+                entry, component))
     return True
 
 

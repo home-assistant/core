@@ -3,7 +3,6 @@ import logging
 
 from homeassistant.const import STATE_OFF, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
-
 from . import DYSON_DEVICES
 
 SENSOR_UNITS = {
@@ -21,26 +20,38 @@ SENSOR_ICONS = {
     'temperature': 'mdi:thermometer',
 }
 
+DYSON_SENSOR_DEVICES = 'dyson_sensor_devices'
+
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dyson Sensors."""
-    _LOGGER.debug("Creating new Dyson fans")
-    devices = []
-    unit = hass.config.units.temperature_unit
-    # Get Dyson Devices from parent component
-    from libpurecool.dyson_pure_cool import DysonPureCool
     from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
+    from libpurecool.dyson_pure_cool import DysonPureCool
 
-    for device in [d for d in hass.data[DYSON_DEVICES]
-                   if isinstance(d, DysonPureCoolLink) and
-                   not isinstance(d, DysonPureCool)]:
-        devices.append(DysonFilterLifeSensor(device))
-        devices.append(DysonDustSensor(device))
-        devices.append(DysonHumiditySensor(device))
-        devices.append(DysonTemperatureSensor(device, unit))
-        devices.append(DysonAirQualitySensor(device))
+    if discovery_info is None:
+        return
+
+    hass.data.setdefault(DYSON_SENSOR_DEVICES, [])
+    unit = hass.config.units.temperature_unit
+    devices = hass.data[DYSON_SENSOR_DEVICES]
+
+    # Get Dyson Devices from parent component
+    device_ids = [device.unique_id for device in
+                  hass.data[DYSON_SENSOR_DEVICES]]
+    for device in hass.data[DYSON_DEVICES]:
+        if isinstance(device, DysonPureCool):
+            if '{}-{}'.format(device.serial, 'temperature') not in device_ids:
+                devices.append(DysonTemperatureSensor(device, unit))
+            if '{}-{}'.format(device.serial, 'humidity') not in device_ids:
+                devices.append(DysonHumiditySensor(device))
+        elif isinstance(device, DysonPureCoolLink):
+            devices.append(DysonFilterLifeSensor(device))
+            devices.append(DysonDustSensor(device))
+            devices.append(DysonHumiditySensor(device))
+            devices.append(DysonTemperatureSensor(device, unit))
+            devices.append(DysonAirQualitySensor(device))
     add_entities(devices)
 
 
@@ -56,7 +67,7 @@ class DysonSensor(Entity):
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self.hass.async_add_job(
+        self.hass.async_add_executor_job(
             self._device.add_message_listener, self.on_message)
 
     def on_message(self, message):
@@ -87,6 +98,11 @@ class DysonSensor(Entity):
     def icon(self):
         """Return the icon for this sensor."""
         return SENSOR_ICONS[self._sensor_type]
+
+    @property
+    def unique_id(self):
+        """Return the sensor's unique id."""
+        return '{}-{}'.format(self._device.serial, self._sensor_type)
 
 
 class DysonFilterLifeSensor(DysonSensor):

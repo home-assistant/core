@@ -14,7 +14,7 @@ from homeassistant.const import (
     STATE_OFF, TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME)
 from homeassistant.util import Throttle
 
-from . import NETATMO_AUTH
+from .const import DATA_NETATMO_AUTH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,8 +68,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NetAtmo Thermostat."""
     import pyatmo
     homes_conf = config.get(CONF_HOMES)
+
+    auth = hass.data[DATA_NETATMO_AUTH]
+
     try:
-        home_data = HomeData(NETATMO_AUTH)
+        home_data = HomeData(auth)
     except pyatmo.NoDevice:
         return
 
@@ -88,7 +91,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for home in homes:
         _LOGGER.debug("Setting up %s ...", home)
         try:
-            room_data = ThermostatData(NETATMO_AUTH, home)
+            room_data = ThermostatData(auth, home)
         except pyatmo.NoDevice:
             continue
         for room_id in room_data.get_room_ids():
@@ -341,8 +344,8 @@ class ThermostatData:
         """Return all module available on the API as a list."""
         if not self.setup():
             return []
-        for key in self.homestatus.rooms:
-            self.room_ids.append(key)
+        for room in self.homestatus.rooms:
+            self.room_ids.append(room)
         return self.room_ids
 
     def setup(self):
@@ -362,6 +365,7 @@ class ThermostatData:
     def update(self):
         """Call the NetAtmo API to update the data."""
         import pyatmo
+
         try:
             self.homestatus = pyatmo.HomeStatus(self.auth, home=self.home)
         except TypeError:
@@ -369,40 +373,52 @@ class ThermostatData:
             return
         _LOGGER.debug("Following is the debugging output for homestatus:")
         _LOGGER.debug(self.homestatus.rawData)
-        for key in self.homestatus.rooms:
-            roomstatus = {}
-            homestatus_room = self.homestatus.rooms[key]
-            homedata_room = self.homedata.rooms[self.home][key]
-            roomstatus['roomID'] = homestatus_room['id']
-            roomstatus['roomname'] = homedata_room['name']
-            roomstatus['target_temperature'] = \
-                homestatus_room['therm_setpoint_temperature']
-            roomstatus['setpoint_mode'] = \
-                homestatus_room['therm_setpoint_mode']
-            roomstatus['current_temperature'] = \
-                homestatus_room['therm_measured_temperature']
-            roomstatus['module_type'] = \
-                self.homestatus.thermostatType(self.home, key)
-            roomstatus['module_id'] = None
-            roomstatus['heating_status'] = None
-            roomstatus['heating_power_request'] = None
-            for module_id in homedata_room['module_ids']:
-                if self.homedata.modules[self.home][module_id]['type'] == \
-                   NA_THERM or roomstatus['module_id'] is None:
-                    roomstatus['module_id'] = module_id
-            if roomstatus['module_type'] == NA_THERM:
-                self.boilerstatus = self.homestatus.boilerStatus(
-                    rid=roomstatus['module_id'])
-                roomstatus['heating_status'] = self.boilerstatus
-            elif roomstatus['module_type'] == NA_VALVE:
-                roomstatus['heating_power_request'] = \
-                    homestatus_room['heating_power_request']
-                roomstatus['heating_status'] = \
-                    roomstatus['heating_power_request'] > 0
-                if self.boilerstatus is not None:
-                    roomstatus['heating_status'] = \
-                      self.boilerstatus and roomstatus['heating_status']
-            self.room_status[key] = roomstatus
+        for room in self.homestatus.rooms:
+            try:
+                roomstatus = {}
+                homestatus_room = self.homestatus.rooms[room]
+                homedata_room = self.homedata.rooms[self.home][room]
+                roomstatus["roomID"] = homestatus_room["id"]
+                roomstatus["roomname"] = homedata_room["name"]
+                roomstatus["target_temperature"] = homestatus_room[
+                    "therm_setpoint_temperature"
+                ]
+                roomstatus["setpoint_mode"] = homestatus_room[
+                    "therm_setpoint_mode"
+                ]
+                roomstatus["current_temperature"] = homestatus_room[
+                    "therm_measured_temperature"
+                ]
+                roomstatus["module_type"] = self.homestatus.thermostatType(
+                    self.home, room
+                )
+                roomstatus["module_id"] = None
+                roomstatus["heating_status"] = None
+                roomstatus["heating_power_request"] = None
+                for module_id in homedata_room["module_ids"]:
+                    if (self.homedata.modules[self.home][module_id]["type"]
+                            == NA_THERM
+                            or roomstatus["module_id"] is None):
+                        roomstatus["module_id"] = module_id
+                if roomstatus["module_type"] == NA_THERM:
+                    self.boilerstatus = self.homestatus.boilerStatus(
+                        rid=roomstatus["module_id"]
+                    )
+                    roomstatus["heating_status"] = self.boilerstatus
+                elif roomstatus["module_type"] == NA_VALVE:
+                    roomstatus["heating_power_request"] = homestatus_room[
+                        "heating_power_request"
+                    ]
+                    roomstatus["heating_status"] = (
+                        roomstatus["heating_power_request"] > 0
+                    )
+                    if self.boilerstatus is not None:
+                        roomstatus["heating_status"] = (
+                            self.boilerstatus and roomstatus["heating_status"]
+                        )
+                self.room_status[room] = roomstatus
+            except KeyError as err:
+                _LOGGER.error("Update of room %s failed. Error: %s", room, err)
         self.away_temperature = self.homestatus.getAwaytemp(self.home)
         self.hg_temperature = self.homestatus.getHgtemp(self.home)
         self.setpoint_duration = self.homedata.setpoint_duration[self.home]

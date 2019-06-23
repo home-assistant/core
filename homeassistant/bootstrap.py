@@ -17,7 +17,6 @@ from homeassistant.util.logging import AsyncHandler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
 from homeassistant.util.yaml import clear_secret_cache
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,6 +25,7 @@ ERROR_LOG_FILENAME = 'home-assistant.log'
 # hass.data key for logging information.
 DATA_LOGGING = 'logging'
 
+DEBUGGER_INTEGRATIONS = {'ptvsd', }
 CORE_INTEGRATIONS = ('homeassistant', 'persistent_notification')
 LOGGING_INTEGRATIONS = {'logger', 'system_log'}
 STAGE_1_INTEGRATIONS = {
@@ -93,49 +93,11 @@ async def async_from_config_dict(config: Dict[str, Any],
     stop = time()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop-start)
 
-    # TEMP: warn users for invalid slugs
-    # Remove after 0.94 or 1.0
-    if cv.INVALID_SLUGS_FOUND or cv.INVALID_ENTITY_IDS_FOUND:
-        msg = []
-
-        if cv.INVALID_ENTITY_IDS_FOUND:
-            msg.append(
-                "Your configuration contains invalid entity ID references. "
-                "Please find and update the following. "
-                "This will become a breaking change."
-            )
-            msg.append('\n'.join('- {} -> {}'.format(*item)
-                                 for item
-                                 in cv.INVALID_ENTITY_IDS_FOUND.items()))
-
-        if cv.INVALID_SLUGS_FOUND:
-            msg.append(
-                "Your configuration contains invalid slugs. "
-                "Please find and update the following. "
-                "This will become a breaking change."
-            )
-            msg.append('\n'.join('- {} -> {}'.format(*item)
-                                 for item in cv.INVALID_SLUGS_FOUND.items()))
-
+    if sys.version_info[:3] < (3, 6, 0):
         hass.components.persistent_notification.async_create(
-            '\n\n'.join(msg), "Config Warning", "config_warning"
-        )
-
-    # TEMP: warn users of invalid extra keys
-    # Remove after 0.92
-    if cv.INVALID_EXTRA_KEYS_FOUND:
-        msg = []
-        msg.append(
-            "Your configuration contains extra keys "
-            "that the platform does not support (but were silently "
-            "accepted before 0.88). Please find and remove the following."
-            "This will become a breaking change."
-        )
-        msg.append('\n'.join('- {}'.format(it)
-                             for it in cv.INVALID_EXTRA_KEYS_FOUND))
-
-        hass.components.persistent_notification.async_create(
-            '\n\n'.join(msg), "Config Warning", "config_warning"
+            "Python 3.5 support is deprecated and will "
+            "be removed in the first release after August 1. Please "
+            "upgrade Python.", "Python version", "python_version"
         )
 
     return hass
@@ -306,6 +268,15 @@ async def _async_set_up_integrations(
     """Set up all the integrations."""
     domains = _get_domains(hass, config)
 
+    # Start up debuggers. Start these first in case they want to wait.
+    debuggers = domains & DEBUGGER_INTEGRATIONS
+    if debuggers:
+        _LOGGER.debug("Starting up debuggers %s", debuggers)
+        await asyncio.gather(*[
+            async_setup_component(hass, domain, config)
+            for domain in debuggers])
+        domains -= DEBUGGER_INTEGRATIONS
+
     # Resolve all dependencies of all components so we can find the logging
     # and integrations that need faster initialization.
     resolved_domains_task = asyncio.gather(*[
@@ -339,7 +310,7 @@ async def _async_set_up_integrations(
     stage_2_domains = domains - logging_domains - stage_1_domains
 
     if logging_domains:
-        _LOGGER.debug("Setting up %s", logging_domains)
+        _LOGGER.info("Setting up %s", logging_domains)
 
         await asyncio.gather(*[
             async_setup_component(hass, domain, config)
@@ -355,7 +326,7 @@ async def _async_set_up_integrations(
     if stage_1_domains:
         await asyncio.gather(*[
             async_setup_component(hass, domain, config)
-            for domain in logging_domains
+            for domain in stage_1_domains
         ])
 
     # Load all integrations

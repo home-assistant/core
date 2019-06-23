@@ -86,8 +86,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     assert state.state is STATE_UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    common.async_lock(hass, 'lock.test')
-    await hass.async_block_till_done()
+    await common.async_lock(hass, 'lock.test')
 
     mqtt_mock.async_publish.assert_called_once_with(
         'command-topic', 'LOCK', 0, False)
@@ -96,8 +95,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     assert state.state is STATE_LOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    common.async_unlock(hass, 'lock.test')
-    await hass.async_block_till_done()
+    await common.async_unlock(hass, 'lock.test')
 
     mqtt_mock.async_publish.assert_called_once_with(
         'command-topic', 'UNLOCK', 0, False)
@@ -125,8 +123,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
     assert state.state is STATE_UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    common.async_lock(hass, 'lock.test')
-    await hass.async_block_till_done()
+    await common.async_lock(hass, 'lock.test')
 
     mqtt_mock.async_publish.assert_called_once_with(
         'command-topic', 'LOCK', 0, False)
@@ -135,8 +132,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
     assert state.state is STATE_LOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    common.async_unlock(hass, 'lock.test')
-    await hass.async_block_till_done()
+    await common.async_unlock(hass, 'lock.test')
 
     mqtt_mock.async_publish.assert_called_once_with(
         'command-topic', 'UNLOCK', 0, False)

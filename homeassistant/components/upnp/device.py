@@ -32,7 +32,8 @@ class Device:
 
         # discover devices
         from async_upnp_client.profiles.igd import IgdDevice
-        discovery_infos = await IgdDevice.async_search(source_ip=local_ip)
+        discovery_infos = await IgdDevice.async_search(source_ip=local_ip,
+                                                       timeout=10)
 
         # add extra info and store devices
         devices = []

@@ -2,8 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "Most je \u017ee nastavljen",
+            "already_in_progress": "Konfiguracijski tok za most je \u017ee v teku.",
             "no_bridges": "Ni odkritih mostov deCONZ",
-            "one_instance_only": "Komponenta podpira le en primerek deCONZ"
+            "not_deconz_bridge": "Ni deCONZ most",
+            "one_instance_only": "Komponenta podpira le en primerek deCONZ",
+            "updated_instance": "Posodobljen deCONZ z novim naslovom gostitelja"
         },
         "error": {
             "no_key": "Klju\u010da API ni mogo\u010de dobiti"

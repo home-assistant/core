@@ -11,18 +11,20 @@ from homeassistant.components.climate.const import (
     ATTR_MIN_TEMP, ATTR_MAX_TEMP, STATE_HEAT, SUPPORT_OPERATION_MODE
 )
 from homeassistant.components.google_assistant import (
-    const, trait, helpers, smart_home as sh,
+    const, trait, smart_home as sh,
     EVENT_COMMAND_RECEIVED, EVENT_QUERY_RECEIVED, EVENT_SYNC_RECEIVED)
+from homeassistant.components.demo.binary_sensor import DemoBinarySensor
+from homeassistant.components.demo.cover import DemoCover
 from homeassistant.components.demo.light import DemoLight
+from homeassistant.components.demo.media_player import AbstractDemoPlayer
 from homeassistant.components.demo.switch import DemoSwitch
 
 from homeassistant.helpers import device_registry
 from tests.common import (mock_device_registry, mock_registry,
                           mock_area_registry, mock_coro)
 
-BASIC_CONFIG = helpers.Config(
-    should_expose=lambda state: True,
-)
+from . import BASIC_CONFIG, MockConfig
+
 REQ_ID = 'ff36a3cc-ec34-11e6-b1a0-64510650abcf'
 
 
@@ -54,7 +56,7 @@ async def test_sync_message(hass):
     # Excluded via config
     hass.states.async_set('light.not_expose', 'on')
 
-    config = helpers.Config(
+    config = MockConfig(
         should_expose=lambda state: state.entity_id != 'light.not_expose',
         entity_config={
             'light.demo_light': {
@@ -142,7 +144,7 @@ async def test_sync_in_area(hass, registries):
     light.entity_id = entity.entity_id
     await light.async_update_ha_state()
 
-    config = helpers.Config(
+    config = MockConfig(
         should_expose=lambda _: True,
         entity_config={}
     )
@@ -527,34 +529,6 @@ async def test_unavailable_state_doesnt_sync(hass):
     }
 
 
-async def test_empty_name_doesnt_sync(hass):
-    """Test that an entity with empty name does not sync over."""
-    light = DemoLight(
-        None, ' ',
-        state=False,
-    )
-    light.hass = hass
-    light.entity_id = 'light.demo_light'
-    await light.async_update_ha_state()
-
-    result = await sh.async_handle_message(
-        hass, BASIC_CONFIG, 'test-agent',
-        {
-            "requestId": REQ_ID,
-            "inputs": [{
-                "intent": "action.devices.SYNC"
-            }]
-        })
-
-    assert result == {
-        'requestId': REQ_ID,
-        'payload': {
-            'agentUserId': 'test-agent',
-            'devices': []
-        }
-    }
-
-
 @pytest.mark.parametrize("device_class,google_type", [
     ('non_existing_class', 'action.devices.types.SWITCH'),
     ('switch', 'action.devices.types.SWITCH'),
@@ -590,6 +564,130 @@ async def test_device_class_switch(hass, device_class, google_type):
                 'attributes': {},
                 'id': 'switch.demo_sensor',
                 'name': {'name': 'Demo Sensor'},
+                'traits': ['action.devices.traits.OnOff'],
+                'type': google_type,
+                'willReportState': False
+            }]
+        }
+    }
+
+
+@pytest.mark.parametrize("device_class,google_type", [
+    ('door', 'action.devices.types.DOOR'),
+    ('garage_door', 'action.devices.types.GARAGE'),
+    ('lock', 'action.devices.types.SENSOR'),
+    ('opening', 'action.devices.types.SENSOR'),
+    ('window', 'action.devices.types.SENSOR'),
+])
+async def test_device_class_binary_sensor(hass, device_class, google_type):
+    """Test that a binary entity syncs to the correct device type."""
+    sensor = DemoBinarySensor(
+        'Demo Sensor',
+        state=False,
+        device_class=device_class
+    )
+    sensor.hass = hass
+    sensor.entity_id = 'binary_sensor.demo_sensor'
+    await sensor.async_update_ha_state()
+
+    result = await sh.async_handle_message(
+        hass, BASIC_CONFIG, 'test-agent',
+        {
+            "requestId": REQ_ID,
+            "inputs": [{
+                "intent": "action.devices.SYNC"
+            }]
+        })
+
+    assert result == {
+        'requestId': REQ_ID,
+        'payload': {
+            'agentUserId': 'test-agent',
+            'devices': [{
+                'attributes': {'queryOnlyOpenClose': True},
+                'id': 'binary_sensor.demo_sensor',
+                'name': {'name': 'Demo Sensor'},
+                'traits': ['action.devices.traits.OpenClose'],
+                'type': google_type,
+                'willReportState': False
+            }]
+        }
+    }
+
+
+@pytest.mark.parametrize("device_class,google_type", [
+    ('non_existing_class', 'action.devices.types.BLINDS'),
+    ('door', 'action.devices.types.DOOR'),
+    ('garage', 'action.devices.types.GARAGE'),
+])
+async def test_device_class_cover(hass, device_class, google_type):
+    """Test that a binary entity syncs to the correct device type."""
+    sensor = DemoCover(
+        hass,
+        'Demo Sensor',
+        device_class=device_class
+    )
+    sensor.hass = hass
+    sensor.entity_id = 'cover.demo_sensor'
+    await sensor.async_update_ha_state()
+
+    result = await sh.async_handle_message(
+        hass, BASIC_CONFIG, 'test-agent',
+        {
+            "requestId": REQ_ID,
+            "inputs": [{
+                "intent": "action.devices.SYNC"
+            }]
+        })
+
+    assert result == {
+        'requestId': REQ_ID,
+        'payload': {
+            'agentUserId': 'test-agent',
+            'devices': [{
+                'attributes': {},
+                'id': 'cover.demo_sensor',
+                'name': {'name': 'Demo Sensor'},
+                'traits': ['action.devices.traits.OpenClose'],
+                'type': google_type,
+                'willReportState': False
+            }]
+        }
+    }
+
+
+@pytest.mark.parametrize("device_class,google_type", [
+    ('non_existing_class', 'action.devices.types.SWITCH'),
+    ('speaker', 'action.devices.types.SPEAKER'),
+    ('tv', 'action.devices.types.TV'),
+])
+async def test_device_media_player(hass, device_class, google_type):
+    """Test that a binary entity syncs to the correct device type."""
+    sensor = AbstractDemoPlayer(
+        'Demo',
+        device_class=device_class
+    )
+    sensor.hass = hass
+    sensor.entity_id = 'media_player.demo'
+    await sensor.async_update_ha_state()
+
+    result = await sh.async_handle_message(
+        hass, BASIC_CONFIG, 'test-agent',
+        {
+            "requestId": REQ_ID,
+            "inputs": [{
+                "intent": "action.devices.SYNC"
+            }]
+        })
+
+    assert result == {
+        'requestId': REQ_ID,
+        'payload': {
+            'agentUserId': 'test-agent',
+            'devices': [{
+                'attributes': {},
+                'id': sensor.entity_id,
+                'name': {'name': sensor.name},
                 'traits': ['action.devices.traits.OnOff'],
                 'type': google_type,
                 'willReportState': False

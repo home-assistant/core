@@ -92,8 +92,7 @@ async def test_arm_home_publishes_mqtt(hass, mqtt_mock):
         }
     })
 
-    common.async_alarm_arm_home(hass)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_home(hass)
     mqtt_mock.async_publish.assert_called_once_with(
         'alarm/command', 'ARM_HOME', 0, False)
 
@@ -116,8 +115,7 @@ async def test_arm_home_not_publishes_mqtt_with_invalid_code_when_req(
     })
 
     call_count = mqtt_mock.async_publish.call_count
-    common.async_alarm_arm_home(hass, 'abcd')
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_home(hass, 'abcd')
     assert mqtt_mock.async_publish.call_count == call_count
 
 
@@ -137,8 +135,7 @@ async def test_arm_home_publishes_mqtt_when_code_not_req(hass, mqtt_mock):
         }
     })
 
-    common.async_alarm_arm_home(hass)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_home(hass)
     mqtt_mock.async_publish.assert_called_once_with(
         'alarm/command', 'ARM_HOME', 0, False)
 
@@ -154,8 +151,7 @@ async def test_arm_away_publishes_mqtt(hass, mqtt_mock):
         }
     })
 
-    common.async_alarm_arm_away(hass)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_away(hass)
     mqtt_mock.async_publish.assert_called_once_with(
         'alarm/command', 'ARM_AWAY', 0, False)
 
@@ -178,8 +174,7 @@ async def test_arm_away_not_publishes_mqtt_with_invalid_code_when_req(
     })
 
     call_count = mqtt_mock.async_publish.call_count
-    common.async_alarm_arm_away(hass, 'abcd')
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_away(hass, 'abcd')
     assert mqtt_mock.async_publish.call_count == call_count
 
 
@@ -199,8 +194,7 @@ async def test_arm_away_publishes_mqtt_when_code_not_req(hass, mqtt_mock):
         }
     })
 
-    common.async_alarm_arm_away(hass)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_away(hass)
     mqtt_mock.async_publish.assert_called_once_with(
         'alarm/command', 'ARM_AWAY', 0, False)
 
@@ -216,8 +210,7 @@ async def test_arm_night_publishes_mqtt(hass, mqtt_mock):
         }
     })
 
-    common.async_alarm_arm_night(hass)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_night(hass)
     mqtt_mock.async_publish.assert_called_once_with(
         'alarm/command', 'ARM_NIGHT', 0, False)
 
@@ -240,8 +233,7 @@ async def test_arm_night_not_publishes_mqtt_with_invalid_code_when_req(
     })
 
     call_count = mqtt_mock.async_publish.call_count
-    common.async_alarm_arm_night(hass, 'abcd')
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_night(hass, 'abcd')
     assert mqtt_mock.async_publish.call_count == call_count
 
 
@@ -261,8 +253,7 @@ async def test_arm_night_publishes_mqtt_when_code_not_req(hass, mqtt_mock):
         }
     })
 
-    common.async_alarm_arm_night(hass)
-    await hass.async_block_till_done()
+    await common.async_alarm_arm_night(hass)
     mqtt_mock.async_publish.assert_called_once_with(
         'alarm/command', 'ARM_NIGHT', 0, False)
 
@@ -278,8 +269,7 @@ async def test_disarm_publishes_mqtt(hass, mqtt_mock):
         }
     })
 
-    common.async_alarm_disarm(hass)
-    await hass.async_block_till_done()
+    await common.async_alarm_disarm(hass)
     mqtt_mock.async_publish.assert_called_once_with(
         'alarm/command', 'DISARM', 0, False)
 
@@ -301,8 +291,7 @@ async def test_disarm_publishes_mqtt_with_template(hass, mqtt_mock):
         }
     })
 
-    common.async_alarm_disarm(hass, 1234)
-    await hass.async_block_till_done()
+    await common.async_alarm_disarm(hass, 1234)
     mqtt_mock.async_publish.assert_called_once_with(
         'alarm/command', '{\"action\":\"DISARM\",\"code\":\"1234\"}',
         0,
@@ -325,8 +314,7 @@ async def test_disarm_publishes_mqtt_when_code_not_req(hass, mqtt_mock):
         }
     })
 
-    common.async_alarm_disarm(hass)
-    await hass.async_block_till_done()
+    await common.async_alarm_disarm(hass)
     mqtt_mock.async_publish.assert_called_once_with(
         'alarm/command', 'DISARM', 0, False)
 
@@ -349,8 +337,7 @@ async def test_disarm_not_publishes_mqtt_with_invalid_code_when_req(
     })
 
     call_count = mqtt_mock.async_publish.call_count
-    common.async_alarm_disarm(hass, 'abcd')
-    await hass.async_block_till_done()
+    await common.async_alarm_disarm(hass, 'abcd')
     assert mqtt_mock.async_publish.call_count == call_count
 
 

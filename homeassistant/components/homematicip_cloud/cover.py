@@ -1,7 +1,12 @@
 """Support for HomematicIP Cloud cover devices."""
 import logging
+from typing import Optional
+
+from homematicip.aio.device import AsyncFullFlushShutter
 
 from homeassistant.components.cover import ATTR_POSITION, CoverDevice
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
@@ -17,10 +22,9 @@ async def async_setup_platform(
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
+                            async_add_entities) -> None:
     """Set up the HomematicIP cover from a config entry."""
-    from homematicip.aio.device import AsyncFullFlushShutter
-
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for device in home.devices:
@@ -35,7 +39,7 @@ class HomematicipCoverShutter(HomematicipGenericDevice, CoverDevice):
     """Representation of a HomematicIP Cloud cover device."""
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int:
         """Return current position of cover."""
         return int((1 - self._device.shutterLevel) * 100)
 
@@ -47,7 +51,7 @@ class HomematicipCoverShutter(HomematicipGenericDevice, CoverDevice):
         await self._device.set_shutter_level(level)
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> Optional[bool]:
         """Return if the cover is closed."""
         if self._device.shutterLevel is not None:
             return self._device.shutterLevel == HMIP_COVER_CLOSED

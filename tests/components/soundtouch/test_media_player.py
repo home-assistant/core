@@ -372,7 +372,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
                                   mock.MagicMock())
         assert mocked_soundtouch_device.call_count == 1
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
-        assert all_devices[0].supported_features == 17853
+        assert all_devices[0].supported_features == 18365
 
     @mock.patch('libsoundtouch.device.SoundTouchDevice.power_off')
     @mock.patch('libsoundtouch.device.SoundTouchDevice.volume')

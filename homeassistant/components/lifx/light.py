@@ -202,7 +202,7 @@ class LIFXManager:
         self.entities = {}
         self.hass = hass
         self.async_add_entities = async_add_entities
-        self.effects_conductor = aiolifx_effects().Conductor(loop=hass.loop)
+        self.effects_conductor = aiolifx_effects().Conductor(hass.loop)
         self.discoveries = []
         self.cleanup_unsub = self.hass.bus.async_listen(
             EVENT_HOMEASSISTANT_STOP,
@@ -253,7 +253,7 @@ class LIFXManager:
                     task = light.set_state(**service.data)
                 tasks.append(self.hass.async_create_task(task))
             if tasks:
-                await asyncio.wait(tasks, loop=self.hass.loop)
+                await asyncio.wait(tasks)
 
         self.hass.services.async_register(
             DOMAIN, SERVICE_LIFX_SET_STATE, service_handler,
@@ -484,7 +484,8 @@ class LIFXLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return convert_16_to_8(self.bulb.color[2])
+        fade = self.bulb.power_level / 65535
+        return convert_16_to_8(int(fade * self.bulb.color[2]))
 
     @property
     def color_temp(self):

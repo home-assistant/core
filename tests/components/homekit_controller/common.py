@@ -9,13 +9,15 @@ from homekit.model.characteristics import (
     AbstractCharacteristic, CharacteristicPermissions, CharacteristicsTypes)
 from homekit.model import Accessory, get_id
 from homekit.exceptions import AccessoryNotFoundError
-from homeassistant.components.homekit_controller import SERVICE_HOMEKIT
+
+from homeassistant import config_entries
 from homeassistant.components.homekit_controller.const import (
     CONTROLLER, DOMAIN, HOMEKIT_ACCESSORY_DISPATCH)
+from homeassistant.components.homekit_controller import (
+    async_setup_entry, config_flow)
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from tests.common import (
-    async_fire_time_changed, async_fire_service_discovered, load_fixture)
+from tests.common import async_fire_time_changed, load_fixture
 
 
 class FakePairing:
@@ -128,7 +130,15 @@ class FakeCharacteristic(AbstractCharacteristic):
     needed even though it doesn't add any methods.
     """
 
-    pass
+    def to_accessory_and_service_list(self):
+        """Serialize the characteristic."""
+        # Upstream doesn't correctly serialize valid_values
+        # This fix will be upstreamed and this function removed when it
+        # is fixed.
+        record = super().to_accessory_and_service_list()
+        if self.valid_values:
+            record['valid-values'] = self.valid_values
+        return record
 
 
 class FakeService(AbstractService):
@@ -180,6 +190,12 @@ async def setup_accessories_from_file(hass, path):
                     char.description = char_data['description']
                 if 'value' in char_data:
                     char.value = char_data['value']
+                if 'minValue' in char_data:
+                    char.minValue = char_data['minValue']
+                if 'maxValue' in char_data:
+                    char.maxValue = char_data['maxValue']
+                if 'valid-values' in char_data:
+                    char.valid_values = char_data['valid-values']
                 service.characteristics.append(char)
 
             accessory.services.append(service)
@@ -203,26 +219,36 @@ async def setup_platform(hass):
     return fake_controller
 
 
-async def setup_test_accessories(hass, accessories, capitalize=False):
-    """Load a fake homekit accessory based on a homekit accessory model.
-
-    If capitalize is True, property names will be in upper case.
-    """
+async def setup_test_accessories(hass, accessories):
+    """Load a fake homekit device based on captured JSON profile."""
     fake_controller = await setup_platform(hass)
     pairing = fake_controller.add(accessories)
 
     discovery_info = {
+        'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
-            ('MD' if capitalize else 'md'): 'TestDevice',
-            ('ID' if capitalize else 'id'): '00:00:00:00:00:00',
-            ('C#' if capitalize else 'c#'): 1,
+            'md': 'TestDevice',
+            'id': '00:00:00:00:00:00',
+            'c#': 1,
         }
     }
 
-    async_fire_service_discovered(hass, SERVICE_HOMEKIT, discovery_info)
-    await hass.async_block_till_done()
+    pairing.pairing_data.update({
+        'AccessoryPairingID': discovery_info['properties']['id'],
+    })
+
+    config_entry = config_entries.ConfigEntry(
+        1, 'homekit_controller', 'TestData', pairing.pairing_data,
+        'test', config_entries.CONN_CLASS_LOCAL_PUSH
+    )
+
+    pairing_cls_loc = 'homekit.controller.ip_implementation.IpPairing'
+    with mock.patch(pairing_cls_loc) as pairing_cls:
+        pairing_cls.return_value = pairing
+        await async_setup_entry(hass, config_entry)
+        await hass.async_block_till_done()
 
     return pairing
 
@@ -235,6 +261,7 @@ async def device_config_changed(hass, accessories):
     pairing.accessories = accessories
 
     discovery_info = {
+        'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
@@ -245,7 +272,14 @@ async def device_config_changed(hass, accessories):
         }
     }
 
-    async_fire_service_discovered(hass, SERVICE_HOMEKIT, discovery_info)
+    # Config Flow will abort and notify us if the discovery event is of
+    # interest - in this case c# has incremented
+    flow = config_flow.HomekitControllerFlowHandler()
+    flow.hass = hass
+    flow.context = {}
+    result = await flow.async_step_zeroconf(discovery_info)
+    assert result['type'] == 'abort'
+    assert result['reason'] == 'already_configured'
 
     # Wait for services to reconfigure
     await hass.async_block_till_done()
@@ -271,7 +305,6 @@ async def setup_test_component(hass, services, capitalize=False, suffix=None):
     accessory = Accessory('TestDevice', 'example.com', 'Test', '0001', '0.1')
     accessory.services.extend(services)
 
-    pairing = await setup_test_accessories(hass, [accessory], capitalize)
-
+    pairing = await setup_test_accessories(hass, [accessory])
     entity = 'testdevice' if suffix is None else 'testdevice_{}'.format(suffix)
     return Helper(hass, '.'.join((domain, entity)), pairing, accessory)

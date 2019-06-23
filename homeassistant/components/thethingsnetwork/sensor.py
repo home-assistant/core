@@ -45,7 +45,7 @@ async def async_setup_platform(
     success = await ttn_data_storage.async_update()
 
     if not success:
-        return False
+        return
 
     devices = []
     for value, unit_of_measurement in values.items():
@@ -78,8 +78,9 @@ class TtnDataSensor(Entity):
         if self._ttn_data_storage.data is not None:
             try:
                 return round(self._state[self._value], 1)
-            except KeyError:
-                pass
+            except (KeyError, TypeError):
+                return None
+        return None
 
     @property
     def unit_of_measurement(self):
@@ -123,33 +124,33 @@ class TtnDataStorage:
         """Get the current state from The Things Network Data Storage."""
         try:
             session = async_get_clientsession(self._hass)
-            with async_timeout.timeout(DEFAULT_TIMEOUT, loop=self._hass.loop):
-                req = await session.get(self._url, headers=self._headers)
+            with async_timeout.timeout(DEFAULT_TIMEOUT):
+                response = await session.get(self._url, headers=self._headers)
 
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error while accessing: %s", self._url)
-            return False
+            return None
 
-        status = req.status
+        status = response.status
 
         if status == 204:
             _LOGGER.error("The device is not available: %s", self._device_id)
-            return False
+            return None
 
         if status == 401:
             _LOGGER.error(
                 "Not authorized for Application ID: %s", self._app_id)
-            return False
+            return None
 
         if status == 404:
             _LOGGER.error("Application ID is not available: %s", self._app_id)
-            return False
+            return None
 
-        data = await req.json()
+        data = await response.json()
         self.data = data[-1]
 
         for value in self._values.items():
             if value[0] not in self.data.keys():
                 _LOGGER.warning("Value not available: %s", value[0])
 
-        return req
+        return response
