@@ -145,7 +145,7 @@ class FroniusSensor(Entity):
             self._attributes = attributes
 
     async def _update(self):
-        """Function returning values of interest"""
+        """Return values of interest."""
         pass
 
 
