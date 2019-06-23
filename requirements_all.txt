@@ -1272,6 +1272,7 @@ pyarlo==0.2.3
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 pyatmo==1.4
 =======
 pyatmo==2.0.0
@@ -1282,6 +1283,9 @@ pyatmo==2.0.1
 =======
 pyatmo==2.1.0
 >>>>>>> Bump pyatmo to v2.1.0 (#24724)
+=======
+pyatmo==2.0.1
+>>>>>>> Bump version pyatmo to 2.0.1 (#24703)
 
 # homeassistant.components.apple_tv
 pyatv==0.3.12
