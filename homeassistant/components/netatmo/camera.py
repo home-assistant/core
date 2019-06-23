@@ -146,7 +146,7 @@ class NetatmoCamera(Camera):
                 response = requests.get('{0}/command/changestatus?status=on'.format(
                     self._vpnurl), timeout=10, verify=self._verify_ssl)
                 self._camera_status = "on"
-           else:
+            else:
                 _LOGGER.error("Welcome VPN URL is None")
                 self._data.update()
                 (self._vpnurl, self._localurl) = \
