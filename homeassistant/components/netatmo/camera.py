@@ -145,6 +145,8 @@ class NetatmoCamera(Camera):
         attr['is_local'] = self._is_local
         attr['vpn_url'] = self._vpn_url
 
+        _LOGGER.debug("Attributes of '%s' = %s", self._name, attr)
+
         return attr
 
     @property
@@ -212,6 +214,8 @@ class NetatmoCamera(Camera):
         self._status = self._data.camera_data.cameraByName(
             camera=self._camera_name, home=self._home
             )["status"]
+
+        _LOGGER.debug("Status of '%s' = %s", self._name, self._status)
 
         # SD Card status
         self._sd_status = self._data.camera_data.cameraByName(
