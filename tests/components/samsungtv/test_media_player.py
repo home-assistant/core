@@ -24,6 +24,7 @@ WORKING_CONFIG = {
     CONF_PORT: 8001,
     CONF_TIMEOUT: 10,
     CONF_MAC: 'fake',
+    CONF_BROADCAST: 'fake',
     'uuid': None,
 }
 
