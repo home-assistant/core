@@ -1360,7 +1360,7 @@ pysmarty==0.8
 pysnmp==4.4.9
 
 # homeassistant.components.sonos
-pysonos==0.0.16
+pysonos==0.0.17
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
