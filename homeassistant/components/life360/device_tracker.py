@@ -8,18 +8,21 @@ import voluptuous as vol
 from homeassistant.components.device_tracker import CONF_SCAN_INTERVAL
 from homeassistant.components.device_tracker.const import (
     ENTITY_ID_FORMAT as DT_ENTITY_ID_FORMAT)
+from homeassistant.components.zone import async_active_zone
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING, ATTR_ENTITY_ID, CONF_PREFIX, LENGTH_FEET,
     LENGTH_KILOMETERS, LENGTH_METERS, LENGTH_MILES, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.distance import convert
 import homeassistant.util.dt as dt_util
 
 from .const import (
     CONF_CIRCLES, CONF_DRIVING_SPEED, CONF_ERROR_THRESHOLD,
     CONF_MAX_GPS_ACCURACY, CONF_MAX_UPDATE_WAIT, CONF_MEMBERS,
-    CONF_WARNING_THRESHOLD, DOMAIN)
+    CONF_SHOW_AS_STATE, CONF_WARNING_THRESHOLD, DOMAIN, SHOW_DRIVING,
+    SHOW_MOVING)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,6 +110,7 @@ class Life360Scanner:
         self._circles_filter = config.get(CONF_CIRCLES)
         self._members_filter = config.get(CONF_MEMBERS)
         self._driving_speed = config.get(CONF_DRIVING_SPEED)
+        self._show_as_state = config[CONF_SHOW_AS_STATE]
         self._apis = apis
         self._errs = {}
         self._error_threshold = config[CONF_ERROR_THRESHOLD]
@@ -266,8 +270,20 @@ class Life360Scanner:
             ATTR_WIFI_ON: _bool_attr_from_int(loc.get('wifiState')),
         }
 
-        self._see(dev_id=dev_id, gps=(lat, lon), gps_accuracy=gps_accuracy,
-                  battery=battery, attributes=attrs,
+        # If user wants driving or moving to be shown as state, and current
+        # location is not in a HA zone, then set location name accordingly.
+        loc_name = None
+        active_zone = run_callback_threadsafe(
+            self._hass.loop, async_active_zone, self._hass, lat, lon,
+            gps_accuracy).result()
+        if not active_zone:
+            if SHOW_DRIVING in self._show_as_state and driving is True:
+                loc_name = SHOW_DRIVING
+            elif SHOW_MOVING in self._show_as_state and moving is True:
+                loc_name = SHOW_MOVING
+
+        self._see(dev_id=dev_id, location_name=loc_name, gps=(lat, lon),
+                  gps_accuracy=gps_accuracy, battery=battery, attributes=attrs,
                   picture=member.get('avatar'))
 
     def _update_members(self, members, members_updated):
