@@ -180,6 +180,8 @@ class RestData:
             method, resource, headers=headers, auth=auth, data=data).prepare()
         self._verify_ssl = verify_ssl
         self._timeout = timeout
+        self._resource = resource
+        self._headers = headers
         self.data = None
 
     def update(self):
@@ -193,6 +195,11 @@ class RestData:
 
             self.data = response.text
         except requests.exceptions.RequestException as ex:
-            _LOGGER.error("Error fetching data: %s from %s failed with %s",
-                          self._request, self._request.url, ex)
-            self.data = None
+            try:
+                response = requests.get(self._resource, headers=self._headers,
+                                        timeout=self._timeout)
+                self.data = response.text
+            except:
+                _LOGGER.error("Error fetching data: %s from %s failed with %s",
+                              self._request, self._request.url, ex)
+                self.data = None
