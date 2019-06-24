@@ -104,12 +104,33 @@ class AdGuardHomeFlowHandler(ConfigFlow):
 
         This flow is triggered by the discovery component.
         """
-        if self._async_current_entries():
+        entries = self._async_current_entries()
+
+        if not entries:
+            self._hassio_discovery = user_input
+            return await self.async_step_hassio_confirm()
+
+        cur_entry = entries[0]
+
+        if (cur_entry.data[CONF_HOST] == user_input[CONF_HOST] and
+                cur_entry.data[CONF_PORT] == user_input[CONF_PORT]):
             return self.async_abort(reason='single_instance_allowed')
 
-        self._hassio_discovery = user_input
+        is_loaded = cur_entry.state == config_entries.ENTRY_STATE_LOADED
 
-        return await self.async_step_hassio_confirm()
+        if is_loaded:
+            await self.hass.config_entries.async_unload(cur_entry.entry_id)
+
+        self.hass.config_entries.async_update_entry(cur_entry, data={
+            **cur_entry.data,
+            CONF_HOST: user_input[CONF_HOST],
+            CONF_PORT: user_input[CONF_PORT],
+        })
+
+        if is_loaded:
+            await self.hass.config_entries.async_setup(cur_entry.entry_id)
+
+        return self.async_abort(reason='existing_instance_updated')
 
     async def async_step_hassio_confirm(self, user_input=None):
         """Confirm Hass.io discovery."""
