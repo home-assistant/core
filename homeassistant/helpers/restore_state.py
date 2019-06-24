@@ -189,7 +189,7 @@ class RestoreEntity(Entity):
     async def async_internal_added_to_hass(self) -> None:
         """Register this entity as a restorable entity."""
         _, data = await asyncio.gather(
-            super().async_added_to_hass(),
+            super().async_internal_added_to_hass(),
             RestoreStateData.async_get_instance(self.hass),
         )
         data.async_restore_entity_added(self.entity_id)

@@ -170,12 +170,12 @@ async def test_dump_error(hass):
     entity = Entity()
     entity.hass = hass
     entity.entity_id = 'input_boolean.b0'
-    await entity.async_added_to_hass()
+    await entity.async_internal_added_to_hass()
 
     entity = RestoreEntity()
     entity.hass = hass
     entity.entity_id = 'input_boolean.b1'
-    await entity.async_added_to_hass()
+    await entity.async_internal_added_to_hass()
 
     data = await RestoreStateData.async_get_instance(hass)
 
