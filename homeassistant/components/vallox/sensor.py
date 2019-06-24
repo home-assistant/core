@@ -13,16 +13,14 @@ from . import DOMAIN, METRIC_KEY_MODE, SIGNAL_VALLOX_STATE_UPDATE
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the sensors."""
-    try:
-        name = hass.data[DOMAIN]['name']
-        state_proxy = hass.data[DOMAIN]['state_proxy']
-
-    except KeyError:
-        _LOGGER.error("Domain data not populated. "
-                      "Check for \"vallox:\" in the configuration.")
+    if discovery_info is None:
         return
+
+    name = hass.data[DOMAIN]['name']
+    state_proxy = hass.data[DOMAIN]['state_proxy']
 
     sensors = [
         ValloxProfileSensor(
@@ -91,7 +89,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         ),
     ]
 
-    async_add_entities(sensors, True)
+    async_add_entities(sensors, update_before_add=True)
 
 
 class ValloxSensor(Entity):
@@ -197,7 +195,6 @@ class ValloxProfileSensor(ValloxSensor):
     def __init__(self, name, state_proxy, device_class, unit_of_measurement,
                  icon) -> None:
         """Initialize the Vallox sensor."""
-
         super().__init__(name, state_proxy, None, device_class,
                          unit_of_measurement, icon)
 

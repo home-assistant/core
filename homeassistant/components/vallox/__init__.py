@@ -8,8 +8,7 @@ from vallox_websocket_api import PROFILE as VALLOX_PROFILE, Vallox
 from vallox_websocket_api.constants import vlxDevConstants
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SENSORS
-from homeassistant.helpers import discovery
+from homeassistant.const import CONF_HOST, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -91,9 +90,6 @@ DEFAULT_FAN_SPEED_BOOST = 65
 
 async def async_setup(hass, config):
     """Set up the client and boot the platforms."""
-    if DOMAIN not in config:
-        return True
-
     conf = config[DOMAIN]
     host = conf.get(CONF_HOST)
     name = conf.get(CONF_NAME)
@@ -117,8 +113,12 @@ async def async_setup(hass, config):
     # Fetch initial state once before bringing up the platforms.
     await state_proxy.async_update(None)
 
-    hass.async_create_task(async_load_platform(hass, 'sensor', DOMAIN, {}, config))
-    hass.async_create_task(async_load_platform(hass, 'fan', DOMAIN, {}, config))
+    hass.async_create_task(
+        async_load_platform(hass, 'sensor', DOMAIN, {}, config))
+    hass.async_create_task(
+        async_load_platform(hass, 'fan', DOMAIN, {}, config))
+
+    async_track_time_interval(hass, state_proxy.async_update, SCAN_INTERVAL)
 
     return True
 
@@ -127,13 +127,12 @@ class ValloxStateProxy:
     """Helper class to reduce websocket API calls."""
 
     def __init__(self, hass, client):
+        """Initialize the proxy."""
         self._hass = hass
         self._client = client
         self._metric_cache = {}
         self._profile = None
         self._valid = False
-
-        async_track_time_interval(self._hass, self.async_update, SCAN_INTERVAL)
 
     def fetch_metric(self, metric_key):
         """Return cached state value."""
@@ -142,14 +141,15 @@ class ValloxStateProxy:
         if not self._valid:
             raise IOError("Device state out of sync.")
 
-        if not metric_key in vlxDevConstants.__dict__.keys():
+        if metric_key not in vlxDevConstants.__dict__.keys():
             raise KeyError("Unknown metric key: {}".format(metric_key))
 
         return self._metric_cache[metric_key]
 
     def get_profile(self):
         """Return cached profile value."""
-        _LOGGER.debug("Returning profile.")
+        _LOGGER.debug("Returning profile")
+
         if not self._valid:
             raise IOError("Device state out of sync.")
 
@@ -157,11 +157,13 @@ class ValloxStateProxy:
 
     async def async_update(self, event_time):
         """Fetch state update."""
-        _LOGGER.debug("Updating Vallox state cache.")
+        _LOGGER.debug("Updating Vallox state cache")
 
         try:
-            self._metric_cache = self._client.fetch_metrics()
-            self._profile = self._client.get_profile()
+            self._metric_cache = await self._hass.async_add_executor_job(
+                self._client.fetch_metrics)
+            self._profile = await self._hass.async_add_executor_job(
+                self._client.get_profile)
             self._valid = True
 
         except IOError as io_err:
@@ -175,6 +177,7 @@ class ValloxServiceHandler:
     """Services implementation."""
 
     def __init__(self, client, state_proxy):
+        """Initialize the proxy."""
         self._client = client
         self._state_proxy = state_proxy
 
@@ -183,7 +186,8 @@ class ValloxServiceHandler:
         _LOGGER.debug("Setting ventilation profile to: %s", profile)
 
         try:
-            self._client.set_profile(STR_TO_PROFILE[profile])
+            await self._hass.async_add_executor_job(
+                self._client.set_profile, STR_TO_PROFILE[profile])
             return True
 
         except IOError as io_err:
@@ -196,7 +200,8 @@ class ValloxServiceHandler:
         _LOGGER.debug("Setting Home fan speed to: %d%%", fan_speed)
 
         try:
-            self._client.set_values(
+            await self._hass.async_add_executor_job(
+                self._client.set_values,
                 {METRIC_KEY_PROFILE_FAN_SPEED_HOME: fan_speed})
             return True
 
@@ -211,7 +216,8 @@ class ValloxServiceHandler:
         _LOGGER.debug("Setting Away fan speed to: %d%%", fan_speed)
 
         try:
-            self._client.set_values(
+            await self._hass.async_add_executor_job(
+                self._client.set_values,
                 {METRIC_KEY_PROFILE_FAN_SPEED_AWAY: fan_speed})
             return True
 
@@ -226,7 +232,8 @@ class ValloxServiceHandler:
         _LOGGER.debug("Setting Boost fan speed to: %d%%", fan_speed)
 
         try:
-            self._client.set_values(
+            await self._hass.async_add_executor_job(
+                self._client.set_values,
                 {METRIC_KEY_PROFILE_FAN_SPEED_BOOST: fan_speed})
             return True
 

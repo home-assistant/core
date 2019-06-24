@@ -2,8 +2,6 @@
 
 import logging
 
-import voluptuous as vol
-
 from homeassistant.components.fan import FanEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -33,16 +31,24 @@ ATTR_PROFILE_FAN_SPEED_BOOST = {
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the fan device."""
-    try:
-        device = ValloxFan(hass.data[DOMAIN]['name'],
-                           hass.data[DOMAIN]['client'],
-                           hass.data[DOMAIN]['state_proxy'])
-    except KeyError:
-        _LOGGER.error("Domain data not populated. "
-                      "Check for \"vallox:\" in the configuration.")
+    if discovery_info is None:
         return
 
-    async_add_entities([device])
+    client = hass.data[DOMAIN]['client']
+
+    try:
+        await hass.async_add_executor_job(
+            client.set_settable_address, METRIC_KEY_MODE, int)
+
+    except AttributeError as attr_err:
+        _LOGGER.error("Error making mode override settable: %s", attr_err)
+        return
+
+    device = ValloxFan(hass.data[DOMAIN]['name'],
+                       client,
+                       hass.data[DOMAIN]['state_proxy'])
+
+    async_add_entities([device], update_before_add=True)
 
 
 class ValloxFan(FanEntity):
@@ -58,12 +64,6 @@ class ValloxFan(FanEntity):
         self._fan_speed_home = None
         self._fan_speed_away = None
         self._fan_speed_boost = None
-
-        try:
-            self._client.set_settable_address(METRIC_KEY_MODE, int)
-
-        except AttributeError as attr_err:
-            _LOGGER.error("Error making mode override settable: %s", attr_err)
 
     @property
     def should_poll(self):
@@ -112,7 +112,7 @@ class ValloxFan(FanEntity):
             if mode == 0:
                 self._state = True
             else:
-                self._state = None
+                self._state = False
 
             # Fetch the profile fan speeds.
             self._fan_speed_home = int(self._state_proxy.fetch_metric(
@@ -126,36 +126,39 @@ class ValloxFan(FanEntity):
 
         except (IOError, KeyError) as err:
             self._available = False
-            _LOGGER.error("Error updating fan. %s", err)
+            _LOGGER.error("Error updating fan: %s", err)
 
     async def async_turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn the device on."""
         _LOGGER.debug("Turn on: %s", speed)
 
-        # Case speed == None equals the GUI toggle switch being activated.
-        if speed is None:
-            # Switch to regular operation only if device is currently in other
-            # mode.
-            if self._state is None:
-                try:
-                    self._client.set_values({METRIC_KEY_MODE: 0})
+        # Only the case speed == None equals the GUI toggle switch being
+        # activated.
+        if speed is not None:
+            return
 
-                    # This state change affects other entities like sensors.
-                    # Force an immediate update that can be observed by all
-                    # parties involved.
-                    await self._state_proxy.async_update(None)
+        if self._state is False:
+            try:
+                await self.hass.async_add_executor_job(
+                    self._client.set_values, {METRIC_KEY_MODE: 0})
 
-                except IOError as io_err:
-                    self._available = False
-                    _LOGGER.error("Error turning on: %s", io_err)
-            else:
-                _LOGGER.error("Already on.")
+                # This state change affects other entities like sensors. Force
+                # an immediate update that can be observed by all parties
+                # involved.
+                await self._state_proxy.async_update(None)
+
+            except IOError as io_err:
+                self._available = False
+                _LOGGER.error("Error turning on: %s", io_err)
+        else:
+            _LOGGER.error("Already on")
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the device off."""
         if self._state is True:
             try:
-                self._client.set_values({METRIC_KEY_MODE: 5})
+                await self.hass.async_add_executor_job(
+                    self._client.set_values, {METRIC_KEY_MODE: 5})
 
                 # Same as for turn_on method.
                 await self._state_proxy.async_update(None)
@@ -164,4 +167,4 @@ class ValloxFan(FanEntity):
                 self._available = False
                 _LOGGER.error("Error turning off: %s", io_err)
         else:
-            _LOGGER.error("Already off.")
+            _LOGGER.error("Already off")
