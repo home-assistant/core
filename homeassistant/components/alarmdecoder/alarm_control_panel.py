@@ -6,7 +6,8 @@ import voluptuous as vol
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.const import (
     ATTR_CODE, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
+    STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED,
+    STATE_ALARM_ARMED_NIGHT)
 import homeassistant.helpers.config_validation as cv
 
 from . import DATA_AD, SIGNAL_PANEL_MESSAGE
@@ -63,6 +64,8 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
             self._state = STATE_ALARM_TRIGGERED
         elif message.armed_away:
             self._state = STATE_ALARM_ARMED_AWAY
+        elif message.armed_home and "***NIGHT-STAY***" in message.text:
+            self._state = STATE_ALARM_ARMED_NIGHT
         elif message.armed_home:
             self._state = STATE_ALARM_ARMED_HOME
         else:
