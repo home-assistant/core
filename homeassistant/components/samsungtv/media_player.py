@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         port = config.get(CONF_PORT)
         name = config.get(CONF_NAME)
         mac = config.get(CONF_MAC)
-        broadcast = config.GET(CONF_BROADCAST)
+        broadcast = config.get(CONF_BROADCAST)
         timeout = config.get(CONF_TIMEOUT)
     elif discovery_info is not None:
         tv_name = discovery_info.get('name')
