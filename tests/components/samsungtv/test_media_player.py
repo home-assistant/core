@@ -11,7 +11,7 @@ import tests.common
 from homeassistant.components.media_player.const import SUPPORT_TURN_ON, \
     MEDIA_TYPE_CHANNEL, MEDIA_TYPE_URL
 from homeassistant.components.samsungtv.media_player import setup_platform, \
-    CONF_TIMEOUT, SamsungTVDevice, SUPPORT_SAMSUNGTV
+    CONF_TIMEOUT, CONF_BROADCAST, SamsungTVDevice, SUPPORT_SAMSUNGTV
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_ON, \
     CONF_MAC, STATE_OFF
 from tests.common import MockDependency
