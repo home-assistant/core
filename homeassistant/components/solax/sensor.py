@@ -94,10 +94,10 @@ class Inverter(Entity):
     def state(self):
         """State of this inverter attribute."""
         return self.value
-    
+
     @property
     def unique_id(self):
-        """Unique Id"""
+        """Return unique id."""
         return self.uid
 
     @property
