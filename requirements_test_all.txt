@@ -79,7 +79,7 @@ av==6.1.2
 axis==25
 
 # homeassistant.components.zha
-bellows-homeassistant==0.8.1
+bellows-homeassistant==0.8.2
 
 # homeassistant.components.caldav
 caldav==0.6.1
