@@ -32,14 +32,17 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     api = solax.RealTimeAPI(config[CONF_IP_ADDRESS])
     endpoint = RealTimeDataEndpoint(hass, api)
+    resp = await api.get_data()
+    serial = resp.serial_number
     hass.async_add_job(endpoint.async_refresh)
     async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
     devices = []
     for sensor in solax.INVERTER_SENSORS:
-        unit = solax.INVERTER_SENSORS[sensor][1]
+        idx, unit = solax.INVERTER_SENSORS[sensor]
         if unit == 'C':
             unit = TEMP_CELSIUS
-        devices.append(Inverter(sensor, unit))
+        uid = '{}-{}'.format(serial, idx)
+        devices.append(Inverter(uid, serial, sensor, unit))
     endpoint.sensors = devices
     async_add_entities(devices)
 
@@ -79,8 +82,10 @@ class RealTimeDataEndpoint:
 class Inverter(Entity):
     """Class for a sensor."""
 
-    def __init__(self, key, unit):
+    def __init__(self, uid, serial, key, unit):
         """Initialize an inverter sensor."""
+        self.uid = uid
+        self.serial = serial
         self.key = key
         self.value = None
         self.unit = unit
@@ -91,9 +96,14 @@ class Inverter(Entity):
         return self.value
 
     @property
+    def unique_id(self):
+        """Return unique id."""
+        return self.uid
+
+    @property
     def name(self):
         """Name of this inverter attribute."""
-        return self.key
+        return 'Solax {} {}'.format(self.serial, self.key)
 
     @property
     def unit_of_measurement(self):
