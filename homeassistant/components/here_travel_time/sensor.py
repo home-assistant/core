@@ -153,12 +153,7 @@ class HERETravelTimeSensor(Entity):
             self._destination = destination
 
         self._client = herepy.RoutingApi(app_id, app_code)
-        try:
-            self.update()
-        except herepy.error.HEREError as err:
-            _LOGGER.error(err)
-            self.valid_api_connection = False
-            return
+        self.update()
 
     @property
     def state(self):
@@ -166,6 +161,7 @@ class HERETravelTimeSensor(Entity):
         if self._response is None:
             return None
 
+        # pylint: disable=E1101
         _summary = self._response.response['route'][0]['summary']
         return round(_summary['trafficTime'] / 60)
 
@@ -180,7 +176,9 @@ class HERETravelTimeSensor(Entity):
         if self._response is None:
             return None
 
+        # pylint: disable=E1101
         _summary = self._response.response['route'][0]['summary']
+        # pylint: disable=E1101
         _route = self._response.response['route']
 
         res = {}
@@ -203,6 +201,7 @@ class HERETravelTimeSensor(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from HERE."""
+        import herepy
         # Convert device_trackers to HERE friendly location
         if hasattr(self, '_origin_entity_id'):
             self._origin = self._get_location_from_entity(
@@ -234,6 +233,11 @@ class HERETravelTimeSensor(Entity):
                 self._destination,
                 [self._travel_mode, self._route_mode, traffic_mode],
             )
+            if isinstance(response, herepy.error.HEREError):
+                _LOGGER.error("API returned error %s", response.message)
+                self.valid_api_connection = False
+                return
+
             self._response = response
 
     def _get_location_from_entity(self, entity_id):
