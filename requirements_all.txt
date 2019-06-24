@@ -308,6 +308,7 @@ beautifulsoup4==4.7.1
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 bellows==0.7.0
 =======
 bellows-homeassistant==0.8.0
@@ -318,6 +319,9 @@ bellows-homeassistant==0.8.1
 =======
 bellows-homeassistant==0.8.1
 >>>>>>> Bump ZHA dependencies. (#24637)
+=======
+bellows-homeassistant==0.8.2
+>>>>>>> Update ZHA dependencies. (#24736)
 =======
 bellows-homeassistant==0.8.2
 >>>>>>> Update ZHA dependencies. (#24736)
