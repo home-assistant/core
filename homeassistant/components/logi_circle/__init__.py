@@ -105,7 +105,7 @@ async def async_setup_entry(hass, entry):
         client_secret=entry.data[CONF_CLIENT_SECRET],
         api_key=entry.data[CONF_API_KEY],
         redirect_uri=entry.data[CONF_REDIRECT_URI],
-        cache_file=DEFAULT_CACHEDB
+        cache_file=hass.config.path(DEFAULT_CACHEDB)
     )
 
     if not logi_circle.authorized:
