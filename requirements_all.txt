@@ -1668,6 +1668,7 @@ pysnmp==4.4.9
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 pysonos==0.0.5
 =======
 pysonos==0.0.14
@@ -1678,6 +1679,9 @@ pysonos==0.0.15
 =======
 pysonos==0.0.16
 >>>>>>> Update pysonos to 0.0.16 (#24607)
+=======
+pysonos==0.0.17
+>>>>>>> Update pysonos to 0.0.17 (#24740)
 =======
 pysonos==0.0.17
 >>>>>>> Update pysonos to 0.0.17 (#24740)
