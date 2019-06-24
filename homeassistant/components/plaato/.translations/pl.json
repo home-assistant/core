@@ -1,0 +1,9 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Twoja instancja Home Assistant musi by\u0107 dost\u0119pna z Internetu, aby otrzymywa\u0107 wiadomo\u015bci z Plaato Airlock.",
+            "one_instance_allowed": "Wymagana jest tylko jedna instancja."
+        },
+        "title": "Plaato Airlock"
+    }
+}
