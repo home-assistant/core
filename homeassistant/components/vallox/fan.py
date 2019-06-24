@@ -36,13 +36,8 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     client = hass.data[DOMAIN]['client']
 
-    try:
-        await hass.async_add_executor_job(
-            client.set_settable_address, METRIC_KEY_MODE, int)
-
-    except AttributeError as attr_err:
-        _LOGGER.error("Error making mode override settable: %s", attr_err)
-        return
+    await hass.async_add_executor_job(
+        client.set_settable_address, METRIC_KEY_MODE, int)
 
     device = ValloxFan(hass.data[DOMAIN]['name'],
                        client,
@@ -124,7 +119,7 @@ class ValloxFan(FanEntity):
 
             self._available = True
 
-        except (IOError, KeyError) as err:
+        except (OSError, KeyError) as err:
             self._available = False
             _LOGGER.error("Error updating fan: %s", err)
 

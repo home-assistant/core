@@ -1,9 +1,11 @@
 """Support for Vallox ventilation unit sensors."""
 
+from datetime import datetime, timedelta
 import logging
 
 from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_TIMESTAMP,
+    TEMP_CELSIUS)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -29,7 +31,6 @@ async def async_setup_platform(hass, config, async_add_entities,
             device_class=None,
             unit_of_measurement=None,
             icon='mdi:gauge'
-
         ),
         ValloxFanSpeedSensor(
             name="{} Fan Speed".format(name),
@@ -79,12 +80,12 @@ async def async_setup_platform(hass, config, async_add_entities,
             unit_of_measurement='%',
             icon=None
         ),
-        ValloxSensor(
+        ValloxFilterRemainingSensor(
             name="{} Remaining Time For Filter".format(name),
             state_proxy=state_proxy,
             metric_key='A_CYC_REMAINING_TIME_FOR_FILTER',
-            device_class=None,
-            unit_of_measurement='days',
+            device_class=DEVICE_CLASS_TIMESTAMP,
+            unit_of_measurement=None,
             icon='mdi:filter'
         ),
     ]
@@ -158,7 +159,7 @@ class ValloxSensor(Entity):
             self._state = self._state_proxy.fetch_metric(self._metric_key)
             self._available = True
 
-        except (IOError, KeyError) as err:
+        except (OSError, KeyError) as err:
             self._available = False
             _LOGGER.error("Error updating sensor: %s", err)
 
@@ -184,7 +185,7 @@ class ValloxFanSpeedSensor(ValloxSensor):
                 self._state = 0
                 self._available = True
 
-        except (IOError, KeyError) as err:
+        except (OSError, KeyError) as err:
             self._available = False
             _LOGGER.error("Error updating sensor: %s", err)
 
@@ -204,6 +205,29 @@ class ValloxProfileSensor(ValloxSensor):
             self._state = self._state_proxy.get_profile()
             self._available = True
 
-        except IOError as err:
+        except OSError as err:
+            self._available = False
+            _LOGGER.error("Error updating sensor: %s", err)
+
+
+class ValloxFilterRemainingSensor(ValloxSensor):
+    """Child class for filter remaining time reporting."""
+
+    async def async_update(self):
+        """Fetch state from the ventilation unit."""
+        try:
+            days_remaining = int(
+                self._state_proxy.fetch_metric(self._metric_key))
+            days_remaining_delta = timedelta(days=days_remaining)
+
+            # Since only a delta of days is received from the device, fix the
+            # time so the timestamp does not change with every update.
+            now = datetime.utcnow().replace(
+                hour=13, minute=0, second=0, microsecond=0)
+
+            self._state = (now + days_remaining_delta).isoformat()
+            self._available = True
+
+        except (OSError, KeyError) as err:
             self._available = False
             _LOGGER.error("Error updating sensor: %s", err)

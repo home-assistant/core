@@ -139,9 +139,9 @@ class ValloxStateProxy:
         _LOGGER.debug("Fetching metric key: %s", metric_key)
 
         if not self._valid:
-            raise IOError("Device state out of sync.")
+            raise OSError("Device state out of sync.")
 
-        if metric_key not in vlxDevConstants.__dict__.keys():
+        if metric_key not in vlxDevConstants.__dict__:
             raise KeyError("Unknown metric key: {}".format(metric_key))
 
         return self._metric_cache[metric_key]
@@ -151,7 +151,7 @@ class ValloxStateProxy:
         _LOGGER.debug("Returning profile")
 
         if not self._valid:
-            raise IOError("Device state out of sync.")
+            raise OSError("Device state out of sync.")
 
         return PROFILE_TO_STR_REPORTABLE[self._profile]
 
