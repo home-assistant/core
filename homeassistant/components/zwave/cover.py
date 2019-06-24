@@ -225,7 +225,8 @@ class FibaroFGRM222(ZwaveRollershutter):
         to  value "2 - Venetian Blind Mode, with positioning"
     """
 
-    def __init__(self, hass, values, invert_buttons, invert_percent, open_tilt_position: int):
+    def __init__(self, hass, values, invert_buttons, invert_percent,
+                 open_tilt_position: int):
         """Initialize the FGRM-222."""
         self._value_blinds = None
         self._value_tilt = None
