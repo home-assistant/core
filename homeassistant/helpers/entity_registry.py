@@ -17,6 +17,7 @@ import weakref
 import attr
 
 from homeassistant.core import callback, split_entity_id, valid_entity_id
+from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.loader import bind_hass
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.yaml import load_yaml
@@ -84,6 +85,10 @@ class EntityRegistry:
         self.hass = hass
         self.entities = None
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self.hass.bus.async_listen(
+            EVENT_DEVICE_REGISTRY_UPDATED,
+            self.async_device_removed
+        )
 
     @callback
     def async_is_registered(self, entity_id):
@@ -168,6 +173,19 @@ class EntityRegistry:
             'entity_id': entity_id
         })
         self.async_schedule_save()
+
+    @callback
+    def async_device_removed(self, event):
+        """Handle the removal of a device.
+
+        Remove entities from the registry that are associated to a device when
+        the device is removed.
+        """
+        if event.data['action'] != 'remove':
+            return
+        entities = async_entries_for_device(self, event.data['device_id'])
+        for entity in entities:
+            self.async_remove(entity.entity_id)
 
     @callback
     def async_update_entity(self, entity_id, *, name=_UNDEF,
