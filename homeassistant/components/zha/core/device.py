@@ -312,7 +312,8 @@ class ZHADevice:
                 ex
             )
 
-    async def async_unsub_dispatcher(self):
+    @callback
+    def async_unsub_dispatcher(self):
         """Unsubscribe the dispatcher."""
         if self._unsub:
             self._unsub()
