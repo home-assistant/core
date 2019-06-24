@@ -1823,8 +1823,14 @@ pytrackr==0.0.5
 # homeassistant.components.tradfri
 pytradfri[async]==6.0.1
 
+<<<<<<< HEAD
 # homeassistant.components.sensor.trafikverket_weatherstation
 pytrafikverket==0.1.5.8
+=======
+# homeassistant.components.trafikverket_train
+# homeassistant.components.trafikverket_weatherstation
+pytrafikverket==0.1.5.9
+>>>>>>> Add Trafikverket train component (#23470)
 
 <<<<<<< HEAD
 <<<<<<< HEAD
