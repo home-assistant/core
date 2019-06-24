@@ -21,8 +21,6 @@ pytest-timeout==1.3.3
 pytest==5.1.2
 requests_mock==1.6.0
 
-# homeassistant.components.here_travel_time
-herepy==0.6.2
 
 # homeassistant.components.homekit
 HAP-python==2.5.0
@@ -172,6 +170,9 @@ hbmqtt==0.9.4
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.0
+
+# homeassistant.components.here_travel_time
+herepy==0.6.3.1
 
 # homeassistant.components.pi_hole
 hole==0.5.0
