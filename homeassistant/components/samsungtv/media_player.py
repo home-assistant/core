@@ -85,7 +85,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     ip_addr = socket.gethostbyname(host)
     if ip_addr not in known_devices:
         known_devices.add(ip_addr)
-        add_entities([SamsungTVDevice(host, port, name, timeout, mac, uuid, broadcast)])
+        add_entities([SamsungTVDevice(host, port, name, timeout, mac, uuid, 
+            broadcast)])
         _LOGGER.info("Samsung TV %s:%d added as '%s'", host, port, name)
     else:
         _LOGGER.info("Ignoring duplicate Samsung TV %s:%d", host, port)
@@ -285,7 +286,8 @@ class SamsungTVDevice(MediaPlayerDevice):
         """Turn the media player on."""
         if self._mac:
             if self._broadcast:
-                self._wol.send_magic_packet(self._mac, ip_address=self._broadcast)
+                self._wol.send_magic_packet(self._mac,
+                    ip_address=self._broadcast)
             else:
                 self._wol.send_magic_packet(self._mac)
         else:
