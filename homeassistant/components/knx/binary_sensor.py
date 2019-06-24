@@ -63,14 +63,14 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
 @callback
 def async_add_entities_config(hass, config, async_add_entities):
     """Set up binary senor for KNX platform configured within platform."""
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
     import xknx
     binary_sensor = xknx.devices.BinarySensor(
         hass.data[DATA_KNX].xknx,
         name=name,
-        group_address=config.get(CONF_ADDRESS),
+        group_address_state=config[CONF_ADDRESS],
         device_class=config.get(CONF_DEVICE_CLASS),
-        significant_bit=config.get(CONF_SIGNIFICANT_BIT),
+        significant_bit=config[CONF_SIGNIFICANT_BIT],
         reset_after=config.get(CONF_RESET_AFTER))
     hass.data[DATA_KNX].xknx.devices.add(binary_sensor)
 
@@ -78,9 +78,9 @@ def async_add_entities_config(hass, config, async_add_entities):
     automations = config.get(CONF_AUTOMATION)
     if automations is not None:
         for automation in automations:
-            counter = automation.get(CONF_COUNTER)
-            hook = automation.get(CONF_HOOK)
-            action = automation.get(CONF_ACTION)
+            counter = automation[CONF_COUNTER]
+            hook = automation[CONF_HOOK]
+            action = automation[CONF_ACTION]
             entity.automations.append(KNXAutomation(
                 hass=hass, device=binary_sensor, hook=hook,
                 action=action, counter=counter))
