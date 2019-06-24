@@ -2034,7 +2034,7 @@ solaredge==0.0.2
 # homeassistant.components.climate.honeywell
 =======
 # homeassistant.components.solax
-solax==0.1.0
+solax==0.1.1
 
 # homeassistant.components.honeywell
 >>>>>>> Solax update 0.1.0 (#24708)
