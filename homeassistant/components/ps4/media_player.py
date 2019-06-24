@@ -186,11 +186,15 @@ class PS4Device(MediaPlayerDevice):
                     self._state = STATE_PLAYING
                     if self._media_content_id != title_id:
                         self._media_content_id = title_id
-                        self._media_title = name
-                        self._source = self._media_title
-                        self._media_type = None
-                        asyncio.ensure_future(
-                            self.async_get_title_data(title_id, name))
+                        stored_id = self._games.get(self._media_content_id)
+                        if stored_id.get('is_locked'):
+                            self._media_title = name
+                            self._source = self._media_title
+                            self._media_type = None
+                            asyncio.ensure_future(
+                                self.async_get_title_data(title_id, name))
+                        else:
+
                 else:
                     if self._state != STATE_IDLE:
                         self.idle()
@@ -274,11 +278,15 @@ class PS4Device(MediaPlayerDevice):
         """Update Game List, Correct data if different."""
         if self._media_content_id in self._games:
             store = self._games[self._media_content_id]
-            if store != self._media_title:
-                self._games.pop(self._media_content_id)
+
+            if store.get('is_locked') is None or not store.get('is_locked'):
+                if store['title_name'] != self._media_title or\
+                        store['cover'] != self._media_image:
+                    self._games.pop(self._media_content_id)
 
         if self._media_content_id not in self._games:
-            self.add_games(self._media_content_id, self._media_title)
+            self.add_games(
+                self._media_content_id, self._media_title, self._media_image)
             self._games = self.load_games()
 
         self._source_list = list(sorted(self._games.values()))
@@ -307,11 +315,13 @@ class PS4Device(MediaPlayerDevice):
         if games is None:
             self.load_games()
 
-    def add_games(self, title_id, app_name):
+    def add_games(self, title_id, app_name, image, lock_data=False):
         """Add games to list."""
         games = self._games
         if title_id is not None and title_id not in games:
-            game = {title_id: app_name}
+            game = {title_id: {
+                'title_name': app_name, 'cover': image,
+                'is_locked': lock_data}}
             games.update(game)
             self.save_games(games)
 
