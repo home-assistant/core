@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen",
             "user_already_configured": "Konto wurde bereits konfiguriert"
         },
         "create_entry": {
