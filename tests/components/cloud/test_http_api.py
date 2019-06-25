@@ -16,6 +16,7 @@ from homeassistant.components.cloud.const import (
 from homeassistant.components.google_assistant.helpers import (
     GoogleEntity)
 from homeassistant.components.alexa.entities import LightCapabilities
+from homeassistant.components.alexa import errors as alexa_errors
 
 from tests.common import mock_coro
 from tests.components.google_assistant import MockConfig
@@ -847,3 +848,53 @@ async def test_update_alexa_entity(
     assert prefs.alexa_entity_configs['light.kitchen'] == {
         'should_expose': False,
     }
+
+
+async def test_sync_alexa_entities_timeout(
+        hass, hass_ws_client, setup_api, mock_cloud_login):
+    """Test that timeout syncing Alexa entities."""
+    client = await hass_ws_client(hass)
+    with patch('homeassistant.components.cloud.alexa_config.AlexaConfig'
+               '.async_sync_entities', side_effect=asyncio.TimeoutError):
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/alexa/sync',
+        })
+        response = await client.receive_json()
+
+    assert not response['success']
+    assert response['error']['code'] == 'timeout'
+
+
+async def test_sync_alexa_entities_no_token(
+        hass, hass_ws_client, setup_api, mock_cloud_login):
+    """Test sync Alexa entities when we have no token."""
+    client = await hass_ws_client(hass)
+    with patch('homeassistant.components.cloud.alexa_config.AlexaConfig'
+               '.async_sync_entities',
+               side_effect=alexa_errors.NoTokenAvailable):
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/alexa/sync',
+        })
+        response = await client.receive_json()
+
+    assert not response['success']
+    assert response['error']['code'] == 'alexa_relink'
+
+
+async def test_enable_alexa_state_report_fail(
+        hass, hass_ws_client, setup_api, mock_cloud_login):
+    """Test enable Alexa entities state reporting when no token available."""
+    client = await hass_ws_client(hass)
+    with patch('homeassistant.components.cloud.alexa_config.AlexaConfig'
+               '.async_sync_entities',
+               side_effect=alexa_errors.NoTokenAvailable):
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/alexa/sync',
+        })
+        response = await client.receive_json()
+
+    assert not response['success']
+    assert response['error']['code'] == 'alexa_relink'
