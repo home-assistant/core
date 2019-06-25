@@ -66,31 +66,26 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         dev = []
         for printer in printers:
-            if printer in data.printers:
-                dev.append(CupsSensor(data, printer))
-            else:
+            if printer not in data.printers:
                 _LOGGER.error("Printer is not present: %s", printer)
                 continue
+            dev.append(CupsSensor(data, printer))
 
         add_entities(dev, True)
+        return
 
-    else:
-        data = CupsData(host, port, printers)
-        data.update()
-        if data.available is False:
-            _LOGGER.error("Unable to connect to IPP printer: %s:%s",
-                          host, port)
-            raise PlatformNotReady()
+    data = CupsData(host, port, printers)
+    data.update()
+    if data.available is False:
+        _LOGGER.error("Unable to connect to IPP printer: %s:%s",
+                      host, port)
+        raise PlatformNotReady()
 
-        dev = []
-        for printer in printers:
-            if printer in data.attributes:
-                dev.append(IPPSensor(data, printer))
-            else:
-                _LOGGER.error("Printer is not present: %s", printer)
-                continue
+    dev = []
+    for printer in printers:
+        dev.append(IPPSensor(data, printer))
 
-        add_entities(dev, True)
+    add_entities(dev, True)
 
 
 class CupsSensor(Entity):
@@ -219,6 +214,7 @@ class IPPSensor(Entity):
                     self._attributes['printer-uri-supported']
 
             return state_attributes
+        return None
 
     def update(self):
         """Fetch new state data for the sensor."""
@@ -252,9 +248,8 @@ class CupsData:
             else:
                 for ipp_printer in self._ipp_printers:
                     self.attributes[ipp_printer] = conn.getPrinterAttributes(
-                        uri="ipp://" + self._host
-                        + ":" + str(self._port)
-                        + "/" + ipp_printer)
+                        uri="ipp://{}:{}/{}"
+                        .format(self._host, self._port, ipp_printer))
 
             self.available = True
         except RuntimeError:
