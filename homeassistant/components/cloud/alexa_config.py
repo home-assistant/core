@@ -104,6 +104,9 @@ class AlexaConfig(alexa_config.AbstractConfig):
         if resp.status == 400:
             if body['reason'] in ('RefreshTokenNotFound', 'UnknownRegion'):
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> Improve Alexa error handling (#24745)
                 if self.should_report_state:
                     await self._prefs.async_update(alexa_report_state=False)
                     self.hass.components.persistent_notification.async_create(
@@ -113,8 +116,11 @@ class AlexaConfig(alexa_config.AbstractConfig):
                         "Alexa state reporting disabled",
                         "cloud_alexa_report",
                     )
+<<<<<<< HEAD
 =======
 >>>>>>> Clean up Google Config (#24663)
+=======
+>>>>>>> Improve Alexa error handling (#24745)
                 raise RequireRelink
 
             raise alexa_errors.NoTokenAvailable
@@ -213,11 +219,17 @@ class AlexaConfig(alexa_config.AbstractConfig):
             return True
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         # Make sure it's valid.
         await self.async_get_access_token()
 
 =======
 >>>>>>> Clean up Google Config (#24663)
+=======
+        # Make sure it's valid.
+        await self.async_get_access_token()
+
+>>>>>>> Improve Alexa error handling (#24745)
         tasks = []
 
         if to_update:
@@ -260,10 +272,16 @@ class AlexaConfig(alexa_config.AbstractConfig):
             to_remove.append(entity_id)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> Improve Alexa error handling (#24745)
         try:
             await self._sync_helper(to_update, to_remove)
         except alexa_errors.NoTokenAvailable:
             pass
+<<<<<<< HEAD
 =======
         await self._sync_helper(to_update, to_remove)
 >>>>>>> Clean up Google Config (#24663)
+=======
+>>>>>>> Improve Alexa error handling (#24745)
