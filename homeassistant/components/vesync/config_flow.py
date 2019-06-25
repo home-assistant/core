@@ -65,7 +65,7 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_final(self):
             return self.async_create_entry(
-                title=user_input[CONF_USERNAME],
+                title=self._username,
                 data={
                     CONF_USERNAME: self.username,
                     CONF_PASSWORD: self.password,
