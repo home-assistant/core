@@ -76,8 +76,10 @@ async def async_setup_entry(hass, config_entry):
 
         manager = VeSync(username, password)
 
-    if not manager.login():
-        _LOGGER.error("Unable to login to VeSync")
+    login = await hass.async_add_executor_job(manager.login)
+
+    if not login:
+        _LOGGER.error("Unable to login")
         return False
 
     device_dict = await async_process_devices(hass, manager)
