@@ -131,23 +131,16 @@ class NetatmoThermostat(ClimateDevice):
         ]
 
         _LOGGER.debug(
-            "Setting up thermostat %s in %s (%s).",
+            "Setting up thermostat %s in %s (%s)",
             self._name, self._room_name, self._room_id
         )
         try:
             self._module_type = self._data.room_status[room_id]['module_type']
         except KeyError:
-            _LOGGER.error("Thermostat in %s not available.", room_id)
+            _LOGGER.error("Thermostat in %s not available", room_id)
 
         if self._module_type == NA_THERM:
-            self._operation_list = [
-                DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
-                DICT_NETATMO_TO_HA[STATE_NETATMO_MANUAL],
-                DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY],
-                DICT_NETATMO_TO_HA[STATE_NETATMO_HG],
-                DICT_NETATMO_TO_HA[STATE_NETATMO_MAX],
-                DICT_NETATMO_TO_HA[STATE_NETATMO_OFF],
-            ]
+            self._operation_list = list(DICT_NETATMO_TO_HA)
             self._support_flags = SUPPORT_FLAGS | SUPPORT_ON_OFF
 
     @property
@@ -178,6 +171,7 @@ class NetatmoThermostat(ClimateDevice):
                 self._room_name,
                 self._room_id
             )
+        return None
 
     @property
     def target_temperature(self):
