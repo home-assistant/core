@@ -123,6 +123,11 @@ class Integration:
         self.requirements = manifest['requirements']  # type: List[str]
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
 
+    @property
+    def is_built_in(self) -> bool:
+        """Test if package is a built-in integration."""
+        return self.pkg_path.startswith(PACKAGE_BUILTIN)
+
     def get_component(self) -> ModuleType:
         """Return the component."""
         cache = self.hass.data.setdefault(DATA_COMPONENTS, {})

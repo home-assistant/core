@@ -318,7 +318,7 @@ async def test_play_media(hass, samsung_mock):
         device.send_key = mock.Mock()
         await device.async_play_media(MEDIA_TYPE_CHANNEL, "576")
 
-        exp = [call("KEY_5"), call("KEY_7"), call("KEY_6")]
+        exp = [call("KEY_5"), call("KEY_7"), call("KEY_6"), call("KEY_ENTER")]
         assert device.send_key.call_args_list == exp
         assert len(sleeps) == 3
 
@@ -346,4 +346,22 @@ async def test_play_media_channel_as_non_positive(hass, samsung_mock):
     device = SamsungTVDevice(**WORKING_CONFIG)
     device.send_key = mock.Mock()
     await device.async_play_media(MEDIA_TYPE_CHANNEL, "-4")
+    assert device.send_key.call_count == 0
+
+
+async def test_select_source(hass, samsung_mock):
+    """Test for select_source."""
+    device = SamsungTVDevice(**WORKING_CONFIG)
+    device.hass = hass
+    device.send_key = mock.Mock()
+    await device.async_select_source("HDMI")
+    exp = [call("KEY_HDMI")]
+    assert device.send_key.call_args_list == exp
+
+
+async def test_select_source_invalid_source(hass, samsung_mock):
+    """Test for select_source with invalid source."""
+    device = SamsungTVDevice(**WORKING_CONFIG)
+    device.send_key = mock.Mock()
+    await device.async_select_source("INVALID")
     assert device.send_key.call_count == 0

@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from aioesphomeapi import (
     APIClient, APIConnectionError, DeviceInfo, EntityInfo, EntityState,
-    ServiceCall, UserService, UserServiceArgType)
+    HomeassistantServiceCall, UserService, UserServiceArgType)
 import voluptuous as vol
 
 from homeassistant import const
@@ -38,18 +38,6 @@ _LOGGER = logging.getLogger(__name__)
 
 STORAGE_KEY = 'esphome.{}'
 STORAGE_VERSION = 1
-
-# The HA component types this integration supports
-HA_COMPONENTS = [
-    'binary_sensor',
-    'camera',
-    'climate',
-    'cover',
-    'fan',
-    'light',
-    'sensor',
-    'switch',
-]
 
 # No config schema - only configuration entry
 CONFIG_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
@@ -98,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistantType,
         entry_data.async_update_state(hass, state)
 
     @callback
-    def async_on_service_call(service: ServiceCall) -> None:
+    def async_on_service_call(service: HomeassistantServiceCall) -> None:
         """Call service when user automation in ESPHome config is triggered."""
         domain, service_name = service.service.split('.', 1)
         service_data = service.data
@@ -114,8 +102,17 @@ async def async_setup_entry(hass: HomeAssistantType,
                 _LOGGER.error('Error rendering data template: %s', ex)
                 return
 
-        hass.async_create_task(hass.services.async_call(
-            domain, service_name, service_data, blocking=True))
+        if service.is_event:
+            # ESPHome uses servicecall packet for both events and service calls
+            # Ensure the user can only send events of form 'esphome.xyz'
+            if domain != 'esphome':
+                _LOGGER.error("Can only generate events under esphome "
+                              "domain!")
+                return
+            hass.bus.async_fire(service.service, service_data)
+        else:
+            hass.async_create_task(hass.services.async_call(
+                domain, service_name, service_data, blocking=True))
 
     async def send_home_assistant_state(entity_id: str, _,
                                         new_state: Optional[State]) -> None:
@@ -144,7 +141,8 @@ async def async_setup_entry(hass: HomeAssistantType,
             entry_data.async_update_device_state(hass)
 
             entity_infos, services = await cli.list_entities_services()
-            entry_data.async_update_static_infos(hass, entity_infos)
+            await entry_data.async_update_static_infos(
+                hass, entry, entity_infos)
             await _setup_services(hass, entry_data, services)
             await cli.subscribe_states(async_on_state)
             await cli.subscribe_service_calls(async_on_service_call)
@@ -162,14 +160,8 @@ async def async_setup_entry(hass: HomeAssistantType,
 
     async def complete_setup() -> None:
         """Complete the config entry setup."""
-        tasks = []
-        for component in HA_COMPONENTS:
-            tasks.append(hass.config_entries.async_forward_entry_setup(
-                entry, component))
-        await asyncio.wait(tasks)
-
         infos, services = await entry_data.async_load_from_store()
-        entry_data.async_update_static_infos(hass, infos)
+        await entry_data.async_update_static_infos(hass, entry, infos)
         await _setup_services(hass, entry_data, services)
 
         # Create connection attempt outside of HA's tracked task in order
@@ -239,7 +231,7 @@ async def _async_setup_device_registry(hass: HomeAssistantType,
                                        entry: ConfigEntry,
                                        device_info: DeviceInfo):
     """Set up device registry feature for a particular config entry."""
-    sw_version = device_info.esphome_core_version
+    sw_version = device_info.esphome_version
     if device_info.compilation_time:
         sw_version += ' ({})'.format(device_info.compilation_time)
     device_registry = await dr.async_get_registry(hass)
@@ -266,6 +258,10 @@ async def _register_service(hass: HomeAssistantType,
             UserServiceArgType.INT: vol.Coerce(int),
             UserServiceArgType.FLOAT: vol.Coerce(float),
             UserServiceArgType.STRING: cv.string,
+            UserServiceArgType.BOOL_ARRAY: [cv.boolean],
+            UserServiceArgType.INT_ARRAY: [vol.Coerce(int)],
+            UserServiceArgType.FLOAT_ARRAY: [vol.Coerce(float)],
+            UserServiceArgType.STRING_ARRAY: [cv.string],
         }[arg.type_]
 
     async def execute_service(call):
@@ -308,7 +304,7 @@ async def _setup_services(hass: HomeAssistantType,
 
 
 async def _cleanup_instance(hass: HomeAssistantType,
-                            entry: ConfigEntry) -> None:
+                            entry: ConfigEntry) -> RuntimeEntryData:
     """Cleanup the esphome client if it exists."""
     data = hass.data[DATA_KEY].pop(entry.entry_id)  # type: RuntimeEntryData
     if data.reconnect_task is not None:
@@ -318,19 +314,19 @@ async def _cleanup_instance(hass: HomeAssistantType,
     for cleanup_callback in data.cleanup_callbacks:
         cleanup_callback()
     await data.client.disconnect()
+    return data
 
 
 async def async_unload_entry(hass: HomeAssistantType,
                              entry: ConfigEntry) -> bool:
     """Unload an esphome config entry."""
-    await _cleanup_instance(hass, entry)
-
+    entry_data = await _cleanup_instance(hass, entry)
     tasks = []
-    for component in HA_COMPONENTS:
+    for platform in entry_data.loaded_platforms:
         tasks.append(hass.config_entries.async_forward_entry_unload(
-            entry, component))
-    await asyncio.wait(tasks)
-
+            entry, platform))
+    if tasks:
+        await asyncio.wait(tasks)
     return True
 
 

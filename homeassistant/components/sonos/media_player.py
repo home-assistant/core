@@ -34,8 +34,7 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PARALLEL_UPDATES = 0
-
+SCAN_INTERVAL = 10
 DISCOVERY_INTERVAL = 60
 
 # Quiet down pysonos logging to just actual problems.
@@ -227,10 +226,10 @@ def _timespan_secs(timespan):
 
 
 def _is_radio_uri(uri):
-    """Return whether the URI is a radio stream."""
+    """Return whether the URI is a stream (not a playlist)."""
     radio_schemes = (
         'x-rincon-mp3radio:', 'x-sonosapi-stream:', 'x-sonosapi-radio:',
-        'x-sonosapi-hls:', 'hls-radio:')
+        'x-sonosapi-hls:', 'hls-radio:', 'x-rincon-stream:')
     return uri.startswith(radio_schemes)
 
 
@@ -241,7 +240,7 @@ class SonosEntity(MediaPlayerDevice):
         """Initialize the Sonos entity."""
         self._seen = None
         self._subscriptions = []
-        self._receives_events = False
+        self._poll_timer = None
         self._volume_increment = 2
         self._unique_id = player.uid
         self._player = player
@@ -347,6 +346,10 @@ class SonosEntity(MediaPlayerDevice):
         if self._seen < time.monotonic() - 2*DISCOVERY_INTERVAL:
             self._available = False
 
+            if self._poll_timer:
+                self._poll_timer()
+                self._poll_timer = None
+
             def _unsub(subscriptions):
                 for subscription in subscriptions:
                     subscription.unsubscribe()
@@ -393,7 +396,8 @@ class SonosEntity(MediaPlayerDevice):
 
     def _subscribe_to_player_events(self):
         """Add event subscriptions."""
-        self._receives_events = False
+        self._poll_timer = self.hass.helpers.event.track_time_interval(
+            self.update, datetime.timedelta(seconds=SCAN_INTERVAL))
 
         # New player available, build the current group topology
         for entity in self.hass.data[DATA_SONOS].entities:
@@ -412,16 +416,20 @@ class SonosEntity(MediaPlayerDevice):
         subscribe(player.zoneGroupTopology, self.update_groups)
         subscribe(player.contentDirectory, self.update_content)
 
-    def update(self):
+    @property
+    def should_poll(self):
+        """Return that we should not be polled (we handle that internally)."""
+        return False
+
+    def update(self, now=None):
         """Retrieve latest state."""
-        if self._available and not self._receives_events:
-            try:
-                self.update_groups()
-                self.update_volume()
-                if self.is_coordinator:
-                    self.update_media()
-            except SoCoException:
-                pass
+        try:
+            self.update_groups()
+            self.update_volume()
+            if self.is_coordinator:
+                self.update_media()
+        except SoCoException:
+            pass
 
     def update_media(self, event=None):
         """Update information about currently playing media."""
@@ -653,7 +661,10 @@ class SonosEntity(MediaPlayerDevice):
                     self.hass.data[DATA_SONOS].topology_condition.notify_all()
 
         if event:
-            self._receives_events = True
+            # Cancel poll timer since we do receive events
+            if self._poll_timer:
+                self._poll_timer()
+                self._poll_timer = None
 
             if not hasattr(event, 'zone_player_uui_ds_in_group'):
                 return

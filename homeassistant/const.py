@@ -346,6 +346,7 @@ LENGTH_MILES = 'mi'  # type: str
 # Pressure units
 PRESSURE_PA = 'Pa'  # type: str
 PRESSURE_HPA = 'hPa'  # type: str
+PRESSURE_BAR = 'bar'  # type: str
 PRESSURE_MBAR = 'mbar'  # type: str
 PRESSURE_INHG = 'inHg'  # type: str
 PRESSURE_PSI = 'psi'  # type: str
@@ -411,6 +412,7 @@ SERVICE_SET_COVER_POSITION = 'set_cover_position'
 SERVICE_SET_COVER_TILT_POSITION = 'set_cover_tilt_position'
 SERVICE_STOP_COVER = 'stop_cover'
 SERVICE_STOP_COVER_TILT = 'stop_cover_tilt'
+SERVICE_TOGGLE_COVER_TILT = 'toggle_cover_tilt'
 
 SERVICE_SELECT_OPTION = 'select_option'
 

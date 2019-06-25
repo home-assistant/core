@@ -157,6 +157,7 @@ omit =
     homeassistant/components/eight_sleep/*
     homeassistant/components/eliqonline/sensor.py
     homeassistant/components/elkm1/*
+    homeassistant/components/elv/switch.py
     homeassistant/components/emby/media_player.py
     homeassistant/components/emoncms/sensor.py
     homeassistant/components/emoncms_history/*
@@ -451,6 +452,7 @@ omit =
     homeassistant/components/ping/device_tracker.py
     homeassistant/components/pioneer/media_player.py
     homeassistant/components/pjlink/media_player.py
+    homeassistant/components/plaato/*
     homeassistant/components/plex/media_player.py
     homeassistant/components/plex/sensor.py
     homeassistant/components/plum_lightpad/*
@@ -561,6 +563,7 @@ omit =
     homeassistant/components/solaredge/sensor.py
     homeassistant/components/solaredge_local/sensor.py
     homeassistant/components/solax/sensor.py
+    homeassistant/components/somfy/*
     homeassistant/components/somfy_mylink/*
     homeassistant/components/sonarr/sensor.py
     homeassistant/components/songpal/media_player.py
@@ -630,9 +633,11 @@ omit =
     homeassistant/components/tplink/switch.py
     homeassistant/components/tplink_lte/*
     homeassistant/components/traccar/device_tracker.py
+    homeassistant/components/traccar/const.py
     homeassistant/components/trackr/device_tracker.py
     homeassistant/components/tradfri/*
     homeassistant/components/tradfri/light.py
+    homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/sensor.py
     homeassistant/components/transmission/*
     homeassistant/components/travisci/sensor.py
@@ -661,6 +666,7 @@ omit =
     homeassistant/components/viaggiatreno/sensor.py
     homeassistant/components/vizio/media_player.py
     homeassistant/components/vlc/media_player.py
+    homeassistant/components/vlc_telnet/media_player.py
     homeassistant/components/volkszaehler/sensor.py
     homeassistant/components/volumio/media_player.py
     homeassistant/components/volvooncall/*

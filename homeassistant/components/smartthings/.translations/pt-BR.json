@@ -1,0 +1,10 @@
+{
+    "config": {
+        "step": {
+            "wait_install": {
+                "title": "Instalar o SmartApp"
+            }
+        },
+        "title": "SmartThings"
+    }
+}

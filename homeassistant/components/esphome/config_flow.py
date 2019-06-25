@@ -22,7 +22,6 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
         self._host = None  # type: Optional[str]
         self._port = None  # type: Optional[int]
         self._password = None  # type: Optional[str]
-        self._name = None  # type: Optional[str]
 
     async def async_step_user(self, user_input: Optional[ConfigType] = None,
                               error: Optional[str] = None):
@@ -44,33 +43,41 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
             errors=errors
         )
 
-    async def _async_authenticate_or_add(self, user_input,
-                                         from_discovery=False):
+    @property
+    def _name(self):
+        return self.context.get('name')
+
+    @_name.setter
+    def _name(self, value):
+        # pylint: disable=unsupported-assignment-operation
+        self.context['name'] = value
+        self.context['title_placeholders'] = {
+            'name': self._name
+        }
+
+    def _set_user_input(self, user_input):
+        if user_input is None:
+            return
         self._host = user_input['host']
         self._port = user_input['port']
+
+    async def _async_authenticate_or_add(self, user_input):
+        self._set_user_input(user_input)
         error, device_info = await self.fetch_device_info()
         if error is not None:
             return await self.async_step_user(error=error)
         self._name = device_info.name
-        # pylint: disable=unsupported-assignment-operation
-        self.context['title_placeholders'] = {
-            'name': self._name
-        }
 
         # Only show authentication step if device uses password
         if device_info.uses_password:
             return await self.async_step_authenticate()
 
-        if from_discovery:
-            # If from discovery, do not create entry immediately,
-            # First present user with message
-            return await self.async_step_discovery_confirm()
         return self._async_get_entry()
 
     async def async_step_discovery_confirm(self, user_input=None):
         """Handle user-confirmation of discovered node."""
         if user_input is not None:
-            return self._async_get_entry()
+            return await self._async_authenticate_or_add(None)
         return self.async_show_form(
             step_id='discovery_confirm',
             description_placeholders={'name': self._name},
@@ -98,14 +105,18 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
                     already_configured = data.device_info.name == node_name
 
             if already_configured:
-                return self.async_abort(
-                    reason='already_configured'
-                )
+                return self.async_abort(reason='already_configured')
 
-        return await self._async_authenticate_or_add(user_input={
-            'host': address,
-            'port': user_input['port'],
-        }, from_discovery=True)
+        self._host = address
+        self._port = user_input['port']
+        self._name = node_name
+
+        # Check if flow for this device already in progress
+        for flow in self._async_in_progress():
+            if flow['context'].get('name') == node_name:
+                return self.async_abort(reason='already_configured')
+
+        return await self.async_step_discovery_confirm()
 
     def _async_get_entry(self):
         return self.async_create_entry(

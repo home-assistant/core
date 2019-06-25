@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
@@ -934,3 +934,17 @@ async def test_entry_reload_error(hass, manager, state):
     assert len(async_setup_entry.mock_calls) == 0
 
     assert entry.state == state
+
+
+async def test_init_custom_integration(hass):
+    """Test initializing flow for custom integration."""
+    integration = loader.Integration(hass, 'custom_components.hue', None, {
+        'name': 'Hue',
+        'dependencies': [],
+        'requirements': [],
+        'domain': 'hue',
+    })
+    with pytest.raises(data_entry_flow.UnknownHandler):
+        with patch('homeassistant.loader.async_get_integration',
+                   return_value=mock_coro(integration)):
+            await hass.config_entries.flow.async_init('bla')

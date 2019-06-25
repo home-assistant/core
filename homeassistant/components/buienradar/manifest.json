@@ -6,5 +6,5 @@
     "buienradar==0.91"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@ties"]
 }
