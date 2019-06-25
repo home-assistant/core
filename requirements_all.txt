@@ -102,7 +102,14 @@ TwitterAPI==2.5.8
 # homeassistant.components.sensor.waze_travel_time
 WazeRouteCalculator==0.6
 
+<<<<<<< HEAD
 # homeassistant.components.notify.yessssms
+=======
+# homeassistant.components.waze_travel_time
+WazeRouteCalculator==0.10
+
+# homeassistant.components.yessssms
+>>>>>>> Update Waze route dependency to 0.10  (#24754)
 YesssSMS==0.2.3
 
 # homeassistant.components.abode
