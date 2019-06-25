@@ -67,8 +67,8 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
             return self.async_create_entry(
                 title=self._username,
                 data={
-                    CONF_USERNAME: self.username,
-                    CONF_PASSWORD: self.password,
-                    CONF_TIME_ZONE: self.time_zone,
+                    CONF_USERNAME: self._username,
+                    CONF_PASSWORD: self._password,
+                    CONF_TIME_ZONE: self._time_zone,
             },
         )
