@@ -52,10 +52,27 @@ async def test_with_cloud_sub(hass):
                   return_value=mock_coro('https://hooks.nabu.casa/ABCD')):
         result = await hass.config_entries.flow.async_init(
             'owntracks', context={'source': 'user'},
-            data={}
+            data={
+                'cloudhook': True
+            }
         )
 
     entry = result['result']
     assert entry.data['cloudhook']
     assert result['description_placeholders']['webhook_url'] == \
         'https://hooks.nabu.casa/ABCD'
+
+
+async def test_with_cloud_sub_no_cloudhook(hass):
+    """Test creating a config flow while subscribed."""
+    with patch('homeassistant.components.cloud.async_active_subscription',
+               return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            'owntracks', context={'source': 'user'},
+            data={
+                'cloudhook': False
+            }
+        )
+
+    entry = result['result']
+    assert not entry.data['cloudhook']

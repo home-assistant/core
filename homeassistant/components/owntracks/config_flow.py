@@ -1,4 +1,6 @@
 """Config flow for OwnTracks."""
+import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.auth.util import generate_secret
@@ -28,18 +30,27 @@ class OwnTracksFlow(config_entries.ConfigFlow):
             return self.async_abort(reason='one_instance_allowed')
 
         if user_input is None:
+            data_schema = vol.Schema({
+                vol.Optional(CONF_CLOUDHOOK, default=True): bool,
+            }) if self.hass.components.cloud.async_active_subscription() \
+                else None
+
             return self.async_show_form(
                 step_id='user',
+                data_schema=data_schema
             )
 
-        webhook_id, webhook_url, cloudhook = await self._get_webhook_id()
+        webhook_id, webhook_url, cloudhook = await self._get_webhook_id(
+            user_input.get(CONF_CLOUDHOOK, False)
+        )
 
         secret = generate_secret(16)
 
         if supports_encryption():
             secret_desc = (
                 "The encryption key is {} "
-                "(on Android under preferences -> advanced)".format(secret))
+                "(on Android under preferences -> advanced)".format(secret)
+            )
         else:
             secret_desc = (
                 "Encryption is not supported because libsodium is not "
@@ -78,10 +89,11 @@ class OwnTracksFlow(config_entries.ConfigFlow):
             }
         )
 
-    async def _get_webhook_id(self):
+    async def _get_webhook_id(self, get_cloudhook: bool = False):
         """Generate webhook ID."""
         webhook_id = self.hass.components.webhook.async_generate_id()
-        if self.hass.components.cloud.async_active_subscription():
+        if get_cloudhook and \
+                self.hass.components.cloud.async_active_subscription():
             webhook_url = \
                 await self.hass.components.cloud.async_create_cloudhook(
                     webhook_id

@@ -4,6 +4,9 @@
     "step": {
       "user": {
         "title": "Set up OwnTracks",
+        "data": {
+            "cloudhook": "Prepare a publicly accessible URL using Home Assistant Cloud"
+        },
         "description": "Are you sure you want to set up OwnTracks?"
       }
     },
