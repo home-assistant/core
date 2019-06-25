@@ -6,8 +6,8 @@ from collections import OrderedDict
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import callback
-from .const import DOMAIN
 from homeassistant.const import (CONF_TIME_ZONE, CONF_USERNAME, CONF_PASSWORD)
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
         )
 
     async def async_step_import(self, import_config):
-        """Handle extername yaml configuration"""
+        """Handle external yaml configuration"""
         return await self.async_step_user(import_config)
 
     async def async_step_user(self, user_input=None):

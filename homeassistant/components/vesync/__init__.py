@@ -1,7 +1,8 @@
 """Etekcity VeSync integration."""
 import logging
 import voluptuous as vol
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_TIME_ZONE)
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, 
+                                 CONF_TIME_ZONE, CONF_SCAN_INTERVAL)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant import config_entries
@@ -15,11 +16,13 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'vesync'
 
+DEFAULT_SCAN_INTERVAL = 36000
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_TIME_ZONE): cv.time_zone,
+        vol.Optional(CONF_TIME_ZONE): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -28,6 +31,9 @@ async def async_setup(hass, config):
     """Set up the VeSync component."""
 
     hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][CONF_SWITCHES] = []
+    hass.data[DOMAIN][CONF_FANS] = []
+    hass.data[DOMAIN][CONF_LIGHTS] = []
 
     if DOMAIN not in config:
         return True
@@ -112,4 +118,3 @@ async def async_unload_entry(hass, entry):
     # We were not able to unload the platforms, either because there
     # were none or one of the forward_unloads failed.
     return False
-    

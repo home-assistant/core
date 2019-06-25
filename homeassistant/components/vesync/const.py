@@ -1,4 +1,4 @@
-"""Define constants for VeSync Component""""
+"""Define constants for VeSync Component"""
 
 DOMAIN = 'vesync'
 USERNAME = 'username'
