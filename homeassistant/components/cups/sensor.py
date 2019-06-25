@@ -106,12 +106,11 @@ class CupsSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._printer is not None:
-            try:
-                return next(v for k, v in PRINTER_STATES.items()
-                            if self._printer['printer-state'] == k)
-            except StopIteration:
-                return self._printer['printer-state']
+        if self._printer is None:
+            return None
+
+        key = self._printer['printer-state']
+        return PRINTER_STATES.get(key, key)
 
     @property
     def available(self):
@@ -126,21 +125,23 @@ class CupsSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        if self._printer is not None:
-            return {
-                ATTR_DEVICE_URI: self._printer['device-uri'],
-                ATTR_PRINTER_INFO: self._printer['printer-info'],
-                ATTR_PRINTER_IS_SHARED: self._printer['printer-is-shared'],
-                ATTR_PRINTER_LOCATION: self._printer['printer-location'],
-                ATTR_PRINTER_MODEL: self._printer['printer-make-and-model'],
-                ATTR_PRINTER_STATE_MESSAGE:
-                    self._printer['printer-state-message'],
-                ATTR_PRINTER_STATE_REASON:
-                    self._printer['printer-state-reasons'],
-                ATTR_PRINTER_TYPE: self._printer['printer-type'],
-                ATTR_PRINTER_URI_SUPPORTED:
-                    self._printer['printer-uri-supported'],
-            }
+        if self._printer is None:
+            return None
+
+        return {
+            ATTR_DEVICE_URI: self._printer['device-uri'],
+            ATTR_PRINTER_INFO: self._printer['printer-info'],
+            ATTR_PRINTER_IS_SHARED: self._printer['printer-is-shared'],
+            ATTR_PRINTER_LOCATION: self._printer['printer-location'],
+            ATTR_PRINTER_MODEL: self._printer['printer-make-and-model'],
+            ATTR_PRINTER_STATE_MESSAGE:
+                self._printer['printer-state-message'],
+            ATTR_PRINTER_STATE_REASON:
+                self._printer['printer-state-reasons'],
+            ATTR_PRINTER_TYPE: self._printer['printer-type'],
+            ATTR_PRINTER_URI_SUPPORTED:
+                self._printer['printer-uri-supported'],
+        }
 
     def update(self):
         """Get the latest data and updates the states."""
@@ -180,41 +181,41 @@ class IPPSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._attributes is not None:
-            try:
-                return next(v for k, v in PRINTER_STATES.items()
-                            if self._attributes['printer-state'] == k)
-            except StopIteration:
-                return self._attributes['printer-state']
+        if self._attributes is None:
+            return None
+
+        key = self._attributes['printer-state']
+        return PRINTER_STATES.get(key, key)
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        if self._attributes is not None:
-            state_attributes = {}
+        if self._attributes is None:
+            return None
 
-            if 'printer-info' in self._attributes:
-                state_attributes[ATTR_PRINTER_INFO] = \
-                    self._attributes['printer-info']
+        state_attributes = {}
 
-            if 'printer-location' in self._attributes:
-                state_attributes[ATTR_PRINTER_LOCATION] = \
-                    self._attributes['printer-location']
+        if 'printer-info' in self._attributes:
+            state_attributes[ATTR_PRINTER_INFO] = \
+                self._attributes['printer-info']
 
-            if 'printer-state-message' in self._attributes:
-                state_attributes[ATTR_PRINTER_STATE_MESSAGE] = \
-                    self._attributes['printer-state-message']
+        if 'printer-location' in self._attributes:
+            state_attributes[ATTR_PRINTER_LOCATION] = \
+                self._attributes['printer-location']
 
-            if 'printer-state-reasons' in self._attributes:
-                state_attributes[ATTR_PRINTER_STATE_REASON] = \
-                    self._attributes['printer-state-reasons']
+        if 'printer-state-message' in self._attributes:
+            state_attributes[ATTR_PRINTER_STATE_MESSAGE] = \
+                self._attributes['printer-state-message']
 
-            if 'printer-uri-supported' in self._attributes:
-                state_attributes[ATTR_PRINTER_URI_SUPPORTED] = \
-                    self._attributes['printer-uri-supported']
+        if 'printer-state-reasons' in self._attributes:
+            state_attributes[ATTR_PRINTER_STATE_REASON] = \
+                self._attributes['printer-state-reasons']
 
-            return state_attributes
-        return None
+        if 'printer-uri-supported' in self._attributes:
+            state_attributes[ATTR_PRINTER_URI_SUPPORTED] = \
+                self._attributes['printer-uri-supported']
+
+        return state_attributes
 
     def update(self):
         """Fetch new state data for the sensor."""
