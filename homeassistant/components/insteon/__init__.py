@@ -49,6 +49,9 @@ SRV_LOAD_DB_RELOAD = 'reload'
 SRV_CONTROLLER = 'controller'
 SRV_RESPONDER = 'responder'
 SRV_HOUSECODE = 'housecode'
+SRV_SCENE_ON = 'scene_on'
+SRV_SCENE_OFF = 'scene_off'
+SRV_LOAD_ALL_DATABASES = 'load_all_databases'
 
 HOUSECODES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
               'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p']
@@ -72,7 +75,6 @@ def set_default_port(schema: Dict) -> Dict:
         else:
             schema[CONF_IP_PORT] = 25105
     return schema
-
 
 CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
     cv.deprecated(CONF_PLATFORM), vol.Schema({
@@ -115,7 +117,6 @@ CONFIG_SCHEMA = vol.Schema({
         set_default_port)
     }, extra=vol.ALLOW_EXTRA)
 
-
 ADD_ALL_LINK_SCHEMA = vol.Schema({
     vol.Required(SRV_ALL_LINK_GROUP): vol.Range(min=0, max=255),
     vol.Required(SRV_ALL_LINK_MODE): vol.In([SRV_CONTROLLER, SRV_RESPONDER]),
@@ -136,6 +137,13 @@ PRINT_ALDB_SCHEMA = vol.Schema({
 
 X10_HOUSECODE_SCHEMA = vol.Schema({
     vol.Required(SRV_HOUSECODE): vol.In(HOUSECODES),
+    })
+
+TRIGGER_SCENE_SCHEMA = vol.Schema({
+    vol.Required(SRV_ALL_LINK_GROUP): vol.Range(min=0, max=255)})
+
+LOAD_ALL_ALDB_SCHEMA = vol.Schema({
+    vol.Optional(SRV_LOAD_DB_RELOAD, default='false'): cv.boolean,
     })
 
 STATE_NAME_LABEL_MAP = {
@@ -246,6 +254,12 @@ async def async_setup(hass, config):
         else:
             _LOGGER.error('Entity %s is not an INSTEON device', entity_id)
 
+    def load_all_aldb(service):
+        """Load the ALDB for all devices."""
+        reload = service.data.get(SRV_LOAD_DB_RELOAD)
+        for entity in hass.data[DOMAIN].get('entities'):
+            entity.load_aldb(reload)
+
     def print_aldb(service):
         """Print the All-Link Database for a device."""
         # For now this sends logs to the log file.
@@ -279,6 +293,16 @@ async def async_setup(hass, config):
         housecode = service.data.get(SRV_HOUSECODE)
         insteon_modem.x10_all_lights_on(housecode)
 
+    def scene_on(service):
+        """Trigger an INSTEON scene ON."""
+        group = service.data.get(SRV_ALL_LINK_GROUP)
+        insteon_modem.trigger_group_on(group)
+
+    def scene_off(service):
+        """Trigger an INSTEON scene ON."""
+        group = service.data.get(SRV_ALL_LINK_GROUP)
+        insteon_modem.trigger_group_off(group)
+
     def _register_services():
         hass.services.register(DOMAIN, SRV_ADD_ALL_LINK, add_all_link,
                                schema=ADD_ALL_LINK_SCHEMA)
@@ -299,6 +323,15 @@ async def async_setup(hass, config):
         hass.services.register(DOMAIN, SRV_X10_ALL_LIGHTS_ON,
                                x10_all_lights_on,
                                schema=X10_HOUSECODE_SCHEMA)
+        hass.services.register(DOMAIN, SRV_SCENE_ON,
+                               scene_on,
+                               schema=TRIGGER_SCENE_SCHEMA)
+        hass.services.register(DOMAIN, SRV_SCENE_OFF,
+                               scene_off,
+                               schema=TRIGGER_SCENE_SCHEMA)
+        hass.services.register(DOMAIN, SRV_LOAD_ALL_DATABASES,
+                               load_all_aldb,
+                               schema=LOAD_ALL_ALDB_SCHEMA)
         _LOGGER.debug("Insteon Services registered")
 
     def _fire_button_on_off_event(address, group, val):

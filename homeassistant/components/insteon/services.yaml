@@ -48,3 +48,21 @@ x10_all_lights_off:
     housecode:
       description: X10 house code
       example: c
+scene_on:
+  description: Trigger an INSTEON scene to turn ON.
+  fields:
+    group:
+      description: INSTEON group or scene number
+      example: 26
+scene_off:
+  description: Trigger an INSTEON scene to turn OFF.
+  fields:
+    group:
+      description: INSTEON group or scene number
+      example: 26
+load_all_databases:
+  description: Load the All-Link database for all INSTEON devices.
+  fields:
+    reload:
+      description: Reload all records. If true the current records are cleared from memory (does not effect the device) and the records are reloaded. If false the existing records are left in place and only missing records are added. Default is false.
+      example: 'true'
