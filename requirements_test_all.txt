@@ -198,7 +198,6 @@ netdisco==2.6.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-# homeassistant.components.vallox
 numpy==1.16.3
 
 # homeassistant.components.google
