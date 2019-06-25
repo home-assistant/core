@@ -2,6 +2,7 @@
 import logging
 from datetime import timedelta
 
+import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -370,6 +371,9 @@ class ThermostatData:
             self.homestatus = pyatmo.HomeStatus(self.auth, home=self.home)
         except TypeError:
             _LOGGER.error("Error when getting homestatus.")
+            return
+        except requests.exceptions.Timeout:
+            _LOGGER.warning("Timed out when connecting to Netatmo server.")
             return
         _LOGGER.debug("Following is the debugging output for homestatus:")
         _LOGGER.debug(self.homestatus.rawData)
