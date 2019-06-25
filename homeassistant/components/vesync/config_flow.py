@@ -7,7 +7,9 @@ from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import callback
 from homeassistant.const import (CONF_TIME_ZONE, CONF_USERNAME, CONF_PASSWORD)
-from .const import DOMAIN
+
+
+DOMAIN = 'vesync'
 
 _LOGGER = logging.getLogger(__name__)
 
