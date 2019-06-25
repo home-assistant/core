@@ -924,8 +924,23 @@ class ZWaveDeviceEntityValues():
             component, DOMAIN,
             compute_value_unique_id(self._node, self.primary))
         if entity_id is None:
-            value_name = _value_name(self.primary)
-            entity_id = generate_entity_id(component + '.{}', value_name, [])
+            _LOGGER.debug("No entity id for unique id %s, generating one",
+                          compute_value_unique_id(self._node, self.primary))
+
+            node = self._node.node_id
+            node_key = 'node-{}'.format(node)
+            node_entity = self._hass.data[DATA_DEVICES].get(node_key)
+            if not node_entity:
+                _LOGGER.warning("Could not find node entity for %s", node_key)
+                return
+
+            node_base_id = node_entity.entity_id[len(DOMAIN) + 1:]
+            suggested_id = '{} {}'.format(node_base_id, self.primary.label)
+            entity_id = generate_entity_id(component + '.{}', suggested_id,
+                                           hass=self._hass)
+
+            _LOGGER.debug("Generated entity id: %s", entity_id)
+
         node_config = self._device_config.get(entity_id)
 
         # Configure node
@@ -960,6 +975,7 @@ class ZWaveDeviceEntityValues():
             self._workaround_ignore = True
             return
 
+        device.entity_id = entity_id
         self._entity = device
 
         @callback
