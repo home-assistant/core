@@ -13,16 +13,16 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_COMPORT = 'rs485'
 DEFAULT_ADDRESS = 2
-TEST_MODE = False
+TEST_MODE = False                      # For testing code when no sunlight.
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COMPORT): cv.string,
     vol.Optional(CONF_ADDRESS, default=DEFAULT_ADDRESS): cv.positive_int,
 })
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Aurora ABB PowerOne device."""
 
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up the Aurora ABB PowerOne device."""
     from aurorapy.client import AuroraSerialClient
 
     devices = []
@@ -31,12 +31,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME, "Solar PV")
     address = config.get(CONF_ADDRESS, 1)
 
-    _LOGGER.debug("Intitialising com port={} address={}".format(
-        comport, address))
+    _LOGGER.debug("Intitialising com port=%s address=%s", comport, address)
     client = AuroraSerialClient(address, comport, parity='N', timeout=1)
 
     devices.append(AuroraABBSolarPVMonitorSensor(client, name, 'Power'))
     add_devices(devices, True)
+
 
 class AuroraABBSolarPVMonitorSensor(Entity):
     """Representation of a Sensor."""
@@ -46,7 +46,6 @@ class AuroraABBSolarPVMonitorSensor(Entity):
         self._name = name + " " + typename
         self.client = client
         self._state = None
-
 
     @property
     def name(self):
@@ -85,8 +84,8 @@ class AuroraABBSolarPVMonitorSensor(Entity):
                 power_watts = self.client.measure(3, True)
                 self.client.close()
             self._state = round(power_watts, 1)
-            #_LOGGER.debug("Got reading %fW" % self._state)
-        except AuroraError as e:
+            # _LOGGER.debug("Got reading %fW" % self._state)
+        except AuroraError as error:
             # aurorapy does not have different exceptions (yet) for dealing
             # with timeout vs other comms errors.
             # This means the (normal) situation of no response during darkness
@@ -95,11 +94,11 @@ class AuroraABBSolarPVMonitorSensor(Entity):
             # released, this could be modified to :
             # except AuroraTimeoutError as e:
             # Workaround: look at the text of the exception
-            if "No response after" in str(e):
+            if "No response after" in str(error):
                 _LOGGER.debug("No response from inverter (could be dark)")
             else:
-                #print("Exception!!: {}".format(str(e)))
-                raise e
+                # print("Exception!!: {}".format(str(e)))
+                raise error
             self._state = None
         finally:
             if self.client.serline.isOpen():
