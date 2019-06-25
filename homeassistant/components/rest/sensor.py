@@ -76,8 +76,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             auth = HTTPBasicAuth(username, password)
     else:
         auth = None
-    rest = RestData(method, resource, auth, headers, payload, verify_ssl,
-                    timeout)
+    rest = RestData(method, resource, auth, headers,
+                    payload.encode('utf-8') if payload else None,
+                    verify_ssl, timeout)
     rest.update()
     if rest.data is None:
         raise PlatformNotReady
