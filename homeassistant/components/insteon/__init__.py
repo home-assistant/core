@@ -76,6 +76,7 @@ def set_default_port(schema: Dict) -> Dict:
             schema[CONF_IP_PORT] = 25105
     return schema
 
+
 CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
     cv.deprecated(CONF_PLATFORM), vol.Schema({
         vol.Required(CONF_ADDRESS): cv.string,
@@ -86,6 +87,7 @@ CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
         vol.Optional(CONF_PLATFORM): cv.string,
     }))
 
+
 CONF_X10_SCHEMA = vol.All(
     vol.Schema({
         vol.Required(CONF_HOUSECODE): cv.string,
@@ -93,6 +95,7 @@ CONF_X10_SCHEMA = vol.All(
         vol.Required(CONF_PLATFORM): cv.string,
         vol.Optional(CONF_DIM_STEPS): vol.Range(min=2, max=255)
         }))
+
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(
@@ -117,34 +120,42 @@ CONFIG_SCHEMA = vol.Schema({
         set_default_port)
     }, extra=vol.ALLOW_EXTRA)
 
+
 ADD_ALL_LINK_SCHEMA = vol.Schema({
     vol.Required(SRV_ALL_LINK_GROUP): vol.Range(min=0, max=255),
     vol.Required(SRV_ALL_LINK_MODE): vol.In([SRV_CONTROLLER, SRV_RESPONDER]),
     })
 
+
 DEL_ALL_LINK_SCHEMA = vol.Schema({
     vol.Required(SRV_ALL_LINK_GROUP): vol.Range(min=0, max=255),
     })
+
 
 LOAD_ALDB_SCHEMA = vol.Schema({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Optional(SRV_LOAD_DB_RELOAD, default='false'): cv.boolean,
     })
 
+
 PRINT_ALDB_SCHEMA = vol.Schema({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     })
+
 
 X10_HOUSECODE_SCHEMA = vol.Schema({
     vol.Required(SRV_HOUSECODE): vol.In(HOUSECODES),
     })
 
+
 TRIGGER_SCENE_SCHEMA = vol.Schema({
     vol.Required(SRV_ALL_LINK_GROUP): vol.Range(min=0, max=255)})
+
 
 LOAD_ALL_ALDB_SCHEMA = vol.Schema({
     vol.Optional(SRV_LOAD_DB_RELOAD, default='false'): cv.boolean,
     })
+
 
 STATE_NAME_LABEL_MAP = {
     'keypadButtonA': 'Button A',
