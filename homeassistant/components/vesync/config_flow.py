@@ -15,11 +15,10 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def configured_instances(hass):
     """Return already configured instances"""
-    return set(
-        entry.data[CONF_USERNAME]
-        for entry in hass.config_entries.async_entries(DOMAIN)
-    )
-
+    entries = hass.config_entries.async_entries(DOMAIN)
+    if entries:
+        return entries[0]
+    return None
 
 @config_entries.HANDLERS.register(DOMAIN)
 class VeSyncFlowHandler(config_entries.ConfigFlow):
@@ -29,6 +28,9 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
 
     def __init__(self):
         """Instantiate config flow"""
+        self._username = None
+        self._password = None
+        self._time_zone = None
         self.data_schema = OrderedDict()
         self.data_schema[vol.Required(CONF_USERNAME)] = str
         self.data_schema[vol.Required(CONF_PASSWORD)] = str
@@ -48,22 +50,25 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start"""
+        
+        if configured_instances(self.hass) is not None:
+            return self.async_abort({CONF_USERNAME: 'identifier_exists'})
 
         if not user_input:
             return await self._show_form()
+        
+        self._username = user_input[CONF_USERNAME]
+        self._password = user_input[CONF_PASSWORD]
+        self._time_zone = user_input.get(CONF_TIME_ZONE, None)
 
-        if user_input[CONF_USERNAME] in configured_instances(self.hass):
-            return await self._show_form({CONF_USERNAME: 'identifier_exists'})
+        return await self.async_step_final()
 
-        username = user_input[CONF_USERNAME]
-        password = user_input[CONF_PASSWORD]
-        time_zone = user_input[CONF_TIME_ZONE]
-
-        return self.async_create_entry(
-            title=user_input[CONF_USERNAME],
-            data={
-                CONF_USERNAME: username,
-                CONF_PASSWORD: password,
-                CONF_TIME_ZONE: time_zone,
-            }
+    async def async_step_final(self):
+            return self.async_create_entry(
+                title=user_input[CONF_USERNAME],
+                data={
+                    CONF_USERNAME: self.username,
+                    CONF_PASSWORD: self.password,
+                    CONF_TIME_ZONE: self.time_zone,
+            },
         )

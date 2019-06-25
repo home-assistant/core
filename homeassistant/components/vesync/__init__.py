@@ -11,6 +11,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.components.vesync import config_flow
 from .common import async_process_devices, CONF_FANS, CONF_LIGHTS, CONF_SWITCHES
+from .config_flow import configured_instances
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,15 +41,16 @@ async def async_setup(hass, config):
 
     conf = config[DOMAIN]
 
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={'source': SOURCE_IMPORT},
-            data={
-                CONF_USERNAME: conf[CONF_USERNAME],
-                CONF_PASSWORD: conf[CONF_PASSWORD],
-                CONF_TIME_ZONE: conf.get(CONF_TIME_ZONE)
-            }))
+    if conf[CONF_USERNAME] not in configured_instances(hass):
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={'source': SOURCE_IMPORT},
+                data={
+                    CONF_USERNAME: conf[CONF_USERNAME],
+                    CONF_PASSWORD: conf[CONF_PASSWORD],
+                    CONF_TIME_ZONE: conf.get(CONF_TIME_ZONE)
+                }))
 
     return True
 
