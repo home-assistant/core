@@ -91,15 +91,12 @@ class AudioBooksData:
                 list_info[list_idx]["lookup_name"] = item["title"]
                 list_idx = list_idx + 1
 
-        self.hass.states.async_set("sensor.audiobookslist", 0, list_info)
+        self.hass.states.async_set("sensor.audiobookslist", -1, list_info)
         import homeassistant.components.ais_ai_service as ais_ai
         if ais_ai.CURR_ENTITIE == 'input_select.book_autor':
             ais_ai.set_curr_entity(self.hass, 'sensor.audiobookslist')
-            if len(list_info) > 1:
-                self.hass.services.call(
-                    'ais_ai_service', 'say_it', {"text": "Mamy " + str(len(list_info)) + " , wybierz książkę"})
-            else:
-                self.hass.services.call('ais_audiobooks_service', 'get_chapters', {"id": 0})
+            self.hass.services.call(
+                'ais_ai_service', 'say_it', {"text": "Mamy " + str(len(list_info)) + " , wybierz książkę"})
 
     def get_chapters(self, call):
         """Load chapters for the selected book."""

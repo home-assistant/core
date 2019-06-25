@@ -300,7 +300,7 @@
         val: true
 
 - id: '201906171602001'
-  alias: 'Get Books'
+  alias: 'AIS Get Books'
   initial_state: True
   hide_entity: True
   trigger:
@@ -310,3 +310,17 @@
     - service: ais_audiobooks_service.get_books
       data_template:
         author: "{{ states('input_select.book_autor') }}"
+
+- id: '201906251757001'
+  alias: 'AIS Change Equalizer Mode'
+  initial_state: True
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_select.media_player_sound_mode
+  action:
+    - service: media_player.select_sound_mode
+      data_template:
+        entity_id: "media_player.wbudowany_glosnik"
+        sound_mode: "{{ states('input_select.media_player_sound_mode') }}"
+

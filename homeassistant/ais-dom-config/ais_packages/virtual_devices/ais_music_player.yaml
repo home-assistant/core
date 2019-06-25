@@ -16,16 +16,16 @@ input_select:
   media_player_sound_mode:
     name: 'Tryb dźwięku:'
     options:
-      - "Normal"
-      - "Boost"
-      - "Treble"
-      - "Pop"
-      - "Rock"
-      - "Clasic"
-      - "Jazz"
-      - "Dance"
+      - "NORMAL"
+      - "BOOST"
+      - "TREBLE"
+      - "POP"
+      - "ROCK"
+      - "CLASSIC"
+      - "JAZZ"
+      - "DANCE"
       - "R&P"
-    initial: "Normal"
+    initial: "NORMAL"
 
 group:
   music_player:

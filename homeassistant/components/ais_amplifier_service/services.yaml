@@ -1,0 +1,21 @@
+# Describes the format for available AIS cloud services
+change_work_mode:
+  description: Ustawienie trybu działania wzmacniacza
+  fields:
+    mode:
+      description: Tryb dzialania wzmacniacza, wybór z listy ("AX", "BT")
+      example: '{"mode": "AX"}'
+
+change_sound_mode:
+  description: Ustawienie trybu działania equalizera
+  fields:
+    mode:
+      description: Tryb dzialania equalizera, wybór z listy  ("NORMAL", "BOOST", "TREBLE", "POP", "ROCK", "CLASSIC", "JAZZ", "DANCE", "R&P")
+      example: '{"mode": "ROCK"}'
+
+exec_command:
+  description: Przesłanie instrukcji sterującej do wzmacniacza
+  fields:
+    command:
+      description: Instrukcja sterująca
+      example: '{"command": "V16"}'

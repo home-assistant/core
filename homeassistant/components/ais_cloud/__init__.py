@@ -648,11 +648,7 @@ class AisColudData:
             attr = state.attributes
             track = attr.get(int(call.data['id']))
 
-            # update list
-            if media_source == ais_global.G_AN_FAVORITE:
-                self.hass.states.async_set(track_list, int(call.data['id']), attr)
-
-            elif media_source == ais_global.G_AN_NEWS:
+            if media_source == ais_global.G_AN_NEWS:
                 self.hass.services.call('ais_cloud', 'select_rss_news_item', {"id": call.data['id']})
 
             elif media_source in (ais_global.G_AN_PODCAST_NAME, ais_global.G_AN_FAVORITE)\

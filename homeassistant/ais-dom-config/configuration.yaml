@@ -130,5 +130,4 @@ ais_spotify_service:
 ais_wifi_service:
 
 #
-tts:
-  - platform: ais_tts
+ais_amplifier_service:

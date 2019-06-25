@@ -68,7 +68,8 @@ class ExoPlayerDevice(MediaPlayerDevice):
         )
 
     def select_sound_mode(self, sound_mode):
-        pass
+        self._sound_mode = sound_mode
+        self.hass.services.call('ais_amplifier_service', 'change_sound_mode', {"mode": sound_mode})
 
     def clear_playlist(self):
         pass
@@ -86,6 +87,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
         self._media_title = None
         self._media_source = None
         self._album_name = None
+        self._sound_mode = 'NORMAL'
         self._playlists = [ais_global.G_AN_RADIO,
                            ais_global.G_AN_PODCAST,
                            ais_global.G_AN_MUSIC,
@@ -214,7 +216,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
     @property
     def sound_mode(self):
         """Return the current matched sound mode."""
-        return "NORMAL"
+        return self._sound_mode
 
     @property
     def sound_mode_list(self):
