@@ -39,7 +39,8 @@ def async_setup(hass, config):
     os.system("su -c 'dmesg -n 1'")
     # set permissions to /dev/ttyS0
     os.system("su -c 'chmod 666 /dev/ttyS0'")
-
+    # disable tone on start
+    os.system(r'su -c "stty -F /dev/ttyS0 9600 && echo COM+TONEOFF\r\n > /dev/ttyS0"')
     return True
 
 
@@ -58,6 +59,11 @@ def _change_sound_mode(hass, call):
     os.system(comm)
 
 
+def set_bt_mode():
+    comm = r'su -c "stty -F /dev/ttyS0 9600 && echo COM+MBT\r\n > /dev/ttyS0"'
+    os.system(comm)
+
+
 @asyncio.coroutine
 def _change_work_mode(hass, call):
     # set the mode
@@ -65,12 +71,23 @@ def _change_work_mode(hass, call):
         _LOGGER.error("No mode in call")
         return
 
+    from threading import Timer
     mode = call.data['mode']
     if mode not in ("BT", "AX"):
         _LOGGER.error("Unrecognized mode in call: " + mode)
         return
-    comm = r'su -c "stty -F /dev/ttyS0 9600 && echo COM+M{}\r\n > /dev/ttyS0"'.format(mode)
-    os.system(comm)
+    if mode == "BT":
+        yield from hass.services.async_call('ais_ai_service', 'say_it', {"text": "Głośnik w trybie Bluetooth "})
+        # change 2 seconds after click
+        t = Timer(2, set_bt_mode)
+        t.start()
+    else:
+        comm = r'su -c "stty -F /dev/ttyS0 9600 && echo COM+MAX\r\n > /dev/ttyS0"'
+        os.system(comm)
+        # say 2 seconds after change
+        import time
+        time.sleep(2)
+        yield from hass.services.async_call('ais_ai_service', 'say_it', {"text": "Głośnik w trybie AUX-IN "})
 
 
 @asyncio.coroutine
