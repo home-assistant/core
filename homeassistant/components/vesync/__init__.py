@@ -80,7 +80,7 @@ async def async_setup_entry(hass, config_entry):
         _LOGGER.error("Unable to login to VeSync")
         return False
 
-    device_tuple = await async_process_devices(hass, manager)
+    device_dict = await async_process_devices(hass, manager)
 
     hass.data[DOMAIN] = {
         'manager': manager
@@ -90,13 +90,13 @@ async def async_setup_entry(hass, config_entry):
 
     lights = hass.data[DOMAIN][CONF_LIGHTS] = []
     switches = hass.data[DOMAIN][CONF_SWITCHES] = []
-    fans = hass.data[DOMAIN][CONF_FANS]
+    fans = hass.data[DOMAIN][CONF_FANS] = []
 
-    if device_tuple['lights']:
-        hass.async_create_task(forward_setup(config_entry, 'lights'))
-    if device_tuple['switches']:
+    if device_dict[CONF_LIGHTS]:
+        hass.async_create_task(forward_setup(config_entry, 'light'))
+    if device_dict[CONF_SWITCHES]:
         hass.async_create_task(forward_setup(config_entry, 'switch'))
-    if device_tuple['fans']:
+    if device_dict[CONF_FANS]:
         hass.async_create_task(forward_setup(config_entry, 'fan'))
 
     return True

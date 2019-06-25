@@ -7,7 +7,7 @@
         "data": {
           "username": "Email Address",
           "password": "Password",
-          "Time Zone": "Set custom time zone (optional)"
+          "time_zone": "Set custom time zone (optional)"
         }
       }
     },
