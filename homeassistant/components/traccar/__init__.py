@@ -5,7 +5,6 @@ import voluptuous as vol
 from aiohttp import web
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import ATTR_BATTERY
 from homeassistant.const import (
     HTTP_UNPROCESSABLE_ENTITY, HTTP_OK, CONF_WEBHOOK_ID)
 from homeassistant.helpers import config_entry_flow
