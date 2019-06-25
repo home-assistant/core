@@ -1,0 +1,10 @@
+{
+  "domain": "vallox",
+  "name": "Vallox",
+  "documentation": "https://www.home-assistant.io/components/vallox",
+  "requirements": [
+    "vallox-websocket-api==1.5.2"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}
