@@ -96,7 +96,7 @@ async def async_setup(hass, config):
 
     client = Vallox(host)
     state_proxy = ValloxStateProxy(hass, client)
-    service_handler = ValloxServiceHandler(client, state_proxy)
+    service_handler = ValloxServiceHandler(hass, client, state_proxy)
 
     hass.data[DOMAIN] = {
         'client': client,
@@ -176,8 +176,9 @@ class ValloxStateProxy:
 class ValloxServiceHandler:
     """Services implementation."""
 
-    def __init__(self, client, state_proxy):
+    def __init__(self, hass, client, state_proxy):
         """Initialize the proxy."""
+        self._hass = hass
         self._client = client
         self._state_proxy = state_proxy
 
