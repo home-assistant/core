@@ -261,6 +261,7 @@ class Entity:
             attr[ATTR_UNIT_OF_MEASUREMENT] = unit_of_measurement
 
         entry = self.registry_entry
+        # pylint: disable=consider-using-ternary
         name = (entry and entry.name) or self.name
         if name is not None:
             attr[ATTR_FRIENDLY_NAME] = name
