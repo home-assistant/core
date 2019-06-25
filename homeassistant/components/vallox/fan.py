@@ -142,9 +142,9 @@ class ValloxFan(FanEntity):
                 # involved.
                 await self._state_proxy.async_update(None)
 
-            except IOError as io_err:
+            except OSError as err:
                 self._available = False
-                _LOGGER.error("Error turning on: %s", io_err)
+                _LOGGER.error("Error turning on: %s", err)
         else:
             _LOGGER.error("Already on")
 
@@ -158,8 +158,8 @@ class ValloxFan(FanEntity):
                 # Same as for turn_on method.
                 await self._state_proxy.async_update(None)
 
-            except IOError as io_err:
+            except OSError as err:
                 self._available = False
-                _LOGGER.error("Error turning off: %s", io_err)
+                _LOGGER.error("Error turning off: %s", err)
         else:
             _LOGGER.error("Already off")

@@ -166,8 +166,8 @@ class ValloxStateProxy:
                 self._client.get_profile)
             self._valid = True
 
-        except IOError as io_err:
-            _LOGGER.error("Error during state cache update: %s", io_err)
+        except OSError as err:
+            _LOGGER.error("Error during state cache update: %s", err)
             self._valid = False
 
         async_dispatcher_send(self._hass, SIGNAL_VALLOX_STATE_UPDATE)
@@ -190,8 +190,8 @@ class ValloxServiceHandler:
                 self._client.set_profile, STR_TO_PROFILE[profile])
             return True
 
-        except IOError as io_err:
-            _LOGGER.error("Error setting ventilation profile: %s", io_err)
+        except OSError as err:
+            _LOGGER.error("Error setting ventilation profile: %s", err)
             return False
 
     async def async_set_profile_fan_speed_home(
@@ -205,9 +205,8 @@ class ValloxServiceHandler:
                 {METRIC_KEY_PROFILE_FAN_SPEED_HOME: fan_speed})
             return True
 
-        except IOError as io_err:
-            _LOGGER.error("Error setting fan speed for Home profile: %s",
-                          io_err)
+        except OSError as err:
+            _LOGGER.error("Error setting fan speed for Home profile: %s", err)
             return False
 
     async def async_set_profile_fan_speed_away(
@@ -221,9 +220,8 @@ class ValloxServiceHandler:
                 {METRIC_KEY_PROFILE_FAN_SPEED_AWAY: fan_speed})
             return True
 
-        except IOError as io_err:
-            _LOGGER.error("Error setting fan speed for Away profile: %s",
-                          io_err)
+        except OSError as err:
+            _LOGGER.error("Error setting fan speed for Away profile: %s", err)
             return False
 
     async def async_set_profile_fan_speed_boost(
@@ -237,9 +235,9 @@ class ValloxServiceHandler:
                 {METRIC_KEY_PROFILE_FAN_SPEED_BOOST: fan_speed})
             return True
 
-        except IOError as io_err:
+        except OSError as err:
             _LOGGER.error("Error setting fan speed for Boost profile: %s",
-                          io_err)
+                          err)
             return False
 
     async def async_handle(self, service):
