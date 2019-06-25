@@ -273,7 +273,7 @@ async def test_import_duplicate_aborted(hass):
     assert flow['reason'] == 'already_configured'
 
 
-async def test_discovery_connection(hass, mock_auth, mock_entry_setup):
+async def test_duplicate_discovery(hass, mock_auth, mock_entry_setup):
     """Test a duplicate discovery in progress is ignored."""
     result = await hass.config_entries.flow.async_init(
         'tradfri', context={'source': 'zeroconf'}, data={
