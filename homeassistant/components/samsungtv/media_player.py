@@ -16,6 +16,8 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_TIMEOUT, STATE_OFF,
     STATE_ON)
+from homeassistant.components.wake_on_lan import (
+    DOMAIN as WOL_DOMAIN, SERVICE_SEND_MAGIC_PACKET)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 
@@ -99,7 +101,6 @@ class SamsungTVDevice(MediaPlayerDevice):
         """Initialize the Samsung device."""
         from samsungctl import exceptions
         from samsungctl import Remote
-        import wakeonlan
         # Save a reference to the imported classes
         self._exceptions_class = exceptions
         self._remote_class = Remote
@@ -108,7 +109,6 @@ class SamsungTVDevice(MediaPlayerDevice):
         self._uuid = uuid
         # Set custom broadcast address for e.g. WOL across subnets
         self._broadcast = broadcast
-        self._wol = wakeonlan
         # Assume that the TV is not muted
         self._muted = False
         # Assume that the TV is in Play mode
@@ -286,10 +286,15 @@ class SamsungTVDevice(MediaPlayerDevice):
         """Turn the media player on."""
         if self._mac:
             if self._broadcast:
-                self._wol.send_magic_packet(
-                    self._mac, ip_address=self._broadcast)
+                await self.hass.service.async_call(
+                    WOL_DOMAIN, SERVICE_SEND_MAGIC_PACKET, {
+                        'mac': self._mac,
+                        'broadcast_address': self._broadcast
+                    })
             else:
-                self._wol.send_magic_packet(self._mac)
+                await self.hass.service.async_call(
+                    WOL_DOMAIN, SERVICE_SEND_MAGIC_PACKET,
+                    {'mac': self._mac})
         else:
             self.send_key('KEY_POWERON')
 
