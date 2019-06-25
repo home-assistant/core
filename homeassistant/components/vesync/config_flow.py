@@ -61,10 +61,7 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
         self._password = user_input[CONF_PASSWORD]
         self._time_zone = user_input.get(CONF_TIME_ZONE, None)
 
-        return await self.async_step_final()
-
-    async def async_step_final(self):
-            return self.async_create_entry(
+        return self.async_create_entry(
                 title=self._username,
                 data={
                     CONF_USERNAME: self._username,
