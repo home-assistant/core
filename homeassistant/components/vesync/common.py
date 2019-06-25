@@ -23,7 +23,7 @@ async def async_process_devices(hass, manager):
         manager_update = manager.update()
         return manager_update
 
-    await hass.add_executor_job(update)
+    await hass.async_add_executor_job(update)
 
     if manager.bulbs:
         devices[CONF_LIGHTS].extend(manager.bulbs)
