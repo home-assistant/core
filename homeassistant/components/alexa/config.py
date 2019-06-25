@@ -42,11 +42,11 @@ class AbstractConfig:
             self._unsub_proactive_report = self.hass.async_create_task(
                 async_enable_proactive_mode(self.hass, self)
             )
-        resp = await self._unsub_proactive_report
-
-        # Failed to start reporting.
-        if resp is None:
+        try:
+            await self._unsub_proactive_report
+        except Exception:  # pylint: disable=broad-except
             self._unsub_proactive_report = None
+            raise
 
     async def async_disable_proactive_mode(self):
         """Disable proactive mode."""
