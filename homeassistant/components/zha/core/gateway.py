@@ -28,7 +28,7 @@ from .const import (
     DEVICE_INFO, DEVICE_JOINED, DEVICE_REMOVED, DOMAIN, IEEE, LOG_ENTRY,
     LOG_OUTPUT, MODEL, NWK, ORIGINAL, RADIO, RADIO_DESCRIPTION, RAW_INIT,
     SIGNAL_REMOVE, SIGNATURE, TYPE, ZHA, ZHA_GW_MSG, ZIGPY, ZIGPY_DECONZ,
-    ZIGPY_XBEE)
+    ZIGPY_XBEE, UNKNOWN_MANUFACTURER, UNKNOWN_MODEL)
 from .device import DeviceStatus, ZHADevice
 from .discovery import (
     async_create_device_entity, async_dispatch_discovery_info,
@@ -119,13 +119,7 @@ class ZHAGateway:
         """Handle a device initialization without quirks loaded."""
         if device.nwk == 0x0000:
             return
-        endpoint_ids = device.endpoints.keys()
-        ept_id = next((ept_id for ept_id in endpoint_ids if ept_id != 0), None)
-        manufacturer = 'Unknown'
-        model = 'Unknown'
-        if ept_id is not None:
-            manufacturer = device.endpoints[ept_id].manufacturer
-            model = device.endpoints[ept_id].model
+
         async_dispatcher_send(
             self._hass,
             ZHA_GW_MSG,
@@ -133,8 +127,8 @@ class ZHAGateway:
                 TYPE: RAW_INIT,
                 NWK: device.nwk,
                 IEEE: str(device.ieee),
-                MODEL: model,
-                ATTR_MANUFACTURER: manufacturer,
+                MODEL: device.model if device.model else UNKNOWN_MODEL,
+                ATTR_MANUFACTURER: device.manufacturer if device.manufacturer else UNKNOWN_MANUFACTURER,
                 SIGNATURE: device.get_signature()
             }
         )

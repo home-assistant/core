@@ -16,9 +16,9 @@ from .const import (
     ATTR_MANUFACTURER, POWER_CONFIGURATION_CHANNEL, SIGNAL_AVAILABLE, IN, OUT,
     ATTR_CLUSTER_ID, ATTR_ATTRIBUTE, ATTR_VALUE, ATTR_COMMAND, SERVER,
     ATTR_COMMAND_TYPE, ATTR_ARGS, CLIENT_COMMANDS, SERVER_COMMANDS,
-    ATTR_ENDPOINT_ID, IEEE, MODEL, NAME, UNKNOWN, QUIRK_APPLIED,
+    ATTR_ENDPOINT_ID, IEEE, MODEL, NAME, QUIRK_APPLIED,
     QUIRK_CLASS, ZDO_CHANNEL, MANUFACTURER_CODE, POWER_SOURCE, MAINS_POWERED,
-    BATTERY_OR_UNKNOWN, NWK
+    BATTERY_OR_UNKNOWN, NWK, UNKNOWN_MANUFACTURER, UNKNOWN_MODEL
 )
 from .channels import EventRelayChannel
 
@@ -39,22 +39,10 @@ class ZHADevice:
         """Initialize the gateway."""
         self.hass = hass
         self._zigpy_device = zigpy_device
-        # Get first non ZDO endpoint id to use to get manufacturer and model
-        endpoint_ids = zigpy_device.endpoints.keys()
-        self._manufacturer = UNKNOWN
-        self._model = UNKNOWN
-        ept_id = next((ept_id for ept_id in endpoint_ids if ept_id != 0), None)
-        if ept_id is not None:
-            self._manufacturer = zigpy_device.endpoints[ept_id].manufacturer
-            self._model = zigpy_device.endpoints[ept_id].model
         self._zha_gateway = zha_gateway
         self.cluster_channels = {}
         self._relay_channels = {}
         self._all_channels = []
-        self._name = "{} {}".format(
-            self.manufacturer,
-            self.model
-        )
         self._available = False
         self._available_signal = "{}_{}_{}".format(
             self.name, self.ieee, SIGNAL_AVAILABLE)
@@ -74,7 +62,7 @@ class ZHADevice:
     @property
     def name(self):
         """Return device name."""
-        return self._name
+        return "{} {}".format(self.manufacturer, self.model)
 
     @property
     def ieee(self):
@@ -84,12 +72,16 @@ class ZHADevice:
     @property
     def manufacturer(self):
         """Return manufacturer for device."""
-        return self._manufacturer
+        if self._zigpy_device.manufacturer is None:
+            return UNKNOWN_MANUFACTURER
+        return self._zigpy_device.manufacturer
 
     @property
     def model(self):
         """Return model for device."""
-        return self._model
+        if self._zigpy_device.model is None:
+            return UNKNOWN_MODEL
+        return self._zigpy_device.model
 
     @property
     def manufacturer_code(self):
