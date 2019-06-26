@@ -177,8 +177,11 @@ class Life360Scanner:
         return prev_seen
 
     def _update_member(self, member, dev_id):
-        loc = member.get('location', {})
-        last_seen = _utc_from_ts(loc.get('timestamp'))
+        loc = member.get('location')
+        try:
+            last_seen = _utc_from_ts(loc.get('timestamp'))
+        except AttributeError:
+            last_seen = None
         prev_seen = self._prev_seen(dev_id, last_seen)
 
         if not loc:
