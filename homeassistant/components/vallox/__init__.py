@@ -96,7 +96,7 @@ async def async_setup(hass, config):
 
     client = Vallox(host)
     state_proxy = ValloxStateProxy(hass, client)
-    service_handler = ValloxServiceHandler(hass, client, state_proxy)
+    service_handler = ValloxServiceHandler(client, state_proxy)
 
     hass.data[DOMAIN] = {
         'client': client,
@@ -160,10 +160,8 @@ class ValloxStateProxy:
         _LOGGER.debug("Updating Vallox state cache")
 
         try:
-            self._metric_cache = await self._hass.async_add_executor_job(
-                self._client.fetch_metrics)
-            self._profile = await self._hass.async_add_executor_job(
-                self._client.get_profile)
+            self._metric_cache = await self._client.fetch_metrics()
+            self._profile = await self._client.get_profile()
             self._valid = True
 
         except OSError as err:
@@ -176,9 +174,8 @@ class ValloxStateProxy:
 class ValloxServiceHandler:
     """Services implementation."""
 
-    def __init__(self, hass, client, state_proxy):
+    def __init__(self, client, state_proxy):
         """Initialize the proxy."""
-        self._hass = hass
         self._client = client
         self._state_proxy = state_proxy
 
@@ -187,8 +184,7 @@ class ValloxServiceHandler:
         _LOGGER.debug("Setting ventilation profile to: %s", profile)
 
         try:
-            await self._hass.async_add_executor_job(
-                self._client.set_profile, STR_TO_PROFILE[profile])
+            await self._client.set_profile(STR_TO_PROFILE[profile])
             return True
 
         except OSError as err:
@@ -201,8 +197,7 @@ class ValloxServiceHandler:
         _LOGGER.debug("Setting Home fan speed to: %d%%", fan_speed)
 
         try:
-            await self._hass.async_add_executor_job(
-                self._client.set_values,
+            await self._client.set_values(
                 {METRIC_KEY_PROFILE_FAN_SPEED_HOME: fan_speed})
             return True
 
@@ -216,8 +211,7 @@ class ValloxServiceHandler:
         _LOGGER.debug("Setting Away fan speed to: %d%%", fan_speed)
 
         try:
-            await self._hass.async_add_executor_job(
-                self._client.set_values,
+            await self._client.set_values(
                 {METRIC_KEY_PROFILE_FAN_SPEED_AWAY: fan_speed})
             return True
 
@@ -231,8 +225,7 @@ class ValloxServiceHandler:
         _LOGGER.debug("Setting Boost fan speed to: %d%%", fan_speed)
 
         try:
-            await self._hass.async_add_executor_job(
-                self._client.set_values,
+            await self._client.set_values(
                 {METRIC_KEY_PROFILE_FAN_SPEED_BOOST: fan_speed})
             return True
 

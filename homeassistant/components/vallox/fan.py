@@ -36,8 +36,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     client = hass.data[DOMAIN]['client']
 
-    await hass.async_add_executor_job(
-        client.set_settable_address, METRIC_KEY_MODE, int)
+    client.set_settable_address(METRIC_KEY_MODE, int)
 
     device = ValloxFan(hass.data[DOMAIN]['name'],
                        client,
@@ -134,8 +133,7 @@ class ValloxFan(FanEntity):
 
         if self._state is False:
             try:
-                await self.hass.async_add_executor_job(
-                    self._client.set_values, {METRIC_KEY_MODE: 0})
+                await self._client.set_values({METRIC_KEY_MODE: 0})
 
                 # This state change affects other entities like sensors. Force
                 # an immediate update that can be observed by all parties
@@ -152,8 +150,7 @@ class ValloxFan(FanEntity):
         """Turn the device off."""
         if self._state is True:
             try:
-                await self.hass.async_add_executor_job(
-                    self._client.set_values, {METRIC_KEY_MODE: 5})
+                await self._client.set_values({METRIC_KEY_MODE: 5})
 
                 # Same as for turn_on method.
                 await self._state_proxy.async_update(None)
