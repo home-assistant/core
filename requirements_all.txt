@@ -1215,6 +1215,7 @@ psutil==5.4.8
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 pubnubsub-handler==1.0.3
 =======
 pubnubsub-handler==1.0.7
@@ -1224,6 +1225,9 @@ pubnubsub-handler==1.0.7
 # homeassistant.components.sensor.pushbullet
 =======
 pubnubsub-handler==1.0.7
+=======
+pubnubsub-handler==1.0.8
+>>>>>>> Pubnub to 1.0.8 (#24781)
 =======
 pubnubsub-handler==1.0.8
 >>>>>>> Pubnub to 1.0.8 (#24781)
