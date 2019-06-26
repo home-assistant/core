@@ -176,24 +176,39 @@ class PS4Device(MediaPlayerDevice):
         if status is not None:
             self._games = self.load_games()
             if self._games is not None:
-                self._source_list = list(sorted(self._games.values()))
+                games = []
+                for data in self._games.values():
+                    games.append(data['name'])
+                self._source_list = sorted(games)
+
             self._retry = 0
             self._disconnected = False
             if status.get('status') == 'Ok':
                 title_id = status.get('running-app-titleid')
                 name = status.get('running-app-name')
+
                 if title_id and name is not None:
                     self._state = STATE_PLAYING
+
                     if self._media_content_id != title_id:
                         self._media_content_id = title_id
-                        stored_id = self._games.get(self._media_content_id)
-                        if stored_id.get('is_locked'):
-                            self._media_title = name
-                            self._source = self._media_title
-                            self._media_type = None
-                            asyncio.ensure_future(
-                                self.async_get_title_data(title_id, name))
-                        else:
+
+                        if self._media_content_id in self._games:
+                            store = self._games[self._media_content_id]
+
+                            # If locked get attributes from file.
+                            is_locked = store.get('is_locked')
+                            if is_locked:
+                                self._media_title = store.get('name')
+                                self._source = self._media_title
+                                self._media_image = store.get('cover')
+                                self._media_type = store.get("type")
+                                self.schedule_update()
+                                return
+
+                        # Get data from PS Store if not locked.
+                        asyncio.ensure_future(
+                            self.async_get_title_data(title_id, name))
 
                 else:
                     if self._state != STATE_IDLE:
@@ -279,17 +294,17 @@ class PS4Device(MediaPlayerDevice):
         if self._media_content_id in self._games:
             store = self._games[self._media_content_id]
 
-            if store.get('is_locked') is None or not store.get('is_locked'):
-                if store['title_name'] != self._media_title or\
-                        store['cover'] != self._media_image:
-                    self._games.pop(self._media_content_id)
+            if store.get('name') != self._media_title or\
+                    store.get('cover') != self._media_image:
+                self._games.pop(self._media_content_id)
 
         if self._media_content_id not in self._games:
             self.add_games(
-                self._media_content_id, self._media_title, self._media_image)
+                self._media_content_id, self._media_title,
+                self._media_image, self._media_type)
             self._games = self.load_games()
 
-        self._source_list = list(sorted(self._games.values()))
+        self._source_list = list(sorted(self._games))
 
     def load_games(self):
         """Load games for sources."""
@@ -301,6 +316,13 @@ class PS4Device(MediaPlayerDevice):
         except FileNotFoundError:
             games = {}
             self.save_games(games)
+
+        # Convert existing data to dict format if not already.
+        if games is not None:
+            for game, data in games.items():
+                if type(data) is not dict:
+                    games[game] = {'name': data}
+
         return games
 
     def save_games(self, games):
@@ -315,13 +337,13 @@ class PS4Device(MediaPlayerDevice):
         if games is None:
             self.load_games()
 
-    def add_games(self, title_id, app_name, image, lock_data=False):
+    def add_games(self, title_id, app_name, image, g_type, lock_data=False):
         """Add games to list."""
         games = self._games
         if title_id is not None and title_id not in games:
             game = {title_id: {
-                'title_name': app_name, 'cover': image,
-                'is_locked': lock_data}}
+                'name': app_name, 'cover': image,
+                'type': g_type, 'is_locked': lock_data}}
             games.update(game)
             self.save_games(games)
 
@@ -329,7 +351,7 @@ class PS4Device(MediaPlayerDevice):
         """Set device info for registry."""
         # If cannot get status on startup, assume info from registry.
         if status is None:
-            _LOGGER.info("Assuming status from registry")
+            _LOGGER.info("Assuming info from registry")
             e_registry = await entity_registry.async_get_registry(self.hass)
             d_registry = await device_registry.async_get_registry(self.hass)
             for entity_id, entry in e_registry.entities.items():
@@ -461,7 +483,8 @@ class PS4Device(MediaPlayerDevice):
 
     async def async_select_source(self, source):
         """Select input source."""
-        for title_id, game in self._games.items():
+        for title_id, data in self._games.items():
+            game = data['name']
             if source.lower().encode(encoding='utf-8') == \
                game.lower().encode(encoding='utf-8') \
                or source == title_id:
