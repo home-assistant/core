@@ -8,7 +8,7 @@ from async_timeout import timeout
 from homeassistant import config_entries
 from homeassistant.helpers import config_entry_flow
 
-from .const import DOMAIN, TIMEOUT_DISCOVERY
+from .const import IZONE, TIMEOUT_DISCOVERY
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,5 +36,5 @@ async def _async_has_devices(hass):
 
 
 config_entry_flow.register_discovery_flow(
-    DOMAIN, 'iZone Aircon', _async_has_devices,
+    IZONE, 'iZone Aircon', _async_has_devices,
     config_entries.CONN_CLASS_LOCAL_POLL)

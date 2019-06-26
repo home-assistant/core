@@ -14,7 +14,7 @@ from homeassistant.const import (
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .const import DATA_ADD_ENTRIES, DATA_DISCOVERY_SERVICE, DOMAIN
+from .const import DATA_ADD_ENTRIES, DATA_DISCOVERY_SERVICE, IZONE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ def init_controller(controller: Controller,
     device = ControllerDevice(controller)
     async_add_entries([device])
     async_add_entries(device.zones.values())
-    _LOGGER.info("Controller UID=%s added.", controller.device_uid)
+    _LOGGER.info("Controller UID=%s added", controller.device_uid)
 
 
 class ControllerDevice(ClimateDevice):
@@ -74,7 +74,7 @@ class ControllerDevice(ClimateDevice):
 
         self._device_info = {
             'identifiers': {
-                (DOMAIN, self.unique_id)
+                (IZONE, self.unique_id)
             },
             'name': self.name,
             'manufacturer': 'IZone',
@@ -156,7 +156,7 @@ class ControllerDevice(ClimateDevice):
     @property
     def unique_id(self):
         """Return the ID of the controller device."""
-        return DOMAIN + '_' + self._controller.device_uid
+        return self._controller.device_uid
 
     @property
     def name(self) -> str:
@@ -187,16 +187,16 @@ class ControllerDevice(ClimateDevice):
         return PRECISION_HALVES
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the optional state attributes."""
-        data = super().state_attributes
-        data['supply_temperature'] = show_temp(
-            self.hass, self.supply_temperature, self.temperature_unit,
-            self.precision)
-        data['temp_setpoint'] = show_temp(
-            self.hass, self._controller.temp_setpoint,
-            self.temperature_unit, self.precision)
-        return data
+        return {
+            'supply_temperature': show_temp(
+                self.hass, self.supply_temperature, self.temperature_unit,
+                self.precision),
+            'temp_setpoint': show_temp(
+                self.hass, self._controller.temp_setpoint,
+                self.temperature_unit, self.precision),
+        }
 
     @property
     def current_operation(self):
@@ -251,7 +251,7 @@ class ControllerDevice(ClimateDevice):
     @property
     def fan_list(self):
         """Return the list of available fan modes."""
-        return list(self._fan_to_pizone.keys())
+        return list(self._fan_to_pizone)
 
     @property
     def min_temp(self):
@@ -263,7 +263,7 @@ class ControllerDevice(ClimateDevice):
         """Return the maximum temperature."""
         return self._controller.temp_max
 
-    async def _wrap_and_catch(self, coro):
+    async def wrap_and_catch(self, coro):
         try:
             await coro
         except ConnectionError as ex:
@@ -281,7 +281,7 @@ class ControllerDevice(ClimateDevice):
             return
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
-            await self._wrap_and_catch(
+            await self.wrap_and_catch(
                 self._controller.set_temp_setpoint(temp))
 
     async def async_set_fan_mode(self, fan_mode):
@@ -290,7 +290,7 @@ class ControllerDevice(ClimateDevice):
         This method must be run in the event loop and returns a coroutine.
         """
         fan = self._fan_to_pizone[fan_mode]
-        await self._wrap_and_catch(self._controller.set_fan(fan))
+        await self.wrap_and_catch(self._controller.set_fan(fan))
 
     async def async_set_operation_mode(self, operation_mode):
         """Set new target operation mode.
@@ -304,21 +304,21 @@ class ControllerDevice(ClimateDevice):
             await self.async_turn_on()
         if operation_mode != STATE_ON:
             mode = self._state_to_pizone[operation_mode]
-            await self._wrap_and_catch(self._controller.set_mode(mode))
+            await self.wrap_and_catch(self._controller.set_mode(mode))
 
     async def async_turn_on(self):
         """Turn device on.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        await self._wrap_and_catch(self._controller.set_on(True))
+        await self.wrap_and_catch(self._controller.set_on(True))
 
     async def async_turn_off(self):
         """Turn device off.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        await self._wrap_and_catch(self._controller.set_on(False))
+        await self.wrap_and_catch(self._controller.set_on(False))
 
 
 class ZoneDevice(ClimateDevice):
@@ -347,11 +347,11 @@ class ZoneDevice(ClimateDevice):
 
         self._device_info = {
             'identifiers': {
-                (DOMAIN, controller.unique_id, zone.index)
+                (IZONE, controller.unique_id, zone.index)
             },
             'name': self.name,
             'manufacturer': 'IZone',
-            'via_device': (DOMAIN, controller.unique_id),
+            'via_device': (IZONE, controller.unique_id),
             'model': zone.type.name.title(),
         }
 
@@ -471,24 +471,18 @@ class ZoneDevice(ClimateDevice):
         return self._controller.max_temp
 
     async def async_set_temperature(self, **kwargs):
-        """Set new target temperature.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+        """Set new target temperature."""
         if self._zone.mode != Zone.Mode.AUTO:
             return
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
-            await self._controller._wrap_and_catch(  # pylint: disable=W0212
+            await self._controller.wrap_and_catch(
                 self._zone.set_temp_setpoint(temp))
 
     async def async_set_operation_mode(self, operation_mode):
-        """Set new target operation mode.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+        """Set new target operation mode."""
         mode = self._state_to_pizone[operation_mode]
-        await self._controller._wrap_and_catch(  # pylint: disable=W0212
+        await self._controller.wrap_and_catch(
             self._zone.set_mode(mode))
         self.async_schedule_update_ha_state()
 
@@ -498,23 +492,17 @@ class ZoneDevice(ClimateDevice):
         return self._zone.mode != Zone.Mode.CLOSE
 
     async def async_turn_on(self):
-        """Turn device on (open zone).
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+        """Turn device on (open zone)."""
         if self._zone.type == Zone.Type.AUTO:
-            await self._controller._wrap_and_catch(  # pylint: disable=W0212
+            await self._controller.wrap_and_catch(
                 self._zone.set_mode(Zone.Mode.AUTO))
         else:
-            await self._controller._wrap_and_catch(  # pylint: disable=W0212
+            await self._controller.wrap_and_catch(
                 self._zone.set_mode(Zone.Mode.OPEN))
         self.async_schedule_update_ha_state()
 
     async def async_turn_off(self):
-        """Turn device off (close zone).
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        await self._controller._wrap_and_catch(  # pylint: disable=W0212
+        """Turn device off (close zone)."""
+        await self._controller.wrap_and_catch(
             self._zone.set_mode(Zone.Mode.CLOSE))
         self.async_schedule_update_ha_state()
