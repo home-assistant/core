@@ -791,6 +791,7 @@ holidays==0.9.9
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 home-assistant-frontend==20190109.1
 =======
 home-assistant-frontend==20190529.0
@@ -846,6 +847,9 @@ home-assistant-frontend==20190624.1
 =======
 home-assistant-frontend==20190624.1
 >>>>>>> Updated frontend to 20190624.1
+=======
+home-assistant-frontend==20190626.0
+>>>>>>> Updated frontend to 20190626.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.2
