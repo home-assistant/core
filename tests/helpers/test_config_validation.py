@@ -17,11 +17,14 @@ def test_boolean():
     """Test boolean validation."""
     schema = vol.Schema(cv.boolean)
 
-    for value in ('T', 'negative', 'lock'):
+    for value in (
+            None, 'T', 'negative', 'lock', 'tr  ue',
+            [], [1, 2], {'one': 'two'}, test_boolean):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
-    for value in ('true', 'On', '1', 'YES', 'enable', 1, True):
+    for value in ('true', 'On', '1', 'YES', '   true  ',
+                  'enable', 1, 50, True, 0.1):
         assert schema(value)
 
     for value in ('false', 'Off', '0', 'NO', 'disable', 0, False):
@@ -941,34 +944,6 @@ def test_comp_entity_ids():
     for invalid in (['light.kitchen', 'not-entity-id'], '*', ''):
         with pytest.raises(vol.Invalid):
             schema(invalid)
-
-
-def test_schema_with_slug_keys_allows_old_slugs(caplog):
-    """Test schema with slug keys allowing old slugs."""
-    schema = cv.schema_with_slug_keys(str)
-
-    with patch.dict(cv.INVALID_SLUGS_FOUND, clear=True):
-        for value in ('_world', 'wow__yeah'):
-            caplog.clear()
-            # Will raise if not allowing old slugs
-            schema({value: 'yo'})
-            assert "Found invalid slug {}".format(value) in caplog.text
-
-        assert len(cv.INVALID_SLUGS_FOUND) == 2
-
-
-def test_entity_id_allow_old_validation(caplog):
-    """Test schema allowing old entity_ids."""
-    schema = vol.Schema(cv.entity_id)
-
-    with patch.dict(cv.INVALID_ENTITY_IDS_FOUND, clear=True):
-        for value in ('hello.__world', 'great.wow__yeah'):
-            caplog.clear()
-            # Will raise if not allowing old entity ID
-            schema(value)
-            assert "Found invalid entity_id {}".format(value) in caplog.text
-
-        assert len(cv.INVALID_ENTITY_IDS_FOUND) == 2
 
 
 def test_uuid4_hex(caplog):

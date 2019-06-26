@@ -3,6 +3,8 @@ import pytest
 
 from unittest.mock import patch
 
+from homeassistant.components.cloud import prefs
+
 from . import mock_cloud, mock_cloud_prefs
 
 
@@ -16,5 +18,13 @@ def mock_user_data():
 @pytest.fixture
 def mock_cloud_fixture(hass):
     """Fixture for cloud component."""
-    mock_cloud(hass)
+    hass.loop.run_until_complete(mock_cloud(hass))
     return mock_cloud_prefs(hass)
+
+
+@pytest.fixture
+async def cloud_prefs(hass):
+    """Fixture for cloud preferences."""
+    cloud_prefs = prefs.CloudPreferences(hass)
+    await cloud_prefs.async_initialize()
+    return cloud_prefs

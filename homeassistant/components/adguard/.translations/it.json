@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "\u00c8 consentita solo una singola configurazione di AdGuard Home."
+        },
+        "error": {
+            "connection_error": "Impossibile connettersi."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Porta",
+                    "ssl": "AdGuard Home utilizza un certificato SSL",
+                    "username": "Nome utente"
+                }
+            }
+        }
+    }
+}

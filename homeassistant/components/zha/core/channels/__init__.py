@@ -14,17 +14,13 @@ from random import uniform
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from ..helpers import (
-    bind_configure_reporting, construct_unique_id,
+    configure_reporting, construct_unique_id,
     safe_read, get_attr_id_by_name, bind_cluster)
 from ..const import (
     REPORT_CONFIG_DEFAULT, SIGNAL_ATTR_UPDATED, ATTRIBUTE_CHANNEL,
     EVENT_RELAY_CHANNEL, ZDO_CHANNEL
 )
 from ..registries import CLUSTER_REPORT_CONFIGS
-
-NODE_DESCRIPTOR_REQUEST = 0x0002
-MAINS_POWERED = 1
-BATTERY_OR_UNKNOWN = 0
 
 ZIGBEE_CHANNEL_REGISTRY = {}
 _LOGGER = logging.getLogger(__name__)
@@ -48,7 +44,6 @@ def decorate_command(channel, command):
     """Wrap a cluster command to make it safe."""
     @wraps(command)
     async def wrapper(*args, **kwds):
-        from zigpy.zcl.foundation import Status
         from zigpy.exceptions import DeliveryError
         try:
             result = await command(*args, **kwds)
@@ -58,9 +53,8 @@ def decorate_command(channel, command):
                           "{}: {}".format("with args", args),
                           "{}: {}".format("with kwargs", kwds),
                           "{}: {}".format("and result", result))
-            if isinstance(result, bool):
-                return result
-            return result[1] is Status.SUCCESS
+            return result
+
         except (DeliveryError, Timeout) as ex:
             _LOGGER.debug(
                 "%s: command failed: %s exception: %s",
@@ -68,7 +62,7 @@ def decorate_command(channel, command):
                 command.__name__,
                 str(ex)
             )
-            return False
+            return ex
     return wrapper
 
 
@@ -139,26 +133,25 @@ class ZigbeeChannel:
         """Set cluster binding and attribute reporting."""
         manufacturer = None
         manufacturer_code = self._zha_device.manufacturer_code
-        if self.cluster.cluster_id >= 0xfc00 and manufacturer_code:
-            manufacturer = manufacturer_code
-        if self.cluster.bind_only:
+        # Xiaomi devices don't need this and it disrupts pairing
+        if self._zha_device.manufacturer != 'LUMI':
+            if self.cluster.cluster_id >= 0xfc00 and manufacturer_code:
+                manufacturer = manufacturer_code
             await bind_cluster(self._unique_id, self.cluster)
-        else:
-            skip_bind = False  # bind cluster only for the 1st configured attr
-            for report_config in self._report_config:
-                attr = report_config.get('attr')
-                min_report_interval, max_report_interval, change = \
-                    report_config.get('config')
-                await bind_configure_reporting(
-                    self._unique_id, self.cluster, attr,
-                    min_report=min_report_interval,
-                    max_report=max_report_interval,
-                    reportable_change=change,
-                    skip_bind=skip_bind,
-                    manufacturer=manufacturer
-                )
-                skip_bind = True
-                await asyncio.sleep(uniform(0.1, 0.5))
+            if not self.cluster.bind_only:
+                for report_config in self._report_config:
+                    attr = report_config.get('attr')
+                    min_report_interval, max_report_interval, change = \
+                        report_config.get('config')
+                    await configure_reporting(
+                        self._unique_id, self.cluster, attr,
+                        min_report=min_report_interval,
+                        max_report=max_report_interval,
+                        reportable_change=change,
+                        manufacturer=manufacturer
+                    )
+                    await asyncio.sleep(uniform(0.1, 0.5))
+
         _LOGGER.debug(
             "%s: finished channel configuration",
             self._unique_id
@@ -268,11 +261,6 @@ class AttributeListeningChannel(ZigbeeChannel):
 class ZDOChannel:
     """Channel for ZDO events."""
 
-    POWER_SOURCES = {
-        MAINS_POWERED: 'Mains',
-        BATTERY_OR_UNKNOWN: 'Battery or Unknown'
-    }
-
     def __init__(self, cluster, device):
         """Initialize ZDOChannel."""
         self.name = ZDO_CHANNEL
@@ -281,8 +269,6 @@ class ZDOChannel:
         self._status = ChannelStatus.CREATED
         self._unique_id = "{}_ZDO".format(device.name)
         self._cluster.add_listener(self)
-        self.power_source = None
-        self.manufacturer_code = None
 
     @property
     def unique_id(self):
@@ -314,49 +300,10 @@ class ZDOChannel:
         entry = self._zha_device.gateway.zha_storage.async_get_or_create(
             self._zha_device)
         _LOGGER.debug("entry loaded from storage: %s", entry)
-        if entry is not None:
-            self.power_source = entry.power_source
-            self.manufacturer_code = entry.manufacturer_code
-
-        if self.power_source is None:
-            self.power_source = BATTERY_OR_UNKNOWN
-
-        if self.manufacturer_code is None and not from_cache:
-            # this should always be set. This is from us not doing
-            # this previously so lets set it up so users don't have
-            # to reconfigure every device.
-            await self.async_get_node_descriptor(False)
-            entry = self._zha_device.gateway.zha_storage.async_update(
-                self._zha_device)
-            _LOGGER.debug("entry after getting node desc in init: %s", entry)
         self._status = ChannelStatus.INITIALIZED
-
-    async def async_get_node_descriptor(self, from_cache):
-        """Request the node descriptor from the device."""
-        from zigpy.zdo.types import Status
-
-        if from_cache:
-            return
-
-        node_descriptor = await self._cluster.request(
-            NODE_DESCRIPTOR_REQUEST,
-            self._cluster.device.nwk, tries=3, delay=2)
-
-        def get_bit(byteval, idx):
-            return int(((byteval & (1 << idx)) != 0))
-
-        if node_descriptor is not None and\
-                node_descriptor[0] == Status.SUCCESS:
-            mac_capability_flags = node_descriptor[2].mac_capability_flags
-
-            self.power_source = get_bit(mac_capability_flags, 2)
-            self.manufacturer_code = node_descriptor[2].manufacturer_code
-
-            _LOGGER.debug("node descriptor: %s", node_descriptor)
 
     async def async_configure(self):
         """Configure channel."""
-        await self.async_get_node_descriptor(False)
         self._status = ChannelStatus.CONFIGURED
 
 

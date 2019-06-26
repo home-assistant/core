@@ -1,8 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 94
-PATCH_VERSION = '4'
+MINOR_VERSION = 95
+PATCH_VERSION = '0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 5, 3)
@@ -59,6 +59,7 @@ CONF_CUSTOMIZE_GLOB = 'customize_glob'
 CONF_DELAY_TIME = 'delay_time'
 CONF_DEVICE = 'device'
 CONF_DEVICE_CLASS = 'device_class'
+CONF_DEVICE_ID = 'device_id'
 CONF_DEVICES = 'devices'
 CONF_DISARM_AFTER_TRIGGER = 'disarm_after_trigger'
 CONF_DISCOVERY = 'discovery'
@@ -345,6 +346,7 @@ LENGTH_MILES = 'mi'  # type: str
 # Pressure units
 PRESSURE_PA = 'Pa'  # type: str
 PRESSURE_HPA = 'hPa'  # type: str
+PRESSURE_BAR = 'bar'  # type: str
 PRESSURE_MBAR = 'mbar'  # type: str
 PRESSURE_INHG = 'inHg'  # type: str
 PRESSURE_PSI = 'psi'  # type: str
@@ -410,6 +412,7 @@ SERVICE_SET_COVER_POSITION = 'set_cover_position'
 SERVICE_SET_COVER_TILT_POSITION = 'set_cover_tilt_position'
 SERVICE_STOP_COVER = 'stop_cover'
 SERVICE_STOP_COVER_TILT = 'stop_cover_tilt'
+SERVICE_TOGGLE_COVER_TILT = 'toggle_cover_tilt'
 
 SERVICE_SELECT_OPTION = 'select_option'
 

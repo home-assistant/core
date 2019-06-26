@@ -6,7 +6,7 @@ set -e
 
 PACKAGES=(
   # homeassistant.components.tellstick
-  libtelldus-core2
+  libtelldus-core2 socat
 )
 
 # Add Tellstick repository

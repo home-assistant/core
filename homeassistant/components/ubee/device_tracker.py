@@ -22,6 +22,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Any(
             'EVW32C-0N',
             'EVW320B',
+            'EVW321B',
             'EVW3200-Wifi',
             'EVW3226@UPC',
         ),

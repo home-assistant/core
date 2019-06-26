@@ -17,9 +17,10 @@ from .const import (
     ATTR_CLUSTER_ID, ATTR_ATTRIBUTE, ATTR_VALUE, ATTR_COMMAND, SERVER,
     ATTR_COMMAND_TYPE, ATTR_ARGS, CLIENT_COMMANDS, SERVER_COMMANDS,
     ATTR_ENDPOINT_ID, IEEE, MODEL, NAME, UNKNOWN, QUIRK_APPLIED,
-    QUIRK_CLASS, ZDO_CHANNEL, MANUFACTURER_CODE, POWER_SOURCE
+    QUIRK_CLASS, ZDO_CHANNEL, MANUFACTURER_CODE, POWER_SOURCE, MAINS_POWERED,
+    BATTERY_OR_UNKNOWN, NWK
 )
-from .channels import EventRelayChannel, ZDOChannel
+from .channels import EventRelayChannel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +69,6 @@ class ZHADevice:
             self._zigpy_device.__class__.__module__,
             self._zigpy_device.__class__.__name__
         )
-        self._power_source = None
         self.status = DeviceStatus.CREATED
 
     @property
@@ -92,6 +92,13 @@ class ZHADevice:
         return self._model
 
     @property
+    def manufacturer_code(self):
+        """Return the manufacturer code for the device."""
+        if self._zigpy_device.node_desc.is_valid:
+            return self._zigpy_device.node_desc.manufacturer_code
+        return None
+
+    @property
     def nwk(self):
         """Return nwk for device."""
         return self._zigpy_device.nwk
@@ -112,20 +119,29 @@ class ZHADevice:
         return self._zigpy_device.last_seen
 
     @property
-    def manufacturer_code(self):
-        """Return manufacturer code for device."""
-        if ZDO_CHANNEL in self.cluster_channels:
-            return self.cluster_channels.get(ZDO_CHANNEL).manufacturer_code
-        return None
+    def is_mains_powered(self):
+        """Return true if device is mains powered."""
+        return self._zigpy_device.node_desc.is_mains_powered
 
     @property
     def power_source(self):
         """Return the power source for the device."""
-        if self._power_source is not None:
-            return self._power_source
-        if ZDO_CHANNEL in self.cluster_channels:
-            return self.cluster_channels.get(ZDO_CHANNEL).power_source
-        return None
+        return MAINS_POWERED if self.is_mains_powered else BATTERY_OR_UNKNOWN
+
+    @property
+    def is_router(self):
+        """Return true if this is a routing capable device."""
+        return self._zigpy_device.node_desc.is_router
+
+    @property
+    def is_coordinator(self):
+        """Return true if this device represents the coordinator."""
+        return self._zigpy_device.node_desc.is_coordinator
+
+    @property
+    def is_end_device(self):
+        """Return true if this device is an end device."""
+        return self._zigpy_device.node_desc.is_end_device
 
     @property
     def gateway(self):
@@ -151,10 +167,6 @@ class ZHADevice:
         """Set availability from restore and prevent signals."""
         self._available = available
 
-    def set_power_source(self, power_source):
-        """Set the power source."""
-        self._power_source = power_source
-
     def update_available(self, available):
         """Set sensor availability."""
         if self._available != available and available:
@@ -177,13 +189,14 @@ class ZHADevice:
         ieee = str(self.ieee)
         return {
             IEEE: ieee,
+            NWK: self.nwk,
             ATTR_MANUFACTURER: self.manufacturer,
             MODEL: self.model,
             NAME: self.name or ieee,
             QUIRK_APPLIED: self.quirk_applied,
             QUIRK_CLASS: self.quirk_class,
             MANUFACTURER_CODE: self.manufacturer_code,
-            POWER_SOURCE: ZDOChannel.POWER_SOURCES.get(self.power_source)
+            POWER_SOURCE: self.power_source
         }
 
     def add_cluster_channel(self, cluster_channel):
@@ -256,7 +269,7 @@ class ZHADevice:
         _LOGGER.debug(
             '%s: power source: %s',
             self.name,
-            ZDOChannel.POWER_SOURCES.get(self.power_source)
+            self.power_source
         )
         self.status = DeviceStatus.INITIALIZED
         _LOGGER.debug('%s: completed initialization', self.name)
@@ -378,7 +391,7 @@ class ZHADevice:
                 manufacturer=manufacturer
             )
             _LOGGER.debug(
-                'set: %s for attr: %s to cluster: %s for entity: %s - res: %s',
+                'set: %s for attr: %s to cluster: %s for ept: %s - res: %s',
                 value,
                 attribute,
                 cluster_id,

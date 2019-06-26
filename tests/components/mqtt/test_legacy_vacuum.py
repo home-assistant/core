@@ -612,7 +612,6 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
         vacuum.DOMAIN: {
             'platform': 'mqtt',
             'name': 'test',
-            'state_topic': 'test-topic',
             'json_attributes_topic': 'attr-topic'
         }
     })
@@ -629,7 +628,6 @@ async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
         vacuum.DOMAIN: {
             'platform': 'mqtt',
             'name': 'test',
-            'state_topic': 'test-topic',
             'json_attributes_topic': 'attr-topic'
         }
     })
@@ -647,7 +645,6 @@ async def test_update_with_json_attrs_bad_json(hass, mqtt_mock, caplog):
         vacuum.DOMAIN: {
             'platform': 'mqtt',
             'name': 'test',
-            'state_topic': 'test-topic',
             'json_attributes_topic': 'attr-topic'
         }
     })
@@ -766,7 +763,6 @@ async def test_entity_device_info_update(hass, mqtt_mock):
     config = {
         'platform': 'mqtt',
         'name': 'Test 1',
-        'state_topic': 'test-topic',
         'command_topic': 'test-command-topic',
         'device': {
             'identifiers': ['helloworld'],
