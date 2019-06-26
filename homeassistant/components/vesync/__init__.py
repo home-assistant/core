@@ -65,6 +65,7 @@ async def async_setup_entry(hass, config_entry):
     else:
         if hass.config.time_zone is not None:
             time_zone = str(hass.config.time_zone)
+            _LOGGER.debug("Time zone - %s", time_zone)
 
     from pyvesync import VeSync
 
@@ -78,15 +79,16 @@ async def async_setup_entry(hass, config_entry):
 
     login = await hass.async_add_executor_job(manager.login)
 
+    _LOGGER.debug("Login successful - %s", login)
+    _LOGGER.debug(manager)
+
     if not login:
         _LOGGER.error("Unable to login")
         return False
 
     device_dict = await async_process_devices(hass, manager)
 
-    hass.data[DOMAIN] = {
-        'manager': manager
-    }
+    hass.data[DOMAIN]['manager'] = manager
 
     forward_setup = hass.config_entries.async_forward_entry_setup
 

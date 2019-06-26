@@ -1,0 +1,19 @@
+{
+    "config": {
+        "title": "VeSync",
+        "step": {
+            "user": {
+                "title": "Fill in your information",
+                "data": {
+                    "username": "Email Address",
+                    "password": "Password",
+                    "time_zone": "Set custom time zone (optional)"
+                }
+            }
+        },
+        "error": {
+            "identifier_exists": "Account already registered",
+            "invalid_credentials": "Invalid credentials"
+        }
+    }
+}

@@ -52,13 +52,13 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start"""
-        
+
         if configured_instances(self.hass) is not None:
             return self.async_abort({CONF_USERNAME: 'identifier_exists'})
 
         if not user_input:
             return await self._show_form()
-        
+
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
         self._time_zone = user_input.get(CONF_TIME_ZONE, None)
