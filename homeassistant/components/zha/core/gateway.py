@@ -120,6 +120,7 @@ class ZHAGateway:
         if device.nwk == 0x0000:
             return
 
+        manuf = device.manufacturer
         async_dispatcher_send(
             self._hass,
             ZHA_GW_MSG,
@@ -128,7 +129,7 @@ class ZHAGateway:
                 NWK: device.nwk,
                 IEEE: str(device.ieee),
                 MODEL: device.model if device.model else UNKNOWN_MODEL,
-                ATTR_MANUFACTURER: device.manufacturer if device.manufacturer else UNKNOWN_MANUFACTURER,
+                ATTR_MANUFACTURER: manuf if manuf else UNKNOWN_MANUFACTURER,
                 SIGNATURE: device.get_signature()
             }
         )
