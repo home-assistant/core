@@ -12,7 +12,6 @@ from collections import OrderedDict
 from itertools import chain
 import logging
 from typing import List, Optional, cast
-import weakref
 
 import attr
 
@@ -50,8 +49,6 @@ class RegistryEntry:
     disabled_by = attr.ib(
         type=str, default=None,
         validator=attr.validators.in_((DISABLED_HASS, DISABLED_USER, None)))
-    update_listeners = attr.ib(type=list, default=attr.Factory(list),
-                               repr=False)
     domain = attr.ib(type=str, init=False, repr=False)
 
     @domain.default
@@ -63,18 +60,6 @@ class RegistryEntry:
     def disabled(self):
         """Return if entry is disabled."""
         return self.disabled_by is not None
-
-    def add_update_listener(self, listener):
-        """Listen for when entry is updated.
-
-        Listener: Callback function(old_entry, new_entry)
-
-        Returns function to unlisten.
-        """
-        weak_listener = weakref.ref(listener)
-        self.update_listeners.append(weak_listener)
-
-        return lambda: self.update_listeners.remove(weak_listener)
 
 
 class EntityRegistry:
@@ -247,26 +232,17 @@ class EntityRegistry:
 
         new = self.entities[entity_id] = attr.evolve(old, **changes)
 
-        to_remove = []
-        for listener_ref in new.update_listeners:
-            listener = listener_ref()
-            if listener is None:
-                to_remove.append(listener_ref)
-            else:
-                try:
-                    listener.async_registry_updated(old, new)
-                except Exception:  # pylint: disable=broad-except
-                    _LOGGER.exception('Error calling update listener')
-
-        for ref in to_remove:
-            new.update_listeners.remove(ref)
-
         self.async_schedule_save()
 
-        self.hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, {
+        data = {
             'action': 'update',
-            'entity_id': entity_id
-        })
+            'entity_id': entity_id,
+        }
+
+        if old.entity_id != entity_id:
+            data['old_entity_id'] = old.entity_id
+
+        self.hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, data)
 
         return new
 
