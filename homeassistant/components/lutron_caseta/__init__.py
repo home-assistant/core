@@ -28,7 +28,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 LUTRON_CASETA_COMPONENTS = [
-    'light', 'switch', 'cover', 'scene'
+    'light', 'switch', 'cover', 'scene', 'fan'
 ]
 
 
