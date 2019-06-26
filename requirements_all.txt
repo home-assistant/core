@@ -1214,6 +1214,7 @@ psutil==5.4.8
 # homeassistant.components.wink
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 pubnubsub-handler==1.0.3
 =======
 pubnubsub-handler==1.0.7
@@ -1223,6 +1224,9 @@ pubnubsub-handler==1.0.7
 # homeassistant.components.sensor.pushbullet
 =======
 pubnubsub-handler==1.0.7
+=======
+pubnubsub-handler==1.0.8
+>>>>>>> Pubnub to 1.0.8 (#24781)
 
 # homeassistant.components.pushbullet
 >>>>>>> Updated pubnubsub-handler to 1.0.7 to fix crash on slow startup (#24388)
