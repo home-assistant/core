@@ -19,6 +19,7 @@ def configured_instances(hass):
     """Return already configured instances"""
     entries = hass.config_entries.async_entries(DOMAIN)
     if entries:
+        _LOGGER.debug("Entry found - %s", entries)
         return entries[0]
     return None
 
@@ -54,7 +55,7 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
         """Handle a flow start"""
 
         if configured_instances(self.hass) is not None:
-            return self.async_abort({CONF_USERNAME: 'identifier_exists'})
+            return self.async_abort(reason='identifier_exists')
 
         if not user_input:
             return await self._show_form()
