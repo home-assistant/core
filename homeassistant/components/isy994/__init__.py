@@ -19,6 +19,7 @@ DOMAIN = 'isy994'
 CONF_IGNORE_STRING = 'ignore_string'
 CONF_SENSOR_STRING = 'sensor_string'
 CONF_ENABLE_CLIMATE = 'enable_climate'
+CONF_ISY_VARIABLES = 'isy_variables'
 CONF_TLS_VER = 'tls'
 
 DEFAULT_IGNORE_STRING = '{IGNORE ME}'
@@ -40,6 +41,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_SENSOR_STRING,
                      default=DEFAULT_SENSOR_STRING): cv.string,
         vol.Optional(CONF_ENABLE_CLIMATE, default=True): cv.boolean,
+        vol.Optional(CONF_ISY_VARIABLES, default=[]): vol.All(cv.ensure_list,
+                                                              [vol.Coerce(int)])
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -119,6 +122,7 @@ NODE_FILTERS = {
 SUPPORTED_DOMAINS = ['binary_sensor', 'sensor', 'lock', 'fan', 'cover',
                      'light', 'switch', 'climate']
 SUPPORTED_PROGRAM_DOMAINS = ['binary_sensor', 'lock', 'fan', 'cover', 'switch']
+SUPPORTED_VARIABLE_DOMAINS = ['sensor']
 
 # ISY Scenes are more like Switches than Hass Scenes
 # (they can turn off, and report their state)
@@ -127,6 +131,7 @@ SCENE_DOMAIN = 'switch'
 ISY994_NODES = "isy994_nodes"
 ISY994_WEATHER = "isy994_weather"
 ISY994_PROGRAMS = "isy994_programs"
+ISY994_VARIABLES = "isy994_variables"
 
 WeatherNode = namedtuple('WeatherNode', ('status', 'name', 'uom'))
 
@@ -334,6 +339,25 @@ def _categorize_programs(hass: HomeAssistant, programs: dict) -> None:
                 hass.data[ISY994_PROGRAMS][domain].append(entity)
 
 
+def _categorize_variables(hass: HomeAssistant, variables: dict,
+                          variable_list: list) -> None:
+    """Categorize the ISY994 Variables."""
+    _LOGGER.debug("ISY Variable List: %s", variable_list)
+    for domain in SUPPORTED_VARIABLE_DOMAINS:
+        for vtype, vname, vid in variables[1].children:
+            _LOGGER.debug("ISY Variable Setup: Checking Type %s, Variable %s to see if we should track it.", vtype, vid)
+            if vid in variable_list:
+                _LOGGER.debug("ISY Variable Setup: Found Variable %s in Integers", vid)
+                variable = (vtype, vname, vid, variables[vtype][vid])
+                hass.data[ISY994_VARIABLES][domain].append(variable)
+        for vtype, vname, vid in variables[2].children:
+            _LOGGER.debug("ISY Variable Setup: Checking Type %s, Variable %s to see if we should track it.", vtype, vid)
+            if vid in variable_list:
+                _LOGGER.debug("ISY Variable Setup: Found Variable %s in State Variables", vid)
+                variable = (vtype, vname, vid, variables[vtype][vid])
+                hass.data[ISY994_VARIABLES][domain].append(variable)
+
+
 def _categorize_weather(hass: HomeAssistant, climate) -> None:
     """Categorize the ISY994 weather data."""
     climate_attrs = dir(climate)
@@ -357,6 +381,10 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for domain in SUPPORTED_DOMAINS:
         hass.data[ISY994_PROGRAMS][domain] = []
 
+    hass.data[ISY994_VARIABLES] = {}
+    for domain in SUPPORTED_VARIABLE_DOMAINS:
+        hass.data[ISY994_VARIABLES][domain] = []
+
     isy_config = config.get(DOMAIN)
 
     user = isy_config.get(CONF_USERNAME)
@@ -366,6 +394,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ignore_identifier = isy_config.get(CONF_IGNORE_STRING)
     sensor_identifier = isy_config.get(CONF_SENSOR_STRING)
     enable_climate = isy_config.get(CONF_ENABLE_CLIMATE)
+    isy_variables = isy_config.get(CONF_ISY_VARIABLES)
 
     if host.scheme == 'http':
         https = False
@@ -386,6 +415,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     _categorize_nodes(hass, isy.nodes, ignore_identifier, sensor_identifier)
     _categorize_programs(hass, isy.programs)
+    _categorize_variables(hass, isy.variables, isy_variables)
 
     if enable_climate and isy.configuration.get('Weather Information'):
         _categorize_weather(hass, isy.climate)

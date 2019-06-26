@@ -5,9 +5,9 @@ from typing import Callable
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     POWER_WATT, TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_UV_INDEX)
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, Dict
 
-from . import ISY994_NODES, ISY994_WEATHER, ISYDevice
+from . import ISY994_NODES, ISY994_VARIABLES, ISY994_WEATHER, ISYDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -242,6 +242,9 @@ def setup_platform(hass, config: ConfigType,
     for node in hass.data[ISY994_WEATHER]:
         devices.append(ISYWeatherDevice(node))
 
+    for vtype, vname, vid, vobj in hass.data[ISY994_VARIABLES][DOMAIN]:
+        devices.append(ISYSensorVariableDevice(vtype, vname, vid, vobj))
+
     add_entities(devices)
 
 
@@ -295,6 +298,46 @@ class ISYSensorDevice(ISYDevice):
         if raw_units in (TEMP_FAHRENHEIT, TEMP_CELSIUS):
             return self.hass.config.units.temperature_unit
         return raw_units
+
+
+class ISYSensorVariableDevice(ISYDevice):
+    """Representation of an ISY994 variable as a sensor device."""
+
+    def __init__(self, vtype: int, vname: str, vid: int, vobj: object) -> None:
+        """Initialize the ISY994 binary sensor program."""
+        super().__init__(vobj)
+        self._name = vname
+        self._vtype = vtype
+        self._vid = vid
+        self._change_handler = None
+        self._init_change_handler = None
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to the node change events."""
+        self._change_handler = self._node.val.subscribe(
+            'changed', self.on_update)
+        self._init_change_handler = self._node.init.subscribe(
+            'changed', self.on_update)
+
+    @property
+    def state(self) -> str:
+        """Get the state of the ISY994 variable sensor device."""
+        if self.is_unknown():
+            return None
+        return self.value
+
+    @property
+    def value(self) -> int:
+        """Get the current value of the device."""
+        return int(self._node.val)
+
+    @property
+    def device_state_attributes(self) -> Dict:
+        """Get the state attributes for the device."""
+        attr = {}
+        attr["Variable Type"] = "State" if self._vtype == 2 else "Integer"
+        attr["Init Value"] = int(self._node.init)
+        return attr
 
 
 class ISYWeatherDevice(ISYDevice):
