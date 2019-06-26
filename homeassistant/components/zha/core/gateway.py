@@ -14,8 +14,8 @@ import traceback
 
 from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import\
-    async_get_registry as get_dev_reg
+from homeassistant.helpers.device_registry import (
+    async_get_registry as get_dev_reg)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_component import EntityComponent
 
@@ -27,14 +27,14 @@ from .const import (
     DEBUG_LEVELS, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME, DEVICE_FULL_INIT,
     DEVICE_INFO, DEVICE_JOINED, DEVICE_REMOVED, DOMAIN, IEEE, LOG_ENTRY,
     LOG_OUTPUT, MODEL, NWK, ORIGINAL, RADIO, RADIO_DESCRIPTION, RAW_INIT,
-    SIGNAL_REMOVE, SIGNATURE, TYPE, ZHA, ZHA_GW_MSG, ZIGPY, ZIGPY_DECONZ,
-    ZIGPY_XBEE)
+    SIGNAL_REMOVE, SIGNATURE, TYPE, UNKNOWN_MANUFACTURER, UNKNOWN_MODEL, ZHA,
+    ZHA_GW_MSG, ZIGPY, ZIGPY_DECONZ, ZIGPY_XBEE)
 from .device import DeviceStatus, ZHADevice
 from .discovery import (
     async_create_device_entity, async_dispatch_discovery_info,
     async_process_endpoint)
 from .patches import apply_application_controller_patch
-from .registries import RADIO_TYPES, INPUT_BIND_ONLY_CLUSTERS
+from .registries import INPUT_BIND_ONLY_CLUSTERS, RADIO_TYPES
 from .store import async_get_registry
 
 _LOGGER = logging.getLogger(__name__)
@@ -119,13 +119,8 @@ class ZHAGateway:
         """Handle a device initialization without quirks loaded."""
         if device.nwk == 0x0000:
             return
-        endpoint_ids = device.endpoints.keys()
-        ept_id = next((ept_id for ept_id in endpoint_ids if ept_id != 0), None)
-        manufacturer = 'Unknown'
-        model = 'Unknown'
-        if ept_id is not None:
-            manufacturer = device.endpoints[ept_id].manufacturer
-            model = device.endpoints[ept_id].model
+
+        manuf = device.manufacturer
         async_dispatcher_send(
             self._hass,
             ZHA_GW_MSG,
@@ -133,8 +128,8 @@ class ZHAGateway:
                 TYPE: RAW_INIT,
                 NWK: device.nwk,
                 IEEE: str(device.ieee),
-                MODEL: model,
-                ATTR_MANUFACTURER: manufacturer,
+                MODEL: device.model if device.model else UNKNOWN_MODEL,
+                ATTR_MANUFACTURER: manuf if manuf else UNKNOWN_MANUFACTURER,
                 SIGNATURE: device.get_signature()
             }
         )
