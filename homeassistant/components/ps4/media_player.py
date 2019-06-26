@@ -8,12 +8,13 @@ from homeassistant.core import callback
 from homeassistant.components.media_player import (
     ENTITY_IMAGE_URL, MediaPlayerDevice)
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_GAME, MEDIA_TYPE_APP, SUPPORT_SELECT_SOURCE,
-    SUPPORT_PAUSE, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
+    ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_TITLE,
+    MEDIA_TYPE_GAME, MEDIA_TYPE_APP, SUPPORT_SELECT_SOURCE, SUPPORT_PAUSE,
+    SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
 from homeassistant.components.ps4 import format_unique_id
 from homeassistant.const import (
-    ATTR_COMMAND, ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_REGION,
-    CONF_TOKEN, STATE_IDLE, STATE_OFF, STATE_PLAYING)
+    ATTR_COMMAND, ATTR_ENTITY_ID, ATTR_LOCKED, CONF_HOST, CONF_NAME,
+    CONF_REGION, CONF_TOKEN, STATE_IDLE, STATE_OFF, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.util.json import load_json, save_json
@@ -30,6 +31,8 @@ ICON = 'mdi:playstation'
 GAMES_FILE = '.ps4-games.json'
 MEDIA_IMAGE_DEFAULT = None
 
+ATTR_MEDIA_IMAGE_URL = 'media_image_url'
+
 COMMANDS = (
     'up',
     'down',
@@ -42,10 +45,21 @@ COMMANDS = (
 )
 
 SERVICE_COMMAND = 'send_command'
+SERVICE_EDIT_DATA = 'edit_title_data'
 
 PS4_COMMAND_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_COMMAND): vol.In(list(COMMANDS))
+    vol.Required(ATTR_COMMAND): vol.All(cv.ensure_list, [COMMANDS])
+})
+
+PS4_EDIT_DATA_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID, default=''): cv.entity_id,
+    vol.Optional(ATTR_MEDIA_CONTENT_ID, default=''): str,
+    vol.Optional(ATTR_LOCKED, default=True): cv.boolean,
+    vol.Optional(ATTR_MEDIA_TITLE, default=''): str,
+    vol.Optional(ATTR_MEDIA_IMAGE_URL, default=''): str,
+    vol.Optional(ATTR_MEDIA_CONTENT_TYPE, default=MEDIA_TYPE_GAME): vol.In(
+        MEDIA_TYPE_GAME, MEDIA_TYPE_APP)
 })
 
 
@@ -58,15 +72,82 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_service_handle(hass):
         """Handle for services."""
         async def async_service_command(call):
+            """Service for sending commands."""
             entity_ids = call.data[ATTR_ENTITY_ID]
             command = call.data[ATTR_COMMAND]
             for device in hass.data[PS4_DATA].devices:
                 if device.entity_id in entity_ids:
                     await device.async_send_command(command)
 
+        async def async_service_edit_data(call):
+            """Service call for editing existing media data."""
+            locked = call.data[ATTR_LOCKED]
+            media_type = call.data[ATTR_MEDIA_CONTENT_TYPE]
+
+            entity_id = None if call.data[ATTR_ENTITY_ID] == ''\
+                else call.data[ATTR_ENTITY_ID]
+            media_id = None if call.data[ATTR_MEDIA_CONTENT_ID] == ''\
+                else call.data[ATTR_MEDIA_CONTENT_ID]
+            media_title = None if call.data[ATTR_MEDIA_TITLE] == ''\
+                else call.data[ATTR_MEDIA_TITLE]
+            media_url = None if call.data[ATTR_MEDIA_IMAGE_URL] == ''\
+                else call.data[ATTR_MEDIA_IMAGE_URL]
+
+            games = load_games(hass)
+
+            if entity_id is not None:
+                for device in hass.data[PS4_DATA].devices:
+                    if device.entity_id == entity_id:
+                        entity = device
+                media_content_id = entity.media_content_id
+                if media_id is not None:
+                    media_content_id = media_id
+
+            if media_content_id is None:
+                return
+
+            g_data = games.get(media_content_id)
+
+            if g_data is not None:
+                g_data[ATTR_LOCKED] = locked
+                if entity_id is not None:
+                    if entity.media_content_id is not None:
+
+                        if media_title is None:
+                            g_data[ATTR_MEDIA_TITLE] = entity.media_title
+                        if media_url is None:
+                            g_data[ATTR_MEDIA_IMAGE_URL] =\
+                                entity.media_image_url
+                        if media_type is None:
+                            g_data[ATTR_MEDIA_CONTENT_TYPE] =\
+                                entity.media_content_type
+
+                """Must be locked to edit other attributes."""
+                if g_data[ATTR_LOCKED] is True:
+                    if media_title is not None:
+                        g_data[ATTR_MEDIA_TITLE] = media_title
+                    if media_url is not None:
+                        g_data[ATTR_MEDIA_IMAGE_URL] = media_url
+                    if media_type is not None:
+                        g_data[ATTR_MEDIA_CONTENT_TYPE] = media_type
+
+                elif media_title is not None or\
+                    media_url is not None or\
+                        media_type is not None:
+
+                        _LOGGER.error("""Field: 'locked' must be set to 'True'
+                            to edit other title attributes""")
+                        return
+
+                games[media_content_id] = g_data
+                save_games(hass, games)
+
         hass.services.async_register(
             PS4_DOMAIN, SERVICE_COMMAND, async_service_command,
             schema=PS4_COMMAND_SCHEMA)
+        hass.services.async_register(
+            PS4_DOMAIN, SERVICE_EDIT_DATA, async_service_edit_data,
+            schema=PS4_EDIT_DATA_SCHEMA)
 
     await async_service_handle(hass)
 
@@ -75,7 +156,6 @@ async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up PS4 Platform."""
     import pyps4_homeassistant.ps4 as pyps4
-    games_file = hass.config.path(GAMES_FILE)
     creds = config.data[CONF_TOKEN]
     device_list = []
     for device in config.data['devices']:
@@ -84,14 +164,50 @@ async def async_setup_platform(
         name = device[CONF_NAME]
         ps4 = pyps4.Ps4Async(host, creds, device_name=DEFAULT_ALIAS)
         device_list.append(PS4Device(
-            config, name, host, region, ps4, creds, games_file))
+            config, name, host, region, ps4, creds))
     async_add_entities(device_list, update_before_add=True)
+
+
+def load_games(hass):
+    """Load games for sources."""
+    g_file = hass.config.path(GAMES_FILE)
+    try:
+        games = load_json(g_file)
+
+    # If file does not exist, create empty file.
+    except FileNotFoundError:
+        games = {}
+        save_games(hass, games)
+
+    # Convert existing data to dict format if not already.
+    if games is not None:
+        for game, data in games.items():
+            if type(data) is not dict:
+                games[game] = {ATTR_MEDIA_TITLE: data,
+                               ATTR_MEDIA_IMAGE_URL: None,
+                               ATTR_LOCKED: False,
+                               ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_GAME}
+
+    return games
+
+
+def save_games(hass, games):
+    """Save games to file."""
+    g_file = hass.config.path(GAMES_FILE)
+    try:
+        save_json(g_file, games)
+    except OSError as error:
+        _LOGGER.error("Could not save game list, %s", error)
+
+    # Retry loading file
+    if games is None:
+        load_games()
 
 
 class PS4Device(MediaPlayerDevice):
     """Representation of a PS4."""
 
-    def __init__(self, config, name, host, region, ps4, creds, games_file):
+    def __init__(self, config, name, host, region, ps4, creds):
         """Initialize the ps4 device."""
         self._entry_id = config.entry_id
         self._ps4 = ps4
@@ -100,7 +216,6 @@ class PS4Device(MediaPlayerDevice):
         self._region = region
         self._creds = creds
         self._state = None
-        self._games_filename = games_file
         self._media_content_id = None
         self._media_title = None
         self._media_image = None
@@ -174,11 +289,11 @@ class PS4Device(MediaPlayerDevice):
         status = self._ps4.status
 
         if status is not None:
-            self._games = self.load_games()
+            self._games = load_games(self.hass)
             if self._games is not None:
                 games = []
                 for data in self._games.values():
-                    games.append(data['name'])
+                    games.append(data[ATTR_MEDIA_TITLE])
                 self._source_list = sorted(games)
 
             self._retry = 0
@@ -197,12 +312,14 @@ class PS4Device(MediaPlayerDevice):
                             store = self._games[self._media_content_id]
 
                             # If locked get attributes from file.
-                            is_locked = store.get('is_locked')
-                            if is_locked:
-                                self._media_title = store.get('name')
+                            locked = store.get(ATTR_LOCKED)
+                            if locked:
+                                self._media_title = store.get(ATTR_MEDIA_TITLE)
                                 self._source = self._media_title
-                                self._media_image = store.get('cover')
-                                self._media_type = store.get("type")
+                                self._media_image = store.get(
+                                    ATTR_MEDIA_IMAGE_URL)
+                                self._media_type = store.get(
+                                    ATTR_MEDIA_CONTENT_TYPE)
                                 self.schedule_update()
                                 return
 
@@ -294,58 +411,27 @@ class PS4Device(MediaPlayerDevice):
         if self._media_content_id in self._games:
             store = self._games[self._media_content_id]
 
-            if store.get('name') != self._media_title or\
-                    store.get('cover') != self._media_image:
+            if store.get(ATTR_MEDIA_TITLE) != self._media_title or\
+                    store.get(ATTR_MEDIA_IMAGE_URL) != self._media_image:
                 self._games.pop(self._media_content_id)
 
         if self._media_content_id not in self._games:
             self.add_games(
                 self._media_content_id, self._media_title,
                 self._media_image, self._media_type)
-            self._games = self.load_games()
+            self._games = load_games(self.hass)
 
         self._source_list = list(sorted(self._games))
 
-    def load_games(self):
-        """Load games for sources."""
-        g_file = self._games_filename
-        try:
-            games = load_json(g_file)
-
-        # If file does not exist, create empty file.
-        except FileNotFoundError:
-            games = {}
-            self.save_games(games)
-
-        # Convert existing data to dict format if not already.
-        if games is not None:
-            for game, data in games.items():
-                if type(data) is not dict:
-                    games[game] = {'name': data}
-
-        return games
-
-    def save_games(self, games):
-        """Save games to file."""
-        g_file = self._games_filename
-        try:
-            save_json(g_file, games)
-        except OSError as error:
-            _LOGGER.error("Could not save game list, %s", error)
-
-        # Retry loading file
-        if games is None:
-            self.load_games()
-
-    def add_games(self, title_id, app_name, image, g_type, lock_data=False):
+    def add_games(self, title_id, app_name, image, g_type, is_locked=False):
         """Add games to list."""
         games = self._games
         if title_id is not None and title_id not in games:
             game = {title_id: {
-                'name': app_name, 'cover': image,
-                'type': g_type, 'is_locked': lock_data}}
+                ATTR_MEDIA_TITLE: app_name, ATTR_MEDIA_IMAGE_URL: image,
+                ATTR_MEDIA_CONTENT_TYPE: g_type, ATTR_LOCKED: is_locked}}
             games.update(game)
-            self.save_games(games)
+            save_games(self.hass, games)
 
     async def async_get_device_info(self, status):
         """Set device info for registry."""
@@ -484,7 +570,7 @@ class PS4Device(MediaPlayerDevice):
     async def async_select_source(self, source):
         """Select input source."""
         for title_id, data in self._games.items():
-            game = data['name']
+            game = data[ATTR_MEDIA_TITLE]
             if source.lower().encode(encoding='utf-8') == \
                game.lower().encode(encoding='utf-8') \
                or source == title_id:
