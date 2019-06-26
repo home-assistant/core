@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.core import callback
 from homeassistant.const import MATCH_ALL
+from homeassistant.setup import async_setup_component
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.util import session_scope
@@ -202,3 +203,22 @@ def test_recorder_setup_failure():
         rec.join()
 
     hass.stop()
+
+
+async def test_defaults_set(hass):
+    """Test the config defaults are set."""
+    recorder_config = None
+
+    async def mock_setup(hass, config):
+        """Mock setup."""
+        nonlocal recorder_config
+        recorder_config = config['recorder']
+        return True
+
+    with patch('homeassistant.components.recorder.async_setup',
+               side_effect=mock_setup):
+        assert await async_setup_component(hass, 'history', {})
+
+    assert recorder_config is not None
+    assert recorder_config['purge_keep_days'] == 10
+    assert recorder_config['purge_interval'] == 1

@@ -9,12 +9,15 @@ PREF_GOOGLE_SECURE_DEVICES_PIN = 'google_secure_devices_pin'
 PREF_CLOUDHOOKS = 'cloudhooks'
 PREF_CLOUD_USER = 'cloud_user'
 PREF_GOOGLE_ENTITY_CONFIGS = 'google_entity_configs'
+PREF_ALEXA_ENTITY_CONFIGS = 'alexa_entity_configs'
+PREF_ALEXA_REPORT_STATE = 'alexa_report_state'
 PREF_OVERRIDE_NAME = 'override_name'
 PREF_DISABLE_2FA = 'disable_2fa'
 PREF_ALIASES = 'aliases'
 PREF_SHOULD_EXPOSE = 'should_expose'
 DEFAULT_SHOULD_EXPOSE = True
 DEFAULT_DISABLE_2FA = False
+DEFAULT_ALEXA_REPORT_STATE = False
 
 CONF_ALEXA = 'alexa'
 CONF_ALIASES = 'aliases'
@@ -29,6 +32,7 @@ CONF_SUBSCRIPTION_INFO_URL = 'subscription_info_url'
 CONF_CLOUDHOOK_CREATE_URL = 'cloudhook_create_url'
 CONF_REMOTE_API_URL = 'remote_api_url'
 CONF_ACME_DIRECTORY_SERVER = 'acme_directory_server'
+CONF_ALEXA_ACCESS_TOKEN_URL = 'alexa_access_token_url'
 
 MODE_DEV = "development"
 MODE_PROD = "production"
@@ -42,3 +46,7 @@ class InvalidTrustedNetworks(Exception):
 
 class InvalidTrustedProxies(Exception):
     """Raised when invalid trusted proxies config."""
+
+
+class RequireRelink(Exception):
+    """The skill needs to be relinked."""

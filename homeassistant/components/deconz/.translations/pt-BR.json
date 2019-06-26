@@ -2,8 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "A ponte j\u00e1 est\u00e1 configurada",
+            "already_in_progress": "Fluxo de configura\u00e7\u00e3o para ponte j\u00e1 est\u00e1 em andamento.",
             "no_bridges": "N\u00e3o h\u00e1 pontes de deCONZ descobertas",
-            "one_instance_only": "Componente suporta apenas uma inst\u00e2ncia deCONZ"
+            "not_deconz_bridge": "N\u00e3o \u00e9 uma ponte deCONZ",
+            "one_instance_only": "Componente suporta apenas uma inst\u00e2ncia deCONZ",
+            "updated_instance": "Atualiza\u00e7\u00e3o da inst\u00e2ncia deCONZ com novo endere\u00e7o de host"
         },
         "error": {
             "no_key": "N\u00e3o foi poss\u00edvel obter uma chave de API"

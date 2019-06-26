@@ -4,21 +4,20 @@ from unittest.mock import Mock
 
 import pytest
 
+from tests.common import mock_coro
+
 import aiounifi
 from aiounifi.clients import Clients
 from aiounifi.devices import Devices
 
 from homeassistant import config_entries
 from homeassistant.components import unifi
-from homeassistant.components.unifi.const import (
-    CONF_POE_CONTROL, CONF_CONTROLLER, CONF_SITE_ID)
+from homeassistant.components.unifi.const import CONF_CONTROLLER, CONF_SITE_ID
 from homeassistant.setup import async_setup_component
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL)
 
 import homeassistant.components.switch as switch
-
-from tests.common import mock_coro
 
 CLIENT_1 = {
     'hostname': 'client_1',
@@ -180,8 +179,7 @@ CONTROLLER_DATA = {
 }
 
 ENTRY_CONFIG = {
-    CONF_CONTROLLER: CONTROLLER_DATA,
-    CONF_POE_CONTROL: True
+    CONF_CONTROLLER: CONTROLLER_DATA
 }
 
 CONTROLLER_ID = unifi.CONTROLLER_ID.format(host='mock-host', site='mock-site')
@@ -190,12 +188,9 @@ CONTROLLER_ID = unifi.CONTROLLER_ID.format(host='mock-host', site='mock-site')
 @pytest.fixture
 def mock_controller(hass):
     """Mock a UniFi Controller."""
-    controller = Mock(
-        available=True,
-        api=Mock(),
-        spec=unifi.UniFiController
-    )
-    controller.mac = '10:00:00:00:00:01'
+    controller = unifi.UniFiController(hass, None)
+
+    controller.api = Mock()
     controller.mock_requests = []
 
     controller.mock_client_responses = deque()
@@ -224,6 +219,9 @@ async def setup_controller(hass, mock_controller):
     config_entry = config_entries.ConfigEntry(
         1, unifi.DOMAIN, 'Mock Title', ENTRY_CONFIG, 'test',
         config_entries.CONN_CLASS_LOCAL_POLL)
+    mock_controller.config_entry = config_entry
+
+    await mock_controller.async_update()
     await hass.config_entries.async_forward_entry_setup(config_entry, 'switch')
     # To flush out the service call to update the group
     await hass.async_block_till_done()
@@ -242,6 +240,7 @@ async def test_platform_manually_configured(hass):
 async def test_no_clients(hass, mock_controller):
     """Test the update_clients function when no clients are found."""
     mock_controller.mock_client_responses.append({})
+    mock_controller.mock_device_responses.append({})
     await setup_controller(hass, mock_controller)
     assert len(mock_controller.mock_requests) == 2
     assert not hass.states.async_all()
