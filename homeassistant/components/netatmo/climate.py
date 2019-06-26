@@ -140,7 +140,7 @@ class NetatmoThermostat(ClimateDevice):
             _LOGGER.error("Thermostat in %s not available", room_id)
 
         if self._module_type == NA_THERM:
-            self._operation_list = list(DICT_NETATMO_TO_HA)
+            self._operation_list = list(DICT_HA_TO_NETATMO)
             self._support_flags = SUPPORT_FLAGS | SUPPORT_ON_OFF
 
     @property
