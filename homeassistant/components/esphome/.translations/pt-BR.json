@@ -8,6 +8,7 @@
             "invalid_password": "Senha inv\u00e1lida!",
             "resolve_error": "N\u00e3o \u00e9 poss\u00edvel resolver o endere\u00e7o do ESP. Se este erro persistir, por favor, defina um endere\u00e7o IP est\u00e1tico: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
+        "flow_title": "ESPHome: {name}",
         "step": {
             "authenticate": {
                 "data": {
@@ -15,6 +16,9 @@
                 },
                 "description": "Por favor, digite a senha que voc\u00ea definiu em sua configura\u00e7\u00e3o.",
                 "title": "Digite a senha"
+            },
+            "discovery_confirm": {
+                "title": "N\u00f3 ESPHome descoberto"
             },
             "user": {
                 "data": {

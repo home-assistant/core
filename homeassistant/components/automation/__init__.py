@@ -50,7 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _platform_validator(config):
-    """Validate it is a valid  platform."""
+    """Validate it is a valid platform."""
     try:
         platform = importlib.import_module('.{}'.format(config[CONF_PLATFORM]),
                                            __name__)
@@ -223,23 +223,25 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Startup with initial state or previous state."""
         await super().async_added_to_hass()
+
+        state = await self.async_get_last_state()
+        if state:
+            enable_automation = state.state == STATE_ON
+            self._last_triggered = state.attributes.get('last_triggered')
+            _LOGGER.debug("Loaded automation %s with state %s from state "
+                          " storage last state %s", self.entity_id,
+                          enable_automation, state)
+        else:
+            enable_automation = DEFAULT_INITIAL_STATE
+            _LOGGER.debug("Automation %s not in state storage, state %s from "
+                          "default is used.", self.entity_id,
+                          enable_automation)
+
         if self._initial_state is not None:
             enable_automation = self._initial_state
-            _LOGGER.debug("Automation %s initial state %s from config "
-                          "initial_state", self.entity_id, enable_automation)
-        else:
-            state = await self.async_get_last_state()
-            if state:
-                enable_automation = state.state == STATE_ON
-                self._last_triggered = state.attributes.get('last_triggered')
-                _LOGGER.debug("Automation %s initial state %s from recorder "
-                              "last state %s", self.entity_id,
-                              enable_automation, state)
-            else:
-                enable_automation = DEFAULT_INITIAL_STATE
-                _LOGGER.debug("Automation %s initial state %s from default "
-                              "initial state", self.entity_id,
-                              enable_automation)
+            _LOGGER.debug("Automation %s initial state %s overridden from "
+                          "config initial_state", self.entity_id,
+                          enable_automation)
 
         if enable_automation:
             await self.async_enable()

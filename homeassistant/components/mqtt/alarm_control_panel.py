@@ -192,6 +192,12 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             return alarm.FORMAT_NUMBER
         return alarm.FORMAT_TEXT
 
+    @property
+    def code_arm_required(self):
+        """Whether the code is required for arm actions."""
+        code_required = self._config.get(CONF_CODE_ARM_REQUIRED)
+        return code_required
+
     async def async_alarm_disarm(self, code=None):
         """Send disarm command.
 

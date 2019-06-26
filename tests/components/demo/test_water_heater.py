@@ -95,7 +95,8 @@ class TestDemowater_heater(unittest.TestCase):
         """Test setting the away mode without required attribute."""
         state = self.hass.states.get(ENTITY_WATER_HEATER)
         assert 'off' == state.attributes.get('away_mode')
-        common.set_away_mode(self.hass, None, ENTITY_WATER_HEATER)
+        with pytest.raises(vol.Invalid):
+            common.set_away_mode(self.hass, None, ENTITY_WATER_HEATER)
         self.hass.block_till_done()
         assert 'off' == state.attributes.get('away_mode')
 

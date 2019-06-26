@@ -152,6 +152,16 @@ def test_integration_properties(hass):
     assert integration.domain == 'hue'
     assert integration.dependencies == ['test-dep']
     assert integration.requirements == ['test-req==1.0.0']
+    assert integration.is_built_in is True
+
+    integration = loader.Integration(
+        hass, 'custom_components.hue', None, {
+            'name': 'Philips Hue',
+            'domain': 'hue',
+            'dependencies': ['test-dep'],
+            'requirements': ['test-req==1.0.0'],
+        })
+    assert integration.is_built_in is False
 
 
 async def test_integrations_only_once(hass):

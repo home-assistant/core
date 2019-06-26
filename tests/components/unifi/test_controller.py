@@ -4,8 +4,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.components.unifi.const import (
-    CONF_POE_CONTROL, CONF_CONTROLLER, CONF_SITE_ID)
+from homeassistant.components.unifi.const import CONF_CONTROLLER, CONF_SITE_ID
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL)
 from homeassistant.components.unifi import controller, errors
@@ -22,8 +21,7 @@ CONTROLLER_DATA = {
 }
 
 ENTRY_CONFIG = {
-    CONF_CONTROLLER: CONTROLLER_DATA,
-    CONF_POE_CONTROL: True
+    CONF_CONTROLLER: CONTROLLER_DATA
 }
 
 
@@ -169,30 +167,6 @@ async def test_reset_unloads_entry_if_setup():
     assert await unifi_controller.async_reset()
 
     assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 1
-
-
-async def test_reset_unloads_entry_without_poe_control():
-    """Calling reset while the entry has been setup."""
-    hass = Mock()
-    entry = Mock()
-    entry.data = dict(ENTRY_CONFIG)
-    entry.data[CONF_POE_CONTROL] = False
-    api = Mock()
-    api.initialize.return_value = mock_coro(True)
-
-    unifi_controller = controller.UniFiController(hass, entry)
-
-    with patch.object(controller, 'get_controller',
-                      return_value=mock_coro(api)):
-        assert await unifi_controller.async_setup() is True
-
-    assert not hass.config_entries.async_forward_entry_setup.mock_calls
-
-    hass.config_entries.async_forward_entry_unload.return_value = \
-        mock_coro(True)
-    assert await unifi_controller.async_reset()
-
-    assert not hass.config_entries.async_forward_entry_unload.mock_calls
 
 
 async def test_get_controller(hass):

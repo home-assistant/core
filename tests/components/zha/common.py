@@ -82,6 +82,8 @@ class FakeDevice:
         self.initializing = False
         self.manufacturer = manufacturer
         self.model = model
+        from zigpy.zdo.types import NodeDescriptor
+        self.node_desc = NodeDescriptor()
 
 
 def make_device(in_cluster_ids, out_cluster_ids, device_type, ieee,

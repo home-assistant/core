@@ -3,6 +3,7 @@
         "abort": {
             "accessory_not_found_error": "Seznanjanja ni mogo\u010de dodati, ker naprave ni ve\u010d mogo\u010de najti.",
             "already_configured": "Dodatna oprema je \u017ee konfigurirana s tem krmilnikom.",
+            "already_in_progress": "Konfiguracijski tok za to napravo je \u017ee v teku.",
             "already_paired": "Ta dodatna oprema je \u017ee povezana z drugo napravo. Ponastavite dodatno opremo in poskusite znova.",
             "ignored_model": "Podpora za HomeKit za ta model je blokirana, saj je na voljo ve\u010d funkcij popolne nativne integracije.",
             "invalid_config_entry": "Ta naprava se prikazuje kot pripravljena za povezavo, vendar je konflikt v nastavitvah  Home Assistant, ki ga je treba najprej odstraniti.",

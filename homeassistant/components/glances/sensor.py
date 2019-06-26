@@ -26,13 +26,13 @@ DEFAULT_VERSION = 2
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 SENSOR_TYPES = {
-    'disk_use_percent': ['Disk used', '%', 'mdi:harddisk'],
+    'disk_use_percent': ['Disk used percent', '%', 'mdi:harddisk'],
     'disk_use': ['Disk used', 'GiB', 'mdi:harddisk'],
     'disk_free': ['Disk free', 'GiB', 'mdi:harddisk'],
-    'memory_use_percent': ['RAM used', '%', 'mdi:memory'],
+    'memory_use_percent': ['RAM used percent', '%', 'mdi:memory'],
     'memory_use': ['RAM used', 'MiB', 'mdi:memory'],
     'memory_free': ['RAM free', 'MiB', 'mdi:memory'],
-    'swap_use_percent': ['Swap used', '%', 'mdi:memory'],
+    'swap_use_percent': ['Swap used percent', '%', 'mdi:memory'],
     'swap_use': ['Swap used', 'GiB', 'mdi:memory'],
     'swap_free': ['Swap free', 'GiB', 'mdi:memory'],
     'processor_load': ['CPU load', '15 min', 'mdi:memory'],

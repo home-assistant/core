@@ -11,7 +11,8 @@ from homeassistant import config_entries
 from homeassistant.core import callback, CoreState
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.const import (
     ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
@@ -46,6 +47,7 @@ ATTR_POWER = 'power_consumption'
 CONF_POLLING_INTENSITY = 'polling_intensity'
 CONF_IGNORED = 'ignored'
 CONF_INVERT_OPENCLOSE_BUTTONS = 'invert_openclose_buttons'
+CONF_INVERT_PERCENT = 'invert_percent'
 CONF_REFRESH_VALUE = 'refresh_value'
 CONF_REFRESH_DELAY = 'delay'
 CONF_DEVICE_CONFIG = 'device_config'
@@ -56,6 +58,7 @@ DATA_ZWAVE_CONFIG = 'zwave_config'
 
 DEFAULT_CONF_IGNORED = False
 DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS = False
+DEFAULT_CONF_INVERT_PERCENT = False
 DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
 
@@ -145,6 +148,8 @@ DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
     vol.Optional(CONF_IGNORED, default=DEFAULT_CONF_IGNORED): cv.boolean,
     vol.Optional(CONF_INVERT_OPENCLOSE_BUTTONS,
                  default=DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS): cv.boolean,
+    vol.Optional(CONF_INVERT_PERCENT,
+                 default=DEFAULT_CONF_INVERT_PERCENT): cv.boolean,
     vol.Optional(CONF_REFRESH_VALUE, default=DEFAULT_CONF_REFRESH_VALUE):
         cv.boolean,
     vol.Optional(CONF_REFRESH_DELAY, default=DEFAULT_CONF_REFRESH_DELAY):
@@ -291,6 +296,8 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DATA_DEVICES] = {}
     hass.data[DATA_ENTITY_VALUES] = []
 
+    registry = await async_get_registry(hass)
+
     if use_debug:  # pragma: no cover
         def log_all(signal, value=None):
             """Log all the signals."""
@@ -332,14 +339,23 @@ async def async_setup_entry(hass, config_entry):
             new_values = hass.data[DATA_ENTITY_VALUES] + [values]
             hass.data[DATA_ENTITY_VALUES] = new_values
 
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
-    registry = await async_get_registry(hass)
+    platform = EntityPlatform(
+        hass=hass,
+        logger=_LOGGER,
+        domain=DOMAIN,
+        platform_name=DOMAIN,
+        platform=None,
+        scan_interval=DEFAULT_SCAN_INTERVAL,
+        entity_namespace=None,
+        async_entities_added_callback=lambda: None,
+    )
+    platform.config_entry = config_entry
 
     def node_added(node):
         """Handle a new node on the network."""
         entity = ZWaveNodeEntity(node, network)
 
-        def _add_node_to_component():
+        async def _add_node_to_component():
             if hass.data[DATA_DEVICES].get(entity.unique_id):
                 return
 
@@ -353,10 +369,10 @@ async def async_setup_entry(hass, config_entry):
                 return
 
             hass.data[DATA_DEVICES][entity.unique_id] = entity
-            component.add_entities([entity])
+            await platform.async_add_entities([entity])
 
         if entity.unique_id:
-            _add_node_to_component()
+            hass.async_add_job(_add_node_to_component())
             return
 
         @callback
@@ -1057,14 +1073,25 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
     @property
     def device_info(self):
         """Return device information."""
-        return {
-            'identifiers': {
-                (DOMAIN, self.node_id)
-            },
+        info = {
             'manufacturer': self.node.manufacturer_name,
             'model': self.node.product_name,
-            'name': node_name(self.node),
         }
+        if self.values.primary.instance > 1:
+            info['name'] = '{} ({})'.format(
+                node_name(self.node), self.values.primary.instance)
+            info['identifiers'] = {
+                (DOMAIN, self.node_id, self.values.primary.instance, ),
+            }
+            info['via_device'] = (DOMAIN, self.node_id, )
+        else:
+            info['name'] = node_name(self.node)
+            info['identifiers'] = {
+                (DOMAIN, self.node_id),
+            }
+            if self.node_id > 1:
+                info['via_device'] = (DOMAIN, 1, )
+        return info
 
     @property
     def name(self):

@@ -17,24 +17,32 @@ from .const import (
 from .error import SmartHomeError
 
 
-class Config:
+class AbstractConfig:
     """Hold the configuration for Google Assistant."""
 
-    def __init__(self, should_expose,
-                 entity_config=None, secure_devices_pin=None,
-                 agent_user_id=None, should_2fa=None):
-        """Initialize the configuration."""
-        self.should_expose = should_expose
-        self.entity_config = entity_config or {}
-        self.secure_devices_pin = secure_devices_pin
-        self._should_2fa = should_2fa
+    @property
+    def agent_user_id(self):
+        """Return Agent User Id to use for query responses."""
+        return None
 
-        # Agent User Id to use for query responses
-        self.agent_user_id = agent_user_id
+    @property
+    def entity_config(self):
+        """Return entity config."""
+        return {}
+
+    @property
+    def secure_devices_pin(self):
+        """Return entity config."""
+        return None
+
+    def should_expose(self, state) -> bool:
+        """Return if entity should be exposed."""
+        raise NotImplementedError
 
     def should_2fa(self, state):
         """If an entity should have 2FA checked."""
-        return self._should_2fa is None or self._should_2fa(state)
+        # pylint: disable=no-self-use
+        return True
 
 
 class RequestData:

@@ -1,4 +1,4 @@
-"""Support for Honeywell Round Connected and Honeywell Evohome thermostats."""
+"""Support for Honeywell Total Connect Comfort climate systems."""
 import logging
 import datetime
 
@@ -25,9 +25,9 @@ CONF_AWAY_TEMPERATURE = 'away_temperature'
 CONF_COOL_AWAY_TEMPERATURE = 'away_cool_temperature'
 CONF_HEAT_AWAY_TEMPERATURE = 'away_heat_temperature'
 
-DEFAULT_AWAY_TEMPERATURE = 16
-DEFAULT_COOL_AWAY_TEMPERATURE = 30
-DEFAULT_HEAT_AWAY_TEMPERATURE = 16
+DEFAULT_AWAY_TEMPERATURE = 16  # in C, for eu regions, the others are F/us
+DEFAULT_COOL_AWAY_TEMPERATURE = 88
+DEFAULT_HEAT_AWAY_TEMPERATURE = 61
 DEFAULT_REGION = 'eu'
 REGIONS = ['eu', 'us']
 
@@ -37,9 +37,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_AWAY_TEMPERATURE,
                  default=DEFAULT_AWAY_TEMPERATURE): vol.Coerce(float),
     vol.Optional(CONF_COOL_AWAY_TEMPERATURE,
-                 default=DEFAULT_COOL_AWAY_TEMPERATURE): vol.Coerce(float),
+                 default=DEFAULT_COOL_AWAY_TEMPERATURE): vol.Coerce(int),
     vol.Optional(CONF_HEAT_AWAY_TEMPERATURE,
-                 default=DEFAULT_HEAT_AWAY_TEMPERATURE): vol.Coerce(float),
+                 default=DEFAULT_HEAT_AWAY_TEMPERATURE): vol.Coerce(int),
     vol.Optional(CONF_REGION, default=DEFAULT_REGION): vol.In(REGIONS),
 })
 
