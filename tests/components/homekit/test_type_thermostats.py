@@ -6,9 +6,10 @@ import pytest
 
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE, ATTR_MAX_TEMP, ATTR_MIN_TEMP,
-    ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH, ATTR_OPERATION_MODE,
-    ATTR_OPERATION_LIST, DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP,
-    DOMAIN as DOMAIN_CLIMATE, STATE_AUTO, STATE_COOL, STATE_HEAT)
+    ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_STEP,
+    ATTR_OPERATION_MODE, ATTR_OPERATION_LIST, DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP, DOMAIN as DOMAIN_CLIMATE, STATE_AUTO, STATE_COOL,
+    STATE_HEAT)
 from homeassistant.components.homekit.const import (
     ATTR_VALUE, DEFAULT_MAX_TEMP_WATER_HEATER, DEFAULT_MIN_TEMP_WATER_HEATER,
     PROP_MAX_VALUE, PROP_MIN_STEP, PROP_MIN_VALUE)
@@ -405,6 +406,19 @@ async def test_thermostat_get_temperature_range(hass, hk_driver, cls):
                           {ATTR_MIN_TEMP: 60, ATTR_MAX_TEMP: 70})
     await hass.async_block_till_done()
     assert acc.get_temperature_range() == (15.5, 21.0)
+
+
+async def test_thermostat_temperature_step_whole(hass, hk_driver, cls):
+    """Test climate device with single digit precision."""
+    entity_id = 'climate.test'
+
+    hass.states.async_set(entity_id, STATE_OFF, {ATTR_TARGET_TEMP_STEP: 1})
+    await hass.async_block_till_done()
+    acc = cls.thermostat(hass, hk_driver, 'Climate', entity_id, 2, None)
+    await hass.async_add_job(acc.run)
+    await hass.async_block_till_done()
+
+    assert acc.char_target_temp.properties[PROP_MIN_STEP] == 1.0
 
 
 async def test_water_heater(hass, hk_driver, cls, events):
