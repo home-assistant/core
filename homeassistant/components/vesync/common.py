@@ -11,6 +11,20 @@ CONF_LIGHTS = 'lights'
 CONF_SWITCHES = 'switches'
 CONF_FANS = 'fans'
 
+class VesyncDevices:
+    """Hold device lists"""
+    def __init__(
+            self,
+            lights=None,
+            switches=None,
+            fans=None
+        ):
+        """Construct class"""
+        self._lights = lights or []
+        self._switches = switches or []
+        self._fans = fans or []
+
+
 async def async_process_devices(hass, manager):
     """Assign devices to proper component"""
 
@@ -19,12 +33,10 @@ async def async_process_devices(hass, manager):
     devices[CONF_SWITCHES] = []
     devices[CONF_FANS] = []
 
-    def update():
-        manager_update = manager.update()
-        return manager_update
-
     await hass.async_add_executor_job(manager.update)
-
+    _LOGGER.debug(manager.bulbs)
+    _LOGGER.debug(manager.switches)
+    _LOGGER.debug(manager.outlets)
     if manager.bulbs:
         devices[CONF_LIGHTS].extend(manager.bulbs)
         _LOGGER.info("%d VeSync light bulbs found", len(manager.bulbs))

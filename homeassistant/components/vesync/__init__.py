@@ -1,7 +1,7 @@
 """Etekcity VeSync integration."""
 import logging
 import voluptuous as vol
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, 
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
                                  CONF_TIME_ZONE, CONF_SCAN_INTERVAL)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry, SOURCE_IMPORT
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.components.vesync import config_flow
-from .common import async_process_devices, CONF_FANS, CONF_LIGHTS, CONF_SWITCHES
+from .common import async_process_devices, VesyncDevices, CONF_FANS, CONF_LIGHTS, CONF_SWITCHES
 from .config_flow import configured_instances
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,9 +32,6 @@ async def async_setup(hass, config):
     """Set up the VeSync component."""
 
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][CONF_SWITCHES] = []
-    hass.data[DOMAIN][CONF_FANS] = []
-    hass.data[DOMAIN][CONF_LIGHTS] = []
 
     if DOMAIN not in config:
         return True
@@ -49,7 +46,7 @@ async def async_setup(hass, config):
                 data={
                     CONF_USERNAME: conf[CONF_USERNAME],
                     CONF_PASSWORD: conf[CONF_PASSWORD],
-                    CONF_TIME_ZONE: conf.get(CONF_TIME_ZONE)
+                    CONF_TIME_ZONE: conf.get(CONF_TIME_ZONE, None)
                 }))
 
     return True
@@ -59,7 +56,12 @@ async def async_setup_entry(hass, config_entry):
     """Set up Vesync as config entry"""
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
-    time_zone = None
+    time_zone = config_entry.data[CONF_TIME_ZONE]
+
+    hass.data[DOMAIN][CONF_SWITCHES] = []
+    hass.data[DOMAIN][CONF_FANS] = []
+    hass.data[DOMAIN][CONF_LIGHTS] = []
+
     if config_entry.data[CONF_TIME_ZONE]:
         time_zone = config_entry.data[CONF_TIME_ZONE]
     else:
@@ -79,12 +81,11 @@ async def async_setup_entry(hass, config_entry):
 
     login = await hass.async_add_executor_job(manager.login)
 
-    _LOGGER.debug("Login successful - %s", login)
-    _LOGGER.debug(manager)
-
     if not login:
         _LOGGER.error("Unable to login")
         return False
+
+    devices = VesyncDevices()
 
     device_dict = await async_process_devices(hass, manager)
 
