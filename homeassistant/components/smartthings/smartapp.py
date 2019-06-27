@@ -282,9 +282,9 @@ async def smartapp_sync_subscriptions(
             await api.create_subscription(sub)
             _LOGGER.debug("Created subscription for '%s' under app '%s'",
                           target, installed_app_id)
-        except Exception:  # pylint:disable=broad-except
-            _LOGGER.exception("Failed to create subscription for '%s' under "
-                              "app '%s'", target, installed_app_id)
+        except Exception as error:  # pylint:disable=broad-except
+            _LOGGER.error("Failed to create subscription for '%s' under app "
+                          "'%s': %s", target, installed_app_id, error)
 
     async def delete_subscription(sub: SubscriptionEntity):
         try:
@@ -293,9 +293,9 @@ async def smartapp_sync_subscriptions(
             _LOGGER.debug("Removed subscription for '%s' under app '%s' "
                           "because it was no longer needed",
                           sub.capability, installed_app_id)
-        except Exception:  # pylint:disable=broad-except
-            _LOGGER.exception("Failed to remove subscription for '%s' under "
-                              "app '%s'", sub.capability, installed_app_id)
+        except Exception as error:  # pylint:disable=broad-except
+            _LOGGER.error("Failed to remove subscription for '%s' under app "
+                          "'%s': %s", sub.capability, installed_app_id, error)
 
     # Build set of capabilities and prune unsupported ones
     capabilities = set()

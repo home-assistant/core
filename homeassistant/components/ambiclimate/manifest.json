@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/ambiclimate",
   "requirements": [
-    "ambiclimate==0.1.2"
+    "ambiclimate==0.2.0"
   ],
   "dependencies": [],
   "codeowners": [

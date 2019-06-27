@@ -400,7 +400,7 @@ def test_write_device():
     device = apns.ApnsDevice('123', 'name', 'track_id', True)
 
     apns._write_device(out, device)
-    data = yaml.load(out.getvalue())
+    data = yaml.safe_load(out.getvalue())
     assert data == {
         123: {
             'name': 'name',

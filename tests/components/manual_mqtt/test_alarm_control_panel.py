@@ -77,6 +77,32 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         assert STATE_ALARM_ARMED_HOME == \
             self.hass.states.get(entity_id).state
 
+    def test_arm_home_no_pending_when_code_not_req(self):
+        """Test arm home method."""
+        assert setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
+                'platform': 'manual_mqtt',
+                'name': 'test',
+                'code': CODE,
+                'code_arm_required': False,
+                'pending_time': 0,
+                'disarm_after_trigger': False,
+                'command_topic': 'alarm/command',
+                'state_topic': 'alarm/state',
+            }})
+
+        entity_id = 'alarm_control_panel.test'
+
+        assert STATE_ALARM_DISARMED == \
+            self.hass.states.get(entity_id).state
+
+        common.alarm_arm_home(self.hass, 0)
+        self.hass.block_till_done()
+
+        assert STATE_ALARM_ARMED_HOME == \
+            self.hass.states.get(entity_id).state
+
     def test_arm_home_with_pending(self):
         """Test arm home method."""
         assert setup_component(
@@ -159,6 +185,32 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             self.hass.states.get(entity_id).state
 
         common.alarm_arm_away(self.hass, CODE, entity_id)
+        self.hass.block_till_done()
+
+        assert STATE_ALARM_ARMED_AWAY == \
+            self.hass.states.get(entity_id).state
+
+    def test_arm_away_no_pending_when_code_not_req(self):
+        """Test arm home method."""
+        assert setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
+                'platform': 'manual_mqtt',
+                'name': 'test',
+                'code_arm_required': False,
+                'code': CODE,
+                'pending_time': 0,
+                'disarm_after_trigger': False,
+                'command_topic': 'alarm/command',
+                'state_topic': 'alarm/state',
+            }})
+
+        entity_id = 'alarm_control_panel.test'
+
+        assert STATE_ALARM_DISARMED == \
+            self.hass.states.get(entity_id).state
+
+        common.alarm_arm_away(self.hass, 0, entity_id)
         self.hass.block_till_done()
 
         assert STATE_ALARM_ARMED_AWAY == \
@@ -274,6 +326,32 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             self.hass.states.get(entity_id).state
 
         common.alarm_arm_night(self.hass, CODE, entity_id)
+        self.hass.block_till_done()
+
+        assert STATE_ALARM_ARMED_NIGHT == \
+            self.hass.states.get(entity_id).state
+
+    def test_arm_night_no_pending_when_code_not_req(self):
+        """Test arm night method."""
+        assert setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
+                'platform': 'manual_mqtt',
+                'name': 'test',
+                'code_arm_required': False,
+                'code': CODE,
+                'pending_time': 0,
+                'disarm_after_trigger': False,
+                'command_topic': 'alarm/command',
+                'state_topic': 'alarm/state',
+            }})
+
+        entity_id = 'alarm_control_panel.test'
+
+        assert STATE_ALARM_DISARMED == \
+            self.hass.states.get(entity_id).state
+
+        common.alarm_arm_night(self.hass, 0, entity_id)
         self.hass.block_till_done()
 
         assert STATE_ALARM_ARMED_NIGHT == \

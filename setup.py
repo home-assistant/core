@@ -55,9 +55,9 @@ REQUIRES = [
     'pip>=8.0.3',
     'python-slugify==3.0.2',
     'pytz>=2019.01',
-    'pyyaml>=3.13,<4',
+    'pyyaml==5.1',
     'requests==2.22.0',
-    'ruamel.yaml==0.15.94',
+    'ruamel.yaml==0.15.97',
     'voluptuous==0.11.5',
     'voluptuous-serialize==2.1.0', 'markdown', 'pyqrcode', 'gmusicapi'
 ]

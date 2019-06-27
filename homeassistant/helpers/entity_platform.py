@@ -296,7 +296,7 @@ class EntityPlatform:
                         'model',
                         'name',
                         'sw_version',
-                        'via_hub',
+                        'via_device',
                 ):
                     if key in device_info:
                         processed_dev_info[key] = device_info[key]

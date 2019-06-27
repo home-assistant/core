@@ -21,6 +21,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CODE_TEMPLATE = 'code_template'
+CONF_CODE_ARM_REQUIRED = 'code_arm_required'
 
 DEFAULT_ALARM_NAME = 'HA Alarm'
 DEFAULT_DELAY_TIME = datetime.timedelta(seconds=0)
@@ -76,6 +77,7 @@ PLATFORM_SCHEMA = vol.Schema(vol.All({
     vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
     vol.Exclusive(CONF_CODE, 'code validation'): cv.string,
     vol.Exclusive(CONF_CODE_TEMPLATE, 'code validation'): cv.template,
+    vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
     vol.Optional(CONF_DELAY_TIME, default=DEFAULT_DELAY_TIME):
         vol.All(cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_PENDING_TIME, default=DEFAULT_PENDING_TIME):
@@ -106,6 +108,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         config[CONF_NAME],
         config.get(CONF_CODE),
         config.get(CONF_CODE_TEMPLATE),
+        config.get(CONF_CODE_ARM_REQUIRED),
         config.get(CONF_DISARM_AFTER_TRIGGER, DEFAULT_DISARM_AFTER_TRIGGER),
         config
         )])
@@ -124,7 +127,7 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
     """
 
     def __init__(self, hass, name, code, code_template,
-                 disarm_after_trigger, config):
+                 code_arm_required, disarm_after_trigger, config):
         """Init the manual alarm panel."""
         self._state = STATE_ALARM_DISARMED
         self._hass = hass
@@ -134,6 +137,7 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
             self._code.hass = hass
         else:
             self._code = code or None
+        self._code_arm_required = code_arm_required
         self._disarm_after_trigger = disarm_after_trigger
         self._previous_state = self._state
         self._state_ts = None
@@ -205,6 +209,11 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
             return alarm.FORMAT_NUMBER
         return alarm.FORMAT_TEXT
 
+    @property
+    def code_arm_required(self):
+        """Whether the code is required for arm actions."""
+        return self._code_arm_required
+
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         if not self._validate_code(code, STATE_ALARM_DISARMED):
@@ -216,28 +225,32 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        if not self._validate_code(code, STATE_ALARM_ARMED_HOME):
+        if self._code_arm_required and not \
+                self._validate_code(code, STATE_ALARM_ARMED_HOME):
             return
 
         self._update_state(STATE_ALARM_ARMED_HOME)
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        if not self._validate_code(code, STATE_ALARM_ARMED_AWAY):
+        if self._code_arm_required and not \
+                self._validate_code(code, STATE_ALARM_ARMED_AWAY):
             return
 
         self._update_state(STATE_ALARM_ARMED_AWAY)
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
-        if not self._validate_code(code, STATE_ALARM_ARMED_NIGHT):
+        if self._code_arm_required and not \
+                self._validate_code(code, STATE_ALARM_ARMED_NIGHT):
             return
 
         self._update_state(STATE_ALARM_ARMED_NIGHT)
 
     def alarm_arm_custom_bypass(self, code=None):
         """Send arm custom bypass command."""
-        if not self._validate_code(code, STATE_ALARM_ARMED_CUSTOM_BYPASS):
+        if self._code_arm_required and not \
+                self._validate_code(code, STATE_ALARM_ARMED_CUSTOM_BYPASS):
             return
 
         self._update_state(STATE_ALARM_ARMED_CUSTOM_BYPASS)

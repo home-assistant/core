@@ -4,8 +4,7 @@ from unittest.mock import Mock, patch
 from homeassistant.components import unifi
 from homeassistant.components.unifi import config_flow
 from homeassistant.setup import async_setup_component
-from homeassistant.components.unifi.const import (
-    CONF_POE_CONTROL, CONF_CONTROLLER, CONF_SITE_ID)
+from homeassistant.components.unifi.const import CONF_CONTROLLER, CONF_SITE_ID
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL)
 
@@ -146,7 +145,8 @@ async def test_flow_works(hass, aioclient_mock):
     flow.hass = hass
 
     with patch('aiounifi.Controller') as mock_controller:
-        def mock_constructor(host, username, password, port, site, websession):
+        def mock_constructor(
+                host, username, password, port, site, websession, sslcontext):
             """Fake the controller constructor."""
             mock_controller.host = host
             mock_controller.username = username
@@ -185,8 +185,7 @@ async def test_flow_works(hass, aioclient_mock):
             CONF_PORT: 1234,
             CONF_SITE_ID: 'default',
             CONF_VERIFY_SSL: True
-        },
-        CONF_POE_CONTROL: True
+        }
     }
 
 
@@ -254,7 +253,8 @@ async def test_user_permissions_low(hass, aioclient_mock):
     flow.hass = hass
 
     with patch('aiounifi.Controller') as mock_controller:
-        def mock_constructor(host, username, password, port, site, websession):
+        def mock_constructor(
+                host, username, password, port, site, websession, sslcontext):
             """Fake the controller constructor."""
             mock_controller.host = host
             mock_controller.username = username

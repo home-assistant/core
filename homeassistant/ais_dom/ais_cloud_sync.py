@@ -56,7 +56,7 @@ def async_setup(hass, config):
             hass.states.async_set(
                 'weblink.cloud', ais_cloud.CLOUD_APP_URL + token, {
                     'icon': 'mdi:open-in-new',
-                    'friendly_name': 'Przejdz do konfiguracji usług online'
+                    'friendly_name': 'Przejdź do konfiguracji usług online'
                 })
             hass.services.call(
                 'group', 'set_visibility', {
