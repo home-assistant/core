@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_LATITUDE, ATTR_LONGITUDE, CONF_MODE, CONF_NAME,
+    ATTR_LATITUDE, ATTR_LONGITUDE, LENGTH_METERS, CONF_MODE, CONF_NAME,
     EVENT_HOMEASSISTANT_START)
 from homeassistant.helpers import location
 import homeassistant.helpers.config_validation as cv
@@ -60,7 +60,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone', 'person']
-DISTANCE_UNIT_METER = 'm'
 DATA_KEY = 'here_travel_time'
 
 
@@ -137,7 +136,7 @@ class HERETravelTimeSensor(Entity):
         self._travel_mode = travel_mode
         self._traffic_mode = traffic_mode
         self._route_mode = route_mode
-        self._unit_of_measurement = "min"
+        self._unit_of_measurement = 'min'
         self._response = None
         self.valid_api_connection = True
 
@@ -183,7 +182,7 @@ class HERETravelTimeSensor(Entity):
 
         res = {}
         res['distance'] = _summary['distance']
-        res['distance_unit'] = DISTANCE_UNIT_METER
+        res['distance_unit'] = LENGTH_METERS
         res['trafficTime'] = _summary['trafficTime']
         res['baseTime'] = _summary['baseTime']
         res['travelTime'] = _summary['travelTime']
