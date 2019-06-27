@@ -62,9 +62,9 @@ class PushoverNotificationService(BaseNotificationService):
                 try:
                     import requests
                     response = requests.get(
-                            data[ATTR_ATTACHMENT],
-                            stream=True,
-                            timeout=5)
+                        data[ATTR_ATTACHMENT],
+                        stream=True,
+                        timeout=5)
                     if response.status_code == 200:
                         # Replace the attachment identifier with file object.
                         data[ATTR_ATTACHMENT] = response.content
