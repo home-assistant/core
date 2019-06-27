@@ -6,7 +6,8 @@ from pyhap.const import CATEGORY_THERMOSTAT
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE, ATTR_MAX_TEMP, ATTR_MIN_TEMP,
     ATTR_OPERATION_LIST, ATTR_OPERATION_MODE, ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW, DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP,
+    ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_STEP,
+    DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP,
     DOMAIN as DOMAIN_CLIMATE,
     SERVICE_SET_OPERATION_MODE as SERVICE_SET_OPERATION_MODE_THERMOSTAT,
     SERVICE_SET_TEMPERATURE as SERVICE_SET_TEMPERATURE_THERMOSTAT, STATE_AUTO,
@@ -57,6 +58,8 @@ class Thermostat(HomeAccessory):
         self._flag_heatingthresh = False
         self.support_power_state = False
         min_temp, max_temp = self.get_temperature_range()
+        temp_step = self.hass.states.get(self.entity_id) \
+            .attributes.get(ATTR_TARGET_TEMP_STEP, 0.5)
 
         # Add additional characteristics if auto mode is supported
         self.chars = []
@@ -84,7 +87,7 @@ class Thermostat(HomeAccessory):
             CHAR_TARGET_TEMPERATURE, value=21.0,
             properties={PROP_MIN_VALUE: min_temp,
                         PROP_MAX_VALUE: max_temp,
-                        PROP_MIN_STEP: 0.5},
+                        PROP_MIN_STEP: temp_step},
             setter_callback=self.set_target_temperature)
 
         # Display units characteristic
@@ -99,14 +102,14 @@ class Thermostat(HomeAccessory):
                 CHAR_COOLING_THRESHOLD_TEMPERATURE, value=23.0,
                 properties={PROP_MIN_VALUE: min_temp,
                             PROP_MAX_VALUE: max_temp,
-                            PROP_MIN_STEP: 0.5},
+                            PROP_MIN_STEP: temp_step},
                 setter_callback=self.set_cooling_threshold)
         if CHAR_HEATING_THRESHOLD_TEMPERATURE in self.chars:
             self.char_heating_thresh_temp = serv_thermostat.configure_char(
                 CHAR_HEATING_THRESHOLD_TEMPERATURE, value=19.0,
                 properties={PROP_MIN_VALUE: min_temp,
                             PROP_MAX_VALUE: max_temp,
-                            PROP_MIN_STEP: 0.5},
+                            PROP_MIN_STEP: temp_step},
                 setter_callback=self.set_heating_threshold)
 
     def get_temperature_range(self):
