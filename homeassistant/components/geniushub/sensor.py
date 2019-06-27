@@ -59,22 +59,17 @@ class GeniusDevice(Entity):
         return self._name
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
+    def icon(self):
+        """Return the icon of the sensor."""
         child_values = self._device._info_raw['childValues']  # noqa; pylint: disable=protected-access
 
         last_comms = datetime.fromtimestamp(child_values['lastComms']['val'])
         interval = child_values['WakeUp_Interval']['val']
 
-        return last_comms > datetime.now() - timedelta(seconds=interval * 3)
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        level = self.state
-
-        if self.state == 0 or not self.available:
+        if last_comms < datetime.now() - timedelta(seconds=interval * 3):
             return "mdi:battery-unknown"
+
+        level = self.state
 
         if level > 95:
             return "mdi:battery"
@@ -84,7 +79,7 @@ class GeniusDevice(Entity):
             return "mdi:battery-60"
         if level > 55:
             return "mdi:battery-40"
-        if level > 40:
+        if level > 45:
             return "mdi:battery-20"
 
         return "mdi:battery-alert"
