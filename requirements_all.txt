@@ -2369,6 +2369,7 @@ zeroconf==0.23.0
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 zha-quirks==0.0.6
 =======
 zha-quirks==0.0.14
@@ -2379,6 +2380,9 @@ zha-quirks==0.0.15
 =======
 zha-quirks==0.0.15
 >>>>>>> Update ZHA dependencies (#24718)
+=======
+zha-quirks==0.0.17
+>>>>>>> Bump ZHA quirks module (#24802)
 =======
 zha-quirks==0.0.17
 >>>>>>> Bump ZHA quirks module (#24802)
