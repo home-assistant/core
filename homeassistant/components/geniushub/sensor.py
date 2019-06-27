@@ -1,5 +1,5 @@
 """Support for Genius Hub sensor devices."""
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 
 from homeassistant.const import DEVICE_CLASS_BATTERY
@@ -57,6 +57,37 @@ class GeniusDevice(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        child_values = self._device._info_raw['childValues']  # noqa; pylint: disable=protected-access
+
+        last_comms = datetime.fromtimestamp(child_values['lastComms']['val'])
+        interval = child_values['WakeUp_Interval']['val']
+
+        return last_comms > datetime.now() - timedelta(seconds=interval * 3)
+
+    @property
+    def icon(self):
+        """Return the icon of the sensor."""
+        level = self.state
+
+        if self.state == 0 or not self.available:
+            return "mdi:battery-unknown"
+
+        if level > 95:
+            return "mdi:battery"
+        if level > 85:
+            return "mdi:battery-80"
+        if level > 70:
+            return "mdi:battery-60"
+        if level > 55:
+            return "mdi:battery-40"
+        if level > 40:
+            return "mdi:battery-20"
+
+        return "mdi:battery-alert"
 
     @property
     def device_class(self):
