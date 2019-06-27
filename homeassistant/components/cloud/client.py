@@ -2,25 +2,27 @@
 import asyncio
 from pathlib import Path
 from typing import Any, Dict
+import logging
 
 import aiohttp
 from hass_nabucasa.client import CloudClient as Interface
 
 from homeassistant.core import callback
-from homeassistant.components.alexa import smart_home as alexa_sh
-from homeassistant.components.google_assistant import (
-    helpers as ga_h, smart_home as ga)
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
+from homeassistant.components.google_assistant import smart_home as ga
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.aiohttp import MockRequest
+from homeassistant.components.alexa import (
+    smart_home as alexa_sh,
+    errors as alexa_errors,
+)
 
-from . import utils
-from .const import (
-    CONF_ENTITY_CONFIG, CONF_FILTER, DOMAIN, DISPATCHER_REMOTE_UPDATE,
-    PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE,
-    PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA)
+from . import utils, alexa_config, google_config
+from .const import DISPATCHER_REMOTE_UPDATE
 from .prefs import CloudPreferences
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class CloudClient(Interface):
@@ -28,16 +30,17 @@ class CloudClient(Interface):
 
     def __init__(self, hass: HomeAssistantType, prefs: CloudPreferences,
                  websession: aiohttp.ClientSession,
-                 alexa_config: Dict[str, Any], google_config: Dict[str, Any]):
+                 alexa_user_config: Dict[str, Any],
+                 google_user_config: Dict[str, Any]):
         """Initialize client interface to Cloud."""
         self._hass = hass
         self._prefs = prefs
         self._websession = websession
-        self._alexa_user_config = alexa_config
-        self._google_user_config = google_config
-
+        self.google_user_config = google_user_config
+        self.alexa_user_config = alexa_user_config
         self._alexa_config = None
         self._google_config = None
+        self.cloud = None
 
     @property
     def base_path(self) -> Path:
@@ -75,70 +78,40 @@ class CloudClient(Interface):
         return self._prefs.remote_enabled
 
     @property
-    def alexa_config(self) -> alexa_sh.Config:
+    def alexa_config(self) -> alexa_config.AlexaConfig:
         """Return Alexa config."""
-        if not self._alexa_config:
-            alexa_conf = self._alexa_user_config
-
-            self._alexa_config = alexa_sh.Config(
-                endpoint=None,
-                async_get_access_token=None,
-                should_expose=alexa_conf[CONF_FILTER],
-                entity_config=alexa_conf.get(CONF_ENTITY_CONFIG),
-            )
+        if self._alexa_config is None:
+            assert self.cloud is not None
+            self._alexa_config = alexa_config.AlexaConfig(
+                self._hass, self.alexa_user_config, self._prefs, self.cloud)
 
         return self._alexa_config
 
     @property
-    def google_config(self) -> ga_h.Config:
+    def google_config(self) -> google_config.CloudGoogleConfig:
         """Return Google config."""
         if not self._google_config:
-            google_conf = self._google_user_config
-
-            def should_expose(entity):
-                """If an entity should be exposed."""
-                if entity.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
-                    return False
-
-                if not google_conf['filter'].empty_filter:
-                    return google_conf['filter'](entity.entity_id)
-
-                entity_configs = self.prefs.google_entity_configs
-                entity_config = entity_configs.get(entity.entity_id, {})
-                return entity_config.get(
-                    PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE)
-
-            def should_2fa(entity):
-                """If an entity should be checked for 2FA."""
-                entity_configs = self.prefs.google_entity_configs
-                entity_config = entity_configs.get(entity.entity_id, {})
-                return not entity_config.get(
-                    PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA)
-
-            username = self._hass.data[DOMAIN].claims["cognito:username"]
-
-            self._google_config = ga_h.Config(
-                should_expose=should_expose,
-                should_2fa=should_2fa,
-                secure_devices_pin=self._prefs.google_secure_devices_pin,
-                entity_config=google_conf.get(CONF_ENTITY_CONFIG),
-                agent_user_id=username,
-            )
-
-        # Set it to the latest.
-        self._google_config.secure_devices_pin = \
-            self._prefs.google_secure_devices_pin
+            assert self.cloud is not None
+            self._google_config = google_config.CloudGoogleConfig(
+                self.google_user_config, self._prefs, self.cloud)
 
         return self._google_config
 
-    @property
-    def google_user_config(self) -> Dict[str, Any]:
-        """Return google action user config."""
-        return self._google_user_config
+    async def async_initialize(self, cloud) -> None:
+        """Initialize the client."""
+        self.cloud = cloud
+
+        if (not self.alexa_config.should_report_state or
+                not self.cloud.is_logged_in):
+            return
+
+        try:
+            await self.alexa_config.async_enable_proactive_mode()
+        except alexa_errors.NoTokenAvailable:
+            pass
 
     async def cleanups(self) -> None:
         """Cleanup some stuff after logout."""
-        self._alexa_config = None
         self._google_config = None
 
     @callback

@@ -5,8 +5,7 @@ from homeassistant import config_entries
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL)
 
-from .const import (CONF_CONTROLLER, CONF_POE_CONTROL, CONF_SITE_ID,
-                    DOMAIN, LOGGER)
+from .const import CONF_CONTROLLER, CONF_SITE_ID, DOMAIN, LOGGER
 from .controller import get_controller
 from .errors import (
     AlreadyConfigured, AuthenticationRequired, CannotConnect, UserLevel)
@@ -84,6 +83,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow):
 
             try:
                 desc = user_input.get(CONF_SITE_ID, self.desc)
+                print(self.sites)
                 for site in self.sites.values():
                     if desc == site['desc']:
                         if site['role'] != 'admin':
@@ -98,8 +98,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow):
                         raise AlreadyConfigured
 
                 data = {
-                    CONF_CONTROLLER: self.config,
-                    CONF_POE_CONTROL: True
+                    CONF_CONTROLLER: self.config
                 }
 
                 return self.async_create_entry(

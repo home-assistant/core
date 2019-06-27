@@ -51,4 +51,4 @@ async def test_aqara_gateway_setup(hass):
     assert device.name == 'Aqara Hub-1563'
     assert device.model == 'ZHWA11LM'
     assert device.sw_version == '1.4.7'
-    assert device.hub_device_id is None
+    assert device.via_device_id is None

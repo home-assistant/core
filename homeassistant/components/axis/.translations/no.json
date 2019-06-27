@@ -7,6 +7,7 @@
         },
         "error": {
             "already_configured": "Enheten er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyt for enhet p\u00e5g\u00e5r allerede.",
             "device_unavailable": "Enheten er ikke tilgjengelig",
             "faulty_credentials": "Ugyldig brukerlegitimasjon"
         },

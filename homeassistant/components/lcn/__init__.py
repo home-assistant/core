@@ -16,10 +16,11 @@ from homeassistant.helpers.entity import Entity
 from .const import (
     BINSENSOR_PORTS, CONF_CLIMATES, CONF_CONNECTIONS, CONF_DIM_MODE,
     CONF_DIMMABLE, CONF_LOCKABLE, CONF_MAX_TEMP, CONF_MIN_TEMP, CONF_MOTOR,
-    CONF_OUTPUT, CONF_SETPOINT, CONF_SK_NUM_TRIES, CONF_SOURCE,
-    CONF_TRANSITION, DATA_LCN, DIM_MODES, DOMAIN, KEYS, LED_PORTS,
-    LOGICOP_PORTS, MOTOR_PORTS, OUTPUT_PORTS, RELAY_PORTS, S0_INPUTS,
-    SETPOINTS, THRESHOLDS, VAR_UNITS, VARIABLES)
+    CONF_OUTPUT, CONF_OUTPUTS, CONF_REGISTER, CONF_SCENE, CONF_SCENES,
+    CONF_SETPOINT, CONF_SK_NUM_TRIES, CONF_SOURCE, CONF_TRANSITION, DATA_LCN,
+    DIM_MODES, DOMAIN, KEYS, LED_PORTS, LOGICOP_PORTS, MOTOR_PORTS,
+    OUTPUT_PORTS, RELAY_PORTS, S0_INPUTS, SETPOINTS, THRESHOLDS, VAR_UNITS,
+    VARIABLES)
 from .helpers import has_unique_connection_names, is_address
 from .services import (
     DynText, Led, LockKeys, LockRegulator, OutputAbs, OutputRel, OutputToggle,
@@ -64,6 +65,20 @@ LIGHTS_SCHEMA = vol.Schema({
                 lambda value: value * 1000),
 })
 
+SCENES_SCHEMA = vol.Schema({
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_ADDRESS): is_address,
+    vol.Required(CONF_REGISTER): vol.All(vol.Coerce(int), vol.Range(0, 9)),
+    vol.Required(CONF_SCENE): vol.All(vol.Coerce(int), vol.Range(0, 9)),
+    vol.Optional(CONF_OUTPUTS): vol.All(
+        cv.ensure_list, [vol.All(vol.Upper,
+                                 vol.In(OUTPUT_PORTS + RELAY_PORTS))]),
+    vol.Optional(CONF_TRANSITION, default=None):
+        vol.Any(vol.All(vol.Coerce(int), vol.Range(min=0., max=486.),
+                        lambda value: value * 1000),
+                None)
+})
+
 SENSORS_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_ADDRESS): is_address,
@@ -105,6 +120,8 @@ CONFIG_SCHEMA = vol.Schema({
             cv.ensure_list, [COVERS_SCHEMA]),
         vol.Optional(CONF_LIGHTS): vol.All(
             cv.ensure_list, [LIGHTS_SCHEMA]),
+        vol.Optional(CONF_SCENES): vol.All(
+            cv.ensure_list, [SCENES_SCHEMA]),
         vol.Optional(CONF_SENSORS): vol.All(
             cv.ensure_list, [SENSORS_SCHEMA]),
         vol.Optional(CONF_SWITCHES): vol.All(
@@ -152,6 +169,7 @@ async def async_setup(hass, config):
                                 ('climate', CONF_CLIMATES),
                                 ('cover', CONF_COVERS),
                                 ('light', CONF_LIGHTS),
+                                ('scene', CONF_SCENES),
                                 ('sensor', CONF_SENSORS),
                                 ('switch', CONF_SWITCHES)):
         if conf_key in config[DOMAIN]:

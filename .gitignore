@@ -95,6 +95,7 @@ virtualization/vagrant/config
 
 # Visual Studio Code
 .vscode
+.devcontainer
 
 # Built docs
 docs/build
