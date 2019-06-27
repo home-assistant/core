@@ -45,19 +45,19 @@ COMMANDS = (
 )
 
 SERVICE_COMMAND = 'send_command'
-SERVICE_EDIT_DATA = 'edit_title_data'
+SERVICE_EDIT_MEDIA_DATA = 'edit_media_data'
 
 PS4_COMMAND_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_COMMAND): vol.All(cv.ensure_list, [COMMANDS])
 })
 
-PS4_EDIT_DATA_SCHEMA = vol.Schema({
+PS4_EDIT_MEDIA_DATA_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID, default=''): cv.entity_id,
     vol.Optional(ATTR_MEDIA_CONTENT_ID, default=''): str,
     vol.Optional(ATTR_LOCKED, default=True): cv.boolean,
     vol.Optional(ATTR_MEDIA_TITLE, default=''): str,
-    vol.Optional(ATTR_MEDIA_IMAGE_URL, default=''): str,
+    vol.Optional(ATTR_MEDIA_IMAGE_URL, default='http://random'): cv.url,
     vol.Optional(ATTR_MEDIA_CONTENT_TYPE, default=MEDIA_TYPE_GAME): vol.In(
         MEDIA_TYPE_GAME, MEDIA_TYPE_APP)
 })
@@ -79,7 +79,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 if device.entity_id in entity_ids:
                     await device.async_send_command(command)
 
-        async def async_service_edit_data(call):
+        async def async_service_edit_media_data(call):
             """Service call for editing existing media data."""
             locked = call.data[ATTR_LOCKED]
             media_type = call.data[ATTR_MEDIA_CONTENT_TYPE]
@@ -90,8 +90,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 else call.data[ATTR_MEDIA_CONTENT_ID]
             media_title = None if call.data[ATTR_MEDIA_TITLE] == ''\
                 else call.data[ATTR_MEDIA_TITLE]
-            media_url = None if call.data[ATTR_MEDIA_IMAGE_URL] == ''\
-                else call.data[ATTR_MEDIA_IMAGE_URL]
+            media_url = None if call.data[ATTR_MEDIA_IMAGE_URL] == \
+                'http://random' else call.data[ATTR_MEDIA_IMAGE_URL]
 
             games = load_games(hass)
 
@@ -123,7 +123,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                                 entity.media_content_type
 
                 """Must be locked to edit other attributes."""
-                if g_data[ATTR_LOCKED] is True:
+                if g_data[ATTR_LOCKED]:
                     if media_title is not None:
                         g_data[ATTR_MEDIA_TITLE] = media_title
                     if media_url is not None:
@@ -146,8 +146,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             PS4_DOMAIN, SERVICE_COMMAND, async_service_command,
             schema=PS4_COMMAND_SCHEMA)
         hass.services.async_register(
-            PS4_DOMAIN, SERVICE_EDIT_DATA, async_service_edit_data,
-            schema=PS4_EDIT_DATA_SCHEMA)
+            PS4_DOMAIN, SERVICE_EDIT_MEDIA_DATA, async_service_edit_media_data,
+            schema=PS4_EDIT_MEDIA_DATA_SCHEMA)
 
     await async_service_handle(hass)
 
@@ -370,6 +370,7 @@ class PS4Device(MediaPlayerDevice):
     async def async_get_title_data(self, title_id, name):
         """Get PS Store Data."""
         from pyps4_homeassistant.errors import PSDataIncomplete
+        _LOGGER.debug("Starting PS Store Search, %s: %s", title_id, name)
         app_name = None
         art = None
         media_type = None
