@@ -138,9 +138,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 module_items = config[CONF_MODULES].items()
                 for module_name, monitored_conditions in module_items:
                     for condition in monitored_conditions:
-                        dev.append(NetatmoSensor(
-                            data, module_name, condition.lower(),
-                            config.get(CONF_STATION)))
+                        if data.station_data:
+                            dev.append(NetatmoSensor(
+                                data, module_name, condition.lower(),
+                                config.get(CONF_STATION)))
                 continue
 
             # otherwise add all modules and conditions
@@ -187,12 +188,11 @@ class NetatmoSensor(Entity):
         self._device_class = SENSOR_TYPES[self.type][3]
         self._icon = SENSOR_TYPES[self.type][2]
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
-        self._module_type = self.netatmo_data. \
-            station_data.moduleByName(module=module_name)['type']
-        module_id = self.netatmo_data. \
-            station_data.moduleByName(station=self.station_name,
-                                      module=module_name)['_id']
-        self._unique_id = '{}-{}'.format(module_id, self.type)
+        module = self.netatmo_data.station_data.moduleByName(
+            station=self.station_name, module=module_name
+        )
+        self._module_type = module['type']
+        self._unique_id = '{}-{}'.format(module['_id'], self.type)
 
     @property
     def name(self):
