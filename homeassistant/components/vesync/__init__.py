@@ -98,10 +98,13 @@ async def async_setup_entry(hass, config_entry):
     fans = hass.data[DOMAIN][CONF_FANS] = []
 
     if device_dict[CONF_LIGHTS]:
+        lights.extend(device_dict[CONF_LIGHTS])
         hass.async_create_task(forward_setup(config_entry, 'light'))
     if device_dict[CONF_SWITCHES]:
+        switches.extend(device_dict[CONF_SWITCHES])
         hass.async_create_task(forward_setup(config_entry, 'switch'))
     if device_dict[CONF_FANS]:
+        fans.extend(device_dict[CONF_FANS])
         hass.async_create_task(forward_setup(config_entry, 'fan'))
 
     return True

@@ -38,30 +38,35 @@ async def async_process_devices(hass, manager):
     _LOGGER.debug(manager.switches)
     _LOGGER.debug(manager.outlets)
     if manager.bulbs:
+        _LOGGER.info("Bulbs - %s", str(manager.bulbs))
         devices[CONF_LIGHTS].extend(manager.bulbs)
         _LOGGER.info("%d VeSync light bulbs found", len(manager.bulbs))
 
     if manager.fans:
+        _LOGGER.info("Bulbs - %s", str(manager.fans))
         devices[CONF_FANS].extend(manager.fans)
         _LOGGER.info("%d VeSync fans found", len(manager.fans))
 
-    if manager.switches:
+    if manager.outlets:
+        _LOGGER.info("Outlets - %s", str(manager.outlets))
         devices[CONF_SWITCHES].extend(manager.outlets)
         _LOGGER.info("%d VeSync outlets found", len(manager.switches))
 
     dim_switch = 0
     reg_switch = 0
-    for switch in manager.switches:
-        if switch.is_dimmable():
-            devices[CONF_LIGHTS].append(switch)
-            dim_switch += 1
-        else:
-            devices[CONF_SWITCHES].append(switch)
-            reg_switch += 1
-    if dim_switch > 0:
-        _LOGGER.info("%d VeSync dimmable switches found", dim_switch)
-    if reg_switch > 0:
-        _LOGGER.info("%d VeSync standard switches found", reg_switch)
+    if manager.switches:
+        _LOGGER.info("Switches - %s", str(manager.switches))
+        for switch in manager.switches:
+            if switch.is_dimmable():
+                devices[CONF_LIGHTS].append(switch)
+                dim_switch += 1
+            else:
+                devices[CONF_SWITCHES].append(switch)
+                reg_switch += 1
+        if dim_switch > 0:
+            _LOGGER.info("%d VeSync dimmable switches found", dim_switch)
+        if reg_switch > 0:
+            _LOGGER.info("%d VeSync standard switches found", reg_switch)
 
     return devices
 
