@@ -132,16 +132,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         import pyatmo
         for data_class in [pyatmo.WeatherStationData, pyatmo.HomeCoachData]:
-            data = NetatmoData(auth, data_class, config.get(CONF_STATION))
+            try:
+                data = NetatmoData(auth, data_class, config.get(CONF_STATION))
+            except pyatmo.NoDevice:
+                continue
             # Test if manually configured
             if CONF_MODULES in config:
                 module_items = config[CONF_MODULES].items()
                 for module_name, monitored_conditions in module_items:
                     for condition in monitored_conditions:
-                        if data.station_data:
-                            dev.append(NetatmoSensor(
-                                data, module_name, condition.lower(),
-                                config.get(CONF_STATION)))
+                        dev.append(NetatmoSensor(
+                            data, module_name, condition.lower(),
+                            config.get(CONF_STATION)))
                 continue
 
             # otherwise add all modules and conditions
@@ -159,11 +161,8 @@ def find_devices(data):
     """Find all devices."""
     dev = []
     not_handled = []
-    for module_name in data.get_module_names():
-        if (module_name not in data.get_module_names()
-                and module_name not in not_handled):
-            not_handled.append(not_handled)
-            continue
+    module_names = data.get_module_names()
+    for module_name in module_names:
         for condition in data.station_data.monitoredConditions(module_name):
             dev.append(NetatmoSensor(
                 data, module_name, condition.lower(), data.station))
@@ -515,15 +514,14 @@ class NetatmoData:
         self.auth = auth
         self.data_class = data_class
         self.data = {}
-        self.station_data = None
+        self.station_data = self.data_class(self.auth)
         self.station = station
         self._next_update = time()
         self._update_in_progress = threading.Lock()
 
     def get_module_names(self):
         """Return all module available on the API as a list."""
-        self.update()
-        return self.data.keys()
+        return self.station_data.modulesNamesList()
 
     def update(self):
         """Call the Netatmo API to update the data.
