@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.core import callback
 from homeassistant.const import (
-    STATE_ON, STATE_OFF, STATE_UNKNOWN, TEMP_CELSIUS)
+    ATTR_TEMPERATURE, STATE_ON, STATE_OFF, STATE_UNKNOWN, TEMP_CELSIUS)
 from homeassistant.components.fan import (
     SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH)
 from homeassistant.components.climate import ClimateDevice
