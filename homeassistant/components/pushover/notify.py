@@ -68,7 +68,7 @@ class PushoverNotificationService(BaseNotificationService):
                     if response.status_code == 200:
                         # Replace the attachment identifier with file object.
                         data[ATTR_ATTACHMENT] = response.content
-                except RequestException as ex_val:
+                except requests.exceptions.RequestException as ex_val:
                     _LOGGER.error(str(ex_val))
                     # Remove attachment key to try sending without attachment
                     del data[ATTR_ATTACHMENT]
