@@ -115,7 +115,8 @@ NODE_FILTERS = {
         'uom': ['2'],
         'states': ['heating', 'cooling', 'idle', 'fan_only', 'off'],
         'node_def_id': ['TempLinc', 'Thermostat'],
-        'insteon_type': ['5.11.16', '5.11.13.', '5.10.14.', '5.3.149.']
+        'insteon_type': ['5.11.16.', '5.11.13.', '5.10.14.', '5.11.15.',
+                         '5.3.149.']
     }
 }
 
