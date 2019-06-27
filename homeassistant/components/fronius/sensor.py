@@ -31,7 +31,7 @@ SENSOR_TYPES = [TYPE_INVERTER, TYPE_STORAGE, TYPE_METER, TYPE_POWER_FLOW]
 SCOPE_TYPES = [SCOPE_DEVICE, SCOPE_SYSTEM]
 
 
-def _state_validator(config):
+def _device_id_validator(config):
     """Ensure that inverters have default id 1 and other devices 0."""
     config = copy.deepcopy(config)
     for cond in config[CONF_MONITORED_CONDITIONS]:
@@ -57,7 +57,7 @@ PLATFORM_SCHEMA = vol.Schema(vol.All(PLATFORM_SCHEMA.extend({
                     vol.All(vol.Coerce(int), vol.Range(min=0))
             }]
         )
-}), _state_validator))
+}), _device_id_validator))
 
 
 async def async_setup_platform(hass,
