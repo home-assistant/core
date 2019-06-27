@@ -32,7 +32,7 @@ SCOPE_TYPES = [SCOPE_DEVICE, SCOPE_SYSTEM]
 
 
 def _state_validator(config):
-    """Ensure that inverters have default id 1"""
+    """Ensure that inverters have default id 1 and other devices 0."""
     config = copy.deepcopy(config)
     for cond in config[CONF_MONITORED_CONDITIONS]:
         if CONF_DEVICE not in cond:
