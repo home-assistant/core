@@ -99,6 +99,12 @@ MODULE_TYPE_RAIN = 'NAModule3'
 MODULE_TYPE_INDOOR = 'NAModule4'
 
 
+NETATMO_DEVICE_TYPES = {
+    'WeatherStationData': 'weather station',
+    'HomeCoachData': 'home coach'
+}
+
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available Netatmo weather sensors."""
     dev = []
@@ -135,6 +141,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             try:
                 data = NetatmoData(auth, data_class, config.get(CONF_STATION))
             except pyatmo.NoDevice:
+                _LOGGER.warning(
+                    "No %s devices found",
+                    NETATMO_DEVICE_TYPES[data_class.__name__]
+                )
                 continue
             # Test if manually configured
             if CONF_MODULES in config:
