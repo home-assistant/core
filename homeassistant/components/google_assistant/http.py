@@ -37,7 +37,7 @@ class GoogleConfig(AbstractConfig):
     @property
     def entity_config(self):
         """Return entity config."""
-        return self._config.get(CONF_ENTITY_CONFIG, {})
+        return self._config.get(CONF_ENTITY_CONFIG) or {}
 
     @property
     def secure_devices_pin(self):
