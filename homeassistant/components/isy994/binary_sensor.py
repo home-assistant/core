@@ -17,7 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 ISY_DEVICE_TYPES = {
     'moisture': ['16.8', '16.13', '16.14'],
     'opening': ['16.9', '16.6', '16.7', '16.2', '16.17', '16.20', '16.21'],
-    'motion': ['16.1', '16.4', '16.5', '16.3']
+    'motion': ['16.1', '16.4', '16.5', '16.3'],
+    'climate': ['5.11', '5.10']
 }
 
 
@@ -40,13 +41,16 @@ def setup_platform(hass, config: ConfigType,
 
     for node in child_nodes:
         try:
-            parent_device = devices_by_nid[node.parent_node.nid]
+            device_type = _detect_device_type(node)
+            # Thermostat Parent Nodes are not binary_sensors and will not show
+            # in this domain, but we don't need them to.
+            if device_type not in ['heat', 'cold']:
+                parent_device = devices_by_nid[node.parent_node.nid]
         except KeyError:
             _LOGGER.error("Node %s has a parent node %s, but no device "
                           "was created for the parent. Skipping.",
                           node.nid, node.parent_nid)
         else:
-            device_type = _detect_device_type(node)
             subnode_id = int(node.nid[-1], 16)
             if device_type in ('opening', 'moisture'):
                 # These sensors use an optional "negative" subnode 2 to snag
@@ -81,8 +85,14 @@ def _detect_device_type(node) -> str:
     split_type = device_type.split('.')
     for device_class, ids in ISY_DEVICE_TYPES.items():
         if '{}.{}'.format(split_type[0], split_type[1]) in ids:
+            # Insteon Thermostats have 2 sub-notes, one for Cool Control and
+            # one for Heat Control.
+            if device_class == 'climate':
+                subnode_id = int(node.nid[-1], 16)
+                if subnode_id == 3:
+                    return 'heat'
+                return 'cold'
             return device_class
-
     return None
 
 

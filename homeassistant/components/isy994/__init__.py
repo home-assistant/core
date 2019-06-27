@@ -49,7 +49,7 @@ NODE_FILTERS = {
     'binary_sensor': {
         'uom': [],
         'states': [],
-        'node_def_id': ['BinaryAlarm'],
+        'node_def_id': ['BinaryAlarm', 'OnOffControl_ADV'],
         'insteon_type': ['16.']  # Does a startswith() match; include the dot
     },
     'sensor': {
@@ -64,7 +64,7 @@ NODE_FILTERS = {
                 list(map(str, range(82, 97)))),
         'states': [],
         'node_def_id': ['IMETER_SOLO'],
-        'insteon_type': ['9.0.', '9.7.']
+        'insteon_type': ['9.0.', '9.7.', '4.33.1.']
     },
     'lock': {
         'uom': ['11'],
@@ -107,11 +107,17 @@ NODE_FILTERS = {
                         'AlertModuleSiren_ADV', 'AlertModuleArmed', 'Siren',
                         'Siren_ADV'],
         'insteon_type': ['2.', '9.10.', '9.11.']
+    },
+    'climate': {
+        'uom': ['2'],
+        'states': ['heating', 'cooling', 'idle', 'fan_only', 'off'],
+        'node_def_id': ['TempLinc', 'Thermostat'],
+        'insteon_type': ['5.11.16', '5.11.13.', '5.10.14.', '5.3.149.']
     }
 }
 
 SUPPORTED_DOMAINS = ['binary_sensor', 'sensor', 'lock', 'fan', 'cover',
-                     'light', 'switch']
+                     'light', 'switch', 'climate']
 SUPPORTED_PROGRAM_DOMAINS = ['binary_sensor', 'lock', 'fan', 'cover', 'switch']
 
 # ISY Scenes are more like Switches than Hass Scenes
@@ -170,6 +176,12 @@ def _check_for_insteon_type(hass: HomeAssistant, node,
             # on ISY 5.x firmware as it uses the superior NodeDefs method
             if domain == 'fan' and int(node.nid[-1]) == 1:
                 hass.data[ISY994_NODES]['light'].append(node)
+                return True
+
+            # Hacky special-case just for Thermostats, which has a "Heat" and
+            # "Cool" sub-node on address 2 and 3
+            if domain == 'climate' and int(node.nid[-1]) in [2, 3]:
+                hass.data[ISY994_NODES]['binary_sensor'].append(node)
                 return True
 
             hass.data[ISY994_NODES][domain].append(node)
@@ -422,7 +434,8 @@ class ISYDevice(Entity):
         """Handle a control event from the ISY994 Node."""
         self.hass.bus.fire('isy994_control', {
             'entity_id': self.entity_id,
-            'control': event
+            'control': event.event,
+            'value': event.nval
         })
 
     @property
