@@ -38,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-SCAN_INTERVAL = timedelta(hours=24)
+SCAN_INTERVAL = timedelta(minutes=30)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
