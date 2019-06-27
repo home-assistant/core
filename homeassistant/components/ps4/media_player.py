@@ -53,11 +53,13 @@ PS4_COMMAND_SCHEMA = vol.Schema({
 })
 
 PS4_EDIT_MEDIA_DATA_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID, default=''): cv.entity_id,
+    vol.Optional(ATTR_ENTITY_ID, default=None): vol.Any(
+        cv.entity_id, type(None)),
     vol.Optional(ATTR_MEDIA_CONTENT_ID, default=''): str,
     vol.Optional(ATTR_LOCKED, default=True): cv.boolean,
     vol.Optional(ATTR_MEDIA_TITLE, default=''): str,
-    vol.Optional(ATTR_MEDIA_IMAGE_URL, default='http://random'): cv.url,
+    vol.Optional(ATTR_MEDIA_IMAGE_URL, default=None): vol.Any(
+        cv.url, type(None)),
     vol.Optional(ATTR_MEDIA_CONTENT_TYPE, default=MEDIA_TYPE_GAME): vol.In(
         MEDIA_TYPE_GAME, MEDIA_TYPE_APP)
 })
@@ -81,17 +83,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         async def async_service_edit_media_data(call):
             """Service call for editing existing media data."""
+            entity = None
             locked = call.data[ATTR_LOCKED]
             media_type = call.data[ATTR_MEDIA_CONTENT_TYPE]
 
-            entity_id = None if call.data[ATTR_ENTITY_ID] == ''\
+            entity_id = None if call.data[ATTR_ENTITY_ID] is None\
                 else call.data[ATTR_ENTITY_ID]
             media_id = None if call.data[ATTR_MEDIA_CONTENT_ID] == ''\
                 else call.data[ATTR_MEDIA_CONTENT_ID]
             media_title = None if call.data[ATTR_MEDIA_TITLE] == ''\
                 else call.data[ATTR_MEDIA_TITLE]
-            media_url = None if call.data[ATTR_MEDIA_IMAGE_URL] == \
-                'http://random' else call.data[ATTR_MEDIA_IMAGE_URL]
+            media_url = None if call.data[ATTR_MEDIA_IMAGE_URL] is \
+                None else call.data[ATTR_MEDIA_IMAGE_URL]
 
             games = load_games(hass)
 
@@ -99,10 +102,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 for device in hass.data[PS4_DATA].devices:
                     if device.entity_id == entity_id:
                         entity = device
-                media_content_id = entity.media_content_id
-                if media_id is not None:
-                    media_content_id = media_id
-
+                        media_content_id = entity.media_content_id
+            if media_id is not None:
+                media_content_id = media_id
             if media_content_id is None:
                 return
 
@@ -110,6 +112,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             if g_data is not None:
                 g_data[ATTR_LOCKED] = locked
+                if not g_data[ATTR_LOCKED]:
+                    games[media_content_id] = g_data
+                    save_games(hass, games)
+                    if entity is not None:
+                        entity.schedule_update()
+                    return
+
                 if entity_id is not None:
                     if entity.media_content_id is not None:
 
@@ -141,6 +150,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
                 games[media_content_id] = g_data
                 save_games(hass, games)
+                if entity is not None:
+                    entity.schedule_update()
 
         hass.services.async_register(
             PS4_DOMAIN, SERVICE_COMMAND, async_service_command,
