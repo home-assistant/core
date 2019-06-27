@@ -12,6 +12,7 @@ from homeassistant.components.notify import (
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_ATTACHMENT = 'attachment'
 
 CONF_USER_KEY = 'user_key'
 
@@ -47,11 +48,40 @@ class PushoverNotificationService(BaseNotificationService):
     def send_message(self, message='', **kwargs):
         """Send a message to a user."""
         from pushover import RequestError
+        import re
 
         # Make a copy and use empty dict if necessary
         data = dict(kwargs.get(ATTR_DATA) or {})
 
         data['title'] = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
+
+        # Check for attachment.
+        if ATTR_ATTACHMENT in data:
+            # If attachment is a URL, use requests to open it as a stream.
+            if re.match('^[a-zA-Z]{3,5}://.+$', data[ATTR_ATTACHMENT]):
+                try:
+                    import requests
+                    response = requests.get(
+                            data[ATTR_ATTACHMENT],
+                            stream=True,
+                            timeout=5)
+                    if response.status_code == 200:
+                        # Replace the attachment identifier with file object.
+                        data[ATTR_ATTACHMENT] = response.content
+                except RequestException as ex_val:
+                    _LOGGER.error(str(ex_val))
+                    # Remove attachment key to try sending without attachment
+                    del data[ATTR_ATTACHMENT]
+            else:
+                # Not a URL, try to open it as a normal file.
+                try:
+                    file_handle = open(data[ATTR_ATTACHMENT], 'rb')
+                    # Replace the attachment identifier with file object.
+                    data[ATTR_ATTACHMENT] = file_handle
+                except IOError as ex_val:
+                    _LOGGER.error(str(ex_val))
+                    # Remove attachment key to try sending without attachment.
+                    del data[ATTR_ATTACHMENT]
 
         targets = kwargs.get(ATTR_TARGET)
 
