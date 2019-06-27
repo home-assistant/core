@@ -170,15 +170,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 def find_devices(data):
     """Find all devices."""
     dev = []
-    not_handled = []
     module_names = data.get_module_names()
     for module_name in module_names:
         for condition in data.station_data.monitoredConditions(module_name):
             dev.append(NetatmoSensor(
                 data, module_name, condition.lower(), data.station))
-
-    for module_name in not_handled:
-        _LOGGER.error('Module name: "%s" not found', module_name)
     return dev
 
 
