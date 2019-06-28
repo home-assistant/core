@@ -101,8 +101,6 @@ stages:
     - 'Overview'
   jobs:
   - job: 'Pytlint'
-    dependsOn:
-    - Check
     pool:
       vmImage: 'ubuntu-latest'
     container: $[ variables['PythonMain'] ]
