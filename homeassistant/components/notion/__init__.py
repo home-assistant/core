@@ -112,7 +112,7 @@ async def async_setup_entry(hass, config_entry):
         raise ConfigEntryNotReady
 
     notion = Notion(client)
-    await notion.async_init()
+    await notion.async_update(initialize=True)
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = notion
 
     for component in ('binary_sensor', 'sensor'):
@@ -159,16 +159,18 @@ class Notion:
         self.systems = []
         self.tasks = []
 
-    async def async_init(self):
-        """Perform post-instantiation configuration."""
+    async def async_update(self, *, initialize=False):
+        """Get the latest Notion data."""
         from aionotion.errors import NotionError
 
         tasks = {
             'bridges': self._client.bridge.async_all(),
             'sensors': self._client.sensor.async_all(),
-            'systems': self._client.system.async_all(),
             'tasks': self._client.task.async_all(),
         }
+        if initialize:
+            tasks['systems'] = self._client.system.async_all()
+
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
         for attr, result in zip(tasks, results):
             if isinstance(result, NotionError):
@@ -177,15 +179,6 @@ class Notion:
                 continue
 
             setattr(self, attr, result)
-
-    async def async_update(self):
-        """Get the latest Notion data."""
-        from aionotion.errors import NotionError
-
-        try:
-            self.tasks = await self._client.task.async_all()
-        except NotionError as err:
-            _LOGGER.error('There was an error while updating: %s', err)
 
 
 class NotionEntity(Entity):
