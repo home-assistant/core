@@ -156,9 +156,12 @@ class WebDavCalendarData:
                 "description": self.get_attr_value(vevent, "description"),
             }
 
-            # CO Same here google integration returns a dict. Need to cleanup if accepted.
-            data['start'] = self.get_hass_date(get_date(data['start']).isoformat())
-            data['end'] = self.get_hass_date(get_date(data['end']).isoformat())
+            data['start'] = get_date(data['start']).isoformat()
+            data['end'] = get_date(data['end']).isoformat()
+            # CO: Here google integration returns a dict. And below in update method a dict is also returned.
+            # (Need to cleanup if accepted.)
+            data['start'] = self.get_hass_date(data['start'])
+            data['end'] = self.get_hass_date(data['end'])
 
             event_list.append(data)
 
