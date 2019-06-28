@@ -129,6 +129,11 @@ class AlexaConfig(alexa_config.AbstractConfig):
             else:
                 await self.async_disable_proactive_mode()
 
+            # State reporting is reported as a property on entities.
+            # So when we change it, we need to sync all entities.
+            await self.async_sync_entities()
+            return
+
         # If entity prefs are the same or we have filter in config.yaml,
         # don't sync.
         if (self._cur_entity_prefs is prefs.alexa_entity_configs or
@@ -190,6 +195,11 @@ class AlexaConfig(alexa_config.AbstractConfig):
 
     async def async_sync_entities(self):
         """Sync all entities to Alexa."""
+        # Remove any pending sync
+        if self._alexa_sync_unsub:
+            self._alexa_sync_unsub()
+            self._alexa_sync_unsub = None
+
         to_update = []
         to_remove = []
 
