@@ -84,8 +84,7 @@ class PushoverNotificationService(BaseNotificationService):
                         # Remove attachment key to send without attachment.
                         del data[ATTR_ATTACHMENT]
                 else:
-                    _LOGGER.error(
-                        'Path is not whitelisted: %s' % data[ATTR_ATTACHMENT])
+                    _LOGGER.error('Path is not whitelisted')
                     # Remove attachment key to send without attachment.
                     del data[ATTR_ATTACHMENT]
 
