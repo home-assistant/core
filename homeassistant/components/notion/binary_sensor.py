@@ -69,7 +69,7 @@ class NotionBinarySensor(NotionEntity, BinarySensorDevice):
             )
             new_sensor_data = next(
                 (s for s in self._notion.sensors
-                 if s['id'] == self._task['id'])
+                 if s['id'] == self._task['sensor_id'])
             )
         except StopIteration:
             _LOGGER.error(
