@@ -3,7 +3,7 @@
 import logging
 import voluptuous as vol
 
-from aurorapy.client import AuroraSerialClient
+from aurorapy.client import AuroraSerialClient, AuroraError
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -15,7 +15,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_COMPORT = 'rs485'
 DEFAULT_ADDRESS = 2
-TEST_MODE = False                      # For testing code when no sunlight.
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COMPORT): cv.string,
@@ -72,17 +71,11 @@ class AuroraABBSolarPVMonitorSensor(Entity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        from aurorapy.client import AuroraError
-
         try:
-            if TEST_MODE:    # For testing the code at night
-                import random
-                power_watts = random.randint(1, 3601)
-            else:
-                self.client.connect()
-                # Read ADC channel 3 (grid power output)
-                power_watts = self.client.measure(3, True)
-                self.client.close()
+            self.client.connect()
+            # read ADC channel 3 (grid power output)
+            power_watts = self.client.measure(3, True)
+            self.client.close()
             self._state = round(power_watts, 1)
             # _LOGGER.debug("Got reading %fW" % self._state)
         except AuroraError as error:
