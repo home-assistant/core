@@ -1,7 +1,9 @@
 """Support for Aurora ABB PowerOne Solar Photvoltaic (PV) inverter."""
-import logging
 
+import logging
 import voluptuous as vol
+
+from aurorapy.client import AuroraSerialClient
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -23,8 +25,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Aurora ABB PowerOne device."""
-    from aurorapy.client import AuroraSerialClient
-
     devices = []
     _LOGGER.debug("Setting up AuroraABBPowerone")
     comport = config.get(CONF_COMPORT)
