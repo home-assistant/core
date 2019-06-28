@@ -5,8 +5,7 @@ trigger:
   branches:
     include:
     - dev
-pr:
-  - dev
+pr: none
 
 resources:
   containers:
