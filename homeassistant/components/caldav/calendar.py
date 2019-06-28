@@ -142,11 +142,19 @@ class WebDavCalendarData:
             if hasattr(vevent, 'uid'):
                 uid = vevent.uid.value
             data = {
-                # Some custom cards access 'id' and 'summary' of event object because google calendar integration / google calendar event API has it.
-                # CO: Here a "uid" is given (from caldav spec), but it is "id" in google calendar integration / google calendar event API.
+                # CO:
+                # Some custom cards access 'id' and 'summary' of event object
+                # because google calendar integration / google calendar event
+                # API has it.
+                #
+                # CO: Here a "uid" is given (from caldav spec),
+                # but it is "id" in google calendar integration
+                #                                / google calendar event API.
                 "uid": uid,
                 "id": uid,
-                # CO: Here it is called title and not summary?! See update method below and the google calendar integration / google calendar event API.
+                # CO: Here it is called title and not summary?!
+                # See update method below and the google calendar integration
+                #                                 / google calendar event API.
                 "title": vevent.summary.value,
                 "summary": vevent.summary.value,
 
@@ -158,7 +166,8 @@ class WebDavCalendarData:
 
             data['start'] = get_date(data['start']).isoformat()
             data['end'] = get_date(data['end']).isoformat()
-            # CO: Here google integration returns a dict. And below in update method a dict is also returned.
+            # CO: Here google integration returns a dict.
+            # And below in update method a dict is also returned.
             # (Need to cleanup if accepted.)
             data['start'] = self.get_hass_date(data['start'])
             data['end'] = self.get_hass_date(data['end'])
