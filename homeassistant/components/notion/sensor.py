@@ -2,8 +2,8 @@
 import logging
 
 from . import (
-    ATTR_BRIDGE_MODE, ATTR_BRIDGE_NAME, ATTR_SYSTEM_MODE, ATTR_SYSTEM_NAME,
-    SENSOR_TEMPERATURE, SENSOR_TYPES, NotionEntity)
+    ATTR_BRIDGE_MODE, ATTR_BRIDGE_NAME, SENSOR_TEMPERATURE, SENSOR_TYPES,
+    NotionEntity)
 from .const import DATA_CLIENT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,28 +76,12 @@ class NotionSensor(NotionEntity):
     async def async_update(self):
         """Fetch new state data for the sensor."""
         try:
-            new_bridge_data = next(
-                (b for b in self._notion.bridges
-                 if b['id'] == self._bridge['id'])
-            )
-        except StopIteration:
-            _LOGGER.error(
-                'Bridge missing (was it removed?): %s: %s',
-                self._sensor['name'], self._task['task_type'])
-
-        try:
-            new_system_data = next(
-                (s for s in self._notion.systems
-                 if s['id'] == self._system['id'])
-            )
-        except StopIteration:
-            _LOGGER.error(
-                'Task missing (was it removed?): %s: %s',
-                self._sensor['name'], self._task['task_type'])
-
-        try:
             new_task_data = next(
                 (t for t in self._notion.tasks if t['id'] == self._task['id'])
+            )
+            new_sensor_data = next(
+                (s for s in self._notion.sensors
+                 if s['id'] == self._task['id'])
             )
         except StopIteration:
             _LOGGER.error(
@@ -105,15 +89,22 @@ class NotionSensor(NotionEntity):
                 self._sensor['name'], self._task['task_type'])
             return
 
+        self._sensor = new_sensor_data
+        self._task = new_task_data
+
+        self._bridge = next(
+            (b for b in self._notion.bridges
+             if b['id'] == self._sensor['bridge']['id'])
+        )
+
         if self._task['task_type'] == SENSOR_TEMPERATURE:
-            self._state = round(float(new_task_data['status']['value']), 1)
+            self._state = round(float(self._task['status']['value']), 1)
         else:
             _LOGGER.error(
                 'Unknown task type: %s: %s',
                 self._sensor['name'], self._task['task_type'])
+
         self._attrs.update({
-            ATTR_BRIDGE_MODE: new_bridge_data['mode'],
-            ATTR_BRIDGE_NAME: new_bridge_data['name'],
-            ATTR_SYSTEM_MODE: new_system_data['mode'],
-            ATTR_SYSTEM_NAME: new_system_data['name'],
+            ATTR_BRIDGE_MODE: self._bridge['mode'],
+            ATTR_BRIDGE_NAME: self._bridge['name'],
         })
