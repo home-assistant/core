@@ -5,8 +5,14 @@ from urllib.parse import urlparse
 
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DCS)
+from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA as SENSOR_DCS
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
+    CONF_BINARY_SENSORS, CONF_DEVICE_CLASS, CONF_HOST, CONF_ICON, CONF_ID,
+    CONF_NAME, CONF_PASSWORD, CONF_SENSORS, CONF_SWITCHES, CONF_TYPE,
+    CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP,
+    STATE_OFF, STATE_ON)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity import Entity
@@ -25,10 +31,46 @@ CONF_TLS_VER = 'tls'
 DEFAULT_IGNORE_STRING = '{IGNORE ME}'
 DEFAULT_SENSOR_STRING = 'sensor'
 
+DEFAULT_ON_VALUE = 1
+DEFAULT_OFF_VALUE = 0
+
 KEY_ACTIONS = 'actions'
 KEY_FOLDER = 'folder'
 KEY_MY_PROGRAMS = 'My Programs'
 KEY_STATUS = 'status'
+
+VAR_BASE_SCHEMA = vol.Schema({
+    vol.Required(CONF_ID): cv.positive_int,
+    vol.Required(CONF_TYPE): vol.All(cv.positive_int,
+                                     vol.In([1, 2])),
+    vol.Optional(CONF_ICON): cv.icon,
+    vol.Optional(CONF_NAME): cv.string,
+    })
+
+SENSOR_VAR_SCHEMA = VAR_BASE_SCHEMA.extend({
+    vol.Optional(CONF_DEVICE_CLASS): SENSOR_DCS,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    })
+
+BINARY_SENSOR_VAR_SCHEMA = VAR_BASE_SCHEMA.extend({
+    vol.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DCS,
+    vol.Optional(STATE_ON, default=DEFAULT_ON_VALUE): vol.Coerce(int),
+    vol.Optional(STATE_OFF, default=DEFAULT_OFF_VALUE): vol.Coerce(int),
+    })
+
+SWITCH_VAR_SCHEMA = VAR_BASE_SCHEMA.extend({
+    vol.Optional(STATE_ON, default=DEFAULT_ON_VALUE): vol.Coerce(int),
+    vol.Optional(STATE_OFF, default=DEFAULT_OFF_VALUE): vol.Coerce(int),
+    })
+
+ISY_VARIABLES_SCHEMA = vol.Schema({
+    vol.Optional(CONF_SENSORS, default=[]):
+        vol.All(cv.ensure_list, [SENSOR_VAR_SCHEMA]),
+    vol.Optional(CONF_BINARY_SENSORS, default=[]):
+        vol.All(cv.ensure_list, [BINARY_SENSOR_VAR_SCHEMA]),
+    vol.Optional(CONF_SWITCHES, default=[]):
+        vol.All(cv.ensure_list, [SWITCH_VAR_SCHEMA]),
+    })
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -41,8 +83,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_SENSOR_STRING,
                      default=DEFAULT_SENSOR_STRING): cv.string,
         vol.Optional(CONF_ENABLE_CLIMATE, default=True): cv.boolean,
-        vol.Optional(CONF_ISY_VARIABLES, default=[]): vol.All(cv.ensure_list,
-                                                              [vol.Coerce(int)])
+        vol.Optional(CONF_ISY_VARIABLES, default={}): ISY_VARIABLES_SCHEMA
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -123,7 +164,7 @@ NODE_FILTERS = {
 SUPPORTED_DOMAINS = ['binary_sensor', 'sensor', 'lock', 'fan', 'cover',
                      'light', 'switch', 'climate']
 SUPPORTED_PROGRAM_DOMAINS = ['binary_sensor', 'lock', 'fan', 'cover', 'switch']
-SUPPORTED_VARIABLE_DOMAINS = ['sensor']
+SUPPORTED_VARIABLE_DOMAINS = ['binary_sensor', 'sensor', 'switch']
 
 # ISY Scenes are more like Switches than Hass Scenes
 # (they can turn off, and report their state)
@@ -341,22 +382,23 @@ def _categorize_programs(hass: HomeAssistant, programs: dict) -> None:
 
 
 def _categorize_variables(hass: HomeAssistant, variables: dict,
-                          variable_list: list) -> None:
+                          domain_cfg: dict, domain: str) -> None:
     """Categorize the ISY994 Variables."""
-    _LOGGER.debug("ISY Variable List: %s", variable_list)
-    for domain in SUPPORTED_VARIABLE_DOMAINS:
-        for vtype, vname, vid in variables[1].children:
-            _LOGGER.debug("ISY Variable Setup: Checking Type %s, Variable %s to see if we should track it.", vtype, vid)
-            if vid in variable_list:
-                _LOGGER.debug("ISY Variable Setup: Found Variable %s in Integers", vid)
-                variable = (vtype, vname, vid, variables[vtype][vid])
-                hass.data[ISY994_VARIABLES][domain].append(variable)
-        for vtype, vname, vid in variables[2].children:
-            _LOGGER.debug("ISY Variable Setup: Checking Type %s, Variable %s to see if we should track it.", vtype, vid)
-            if vid in variable_list:
-                _LOGGER.debug("ISY Variable Setup: Found Variable %s in State Variables", vid)
-                variable = (vtype, vname, vid, variables[vtype][vid])
-                hass.data[ISY994_VARIABLES][domain].append(variable)
+    if domain_cfg is None:
+        return
+    for isy_var in domain_cfg:
+        vid = isy_var.get(CONF_ID)
+        vtype = isy_var.get(CONF_TYPE)
+        _, vname, _ = next((var for i, var in
+                            enumerate(variables[vtype].children)
+                            if var[2] == vid), None)
+        if vname is None:
+            _LOGGER.error("ISY Variable Not Found in ISY List; "
+                          "check your config for Variable %s.%s",
+                          vtype, vid)
+            continue
+        variable = (isy_var, vname, variables[vtype][vid])
+        hass.data[ISY994_VARIABLES][domain].append(variable)
 
 
 def _categorize_weather(hass: HomeAssistant, climate) -> None:
@@ -416,7 +458,14 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     _categorize_nodes(hass, isy.nodes, ignore_identifier, sensor_identifier)
     _categorize_programs(hass, isy.programs)
-    _categorize_variables(hass, isy.variables, isy_variables)
+    _categorize_variables(hass, isy.variables,
+                          isy_variables.get(CONF_SENSORS), 'sensor')
+    _categorize_variables(hass, isy.variables,
+                          isy_variables.get(CONF_BINARY_SENSORS),
+                          'binary_sensor')
+    _categorize_variables(hass, isy.variables,
+                          isy_variables.get(CONF_SWITCHES),
+                          'switch')
 
     if enable_climate and isy.configuration.get('Weather Information'):
         _categorize_weather(hass, isy.climate)

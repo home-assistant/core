@@ -1,10 +1,12 @@
 """Support for ISY994 sensors."""
 import logging
-from typing import Callable
+from typing import Callable, Optional
 
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
-    POWER_WATT, TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_UV_INDEX)
+    CONF_DEVICE_CLASS, CONF_ICON, CONF_ID, CONF_NAME, CONF_TYPE,
+    CONF_UNIT_OF_MEASUREMENT, POWER_WATT, TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    UNIT_UV_INDEX)
 from homeassistant.helpers.typing import ConfigType, Dict
 
 from . import ISY994_NODES, ISY994_VARIABLES, ISY994_WEATHER, ISYDevice
@@ -242,8 +244,8 @@ def setup_platform(hass, config: ConfigType,
     for node in hass.data[ISY994_WEATHER]:
         devices.append(ISYWeatherDevice(node))
 
-    for vtype, vname, vid, vobj in hass.data[ISY994_VARIABLES][DOMAIN]:
-        devices.append(ISYSensorVariableDevice(vtype, vname, vid, vobj))
+    for vcfg, vname, vobj in hass.data[ISY994_VARIABLES][DOMAIN]:
+        devices.append(ISYSensorVariableDevice(vcfg, vname, vobj))
 
     add_entities(devices)
 
@@ -303,12 +305,13 @@ class ISYSensorDevice(ISYDevice):
 class ISYSensorVariableDevice(ISYDevice):
     """Representation of an ISY994 variable as a sensor device."""
 
-    def __init__(self, vtype: int, vname: str, vid: int, vobj: object) -> None:
+    def __init__(self, vcfg: dict, vname: str, vobj: object) -> None:
         """Initialize the ISY994 binary sensor program."""
         super().__init__(vobj)
-        self._name = vname
-        self._vtype = vtype
-        self._vid = vid
+        self._config = vcfg
+        self._name = vcfg.get(CONF_NAME, vname)
+        self._vtype = vcfg.get(CONF_TYPE)
+        self._vid = vcfg.get(CONF_ID)
         self._change_handler = None
         self._init_change_handler = None
 
@@ -338,6 +341,21 @@ class ISYSensorVariableDevice(ISYDevice):
         attr["Variable Type"] = "State" if self._vtype == 2 else "Integer"
         attr["Init Value"] = int(self._node.init)
         return attr
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return self._config.get(CONF_ICON)
+
+    @property
+    def device_class(self) -> Optional[str]:
+        """Return the device class of the sensor."""
+        return self._config.get(CONF_DEVICE_CLASS)
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit this state is expressed in."""
+        return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
 
 class ISYWeatherDevice(ISYDevice):
