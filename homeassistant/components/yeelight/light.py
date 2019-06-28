@@ -99,9 +99,7 @@ MODEL_TO_DEVICE_TYPE = {
     'ceiling1': BulbType.WhiteTemp,
     'ceiling2': BulbType.WhiteTemp,
     'ceiling3': BulbType.WhiteTemp,
-    'ceiling4': BulbType.WhiteTempMood,
-    'white_temp': BulbType.WhiteTemp,
-    'white_temp_ambilight': BulbType.WhiteTempMood}
+    'ceiling4': BulbType.WhiteTempMood}
 
 
 def _transitions_config_parser(transitions):
