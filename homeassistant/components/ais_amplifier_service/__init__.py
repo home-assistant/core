@@ -40,7 +40,9 @@ def async_setup(hass, config):
     # set permissions to /dev/ttyS0
     os.system("su -c 'chmod 666 /dev/ttyS0'")
     # disable tone on start
-    os.system(r'su -c "stty -F /dev/ttyS0 9600 && echo COM+TONEOFF\r\n > /dev/ttyS0"')
+    # os.system(r'su -c "stty -F /dev/ttyS0 9600 && echo COM+TONEOFF\r\n > /dev/ttyS0"')
+    # set aux mode on start
+    os.system(r'su -c "stty -F /dev/ttyS0 9600 && echo COM+MAX\r\n > /dev/ttyS0"')
     return True
 
 
