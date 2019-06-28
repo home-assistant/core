@@ -38,7 +38,7 @@ stages:
         pip install flake8
       displayName: 'Setup Env'
     - script: |
-        . lint/bin/activate
+        . venv/bin/activate
         flake8 homeassistant tests script
       displayName: 'Run flake8'
   - job: 'Validate'
@@ -50,7 +50,7 @@ stages:
         python -m venv venv
 
         . venv/bin/activate
-        pip install .
+        pip install -e .
       displayName: 'Setup Env'
     - script: |
         . venv/bin/activate
@@ -58,7 +58,7 @@ stages:
       displayName: 'Validate manifests'
     - script: |
         . venv/bin/activate
-        python script/gen_requirements_all.py validate
+        ./script/gen_requirements_all.py validate
       displayName: 'requirements_all validate'
 
 - stage: 'Tests'
