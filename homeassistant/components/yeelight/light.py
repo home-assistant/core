@@ -99,7 +99,9 @@ MODEL_TO_DEVICE_TYPE = {
     'ceiling1': BulbType.WhiteTemp,
     'ceiling2': BulbType.WhiteTemp,
     'ceiling3': BulbType.WhiteTemp,
-    'ceiling4': BulbType.WhiteTempMood}
+    'ceiling4': BulbType.WhiteTempMood,
+    'white_temp': BulbType.WhiteTemp,
+    'white_temp_ambilight': BulbType.WhiteTempMood}
 
 
 def _transitions_config_parser(transitions):
@@ -277,10 +279,10 @@ class YeelightGenericLight(Light):
     @property
     def color_temp(self) -> int:
         """Return the color temperature."""
-        temp = self._get_property('ct')
-        if temp:
-            self._color_temp = temp
-        return kelvin_to_mired(int(self._color_temp))
+        temp_in_k = self._get_property('ct')
+        if temp_in_k:
+            self._color_temp = kelvin_to_mired(int(temp_in_k))
+        return self._color_temp
 
     @property
     def name(self) -> str:
