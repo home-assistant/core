@@ -160,3 +160,19 @@ stages:
         . venv/bin/activate
         pylint homeassistant
       displayName: 'Run pylint'
+  - job: 'Mypy'
+    pool:
+      vmImage: 'ubuntu-latest'
+    container: $[ variables['PythonMain'] ]
+    steps:
+    - script: |
+        python -m venv venv
+
+        . venv/bin/activate
+        pip install -r requirements_test.txt
+      displayName: 'Setup Env'
+    - script: |
+        . venv/bin/activate
+        TYPING_FILES=$(cat mypyrc)
+        mypy $TYPING_FILES
+      displayName: 'Run mypy'
