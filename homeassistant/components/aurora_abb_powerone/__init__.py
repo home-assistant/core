@@ -1,1 +1,1 @@
-"""The example sensor integration."""
+"""The Aurora ABB Powerone PV inverter sensor integration."""
