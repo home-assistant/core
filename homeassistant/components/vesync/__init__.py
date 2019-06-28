@@ -2,15 +2,11 @@
 import logging
 import voluptuous as vol
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
-                                 CONF_TIME_ZONE, CONF_SCAN_INTERVAL)
+                                 CONF_TIME_ZONE)
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry, SOURCE_IMPORT
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
-from homeassistant.components.vesync import config_flow
-from .common import async_process_devices, VesyncDevices, CONF_FANS, CONF_LIGHTS, CONF_SWITCHES
+from homeassistant.config_entries import SOURCE_IMPORT
+from .common import (async_process_devices, CONF_FANS,
+                     CONF_LIGHTS, CONF_SWITCHES)
 from .config_flow import configured_instances
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,8 +81,6 @@ async def async_setup_entry(hass, config_entry):
         _LOGGER.error("Unable to login")
         return False
 
-    devices = VesyncDevices()
-
     device_dict = await async_process_devices(hass, manager)
 
     hass.data[DOMAIN]['manager'] = manager
@@ -119,9 +113,9 @@ async def async_unload_entry(hass, entry):
     if hass.data[DOMAIN][CONF_SWITCHES]:
         remove_switches = await forward_unload(entry, 'switch')
     if hass.data[DOMAIN][CONF_FANS]:
-        remove_switches = await forward_unload(entry, 'fan')
+        remove_fans = await forward_unload(entry, 'fan')
 
-    if remove_lights or remove_switches:
+    if remove_lights or remove_switches or remove_fans:
         hass.data[DOMAIN].clear()
         return True
 

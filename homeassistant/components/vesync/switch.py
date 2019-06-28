@@ -9,36 +9,6 @@ _LOGGER = logging.getLogger(__name__)
 ENERGY_UPDATE_INT = 21600
 
 
-"""def setup_platform(hass, config, add_entities, discovery_info=None):
-
-    if discovery_info is None:
-        return
-
-    switches = []
-
-    manager = hass.data[DOMAIN]['manager']
-
-    if manager.outlets is not None and manager.outlets:
-        if len(manager.outlets) == 1:
-            count_string = 'switch'
-        else:
-            count_string = 'switches'
-
-        _LOGGER.info("Discovered %d VeSync %s",
-                     len(manager.outlets), count_string)
-
-        for switch in manager.outlets:
-            switch._energy_update_interval = ENERGY_UPDATE_INT
-            switches.append(VeSyncSwitchHA(switch))
-            _LOGGER.info("Added a VeSync switch named '%s'",
-                         switch.device_name)
-    else:
-        _LOGGER.info("No VeSync switches or outlets found")
-
-    add_entities(switches)
-"""
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up switches"""
     await async_add_entities_retry(
@@ -79,22 +49,24 @@ class VeSyncSwitchHA(SwitchDevice):
         """Return the state attributes of the device."""
         attr = {}
         attr['active_time'] = self.smartplug.active_time
-        attr['voltage'] = self.smartplug.voltage
-        attr['active_time'] = self.smartplug.active_time
-        attr['weekly_energy_total'] = self.smartplug.weekly_energy_total
-        attr['monthly_energy_total'] = self.smartplug.monthly_energy_total
-        attr['yearly_energy_total'] = self.smartplug.yearly_energy_total
+        if hasattr(self.smartplug, 'weekly_energy_total'):
+            attr['voltage'] = self.smartplug.voltage
+            attr['weekly_energy_total'] = self.smartplug.weekly_energy_total
+            attr['monthly_energy_total'] = self.smartplug.monthly_energy_total
+            attr['yearly_energy_total'] = self.smartplug.yearly_energy_total
         return attr
 
     @property
     def current_power_w(self):
         """Return the current power usage in W."""
-        return self.smartplug.power
+        if hasattr(self.smartplug, 'power'):
+            return self.smartplug.power
 
     @property
     def today_energy_kwh(self):
         """Return the today total energy usage in kWh."""
-        return self.smartplug.energy_today
+        if hasattr(self.smartplug, 'energy_today'):
+            return self.smartplug.energy_today
 
     @property
     def available(self) -> bool:
@@ -117,4 +89,7 @@ class VeSyncSwitchHA(SwitchDevice):
     def update(self):
         """Handle data changes for node values."""
         self.smartplug.update()
-        self.smartplug.update_energy()
+        try:
+            self.smartplug.update_energy()
+        except AttributeError:
+            pass

@@ -1,28 +1,13 @@
+"""Common utilities for VeSync Component"""
 import logging
-import voluptuous as vol
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry, SOURCE_IMPORT
-from .const import DOMAIN
 import asyncio
 from datetime import timedelta
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_LIGHTS = 'lights'
 CONF_SWITCHES = 'switches'
 CONF_FANS = 'fans'
-
-class VesyncDevices:
-    """Hold device lists"""
-    def __init__(
-            self,
-            lights=None,
-            switches=None,
-            fans=None
-        ):
-        """Construct class"""
-        self._lights = lights or []
-        self._switches = switches or []
-        self._fans = fans or []
 
 
 async def async_process_devices(hass, manager):
@@ -34,28 +19,22 @@ async def async_process_devices(hass, manager):
     devices[CONF_FANS] = []
 
     await hass.async_add_executor_job(manager.update)
-    _LOGGER.debug(manager.bulbs)
-    _LOGGER.debug(manager.switches)
-    _LOGGER.debug(manager.outlets)
+
     if manager.bulbs:
-        _LOGGER.info("Bulbs - %s", str(manager.bulbs))
         devices[CONF_LIGHTS].extend(manager.bulbs)
         _LOGGER.info("%d VeSync light bulbs found", len(manager.bulbs))
 
     if manager.fans:
-        _LOGGER.info("Bulbs - %s", str(manager.fans))
         devices[CONF_FANS].extend(manager.fans)
         _LOGGER.info("%d VeSync fans found", len(manager.fans))
 
     if manager.outlets:
-        _LOGGER.info("Outlets - %s", str(manager.outlets))
         devices[CONF_SWITCHES].extend(manager.outlets)
         _LOGGER.info("%d VeSync outlets found", len(manager.switches))
 
     dim_switch = 0
     reg_switch = 0
     if manager.switches:
-        _LOGGER.info("Switches - %s", str(manager.switches))
         for switch in manager.switches:
             if switch.is_dimmable():
                 devices[CONF_LIGHTS].append(switch)
@@ -124,12 +103,3 @@ async def async_add_entities_retry(hass,
     await process_objects_loop(interval.seconds)
 
     return cancel_interval_callback
-
-
-
-
-async def async_rm_stale_devices(hass, manager):
-    """Remove devices from HA that aren't found in account"""
-    ha_list = hass.data[DOMAIN]
-    ha_devices = ha_list.get(CONF_SWITCHES) + ha_list.get('lights')\
-        + ha_list.get('fans')

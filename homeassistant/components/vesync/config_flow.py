@@ -1,10 +1,8 @@
-import asyncio
+"""Config flow utilities"""
 import logging
-import voluptuous as vol
-import async_timeout
 from collections import OrderedDict
+import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import callback
 from homeassistant.const import (CONF_TIME_ZONE, CONF_USERNAME, CONF_PASSWORD)
 
@@ -22,6 +20,7 @@ def configured_instances(hass):
         _LOGGER.debug("Entry found - %s", entries)
         return entries[0]
     return None
+
 
 @config_entries.HANDLERS.register(DOMAIN)
 class VeSyncFlowHandler(config_entries.ConfigFlow):
@@ -65,10 +64,10 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
         self._time_zone = user_input.get(CONF_TIME_ZONE, None)
 
         return self.async_create_entry(
-                title=self._username,
-                data={
-                    CONF_USERNAME: self._username,
-                    CONF_PASSWORD: self._password,
-                    CONF_TIME_ZONE: self._time_zone,
+            title=self._username,
+            data={
+                CONF_USERNAME: self._username,
+                CONF_PASSWORD: self._password,
+                CONF_TIME_ZONE: self._time_zone,
             },
         )
