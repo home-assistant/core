@@ -4,6 +4,7 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import (
+    ATTR_BRIDGE_MODE, ATTR_BRIDGE_NAME, ATTR_SYSTEM_MODE, ATTR_SYSTEM_NAME,
     BINARY_SENSOR_TYPES, SENSOR_BATTERY, SENSOR_DOOR, SENSOR_GARAGE_DOOR,
     SENSOR_LEAK, SENSOR_MISSING, SENSOR_SAFE, SENSOR_SLIDING, SENSOR_SMOKE_CO,
     SENSOR_WINDOW_HINGED_HORIZONTAL, SENSOR_WINDOW_HINGED_VERTICAL,
@@ -64,7 +65,27 @@ class NotionBinarySensor(NotionEntity, BinarySensorDevice):
     async def async_update(self):
         """Fetch new state data for the sensor."""
         try:
-            new_data = next(
+            new_bridge_data = next(
+                (b for b in self._notion.bridges
+                 if b['id'] == self._bridge['id'])
+            )
+        except StopIteration:
+            _LOGGER.error(
+                'Bridge missing (was it removed?): %s: %s',
+                self._sensor['name'], self._task['task_type'])
+
+        try:
+            new_system_data = next(
+                (s for s in self._notion.systems
+                 if s['id'] == self._system['id'])
+            )
+        except StopIteration:
+            _LOGGER.error(
+                'Task missing (was it removed?): %s: %s',
+                self._sensor['name'], self._task['task_type'])
+
+        try:
+            new_task_data = next(
                 (t for t in self._notion.tasks if t['id'] == self._task['id'])
             )
         except StopIteration:
@@ -73,4 +94,10 @@ class NotionBinarySensor(NotionEntity, BinarySensorDevice):
                 self._sensor['name'], self._task['task_type'])
             return
 
-        self._state = new_data['status']['value']
+        self._state = new_task_data['status']['value']
+        self._attrs.update({
+            ATTR_BRIDGE_MODE: new_bridge_data['mode'],
+            ATTR_BRIDGE_NAME: new_bridge_data['name'],
+            ATTR_SYSTEM_MODE: new_system_data['mode'],
+            ATTR_SYSTEM_NAME: new_system_data['name'],
+        })
