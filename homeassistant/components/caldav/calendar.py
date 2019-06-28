@@ -142,16 +142,23 @@ class WebDavCalendarData:
             if hasattr(vevent, 'uid'):
                 uid = vevent.uid.value
             data = {
+                # Some custom cards access 'id' and 'summary' of event object because google calendar integration / google calendar event API has it.
+                # CO: Here a "uid" is given (from caldav spec), but it is "id" in google calendar integration / google calendar event API.
                 "uid": uid,
+                "id": uid,
+                # CO: Here it is called title and not summary?! See update method below and the google calendar integration / google calendar event API.
                 "title": vevent.summary.value,
+                "summary": vevent.summary.value,
+
                 "start": self.get_hass_date(vevent.dtstart.value),
                 "end": self.get_hass_date(self.get_end_date(vevent)),
                 "location": self.get_attr_value(vevent, "location"),
                 "description": self.get_attr_value(vevent, "description"),
             }
 
-            data['start'] = get_date(data['start']).isoformat()
-            data['end'] = get_date(data['end']).isoformat()
+            # CO Same here google integration returns a dict. Need to cleanup if accepted.
+            data['start'] = self.get_hass_date(get_date(data['start']).isoformat())
+            data['end'] = self.get_hass_date(get_date(data['end']).isoformat())
 
             event_list.append(data)
 
@@ -190,6 +197,7 @@ class WebDavCalendarData:
 
         # Populate the entity attributes with the event values
         self.event = {
+            # CO: Here it is called summary but above it is title?!
             "summary": vevent.summary.value,
             "start": self.get_hass_date(vevent.dtstart.value),
             "end": self.get_hass_date(self.get_end_date(vevent)),
