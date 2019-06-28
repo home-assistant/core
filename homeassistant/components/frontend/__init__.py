@@ -256,9 +256,15 @@ async def async_setup(hass, config):
     for panel in ('kiosk', 'states', 'profile'):
         async_register_built_in_panel(hass, panel)
 
-    for panel in ('dev-event', 'dev-info', 'dev-service', 'dev-state',
-                  'dev-template', 'dev-mqtt'):
-        async_register_built_in_panel(hass, panel, require_admin=True)
+    # To smooth transition to new urls, add redirects to new urls of dev tools
+    # Added June 27, 2019. Can be removed in 2021.
+    for panel in ('event', 'info', 'service', 'state', 'template', 'mqtt'):
+        hass.http.register_redirect('/dev-{}'.format(panel),
+                                    '/developer-tools/{}'.format(panel))
+
+    async_register_built_in_panel(
+        hass, "developer-tools", require_admin=True,
+        sidebar_title="Developer Tools", sidebar_icon="hass:hammer")
 
     if DATA_EXTRA_HTML_URL not in hass.data:
         hass.data[DATA_EXTRA_HTML_URL] = set()
