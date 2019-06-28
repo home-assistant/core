@@ -32,18 +32,40 @@ stages:
     container: $[ variables['PythonMain'] ]
     steps:
     - script: |
-        python -m venv lint
-        
-        . lint/bin/activate
+        python -m venv venv
+
+        . venv/bin/activate
         pip install flake8
+      displayName: 'Setup Env'
+    - script: |
+        . lint/bin/activate
         flake8 homeassistant tests script
       displayName: 'Run flake8'
+  - job: 'Validate'
+    pool:
+      vmImage: 'ubuntu-latest'
+    container: $[ variables['PythonMain'] ]
+    steps:
+    - script: |
+        python -m venv venv
+
+        . venv/bin/activate
+        pip install .
+      displayName: 'Setup Env'
+    - script: |
+        . venv/bin/activate
+        python -m script.hassfest validate
+      displayName: 'Validate manifests'
+    - script: |
+        . venv/bin/activate
+        python script/gen_requirements_all.py validate
+      displayName: 'requirements_all validate'
 
 - stage: 'Tests'
   dependsOn:
     - 'Overview'
   jobs:
-  - job: 'PyTests'
+  - job: 'PyTest'
     pool:
       vmImage: 'ubuntu-latest'
     strategy:
