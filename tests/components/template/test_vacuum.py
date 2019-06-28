@@ -211,7 +211,7 @@ async def test_state_services(hass, calls):
     await _register_components(hass)
 
     # Start vacuum
-    common.async_start(hass, _TEST_VACUUM)
+    await common.async_start(hass, _TEST_VACUUM)
     await hass.async_block_till_done()
 
     # verify
@@ -219,7 +219,7 @@ async def test_state_services(hass, calls):
     _verify(hass, STATE_CLEANING, None)
 
     # Pause vacuum
-    common.async_pause(hass, _TEST_VACUUM)
+    await common.async_pause(hass, _TEST_VACUUM)
     await hass.async_block_till_done()
 
     # verify
@@ -227,7 +227,7 @@ async def test_state_services(hass, calls):
     _verify(hass, STATE_PAUSED, None)
 
     # Stop vacuum
-    common.async_stop(hass, _TEST_VACUUM)
+    await common.async_stop(hass, _TEST_VACUUM)
     await hass.async_block_till_done()
 
     # verify
@@ -235,7 +235,7 @@ async def test_state_services(hass, calls):
     _verify(hass, STATE_IDLE, None)
 
     # Return vacuum to base
-    common.async_return_to_base(hass, _TEST_VACUUM)
+    await common.async_return_to_base(hass, _TEST_VACUUM)
     await hass.async_block_till_done()
 
     # verify
@@ -248,27 +248,27 @@ async def test_unused_services(hass, calls):
     await _register_basic_vacuum(hass)
 
     # Pause vacuum
-    common.async_pause(hass, _TEST_VACUUM)
+    await common.async_pause(hass, _TEST_VACUUM)
     await hass.async_block_till_done()
 
     # Stop vacuum
-    common.async_stop(hass, _TEST_VACUUM)
+    await common.async_stop(hass, _TEST_VACUUM)
     await hass.async_block_till_done()
 
     # Return vacuum to base
-    common.async_return_to_base(hass, _TEST_VACUUM)
+    await common.async_return_to_base(hass, _TEST_VACUUM)
     await hass.async_block_till_done()
 
     # Spot cleaning
-    common.async_clean_spot(hass, _TEST_VACUUM)
+    await common.async_clean_spot(hass, _TEST_VACUUM)
     await hass.async_block_till_done()
 
     # Locate vacuum
-    common.async_locate(hass, _TEST_VACUUM)
+    await common.async_locate(hass, _TEST_VACUUM)
     await hass.async_block_till_done()
 
     # Set fan's speed
-    common.async_set_fan_speed(hass, 'medium', _TEST_VACUUM)
+    await common.async_set_fan_speed(hass, 'medium', _TEST_VACUUM)
     await hass.async_block_till_done()
 
     _verify(hass, STATE_UNKNOWN, None)
@@ -279,7 +279,7 @@ async def test_clean_spot_service(hass, calls):
     await _register_components(hass)
 
     # Clean spot
-    common.async_clean_spot(hass, _TEST_VACUUM)
+    await common.async_clean_spot(hass, _TEST_VACUUM)
     await hass.async_block_till_done()
 
     # verify
@@ -291,7 +291,7 @@ async def test_locate_service(hass, calls):
     await _register_components(hass)
 
     # Locate vacuum
-    common.async_locate(hass, _TEST_VACUUM)
+    await common.async_locate(hass, _TEST_VACUUM)
     await hass.async_block_till_done()
 
     # verify
@@ -303,14 +303,14 @@ async def test_set_fan_speed(hass, calls):
     await _register_components(hass)
 
     # Set vacuum's fan speed to high
-    common.async_set_fan_speed(hass, 'high', _TEST_VACUUM)
+    await common.async_set_fan_speed(hass, 'high', _TEST_VACUUM)
     await hass.async_block_till_done()
 
     # verify
     assert hass.states.get(_FAN_SPEED_INPUT_SELECT).state == 'high'
 
     # Set fan's speed to medium
-    common.async_set_fan_speed(hass, 'medium', _TEST_VACUUM)
+    await common.async_set_fan_speed(hass, 'medium', _TEST_VACUUM)
     await hass.async_block_till_done()
 
     # verify
@@ -322,14 +322,14 @@ async def test_set_invalid_fan_speed(hass, calls):
     await _register_components(hass)
 
     # Set vacuum's fan speed to high
-    common.async_set_fan_speed(hass, 'high', _TEST_VACUUM)
+    await common.async_set_fan_speed(hass, 'high', _TEST_VACUUM)
     await hass.async_block_till_done()
 
     # verify
     assert hass.states.get(_FAN_SPEED_INPUT_SELECT).state == 'high'
 
     # Set vacuum's fan speed to 'invalid'
-    common.async_set_fan_speed(hass, 'invalid', _TEST_VACUUM)
+    await common.async_set_fan_speed(hass, 'invalid', _TEST_VACUUM)
     await hass.async_block_till_done()
 
     # verify fan speed is unchanged
