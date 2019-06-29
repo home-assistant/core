@@ -1,11 +1,12 @@
 """Support for Genius Hub sensor devices."""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import logging
 
 from homeassistant.const import DEVICE_CLASS_BATTERY
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from homeassistant.util.dt import utcnow, UTC
 
 from . import DOMAIN
 
@@ -38,6 +39,8 @@ async def async_setup_platform(hass, config, async_add_entities,
 class GeniusDevice(Entity):
     """Representation of a Genius Hub sensor."""
 
+    parallel_updates = True
+
     def __init__(self, client, device):
         """Initialize the sensor."""
         self._client = client
@@ -61,12 +64,12 @@ class GeniusDevice(Entity):
     @property
     def icon(self):
         """Return the icon of the sensor."""
-        child_values = self._device._info_raw['childValues']  # noqa; pylint: disable=protected-access
+        values = self._device._info_raw['childValues']  # noqa; pylint: disable=protected-access
 
-        last_comms = datetime.fromtimestamp(child_values['lastComms']['val'])
-        interval = child_values['WakeUp_Interval']['val']
+        last_comms = datetime.fromtimestamp(values['lastComms']['val'], tz=UTC)
+        interval = timedelta(seconds=values['WakeUp_Interval']['val'] * 3)
 
-        if last_comms < datetime.now() - timedelta(seconds=interval * 3):
+        if last_comms < utcnow() - interval:
             return "mdi:battery-unknown"
 
         level = self.state
