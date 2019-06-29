@@ -24,7 +24,7 @@ CONF_PROFILES = 'profiles'
 SUPPORTED_LANGUAGES = [
     'da-DK', 'de-DE', 'en-AU', 'en-GB', 'en-US', 'es-ES', 'fr-CA', 'fr-FR',
     'hu-HU', 'it-IT', 'ja-JP', 'ko-KR', 'nb-NO', 'nl-NL', 'pl-PL', 'pt-BR',
-    'pt-PT', 'ru-RU', 'sk-SK', 'sv-SE', 'tr-TR', 'uk-UA', 
+    'pt-PT', 'ru-RU', 'sk-SK', 'sv-SE', 'tr-TR', 'uk-UA',
 ]
 DEFAULT_LANG = 'en-US'
 
