@@ -37,7 +37,7 @@ REQUIRES = [
     'async_timeout==3.0.1',
     'attrs==19.1.0',
     'bcrypt==3.1.6',
-    'certifi>=2018.04.16',
+    'certifi>=2019.6.16',
     'importlib-metadata==0.15',
     'jinja2>=2.10',
     'PyJWT==1.7.1',
