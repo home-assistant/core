@@ -1,12 +1,12 @@
 """Support for Genius Hub sensor devices."""
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 import logging
 
 from homeassistant.const import DEVICE_CLASS_BATTERY
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.util.dt import utcnow, UTC
+from homeassistant.util.dt import utc_from_timestamp, utcnow
 
 from . import DOMAIN
 
@@ -66,8 +66,10 @@ class GeniusDevice(Entity):
         """Return the icon of the sensor."""
         values = self._device._info_raw['childValues']  # noqa; pylint: disable=protected-access
 
-        last_comms = datetime.fromtimestamp(values['lastComms']['val'], tz=UTC)
+        last_comms = utc_from_timestamp(values['lastComms']['val'])
         interval = timedelta(seconds=values['WakeUp_Interval']['val'] * 3)
+
+        _LOGGER.warn("lc = %s, utcnow = %s", last_comms, utcnow())
 
         if last_comms < utcnow() - interval:
             return "mdi:battery-unknown"
@@ -115,8 +117,7 @@ class GeniusDevice(Entity):
         attrs['assigned_zone'] = self._device.assignedZones[0]['name']
 
         last_comms = self._device._info_raw['childValues']['lastComms']['val']  # noqa; pylint: disable=protected-access
-        attrs['last_comms'] = datetime.fromtimestamp(
-            last_comms, tz=UTC).isoformat()
+        attrs['last_comms'] = utc_from_timestamp(last_comms).isoformat()
 
         return {**attrs}
 
