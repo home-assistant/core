@@ -1102,11 +1102,22 @@ nsw-fuel-api-client==1.0.10
 # homeassistant.components.nuheat
 nuheat==0.3.0
 
+<<<<<<< HEAD
 # homeassistant.components.binary_sensor.trend
 # homeassistant.components.image_processing.opencv
 # homeassistant.components.image_processing.tensorflow
 # homeassistant.components.sensor.pollen
 numpy==1.15.4
+=======
+# homeassistant.components.iqvia
+# homeassistant.components.opencv
+# homeassistant.components.tensorflow
+# homeassistant.components.trend
+numpy==1.16.4
+
+# homeassistant.components.oasa_telematics
+oasatelematics==0.3
+>>>>>>> Upgrade numpy to 1.16.4 (#24845)
 
 # homeassistant.components.google
 oauth2client==4.0.0
