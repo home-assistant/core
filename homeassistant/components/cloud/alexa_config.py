@@ -78,7 +78,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
     @property
     def entity_config(self):
         """Return entity config."""
-        return self._config.get(CONF_ENTITY_CONFIG, {})
+        return self._config.get(CONF_ENTITY_CONFIG) or {}
 
     def should_expose(self, entity_id):
         """If an entity should be exposed."""
@@ -128,6 +128,11 @@ class AlexaConfig(alexa_config.AbstractConfig):
                 await self.async_enable_proactive_mode()
             else:
                 await self.async_disable_proactive_mode()
+
+            # State reporting is reported as a property on entities.
+            # So when we change it, we need to sync all entities.
+            await self.async_sync_entities()
+            return
 
         # If entity prefs are the same or we have filter in config.yaml,
         # don't sync.
@@ -190,6 +195,11 @@ class AlexaConfig(alexa_config.AbstractConfig):
 
     async def async_sync_entities(self):
         """Sync all entities to Alexa."""
+        # Remove any pending sync
+        if self._alexa_sync_unsub:
+            self._alexa_sync_unsub()
+            self._alexa_sync_unsub = None
+
         to_update = []
         to_remove = []
 
