@@ -66,12 +66,24 @@ class TotalConnectAlarm(alarm.AlarmControlPanel):
 
         if status == self._client.DISARMED:
             state = STATE_ALARM_DISARMED
+        elif status == self._client.DISARMED_BYPASS:
+            state = STATE_ALARM_DISARMED
         elif status == self._client.ARMED_STAY:
             state = STATE_ALARM_ARMED_HOME
-        elif status == self._client.ARMED_AWAY:
-            state = STATE_ALARM_ARMED_AWAY
+        elif status == self._client.ARMED_STAY_INSTANT:
+            state = STATE_ALARM_ARMED_HOME
+        elif status == self._client.ARMED_STAY_INSTANT_BYPASS:
+            state = STATE_ALARM_ARMED_HOME
         elif status == self._client.ARMED_STAY_NIGHT:
             state = STATE_ALARM_ARMED_NIGHT
+        elif status == self._client.ARMED_AWAY:
+            state = STATE_ALARM_ARMED_AWAY
+        elif status == self._client.ARMED_AWAY_BYPASS:
+            state = STATE_ALARM_ARMED_AWAY
+        elif status == self._client.ARMED_AWAY_INSTANT:
+            state = STATE_ALARM_ARMED_AWAY
+        elif status == self._client.ARMED_AWAY_INSTANT_BYPASS:
+            state = STATE_ALARM_ARMED_AWAY
         elif status == self._client.ARMED_CUSTOM_BYPASS:
             state = STATE_ALARM_ARMED_CUSTOM_BYPASS
         elif status == self._client.ARMING:
