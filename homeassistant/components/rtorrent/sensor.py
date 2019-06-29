@@ -99,8 +99,9 @@ class RTorrentSensor(Entity):
         try:
             self.data = multicall()
             self._available = True
-        except (xmlrpc.client.ProtocolError, ConnectionRefusedError):
-            _LOGGER.error("Connection to rtorrent lost")
+        except (xmlrpc.client.ProtocolError,
+                ConnectionRefusedError, OSError) as ex:
+            _LOGGER.error("Connection to rtorrent failed (%s)", ex)
             self._available = False
             return
 

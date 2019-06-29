@@ -2,7 +2,6 @@
 from unittest.mock import patch, MagicMock
 
 from aiohttp import web
-import jwt
 import pytest
 
 from homeassistant.core import State
@@ -13,32 +12,13 @@ from homeassistant.components.cloud.const import (
 from tests.components.alexa import test_smart_home as test_alexa
 from tests.common import mock_coro
 
-from . import mock_cloud_prefs
+from . import mock_cloud_prefs, mock_cloud
 
 
 @pytest.fixture
-def mock_cloud():
+def mock_cloud_inst():
     """Mock cloud class."""
     return MagicMock(subscription_expired=False)
-
-
-@pytest.fixture
-async def mock_cloud_setup(hass):
-    """Set up the cloud."""
-    with patch('hass_nabucasa.Cloud.start', return_value=mock_coro()):
-        assert await async_setup_component(hass, 'cloud', {
-            'cloud': {}
-        })
-
-
-@pytest.fixture
-def mock_cloud_login(hass, mock_cloud_setup):
-    """Mock cloud is logged in."""
-    hass.data[DOMAIN].id_token = jwt.encode({
-        'email': 'hello@home-assistant.io',
-        'custom:sub-exp': '2018-01-03',
-        'cognito:username': 'abcdefghjkl',
-    }, 'test')
 
 
 async def test_handler_alexa(hass):
@@ -48,24 +28,20 @@ async def test_handler_alexa(hass):
     hass.states.async_set(
         'switch.test2', 'on', {'friendly_name': "Test switch 2"})
 
-    with patch('hass_nabucasa.Cloud.start', return_value=mock_coro()):
-        setup = await async_setup_component(hass, 'cloud', {
-            'cloud': {
-                'alexa': {
-                    'filter': {
-                        'exclude_entities': 'switch.test2'
-                    },
-                    'entity_config': {
-                        'switch.test': {
-                            'name': 'Config name',
-                            'description': 'Config description',
-                            'display_categories': 'LIGHT'
-                        }
-                    }
+    await mock_cloud(hass, {
+        'alexa': {
+            'filter': {
+                'exclude_entities': 'switch.test2'
+            },
+            'entity_config': {
+                'switch.test': {
+                    'name': 'Config name',
+                    'description': 'Config description',
+                    'display_categories': 'LIGHT'
                 }
             }
-        })
-        assert setup
+        }
+    })
 
     mock_cloud_prefs(hass)
     cloud = hass.data['cloud']
@@ -106,24 +82,20 @@ async def test_handler_google_actions(hass):
     hass.states.async_set(
         'group.all_locks', 'on', {'friendly_name': "Evil locks"})
 
-    with patch('hass_nabucasa.Cloud.start', return_value=mock_coro()):
-        setup = await async_setup_component(hass, 'cloud', {
-            'cloud': {
-                'google_actions': {
-                    'filter': {
-                        'exclude_entities': 'switch.test2'
-                    },
-                    'entity_config': {
-                        'switch.test': {
-                            'name': 'Config name',
-                            'aliases': 'Config alias',
-                            'room': 'living room'
-                        }
-                    }
+    await mock_cloud(hass, {
+        'google_actions': {
+            'filter': {
+                'exclude_entities': 'switch.test2'
+            },
+            'entity_config': {
+                'switch.test': {
+                    'name': 'Config name',
+                    'aliases': 'Config alias',
+                    'room': 'living room'
                 }
             }
-        })
-        assert setup
+        }
+    })
 
     mock_cloud_prefs(hass)
     cloud = hass.data['cloud']

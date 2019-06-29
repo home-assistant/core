@@ -38,4 +38,4 @@ async def test_lennox_e30_setup(hass):
 
     # The fixture contains a single accessory - so its a single device
     # and no bridge
-    assert device.hub_device_id is None
+    assert device.via_device_id is None

@@ -6,6 +6,7 @@ import re
 from datetime import (timedelta, datetime as datetime_sys,
                       time as time_sys, date as date_sys)
 from socket import _GLOBAL_DEFAULT_TIMEOUT
+from numbers import Number
 from typing import Any, Union, TypeVar, Callable, Sequence, Dict, Optional
 from urllib.parse import urlparse
 from uuid import UUID
@@ -81,14 +82,17 @@ def has_at_most_one_key(*keys: str) -> Callable:
 
 def boolean(value: Any) -> bool:
     """Validate and coerce a boolean value."""
+    if isinstance(value, bool):
+        return value
     if isinstance(value, str):
-        value = value.lower()
+        value = value.lower().strip()
         if value in ('1', 'true', 'yes', 'on', 'enable'):
             return True
         if value in ('0', 'false', 'no', 'off', 'disable'):
             return False
-        raise vol.Invalid('invalid boolean value {}'.format(value))
-    return bool(value)
+    elif isinstance(value, Number):
+        return value != 0
+    raise vol.Invalid('invalid boolean value {}'.format(value))
 
 
 def isdevice(value):

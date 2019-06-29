@@ -296,7 +296,7 @@ class EntityPlatform:
                         'model',
                         'name',
                         'sw_version',
-                        'via_hub',
+                        'via_device',
                 ):
                     if key in device_info:
                         processed_dev_info[key] = device_info[key]
@@ -320,9 +320,8 @@ class EntityPlatform:
                     '"{} {}"'.format(self.platform_name, entity.unique_id))
                 return
 
+            entity.registry_entry = entry
             entity.entity_id = entry.entity_id
-            entity.registry_name = entry.name
-            entity.async_on_remove(entry.add_update_listener(entity))
 
         # We won't generate an entity ID if the platform has already set one
         # We will however make sure that platform cannot pick a registered ID
@@ -360,6 +359,7 @@ class EntityPlatform:
         self.entities[entity_id] = entity
         entity.async_on_remove(lambda: self.entities.pop(entity_id))
 
+        await entity.async_internal_added_to_hass()
         await entity.async_added_to_hass()
 
         await entity.async_update_ha_state()

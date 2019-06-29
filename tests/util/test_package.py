@@ -178,7 +178,7 @@ def test_install_find_links(mock_sys, mock_popen, mock_env_copy, mock_venv):
         mock_popen.call_args ==
         call([
             mock_sys.executable, '-m', 'pip', 'install', '--quiet',
-            TEST_NEW_REQ, '--find-links', link
+            TEST_NEW_REQ, '--find-links', link, '--prefer-binary'
         ], stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
     )
     assert mock_popen.return_value.communicate.call_count == 1

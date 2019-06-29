@@ -11,9 +11,8 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import slugify
 
 from .core.const import (
-    DOMAIN, ATTR_MANUFACTURER, DATA_ZHA, DATA_ZHA_BRIDGE_ID, MODEL, NAME,
-    SIGNAL_REMOVE
-)
+    ATTR_MANUFACTURER, DATA_ZHA, DATA_ZHA_BRIDGE_ID, DOMAIN, MODEL, NAME,
+    SIGNAL_REMOVE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,31 +31,17 @@ class ZhaEntity(RestoreEntity, entity.Entity):
         self._force_update = False
         self._should_poll = False
         self._unique_id = unique_id
-        self._name = None
-        if zha_device.manufacturer and zha_device.model is not None:
-            self._name = "{} {}".format(
-                zha_device.manufacturer,
-                zha_device.model
-            )
         if not skip_entity_id:
             ieee = zha_device.ieee
             ieeetail = ''.join(['%02x' % (o, ) for o in ieee[-4:]])
-            if zha_device.manufacturer and zha_device.model is not None:
-                self.entity_id = "{}.{}_{}_{}_{}{}".format(
-                    self._domain,
-                    slugify(zha_device.manufacturer),
-                    slugify(zha_device.model),
-                    ieeetail,
-                    channels[0].cluster.endpoint.endpoint_id,
-                    kwargs.get(ENTITY_SUFFIX, ''),
-                )
-            else:
-                self.entity_id = "{}.zha_{}_{}{}".format(
-                    self._domain,
-                    ieeetail,
-                    channels[0].cluster.endpoint.endpoint_id,
-                    kwargs.get(ENTITY_SUFFIX, ''),
-                )
+            self.entity_id = "{}.{}_{}_{}_{}{}".format(
+                self._domain,
+                slugify(zha_device.manufacturer),
+                slugify(zha_device.model),
+                ieeetail,
+                channels[0].cluster.endpoint.endpoint_id,
+                kwargs.get(ENTITY_SUFFIX, ''),
+            )
         self._state = None
         self._device_state_attributes = {}
         self._zha_device = zha_device
@@ -70,7 +55,7 @@ class ZhaEntity(RestoreEntity, entity.Entity):
     @property
     def name(self):
         """Return Entity's default name."""
-        return self._name
+        return self.zha_device.name
 
     @property
     def unique_id(self) -> str:
@@ -108,7 +93,8 @@ class ZhaEntity(RestoreEntity, entity.Entity):
             ATTR_MANUFACTURER: zha_device_info[ATTR_MANUFACTURER],
             MODEL: zha_device_info[MODEL],
             NAME: zha_device_info[NAME],
-            'via_hub': (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
+            'via_device': (
+                DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
         }
 
     @property

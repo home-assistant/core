@@ -1,20 +1,21 @@
 """Support for the Netatmo Weather Service."""
-from datetime import timedelta
 import logging
-from time import time
 import threading
+from datetime import timedelta
+from time import time
 
+import requests
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_MODE, CONF_MONITORED_CONDITIONS,
     TEMP_CELSIUS, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_BATTERY)
 from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import call_later
 from homeassistant.util import Throttle
-
 from .const import DATA_NETATMO_AUTH
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,10 +99,15 @@ MODULE_TYPE_RAIN = 'NAModule3'
 MODULE_TYPE_INDOOR = 'NAModule4'
 
 
+NETATMO_DEVICE_TYPES = {
+    'WeatherStationData': 'weather station',
+    'HomeCoachData': 'home coach'
+}
+
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available Netatmo weather sensors."""
     dev = []
-    not_handled = {}
     auth = hass.data[DATA_NETATMO_AUTH]
 
     if config.get(CONF_AREAS) is not None:
@@ -121,45 +127,55 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     area[CONF_MODE]
                 ))
     else:
-        for data_class in all_product_classes():
-            data = NetatmoData(auth, data_class, config.get(CONF_STATION))
-            module_items = []
+        def _retry(_data):
+            try:
+                _dev = find_devices(_data)
+            except requests.exceptions.Timeout:
+                return call_later(hass, NETATMO_UPDATE_INTERVAL,
+                                  lambda _: _retry(_data))
+            if _dev:
+                add_entities(_dev, True)
+
+        import pyatmo
+        for data_class in [pyatmo.WeatherStationData, pyatmo.HomeCoachData]:
+            try:
+                data = NetatmoData(auth, data_class, config.get(CONF_STATION))
+            except pyatmo.NoDevice:
+                _LOGGER.warning(
+                    "No %s devices found",
+                    NETATMO_DEVICE_TYPES[data_class.__name__]
+                )
+                continue
             # Test if manually configured
             if CONF_MODULES in config:
                 module_items = config[CONF_MODULES].items()
-            else:
-                # otherwise add all modules and conditions
-                for module_name in data.get_module_names():
-                    monitored_conditions = \
-                        data.station_data.monitoredConditions(module_name)
-                    module_items.append(
-                        (module_name, monitored_conditions))
-
-            for module_name, monitored_conditions in module_items:
-                # Test if module exists
-                if module_name not in data.get_module_names():
-                    not_handled[module_name] = \
-                        not_handled[module_name]+1 \
-                        if module_name in not_handled else 1
-                else:
-                    # Only create sensors for monitored properties
+                for module_name, monitored_conditions in module_items:
                     for condition in monitored_conditions:
                         dev.append(NetatmoSensor(
                             data, module_name, condition.lower(),
                             config.get(CONF_STATION)))
+                continue
 
-        for module_name, _ in not_handled.items():
-            _LOGGER.error('Module name: "%s" not found', module_name)
+            # otherwise add all modules and conditions
+            try:
+                dev.extend(find_devices(data))
+            except requests.exceptions.Timeout:
+                call_later(hass, NETATMO_UPDATE_INTERVAL,
+                           lambda _: _retry(data))
 
     if dev:
         add_entities(dev, True)
 
 
-def all_product_classes():
-    """Provide all handled Netatmo product classes."""
-    import pyatmo
-
-    return [pyatmo.WeatherStationData, pyatmo.HomeCoachData]
+def find_devices(data):
+    """Find all devices."""
+    dev = []
+    module_names = data.get_module_names()
+    for module_name in module_names:
+        for condition in data.station_data.monitoredConditions(module_name):
+            dev.append(NetatmoSensor(
+                data, module_name, condition.lower(), data.station))
+    return dev
 
 
 class NetatmoSensor(Entity):
@@ -177,12 +193,11 @@ class NetatmoSensor(Entity):
         self._device_class = SENSOR_TYPES[self.type][3]
         self._icon = SENSOR_TYPES[self.type][2]
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
-        self._module_type = self.netatmo_data. \
-            station_data.moduleByName(module=module_name)['type']
-        module_id = self.netatmo_data. \
-            station_data.moduleByName(station=self.station_name,
-                                      module=module_name)['_id']
-        self._unique_id = '{}-{}'.format(module_id, self.type)
+        module = self.netatmo_data.station_data.moduleByName(
+            station=self.station_name, module=module_name
+        )
+        self._module_type = module['type']
+        self._unique_id = '{}-{}'.format(module['_id'], self.type)
 
     @property
     def name(self):
@@ -505,31 +520,14 @@ class NetatmoData:
         self.auth = auth
         self.data_class = data_class
         self.data = {}
-        self.station_data = None
+        self.station_data = self.data_class(self.auth)
         self.station = station
         self._next_update = time()
         self._update_in_progress = threading.Lock()
 
     def get_module_names(self):
         """Return all module available on the API as a list."""
-        self.update()
-        return self.data.keys()
-
-    def _detect_platform_type(self):
-        """Return the XXXData object corresponding to the specified platform.
-
-        The return can be a WeatherStationData or a HomeCoachData.
-        """
-        from pyatmo import NoDevice
-        try:
-            station_data = self.data_class(self.auth)
-            _LOGGER.debug("%s detected!", str(self.data_class.__name__))
-            return station_data
-        except NoDevice:
-            _LOGGER.warning("No Weather or HomeCoach devices found for %s",
-                            str(self.station)
-                            )
-            raise
+        return self.station_data.modulesNamesList()
 
     def update(self):
         """Call the Netatmo API to update the data.
@@ -541,14 +539,20 @@ class NetatmoData:
         if time() < self._next_update or \
                 not self._update_in_progress.acquire(False):
             return
-
-        from pyatmo import NoDevice
         try:
-            self.station_data = self._detect_platform_type()
-        except NoDevice:
-            return
+            from pyatmo import NoDevice
+            try:
+                self.station_data = self.data_class(self.auth)
+                _LOGGER.debug("%s detected!", str(self.data_class.__name__))
+            except NoDevice:
+                _LOGGER.warning("No Weather or HomeCoach devices found for %s",
+                                str(self.station)
+                                )
+                return
+            except requests.exceptions.Timeout:
+                _LOGGER.warning("Timed out when connecting to Netatmo server.")
+                return
 
-        try:
             if self.station is not None:
                 data = self.station_data.lastData(
                     station=self.station, exclude=3600)

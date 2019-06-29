@@ -7,5 +7,6 @@
     "pychromecast==3.2.2"
   ],
   "dependencies": [],
+  "zeroconf": ["_googlecast._tcp.local."],
   "codeowners": []
 }

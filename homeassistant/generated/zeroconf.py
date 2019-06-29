@@ -14,11 +14,17 @@ ZEROCONF = {
     "_esphomelib._tcp.local.": [
         "esphome"
     ],
+    "_googlecast._tcp.local.": [
+        "cast"
+    ],
     "_hap._tcp.local.": [
         "homekit_controller"
     ]
 }
 
 HOMEKIT = {
-    "LIFX ": "lifx"
+    "BSB002": "hue",
+    "LIFX": "lifx",
+    "TRADFRI": "tradfri",
+    "Wemo": "wemo"
 }

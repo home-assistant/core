@@ -186,18 +186,18 @@ class RestoreStateData():
 class RestoreEntity(Entity):
     """Mixin class for restoring previous entity state."""
 
-    async def async_added_to_hass(self) -> None:
+    async def async_internal_added_to_hass(self) -> None:
         """Register this entity as a restorable entity."""
         _, data = await asyncio.gather(
-            super().async_added_to_hass(),
+            super().async_internal_added_to_hass(),
             RestoreStateData.async_get_instance(self.hass),
         )
         data.async_restore_entity_added(self.entity_id)
 
-    async def async_will_remove_from_hass(self) -> None:
+    async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         _, data = await asyncio.gather(
-            super().async_will_remove_from_hass(),
+            super().async_internal_will_remove_from_hass(),
             RestoreStateData.async_get_instance(self.hass),
         )
         data.async_restore_entity_removed(self.entity_id)
