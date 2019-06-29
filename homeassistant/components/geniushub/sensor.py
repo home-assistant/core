@@ -115,8 +115,8 @@ class GeniusDevice(Entity):
         attrs['assigned_zone'] = self._device.assignedZones[0]['name']
 
         last_comms = self._device._info_raw['childValues']['lastComms']['val']  # noqa; pylint: disable=protected-access
-        attrs['last_comms'] = datetime.utcfromtimestamp(
-            last_comms).isoformat()
+        attrs['last_comms'] = datetime.fromtimestamp(
+            last_comms, tz=UTC).isoformat()
 
         return {**attrs}
 
