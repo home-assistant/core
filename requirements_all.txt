@@ -2044,7 +2044,7 @@ simplisafe-python==3.4.2
 >>>>>>> Bump simplipy to 3.4.2 (#24326)
 
 # homeassistant.components.sisyphus
-sisyphus-control==2.1
+sisyphus-control==2.2
 
 # homeassistant.components.skybell
 skybellpy==0.3.0
