@@ -27,8 +27,12 @@ ruamel.yaml==0.15.85
 =======
 python-slugify==3.0.2
 pytz>=2019.01
+<<<<<<< HEAD
 pyyaml==5.1
 >>>>>>> Pyyaml5.1 (#24529)
+=======
+pyyaml==5.1.1
+>>>>>>> Upgrade pyyaml to 5.1.1 (#24847)
 requests==2.22.0
 ruamel.yaml==0.15.97
 >>>>>>> Upgrade ruamel.yaml to 0.15.97 (#24350)
