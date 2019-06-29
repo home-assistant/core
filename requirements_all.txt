@@ -11,10 +11,16 @@ attrs==19.1.0
 bcrypt==3.1.6
 certifi>=2019.6.16
 importlib-metadata==0.15
+<<<<<<< HEAD
 >>>>>>> Upgrade certifi to >= 2019.6.16 (#24846)
 jinja2>=2.10
 PyJWT==1.6.4
 cryptography==2.3.1
+=======
+jinja2>=2.10.1
+PyJWT==1.7.1
+cryptography==2.6.1
+>>>>>>> Upgrade jinja2 to >=2.10.1 (#24851)
 pip>=8.0.3
 <<<<<<< HEAD
 python-slugify==1.2.6
