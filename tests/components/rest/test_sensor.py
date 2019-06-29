@@ -139,11 +139,14 @@ class TestRestSensor(unittest.TestCase):
         self.device_class = None
         self.value_template = template('{{ value_json.key }}')
         self.value_template.hass = self.hass
+        self.json_attrs_tpl = template('{{ value_json | tojson }}')
+        self.json_attrs_tpl.hass = self.hass
         self.force_update = False
 
         self.sensor = rest.RestSensor(
             self.hass, self.rest, self.name, self.unit_of_measurement,
-            self.device_class, self.value_template, [], self.force_update
+            self.device_class, self.value_template, [], self.json_attrs_tpl,
+            self.force_update
         )
 
     def tearDown(self):
@@ -196,6 +199,7 @@ class TestRestSensor(unittest.TestCase):
         self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
                                       self.unit_of_measurement,
                                       self.device_class, None, [],
+                                      None,
                                       self.force_update)
         self.sensor.update()
         assert 'plain_state' == self.sensor.state
@@ -209,6 +213,7 @@ class TestRestSensor(unittest.TestCase):
         self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
                                       self.unit_of_measurement,
                                       self.device_class, None, ['key'],
+                                      self.json_attrs_tpl,
                                       self.force_update)
         self.sensor.update()
         assert 'some_json_value' == \
@@ -222,6 +227,7 @@ class TestRestSensor(unittest.TestCase):
         self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
                                       self.unit_of_measurement,
                                       self.device_class, None, ['key'],
+                                      self.json_attrs_tpl,
                                       self.force_update)
         self.sensor.update()
         assert {} == self.sensor.device_state_attributes
@@ -236,13 +242,14 @@ class TestRestSensor(unittest.TestCase):
         self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
                                       self.unit_of_measurement,
                                       self.device_class, None, ['key'],
+                                      self.json_attrs_tpl,
                                       self.force_update)
         self.sensor.update()
         assert {} == self.sensor.device_state_attributes
         assert mock_logger.warning.called
 
     @patch('homeassistant.components.rest.sensor._LOGGER')
-    def test_update_with_json_attrs_bad_JSON(self, mock_logger):
+    def test_update_with_json_attrs_bad_json(self, mock_logger):
         """Test attributes get extracted from a JSON result."""
         self.rest.update = Mock('rest.RestData.update',
                                 side_effect=self.update_side_effect(
@@ -250,6 +257,7 @@ class TestRestSensor(unittest.TestCase):
         self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
                                       self.unit_of_measurement,
                                       self.device_class, None, ['key'],
+                                      self.json_attrs_tpl,
                                       self.force_update)
         self.sensor.update()
         assert {} == self.sensor.device_state_attributes
@@ -265,6 +273,7 @@ class TestRestSensor(unittest.TestCase):
                                       self.unit_of_measurement,
                                       self.device_class,
                                       self.value_template, ['key'],
+                                      self.json_attrs_tpl,
                                       self.force_update)
         self.sensor.update()
 

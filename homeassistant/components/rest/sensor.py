@@ -27,6 +27,7 @@ DEFAULT_FORCE_UPDATE = False
 DEFAULT_TIMEOUT = 10
 
 CONF_JSON_ATTRS = 'json_attributes'
+CONF_JSON_ATTRS_TEMPLATE = 'json_attributes_template'
 METHODS = ['POST', 'GET']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -35,6 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
     vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
     vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
+    vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(METHODS),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
@@ -63,6 +65,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     device_class = config.get(CONF_DEVICE_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     json_attrs = config.get(CONF_JSON_ATTRS)
+    json_attrs_tpl = config.get(CONF_JSON_ATTRS_TEMPLATE)
     force_update = config.get(CONF_FORCE_UPDATE)
     timeout = config.get(CONF_TIMEOUT)
 
@@ -86,7 +89,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # ensure it's updating its state.
     add_entities([RestSensor(
         hass, rest, name, unit, device_class,
-        value_template, json_attrs, force_update
+        value_template, json_attrs, json_attrs_tpl, force_update
     )], True)
 
 
@@ -94,7 +97,8 @@ class RestSensor(Entity):
     """Implementation of a REST sensor."""
 
     def __init__(self, hass, rest, name, unit_of_measurement,
-                 device_class, value_template, json_attrs, force_update):
+                 device_class, value_template, json_attrs,
+                 json_attrs_tpl, force_update):
         """Initialize the REST sensor."""
         self._hass = hass
         self.rest = rest
@@ -104,6 +108,7 @@ class RestSensor(Entity):
         self._device_class = device_class
         self._value_template = value_template
         self._json_attrs = json_attrs
+        self._json_attrs_tpl = json_attrs_tpl
         self._attributes = None
         self._force_update = force_update
 
@@ -142,18 +147,30 @@ class RestSensor(Entity):
         self.rest.update()
         value = self.rest.data
 
-        if self._json_attrs:
+        if self._json_attrs or self._json_attrs_tpl:
             self._attributes = {}
             if value:
                 try:
-                    json_dict = json.loads(value)
+                    json_str = value
+                    if self._json_attrs_tpl:
+                        json_str = self._json_attrs_tpl.\
+                            render_with_possible_json_value(json_str)
+                    json_dict = json.loads(json_str)
                     if isinstance(json_dict, dict):
-                        attrs = {k: json_dict[k] for k in self._json_attrs
-                                 if k in json_dict}
+                        # Start with a blank dict
+                        attrs = {}
+                        # If we were given a template, assume all items wanted
+                        if self._json_attrs_tpl:
+                            attrs = json_dict
+                        # If we were given a list, filter the JSON
+                        if self._json_attrs:
+                            attrs = {k: json_dict[k] for k in self._json_attrs
+                                     if k in json_dict}
+                        # Return the final set
                         self._attributes = attrs
                     else:
                         _LOGGER.warning("JSON result was not a dictionary")
-                except ValueError:
+                except (ValueError, TypeError):
                     _LOGGER.warning("REST result could not be parsed as JSON")
                     _LOGGER.debug("Erroneous JSON: %s", value)
             else:
