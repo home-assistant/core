@@ -280,7 +280,7 @@ class ISYBinarySensorHeartbeat(ISYDevice, BinarySensorDevice):
 
     def _heartbeat_node_control_handler(self, event: object) -> None:
         """Update the heartbeat timestamp when an On event is sent."""
-        if event == 'DON':
+        if event in ['DON', 'DOF']:
             self.heartbeat()
 
     def heartbeat(self):
