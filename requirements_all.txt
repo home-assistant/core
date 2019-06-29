@@ -2119,8 +2119,13 @@ spotcrime==1.0.3
 spotipy-homeassistant==2.4.4.dev1
 
 # homeassistant.components.recorder
+<<<<<<< HEAD
 # homeassistant.components.sensor.sql
 sqlalchemy==1.2.15
+=======
+# homeassistant.components.sql
+sqlalchemy==1.3.5
+>>>>>>> Upgrade sqlalchemy to 1.3.5 (#24844)
 
 # homeassistant.components.sensor.srp_energy
 srpenergy==1.0.5
