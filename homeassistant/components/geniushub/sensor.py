@@ -69,8 +69,6 @@ class GeniusDevice(Entity):
         last_comms = utc_from_timestamp(values['lastComms']['val'])
         interval = timedelta(seconds=values['WakeUp_Interval']['val'] * 3)
 
-        _LOGGER.warn("lc = %s, utcnow = %s", last_comms, utcnow())
-
         if last_comms < utcnow() - interval:
             return "mdi:battery-unknown"
 
