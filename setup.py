@@ -36,7 +36,7 @@ REQUIRES = [
     'astral==1.10.1',
     'async_timeout==3.0.1',
     'attrs==19.1.0',
-    'bcrypt==3.1.6',
+    'bcrypt==3.1.7',
     'certifi>=2018.04.16',
     'importlib-metadata==0.15',
     'jinja2>=2.10',
