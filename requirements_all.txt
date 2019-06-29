@@ -1240,8 +1240,16 @@ prometheus_client==0.2.0
 # homeassistant.components.image_processing.tensorflow
 protobuf==3.6.1
 
+<<<<<<< HEAD
 # homeassistant.components.sensor.systemmonitor
 psutil==5.4.8
+=======
+# homeassistant.components.systemmonitor
+psutil==5.6.3
+
+# homeassistant.components.ptvsd
+ptvsd==4.2.8
+>>>>>>> Upgrade psutil to 5.6.3 (#24854)
 
 # homeassistant.components.wink
 <<<<<<< HEAD
