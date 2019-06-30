@@ -49,13 +49,13 @@ SENSOR_TYPES = {
     'temperature': ['Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
     'groundtemperature': ['Ground temperature', TEMP_CELSIUS,
                           'mdi:thermometer'],
-    'windspeed': ['Wind speed', 'm/s', 'mdi:weather-windy'],
+    'windspeed': ['Wind speed', 'km/h', 'mdi:weather-windy'],
     'windforce': ['Wind force', 'Bft', 'mdi:weather-windy'],
     'winddirection': ['Wind direction', None, 'mdi:compass-outline'],
     'windazimuth': ['Wind direction azimuth', '°', 'mdi:compass-outline'],
     'pressure': ['Pressure', 'hPa', 'mdi:gauge'],
-    'visibility': ['Visibility', 'm', None],
-    'windgust': ['Wind gust', 'm/s', 'mdi:weather-windy'],
+    'visibility': ['Visibility', 'km', None],
+    'windgust': ['Wind gust', 'km/h', 'mdi:weather-windy'],
     'precipitation': ['Precipitation', 'mm/h', 'mdi:weather-pouring'],
     'irradiance': ['Irradiance', 'W/m2', 'mdi:sunglasses'],
     'precipitation_forecast_average': ['Precipitation forecast average',
@@ -108,11 +108,11 @@ SENSOR_TYPES = {
     'windforce_3d': ['Wind force 3d', 'Bft', 'mdi:weather-windy'],
     'windforce_4d': ['Wind force 4d', 'Bft', 'mdi:weather-windy'],
     'windforce_5d': ['Wind force 5d', 'Bft', 'mdi:weather-windy'],
-    'windspeed_1d': ['Wind speed 1d', 'm/s', 'mdi:weather-windy'],
-    'windspeed_2d': ['Wind speed 2d', 'm/s', 'mdi:weather-windy'],
-    'windspeed_3d': ['Wind speed 3d', 'm/s', 'mdi:weather-windy'],
-    'windspeed_4d': ['Wind speed 4d', 'm/s', 'mdi:weather-windy'],
-    'windspeed_5d': ['Wind speed 5d', 'm/s', 'mdi:weather-windy'],
+    'windspeed_1d': ['Wind speed 1d', 'km/h', 'mdi:weather-windy'],
+    'windspeed_2d': ['Wind speed 2d', 'km/h', 'mdi:weather-windy'],
+    'windspeed_3d': ['Wind speed 3d', 'km/h', 'mdi:weather-windy'],
+    'windspeed_4d': ['Wind speed 4d', 'km/h', 'mdi:weather-windy'],
+    'windspeed_5d': ['Wind speed 5d', 'km/h', 'mdi:weather-windy'],
     'winddirection_1d': ['Wind direction 1d', None, 'mdi:compass-outline'],
     'winddirection_2d': ['Wind direction 2d', None, 'mdi:compass-outline'],
     'winddirection_3d': ['Wind direction 3d', None, 'mdi:compass-outline'],
@@ -241,7 +241,8 @@ class BrSensor(Entity):
                                           DETAILED, EXACT, EXACTNL, FORECAST,
                                           IMAGE, MEASURED,
                                           PRECIPITATION_FORECAST, STATIONNAME,
-                                          TIMEFRAME)
+                                          TIMEFRAME, VISIBILITY, WINDGUST,
+                                          WINDSPEED)
 
         # Check if we have a new measurement,
         # otherwise we do not have to update the sensor
@@ -296,6 +297,17 @@ class BrSensor(Entity):
                         return True
                 return False
 
+            if self.type.startswith(WINDSPEED):
+                # hass wants windspeeds in km/h not m/s, so convert:
+                try:
+                    self._state = data.get(FORECAST)[fcday].get(self.type[:-3])
+                    if self._state is not None:
+                        self._state = round(self._state * 3.6, 1) 
+                    return True
+                except IndexError:
+                    _LOGGER.warning("No forecast for fcday=%s...", fcday)
+                    return False
+
             # update all other sensors
             try:
                 self._state = data.get(FORECAST)[fcday].get(self.type[:-3])
@@ -335,6 +347,20 @@ class BrSensor(Entity):
             self._state = nested.get(self.type[len(PRECIPITATION_FORECAST)+1:])
             return True
 
+        if self.type == WINDSPEED or self.type == WINDGUST:
+            # hass wants windspeeds in km/h not m/s, so convert:
+            self._state = data.get(self.type)
+            if self._state is not None:
+                self._state = round(data.get(self.type) * 3.6, 1)
+            return True
+            
+        if self.type == VISIBILITY:
+            # hass wants visibility in km (not m), so convert:
+            self._state = data.get(self.type)
+            if self._state is not None:
+                self._state = round(self._state / 1000, 1)
+            return True
+        
         # update all other sensors
         self._state = data.get(self.type)
         return True
@@ -599,3 +625,4 @@ class BrData:
         """Return the forecast data."""
         from buienradar.constants import FORECAST
         return self.data.get(FORECAST)
+
