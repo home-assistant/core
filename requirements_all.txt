@@ -4,15 +4,15 @@ astral==1.10.1
 async_timeout==3.0.1
 attrs==19.1.0
 bcrypt==3.1.6
-certifi>=2018.04.16
+certifi>=2019.6.16
 importlib-metadata==0.18
-jinja2>=2.10
+jinja2>=2.10.1
 PyJWT==1.7.1
-cryptography==2.6.1
+cryptography==2.7
 pip>=8.0.3
 python-slugify==3.0.2
 pytz>=2019.01
-pyyaml==5.1
+pyyaml==5.1.1
 requests==2.22.0
 ruamel.yaml==0.15.97
 voluptuous==0.11.5
@@ -825,7 +825,7 @@ nuheat==0.3.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.16.3
+numpy==1.16.4
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
@@ -922,7 +922,7 @@ pocketcasts==0.1
 postnl_api==1.0.2
 
 # homeassistant.components.reddit
-praw==6.1.1
+praw==6.3.1
 
 # homeassistant.components.islamic_prayer_times
 prayer_times_calculator==0.0.3
@@ -940,7 +940,7 @@ prometheus_client==0.2.0
 protobuf==3.6.1
 
 # homeassistant.components.systemmonitor
-psutil==5.6.2
+psutil==5.6.3
 
 # homeassistant.components.ptvsd
 ptvsd==4.2.8
@@ -1728,7 +1728,7 @@ spotipy-homeassistant==2.4.4.dev1
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.3.3
+sqlalchemy==1.3.5
 
 # homeassistant.components.srp_energy
 srpenergy==1.0.6
@@ -1919,7 +1919,7 @@ yeelight==0.5.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2019.06.08
+youtube_dl==2019.06.27
 
 # homeassistant.components.zengge
 zengge==0.2
