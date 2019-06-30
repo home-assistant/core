@@ -18,6 +18,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.util.json import load_json, save_json
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import (DEFAULT_ALIAS, DOMAIN as PS4_DOMAIN, PS4_DATA,
                     REGIONS as deprecated_regions)
@@ -45,23 +46,57 @@ COMMANDS = (
 )
 
 SERVICE_COMMAND = 'send_command'
-SERVICE_EDIT_MEDIA_DATA = 'edit_media_data'
+SERVICE_LOCK_MEDIA = 'lock_media'
+SERVICE_UNLOCK_MEDIA = 'unlock_media'
+SERVICE_LOCK_CURRENT_MEDIA = 'lock_current_media'
+SERVICE_UNLOCK_CURRENT_MEDIA = 'unlock_current_media'
+SERVICE_ADD_MEDIA = 'add_media'
+SERVICE_REMOVE_MEDIA = 'remove_media'
+SERVICE_EDIT_MEDIA = 'edit_media'
 
 PS4_COMMAND_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_COMMAND): vol.All(cv.ensure_list, [COMMANDS])
 })
 
-PS4_EDIT_MEDIA_DATA_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID, default=None): vol.Any(
-        cv.entity_id, type(None)),
-    vol.Optional(ATTR_MEDIA_CONTENT_ID, default=''): str,
-    vol.Optional(ATTR_LOCKED, default=True): cv.boolean,
-    vol.Optional(ATTR_MEDIA_TITLE, default=''): str,
-    vol.Optional(ATTR_MEDIA_IMAGE_URL, default=None): vol.Any(
-        cv.url, type(None)),
+PS4_LOCK_CURRENT_MEDIA_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_id
+})
+
+PS4_UNLOCK_CURRENT_MEDIA_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_id
+})
+
+PS4_LOCK_MEDIA_SCHEMA = vol.Schema({
+    vol.Required(ATTR_MEDIA_CONTENT_ID): str,
+})
+
+PS4_UNLOCK_MEDIA_SCHEMA = vol.Schema({
+    vol.Required(ATTR_MEDIA_CONTENT_ID): str,
+})
+
+
+PS4_ADD_MEDIA_SCHEMA = vol.Schema({
+    vol.Required(ATTR_MEDIA_CONTENT_ID): str,
+    vol.Required(ATTR_MEDIA_TITLE): str,
+    vol.Optional(ATTR_MEDIA_IMAGE_URL, default=''): vol.Any(
+        cv.url, str),
     vol.Optional(ATTR_MEDIA_CONTENT_TYPE, default=MEDIA_TYPE_GAME): vol.In(
-        MEDIA_TYPE_GAME, MEDIA_TYPE_APP)
+        [MEDIA_TYPE_GAME, MEDIA_TYPE_APP])
+
+})
+
+PS4_REMOVE_MEDIA_SCHEMA = vol.Schema({
+    vol.Required(ATTR_MEDIA_CONTENT_ID): str,
+})
+
+PS4_EDIT_MEDIA_SCHEMA = vol.Schema({
+    vol.Required(ATTR_MEDIA_CONTENT_ID): str,
+    vol.Optional(ATTR_MEDIA_TITLE, default=''): str,
+    vol.Optional(ATTR_MEDIA_IMAGE_URL, default=''): vol.Any(
+        cv.url, str),
+    vol.Optional(ATTR_MEDIA_CONTENT_TYPE, default=MEDIA_TYPE_GAME): vol.In(
+        [MEDIA_TYPE_GAME, MEDIA_TYPE_APP])
 })
 
 
@@ -81,84 +116,174 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 if device.entity_id in entity_ids:
                     await device.async_send_command(command)
 
-        async def async_service_edit_media_data(call):
-            """Service call for editing existing media data."""
-            entity = None
-            locked = call.data[ATTR_LOCKED]
-            media_type = call.data[ATTR_MEDIA_CONTENT_TYPE]
+        def set_media(hass, games, media_content_id, media_title,
+                      media_url, media_type):
+            """Set media data."""
+            data = games[media_content_id]
+            data[ATTR_LOCKED] = True
+            data[ATTR_MEDIA_TITLE] = media_title
+            data[ATTR_MEDIA_IMAGE_URL] = media_url
+            data[ATTR_MEDIA_CONTENT_TYPE] = media_type
+            games[media_content_id] = data
+            save_games(hass, games)
 
-            entity_id = None if call.data[ATTR_ENTITY_ID] is None\
-                else call.data[ATTR_ENTITY_ID]
-            media_id = None if call.data[ATTR_MEDIA_CONTENT_ID] == ''\
-                else call.data[ATTR_MEDIA_CONTENT_ID]
-            media_title = None if call.data[ATTR_MEDIA_TITLE] == ''\
-                else call.data[ATTR_MEDIA_TITLE]
-            media_url = None if call.data[ATTR_MEDIA_IMAGE_URL] is \
-                None else call.data[ATTR_MEDIA_IMAGE_URL]
+        async def async_service_lock_media(call):
+            """Service to lock media data that entity is playing."""
+            games = load_games(hass)
+            media_content_id = call.data[ATTR_MEDIA_CONTENT_ID]
+            data = games.get(media_content_id)
+            if data is not None:
+                data[ATTR_LOCKED] = True
+                games[media_content_id] = data
+                save_games(hass, games)
+                _LOGGER.debug("Setting Lock to %s", data[ATTR_LOCKED])
+            else:
+                raise HomeAssistantError(
+                    "Title with ID: {} is not in source list".format(
+                        media_content_id))
 
+        async def async_service_unlock_media(call):
+            """Service to lock media data that entity is playing."""
+            games = load_games(hass)
+            media_content_id = call.data[ATTR_MEDIA_CONTENT_ID]
+            data = games.get(media_content_id)
+            if data is not None:
+                data[ATTR_LOCKED] = False
+                games[media_content_id] = data
+                save_games(hass, games)
+                _LOGGER.debug("Setting Lock to %s", data[ATTR_LOCKED])
+            else:
+                raise HomeAssistantError(
+                    "Title with ID: {} is not in source list".format(
+                        media_content_id))
+
+        async def async_service_lock_current_media(call):
+            """Service to lock media data that entity is playing."""
+            media_content_id = None
+            entity_id = call.data[ATTR_ENTITY_ID]
+            games = load_games(hass)
+            for device in hass.data[PS4_DATA].devices:
+                if device.entity_id == entity_id:
+                    entity = device
+                    media_id = entity.media_content_id
+                    if media_id is not None:
+                        media_content_id = media_id
+
+            if media_content_id is not None:
+                data = games.get(media_content_id)
+                data[ATTR_LOCKED] = True
+                games[media_content_id] = data
+                save_games(hass, games)
+                _LOGGER.debug("Setting Lock to %s", data[ATTR_LOCKED])
+            else:
+                raise HomeAssistantError(
+                    "Entity: {} has no current media data".format(entity_id))
+
+        async def async_service_unlock_current_media(call):
+            """Service to unlock media data that entity is playing."""
+            media_content_id = None
+            entity_id = call.data[ATTR_ENTITY_ID]
+            games = load_games(hass)
+            for device in hass.data[PS4_DATA].devices:
+                if device.entity_id == entity_id:
+                    entity = device
+                    media_id = entity.media_content_id
+                    if media_id is not None:
+                        media_content_id = media_id
+
+            if media_content_id is not None:
+                data = games.get(media_content_id)
+                data[ATTR_LOCKED] = False
+                games[media_content_id] = data
+                save_games(hass, games)
+                _LOGGER.debug("Setting Lock to %s", data[ATTR_LOCKED])
+            else:
+                raise HomeAssistantError(
+                    "Entity: {} has no current media data".format(entity_id))
+
+        async def async_service_add_media(call):
+            """Add media data manually."""
             games = load_games(hass)
 
-            if entity_id is not None:
-                for device in hass.data[PS4_DATA].devices:
-                    if device.entity_id == entity_id:
-                        entity = device
-                        media_content_id = entity.media_content_id
-            if media_id is not None:
-                media_content_id = media_id
-            if media_content_id is None:
-                return
+            media_content_id = call.data[ATTR_MEDIA_CONTENT_ID]
+            media_title = call.data[ATTR_MEDIA_TITLE]
+            media_url = None if call.data[ATTR_MEDIA_IMAGE_URL] == ''\
+                else call.data[ATTR_MEDIA_IMAGE_URL]
+            media_type = MEDIA_TYPE_GAME\
+                if call.data[ATTR_MEDIA_CONTENT_TYPE] == ''\
+                else call.data[ATTR_MEDIA_CONTENT_TYPE]
+            set_media(hass, games, media_content_id, media_title,
+                      media_url, media_type)
 
-            g_data = games.get(media_content_id)
-
-            if g_data is not None:
-                g_data[ATTR_LOCKED] = locked
-                if not g_data[ATTR_LOCKED]:
-                    games[media_content_id] = g_data
-                    save_games(hass, games)
-                    if entity is not None:
-                        entity.schedule_update()
-                    return
-
-                if entity_id is not None:
-                    if entity.media_content_id is not None:
-
-                        if media_title is None:
-                            g_data[ATTR_MEDIA_TITLE] = entity.media_title
-                        if media_url is None:
-                            g_data[ATTR_MEDIA_IMAGE_URL] =\
-                                entity.media_image_url
-                        if media_type is None:
-                            g_data[ATTR_MEDIA_CONTENT_TYPE] =\
-                                entity.media_content_type
-
-                """Must be locked to edit other attributes."""
-                if g_data[ATTR_LOCKED]:
-                    if media_title is not None:
-                        g_data[ATTR_MEDIA_TITLE] = media_title
-                    if media_url is not None:
-                        g_data[ATTR_MEDIA_IMAGE_URL] = media_url
-                    if media_type is not None:
-                        g_data[ATTR_MEDIA_CONTENT_TYPE] = media_type
-
-                elif media_title is not None or\
-                    media_url is not None or\
-                        media_type is not None:
-
-                        _LOGGER.error("""Field: 'locked' must be set to 'True'
-                            to edit other title attributes""")
-                        return
-
-                games[media_content_id] = g_data
+        async def async_service_remove_media(call):
+            """Remove media data manually."""
+            media_content_id = call.data[ATTR_MEDIA_CONTENT_ID]
+            games = load_games(hass)
+            if media_content_id in games:
+                games.pop(media_content_id)
                 save_games(hass, games)
-                if entity is not None:
-                    entity.schedule_update()
+
+        async def async_service_edit_media(call):
+            """Service call for editing existing media data."""
+            games = load_games(hass)
+            media_content_id = call.data[ATTR_MEDIA_CONTENT_ID]
+            data = games.get(media_content_id)
+            if data is not None:
+                media_title = None if call.data[ATTR_MEDIA_TITLE] == ''\
+                    else call.data[ATTR_MEDIA_TITLE]
+                media_url = None if call.data[ATTR_MEDIA_IMAGE_URL] == ''\
+                    else call.data[ATTR_MEDIA_IMAGE_URL]
+                media_type = MEDIA_TYPE_GAME\
+                    if call.data[ATTR_MEDIA_CONTENT_TYPE] == ''\
+                    else call.data[ATTR_MEDIA_CONTENT_TYPE]
+
+                if media_title is None:
+                    stored_title = data.get(ATTR_MEDIA_TITLE)
+                    if stored_title is not None:
+                        media_title = stored_title
+
+                if media_url is None:
+                    stored_url = data.get(ATTR_MEDIA_IMAGE_URL)
+                    if stored_url is not None:
+                        media_url = stored_url
+
+                if media_type is None:
+                    stored_type = data.get(ATTR_MEDIA_CONTENT_TYPE)
+                    if stored_type is not None:
+                        media_type = stored_type
+
+                set_media(hass, games, media_content_id, media_title,
+                          media_url, media_type)
 
         hass.services.async_register(
             PS4_DOMAIN, SERVICE_COMMAND, async_service_command,
             schema=PS4_COMMAND_SCHEMA)
+
         hass.services.async_register(
-            PS4_DOMAIN, SERVICE_EDIT_MEDIA_DATA, async_service_edit_media_data,
-            schema=PS4_EDIT_MEDIA_DATA_SCHEMA)
+            PS4_DOMAIN, SERVICE_LOCK_MEDIA, async_service_lock_media,
+            schema=PS4_LOCK_MEDIA_SCHEMA)
+        hass.services.async_register(
+            PS4_DOMAIN, SERVICE_UNLOCK_MEDIA,
+            async_service_unlock_media,
+            schema=PS4_UNLOCK_MEDIA_SCHEMA)
+        hass.services.async_register(
+            PS4_DOMAIN, SERVICE_LOCK_CURRENT_MEDIA,
+            async_service_lock_current_media,
+            schema=PS4_LOCK_CURRENT_MEDIA_SCHEMA)
+        hass.services.async_register(
+            PS4_DOMAIN, SERVICE_UNLOCK_CURRENT_MEDIA,
+            async_service_unlock_current_media,
+            schema=PS4_UNLOCK_CURRENT_MEDIA_SCHEMA)
+        hass.services.async_register(
+            PS4_DOMAIN, SERVICE_ADD_MEDIA, async_service_add_media,
+            schema=PS4_ADD_MEDIA_SCHEMA)
+        hass.services.async_register(
+            PS4_DOMAIN, SERVICE_REMOVE_MEDIA,
+            async_service_remove_media,
+            schema=PS4_REMOVE_MEDIA_SCHEMA)
+        hass.services.async_register(
+            PS4_DOMAIN, SERVICE_EDIT_MEDIA, async_service_edit_media,
+            schema=PS4_EDIT_MEDIA_SCHEMA)
 
     await async_service_handle(hass)
 
@@ -190,7 +315,7 @@ def load_games(hass):
         games = {}
         save_games(hass, games)
 
-    # Convert existing data to dict format if not already.
+    # Convert str format to dict format if not already.
     if games is not None:
         for game, data in games.items():
             if type(data) is not dict:
@@ -331,7 +456,6 @@ class PS4Device(MediaPlayerDevice):
                                     ATTR_MEDIA_IMAGE_URL)
                                 self._media_type = store.get(
                                     ATTR_MEDIA_CONTENT_TYPE)
-                                self.schedule_update()
                                 return
 
                         # Get data from PS Store if not locked.
