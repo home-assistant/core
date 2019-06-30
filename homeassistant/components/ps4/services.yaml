@@ -8,23 +8,69 @@ send_command:
       description: Button to press.
       example: 'ps'
 
-edit_media_data:
-  description: Edit or correct media data attributes and prevent automatic updates to media data.
+lock_media:
+  description: Lock media data attributes to prevent automatic updates to media data.
   fields:
-    locked:
-      description: Set to 'True' to lock and prevent media data from automatically updating. Set to 'False' to have Home Assistant automatically retrieve the current data from the PlayStation Store. Defaults to 'True'.
-      example: 'False'
-    entity_id: 
-      description: Entity ID to get current media attributes from. To simply lock the current media data, you may also just specify the entity.
     media_content_id:
-      description: The ID or the PlayStation Store SKU ID of the title. Defaults to the ID of the currently playing title if 'entity_id' is specified.
+      description: The ID or the PlayStation Store SKU ID of the title. Must be in source list.
+      example: 'CUSA00123'
+
+unlock_media:
+  description: Unlock media data attributes to allow automatic updates to media data.
+  fields:
+    media_content_id:
+      description: The ID or the PlayStation Store SKU ID of the title. Must be in source list.
+      example: 'CUSA00123'
+
+lock_current_media:
+  description: Lock the attributes of the media which is currently playing.
+  fields:
+    entity_id: 
+      description: The entity that is playing media.
+      example: 'media_player.playstation_4'
+
+unlock_current_media:
+  description: Unlock the attributes of the media which is currently playing.
+  fields:
+    entity_id: 
+      description: The entity that is playing media.
+      example: 'media_player.playstation_4'
+
+add_media:
+  description: Manually add media data to source list.
+  fields:
+    media_content_id:
+      description: The ID or the PlayStation Store SKU ID of the title.
       example: 'CUSA00123'
     media_content_title:
-      description: The name for the media title. Defaults to the current title. The 'locked' field must be set to 'True' if specified.
+      description: The name for the media title. Defaults to the current title.
       example: 'A Title: 5'
     media_image_url:
-      description: A URL directing to an image that will be displayed. You may use images in the local (/config/www/) folder. Defaults to the current image url if any. The 'locked' field must be set to 'True' if specified.
+      description: A URL directing to an image that will be displayed. You may use images in the local (/config/www/) folder.
       example: 'http://localhost:8123/local/image.jpg'
     media_content_type:
-      description: The type of media. Must be 'game' or 'app'. Defaults to 'game'. The 'locked' field must be set to 'True' if specified.
+      description: The type of media. Must be 'game' or 'app'. Defaults to 'game'.
+      example: 'game'
+
+remove_media:
+  description: Remove media data from source list.
+  fields:
+    media_content_id:
+      description: The ID or the PlayStation Store SKU ID of the title.
+      example: 'CUSA00123'
+
+edit_media:
+  description: Edit or correct media data attributes and prevent automatic updates to media data.
+  fields:
+    media_content_id:
+      description: The ID or the PlayStation Store SKU ID of the title. Must be specified if 'entity_id' is not specified.
+      example: 'CUSA00123'
+    media_title:
+      description: The name for the media title.
+      example: 'A Title: The Name'
+    media_image_url:
+      description: A URL directing to an image that will be displayed. You may use images in the local (/config/www/) folder.
+      example: 'http://localhost:8123/local/image.jpg'
+    media_content_type:
+      description: The type of media. Must be 'game' or 'app'. Defaults to 'game'.
       example: 'game'
