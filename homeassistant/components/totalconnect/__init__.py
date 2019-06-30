@@ -1,15 +1,12 @@
 """The totalconnect component."""
 import logging
-
 import voluptuous as vol
-
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME)
+from total_connect_client import TotalConnectClient
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_NAME = 'Total Connect'
 
 DOMAIN = 'totalconnect'
 
@@ -23,39 +20,32 @@ CONFIG_SCHEMA = vol.Schema({
 TOTALCONNECT_PLATFORMS = ['alarm_control_panel']
 
 
+def setup(hass, config):
+    """Set up TotalConnect component."""
+    conf = config[DOMAIN]
+
+    username = conf[CONF_USERNAME]
+    password = conf[CONF_PASSWORD]
+
+    client = TotalConnectClient.TotalConnectClient(username, password)
+
+    if client.token is False:
+        return False
+
+    hass.data[DOMAIN] = TotalConnectSystem(username, password, client)
+
+    for platform in TOTALCONNECT_PLATFORMS:
+        discovery.load_platform(hass, platform, DOMAIN, {}, config)
+
+    return True
+
+
 class TotalConnectSystem:
     """TotalConnect System class."""
 
-    def __init__(self, username, password):
+    def __init__(self, username, password, client):
         """Initialize the TotalConnect system."""
-        from total_connect_client import TotalConnectClient
 
-        _LOGGER.debug("Setting up TotalConnectSystem...")
         self._username = username
         self._password = password
-        self._client = TotalConnectClient.TotalConnectClient(username,
-                                                             password)
-
-    @property
-    def client(self):
-        """Return the client."""
-        return self._client
-
-
-def setup(hass, config):
-    """Set up TotalConnect component."""
-    conf = config.get(DOMAIN)
-    if conf is not None:
-
-        username = conf.get(CONF_USERNAME)
-        password = conf.get(CONF_PASSWORD)
-
-        hass.data[DOMAIN] = TotalConnectSystem(username, password)
-
-        for platform in TOTALCONNECT_PLATFORMS:
-            discovery.load_platform(hass, platform, DOMAIN, {}, config)
-
-        return True
-
-    _LOGGER.critical("TotalConnect configuration is missing.")
-    return False
+        self._client = client

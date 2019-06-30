@@ -14,9 +14,12 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an alarm control panel for a TotalConnect device."""
+    if discovery_info is None:
+        return
+    
     alarms = []
 
-    client = hass.data[TOTALCONNECT_DOMAIN].client
+    client = hass.data[TOTALCONNECT_DOMAIN]._client
 
     for location in client.locations:
         location_id = location.get('LocationID')
