@@ -51,14 +51,14 @@ homeassistant/components/bt_smarthub/* @jxwolstenholme
 <<<<<<< HEAD
 homeassistant/components/buienradar/* @ties
 =======
-homeassistant/components/buienradar/* @mjj4791
+homeassistant/components/buienradar/* @mjj4791 @ties
 >>>>>>> Update to json api; and additional sensors
 homeassistant/components/cisco_ios/* @fbradyirl
 homeassistant/components/cisco_mobility_express/* @fbradyirl
 homeassistant/components/cisco_webex_teams/* @fbradyirl
 homeassistant/components/ciscospark/* @fbradyirl
 homeassistant/components/cloud/* @home-assistant/cloud
-homeassistant/components/cloudflare/* @ludeeus
+homeassistant/components/cloudflare/* :q@ludeeus@ludeeus
 homeassistant/components/config/* @home-assistant/core
 homeassistant/components/configurator/* @home-assistant/core
 homeassistant/components/conversation/* @home-assistant/core
