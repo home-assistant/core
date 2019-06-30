@@ -180,10 +180,10 @@ class BrWeather(WeatherEntity):
                 ATTR_FORECAST_TEMP: data_in.get(MAX_TEMP),
                 ATTR_FORECAST_PRECIPITATION: data_in.get(RAIN),
                 ATTR_FORECAST_WIND_BEARING: data_in.get(WINDAZIMUTH),
-                ATTR_FORECAST_WIND_SPEED: round(data_in.get(WINDSPEED) * 3.6, 1)
+                ATTR_FORECAST_WIND_SPEED: 
+                    round(data_in.get(WINDSPEED) * 3.6, 1)
             }
 
             fcdata_out.append(data_out)
 
         return fcdata_out
-
