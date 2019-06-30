@@ -1,0 +1,10 @@
+{
+  "domain": "landroid_cloud",
+  "name": "Worx Landroid Cloud",
+  "documentation": "https://www.home-assistant.io/components/landroid_cloud",
+  "requirements": [
+    "pyworxcloud==1.1.1"
+  ],
+  "dependencies": [],
+  "codeowners": [ "@MTrab" ]
+}
