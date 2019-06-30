@@ -2,20 +2,19 @@
 
 Such systems include evohome, and Round Thermostat.
 """
-import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Awaitable, Dict, Optional, Tuple, List
+from typing import Any, Dict, Tuple
 
+from dateutil.tz import tzlocal
 import requests.exceptions
 import voluptuous as vol
 import evohomeclient2
 
 from homeassistant.const import (
     CONF_SCAN_INTERVAL, CONF_USERNAME, CONF_PASSWORD,
-    EVENT_HOMEASSISTANT_START,
     HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS,
-    PRECISION_HALVES, TEMP_CELSIUS,
+    TEMP_CELSIUS,
     CONF_ACCESS_TOKEN, CONF_ACCESS_TOKEN_EXPIRES, CONF_REFRESH_TOKEN)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -25,6 +24,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time, async_track_time_interval)
+from homeassistant.util.dt import as_utc, parse_datetime, utcnow
 
 from .const import (
     DOMAIN, STORAGE_VERSION, STORAGE_KEY, GWS, TCS)
@@ -33,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_LOCATION_IDX = 'location_idx'
 SCAN_INTERVAL_DEFAULT = timedelta(seconds=300)
-SCAN_INTERVAL_MINIMUM = timedelta(seconds=180)
+SCAN_INTERVAL_MINIMUM = timedelta(seconds=60)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -46,25 +46,69 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
+def _handle_exception(err):
+    try:
+        raise err
+
+    except evohomeclient2.AuthenticationError:
+        _LOGGER.error(
+            "Failed to (re)authenticate with the vendor's server. "
+            "Check that your username and password are correct. "
+            "Message is: %s",
+            err
+        )
+        return False
+
+    except requests.exceptions.ConnectionError:
+        # this appears to be common with Honeywell's servers
+        _LOGGER.warning(
+            "Unable to connect with the vendor's server. "
+            "Check your network and the vendor's status page."
+            "Message is: %s",
+            err
+        )
+        return False
+
+    except requests.exceptions.HTTPError:
+        if err.response.status_code == HTTP_SERVICE_UNAVAILABLE:
+            _LOGGER.warning(
+                "Vendor says their server is currently unavailable. "
+                "Check the vendor's status page."
+            )
+            return False
+
+        if err.response.status_code == HTTP_TOO_MANY_REQUESTS:
+            _LOGGER.warning(
+                "The vendor's API rate limit has been exceeded. "
+                "Consider increasing the %s.", CONF_SCAN_INTERVAL
+            )
+            return False
+
+        raise  # we don't expect/handle any other HTTPErrors
+
+
 async def async_setup(hass, hass_config):
     """Create a (EMEA/EU-based) Honeywell evohome system."""
     broker = EvoBroker(hass, hass_config[DOMAIN])
     if not await broker.init_client():
         return False
 
-    async_track_time_interval(
-        hass,
-        broker.update,
-        timedelta(seconds=10)
-        # self.params[CONF_SCAN_INTERVAL]                                        # TODO: restore this
-    )
-
     load_platform(hass, 'climate', DOMAIN, {}, hass_config)
     if broker.tcs.hotwater:
         load_platform(hass, 'water_heater', DOMAIN, {}, hass_config)
 
+    async_track_time_interval(
+        hass,
+        broker.update,
+        hass_config[DOMAIN][CONF_SCAN_INTERVAL]
+    )
+
     return True
 
+    def __init__(self, hass, params):
+        """Initialize the evohome client and data structure."""
+        self.hass = hass
+        self.params = params
 
 class EvoBroker:
     """Container for evohome client and data."""
@@ -76,7 +120,7 @@ class EvoBroker:
 
         self.config = self.status = self.timers = {}
 
-        self.client = None
+        self.client = self.tcs = None
         self._app_storage = None
 
         hass.data[DOMAIN] = {}
@@ -101,25 +145,14 @@ class EvoBroker:
                 access_token_expires
             )
 
-        except evohomeclient2.AuthenticationError as err:
-            _LOGGER.error(
-                "Failed to authenticate with the vendor's server. "
-                "Check your username and password are correct. "
-                "Resolve any errors and restart HA. Message is: %s",
-                err
-            )
-            return False
-
-        except requests.exceptions.ConnectionError:
-            _LOGGER.error(
-                "Unable to connect with the vendor's server. "
-                "Check your network and the vendor's status page. "
-                "Resolve any errors and restart HA."
-            )
-            return False
+        except (requests.exceptions.RequestException,
+                evohomeclient2.AuthenticationError) as err:
+            if not _handle_exception(err):
+                return False
 
         else:
-            await self._save_auth_tokens()
+            if access_token != self.client.access_token:
+                await self._save_auth_tokens()
 
         finally:
             self.params[CONF_PASSWORD] = 'REDACTED'
@@ -152,32 +185,36 @@ class EvoBroker:
         if app_storage.get(CONF_USERNAME) == self.params[CONF_USERNAME]:
             refresh_token = app_storage.get(CONF_REFRESH_TOKEN)
             access_token = app_storage.get(CONF_ACCESS_TOKEN)
-            access_token_expires = app_storage.get(CONF_ACCESS_TOKEN_EXPIRES)
-            if access_token_expires:
-                access_token_expires = datetime.strptime(
-                    access_token_expires, '%Y-%m-%d %H:%M:%S')
-            return (refresh_token, access_token, access_token_expires)
+            at_expires_str = app_storage.get(CONF_ACCESS_TOKEN_EXPIRES)
+            if at_expires_str:
+                at_expires_dt = as_utc(parse_datetime(at_expires_str))
+                at_expires_dt = at_expires_dt.astimezone(tzlocal())
+                at_expires_dt = at_expires_dt.replace(tzinfo=None)
+            else:
+                at_expires_dt = None
 
-        return (None, None, None)  # account switched: so tokens are not valid
+            return (refresh_token, access_token, at_expires_dt)
 
-    async def _save_auth_tokens(self, *args, **kwargs) -> None:
-        _LOGGER.warn("AAA expires = %s", self.client.access_token_expires)       # TODO: remove this
-        _LOGGER.warn("AAA time    = %s", datetime.now())
+        return (None, None, None)  # account switched: so tokens wont be valid
 
-        for arg in args:                                                         # TODO: remove this
-            _LOGGER.warn( "arg of *args: %s", arg)
-        if kwargs is not None:
-            for key, value in kwargs.items():
-                _LOGGER.warn("%s == %s", key, value)
+    async def _save_auth_tokens(self, *args) -> None:
+        dt_naive = self.client.access_token_expires.replace(microsecond=0)
+        dt_aware = as_utc(dt_naive.replace(tzinfo=tzlocal()))
+        access_token_expires_utc = dt_aware.replace(tzinfo=None).isoformat()
 
         self._app_storage[CONF_USERNAME] = self.params[CONF_USERNAME]
         self._app_storage[CONF_REFRESH_TOKEN] = self.client.refresh_token
         self._app_storage[CONF_ACCESS_TOKEN] = self.client.access_token
-        self._app_storage[CONF_ACCESS_TOKEN_EXPIRES] = \
-            self.client.access_token_expires.strftime('%Y-%m-%d %H:%M:%S')
+        self._app_storage[CONF_ACCESS_TOKEN_EXPIRES] = access_token_expires_utc
 
         store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         await store.async_save(self._app_storage)
+
+        async_track_point_in_utc_time(
+            self.hass,
+            self._save_auth_tokens,
+            dt_aware
+        )
 
     def update(self, args, **kwargs):
         """Get the latest state data of the entire evohome Location.
@@ -192,17 +229,11 @@ class EvoBroker:
             status = self.client.locations[loc_idx].status()[GWS][0][TCS][0]
         except (requests.exceptions.RequestException,
                 evohomeclient2.AuthenticationError) as err:
-            self._handle_exception(err)
+            _handle_exception(err)
         else:
-            self.timers['statusUpdated'] = datetime.now()
+            self.timers['statusUpdated'] = utcnow()
 
         _LOGGER.debug("Status = %s", status)
-
-        async_track_point_in_utc_time(                                           # TODO: add code to _save_auth_tokens
-            self.hass,
-            self._save_auth_tokens,
-            self.client.access_token_expires + timedelta(seconds=10)
-        )
 
         # inform the evohome devices that state data has been updated
         async_dispatcher_send(self.hass, DOMAIN, {'signal': 'refresh'})
@@ -211,9 +242,8 @@ class EvoBroker:
 class EvoDevice(Entity):
     """Base for any Honeywell evohome device.
 
-    Such devices include the Controller, (up to 12) Heating Zones and
-    (optionally) a DHW controller.
-    """
+        self.client = self.tcs = None
+        self._app_storage = None
 
     def __init__(self, evo_broker, evo_device):
         """Initialize the evohome entity."""
@@ -224,6 +254,7 @@ class EvoDevice(Entity):
 
         self._id = self._name = self._icon = self._precision = None
         self._operation_list = self._supported_features = None
+        self._state_attributes = None
         self._available = False  # should become True after first update()
 
     @callback
@@ -231,43 +262,9 @@ class EvoDevice(Entity):
         if packet['signal'] == 'refresh':
             self.async_schedule_update_ha_state(force_refresh=True)
 
-    def _handle_exception(self, err):
-        try:
-            raise err
-
-        except evohomeclient2.AuthenticationError:
-            _LOGGER.error(
-                "Failed to (re)authenticate with the vendor's server. "
-                "Message is: %s",
-                err
-            )
-
-        except requests.exceptions.ConnectionError:
-            # this appears to be common with Honeywell's servers
-            _LOGGER.warning(
-                "Unable to connect with the vendor's server. "
-                "Check your network and the vendor's status page."
-            )
-
-        except requests.exceptions.HTTPError:
-            if err.response.status_code == HTTP_SERVICE_UNAVAILABLE:
-                _LOGGER.warning(
-                    "Vendor says their server is currently unavailable. "
-                    "Check the vendor's status page."
-                )
-
-            elif err.response.status_code == HTTP_TOO_MANY_REQUESTS:
-                _LOGGER.warning(
-                    "The vendor's API rate limit has been exceeded. "
-                    "Consider increasing the %s.", CONF_SCAN_INTERVAL
-                )
-
-            else:
-                raise  # we don't expect/handle any other HTTPErrors
-
     @property
     def should_poll(self) -> bool:
-        """The evohome devices should not be polled."""
+        """Evohome devices should not be polled."""
         return False
 
     @property

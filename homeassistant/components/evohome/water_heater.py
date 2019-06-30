@@ -3,17 +3,14 @@ from datetime import datetime, timedelta
 import logging
 
 import requests.exceptions
+import evohomeclient2
 
 from homeassistant.components.water_heater import (
-    SUPPORT_OPERATION_MODE,
-    WaterHeaterDevice)
-from homeassistant.const import (
-    PRECISION_WHOLE, STATE_OFF, STATE_ON)
+    SUPPORT_OPERATION_MODE, WaterHeaterDevice)
+from homeassistant.const import PRECISION_WHOLE, STATE_OFF, STATE_ON
 
-from . import (EvoDevice, CONF_LOCATION_IDX)
-from .const import (
-    DOMAIN, GWS, TCS,
-    EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER)
+from . import _handle_exception, EvoDevice
+from .const import DOMAIN, EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,10 +26,7 @@ DHW_STATE_ATTRIBUTES = ['activeFaults', 'stateStatus', 'temperatureStatus']
 async def async_setup_platform(hass, hass_config, async_add_entities,
                                discovery_info=None):
     """Create the DHW controller."""
-    _LOGGER.warn("async_setup_platform(HEATER): hass_config=%s", hass_config)    # TODO: delete me
-
     broker = hass.data[DOMAIN]['broker']
-    loc_idx = broker.params[CONF_LOCATION_IDX]
 
     _LOGGER.debug(
         "Found DHW device, id: %s [%s]",
@@ -56,9 +50,6 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         self._precision = PRECISION_WHOLE
 
         self._config = evo_broker.config['dhw']
-        _LOGGER.warn("__init__(DHW): self._config = %s", self._config)           # TODO: remove
-
-        self._precision = PRECISION_WHOLE
 
         self._state_attributes = DHW_STATE_ATTRIBUTES
         self._operation_list = list(HA_OPMODE_TO_DHW)
@@ -66,13 +57,8 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
 
     async def async_update(self):
         """Process the evohome DHW controller's state data."""
-        _LOGGER.warn("async_update(DHW=%s)", self._id)
-
-        # self._status = self._status['dhw']
         self._available = self._evo_device.temperatureStatus['isAvailable']
 
-
-# These properties, methods are from the WaterHeater class  # TODO: remove me
     @property
     def current_operation(self) -> str:
         """Return the current operating mode (On, or Off)."""
@@ -99,6 +85,6 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
 
         try:
             self._evo_device._set_dhw(data)  # pylint: disable=protected-access
-        except requests.exceptions.HTTPError as err:
-            if not self._handle_exception(err):
-                raise
+        except (requests.exceptions.RequestException,
+                evohomeclient2.AuthenticationError) as err:
+            _handle_exception(err)

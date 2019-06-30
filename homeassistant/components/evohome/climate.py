@@ -1,24 +1,18 @@
 """Support for Climate devices of (EMEA/EU-based) Honeywell TCC systems."""
-from datetime import datetime, timedelta
 import logging
 
 import requests.exceptions
-
 import evohomeclient2
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO, STATE_ECO, STATE_MANUAL, SUPPORT_AWAY_MODE, SUPPORT_ON_OFF,
-    SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_OFF)
-from homeassistant.const import (
-    CONF_SCAN_INTERVAL, PRECISION_HALVES, PRECISION_TENTHS, STATE_OFF,)
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.util.dt import utc_from_timestamp, utcnow
+    STATE_AUTO, STATE_ECO, STATE_MANUAL, SUPPORT_AWAY_MODE, SUPPORT_ON_OFF,
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.const import STATE_OFF
 
-from . import (EvoDevice, CONF_LOCATION_IDX)
+from . import CONF_LOCATION_IDX, _handle_exception, EvoDevice
 from .const import (
-    DOMAIN, GWS, TCS,
+    DOMAIN,
     EVO_RESET, EVO_AUTO, EVO_AUTOECO, EVO_AWAY, EVO_DAYOFF, EVO_CUSTOM,
     EVO_HEATOFF, EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER)
 
@@ -57,8 +51,6 @@ ZONE_STATE_ATTRIBUTES = ['activeFaults', 'setpointStatus', 'temperatureStatus']
 async def async_setup_platform(hass, hass_config, async_add_entities,
                                discovery_info=None):
     """Create the evohome Controller, and its Zones, if any."""
-    _LOGGER.warn("async_setup_platform(CLIMATE): hass_config=%s", hass_config)   # TODO: delete me
-
     broker = hass.data[DOMAIN]['broker']
     loc_idx = broker.params[CONF_LOCATION_IDX]
 
@@ -97,7 +89,6 @@ class EvoZone(EvoDevice, ClimateDevice):
             if _zone['zoneId'] == self._id:
                 self._config = _zone
                 break
-        _LOGGER.warn("__init__(Zone): self._config = %s", self._config)          # TODO: remove
 
         self._precision = \
             self._evo_device.setpointCapabilities['valueResolution']
@@ -144,7 +135,7 @@ class EvoZone(EvoDevice, ClimateDevice):
         is_off = \
             self.target_temperature == self.min_temp and \
             self._evo_device.setpointStatus['setpointMode'] == EVO_PERMOVER
-        return not is_off
+        return self.current_operation == EVO_HEATOFF or not is_off
 
     @property
     def min_temp(self):
@@ -173,7 +164,7 @@ class EvoZone(EvoDevice, ClimateDevice):
             self._evo_device.set_temperature(temperature, until)
         except (requests.exceptions.RequestException,
                 evohomeclient2.AuthenticationError) as err:
-            self._handle_exception(err)
+            _handle_exception(err)
 
     def set_temperature(self, **kwargs):
         """Set new target temperature, indefinitely."""
@@ -200,7 +191,7 @@ class EvoZone(EvoDevice, ClimateDevice):
                 self._evo_device.cancel_temp_override()
             except (requests.exceptions.RequestException,
                     evohomeclient2.AuthenticationError) as err:
-                self._handle_exception(err)
+                _handle_exception(err)
 
         elif operation_mode == EVO_TEMPOVER:
             _LOGGER.error(
@@ -245,9 +236,6 @@ class EvoZone(EvoDevice, ClimateDevice):
         """Process the evohome Zone's state data."""
         self._available = self._evo_device.temperatureStatus['isAvailable']
 
-        # _LOGGER.error("dir(self._evo_device) = %s", dir(self._evo_device))
-        # _LOGGER.error("%s", self._evo_device.setpointCapabilities['maxHeatSetpoint'])
-
 
 class EvoController(EvoDevice, ClimateDevice):
     """Base for a Honeywell evohome hub/Controller device.
@@ -268,7 +256,6 @@ class EvoController(EvoDevice, ClimateDevice):
         self._config['zones'] = '...'
         if 'dhw' in self._config:
             self._config['dhw'] = '...'
-        _LOGGER.warn("__init__(TCS): self._config = %s", self._config)           # TODO: remove
 
         self._precision = None
         self._state_attributes = TCS_STATE_ATTRIBUTES
@@ -289,7 +276,7 @@ class EvoController(EvoDevice, ClimateDevice):
         expected by the HA schema.
         """
         temps = [z.temperatureStatus['temperature'] for z in
-                 self._evo_device._zones if z.temperatureStatus['isAvailable']]
+                 self._evo_device._zones if z.temperatureStatus['isAvailable']]  # noqa: E501; pylint: disable=protected-access
         return round(sum(temps) / len(temps), 1) if temps else None
 
     @property
@@ -300,7 +287,7 @@ class EvoController(EvoDevice, ClimateDevice):
         expected by the HA schema.
         """
         temps = [z.setpointStatus['targetHeatTemperature']
-                 for z in self._evo_device._zones]
+                 for z in self._evo_device._zones]                               # noqa: E501; pylint: disable=protected-access
         return round(sum(temps) / len(temps), 1) if temps else None
 
     @property
@@ -336,7 +323,7 @@ class EvoController(EvoDevice, ClimateDevice):
             self._evo_device._set_status(operation_mode)  # noqa: E501; pylint: disable=protected-access
         except (requests.exceptions.RequestException,
                 evohomeclient2.AuthenticationError) as err:
-            self._handle_exception(err)
+            _handle_exception(err)
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target operation mode for the TCS.
@@ -364,7 +351,4 @@ class EvoController(EvoDevice, ClimateDevice):
 
     async def async_update(self):
         """Process the evohome Controller's state data."""
-        _LOGGER.warn("async_update(TCS=%s)", self._id)
-        # _LOGGER.warn("dir(self._evo_device) = %s", dir(self._evo_device))
-        # self._status = self._status
         self._available = True
