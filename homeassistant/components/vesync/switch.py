@@ -2,11 +2,13 @@
 import logging
 from homeassistant.components.switch import (SwitchDevice)
 
-from .common import DOMAIN, CONF_SWITCHES, async_add_entities_retry
+from .common import CONF_SWITCHES, async_add_entities_retry
 
 _LOGGER = logging.getLogger(__name__)
 
 ENERGY_UPDATE_INT = 21600
+
+DOMAIN = 'vesync'
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

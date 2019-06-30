@@ -29,10 +29,10 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN] = {}
 
-    if DOMAIN not in config:
-        return True
-
     conf = config[DOMAIN]
+
+    if conf[CONF_USERNAME] in configured_instances(hass):
+        return True
 
     if conf[CONF_USERNAME] not in configured_instances(hass):
         hass.async_create_task(
@@ -119,6 +119,4 @@ async def async_unload_entry(hass, entry):
         hass.data[DOMAIN].clear()
         return True
 
-    # We were not able to unload the platforms, either because there
-    # were none or one of the forward_unloads failed.
     return False
