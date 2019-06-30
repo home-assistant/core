@@ -132,8 +132,8 @@ class ZhaEntity(RestoreEntity, entity.Entity):
             signal_override=True
         )
         self._zha_device.gateway.register_entity_reference(
-            self._zha_device.ieee, self.entity_id, self._zha_device,
-            self.cluster_channels, self.device_info)
+            self._zha_device.ieee, self, self.device_info
+        )
 
     async def async_check_recently_seen(self):
         """Check if the device was seen within the last 2 hours."""
