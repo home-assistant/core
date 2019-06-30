@@ -39,8 +39,6 @@ async def async_setup_platform(hass, config, async_add_entities,
 class GeniusDevice(Entity):
     """Representation of a Genius Hub sensor."""
 
-    parallel_updates = True
-
     def __init__(self, client, device):
         """Initialize the sensor."""
         self._client = client
@@ -67,25 +65,22 @@ class GeniusDevice(Entity):
         values = self._device._info_raw['childValues']  # noqa; pylint: disable=protected-access
 
         last_comms = utc_from_timestamp(values['lastComms']['val'])
-        interval = timedelta(seconds=values['WakeUp_Interval']['val'] * 3)
+        interval = timedelta(seconds=values['WakeUp_Interval']['val'])
 
-        if last_comms < utcnow() - interval:
-            return "mdi:battery-unknown"
+        if last_comms < utcnow() - interval * 3:
+            return 'mdi:battery-unknown'
 
-        level = self.state
+        battery_level = self._device.state['batteryLevel']
+        if battery_level == 255:
+            return 'mdi:battery-unknown'
+        if battery_level < 40:
+            return 'mdi:battery-alert'
 
-        if level > 95:
-            return "mdi:battery"
-        if level > 85:
-            return "mdi:battery-80"
-        if level > 70:
-            return "mdi:battery-60"
-        if level > 55:
-            return "mdi:battery-40"
-        if level > 45:
-            return "mdi:battery-20"
+        icon = 'mdi:battery'
+        if battery_level <= 95:
+            icon += '-{}'.format(int(round(battery_level / 10 - .01)) * 10)
 
-        return "mdi:battery-alert"
+        return icon
 
     @property
     def device_class(self):
