@@ -42,7 +42,7 @@ add_media:
     media_content_id:
       description: The ID or the PlayStation Store SKU ID of the title.
       example: 'CUSA00123'
-    media_content_title:
+    media_title:
       description: The name for the media title. Defaults to the current title.
       example: 'A Title: 5'
     media_image_url:
