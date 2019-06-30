@@ -2393,6 +2393,7 @@ yeelightsunflower==0.0.10
 # homeassistant.components.media_extractor
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 youtube_dl==2019.01.10
 =======
 youtube_dl==2019.05.20
@@ -2400,6 +2401,9 @@ youtube_dl==2019.05.20
 =======
 youtube_dl==2019.06.08
 >>>>>>> Upgrade youtube_dl to 2019.06.08 (#24692)
+=======
+youtube_dl==2019.06.27
+>>>>>>> Upgrade youtube_dl to 2019.06.27 (#24875)
 
 # homeassistant.components.light.zengge
 zengge==0.2
