@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.components.cover import (
-    CoverDevice, PLATFORM_SCHEMA, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_STOP)
+    CoverDevice, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_STOP)
 
 from . import DOMAIN as VELBUS_DOMAIN, VelbusEntity
 
@@ -16,7 +16,7 @@ async def async_setup_platform(
         return
     covers = []
     for cover in discovery_info:
-        module = hass.data[VELBUS_DOMAIN].get_module(cover[0]) 
+        module = hass.data[VELBUS_DOMAIN].get_module(cover[0])
         channel = cover[1]
         covers.append(VelbusCover(module, channel))
     async_add_entities(covers)
