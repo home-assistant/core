@@ -19,8 +19,12 @@ cryptography==2.3.1
 =======
 jinja2>=2.10.1
 PyJWT==1.7.1
+<<<<<<< HEAD
 cryptography==2.6.1
 >>>>>>> Upgrade jinja2 to >=2.10.1 (#24851)
+=======
+cryptography==2.7
+>>>>>>> Upgrade cryptography to 2.7 (#24852)
 pip>=8.0.3
 <<<<<<< HEAD
 python-slugify==1.2.6
