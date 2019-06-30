@@ -131,13 +131,17 @@ class BrWeather(WeatherEntity):
 
     @property
     def visibility(self):
-        """Return the current visibility."""
-        return self._data.visibility
+        """Return the current visibility in km."""
+        if self._data.visibility is None:
+            return None
+        return round(self._data.visibility / 1000, 1)
 
     @property
     def wind_speed(self):
-        """Return the current windspeed."""
-        return self._data.wind_speed
+        """Return the current windspeed in km/h."""
+        if self._data.wind_speed is None:
+            return None
+        return round(self._data.wind_speed * 3.6, 1)
 
     @property
     def wind_bearing(self):
@@ -176,9 +180,10 @@ class BrWeather(WeatherEntity):
                 ATTR_FORECAST_TEMP: data_in.get(MAX_TEMP),
                 ATTR_FORECAST_PRECIPITATION: data_in.get(RAIN),
                 ATTR_FORECAST_WIND_BEARING: data_in.get(WINDAZIMUTH),
-                ATTR_FORECAST_WIND_SPEED: data_in.get(WINDSPEED)
+                ATTR_FORECAST_WIND_SPEED: round(data_in.get(WINDSPEED) * 3.6, 1)
             }
 
             fcdata_out.append(data_out)
 
         return fcdata_out
+
