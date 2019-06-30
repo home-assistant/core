@@ -10,7 +10,7 @@
   "codeowners": ["@ties"]
 =======
   "codeowners": [
-    "@mjj4791"
+    "@mjj4791", "@ties"
   ]
 >>>>>>> Update to json api; and additional sensors
 }
