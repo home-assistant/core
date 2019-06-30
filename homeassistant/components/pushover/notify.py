@@ -67,8 +67,12 @@ class PushoverNotificationService(BaseNotificationService):
                     if response.status_code == 200:
                         # Replace the attachment identifier with file object.
                         data[ATTR_ATTACHMENT] = response.content
+                    else:
+                        _LOGGER.error('Image not found')
+                        # Remove attachment key to send without attachment.
+                        del data[ATTR_ATTACHMENT]
                 except requests.exceptions.RequestException as ex_val:
-                    _LOGGER.error(str(ex_val))
+                    _LOGGER.error(ex_val)
                     # Remove attachment key to try sending without attachment
                     del data[ATTR_ATTACHMENT]
             else:
@@ -79,8 +83,8 @@ class PushoverNotificationService(BaseNotificationService):
                         file_handle = open(data[ATTR_ATTACHMENT], 'rb')
                         # Replace the attachment identifier with file object.
                         data[ATTR_ATTACHMENT] = file_handle
-                    except IOError as ex_val:
-                        _LOGGER.error(str(ex_val))
+                    except OSError as ex_val:
+                        _LOGGER.error(ex_val)
                         # Remove attachment key to send without attachment.
                         del data[ATTR_ATTACHMENT]
                 else:
@@ -100,6 +104,6 @@ class PushoverNotificationService(BaseNotificationService):
             try:
                 self.pushover.send_message(message, **data)
             except ValueError as val_err:
-                _LOGGER.error(str(val_err))
+                _LOGGER.error(val_err)
             except RequestError:
                 _LOGGER.exception("Could not send pushover notification")
