@@ -1229,7 +1229,14 @@ pocketcasts==0.1
 # homeassistant.components.sensor.postnl
 postnl_api==1.0.2
 
+<<<<<<< HEAD
 # homeassistant.components.sensor.islamic_prayer_times
+=======
+# homeassistant.components.reddit
+praw==6.3.1
+
+# homeassistant.components.islamic_prayer_times
+>>>>>>> Update praw to 6.3.1 (#23737)
 prayer_times_calculator==0.0.3
 
 # homeassistant.components.sensor.prezzibenzina
