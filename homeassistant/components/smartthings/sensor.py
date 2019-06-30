@@ -2,10 +2,12 @@
 from collections import namedtuple
 from typing import Optional, Sequence
 
+from pysmartthings import Attribute, Capability
+
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_TIMESTAMP, MASS_KILOGRAMS,
-    ENERGY_KILO_WATT_HOUR, POWER_WATT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_TIMESTAMP, ENERGY_KILO_WATT_HOUR,
+    MASS_KILOGRAMS, POWER_WATT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
@@ -158,7 +160,6 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add binary sensors for a config entry."""
-    from pysmartthings import Capability
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     sensors = []
     for device in broker.devices.values():
@@ -245,7 +246,6 @@ class SmartThingsThreeAxisSensor(SmartThingsEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        from pysmartthings import Attribute
         three_axis = self._device.status.attributes[Attribute.three_axis].value
         try:
             return three_axis[self._index]
