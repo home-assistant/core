@@ -11,8 +11,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import slugify
 
 from .core.const import (
-    ATTR_MANUFACTURER, DATA_ZHA, DATA_ZHA_BRIDGE_ID, DOMAIN, MODEL, NAME,
-    SIGNAL_REMOVE)
+    ATTR_MANUFACTURER, DATA_ZHA, DATA_ZHA_BRIDGE_ID, DOMAIN, MODEL, NAME)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,11 +125,6 @@ class ZhaEntity(RestoreEntity, entity.Entity):
             None, "{}_{}".format(self.zha_device.available_signal, 'entity'),
             self.async_set_available,
             signal_override=True)
-        await self.async_accept_signal(
-            None, "{}_{}".format(SIGNAL_REMOVE, str(self.zha_device.ieee)),
-            self.async_remove,
-            signal_override=True
-        )
         self._zha_device.gateway.register_entity_reference(
             self._zha_device.ieee, self, self.device_info
         )
