@@ -302,7 +302,7 @@ class BrSensor(Entity):
                 try:
                     self._state = data.get(FORECAST)[fcday].get(self.type[:-3])
                     if self._state is not None:
-                        self._state = round(self._state * 3.6, 1) 
+                        self._state = round(self._state * 3.6, 1)
                     return True
                 except IndexError:
                     _LOGGER.warning("No forecast for fcday=%s...", fcday)
@@ -353,14 +353,14 @@ class BrSensor(Entity):
             if self._state is not None:
                 self._state = round(data.get(self.type) * 3.6, 1)
             return True
-            
+
         if self.type == VISIBILITY:
             # hass wants visibility in km (not m), so convert:
             self._state = data.get(self.type)
             if self._state is not None:
                 self._state = round(self._state / 1000, 1)
             return True
-        
+
         # update all other sensors
         self._state = data.get(self.type)
         return True
@@ -625,4 +625,3 @@ class BrData:
         """Return the forecast data."""
         from buienradar.constants import FORECAST
         return self.data.get(FORECAST)
-
