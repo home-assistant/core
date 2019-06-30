@@ -154,7 +154,8 @@ class ZHAGateway:
         ha_device_registry = await get_dev_reg(self._hass)
         reg_device = ha_device_registry.async_get_device(
             {(DOMAIN, str(device.ieee))}, set())
-        ha_device_registry.async_remove_device(reg_device.id)
+        if reg_device is not None:
+            ha_device_registry.async_remove_device(reg_device.id)
 
     def device_removed(self, device):
         """Handle device being removed from the network."""
