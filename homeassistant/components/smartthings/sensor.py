@@ -133,6 +133,7 @@ CAPABILITY_TO_SENSORS = {
     Capability.thermostat_setpoint: [
         Map(Attribute.thermostat_setpoint, "Thermostat Setpoint", None,
             DEVICE_CLASS_TEMPERATURE)],
+    Capability.three_axis: [],
     Capability.tv_channel: [
         Map(Attribute.tv_channel, "Tv Channel", None, None)],
     Capability.tvoc_measurement: [
