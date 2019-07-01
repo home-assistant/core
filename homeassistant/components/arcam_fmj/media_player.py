@@ -108,13 +108,6 @@ class ArcamFmj(MediaPlayerDevice):
         )
 
     @property
-    def unique_id(self) -> Optional[str]:
-        """Return a unique ID."""
-        return "{}_{}_{}".format(
-            self._state.client.host, self._state.client.port, self._state.zn
-        )
-
-    @property
     def device_info(self):
         """Return a device description for device registry."""
         return {
