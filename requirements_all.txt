@@ -256,11 +256,15 @@ amcrest==1.5.3
 
 # homeassistant.components.androidtv
 <<<<<<< HEAD
+<<<<<<< HEAD
 androidtv==0.0.15
 >>>>>>> Improve amcrest error handling and bump amcrest package to 1.5.3 (#24262)
 =======
 androidtv==0.0.16
 >>>>>>> Bump androidtv to 0.0.16 (#24576)
+=======
+androidtv==0.0.17
+>>>>>>> Bump androidtv to 0.0.17 (#24886)
 
 # homeassistant.components.switch.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
