@@ -117,6 +117,7 @@ homeassistant/components/homeassistant/* @home-assistant/core
 homeassistant/components/homekit/* @cdce8p
 homeassistant/components/homekit_controller/* @Jc2k
 homeassistant/components/homematic/* @pvizeli @danielperna84
+homeassistant/components/honeywell/* @zxdavb
 homeassistant/components/html5/* @robbiet480
 homeassistant/components/http/* @home-assistant/core
 homeassistant/components/huawei_lte/* @scop
