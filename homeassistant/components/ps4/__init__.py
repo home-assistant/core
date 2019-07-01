@@ -315,6 +315,8 @@ async def async_service_handle(hass: HomeAssistantType):
         if media_content_id in games:
             games.pop(media_content_id)
             save_games(hass, games)
+            _LOGGER.debug(
+                "Removed media from source list: %s", media_content_id)
 
     async def async_service_edit_media(call):
         """Service call for editing existing media data."""
@@ -432,9 +434,12 @@ async def async_service_handle(hass: HomeAssistantType):
     hass.services.async_register(
         DOMAIN, SERVICE_EDIT_MEDIA, async_service_edit_media,
         schema=PS4_EDIT_MEDIA_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_EDIT_CURRENT_MEDIA, async_service_edit_current_media,
+        schema=PS4_EDIT_CURRENT_MEDIA_SCHEMA)
 
 
-def load_games(hass):
+def load_games(hass: HomeAssistantType) -> dict:
     """Load games for sources."""
     g_file = hass.config.path(GAMES_FILE)
     try:
@@ -453,11 +458,10 @@ def load_games(hass):
                                ATTR_MEDIA_IMAGE_URL: None,
                                ATTR_LOCKED: False,
                                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_GAME}
-
     return games
 
 
-def save_games(hass, games):
+def save_games(hass: HomeAssistantType, games: dict):
     """Save games to file."""
     g_file = hass.config.path(GAMES_FILE)
     try:
@@ -470,8 +474,8 @@ def save_games(hass, games):
         load_games()
 
 
-def _set_media(hass, games, media_content_id, media_title,
-               media_url, media_type):
+def _set_media(hass: HomeAssistantType, games: dict, media_content_id,
+               media_title, media_url, media_type):
     """Set media data."""
     if games.get(media_content_id) is not None:
         data = games[media_content_id]
@@ -485,10 +489,11 @@ def _set_media(hass, games, media_content_id, media_title,
     data[ATTR_MEDIA_CONTENT_TYPE] = media_type
     games[media_content_id] = data
     save_games(hass, games)
+    _LOGGER.debug("Setting media data, %s: %s", media_content_id, data)
 
 
-def _refresh_entity_media(hass, media_content_id):
-    """Refresh media properties if device is playing the same media."""
+def _refresh_entity_media(hass: HomeAssistantType, media_content_id):
+    """Refresh media properties if data is changed.."""
     for device in hass.data[PS4_DATA].devices:
         if device.media_content_id == media_content_id:
             device.reset_title()
