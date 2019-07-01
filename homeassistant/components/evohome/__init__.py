@@ -105,10 +105,6 @@ async def async_setup(hass, hass_config):
 
     return True
 
-    def __init__(self, hass, params):
-        """Initialize the evohome client and data structure."""
-        self.hass = hass
-        self.params = params
 
 class EvoBroker:
     """Container for evohome client and data."""
@@ -240,10 +236,11 @@ class EvoBroker:
 
 
 class EvoDevice(Entity):
-    """Base for any Honeywell evohome device.
+    """Base for any evohome device.
 
-        self.client = self.tcs = None
-        self._app_storage = None
+    This includes the Controller, (up to 12) Heating Zones and
+    (optionally) a DHW controller.
+    """
 
     def __init__(self, evo_broker, evo_device):
         """Initialize the evohome entity."""
