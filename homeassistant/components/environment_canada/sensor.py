@@ -28,42 +28,67 @@ ATTR_TIME = 'alert time'
 
 CONF_ATTRIBUTION = "Data provided by Environment Canada"
 CONF_STATION = 'station'
+CONF_LANGUAGE = 'language'
 
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=10)
 
 SENSOR_TYPES = {
-    'temperature': {'name': 'Temperature',
+    'temperature': {'english': 'Temperature',
+                    'french': 'Température',
                     'unit': TEMP_CELSIUS},
-    'dewpoint': {'name': 'Dew Point',
+    'dewpoint': {'english': 'Dew Point',
+                 'french': 'Point de rosée',
                  'unit': TEMP_CELSIUS},
-    'wind_chill': {'name': 'Wind Chill',
+    'wind_chill': {'english': 'Wind Chill',
+                   'french': 'Refroidissement éolien',
                    'unit': TEMP_CELSIUS},
-    'humidex': {'name': 'Humidex',
+    'humidex': {'english': 'Humidex',
+                'french': 'Humidex',
                 'unit': TEMP_CELSIUS},
-    'pressure': {'name': 'Pressure',
+    'pressure': {'english': 'Pressure',
+                 'french': 'Pression',
                  'unit': 'kPa'},
-    'tendency': {'name': 'Tendency'},
-    'humidity': {'name': 'Humidity',
+    'tendency': {'english': 'Tendency',
+                 'french': 'Tendance'},
+    'humidity': {'english': 'Humidity',
+                 'french': 'Humidité',
                  'unit': '%'},
-    'visibility': {'name': 'Visibility',
+    'visibility': {'english': 'Visibility',
+                   'french': 'Visibilité',
                    'unit': 'km'},
-    'condition': {'name': 'Condition'},
-    'wind_speed': {'name': 'Wind Speed',
+    'condition': {'english': 'Condition',
+                  'french': 'Condition'},
+    'wind_speed': {'english': 'Wind Speed',
+                   'french': 'Vitesse de vent',
                    'unit': 'km/h'},
-    'wind_gust': {'name': 'Wind Gust',
+    'wind_gust': {'english': 'Wind Gust',
+                  'french': 'Rafale de vent',
                   'unit': 'km/h'},
-    'wind_dir': {'name': 'Wind Direction'},
-    'high_temp': {'name': 'High Temperature',
+    'wind_dir': {'english': 'Wind Direction',
+                 'french': 'Direction de vent'},
+    'high_temp': {'english': 'High Temperature',
+                  'french': 'Haute température',
                   'unit': TEMP_CELSIUS},
-    'low_temp': {'name': 'Low Temperature',
+    'low_temp': {'english': 'Low Temperature',
+                 'french': 'Basse température',
                  'unit': TEMP_CELSIUS},
-    'pop': {'name': 'Chance of Precip.',
+    'pop': {'english': 'Chance of Precip.',
+            'french': 'Probabilité d\'averses',
             'unit': '%'},
-    'warnings': {'name': 'Warnings'},
-    'watches': {'name': 'Watches'},
-    'advisories': {'name': 'Advisories'},
-    'statements': {'name': 'Statements'},
-    'endings': {'name': 'Ended'}
+    'forecast_period': {'english': 'Forecast Period',
+                        'french': 'Période de prévision'},
+    'text_summary': {'english': 'Text Summary',
+                     'french': 'Résumé textuel'},
+    'warnings': {'english': 'Warnings',
+                 'french': 'Alertes'},
+    'watches': {'english': 'Watches',
+                'french': 'Veilles'},
+    'advisories': {'english': 'Advisories',
+                   'french': 'Avis'},
+    'statements': {'english': 'Statements',
+                   'french': 'Bulletins'},
+    'endings': {'english': 'Ended',
+                'french': 'Terminé'}
 }
 
 
@@ -83,6 +108,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATION): validate_station,
     vol.Inclusive(CONF_LATITUDE, 'latlon'): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'latlon'): cv.longitude,
+    vol.Optional(CONF_LANGUAGE, default='english'):
+        vol.In(['english', 'french'])
 })
 
 
@@ -91,15 +118,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from env_canada import ECData
 
     if config.get(CONF_STATION):
-        ec_data = ECData(station_id=config[CONF_STATION])
+        ec_data = ECData(station_id=config[CONF_STATION],
+                         language=config.get(CONF_LANGUAGE))
     elif config.get(CONF_LATITUDE) and config.get(CONF_LONGITUDE):
         ec_data = ECData(coordinates=(config[CONF_LATITUDE],
-                                      config[CONF_LONGITUDE]))
+                                      config[CONF_LONGITUDE]),
+                         language=config.get(CONF_LANGUAGE))
     else:
         ec_data = ECData(coordinates=(hass.config.latitude,
-                                      hass.config.longitude))
+                                      hass.config.longitude),
+                         language=config.get(CONF_LANGUAGE))
 
-    add_devices([ECSensor(sensor_type, ec_data, config.get(CONF_NAME))
+    add_devices([ECSensor(sensor_type,
+                          ec_data,
+                          config.get(CONF_NAME),
+                          config.get(CONF_LANGUAGE))
                  for sensor_type in config[CONF_MONITORED_CONDITIONS]],
                 True)
 
@@ -107,22 +140,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ECSensor(Entity):
     """Implementation of an Environment Canada sensor."""
 
-    def __init__(self, sensor_type, ec_data, platform_name):
+    def __init__(self, sensor_type, ec_data, platform_name, language):
         """Initialize the sensor."""
         self.sensor_type = sensor_type
         self.ec_data = ec_data
         self.platform_name = platform_name
         self._state = None
         self._attr = None
+        self.language = language
 
     @property
     def name(self):
         """Return the name of the sensor."""
+        name = SENSOR_TYPES[self.sensor_type][self.language]
         if self.platform_name is None:
-            return SENSOR_TYPES[self.sensor_type]['name']
-
-        return ' '.join([self.platform_name,
-                         SENSOR_TYPES[self.sensor_type]['name']])
+            return name
+        return ' '.join([self.platform_name, name])
 
     @property
     def state(self):
