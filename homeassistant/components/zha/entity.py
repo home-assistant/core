@@ -1,5 +1,6 @@
 """Entity for Zigbee Home Automation."""
 
+import asyncio
 import logging
 import time
 
@@ -11,7 +12,8 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import slugify
 
 from .core.const import (
-    ATTR_MANUFACTURER, DATA_ZHA, DATA_ZHA_BRIDGE_ID, DOMAIN, MODEL, NAME)
+    ATTR_MANUFACTURER, DATA_ZHA, DATA_ZHA_BRIDGE_ID, DOMAIN, MODEL, NAME,
+    SIGNAL_REMOVE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +50,7 @@ class ZhaEntity(RestoreEntity, entity.Entity):
         self._available = False
         self._component = kwargs['component']
         self._unsubs = []
+        self.remove_future = asyncio.Future()
         for channel in channels:
             self.cluster_channels[channel.name] = channel
 
@@ -125,9 +128,14 @@ class ZhaEntity(RestoreEntity, entity.Entity):
             None, "{}_{}".format(self.zha_device.available_signal, 'entity'),
             self.async_set_available,
             signal_override=True)
-        self._zha_device.gateway.register_entity_reference(
-            self._zha_device.ieee, self, self.device_info
+        await self.async_accept_signal(
+            None, "{}_{}".format(SIGNAL_REMOVE, str(self.zha_device.ieee)),
+            self.async_remove,
+            signal_override=True
         )
+        self._zha_device.gateway.register_entity_reference(
+            self._zha_device.ieee, self.entity_id, self._zha_device,
+            self.cluster_channels, self.device_info, self.remove_future)
 
     async def async_check_recently_seen(self):
         """Check if the device was seen within the last 2 hours."""
@@ -145,6 +153,7 @@ class ZhaEntity(RestoreEntity, entity.Entity):
         """Disconnect entity object when removed."""
         for unsub in self._unsubs:
             unsub()
+        self.remove_future.set_result(True)
 
     @callback
     def async_restore_last_state(self, last_state):
