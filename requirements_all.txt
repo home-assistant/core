@@ -202,7 +202,7 @@ aprslib==0.6.46
 aqualogic==1.0
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==0.4.2
+arcam-fmj==0.4.3
 
 # homeassistant.components.ampio
 asmog==0.0.6
