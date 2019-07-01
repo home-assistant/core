@@ -326,19 +326,17 @@ class SonosEntity(MediaPlayerDevice):
 
     async def async_seen(self):
         """Record that this player was seen right now."""
-        if not self.available:
-            def _sub():
-                self._set_basic_information()
-                self._subscribe_to_player_events()
-
-            await self.hass.async_add_executor_job(_sub)
-            self.async_schedule_update_ha_state()
+        was_available = self.available
 
         if self._seen_timer:
             self._seen_timer()
 
         self._seen_timer = self.hass.helpers.event.async_call_later(
             2.5*DISCOVERY_INTERVAL, self.async_unseen)
+
+        if not was_available:
+            await self.hass.async_add_executor_job(self._attach_player)
+            self.async_schedule_update_ha_state()
 
     @callback
     def async_unseen(self, now):
@@ -363,12 +361,6 @@ class SonosEntity(MediaPlayerDevice):
         """Return True if entity is available."""
         return self._seen_timer is not None
 
-    def _set_basic_information(self):
-        """Set initial entity information."""
-        self._shuffle = self.soco.shuffle
-        self.update_volume()
-        self._set_favorites()
-
     def _set_favorites(self):
         """Set available favorites."""
         favorites = self.soco.music_library.get_sonos_favorites()
@@ -388,8 +380,12 @@ class SonosEntity(MediaPlayerDevice):
             )
         return url
 
-    def _subscribe_to_player_events(self):
-        """Add event subscriptions."""
+    def _attach_player(self):
+        """Get basic information and add event subscriptions."""
+        self._shuffle = self.soco.shuffle
+        self.update_volume()
+        self._set_favorites()
+
         self._poll_timer = self.hass.helpers.event.track_time_interval(
             self.update, datetime.timedelta(seconds=SCAN_INTERVAL))
 
