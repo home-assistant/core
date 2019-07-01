@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "existing_instance_updated": "Updated existing configuration.",
             "single_instance_allowed": "Only a single configuration of AdGuard Home is allowed."
         },
         "error": {
