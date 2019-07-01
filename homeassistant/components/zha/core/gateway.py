@@ -27,8 +27,8 @@ from .const import (
     DEBUG_LEVELS, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME, DEVICE_FULL_INIT,
     DEVICE_INFO, DEVICE_JOINED, DEVICE_REMOVED, DOMAIN, IEEE, LOG_ENTRY,
     LOG_OUTPUT, MODEL, NWK, ORIGINAL, RADIO, RADIO_DESCRIPTION, RAW_INIT,
-    SIGNATURE, TYPE, UNKNOWN_MANUFACTURER, UNKNOWN_MODEL, ZHA, ZHA_GW_MSG,
-    ZIGPY, ZIGPY_DECONZ, ZIGPY_XBEE)
+    SIGNAL_REMOVE, SIGNATURE, TYPE, UNKNOWN_MANUFACTURER, UNKNOWN_MODEL, ZHA,
+    ZHA_GW_MSG, ZIGPY, ZIGPY_DECONZ, ZIGPY_XBEE)
 from .device import DeviceStatus, ZHADevice
 from .discovery import (
     async_create_device_entity, async_dispatch_discovery_info,
@@ -41,8 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 
 EntityReference = collections.namedtuple(
     'EntityReference',
-    'entity device_info'
-)
+    'reference_id zha_device cluster_channels device_info remove_future')
 
 
 class ZHAGateway:
@@ -149,8 +148,8 @@ class ZHAGateway:
         if entity_refs is not None:
             remove_tasks = []
             for entity_ref in entity_refs:
-                remove_tasks.append(entity_ref.entity.async_remove())
-            await asyncio.gather(*remove_tasks)
+                remove_tasks.append(entity_ref.remove_future)
+            await asyncio.wait(remove_tasks)
         ha_device_registry = await get_dev_reg(self._hass)
         reg_device = ha_device_registry.async_get_device(
             {(DOMAIN, str(device.ieee))}, set())
@@ -164,6 +163,10 @@ class ZHAGateway:
         if zha_device is not None:
             device_info = async_get_device_info(self._hass, zha_device)
             zha_device.async_unsub_dispatcher()
+            async_dispatcher_send(
+                self._hass,
+                "{}_{}".format(SIGNAL_REMOVE, str(zha_device.ieee))
+            )
             asyncio.ensure_future(
                 self._async_remove_device(zha_device, entity_refs)
             )
@@ -185,7 +188,7 @@ class ZHAGateway:
         """Return entity reference for given entity_id if found."""
         for entity_reference in itertools.chain.from_iterable(
                 self.device_registry.values()):
-            if entity_id == entity_reference.entity.entity_id:
+            if entity_id == entity_reference.reference_id:
                 return entity_reference
 
     @property
@@ -198,10 +201,18 @@ class ZHAGateway:
         """Return entities by ieee."""
         return self._device_registry
 
-    def register_entity_reference(self, ieee, entity, device_info):
+    def register_entity_reference(
+            self, ieee, reference_id, zha_device, cluster_channels,
+            device_info, remove_future):
         """Record the creation of a hass entity associated with ieee."""
         self._device_registry[ieee].append(
-            EntityReference(entity=entity, device_info=device_info)
+            EntityReference(
+                reference_id=reference_id,
+                zha_device=zha_device,
+                cluster_channels=cluster_channels,
+                device_info=device_info,
+                remove_future=remove_future
+            )
         )
 
     @callback
