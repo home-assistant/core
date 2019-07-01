@@ -139,7 +139,7 @@ def async_get_device_info(hass, device, ha_device_registry=None):
     ret_device = {}
     ret_device.update(device.device_info)
     ret_device['entities'] = [{
-        'entity_id': entity_ref.entity.entity_id,
+        'entity_id': entity_ref.reference_id,
         NAME: entity_ref.device_info[NAME]
     } for entity_ref in zha_gateway.device_registry[device.ieee]]
 
