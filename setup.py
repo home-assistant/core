@@ -38,7 +38,7 @@ REQUIRES = [
     'attrs==19.1.0',
     'bcrypt==3.1.6',
     'certifi>=2019.6.16',
-    'importlib-metadata==0.15',
+    'importlib-metadata==0.18',
     'jinja2>=2.10.1',
     'PyJWT==1.7.1',
     # PyJWT has loose dependency. We want the latest one.
