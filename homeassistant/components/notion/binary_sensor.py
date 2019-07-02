@@ -4,10 +4,10 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import (
-    ATTR_BRIDGE_MODE, ATTR_BRIDGE_NAME, BINARY_SENSOR_TYPES, SENSOR_BATTERY,
-    SENSOR_DOOR, SENSOR_GARAGE_DOOR, SENSOR_LEAK, SENSOR_MISSING, SENSOR_SAFE,
-    SENSOR_SLIDING, SENSOR_SMOKE_CO, SENSOR_WINDOW_HINGED_HORIZONTAL,
-    SENSOR_WINDOW_HINGED_VERTICAL, NotionEntity)
+    BINARY_SENSOR_TYPES, SENSOR_BATTERY, SENSOR_DOOR, SENSOR_GARAGE_DOOR,
+    SENSOR_LEAK, SENSOR_MISSING, SENSOR_SAFE, SENSOR_SLIDING, SENSOR_SMOKE_CO,
+    SENSOR_WINDOW_HINGED_HORIZONTAL, SENSOR_WINDOW_HINGED_VERTICAL,
+    NotionEntity)
 
 from .const import DATA_CLIENT, DOMAIN
 
@@ -86,7 +86,3 @@ class NotionBinarySensor(NotionEntity, BinarySensorDevice):
         )
 
         self._state = self._task['status']['value']
-        self._attrs.update({
-            ATTR_BRIDGE_MODE: self._bridge['mode'],
-            ATTR_BRIDGE_NAME: self._bridge['name'],
-        })

@@ -1,9 +1,7 @@
 """Support for Notion sensors."""
 import logging
 
-from . import (
-    ATTR_BRIDGE_MODE, ATTR_BRIDGE_NAME, SENSOR_TEMPERATURE, SENSOR_TYPES,
-    NotionEntity)
+from . import SENSOR_TEMPERATURE, SENSOR_TYPES, NotionEntity
 from .const import DATA_CLIENT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -103,8 +101,3 @@ class NotionSensor(NotionEntity):
             _LOGGER.error(
                 'Unknown task type: %s: %s',
                 self._sensor['name'], self._task['task_type'])
-
-        self._attrs.update({
-            ATTR_BRIDGE_MODE: self._bridge['mode'],
-            ATTR_BRIDGE_NAME: self._bridge['name'],
-        })

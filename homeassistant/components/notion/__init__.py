@@ -6,8 +6,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME)
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
@@ -22,8 +21,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_BRIDGE_MODE = 'bridge_mode'
-ATTR_BRIDGE_NAME = 'bridge_name'
 ATTR_SYSTEM_MODE = 'system_mode'
 ATTR_SYSTEM_NAME = 'system_name'
 
@@ -63,8 +60,6 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-            cv.time_period,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -130,7 +125,7 @@ async def async_setup_entry(hass, config_entry):
         config_entry.entry_id] = async_track_time_interval(
             hass,
             refresh,
-            timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL]))
+            timedelta(seconds=config_entry.data[DEFAULT_SCAN_INTERVAL]))
 
     return True
 
@@ -195,6 +190,7 @@ class NotionEntity(Entity):
             device_class):
         """Initialize the entity."""
         self._async_unsub_dispatcher_connect = None
+        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._bridge = bridge
         self._device_class = device_class
         self._name = name
@@ -204,18 +200,10 @@ class NotionEntity(Entity):
         self._system = system
         self._task = task
 
-        self._attrs = {
-            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
-            ATTR_BRIDGE_MODE: self._bridge['mode'],
-            ATTR_BRIDGE_NAME: self._bridge['name'],
-            ATTR_SYSTEM_MODE: self._system['mode'],
-            ATTR_SYSTEM_NAME: self._system['name'],
-        }
-
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._task['id'] in [t['id'] for t in self._notion.tasks]
+        return any(self._task['id'] == t['id'] for t in self._notion.tasks)
 
     @property
     def device_class(self):
