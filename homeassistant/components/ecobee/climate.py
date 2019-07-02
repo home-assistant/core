@@ -352,7 +352,8 @@ class Thermostat(ClimateDevice):
 
     def set_fan_mode(self, fan_mode):
         """Set the fan mode.  Valid values are "on" or "auto"."""
-        if (fan_mode.lower() != STATE_ON) and (fan_mode.lower() != HVAC_MODE_AUTO):
+        if fan_mode.lower() != STATE_ON and \
+                fan_mode.lower() != HVAC_MODE_AUTO:
             error = "Invalid fan_mode value:  Valid values are 'on' or 'auto'"
             _LOGGER.error(error)
             return
@@ -376,8 +377,8 @@ class Thermostat(ClimateDevice):
         heatCoolMinDelta property.
         https://www.ecobee.com/home/developer/api/examples/ex5.shtml
         """
-        if self.current_operation == HVAC_MODE_HEAT or self.current_operation == \
-                HVAC_MODE_COOL:
+        if self.current_operation == HVAC_MODE_HEAT or \
+                self.current_operation == HVAC_MODE_COOL:
             heat_temp = temp
             cool_temp = temp
         else:

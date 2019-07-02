@@ -171,7 +171,8 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
         if self._current_mode == HVAC_MODE_OFF:
             return HVAC_MODE_OFF
 
-        if self._state == HVAC_MODE_OFF and self._current_mode != HVAC_MODE_OFF:
+        if self._state == HVAC_MODE_OFF and \
+                self._current_mode != HVAC_MODE_OFF:
             return HVAC_MODE_OFF
         return self._state
 

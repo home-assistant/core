@@ -81,7 +81,7 @@ class DaikinClimate(ClimateDevice):
 
         self._api = api
         self._list = {
-            ATTR_OPERATION_MODE: list(HA_STATE_TO_DAIKIN),
+            ATTR_HVAC_MODE: list(HA_STATE_TO_DAIKIN),
             ATTR_FAN_MODE: self._api.device.fan_rate,
             ATTR_SWING_MODE: list(
                 map(

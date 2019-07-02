@@ -24,7 +24,8 @@ DICT_MYS_TO_HA = {
 }
 
 FAN_LIST = ['Auto', 'Min', 'Normal', 'Max']
-OPERATION_LIST = [HVAC_MODE_OFF, HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT]
+OPERATION_LIST = [HVAC_MODE_OFF, HVAC_MODE_AUTO, HVAC_MODE_COOL,
+                  HVAC_MODE_HEAT]
 
 
 async def async_setup_platform(

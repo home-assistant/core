@@ -11,6 +11,10 @@ from homeassistant.const import PRECISION_WHOLE, STATE_ON
 from . import DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities
 
 
+SUPPORT_HVAC = [HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_AUTO,
+                HVAC_MODE_FAN_ONLY]
+
+
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Create the Elk-M1 thermostat platform."""
@@ -85,7 +89,7 @@ class ElkThermostat(ElkEntity, ClimateDevice):
     @property
     def hvac_modes(self):
         """Return the list of available operation modes."""
-        return [HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_AUTO, HVAC_MODE_FAN_ONLY]
+        return SUPPORT_HVAC
 
     @property
     def precision(self):
@@ -129,11 +133,13 @@ class ElkThermostat(ElkEntity, ClimateDevice):
         """Set thermostat operation mode."""
         from elkm1_lib.const import ThermostatFan, ThermostatMode
         settings = {
-            HVAC_MODE_OFF: (ThermostatMode.OFF.value, ThermostatFan.AUTO.value),
+            HVAC_MODE_OFF:
+                (ThermostatMode.OFF.value, ThermostatFan.AUTO.value),
             HVAC_MODE_HEAT: (ThermostatMode.HEAT.value, None),
             HVAC_MODE_COOL: (ThermostatMode.COOL.value, None),
             HVAC_MODE_AUTO: (ThermostatMode.AUTO.value, None),
-            HVAC_MODE_FAN_ONLY: (ThermostatMode.OFF.value, ThermostatFan.ON.value)
+            HVAC_MODE_FAN_ONLY:
+                (ThermostatMode.OFF.value, ThermostatFan.ON.value)
         }
         self._elk_set(settings[hvac_mode][0], settings[hvac_mode][1])
 

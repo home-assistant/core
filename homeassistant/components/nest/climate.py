@@ -5,14 +5,12 @@ import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, HVAC_MODE_AUTO, HVAC_MODE_COOL,
-    STATE_ECO, HVAC_MODE_HEAT, SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
-    HVAC_MODE_OFF, FAN_ON, FAN_AUTO)
+    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, FAN_AUTO, FAN_ON,
+    HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF, STATE_ECO,
+    SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_SCAN_INTERVAL, STATE_ON, TEMP_CELSIUS,
-    TEMP_FAHRENHEIT)
+    ATTR_TEMPERATURE, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DATA_NEST, DOMAIN as NEST_DOMAIN, SIGNAL_NEST_UPDATE
@@ -153,7 +151,8 @@ class NestThermostat(ClimateDevice):
     @property
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
-        if self._mode in [HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_OFF, STATE_ECO]:
+        if self._mode in \
+                (HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_OFF, STATE_ECO):
             return self._mode
         if self._mode == NEST_MODE_HEAT_COOL:
             return HVAC_MODE_AUTO
@@ -213,7 +212,8 @@ class NestThermostat(ClimateDevice):
 
     def set_hvac_mode(self, hvac_mode):
         """Set operation mode."""
-        if hvac_mode in [HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_OFF, STATE_ECO]:
+        if hvac_mode in \
+                (HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_OFF, STATE_ECO):
             device_mode = hvac_mode
         elif hvac_mode == HVAC_MODE_AUTO:
             device_mode = NEST_MODE_HEAT_COOL

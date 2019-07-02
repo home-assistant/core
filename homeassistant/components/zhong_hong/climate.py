@@ -3,16 +3,17 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_HVAC_MODE, HVAC_MODE_COOL, HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
+    ATTR_HVAC_MODE, HVAC_MODE_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_HEAT, SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
     SUPPORT_TARGET_TEMPERATURE)
-from homeassistant.const import (ATTR_TEMPERATURE, CONF_HOST, CONF_PORT,
-                                 EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS)
+from homeassistant.const import (
+    ATTR_TEMPERATURE, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP,
+    TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
-                                              async_dispatcher_send)
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, async_dispatcher_send)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +31,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_GATEWAY_ADDRRESS, default=DEFAULT_GATEWAY_ADDRRESS):
         cv.positive_int,
 })
+
+SUPPORT_HVAC = [HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_DRY,
+                HVAC_MODE_FAN_ONLY]
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -144,7 +148,7 @@ class ZhongHongClimate(ClimateDevice):
     @property
     def hvac_modes(self):
         """Return the list of available operation modes."""
-        return [HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY]
+        return SUPPORT_HVAC
 
     @property
     def current_temperature(self):
