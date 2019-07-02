@@ -4,6 +4,10 @@
 	"context": "..",
 	"dockerFile": "Dockerfile",
 	"postCreateCommand": "pip3 install -e .",
+	"appPort": 8123,
+	"runArgs": [
+		"-e", "GIT_EDTIOR='code --wait'"
+	],
 	"extensions": [
 		"ms-python.python"
 	],
