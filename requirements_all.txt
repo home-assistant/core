@@ -993,7 +993,7 @@ libsoundtouch==0.7.2
 # homeassistant.components.light.lifx_legacy
 =======
 # homeassistant.components.life360
-life360==4.0.0
+life360==4.0.1
 
 # homeassistant.components.lifx_legacy
 >>>>>>> Life360 integration (#24227)
