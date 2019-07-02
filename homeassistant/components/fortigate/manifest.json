@@ -1,0 +1,12 @@
+{
+    "domain": "fortigate",
+    "name": "Fortigate",
+    "documentation": "https://github.com/kifeo/home-assistant",
+    "dependencies": [],
+    "codeowners": [
+        "@kifeo"
+    ],
+    "requirements": [
+        "pyfgt==0.5.1"
+    ]
+}
