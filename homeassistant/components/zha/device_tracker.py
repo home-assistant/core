@@ -5,7 +5,7 @@ from homeassistant.components.device_tracker import (
     SOURCE_TYPE_ZIGBEE, DOMAIN
 )
 from homeassistant.components.device_tracker.config_entry import (
-    DeviceTrackerEntity
+    TrackerEntity
 )
 from homeassistant.const import (
     STATE_NOT_HOME,
@@ -52,7 +52,7 @@ async def _async_setup_entities(hass, config_entry, async_add_entities,
     async_add_entities(entities, update_before_add=True)
 
 
-class ZHADeviceTrackerEntity(DeviceTrackerEntity, ZhaEntity):
+class ZHADeviceTrackerEntity(TrackerEntity, ZhaEntity):
     """Represent a tracked device."""
 
     def __init__(self, **kwargs):

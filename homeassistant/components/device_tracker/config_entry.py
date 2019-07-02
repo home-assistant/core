@@ -37,7 +37,7 @@ async def async_unload_entry(hass, entry):
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
-class DeviceTrackerEntity(Entity):
+class TrackerEntity(Entity):
     """Represent a tracked device."""
 
     @property
