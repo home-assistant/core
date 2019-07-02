@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_OFF,
     SUPPORT_ON_OFF, STATE_HEAT)
 from homeassistant.const import ATTR_NAME
 from homeassistant.const import (ATTR_TEMPERATURE,
@@ -197,9 +197,9 @@ class AmbiclimateEntity(ClimateDevice):
         return SUPPORT_FLAGS
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation."""
-        return STATE_HEAT if self.is_on else STATE_OFF
+        return STATE_HEAT if self.is_on else HVAC_MODE_OFF
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
