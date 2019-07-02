@@ -239,21 +239,21 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set operation mode."""
-        if operation_mode == HVAC_MODE_HEAT:
+        if hvac_mode == HVAC_MODE_HEAT:
             self._current_operation = HVAC_MODE_HEAT
             self._enabled = True
             await self._async_control_heating(force=True)
-        elif operation_mode == HVAC_MODE_COOL:
+        elif hvac_mode == HVAC_MODE_COOL:
             self._current_operation = HVAC_MODE_COOL
             self._enabled = True
             await self._async_control_heating(force=True)
-        elif operation_mode == HVAC_MODE_OFF:
+        elif hvac_mode == HVAC_MODE_OFF:
             self._current_operation = HVAC_MODE_OFF
             self._enabled = False
             if self._is_device_active:
                 await self._async_heater_turn_off()
         else:
-            _LOGGER.error("Unrecognized operation mode: %s", operation_mode)
+            _LOGGER.error("Unrecognized operation mode: %s", hvac_mode)
             return
         # Ensure we update the current operation after changing the mode
         self.schedule_update_ha_state()

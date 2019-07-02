@@ -147,7 +147,7 @@ class GeniusClimateZone(ClimateDevice):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set a new operation mode for this zone."""
-        await self._zone.set_mode(HA_OPMODE_TO_GH[operation_mode])
+        await self._zone.set_mode(HA_OPMODE_TO_GH[hvac_mode])
 
     async def async_set_temperature(self, **kwargs):
         """Set a new target temperature for this zone."""

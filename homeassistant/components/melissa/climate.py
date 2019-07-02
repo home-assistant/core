@@ -155,7 +155,7 @@ class MelissaClimate(ClimateDevice):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set operation mode."""
-        mode = self.hass_mode_to_melissa(operation_mode)
+        mode = self.hass_mode_to_melissa(hvac_mode)
         await self.async_send({self._api.MODE: mode})
 
     async def async_turn_on(self):

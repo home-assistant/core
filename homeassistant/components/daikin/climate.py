@@ -230,7 +230,7 @@ class DaikinClimate(ClimateDevice):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set HVAC mode."""
-        await self._set({ATTR_OPERATION_MODE: operation_mode})
+        await self._set({ATTR_OPERATION_MODE: hvac_mode})
 
     @property
     def fan_mode(self):

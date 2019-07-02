@@ -166,10 +166,10 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateDevice):
         """Set new target temperature."""
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type,
-            DICT_HA_TO_MYS[operation_mode])
+            DICT_HA_TO_MYS[hvac_mode])
         if self.gateway.optimistic:
             # Optimistically assume that device has changed state
-            self._values[self.value_type] = operation_mode
+            self._values[self.value_type] = hvac_mode
             self.async_schedule_update_ha_state()
 
     async def async_update(self):

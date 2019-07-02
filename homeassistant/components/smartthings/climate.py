@@ -166,7 +166,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
-        mode = STATE_TO_MODE[operation_mode]
+        mode = STATE_TO_MODE[hvac_mode]
         await self._device.set_thermostat_mode(mode, set_status=True)
 
         # State is set optimistically in the command above, therefore update

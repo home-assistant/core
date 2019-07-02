@@ -255,7 +255,7 @@ class KNXClimate(ClimateDevice):
         if self.device.mode.supports_operation_mode:
             from xknx.knx import HVACOperationMode
             knx_operation_mode = HVACOperationMode(
-                OPERATION_MODES_INV.get(operation_mode))
+                OPERATION_MODES_INV.get(hvac_mode))
             await self.device.mode.set_operation_mode(knx_operation_mode)
             await self.async_update_ha_state()
 

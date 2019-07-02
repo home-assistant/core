@@ -162,7 +162,7 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
         """Set new target operation mode."""
         characteristics = [{'aid': self._aid,
                             'iid': self._chars['heating-cooling.target'],
-                            'value': MODE_HASS_TO_HOMEKIT[operation_mode]}]
+                            'value': MODE_HASS_TO_HOMEKIT[hvac_mode]}]
         await self._accessory.put_characteristics(characteristics)
 
     @property

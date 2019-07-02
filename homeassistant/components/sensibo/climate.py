@@ -297,7 +297,7 @@ class SensiboClimate(ClimateDevice):
         """Set new target operation mode."""
         with async_timeout.timeout(TIMEOUT):
             await self._client.async_set_ac_state_property(
-                self._id, 'mode', HA_TO_SENSIBO[operation_mode],
+                self._id, 'mode', HA_TO_SENSIBO[hvac_mode],
                 self._ac_states)
 
     async def async_set_swing_mode(self, swing_mode):

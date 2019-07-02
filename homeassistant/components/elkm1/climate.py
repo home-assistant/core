@@ -137,7 +137,7 @@ class ElkThermostat(ElkEntity, ClimateDevice):
             HVAC_MODE_AUTO: (ThermostatMode.AUTO.value, None),
             HVAC_MODE_FAN_ONLY: (ThermostatMode.OFF.value, ThermostatFan.ON.value)
         }
-        self._elk_set(settings[operation_mode][0], settings[operation_mode][1])
+        self._elk_set(settings[hvac_mode][0], settings[hvac_mode][1])
 
     async def async_turn_aux_heat_on(self):
         """Turn auxiliary heater on."""
