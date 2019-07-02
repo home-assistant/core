@@ -164,27 +164,28 @@ class ONVIFHassCamera(Camera):
 
             system_date = dt_util.utcnow()
             device_time = await devicemgmt.GetSystemDateAndTime()
-            cdate = device_time.UTCDateTime
-            cam_date = dt.datetime(cdate.Date.Year, cdate.Date.Month,
-                                   cdate.Date.Day, cdate.Time.Hour,
-                                   cdate.Time.Minute, cdate.Time.Second,
-                                   0, dt_util.UTC)
+            if device_time:
+                cdate = device_time.UTCDateTime
+                cam_date = dt.datetime(cdate.Date.Year, cdate.Date.Month,
+                                       cdate.Date.Day, cdate.Time.Hour,
+                                       cdate.Time.Minute, cdate.Time.Second,
+                                       0, dt_util.UTC)
 
-            _LOGGER.debug("Camera date/time: %s",
-                          cam_date)
+                _LOGGER.debug("Camera date/time: %s",
+                              cam_date)
 
-            _LOGGER.debug("System date/time: %s",
-                          system_date)
+                _LOGGER.debug("System date/time: %s",
+                              system_date)
 
-            dt_diff = cam_date - system_date
-            dt_diff_seconds = dt_diff.total_seconds()
+                dt_diff = cam_date - system_date
+                dt_diff_seconds = dt_diff.total_seconds()
 
-            if dt_diff_seconds > 5:
-                _LOGGER.warning("The date/time on the camera is '%s', "
-                                "which is different from the system '%s', "
-                                "this could lead to authentication issues",
-                                cam_date,
-                                system_date)
+                if dt_diff_seconds > 5:
+                    _LOGGER.warning("The date/time on the camera is '%s', "
+                                    "which is different from the system '%s', "
+                                    "this could lead to authentication issues",
+                                    cam_date,
+                                    system_date)
 
             _LOGGER.debug("Obtaining input uri")
 
@@ -307,7 +308,7 @@ class ONVIFHassCamera(Camera):
 
         image = await asyncio.shield(ffmpeg.get_image(
             self._input, output_format=IMAGE_JPEG,
-            extra_cmd=self._ffmpeg_arguments), loop=self.hass.loop)
+            extra_cmd=self._ffmpeg_arguments))
         return image
 
     async def handle_async_mjpeg_stream(self, request):
@@ -338,8 +339,7 @@ class ONVIFHassCamera(Camera):
             return SUPPORT_STREAM
         return 0
 
-    @property
-    def stream_source(self):
+    async def stream_source(self):
         """Return the stream source."""
         return self._input
 

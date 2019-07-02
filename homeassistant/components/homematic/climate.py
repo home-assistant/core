@@ -172,8 +172,8 @@ class HMThermostat(HMDevice, ClimateDevice):
         """Return Control mode."""
         if HMIP_CONTROL_MODE in self._data:
             return self._data[HMIP_CONTROL_MODE]
-        # Homematic
-        return self._data['CONTROL_MODE']
+        else:  # Homematic
+            return self._data['CONTROL_MODE']
 
     def _init_data_struct(self):
         """Generate a data dict (self._data) from the Homematic metadata."""

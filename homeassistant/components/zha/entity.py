@@ -1,5 +1,6 @@
 """Entity for Zigbee Home Automation."""
 
+import asyncio
 import logging
 import time
 
@@ -11,10 +12,8 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import slugify
 
 from .core.const import (
-    DOMAIN, ATTR_MANUFACTURER, DATA_ZHA, DATA_ZHA_BRIDGE_ID, MODEL, NAME,
-    SIGNAL_REMOVE
-)
-from .core.channels import MAINS_POWERED
+    ATTR_MANUFACTURER, DATA_ZHA, DATA_ZHA_BRIDGE_ID, DOMAIN, MODEL, NAME,
+    SIGNAL_REMOVE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,31 +32,17 @@ class ZhaEntity(RestoreEntity, entity.Entity):
         self._force_update = False
         self._should_poll = False
         self._unique_id = unique_id
-        self._name = None
-        if zha_device.manufacturer and zha_device.model is not None:
-            self._name = "{} {}".format(
-                zha_device.manufacturer,
-                zha_device.model
-            )
         if not skip_entity_id:
             ieee = zha_device.ieee
             ieeetail = ''.join(['%02x' % (o, ) for o in ieee[-4:]])
-            if zha_device.manufacturer and zha_device.model is not None:
-                self.entity_id = "{}.{}_{}_{}_{}{}".format(
-                    self._domain,
-                    slugify(zha_device.manufacturer),
-                    slugify(zha_device.model),
-                    ieeetail,
-                    channels[0].cluster.endpoint.endpoint_id,
-                    kwargs.get(ENTITY_SUFFIX, ''),
-                )
-            else:
-                self.entity_id = "{}.zha_{}_{}{}".format(
-                    self._domain,
-                    ieeetail,
-                    channels[0].cluster.endpoint.endpoint_id,
-                    kwargs.get(ENTITY_SUFFIX, ''),
-                )
+            self.entity_id = "{}.{}_{}_{}_{}{}".format(
+                self._domain,
+                slugify(zha_device.manufacturer),
+                slugify(zha_device.model),
+                ieeetail,
+                channels[0].cluster.endpoint.endpoint_id,
+                kwargs.get(ENTITY_SUFFIX, ''),
+            )
         self._state = None
         self._device_state_attributes = {}
         self._zha_device = zha_device
@@ -65,13 +50,14 @@ class ZhaEntity(RestoreEntity, entity.Entity):
         self._available = False
         self._component = kwargs['component']
         self._unsubs = []
+        self.remove_future = asyncio.Future()
         for channel in channels:
             self.cluster_channels[channel.name] = channel
 
     @property
     def name(self):
         """Return Entity's default name."""
-        return self._name
+        return self.zha_device.name
 
     @property
     def unique_id(self) -> str:
@@ -109,7 +95,8 @@ class ZhaEntity(RestoreEntity, entity.Entity):
             ATTR_MANUFACTURER: zha_device_info[ATTR_MANUFACTURER],
             MODEL: zha_device_info[MODEL],
             NAME: zha_device_info[NAME],
-            'via_hub': (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
+            'via_device': (
+                DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
         }
 
     @property
@@ -148,7 +135,7 @@ class ZhaEntity(RestoreEntity, entity.Entity):
         )
         self._zha_device.gateway.register_entity_reference(
             self._zha_device.ieee, self.entity_id, self._zha_device,
-            self.cluster_channels, self.device_info)
+            self.cluster_channels, self.device_info, self.remove_future)
 
     async def async_check_recently_seen(self):
         """Check if the device was seen within the last 2 hours."""
@@ -157,7 +144,7 @@ class ZhaEntity(RestoreEntity, entity.Entity):
                 time.time() - self._zha_device.last_seen <
                 RESTART_GRACE_PERIOD):
             self.async_set_available(True)
-            if self.zha_device.power_source != MAINS_POWERED:
+            if not self.zha_device.is_mains_powered:
                 # mains powered devices will get real time state
                 self.async_restore_last_state(last_state)
             self._zha_device.set_available(True)
@@ -166,6 +153,7 @@ class ZhaEntity(RestoreEntity, entity.Entity):
         """Disconnect entity object when removed."""
         for unsub in self._unsubs:
             unsub()
+        self.remove_future.set_result(True)
 
     @callback
     def async_restore_last_state(self, last_state):

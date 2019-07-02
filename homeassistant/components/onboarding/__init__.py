@@ -3,10 +3,11 @@ from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.storage import Store
 
-from .const import DOMAIN, STEP_USER, STEPS, STEP_INTEGRATION
+from .const import (
+    DOMAIN, STEP_USER, STEPS, STEP_INTEGRATION, STEP_CORE_CONFIG)
 
 STORAGE_KEY = DOMAIN
-STORAGE_VERSION = 2
+STORAGE_VERSION = 3
 
 
 class OnboadingStorage(Store):
@@ -15,7 +16,10 @@ class OnboadingStorage(Store):
     async def _async_migrate_func(self, old_version, old_data):
         """Migrate to the new version."""
         # From version 1 -> 2, we automatically mark the integration step done
-        old_data['done'].append(STEP_INTEGRATION)
+        if old_version < 2:
+            old_data['done'].append(STEP_INTEGRATION)
+        if old_version < 3:
+            old_data['done'].append(STEP_CORE_CONFIG)
         return old_data
 
 

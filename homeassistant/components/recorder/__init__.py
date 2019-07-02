@@ -62,7 +62,7 @@ FILTER_SCHEMA = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: FILTER_SCHEMA.extend({
+    vol.Optional(DOMAIN, default=dict): FILTER_SCHEMA.extend({
         vol.Optional(CONF_PURGE_KEEP_DAYS, default=10):
             vol.All(vol.Coerce(int), vol.Range(min=1)),
         vol.Optional(CONF_PURGE_INTERVAL, default=1):
@@ -95,7 +95,7 @@ def run_information(hass, point_in_time: Optional[datetime] = None):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
-    conf = config.get(DOMAIN, {})
+    conf = config[DOMAIN]
     keep_days = conf.get(CONF_PURGE_KEEP_DAYS)
     purge_interval = conf.get(CONF_PURGE_INTERVAL)
 
@@ -141,7 +141,7 @@ class Recorder(threading.Thread):
         self.queue = queue.Queue()  # type: Any
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
-        self.async_db_ready = asyncio.Future(loop=hass.loop)
+        self.async_db_ready = asyncio.Future()
         self.engine = None  # type: Any
         self.run_info = None  # type: Any
 

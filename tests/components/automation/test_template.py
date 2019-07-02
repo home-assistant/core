@@ -1,11 +1,16 @@
 """The tests for the Template automation."""
+from datetime import timedelta
+from unittest import mock
+
 import pytest
 
 from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 import homeassistant.components.automation as automation
 
-from tests.common import (assert_setup_component, mock_component)
+from tests.common import (
+    async_fire_time_changed, assert_setup_component, mock_component)
 from tests.components.automation import common
 from tests.common import async_mock_service
 
@@ -434,3 +439,184 @@ async def test_wait_template_with_trigger(hass, calls):
     assert 1 == len(calls)
     assert 'template - test.entity - hello - world' == \
         calls[0].data['some']
+
+
+async def test_if_fires_on_change_with_for(hass, calls):
+    """Test for firing on change with for."""
+    assert await async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'trigger': {
+                'platform': 'template',
+                'value_template': "{{ is_state('test.entity', 'world') }}",
+                'for': {
+                    'seconds': 5
+                },
+            },
+            'action': {
+                'service': 'test.automation'
+            }
+        }
+    })
+
+    hass.states.async_set('test.entity', 'world')
+    await hass.async_block_till_done()
+    assert 0 == len(calls)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert 1 == len(calls)
+
+
+async def test_if_not_fires_on_change_with_for(hass, calls):
+    """Test for firing on change with for."""
+    assert await async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'trigger': {
+                'platform': 'template',
+                'value_template': "{{ is_state('test.entity', 'world') }}",
+                'for': {
+                    'seconds': 5
+                },
+            },
+            'action': {
+                'service': 'test.automation'
+            }
+        }
+    })
+
+    hass.states.async_set('test.entity', 'world')
+    await hass.async_block_till_done()
+    assert 0 == len(calls)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=4))
+    await hass.async_block_till_done()
+    assert 0 == len(calls)
+    hass.states.async_set('test.entity', 'hello')
+    await hass.async_block_till_done()
+    assert 0 == len(calls)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=6))
+    await hass.async_block_till_done()
+    assert 0 == len(calls)
+
+
+async def test_if_not_fires_when_turned_off_with_for(hass, calls):
+    """Test for firing on change with for."""
+    assert await async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'trigger': {
+                'platform': 'template',
+                'value_template': "{{ is_state('test.entity', 'world') }}",
+                'for': {
+                    'seconds': 5
+                },
+            },
+            'action': {
+                'service': 'test.automation'
+            }
+        }
+    })
+
+    hass.states.async_set('test.entity', 'world')
+    await hass.async_block_till_done()
+    assert 0 == len(calls)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=4))
+    await hass.async_block_till_done()
+    assert 0 == len(calls)
+    await common.async_turn_off(hass)
+    await hass.async_block_till_done()
+    assert 0 == len(calls)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=6))
+    await hass.async_block_till_done()
+    assert 0 == len(calls)
+
+
+async def test_if_fires_on_change_with_for_template_1(hass, calls):
+    """Test for firing on change with for template."""
+    assert await async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'trigger': {
+                'platform': 'template',
+                'value_template': "{{ is_state('test.entity', 'world') }}",
+                'for': {
+                    'seconds': "{{ 5 }}"
+                },
+            },
+            'action': {
+                'service': 'test.automation'
+            }
+        }
+    })
+
+    hass.states.async_set('test.entity', 'world')
+    await hass.async_block_till_done()
+    assert 0 == len(calls)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert 1 == len(calls)
+
+
+async def test_if_fires_on_change_with_for_template_2(hass, calls):
+    """Test for firing on change with for template."""
+    assert await async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'trigger': {
+                'platform': 'template',
+                'value_template': "{{ is_state('test.entity', 'world') }}",
+                'for': "{{ 5 }}",
+            },
+            'action': {
+                'service': 'test.automation'
+            }
+        }
+    })
+
+    hass.states.async_set('test.entity', 'world')
+    await hass.async_block_till_done()
+    assert 0 == len(calls)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert 1 == len(calls)
+
+
+async def test_if_fires_on_change_with_for_template_3(hass, calls):
+    """Test for firing on change with for template."""
+    assert await async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'trigger': {
+                'platform': 'template',
+                'value_template': "{{ is_state('test.entity', 'world') }}",
+                'for': "00:00:{{ 5 }}",
+            },
+            'action': {
+                'service': 'test.automation'
+            }
+        }
+    })
+
+    hass.states.async_set('test.entity', 'world')
+    await hass.async_block_till_done()
+    assert 0 == len(calls)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert 1 == len(calls)
+
+
+async def test_invalid_for_template_1(hass, calls):
+    """Test for invalid for template."""
+    assert await async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'trigger': {
+                'platform': 'template',
+                'value_template': "{{ is_state('test.entity', 'world') }}",
+                'for': {
+                    'seconds': "{{ five }}"
+                },
+            },
+            'action': {
+                'service': 'test.automation'
+            }
+        }
+    })
+
+    with mock.patch.object(automation.template, '_LOGGER') as mock_logger:
+        hass.states.async_set('test.entity', 'world')
+        await hass.async_block_till_done()
+        assert mock_logger.error.called

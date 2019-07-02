@@ -312,6 +312,8 @@ async def check_ha_config_file(hass):
             return result.add_error("File configuration.yaml not found.")
         config = await hass.async_add_executor_job(
             load_yaml_config_file, config_path)
+    except FileNotFoundError:
+        return result.add_error("File not found: {}".format(config_path))
     except HomeAssistantError as err:
         return result.add_error(
             "Error loading {}: {}".format(config_path, err))
@@ -343,17 +345,17 @@ async def check_ha_config_file(hass):
             result.add_error("Integration not found: {}".format(domain))
             continue
 
-        try:
-            component = integration.get_component()
-        except ImportError:
-            result.add_error("Component not found: {}".format(domain))
-            continue
-
         if (not hass.config.skip_pip and integration.requirements and
                 not await requirements.async_process_requirements(
                     hass, integration.domain, integration.requirements)):
             result.add_error("Unable to install all requirements: {}".format(
                 ', '.join(integration.requirements)))
+            continue
+
+        try:
+            component = integration.get_component()
+        except ImportError:
+            result.add_error("Component not found: {}".format(domain))
             continue
 
         if hasattr(component, 'CONFIG_SCHEMA'):

@@ -1,8 +1,13 @@
 """Entity class that represents Z-Wave node."""
 import logging
+from itertools import count
 
 from homeassistant.core import callback
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_WAKEUP, ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL, ATTR_WAKEUP, ATTR_ENTITY_ID)
+from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers.device_registry import (
+    async_get_registry as get_dev_reg)
 from homeassistant.helpers.entity import Entity
 
 from .const import (
@@ -74,6 +79,16 @@ class ZWaveBaseEntity(Entity):
         if self.hass and self.platform:
             self.hass.add_job(_async_remove_and_add)
 
+    async def node_removed(self):
+        """Call when a node is removed from the Z-Wave network."""
+        await self.async_remove()
+
+        registry = await async_get_registry(self.hass)
+        if self.entity_id not in registry.entities:
+            return
+
+        registry.async_remove(self.entity_id)
+
 
 class ZWaveNodeEntity(ZWaveBaseEntity):
     """Representation of a Z-Wave node."""
@@ -113,7 +128,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
     @property
     def device_info(self):
         """Return device information."""
-        return {
+        info = {
             'identifiers': {
                 (DOMAIN, self.node_id)
             },
@@ -121,6 +136,9 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             'model': self.node.product_name,
             'name': node_name(self.node)
         }
+        if self.node_id > 1:
+            info['via_device'] = (DOMAIN, 1)
+        return info
 
     def network_node_changed(self, node=None, value=None, args=None):
         """Handle a changed node on the network."""
@@ -177,6 +195,42 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
                 self.try_remove_and_add()
 
         self.maybe_schedule_update()
+
+    async def node_renamed(self, update_ids=False):
+        """Rename the node and update any IDs."""
+        self._name = node_name(self.node)
+        # Set the name in the devices. If they're customised
+        # the customisation will not be stored as name and will stick.
+        dev_reg = await get_dev_reg(self.hass)
+        device = dev_reg.async_get_device(
+            identifiers={(DOMAIN, self.node_id), },
+            connections=set())
+        dev_reg.async_update_device(device.id, name=self._name)
+        # update sub-devices too
+        for i in count(2):
+            identifier = (DOMAIN, self.node_id, i)
+            device = dev_reg.async_get_device(
+                identifiers={identifier, },
+                connections=set())
+            if not device:
+                break
+            new_name = "{} ({})".format(self._name, i)
+            dev_reg.async_update_device(device.id, name=new_name)
+
+        # Update entity ID.
+        if update_ids:
+            ent_reg = await async_get_registry(self.hass)
+            new_entity_id = ent_reg.async_generate_entity_id(
+                DOMAIN, self._name,
+                self.platform.entities.keys() - {self.entity_id})
+            if new_entity_id != self.entity_id:
+                # Don't change the name attribute, it will be None unless
+                # customised and if it's been customised, keep the
+                # customisation.
+                ent_reg.async_update_entity(
+                    self.entity_id, new_entity_id=new_entity_id)
+                return
+        self.async_schedule_update_ha_state()
 
     def network_node_event(self, node, value):
         """Handle a node activated event on the network."""

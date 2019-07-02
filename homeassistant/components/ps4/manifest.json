@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/ps4",
   "requirements": [
-    "pyps4-homeassistant==0.7.3"
+    "pyps4-homeassistant==0.8.5"
   ],
   "dependencies": [],
   "codeowners": [

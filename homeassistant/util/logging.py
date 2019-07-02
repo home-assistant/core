@@ -64,7 +64,7 @@ class AsyncHandler:
 
         if blocking:
             while self._thread.is_alive():
-                await asyncio.sleep(0, loop=self.loop)
+                await asyncio.sleep(0)
 
     def emit(self, record: Optional[logging.LogRecord]) -> None:
         """Process a record."""
@@ -141,8 +141,9 @@ def catch_log_exception(
 
     # Check for partials to properly determine if coroutine function
     check_func = func
-    while isinstance(check_func, partial):
-        check_func = check_func.func
+    # type ignores: https://github.com/python/typeshed/pull/3077
+    while isinstance(check_func, partial):  # type: ignore
+        check_func = check_func.func  # type: ignore
 
     wrapper_func = None
     if asyncio.iscoroutinefunction(check_func):

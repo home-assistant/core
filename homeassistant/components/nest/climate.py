@@ -9,7 +9,7 @@ from homeassistant.components.climate.const import (
     STATE_ECO, HVAC_MODE_HEAT, SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
-    HVAC_MODE_OFF)
+    HVAC_MODE_OFF, FAN_ON, FAN_AUTO)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_SCAN_INTERVAL, STATE_ON, TEMP_CELSIUS,
     TEMP_FAHRENHEIT)
@@ -54,7 +54,7 @@ class NestThermostat(ClimateDevice):
         self._unit = temp_unit
         self.structure = structure
         self.device = device
-        self._fan_modes = [STATE_ON, HVAC_MODE_AUTO]
+        self._fan_modes = [FAN_ON, FAN_AUTO]
 
         # Set the default supported features
         self._support_flags = (SUPPORT_TARGET_TEMPERATURE |
@@ -242,7 +242,7 @@ class NestThermostat(ClimateDevice):
         """Return whether the fan is on."""
         if self._has_fan:
             # Return whether the fan is on
-            return STATE_ON if self._fan else HVAC_MODE_AUTO
+            return FAN_ON if self._fan else FAN_AUTO
         # No Fan available so disable slider
         return None
 

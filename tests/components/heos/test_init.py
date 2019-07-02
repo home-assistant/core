@@ -27,7 +27,8 @@ async def test_async_setup_creates_entry(hass, config):
     assert entry.data == {CONF_HOST: '127.0.0.1'}
 
 
-async def test_async_setup_updates_entry(hass, config_entry, config):
+async def test_async_setup_updates_entry(hass, config_entry, config,
+                                         controller):
     """Test component setup updates entry from config."""
     config[DOMAIN][CONF_HOST] = '127.0.0.2'
     config_entry.add_to_hass(hass)

@@ -11,17 +11,14 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
 
-from . import (authed_api_client, create_registrations,  # noqa: F401
-               webhook_client)  # noqa: F401
-
 from .const import (CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT,
                     RENDER_TEMPLATE, UPDATE)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def test_webhook_handle_render_template(create_registrations,  # noqa: F401, F811, E501
-                                              webhook_client):  # noqa: F811
+async def test_webhook_handle_render_template(create_registrations,
+                                              webhook_client):
     """Test that we render templates properly."""
     resp = await webhook_client.post(
         '/api/webhook/{}'.format(create_registrations[1]['webhook_id']),
@@ -34,7 +31,7 @@ async def test_webhook_handle_render_template(create_registrations,  # noqa: F40
     assert json == {'one': 'Hello world'}
 
 
-async def test_webhook_handle_call_services(hass, create_registrations,  # noqa: F401, F811, E501
+async def test_webhook_handle_call_services(hass, create_registrations,
                                             webhook_client):  # noqa: E501 F811
     """Test that we call services properly."""
     calls = async_mock_service(hass, 'test', 'mobile_app')
@@ -49,8 +46,8 @@ async def test_webhook_handle_call_services(hass, create_registrations,  # noqa:
     assert len(calls) == 1
 
 
-async def test_webhook_handle_fire_event(hass, create_registrations,  # noqa: F401, F811, E501
-                                         webhook_client):  # noqa: F811
+async def test_webhook_handle_fire_event(hass, create_registrations,
+                                         webhook_client):
     """Test that we can fire events."""
     events = []
 
@@ -76,7 +73,7 @@ async def test_webhook_handle_fire_event(hass, create_registrations,  # noqa: F4
 
 async def test_webhook_update_registration(webhook_client, hass_client):  # noqa: E501 F811
     """Test that a we can update an existing registration via webhook."""
-    authed_api_client = await hass_client()  # noqa: F811
+    authed_api_client = await hass_client()
     register_resp = await authed_api_client.post(
         '/api/mobile_app/registrations', json=REGISTER_CLEARTEXT
     )
@@ -102,8 +99,8 @@ async def test_webhook_update_registration(webhook_client, hass_client):  # noqa
     assert CONF_SECRET not in update_json
 
 
-async def test_webhook_handle_get_zones(hass, create_registrations,  # noqa: F401, F811, E501
-                                        webhook_client):  # noqa: F811
+async def test_webhook_handle_get_zones(hass, create_registrations,
+                                        webhook_client):
     """Test that we can get zones properly."""
     await async_setup_component(hass, ZONE_DOMAIN, {
         ZONE_DOMAIN: {
@@ -126,8 +123,8 @@ async def test_webhook_handle_get_zones(hass, create_registrations,  # noqa: F40
     assert json[0]['entity_id'] == 'zone.home'
 
 
-async def test_webhook_handle_get_config(hass, create_registrations,  # noqa: F401, F811, E501
-                                         webhook_client):  # noqa: F811
+async def test_webhook_handle_get_config(hass, create_registrations,
+                                         webhook_client):
     """Test that we can get config properly."""
     resp = await webhook_client.post(
         '/api/webhook/{}'.format(create_registrations[1]['webhook_id']),
@@ -160,8 +157,8 @@ async def test_webhook_handle_get_config(hass, create_registrations,  # noqa: F4
     assert expected_dict == json
 
 
-async def test_webhook_returns_error_incorrect_json(webhook_client,  # noqa: F401, F811, E501
-                                                    create_registrations,  # noqa: F401, F811, E501
+async def test_webhook_returns_error_incorrect_json(webhook_client,
+                                                    create_registrations,
                                                     caplog):  # noqa: E501 F811
     """Test that an error is returned when JSON is invalid."""
     resp = await webhook_client.post(
@@ -175,8 +172,8 @@ async def test_webhook_returns_error_incorrect_json(webhook_client,  # noqa: F40
     assert 'invalid JSON' in caplog.text
 
 
-async def test_webhook_handle_decryption(webhook_client,  # noqa: F811
-                                         create_registrations):  # noqa: F401, F811, E501
+async def test_webhook_handle_decryption(webhook_client,
+                                         create_registrations):
     """Test that we can encrypt/decrypt properly."""
     try:
         # pylint: disable=unused-import
@@ -221,8 +218,8 @@ async def test_webhook_handle_decryption(webhook_client,  # noqa: F811
     assert json.loads(decrypted_data) == {'one': 'Hello world'}
 
 
-async def test_webhook_requires_encryption(webhook_client,  # noqa: F811
-                                           create_registrations):  # noqa: F401, F811, E501
+async def test_webhook_requires_encryption(webhook_client,
+                                           create_registrations):
     """Test that encrypted registrations only accept encrypted data."""
     resp = await webhook_client.post(
         '/api/webhook/{}'.format(create_registrations[0]['webhook_id']),

@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
@@ -261,9 +261,9 @@ async def test_remove_entry(hass, manager):
     # Just Group all_lights
     assert len(hass.states.async_all()) == 1
 
-    # Check that entity registry entry no longer references config_entry_id
-    entity_entry = list(ent_reg.entities.values())[0]
-    assert entity_entry.config_entry_id is None
+    # Check that entity registry entry has been removed
+    entity_entry_list = list(ent_reg.entities.values())
+    assert not entity_entry_list
 
 
 async def test_remove_entry_handles_callback_error(hass, manager):
@@ -934,3 +934,17 @@ async def test_entry_reload_error(hass, manager, state):
     assert len(async_setup_entry.mock_calls) == 0
 
     assert entry.state == state
+
+
+async def test_init_custom_integration(hass):
+    """Test initializing flow for custom integration."""
+    integration = loader.Integration(hass, 'custom_components.hue', None, {
+        'name': 'Hue',
+        'dependencies': [],
+        'requirements': [],
+        'domain': 'hue',
+    })
+    with pytest.raises(data_entry_flow.UnknownHandler):
+        with patch('homeassistant.loader.async_get_integration',
+                   return_value=mock_coro(integration)):
+            await hass.config_entries.flow.async_init('bla')

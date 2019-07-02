@@ -76,7 +76,7 @@ async def test_create_entry_when_friendly_name_valid(hass, controller):
 async def test_discovery_shows_create_form(hass, controller, discovery_data):
     """Test discovery shows form to confirm setup and subsequent abort."""
     await hass.config_entries.flow.async_init(
-                DOMAIN, context={'source': 'discovery'},
+                DOMAIN, context={'source': 'ssdp'},
                 data=discovery_data)
     await hass.async_block_till_done()
     assert len(hass.config_entries.flow.async_progress()) == 1
@@ -87,7 +87,7 @@ async def test_discovery_shows_create_form(hass, controller, discovery_data):
     discovery_data[CONF_HOST] = "127.0.0.2"
     discovery_data[CONF_NAME] = "Bedroom"
     await hass.config_entries.flow.async_init(
-                DOMAIN, context={'source': 'discovery'},
+                DOMAIN, context={'source': 'ssdp'},
                 data=discovery_data)
     await hass.async_block_till_done()
     assert len(hass.config_entries.flow.async_progress()) == 1
@@ -103,6 +103,6 @@ async def test_disovery_flow_aborts_already_setup(
     config_entry.add_to_hass(hass)
     flow = HeosFlowHandler()
     flow.hass = hass
-    result = await flow.async_step_discovery(discovery_data)
+    result = await flow.async_step_ssdp(discovery_data)
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
     assert result['reason'] == 'already_setup'

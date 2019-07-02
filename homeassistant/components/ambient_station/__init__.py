@@ -119,8 +119,8 @@ TYPE_WINDSPEEDMPH = 'windspeedmph'
 TYPE_YEARLYRAININ = 'yearlyrainin'
 SENSOR_TYPES = {
     TYPE_24HOURRAININ: ('24 Hr Rain', 'in', TYPE_SENSOR, None),
-    TYPE_BAROMABSIN: ('Abs Pressure', 'inHg', TYPE_SENSOR, None),
-    TYPE_BAROMRELIN: ('Rel Pressure', 'inHg', TYPE_SENSOR, None),
+    TYPE_BAROMABSIN: ('Abs Pressure', 'inHg', TYPE_SENSOR, 'pressure'),
+    TYPE_BAROMRELIN: ('Rel Pressure', 'inHg', TYPE_SENSOR, 'pressure'),
     TYPE_BATT10: ('Battery 10', None, TYPE_BINARY_SENSOR, 'battery'),
     TYPE_BATT1: ('Battery 1', None, TYPE_BINARY_SENSOR, 'battery'),
     TYPE_BATT2: ('Battery 2', None, TYPE_BINARY_SENSOR, 'battery'),
@@ -134,23 +134,23 @@ SENSOR_TYPES = {
     TYPE_BATTOUT: ('Battery', None, TYPE_BINARY_SENSOR, 'battery'),
     TYPE_CO2: ('co2', 'ppm', TYPE_SENSOR, None),
     TYPE_DAILYRAININ: ('Daily Rain', 'in', TYPE_SENSOR, None),
-    TYPE_DEWPOINT: ('Dew Point', '°F', TYPE_SENSOR, None),
+    TYPE_DEWPOINT: ('Dew Point', '°F', TYPE_SENSOR, 'temperature'),
     TYPE_EVENTRAININ: ('Event Rain', 'in', TYPE_SENSOR, None),
-    TYPE_FEELSLIKE: ('Feels Like', '°F', TYPE_SENSOR, None),
+    TYPE_FEELSLIKE: ('Feels Like', '°F', TYPE_SENSOR, 'temperature'),
     TYPE_HOURLYRAININ: ('Hourly Rain Rate', 'in/hr', TYPE_SENSOR, None),
-    TYPE_HUMIDITY10: ('Humidity 10', '%', TYPE_SENSOR, None),
-    TYPE_HUMIDITY1: ('Humidity 1', '%', TYPE_SENSOR, None),
-    TYPE_HUMIDITY2: ('Humidity 2', '%', TYPE_SENSOR, None),
-    TYPE_HUMIDITY3: ('Humidity 3', '%', TYPE_SENSOR, None),
-    TYPE_HUMIDITY4: ('Humidity 4', '%', TYPE_SENSOR, None),
-    TYPE_HUMIDITY5: ('Humidity 5', '%', TYPE_SENSOR, None),
-    TYPE_HUMIDITY6: ('Humidity 6', '%', TYPE_SENSOR, None),
-    TYPE_HUMIDITY7: ('Humidity 7', '%', TYPE_SENSOR, None),
-    TYPE_HUMIDITY8: ('Humidity 8', '%', TYPE_SENSOR, None),
-    TYPE_HUMIDITY9: ('Humidity 9', '%', TYPE_SENSOR, None),
-    TYPE_HUMIDITY: ('Humidity', '%', TYPE_SENSOR, None),
-    TYPE_HUMIDITYIN: ('Humidity In', '%', TYPE_SENSOR, None),
-    TYPE_LASTRAIN: ('Last Rain', None, TYPE_SENSOR, None),
+    TYPE_HUMIDITY10: ('Humidity 10', '%', TYPE_SENSOR, 'humidity'),
+    TYPE_HUMIDITY1: ('Humidity 1', '%', TYPE_SENSOR, 'humidity'),
+    TYPE_HUMIDITY2: ('Humidity 2', '%', TYPE_SENSOR, 'humidity'),
+    TYPE_HUMIDITY3: ('Humidity 3', '%', TYPE_SENSOR, 'humidity'),
+    TYPE_HUMIDITY4: ('Humidity 4', '%', TYPE_SENSOR, 'humidity'),
+    TYPE_HUMIDITY5: ('Humidity 5', '%', TYPE_SENSOR, 'humidity'),
+    TYPE_HUMIDITY6: ('Humidity 6', '%', TYPE_SENSOR, 'humidity'),
+    TYPE_HUMIDITY7: ('Humidity 7', '%', TYPE_SENSOR, 'humidity'),
+    TYPE_HUMIDITY8: ('Humidity 8', '%', TYPE_SENSOR, 'humidity'),
+    TYPE_HUMIDITY9: ('Humidity 9', '%', TYPE_SENSOR, 'humidity'),
+    TYPE_HUMIDITY: ('Humidity', '%', TYPE_SENSOR, 'humidity'),
+    TYPE_HUMIDITYIN: ('Humidity In', '%', TYPE_SENSOR, 'humidity'),
+    TYPE_LASTRAIN: ('Last Rain', None, TYPE_SENSOR, 'timestamp'),
     TYPE_MAXDAILYGUST: ('Max Gust', 'mph', TYPE_SENSOR, None),
     TYPE_MONTHLYRAININ: ('Monthly Rain', 'in', TYPE_SENSOR, None),
     TYPE_RELAY10: ('Relay 10', None, TYPE_BINARY_SENSOR, 'connectivity'),
@@ -163,39 +163,39 @@ SENSOR_TYPES = {
     TYPE_RELAY7: ('Relay 7', None, TYPE_BINARY_SENSOR, 'connectivity'),
     TYPE_RELAY8: ('Relay 8', None, TYPE_BINARY_SENSOR, 'connectivity'),
     TYPE_RELAY9: ('Relay 9', None, TYPE_BINARY_SENSOR, 'connectivity'),
-    TYPE_SOILHUM10: ('Soil Humidity 10', '%', TYPE_SENSOR, None),
-    TYPE_SOILHUM1: ('Soil Humidity 1', '%', TYPE_SENSOR, None),
-    TYPE_SOILHUM2: ('Soil Humidity 2', '%', TYPE_SENSOR, None),
-    TYPE_SOILHUM3: ('Soil Humidity 3', '%', TYPE_SENSOR, None),
-    TYPE_SOILHUM4: ('Soil Humidity 4', '%', TYPE_SENSOR, None),
-    TYPE_SOILHUM5: ('Soil Humidity 5', '%', TYPE_SENSOR, None),
-    TYPE_SOILHUM6: ('Soil Humidity 6', '%', TYPE_SENSOR, None),
-    TYPE_SOILHUM7: ('Soil Humidity 7', '%', TYPE_SENSOR, None),
-    TYPE_SOILHUM8: ('Soil Humidity 8', '%', TYPE_SENSOR, None),
-    TYPE_SOILHUM9: ('Soil Humidity 9', '%', TYPE_SENSOR, None),
-    TYPE_SOILTEMP10F: ('Soil Temp 10', '°F', TYPE_SENSOR, None),
-    TYPE_SOILTEMP1F: ('Soil Temp 1', '°F', TYPE_SENSOR, None),
-    TYPE_SOILTEMP2F: ('Soil Temp 2', '°F', TYPE_SENSOR, None),
-    TYPE_SOILTEMP3F: ('Soil Temp 3', '°F', TYPE_SENSOR, None),
-    TYPE_SOILTEMP4F: ('Soil Temp 4', '°F', TYPE_SENSOR, None),
-    TYPE_SOILTEMP5F: ('Soil Temp 5', '°F', TYPE_SENSOR, None),
-    TYPE_SOILTEMP6F: ('Soil Temp 6', '°F', TYPE_SENSOR, None),
-    TYPE_SOILTEMP7F: ('Soil Temp 7', '°F', TYPE_SENSOR, None),
-    TYPE_SOILTEMP8F: ('Soil Temp 8', '°F', TYPE_SENSOR, None),
-    TYPE_SOILTEMP9F: ('Soil Temp 9', '°F', TYPE_SENSOR, None),
-    TYPE_SOLARRADIATION: ('Solar Rad', 'W/m^2', TYPE_SENSOR, None),
-    TYPE_TEMP10F: ('Temp 10', '°F', TYPE_SENSOR, None),
-    TYPE_TEMP1F: ('Temp 1', '°F', TYPE_SENSOR, None),
-    TYPE_TEMP2F: ('Temp 2', '°F', TYPE_SENSOR, None),
-    TYPE_TEMP3F: ('Temp 3', '°F', TYPE_SENSOR, None),
-    TYPE_TEMP4F: ('Temp 4', '°F', TYPE_SENSOR, None),
-    TYPE_TEMP5F: ('Temp 5', '°F', TYPE_SENSOR, None),
-    TYPE_TEMP6F: ('Temp 6', '°F', TYPE_SENSOR, None),
-    TYPE_TEMP7F: ('Temp 7', '°F', TYPE_SENSOR, None),
-    TYPE_TEMP8F: ('Temp 8', '°F', TYPE_SENSOR, None),
-    TYPE_TEMP9F: ('Temp 9', '°F', TYPE_SENSOR, None),
-    TYPE_TEMPF: ('Temp', '°F', TYPE_SENSOR, None),
-    TYPE_TEMPINF: ('Inside Temp', '°F', TYPE_SENSOR, None),
+    TYPE_SOILHUM10: ('Soil Humidity 10', '%', TYPE_SENSOR, 'humidity'),
+    TYPE_SOILHUM1: ('Soil Humidity 1', '%', TYPE_SENSOR, 'humidity'),
+    TYPE_SOILHUM2: ('Soil Humidity 2', '%', TYPE_SENSOR, 'humidity'),
+    TYPE_SOILHUM3: ('Soil Humidity 3', '%', TYPE_SENSOR, 'humidity'),
+    TYPE_SOILHUM4: ('Soil Humidity 4', '%', TYPE_SENSOR, 'humidity'),
+    TYPE_SOILHUM5: ('Soil Humidity 5', '%', TYPE_SENSOR, 'humidity'),
+    TYPE_SOILHUM6: ('Soil Humidity 6', '%', TYPE_SENSOR, 'humidity'),
+    TYPE_SOILHUM7: ('Soil Humidity 7', '%', TYPE_SENSOR, 'humidity'),
+    TYPE_SOILHUM8: ('Soil Humidity 8', '%', TYPE_SENSOR, 'humidity'),
+    TYPE_SOILHUM9: ('Soil Humidity 9', '%', TYPE_SENSOR, 'humidity'),
+    TYPE_SOILTEMP10F: ('Soil Temp 10', '°F', TYPE_SENSOR, 'temperature'),
+    TYPE_SOILTEMP1F: ('Soil Temp 1', '°F', TYPE_SENSOR, 'temperature'),
+    TYPE_SOILTEMP2F: ('Soil Temp 2', '°F', TYPE_SENSOR, 'temperature'),
+    TYPE_SOILTEMP3F: ('Soil Temp 3', '°F', TYPE_SENSOR, 'temperature'),
+    TYPE_SOILTEMP4F: ('Soil Temp 4', '°F', TYPE_SENSOR, 'temperature'),
+    TYPE_SOILTEMP5F: ('Soil Temp 5', '°F', TYPE_SENSOR, 'temperature'),
+    TYPE_SOILTEMP6F: ('Soil Temp 6', '°F', TYPE_SENSOR, 'temperature'),
+    TYPE_SOILTEMP7F: ('Soil Temp 7', '°F', TYPE_SENSOR, 'temperature'),
+    TYPE_SOILTEMP8F: ('Soil Temp 8', '°F', TYPE_SENSOR, 'temperature'),
+    TYPE_SOILTEMP9F: ('Soil Temp 9', '°F', TYPE_SENSOR, 'temperature'),
+    TYPE_SOLARRADIATION: ('Solar Rad', 'lx', TYPE_SENSOR, 'illuminance'),
+    TYPE_TEMP10F: ('Temp 10', '°F', TYPE_SENSOR, 'temperature'),
+    TYPE_TEMP1F: ('Temp 1', '°F', TYPE_SENSOR, 'temperature'),
+    TYPE_TEMP2F: ('Temp 2', '°F', TYPE_SENSOR, 'temperature'),
+    TYPE_TEMP3F: ('Temp 3', '°F', TYPE_SENSOR, 'temperature'),
+    TYPE_TEMP4F: ('Temp 4', '°F', TYPE_SENSOR, 'temperature'),
+    TYPE_TEMP5F: ('Temp 5', '°F', TYPE_SENSOR, 'temperature'),
+    TYPE_TEMP6F: ('Temp 6', '°F', TYPE_SENSOR, 'temperature'),
+    TYPE_TEMP7F: ('Temp 7', '°F', TYPE_SENSOR, 'temperature'),
+    TYPE_TEMP8F: ('Temp 8', '°F', TYPE_SENSOR, 'temperature'),
+    TYPE_TEMP9F: ('Temp 9', '°F', TYPE_SENSOR, 'temperature'),
+    TYPE_TEMPF: ('Temp', '°F', TYPE_SENSOR, 'temperature'),
+    TYPE_TEMPINF: ('Inside Temp', '°F', TYPE_SENSOR, 'temperature'),
     TYPE_TOTALRAININ: ('Lifetime Rain', 'in', TYPE_SENSOR, None),
     TYPE_UV: ('uv', 'Index', TYPE_SENSOR, None),
     TYPE_WEEKLYRAININ: ('Weekly Rain', 'in', TYPE_SENSOR, None),
@@ -327,7 +327,7 @@ class AmbientStation:
             """Define a handler to fire when the websocket is connected."""
             _LOGGER.info('Connected to websocket')
             _LOGGER.debug('Watchdog starting')
-            if self._watchdog_listener:
+            if self._watchdog_listener is not None:
                 self._watchdog_listener()
             self._watchdog_listener = async_call_later(
                 self._hass, DEFAULT_WATCHDOG_SECONDS, _ws_reconnect)
@@ -404,9 +404,10 @@ class AmbientWeatherEntity(Entity):
 
     def __init__(
             self, ambient, mac_address, station_name, sensor_type,
-            sensor_name):
+            sensor_name, device_class):
         """Initialize the sensor."""
         self._ambient = ambient
+        self._device_class = device_class
         self._async_unsub_dispatcher_connect = None
         self._mac_address = mac_address
         self._sensor_name = sensor_name
@@ -419,6 +420,11 @@ class AmbientWeatherEntity(Entity):
         """Return True if entity is available."""
         return self._ambient.stations[self._mac_address][ATTR_LAST_DATA].get(
             self._sensor_type) is not None
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        return self._device_class
 
     @property
     def device_info(self):

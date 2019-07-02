@@ -61,7 +61,7 @@ class TradfriSwitch(SwitchDevice):
             'manufacturer': info.manufacturer,
             'model': info.model_number,
             'sw_version': info.firmware_version,
-            'via_hub': (TRADFRI_DOMAIN, self._gateway_id),
+            'via_device': (TRADFRI_DOMAIN, self._gateway_id),
         }
 
     async def async_added_to_hass(self):
