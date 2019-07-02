@@ -8,8 +8,7 @@ from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF,
     SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_FAN_MODE, SUPPORT_AWAY_MODE,
-    HVAC_MODE_OFF)
+    SUPPORT_FAN_MODE, SUPPORT_AWAY_MODE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_HOST, PRECISION_HALVES, TEMP_FAHRENHEIT, STATE_ON)
 import homeassistant.helpers.config_validation as cv

@@ -324,7 +324,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
         await self._device.set_air_conditioner_mode(
-            STATE_TO_AC_MODE[operation_mode], set_status=True)
+            STATE_TO_AC_MODE[hvac_mode], set_status=True)
         # State is set optimistically in the command above, therefore update
         # the entity state ahead of receiving the confirming push updates
         self.async_schedule_update_ha_state()

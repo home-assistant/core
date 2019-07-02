@@ -8,7 +8,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_OFF)
 from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
 from homeassistant.const import (
-    ATTR_TEMPERATURE, PRECISION_WHOLE, HVAC_MODE_OFF, STATE_ON,
+    ATTR_TEMPERATURE, PRECISION_WHOLE, STATE_ON,
     TEMP_CELSIUS)
 
 from . import DATA_MELISSA
