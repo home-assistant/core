@@ -9,7 +9,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     ATTR_FAN_MODE, ATTR_FAN_MODES,
-    ATTR_OPERATION_MODE, ATTR_OPERATION_LIST, SUPPORT_TARGET_TEMPERATURE,
+    ATTR_HVAC_MODE, ATTR_OPERATION_LIST, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_AWAY_MODE)
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
@@ -324,7 +324,7 @@ class HoneywellUSThermostat(ClimateDevice):
         data = {
             ATTR_FAN: (self.is_fan_on and 'running' or 'idle'),
             ATTR_FAN_MODE: self._device.fan_mode,
-            ATTR_OPERATION_MODE: self._device.system_mode,
+            ATTR_HVAC_MODE: self._device.system_mode,
         }
         data[ATTR_FAN_MODES] = somecomfort.FAN_MODES
         data[ATTR_OPERATION_LIST] = somecomfort.SYSTEM_MODES

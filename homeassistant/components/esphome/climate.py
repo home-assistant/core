@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, List, Optional
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_OPERATION_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
+    ATTR_HVAC_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, SUPPORT_AWAY_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
@@ -143,9 +143,9 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature (and operation mode if set)."""
         data = {'key': self._static_info.key}
-        if ATTR_OPERATION_MODE in kwargs:
+        if ATTR_HVAC_MODE in kwargs:
             data['mode'] = _climate_modes.from_hass(
-                kwargs[ATTR_OPERATION_MODE])
+                kwargs[ATTR_HVAC_MODE])
         if ATTR_TEMPERATURE in kwargs:
             data['target_temperature'] = kwargs[ATTR_TEMPERATURE]
         if ATTR_TARGET_TEMP_LOW in kwargs:

@@ -5,7 +5,7 @@ import requests
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_OPERATION_MODE, STATE_ECO, HVAC_MODE_HEAT, STATE_MANUAL,
+    ATTR_HVAC_MODE, STATE_ECO, HVAC_MODE_HEAT, STATE_MANUAL,
     SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_OFF)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, PRECISION_HALVES,
@@ -98,8 +98,8 @@ class FritzboxThermostat(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        if ATTR_OPERATION_MODE in kwargs:
-            operation_mode = kwargs.get(ATTR_OPERATION_MODE)
+        if ATTR_HVAC_MODE in kwargs:
+            operation_mode = kwargs.get(ATTR_HVAC_MODE)
             self.set_operation_mode(operation_mode)
         elif ATTR_TEMPERATURE in kwargs:
             temperature = kwargs.get(ATTR_TEMPERATURE)

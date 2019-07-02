@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    ATTR_OPERATION_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
+    ATTR_HVAC_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, SUPPORT_FAN_MODE,
     SUPPORT_TARGET_HUMIDITY, SUPPORT_AWAY_MODE,
     SUPPORT_TARGET_HUMIDITY_HIGH, SUPPORT_TARGET_HUMIDITY_LOW,
@@ -235,7 +235,7 @@ class VenstarThermostat(ClimateDevice):
     def set_temperature(self, **kwargs):
         """Set a new target temperature."""
         set_temp = True
-        operation_mode = kwargs.get(ATTR_OPERATION_MODE, self._client.mode)
+        operation_mode = kwargs.get(ATTR_HVAC_MODE, self._client.mode)
         temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temperature = kwargs.get(ATTR_TEMPERATURE)

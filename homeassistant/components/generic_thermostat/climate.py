@@ -17,7 +17,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_AWAY_MODE, ATTR_OPERATION_MODE, HVAC_MODE_AUTO, HVAC_MODE_COOL,
+    ATTR_AWAY_MODE, ATTR_HVAC_MODE, HVAC_MODE_AUTO, HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF, SUPPORT_AWAY_MODE,
     SUPPORT_TARGET_TEMPERATURE)
@@ -170,9 +170,9 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
                 self._is_away = str(
                     old_state.attributes[ATTR_AWAY_MODE]) == STATE_ON
             if (self._initial_operation_mode is None and
-                    old_state.attributes[ATTR_OPERATION_MODE] is not None):
+                    old_state.attributes[ATTR_HVAC_MODE] is not None):
                 self._current_operation = \
-                    old_state.attributes[ATTR_OPERATION_MODE]
+                    old_state.attributes[ATTR_HVAC_MODE]
                 self._enabled = self._current_operation != HVAC_MODE_OFF
 
         else:

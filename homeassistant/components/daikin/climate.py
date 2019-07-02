@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_AWAY_MODE, ATTR_CURRENT_TEMPERATURE, ATTR_FAN_MODE,
-    ATTR_OPERATION_MODE, ATTR_SWING_MODE, HVAC_MODE_AUTO, HVAC_MODE_COOL,
+    ATTR_HVAC_MODE, ATTR_SWING_MODE, HVAC_MODE_AUTO, HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE,
     SUPPORT_ON_OFF, SUPPORT_SWING_MODE,
@@ -47,7 +47,7 @@ DAIKIN_TO_HA_STATE = {
 
 HA_ATTR_TO_DAIKIN = {
     ATTR_AWAY_MODE: 'en_hol',
-    ATTR_OPERATION_MODE: 'mode',
+    ATTR_HVAC_MODE: 'mode',
     ATTR_FAN_MODE: 'f_rate',
     ATTR_SWING_MODE: 'f_dir',
     ATTR_INSIDE_TEMPERATURE: 'htemp',
@@ -81,7 +81,7 @@ class DaikinClimate(ClimateDevice):
 
         self._api = api
         self._list = {
-            ATTR_OPERATION_MODE: list(HA_STATE_TO_DAIKIN),
+            ATTR_HVAC_MODE: list(HA_STATE_TO_DAIKIN),
             ATTR_FAN_MODE: self._api.device.fan_modes,
             ATTR_SWING_MODE: list(
                 map(
@@ -126,7 +126,7 @@ class DaikinClimate(ClimateDevice):
             value = self._api.device.represent(daikin_attr)[1].title()
         elif key == ATTR_SWING_MODE:
             value = self._api.device.represent(daikin_attr)[1].title()
-        elif key == ATTR_OPERATION_MODE:
+        elif key == ATTR_HVAC_MODE:
             # Daikin can return also internal states auto-1 or auto-7
             # and we need to translate them as AUTO
             daikin_mode = re.sub(
@@ -153,14 +153,14 @@ class DaikinClimate(ClimateDevice):
         values = {}
 
         for attr in [ATTR_TEMPERATURE, ATTR_FAN_MODE, ATTR_SWING_MODE,
-                     ATTR_OPERATION_MODE]:
+                     ATTR_HVAC_MODE]:
             value = settings.get(attr)
             if value is None:
                 continue
 
             daikin_attr = HA_ATTR_TO_DAIKIN.get(attr)
             if daikin_attr is not None:
-                if attr == ATTR_OPERATION_MODE:
+                if attr == ATTR_HVAC_MODE:
                     values[daikin_attr] = HA_STATE_TO_DAIKIN[value]
                 elif value in self._list[attr]:
                     values[daikin_attr] = value.lower()
@@ -219,16 +219,16 @@ class DaikinClimate(ClimateDevice):
     @property
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
-        return self.get(ATTR_OPERATION_MODE)
+        return self.get(ATTR_HVAC_MODE)
 
     @property
     def hvac_modes(self):
         """Return the list of available operation modes."""
-        return self._list.get(ATTR_OPERATION_MODE)
+        return self._list.get(ATTR_HVAC_MODE)
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set HVAC mode."""
-        await self._set({ATTR_OPERATION_MODE: hvac_mode})
+        await self._set({ATTR_HVAC_MODE: hvac_mode})
 
     @property
     def fan_mode(self):
@@ -271,7 +271,7 @@ class DaikinClimate(ClimateDevice):
     def is_on(self):
         """Return true if on."""
         return self._api.device.represent(
-            HA_ATTR_TO_DAIKIN[ATTR_OPERATION_MODE]
+            HA_ATTR_TO_DAIKIN[ATTR_HVAC_MODE]
         )[1] != HA_STATE_TO_DAIKIN[HVAC_MODE_OFF]
 
     async def async_turn_on(self):
@@ -281,7 +281,7 @@ class DaikinClimate(ClimateDevice):
     async def async_turn_off(self):
         """Turn device off."""
         await self._api.device.set({
-            HA_ATTR_TO_DAIKIN[ATTR_OPERATION_MODE]:
+            HA_ATTR_TO_DAIKIN[ATTR_HVAC_MODE]:
             HA_STATE_TO_DAIKIN[HVAC_MODE_OFF]
         })
 
