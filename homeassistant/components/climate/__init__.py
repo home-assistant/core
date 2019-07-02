@@ -28,7 +28,7 @@ from .const import (
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_STEP, DOMAIN, HVAC_MODES,
     SERVICE_SET_AUX_HEAT, SERVICE_SET_FAN_MODE, SERVICE_SET_PRESET_MODE,
     SERVICE_SET_HUMIDITY, SERVICE_SET_HVAC_MODE, SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE, SUPPORT_AUX_HEAT, SUPPORT_HVAC_ACTION,
+    SERVICE_SET_TEMPERATURE, SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE, SUPPORT_SWING_MODE,
     SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_TEMPERATURE_RANGE)
 from .reproduce_state import async_reproduce_states  # noqa
@@ -192,7 +192,7 @@ class ClimateDevice(Entity):
             data[ATTR_FAN_MODE] = self.fan_mode
             data[ATTR_FAN_MODES] = self.fan_modes
 
-        if supported_features & SUPPORT_HVAC_ACTION:
+        if self.hvac_action:
             data[ATTR_HVAC_ACTIONS] = self.hvac_action
 
         if supported_features & SUPPORT_PRESET_MODE:
