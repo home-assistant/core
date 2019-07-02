@@ -11,7 +11,7 @@ from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     FAN_AUTO, FAN_DIFFUSE, FAN_ON,
-    SUPPORT_AUX_HEAT, SUPPORT_FAN_MODE, SUPPORT_HVAC_ACTION,
+    SUPPORT_AUX_HEAT, SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE, SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
     CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, CURRENT_HVAC_OFF,
@@ -125,8 +125,7 @@ class HoneywellUSThermostat(ClimateDevice):
         self._username = username
         self._password = password
 
-        self._supported_features = (SUPPORT_HVAC_ACTION |
-                                    SUPPORT_PRESET_MODE |
+        self._supported_features = (SUPPORT_PRESET_MODE |
                                     SUPPORT_TARGET_TEMPERATURE)
 
         # pylint: disable=protected-access
