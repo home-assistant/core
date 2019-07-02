@@ -13,7 +13,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.event import async_call_later
 from .core.const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW,
     POWER_CONFIGURATION_CHANNEL, SIGNAL_STATE_ATTR,
@@ -64,7 +63,7 @@ class ZHADeviceTrackerEntity(DeviceTrackerEntity, ZhaEntity):
         self._last_seen = None
         self._seen = False
         self._keepalive_interval = 60
-        self._unsub_state_check = None
+        self._should_poll = True
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
@@ -76,6 +75,17 @@ class ZHADeviceTrackerEntity(DeviceTrackerEntity, ZhaEntity):
             await self.async_accept_signal(
                 self._battery_channel, SIGNAL_ATTR_UPDATED,
                 self.async_attribute_updated)
+
+    async def async_update(self):
+        """Handle polling."""
+        if self._last_seen is None:
+            self._seen = False
+        else:
+            difference = time.time() - self._last_seen
+            if difference > self._keepalive_interval:
+                self._seen = False
+            else:
+                self._seen = True
 
     @property
     def state(self):
@@ -103,22 +113,3 @@ class ZHADeviceTrackerEntity(DeviceTrackerEntity, ZhaEntity):
     def async_attribute_updated(self, attribute, value):
         """Handle tracking."""
         self._last_seen = time.time()
-        self._seen = True
-        self.async_schedule_update_ha_state()
-        if self._unsub_state_check:
-            self._unsub_state_check()
-        self._unsub_state_check = async_call_later(
-            self.hass, 60, self._async_maybe_mark_not_home
-        )
-
-    @callback
-    def _async_maybe_mark_not_home(self, *_):
-        if self._last_seen is None:
-            self._seen = False
-        else:
-            difference = time.time() - self._last_seen
-            if difference > self._keepalive_interval:
-                self._seen = False
-            else:
-                self._seen = True
-        self.async_schedule_update_ha_state()
