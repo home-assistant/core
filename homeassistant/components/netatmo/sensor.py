@@ -10,7 +10,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_MODE, CONF_MONITORED_CONDITIONS,
+    CONF_NAME, CONF_MODE,
     TEMP_CELSIUS, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_BATTERY)
 from homeassistant.helpers.entity import Entity
@@ -85,8 +85,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
             vol.Required(CONF_LAT_SW): cv.latitude,
             vol.Required(CONF_LON_NE): cv.longitude,
             vol.Required(CONF_LON_SW): cv.longitude,
-            vol.Required(CONF_MONITORED_CONDITIONS): [vol.In(
-                SUPPORTED_PUBLIC_SENSOR_TYPES)],
             vol.Optional(CONF_MODE, default=DEFAULT_MODE): vol.In(MODE_TYPES),
             vol.Optional(CONF_NAME, default=DEFAULT_NAME_PUBLIC): cv.string
         }
@@ -119,7 +117,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 lat_sw=area[CONF_LAT_SW],
                 lon_sw=area[CONF_LON_SW]
             )
-            for sensor_type in area[CONF_MONITORED_CONDITIONS]:
+            for sensor_type in SUPPORTED_PUBLIC_SENSOR_TYPES:
                 dev.append(NetatmoPublicSensor(
                     area[CONF_NAME],
                     data,
