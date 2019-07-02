@@ -32,64 +32,31 @@ CONF_LANGUAGE = 'language'
 
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=10)
 
-SENSOR_TYPES = {
-    'temperature': {'english': 'Temperature',
-                    'french': 'Température',
-                    'unit': TEMP_CELSIUS},
-    'dewpoint': {'english': 'Dew Point',
-                 'french': 'Point de rosée',
-                 'unit': TEMP_CELSIUS},
-    'wind_chill': {'english': 'Wind Chill',
-                   'french': 'Refroidissement éolien',
-                   'unit': TEMP_CELSIUS},
-    'humidex': {'english': 'Humidex',
-                'french': 'Humidex',
-                'unit': TEMP_CELSIUS},
-    'pressure': {'english': 'Pressure',
-                 'french': 'Pression',
-                 'unit': 'kPa'},
-    'tendency': {'english': 'Tendency',
-                 'french': 'Tendance'},
-    'humidity': {'english': 'Humidity',
-                 'french': 'Humidité',
-                 'unit': '%'},
-    'visibility': {'english': 'Visibility',
-                   'french': 'Visibilité',
-                   'unit': 'km'},
-    'condition': {'english': 'Condition',
-                  'french': 'Condition'},
-    'wind_speed': {'english': 'Wind Speed',
-                   'french': 'Vitesse de vent',
-                   'unit': 'km/h'},
-    'wind_gust': {'english': 'Wind Gust',
-                  'french': 'Rafale de vent',
-                  'unit': 'km/h'},
-    'wind_dir': {'english': 'Wind Direction',
-                 'french': 'Direction de vent'},
-    'high_temp': {'english': 'High Temperature',
-                  'french': 'Haute température',
-                  'unit': TEMP_CELSIUS},
-    'low_temp': {'english': 'Low Temperature',
-                 'french': 'Basse température',
-                 'unit': TEMP_CELSIUS},
-    'pop': {'english': 'Chance of Precip.',
-            'french': 'Probabilité d\'averses',
-            'unit': '%'},
-    'forecast_period': {'english': 'Forecast Period',
-                        'french': 'Période de prévision'},
-    'text_summary': {'english': 'Text Summary',
-                     'french': 'Résumé textuel'},
-    'warnings': {'english': 'Warnings',
-                 'french': 'Alertes'},
-    'watches': {'english': 'Watches',
-                'french': 'Veilles'},
-    'advisories': {'english': 'Advisories',
-                   'french': 'Avis'},
-    'statements': {'english': 'Statements',
-                   'french': 'Bulletins'},
-    'endings': {'english': 'Ended',
-                'french': 'Terminé'}
-}
+SENSOR_TYPES = [
+    'temperature',
+    'dewpoint',
+    'wind_chill',
+    'humidex',
+    'pressure',
+    'tendency',
+    'humidity',
+    'visibility',
+    'condition',
+    'wind_speed',
+    'wind_gust',
+    'wind_dir',
+    'wind_bearing',
+    'forecast_period',
+    'text_summary',
+    'high_temp',
+    'low_temp',
+    'pop',
+    'warnings',
+    'watches',
+    'advisories',
+    'statements',
+    'endings'
+]
 
 
 def validate_station(station):
@@ -104,12 +71,12 @@ def validate_station(station):
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Required(CONF_LANGUAGE, default='english'):
+        vol.In(['english', 'french']),
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_STATION): validate_station,
     vol.Inclusive(CONF_LATITUDE, 'latlon'): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'latlon'): cv.longitude,
-    vol.Optional(CONF_LANGUAGE, default='english'):
-        vol.In(['english', 'french'])
 })
 
 
@@ -131,8 +98,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices([ECSensor(sensor_type,
                           ec_data,
-                          config.get(CONF_NAME),
-                          config.get(CONF_LANGUAGE))
+                          config.get(CONF_NAME))
                  for sensor_type in config[CONF_MONITORED_CONDITIONS]],
                 True)
 
@@ -140,22 +106,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ECSensor(Entity):
     """Implementation of an Environment Canada sensor."""
 
-    def __init__(self, sensor_type, ec_data, platform_name, language):
+    def __init__(self, sensor_type, ec_data, platform_name):
         """Initialize the sensor."""
         self.sensor_type = sensor_type
         self.ec_data = ec_data
         self.platform_name = platform_name
         self._state = None
         self._attr = None
-        self.language = language
+        self._data = None
+        self._name = None
+        self._unit = None
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        name = SENSOR_TYPES[self.sensor_type][self.language]
         if self.platform_name is None:
-            return name
-        return ' '.join([self.platform_name, name])
+            return self._name
+        return ' '.join([self.platform_name, self._name])
 
     @property
     def state(self):
@@ -170,7 +137,7 @@ class ECSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the units of measurement."""
-        return SENSOR_TYPES[self.sensor_type].get('unit')
+        return self._unit
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -178,22 +145,31 @@ class ECSensor(Entity):
         self.ec_data.update()
         self.ec_data.conditions.update(self.ec_data.alerts)
 
-        self._attr = {}
+        conditions = self.ec_data.conditions
+        sensor_data = conditions.get(self.sensor_type)
 
-        sensor_data = self.ec_data.conditions.get(self.sensor_type)
-        if isinstance(sensor_data, list):
+        self._attr = {}
+        self._name = sensor_data.get('label')
+        value = sensor_data.get('value')
+
+        if isinstance(value, list):
             self._state = ' | '.join([str(s.get('title'))
-                                      for s in sensor_data])
+                                      for s in value])
             self._attr.update({
                 ATTR_DETAIL: ' | '.join([str(s.get('detail'))
-                                         for s in sensor_data]),
+                                         for s in value]),
                 ATTR_TIME: ' | '.join([str(s.get('date'))
-                                       for s in sensor_data])
+                                       for s in value])
             })
         else:
-            self._state = sensor_data
+            self._state = value
 
-        timestamp = self.ec_data.conditions.get('timestamp')
+        if sensor_data.get('unit') == 'C':
+            self._unit = TEMP_CELSIUS
+        else:
+            self._unit = sensor_data.get('unit')
+
+        timestamp = self.ec_data.conditions.get('timestamp').get('value')
         if timestamp:
             updated_utc = datetime.datetime.strptime(timestamp, '%Y%m%d%H%M%S')
             updated_local = dt.as_local(updated_utc).isoformat()
@@ -205,7 +181,7 @@ class ECSensor(Entity):
         self._attr.update({
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             ATTR_UPDATED: updated_local,
-            ATTR_LOCATION: self.ec_data.conditions.get('location'),
-            ATTR_STATION: self.ec_data.conditions.get('station'),
+            ATTR_LOCATION: conditions.get('location').get('value'),
+            ATTR_STATION: conditions.get('station').get('value'),
             ATTR_HIDDEN: hidden
         })
