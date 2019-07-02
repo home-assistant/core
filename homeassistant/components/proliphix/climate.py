@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     pdp = proliphix.PDP(host, username, password)
 
-    add_entities([ProliphixThermostat(pdp)])
+    add_entities([ProliphixThermostat(pdp)], True)
 
 
 class ProliphixThermostat(ClimateDevice):
@@ -37,7 +37,6 @@ class ProliphixThermostat(ClimateDevice):
     def __init__(self, pdp):
         """Initialize the thermostat."""
         self._pdp = pdp
-        self._pdp.update()
         self._name = self._pdp.name
 
     @property
@@ -100,6 +99,11 @@ class ProliphixThermostat(ClimateDevice):
             return HVAC_MODE_HEAT
         if state == 6:
             return HVAC_MODE_COOL
+
+    @property
+    def hvac_modes(self):
+        """Return available HVAC modes."""
+        return []
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
