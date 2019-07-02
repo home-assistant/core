@@ -3,7 +3,7 @@ from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
-    HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, HVAC_STATE_OFF, SUPPORT_AUX_HEAT,
+    HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE_HIGH,
     SUPPORT_TARGET_TEMPERATURE_LOW)
@@ -87,7 +87,7 @@ class ElkThermostat(ElkEntity, ClimateDevice):
     @property
     def hvac_modes(self):
         """Return the list of available operation modes."""
-        return [HVAC_STATE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_AUTO, HVAC_MODE_FAN_ONLY]
+        return [HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_AUTO, HVAC_MODE_FAN_ONLY]
 
     @property
     def precision(self):
@@ -131,7 +131,7 @@ class ElkThermostat(ElkEntity, ClimateDevice):
         """Set thermostat operation mode."""
         from elkm1_lib.const import ThermostatFan, ThermostatMode
         settings = {
-            HVAC_STATE_OFF: (ThermostatMode.OFF.value, ThermostatFan.AUTO.value),
+            HVAC_MODE_OFF: (ThermostatMode.OFF.value, ThermostatFan.AUTO.value),
             HVAC_MODE_HEAT: (ThermostatMode.HEAT.value, None),
             HVAC_MODE_COOL: (ThermostatMode.COOL.value, None),
             HVAC_MODE_AUTO: (ThermostatMode.AUTO.value, None),
@@ -177,13 +177,13 @@ class ElkThermostat(ElkEntity, ClimateDevice):
     def _element_changed(self, element, changeset):
         from elkm1_lib.const import ThermostatFan, ThermostatMode
         mode_to_state = {
-            ThermostatMode.OFF.value: HVAC_STATE_OFF,
+            ThermostatMode.OFF.value: HVAC_MODE_OFF,
             ThermostatMode.COOL.value: HVAC_MODE_COOL,
             ThermostatMode.HEAT.value: HVAC_MODE_HEAT,
             ThermostatMode.EMERGENCY_HEAT.value: HVAC_MODE_HEAT,
             ThermostatMode.AUTO.value: HVAC_MODE_AUTO,
         }
         self._state = mode_to_state.get(self._element.mode)
-        if self._state == HVAC_STATE_OFF and \
+        if self._state == HVAC_MODE_OFF and \
                 self._element.fan == ThermostatFan.ON.value:
             self._state = HVAC_MODE_FAN_ONLY

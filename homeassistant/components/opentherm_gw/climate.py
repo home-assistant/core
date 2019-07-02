@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_STATE_OFF, SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES, PRECISION_TENTHS,
     PRECISION_WHOLE, TEMP_CELSIUS)
@@ -35,7 +35,7 @@ class OpenThermGateway(ClimateDevice):
         self.friendly_name = config.get(CONF_NAME)
         self.floor_temp = config.get(CONF_FLOOR_TEMP)
         self.temp_precision = config.get(CONF_PRECISION)
-        self._current_operation = HVAC_STATE_OFF
+        self._current_operation = HVAC_MODE_OFF
         self._current_temperature = None
         self._new_target_temperature = None
         self._target_temperature = None
@@ -60,7 +60,7 @@ class OpenThermGateway(ClimateDevice):
         elif cooling_active:
             self._current_operation = HVAC_MODE_COOL
         else:
-            self._current_operation = HVAC_STATE_OFF
+            self._current_operation = HVAC_MODE_OFF
         self._current_temperature = status.get(self._gw_vars.DATA_ROOM_TEMP)
         temp_upd = status.get(self._gw_vars.DATA_ROOM_SETPOINT)
         if self._target_temperature != temp_upd:

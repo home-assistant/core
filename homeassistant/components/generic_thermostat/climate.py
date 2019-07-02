@@ -19,7 +19,7 @@ from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_AWAY_MODE, ATTR_OPERATION_MODE, HVAC_MODE_AUTO, HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
-    HVAC_STATE_OFF, SUPPORT_AWAY_MODE, HVAC_MODE_OFF,
+    HVAC_MODE_OFF, SUPPORT_AWAY_MODE, HVAC_MODE_OFF,
     SUPPORT_TARGET_TEMPERATURE)
 
 _LOGGER = logging.getLogger(__name__)
@@ -191,7 +191,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
         if self._is_device_active:
             return self.current_operation
         if self._enabled:
-            return HVAC_STATE_OFF
+            return HVAC_MODE_OFF
         return HVAC_MODE_OFF
 
     @property

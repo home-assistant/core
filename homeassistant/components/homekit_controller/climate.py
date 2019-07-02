@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_STATE_OFF,
+    HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF,
 
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_HUMIDITY_HIGH, SUPPORT_TARGET_HUMIDITY_LOW, HVAC_MODE_OFF)
@@ -172,7 +172,7 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
             return HVAC_MODE_OFF
 
         if self._state == HVAC_MODE_OFF and self._current_mode != HVAC_MODE_OFF:
-            return HVAC_STATE_OFF
+            return HVAC_MODE_OFF
         return self._state
 
     @property

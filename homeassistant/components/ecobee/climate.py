@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant.components import ecobee
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    DOMAIN, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_STATE_OFF,
+    DOMAIN, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF,
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE,
     SUPPORT_TARGET_HUMIDITY_LOW, SUPPORT_TARGET_HUMIDITY_HIGH,
@@ -262,7 +262,7 @@ class Thermostat(ClimateDevice):
         status = self.thermostat['equipmentStatus']
         operation = None
         if status == '':
-            operation = HVAC_STATE_OFF
+            operation = HVAC_MODE_OFF
         elif 'Cool' in status:
             operation = HVAC_MODE_COOL
         elif 'auxHeat' in status:
