@@ -56,7 +56,9 @@ class BaseTrackerEntity(Entity):
     @property
     def state_attributes(self):
         """Return the device state attributes."""
-        attr = {}
+        attr = {
+            ATTR_SOURCE_TYPE: self.source_type
+        }
 
         if self.battery_level:
             attr[ATTR_BATTERY_LEVEL] = self.battery_level
@@ -113,9 +115,7 @@ class TrackerEntity(BaseTrackerEntity):
     @property
     def state_attributes(self):
         """Return the device state attributes."""
-        attr = {
-            ATTR_SOURCE_TYPE: self.source_type
-        }
+        attr = {}
         attr.update(super.state_attributes)
         if self.latitude is not None:
             attr[ATTR_LATITUDE] = self.latitude
