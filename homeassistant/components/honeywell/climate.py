@@ -10,7 +10,7 @@ from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     ATTR_FAN_MODE, ATTR_FAN_MODES,
     ATTR_OPERATION_MODE, ATTR_OPERATION_LIST, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_AWAY_MODE, SUPPORT_OPERATION_MODE)
+    SUPPORT_AWAY_MODE)
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_TEMPERATURE, CONF_REGION)

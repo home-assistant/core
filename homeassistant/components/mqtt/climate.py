@@ -136,7 +136,8 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_HOLD_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_MODE_LIST,
-                 default=[HVAC_MODE_AUTO, HVAC_MODE_OFF, HVAC_MODE_COOL, HVAC_MODE_HEAT,
+                 default=[HVAC_MODE_AUTO, HVAC_MODE_OFF, HVAC_MODE_COOL,
+                          HVAC_MODE_HEAT,
                           HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY]): cv.ensure_list,
     vol.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
     vol.Optional(CONF_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
@@ -684,10 +685,6 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         if (self._topic[CONF_TEMP_HIGH_STATE_TOPIC] is not None) or \
            (self._topic[CONF_TEMP_HIGH_COMMAND_TOPIC] is not None):
             support |= SUPPORT_TARGET_TEMPERATURE_HIGH
-
-        if (self._topic[CONF_MODE_COMMAND_TOPIC] is not None) or \
-           (self._topic[CONF_MODE_STATE_TOPIC] is not None):
-            support |= SUPPORT_OPERATION_MODE
 
         if (self._topic[CONF_FAN_MODE_STATE_TOPIC] is not None) or \
            (self._topic[CONF_FAN_MODE_COMMAND_TOPIC] is not None):

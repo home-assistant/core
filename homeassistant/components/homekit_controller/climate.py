@@ -80,8 +80,6 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
         ]
 
     def _setup_heating_cooling_target(self, characteristic):
-        self._features |= SUPPORT_OPERATION_MODE
-
         if 'valid-values' in characteristic:
             valid_values = [
                 val for val in DEFAULT_VALID_MODES

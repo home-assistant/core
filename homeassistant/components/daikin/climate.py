@@ -91,9 +91,7 @@ class DaikinClimate(ClimateDevice):
             ),
         }
 
-        self._supported_features = (SUPPORT_ON_OFF
-                                    | SUPPORT_OPERATION_MODE
-                                    | SUPPORT_TARGET_TEMPERATURE)
+        self._supported_features = SUPPORT_ON_OFF | SUPPORT_TARGET_TEMPERATURE
 
         if self._api.device.support_away_mode:
             self._supported_features |= SUPPORT_AWAY_MODE

@@ -65,11 +65,10 @@ class EphEmberThermostat(ClimateDevice):
     def supported_features(self):
         """Return the list of supported features."""
         if self._hot_water:
-            return SUPPORT_AUX_HEAT | SUPPORT_OPERATION_MODE
+            return SUPPORT_AUX_HEAT
 
         return (SUPPORT_TARGET_TEMPERATURE |
-                SUPPORT_AUX_HEAT |
-                SUPPORT_OPERATION_MODE)
+                SUPPORT_AUX_HEAT)
 
     @property
     def name(self):

@@ -147,8 +147,8 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
     def _determine_features(self):
         from pysmartthings import Capability
 
-        flags = SUPPORT_OPERATION_MODE \
-            | SUPPORT_TARGET_TEMPERATURE \
+        flags = \
+            SUPPORT_TARGET_TEMPERATURE \
             | SUPPORT_TARGET_TEMPERATURE_LOW \
             | SUPPORT_TARGET_TEMPERATURE_HIGH
         if self._device.get_capability(

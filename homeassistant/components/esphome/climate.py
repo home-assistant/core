@@ -101,7 +101,7 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
     @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
-        features = SUPPORT_OPERATION_MODE
+        features = 0
         if self._static_info.supports_two_point_target_temperature:
             features |= (SUPPORT_TARGET_TEMPERATURE_LOW |
                          SUPPORT_TARGET_TEMPERATURE_HIGH)

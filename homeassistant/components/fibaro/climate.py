@@ -129,7 +129,6 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
             if 'setMode' in device.actions or \
                     'setOperatingMode' in device.actions:
                 self._op_mode_device = FibaroDevice(device)
-                self._support_flags |= SUPPORT_OPERATION_MODE
             if 'setFanMode' in device.actions:
                 self._fan_mode_device = FibaroDevice(device)
                 self._support_flags |= SUPPORT_FAN_MODE

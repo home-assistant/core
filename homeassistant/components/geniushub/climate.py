@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO, STATE_ECO, HVAC_MODE_HEAT, STATE_MANUAL,
-    SUPPORT_TARGET_TEMPERATURE,  SUPPORT_ON_OFF,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_ON_OFF,
     HVAC_MODE_OFF)
 from homeassistant.const import (
     ATTR_TEMPERATURE, TEMP_CELSIUS)
@@ -19,8 +19,7 @@ GH_ZONES = ['radiator']
 
 GH_SUPPORT_FLAGS = \
     SUPPORT_TARGET_TEMPERATURE | \
-    SUPPORT_ON_OFF | \
-    SUPPORT_OPERATION_MODE
+    SUPPORT_ON_OFF
 
 GH_MAX_TEMP = 28.0
 GH_MIN_TEMP = 4.0
