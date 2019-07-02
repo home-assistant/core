@@ -35,6 +35,23 @@ async def async_trigger(hass, config, action, automation_info):
         """Listen for state changes and calls action."""
         nonlocal unsub_track_same
 
+        @callback
+        def call_action():
+            """Call action with right context."""
+            hass.async_run_job(action({
+                'trigger': {
+                    'platform': 'template',
+                    'entity_id': entity_id,
+                    'from_state': from_s,
+                    'to_state': to_s,
+                    'for': time_delta if not time_delta else period
+                },
+            }, context=(to_s.context if to_s else None)))
+
+        if not time_delta:
+            call_action()
+            return
+
         variables = {
             'trigger': {
                 'platform': 'template',
@@ -43,16 +60,6 @@ async def async_trigger(hass, config, action, automation_info):
                 'to_state': to_s,
             },
         }
-
-        @callback
-        def call_action():
-            """Call action with right context."""
-            hass.async_run_job(action(
-                variables, context=(to_s.context if to_s else None)))
-
-        if not time_delta:
-            call_action()
-            return
 
         try:
             if isinstance(time_delta, template.Template):
