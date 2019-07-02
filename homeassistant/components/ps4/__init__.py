@@ -63,7 +63,7 @@ PS4_EDIT_MEDIA_SCHEMA = vol.Schema({
 })
 
 PS4_EDIT_CURRENT_MEDIA_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
     vol.Optional(ATTR_MEDIA_TITLE, default=''): str,
     vol.Optional(ATTR_MEDIA_IMAGE_URL, default=DEFAULT_URL): cv.url,
     vol.Optional(ATTR_MEDIA_CONTENT_TYPE, default=MEDIA_TYPE_GAME): vol.In(
@@ -261,6 +261,10 @@ async def async_service_handle(hass: HomeAssistantType):
                 games[media_content_id] = data
                 save_games(hass, games)
                 _LOGGER.debug("Setting Lock to %s", data[ATTR_LOCKED])
+            else:
+                raise HomeAssistantError(
+                    "Media ID: {} is not in source list".format(
+                        media_content_id))
         else:
             raise HomeAssistantError(
                 "Entity: {} has no current media data".format(entity_id))
@@ -284,8 +288,11 @@ async def async_service_handle(hass: HomeAssistantType):
                 games[media_content_id] = data
                 save_games(hass, games)
                 _LOGGER.debug("Setting Lock to %s", data[ATTR_LOCKED])
-
                 _refresh_entity_media(hass, media_content_id)
+            else:
+                raise HomeAssistantError(
+                    "Media ID: {} is not in source list".format(
+                        media_content_id))
         else:
             raise HomeAssistantError(
                 "Entity: {} has no current media data".format(entity_id))
@@ -367,44 +374,51 @@ async def async_service_handle(hass: HomeAssistantType):
         for device in hass.data[PS4_DATA].devices:
             if device.entity_id == entity_id:
                 entity = device
+                media_id = entity.media_content_id
+                if media_id is not None:
+                    media_content_id = media_id
 
-        media_content_id = entity.media_content_id
-        data = games.get(media_content_id)
+        if media_content_id is not None:
+            data = games.get(media_content_id)
+            if data is not None:
 
-        if data is not None:
-            media_title = None if call.data[ATTR_MEDIA_TITLE] == ''\
-                else call.data[ATTR_MEDIA_TITLE]
+                media_title = None if call.data[ATTR_MEDIA_TITLE] == ''\
+                    else call.data[ATTR_MEDIA_TITLE]
 
-            media_url = None\
-                if call.data[ATTR_MEDIA_IMAGE_URL] == DEFAULT_URL\
-                else call.data[ATTR_MEDIA_IMAGE_URL]
+                media_url = None\
+                    if call.data[ATTR_MEDIA_IMAGE_URL] == DEFAULT_URL\
+                    else call.data[ATTR_MEDIA_IMAGE_URL]
 
-            media_type = MEDIA_TYPE_GAME\
-                if call.data[ATTR_MEDIA_CONTENT_TYPE] == ''\
-                else call.data[ATTR_MEDIA_CONTENT_TYPE]
+                media_type = MEDIA_TYPE_GAME\
+                    if call.data[ATTR_MEDIA_CONTENT_TYPE] == ''\
+                    else call.data[ATTR_MEDIA_CONTENT_TYPE]
 
-            if media_title is None:
-                stored_title = data.get(ATTR_MEDIA_TITLE)
-                if stored_title is not None:
-                    media_title = stored_title
+                if media_title is None:
+                    stored_title = data.get(ATTR_MEDIA_TITLE)
+                    if stored_title is not None:
+                        media_title = stored_title
 
-            if media_url is None:
-                stored_url = data.get(ATTR_MEDIA_IMAGE_URL)
-                if stored_url is not None:
-                    media_url = stored_url
+                if media_url is None:
+                    stored_url = data.get(ATTR_MEDIA_IMAGE_URL)
+                    if stored_url is not None:
+                        media_url = stored_url
 
-            if media_type is None:
-                stored_type = data.get(ATTR_MEDIA_CONTENT_TYPE)
-                if stored_type is not None:
-                    media_type = stored_type
+                if media_type is None:
+                    stored_type = data.get(ATTR_MEDIA_CONTENT_TYPE)
+                    if stored_type is not None:
+                        media_type = stored_type
 
-            _set_media(hass, games, media_content_id, media_title,
-                       media_url, media_type)
-            _refresh_entity_media(hass, media_content_id)
+                _set_media(hass, games, media_content_id, media_title,
+                           media_url, media_type)
+                _refresh_entity_media(hass, media_content_id)
+
+            else:
+                raise HomeAssistantError(
+                    "Media ID: {} is not in source list".format(
+                        media_content_id))
         else:
             raise HomeAssistantError(
-                "Media ID: {} is not in source list".format(
-                    media_content_id))
+                "Entity: {} has no current media data".format(entity_id))
 
     hass.services.async_register(
         DOMAIN, SERVICE_COMMAND, async_service_command,
