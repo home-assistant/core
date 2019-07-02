@@ -11,7 +11,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE,
     SUPPORT_TARGET_HUMIDITY_LOW, SUPPORT_TARGET_HUMIDITY_HIGH,
     SUPPORT_AUX_HEAT, SUPPORT_TARGET_TEMPERATURE_RANGE, SUPPORT_FAN_MODE,
-    HVAC_MODE_OFF)
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv

@@ -6,7 +6,7 @@ from typing import Iterable, Optional, Sequence
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN, ClimateDevice)
 from homeassistant.components.climate.const import (
-    ATTR_OPERATION_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
+    ATTR_HVAC_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_DRY, STATE_ECO, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT,
     SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE_RANGE, HVAC_MODE_OFF)
@@ -174,7 +174,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
     async def async_set_temperature(self, **kwargs):
         """Set new operation mode and target temperatures."""
         # Operation state
-        operation_state = kwargs.get(ATTR_OPERATION_MODE)
+        operation_state = kwargs.get(ATTR_HVAC_MODE)
         if operation_state:
             mode = STATE_TO_MODE[operation_state]
             await self._device.set_thermostat_mode(mode, set_status=True)
@@ -331,7 +331,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
         """Set new target temperature."""
         tasks = []
         # operation mode
-        operation_mode = kwargs.get(ATTR_OPERATION_MODE)
+        operation_mode = kwargs.get(ATTR_HVAC_MODE)
         if operation_mode:
             tasks.append(self.async_set_operation_mode(operation_mode))
         # temperature
