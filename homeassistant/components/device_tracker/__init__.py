@@ -41,7 +41,6 @@ from .const import (
     SOURCE_TYPE_BLUETOOTH,
     SOURCE_TYPE_GPS,
     SOURCE_TYPE_ROUTER,
-    SOURCE_TYPE_ZIGBEE,
 )
 
 ENTITY_ID_ALL_DEVICES = group.ENTITY_ID_FORMAT.format('all_devices')
@@ -49,8 +48,7 @@ ENTITY_ID_ALL_DEVICES = group.ENTITY_ID_FORMAT.format('all_devices')
 SERVICE_SEE = 'see'
 
 SOURCE_TYPES = (SOURCE_TYPE_GPS, SOURCE_TYPE_ROUTER,
-                SOURCE_TYPE_BLUETOOTH, SOURCE_TYPE_BLUETOOTH_LE,
-                SOURCE_TYPE_ZIGBEE)
+                SOURCE_TYPE_BLUETOOTH, SOURCE_TYPE_BLUETOOTH_LE)
 
 NEW_DEVICE_DEFAULTS_SCHEMA = vol.Any(None, vol.Schema({
     vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,

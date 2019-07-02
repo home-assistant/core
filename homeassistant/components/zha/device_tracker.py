@@ -3,7 +3,7 @@ import logging
 import numbers
 import time
 from homeassistant.components.device_tracker import (
-    SOURCE_TYPE_ZIGBEE, DOMAIN
+    SOURCE_TYPE_ROUTER, DOMAIN
 )
 from homeassistant.components.device_tracker.config_entry import (
     ScannerEntity
@@ -90,7 +90,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
     @property
     def source_type(self):
         """Return the source type, eg gps or router, of the device."""
-        return SOURCE_TYPE_ZIGBEE
+        return SOURCE_TYPE_ROUTER
 
     @callback
     def async_attribute_updated(self, attribute, value):
