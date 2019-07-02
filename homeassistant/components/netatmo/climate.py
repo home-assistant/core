@@ -239,13 +239,13 @@ class NetatmoThermostat(ClimateDevice):
         if not self.is_on:
             self.turn_on()
         if hvac_mode in [DICT_NETATMO_TO_HA[STATE_NETATMO_MAX],
-                              DICT_NETATMO_TO_HA[STATE_NETATMO_OFF]]:
+                         DICT_NETATMO_TO_HA[STATE_NETATMO_OFF]]:
             self._data.homestatus.setroomThermpoint(
                 self._data.homedata.gethomeId(self._data.home),
                 self._room_id, DICT_HA_TO_NETATMO[hvac_mode])
         elif hvac_mode in [DICT_NETATMO_TO_HA[STATE_NETATMO_HG],
-                                DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
-                                DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY]]:
+                           DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
+                           DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY]]:
             self._data.homestatus.setThermmode(
                 self._data.homedata.gethomeId(self._data.home),
                 DICT_HA_TO_NETATMO[hvac_mode])
