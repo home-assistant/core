@@ -7,7 +7,7 @@ from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     ATTR_OPERATION_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, SUPPORT_FAN_MODE,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_HUMIDITY, SUPPORT_AWAY_MODE,
+    SUPPORT_TARGET_HUMIDITY, SUPPORT_AWAY_MODE,
     SUPPORT_TARGET_HUMIDITY_HIGH, SUPPORT_TARGET_HUMIDITY_LOW,
     SUPPORT_HOLD_MODE, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
@@ -86,7 +86,7 @@ class VenstarThermostat(ClimateDevice):
     def supported_features(self):
         """Return the list of supported features."""
         features = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE |
-                    SUPPORT_OPERATION_MODE | SUPPORT_AWAY_MODE |
+                    SUPPORT_AWAY_MODE |
                     SUPPORT_HOLD_MODE)
 
         if self._client.mode == self._client.MODE_AUTO:

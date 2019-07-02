@@ -4,7 +4,7 @@ import socket
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_AUTO, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import DATA_KEY
@@ -15,7 +15,7 @@ STATE_MANUAL = 'manual'
 STATE_BOOST = 'boost'
 STATE_VACATION = 'vacation'
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

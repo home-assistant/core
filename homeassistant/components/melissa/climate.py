@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT,
-    SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
+    SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
     SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_OFF)
 from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
 from homeassistant.const import (

@@ -7,14 +7,14 @@ import voluptuous as vol
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT, SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
+    HVAC_MODE_HEAT, SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_HOST, CONF_PORT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE |
-                 SUPPORT_OPERATION_MODE | SUPPORT_ON_OFF)
+                 SUPPORT_ON_OFF)
 
 DEFAULT_PORT = 10102
 

@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT, STATE_MANUAL, STATE_ECO,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_AWAY_MODE,
     SUPPORT_ON_OFF, HVAC_MODE_OFF)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_MAC, CONF_DEVICES, STATE_ON,
@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Schema({cv.string: DEVICE_SCHEMA}),
 })
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
                  SUPPORT_AWAY_MODE | SUPPORT_ON_OFF)
 
 

@@ -4,7 +4,7 @@ import voluptuous as vol
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_DRY, STATE_ECO, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, STATE_IDLE, STATE_MANUAL,
-    SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
+    SUPPORT_ON_OFF,  SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv

@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    DOMAIN, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
+    DOMAIN, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_FAN_MODE, SUPPORT_SWING_MODE,
     SUPPORT_ON_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_FAN_ONLY, HVAC_MODE_DRY,
     HVAC_MODE_AUTO, HVAC_MODE_OFF)
@@ -45,7 +45,6 @@ _INITIAL_FETCH_FIELDS = 'id,' + _FETCH_FIELDS
 
 FIELD_TO_FLAG = {
     'fanLevel':  SUPPORT_FAN_MODE,
-    'mode': SUPPORT_OPERATION_MODE,
     'swing': SUPPORT_SWING_MODE,
     'targetTemperature': SUPPORT_TARGET_TEMPERATURE,
     'on': SUPPORT_ON_OFF,

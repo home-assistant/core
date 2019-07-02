@@ -8,7 +8,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.climate.const import (
     ATTR_OPERATION_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_DRY, STATE_ECO, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT,
-    SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
+    SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE_HIGH,
     SUPPORT_TARGET_TEMPERATURE_LOW, HVAC_MODE_OFF)
 from homeassistant.const import (
@@ -429,7 +429,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
     @property
     def supported_features(self):
         """Return the supported features."""
-        return SUPPORT_OPERATION_MODE | SUPPORT_TARGET_TEMPERATURE \
+        return SUPPORT_TARGET_TEMPERATURE \
             | SUPPORT_FAN_MODE | SUPPORT_ON_OFF
 
     @property

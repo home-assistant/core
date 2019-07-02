@@ -5,7 +5,7 @@ import logging
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_COOL, HVAC_MODE_HEAT, STATE_IDLE, SUPPORT_FAN_MODE,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
+    SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import DOMAIN as SPIDER_DOMAIN
@@ -58,9 +58,6 @@ class SpiderThermostat(ClimateDevice):
     def supported_features(self):
         """Return the list of supported features."""
         supports = SUPPORT_TARGET_TEMPERATURE
-
-        if self.thermostat.has_operation_mode:
-            supports |= SUPPORT_OPERATION_MODE
 
         if self.thermostat.has_fan_mode:
             supports |= SUPPORT_FAN_MODE

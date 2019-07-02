@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     DOMAIN, HVAC_MODE_AUTO, HVAC_MODE_HEAT, STATE_IDLE, SUPPORT_HOLD_MODE,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
+    SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
@@ -38,8 +38,7 @@ RESUME_PROGRAM_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
 })
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_HOLD_MODE |
-                 SUPPORT_OPERATION_MODE)
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_HOLD_MODE)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

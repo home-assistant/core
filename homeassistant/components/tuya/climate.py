@@ -2,7 +2,7 @@
 from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO, HVAC_MODE_COOL, STATE_ECO, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT,
-    SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
+    SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
 from homeassistant.const import (

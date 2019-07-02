@@ -7,7 +7,7 @@ from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     ATTR_OPERATION_MODE, HVAC_MODE_COOL, HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
+    SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (ATTR_TEMPERATURE, CONF_HOST, CONF_PORT,
                                  EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
@@ -129,7 +129,7 @@ class ZhongHongClimate(ClimateDevice):
     def supported_features(self):
         """Return the list of supported features."""
         return (SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
-                | SUPPORT_OPERATION_MODE | SUPPORT_ON_OFF)
+                | SUPPORT_ON_OFF)
 
     @property
     def temperature_unit(self):

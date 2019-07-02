@@ -7,7 +7,7 @@ from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, HVAC_MODE_AUTO, HVAC_MODE_COOL,
     STATE_ECO, HVAC_MODE_HEAT, SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
     HVAC_MODE_OFF)
 from homeassistant.const import (
@@ -58,7 +58,7 @@ class NestThermostat(ClimateDevice):
 
         # Set the default supported features
         self._support_flags = (SUPPORT_TARGET_TEMPERATURE |
-                               SUPPORT_OPERATION_MODE | SUPPORT_AWAY_MODE)
+                               SUPPORT_AWAY_MODE)
 
         # Not all nest devices support cooling and heating remove unused
         self._operation_list = [HVAC_MODE_OFF]

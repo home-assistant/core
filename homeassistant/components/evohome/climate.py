@@ -9,7 +9,7 @@ import evohomeclient2
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO, STATE_ECO, STATE_MANUAL, SUPPORT_AWAY_MODE, SUPPORT_ON_OFF,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_OFF)
+     SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_OFF)
 from homeassistant.const import (
     CONF_SCAN_INTERVAL)
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -124,7 +124,7 @@ class EvoZone(EvoDevice, ClimateDevice):
 
         self._operation_list = ZONE_OP_LIST
         self._supported_features = \
-            SUPPORT_OPERATION_MODE | \
+            \
             SUPPORT_TARGET_TEMPERATURE | \
             SUPPORT_ON_OFF
 
@@ -303,7 +303,7 @@ class EvoController(EvoDevice, ClimateDevice):
 
         self._operation_list = TCS_OP_LIST
         self._supported_features = \
-            SUPPORT_OPERATION_MODE | \
+            \
             SUPPORT_AWAY_MODE
 
     @property

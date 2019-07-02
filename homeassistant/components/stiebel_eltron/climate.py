@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO, STATE_ECO, STATE_MANUAL, SUPPORT_OPERATION_MODE,
+    HVAC_MODE_AUTO, STATE_ECO, STATE_MANUAL,
     SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_OFF)
 from homeassistant.const import (
     ATTR_TEMPERATURE, STATE_ON, TEMP_CELSIUS)

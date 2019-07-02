@@ -5,7 +5,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_DRY,
     STATE_ECO, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT,
     STATE_MANUAL, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_OPERATION_MODE, SUPPORT_FAN_MODE,
+    SUPPORT_FAN_MODE,
     HVAC_MODE_OFF)
 
 from homeassistant.components.climate import (
