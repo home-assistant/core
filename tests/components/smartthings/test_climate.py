@@ -216,8 +216,7 @@ async def test_buggy_thermostat_entity_state(hass, buggy_thermostat):
     state = hass.states.get('climate.buggy_thermostat')
     assert state.state == STATE_UNKNOWN
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == \
-        SUPPORT_TARGET_TEMPERATURE_HIGH | \
-        SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_TARGET_TEMPERATURE
+        SUPPORT_TARGET_TEMPERATURE_RANGE | SUPPORT_TARGET_TEMPERATURE
     assert ATTR_OPERATION_LIST not in state.attributes
     assert state.attributes[ATTR_TEMPERATURE] is None
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.1  # celsius

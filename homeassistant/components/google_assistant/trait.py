@@ -538,13 +538,12 @@ class TemperatureSettingTrait(_Trait):
     # We do not support "on" as we are unable to know how to restore
     # the last mode.
     hass_to_google = {
-        climate.STATE_HEAT: 'heat',
-        climate.STATE_COOL: 'cool',
-        STATE_OFF: 'off',
-        climate.STATE_AUTO: 'heatcool',
-        climate.STATE_FAN_ONLY: 'fan-only',
-        climate.STATE_DRY: 'dry',
-        climate.STATE_ECO: 'eco'
+        climate.HVAC_MODE_HEAT: 'heat',
+        climate.HVAC_MODE_COOL: 'cool',
+        climate.HVAC_MODE_OFF: 'off',
+        climate.HVAC_MODE_HEAT_COOL: 'heatcool',
+        climate.HVAC_MODE_FAN_ONLY: 'fan-only',
+        climate.HVAC_MODE_DRY: 'dry',
     }
     google_to_hass = {value: key for key, value in hass_to_google.items()}
 
@@ -552,7 +551,7 @@ class TemperatureSettingTrait(_Trait):
     def supported(domain, features, device_class):
         """Test if state is supported."""
         if domain == climate.DOMAIN:
-            return features & climate.SUPPORT_OPERATION_MODE
+            return True
 
         return (domain == sensor.DOMAIN
                 and device_class == sensor.DEVICE_CLASS_TEMPERATURE)
@@ -571,6 +570,7 @@ class TemperatureSettingTrait(_Trait):
                 response["queryOnlyTemperatureSetting"] = True
 
         elif domain == climate.DOMAIN:
+            # TODO how do want to map eco preset to thermostat mode?
             modes = []
             supported = attrs.get(ATTR_SUPPORTED_FEATURES)
 
