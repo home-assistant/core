@@ -8,7 +8,7 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, HVAC_MODE_AUTO, HVAC_MODE_COOL,
     STATE_ECO, HVAC_MODE_HEAT, SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
     HVAC_MODE_OFF)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_SCAN_INTERVAL, STATE_ON, TEMP_CELSIUS,
@@ -73,8 +73,7 @@ class NestThermostat(ClimateDevice):
         if self.device.can_heat and self.device.can_cool:
             self._operation_list.append(HVAC_MODE_AUTO)
             self._support_flags = (self._support_flags |
-                                   SUPPORT_TARGET_TEMPERATURE_HIGH |
-                                   SUPPORT_TARGET_TEMPERATURE_LOW)
+                                   SUPPORT_TARGET_TEMPERATURE_RANGE)
 
         self._operation_list.append(STATE_ECO)
 

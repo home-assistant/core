@@ -5,7 +5,7 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, DOMAIN, HVAC_MODE_AUTO,
     HVAC_MODE_COOL, HVAC_MODE_HEAT, SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
     HVAC_MODE_OFF)
 from homeassistant.const import (
     ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT)
@@ -48,8 +48,7 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateDevice):
         if (set_req.V_HVAC_SETPOINT_COOL in self._values and
                 set_req.V_HVAC_SETPOINT_HEAT in self._values):
             features = (
-                features | SUPPORT_TARGET_TEMPERATURE_HIGH |
-                SUPPORT_TARGET_TEMPERATURE_LOW)
+                features | SUPPORT_TARGET_TEMPERATURE_RANGE)
         else:
             features = features | SUPPORT_TARGET_TEMPERATURE
         return features

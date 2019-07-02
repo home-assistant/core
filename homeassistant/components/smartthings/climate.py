@@ -9,8 +9,7 @@ from homeassistant.components.climate.const import (
     ATTR_OPERATION_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_DRY, STATE_ECO, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT,
     SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE_HIGH,
-    SUPPORT_TARGET_TEMPERATURE_LOW, HVAC_MODE_OFF)
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE_RANGE, HVAC_MODE_OFF)
 from homeassistant.const import (
     ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
@@ -149,8 +148,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
 
         flags = \
             SUPPORT_TARGET_TEMPERATURE \
-            | SUPPORT_TARGET_TEMPERATURE_LOW \
-            | SUPPORT_TARGET_TEMPERATURE_HIGH
+            | SUPPORT_TARGET_TEMPERATURE_RANGE
         if self._device.get_capability(
                 Capability.thermostat_fan_mode, Capability.thermostat):
             flags |= SUPPORT_FAN_MODE

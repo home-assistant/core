@@ -10,7 +10,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_HUMIDITY, SUPPORT_AWAY_MODE,
     SUPPORT_TARGET_HUMIDITY_HIGH, SUPPORT_TARGET_HUMIDITY_LOW,
     SUPPORT_HOLD_MODE, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
     HVAC_MODE_OFF)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_TIMEOUT,
@@ -90,8 +90,7 @@ class VenstarThermostat(ClimateDevice):
                     SUPPORT_HOLD_MODE)
 
         if self._client.mode == self._client.MODE_AUTO:
-            features |= (SUPPORT_TARGET_TEMPERATURE_HIGH |
-                         SUPPORT_TARGET_TEMPERATURE_LOW)
+            features |= (SUPPORT_TARGET_TEMPERATURE_RANGE)
 
         if (self._humidifier and
                 hasattr(self._client, 'hum_active')):

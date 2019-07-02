@@ -5,8 +5,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
     HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE_HIGH,
-    SUPPORT_TARGET_TEMPERATURE_LOW)
+    SUPPORT_TARGET_TEMPERATURE_RANGE)
 from homeassistant.const import PRECISION_WHOLE, STATE_ON
 
 from . import DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities
@@ -35,8 +34,7 @@ class ElkThermostat(ElkEntity, ClimateDevice):
     def supported_features(self):
         """Return the list of supported features."""
         return (SUPPORT_FAN_MODE | SUPPORT_AUX_HEAT
-                | SUPPORT_TARGET_TEMPERATURE_HIGH
-                | SUPPORT_TARGET_TEMPERATURE_LOW)
+                | SUPPORT_TARGET_TEMPERATURE_RANGE)
 
     @property
     def temperature_unit(self):

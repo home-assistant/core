@@ -12,8 +12,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE,
     SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE,
     ATTR_TARGET_TEMP_LOW,
-    ATTR_TARGET_TEMP_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
-    SUPPORT_TARGET_TEMPERATURE_HIGH, HVAC_MODE_OFF)
+    ATTR_TARGET_TEMP_HIGH, SUPPORT_TARGET_TEMPERATURE_RANGE, HVAC_MODE_OFF)
 from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_DEVICE, CONF_NAME, CONF_VALUE_TEMPLATE,
@@ -680,11 +679,11 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
         if (self._topic[CONF_TEMP_LOW_STATE_TOPIC] is not None) or \
            (self._topic[CONF_TEMP_LOW_COMMAND_TOPIC] is not None):
-            support |= SUPPORT_TARGET_TEMPERATURE_LOW
+            support |= SUPPORT_TARGET_TEMPERATURE_RANGE
 
         if (self._topic[CONF_TEMP_HIGH_STATE_TOPIC] is not None) or \
            (self._topic[CONF_TEMP_HIGH_COMMAND_TOPIC] is not None):
-            support |= SUPPORT_TARGET_TEMPERATURE_HIGH
+            support |= SUPPORT_TARGET_TEMPERATURE_RANGE
 
         if (self._topic[CONF_FAN_MODE_STATE_TOPIC] is not None) or \
            (self._topic[CONF_FAN_MODE_COMMAND_TOPIC] is not None):

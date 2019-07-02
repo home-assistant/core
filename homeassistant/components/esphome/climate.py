@@ -7,7 +7,7 @@ from homeassistant.components.climate.const import (
     ATTR_OPERATION_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, SUPPORT_AWAY_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
     HVAC_MODE_OFF)
 from homeassistant.const import (
     ATTR_TEMPERATURE, PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE,
@@ -103,8 +103,7 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
         """Return the list of supported features."""
         features = 0
         if self._static_info.supports_two_point_target_temperature:
-            features |= (SUPPORT_TARGET_TEMPERATURE_LOW |
-                         SUPPORT_TARGET_TEMPERATURE_HIGH)
+            features |= (SUPPORT_TARGET_TEMPERATURE_RANGE)
         else:
             features |= SUPPORT_TARGET_TEMPERATURE
         if self._static_info.supports_away:
