@@ -8,7 +8,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_OFF)
 from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
 from homeassistant.const import (
-    ATTR_TEMPERATURE, PRECISION_WHOLE, STATE_IDLE, STATE_ON,
+    ATTR_TEMPERATURE, PRECISION_WHOLE, HVAC_STATE_OFF, STATE_ON,
     TEMP_CELSIUS)
 
 from . import DATA_MELISSA
@@ -65,7 +65,7 @@ class MelissaClimate(ClimateDevice):
         """Return current state."""
         if self._cur_settings is not None:
             return self._cur_settings[self._api.STATE] in (
-                self._api.STATE_ON, self._api.STATE_IDLE)
+                self._api.STATE_ON, self._api.HVAC_STATE_OFF)
         return None
 
     @property
@@ -195,8 +195,8 @@ class MelissaClimate(ClimateDevice):
             return STATE_ON
         if state == self._api.HVAC_MODE_OFF:
             return HVAC_MODE_OFF
-        if state == self._api.STATE_IDLE:
-            return STATE_IDLE
+        if state == self._api.HVAC_STATE_OFF:
+            return HVAC_STATE_OFF
         return None
 
     def melissa_op_to_hass(self, mode):

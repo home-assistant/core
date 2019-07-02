@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, STATE_IDLE,
+    HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_STATE_OFF,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_FAN_MODE, SUPPORT_AWAY_MODE,
     HVAC_MODE_OFF)
@@ -46,7 +46,7 @@ FAN_MODE_TO_CODE = {v: k for k, v in CODE_TO_FAN_MODE.items()}
 
 # Active thermostat state (is it heating or cooling?).  In the future
 # this should probably made into heat and cool binary sensors.
-CODE_TO_TEMP_STATE = {0: STATE_IDLE, 1: HVAC_MODE_HEAT, 2: HVAC_MODE_COOL}
+CODE_TO_TEMP_STATE = {0: HVAC_STATE_OFF, 1: HVAC_MODE_HEAT, 2: HVAC_MODE_COOL}
 
 # Active fan state.  This is if the fan is actually on or not.  In the
 # future this should probably made into a binary sensor for the fan.
@@ -117,7 +117,7 @@ class RadioThermostat(ClimateDevice):
         self.device = device
         self._target_temperature = None
         self._current_temperature = None
-        self._current_operation = STATE_IDLE
+        self._current_operation = HVAC_STATE_OFF
         self._name = None
         self._fmode = None
         self._fstate = None
@@ -217,7 +217,7 @@ class RadioThermostat(ClimateDevice):
     @property
     def is_on(self):
         """Return true if on."""
-        return self._tstate != STATE_IDLE
+        return self._tstate != HVAC_STATE_OFF
 
     def update(self):
         """Update and validate the data from the thermostat."""
@@ -266,7 +266,7 @@ class RadioThermostat(ClimateDevice):
             elif self._tstate == HVAC_MODE_HEAT:
                 self._target_temperature = data['t_heat']
         else:
-            self._current_operation = STATE_IDLE
+            self._current_operation = HVAC_STATE_OFF
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
