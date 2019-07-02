@@ -181,11 +181,11 @@ class MaxCubeClimate(ClimateDevice):
     def map_mode_max_hass(mode):
         """Map MAX! Operation Modes to Home Assistant Operation Modes."""
         if mode == MAX_DEVICE_MODE_MANUAL:
-            operation_mode = STATE_MANUAL
+            operation_mode = PRESET_MANUAL
         elif mode == MAX_DEVICE_MODE_VACATION:
-            operation_mode = STATE_VACATION
+            operation_mode = PRESET_VACATION
         elif mode == MAX_DEVICE_MODE_BOOST:
-            operation_mode = STATE_BOOST
+            operation_mode = PRESET_BOOST
         else:
             operation_mode = None
 
