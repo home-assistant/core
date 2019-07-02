@@ -36,8 +36,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                                     device_trackers.values())
         del hass.data[DATA_ZHA][DOMAIN]
 
-    return True
-
 
 async def _async_setup_entities(hass, config_entry, async_add_entities,
                                 discovery_infos):
