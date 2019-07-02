@@ -126,7 +126,7 @@ class TrackerEntity(BaseTrackerEntity):
 
 
 class ScannerEntity(BaseTrackerEntity):
-    """Represent a tracked device that is on a scaned network."""
+    """Represent a tracked device that is on a scanned network."""
 
     @property
     def state(self):
