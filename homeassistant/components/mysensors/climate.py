@@ -41,7 +41,7 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        features = SUPPORT_OPERATION_MODE
+        features = 0
         set_req = self.gateway.const.SetReq
         if set_req.V_HVAC_SPEED in self._values:
             features = features | SUPPORT_FAN_MODE

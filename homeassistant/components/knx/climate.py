@@ -170,8 +170,6 @@ class KNXClimate(ClimateDevice):
     def supported_features(self):
         """Return the list of supported features."""
         support = SUPPORT_TARGET_TEMPERATURE
-        if self.device.mode.supports_operation_mode:
-            support |= SUPPORT_OPERATION_MODE
         if self.device.supports_on_off:
             support |= SUPPORT_ON_OFF
         return support

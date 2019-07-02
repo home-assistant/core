@@ -13,7 +13,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.climate.const import (
     DOMAIN as CLIMATE_DOMAIN,
     SUPPORT_AUX_HEAT, SUPPORT_AWAY_MODE,
-    SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE, SUPPORT_OPERATION_MODE,
+    SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE,
     SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE, STATE_AUTO,
     STATE_COOL, STATE_HEAT, STATE_DRY, STATE_FAN_ONLY,
     SUPPORT_TARGET_TEMPERATURE_LOW, SUPPORT_TARGET_TEMPERATURE_HIGH)
@@ -61,7 +61,7 @@ async def test_supported_features(hass, mqtt_mock):
     assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
 
     state = hass.states.get(ENTITY_CLIMATE)
-    support = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+    support = (SUPPORT_TARGET_TEMPERATURE |
                SUPPORT_SWING_MODE | SUPPORT_FAN_MODE | SUPPORT_AWAY_MODE |
                SUPPORT_HOLD_MODE | SUPPORT_AUX_HEAT |
                SUPPORT_TARGET_TEMPERATURE_LOW |
