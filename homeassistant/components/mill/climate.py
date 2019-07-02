@@ -7,10 +7,9 @@ import voluptuous as vol
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
     DOMAIN, HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE)
+    SUPPORT_TARGET_TEMPERATURE, FAN_ON)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_PASSWORD, CONF_USERNAME, STATE_OFF, STATE_ON,
-    TEMP_CELSIUS)
+    ATTR_TEMPERATURE, CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -143,7 +142,7 @@ class MillHeater(ClimateDevice):
     @property
     def fan_modes(self):
         """List of available fan modes."""
-        return [STATE_ON, STATE_OFF]
+        return [FAN_ON, HVAC_MODE_OFF]
 
     @property
     def min_temp(self):
@@ -185,7 +184,7 @@ class MillHeater(ClimateDevice):
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
-        fan_status = 1 if fan_mode == STATE_ON else 0
+        fan_status = 1 if fan_mode == FAN_ON else 0
         await self._conn.heater_control(
             self._heater.device_id, fan_status=fan_status)
 
