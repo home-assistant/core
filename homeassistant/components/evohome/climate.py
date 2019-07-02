@@ -9,9 +9,9 @@ import evohomeclient2
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO, STATE_ECO, STATE_MANUAL, SUPPORT_AWAY_MODE, SUPPORT_ON_OFF,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_OFF)
 from homeassistant.const import (
-    CONF_SCAN_INTERVAL, HVAC_MODE_OFF,)
+    CONF_SCAN_INTERVAL)
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from . import (

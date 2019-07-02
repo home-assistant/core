@@ -13,10 +13,10 @@ from homeassistant.components.climate.const import (
     SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
-    SUPPORT_TARGET_TEMPERATURE_HIGH)
+    SUPPORT_TARGET_TEMPERATURE_HIGH, HVAC_MODE_OFF)
 from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_DEVICE, CONF_NAME, CONF_VALUE_TEMPLATE, HVAC_MODE_OFF,
+    ATTR_TEMPERATURE, CONF_DEVICE, CONF_NAME, CONF_VALUE_TEMPLATE,
     STATE_ON)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv

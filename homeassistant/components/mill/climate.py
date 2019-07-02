@@ -7,9 +7,9 @@ import voluptuous as vol
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
     DOMAIN, HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE)
+    SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_OFF)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_PASSWORD, CONF_USERNAME, HVAC_MODE_OFF, STATE_ON,
+    ATTR_TEMPERATURE, CONF_PASSWORD, CONF_USERNAME, STATE_ON,
     TEMP_CELSIUS)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession

@@ -5,10 +5,10 @@ from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT,
     SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE)
+    SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_OFF)
 from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
 from homeassistant.const import (
-    ATTR_TEMPERATURE, PRECISION_WHOLE, STATE_IDLE, HVAC_MODE_OFF, STATE_ON,
+    ATTR_TEMPERATURE, PRECISION_WHOLE, STATE_IDLE, STATE_ON,
     TEMP_CELSIUS)
 
 from . import DATA_MELISSA

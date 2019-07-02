@@ -12,10 +12,10 @@ from homeassistant.components.climate.const import (
     DOMAIN, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
     SUPPORT_FAN_MODE, SUPPORT_SWING_MODE,
     SUPPORT_ON_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_FAN_ONLY, HVAC_MODE_DRY,
-    HVAC_MODE_AUTO)
+    HVAC_MODE_AUTO, HVAC_MODE_OFF)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_STATE, ATTR_TEMPERATURE, CONF_API_KEY, CONF_ID,
-    STATE_ON, HVAC_MODE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    STATE_ON, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession

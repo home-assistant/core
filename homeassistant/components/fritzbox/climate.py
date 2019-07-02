@@ -6,9 +6,9 @@ import requests
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_OPERATION_MODE, STATE_ECO, HVAC_MODE_HEAT, STATE_MANUAL,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_OFF)
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, PRECISION_HALVES, HVAC_MODE_OFF,
+    ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, PRECISION_HALVES,
     STATE_ON, TEMP_CELSIUS)
 
 from . import (

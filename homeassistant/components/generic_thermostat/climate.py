@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES,
     PRECISION_TENTHS, PRECISION_WHOLE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    HVAC_MODE_OFF, STATE_ON, STATE_UNKNOWN)
+    STATE_ON, STATE_UNKNOWN)
 from homeassistant.core import DOMAIN as HA_DOMAIN, callback
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
@@ -17,8 +17,9 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_AWAY_MODE, ATTR_OPERATION_MODE, HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT,
-    STATE_IDLE, SUPPORT_AWAY_MODE, SUPPORT_OPERATION_MODE,
+    ATTR_AWAY_MODE, ATTR_OPERATION_MODE, HVAC_MODE_AUTO, HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    STATE_IDLE, SUPPORT_AWAY_MODE, SUPPORT_OPERATION_MODE, HVAC_MODE_OFF,
     SUPPORT_TARGET_TEMPERATURE)
 
 _LOGGER = logging.getLogger(__name__)
