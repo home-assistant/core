@@ -138,4 +138,4 @@ class ScannerEntity(BaseTrackerEntity):
     @property
     def is_connected(self):
         """Return true if the device is connected to the network."""
-        return False
+        raise NotImplementedError
