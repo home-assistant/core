@@ -72,13 +72,9 @@ SENSOR_TYPES = {
     'health_idx': ['Health', '', 'mdi:cloud', None],
 }
 
-MODULE_SCHEMA = vol.Schema({
-    vol.Required(cv.string): vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-})
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATION): cv.string,
-    vol.Optional(CONF_MODULES): MODULE_SCHEMA,
+    vol.Optional(CONF_MODULES): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_AREAS): vol.All(cv.ensure_list, [
         {
             vol.Required(CONF_LAT_NE): cv.latitude,
@@ -146,12 +142,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 continue
             # Test if manually configured
             if CONF_MODULES in config:
-                module_items = config[CONF_MODULES].items()
-                for module_name, monitored_conditions in module_items:
-                    for condition in monitored_conditions:
-                        dev.append(NetatmoSensor(
-                            data, module_name, condition.lower(),
-                            config.get(CONF_STATION)))
+                module_items = config[CONF_MODULES]
+                for module_name in module_items:
+                    for condition in data.station_data.monitoredConditions(
+                        module_name
+                    ):
+                        dev.append(
+                            NetatmoSensor(
+                                data,
+                                module_name,
+                                condition.lower(),
+                                data.station
+                            )
+                        )
                 continue
 
             # otherwise add all modules and conditions
