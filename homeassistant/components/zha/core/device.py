@@ -198,6 +198,8 @@ class ZHADevice:
     def device_info(self):
         """Return a device description for device."""
         ieee = str(self.ieee)
+        time_struct = time.localtime(self.last_seen)
+        update_time = time.strftime("%Y-%m-%dT%H:%M:%S", time_struct)
         return {
             IEEE: ieee,
             NWK: self.nwk,
@@ -210,7 +212,7 @@ class ZHADevice:
             POWER_SOURCE: self.power_source,
             LQI: self.lqi,
             RSSI: self.rssi,
-            LAST_SEEN: self.last_seen
+            LAST_SEEN: update_time
         }
 
     def add_cluster_channel(self, cluster_channel):
