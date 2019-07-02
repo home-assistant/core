@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
 import asyncio
+from datetime import timedelta
 from enum import Enum
 import logging
 import time
@@ -26,7 +27,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 _KEEP_ALIVE_INTERVAL = 7200
-_UPDATE_ALIVE_INTERVAL = 60
+_UPDATE_ALIVE_INTERVAL = timedelta(seconds=60)
 
 
 class DeviceStatus(Enum):
