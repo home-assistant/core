@@ -125,7 +125,7 @@ class ElkThermostat(ElkEntity, ClimateDevice):
         if fan is not None:
             self._element.set(ThermostatSetting.FAN.value, fan)
 
-    async def async_set_operation_mode(self, operation_mode):
+    async def async_set_hvac_mode(self, hvac_mode):
         """Set thermostat operation mode."""
         from elkm1_lib.const import ThermostatFan, ThermostatMode
         settings = {

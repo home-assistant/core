@@ -227,7 +227,7 @@ class DaikinClimate(ClimateDevice):
         """Return the list of available operation modes."""
         return self._list.get(ATTR_OPERATION_MODE)
 
-    async def async_set_operation_mode(self, operation_mode):
+    async def async_set_hvac_mode(self, hvac_mode):
         """Set HVAC mode."""
         await self._set({ATTR_OPERATION_MODE: operation_mode})
 

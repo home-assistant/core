@@ -294,7 +294,7 @@ class SensiboClimate(ClimateDevice):
             await self._client.async_set_ac_state_property(
                 self._id, 'fanLevel', fan_mode, self._ac_states)
 
-    async def async_set_operation_mode(self, operation_mode):
+    async def async_set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
         with async_timeout.timeout(TIMEOUT):
             await self._client.async_set_ac_state_property(

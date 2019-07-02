@@ -250,7 +250,7 @@ class KNXClimate(ClimateDevice):
                 operation_mode in
                 self.device.mode.operation_modes]
 
-    async def async_set_operation_mode(self, operation_mode):
+    async def async_set_hvac_mode(self, hvac_mode):
         """Set operation mode."""
         if self.device.mode.supports_operation_mode:
             from xknx.knx import HVACOperationMode

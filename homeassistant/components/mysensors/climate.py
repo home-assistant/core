@@ -161,7 +161,7 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateDevice):
             self._values[set_req.V_HVAC_SPEED] = fan_mode
             self.async_schedule_update_ha_state()
 
-    async def async_set_operation_mode(self, operation_mode):
+    async def async_set_hvac_mode(self, hvac_mode):
         """Set new target temperature."""
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type,

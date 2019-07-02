@@ -157,7 +157,7 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
                             'value': humidity}]
         await self._accessory.put_characteristics(characteristics)
 
-    async def async_set_operation_mode(self, operation_mode):
+    async def async_set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
         characteristics = [{'aid': self._aid,
                             'iid': self._chars['heating-cooling.target'],
