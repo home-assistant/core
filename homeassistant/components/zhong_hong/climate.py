@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    ATTR_OPERATION_MODE, HVAC_MODE_COOL, HVAC_MODE_DRY,
+    ATTR_HVAC_MODE, HVAC_MODE_COOL, HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (ATTR_TEMPERATURE, CONF_HOST, CONF_PORT,
@@ -200,13 +200,13 @@ class ZhongHongClimate(ClimateDevice):
         if temperature is not None:
             self._device.set_temperature(temperature)
 
-        operation_mode = kwargs.get(ATTR_OPERATION_MODE)
+        operation_mode = kwargs.get(ATTR_HVAC_MODE)
         if operation_mode is not None:
-            self.set_operation_mode(operation_mode)
+            self.set_hvac_mode(operation_mode)
 
-    def set_hvac_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
-        self._device.set_operation_mode(operation_mode.upper())
+        self._device.set_operation_mode(hvac_mode.upper())
 
     def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
