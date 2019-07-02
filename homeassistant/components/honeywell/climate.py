@@ -1,4 +1,4 @@
-"""Support for Honeywell TCC-accessible thermostats."""
+"""Support for Honeywell (US) Total Connect Comfort climate systems."""
 import datetime
 import logging
 from typing import Dict, Optional, List
