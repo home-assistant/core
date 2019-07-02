@@ -58,11 +58,15 @@ API_TEMP_UNITS = {
 API_THERMOSTAT_MODES = OrderedDict([
     (climate.HVAC_MODE_HEAT, 'HEAT'),
     (climate.HVAC_MODE_COOL, 'COOL'),
+    (climate.HVAC_MODE_HEAT_COOL, 'AUTO'),
     (climate.HVAC_MODE_AUTO, 'AUTO'),
     (climate.HVAC_MODE_OFF, 'OFF'),
     (climate.HVAC_MODE_FAN_ONLY, 'OFF'),
     (climate.HVAC_MODE_DRY, 'OFF'),
 ])
+API_THERMOSTAT_PRESETS = {
+    climate.PRESET_ECO: 'ECO'
+}
 
 PERCENTAGE_FAN_MAP = {
     fan.SPEED_LOW: 33,
