@@ -16,7 +16,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE,
     SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE, STATE_AUTO,
     STATE_COOL, STATE_HEAT, STATE_DRY, STATE_FAN_ONLY,
-    SUPPORT_TARGET_TEMPERATURE_LOW, SUPPORT_TARGET_TEMPERATURE_HIGH)
+    SUPPORT_TARGET_TEMPERATURE_RANGE)
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 
@@ -64,8 +64,7 @@ async def test_supported_features(hass, mqtt_mock):
     support = (SUPPORT_TARGET_TEMPERATURE |
                SUPPORT_SWING_MODE | SUPPORT_FAN_MODE | SUPPORT_AWAY_MODE |
                SUPPORT_HOLD_MODE | SUPPORT_AUX_HEAT |
-               SUPPORT_TARGET_TEMPERATURE_LOW |
-               SUPPORT_TARGET_TEMPERATURE_HIGH)
+               SUPPORT_TARGET_TEMPERATURE_RANGE)
 
     assert state.attributes.get("supported_features") == support
 
