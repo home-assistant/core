@@ -12,6 +12,7 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/climate.flexit/
 """
 import logging
+from typing import List
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -20,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_FAN_MODE)
+    SUPPORT_FAN_MODE, HVAC_MODE_COOL)
 from homeassistant.components.modbus import (
     CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN)
 import homeassistant.helpers.config_validation as cv
@@ -137,6 +138,14 @@ class Flexit(ClimateDevice):
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         return self._current_operation
+
+    @property
+    def hvac_modes(self) -> List[str]:
+        """Return the list of available hvac operation modes.
+
+        Need to be a subset of HVAC_MODES.
+        """
+        return [HVAC_MODE_COOL]
 
     @property
     def fan_mode(self):
