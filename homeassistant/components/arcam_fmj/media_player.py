@@ -48,9 +48,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
-    config_entry: config_entries.ConfigEntry,
-    async_add_entities,
+        hass: HomeAssistantType,
+        config_entry: config_entries.ConfigEntry,
+        async_add_entities,
 ):
     """Set up the configuration entry."""
     data = hass.data[DOMAIN_DATA_ENTRIES][config_entry.entry_id]
