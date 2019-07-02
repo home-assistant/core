@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE, HVAC_MODE_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT, SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
+    HVAC_MODE_HEAT, SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP,
@@ -90,7 +90,6 @@ class ZhongHongClimate(ClimateDevice):
         self._current_temperature = None
         self._target_temperature = None
         self._current_fan_mode = None
-        self._is_on = None
         self.is_initialized = False
 
     async def async_added_to_hass(self):
@@ -110,7 +109,6 @@ class ZhongHongClimate(ClimateDevice):
             self._current_fan_mode = self._device.current_fan_mode
         if self._device.target_temperature:
             self._target_temperature = self._device.target_temperature
-        self._is_on = self._device.is_on
         self.schedule_update_ha_state()
 
     @property
@@ -132,8 +130,7 @@ class ZhongHongClimate(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return (SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
-                | SUPPORT_ON_OFF)
+        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
     @property
     def temperature_unit(self):
