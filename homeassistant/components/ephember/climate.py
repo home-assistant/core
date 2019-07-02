@@ -119,13 +119,13 @@ class EphEmberThermostat(ClimateDevice):
         """Return the supported operations."""
         return OPERATION_LIST
 
-    def set_hvac_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set the operation mode."""
-        mode = self.map_mode_hass_eph(operation_mode)
+        mode = self.map_mode_hass_eph(hvac_mode)
         if mode is not None:
             self._ember.set_mode_by_name(self._zone_name, mode)
         else:
-            _LOGGER.error("Invalid operation mode provided %s", operation_mode)
+            _LOGGER.error("Invalid operation mode provided %s", hvac_mode)
 
     @property
     def is_on(self):

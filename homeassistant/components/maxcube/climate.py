@@ -120,10 +120,10 @@ class MaxCubeClimate(ClimateDevice):
                 _LOGGER.error("Setting target temperature failed")
                 return False
 
-    def set_hvac_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set new operation mode."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
-        mode = self.map_mode_hass_max(operation_mode)
+        mode = self.map_mode_hass_max(hvac_mode)
 
         if mode is None:
             return False

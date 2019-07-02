@@ -234,21 +234,21 @@ class NetatmoThermostat(ClimateDevice):
         self.update_without_throttle = True
         self.schedule_update_ha_state()
 
-    def set_hvac_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
         if not self.is_on:
             self.turn_on()
-        if operation_mode in [DICT_NETATMO_TO_HA[STATE_NETATMO_MAX],
+        if hvac_mode in [DICT_NETATMO_TO_HA[STATE_NETATMO_MAX],
                               DICT_NETATMO_TO_HA[STATE_NETATMO_OFF]]:
             self._data.homestatus.setroomThermpoint(
                 self._data.homedata.gethomeId(self._data.home),
-                self._room_id, DICT_HA_TO_NETATMO[operation_mode])
-        elif operation_mode in [DICT_NETATMO_TO_HA[STATE_NETATMO_HG],
+                self._room_id, DICT_HA_TO_NETATMO[hvac_mode])
+        elif hvac_mode in [DICT_NETATMO_TO_HA[STATE_NETATMO_HG],
                                 DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
                                 DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY]]:
             self._data.homestatus.setThermmode(
                 self._data.homedata.gethomeId(self._data.home),
-                DICT_HA_TO_NETATMO[operation_mode])
+                DICT_HA_TO_NETATMO[hvac_mode])
         self.update_without_throttle = True
         self.schedule_update_ha_state()
 

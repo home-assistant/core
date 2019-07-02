@@ -245,7 +245,7 @@ class EvoZone(EvoDevice, ClimateDevice):
                 operation_mode
             )
 
-    def set_hvac_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set an operating mode for a Zone.
 
         Currently limited to 'Auto' & 'Manual'. If 'Off' is needed, it can be
@@ -267,7 +267,7 @@ class EvoZone(EvoDevice, ClimateDevice):
         period of time, 'TemporaryOverride', after which they will revert back
         to 'FollowSchedule' mode, or indefinitely, 'PermanentOverride'.
         """
-        self._set_operation_mode(HA_STATE_TO_ZONE.get(operation_mode))
+        self._set_operation_mode(HA_STATE_TO_ZONE.get(hvac_mode))
 
     def update(self):
         """Process the evohome Zone's state data."""
@@ -398,13 +398,13 @@ class EvoController(EvoDevice, ClimateDevice):
                 evohomeclient2.AuthenticationError) as err:
             self._handle_exception(err)
 
-    def set_hvac_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set new target operation mode for the TCS.
 
         Currently limited to 'Auto', 'AutoWithEco' & 'HeatingOff'. If 'Away'
         mode is needed, it can be enabled via turn_away_mode_on method.
         """
-        self._set_operation_mode(HA_STATE_TO_TCS.get(operation_mode))
+        self._set_operation_mode(HA_STATE_TO_TCS.get(hvac_mode))
 
     def turn_away_mode_on(self):
         """Turn away mode on.

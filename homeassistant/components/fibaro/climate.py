@@ -236,16 +236,16 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
             return None
         return list(self._op_state_to_mode)
 
-    def set_hvac_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
         if self._op_mode_device is None:
             return
         if "setOperatingMode" in self._op_mode_device.fibaro_device.actions:
             self._op_mode_device.action(
-                "setOperatingMode", self._op_state_to_mode[operation_mode])
+                "setOperatingMode", self._op_state_to_mode[hvac_mode])
         elif "setMode" in self._op_mode_device.fibaro_device.actions:
             self._op_mode_device.action(
-                "setMode", self._op_state_to_mode[operation_mode])
+                "setMode", self._op_state_to_mode[hvac_mode])
 
     @property
     def temperature_unit(self):

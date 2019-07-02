@@ -1,7 +1,8 @@
 """Support for the Tuya climate devices."""
 from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO, HVAC_MODE_COOL, STATE_ECO, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT,
+    HVAC_MODE_AUTO, HVAC_MODE_COOL, STATE_ECO, HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_HEAT,
     SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
@@ -126,9 +127,9 @@ class TuyaClimateDevice(TuyaDevice, ClimateDevice):
         """Set new target fan mode."""
         self.tuya.set_fan_mode(fan_mode)
 
-    def set_hvac_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
-        self.tuya.set_operation_mode(HA_STATE_TO_TUYA.get(operation_mode))
+        self.tuya.set_operation_mode(HA_STATE_TO_TUYA.get(hvac_mode))
 
     def turn_on(self):
         """Turn device on."""
@@ -141,11 +142,9 @@ class TuyaClimateDevice(TuyaDevice, ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        supports = SUPPORT_ON_OFF
+        supports = 0
         if self.tuya.support_target_temperature():
             supports = supports | SUPPORT_TARGET_TEMPERATURE
-        if self.tuya.support_mode():
-            supports = supports | SUPPORT_OPERATION_MODE
         if self.tuya.support_wind_speed():
             supports = supports | SUPPORT_FAN_MODE
         return supports

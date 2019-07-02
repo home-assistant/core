@@ -306,15 +306,15 @@ class RadioThermostat(ClimateDevice):
             'minute': now.minute
         }
 
-    def set_hvac_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set operation mode (auto, cool, heat, off)."""
-        if operation_mode in (HVAC_MODE_OFF, HVAC_MODE_AUTO):
-            self.device.tmode = TEMP_MODE_TO_CODE[operation_mode]
+        if hvac_mode in (HVAC_MODE_OFF, HVAC_MODE_AUTO):
+            self.device.tmode = TEMP_MODE_TO_CODE[hvac_mode]
 
         # Setting t_cool or t_heat automatically changes tmode.
-        elif operation_mode == HVAC_MODE_COOL:
+        elif hvac_mode == HVAC_MODE_COOL:
             self.device.t_cool = self._target_temperature
-        elif operation_mode == HVAC_MODE_HEAT:
+        elif hvac_mode == HVAC_MODE_HEAT:
             self.device.t_heat = self._target_temperature
 
     def turn_away_mode_on(self):

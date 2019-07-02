@@ -140,10 +140,10 @@ class StiebelEltron(ClimateDevice):
         """Return current operation ie. heat, cool, idle."""
         return STE_TO_HA_STATE.get(self._current_operation)
 
-    def set_hvac_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set new operation mode."""
-        new_mode = HA_TO_STE_STATE.get(operation_mode)
-        _LOGGER.debug("set_operation_mode: %s -> %s", self._current_operation,
+        new_mode = HA_TO_STE_STATE.get(hvac_mode)
+        _LOGGER.debug("set_hvac_mode: %s -> %s", self._current_operation,
                       new_mode)
         self._ste_data.api.set_operation(new_mode)
         self._force_update = True

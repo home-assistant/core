@@ -270,9 +270,9 @@ class VenstarThermostat(ClimateDevice):
         if not success:
             _LOGGER.error("Failed to change the fan mode")
 
-    def set_hvac_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
-        self._set_operation_mode(operation_mode)
+        self._set_operation_mode(hvac_mode)
 
     def set_humidity(self, humidity):
         """Set new target humidity."""

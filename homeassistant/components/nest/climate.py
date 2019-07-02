@@ -212,17 +212,17 @@ class NestThermostat(ClimateDevice):
             # restore target temperature
             self.schedule_update_ha_state(True)
 
-    def set_hvac_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set operation mode."""
-        if operation_mode in [HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_OFF, STATE_ECO]:
-            device_mode = operation_mode
-        elif operation_mode == HVAC_MODE_AUTO:
+        if hvac_mode in [HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_OFF, STATE_ECO]:
+            device_mode = hvac_mode
+        elif hvac_mode == HVAC_MODE_AUTO:
             device_mode = NEST_MODE_HEAT_COOL
         else:
             device_mode = HVAC_MODE_OFF
             _LOGGER.error(
                 "An error occurred while setting device mode. "
-                "Invalid operation mode: %s", operation_mode)
+                "Invalid operation mode: %s", hvac_mode)
         self.device.mode = device_mode
 
     @property

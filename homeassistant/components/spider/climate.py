@@ -122,10 +122,10 @@ class SpiderThermostat(ClimateDevice):
 
         self.thermostat.set_temperature(temperature)
 
-    def set_hvac_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
         self.thermostat.set_operation_mode(
-            HA_STATE_TO_SPIDER.get(operation_mode))
+            HA_STATE_TO_SPIDER.get(hvac_mode))
 
     @property
     def fan_mode(self):

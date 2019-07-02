@@ -175,10 +175,10 @@ class RoundThermostat(ClimateDevice):
         """Return true if away mode is on."""
         return self._away
 
-    def set_hvac_mode(self, operation_mode: str) -> None:
+    def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set the HVAC mode for the thermostat."""
         if hasattr(self.client, ATTR_SYSTEM_MODE):
-            self.client.system_mode = operation_mode
+            self.client.system_mode = hvac_mode
 
     def turn_away_mode_on(self):
         """Turn away on.

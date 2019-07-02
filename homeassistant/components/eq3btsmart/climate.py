@@ -126,10 +126,10 @@ class EQ3BTSmartThermostat(ClimateDevice):
         """Return the list of available operation modes."""
         return [x for x in self.modes.values()]
 
-    def set_hvac_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set operation mode."""
-        self._target_mode = operation_mode
-        self._thermostat.mode = self.reverse_modes[operation_mode]
+        self._target_mode = hvac_mode
+        self._thermostat.mode = self.reverse_modes[hvac_mode]
 
     def turn_away_mode_off(self):
         """Away mode off turns to AUTO mode."""

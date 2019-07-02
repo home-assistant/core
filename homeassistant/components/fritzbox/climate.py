@@ -123,15 +123,15 @@ class FritzboxThermostat(ClimateDevice):
         """Return the list of available operation modes."""
         return OPERATION_LIST
 
-    def set_hvac_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set new operation mode."""
-        if operation_mode == HVAC_MODE_HEAT:
+        if hvac_mode == HVAC_MODE_HEAT:
             self.set_temperature(temperature=self._comfort_temperature)
-        elif operation_mode == STATE_ECO:
+        elif hvac_mode == STATE_ECO:
             self.set_temperature(temperature=self._eco_temperature)
-        elif operation_mode == HVAC_MODE_OFF:
+        elif hvac_mode == HVAC_MODE_OFF:
             self.set_temperature(temperature=OFF_REPORT_SET_TEMPERATURE)
-        elif operation_mode == STATE_ON:
+        elif hvac_mode == STATE_ON:
             self.set_temperature(temperature=ON_REPORT_SET_TEMPERATURE)
 
     @property
