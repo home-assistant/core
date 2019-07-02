@@ -15,8 +15,8 @@ from .const import ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC
 _LOGGER = logging.getLogger(__name__)
 
 TOPIC_MATCHER = re.compile(
-    r'(?P<prefix_topic>\w+)/(?P<component>\w+)/'
-    r'(?:(?P<node_id>[a-zA-Z0-9_-]+)/)?(?P<object_id>[a-zA-Z0-9_-]+)/config')
+    r'(?P<component>\w+)/(?:(?P<node_id>[a-zA-Z0-9_-]+)/)'
+    r'?(?P<object_id>[a-zA-Z0-9_-]+)/config')
 
 SUPPORTED_COMPONENTS = [
     'alarm_control_panel',
@@ -233,12 +233,13 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
         """Process the received message."""
         payload = msg.payload
         topic = msg.topic
-        match = TOPIC_MATCHER.match(topic)
+        topic_trimmed = topic.replace('{}/'.format(discovery_topic), '', 1)
+        match = TOPIC_MATCHER.match(topic_trimmed)
 
         if not match:
             return
 
-        _prefix_topic, component, node_id, object_id = match.groups()
+        component, node_id, object_id = match.groups()
 
         if component not in SUPPORTED_COMPONENTS:
             _LOGGER.warning("Component %s is not supported", component)

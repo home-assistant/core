@@ -3,6 +3,7 @@
 import logging
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 
 from . import (
@@ -45,7 +46,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             async_add_entities(entities, True)
         else:
             for entity in devices[device_id]:
-                entity.async_schedule_update_ha_state()
+                async_dispatcher_send(hass, "{}_{}".format(PLAATO_DOMAIN,
+                                                           entity.unique_id))
 
     hass.data[SENSOR_DATA_KEY] = async_dispatcher_connect(
         hass, SENSOR_UPDATE, _update_sensor
@@ -137,3 +139,9 @@ class PlaatoSensor(Entity):
     def should_poll(self):
         """Return the polling state."""
         return False
+
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        self.hass.helpers.dispatcher.async_dispatcher_connect(
+            "{}_{}".format(PLAATO_DOMAIN, self.unique_id),
+            self.async_schedule_update_ha_state)

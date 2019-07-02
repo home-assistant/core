@@ -29,10 +29,8 @@ from homeassistant.const import (
 from homeassistant.core import State, DOMAIN as HA_DOMAIN, EVENT_CALL_SERVICE
 from homeassistant.util import color
 from tests.common import async_mock_service, mock_coro
+from . import BASIC_CONFIG, MockConfig
 
-BASIC_CONFIG = helpers.Config(
-    should_expose=lambda state: True,
-)
 
 REQ_ID = 'ff36a3cc-ec34-11e6-b1a0-64510650abcf'
 
@@ -42,8 +40,7 @@ BASIC_DATA = helpers.RequestData(
     REQ_ID,
 )
 
-PIN_CONFIG = helpers.Config(
-    should_expose=lambda state: True,
+PIN_CONFIG = MockConfig(
     secure_devices_pin='1234'
 )
 
@@ -927,7 +924,7 @@ async def test_lock_unlock_unlock(hass):
 
     # Test with 2FA override
     with patch('homeassistant.components.google_assistant.helpers'
-               '.Config.should_2fa', return_value=False):
+               '.AbstractConfig.should_2fa', return_value=False):
         await trt.execute(
             trait.COMMAND_LOCKUNLOCK, BASIC_DATA, {'lock': False}, {})
     assert len(calls) == 2

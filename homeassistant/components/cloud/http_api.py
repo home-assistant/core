@@ -13,13 +13,17 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import (
     RequestDataValidator)
 from homeassistant.components import websocket_api
-from homeassistant.components.alexa import entities as alexa_entities
+from homeassistant.components.websocket_api import const as ws_const
+from homeassistant.components.alexa import (
+    entities as alexa_entities,
+    errors as alexa_errors,
+)
 from homeassistant.components.google_assistant import helpers as google_helpers
 
 from .const import (
     DOMAIN, REQUEST_TIMEOUT, PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE,
     PREF_GOOGLE_SECURE_DEVICES_PIN, InvalidTrustedNetworks,
-    InvalidTrustedProxies, PREF_ALEXA_REPORT_STATE)
+    InvalidTrustedProxies, PREF_ALEXA_REPORT_STATE, RequireRelink)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,6 +96,7 @@ async def async_setup(hass):
 
     hass.components.websocket_api.async_register_command(alexa_list)
     hass.components.websocket_api.async_register_command(alexa_update)
+    hass.components.websocket_api.async_register_command(alexa_sync)
 
     hass.http.register_view(GoogleActionsSyncView)
     hass.http.register_view(CloudLoginView)
@@ -373,6 +378,24 @@ async def websocket_update_prefs(hass, connection, msg):
     changes = dict(msg)
     changes.pop('id')
     changes.pop('type')
+
+    # If we turn alexa linking on, validate that we can fetch access token
+    if changes.get(PREF_ALEXA_REPORT_STATE):
+        try:
+            with async_timeout.timeout(10):
+                await cloud.client.alexa_config.async_get_access_token()
+        except asyncio.TimeoutError:
+            connection.send_error(msg['id'], 'alexa_timeout',
+                                  'Timeout validating Alexa access token.')
+            return
+        except (alexa_errors.NoTokenAvailable, RequireRelink):
+            connection.send_error(
+                msg['id'], 'alexa_relink',
+                'Please go to the Alexa app and re-link the Home Assistant '
+                'skill and then try to enable state reporting.'
+            )
+            return
+
     await cloud.client.prefs.async_update(**changes)
 
     connection.send_message(websocket_api.result_message(msg['id']))
@@ -560,3 +583,31 @@ async def alexa_update(hass, connection, msg):
     connection.send_result(
         msg['id'],
         cloud.client.prefs.alexa_entity_configs.get(msg['entity_id']))
+
+
+@websocket_api.require_admin
+@_require_cloud_login
+@websocket_api.async_response
+@websocket_api.websocket_command({
+    'type': 'cloud/alexa/sync',
+})
+async def alexa_sync(hass, connection, msg):
+    """Sync with Alexa."""
+    cloud = hass.data[DOMAIN]
+
+    with async_timeout.timeout(10):
+        try:
+            success = await cloud.client.alexa_config.async_sync_entities()
+        except alexa_errors.NoTokenAvailable:
+            connection.send_error(
+                msg['id'], 'alexa_relink',
+                'Please go to the Alexa app and re-link the Home Assistant '
+                'skill.'
+            )
+            return
+
+    if success:
+        connection.send_result(msg['id'])
+    else:
+        connection.send_error(
+            msg['id'], ws_const.ERR_UNKNOWN_ERROR, 'Unknown error')

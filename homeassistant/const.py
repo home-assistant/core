@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 95
+MINOR_VERSION = 96
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -346,6 +346,7 @@ LENGTH_MILES = 'mi'  # type: str
 # Pressure units
 PRESSURE_PA = 'Pa'  # type: str
 PRESSURE_HPA = 'hPa'  # type: str
+PRESSURE_BAR = 'bar'  # type: str
 PRESSURE_MBAR = 'mbar'  # type: str
 PRESSURE_INHG = 'inHg'  # type: str
 PRESSURE_PSI = 'psi'  # type: str

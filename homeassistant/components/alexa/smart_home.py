@@ -16,41 +16,6 @@ _LOGGER = logging.getLogger(__name__)
 EVENT_ALEXA_SMART_HOME = 'alexa_smart_home'
 
 
-# def _capability(interface,
-#                 version=3,
-#                 supports_deactivation=None,
-#                 retrievable=None,
-#                 properties_supported=None,
-#                 cap_type='AlexaInterface'):
-#     """Return a Smart Home API capability object.
-
-#     https://developer.amazon.com/docs/device-apis/alexa-discovery.html#capability-object
-
-#     There are some additional fields allowed but not implemented here since
-#     we've no use case for them yet:
-
-#       - proactively_reported
-
-#     `supports_deactivation` applies only to scenes.
-#     """
-#     result = {
-#         'type': cap_type,
-#         'interface': interface,
-#         'version': version,
-#     }
-
-#     if supports_deactivation is not None:
-#         result['supportsDeactivation'] = supports_deactivation
-
-#     if retrievable is not None:
-#         result['retrievable'] = retrievable
-
-#     if properties_supported is not None:
-#         result['properties'] = {'supported': properties_supported}
-
-#     return result
-
-
 async def async_handle_message(
         hass,
         config,

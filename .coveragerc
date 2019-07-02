@@ -157,6 +157,7 @@ omit =
     homeassistant/components/eight_sleep/*
     homeassistant/components/eliqonline/sensor.py
     homeassistant/components/elkm1/*
+    homeassistant/components/elv/switch.py
     homeassistant/components/emby/media_player.py
     homeassistant/components/emoncms/sensor.py
     homeassistant/components/emoncms_history/*
@@ -213,6 +214,7 @@ omit =
     homeassistant/components/fritzbox_callmonitor/sensor.py
     homeassistant/components/fritzbox_netmonitor/sensor.py
     homeassistant/components/fritzdect/switch.py
+    homeassistant/components/fronius/sensor.py
     homeassistant/components/frontier_silicon/media_player.py
     homeassistant/components/futurenow/light.py
     homeassistant/components/garadget/cover.py
@@ -636,6 +638,7 @@ omit =
     homeassistant/components/trackr/device_tracker.py
     homeassistant/components/tradfri/*
     homeassistant/components/tradfri/light.py
+    homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/sensor.py
     homeassistant/components/transmission/*
     homeassistant/components/travisci/sensor.py
@@ -654,6 +657,7 @@ omit =
     homeassistant/components/uptimerobot/binary_sensor.py
     homeassistant/components/uscis/sensor.py
     homeassistant/components/usps/*
+    homeassistant/components/vallox/*
     homeassistant/components/vasttrafik/sensor.py
     homeassistant/components/velbus/*
     homeassistant/components/velux/*
@@ -664,6 +668,7 @@ omit =
     homeassistant/components/viaggiatreno/sensor.py
     homeassistant/components/vizio/media_player.py
     homeassistant/components/vlc/media_player.py
+    homeassistant/components/vlc_telnet/media_player.py
     homeassistant/components/volkszaehler/sensor.py
     homeassistant/components/volumio/media_player.py
     homeassistant/components/volvooncall/*

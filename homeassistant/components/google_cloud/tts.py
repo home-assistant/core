@@ -23,8 +23,8 @@ CONF_PROFILES = 'profiles'
 
 SUPPORTED_LANGUAGES = [
     'da-DK', 'de-DE', 'en-AU', 'en-GB', 'en-US', 'es-ES', 'fr-CA', 'fr-FR',
-    'it-IT', 'ja-JP', 'ko-KR', 'nb-NO', 'nl-NL', 'pl-PL', 'pt-BR', 'pt-PT',
-    'ru-RU', 'sk-SK', 'sv-SE', 'tr-TR', 'uk-UA',
+    'hu-HU', 'it-IT', 'ja-JP', 'ko-KR', 'nb-NO', 'nl-NL', 'pl-PL', 'pt-BR',
+    'pt-PT', 'ru-RU', 'sk-SK', 'sv-SE', 'tr-TR', 'uk-UA',
 ]
 DEFAULT_LANG = 'en-US'
 
@@ -33,7 +33,7 @@ DEFAULT_GENDER = 'NEUTRAL'
 VOICE_REGEX = r'[a-z]{2}-[A-Z]{2}-(Standard|Wavenet)-[A-Z]|'
 DEFAULT_VOICE = ''
 
-DEFAULT_ENCODING = 'OGG_OPUS'
+DEFAULT_ENCODING = 'MP3'
 
 MIN_SPEED = 0.25
 MAX_SPEED = 4.0

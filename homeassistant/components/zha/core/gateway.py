@@ -14,6 +14,8 @@ import traceback
 
 from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import (
+    async_get_registry as get_dev_reg)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_component import EntityComponent
 
@@ -25,20 +27,21 @@ from .const import (
     DEBUG_LEVELS, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME, DEVICE_FULL_INIT,
     DEVICE_INFO, DEVICE_JOINED, DEVICE_REMOVED, DOMAIN, IEEE, LOG_ENTRY,
     LOG_OUTPUT, MODEL, NWK, ORIGINAL, RADIO, RADIO_DESCRIPTION, RAW_INIT,
-    SIGNAL_REMOVE, SIGNATURE, TYPE, ZHA, ZHA_GW_MSG, ZIGPY, ZIGPY_DECONZ,
-    ZIGPY_XBEE)
+    SIGNAL_REMOVE, SIGNATURE, TYPE, UNKNOWN_MANUFACTURER, UNKNOWN_MODEL, ZHA,
+    ZHA_GW_MSG, ZIGPY, ZIGPY_DECONZ, ZIGPY_XBEE)
 from .device import DeviceStatus, ZHADevice
 from .discovery import (
     async_create_device_entity, async_dispatch_discovery_info,
     async_process_endpoint)
 from .patches import apply_application_controller_patch
-from .registries import RADIO_TYPES, INPUT_BIND_ONLY_CLUSTERS
+from .registries import INPUT_BIND_ONLY_CLUSTERS, RADIO_TYPES
 from .store import async_get_registry
 
 _LOGGER = logging.getLogger(__name__)
 
 EntityReference = collections.namedtuple(
-    'EntityReference', 'reference_id zha_device cluster_channels device_info')
+    'EntityReference',
+    'reference_id zha_device cluster_channels device_info remove_future')
 
 
 class ZHAGateway:
@@ -117,13 +120,8 @@ class ZHAGateway:
         """Handle a device initialization without quirks loaded."""
         if device.nwk == 0x0000:
             return
-        endpoint_ids = device.endpoints.keys()
-        ept_id = next((ept_id for ept_id in endpoint_ids if ept_id != 0), None)
-        manufacturer = 'Unknown'
-        model = 'Unknown'
-        if ept_id is not None:
-            manufacturer = device.endpoints[ept_id].manufacturer
-            model = device.endpoints[ept_id].model
+
+        manuf = device.manufacturer
         async_dispatcher_send(
             self._hass,
             ZHA_GW_MSG,
@@ -131,8 +129,8 @@ class ZHAGateway:
                 TYPE: RAW_INIT,
                 NWK: device.nwk,
                 IEEE: str(device.ieee),
-                MODEL: model,
-                ATTR_MANUFACTURER: manufacturer,
+                MODEL: device.model if device.model else UNKNOWN_MODEL,
+                ATTR_MANUFACTURER: manuf if manuf else UNKNOWN_MANUFACTURER,
                 SIGNATURE: device.get_signature()
             }
         )
@@ -146,16 +144,31 @@ class ZHAGateway:
         """Handle device leaving the network."""
         pass
 
+    async def _async_remove_device(self, device, entity_refs):
+        if entity_refs is not None:
+            remove_tasks = []
+            for entity_ref in entity_refs:
+                remove_tasks.append(entity_ref.remove_future)
+            await asyncio.wait(remove_tasks)
+        ha_device_registry = await get_dev_reg(self._hass)
+        reg_device = ha_device_registry.async_get_device(
+            {(DOMAIN, str(device.ieee))}, set())
+        if reg_device is not None:
+            ha_device_registry.async_remove_device(reg_device.id)
+
     def device_removed(self, device):
         """Handle device being removed from the network."""
         zha_device = self._devices.pop(device.ieee, None)
-        self._device_registry.pop(device.ieee, None)
+        entity_refs = self._device_registry.pop(device.ieee, None)
         if zha_device is not None:
             device_info = async_get_device_info(self._hass, zha_device)
-            self._hass.async_create_task(zha_device.async_unsub_dispatcher())
+            zha_device.async_unsub_dispatcher()
             async_dispatcher_send(
                 self._hass,
                 "{}_{}".format(SIGNAL_REMOVE, str(zha_device.ieee))
+            )
+            asyncio.ensure_future(
+                self._async_remove_device(zha_device, entity_refs)
             )
             if device_info is not None:
                 async_dispatcher_send(
@@ -190,14 +203,15 @@ class ZHAGateway:
 
     def register_entity_reference(
             self, ieee, reference_id, zha_device, cluster_channels,
-            device_info):
+            device_info, remove_future):
         """Record the creation of a hass entity associated with ieee."""
         self._device_registry[ieee].append(
             EntityReference(
                 reference_id=reference_id,
                 zha_device=zha_device,
                 cluster_channels=cluster_channels,
-                device_info=device_info
+                device_info=device_info,
+                remove_future=remove_future
             )
         )
 

@@ -257,7 +257,8 @@ class ConfigEntry:
                           self.title, self.domain)
             return False
         # Handler may be a partial
-        while isinstance(handler, functools.partial):
+        # type ignore: https://github.com/python/typeshed/pull/3077
+        while isinstance(handler, functools.partial):  # type: ignore
             handler = handler.func
 
         if self.version == handler.VERSION:
@@ -551,6 +552,14 @@ class ConfigEntries:
                 self.hass, handler_key)
         except loader.IntegrationNotFound:
             _LOGGER.error('Cannot find integration %s', handler_key)
+            raise data_entry_flow.UnknownHandler
+
+        # Our config flow list is based on built-in integrations. If overriden,
+        # we should not load it's config flow.
+        if not integration.is_built_in:
+            _LOGGER.error(
+                'Config flow is not supported for custom integration %s',
+                handler_key)
             raise data_entry_flow.UnknownHandler
 
         # Make sure requirements and dependencies of component are resolved
