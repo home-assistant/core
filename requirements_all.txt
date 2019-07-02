@@ -1876,8 +1876,13 @@ python-nest==4.0.5
 # homeassistant.components.device_tracker.nmap_tracker
 python-nmap==0.6.1
 
+<<<<<<< HEAD
 # homeassistant.components.notify.pushover
 python-pushover==0.3
+=======
+# homeassistant.components.pushover
+python-pushover==0.4
+>>>>>>> Add ability to send attachments in pushover notifications (#24806)
 
 # homeassistant.components.sensor.qbittorrent
 python-qbittorrent==0.3.1
