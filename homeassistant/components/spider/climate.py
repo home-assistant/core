@@ -108,12 +108,12 @@ class SpiderThermostat(ClimateDevice):
         return self.thermostat.maximum_temperature
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         return SPIDER_STATE_TO_HA[self.thermostat.operation_mode]
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return OPERATION_LIST
 
@@ -125,7 +125,7 @@ class SpiderThermostat(ClimateDevice):
 
         self.thermostat.set_temperature(temperature)
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, operation_mode):
         """Set new target operation mode."""
         self.thermostat.set_operation_mode(
             HA_STATE_TO_SPIDER.get(operation_mode))

@@ -131,16 +131,16 @@ class StiebelEltron(ClimateDevice):
 
     # Handle SUPPORT_OPERATION_MODE
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """List of the operation modes."""
         return self._operation_modes
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         return STE_TO_HA_STATE.get(self._current_operation)
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, operation_mode):
         """Set new operation mode."""
         new_mode = HA_TO_STE_STATE.get(operation_mode)
         _LOGGER.debug("set_operation_mode: %s -> %s", self._current_operation,

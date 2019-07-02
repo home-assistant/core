@@ -93,14 +93,14 @@ class MelissaClimate(ClimateDevice):
         return PRECISION_WHOLE
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return the current operation mode."""
         if self._cur_settings is not None:
             return self.melissa_op_to_hass(
                 self._cur_settings[self._api.MODE])
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return OP_MODES
 

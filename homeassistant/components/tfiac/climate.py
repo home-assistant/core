@@ -150,7 +150,7 @@ class TfiacClimate(ClimateDevice):
         return SUPPORT_FAN
 
     @property
-    def current_swing_mode(self):
+    def swing_mode(self):
         """Return the swing setting."""
         return self._client.status['swing_mode'].lower()
 

@@ -195,12 +195,12 @@ class RadioThermostat(ClimateDevice):
         return self._current_temperature
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return the current operation. head, cool idle."""
         return self._current_operation
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the operation modes list."""
         return OPERATION_LIST
 
@@ -306,7 +306,7 @@ class RadioThermostat(ClimateDevice):
             'minute': now.minute
         }
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, operation_mode):
         """Set operation mode (auto, cool, heat, off)."""
         if operation_mode in (STATE_OFF, STATE_AUTO):
             self.device.tmode = TEMP_MODE_TO_CODE[operation_mode]

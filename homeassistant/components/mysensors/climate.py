@@ -102,12 +102,12 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateDevice):
             return float(temp) if temp is not None else None
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         return self._values.get(self.value_type)
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """List of available operation modes."""
         return OPERATION_LIST
 

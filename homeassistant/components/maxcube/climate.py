@@ -87,13 +87,13 @@ class MaxCubeClimate(ClimateDevice):
         return self.map_temperature_max_hass(device.actual_temperature)
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation (auto, manual, boost, vacation)."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
         return self.map_mode_max_hass(device.mode)
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return self._operation_list
 
@@ -120,7 +120,7 @@ class MaxCubeClimate(ClimateDevice):
                 _LOGGER.error("Setting target temperature failed")
                 return False
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, operation_mode):
         """Set new operation mode."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
         mode = self.map_mode_hass_max(operation_mode)

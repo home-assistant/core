@@ -127,12 +127,12 @@ class CoolmasterClimate(ClimateDevice):
         return self._target_temperature
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         return self._current_operation
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return self._operation_list
 
@@ -165,7 +165,7 @@ class CoolmasterClimate(ClimateDevice):
                       fan_mode)
         self._device.set_fan_speed(fan_mode)
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, operation_mode):
         """Set new operation mode."""
         _LOGGER.debug("Setting operation mode of %s to %s", self.unique_id,
                       operation_mode)

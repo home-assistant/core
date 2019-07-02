@@ -115,7 +115,7 @@ class NuHeatThermostat(ClimateDevice):
         return self._thermostat.fahrenheit
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation. ie. heat, idle."""
         if self._thermostat.heating:
             return STATE_HEAT
@@ -162,7 +162,7 @@ class NuHeatThermostat(ClimateDevice):
         return MODE_AUTO
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return list of possible operation modes."""
         return OPERATION_LIST
 

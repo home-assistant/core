@@ -500,12 +500,12 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         return self._target_temp_high
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         return self._current_operation
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return self._config[CONF_MODE_LIST]
 
@@ -617,7 +617,7 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self.async_write_ha_state()
 
     @property
-    def current_swing_mode(self):
+    def swing_mode(self):
         """Return the swing setting."""
         return self._current_swing_mode
 

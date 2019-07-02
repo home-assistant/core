@@ -218,12 +218,12 @@ class DaikinClimate(ClimateDevice):
         await self._set(kwargs)
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         return self.get(ATTR_OPERATION_MODE)
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return self._list.get(ATTR_OPERATION_MODE)
 
@@ -246,7 +246,7 @@ class DaikinClimate(ClimateDevice):
         return self._list.get(ATTR_FAN_MODE)
 
     @property
-    def current_swing_mode(self):
+    def swing_mode(self):
         """Return the fan setting."""
         return self.get(ATTR_SWING_MODE)
 

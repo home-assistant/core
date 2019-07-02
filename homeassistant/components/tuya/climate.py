@@ -80,7 +80,7 @@ class TuyaClimateDevice(TuyaDevice, ClimateDevice):
         return TEMP_CELSIUS
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         mode = self.tuya.current_operation()
         if mode is None:
@@ -88,7 +88,7 @@ class TuyaClimateDevice(TuyaDevice, ClimateDevice):
         return TUYA_STATE_TO_HA.get(mode)
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return self.operations
 
@@ -126,7 +126,7 @@ class TuyaClimateDevice(TuyaDevice, ClimateDevice):
         """Set new target fan mode."""
         self.tuya.set_fan_mode(fan_mode)
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, operation_mode):
         """Set new target operation mode."""
         self.tuya.set_operation_mode(HA_STATE_TO_TUYA.get(operation_mode))
 

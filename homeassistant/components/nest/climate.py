@@ -151,7 +151,7 @@ class NestThermostat(ClimateDevice):
         return self._temperature
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         if self._mode in [STATE_HEAT, STATE_COOL, STATE_OFF, STATE_ECO]:
             return self._mode
@@ -211,7 +211,7 @@ class NestThermostat(ClimateDevice):
             # restore target temperature
             self.schedule_update_ha_state(True)
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, operation_mode):
         """Set operation mode."""
         if operation_mode in [STATE_HEAT, STATE_COOL, STATE_OFF, STATE_ECO]:
             device_mode = operation_mode
@@ -225,7 +225,7 @@ class NestThermostat(ClimateDevice):
         self.device.mode = device_mode
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """List of available operation modes."""
         return self._operation_list
 

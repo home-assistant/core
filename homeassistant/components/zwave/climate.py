@@ -196,7 +196,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         return self._fan_modes
 
     @property
-    def current_swing_mode(self):
+    def swing_mode(self):
         """Return the swing mode set."""
         return self._current_swing_mode
 

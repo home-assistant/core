@@ -217,7 +217,7 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
             "setFanMode", self._fan_state_to_mode[fan_mode])
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         if self._op_mode_device is None:
             return None
@@ -230,13 +230,13 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
         return self._op_mode_to_state.get(mode)
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         if self._op_mode_device is None:
             return None
         return list(self._op_state_to_mode)
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, operation_mode):
         """Set new target operation mode."""
         if self._op_mode_device is None:
             return

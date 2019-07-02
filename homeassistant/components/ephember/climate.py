@@ -108,18 +108,18 @@ class EphEmberThermostat(ClimateDevice):
         return attributes
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         from pyephember.pyephember import ZoneMode
         mode = ZoneMode(self._zone['mode'])
         return self.map_mode_eph_hass(mode)
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the supported operations."""
         return OPERATION_LIST
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, operation_mode):
         """Set the operation mode."""
         mode = self.map_mode_hass_eph(operation_mode)
         if mode is not None:

@@ -189,7 +189,7 @@ class SensiboClimate(ClimateDevice):
         return None
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         return SENSIBO_TO_HA.get(self._ac_states['mode'])
 
@@ -214,7 +214,7 @@ class SensiboClimate(ClimateDevice):
             self.temperature_unit)
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """List of available operation modes."""
         return self._operations
 
@@ -229,7 +229,7 @@ class SensiboClimate(ClimateDevice):
         return self._current_capabilities.get('fanLevels')
 
     @property
-    def current_swing_mode(self):
+    def swing_mode(self):
         """Return the fan setting."""
         return self._ac_states.get('swing')
 

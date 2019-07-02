@@ -137,12 +137,12 @@ class ZhongHongClimate(ClimateDevice):
         return TEMP_CELSIUS
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         return self._current_operation
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return [STATE_COOL, STATE_HEAT, STATE_DRY, STATE_FAN_ONLY]
 
@@ -204,7 +204,7 @@ class ZhongHongClimate(ClimateDevice):
         if operation_mode is not None:
             self.set_operation_mode(operation_mode)
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, operation_mode):
         """Set new target operation mode."""
         self._device.set_operation_mode(operation_mode.upper())
 

@@ -225,7 +225,7 @@ class Thermostat(ClimateDevice):
         return None
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation."""
         if self.operation_mode == 'auxHeatOnly' or \
                 self.operation_mode == 'heatPump':
@@ -233,7 +233,7 @@ class Thermostat(ClimateDevice):
         return self.operation_mode
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the operation modes list."""
         return self._operation_list
 
@@ -405,7 +405,7 @@ class Thermostat(ClimateDevice):
         """Set the humidity level."""
         self.data.ecobee.set_humidity(self.thermostat_index, humidity)
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, operation_mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
         self.data.ecobee.set_hvac_mode(self.thermostat_index, operation_mode)
         self.update_without_throttle = True

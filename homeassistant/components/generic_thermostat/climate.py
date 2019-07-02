@@ -222,7 +222,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
         return self._cur_temp
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation."""
         return self._current_operation
 
@@ -232,7 +232,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
         return self._target_temp
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """List of available operation modes."""
         return self._operation_list
 

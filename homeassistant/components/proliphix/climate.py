@@ -91,7 +91,7 @@ class ProliphixThermostat(ClimateDevice):
         return self._pdp.setback
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return the current state of the thermostat."""
         state = self._pdp.hvac_mode
         if state in (1, 2):

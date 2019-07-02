@@ -129,7 +129,7 @@ class EvoZone(EvoDevice, ClimateDevice):
             SUPPORT_ON_OFF
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return the current operating mode of the evohome Zone.
 
         The evohome Zones that are in 'FollowSchedule' mode inherit their
@@ -245,7 +245,7 @@ class EvoZone(EvoDevice, ClimateDevice):
                 operation_mode
             )
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, operation_mode):
         """Set an operating mode for a Zone.
 
         Currently limited to 'Auto' & 'Manual'. If 'Off' is needed, it can be
@@ -323,7 +323,7 @@ class EvoController(EvoDevice, ClimateDevice):
         return {'status': status}
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return the current operating mode of the evohome Controller."""
         return TCS_STATE_TO_HA.get(self._status['systemModeStatus']['mode'])
 
@@ -398,7 +398,7 @@ class EvoController(EvoDevice, ClimateDevice):
                 evohomeclient2.AuthenticationError) as err:
             self._handle_exception(err)
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, operation_mode):
         """Set new target operation mode for the TCS.
 
         Currently limited to 'Auto', 'AutoWithEco' & 'HeatingOff'. If 'Away'

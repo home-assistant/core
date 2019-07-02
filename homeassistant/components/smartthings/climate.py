@@ -243,7 +243,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
         return self._device.status.humidity
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         return self._current_operation
 
@@ -266,7 +266,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
         return self._device.status.supported_thermostat_fan_modes
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return self._operations
 
@@ -377,7 +377,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
         return self._device.status.fan_mode
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         return AC_MODE_TO_STATE.get(self._device.status.air_conditioner_mode)
 
@@ -422,7 +422,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
         return self._device.status.switch
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return self._operations
 

@@ -130,12 +130,12 @@ class GeniusClimateZone(ClimateDevice):
         return self._supported_features
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return self._operation_list
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return the current operation mode."""
         return GH_STATE_TO_HA[self._zone.mode]
 

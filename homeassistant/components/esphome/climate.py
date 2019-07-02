@@ -74,7 +74,7 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
         return TEMP_CELSIUS
 
     @property
-    def operation_list(self) -> List[str]:
+    def hvac_modes(self) -> List[str]:
         """Return the list of available operation modes."""
         return [
             _climate_modes.from_esphome(mode)
@@ -111,7 +111,7 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
         return features
 
     @esphome_state_property
-    def current_operation(self) -> Optional[str]:
+    def hvac_mode(self) -> Optional[str]:
         """Return current operation ie. heat, cool, idle."""
         return _climate_modes.from_esphome(self._state.mode)
 

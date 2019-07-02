@@ -221,12 +221,12 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
         return self._max_target_humidity
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         return self._current_mode
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return self._valid_modes
 

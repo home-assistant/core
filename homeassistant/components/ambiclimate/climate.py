@@ -197,7 +197,7 @@ class AmbiclimateEntity(ClimateDevice):
         return SUPPORT_FLAGS
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation."""
         return STATE_HEAT if self.is_on else STATE_OFF
 

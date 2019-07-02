@@ -116,7 +116,7 @@ class OpenThermGateway(ClimateDevice):
         return TEMP_CELSIUS
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         return self._current_operation
 

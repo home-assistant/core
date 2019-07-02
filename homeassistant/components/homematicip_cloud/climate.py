@@ -76,7 +76,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         return self._device.humidity
 
     @property
-    def current_operation(self) -> str:
+    def hvac_mode(self) -> str:
         """Return current operation ie. automatic or manual."""
         return HMIP_STATE_TO_HA.get(self._device.controlMode)
 

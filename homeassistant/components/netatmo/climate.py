@@ -162,12 +162,12 @@ class NetatmoThermostat(ClimateDevice):
         return self._data.room_status[self._room_id]['target_temperature']
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return the current state of the thermostat."""
         return self._operation_mode
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the operation modes list."""
         return self._operation_list
 
@@ -234,7 +234,7 @@ class NetatmoThermostat(ClimateDevice):
         self.update_without_throttle = True
         self.schedule_update_ha_state()
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, operation_mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
         if not self.is_on:
             self.turn_on()

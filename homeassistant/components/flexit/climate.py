@@ -134,7 +134,7 @@ class Flexit(ClimateDevice):
         return self._target_temperature
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         return self._current_operation
 

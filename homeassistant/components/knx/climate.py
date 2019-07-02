@@ -237,14 +237,14 @@ class KNXClimate(ClimateDevice):
         await self.async_update_ha_state()
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         if self.device.mode.supports_operation_mode:
             return OPERATION_MODES.get(self.device.mode.operation_mode.value)
         return None
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return [OPERATION_MODES.get(operation_mode.value) for
                 operation_mode in

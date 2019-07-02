@@ -115,18 +115,18 @@ class EQ3BTSmartThermostat(ClimateDevice):
         self._thermostat.target_temperature = temperature
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return the current operation mode."""
         if self._thermostat.mode < 0:
             return None
         return self.modes[self._thermostat.mode]
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return [x for x in self.modes.values()]
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, operation_mode):
         """Set operation mode."""
         self._target_mode = operation_mode
         self._thermostat.mode = self.reverse_modes[operation_mode]

@@ -126,7 +126,7 @@ class VenstarThermostat(ClimateDevice):
         return VALID_FAN_STATES
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return VALID_THERMOSTAT_MODES
 
@@ -141,7 +141,7 @@ class VenstarThermostat(ClimateDevice):
         return self._client.get_indoor_humidity()
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         if self._client.mode == self._client.MODE_HEAT:
             return STATE_HEAT
@@ -268,7 +268,7 @@ class VenstarThermostat(ClimateDevice):
         if not success:
             _LOGGER.error("Failed to change the fan mode")
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, operation_mode):
         """Set new target operation mode."""
         self._set_operation_mode(operation_mode)
 

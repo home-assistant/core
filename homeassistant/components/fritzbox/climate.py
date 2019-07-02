@@ -106,7 +106,7 @@ class FritzboxThermostat(ClimateDevice):
             self._device.set_target_temperature(temperature)
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return the current operation mode."""
         if self._target_temperature == ON_API_TEMPERATURE:
             return STATE_ON
@@ -119,11 +119,11 @@ class FritzboxThermostat(ClimateDevice):
         return STATE_MANUAL
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return OPERATION_LIST
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, operation_mode):
         """Set new operation mode."""
         if operation_mode == STATE_HEAT:
             self.set_temperature(temperature=self._comfort_temperature)
