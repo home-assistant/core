@@ -906,3 +906,106 @@ async def test_wait_template_with_trigger(hass, calls):
     assert 1 == len(calls)
     assert 'numeric_state - test.entity - 12' == \
         calls[0].data['some']
+
+
+async def test_if_fires_on_entities_change_no_overlap(hass, calls):
+    """Test for firing on entities change with no overlap."""
+    assert await async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'trigger': {
+                'platform': 'numeric_state',
+                'entity_id': [
+                    'test.entity_1',
+                    'test.entity_2',
+                ],
+                'above': 8,
+                'below': 12,
+                'for': {
+                    'seconds': 5
+                },
+            },
+            'action': {
+                'service': 'test.automation',
+                'data_template': {
+                    'some': '{{ trigger.entity_id }}',
+                },
+            }
+        }
+    })
+    await hass.async_block_till_done()
+
+    utcnow = dt_util.utcnow()
+    with patch('homeassistant.core.dt_util.utcnow') as mock_utcnow:
+        mock_utcnow.return_value = utcnow
+        hass.states.async_set('test.entity_1', 9)
+        await hass.async_block_till_done()
+        mock_utcnow.return_value += timedelta(seconds=10)
+        async_fire_time_changed(hass, mock_utcnow.return_value)
+        await hass.async_block_till_done()
+        assert 1 == len(calls)
+        assert 'test.entity_1' == calls[0].data['some']
+
+        hass.states.async_set('test.entity_2', 9)
+        await hass.async_block_till_done()
+        mock_utcnow.return_value += timedelta(seconds=10)
+        async_fire_time_changed(hass, mock_utcnow.return_value)
+        await hass.async_block_till_done()
+        assert 2 == len(calls)
+        assert 'test.entity_2' == calls[1].data['some']
+
+
+async def test_if_fires_on_entities_change_overlap(hass, calls):
+    """Test for firing on entities change with overlap."""
+    assert await async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'trigger': {
+                'platform': 'numeric_state',
+                'entity_id': [
+                    'test.entity_1',
+                    'test.entity_2',
+                ],
+                'above': 8,
+                'below': 12,
+                'for': {
+                    'seconds': 5
+                },
+            },
+            'action': {
+                'service': 'test.automation',
+                'data_template': {
+                    'some': '{{ trigger.entity_id }}',
+                },
+            }
+        }
+    })
+    await hass.async_block_till_done()
+
+    utcnow = dt_util.utcnow()
+    with patch('homeassistant.core.dt_util.utcnow') as mock_utcnow:
+        mock_utcnow.return_value = utcnow
+        hass.states.async_set('test.entity_1', 9)
+        await hass.async_block_till_done()
+        mock_utcnow.return_value += timedelta(seconds=1)
+        async_fire_time_changed(hass, mock_utcnow.return_value)
+        hass.states.async_set('test.entity_2', 9)
+        await hass.async_block_till_done()
+        mock_utcnow.return_value += timedelta(seconds=1)
+        async_fire_time_changed(hass, mock_utcnow.return_value)
+        hass.states.async_set('test.entity_2', 15)
+        await hass.async_block_till_done()
+        mock_utcnow.return_value += timedelta(seconds=1)
+        async_fire_time_changed(hass, mock_utcnow.return_value)
+        hass.states.async_set('test.entity_2', 9)
+        await hass.async_block_till_done()
+        assert 0 == len(calls)
+        mock_utcnow.return_value += timedelta(seconds=3)
+        async_fire_time_changed(hass, mock_utcnow.return_value)
+        await hass.async_block_till_done()
+        assert 1 == len(calls)
+        assert 'test.entity_1' == calls[0].data['some']
+
+        mock_utcnow.return_value += timedelta(seconds=3)
+        async_fire_time_changed(hass, mock_utcnow.return_value)
+        await hass.async_block_till_done()
+        assert 2 == len(calls)
+        assert 'test.entity_2' == calls[1].data['some']
