@@ -87,10 +87,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             client = somecomfort.SomeComfort(username, password)
         except somecomfort.AuthError:
             _LOGGER.error("Failed to login to honeywell account %s", username)
-            return False
+            return
         except somecomfort.SomeComfortError as ex:
             _LOGGER.error("Failed to initialize honeywell client: %s", str(ex))
-            return False
+            return
 
         dev_id = config.get('thermostat')
         loc_id = config.get('location')
@@ -103,13 +103,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                       for device in location.devices_by_id.values()
                       if ((not loc_id or location.locationid == loc_id) and
                           (not dev_id or device.deviceid == dev_id))])
-        return True
+        return
 
     _LOGGER.warning(
         "The honeywell component has been deprecated for EU (i.e. non-US) "
         "systems. For EU-based systems, use the evohome component, "
         "see: https://home-assistant.io/components/evohome")
-    return False
 
 
 class HoneywellUSThermostat(ClimateDevice):
