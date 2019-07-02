@@ -8,7 +8,7 @@ from libpurecool.dyson_pure_hotcool_link import DysonPureHotCoolLink
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, HVAC_MODE_COOL,
-    HVAC_MODE_HEAT, SUPPORT_HVAC_ACTION, SUPPORT_FAN_MODE, FAN_FOCUS,
+    HVAC_MODE_HEAT, SUPPORT_FAN_MODE, FAN_FOCUS,
     FAN_DIFFUSE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
@@ -18,8 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FAN = [FAN_FOCUS, FAN_DIFFUSE]
 SUPPORT_HVAG = [HVAC_MODE_COOL, HVAC_MODE_HEAT]
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE |
-                 SUPPORT_HVAC_ACTION)
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

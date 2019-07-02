@@ -52,7 +52,7 @@ class LcnClimate(LcnDevice, ClimateDevice):
 
         self._current_temperature = None
         self._target_temperature = None
-        self._is_on = True
+        self._is_on = None
 
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""

@@ -28,7 +28,7 @@ from .const import (
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_STEP, DOMAIN, HVAC_MODES,
     SERVICE_SET_AUX_HEAT, SERVICE_SET_FAN_MODE, SERVICE_SET_PRESET_MODE,
     SERVICE_SET_HUMIDITY, SERVICE_SET_HVAC_MODE, SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE, SUPPORT_AUX_HEAT, SUPPORT_HVAC_ACTION,
+    SERVICE_SET_TEMPERATURE, SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE, SUPPORT_SWING_MODE,
     SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_TEMPERATURE_RANGE)
 from .reproduce_state import async_reproduce_states  # noqa
@@ -70,7 +70,7 @@ SET_FAN_MODE_SCHEMA = vol.Schema({
 })
 SET_PRESET_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-    vol.Required(ATTR_PRESET_MODE): cv.string,
+    vol.Required(ATTR_PRESET_MODE): vol.Maybe(cv.string),
 })
 SET_HVAC_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
@@ -192,7 +192,7 @@ class ClimateDevice(Entity):
             data[ATTR_FAN_MODE] = self.fan_mode
             data[ATTR_FAN_MODES] = self.fan_modes
 
-        if supported_features & SUPPORT_HVAC_ACTION:
+        if self.hvac_action:
             data[ATTR_HVAC_ACTIONS] = self.hvac_action
 
         if supported_features & SUPPORT_PRESET_MODE:
@@ -264,48 +264,75 @@ class ClimateDevice(Entity):
 
     @property
     def target_temperature_high(self) -> Optional[float]:
-        """Return the highbound target temperature we try to reach."""
-        return None
+        """Return the highbound target temperature we try to reach.
+
+        Requires SUPPORT_TARGET_TEMPERATURE_RANGE.
+        """
+        raise NotImplementedError
 
     @property
     def target_temperature_low(self) -> Optional[float]:
-        """Return the lowbound target temperature we try to reach."""
-        return None
+        """Return the lowbound target temperature we try to reach.
+
+        Requires SUPPORT_TARGET_TEMPERATURE_RANGE.
+        """
+        raise NotImplementedError
 
     @property
     def preset_mode(self) -> Optional[str]:
-        """Return the current preset mode, e.g., home, away, temp."""
-        return None
+        """Return the current preset mode, e.g., home, away, temp.
+
+        Requires SUPPORT_PRESET_MODE.
+        """
+        raise NotImplementedError
 
     @property
     def preset_modes(self) -> Optional[List[str]]:
-        """Return a list of available preset modes."""
-        return None
+        """Return a list of available preset modes.
+
+        Requires SUPPORT_PRESET_MODE.
+        """
+        raise NotImplementedError
 
     @property
     def is_aux_heat(self) -> Optional[str]:
-        """Return true if aux heater."""
-        return None
+        """Return true if aux heater.
+
+        Requires SUPPORT_AUX_HEAT.
+        """
+        raise NotImplementedError
 
     @property
     def fan_mode(self) -> Optional[str]:
-        """Return the fan setting."""
-        return None
+        """Return the fan setting.
+
+        Requires SUPPORT_FAN_MODE.
+        """
+        raise NotImplementedError
 
     @property
     def fan_modes(self) -> Optional[List[str]]:
-        """Return the list of available fan modes."""
-        return None
+        """Return the list of available fan modes.
+
+        Requires SUPPORT_FAN_MODE.
+        """
+        raise NotImplementedError
 
     @property
     def swing_mode(self) -> Optional[str]:
-        """Return the fan setting."""
-        return None
+        """Return the swing setting.
+
+        Requires SUPPORT_SWING_MODE.
+        """
+        raise NotImplementedError
 
     @property
     def swing_modes(self) -> Optional[List[str]]:
-        """Return the list of available swing modes."""
-        return None
+        """Return the list of available swing modes.
+
+        Requires SUPPORT_SWING_MODE.
+        """
+        raise NotImplementedError
 
     def set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""

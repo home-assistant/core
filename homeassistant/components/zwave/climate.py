@@ -6,8 +6,7 @@ from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, CURRENT_HVAC_OFF,
     DOMAIN, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_HEAT_COOL, HVAC_MODE_OFF,
-    SUPPORT_HVAC_ACTION, SUPPORT_FAN_MODE, SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE)
+    SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -110,8 +109,6 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         support = SUPPORT_TARGET_TEMPERATURE
         if self.values.fan_mode:
             support |= SUPPORT_FAN_MODE
-        if self.values.operating_state:
-            support |= SUPPORT_HVAC_ACTION
         if self._zxt_120 == 1 and self.values.zxt_120_swing_mode:
             support |= SUPPORT_SWING_MODE
         return support
