@@ -9,7 +9,9 @@
 		"-e", "GIT_EDTIOR='code --wait'"
 	],
 	"extensions": [
-		"ms-python.python"
+		"ms-python.python",
+		"ms-azure-devops.azure-pipelines",
+		"redhat.vscode-yaml"
 	],
 	"settings": {
 		"python.pythonPath": "/usr/local/bin/python",
