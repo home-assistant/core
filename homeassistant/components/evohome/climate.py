@@ -8,10 +8,10 @@ import evohomeclient2
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_ECO, STATE_MANUAL, SUPPORT_AWAY_MODE, SUPPORT_ON_OFF,
+    HVAC_MODE_AUTO, STATE_ECO, STATE_MANUAL, SUPPORT_AWAY_MODE, SUPPORT_ON_OFF,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
-    CONF_SCAN_INTERVAL, STATE_OFF,)
+    CONF_SCAN_INTERVAL, HVAC_MODE_OFF,)
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from . import (
@@ -39,18 +39,18 @@ EVO_PERMOVER = 'PermanentOverride'
 # For the Controller. NB: evohome treats Away mode as a mode in/of itself,
 # where HA considers it to 'override' the exising operating mode
 TCS_STATE_TO_HA = {
-    EVO_RESET: STATE_AUTO,
-    EVO_AUTO: STATE_AUTO,
+    EVO_RESET: HVAC_MODE_AUTO,
+    EVO_AUTO: HVAC_MODE_AUTO,
     EVO_AUTOECO: STATE_ECO,
-    EVO_AWAY: STATE_AUTO,
-    EVO_DAYOFF: STATE_AUTO,
-    EVO_CUSTOM: STATE_AUTO,
-    EVO_HEATOFF: STATE_OFF
+    EVO_AWAY: HVAC_MODE_AUTO,
+    EVO_DAYOFF: HVAC_MODE_AUTO,
+    EVO_CUSTOM: HVAC_MODE_AUTO,
+    EVO_HEATOFF: HVAC_MODE_OFF
 }
 HA_STATE_TO_TCS = {
-    STATE_AUTO: EVO_AUTO,
+    HVAC_MODE_AUTO: EVO_AUTO,
     STATE_ECO: EVO_AUTOECO,
-    STATE_OFF: EVO_HEATOFF
+    HVAC_MODE_OFF: EVO_HEATOFF
 }
 TCS_OP_LIST = list(HA_STATE_TO_TCS)
 
@@ -61,12 +61,12 @@ EVO_PERMOVER = 'PermanentOverride'
 
 # for the Zones...
 ZONE_STATE_TO_HA = {
-    EVO_FOLLOW: STATE_AUTO,
+    EVO_FOLLOW: HVAC_MODE_AUTO,
     EVO_TEMPOVER: STATE_MANUAL,
     EVO_PERMOVER: STATE_MANUAL
 }
 HA_STATE_TO_ZONE = {
-    STATE_AUTO: EVO_FOLLOW,
+    HVAC_MODE_AUTO: EVO_FOLLOW,
     STATE_MANUAL: EVO_PERMOVER
 }
 ZONE_OP_LIST = list(HA_STATE_TO_ZONE)

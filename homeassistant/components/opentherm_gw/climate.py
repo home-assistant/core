@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_COOL, HVAC_MODE_HEAT, STATE_IDLE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES, PRECISION_TENTHS,
     PRECISION_WHOLE, TEMP_CELSIUS)
@@ -56,9 +56,9 @@ class OpenThermGateway(ClimateDevice):
         flame_on = status.get(self._gw_vars.DATA_SLAVE_FLAME_ON)
         cooling_active = status.get(self._gw_vars.DATA_SLAVE_COOLING_ACTIVE)
         if ch_active and flame_on:
-            self._current_operation = STATE_HEAT
+            self._current_operation = HVAC_MODE_HEAT
         elif cooling_active:
-            self._current_operation = STATE_COOL
+            self._current_operation = HVAC_MODE_COOL
         else:
             self._current_operation = STATE_IDLE
         self._current_temperature = status.get(self._gw_vars.DATA_ROOM_TEMP)

@@ -5,10 +5,10 @@ import requests
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_OPERATION_MODE, STATE_ECO, STATE_HEAT, STATE_MANUAL,
+    ATTR_OPERATION_MODE, STATE_ECO, HVAC_MODE_HEAT, STATE_MANUAL,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, PRECISION_HALVES, STATE_OFF,
+    ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, PRECISION_HALVES, HVAC_MODE_OFF,
     STATE_ON, TEMP_CELSIUS)
 
 from . import (
@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE)
 
-OPERATION_LIST = [STATE_HEAT, STATE_ECO, STATE_OFF, STATE_ON]
+OPERATION_LIST = [HVAC_MODE_HEAT, STATE_ECO, HVAC_MODE_OFF, STATE_ON]
 
 MIN_TEMPERATURE = 8
 MAX_TEMPERATURE = 28
@@ -111,9 +111,9 @@ class FritzboxThermostat(ClimateDevice):
         if self._target_temperature == ON_API_TEMPERATURE:
             return STATE_ON
         if self._target_temperature == OFF_API_TEMPERATURE:
-            return STATE_OFF
+            return HVAC_MODE_OFF
         if self._target_temperature == self._comfort_temperature:
-            return STATE_HEAT
+            return HVAC_MODE_HEAT
         if self._target_temperature == self._eco_temperature:
             return STATE_ECO
         return STATE_MANUAL
@@ -125,11 +125,11 @@ class FritzboxThermostat(ClimateDevice):
 
     def set_hvac_mode(self, operation_mode):
         """Set new operation mode."""
-        if operation_mode == STATE_HEAT:
+        if operation_mode == HVAC_MODE_HEAT:
             self.set_temperature(temperature=self._comfort_temperature)
         elif operation_mode == STATE_ECO:
             self.set_temperature(temperature=self._eco_temperature)
-        elif operation_mode == STATE_OFF:
+        elif operation_mode == HVAC_MODE_OFF:
             self.set_temperature(temperature=OFF_REPORT_SET_TEMPERATURE)
         elif operation_mode == STATE_ON:
             self.set_temperature(temperature=ON_REPORT_SET_TEMPERATURE)

@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING, List, Optional
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_OPERATION_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    STATE_AUTO, STATE_COOL, STATE_HEAT, SUPPORT_AWAY_MODE,
+    HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, SUPPORT_AWAY_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.const import (
     ATTR_TEMPERATURE, PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE,
-    STATE_OFF, TEMP_CELSIUS)
+    HVAC_MODE_OFF, TEMP_CELSIUS)
 
 from . import EsphomeEntity, platform_async_setup_entry, \
     esphome_state_property, esphome_map_enum
@@ -40,10 +40,10 @@ def _climate_modes():
     # pylint: disable=redefined-outer-name
     from aioesphomeapi import ClimateMode  # noqa
     return {
-        ClimateMode.OFF: STATE_OFF,
-        ClimateMode.AUTO: STATE_AUTO,
-        ClimateMode.COOL: STATE_COOL,
-        ClimateMode.HEAT: STATE_HEAT,
+        ClimateMode.OFF: HVAC_MODE_OFF,
+        ClimateMode.AUTO: HVAC_MODE_AUTO,
+        ClimateMode.COOL: HVAC_MODE_COOL,
+        ClimateMode.HEAT: HVAC_MODE_HEAT,
     }
 
 

@@ -5,8 +5,8 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    ATTR_OPERATION_MODE, STATE_COOL, STATE_DRY,
-    STATE_FAN_ONLY, STATE_HEAT, SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
+    ATTR_OPERATION_MODE, HVAC_MODE_COOL, HVAC_MODE_DRY,
+    HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (ATTR_TEMPERATURE, CONF_HOST, CONF_PORT,
                                  EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS)
@@ -144,7 +144,7 @@ class ZhongHongClimate(ClimateDevice):
     @property
     def hvac_modes(self):
         """Return the list of available operation modes."""
-        return [STATE_COOL, STATE_HEAT, STATE_DRY, STATE_FAN_ONLY]
+        return [HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY]
 
     @property
     def current_temperature(self):

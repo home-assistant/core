@@ -3,7 +3,7 @@ import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_DRY, STATE_ECO, STATE_FAN_ONLY, STATE_HEAT, STATE_IDLE, STATE_MANUAL,
+    HVAC_MODE_DRY, STATE_ECO, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, STATE_IDLE, STATE_MANUAL,
     SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
 from homeassistant.core import callback
@@ -45,10 +45,10 @@ OPERATION_MODES = {
     "Frost Protection": STATE_MANUAL,
     "Night": STATE_IDLE,
     "Standby": STATE_ECO,
-    "Comfort": STATE_HEAT,
+    "Comfort": HVAC_MODE_HEAT,
     # Map DPT 201.104 HVAC control modes
-    "Fan only": STATE_FAN_ONLY,
-    "Dehumidification": STATE_DRY
+    "Fan only": HVAC_MODE_FAN_ONLY,
+    "Dehumidification": HVAC_MODE_DRY
 }
 
 OPERATION_MODES_INV = dict((

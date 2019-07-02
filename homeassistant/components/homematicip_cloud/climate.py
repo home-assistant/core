@@ -6,7 +6,7 @@ from homematicip.aio.home import AsyncHome
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_MANUAL, SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_AUTO, STATE_MANUAL, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
@@ -16,7 +16,7 @@ from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 _LOGGER = logging.getLogger(__name__)
 
 HA_STATE_TO_HMIP = {
-    STATE_AUTO: 'AUTOMATIC',
+    HVAC_MODE_AUTO: 'AUTOMATIC',
     STATE_MANUAL: 'MANUAL',
 }
 

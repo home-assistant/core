@@ -2,8 +2,8 @@
 import logging
 
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_COOL, STATE_DRY,
-    STATE_ECO, STATE_FAN_ONLY, STATE_HEAT,
+    HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_DRY,
+    STATE_ECO, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT,
     STATE_MANUAL, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_OPERATION_MODE, SUPPORT_FAN_MODE)
 
@@ -12,7 +12,7 @@ from homeassistant.components.climate import (
 
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    STATE_OFF,
+    HVAC_MODE_OFF,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT)
 
@@ -25,16 +25,16 @@ SPEED_HIGH = 'high'
 
 # State definitions missing from HA, but defined by Z-Wave standard.
 # We map them to states known supported by HA here:
-STATE_AUXILIARY = STATE_HEAT
-STATE_RESUME = STATE_HEAT
-STATE_MOIST = STATE_DRY
-STATE_AUTO_CHANGEOVER = STATE_AUTO
+STATE_AUXILIARY = HVAC_MODE_HEAT
+STATE_RESUME = HVAC_MODE_HEAT
+STATE_MOIST = HVAC_MODE_DRY
+HVAC_MODE_AUTO_CHANGEOVER = HVAC_MODE_AUTO
 STATE_ENERGY_HEAT = STATE_ECO
-STATE_ENERGY_COOL = STATE_COOL
-STATE_FULL_POWER = STATE_AUTO
+STATE_ENERGY_COOL = HVAC_MODE_COOL
+STATE_FULL_POWER = HVAC_MODE_AUTO
 STATE_FORCE_OPEN = STATE_MANUAL
-STATE_AWAY = STATE_AUTO
-STATE_FURNACE = STATE_HEAT
+STATE_AWAY = HVAC_MODE_AUTO
+STATE_FURNACE = HVAC_MODE_HEAT
 
 FAN_AUTO_HIGH = 'auto_high'
 FAN_AUTO_MEDIUM = 'auto_medium'
@@ -49,7 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 # SDS13781-10 Z-Wave Application Command Class Specification 2019-01-04
 # Table 128, Thermostat Fan Mode Set version 4::Fan Mode encoding
 FANMODES = {
-    0: STATE_OFF,
+    0: HVAC_MODE_OFF,
     1: SPEED_LOW,
     2: FAN_AUTO_HIGH,
     3: SPEED_HIGH,
@@ -60,23 +60,23 @@ FANMODES = {
     8: FAN_LEFT_RIGHT,
     9: FAN_UP_DOWN,
     10: FAN_QUIET,
-    128: STATE_AUTO
+    128: HVAC_MODE_AUTO
 }
 
 # SDS13781-10 Z-Wave Application Command Class Specification 2019-01-04
 # Table 130, Thermostat Mode Set version 3::Mode encoding.
 OPMODES = {
-    0: STATE_OFF,
-    1: STATE_HEAT,
-    2: STATE_COOL,
-    3: STATE_AUTO,
+    0: HVAC_MODE_OFF,
+    1: HVAC_MODE_HEAT,
+    2: HVAC_MODE_COOL,
+    3: HVAC_MODE_AUTO,
     4: STATE_AUXILIARY,
     5: STATE_RESUME,
-    6: STATE_FAN_ONLY,
+    6: HVAC_MODE_FAN_ONLY,
     7: STATE_FURNACE,
-    8: STATE_DRY,
+    8: HVAC_MODE_DRY,
     9: STATE_MOIST,
-    10: STATE_AUTO_CHANGEOVER,
+    10: HVAC_MODE_AUTO_CHANGEOVER,
     11: STATE_ENERGY_HEAT,
     12: STATE_ENERGY_COOL,
     13: STATE_AWAY,
@@ -284,6 +284,6 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
     @property
     def is_on(self):
         """Return true if on."""
-        if self.current_operation == STATE_OFF:
+        if self.current_operation == HVAC_MODE_OFF:
             return False
         return True

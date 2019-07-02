@@ -3,10 +3,10 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_OPERATION_MODE,
+    HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, STATE_IDLE, SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_HUMIDITY_HIGH, SUPPORT_TARGET_HUMIDITY_LOW)
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, HVAC_MODE_OFF, TEMP_CELSIUS
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -14,10 +14,10 @@ _LOGGER = logging.getLogger(__name__)
 
 # Map of Homekit operation modes to hass modes
 MODE_HOMEKIT_TO_HASS = {
-    0: STATE_OFF,
-    1: STATE_HEAT,
-    2: STATE_COOL,
-    3: STATE_AUTO,
+    0: HVAC_MODE_OFF,
+    1: HVAC_MODE_HEAT,
+    2: HVAC_MODE_COOL,
+    3: HVAC_MODE_AUTO,
 }
 
 # Map of hass operation modes to homekit modes
@@ -169,10 +169,10 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
         """Return the current state."""
         # If the device reports its operating mode as off, it sometimes doesn't
         # report a new state.
-        if self._current_mode == STATE_OFF:
-            return STATE_OFF
+        if self._current_mode == HVAC_MODE_OFF:
+            return HVAC_MODE_OFF
 
-        if self._state == STATE_OFF and self._current_mode != STATE_OFF:
+        if self._state == HVAC_MODE_OFF and self._current_mode != HVAC_MODE_OFF:
             return STATE_IDLE
         return self._state
 

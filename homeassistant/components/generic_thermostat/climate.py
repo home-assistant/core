@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES,
     PRECISION_TENTHS, PRECISION_WHOLE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    STATE_OFF, STATE_ON, STATE_UNKNOWN)
+    HVAC_MODE_OFF, STATE_ON, STATE_UNKNOWN)
 from homeassistant.core import DOMAIN as HA_DOMAIN, callback
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
@@ -17,7 +17,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_AWAY_MODE, ATTR_OPERATION_MODE, STATE_AUTO, STATE_COOL, STATE_HEAT,
+    ATTR_AWAY_MODE, ATTR_OPERATION_MODE, HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT,
     STATE_IDLE, SUPPORT_AWAY_MODE, SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE)
 
@@ -58,7 +58,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_KEEP_ALIVE): vol.All(
         cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_INITIAL_OPERATION_MODE):
-        vol.In([STATE_AUTO, STATE_OFF]),
+        vol.In([HVAC_MODE_AUTO, HVAC_MODE_OFF]),
     vol.Optional(CONF_AWAY_TEMP): vol.Coerce(float),
     vol.Optional(CONF_PRECISION): vol.In(
         [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
@@ -111,14 +111,14 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
             else away_temp
         self._temp_precision = precision
         if self.ac_mode:
-            self._current_operation = STATE_COOL
-            self._operation_list = [STATE_COOL, STATE_OFF]
+            self._current_operation = HVAC_MODE_COOL
+            self._operation_list = [HVAC_MODE_COOL, HVAC_MODE_OFF]
         else:
-            self._current_operation = STATE_HEAT
-            self._operation_list = [STATE_HEAT, STATE_OFF]
-        if initial_operation_mode == STATE_OFF:
+            self._current_operation = HVAC_MODE_HEAT
+            self._operation_list = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+        if initial_operation_mode == HVAC_MODE_OFF:
             self._enabled = False
-            self._current_operation = STATE_OFF
+            self._current_operation = HVAC_MODE_OFF
         else:
             self._enabled = True
         self._active = False
@@ -173,7 +173,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
                     old_state.attributes[ATTR_OPERATION_MODE] is not None):
                 self._current_operation = \
                     old_state.attributes[ATTR_OPERATION_MODE]
-                self._enabled = self._current_operation != STATE_OFF
+                self._enabled = self._current_operation != HVAC_MODE_OFF
 
         else:
             # No previous state, try and restore defaults
@@ -192,7 +192,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
             return self.current_operation
         if self._enabled:
             return STATE_IDLE
-        return STATE_OFF
+        return HVAC_MODE_OFF
 
     @property
     def should_poll(self):
@@ -238,16 +238,16 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set operation mode."""
-        if operation_mode == STATE_HEAT:
-            self._current_operation = STATE_HEAT
+        if operation_mode == HVAC_MODE_HEAT:
+            self._current_operation = HVAC_MODE_HEAT
             self._enabled = True
             await self._async_control_heating(force=True)
-        elif operation_mode == STATE_COOL:
-            self._current_operation = STATE_COOL
+        elif operation_mode == HVAC_MODE_COOL:
+            self._current_operation = HVAC_MODE_COOL
             self._enabled = True
             await self._async_control_heating(force=True)
-        elif operation_mode == STATE_OFF:
-            self._current_operation = STATE_OFF
+        elif operation_mode == HVAC_MODE_OFF:
+            self._current_operation = HVAC_MODE_OFF
             self._enabled = False
             if self._is_device_active:
                 await self._async_heater_turn_off()
@@ -263,7 +263,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
 
     async def async_turn_off(self):
         """Turn thermostat off."""
-        await self.async_set_operation_mode(STATE_OFF)
+        await self.async_set_operation_mode(HVAC_MODE_OFF)
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -338,7 +338,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
                     if self._is_device_active:
                         current_state = STATE_ON
                     else:
-                        current_state = STATE_OFF
+                        current_state = HVAC_MODE_OFF
                     long_enough = condition.state(
                         self.hass, self.heater_entity_id, current_state,
                         self.min_cycle_duration)

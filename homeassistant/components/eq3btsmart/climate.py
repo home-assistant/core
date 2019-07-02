@@ -5,11 +5,11 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    STATE_HEAT, STATE_MANUAL, STATE_ECO,
+    HVAC_MODE_HEAT, STATE_MANUAL, STATE_ECO,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE,
     SUPPORT_ON_OFF)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_MAC, CONF_DEVICES, STATE_ON, STATE_OFF,
+    ATTR_TEMPERATURE, CONF_MAC, CONF_DEVICES, STATE_ON, HVAC_MODE_OFF,
     TEMP_CELSIUS, PRECISION_HALVES)
 import homeassistant.helpers.config_validation as cv
 
@@ -57,8 +57,8 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
         self.modes = {
             eq3.Mode.Open: STATE_ON,
-            eq3.Mode.Closed: STATE_OFF,
-            eq3.Mode.Auto: STATE_HEAT,
+            eq3.Mode.Closed: HVAC_MODE_OFF,
+            eq3.Mode.Auto: HVAC_MODE_HEAT,
             eq3.Mode.Manual: STATE_MANUAL,
             eq3.Mode.Boost: STATE_BOOST,
             eq3.Mode.Away: STATE_ECO,
@@ -133,7 +133,7 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
     def turn_away_mode_off(self):
         """Away mode off turns to AUTO mode."""
-        self.set_operation_mode(STATE_HEAT)
+        self.set_operation_mode(HVAC_MODE_HEAT)
 
     def turn_away_mode_on(self):
         """Set away mode on."""
@@ -146,11 +146,11 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
     def turn_on(self):
         """Turn device on."""
-        self.set_operation_mode(STATE_HEAT)
+        self.set_operation_mode(HVAC_MODE_HEAT)
 
     def turn_off(self):
         """Turn device off."""
-        self.set_operation_mode(STATE_OFF)
+        self.set_operation_mode(HVAC_MODE_OFF)
 
     @property
     def min_temp(self):

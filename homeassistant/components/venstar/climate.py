@@ -6,14 +6,14 @@ import voluptuous as vol
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     ATTR_OPERATION_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    STATE_AUTO, STATE_COOL, STATE_HEAT, SUPPORT_FAN_MODE,
+    HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_HUMIDITY, SUPPORT_AWAY_MODE,
     SUPPORT_TARGET_HUMIDITY_HIGH, SUPPORT_TARGET_HUMIDITY_LOW,
     SUPPORT_HOLD_MODE, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_TIMEOUT,
-    CONF_USERNAME, PRECISION_WHOLE, STATE_OFF, STATE_ON, TEMP_CELSIUS,
+    CONF_USERNAME, PRECISION_WHOLE, HVAC_MODE_OFF, STATE_ON, TEMP_CELSIUS,
     TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 
@@ -26,8 +26,8 @@ CONF_HUMIDIFIER = 'humidifier'
 
 DEFAULT_SSL = False
 
-VALID_FAN_STATES = [STATE_ON, STATE_AUTO]
-VALID_THERMOSTAT_MODES = [STATE_HEAT, STATE_COOL, STATE_OFF, STATE_AUTO]
+VALID_FAN_STATES = [STATE_ON, HVAC_MODE_AUTO]
+VALID_THERMOSTAT_MODES = [HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_OFF, HVAC_MODE_AUTO]
 
 HOLD_MODE_OFF = 'off'
 HOLD_MODE_TEMPERATURE = 'temperature'
@@ -144,18 +144,18 @@ class VenstarThermostat(ClimateDevice):
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         if self._client.mode == self._client.MODE_HEAT:
-            return STATE_HEAT
+            return HVAC_MODE_HEAT
         if self._client.mode == self._client.MODE_COOL:
-            return STATE_COOL
+            return HVAC_MODE_COOL
         if self._client.mode == self._client.MODE_AUTO:
-            return STATE_AUTO
-        return STATE_OFF
+            return HVAC_MODE_AUTO
+        return HVAC_MODE_OFF
 
     @property
     def fan_mode(self):
         """Return the fan setting."""
         if self._client.fan == self._client.FAN_AUTO:
-            return STATE_AUTO
+            return HVAC_MODE_AUTO
         return STATE_ON
 
     @property
@@ -218,11 +218,11 @@ class VenstarThermostat(ClimateDevice):
 
     def _set_operation_mode(self, operation_mode):
         """Change the operation mode (internal)."""
-        if operation_mode == STATE_HEAT:
+        if operation_mode == HVAC_MODE_HEAT:
             success = self._client.set_mode(self._client.MODE_HEAT)
-        elif operation_mode == STATE_COOL:
+        elif operation_mode == HVAC_MODE_COOL:
             success = self._client.set_mode(self._client.MODE_COOL)
-        elif operation_mode == STATE_AUTO:
+        elif operation_mode == HVAC_MODE_AUTO:
             success = self._client.set_mode(self._client.MODE_AUTO)
         else:
             success = self._client.set_mode(self._client.MODE_OFF)

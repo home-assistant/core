@@ -4,7 +4,7 @@ import socket
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_AUTO, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import DATA_KEY
@@ -41,7 +41,7 @@ class MaxCubeClimate(ClimateDevice):
     def __init__(self, handler, name, rf_address):
         """Initialize MAX! Cube ClimateDevice."""
         self._name = name
-        self._operation_list = [STATE_AUTO, STATE_MANUAL, STATE_BOOST,
+        self._operation_list = [HVAC_MODE_AUTO, STATE_MANUAL, STATE_BOOST,
                                 STATE_VACATION]
         self._rf_address = rf_address
         self._cubehandle = handler
@@ -156,7 +156,7 @@ class MaxCubeClimate(ClimateDevice):
             MAX_DEVICE_MODE_VACATION, \
             MAX_DEVICE_MODE_BOOST
 
-        if operation_mode == STATE_AUTO:
+        if operation_mode == HVAC_MODE_AUTO:
             mode = MAX_DEVICE_MODE_AUTOMATIC
         elif operation_mode == STATE_MANUAL:
             mode = MAX_DEVICE_MODE_MANUAL
@@ -179,7 +179,7 @@ class MaxCubeClimate(ClimateDevice):
             MAX_DEVICE_MODE_BOOST
 
         if mode == MAX_DEVICE_MODE_AUTOMATIC:
-            operation_mode = STATE_AUTO
+            operation_mode = HVAC_MODE_AUTO
         elif mode == MAX_DEVICE_MODE_MANUAL:
             operation_mode = STATE_MANUAL
         elif mode == MAX_DEVICE_MODE_VACATION:

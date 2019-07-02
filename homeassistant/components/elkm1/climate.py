@@ -1,8 +1,8 @@
 """Support for control of Elk-M1 connected thermostats."""
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, STATE_AUTO, STATE_COOL,
-    STATE_FAN_ONLY, STATE_HEAT, STATE_IDLE, SUPPORT_AUX_HEAT, SUPPORT_FAN_MODE,
+    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, HVAC_MODE_AUTO, HVAC_MODE_COOL,
+    HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, STATE_IDLE, SUPPORT_AUX_HEAT, SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE_HIGH,
     SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.const import PRECISION_WHOLE, STATE_ON
@@ -85,7 +85,7 @@ class ElkThermostat(ElkEntity, ClimateDevice):
     @property
     def hvac_modes(self):
         """Return the list of available operation modes."""
-        return [STATE_IDLE, STATE_HEAT, STATE_COOL, STATE_AUTO, STATE_FAN_ONLY]
+        return [STATE_IDLE, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_AUTO, HVAC_MODE_FAN_ONLY]
 
     @property
     def precision(self):
@@ -113,7 +113,7 @@ class ElkThermostat(ElkEntity, ClimateDevice):
         """Return the fan setting."""
         from elkm1_lib.const import ThermostatFan
         if self._element.fan == ThermostatFan.AUTO.value:
-            return STATE_AUTO
+            return HVAC_MODE_AUTO
         if self._element.fan == ThermostatFan.ON.value:
             return STATE_ON
         return None
@@ -130,10 +130,10 @@ class ElkThermostat(ElkEntity, ClimateDevice):
         from elkm1_lib.const import ThermostatFan, ThermostatMode
         settings = {
             STATE_IDLE: (ThermostatMode.OFF.value, ThermostatFan.AUTO.value),
-            STATE_HEAT: (ThermostatMode.HEAT.value, None),
-            STATE_COOL: (ThermostatMode.COOL.value, None),
-            STATE_AUTO: (ThermostatMode.AUTO.value, None),
-            STATE_FAN_ONLY: (ThermostatMode.OFF.value, ThermostatFan.ON.value)
+            HVAC_MODE_HEAT: (ThermostatMode.HEAT.value, None),
+            HVAC_MODE_COOL: (ThermostatMode.COOL.value, None),
+            HVAC_MODE_AUTO: (ThermostatMode.AUTO.value, None),
+            HVAC_MODE_FAN_ONLY: (ThermostatMode.OFF.value, ThermostatFan.ON.value)
         }
         self._elk_set(settings[operation_mode][0], settings[operation_mode][1])
 
@@ -150,12 +150,12 @@ class ElkThermostat(ElkEntity, ClimateDevice):
     @property
     def fan_modes(self):
         """Return the list of available fan modes."""
-        return [STATE_AUTO, STATE_ON]
+        return [HVAC_MODE_AUTO, STATE_ON]
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
         from elkm1_lib.const import ThermostatFan
-        if fan_mode == STATE_AUTO:
+        if fan_mode == HVAC_MODE_AUTO:
             self._elk_set(None, ThermostatFan.AUTO.value)
         elif fan_mode == STATE_ON:
             self._elk_set(None, ThermostatFan.ON.value)
@@ -176,12 +176,12 @@ class ElkThermostat(ElkEntity, ClimateDevice):
         from elkm1_lib.const import ThermostatFan, ThermostatMode
         mode_to_state = {
             ThermostatMode.OFF.value: STATE_IDLE,
-            ThermostatMode.COOL.value: STATE_COOL,
-            ThermostatMode.HEAT.value: STATE_HEAT,
-            ThermostatMode.EMERGENCY_HEAT.value: STATE_HEAT,
-            ThermostatMode.AUTO.value: STATE_AUTO,
+            ThermostatMode.COOL.value: HVAC_MODE_COOL,
+            ThermostatMode.HEAT.value: HVAC_MODE_HEAT,
+            ThermostatMode.EMERGENCY_HEAT.value: HVAC_MODE_HEAT,
+            ThermostatMode.AUTO.value: HVAC_MODE_AUTO,
         }
         self._state = mode_to_state.get(self._element.mode)
         if self._state == STATE_IDLE and \
                 self._element.fan == ThermostatFan.ON.value:
-            self._state = STATE_FAN_ONLY
+            self._state = HVAC_MODE_FAN_ONLY

@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    DOMAIN, STATE_AUTO, STATE_HEAT, STATE_IDLE, SUPPORT_HOLD_MODE,
+    DOMAIN, HVAC_MODE_AUTO, HVAC_MODE_HEAT, STATE_IDLE, SUPPORT_HOLD_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT)
@@ -22,11 +22,11 @@ ICON = "mdi:thermometer"
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 # Hold modes
-MODE_AUTO = STATE_AUTO  # Run device schedule
+MODE_AUTO = HVAC_MODE_AUTO  # Run device schedule
 MODE_HOLD_TEMPERATURE = "temperature"
 MODE_TEMPORARY_HOLD = "temporary_temperature"
 
-OPERATION_LIST = [STATE_HEAT, STATE_IDLE]
+OPERATION_LIST = [HVAC_MODE_HEAT, STATE_IDLE]
 
 SCHEDULE_HOLD = 3
 SCHEDULE_RUN = 1
@@ -118,7 +118,7 @@ class NuHeatThermostat(ClimateDevice):
     def hvac_mode(self):
         """Return current operation. ie. heat, idle."""
         if self._thermostat.heating:
-            return STATE_HEAT
+            return HVAC_MODE_HEAT
 
         return STATE_IDLE
 

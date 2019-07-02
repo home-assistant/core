@@ -5,12 +5,12 @@ import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, STATE_AUTO, STATE_COOL,
-    STATE_ECO, STATE_HEAT, SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE,
+    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, HVAC_MODE_AUTO, HVAC_MODE_COOL,
+    STATE_ECO, HVAC_MODE_HEAT, SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_SCAN_INTERVAL, STATE_OFF, STATE_ON, TEMP_CELSIUS,
+    ATTR_TEMPERATURE, CONF_SCAN_INTERVAL, HVAC_MODE_OFF, STATE_ON, TEMP_CELSIUS,
     TEMP_FAHRENHEIT)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -53,24 +53,24 @@ class NestThermostat(ClimateDevice):
         self._unit = temp_unit
         self.structure = structure
         self.device = device
-        self._fan_modes = [STATE_ON, STATE_AUTO]
+        self._fan_modes = [STATE_ON, HVAC_MODE_AUTO]
 
         # Set the default supported features
         self._support_flags = (SUPPORT_TARGET_TEMPERATURE |
                                SUPPORT_OPERATION_MODE | SUPPORT_AWAY_MODE)
 
         # Not all nest devices support cooling and heating remove unused
-        self._operation_list = [STATE_OFF]
+        self._operation_list = [HVAC_MODE_OFF]
 
         # Add supported nest thermostat features
         if self.device.can_heat:
-            self._operation_list.append(STATE_HEAT)
+            self._operation_list.append(HVAC_MODE_HEAT)
 
         if self.device.can_cool:
-            self._operation_list.append(STATE_COOL)
+            self._operation_list.append(HVAC_MODE_COOL)
 
         if self.device.can_heat and self.device.can_cool:
-            self._operation_list.append(STATE_AUTO)
+            self._operation_list.append(HVAC_MODE_AUTO)
             self._support_flags = (self._support_flags |
                                    SUPPORT_TARGET_TEMPERATURE_HIGH |
                                    SUPPORT_TARGET_TEMPERATURE_LOW)
@@ -153,10 +153,10 @@ class NestThermostat(ClimateDevice):
     @property
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
-        if self._mode in [STATE_HEAT, STATE_COOL, STATE_OFF, STATE_ECO]:
+        if self._mode in [HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_OFF, STATE_ECO]:
             return self._mode
         if self._mode == NEST_MODE_HEAT_COOL:
-            return STATE_AUTO
+            return HVAC_MODE_AUTO
         return None
 
     @property
@@ -213,12 +213,12 @@ class NestThermostat(ClimateDevice):
 
     def set_hvac_mode(self, operation_mode):
         """Set operation mode."""
-        if operation_mode in [STATE_HEAT, STATE_COOL, STATE_OFF, STATE_ECO]:
+        if operation_mode in [HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_OFF, STATE_ECO]:
             device_mode = operation_mode
-        elif operation_mode == STATE_AUTO:
+        elif operation_mode == HVAC_MODE_AUTO:
             device_mode = NEST_MODE_HEAT_COOL
         else:
-            device_mode = STATE_OFF
+            device_mode = HVAC_MODE_OFF
             _LOGGER.error(
                 "An error occurred while setting device mode. "
                 "Invalid operation mode: %s", operation_mode)
@@ -242,7 +242,7 @@ class NestThermostat(ClimateDevice):
         """Return whether the fan is on."""
         if self._has_fan:
             # Return whether the fan is on
-            return STATE_ON if self._fan else STATE_AUTO
+            return STATE_ON if self._fan else HVAC_MODE_AUTO
         # No Fan available so disable slider
         return None
 

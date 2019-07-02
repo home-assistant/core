@@ -2,28 +2,28 @@
 from homeassistant.components import mysensors
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, DOMAIN, STATE_AUTO,
-    STATE_COOL, STATE_HEAT, SUPPORT_FAN_MODE,
+    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, DOMAIN, HVAC_MODE_AUTO,
+    HVAC_MODE_COOL, HVAC_MODE_HEAT, SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_TEMPERATURE, HVAC_MODE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 DICT_HA_TO_MYS = {
-    STATE_AUTO: 'AutoChangeOver',
-    STATE_COOL: 'CoolOn',
-    STATE_HEAT: 'HeatOn',
-    STATE_OFF: 'Off',
+    HVAC_MODE_AUTO: 'AutoChangeOver',
+    HVAC_MODE_COOL: 'CoolOn',
+    HVAC_MODE_HEAT: 'HeatOn',
+    HVAC_MODE_OFF: 'Off',
 }
 DICT_MYS_TO_HA = {
-    'AutoChangeOver': STATE_AUTO,
-    'CoolOn': STATE_COOL,
-    'HeatOn': STATE_HEAT,
-    'Off': STATE_OFF,
+    'AutoChangeOver': HVAC_MODE_AUTO,
+    'CoolOn': HVAC_MODE_COOL,
+    'HeatOn': HVAC_MODE_HEAT,
+    'Off': HVAC_MODE_OFF,
 }
 
 FAN_LIST = ['Auto', 'Min', 'Normal', 'Max']
-OPERATION_LIST = [STATE_OFF, STATE_AUTO, STATE_COOL, STATE_HEAT]
+OPERATION_LIST = [HVAC_MODE_OFF, HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT]
 
 
 async def async_setup_platform(

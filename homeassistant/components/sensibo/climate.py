@@ -11,11 +11,11 @@ from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     DOMAIN, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
     SUPPORT_FAN_MODE, SUPPORT_SWING_MODE,
-    SUPPORT_ON_OFF, STATE_HEAT, STATE_COOL, STATE_FAN_ONLY, STATE_DRY,
-    STATE_AUTO)
+    SUPPORT_ON_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_FAN_ONLY, HVAC_MODE_DRY,
+    HVAC_MODE_AUTO)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_STATE, ATTR_TEMPERATURE, CONF_API_KEY, CONF_ID,
-    STATE_ON, STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    STATE_ON, HVAC_MODE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -52,11 +52,11 @@ FIELD_TO_FLAG = {
 }
 
 SENSIBO_TO_HA = {
-    "cool": STATE_COOL,
-    "heat": STATE_HEAT,
-    "fan": STATE_FAN_ONLY,
-    "auto": STATE_AUTO,
-    "dry": STATE_DRY
+    "cool": HVAC_MODE_COOL,
+    "heat": HVAC_MODE_HEAT,
+    "fan": HVAC_MODE_FAN_ONLY,
+    "auto": HVAC_MODE_AUTO,
+    "dry": HVAC_MODE_DRY
 }
 
 HA_TO_SENSIBO = {value: key for key, value in SENSIBO_TO_HA.items()}
@@ -321,19 +321,19 @@ class SensiboClimate(ClimateDevice):
 
     async def async_assume_state(self, state):
         """Set external state."""
-        change_needed = (state != STATE_OFF and not self.is_on) \
-            or (state == STATE_OFF and self.is_on)
+        change_needed = (state != HVAC_MODE_OFF and not self.is_on) \
+            or (state == HVAC_MODE_OFF and self.is_on)
         if change_needed:
             with async_timeout.timeout(TIMEOUT):
                 await self._client.async_set_ac_state_property(
                     self._id,
                     'on',
-                    state != STATE_OFF,  # value
+                    state != HVAC_MODE_OFF,  # value
                     self._ac_states,
                     True  # assumed_state
                 )
 
-        if state in [STATE_ON, STATE_OFF]:
+        if state in [STATE_ON, HVAC_MODE_OFF]:
             self._external_state = None
         else:
             self._external_state = state

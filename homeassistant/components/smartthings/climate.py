@@ -7,50 +7,50 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN, ClimateDevice)
 from homeassistant.components.climate.const import (
     ATTR_OPERATION_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    STATE_AUTO, STATE_COOL, STATE_DRY, STATE_ECO, STATE_FAN_ONLY, STATE_HEAT,
+    HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_DRY, STATE_ECO, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT,
     SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE_HIGH,
     SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_TEMPERATURE, HVAC_MODE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
 ATTR_OPERATION_STATE = 'operation_state'
 MODE_TO_STATE = {
-    'auto': STATE_AUTO,
-    'cool': STATE_COOL,
+    'auto': HVAC_MODE_AUTO,
+    'cool': HVAC_MODE_COOL,
     'eco': STATE_ECO,
     'rush hour': STATE_ECO,
-    'emergency heat': STATE_HEAT,
-    'heat': STATE_HEAT,
-    'off': STATE_OFF
+    'emergency heat': HVAC_MODE_HEAT,
+    'heat': HVAC_MODE_HEAT,
+    'off': HVAC_MODE_OFF
 }
 STATE_TO_MODE = {
-    STATE_AUTO: 'auto',
-    STATE_COOL: 'cool',
+    HVAC_MODE_AUTO: 'auto',
+    HVAC_MODE_COOL: 'cool',
     STATE_ECO: 'eco',
-    STATE_HEAT: 'heat',
-    STATE_OFF: 'off'
+    HVAC_MODE_HEAT: 'heat',
+    HVAC_MODE_OFF: 'off'
 }
 
 AC_MODE_TO_STATE = {
-    'auto': STATE_AUTO,
-    'cool': STATE_COOL,
-    'dry': STATE_DRY,
-    'coolClean': STATE_COOL,
-    'dryClean': STATE_DRY,
-    'heat': STATE_HEAT,
-    'heatClean': STATE_HEAT,
-    'fanOnly': STATE_FAN_ONLY
+    'auto': HVAC_MODE_AUTO,
+    'cool': HVAC_MODE_COOL,
+    'dry': HVAC_MODE_DRY,
+    'coolClean': HVAC_MODE_COOL,
+    'dryClean': HVAC_MODE_DRY,
+    'heat': HVAC_MODE_HEAT,
+    'heatClean': HVAC_MODE_HEAT,
+    'fanOnly': HVAC_MODE_FAN_ONLY
 }
 STATE_TO_AC_MODE = {
-    STATE_AUTO: 'auto',
-    STATE_COOL: 'cool',
-    STATE_DRY: 'dry',
-    STATE_HEAT: 'heat',
-    STATE_FAN_ONLY: 'fanOnly'
+    HVAC_MODE_AUTO: 'auto',
+    HVAC_MODE_COOL: 'cool',
+    HVAC_MODE_DRY: 'dry',
+    HVAC_MODE_HEAT: 'heat',
+    HVAC_MODE_FAN_ONLY: 'fanOnly'
 }
 
 UNIT_MAP = {
@@ -185,9 +185,9 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
         # Heat/cool setpoint
         heating_setpoint = None
         cooling_setpoint = None
-        if self.current_operation == STATE_HEAT:
+        if self.current_operation == HVAC_MODE_HEAT:
             heating_setpoint = kwargs.get(ATTR_TEMPERATURE)
-        elif self.current_operation == STATE_COOL:
+        elif self.current_operation == HVAC_MODE_COOL:
             cooling_setpoint = kwargs.get(ATTR_TEMPERATURE)
         else:
             heating_setpoint = kwargs.get(ATTR_TARGET_TEMP_LOW)
@@ -278,23 +278,23 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self.current_operation == STATE_COOL:
+        if self.current_operation == HVAC_MODE_COOL:
             return self._device.status.cooling_setpoint
-        if self.current_operation == STATE_HEAT:
+        if self.current_operation == HVAC_MODE_HEAT:
             return self._device.status.heating_setpoint
         return None
 
     @property
     def target_temperature_high(self):
         """Return the highbound target temperature we try to reach."""
-        if self.current_operation == STATE_AUTO:
+        if self.current_operation == HVAC_MODE_AUTO:
             return self._device.status.cooling_setpoint
         return None
 
     @property
     def target_temperature_low(self):
         """Return the lowbound target temperature we try to reach."""
-        if self.current_operation == STATE_AUTO:
+        if self.current_operation == HVAC_MODE_AUTO:
             return self._device.status.heating_setpoint
         return None
 

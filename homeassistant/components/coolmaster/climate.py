@@ -6,8 +6,8 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_COOL, STATE_DRY, STATE_FAN_ONLY,
-    STATE_HEAT, SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
+    HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_HEAT, SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_HOST, CONF_PORT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
@@ -18,15 +18,15 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE |
 
 DEFAULT_PORT = 10102
 
-AVAILABLE_MODES = [STATE_HEAT, STATE_COOL, STATE_AUTO, STATE_DRY,
-                   STATE_FAN_ONLY]
+AVAILABLE_MODES = [HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_AUTO, HVAC_MODE_DRY,
+                   HVAC_MODE_FAN_ONLY]
 
 CM_TO_HA_STATE = {
-    'heat': STATE_HEAT,
-    'cool': STATE_COOL,
-    'auto': STATE_AUTO,
-    'dry': STATE_DRY,
-    'fan': STATE_FAN_ONLY,
+    'heat': HVAC_MODE_HEAT,
+    'cool': HVAC_MODE_COOL,
+    'auto': HVAC_MODE_AUTO,
+    'dry': HVAC_MODE_DRY,
+    'fan': HVAC_MODE_FAN_ONLY,
 }
 
 HA_STATE_TO_CM = {value: key for key, value in CM_TO_HA_STATE.items()}
@@ -165,11 +165,11 @@ class CoolmasterClimate(ClimateDevice):
                       fan_mode)
         self._device.set_fan_speed(fan_mode)
 
-    def set_hvac_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set new operation mode."""
         _LOGGER.debug("Setting operation mode of %s to %s", self.unique_id,
-                      operation_mode)
-        self._device.set_mode(HA_STATE_TO_CM[operation_mode])
+                      hvac_mode)
+        self._device.set_mode(HA_STATE_TO_CM[hvac_mode])
 
     def turn_on(self):
         """Turn on."""

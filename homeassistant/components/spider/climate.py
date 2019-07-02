@@ -4,7 +4,7 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_FAN_MODE,
+    HVAC_MODE_COOL, HVAC_MODE_HEAT, STATE_IDLE, SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
@@ -21,13 +21,13 @@ FAN_LIST = [
 ]
 
 OPERATION_LIST = [
-    STATE_HEAT,
-    STATE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_COOL,
 ]
 
 HA_STATE_TO_SPIDER = {
-    STATE_COOL: 'Cool',
-    STATE_HEAT: 'Heat',
+    HVAC_MODE_COOL: 'Cool',
+    HVAC_MODE_HEAT: 'Heat',
     STATE_IDLE: 'Idle',
 }
 

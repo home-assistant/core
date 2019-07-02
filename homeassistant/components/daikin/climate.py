@@ -7,12 +7,12 @@ import voluptuous as vol
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_AWAY_MODE, ATTR_CURRENT_TEMPERATURE, ATTR_FAN_MODE,
-    ATTR_OPERATION_MODE, ATTR_SWING_MODE, STATE_AUTO, STATE_COOL, STATE_DRY,
-    STATE_FAN_ONLY, STATE_HEAT, SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE,
+    ATTR_OPERATION_MODE, ATTR_SWING_MODE, HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_DRY,
+    HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE,
     SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, STATE_OFF, TEMP_CELSIUS)
+    ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, HVAC_MODE_OFF, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN as DAIKIN_DOMAIN
@@ -27,21 +27,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 HA_STATE_TO_DAIKIN = {
-    STATE_FAN_ONLY: 'fan',
-    STATE_DRY: 'dry',
-    STATE_COOL: 'cool',
-    STATE_HEAT: 'hot',
-    STATE_AUTO: 'auto',
-    STATE_OFF: 'off',
+    HVAC_MODE_FAN_ONLY: 'fan',
+    HVAC_MODE_DRY: 'dry',
+    HVAC_MODE_COOL: 'cool',
+    HVAC_MODE_HEAT: 'hot',
+    HVAC_MODE_AUTO: 'auto',
+    HVAC_MODE_OFF: 'off',
 }
 
 DAIKIN_TO_HA_STATE = {
-    'fan': STATE_FAN_ONLY,
-    'dry': STATE_DRY,
-    'cool': STATE_COOL,
-    'hot': STATE_HEAT,
-    'auto': STATE_AUTO,
-    'off': STATE_OFF,
+    'fan': HVAC_MODE_FAN_ONLY,
+    'dry': HVAC_MODE_DRY,
+    'cool': HVAC_MODE_COOL,
+    'hot': HVAC_MODE_HEAT,
+    'auto': HVAC_MODE_AUTO,
+    'off': HVAC_MODE_OFF,
 }
 
 HA_ATTR_TO_DAIKIN = {
@@ -273,7 +273,7 @@ class DaikinClimate(ClimateDevice):
         """Return true if on."""
         return self._api.device.represent(
             HA_ATTR_TO_DAIKIN[ATTR_OPERATION_MODE]
-        )[1] != HA_STATE_TO_DAIKIN[STATE_OFF]
+        )[1] != HA_STATE_TO_DAIKIN[HVAC_MODE_OFF]
 
     async def async_turn_on(self):
         """Turn device on."""
@@ -283,7 +283,7 @@ class DaikinClimate(ClimateDevice):
         """Turn device off."""
         await self._api.device.set({
             HA_ATTR_TO_DAIKIN[ATTR_OPERATION_MODE]:
-            HA_STATE_TO_DAIKIN[STATE_OFF]
+            HA_STATE_TO_DAIKIN[HVAC_MODE_OFF]
         })
 
     @property
@@ -291,7 +291,7 @@ class DaikinClimate(ClimateDevice):
         """Return true if away mode is on."""
         return self._api.device.represent(
             HA_ATTR_TO_DAIKIN[ATTR_AWAY_MODE]
-        )[1] != HA_STATE_TO_DAIKIN[STATE_OFF]
+        )[1] != HA_STATE_TO_DAIKIN[HVAC_MODE_OFF]
 
     async def async_turn_away_mode_on(self):
         """Turn away mode on."""

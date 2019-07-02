@@ -7,8 +7,8 @@ from homeassistant.components import climate, mqtt
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA, ClimateDevice)
 from homeassistant.components.climate.const import (
-    ATTR_OPERATION_MODE, DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, STATE_AUTO,
-    STATE_COOL, STATE_DRY, STATE_FAN_ONLY, STATE_HEAT, SUPPORT_AUX_HEAT,
+    ATTR_OPERATION_MODE, DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, HVAC_MODE_AUTO,
+    HVAC_MODE_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, SUPPORT_AUX_HEAT,
     SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE,
     ATTR_TARGET_TEMP_LOW,
@@ -16,7 +16,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE_HIGH)
 from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_DEVICE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_OFF,
+    ATTR_TEMPERATURE, CONF_DEVICE, CONF_NAME, CONF_VALUE_TEMPLATE, HVAC_MODE_OFF,
     STATE_ON)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -127,7 +127,7 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     vol.Optional(CONF_FAN_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_FAN_MODE_LIST,
-                 default=[STATE_AUTO, SPEED_LOW,
+                 default=[HVAC_MODE_AUTO, SPEED_LOW,
                           SPEED_MEDIUM, SPEED_HIGH]): cv.ensure_list,
     vol.Optional(CONF_FAN_MODE_STATE_TEMPLATE): cv.template,
     vol.Optional(CONF_FAN_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
@@ -136,8 +136,8 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_HOLD_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_MODE_LIST,
-                 default=[STATE_AUTO, STATE_OFF, STATE_COOL, STATE_HEAT,
-                          STATE_DRY, STATE_FAN_ONLY]): cv.ensure_list,
+                 default=[HVAC_MODE_AUTO, HVAC_MODE_OFF, HVAC_MODE_COOL, HVAC_MODE_HEAT,
+                          HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY]): cv.ensure_list,
     vol.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
     vol.Optional(CONF_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -150,7 +150,7 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_SEND_IF_OFF, default=True): cv.boolean,
     vol.Optional(CONF_SWING_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_SWING_MODE_LIST,
-                 default=[STATE_ON, STATE_OFF]): cv.ensure_list,
+                 default=[STATE_ON, HVAC_MODE_OFF]): cv.ensure_list,
     vol.Optional(CONF_SWING_MODE_STATE_TEMPLATE): cv.template,
     vol.Optional(CONF_SWING_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_TEMP_INITIAL, default=21): cv.positive_int,
@@ -275,9 +275,9 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         if self._topic[CONF_FAN_MODE_STATE_TOPIC] is None:
             self._current_fan_mode = SPEED_LOW
         if self._topic[CONF_SWING_MODE_STATE_TOPIC] is None:
-            self._current_swing_mode = STATE_OFF
+            self._current_swing_mode = HVAC_MODE_OFF
         if self._topic[CONF_MODE_STATE_TOPIC] is None:
-            self._current_operation = STATE_OFF
+            self._current_operation = HVAC_MODE_OFF
         self._away = False
         self._hold = None
         self._aux = False
@@ -552,7 +552,7 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 setattr(self, attr, temp)
 
             if (self._config[CONF_SEND_IF_OFF] or
-                    self._current_operation != STATE_OFF):
+                    self._current_operation != HVAC_MODE_OFF):
                 self._publish(cmnd_topic, temp)
 
     async def async_set_temperature(self, **kwargs):
@@ -579,7 +579,7 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     async def async_set_swing_mode(self, swing_mode):
         """Set new swing mode."""
         if (self._config[CONF_SEND_IF_OFF] or
-                self._current_operation != STATE_OFF):
+                self._current_operation != HVAC_MODE_OFF):
             self._publish(CONF_SWING_MODE_COMMAND_TOPIC,
                           swing_mode)
 
@@ -590,7 +590,7 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     async def async_set_fan_mode(self, fan_mode):
         """Set new target temperature."""
         if (self._config[CONF_SEND_IF_OFF] or
-                self._current_operation != STATE_OFF):
+                self._current_operation != HVAC_MODE_OFF):
             self._publish(CONF_FAN_MODE_COMMAND_TOPIC,
                           fan_mode)
 
@@ -600,12 +600,12 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
     async def async_set_operation_mode(self, operation_mode) -> None:
         """Set new operation mode."""
-        if (self._current_operation == STATE_OFF and
-                operation_mode != STATE_OFF):
+        if (self._current_operation == HVAC_MODE_OFF and
+                operation_mode != HVAC_MODE_OFF):
             self._publish(CONF_POWER_COMMAND_TOPIC,
                           self._config[CONF_PAYLOAD_ON])
-        elif (self._current_operation != STATE_OFF and
-              operation_mode == STATE_OFF):
+        elif (self._current_operation != HVAC_MODE_OFF and
+              operation_mode == HVAC_MODE_OFF):
             self._publish(CONF_POWER_COMMAND_TOPIC,
                           self._config[CONF_PAYLOAD_OFF])
 

@@ -5,10 +5,10 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    STATE_HEAT, STATE_AUTO, SUPPORT_AUX_HEAT, SUPPORT_OPERATION_MODE,
+    HVAC_MODE_HEAT, HVAC_MODE_AUTO, SUPPORT_AUX_HEAT, SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, TEMP_CELSIUS, CONF_USERNAME, CONF_PASSWORD, STATE_OFF)
+    ATTR_TEMPERATURE, TEMP_CELSIUS, CONF_USERNAME, CONF_PASSWORD, HVAC_MODE_OFF)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 # Return cached results if last scan was less then this time ago
 SCAN_INTERVAL = timedelta(seconds=120)
 
-OPERATION_LIST = [STATE_AUTO, STATE_HEAT, STATE_OFF]
+OPERATION_LIST = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -24,9 +24,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 EPH_TO_HA_STATE = {
-    'AUTO': STATE_AUTO,
-    'ON': STATE_HEAT,
-    'OFF': STATE_OFF
+    'AUTO': HVAC_MODE_AUTO,
+    'ON': HVAC_MODE_HEAT,
+    'OFF': HVAC_MODE_OFF
 }
 
 HA_STATE_TO_EPH = {value: key for key, value in EPH_TO_HA_STATE.items()}
@@ -197,4 +197,4 @@ class EphEmberThermostat(ClimateDevice):
     @staticmethod
     def map_mode_eph_hass(operation_mode):
         """Map from eph mode to home assistant mode."""
-        return EPH_TO_HA_STATE.get(operation_mode.name, STATE_AUTO)
+        return EPH_TO_HA_STATE.get(operation_mode.name, HVAC_MODE_AUTO)

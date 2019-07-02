@@ -3,10 +3,10 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_ECO, STATE_HEAT, STATE_MANUAL,
+    HVAC_MODE_AUTO, STATE_ECO, HVAC_MODE_HEAT, STATE_MANUAL,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_ON_OFF)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS)
+    ATTR_TEMPERATURE, HVAC_MODE_OFF, TEMP_CELSIUS)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -26,18 +26,18 @@ GH_MIN_TEMP = 4.0
 
 # Genius Hub Zones support only Off, Override/Boost, Footprint & Timer modes
 HA_OPMODE_TO_GH = {
-    STATE_OFF: 'off',
-    STATE_AUTO: 'timer',
+    HVAC_MODE_OFF: 'off',
+    HVAC_MODE_AUTO: 'timer',
     STATE_ECO: 'footprint',
     STATE_MANUAL: 'override',
 }
 GH_STATE_TO_HA = {
-    'off': STATE_OFF,
-    'timer': STATE_AUTO,
+    'off': HVAC_MODE_OFF,
+    'timer': HVAC_MODE_AUTO,
     'footprint': STATE_ECO,
     'away': None,
     'override': STATE_MANUAL,
-    'early': STATE_HEAT,
+    'early': HVAC_MODE_HEAT,
     'test': None,
     'linked': None,
     'other': None,
@@ -142,7 +142,7 @@ class GeniusClimateZone(ClimateDevice):
     @property
     def is_on(self):
         """Return True if the device is on."""
-        return self._zone.mode != HA_OPMODE_TO_GH[STATE_OFF]
+        return self._zone.mode != HA_OPMODE_TO_GH[HVAC_MODE_OFF]
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set a new operation mode for this zone."""
@@ -158,9 +158,9 @@ class GeniusClimateZone(ClimateDevice):
         Set a Zone to Footprint mode if they have a Room sensor, and to Timer
         mode otherwise.
         """
-        mode = STATE_ECO if hasattr(self._zone, 'occupied') else STATE_AUTO
+        mode = STATE_ECO if hasattr(self._zone, 'occupied') else HVAC_MODE_AUTO
         await self._zone.set_mode(HA_OPMODE_TO_GH[mode])
 
     async def async_turn_off(self):
         """Turn off this heating zone (i.e. to frost protect)."""
-        await self._zone.set_mode(HA_OPMODE_TO_GH[STATE_OFF])
+        await self._zone.set_mode(HA_OPMODE_TO_GH[HVAC_MODE_OFF])

@@ -9,7 +9,7 @@ from homeassistant.components.climate.const import (
     DOMAIN, HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_PASSWORD, CONF_USERNAME, STATE_OFF, STATE_ON,
+    ATTR_TEMPERATURE, CONF_PASSWORD, CONF_USERNAME, HVAC_MODE_OFF, STATE_ON,
     TEMP_CELSIUS)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -138,12 +138,12 @@ class MillHeater(ClimateDevice):
     @property
     def fan_mode(self):
         """Return the fan setting."""
-        return STATE_ON if self._heater.fan_status == 1 else STATE_OFF
+        return STATE_ON if self._heater.fan_status == 1 else HVAC_MODE_OFF
 
     @property
     def fan_modes(self):
         """List of available fan modes."""
-        return [STATE_ON, STATE_OFF]
+        return [STATE_ON, HVAC_MODE_OFF]
 
     @property
     def min_temp(self):

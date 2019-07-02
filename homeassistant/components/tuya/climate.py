@@ -1,7 +1,7 @@
 """Support for the Tuya climate devices."""
 from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_COOL, STATE_ECO, STATE_FAN_ONLY, STATE_HEAT,
+    HVAC_MODE_AUTO, HVAC_MODE_COOL, STATE_ECO, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT,
     SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
@@ -13,11 +13,11 @@ from . import DATA_TUYA, TuyaDevice
 DEVICE_TYPE = 'climate'
 
 HA_STATE_TO_TUYA = {
-    STATE_AUTO: 'auto',
-    STATE_COOL: 'cold',
+    HVAC_MODE_AUTO: 'auto',
+    HVAC_MODE_COOL: 'cold',
     STATE_ECO: 'eco',
-    STATE_FAN_ONLY: 'wind',
-    STATE_HEAT: 'hot',
+    HVAC_MODE_FAN_ONLY: 'wind',
+    HVAC_MODE_HEAT: 'hot',
 }
 
 TUYA_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_TUYA.items()}

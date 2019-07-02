@@ -6,14 +6,14 @@ import voluptuous as vol
 from homeassistant.components import ecobee
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    DOMAIN, STATE_COOL, STATE_HEAT, STATE_AUTO, STATE_IDLE,
+    DOMAIN, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_AUTO, STATE_IDLE,
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE, SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_HUMIDITY_LOW, SUPPORT_TARGET_HUMIDITY_HIGH,
     SUPPORT_AUX_HEAT, SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_ON, STATE_OFF, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
+    ATTR_ENTITY_ID, STATE_ON, HVAC_MODE_OFF, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 
 _CONFIGURING = {}
@@ -153,25 +153,25 @@ class Thermostat(ClimateDevice):
     @property
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
-        if self.current_operation == STATE_AUTO:
+        if self.current_operation == HVAC_MODE_AUTO:
             return self.thermostat['runtime']['desiredHeat'] / 10.0
         return None
 
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
-        if self.current_operation == STATE_AUTO:
+        if self.current_operation == HVAC_MODE_AUTO:
             return self.thermostat['runtime']['desiredCool'] / 10.0
         return None
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self.current_operation == STATE_AUTO:
+        if self.current_operation == HVAC_MODE_AUTO:
             return None
-        if self.current_operation == STATE_HEAT:
+        if self.current_operation == HVAC_MODE_HEAT:
             return self.thermostat['runtime']['desiredHeat'] / 10.0
-        if self.current_operation == STATE_COOL:
+        if self.current_operation == HVAC_MODE_COOL:
             return self.thermostat['runtime']['desiredCool'] / 10.0
         return None
 
@@ -180,7 +180,7 @@ class Thermostat(ClimateDevice):
         """Return the current fan status."""
         if 'fan' in self.thermostat['equipmentStatus']:
             return STATE_ON
-        return STATE_OFF
+        return HVAC_MODE_OFF
 
     @property
     def fan_mode(self):
@@ -229,7 +229,7 @@ class Thermostat(ClimateDevice):
         """Return current operation."""
         if self.operation_mode == 'auxHeatOnly' or \
                 self.operation_mode == 'heatPump':
-            return STATE_HEAT
+            return HVAC_MODE_HEAT
         return self.operation_mode
 
     @property
@@ -264,11 +264,11 @@ class Thermostat(ClimateDevice):
         if status == '':
             operation = STATE_IDLE
         elif 'Cool' in status:
-            operation = STATE_COOL
+            operation = HVAC_MODE_COOL
         elif 'auxHeat' in status:
-            operation = STATE_HEAT
+            operation = HVAC_MODE_HEAT
         elif 'heatPump' in status:
-            operation = STATE_HEAT
+            operation = HVAC_MODE_HEAT
         else:
             operation = status
 
@@ -352,7 +352,7 @@ class Thermostat(ClimateDevice):
 
     def set_fan_mode(self, fan_mode):
         """Set the fan mode.  Valid values are "on" or "auto"."""
-        if (fan_mode.lower() != STATE_ON) and (fan_mode.lower() != STATE_AUTO):
+        if (fan_mode.lower() != STATE_ON) and (fan_mode.lower() != HVAC_MODE_AUTO):
             error = "Invalid fan_mode value:  Valid values are 'on' or 'auto'"
             _LOGGER.error(error)
             return
@@ -376,8 +376,8 @@ class Thermostat(ClimateDevice):
         heatCoolMinDelta property.
         https://www.ecobee.com/home/developer/api/examples/ex5.shtml
         """
-        if self.current_operation == STATE_HEAT or self.current_operation == \
-                STATE_COOL:
+        if self.current_operation == HVAC_MODE_HEAT or self.current_operation == \
+                HVAC_MODE_COOL:
             heat_temp = temp
             cool_temp = temp
         else:
@@ -392,7 +392,7 @@ class Thermostat(ClimateDevice):
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temp = kwargs.get(ATTR_TEMPERATURE)
 
-        if self.current_operation == STATE_AUTO and \
+        if self.hvac_mode == HVAC_MODE_AUTO and \
                 (low_temp is not None or high_temp is not None):
             self.set_auto_temp_hold(low_temp, high_temp)
         elif temp is not None:
@@ -405,9 +405,9 @@ class Thermostat(ClimateDevice):
         """Set the humidity level."""
         self.data.ecobee.set_humidity(self.thermostat_index, humidity)
 
-    def set_hvac_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
-        self.data.ecobee.set_hvac_mode(self.thermostat_index, operation_mode)
+        self.data.ecobee.set_hvac_mode(self.thermostat_index, hvac_mode)
         self.update_without_throttle = True
 
     def set_fan_min_on_time(self, fan_min_on_time):
