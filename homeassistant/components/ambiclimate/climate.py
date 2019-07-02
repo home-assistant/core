@@ -191,7 +191,10 @@ class AmbiclimateEntity(ClimateDevice):
     @property
     def hvac_mode(self):
         """Return current operation."""
-        return HVAC_MODE_HEAT if self._data.get('power', '').lower() == 'on' else HVAC_MODE_OFF
+        if self._data.get('power', '').lower() == 'on':
+            return HVAC_MODE_HEAT
+
+        return HVAC_MODE_OFF
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""

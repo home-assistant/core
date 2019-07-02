@@ -4,7 +4,7 @@ import pytest
 
 from homeassistant.core import State, EVENT_CALL_SERVICE
 from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
+    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
 from homeassistant.setup import async_setup_component
 from homeassistant.components import camera
 from homeassistant.components.climate.const import (
