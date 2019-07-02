@@ -87,7 +87,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: config_entries.ConfigEntry
+        hass: HomeAssistantType, entry: config_entries.ConfigEntry
 ):
     """Set up an access point from a config entry."""
     client = Client(entry.data[CONF_HOST], entry.data[CONF_PORT])
