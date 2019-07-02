@@ -3,12 +3,13 @@ import datetime
 import logging
 
 import voluptuous as vol
+import radiotherm
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF,
     SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_FAN_MODE, SUPPORT_AWAY_MODE)
+    SUPPORT_FAN_MODE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_HOST, PRECISION_HALVES, TEMP_FAHRENHEIT, STATE_ON)
 import homeassistant.helpers.config_validation as cv
@@ -67,22 +68,13 @@ def round_temp(temperature):
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_HOLD_TEMP, default=False): cv.boolean,
-    vol.Optional(CONF_AWAY_TEMPERATURE_HEAT,
-                 default=DEFAULT_AWAY_TEMPERATURE_HEAT):
-    vol.All(vol.Coerce(float), round_temp),
-    vol.Optional(CONF_AWAY_TEMPERATURE_COOL,
-                 default=DEFAULT_AWAY_TEMPERATURE_COOL):
-    vol.All(vol.Coerce(float), round_temp),
 })
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
-                 SUPPORT_FAN_MODE | SUPPORT_AWAY_MODE)
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Radio Thermostat."""
-    import radiotherm
-
     hosts = []
     if CONF_HOST in config:
         hosts = config[CONF_HOST]
@@ -132,7 +124,6 @@ class RadioThermostat(ClimateDevice):
         self._prev_temp = None
 
         # Fan circulate mode is only supported by the CT80 models.
-        import radiotherm
         self._is_model_ct80 = isinstance(
             self.device, radiotherm.thermostat.CT80)
 
@@ -211,16 +202,6 @@ class RadioThermostat(ClimateDevice):
         """Return the temperature we try to reach."""
         return self._target_temperature
 
-    @property
-    def is_away_mode_on(self):
-        """Return true if away mode is on."""
-        return self._away
-
-    @property
-    def is_on(self):
-        """Return true if on."""
-        return self._tstate != HVAC_MODE_OFF
-
     def update(self):
         """Update and validate the data from the thermostat."""
         # Radio thermostats are very slow, and sometimes don't respond
@@ -237,7 +218,6 @@ class RadioThermostat(ClimateDevice):
             self._name = self.device.name['raw']
 
         # Request the current state from the thermostat.
-        import radiotherm
         try:
             data = self.device.tstat['raw']
         except radiotherm.validate.RadiothermTstatError:
@@ -318,24 +298,3 @@ class RadioThermostat(ClimateDevice):
             self.device.t_cool = self._target_temperature
         elif hvac_mode == HVAC_MODE_HEAT:
             self.device.t_heat = self._target_temperature
-
-    def turn_away_mode_on(self):
-        """Turn away on.
-
-        The RTCOA app simulates away mode by using a hold.
-        """
-        away_temp = None
-        if not self._away:
-            self._prev_temp = self._target_temperature
-            if self._current_operation == HVAC_MODE_HEAT:
-                away_temp = self._away_temps[0]
-            elif self._current_operation == HVAC_MODE_COOL:
-                away_temp = self._away_temps[1]
-
-        self._away = True
-        self.set_temperature(temperature=away_temp, hold_changed=True)
-
-    def turn_away_mode_off(self):
-        """Turn away off."""
-        self._away = False
-        self.set_temperature(temperature=self._prev_temp, hold_changed=True)
