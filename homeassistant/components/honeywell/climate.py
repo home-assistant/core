@@ -375,10 +375,10 @@ class HoneywellUSThermostat(ClimateDevice):
         except somecomfort.SomeComfortError:
             _LOGGER.error('Can not stop hold mode')
 
-    def set_hvac_mode(self, operation_mode: str) -> None:
+    def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set the system mode (Cool, Heat, etc)."""
         if hasattr(self._device, ATTR_SYSTEM_MODE):
-            self._device.system_mode = operation_mode
+            self._device.system_mode = hvac_mode
 
     def update(self):
         """Update the state."""
