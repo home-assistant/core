@@ -37,7 +37,7 @@ async def async_unload_entry(hass, entry):
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
-class TrackerEntity(Entity):
+class BaseTrackerEntity(Entity):
     """Represent a tracked device."""
 
     @property
@@ -47,6 +47,25 @@ class TrackerEntity(Entity):
         Percentage from 0-100.
         """
         return None
+
+    @property
+    def source_type(self):
+        """Return the source type, eg gps or router, of the device."""
+        raise NotImplementedError
+
+    @property
+    def state_attributes(self):
+        """Return the device state attributes."""
+        attr = {}
+
+        if self.battery_level:
+            attr[ATTR_BATTERY_LEVEL] = self.battery_level
+
+        return attr
+
+
+class TrackerEntity(BaseTrackerEntity):
+    """Represent a tracked device."""
 
     @property
     def location_accuracy(self):
@@ -70,11 +89,6 @@ class TrackerEntity(Entity):
     def longitude(self) -> float:
         """Return longitude value of the device."""
         return NotImplementedError
-
-    @property
-    def source_type(self):
-        """Return the source type, eg gps or router, of the device."""
-        raise NotImplementedError
 
     @property
     def state(self):
@@ -102,13 +116,26 @@ class TrackerEntity(Entity):
         attr = {
             ATTR_SOURCE_TYPE: self.source_type
         }
-
+        attr.update(super.state_attributes)
         if self.latitude is not None:
             attr[ATTR_LATITUDE] = self.latitude
             attr[ATTR_LONGITUDE] = self.longitude
             attr[ATTR_GPS_ACCURACY] = self.location_accuracy
 
-        if self.battery_level:
-            attr[ATTR_BATTERY_LEVEL] = self.battery_level
-
         return attr
+
+
+class ScannerEntity(BaseTrackerEntity):
+    """Represent a tracked device that is on a scaned network."""
+
+    @property
+    def state(self):
+        """Return the state of the device."""
+        if self.is_connected:
+            return STATE_HOME
+        return STATE_NOT_HOME
+
+    @property
+    def is_connected(self):
+        """Return true if the device is connected to the network."""
+        return False

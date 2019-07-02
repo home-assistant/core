@@ -1,15 +1,12 @@
 """Support for the ZHA platform."""
 import logging
+import numbers
 import time
 from homeassistant.components.device_tracker import (
     SOURCE_TYPE_ZIGBEE, DOMAIN
 )
 from homeassistant.components.device_tracker.config_entry import (
-    TrackerEntity
-)
-from homeassistant.const import (
-    STATE_NOT_HOME,
-    STATE_HOME
+    ScannerEntity
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -47,12 +44,12 @@ async def _async_setup_entities(hass, config_entry, async_add_entities,
     """Set up the ZHA device trackers."""
     entities = []
     for discovery_info in discovery_infos:
-        entities.append(ZHADeviceTrackerEntity(**discovery_info))
+        entities.append(ZHADeviceScannerEntity(**discovery_info))
 
     async_add_entities(entities, update_before_add=True)
 
 
-class ZHADeviceTrackerEntity(TrackerEntity, ZhaEntity):
+class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
     """Represent a tracked device."""
 
     def __init__(self, **kwargs):
@@ -61,7 +58,7 @@ class ZHADeviceTrackerEntity(TrackerEntity, ZhaEntity):
         self._battery_channel = self.cluster_channels.get(
             POWER_CONFIGURATION_CHANNEL)
         self._last_seen = None
-        self._seen = False
+        self._connected = False
         self._keepalive_interval = 60
         self._should_poll = True
 
@@ -79,30 +76,18 @@ class ZHADeviceTrackerEntity(TrackerEntity, ZhaEntity):
     async def async_update(self):
         """Handle polling."""
         if self._last_seen is None:
-            self._seen = False
+            self._connected = False
         else:
             difference = time.time() - self._last_seen
             if difference > self._keepalive_interval:
-                self._seen = False
+                self._connected = False
             else:
-                self._seen = True
+                self._connected = True
 
     @property
-    def state(self):
-        """Return the state of the device."""
-        if self._seen:
-            return STATE_HOME
-        return STATE_NOT_HOME
-
-    @property
-    def latitude(self) -> float:
-        """Return latitude value of the device."""
-        return None
-
-    @property
-    def longitude(self) -> float:
-        """Return longitude value of the device."""
-        return None
+    def is_connected(self):
+        """Return true if the device is connected to the network."""
+        return self._connected
 
     @property
     def source_type(self):
@@ -113,3 +98,18 @@ class ZHADeviceTrackerEntity(TrackerEntity, ZhaEntity):
     def async_attribute_updated(self, attribute, value):
         """Handle tracking."""
         self._last_seen = time.time()
+
+    @property
+    def battery_level(self):
+        """Return the battery level of the device.
+
+        Percentage from 0-100.
+        """
+        value = self._battery_channel.get_attribute_value(
+            'battery_percentage_remaining', from_cache=True)
+        # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
+        if not isinstance(value, numbers.Number) or value == -1:
+            return None
+        value = value / 2
+        value = int(round(value))
+        return value
