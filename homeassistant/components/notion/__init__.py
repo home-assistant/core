@@ -1,6 +1,5 @@
 """Support for Notion."""
 import asyncio
-from datetime import timedelta
 import logging
 
 import voluptuous as vol
