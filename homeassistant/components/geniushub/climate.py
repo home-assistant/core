@@ -1,6 +1,6 @@
 """Support for Genius Hub climate devices."""
 import logging
-from typing import Awaitable, Dict, Optional, List
+from typing import Any, Awaitable, Dict, Optional, List
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
