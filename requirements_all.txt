@@ -1783,6 +1783,7 @@ pysnmp==4.4.9
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 pysonos==0.0.5
 =======
 pysonos==0.0.14
@@ -1802,6 +1803,9 @@ pysonos==0.0.17
 =======
 pysonos==0.0.18
 >>>>>>> Stability improvements for Sonos availability (#24880)
+=======
+pysonos==0.0.19
+>>>>>>> Update pysonos to 0.0.19 (#24930)
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
