@@ -4,7 +4,7 @@ from typing import Awaitable, Dict, Optional, List
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_OFF, HVAC_MODE_AUTO, PRESET_BOOST, PRESET_ACTIVITY,
+    HVAC_MODE_OFF, HVAC_MODE_HEAT, PRESET_BOOST, PRESET_ACTIVITY,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import callback
