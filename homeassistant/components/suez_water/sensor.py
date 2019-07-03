@@ -4,6 +4,9 @@ import logging
 
 import voluptuous as vol
 
+from pysuez.client import PySuezError
+from pysuez import SuezClient
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, VOLUME_LITERS
 import homeassistant.helpers.config_validation as cv
@@ -12,9 +15,10 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 CONF_COUNTER_ID = 'counter_id'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(hours=12)
 SCAN_INTERVAL = timedelta(hours=12)
 
+COMPONENT_ICON = 'mdi:water-pump'
+COMPONENT_NAME = "Suez Water Client"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -23,11 +27,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
-    from pysuez.client import PySuezError
-    from pysuez import SuezClient
-
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
     counter_id = config[CONF_COUNTER_ID]
@@ -35,14 +36,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         client = SuezClient(
             username, password, counter_id)
 
-        if client.check_credentials():
-            add_devices([SuezSensor(client)], True)
-        else:
+        if not client.check_credentials():
             _LOGGER.warning("Wrong username and/or password")
+        else:
+            add_entities([SuezSensor(client)], True)
 
     except PySuezError:
         _LOGGER.warning("Unable to create Suez Client")
-        return False
+        return
 
 
 class SuezSensor(Entity):
@@ -50,12 +51,13 @@ class SuezSensor(Entity):
 
     def __init__(self, client):
         """Initialize the data object."""
-        self._name = "Suez Water Client"
+        self._name = COMPONENT_NAME
         self._attributes = {}
-        self.success = False
         self._state = None
-        self._icon = 'mdi:water-pump'
+        self._available = None
+        self._icon = COMPONENT_ICON
         self.client = client
+        self.success = False
 
     @property
     def name(self):
@@ -84,26 +86,49 @@ class SuezSensor(Entity):
 
     def _fetch_data(self):
         """Fetch latest data from Suez."""
-        from pysuez.client import PySuezError
-
         try:
             self.client.update()
-
+            # _state holds the volume of consumed water during previous day
             self._state = self.client.state
-            self._attributes = self.client.attributes
             self.success = True
+            self._available = True
+            self._attributes[
+                'attribution'] = self.client.attributes[
+                    'attribution']
+            self._attributes['thisMonthConsumption'] = {}
+            for item in self.client.attributes['thisMonthConsumption']:
+                self._attributes['thisMonthConsumption'][
+                    item] = self.client.attributes[
+                        'thisMonthConsumption'][item]
+            self._attributes['previousMonthConsumption'] = {}
+            for item in self.client.attributes['previousMonthConsumption']:
+                self._attributes['previousMonthConsumption'][
+                    item] = self.client.attributes[
+                        'previousMonthConsumption'][item]
+            self._attributes[
+                'highestMonthlyConsumption'] = self.client.attributes[
+                    'highestMonthlyConsumption']
+            self._attributes[
+                'lastYearOverAll'] = self.client.attributes[
+                    'lastYearOverAll']
+            self._attributes[
+                'thisYearOverAll'] = self.client.attributes[
+                    'thisYearOverAll']
+            self._attributes['history'] = {}
+            for item in self.client.attributes['history']:
+                self._attributes[
+                    'history'][item] = self.client.attributes[
+                        'history'][item]
 
         except PySuezError:
+            self.success = False
+            self._available = False
             _LOGGER.warning("Unable to fetch data")
-            return False
-
-        return True
+            return
 
     def update(self):
         """Return the latest collected data from Linky."""
         self._fetch_data()
-        if not self.success:
-            return
         _LOGGER.debug(
             "Suez data state is: %s, and the success is %s",
             self._state, self.success)
