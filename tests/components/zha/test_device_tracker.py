@@ -1,8 +1,12 @@
 """Test ZHA Device Tracker."""
 from datetime import timedelta
 import time
-from homeassistant.components.device_tracker import DOMAIN
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
+from homeassistant.components.device_tracker import DOMAIN, SOURCE_TYPE_ROUTER
+from homeassistant.const import (
+    STATE_HOME,
+    STATE_NOT_HOME,
+    STATE_UNAVAILABLE
+)
 from homeassistant.components.zha.core.registries import \
     SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE
 import homeassistant.util.dt as dt_util
@@ -60,13 +64,24 @@ async def test_device_tracker(hass, config_entry, zha_gateway):
     assert hass.states.get(entity_id).state == STATE_NOT_HOME
 
     # turn state flip
-    attr = make_attribute(21, 23)
+    attr = make_attribute(0x0020, 23)
     cluster.handle_message(False, 1, 0x0a, [[attr]])
+
+    attr = make_attribute(0x0021, 200)
+    cluster.handle_message(False, 1, 0x0a, [[attr]])
+
     zigpy_device.last_seen = time.time() + 10
     next_update = dt_util.utcnow() + timedelta(seconds=30)
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done()
+
     assert hass.states.get(entity_id).state == STATE_HOME
+
+    entity = hass.data[DOMAIN].get_entity(entity_id)
+
+    assert entity.is_connected is True
+    assert entity.source_type == SOURCE_TYPE_ROUTER
+    assert entity.battery_level == 100
 
     # test adding device tracker to the network and HA
     await async_test_device_join(

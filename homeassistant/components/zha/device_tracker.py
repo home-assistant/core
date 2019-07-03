@@ -81,16 +81,6 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
                 self._connected = False
             else:
                 self._connected = True
-                # replace with power formatter import once the other PR merges
-                value = await self._battery_channel.get_attribute_value(
-                    'battery_percentage_remaining', from_cache=True)
-                # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
-                if not isinstance(value, numbers.Number) or value == -1:
-                    self._battery_level = None
-                else:
-                    value = value / 2
-                    value = int(round(value))
-                    self._battery_level = value
 
     @property
     def is_connected(self):
@@ -105,7 +95,19 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
     @callback
     def async_attribute_updated(self, attribute, value):
         """Handle tracking."""
-        pass
+        _LOGGER.debug('Attribute updated: %s - %s', attribute, value)
+        # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
+        # Fix this after the other PR merges and replace with power formatter
+        # import once the other PR merges
+        self._connected = True
+        if attribute in ('battery_level', 'battery_percentage_remaining'):
+            if not isinstance(value, numbers.Number) or value == -1:
+                self._battery_level = None
+            else:
+                value = value / 2
+                value = int(round(value))
+                self._battery_level = value
+        self.async_schedule_update_ha_state()
 
     @property
     def battery_level(self):
