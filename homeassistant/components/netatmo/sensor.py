@@ -149,7 +149,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             # Test if manually configured
             if CONF_MODULES in config:
                 module_items = config[CONF_MODULES].items()
+                module_names = data.get_module_names()
                 for module_name, monitored_conditions in module_items:
+                    if module_name not in module_names:
+                        continue
                     for condition in monitored_conditions:
                         dev.append(NetatmoSensor(
                             data, module_name, condition.lower(),
@@ -527,6 +530,8 @@ class NetatmoData:
 
     def get_module_names(self):
         """Return all module available on the API as a list."""
+        if self.station is not None:
+            return self.station_data.modulesNamesList(station=self.station)
         return self.station_data.modulesNamesList()
 
     def update(self):
