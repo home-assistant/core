@@ -289,8 +289,7 @@ async def test_track_template_result(hass):
     async_track_template_result(
         hass, template_condition, wildcard_run_callback)
 
-    @asyncio.coroutine
-    def wildercard_run_callback(event, template, old_result, new_result):
+    async def wildercard_run_callback(event, template, old_result, new_result):
         wildercard_runs.append((int(old_result or 0), int(new_result)))
 
     async_track_template_result(

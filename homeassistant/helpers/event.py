@@ -7,19 +7,19 @@ from typing import Any, Callable, Mapping, Optional, Union
 import attr
 import voluptuous as vol
 
-from ..const import (
+from homeassistant.const import (
     ATTR_NOW, EVENT_CORE_CONFIG_UPDATE, EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED, MATCH_ALL, SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET)
-from ..core import Event, HomeAssistant, State, callback
-from ..exceptions import TemplateError
-from ..loader import bind_hass
-from ..util import dt as dt_util
-from ..util.async_ import run_callback_threadsafe
-from . import config_validation as cv
-from .sun import get_astral_event_next
-from .template import Template
-from .typing import TemplateVarsType
+from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.exceptions import TemplateError
+from homeassistant.loader import bind_hass
+from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.sun import get_astral_event_next
+from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import TemplateVarsType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -197,7 +197,7 @@ _UNCHANGED = object()
 
 
 class TrackTemplateResultInfo:
-    """Return value from async_track_template_result."""
+    """Handle removal / refresh of tracker."""
 
     def __init__(self, hass, template, action, variables):
         """Initialiser, should be package private."""
