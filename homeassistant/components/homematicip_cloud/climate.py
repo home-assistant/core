@@ -24,7 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 HMIP_AUTOMATIC_CM = 'AUTOMATIC'
 HMIP_MANUAL_CM = 'MANUAL'
 HMIP_ECO_CM = 'ECO'
-PRESET_MANUAL = 'manual'
 
 
 async def async_setup_platform(
@@ -162,8 +161,6 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
             await self._device.set_boost()
         elif preset_mode == PRESET_COMFORT:
             await self._device.set_control_mode(HMIP_AUTOMATIC_CM)
-        elif preset_mode == PRESET_MANUAL:
-            await self._device.set_control_mode(HMIP_MANUAL_CM)
 
 
 def _get_first_heating_thermostat(heating_group: AsyncHeatingGroup):
