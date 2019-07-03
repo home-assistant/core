@@ -109,7 +109,6 @@ enocean==0.50
 ephem==3.7.6.0
 
 # homeassistant.components.evohome
-# homeassistant.components.honeywell
 evohomeclient==0.3.2
 
 # homeassistant.components.feedreader

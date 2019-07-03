@@ -15,17 +15,58 @@ SUPPORT_FLAGS = 0
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo climate devices."""
     add_entities([
-        DemoClimate('HeatPump', 68, TEMP_FAHRENHEIT, None, 77,
-                    None, None, None, None, HVAC_MODE_AUTO,
-                    CURRENT_HVAC_HEAT, None, None, None,
-                    [HVAC_MODE_HEAT, HVAC_MODE_OFF]),
-        DemoClimate('Hvac', 21, TEMP_CELSIUS, None, 22, 'On High',
-                    67, 54, 'Off', HVAC_MODE_COOL, CURRENT_HVAC_COOL,
-                    False, None, None, HVAC_MODES),
-        DemoClimate('Ecobee', None, TEMP_CELSIUS, 'home', 23, 'Auto Low',
-                    None, None, 'Auto', HVAC_MODE_HEAT_COOL, None, None, 24,
-                    21, [HVAC_MODE_AUTO, HVAC_MODE_HEAT_COOL, HVAC_MODE_COOL,
-                         HVAC_MODE_HEAT])
+        DemoClimate(
+            name='HeatPump',
+            target_temperature=68,
+            unit_of_measurement=TEMP_FAHRENHEIT,
+            preset=None,
+            current_temperature=77,
+            fan_mode=None,
+            target_humidity=None,
+            current_humidity=None,
+            swing_mode=None,
+            hvac_mode=HVAC_MODE_HEAT,
+            hvac_action=CURRENT_HVAC_HEAT,
+            aux=None,
+            target_temp_high=None,
+            target_temp_low=None,
+            hvac_modes=[HVAC_MODE_HEAT, HVAC_MODE_OFF]
+        ),
+        DemoClimate(
+            name='Hvac',
+            target_temperature=21,
+            unit_of_measurement=TEMP_CELSIUS,
+            preset=None,
+            current_temperature=22,
+            fan_mode='On High',
+            target_humidity=67,
+            current_humidity=54,
+            swing_mode='Off',
+            hvac_mode=HVAC_MODE_COOL,
+            hvac_action=CURRENT_HVAC_COOL,
+            aux=False,
+            target_temp_high=None,
+            target_temp_low=None,
+            hvac_modes=HVAC_MODES
+        ),
+        DemoClimate(
+            name='Ecobee',
+            target_temperature=None,
+            unit_of_measurement=TEMP_CELSIUS,
+            preset='home',
+            preset_modes=['home', 'eco'],
+            current_temperature=23,
+            fan_mode='Auto Low',
+            target_humidity=None,
+            current_humidity=None,
+            swing_mode='Auto',
+            hvac_mode=HVAC_MODE_HEAT_COOL,
+            hvac_action=None,
+            aux=None,
+            target_temp_high=24,
+            target_temp_low=21,
+            hvac_modes=[HVAC_MODE_AUTO, HVAC_MODE_HEAT_COOL, HVAC_MODE_COOL,
+                        HVAC_MODE_HEAT])
     ])
 
 
@@ -33,10 +74,23 @@ class DemoClimate(ClimateDevice):
     """Representation of a demo climate device."""
 
     def __init__(
-            self, name, target_temperature, unit_of_measurement, preset,
-            current_temperature, fan_mode, target_humidity, current_humidity,
-            swing_mode, hvac_mode, hvac_action, aux, target_temp_high,
-            target_temp_low, hvac_modes
+            self,
+            name,
+            target_temperature,
+            unit_of_measurement,
+            preset,
+            current_temperature,
+            fan_mode,
+            target_humidity,
+            current_humidity,
+            swing_mode,
+            hvac_mode,
+            hvac_action,
+            aux,
+            target_temp_high,
+            target_temp_low,
+            hvac_modes,
+            preset_modes=None,
     ):
         """Initialize the climate device."""
         self._name = name
@@ -64,6 +118,7 @@ class DemoClimate(ClimateDevice):
         self._target_humidity = target_humidity
         self._unit_of_measurement = unit_of_measurement
         self._preset = preset
+        self._preset_modes = preset_modes
         self._current_temperature = current_temperature
         self._current_humidity = current_humidity
         self._current_fan_mode = fan_mode
@@ -149,8 +204,13 @@ class DemoClimate(ClimateDevice):
 
     @property
     def preset_mode(self):
-        """Return hold mode setting."""
+        """Return preset mode."""
         return self._preset
+
+    @property
+    def preset_modes(self):
+        """Return preset modes."""
+        return self._preset_modes
 
     @property
     def is_aux_heat(self):
