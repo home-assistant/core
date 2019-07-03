@@ -5,7 +5,8 @@ from pyotgw import vars as gw_vars
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_TARGET_TEMPERATURE,
+    PRESET_AWAY, SUPPORT_PRESET_MODE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE,
     TEMP_CELSIUS)
@@ -18,7 +19,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 
 async def async_setup_platform(
@@ -156,9 +157,19 @@ class OpenThermClimate(ClimateDevice):
         return self.precision
 
     @property
-    def is_away_mode_on(self):
-        """Return true if away mode is on."""
-        return self._away_state_a or self._away_state_b
+    def preset_mode(self):
+        """Return current preset mode."""
+        if self._away_state_a or self._away_state_b:
+            return PRESET_AWAY
+
+    @property
+    def preset_modes(self):
+        """Available preset modes to set."""
+        return [PRESET_AWAY]
+
+    def set_preset_mode(self, preset_mode):
+        """Set the preset mode."""
+        _LOGGER.warning("Changing preset mode is not supported")
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
