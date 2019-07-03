@@ -7,9 +7,8 @@ from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_HUMIDITY, SUPPORT_AWAY_MODE,
-    SUPPORT_TARGET_HUMIDITY_HIGH, SUPPORT_TARGET_HUMIDITY_LOW,
-    SUPPORT_HOLD_MODE, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_HUMIDITY, SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE, PRESET_AWAY,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
     HVAC_MODE_OFF)
 from homeassistant.const import (
@@ -86,17 +85,14 @@ class VenstarThermostat(ClimateDevice):
     def supported_features(self):
         """Return the list of supported features."""
         features = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE |
-                    SUPPORT_AWAY_MODE |
-                    SUPPORT_HOLD_MODE)
+                    SUPPORT_PRESET_MODE)
 
         if self._client.mode == self._client.MODE_AUTO:
             features |= (SUPPORT_TARGET_TEMPERATURE_RANGE)
 
         if (self._humidifier and
                 hasattr(self._client, 'hum_active')):
-            features |= (SUPPORT_TARGET_HUMIDITY |
-                         SUPPORT_TARGET_HUMIDITY_HIGH |
-                         SUPPORT_TARGET_HUMIDITY_LOW)
+            features |= SUPPORT_TARGET_HUMIDITY
 
         return features
 
@@ -206,16 +202,20 @@ class VenstarThermostat(ClimateDevice):
         return 60
 
     @property
-    def is_away_mode_on(self):
-        """Return the status of away mode."""
-        return self._client.away == self._client.AWAY_AWAY
-
-    @property
-    def current_hold_mode(self):
-        """Return the status of hold mode."""
+    def preset_mode(self):
+        """Return current preset."""
+        if self._client.away:
+            return PRESET_AWAY
         if self._client.schedule == 0:
             return HOLD_MODE_TEMPERATURE
-        return HOLD_MODE_OFF
+
+    @property
+    def preset_modes(self):
+        """Return valid preset modes."""
+        return [
+            PRESET_AWAY,
+            HOLD_MODE_TEMPERATURE,
+        ]
 
     def _set_operation_mode(self, operation_mode):
         """Change the operation mode (internal)."""
@@ -280,29 +280,21 @@ class VenstarThermostat(ClimateDevice):
         if not success:
             _LOGGER.error("Failed to change the target humidity level")
 
-    def set_hold_mode(self, hold_mode):
+    def set_preset_mode(self, preset_mode):
         """Set the hold mode."""
-        if hold_mode == HOLD_MODE_TEMPERATURE:
+        if preset_mode == PRESET_AWAY:
+            success = self._client.set_away(self._client.AWAY_AWAY)
+        elif preset_mode == HOLD_MODE_TEMPERATURE:
             success = self._client.set_schedule(0)
-        elif hold_mode == HOLD_MODE_OFF:
-            success = self._client.set_schedule(1)
+        elif preset_mode is None:
+            success = False
+            if self._client.away:
+                success = self._client.set_away(self._client.AWAY_HOME)
+            if self._client.schedule == 0:
+                success = success and self._client.set_schedule(1)
         else:
-            _LOGGER.error("Unknown hold mode: %s", hold_mode)
+            _LOGGER.error("Unknown hold mode: %s", preset_mode)
             success = False
 
         if not success:
             _LOGGER.error("Failed to change the schedule/hold state")
-
-    def turn_away_mode_on(self):
-        """Activate away mode."""
-        success = self._client.set_away(self._client.AWAY_AWAY)
-
-        if not success:
-            _LOGGER.error("Failed to activate away mode")
-
-    def turn_away_mode_off(self):
-        """Deactivate away mode."""
-        success = self._client.set_away(self._client.AWAY_HOME)
-
-        if not success:
-            _LOGGER.error("Failed to deactivate away mode")
