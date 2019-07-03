@@ -12,7 +12,7 @@ from homematicip.functionalHomes import IndoorClimateHome
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO, HVAC_MODE_HEAT, PRESET_AWAY, PRESET_BOOST, PRESET_COMFORT,
-    PRESET_ECO, PRESET_MANUAL, SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE)
+    PRESET_ECO, SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
@@ -114,8 +114,6 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
             return PRESET_BOOST
         if self._device.controlMode == HMIP_AUTOMATIC_CM:
             return PRESET_COMFORT
-        if self._device.controlMode == HMIP_MANUAL_CM:
-            return PRESET_MANUAL
         if self._device.controlMode == HMIP_ECO_CM:
             return PRESET_ECO
         if self._home.get_functionalHome(IndoorClimateHome).absenceType \
@@ -131,7 +129,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
 
         Requires SUPPORT_PRESET_MODE.
         """
-        return [PRESET_BOOST, PRESET_COMFORT, PRESET_MANUAL]
+        return [PRESET_BOOST, PRESET_COMFORT]
 
     @property
     def min_temp(self) -> float:

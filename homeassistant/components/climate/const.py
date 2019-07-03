@@ -51,10 +51,6 @@ PRESET_HOME = 'home'
 # Device is prepared for sleep
 PRESET_SLEEP = 'sleep'
 
-# Device is in manual mode
-PRESET_MANUAL = 'manual'
-
-
 # Possible fan state
 FAN_ON = "on"
 FAN_OFF = "off"
