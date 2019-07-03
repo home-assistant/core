@@ -366,7 +366,9 @@ class SonosEntity(MediaPlayerDevice):
         favorites = self.soco.music_library.get_sonos_favorites()
         # Exclude favorites that are non-playable due to no linked resources
         self._favorites = [f for f in favorites if f.reference.resources]
-
+        playlists = self.soco.get_sonos_playlists()
+        self._favorites.extend(playlists)
+        
     def _radio_artwork(self, url):
         """Return the private URL with artwork for a radio stream."""
         if url not in ('', 'NOT_IMPLEMENTED', None):
@@ -527,7 +529,7 @@ class SonosEntity(MediaPlayerDevice):
         # Check if currently playing radio station is in favorites
         self._source_name = None
         for fav in self._favorites:
-            if fav.reference.get_uri() == media_info['CurrentURI']:
+            if hasattr(fav, 'reference') and fav.reference.get_uri() == media_info['CurrentURI']:
                 self._source_name = fav.title
 
     def update_media_music(self, update_media_position, track_info):
@@ -780,14 +782,21 @@ class SonosEntity(MediaPlayerDevice):
                    if fav.title == source]
             if len(fav) == 1:
                 src = fav.pop()
-                uri = src.reference.get_uri()
-                if _is_radio_uri(uri):
-                    self.soco.play_uri(uri, title=source)
+                if hasattr(src, 'reference'):
+                    # Normal Favorite
+                    uri = src.reference.get_uri()
+                    if _is_radio_uri(uri):
+                        self.soco.play_uri(uri, title=source)
+                    else:
+                        self.soco.clear_queue()
+                        self.soco.add_to_queue(src.reference)
+                        self.soco.play_from_queue(0)
                 else:
+                    # Sonos Playlist
                     self.soco.clear_queue()
-                    self.soco.add_to_queue(src.reference)
+                    self.soco.add_to_queue(src)
                     self.soco.play_from_queue(0)
-
+                    
     @property
     @soco_coordinator
     def source_list(self):
