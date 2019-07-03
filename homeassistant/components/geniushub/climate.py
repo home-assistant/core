@@ -22,18 +22,10 @@ GH_STATE_ATTRS = ['mode', 'temperature', 'type', 'occupied', 'override']
 
 # GeniusHub Zones support: Off, Timer, Override/Boost, Footprint & Linked modes
 GH_MODE_TO_HA_PRESET = {
-    'off': None,
-    'timer': None,
     'footprint': PRESET_ACTIVITY,
-    'away': None,
     'override': PRESET_BOOST,
-    'early': None,
-    'test': None,
-    'linked': None,
-    'other': None,
 }
-HA_PRESET_TO_GH_MODE = {v: k for k, v in GH_MODE_TO_HA_PRESET.items()
-                        if v is not None}
+HA_PRESET_TO_GH_MODE = {v: k for k, v in GH_MODE_TO_HA_PRESET.items()}
 
 HA_HVAC_MODE_TO_GH_MODE = {
     HVAC_MODE_OFF: 'off',
@@ -124,7 +116,7 @@ class GeniusClimateZone(ClimateDevice):
 
         Need to be one of HVAC_MODE_*.
         """
-        return GH_MODE_TO_HA_HVAC_MODE.get(self._zone.mode, HVAC_MODE_AUTO)
+        return GH_MODE_TO_HA_HVAC_MODE.get(self._zone.mode, HVAC_MODE_HEAT)
 
     @property
     def hvac_modes(self) -> List[str]:
