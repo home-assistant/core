@@ -308,11 +308,3 @@ class KNXClimate(ClimateDevice):
                 PRESET_MODES_INV.get(preset_mode))
             await self.device.mode.set_operation_mode(knx_operation_mode)
             await self.async_update_ha_state()
-
-    @property
-    def preset_mode_list(self) -> List[str]:
-        """Return the list of available operation modes."""
-        _operations = [PRESET_MODES.get(operation_mode.value) for
-                       operation_mode in
-                       self.device.mode.operation_modes]
-        return list(filter(None, _operations))
