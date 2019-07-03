@@ -148,7 +148,6 @@ async def async_unload_entry(hass, config_entry):
 
 async def register_new_bridge(hass, bridge, config_entry_id):
     """Register a new bridge."""
-    _LOGGER.debug('Registering bridge: %s', bridge)
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry_id,
@@ -273,6 +272,13 @@ class NotionEntity(Entity):
     def unique_id(self):
         """Return a unique, unchanging string that represents this sensor."""
         return self._task_id
+
+    @callback
+    def _update_bridge(self, sensor_id):
+        """Update the entity's bridge ID if it has changed."""
+        sensor = self._notion.sensors[sensor_id]
+        if self._bridge_id != sensor['bridge']['id']:
+            self._bridge_id = sensor['bridge']['id']
 
     async def async_added_to_hass(self):
         """Register callbacks."""

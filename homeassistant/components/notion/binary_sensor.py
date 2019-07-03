@@ -63,4 +63,10 @@ class NotionBinarySensor(NotionEntity, BinarySensorDevice):
 
     async def async_update(self):
         """Fetch new state data for the sensor."""
-        self._state = self._notion.tasks[self._task_id]['status']['value']
+        task = self._notion.tasks[self._task_id]
+
+        # Sensors can move to different bridges based upon signal strength,
+        # etc. Check and see if this entity has a new bridge:
+        self._update_bridge(self._notion.sensors[task['sensor_id']]['id'])
+
+        self._state = task['status']['value']
