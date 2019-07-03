@@ -1,6 +1,6 @@
-"""Support for (EMEA/EU-based) Honeywell TCC systems.
+"""Support for (EMEA/EU-based) Honeywell TCC climate systems.
 
-Such systems include evohome, and Round Thermostat.
+Such systems include evohome (multi-zone), and Round Thermostat (single zone).
 """
 from datetime import datetime, timedelta
 import logging
@@ -259,9 +259,10 @@ class EvoDevice(Entity):
         if packet['signal'] == 'refresh':
             self.async_schedule_update_ha_state(force_refresh=True)
 
+## from the Entity class
     @property
     def should_poll(self) -> bool:
-        """Evohome devices should not be polled."""
+        """Evohome entities should not be polled."""
         return False
 
     @property
@@ -296,6 +297,8 @@ class EvoDevice(Entity):
         """Run when entity about to be added to hass."""
         async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
 
+
+## from Climate & WaterHeater classes
     @property
     def precision(self) -> float:
         """Return the temperature precision to use in the frontend UI."""
@@ -305,8 +308,3 @@ class EvoDevice(Entity):
     def temperature_unit(self) -> str:
         """Return the temperature unit to use in the frontend UI."""
         return TEMP_CELSIUS
-
-    @property
-    def operation_list(self):
-        """Return the list of available operations."""
-        return self._operation_list

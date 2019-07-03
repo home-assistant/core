@@ -100,7 +100,15 @@ class EvoZone(EvoDevice, ClimateDevice):
         self._operation_list = list(HA_STATE_TO_ZONE)
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> str:
+        """Return hvac operation ie. heat, cool mode.
+
+        Need to be one of HVAC_MODE_*.
+        """
+        return self._operation_list
+
+    @property
+    def hvac_mode(self) -> List[str]:
         """Return the current operating mode of the evohome Zone.
 
         The evohome Zones that are in 'FollowSchedule' mode inherit their
@@ -115,18 +123,18 @@ class EvoZone(EvoDevice, ClimateDevice):
         return ZONE_STATE_TO_HA.get(setpoint_mode)
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> Optional[float]:
         """Return the current temperature of the evohome Zone."""
         return (self._evo_device.temperatureStatus['temperature']
                 if self._evo_device.temperatureStatus['isAvailable'] else None)
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> Optional[float]:
         """Return the target temperature of the evohome Zone."""
         return self._evo_device.setpointStatus['targetHeatTemperature']
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self):  # TODO: remove
         """Return True if the evohome Zone is off.
 
         A Zone is considered off if its target temp is set to its minimum, and
@@ -138,7 +146,7 @@ class EvoZone(EvoDevice, ClimateDevice):
         return self.current_operation == EVO_HEATOFF or not is_off
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum target temperature of a evohome Zone.
 
         The default is 5 (in Celsius), but it is configurable within 5-35.
@@ -146,7 +154,7 @@ class EvoZone(EvoDevice, ClimateDevice):
         return self._evo_device.setpointCapabilities['minHeatSetpoint']
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum target temperature of a evohome Zone.
 
         The default is 35 (in Celsius), but it is configurable within 5-35.
@@ -166,7 +174,7 @@ class EvoZone(EvoDevice, ClimateDevice):
                 evohomeclient2.AuthenticationError) as err:
             _handle_exception(err)
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs) -> None:
         """Set new target temperature, indefinitely."""
         self._set_temperature(kwargs['temperature'], until=None)
 
@@ -185,7 +193,7 @@ class EvoZone(EvoDevice, ClimateDevice):
         """
         self._set_temperature(self.min_temp, until=None)
 
-    def _set_operation_mode(self, operation_mode):
+    def _set_operation_mode(self, operation_mode) -> None:
         if operation_mode == EVO_FOLLOW:
             try:
                 self._evo_device.cancel_temp_override()
@@ -208,7 +216,7 @@ class EvoZone(EvoDevice, ClimateDevice):
                 operation_mode
             )
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set an operating mode for a Zone.
 
         Currently limited to 'Auto' & 'Manual'. If 'Off' is needed, it can be
@@ -264,12 +272,12 @@ class EvoController(EvoDevice, ClimateDevice):
         self._operation_list = list(HA_STATE_TO_TCS)
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> List[str]:
         """Return the current operating mode of the evohome Controller."""
         return TCS_STATE_TO_HA.get(self._evo_device.systemModeStatus['mode'])
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> Optional[float]:
         """Return the average current temperature of the Heating/DHW zones.
 
         Although evohome Controllers do not have a target temp, one is
@@ -280,7 +288,7 @@ class EvoController(EvoDevice, ClimateDevice):
         return round(sum(temps) / len(temps), 1) if temps else None
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> Optional[float]:
         """Return the average target temperature of the Heating/DHW zones.
 
         Although evohome Controllers do not have a target temp, one is
@@ -301,7 +309,7 @@ class EvoController(EvoDevice, ClimateDevice):
         return self._evo_device.systemModeStatus['mode'] != EVO_HEATOFF
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum target temperature of a evohome Controller.
 
         Although evohome Controllers do not have a minimum target temp, one is
@@ -310,7 +318,7 @@ class EvoController(EvoDevice, ClimateDevice):
         return 5
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum target temperature of a evohome Controller.
 
         Although evohome Controllers do not have a maximum target temp, one is
@@ -318,14 +326,14 @@ class EvoController(EvoDevice, ClimateDevice):
         """
         return 35
 
-    def _set_operation_mode(self, operation_mode):
+    def _set_operation_mode(self, operation_mode) -> None:
         try:
             self._evo_device._set_status(operation_mode)  # noqa: E501; pylint: disable=protected-access
         except (requests.exceptions.RequestException,
                 evohomeclient2.AuthenticationError) as err:
             _handle_exception(err)
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target operation mode for the TCS.
 
         Currently limited to 'Auto', 'AutoWithEco' & 'HeatingOff'. If 'Away'

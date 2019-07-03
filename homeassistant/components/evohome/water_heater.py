@@ -55,21 +55,22 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         self._operation_list = list(HA_OPMODE_TO_DHW)
         self._supported_features = SUPPORT_OPERATION_MODE
 
-    async def async_update(self):
-        """Process the evohome DHW controller's state data."""
-        self._available = self._evo_device.temperatureStatus['isAvailable']
-
     @property
     def current_operation(self) -> str:
         """Return the current operating mode (On, or Off)."""
         return EVO_STATE_TO_HA[self._evo_device.stateStatus['state']]
 
     @property
+    def operation_list(self) -> List[str]:
+        """Return the list of available operations."""
+        return self._operation_list
+
+    @property
     def current_temperature(self) -> float:
         """Return the current temperature."""
         return self._evo_device.temperatureStatus['temperature']
 
-    def set_operation_mode(self, operation_mode):
+    def set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode for a DHW controller."""
         op_mode = HA_OPMODE_TO_DHW[operation_mode]
 
@@ -88,3 +89,7 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         except (requests.exceptions.RequestException,
                 evohomeclient2.AuthenticationError) as err:
             _handle_exception(err)
+
+    async def async_update(self)  -> Awaitable[None]:
+        """Process the evohome DHW controller's state data."""
+        self._available = self._evo_device.temperatureStatus['isAvailable']
