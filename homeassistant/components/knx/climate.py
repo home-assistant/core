@@ -247,7 +247,8 @@ class KNXClimate(ClimateDevice):
         elif self.device.supports_on_off and self.device.is_on:
             return HVAC_MODE_HEAT
         if self.device.mode.supports_operation_mode:
-            return OPERATION_MODES.get(self.device.mode.operation_mode.value, HVAC_MODE_HEAT)
+            return OPERATION_MODES.get(
+                self.device.mode.operation_mode.value, HVAC_MODE_HEAT)
         return None
 
     @property
@@ -283,7 +284,8 @@ class KNXClimate(ClimateDevice):
         Requires SUPPORT_PRESET_MODE.
         """
         if self.device.mode.supports_operation_mode:
-            return PRESET_MODES.get(self.device.mode.operation_mode.value, PRESET_AWAY)
+            return PRESET_MODES.get(
+                self.device.mode.operation_mode.value, PRESET_AWAY)
         return None
 
     @property
@@ -293,8 +295,8 @@ class KNXClimate(ClimateDevice):
         Requires SUPPORT_PRESET_MODE.
         """
         _presets = [PRESET_MODES.get(operation_mode.value) for
-                       operation_mode in
-                       self.device.mode.operation_modes]
+                    operation_mode in
+                    self.device.mode.operation_modes]
 
         return list(filter(None, _presets))
 
