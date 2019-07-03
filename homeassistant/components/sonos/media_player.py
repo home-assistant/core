@@ -37,10 +37,6 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = 10
 DISCOVERY_INTERVAL = 60
 
-# Quiet down pysonos logging to just actual problems.
-logging.getLogger('pysonos').setLevel(logging.WARNING)
-logging.getLogger('pysonos.data_structures_entry').setLevel(logging.ERROR)
-
 SUPPORT_SONOS = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
     SUPPORT_PLAY | SUPPORT_PAUSE | SUPPORT_STOP | SUPPORT_SELECT_SOURCE |\
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK |\
