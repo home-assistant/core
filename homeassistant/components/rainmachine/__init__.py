@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, CONF_SWITCHES)
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
@@ -186,6 +187,7 @@ async def async_setup_entry(hass, config_entry):
             ssl=config_entry.data[CONF_SSL])
         rainmachine = RainMachine(
             client,
+            config_entry.entry_id,
             config_entry.data.get(CONF_BINARY_SENSORS, {}).get(
                 CONF_MONITORED_CONDITIONS, list(BINARY_SENSORS)),
             config_entry.data.get(CONF_SENSORS, {}).get(
@@ -320,11 +322,12 @@ class RainMachine:
     """Define a generic RainMachine object."""
 
     def __init__(
-            self, client, binary_sensor_conditions, sensor_conditions,
-            default_zone_runtime):
+            self, client, config_entry_id, binary_sensor_conditions,
+            sensor_conditions, default_zone_runtime):
         """Initialize."""
         self.binary_sensor_conditions = binary_sensor_conditions
         self.client = client
+        self.config_entry_id = config_entry_id
         self.data = {}
         self.default_zone_runtime = default_zone_runtime
         self.device_mac = self.client.mac
@@ -386,14 +389,16 @@ class RainMachineEntity(Entity):
     def device_info(self):
         """Return device registry information for this entity."""
         return {
+            'config_entry_id': self.rainmachine.config_entry_id,
+            'connections': {
+                (CONNECTION_NETWORK_MAC, self.rainmachine.client.mac)
+            },
             'identifiers': {
                 (DOMAIN, self.rainmachine.client.mac)
             },
             'name': self.rainmachine.client.name,
             'manufacturer': 'RainMachine',
-            'model': 'Version {0} (API: {1})'.format(
-                self.rainmachine.client.hardware_version,
-                self.rainmachine.client.api_version),
+            'model': self.rainmachine.client.hardware_version,
             'sw_version': self.rainmachine.client.software_version,
         }
 
