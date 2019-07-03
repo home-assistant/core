@@ -5,12 +5,15 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
 import asyncio
+from datetime import timedelta
 from enum import Enum
 import logging
+import time
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
+from homeassistant.helpers.event import async_track_time_interval
 
 from .channels import EventRelayChannel
 from .const import (
@@ -19,9 +22,12 @@ from .const import (
     BATTERY_OR_UNKNOWN, CLIENT_COMMANDS, IEEE, IN, MAINS_POWERED,
     MANUFACTURER_CODE, MODEL, NAME, NWK, OUT, POWER_CONFIGURATION_CHANNEL,
     POWER_SOURCE, QUIRK_APPLIED, QUIRK_CLASS, SERVER, SERVER_COMMANDS,
-    SIGNAL_AVAILABLE, UNKNOWN_MANUFACTURER, UNKNOWN_MODEL, ZDO_CHANNEL)
+    SIGNAL_AVAILABLE, UNKNOWN_MANUFACTURER, UNKNOWN_MODEL, ZDO_CHANNEL,
+    LQI, RSSI, LAST_SEEN)
 
 _LOGGER = logging.getLogger(__name__)
+_KEEP_ALIVE_INTERVAL = 7200
+_UPDATE_ALIVE_INTERVAL = timedelta(seconds=60)
 
 
 class DeviceStatus(Enum):
@@ -55,6 +61,11 @@ class ZHADevice:
         self.quirk_class = "{}.{}".format(
             self._zigpy_device.__class__.__module__,
             self._zigpy_device.__class__.__name__
+        )
+        self._available_check = async_track_time_interval(
+            self.hass,
+            self._check_available,
+            _UPDATE_ALIVE_INTERVAL
         )
         self.status = DeviceStatus.CREATED
 
@@ -158,6 +169,16 @@ class ZHADevice:
         """Set availability from restore and prevent signals."""
         self._available = available
 
+    def _check_available(self, *_):
+        if self.last_seen is None:
+            self.update_available(False)
+        else:
+            difference = time.time() - self.last_seen
+            if difference > _KEEP_ALIVE_INTERVAL:
+                self.update_available(False)
+            else:
+                self.update_available(True)
+
     def update_available(self, available):
         """Set sensor availability."""
         if self._available != available and available:
@@ -178,6 +199,8 @@ class ZHADevice:
     def device_info(self):
         """Return a device description for device."""
         ieee = str(self.ieee)
+        time_struct = time.localtime(self.last_seen)
+        update_time = time.strftime("%Y-%m-%dT%H:%M:%S", time_struct)
         return {
             IEEE: ieee,
             NWK: self.nwk,
@@ -187,7 +210,10 @@ class ZHADevice:
             QUIRK_APPLIED: self.quirk_applied,
             QUIRK_CLASS: self.quirk_class,
             MANUFACTURER_CODE: self.manufacturer_code,
-            POWER_SOURCE: self.power_source
+            POWER_SOURCE: self.power_source,
+            LQI: self.lqi,
+            RSSI: self.rssi,
+            LAST_SEEN: update_time
         }
 
     def add_cluster_channel(self, cluster_channel):
