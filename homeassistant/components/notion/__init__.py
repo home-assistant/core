@@ -8,7 +8,8 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import (
+    aiohttp_client, config_validation as cv, device_registry as dr)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
@@ -105,8 +106,8 @@ async def async_setup_entry(hass, config_entry):
         _LOGGER.error('Config entry failed: %s', err)
         raise ConfigEntryNotReady
 
-    notion = Notion(client)
-    await notion.async_update(initialize=True)
+    notion = Notion(hass, client, config_entry.entry_id)
+    await notion.async_update()
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = notion
 
     for component in ('binary_sensor', 'sensor'):
@@ -142,18 +143,35 @@ async def async_unload_entry(hass, config_entry):
     return True
 
 
+async def register_new_bridge(hass, bridge, config_entry_id):
+    """Register a new bridge."""
+    _LOGGER.debug('Registering bridge: %s', bridge)
+    device_registry = await dr.async_get_registry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry_id,
+        identifiers={
+            (DOMAIN, bridge['hardware_id'])
+        },
+        manufacturer='Silicon Labs',
+        model=bridge['hardware_revision'],
+        name=bridge['name'] or bridge['id'],
+        sw_version=bridge['firmware_version']['wifi']
+    )
+
+
 class Notion:
     """Define a class to handle the Notion API."""
 
-    def __init__(self, client):
+    def __init__(self, hass, client, config_entry_id):
         """Initialize."""
         self._client = client
+        self._config_entry_id = config_entry_id
+        self._hass = hass
         self.bridges = {}
         self.sensors = {}
-        self.systems = {}
         self.tasks = {}
 
-    async def async_update(self, *, initialize=False):
+    async def async_update(self):
         """Get the latest Notion data."""
         from aionotion.errors import NotionError
 
@@ -162,8 +180,6 @@ class Notion:
             'sensors': self._client.sensor.async_all(),
             'tasks': self._client.task.async_all(),
         }
-        if initialize:
-            tasks['systems'] = self._client.system.async_all()
 
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
         for attr, result in zip(tasks, results):
@@ -174,6 +190,11 @@ class Notion:
 
             holding_pen = getattr(self, attr)
             for item in result:
+                if attr == 'bridges' and item['id'] not in holding_pen:
+                    # If a new bridge is discovered, register it:
+                    self._hass.async_create_task(
+                        register_new_bridge(
+                            self._hass, item, self._config_entry_id))
                 holding_pen[item['id']] = item
 
 
@@ -227,7 +248,7 @@ class NotionEntity(Entity):
             'identifiers': {
                 (DOMAIN, sensor['hardware_id'])
             },
-            'manufacturer': 'Notion',
+            'manufacturer': 'Silicon Labs',
             'model': sensor['hardware_revision'],
             'name': sensor['name'],
             'sw_version': sensor['firmware_version'],
