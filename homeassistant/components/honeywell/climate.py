@@ -126,7 +126,8 @@ class HoneywellUSThermostat(ClimateDevice):
         self._password = password
 
         self._supported_features = (SUPPORT_PRESET_MODE |
-                                    SUPPORT_TARGET_TEMPERATURE)
+                                    SUPPORT_TARGET_TEMPERATURE |
+                                    SUPPORT_TARGET_TEMPERATURE_RANGE)
 
         # pylint: disable=protected-access
         _LOGGER.debug("uiData = %s ", device._data['uiData'])
@@ -153,8 +154,6 @@ class HoneywellUSThermostat(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        if self.hvac_mode == HVAC_MODE_HEAT_COOL:
-            return self._supported_features | SUPPORT_TARGET_TEMPERATURE_RANGE
         return self._supported_features
 
     @property
