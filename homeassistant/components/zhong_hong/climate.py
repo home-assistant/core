@@ -175,7 +175,7 @@ class ZhongHongClimate(ClimateDevice):
     @property
     def fan_modes(self):
         """Return the list of available fan modes."""
-        return self._device.fan_modes
+        return self._device.fan_list
 
     @property
     def min_temp(self):

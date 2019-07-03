@@ -47,7 +47,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             aux=False,
             target_temp_high=None,
             target_temp_low=None,
-            hvac_modes=HVAC_MODES
+            hvac_modes=[mode for mode in HVAC_MODES
+                        if mode != HVAC_MODE_HEAT_COOL]
         ),
         DemoClimate(
             name='Ecobee',
@@ -65,7 +66,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             aux=None,
             target_temp_high=24,
             target_temp_low=21,
-            hvac_modes=[HVAC_MODE_AUTO, HVAC_MODE_HEAT_COOL, HVAC_MODE_COOL,
+            hvac_modes=[HVAC_MODE_AUTO, HVAC_MODE_COOL,
                         HVAC_MODE_HEAT])
     ])
 
