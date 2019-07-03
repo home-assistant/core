@@ -411,6 +411,19 @@ async def test_location_update(hass, context):
     """Test the update of a location."""
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
 
+    assert_location_source_type(hass, 'gps')
+    assert_location_latitude(hass, LOCATION_MESSAGE['lat'])
+    assert_location_accuracy(hass, LOCATION_MESSAGE['acc'])
+    assert_location_state(hass, 'outer')
+
+
+async def test_location_update_no_t_key(hass, context):
+    """Test the update of a location when message does not contain 't'."""
+    message = LOCATION_MESSAGE.copy()
+    message.pop('t')
+    await send_message(hass, LOCATION_TOPIC, message)
+
+    assert_location_source_type(hass, 'gps')
     assert_location_latitude(hass, LOCATION_MESSAGE['lat'])
     assert_location_accuracy(hass, LOCATION_MESSAGE['acc'])
     assert_location_state(hass, 'outer')
@@ -861,10 +874,9 @@ async def test_event_beacon_unknown_zone_no_location(hass, context):
     # the Device during test case setup.
     assert_location_state(hass, 'None')
 
-    # home is the state of a Device constructed through
-    # the normal code path on it's first observation with
-    # the conditions I pass along.
-    assert_mobile_tracker_state(hass, 'home', 'unknown')
+    # We have had no location yet, so the beacon status
+    # set to unknown.
+    assert_mobile_tracker_state(hass, 'unknown', 'unknown')
 
 
 async def test_event_beacon_unknown_zone(hass, context):
@@ -1276,7 +1288,7 @@ async def test_single_waypoint_import(hass, context):
 async def test_not_implemented_message(hass, context):
     """Handle not implemented message type."""
     patch_handler = patch('homeassistant.components.owntracks.'
-                          'device_tracker.async_handle_not_impl_msg',
+                          'messages.async_handle_not_impl_msg',
                           return_value=mock_coro(False))
     patch_handler.start()
     assert not await send_message(hass, LWT_TOPIC, LWT_MESSAGE)
@@ -1286,7 +1298,7 @@ async def test_not_implemented_message(hass, context):
 async def test_unsupported_message(hass, context):
     """Handle not implemented message type."""
     patch_handler = patch('homeassistant.components.owntracks.'
-                          'device_tracker.async_handle_unsupported_msg',
+                          'messages.async_handle_unsupported_msg',
                           return_value=mock_coro(False))
     patch_handler.start()
     assert not await send_message(hass, BAD_TOPIC, BAD_MESSAGE)
@@ -1374,7 +1386,7 @@ def config_context(hass, setup_comp):
     patch_save.stop()
 
 
-@patch('homeassistant.components.owntracks.device_tracker.get_cipher',
+@patch('homeassistant.components.owntracks.messages.get_cipher',
        mock_cipher)
 async def test_encrypted_payload(hass, setup_comp):
     """Test encrypted payload."""
@@ -1385,7 +1397,7 @@ async def test_encrypted_payload(hass, setup_comp):
     assert_location_latitude(hass, LOCATION_MESSAGE['lat'])
 
 
-@patch('homeassistant.components.owntracks.device_tracker.get_cipher',
+@patch('homeassistant.components.owntracks.messages.get_cipher',
        mock_cipher)
 async def test_encrypted_payload_topic_key(hass, setup_comp):
     """Test encrypted payload with a topic key."""
@@ -1398,7 +1410,7 @@ async def test_encrypted_payload_topic_key(hass, setup_comp):
     assert_location_latitude(hass, LOCATION_MESSAGE['lat'])
 
 
-@patch('homeassistant.components.owntracks.device_tracker.get_cipher',
+@patch('homeassistant.components.owntracks.messages.get_cipher',
        mock_cipher)
 async def test_encrypted_payload_no_key(hass, setup_comp):
     """Test encrypted payload with no key, ."""
@@ -1411,7 +1423,7 @@ async def test_encrypted_payload_no_key(hass, setup_comp):
     assert hass.states.get(DEVICE_TRACKER_STATE) is None
 
 
-@patch('homeassistant.components.owntracks.device_tracker.get_cipher',
+@patch('homeassistant.components.owntracks.messages.get_cipher',
        mock_cipher)
 async def test_encrypted_payload_wrong_key(hass, setup_comp):
     """Test encrypted payload with wrong key."""
@@ -1422,7 +1434,7 @@ async def test_encrypted_payload_wrong_key(hass, setup_comp):
     assert hass.states.get(DEVICE_TRACKER_STATE) is None
 
 
-@patch('homeassistant.components.owntracks.device_tracker.get_cipher',
+@patch('homeassistant.components.owntracks.messages.get_cipher',
        mock_cipher)
 async def test_encrypted_payload_wrong_topic_key(hass, setup_comp):
     """Test encrypted payload with wrong  topic key."""
@@ -1435,7 +1447,7 @@ async def test_encrypted_payload_wrong_topic_key(hass, setup_comp):
     assert hass.states.get(DEVICE_TRACKER_STATE) is None
 
 
-@patch('homeassistant.components.owntracks.device_tracker.get_cipher',
+@patch('homeassistant.components.owntracks.messages.get_cipher',
        mock_cipher)
 async def test_encrypted_payload_no_topic_key(hass, setup_comp):
     """Test encrypted payload with no topic key."""
@@ -1492,3 +1504,47 @@ async def test_region_mapping(hass, setup_comp):
 
     await send_message(hass, EVENT_TOPIC, message)
     assert_location_state(hass, 'inner')
+
+
+async def test_restore_state(hass, hass_client):
+    """Test that we can restore state."""
+    entry = MockConfigEntry(domain='owntracks', data={
+        'webhook_id': 'owntracks_test',
+        'secret': 'abcd',
+    })
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.post(
+        '/api/webhook/owntracks_test',
+        json=LOCATION_MESSAGE,
+        headers={
+            'X-Limit-u': 'Paulus',
+            'X-Limit-d': 'Pixel',
+        }
+    )
+    assert resp.status == 200
+    await hass.async_block_till_done()
+
+    state_1 = hass.states.get('device_tracker.paulus_pixel')
+    assert state_1 is not None
+
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state_2 = hass.states.get('device_tracker.paulus_pixel')
+    assert state_2 is not None
+
+    assert state_1 is not state_2
+
+    assert state_1.state == state_2.state
+    assert state_1.name == state_2.name
+    assert state_1.attributes['latitude'] == state_2.attributes['latitude']
+    assert state_1.attributes['longitude'] == state_2.attributes['longitude']
+    assert state_1.attributes['battery_level'] == \
+        state_2.attributes['battery_level']
+    assert state_1.attributes['source_type'] == \
+        state_2.attributes['source_type']

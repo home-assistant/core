@@ -6,7 +6,8 @@ from homeassistant.components.cover import (
 from homeassistant.components.cover import CoverDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import (
-    ZWaveDeviceEntity, CONF_INVERT_OPENCLOSE_BUTTONS, workaround)
+    ZWaveDeviceEntity, CONF_INVERT_OPENCLOSE_BUTTONS, CONF_INVERT_PERCENT,
+    workaround)
 from .const import (
     COMMAND_CLASS_SWITCH_MULTILEVEL, COMMAND_CLASS_SWITCH_BINARY,
     COMMAND_CLASS_BARRIER_OPERATOR, DATA_NETWORK)
@@ -35,10 +36,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 def get_device(hass, values, node_config, **kwargs):
     """Create Z-Wave entity device."""
     invert_buttons = node_config.get(CONF_INVERT_OPENCLOSE_BUTTONS)
+    invert_percent = node_config.get(CONF_INVERT_PERCENT)
     if (values.primary.command_class ==
             COMMAND_CLASS_SWITCH_MULTILEVEL
             and values.primary.index == 0):
-        return ZwaveRollershutter(hass, values, invert_buttons)
+        return ZwaveRollershutter(hass, values, invert_buttons, invert_percent)
     if values.primary.command_class == COMMAND_CLASS_SWITCH_BINARY:
         return ZwaveGarageDoorSwitch(values)
     if values.primary.command_class == \
@@ -50,7 +52,7 @@ def get_device(hass, values, node_config, **kwargs):
 class ZwaveRollershutter(ZWaveDeviceEntity, CoverDevice):
     """Representation of an Z-Wave cover."""
 
-    def __init__(self, hass, values, invert_buttons):
+    def __init__(self, hass, values, invert_buttons, invert_percent):
         """Initialize the Z-Wave rollershutter."""
         ZWaveDeviceEntity.__init__(self, values, DOMAIN)
         self._network = hass.data[DATA_NETWORK]
@@ -58,6 +60,7 @@ class ZwaveRollershutter(ZWaveDeviceEntity, CoverDevice):
         self._close_id = None
         self._current_position = None
         self._invert_buttons = invert_buttons
+        self._invert_percent = invert_percent
 
         self._workaround = workaround.get_device_mapping(values.primary)
         if self._workaround:
@@ -92,12 +95,14 @@ class ZwaveRollershutter(ZWaveDeviceEntity, CoverDevice):
         """Return the current position of Zwave roller shutter."""
         if self._workaround == workaround.WORKAROUND_NO_POSITION:
             return None
+
         if self._current_position is not None:
             if self._current_position <= 5:
-                return 0
+                return 100 if self._invert_percent else 0
             if self._current_position >= 95:
-                return 100
-            return self._current_position
+                return 0 if self._invert_percent else 100
+            return 100 - self._current_position if self._invert_percent \
+                else self._current_position
 
     def open_cover(self, **kwargs):
         """Move the roller shutter up."""
@@ -110,7 +115,9 @@ class ZwaveRollershutter(ZWaveDeviceEntity, CoverDevice):
     def set_cover_position(self, **kwargs):
         """Move the roller shutter to a specific position."""
         self.node.set_dimmer(self.values.primary.value_id,
-                             kwargs.get(ATTR_POSITION))
+                             (100 - kwargs.get(ATTR_POSITION))
+                             if self._invert_percent
+                             else kwargs.get(ATTR_POSITION))
 
     def stop_cover(self, **kwargs):
         """Stop the roller shutter."""

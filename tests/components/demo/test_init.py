@@ -5,7 +5,8 @@ import os
 import pytest
 
 from homeassistant.setup import async_setup_component
-from homeassistant.components import demo, device_tracker
+from homeassistant.components import demo
+from homeassistant.components.device_tracker.legacy import YAML_DEVICES
 from homeassistant.helpers.json import JSONEncoder
 
 
@@ -20,7 +21,7 @@ def demo_cleanup(hass):
     """Clean up device tracker demo file."""
     yield
     try:
-        os.remove(hass.config.path(device_tracker.YAML_DEVICES))
+        os.remove(hass.config.path(YAML_DEVICES))
     except FileNotFoundError:
         pass
 

@@ -1,23 +1,18 @@
 """Support for ESPHome binary sensors."""
 import logging
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
+
+from aioesphomeapi import BinarySensorInfo, BinarySensorState
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import EsphomeEntity, platform_async_setup_entry
-
-if TYPE_CHECKING:
-    # pylint: disable=unused-import
-    from aioesphomeapi import BinarySensorInfo, BinarySensorState  # noqa
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up ESPHome binary sensors based on a config entry."""
-    # pylint: disable=redefined-outer-name
-    from aioesphomeapi import BinarySensorInfo, BinarySensorState  # noqa
-
     await platform_async_setup_entry(
         hass, entry, async_add_entities,
         component_key='binary_sensor',
@@ -30,11 +25,11 @@ class EsphomeBinarySensor(EsphomeEntity, BinarySensorDevice):
     """A binary sensor implementation for ESPHome."""
 
     @property
-    def _static_info(self) -> 'BinarySensorInfo':
+    def _static_info(self) -> BinarySensorInfo:
         return super()._static_info
 
     @property
-    def _state(self) -> Optional['BinarySensorState']:
+    def _state(self) -> Optional[BinarySensorState]:
         return super()._state
 
     @property

@@ -8,6 +8,7 @@
             "invalid_password": "Mot de passe invalide !",
             "resolve_error": "Impossible de r\u00e9soudre l'adresse de l'ESP. Si cette erreur persiste, veuillez d\u00e9finir une adresse IP statique: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
+        "flow_title": "ESPHome: {name}",
         "step": {
             "authenticate": {
                 "data": {

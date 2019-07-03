@@ -124,9 +124,15 @@ class SytadinData:
             data = BeautifulSoup(raw_html, 'html.parser')
 
             values = data.select('.barometre_valeur')
-            self.traffic_jam = re.search(REGEX, values[0].text).group()
-            self.mean_velocity = re.search(REGEX, values[1].text).group()
-            self.congestion = re.search(REGEX, values[2].text).group()
+            parse_traffic_jam = re.search(REGEX, values[0].text)
+            if parse_traffic_jam:
+                self.traffic_jam = parse_traffic_jam.group()
+            parse_mean_velocity = re.search(REGEX, values[1].text)
+            if parse_mean_velocity:
+                self.mean_velocity = parse_mean_velocity.group()
+            parse_congestion = re.search(REGEX, values[2].text)
+            if parse_congestion:
+                self.congestion = parse_congestion.group()
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Connection error")
             self.data = None

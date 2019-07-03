@@ -108,7 +108,7 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
         }
 
         try:
-            with async_timeout.timeout(self.timeout, loop=self.hass.loop):
+            with async_timeout.timeout(self.timeout):
                 request = await websession.post(
                     OPENALPR_API_URL, params=params, data=body
                 )

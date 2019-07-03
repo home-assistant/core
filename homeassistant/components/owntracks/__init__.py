@@ -15,6 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_when_setup
 
 from .config_flow import CONF_SECRET
+from .messages import async_handle_message
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +51,9 @@ CONFIG_SCHEMA = vol.Schema({
 async def async_setup(hass, config):
     """Initialize OwnTracks component."""
     hass.data[DOMAIN] = {
-        'config': config[DOMAIN]
+        'config': config[DOMAIN],
+        'devices': {},
+        'unsub': None,
     }
     if not hass.config_entries.async_entries(DOMAIN):
         hass.async_create_task(hass.config_entries.flow.async_init(
@@ -88,7 +91,31 @@ async def async_setup_entry(hass, entry):
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(
         entry, 'device_tracker'))
 
+    hass.data[DOMAIN]['unsub'] = \
+        hass.helpers.dispatcher.async_dispatcher_connect(
+            DOMAIN, async_handle_message)
+
     return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unload an OwnTracks config entry."""
+    hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
+    await hass.config_entries.async_forward_entry_unload(
+        entry, 'device_tracker')
+    hass.data[DOMAIN]['unsub']()
+
+    return True
+
+
+async def async_remove_entry(hass, entry):
+    """Remove an OwnTracks config entry."""
+    if (not entry.data.get('cloudhook') or
+            'cloud' not in hass.config.components):
+        return
+
+    await hass.components.cloud.async_delete_cloudhook(
+        entry.data[CONF_WEBHOOK_ID])
 
 
 async def async_connect_mqtt(hass, component):
@@ -165,6 +192,7 @@ class OwnTracksContext:
         self.region_mapping = region_mapping
         self.events_only = events_only
         self.mqtt_topic = mqtt_topic
+        self._pending_msg = []
 
     @callback
     def async_valid_accuracy(self, message):
@@ -195,11 +223,22 @@ class OwnTracksContext:
 
         return True
 
-    async def async_see(self, **data):
-        """Send a see message to the device tracker."""
-        raise NotImplementedError
+    @callback
+    def set_async_see(self, func):
+        """Set a new async_see function."""
+        self.async_see = func
+        for msg in self._pending_msg:
+            func(**msg)
+        self._pending_msg.clear()
 
-    async def async_see_beacons(self, hass, dev_id, kwargs_param):
+    # pylint: disable=method-hidden
+    @callback
+    def async_see(self, **data):
+        """Send a see message to the device tracker."""
+        self._pending_msg.append(data)
+
+    @callback
+    def async_see_beacons(self, hass, dev_id, kwargs_param):
         """Set active beacons to the current location."""
         kwargs = kwargs_param.copy()
 
@@ -213,8 +252,13 @@ class OwnTracksContext:
             acc = device_tracker_state.attributes.get("gps_accuracy")
             lat = device_tracker_state.attributes.get("latitude")
             lon = device_tracker_state.attributes.get("longitude")
-            kwargs['gps_accuracy'] = acc
-            kwargs['gps'] = (lat, lon)
+
+            if lat is not None and lon is not None:
+                kwargs['gps'] = (lat, lon)
+                kwargs['gps_accuracy'] = acc
+            else:
+                kwargs['gps'] = None
+                kwargs['gps_accuracy'] = None
 
         # the battery state applies to the tracking device, not the beacon
         # kwargs location is the beacon's configured lat/lon
@@ -222,4 +266,4 @@ class OwnTracksContext:
         for beacon in self.mobile_beacons_active[dev_id]:
             kwargs['dev_id'] = "{}_{}".format(BEACON_DEV_ID, beacon)
             kwargs['host_name'] = beacon
-            await self.async_see(**kwargs)
+            self.async_see(**kwargs)

@@ -6,5 +6,8 @@
     "pylinky==0.3.3"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@tiste",
+    "@Quentame"
+  ]
 }

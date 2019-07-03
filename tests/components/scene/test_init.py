@@ -90,7 +90,7 @@ class TestScene(unittest.TestCase):
                 self.light_1.entity_id, self.light_2.entity_id)
 
         with io.StringIO(config) as file:
-            doc = yaml_loader.yaml.load(file)
+            doc = yaml_loader.yaml.safe_load(file)
 
         assert setup_component(self.hass, scene.DOMAIN, doc)
         common.activate(self.hass, 'scene.test')

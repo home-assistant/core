@@ -1,13 +1,15 @@
 """Support to embed Sonos."""
+import asyncio
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_HOSTS, ATTR_ENTITY_ID, ATTR_TIME
-from homeassistant.helpers import config_entry_flow, config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-DOMAIN = 'sonos'
+from .const import DOMAIN
+
 
 CONF_ADVERTISE_ADDR = 'advertise_addr'
 CONF_INTERFACE_ADDR = 'interface_addr'
@@ -80,12 +82,15 @@ SONOS_SET_OPTION_SCHEMA = vol.Schema({
     vol.Optional(ATTR_SPEECH_ENHANCE): cv.boolean,
 })
 
+DATA_SERVICE_EVENT = 'sonos_service_idle'
+
 
 async def async_setup(hass, config):
     """Set up the Sonos component."""
     conf = config.get(DOMAIN)
 
     hass.data[DOMAIN] = conf or {}
+    hass.data[DATA_SERVICE_EVENT] = asyncio.Event()
 
     if conf is not None:
         hass.async_create_task(hass.config_entries.flow.async_init(
@@ -93,7 +98,9 @@ async def async_setup(hass, config):
 
     async def service_handle(service):
         """Dispatch a service call."""
+        hass.data[DATA_SERVICE_EVENT].clear()
         async_dispatcher_send(hass, DOMAIN, service.service, service.data)
+        await hass.data[DATA_SERVICE_EVENT].wait()
 
     hass.services.async_register(
         DOMAIN, SERVICE_JOIN, service_handle,
@@ -135,14 +142,3 @@ async def async_setup_entry(hass, entry):
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(
         entry, MP_DOMAIN))
     return True
-
-
-async def _async_has_devices(hass):
-    """Return if there are devices that can be discovered."""
-    import pysonos
-
-    return await hass.async_add_executor_job(pysonos.discover)
-
-
-config_entry_flow.register_discovery_flow(
-    DOMAIN, 'Sonos', _async_has_devices, config_entries.CONN_CLASS_LOCAL_PUSH)
