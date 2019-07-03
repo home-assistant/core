@@ -51,18 +51,15 @@ class SuezSensor(Entity):
 
     def __init__(self, client):
         """Initialize the data object."""
-        self._name = COMPONENT_NAME
         self._attributes = {}
         self._state = None
         self._available = None
-        self._icon = COMPONENT_ICON
         self.client = client
-        self.success = False
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        return COMPONENT_NAME
 
     @property
     def state(self):
@@ -82,7 +79,7 @@ class SuezSensor(Entity):
     @property
     def icon(self):
         """Return the icon of the sensor."""
-        return self._icon
+        return COMPONENT_ICON
 
     def _fetch_data(self):
         """Fetch latest data from Suez."""
@@ -90,30 +87,29 @@ class SuezSensor(Entity):
             self.client.update()
             # _state holds the volume of consumed water during previous day
             self._state = self.client.state
-            self.success = True
             self._available = True
             self._attributes[
                 'attribution'] = self.client.attributes[
                     'attribution']
-            self._attributes['thisMonthConsumption'] = {}
-            for item in self.client.attributes['thisMonthConsumption']:
-                self._attributes['thisMonthConsumption'][
+            self._attributes['this_month_consumption'] = {}
+            for item in self.client.attributes['this_month_consumption']:
+                self._attributes['this_month_consumption'][
                     item] = self.client.attributes[
-                        'thisMonthConsumption'][item]
-            self._attributes['previousMonthConsumption'] = {}
-            for item in self.client.attributes['previousMonthConsumption']:
-                self._attributes['previousMonthConsumption'][
+                        'this_month_consumption'][item]
+            self._attributes['previous_month_consumption'] = {}
+            for item in self.client.attributes['previous_month_consumption']:
+                self._attributes['previous_month_consumption'][
                     item] = self.client.attributes[
-                        'previousMonthConsumption'][item]
+                        'previous_month_consumption'][item]
             self._attributes[
-                'highestMonthlyConsumption'] = self.client.attributes[
-                    'highestMonthlyConsumption']
+                'highest_monthly_consumption'] = self.client.attributes[
+                    'highest_monthly_consumption']
             self._attributes[
-                'lastYearOverAll'] = self.client.attributes[
-                    'lastYearOverAll']
+                'last_year_overall'] = self.client.attributes[
+                    'last_year_overall']
             self._attributes[
-                'thisYearOverAll'] = self.client.attributes[
-                    'thisYearOverAll']
+                'this_year_overall'] = self.client.attributes[
+                    'this_year_overall']
             self._attributes['history'] = {}
             for item in self.client.attributes['history']:
                 self._attributes[
@@ -121,7 +117,6 @@ class SuezSensor(Entity):
                         'history'][item]
 
         except PySuezError:
-            self.success = False
             self._available = False
             _LOGGER.warning("Unable to fetch data")
             return
@@ -130,5 +125,4 @@ class SuezSensor(Entity):
         """Return the latest collected data from Linky."""
         self._fetch_data()
         _LOGGER.debug(
-            "Suez data state is: %s, and the success is %s",
-            self._state, self.success)
+            "Suez data state is: %s.", self._state)
