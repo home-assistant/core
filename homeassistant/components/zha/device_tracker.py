@@ -1,6 +1,5 @@
 """Support for the ZHA platform."""
 import logging
-import numbers
 import time
 from homeassistant.components.device_tracker import (
     SOURCE_TYPE_ROUTER, DOMAIN
@@ -12,10 +11,10 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .core.const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW,
-    POWER_CONFIGURATION_CHANNEL, SIGNAL_STATE_ATTR,
-    SIGNAL_ATTR_UPDATED
+    POWER_CONFIGURATION_CHANNEL, SIGNAL_ATTR_UPDATED
 )
 from .entity import ZhaEntity
+from .sensor import battery_percentage_remaining_formatter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,11 +64,8 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
         await super().async_added_to_hass()
         if self._battery_channel:
             await self.async_accept_signal(
-                self._battery_channel, SIGNAL_STATE_ATTR,
-                self.async_attribute_updated)
-            await self.async_accept_signal(
                 self._battery_channel, SIGNAL_ATTR_UPDATED,
-                self.async_attribute_updated)
+                self.async_battery_percentage_remaining_updated)
 
     async def async_update(self):
         """Handle polling."""
@@ -93,20 +89,11 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
         return SOURCE_TYPE_ROUTER
 
     @callback
-    def async_attribute_updated(self, attribute, value):
+    def async_battery_percentage_remaining_updated(self, value):
         """Handle tracking."""
-        _LOGGER.debug('Attribute updated: %s - %s', attribute, value)
-        # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
-        # Fix this after the other PR merges and replace with power formatter
-        # import once the other PR merges
+        _LOGGER.debug('battery_percentage_remaining updated: %s', value)
         self._connected = True
-        if attribute in ('battery_level', 'battery_percentage_remaining'):
-            if not isinstance(value, numbers.Number) or value == -1:
-                self._battery_level = None
-            else:
-                value = value / 2
-                value = int(round(value))
-                self._battery_level = value
+        self._battery_level = battery_percentage_remaining_formatter(value)
         self.async_schedule_update_ha_state()
 
     @property
