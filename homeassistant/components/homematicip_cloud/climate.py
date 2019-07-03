@@ -24,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 HMIP_AUTOMATIC_CM = 'AUTOMATIC'
 HMIP_MANUAL_CM = 'MANUAL'
 HMIP_ECO_CM = 'ECO'
+PRESET_MANUAL = 'manual'
 
 
 async def async_setup_platform(
@@ -116,9 +117,9 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
             return PRESET_COMFORT
         if self._device.controlMode == HMIP_ECO_CM:
             return PRESET_ECO
-        if self._home.get_functionalHome(IndoorClimateHome).absenceType \
+        if (self._home.get_functionalHome(IndoorClimateHome).absenceType
                 in [AbsenceType.PERIOD, AbsenceType.PERMANENT,
-                    AbsenceType.VACATION]:
+                    AbsenceType.VACATION]):
             return PRESET_AWAY
 
         return None
