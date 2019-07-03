@@ -22,15 +22,16 @@ CONF_GAIN = 'gain'
 CONF_PROFILES = 'profiles'
 
 SUPPORTED_LANGUAGES = [
-    'da-DK', 'de-DE', 'en-AU', 'en-GB', 'en-US', 'es-ES', 'fr-CA', 'fr-FR',
-    'hu-HU', 'it-IT', 'ja-JP', 'ko-KR', 'nb-NO', 'nl-NL', 'pl-PL', 'pt-BR',
-    'pt-PT', 'ru-RU', 'sk-SK', 'sv-SE', 'tr-TR', 'uk-UA',
+    'cs-CZ', 'da-DK', 'de-DE', 'el-GR', 'en-AU', 'en-GB', 'en-IN', 'en-US',
+    'es-ES', 'fi-FI', 'fil-PH', 'fr-CA', 'fr-FR', 'hi-IN', 'hu-HU', 'id-ID',
+    'it-IT', 'ja-JP', 'ko-KR', 'nb-NO', 'nl-NL', 'pl-PL', 'pt-BR', 'pt-PT',
+    'ru-RU', 'sk-SK', 'sv-SE', 'tr-TR', 'uk-UA', 'vi-VN',
 ]
 DEFAULT_LANG = 'en-US'
 
 DEFAULT_GENDER = 'NEUTRAL'
 
-VOICE_REGEX = r'[a-z]{2}-[A-Z]{2}-(Standard|Wavenet)-[A-Z]|'
+VOICE_REGEX = r'[a-z]{2,3}-[A-Z]{2}-(Standard|Wavenet)-[A-Z]|'
 DEFAULT_VOICE = ''
 
 DEFAULT_ENCODING = 'MP3'
