@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_IP_ADDRESS, CONF_MONITORED_CONDITIONS, ENERGY_KILO_WATT_HOUR)
+    CONF_IP_ADDRESS, ENERGY_KILO_WATT_HOUR)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -32,9 +32,7 @@ SENSORS = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_IP_ADDRESS): cv.string,
     vol.Required(CONF_CLOUD_ID): cv.string,
-    vol.Required(CONF_INSTALL_CODE): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)):
-        vol.All(cv.ensure_list, [vol.In(list(SENSORS))])
+    vol.Required(CONF_INSTALL_CODE): cv.string
 })
 
 
@@ -43,7 +41,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ip_address = config[CONF_IP_ADDRESS]
     cloud_id = config[CONF_CLOUD_ID]
     install_code = config[CONF_INSTALL_CODE]
-    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
+    monitored_conditions = list(SENSORS)
     for condition in monitored_conditions:
         add_devices([Eagle(ip_address, cloud_id, install_code, condition,
                            SENSORS[condition][0], SENSORS[condition][1])])
