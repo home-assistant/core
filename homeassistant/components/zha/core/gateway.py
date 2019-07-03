@@ -17,22 +17,21 @@ from homeassistant.core import callback
 from homeassistant.helpers.device_registry import (
     async_get_registry as get_dev_reg)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_component import EntityComponent
 
 from ..api import async_get_device_info
 from .const import (
     ADD_DEVICE_RELAY_LOGGERS, ATTR_MANUFACTURER, BELLOWS, CONF_BAUDRATE,
     CONF_DATABASE, CONF_RADIO_TYPE, CONF_USB_PATH, CONTROLLER, CURRENT,
-    DATA_ZHA, DATA_ZHA_BRIDGE_ID, DATA_ZHA_CORE_COMPONENT, DATA_ZHA_GATEWAY,
-    DEBUG_LEVELS, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME, DEVICE_FULL_INIT,
+    DATA_ZHA, DATA_ZHA_BRIDGE_ID, DATA_ZHA_GATEWAY, DEBUG_LEVELS,
+    DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME, DEVICE_FULL_INIT,
     DEVICE_INFO, DEVICE_JOINED, DEVICE_REMOVED, DOMAIN, IEEE, LOG_ENTRY,
     LOG_OUTPUT, MODEL, NWK, ORIGINAL, RADIO, RADIO_DESCRIPTION, RAW_INIT,
     SIGNAL_REMOVE, SIGNATURE, TYPE, UNKNOWN_MANUFACTURER, UNKNOWN_MODEL, ZHA,
     ZHA_GW_MSG, ZIGPY, ZIGPY_DECONZ, ZIGPY_XBEE)
 from .device import DeviceStatus, ZHADevice
 from .discovery import (
-    async_create_device_entity, async_dispatch_discovery_info,
-    async_process_endpoint)
+    async_dispatch_discovery_info, async_process_endpoint
+)
 from .patches import apply_application_controller_patch
 from .registries import INPUT_BIND_ONLY_CLUSTERS, RADIO_TYPES
 from .store import async_get_registry
@@ -51,13 +50,11 @@ class ZHAGateway:
         """Initialize the gateway."""
         self._hass = hass
         self._config = config
-        self._component = EntityComponent(_LOGGER, DOMAIN, hass)
         self._devices = {}
         self._device_registry = collections.defaultdict(list)
         self.zha_storage = None
         self.application_controller = None
         self.radio_description = None
-        hass.data[DATA_ZHA][DATA_ZHA_CORE_COMPONENT] = self._component
         hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
         self._log_levels = {
             ORIGINAL: async_capture_log_levels(),
@@ -323,9 +320,6 @@ class ZHAGateway:
                     is_new_join,
                     discovery_info
                 )
-
-            device_entity = async_create_device_entity(zha_device)
-            await self._component.async_add_entities([device_entity])
 
         if is_new_join:
             device_info = async_get_device_info(self._hass, zha_device)
