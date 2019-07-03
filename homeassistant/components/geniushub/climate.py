@@ -57,7 +57,7 @@ class GeniusClimateZone(ClimateDevice):
         else:
             self._preset_modes = [PRESET_BOOST]
 
-    async def async_added_to_hass(self) -> None:
+    async def async_added_to_hass(self) -> Awaitable[None]:
         """Run when entity about to be added."""
         async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
 
@@ -71,7 +71,7 @@ class GeniusClimateZone(ClimateDevice):
         return self._zone.name
 
     @property
-    def device_state_attributes(self) -> Dict:
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the device state attributes."""
         tmp = self._zone.__dict__.items()
         return {'status': {k: v for k, v in tmp if k in GH_STATE_ATTRS}}
@@ -136,7 +136,7 @@ class GeniusClimateZone(ClimateDevice):
         """Return a list of available preset modes."""
         return self._preset_modes
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs) -> Awaitable[None]:
         """Set a new target temperature for this zone."""
         await self._zone.set_override(kwargs[ATTR_TEMPERATURE],
                                       kwargs.get(ATTR_DURATION, 3600))
