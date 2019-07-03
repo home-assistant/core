@@ -772,9 +772,10 @@ class NexiaThermostat:
         """
         air_cleaner_mode = air_cleaner_mode.lower()
         if air_cleaner_mode in self.AIR_CLEANER_MODES:
-            url = self._get_thermostat_put_url("air_cleaner_mode", thermostat_id)
-            data = {"air_cleaner_mode": air_cleaner_mode}
-            self._put_url(url, data)
+            if air_cleaner_mode != self.get_air_cleaner_mode(thermostat_id):
+                url = self._get_thermostat_put_url("air_cleaner_mode", thermostat_id)
+                data = {"air_cleaner_mode": air_cleaner_mode}
+                self._put_url(url, data)
         else:
             raise KeyError("Invalid air cleaner mode specified")
 

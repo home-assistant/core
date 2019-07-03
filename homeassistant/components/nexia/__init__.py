@@ -48,6 +48,7 @@ ATTR_COMPRESSOR_SPEED = 'compressor_speed'
 ATTR_OUTDOOR_TEMPERATURE = 'outdoor_temperature'
 ATTR_THERMOSTAT_ID = 'thermostat_id'
 ATTR_ZONE_ID = 'zone_id'
+ATTR_AIRCLEANER_MODE = 'aircleaner_mode'
 
 
 CONFIG_SCHEMA = vol.Schema({

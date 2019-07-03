@@ -1,6 +1,7 @@
 """Support for Nexia / Trane XL thermostats."""
 import logging
 import datetime
+import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -14,15 +15,25 @@ from homeassistant.components.climate.const import (
     ATTR_AUX_HEAT,
     STATE_COOL, STATE_HEAT, STATE_IDLE)
 from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_ATTRIBUTION, ATTR_TEMPERATURE,
-                                 STATE_OFF)
+                                 STATE_OFF, ATTR_ENTITY_ID)
 from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
+
 from . import (ATTR_MODEL, ATTR_FIRMWARE, ATTR_THERMOSTAT_NAME, ATTR_SETPOINT_STATUS,
-               ATTR_ZONE_STATUS,
+               ATTR_ZONE_STATUS, ATTR_AIRCLEANER_MODE, DOMAIN,
                ATTR_THERMOSTAT_ID, ATTR_ZONE_ID, ATTRIBUTION, DATA_NEXIA, NEXIA_DEVICE,
                NEXIA_SCAN_INTERVAL)
 
+
+
 _LOGGER = logging.getLogger(__name__)
 
+SERVICE_SET_AIRCLEANER_MODE = 'set_aircleaner_mode'
+
+SET_FAN_MIN_ON_TIME_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_AIRCLEANER_MODE): cv.string,
+})
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up climate zones for a Nexia device."""
@@ -33,6 +44,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for zone_id in thermostat.get_zone_ids(thermostat_id):
             zones.append(NexiaZone(thermostat, scan_interval, thermostat_id, zone_id))
     add_entities(zones, True)
+
+    def airclaner_set_service(service):
+        entity_id = service.data.get(ATTR_ENTITY_ID)
+        aircleaner_mode = service.data.get(ATTR_AIRCLEANER_MODE)
+
+        if entity_id:
+            target_zones = [zone for zone in zones if zone.entity_id in entity_id]
+        else:
+            target_zones = zones
+
+        for zone in target_zones:
+            zone.set_aircleaner_mode(aircleaner_mode)
+
+
+    hass.services.register(
+        DOMAIN, SERVICE_SET_AIRCLEANER_MODE, airclaner_set_service,
+        schema=SET_FAN_MIN_ON_TIME_SCHEMA)
 
 
 class NexiaZone(ClimateDevice):
@@ -270,6 +298,10 @@ class NexiaZone(ClimateDevice):
         else:
             raise KeyError(f"Operation mode {operation_mode} not in the supported operations "
                            f"list {str(self._device.OPERATION_MODES)}")
+
+    def set_aircleaner_mode(self, aircleaner_mode):
+        """ Sets the aircleaner mode """
+        self._device.set_air_cleaner(aircleaner_mode, self._thermostat_id)
 
     def _update(self):
         """Update the state."""
