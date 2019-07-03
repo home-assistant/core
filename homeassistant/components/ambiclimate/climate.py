@@ -208,7 +208,7 @@ class AmbiclimateEntity(ClimateDevice):
         if hvac_mode == HVAC_MODE_HEAT:
             await self._heater.turn_on()
             return
-        elif hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVAC_MODE_OFF:
             await self._heater.turn_off()
 
     async def async_update(self):
