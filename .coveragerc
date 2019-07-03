@@ -581,6 +581,7 @@ omit =
     homeassistant/components/stiebel_eltron/*
     homeassistant/components/streamlabswater/*
     homeassistant/components/stride/notify.py
+    homeassistant/components/suez_water/*
     homeassistant/components/supervisord/sensor.py
     homeassistant/components/swiss_hydrological_data/sensor.py
     homeassistant/components/swiss_public_transport/sensor.py
@@ -725,7 +726,6 @@ omit =
     homeassistant/components/zoneminder/*
     homeassistant/components/supla/*
     homeassistant/components/zwave/util.py
-    homeassistant/components/suez_water/*
 
 [report]
 # Regexes for lines to exclude from consideration
