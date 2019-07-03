@@ -55,10 +55,10 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
         super().__init__(**kwargs)
         self._battery_channel = self.cluster_channels.get(
             POWER_CONFIGURATION_CHANNEL)
-        self._last_seen = None
         self._connected = False
         self._keepalive_interval = 60
         self._should_poll = True
+        self._battery_level = None
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
@@ -73,14 +73,24 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
 
     async def async_update(self):
         """Handle polling."""
-        if self._last_seen is None:
+        if self.zha_device.last_seen is None:
             self._connected = False
         else:
-            difference = time.time() - self._last_seen
+            difference = time.time() - self.zha_device.last_seen
             if difference > self._keepalive_interval:
                 self._connected = False
             else:
                 self._connected = True
+                # replace with power formatter import once the other PR merges
+                value = await self._battery_channel.get_attribute_value(
+                    'battery_percentage_remaining', from_cache=True)
+                # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
+                if not isinstance(value, numbers.Number) or value == -1:
+                    self._battery_level = None
+                else:
+                    value = value / 2
+                    value = int(round(value))
+                    self._battery_level = value
 
     @property
     def is_connected(self):
@@ -95,7 +105,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
     @callback
     def async_attribute_updated(self, attribute, value):
         """Handle tracking."""
-        self._last_seen = time.time()
+        pass
 
     @property
     def battery_level(self):
@@ -103,11 +113,4 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
 
         Percentage from 0-100.
         """
-        value = self._battery_channel.get_attribute_value(
-            'battery_percentage_remaining', from_cache=True)
-        # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
-        if not isinstance(value, numbers.Number) or value == -1:
-            return None
-        value = value / 2
-        value = int(round(value))
-        return value
+        return self._battery_level
