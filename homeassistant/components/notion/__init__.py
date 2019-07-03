@@ -93,7 +93,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set up Notion as a config entry."""
     from aionotion import async_get_client
-    from aionotion.errors import NotionError
+    from aionotion.errors import InvalidCredentialsError, NotionError
 
     session = aiohttp_client.async_get_clientsession(hass)
 
@@ -102,6 +102,9 @@ async def async_setup_entry(hass, config_entry):
             config_entry.data[CONF_USERNAME],
             config_entry.data[CONF_PASSWORD],
             session)
+    except InvalidCredentialsError:
+        _LOGGER.error('Invalid username and/or password')
+        return
     except NotionError as err:
         _LOGGER.error('Config entry failed: %s', err)
         raise ConfigEntryNotReady
