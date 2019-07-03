@@ -368,7 +368,7 @@ class SonosEntity(MediaPlayerDevice):
         self._favorites = [f for f in favorites if f.reference.resources]
         playlists = self.soco.get_sonos_playlists()
         self._favorites.extend(playlists)
-        
+
     def _radio_artwork(self, url):
         """Return the private URL with artwork for a radio stream."""
         if url not in ('', 'NOT_IMPLEMENTED', None):
@@ -529,7 +529,8 @@ class SonosEntity(MediaPlayerDevice):
         # Check if currently playing radio station is in favorites
         self._source_name = None
         for fav in self._favorites:
-            if hasattr(fav, 'reference') and fav.reference.get_uri() == media_info['CurrentURI']:
+            if hasattr(fav, 'reference') and \
+               fav.reference.get_uri() == media_info['CurrentURI']:
                 self._source_name = fav.title
 
     def update_media_music(self, update_media_position, track_info):
@@ -796,7 +797,7 @@ class SonosEntity(MediaPlayerDevice):
                     self.soco.clear_queue()
                     self.soco.add_to_queue(src)
                     self.soco.play_from_queue(0)
-                    
+
     @property
     @soco_coordinator
     def source_list(self):
