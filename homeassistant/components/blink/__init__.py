@@ -143,7 +143,6 @@ async def async_handle_save_video_service(hass, call):
     filename.hass = hass
 
     video_path = filename.async_render()
-    _LOGGER.debug("Video path: %s", video_path)
     if not hass.config.is_allowed_path(video_path):
         _LOGGER.error(
             "Can't write %s, no access to path!", video_path)
