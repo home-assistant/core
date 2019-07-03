@@ -40,7 +40,7 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
 class EvoDHW(EvoDevice, WaterHeaterDevice):
     """Base for a Honeywell evohome DHW controller (aka boiler)."""
 
-    def __init__(self, evo_broker, evo_device):
+    def __init__(self, evo_broker, evo_device) -> None:
         """Initialize the evohome DHW controller."""
         super().__init__(evo_broker, evo_device)
 

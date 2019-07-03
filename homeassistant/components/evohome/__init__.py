@@ -109,7 +109,7 @@ async def async_setup(hass, hass_config):
 class EvoBroker:
     """Container for evohome client and data."""
 
-    def __init__(self, hass, params):
+    def __init__(self, hass, params) -> None:
         """Initialize the evohome client and data structure."""
         self.hass = hass
         self.params = params
@@ -212,7 +212,7 @@ class EvoBroker:
             dt_aware
         )
 
-    def update(self, args, **kwargs):
+    def update(self, *args, **kwargs) -> None:
         """Get the latest state data of the entire evohome Location.
 
         This includes state data for the Controller and all its child devices,
@@ -242,7 +242,7 @@ class EvoDevice(Entity):
     (optionally) a DHW controller.
     """
 
-    def __init__(self, evo_broker, evo_device):
+    def __init__(self, evo_broker, evo_device) -> None:
         """Initialize the evohome entity."""
         self._evo_device = evo_device
         self._evo_tcs = evo_broker.tcs
@@ -259,7 +259,6 @@ class EvoDevice(Entity):
         if packet['signal'] == 'refresh':
             self.async_schedule_update_ha_state(force_refresh=True)
 
-## from the Entity class
     @property
     def should_poll(self) -> bool:
         """Evohome entities should not be polled."""
@@ -297,8 +296,6 @@ class EvoDevice(Entity):
         """Run when entity about to be added to hass."""
         async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
 
-
-## from Climate & WaterHeater classes
     @property
     def precision(self) -> float:
         """Return the temperature precision to use in the frontend UI."""
