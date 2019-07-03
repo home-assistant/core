@@ -101,7 +101,11 @@ class InComfortClimate(ClimateDevice):
         """Return max valid temperature that can be set."""
         return INTOUCH_MAX_TEMP
 
-    async def async_set_temperature(self, **kwargs) -> Awaitable[None]:
+    async def async_set_temperature(self, **kwargs) -> None:
         """Set a new target temperature for this zone."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         await self._room.set_override(temperature)
+
+     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+        """Set new target hvac mode."""
+        pass
