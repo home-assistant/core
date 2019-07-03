@@ -4,8 +4,7 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.notion import DOMAIN, config_flow
-from homeassistant.const import (
-    CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry, MockDependency, mock_coro
 
@@ -83,7 +82,6 @@ async def test_step_import(hass, mock_aionotion):
     assert result['data'] == {
         CONF_USERNAME: 'user@host.com',
         CONF_PASSWORD: 'password123',
-        CONF_SCAN_INTERVAL: 60,
     }
 
 
@@ -103,5 +101,4 @@ async def test_step_user(hass, mock_aionotion):
     assert result['data'] == {
         CONF_USERNAME: 'user@host.com',
         CONF_PASSWORD: 'password123',
-        CONF_SCAN_INTERVAL: 60,
     }
