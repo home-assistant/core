@@ -67,6 +67,6 @@ class NotionBinarySensor(NotionEntity, BinarySensorDevice):
 
         # Sensors can move to different bridges based upon signal strength,
         # etc. Check and see if this entity has a new bridge:
-        self._update_bridge(self._notion.sensors[task['sensor_id']]['id'])
+        self._update_bridge_id(self._notion.sensors[task['sensor_id']]['id'])
 
         self._state = task['status']['value']

@@ -274,7 +274,7 @@ class NotionEntity(Entity):
         return self._task_id
 
     @callback
-    def _update_bridge(self, sensor_id):
+    def _update_bridge_id(self, sensor_id):
         """Update the entity's bridge ID if it has changed."""
         sensor = self._notion.sensors[sensor_id]
         if self._bridge_id != sensor['bridge']['id']:
