@@ -1,5 +1,5 @@
 """
-Support for Dublin RTPI information from data.dublinked.ie.
+Support for Dublin RTPI information from data.smartdublin.ie.
 
 For more info on the API see :
 https://data.gov.ie/dataset/real-time-passenger-information-rtpi-for-dublin-bus-bus-eireann-luas-and-irish-rail/resource/4b9f2c4f-6bf5-4958-a43a-f12dab04cf61
@@ -20,7 +20,7 @@ from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-_RESOURCE = 'https://data.dublinked.ie/cgi-bin/rtpi/realtimebusinformation'
+_RESOURCE = 'https://data.smartdublin.ie/cgi-bin/rtpi/realtimebusinformation'
 
 ATTR_STOP_ID = 'Stop ID'
 ATTR_ROUTE = 'Route'
@@ -28,7 +28,7 @@ ATTR_DUE_IN = 'Due in'
 ATTR_DUE_AT = 'Due at'
 ATTR_NEXT_UP = 'Later Bus'
 
-ATTRIBUTION = "Data provided by data.dublinked.ie"
+ATTRIBUTION = "Data provided by data.smartdublin.ie"
 
 CONF_STOP_ID = 'stopid'
 CONF_ROUTE = 'route'
