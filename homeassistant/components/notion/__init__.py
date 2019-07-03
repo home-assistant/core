@@ -125,7 +125,7 @@ async def async_setup_entry(hass, config_entry):
         config_entry.entry_id] = async_track_time_interval(
             hass,
             refresh,
-            timedelta(seconds=config_entry.data[DEFAULT_SCAN_INTERVAL]))
+            timedelta(seconds=DEFAULT_SCAN_INTERVAL))
 
     return True
 
