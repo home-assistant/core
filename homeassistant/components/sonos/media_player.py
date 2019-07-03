@@ -529,8 +529,8 @@ class SonosEntity(MediaPlayerDevice):
         # Check if currently playing radio station is in favorites
         self._source_name = None
         for fav in self._favorites:
-            if hasattr(fav, 'reference') and \
-               fav.reference.get_uri() == media_info['CurrentURI']:
+            if (hasattr(fav, 'reference') and
+                    fav.reference.get_uri() == media_info['CurrentURI']):
                 self._source_name = fav.title
 
     def update_media_music(self, update_media_position, track_info):
