@@ -6,8 +6,7 @@ from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_OFF, HVAC_MODE_AUTO, PRESET_BOOST, PRESET_ACTIVITY,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE)
-from homeassistant.const import (
-    ATTR_DURATION, ATTR_TEMPERATURE, TEMP_CELSIUS)
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -15,23 +14,25 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_DURATION = 'duration'
+
 GH_ZONES = ['radiator']
 
 # temperature is repeated here, as it gives access to high-precision temps
 GH_STATE_ATTRS = ['mode', 'temperature', 'type', 'occupied', 'override']
 
 # GeniusHub Zones support: Off, Timer, Override/Boost, Footprint & Linked modes
-GH_MODE_TO_HA_PRESET = {
-    'footprint': PRESET_ACTIVITY,
-    'override': PRESET_BOOST,
-}
-HA_PRESET_TO_GH_MODE = {v: k for k, v in GH_MODE_TO_HA_PRESET.items()}
-
-HA_HVAC_MODE_TO_GH_MODE = {
+HA_HVAC_TO_GH = {
     HVAC_MODE_OFF: 'off',
-    HVAC_MODE_AUTO: 'timer',
+    HVAC_MODE_HEAT: 'timer'
 }
-GH_MODE_TO_HA_HVAC_MODE = {v: k for k, v in HA_HVAC_MODE_TO_GH_MODE.items()}
+GH_HVAC_TO_HA = {v: k for k, v in HA_HVAC_TO_GH.items()}
+
+HA_PRESET_TO_GH = {
+    PRESET_ACTIVITY: 'footprint',
+    PRESET_BOOST: 'override'
+}
+GH_PRESET_TO_HA = {v: k for k, v in HA_PRESET_TO_GH.items()}
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
@@ -50,6 +51,11 @@ class GeniusClimateZone(ClimateDevice):
         """Initialize the climate device."""
         self._client = client
         self._zone = zone
+
+        if hasattr(self._zone, 'occupied'):  # has a movement sensor
+            self._preset_modes = list(HA_PRESET_TO_GH)
+        else:
+            self._preset_modes = [PRESET_BOOST]
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
@@ -112,31 +118,23 @@ class GeniusClimateZone(ClimateDevice):
 
     @property
     def hvac_mode(self) -> str:
-        """Return hvac operation ie. heat, cool mode.
-
-        Need to be one of HVAC_MODE_*.
-        """
-        return GH_MODE_TO_HA_HVAC_MODE.get(self._zone.mode, HVAC_MODE_HEAT)
+        """Return hvac operation ie. heat, cool mode."""
+        return GH_HVAC_TO_HA.get(self._zone.mode, HVAC_MODE_HEAT)
 
     @property
     def hvac_modes(self) -> List[str]:
-        """Return the list of available hvac operation modes.
-
-        Need to be a subset of HVAC_MODES.
-        """
-        return list(HA_HVAC_MODE_TO_GH_MODE)
+        """Return the list of available hvac operation modes."""
+        return list(HA_HVAC_TO_GH)
 
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        return GH_MODE_TO_HA_PRESET.get(self._zone.mode)
+        return GH_PRESET_TO_HA.get(self._zone.mode)
 
     @property
     def preset_modes(self) -> Optional[List[str]]:
         """Return a list of available preset modes."""
-        if hasattr(self._zone, 'occupied'):  # has a movement sensor
-            return list(HA_PRESET_TO_GH_MODE)
-        return [PRESET_BOOST]
+        return self._preset_modes
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set a new target temperature for this zone."""
@@ -144,9 +142,9 @@ class GeniusClimateZone(ClimateDevice):
                                       kwargs.get(ATTR_DURATION, 3600))
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> Awaitable[None]:
-        """Set new target hvac mode."""
-        await self._zone.set_mode(HA_HVAC_MODE_TO_GH_MODE[hvac_mode])
+        """Set a new hvac mode."""
+        await self._zone.set_mode(HA_HVAC_TO_GH.get(hvac_mode))
 
     async def async_set_preset_mode(self, preset_mode: str) -> Awaitable[None]:
-        """Set new preset mode."""
-        await self._zone.set_mode(HA_PRESET_TO_GH_MODE[preset_mode])
+        """Set a new preset mode."""
+        await self._zone.set_mode(HA_PRESET_TO_GH.get(preset_mode, 'timer'))
