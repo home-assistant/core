@@ -19,24 +19,22 @@ async def async_setup_entry(hass, entry, async_add_entities):
     notion = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
 
     sensor_list = []
-    for task in notion.tasks:
+    for task_id, task in notion.tasks.items():
         if task['task_type'] not in BINARY_SENSOR_TYPES:
             continue
 
         name, device_class = BINARY_SENSOR_TYPES[task['task_type']]
-        sensor = next(
-            (s for s in notion.sensors if s['id'] == task['sensor_id'])
-        )
-        bridge = next(
-            (b for b in notion.bridges if b['id'] == sensor['bridge']['id'])
-        )
-        system = next(
-            (s for s in notion.systems if s['id'] == sensor['system_id'])
-        )
+        sensor = notion.sensors[task['sensor_id']]
 
         sensor_list.append(
             NotionBinarySensor(
-                notion, task, sensor, bridge, system, name, device_class))
+                notion,
+                task_id,
+                sensor['id'],
+                sensor['bridge']['id'],
+                sensor['system_id'],
+                name,
+                device_class))
 
     async_add_entities(sensor_list, True)
 
@@ -47,42 +45,22 @@ class NotionBinarySensor(NotionEntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Return whether the sensor is on or off."""
-        if self._task['task_type'] == SENSOR_BATTERY:
+        task = self._notion.tasks[self._task_id]
+
+        if task['task_type'] == SENSOR_BATTERY:
             return self._state != 'battery_good'
-        if self._task['task_type'] in (
+        if task['task_type'] in (
                 SENSOR_DOOR, SENSOR_GARAGE_DOOR, SENSOR_SAFE, SENSOR_SLIDING,
                 SENSOR_WINDOW_HINGED_HORIZONTAL,
                 SENSOR_WINDOW_HINGED_VERTICAL):
             return self._state != 'closed'
-        if self._task['task_type'] == SENSOR_LEAK:
+        if task['task_type'] == SENSOR_LEAK:
             return self._state != 'no_leak'
-        if self._task['task_type'] == SENSOR_MISSING:
+        if task['task_type'] == SENSOR_MISSING:
             return self._state == 'not_missing'
-        if self._task['task_type'] == SENSOR_SMOKE_CO:
+        if task['task_type'] == SENSOR_SMOKE_CO:
             return self._state != 'no_alarm'
 
     async def async_update(self):
         """Fetch new state data for the sensor."""
-        try:
-            new_task_data = next(
-                (t for t in self._notion.tasks if t['id'] == self._task['id'])
-            )
-            new_sensor_data = next(
-                (s for s in self._notion.sensors
-                 if s['id'] == self._task['sensor_id'])
-            )
-        except StopIteration:
-            _LOGGER.error(
-                'Task missing (was it removed?): %s: %s',
-                self._sensor['name'], self._task['task_type'])
-            return
-
-        self._sensor = new_sensor_data
-        self._task = new_task_data
-
-        self._bridge = next(
-            (b for b in self._notion.bridges
-             if b['id'] == self._sensor['bridge']['id'])
-        )
-
-        self._state = self._task['status']['value']
+        self._state = self._notion.tasks[self._task_id]['status']['value']

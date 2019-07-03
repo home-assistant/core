@@ -148,10 +148,10 @@ class Notion:
     def __init__(self, client):
         """Initialize."""
         self._client = client
-        self.bridges = []
-        self.sensors = []
-        self.systems = []
-        self.tasks = []
+        self.bridges = {}
+        self.sensors = {}
+        self.systems = {}
+        self.tasks = {}
 
     async def async_update(self, *, initialize=False):
         """Get the latest Notion data."""
@@ -172,7 +172,9 @@ class Notion:
                     'There was an error while updating %s: %s', attr, result)
                 continue
 
-            setattr(self, attr, result)
+            holding_pen = getattr(self, attr)
+            for item in result:
+                holding_pen[item['id']] = item
 
 
 class NotionEntity(Entity):
@@ -181,28 +183,29 @@ class NotionEntity(Entity):
     def __init__(
             self,
             notion,
-            task,
-            sensor,
-            bridge,
-            system,
+            task_id,
+            sensor_id,
+            bridge_id,
+            system_id,
             name,
             device_class):
         """Initialize the entity."""
         self._async_unsub_dispatcher_connect = None
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._bridge = bridge
+        self._bridge_id = bridge_id
         self._device_class = device_class
         self._name = name
         self._notion = notion
-        self._sensor = sensor
+        self._sensor_id = sensor_id
         self._state = None
-        self._system = system
-        self._task = task
+        self._system_id = system_id
+        self._task_id = task_id
 
     @property
     def available(self):
         """Return True if entity is available."""
-        return any(self._task['id'] == t['id'] for t in self._notion.tasks)
+        return any(
+            self._task_id == task_id for task_id in list(self._notion.tasks))
 
     @property
     def device_class(self):
@@ -217,21 +220,25 @@ class NotionEntity(Entity):
     @property
     def device_info(self):
         """Return device registry information for this entity."""
+        bridge = self._notion.bridges[self._bridge_id]
+        sensor = self._notion.sensors[self._sensor_id]
+
         return {
             'identifiers': {
-                (DOMAIN, self._sensor['hardware_id'])
+                (DOMAIN, sensor['hardware_id'])
             },
             'manufacturer': 'Notion',
-            'model': self._sensor['hardware_revision'],
-            'name': self._sensor['name'],
-            'sw_version': self._sensor['firmware_version'],
-            'via_device': (DOMAIN, self._bridge['hardware_id'])
+            'model': sensor['hardware_revision'],
+            'name': sensor['name'],
+            'sw_version': sensor['firmware_version'],
+            'via_device': (DOMAIN, bridge['hardware_id'])
         }
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{0}: {1}'.format(self._sensor['name'], self._name)
+        return '{0}: {1}'.format(
+            self._notion.sensors[self._sensor_id]['name'], self._name)
 
     @property
     def should_poll(self):
@@ -241,7 +248,7 @@ class NotionEntity(Entity):
     @property
     def unique_id(self):
         """Return a unique, unchanging string that represents this sensor."""
-        return self._task['id']
+        return self._task_id
 
     async def async_added_to_hass(self):
         """Register callbacks."""

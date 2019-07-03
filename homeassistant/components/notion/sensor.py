@@ -12,28 +12,20 @@ async def async_setup_entry(hass, entry, async_add_entities):
     notion = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
 
     sensor_list = []
-    for task in notion.tasks:
+    for task_id, task in notion.tasks.items():
         if task['task_type'] not in SENSOR_TYPES:
             continue
 
         name, device_class, unit = SENSOR_TYPES[task['task_type']]
-        sensor = next(
-            (s for s in notion.sensors if s['id'] == task['sensor_id'])
-        )
-        bridge = next(
-            (b for b in notion.bridges if b['id'] == sensor['bridge']['id'])
-        )
-        system = next(
-            (s for s in notion.systems if s['id'] == sensor['system_id'])
-        )
+        sensor = notion.sensors[task['sensor_id']]
 
         sensor_list.append(
             NotionSensor(
                 notion,
-                task,
-                sensor,
-                bridge,
-                system,
+                task_id,
+                sensor['id'],
+                sensor['bridge']['id'],
+                sensor['system_id'],
                 name,
                 device_class,
                 unit
@@ -48,16 +40,22 @@ class NotionSensor(NotionEntity):
     def __init__(
             self,
             notion,
-            task,
-            sensor,
-            bridge,
-            system,
+            task_id,
+            sensor_id,
+            bridge_id,
+            system_id,
             name,
             device_class,
             unit):
         """Initialize the entity."""
         super().__init__(
-            notion, task, sensor, bridge, system, name, device_class)
+            notion,
+            task_id,
+            sensor_id,
+            bridge_id,
+            system_id,
+            name,
+            device_class)
 
         self._unit = unit
 
@@ -73,31 +71,11 @@ class NotionSensor(NotionEntity):
 
     async def async_update(self):
         """Fetch new state data for the sensor."""
-        try:
-            new_task_data = next(
-                (t for t in self._notion.tasks if t['id'] == self._task['id'])
-            )
-            new_sensor_data = next(
-                (s for s in self._notion.sensors
-                 if s['id'] == self._task['sensor_id'])
-            )
-        except StopIteration:
-            _LOGGER.error(
-                'Task missing (was it removed?): %s: %s',
-                self._sensor['name'], self._task['task_type'])
-            return
+        task = self._notion.tasks[self._task_id]
 
-        self._sensor = new_sensor_data
-        self._task = new_task_data
-
-        self._bridge = next(
-            (b for b in self._notion.bridges
-             if b['id'] == self._sensor['bridge']['id'])
-        )
-
-        if self._task['task_type'] == SENSOR_TEMPERATURE:
-            self._state = round(float(self._task['status']['value']), 1)
+        if task['task_type'] == SENSOR_TEMPERATURE:
+            self._state = round(float(task['status']['value']), 1)
         else:
             _LOGGER.error(
                 'Unknown task type: %s: %s',
-                self._sensor['name'], self._task['task_type'])
+                self._notion.sensors[self._sensor_id], task['task_type'])
