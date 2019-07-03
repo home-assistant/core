@@ -90,6 +90,8 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         Need to be one of HVAC_MODE_*.
         """
         if self._device.boostMode:
+            return HVAC_MODE_AUTO
+        if self._device.controlMode == HMIP_MANUAL_CM:
             return HVAC_MODE_HEAT
 
         return HVAC_MODE_AUTO
@@ -117,7 +119,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         if self._device.controlMode == HMIP_ECO_CM:
             return PRESET_ECO
         if self._home.get_functionalHome(IndoorClimateHome).absenceType \
-                != AbsenceType.NOT_ABSENT:
+                in [AbsenceType.PERIOD, AbsenceType.PERMANENT , AbsenceType.VACATION]:
             return PRESET_AWAY
 
         return None
