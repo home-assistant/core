@@ -119,7 +119,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         if self._device.controlMode == HMIP_ECO_CM:
             return PRESET_ECO
         if self._home.get_functionalHome(IndoorClimateHome).absenceType \
-                in [AbsenceType.PERIOD, AbsenceType.PERMANENT, 
+                in [AbsenceType.PERIOD, AbsenceType.PERMANENT,
                     AbsenceType.VACATION]:
             return PRESET_AWAY
 
