@@ -73,10 +73,6 @@ class NotionSensor(NotionEntity):
         """Fetch new state data for the sensor."""
         task = self._notion.tasks[self._task_id]
 
-        # Sensors can move to different bridges based upon signal strength,
-        # etc. Check and see if this entity has a new bridge:
-        self._update_bridge_id(self._notion.sensors[task['sensor_id']]['id'])
-
         if task['task_type'] == SENSOR_TEMPERATURE:
             self._state = round(float(task['status']['value']), 1)
         else:

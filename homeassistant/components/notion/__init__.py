@@ -274,9 +274,12 @@ class NotionEntity(Entity):
         return self._task_id
 
     @callback
-    def _update_bridge_id(self, sensor_id):
-        """Update the entity's bridge ID if it has changed."""
-        sensor = self._notion.sensors[sensor_id]
+    def _update_bridge_id(self):
+        """Update the entity's bridge ID if it has changed.
+
+        Sensors can move to other bridges based on signal strength, etc.
+        """
+        sensor = self._notion.sensors[self._sensor_id]
         if self._bridge_id != sensor['bridge']['id']:
             self._bridge_id = sensor['bridge']['id']
 
@@ -284,7 +287,8 @@ class NotionEntity(Entity):
         """Register callbacks."""
         @callback
         def update():
-            """Update the state."""
+            """Update the entity."""
+            self._update_bridge_id()
             self.async_schedule_update_ha_state(True)
 
         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
