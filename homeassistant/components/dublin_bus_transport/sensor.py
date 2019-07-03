@@ -117,7 +117,9 @@ class DublinPublicTransportSensor(Entity):
         return ICON
 
     def update(self):
-        """Get the latest data from opendata.ch and update the states."""
+        """
+        Get the latest data from data.smartdublin.ie and update the states.
+        """
         self.data.update()
         self._times = self.data.info
         try:
@@ -138,7 +140,7 @@ class PublicTransportData:
                       ATTR_DUE_IN: 'n/a'}]
 
     def update(self):
-        """Get the latest data from opendata.ch."""
+        """Get the latest data from data.smartdublin.ie."""
         params = {}
         params['stopid'] = self.stop
 
