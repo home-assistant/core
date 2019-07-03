@@ -61,7 +61,7 @@ SERVICE_TRIGGER_SCHEMA = vol.Schema({
 
 SERVICE_SAVE_VIDEO_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_FILENAME): cv.string,
+    vol.Required(CONF_FILENAME): cv.template,
 })
 
 CONFIG_SCHEMA = vol.Schema(
@@ -139,7 +139,11 @@ def setup(hass, config):
 async def async_handle_save_video_service(hass, call):
     """Handle save video service calls."""
     camera_name = call.data[CONF_NAME]
-    video_path = call.data[CONF_FILENAME]
+    filename = call.data[CONF_FILENAME]
+    filename.hass = hass
+
+    video_path = filename.async_render()
+    _LOGGER.debug("Video path: %s", video_path)
     if not hass.config.is_allowed_path(video_path):
         _LOGGER.error(
             "Can't write %s, no access to path!", video_path)
