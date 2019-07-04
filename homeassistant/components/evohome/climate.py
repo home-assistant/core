@@ -218,7 +218,6 @@ class EvoZone(EvoDevice, ClimateDevice):
                     evohomeclient2.AuthenticationError) as err:
                 _handle_exception(err)
 
-
     def set_hvac_mode(self, hvac_mode: str) -> None:  # TODO: finished
         """Set an operating mode for the Zone."""
         if hvac_mode == HVAC_MODE_OFF:
