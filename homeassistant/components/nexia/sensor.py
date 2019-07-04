@@ -22,37 +22,61 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensors = list()
 
     for thermostat_id in thermostat.get_thermostat_ids():
-        sensors.append(NexiaSensor(thermostat, scan_interval, thermostat_id,
-                                   "get_system_status",
-                                   "System Status", None, None))
+        sensors.append(
+            NexiaSensor(thermostat,
+                        scan_interval,
+                        thermostat_id,
+                        "get_system_status",
+                        "System Status",
+                        None,
+                        None)
+        )
 
         if thermostat.has_variable_speed_compressor(thermostat_id):
             sensors.append(
-                NexiaSensor(thermostat, scan_interval, thermostat_id,
+                NexiaSensor(thermostat,
+                            scan_interval,
+                            thermostat_id,
                             "get_current_compressor_speed",
-                            "Current Compressor Speed", None, "%",
-                            percent_conv))
+                            "Current Compressor Speed",
+                            None,
+                            "%",
+                            percent_conv)
+            )
             sensors.append(
-                NexiaSensor(thermostat, scan_interval, thermostat_id,
+                NexiaSensor(thermostat,
+                            scan_interval,
+                            thermostat_id,
                             "get_requested_compressor_speed",
-                            "Requested Compressor Speed", None,
-                            "%", percent_conv))
+                            "Requested Compressor Speed",
+                            None,
+                            "%",
+                            percent_conv))
 
         if thermostat.has_outdoor_temperature(thermostat_id):
             unit = (TEMP_CELSIUS if thermostat.get_unit(
                 thermostat_id) == thermostat.UNIT_CELSIUS else TEMP_FAHRENHEIT)
             sensors.append(
-                NexiaSensor(thermostat, scan_interval, thermostat_id,
+                NexiaSensor(thermostat,
+                            scan_interval,
+                            thermostat_id,
                             "get_outdoor_temperature",
                             "Outdoor Temperature",
-                            DEVICE_CLASS_TEMPERATURE, unit))
+                            DEVICE_CLASS_TEMPERATURE,
+                            unit)
+            )
 
         if thermostat.has_relative_humidity(thermostat_id):
             sensors.append(
-                NexiaSensor(thermostat, scan_interval, thermostat_id,
+                NexiaSensor(thermostat,
+                            scan_interval,
+                            thermostat_id,
                             "get_relative_humidity",
-                            "Relative Humidity", DEVICE_CLASS_HUMIDITY,
-                            "%", percent_conv))
+                            "Relative Humidity",
+                            DEVICE_CLASS_HUMIDITY,
+                            "%",
+                            percent_conv)
+            )
 
         for zone in thermostat.get_zone_ids(thermostat_id):
             name = thermostat.get_zone_name(thermostat_id, zone)
@@ -67,15 +91,28 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                                 f"{name} Temperature",
                                 DEVICE_CLASS_TEMPERATURE,
                                 unit,
-                                None))
+                                None)
+            )
             sensors.append(
-                NexiaZoneSensor(thermostat, scan_interval, thermostat_id, zone,
+                NexiaZoneSensor(thermostat,
+                                scan_interval,
+                                thermostat_id,
+                                zone,
                                 "get_zone_status",
-                                f"{name} Zone Status", None, None))
+                                f"{name} Zone Status",
+                                None,
+                                None)
+            )
             sensors.append(
-                NexiaZoneSensor(thermostat, scan_interval, thermostat_id, zone,
+                NexiaZoneSensor(thermostat,
+                                scan_interval,
+                                thermostat_id,
+                                zone,
                                 "get_zone_setpoint_status",
-                                f"{name} Zone Setpoint Status", None, None))
+                                f"{name} Zone Setpoint Status",
+                                None,
+                                None)
+            )
 
     add_entities(sensors, True)
 

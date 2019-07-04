@@ -339,7 +339,7 @@ class NexiaZone(ClimateDevice):
                 self._zone)
         else:
             raise KeyError(
-                f"Operation mode {operation_mode} not in the supported "
+                f"Operation mode {operation_mode} not in the supported " +
                 f"operations list {str(self._device.OPERATION_MODES)}")
 
     def set_aircleaner_mode(self, aircleaner_mode):
