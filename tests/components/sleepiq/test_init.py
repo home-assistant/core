@@ -12,7 +12,7 @@ from tests.common import load_fixture, get_test_home_assistant
 
 def mock_responses(mock):
     """Mock responses for SleepIQ."""
-    base_url = 'https://api.sleepiq.sleepnumber.com/rest/'
+    base_url = 'https://prod-api.sleepiq.sleepnumber.com/rest/'
     mock.put(
         base_url + 'login',
         text=load_fixture('sleepiq-login.json'))
@@ -61,7 +61,7 @@ class TestSleepIQ(unittest.TestCase):
     @requests_mock.Mocker()
     def test_setup_login_failed(self, mock):
         """Test the setup if a bad username or password is given."""
-        mock.put('https://api.sleepiq.sleepnumber.com/rest/login',
+        mock.put('https://prod-api.sleepiq.sleepnumber.com/rest/login',
                  status_code=401,
                  json=load_fixture('sleepiq-login-failed.json'))
 
