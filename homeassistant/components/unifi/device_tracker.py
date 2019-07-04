@@ -34,18 +34,6 @@ DEFAULT_PORT = 8443
 DEFAULT_VERIFY_SSL = True
 DEFAULT_DETECTION_TIME = timedelta(seconds=300)
 
-AVAILABLE_ATTRS = [
-    '_id', '_is_guest_by_uap', '_last_seen_by_uap', '_uptime_by_uap',
-    'ap_mac', 'assoc_time', 'authorized', 'bssid', 'bytes-r', 'ccq',
-    'channel', 'essid', 'first_seen', 'hostname', 'idletime', 'ip',
-    'is_11r', 'is_guest', 'is_wired', 'last_seen', 'latest_assoc_time',
-    'mac', 'name', 'noise', 'noted', 'oui', 'powersave_enabled',
-    'qos_policy_applied', 'radio', 'radio_proto', 'rssi', 'rx_bytes',
-    'rx_bytes-r', 'rx_packets', 'rx_rate', 'signal', 'site_id',
-    'tx_bytes', 'tx_bytes-r', 'tx_packets', 'tx_power', 'tx_rate',
-    'uptime', 'user_id', 'usergroup_id', 'vlan'
-]
-
 TIMESTAMP_ATTRS = ['first_seen', 'last_seen', 'latest_assoc_time']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -59,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DETECTION_TIME, default=DEFAULT_DETECTION_TIME): vol.All(
         cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(AVAILABLE_ATTRS)]),
+        vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_SSID_FILTER): vol.All(cv.ensure_list, [cv.string])
 })
 
@@ -164,22 +152,3 @@ class UniFiClientTracker(ScannerEntity):
         return {
             'connections': {(CONNECTION_NETWORK_MAC, self.client.mac)}
         }
-
-    @property
-    def device_state_attributes(self):
-        """Return the extra attributes of the device."""
-        monitored_conditions = \
-            self.controller.unifi_config.get(CONF_MONITORED_CONDITIONS, {})
-
-        attributes = {}
-        for variable in monitored_conditions:
-
-            if variable in self.client.raw:
-                if variable in TIMESTAMP_ATTRS:
-                    attributes[variable] = dt_util.utc_from_timestamp(
-                        float(self.client.raw[variable])
-                    )
-                else:
-                    attributes[variable] = self.client.raw[variable]
-
-        return attributes
