@@ -1,8 +1,8 @@
 """Support for Aurora ABB PowerOne Solar Photvoltaic (PV) inverter."""
 
 import logging
-import voluptuous as vol
 
+import voluptuous as vol
 from aurorapy.client import AuroraSerialClient, AuroraError
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
