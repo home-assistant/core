@@ -18,7 +18,7 @@ from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.loader import bind_hass
-from homeassistant.util.dt import utcnow
+from homeassistant.util.dt import parse_datetime, utcnow
 
 DOMAIN = 'automation'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -228,6 +228,8 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         if state:
             enable_automation = state.state == STATE_ON
             self._last_triggered = state.attributes.get('last_triggered')
+            if isinstance(self._last_triggered, str):
+                self._last_triggered = parse_datetime(self._last_triggered)
             _LOGGER.debug("Loaded automation %s with state %s from state "
                           " storage last state %s", self.entity_id,
                           enable_automation, state)
