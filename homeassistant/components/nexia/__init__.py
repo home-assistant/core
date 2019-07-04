@@ -2,11 +2,12 @@
 import logging
 from datetime import timedelta
 
-from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
+from requests.exceptions import ConnectTimeout, HTTPError
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_ID, CONF_SCAN_INTERVAL
 import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_ID, \
+    CONF_SCAN_INTERVAL
 
 REQUIREMENTS = [
     "beautifulsoup4==4.6.3",
@@ -50,7 +51,6 @@ ATTR_THERMOSTAT_ID = 'thermostat_id'
 ATTR_ZONE_ID = 'zone_id'
 ATTR_AIRCLEANER_MODE = 'aircleaner_mode'
 
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
@@ -72,12 +72,14 @@ def setup(hass, config):
     house_id = conf[CONF_ID]
 
     scan_interval = timedelta(seconds=conf.get(CONF_SCAN_INTERVAL,
-                                               NexiaThermostat.DEFAULT_UPDATE_RATE))
+                                        NexiaThermostat.DEFAULT_UPDATE_RATE))
 
     try:
-        thermostat = NexiaThermostat(username=username, password=password, house_id=house_id,
-                                     update_rate=NexiaThermostat.DISABLE_AUTO_UPDATE)
-        hass.data[DATA_NEXIA] = {NEXIA_DEVICE: thermostat, NEXIA_SCAN_INTERVAL: scan_interval}
+        thermostat = NexiaThermostat(username=username, password=password,
+                             house_id=house_id,
+                             update_rate=NexiaThermostat.DISABLE_AUTO_UPDATE)
+        hass.data[DATA_NEXIA] = {NEXIA_DEVICE: thermostat,
+                                 NEXIA_SCAN_INTERVAL: scan_interval}
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Nexia service: %s", str(ex))
         hass.components.persistent_notification.create(
