@@ -1,7 +1,7 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
 import datetime
 import logging
-from typing import Dict, Optional, List
+from typing import Any, Dict, Optional, List
 
 import requests
 import voluptuous as vol
@@ -152,7 +152,7 @@ class HoneywellUSThermostat(ClimateDevice):
         self._fan_mode_map = {k: v for d in mappings for k, v in d.items()}
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Return the list of supported features."""
         return self._supported_features
 
@@ -163,10 +163,7 @@ class HoneywellUSThermostat(ClimateDevice):
 
     @property
     def hvac_action(self) -> Optional[str]:
-        """Return the current running hvac operation if supported.
-
-        Need to be one of CURRENT_HVAC_*.
-        """
+        """Return the current running hvac operation if supported."""
         return HW_MODE_TO_HA_HVAC_ACTION[self._device.equipment_output_status]
 
     @property
@@ -297,7 +294,7 @@ class HoneywellUSThermostat(ClimateDevice):
             _LOGGER.error("Invalid temperature %s: %s", temperature, err)
 
     @property
-    def device_state_attributes(self) -> Dict:
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the device specific state attributes."""
         # pylint: disable=protected-access
         data = {}
@@ -311,7 +308,7 @@ class HoneywellUSThermostat(ClimateDevice):
         """Return the current preset mode, e.g., home, away, temp."""
         return PRESET_AWAY if self._away else None
 
-    def _turn_away_mode_on(self):
+    def _turn_away_mode_on(self) -> None:
         """Turn away on.
 
         Somecomfort does have a proprietary away mode, but it doesn't really
@@ -339,7 +336,7 @@ class HoneywellUSThermostat(ClimateDevice):
             _LOGGER.error('Temperature %.1f out of range',
                           getattr(self, "_{}_away_temp".format(mode)))
 
-    def _turn_away_mode_off(self):
+    def _turn_away_mode_off(self) -> None:
         """Turn away off."""
         self._away = False
         try:
@@ -353,7 +350,7 @@ class HoneywellUSThermostat(ClimateDevice):
         """Set new target hvac mode."""
         self._device.system_mode = self._hvac_mode_map[hvac_mode]
 
-    def update(self):
+    def update(self) -> None:
         """Update the state."""
         retries = 3
         while retries > 0:
@@ -370,7 +367,7 @@ class HoneywellUSThermostat(ClimateDevice):
                 _LOGGER.error(
                     "SomeComfort update failed, Retrying - Error: %s", exp)
 
-    def _retry(self):
+    def _retry(self) -> bool:
         """Recreate a new somecomfort client.
 
         When we got an error, the best way to be sure that the next query
