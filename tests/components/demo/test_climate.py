@@ -44,7 +44,8 @@ def test_setup_params(hass):
     assert "Off" == state.attributes.get(ATTR_SWING_MODE)
     assert STATE_OFF == state.attributes.get(ATTR_AUX_HEAT)
     assert 5 == state.attributes.get(ATTR_TARGET_TEMP_STEP)
-    assert state.attributes.get(ATTR_HVAC_MODES) == HVAC_MODES
+    assert state.attributes.get(ATTR_HVAC_MODES) == \
+        ['off', 'heat', 'cool', 'auto', 'dry', 'fan_only']
 
 
 def test_default_setup_params(hass):
@@ -257,7 +258,8 @@ async def test_set_aux_heat_bad_attr(hass):
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get(ATTR_AUX_HEAT) == STATE_OFF
 
-    await common.async_set_aux_heat(hass, None, ENTITY_CLIMATE)
+    with pytest.raises(vol.Invalid):
+        await common.async_set_aux_heat(hass, None, ENTITY_CLIMATE)
     await hass.async_block_till_done()
 
     assert state.attributes.get(ATTR_AUX_HEAT) == STATE_OFF

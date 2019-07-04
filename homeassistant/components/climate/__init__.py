@@ -2,35 +2,35 @@
 from datetime import timedelta
 import functools as ft
 import logging
-from typing import Any, Awaitable, Dict, Optional, List
+from typing import Any, Awaitable, Dict, List, Optional
 
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, PRECISION_TENTHS, PRECISION_WHOLE,
-    TEMP_CELSIUS, STATE_ON, STATE_OFF)
+    STATE_OFF, STATE_ON, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import (
-    ServiceDataType, HomeAssistantType, ConfigType)
 from homeassistant.helpers.config_validation import (  # noqa
     PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
+from homeassistant.helpers.typing import (
+    ConfigType, HomeAssistantType, ServiceDataType)
 from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import (
-    ATTR_AUX_HEAT, ATTR_CURRENT_HUMIDITY, ATTR_HVAC_ACTIONS,
-    ATTR_CURRENT_TEMPERATURE, ATTR_FAN_MODES, ATTR_FAN_MODE, ATTR_HUMIDITY,
+    ATTR_AUX_HEAT, ATTR_CURRENT_HUMIDITY, ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE, ATTR_FAN_MODES, ATTR_HUMIDITY, ATTR_HVAC_ACTIONS,
     ATTR_HVAC_MODE, ATTR_HVAC_MODES, ATTR_MAX_HUMIDITY, ATTR_MAX_TEMP,
-    ATTR_MIN_HUMIDITY, ATTR_MIN_TEMP, ATTR_PRESET_MODES, ATTR_PRESET_MODE,
-    ATTR_SWING_MODES, ATTR_SWING_MODE, ATTR_TARGET_TEMP_HIGH,
+    ATTR_MIN_HUMIDITY, ATTR_MIN_TEMP, ATTR_PRESET_MODE, ATTR_PRESET_MODES,
+    ATTR_SWING_MODE, ATTR_SWING_MODES, ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_STEP, DOMAIN, HVAC_MODES,
-    SERVICE_SET_AUX_HEAT, SERVICE_SET_FAN_MODE, SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_HUMIDITY, SERVICE_SET_HVAC_MODE, SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE, SUPPORT_AUX_HEAT,
-    SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE, SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_TEMPERATURE_RANGE)
+    SERVICE_SET_AUX_HEAT, SERVICE_SET_FAN_MODE, SERVICE_SET_HUMIDITY,
+    SERVICE_SET_HVAC_MODE, SERVICE_SET_PRESET_MODE, SERVICE_SET_SWING_MODE,
+    SERVICE_SET_TEMPERATURE, SUPPORT_AUX_HEAT, SUPPORT_FAN_MODE,
+    SUPPORT_PRESET_MODE, SUPPORT_SWING_MODE, SUPPORT_TARGET_HUMIDITY,
+    SUPPORT_TARGET_TEMPERATURE_RANGE)
 from .reproduce_state import async_reproduce_states  # noqa
 
 DEFAULT_MIN_TEMP = 7
