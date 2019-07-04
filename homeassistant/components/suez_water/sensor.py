@@ -38,6 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         if not client.check_credentials():
             _LOGGER.warning("Wrong username and/or password")
+            return
         add_entities([SuezSensor(client)], True)
 
     except PySuezError:
@@ -91,24 +92,24 @@ class SuezSensor(Entity):
                 'attribution'] = self.client.attributes[
                     'attribution']
             self._attributes['this_month_consumption'] = {}
-            for item in self.client.attributes['this_month_consumption']:
+            for item in self.client.attributes['thisMonthConsumption']:
                 self._attributes['this_month_consumption'][
                     item] = self.client.attributes[
-                        'this_month_consumption'][item]
+                        'thisMonthConsumption'][item]
             self._attributes['previous_month_consumption'] = {}
-            for item in self.client.attributes['previous_month_consumption']:
+            for item in self.client.attributes['previousMonthConsumption']:
                 self._attributes['previous_month_consumption'][
                     item] = self.client.attributes[
-                        'previous_month_consumption'][item]
+                        'previousMonthConsumption'][item]
             self._attributes[
                 'highest_monthly_consumption'] = self.client.attributes[
-                    'highest_monthly_consumption']
+                    'highestMonthlyConsumption']
             self._attributes[
                 'last_year_overall'] = self.client.attributes[
-                    'last_year_overall']
+                    'lastYearOverAll']
             self._attributes[
                 'this_year_overall'] = self.client.attributes[
-                    'this_year_overall']
+                    'thisYearOverAll']
             self._attributes['history'] = {}
             for item in self.client.attributes['history']:
                 self._attributes[
