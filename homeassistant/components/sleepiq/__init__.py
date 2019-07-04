@@ -1,7 +1,6 @@
 """Support for SleepIQ from SleepNumber."""
 import logging
 from datetime import timedelta
-from requests.exceptions import HTTPError
 
 import voluptuous as vol
 
