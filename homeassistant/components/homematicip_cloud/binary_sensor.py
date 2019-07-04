@@ -1,13 +1,29 @@
 """Support for HomematicIP Cloud binary sensor."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homematicip.aio.device import (
+    AsyncDevice, AsyncMotionDetectorIndoor, AsyncMotionDetectorOutdoor,
+    AsyncMotionDetectorPushButton, AsyncPresenceDetectorIndoor,
+    AsyncRotaryHandleSensor, AsyncShutterContact, AsyncSmokeDetector,
+    AsyncWaterSensor, AsyncWeatherSensor, AsyncWeatherSensorPlus,
+    AsyncWeatherSensorPro)
+from homematicip.aio.group import AsyncSecurityGroup, AsyncSecurityZoneGroup
+from homematicip.aio.home import AsyncHome
+from homematicip.base.enums import SmokeDetectorAlarmType, WindowState
+
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY, DEVICE_CLASS_DOOR, DEVICE_CLASS_LIGHT,
+    DEVICE_CLASS_MOISTURE, DEVICE_CLASS_MOTION, DEVICE_CLASS_PRESENCE,
+    DEVICE_CLASS_SAFETY, DEVICE_CLASS_SMOKE, BinarySensorDevice)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 from .device import ATTR_GROUP_MEMBER_UNREACHABLE
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_LOW_BATTERY = 'low_battery'
 ATTR_MOTIONDETECTED = 'motion detected'
 ATTR_PRESENCEDETECTED = 'presence detected'
 ATTR_POWERMAINSFAILURE = 'power mains failure'
@@ -24,17 +40,9 @@ async def async_setup_platform(
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
+                            async_add_entities) -> None:
     """Set up the HomematicIP Cloud binary sensor from a config entry."""
-    from homematicip.aio.device import (
-        AsyncDevice, AsyncShutterContact, AsyncMotionDetectorIndoor,
-        AsyncMotionDetectorOutdoor, AsyncSmokeDetector, AsyncWaterSensor,
-        AsyncRotaryHandleSensor, AsyncMotionDetectorPushButton,
-        AsyncWeatherSensor, AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
-
-    from homematicip.aio.group import (
-        AsyncSecurityGroup, AsyncSecurityZoneGroup)
-
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for device in home.devices:
@@ -44,6 +52,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                                AsyncMotionDetectorOutdoor,
                                AsyncMotionDetectorPushButton)):
             devices.append(HomematicipMotionDetector(home, device))
+        if isinstance(device, AsyncPresenceDetectorIndoor):
+            devices.append(HomematicipPresenceDetector(home, device))
         if isinstance(device, AsyncSmokeDetector):
             devices.append(HomematicipSmokeDetector(home, device))
         if isinstance(device, AsyncWaterSensor):
@@ -72,16 +82,14 @@ class HomematicipShutterContact(HomematicipGenericDevice, BinarySensorDevice):
     """Representation of a HomematicIP Cloud shutter contact."""
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the class of this sensor."""
-        return 'door'
+        return DEVICE_CLASS_DOOR
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the shutter contact is on/open."""
-        from homematicip.base.enums import WindowState
-
-        if self._device.sabotage:
+        if hasattr(self._device, 'sabotage') and self._device.sabotage:
             return True
         if self._device.windowState is None:
             return None
@@ -92,30 +100,46 @@ class HomematicipMotionDetector(HomematicipGenericDevice, BinarySensorDevice):
     """Representation of a HomematicIP Cloud motion detector."""
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the class of this sensor."""
-        return 'motion'
+        return DEVICE_CLASS_MOTION
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if motion is detected."""
-        if self._device.sabotage:
+        if hasattr(self._device, 'sabotage') and self._device.sabotage:
             return True
         return self._device.motionDetected
+
+
+class HomematicipPresenceDetector(HomematicipGenericDevice,
+                                  BinarySensorDevice):
+    """Representation of a HomematicIP Cloud presence detector."""
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this sensor."""
+        return DEVICE_CLASS_PRESENCE
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if presence is detected."""
+        if hasattr(self._device, 'sabotage') and self._device.sabotage:
+            return True
+        return self._device.presenceDetected
 
 
 class HomematicipSmokeDetector(HomematicipGenericDevice, BinarySensorDevice):
     """Representation of a HomematicIP Cloud smoke detector."""
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the class of this sensor."""
-        return 'smoke'
+        return DEVICE_CLASS_SMOKE
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if smoke is detected."""
-        from homematicip.base.enums import SmokeDetectorAlarmType
         return (self._device.smokeDetectorAlarmType
                 != SmokeDetectorAlarmType.IDLE_OFF)
 
@@ -124,12 +148,12 @@ class HomematicipWaterDetector(HomematicipGenericDevice, BinarySensorDevice):
     """Representation of a HomematicIP Cloud water detector."""
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the class of this sensor."""
-        return 'moisture'
+        return DEVICE_CLASS_MOISTURE
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true, if moisture or waterlevel is detected."""
         return self._device.moistureDetected or self._device.waterlevelDetected
 
@@ -137,17 +161,17 @@ class HomematicipWaterDetector(HomematicipGenericDevice, BinarySensorDevice):
 class HomematicipStormSensor(HomematicipGenericDevice, BinarySensorDevice):
     """Representation of a HomematicIP Cloud storm sensor."""
 
-    def __init__(self, home, device):
+    def __init__(self, home: AsyncHome, device) -> None:
         """Initialize storm sensor."""
         super().__init__(home, device, "Storm")
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon."""
         return 'mdi:weather-windy' if self.is_on else 'mdi:pinwheel-outline'
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true, if storm is detected."""
         return self._device.storm
 
@@ -155,17 +179,17 @@ class HomematicipStormSensor(HomematicipGenericDevice, BinarySensorDevice):
 class HomematicipRainSensor(HomematicipGenericDevice, BinarySensorDevice):
     """Representation of a HomematicIP Cloud rain sensor."""
 
-    def __init__(self, home, device):
+    def __init__(self, home: AsyncHome, device) -> None:
         """Initialize rain sensor."""
         super().__init__(home, device, "Raining")
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the class of this sensor."""
-        return 'moisture'
+        return DEVICE_CLASS_MOISTURE
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true, if it is raining."""
         return self._device.raining
 
@@ -173,17 +197,17 @@ class HomematicipRainSensor(HomematicipGenericDevice, BinarySensorDevice):
 class HomematicipSunshineSensor(HomematicipGenericDevice, BinarySensorDevice):
     """Representation of a HomematicIP Cloud sunshine sensor."""
 
-    def __init__(self, home, device):
+    def __init__(self, home: AsyncHome, device) -> None:
         """Initialize sunshine sensor."""
         super().__init__(home, device, 'Sunshine')
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the class of this sensor."""
-        return 'light'
+        return DEVICE_CLASS_LIGHT
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if sun is shining."""
         return self._device.sunshine
 
@@ -201,17 +225,17 @@ class HomematicipSunshineSensor(HomematicipGenericDevice, BinarySensorDevice):
 class HomematicipBatterySensor(HomematicipGenericDevice, BinarySensorDevice):
     """Representation of a HomematicIP Cloud low battery sensor."""
 
-    def __init__(self, home, device):
+    def __init__(self, home: AsyncHome, device) -> None:
         """Initialize battery sensor."""
         super().__init__(home, device, 'Battery')
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the class of this sensor."""
-        return 'battery'
+        return DEVICE_CLASS_BATTERY
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if battery is low."""
         return self._device.lowBat
 
@@ -220,18 +244,19 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice,
                                          BinarySensorDevice):
     """Representation of a HomematicIP Cloud security zone group."""
 
-    def __init__(self, home, device, post='SecurityZone'):
+    def __init__(self, home: AsyncHome, device,
+                 post: str = 'SecurityZone') -> None:
         """Initialize security zone group."""
         device.modelType = 'HmIP-{}'.format(post)
         super().__init__(home, device, post)
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the class of this sensor."""
-        return 'safety'
+        return DEVICE_CLASS_SAFETY
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Security-Group available."""
         # A security-group must be available, and should not be affected by
         # the individual availability of group members.
@@ -246,7 +271,7 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice,
             attr[ATTR_MOTIONDETECTED] = True
         if self._device.presenceDetected:
             attr[ATTR_PRESENCEDETECTED] = True
-        from homematicip.base.enums import WindowState
+
         if self._device.windowState is not None and \
                 self._device.windowState != WindowState.CLOSED:
             attr[ATTR_WINDOWSTATE] = str(self._device.windowState)
@@ -255,14 +280,14 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice,
         return attr
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if security issue detected."""
         if self._device.motionDetected or \
                 self._device.presenceDetected or \
                 self._device.unreach or \
                 self._device.sabotage:
             return True
-        from homematicip.base.enums import WindowState
+
         if self._device.windowState is not None and \
                 self._device.windowState != WindowState.CLOSED:
             return True
@@ -273,7 +298,7 @@ class HomematicipSecuritySensorGroup(HomematicipSecurityZoneSensorGroup,
                                      BinarySensorDevice):
     """Representation of a HomematicIP security group."""
 
-    def __init__(self, home, device):
+    def __init__(self, home: AsyncHome, device) -> None:
         """Initialize security group."""
         super().__init__(home, device, 'Sensors')
 
@@ -288,7 +313,8 @@ class HomematicipSecuritySensorGroup(HomematicipSecurityZoneSensorGroup,
             attr[ATTR_MOISTUREDETECTED] = True
         if self._device.waterlevelDetected:
             attr[ATTR_WATERLEVELDETECTED] = True
-        from homematicip.base.enums import SmokeDetectorAlarmType
+        if self._device.lowBat:
+            attr[ATTR_LOW_BATTERY] = True
         if self._device.smokeDetectorAlarmType is not None and \
                 self._device.smokeDetectorAlarmType != \
                 SmokeDetectorAlarmType.IDLE_OFF:
@@ -298,10 +324,9 @@ class HomematicipSecuritySensorGroup(HomematicipSecurityZoneSensorGroup,
         return attr
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if safety issue detected."""
         parent_is_on = super().is_on
-        from homematicip.base.enums import SmokeDetectorAlarmType
         if parent_is_on or \
                 self._device.powerMainsFailure or \
                 self._device.moistureDetected or \

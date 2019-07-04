@@ -8,7 +8,8 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import CONF_TIMEOUT
 from homeassistant.helpers import config_validation as cv
 
-from . import CameraData, NETATMO_AUTH
+from .const import DATA_NETATMO_AUTH
+from . import CameraData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,8 +60,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     module_name = None
 
     import pyatmo
+
+    auth = hass.data[DATA_NETATMO_AUTH]
+
     try:
-        data = CameraData(hass, NETATMO_AUTH, home)
+        data = CameraData(hass, auth, home)
         if not data.get_camera_names():
             return None
     except pyatmo.NoDevice:

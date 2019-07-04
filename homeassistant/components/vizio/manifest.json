@@ -3,8 +3,8 @@
   "name": "Vizio",
   "documentation": "https://www.home-assistant.io/components/vizio",
   "requirements": [
-    "pyvizio==0.0.4"
+    "pyvizio==0.0.7"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@raman325"]
 }

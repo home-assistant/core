@@ -1,4 +1,4 @@
-"""Support for Panasonic Blu-Ray players."""
+"""Support for Panasonic Blu-ray players."""
 from datetime import timedelta
 import logging
 
@@ -14,15 +14,15 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
-DEFAULT_NAME = "Panasonic Blu-Ray"
-SCAN_INTERVAL = timedelta(seconds=30)
-
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_NAME = "Panasonic Blu-Ray"
+
+SCAN_INTERVAL = timedelta(seconds=30)
 
 SUPPORT_PANASONIC_BD = (SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY |
                         SUPPORT_STOP | SUPPORT_PAUSE)
 
-# No host is needed for configuration, however it can be set.
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -30,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Panasonic Blu-Ray platform."""
+    """Set up the Panasonic Blu-ray platform."""
     conf = discovery_info if discovery_info else config
 
     # Register configured device with Home Assistant.
@@ -38,18 +38,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class PanasonicBluRay(MediaPlayerDevice):
-    """Represent Panasonic Blu-Ray devices for Home Assistant."""
+    """Representation of a Panasonic Blu-ray device."""
 
     def __init__(self, ip, name):
-        """Receive IP address and name to construct class."""
-        # Import panacotta library.
+        """Initialize the Panasonic Blue-ray device."""
         import panacotta
 
-        # Initialize the Panasonic device.
         self._device = panacotta.PanasonicBD(ip)
-        # Default name value, only to be overridden by user.
         self._name = name
-        # Assume we're off to start with
         self._state = STATE_OFF
         self._position = 0
         self._duration = 0

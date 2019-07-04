@@ -170,8 +170,8 @@ def get_attr_id_by_name(cluster, attr_name):
 
 async def get_matched_clusters(source_zha_device, target_zha_device):
     """Get matched input/output cluster pairs for 2 devices."""
-    source_clusters = source_zha_device.async_get_zha_clusters()
-    target_clusters = target_zha_device.async_get_zha_clusters()
+    source_clusters = source_zha_device.async_get_std_clusters()
+    target_clusters = target_zha_device.async_get_std_clusters()
     clusters_to_bind = []
 
     for endpoint_id in source_clusters:
@@ -193,8 +193,8 @@ async def get_matched_clusters(source_zha_device, target_zha_device):
 @callback
 def async_is_bindable_target(source_zha_device, target_zha_device):
     """Determine if target is bindable to source."""
-    source_clusters = source_zha_device.async_get_zha_clusters()
-    target_clusters = target_zha_device.async_get_zha_clusters()
+    source_clusters = source_zha_device.async_get_std_clusters()
+    target_clusters = target_zha_device.async_get_std_clusters()
 
     bindables = set(BINDABLE_CLUSTERS)
     for endpoint_id in source_clusters:

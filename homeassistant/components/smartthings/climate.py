@@ -3,6 +3,8 @@ import asyncio
 import logging
 from typing import Iterable, Optional, Sequence
 
+from pysmartthings import Attribute, Capability
+
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN, ClimateDevice)
 from homeassistant.components.climate.const import (
@@ -39,19 +41,19 @@ AC_MODE_TO_STATE = {
     'auto': STATE_AUTO,
     'cool': STATE_COOL,
     'dry': STATE_DRY,
+    'coolClean': STATE_COOL,
+    'dryClean': STATE_DRY,
     'heat': STATE_HEAT,
+    'heatClean': STATE_HEAT,
     'fanOnly': STATE_FAN_ONLY
 }
-STATE_TO_AC_MODE = {v: k for k, v in AC_MODE_TO_STATE.items()}
-
-SPEED_TO_FAN_MODE = {
-    0: 'auto',
-    1: 'low',
-    2: 'medium',
-    3: 'high',
-    4: 'turbo'
+STATE_TO_AC_MODE = {
+    STATE_AUTO: 'auto',
+    STATE_COOL: 'cool',
+    STATE_DRY: 'dry',
+    STATE_HEAT: 'heat',
+    STATE_FAN_ONLY: 'fanOnly'
 }
-FAN_MODE_TO_SPEED = {v: k for k, v in SPEED_TO_FAN_MODE.items()}
 
 UNIT_MAP = {
     'C': TEMP_CELSIUS,
@@ -69,11 +71,9 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add climate entities for a config entry."""
-    from pysmartthings import Capability
-
     ac_capabilities = [
         Capability.air_conditioner_mode,
-        Capability.fan_speed,
+        Capability.air_conditioner_fan_mode,
         Capability.switch,
         Capability.temperature_measurement,
         Capability.thermostat_cooling_setpoint]
@@ -93,12 +93,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
     """Return all capabilities supported if minimum required are present."""
-    from pysmartthings import Capability
-
     supported = [
         Capability.air_conditioner_mode,
         Capability.demand_response_load_control,
-        Capability.fan_speed,
+        Capability.air_conditioner_fan_mode,
         Capability.power_consumption_report,
         Capability.relative_humidity_measurement,
         Capability.switch,
@@ -124,7 +122,7 @@ def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
     # Or must have all of these A/C capabilities
     ac_capabilities = [
         Capability.air_conditioner_mode,
-        Capability.fan_speed,
+        Capability.air_conditioner_fan_mode,
         Capability.switch,
         Capability.temperature_measurement,
         Capability.thermostat_cooling_setpoint]
@@ -145,8 +143,6 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
         self._operations = None
 
     def _determine_features(self):
-        from pysmartthings import Capability
-
         flags = SUPPORT_OPERATION_MODE \
             | SUPPORT_TARGET_TEMPERATURE \
             | SUPPORT_TARGET_TEMPERATURE_LOW \
@@ -301,7 +297,6 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        from pysmartthings import Attribute
         return UNIT_MAP.get(
             self._device.status.attributes[Attribute.temperature].unit)
 
@@ -309,10 +304,14 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
 class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
     """Define a SmartThings Air Conditioner."""
 
+    def __init__(self, device):
+        """Init the class."""
+        super().__init__(device)
+        self._operations = None
+
     async def async_set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
-        await self._device.set_fan_speed(
-            FAN_MODE_TO_SPEED[fan_mode], set_status=True)
+        await self._device.set_fan_mode(fan_mode, set_status=True)
         # State is set optimistically in the command above, therefore update
         # the entity state ahead of receiving the confirming push updates
         self.async_schedule_update_ha_state()
@@ -354,10 +353,23 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
         # the entity state ahead of receiving the confirming push updates
         self.async_schedule_update_ha_state()
 
+    async def async_update(self):
+        """Update the calculated fields of the AC."""
+        operations = set()
+        for mode in self._device.status.supported_ac_modes:
+            state = AC_MODE_TO_STATE.get(mode)
+            if state is not None:
+                operations.add(state)
+            else:
+                _LOGGER.debug('Device %s (%s) returned an invalid supported '
+                              'AC mode: %s', self._device.label,
+                              self._device.device_id, mode)
+        self._operations = operations
+
     @property
     def current_fan_mode(self):
         """Return the fan setting."""
-        return SPEED_TO_FAN_MODE.get(self._device.status.fan_speed)
+        return self._device.status.fan_mode
 
     @property
     def current_operation(self):
@@ -397,7 +409,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
     @property
     def fan_list(self):
         """Return the list of available fan modes."""
-        return list(FAN_MODE_TO_SPEED)
+        return self._device.status.supported_ac_fan_modes
 
     @property
     def is_on(self):
@@ -407,7 +419,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        return list(STATE_TO_AC_MODE)
+        return self._operations
 
     @property
     def supported_features(self):
@@ -423,6 +435,5 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        from pysmartthings import Attribute
         return UNIT_MAP.get(
             self._device.status.attributes[Attribute.temperature].unit)

@@ -55,13 +55,13 @@ class MikrotikScanner(DeviceScanner):
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
         self.method = config.get(CONF_METHOD)
+        self.encoding = config[CONF_ENCODING]
 
         self.connected = False
         self.success_init = False
         self.client = None
         self.wireless_exist = None
         self.success_init = self.connect_to_device()
-        self.encoding = config[CONF_ENCODING]
 
         if self.success_init:
             _LOGGER.info("Start polling Mikrotik (%s) router...", self.host)

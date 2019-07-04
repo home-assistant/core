@@ -10,7 +10,6 @@ from homeassistant.const import (CONF_API_KEY,
                                  CONF_NAME, ATTR_ATTRIBUTION)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'http://www.zillow.com/webservice/GetZestimate.htm'
@@ -39,18 +38,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
+SCAN_INTERVAL = timedelta(minutes=30)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Zestimate sensor."""
     name = config.get(CONF_NAME)
     properties = config[CONF_ZPID]
-    params = {'zws-id': config[CONF_API_KEY]}
 
     sensors = []
     for zpid in properties:
+        params = {'zws-id': config[CONF_API_KEY]}
         params['zpid'] = zpid
         sensors.append(ZestimateDataSensor(name, params))
     add_entities(sensors, True)
@@ -68,9 +66,14 @@ class ZestimateDataSensor(Entity):
         self._state = None
 
     @property
+    def unique_id(self):
+        """Return the ZPID."""
+        return self.params['zpid']
+
+    @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        return '{} {}'.format(self._name, self.address)
 
     @property
     def state(self):
@@ -95,7 +98,6 @@ class ZestimateDataSensor(Entity):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data and update the states."""
         import xmltodict
@@ -113,12 +115,16 @@ class ZestimateDataSensor(Entity):
             return
         data = data_dict['response'][NAME]
         details = {}
-        details[ATTR_AMOUNT] = data['amount']['#text']
-        details[ATTR_CURRENCY] = data['amount']['@currency']
-        details[ATTR_LAST_UPDATED] = data['last-updated']
-        details[ATTR_CHANGE] = int(data['valueChange']['#text'])
-        details[ATTR_VAL_HI] = int(data['valuationRange']['high']['#text'])
-        details[ATTR_VAL_LOW] = int(data['valuationRange']['low']['#text'])
+        if 'amount' in data and data['amount'] is not None:
+            details[ATTR_AMOUNT] = data['amount']['#text']
+            details[ATTR_CURRENCY] = data['amount']['@currency']
+        if 'last-updated' in data and data['last-updated'] is not None:
+            details[ATTR_LAST_UPDATED] = data['last-updated']
+        if 'valueChange' in data and data['valueChange'] is not None:
+            details[ATTR_CHANGE] = int(data['valueChange']['#text'])
+        if 'valuationRange' in data and data['valuationRange'] is not None:
+            details[ATTR_VAL_HI] = int(data['valuationRange']['high']['#text'])
+            details[ATTR_VAL_LOW] = int(data['valuationRange']['low']['#text'])
         self.address = data_dict['response']['address']['street']
         self.data = details
         if self.data is not None:

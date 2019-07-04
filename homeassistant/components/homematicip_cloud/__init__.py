@@ -4,9 +4,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import configured_haps
 from .const import (
@@ -26,7 +29,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HomematicIP Cloud component."""
     hass.data[DOMAIN] = {}
 
@@ -46,7 +49,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an access point from a config entry."""
     hap = HomematicipHAP(hass, entry)
     hapid = entry.data[HMIPC_HAPID].replace('-', '').upper()

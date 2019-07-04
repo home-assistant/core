@@ -4,7 +4,7 @@ import asyncio
 import pytest
 
 from homeassistant.setup import async_setup_component
-
+from homeassistant.components import owntracks
 from tests.common import mock_component, MockConfigEntry
 
 MINIMAL_LOCATION_MESSAGE = {
@@ -162,13 +162,22 @@ def test_returns_error_missing_device(mock_client):
     assert json == []
 
 
-async def test_config_flow_import(hass):
-    """Test that we automatically create a config flow."""
-    assert not hass.config_entries.async_entries('owntracks')
-    assert await async_setup_component(hass, 'owntracks', {
-        'owntracks': {
+def test_context_delivers_pending_msg():
+    """Test that context is able to hold pending messages while being init."""
+    context = owntracks.OwnTracksContext(
+        None, None, None, None, None, None, None, None
+    )
+    context.async_see(hello='world')
+    context.async_see(world='hello')
+    received = []
 
-        }
-    })
-    await hass.async_block_till_done()
-    assert hass.config_entries.async_entries('owntracks')
+    context.set_async_see(lambda **data: received.append(data))
+
+    assert len(received) == 2
+    assert received[0] == {'hello': 'world'}
+    assert received[1] == {'world': 'hello'}
+
+    received.clear()
+
+    context.set_async_see(lambda **data: received.append(data))
+    assert len(received) == 0

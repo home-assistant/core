@@ -139,7 +139,7 @@ async def async_test_pressure(hass, device_info):
 async def async_test_illuminance(hass, device_info):
     """Test illuminance sensor."""
     await send_attribute_report(hass, device_info["cluster"], 0, 10)
-    assert_state(hass, device_info, '10', 'lx')
+    assert_state(hass, device_info, '1.0', 'lx')
 
 
 async def async_test_metering(hass, device_info):

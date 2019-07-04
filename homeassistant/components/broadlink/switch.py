@@ -1,5 +1,4 @@
 """Support for Broadlink RM devices."""
-from base64 import b64decode
 import binascii
 from datetime import timedelta
 import logging
@@ -11,11 +10,12 @@ from homeassistant.components.switch import (
     ENTITY_ID_FORMAT, PLATFORM_SCHEMA, SwitchDevice)
 from homeassistant.const import (
     CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_FRIENDLY_NAME, CONF_HOST, CONF_MAC,
-    CONF_SWITCHES, CONF_TIMEOUT, CONF_TYPE)
+    CONF_SWITCHES, CONF_TIMEOUT, CONF_TYPE, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle, slugify
+from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import async_setup_service
+from . import async_setup_service, data_packet
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,8 +35,8 @@ MP1_TYPES = ['mp1']
 SWITCH_TYPES = RM_TYPES + SP1_TYPES + SP2_TYPES + MP1_TYPES
 
 SWITCH_SCHEMA = vol.Schema({
-    vol.Optional(CONF_COMMAND_OFF): cv.string,
-    vol.Optional(CONF_COMMAND_ON): cv.string,
+    vol.Optional(CONF_COMMAND_OFF): data_packet,
+    vol.Optional(CONF_COMMAND_ON): data_packet,
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
 })
 
@@ -110,13 +110,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     broadlink_device.timeout = config.get(CONF_TIMEOUT)
     try:
         broadlink_device.auth()
-    except socket.timeout:
+    except OSError:
         _LOGGER.error("Failed to connect to device")
 
     add_entities(switches)
 
 
-class BroadlinkRMSwitch(SwitchDevice):
+class BroadlinkRMSwitch(SwitchDevice, RestoreEntity):
     """Representation of an Broadlink switch."""
 
     def __init__(self, name, friendly_name, device, command_on, command_off):
@@ -124,9 +124,17 @@ class BroadlinkRMSwitch(SwitchDevice):
         self.entity_id = ENTITY_ID_FORMAT.format(slugify(name))
         self._name = friendly_name
         self._state = False
-        self._command_on = b64decode(command_on) if command_on else None
-        self._command_off = b64decode(command_off) if command_off else None
+        self._command_on = command_on
+        self._command_off = command_off
         self._device = device
+        self._is_available = False
+
+    async def async_added_to_hass(self):
+        """Call when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        state = await self.async_get_last_state()
+        if state:
+            self._state = state.state == STATE_ON
 
     @property
     def name(self):
@@ -137,6 +145,11 @@ class BroadlinkRMSwitch(SwitchDevice):
     def assumed_state(self):
         """Return true if unable to access real state of entity."""
         return True
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return not self.should_poll or self._is_available
 
     @property
     def should_poll(self):
@@ -167,7 +180,7 @@ class BroadlinkRMSwitch(SwitchDevice):
             return True
         try:
             self._device.send_data(packet)
-        except (socket.timeout, ValueError) as error:
+        except (ValueError, OSError) as error:
             if retry < 1:
                 _LOGGER.error("Error during sending a packet: %s", error)
                 return False
@@ -179,7 +192,7 @@ class BroadlinkRMSwitch(SwitchDevice):
     def _auth(self, retry=2):
         try:
             auth = self._device.auth()
-        except socket.timeout:
+        except OSError:
             auth = False
             if retry < 1:
                 _LOGGER.error("Timeout during authorization")
@@ -245,6 +258,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
         except (socket.timeout, ValueError) as error:
             if retry < 1:
                 _LOGGER.error("Error during updating the state: %s", error)
+                self._is_available = False
                 return
             if not self._auth():
                 return
@@ -253,6 +267,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
             return self._update(retry-1)
         self._state = state
         self._load_power = load_power
+        self._is_available = True
 
 
 class BroadlinkMP1Slot(BroadlinkRMSwitch):
@@ -278,10 +293,12 @@ class BroadlinkMP1Slot(BroadlinkRMSwitch):
         except (socket.timeout, ValueError) as error:
             if retry < 1:
                 _LOGGER.error("Error during sending a packet: %s", error)
+                self._is_available = False
                 return False
             if not self._auth():
                 return False
             return self._sendpacket(packet, max(0, retry-1))
+        self._is_available = True
         return True
 
     @property
@@ -305,6 +322,8 @@ class BroadlinkMP1Switch:
 
     def get_outlet_status(self, slot):
         """Get status of outlet from cached status list."""
+        if self._states is None:
+            return None
         return self._states['s{}'.format(slot)]
 
     @Throttle(TIME_BETWEEN_UPDATES)
@@ -331,7 +350,7 @@ class BroadlinkMP1Switch:
         """Authenticate the device."""
         try:
             auth = self._device.auth()
-        except socket.timeout:
+        except OSError:
             auth = False
         if not auth and retry > 0:
             return self._auth(retry-1)

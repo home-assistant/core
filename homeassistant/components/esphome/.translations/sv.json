@@ -8,6 +8,7 @@
             "invalid_password": "Ogiltigt l\u00f6senord!",
             "resolve_error": "Det g\u00e5r inte att hitta IP-adressen f\u00f6r ESP med DNS-namnet. Om det h\u00e4r felet kvarst\u00e5r anger du en statisk IP-adress: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
+        "flow_title": "ESPHome: {name}",
         "step": {
             "authenticate": {
                 "data": {

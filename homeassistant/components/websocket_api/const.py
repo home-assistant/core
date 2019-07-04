@@ -1,6 +1,9 @@
 """Websocket constants."""
 import asyncio
 from concurrent import futures
+from functools import partial
+import json
+from homeassistant.helpers.json import JSONEncoder
 
 DOMAIN = 'websocket_api'
 URL = '/api/websocket'
@@ -13,6 +16,7 @@ ERR_HOME_ASSISTANT_ERROR = 'home_assistant_error'
 ERR_UNKNOWN_COMMAND = 'unknown_command'
 ERR_UNKNOWN_ERROR = 'unknown_error'
 ERR_UNAUTHORIZED = 'unauthorized'
+ERR_TIMEOUT = 'timeout'
 
 TYPE_RESULT = 'result'
 
@@ -24,3 +28,8 @@ CANCELLATION_ERRORS = (asyncio.CancelledError, futures.CancelledError)
 # Event types
 SIGNAL_WEBSOCKET_CONNECTED = 'websocket_connected'
 SIGNAL_WEBSOCKET_DISCONNECTED = 'websocket_disconnected'
+
+# Data used to store the current connection list
+DATA_CONNECTIONS = DOMAIN + '.connections'
+
+JSON_DUMP = partial(json.dumps, cls=JSONEncoder, allow_nan=False)

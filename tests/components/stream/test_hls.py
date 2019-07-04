@@ -2,6 +2,8 @@
 from datetime import timedelta
 from urllib.parse import urlparse
 
+import pytest
+
 from homeassistant.setup import async_setup_component
 from homeassistant.components.stream import request_stream
 import homeassistant.util.dt as dt_util
@@ -11,6 +13,7 @@ from tests.components.stream.common import (
     generate_h264_video, preload_stream)
 
 
+@pytest.mark.skip("Flaky in CI")
 async def test_hls_stream(hass, hass_client):
     """
     Test hls stream.
@@ -52,6 +55,7 @@ async def test_hls_stream(hass, hass_client):
     assert fail_response.status == 404
 
 
+@pytest.mark.skip("Flaky in CI")
 async def test_stream_timeout(hass, hass_client):
     """Test hls stream timeout."""
     await async_setup_component(hass, 'stream', {
@@ -90,6 +94,7 @@ async def test_stream_timeout(hass, hass_client):
     assert fail_response.status == 404
 
 
+@pytest.mark.skip("Flaky in CI")
 async def test_stream_ended(hass):
     """Test hls stream packets ended."""
     await async_setup_component(hass, 'stream', {

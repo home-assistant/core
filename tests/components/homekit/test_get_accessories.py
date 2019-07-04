@@ -59,10 +59,6 @@ def test_customize_options(config, name):
     ('Fan', 'fan.test', 'on', {}, {}),
     ('Light', 'light.test', 'on', {}, {}),
     ('Lock', 'lock.test', 'locked', {}, {ATTR_CODE: '1234'}),
-    ('MediaPlayer', 'media_player.test', 'on',
-     {ATTR_SUPPORTED_FEATURES: media_player_c.SUPPORT_TURN_ON |
-      media_player_c.SUPPORT_TURN_OFF}, {CONF_FEATURE_LIST:
-                                         {FEATURE_ON_OFF: None}}),
     ('SecuritySystem', 'alarm_control_panel.test', 'armed_away', {},
      {ATTR_CODE: '1234'}),
     ('Thermostat', 'climate.test', 'auto', {}, {}),
@@ -101,10 +97,31 @@ def test_type_covers(type_name, entity_id, state, attrs):
     assert mock_type.called
 
 
+@pytest.mark.parametrize('type_name, entity_id, state, attrs, config', [
+    ('MediaPlayer', 'media_player.test', 'on',
+     {ATTR_SUPPORTED_FEATURES: media_player_c.SUPPORT_TURN_ON |
+      media_player_c.SUPPORT_TURN_OFF}, {CONF_FEATURE_LIST:
+                                         {FEATURE_ON_OFF: None}}),
+    ('TelevisionMediaPlayer', 'media_player.tv', 'on',
+     {ATTR_DEVICE_CLASS: 'tv'}, {}),
+])
+def test_type_media_player(type_name, entity_id, state, attrs, config):
+    """Test if media_player types are associated correctly."""
+    mock_type = Mock()
+    with patch.dict(TYPES, {type_name: mock_type}):
+        entity_state = State(entity_id, state, attrs)
+        get_accessory(None, None, entity_state, 2, config)
+    assert mock_type.called
+
+    if config:
+        assert mock_type.call_args[0][-1] == config
+
+
 @pytest.mark.parametrize('type_name, entity_id, state, attrs', [
     ('BinarySensor', 'binary_sensor.opening', 'on',
      {ATTR_DEVICE_CLASS: 'opening'}),
     ('BinarySensor', 'device_tracker.someone', 'not_home', {}),
+    ('BinarySensor', 'person.someone', 'home', {}),
     ('AirQualitySensor', 'sensor.air_quality_pm25', '40', {}),
     ('AirQualitySensor', 'sensor.air_quality', '40',
      {ATTR_DEVICE_CLASS: 'pm25'}),

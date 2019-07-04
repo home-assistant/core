@@ -220,9 +220,9 @@ class FibaroController():
                 room_name = self._room_map[device.roomID].name
             device.room_name = room_name
             device.friendly_name = '{} {}'.format(room_name, device.name)
-            device.ha_id = '{}_{}_{}'.format(
+            device.ha_id = 'scene_{}_{}_{}'.format(
                 slugify(room_name), slugify(device.name), device.id)
-            device.unique_id_str = "{}.{}".format(
+            device.unique_id_str = "{}.scene.{}".format(
                 self.hub_serial, device.id)
             self._scene_map[device.id] = device
             self.fibaro_devices['scene'].append(device)

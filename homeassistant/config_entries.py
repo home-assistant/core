@@ -1,129 +1,9 @@
-"""The Config Manager is responsible for managing configuration for components.
-
-The Config Manager allows for creating config entries to be consumed by
-components. Each entry is created via a Config Flow Handler, as defined by each
-component.
-
-During startup, Home Assistant will setup the entries during the normal setup
-of a component. It will first call the normal setup and then call the method
-`async_setup_entry(hass, entry)` for each entry. The same method is called when
-Home Assistant is running while a config entry is created.  If the version of
-the config entry does not match that of the flow handler, setup will
-call the method `async_migrate_entry(hass, entry)` with the expectation that
-the entry be brought to the current version.  Return `True` to indicate
-migration was successful, otherwise `False`.
-
-## Config Flows
-
-A component needs to define a Config Handler to allow the user to create config
-entries for that component. A config flow will manage the creation of entries
-from user input, discovery or other sources (like hassio).
-
-When a config flow is started for a domain, the handler will be instantiated
-and receives a unique id. The instance of this handler will be reused for every
-interaction of the user with this flow. This makes it possible to store
-instance variables on the handler.
-
-Before instantiating the handler, Home Assistant will make sure to load all
-dependencies and install the requirements of the component.
-
-At a minimum, each config flow will have to define a version number and the
-'user' step.
-
-    @config_entries.HANDLERS.register(DOMAIN)
-    class ExampleConfigFlow(config_entries.ConfigFlow):
-
-        VERSION = 1
-        CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
-
-        async def async_step_user(self, user_input=None):
-            …
-
-The 'user' step is the first step of a flow and is called when a user
-starts a new flow. Each step has three different possible results: "Show Form",
-"Abort" and "Create Entry".
-
-> Note: prior 0.76, the default step is 'init' step, some config flows still
-keep 'init' step to avoid break localization. All new config flow should use
-'user' step.
-
-### Show Form
-
-This will show a form to the user to fill in. You define the current step,
-a title, a description and the schema of the data that needs to be returned.
-
-    async def async_step_init(self, user_input=None):
-        # Use OrderedDict to guarantee order of the form shown to the user
-        data_schema = OrderedDict()
-        data_schema[vol.Required('username')] = str
-        data_schema[vol.Required('password')] = str
-
-        return self.async_show_form(
-            step_id='user',
-            title='Account Info',
-            data_schema=vol.Schema(data_schema)
-        )
-
-After the user has filled in the form, the step method will be called again and
-the user input is passed in. If the validation of the user input fails , you
-can return a dictionary with errors. Each key in the dictionary refers to a
-field name that contains the error. Use the key 'base' if you want to show a
-generic error.
-
-    async def async_step_init(self, user_input=None):
-        errors = None
-        if user_input is not None:
-            # Validate user input
-            if valid:
-                return self.create_entry(…)
-
-            errors['base'] = 'Unable to reach authentication server.'
-
-        return self.async_show_form(…)
-
-If the user input passes validation, you can again return one of the three
-return values. If you want to navigate the user to the next step, return the
-return value of that step:
-
-    return await self.async_step_account()
-
-### Abort
-
-When the result is "Abort", a message will be shown to the user and the
-configuration flow is finished.
-
-    return self.async_abort(
-        reason='This device is not supported by Home Assistant.'
-    )
-
-### Create Entry
-
-When the result is "Create Entry", an entry will be created and stored in Home
-Assistant, a success message is shown to the user and the flow is finished.
-
-## Initializing a config flow from an external source
-
-You might want to initialize a config flow programmatically. For example, if
-we discover a device on the network that requires user interaction to finish
-setup. To do so, pass a source parameter and optional user input to the init
-method:
-
-    await hass.config_entries.flow.async_init(
-        'hue', context={'source': 'discovery'}, data=discovery_info)
-
-The config flow handler will need to add a step to support the source. The step
-should follow the same return values as a normal step.
-
-    async def async_step_discovery(info):
-
-If the result of the step is to show a form, the user will be able to continue
-the flow from the config panel.
-"""
+"""Manage config entries in Home Assistant."""
 import asyncio
 import logging
 import functools
 import uuid
-from typing import Callable, Dict, List, Optional, Set  # noqa pylint: disable=unused-import
+from typing import Callable, List, Optional, Set  # noqa pylint: disable=unused-import
 import weakref
 
 from homeassistant import data_entry_flow, loader
@@ -140,54 +20,6 @@ SOURCE_DISCOVERY = 'discovery'
 SOURCE_IMPORT = 'import'
 
 HANDLERS = Registry()
-# Components that have config flows. In future we will auto-generate this list.
-FLOWS = [
-    'ambient_station',
-    'axis',
-    'cast',
-    'daikin',
-    'deconz',
-    'dialogflow',
-    'esphome',
-    'emulated_roku',
-    'geofency',
-    'gpslogger',
-    'hangouts',
-    'heos',
-    'homematicip_cloud',
-    'hue',
-    'ifttt',
-    'ios',
-    'ipma',
-    'lifx',
-    'locative',
-    'logi_circle',
-    'luftdaten',
-    'mailgun',
-    'mobile_app',
-    'mqtt',
-    'nest',
-    'openuv',
-    'owntracks',
-    'point',
-    'ps4',
-    'rainmachine',
-    'simplisafe',
-    'smartthings',
-    'smhi',
-    'sonos',
-    'tellduslive',
-    'toon',
-    'tplink',
-    'tradfri',
-    'twilio',
-    'unifi',
-    'upnp',
-    'zha',
-    'zone',
-    'zwave',
-]
-
 
 STORAGE_KEY = 'core.config_entries'
 STORAGE_VERSION = 1
@@ -217,6 +49,8 @@ UNRECOVERABLE_STATES = (
 
 DISCOVERY_NOTIFICATION_ID = 'config_entry_discovery'
 DISCOVERY_SOURCES = (
+    'ssdp',
+    'zeroconf',
     SOURCE_DISCOVERY,
     SOURCE_IMPORT,
 )
@@ -290,23 +124,37 @@ class ConfigEntry:
         self._async_cancel_retry_setup = None
 
     async def async_setup(
-            self, hass: HomeAssistant, *, component=None, tries=0) -> None:
+            self, hass: HomeAssistant, *,
+            integration: Optional[loader.Integration] = None, tries=0) -> None:
         """Set up an entry."""
-        if component is None:
-            component = getattr(hass.components, self.domain)
+        if integration is None:
+            integration = await loader.async_get_integration(hass, self.domain)
+
+        try:
+            component = integration.get_component()
+            if self.domain == integration.domain:
+                integration.get_platform('config_flow')
+        except ImportError as err:
+            _LOGGER.error(
+                'Error importing integration %s to set up %s config entry: %s',
+                integration.domain, self.domain, err)
+            if self.domain == integration.domain:
+                self.state = ENTRY_STATE_SETUP_ERROR
+            return
 
         # Perform migration
-        if component.DOMAIN == self.domain:
+        if integration.domain == self.domain:
             if not await self.async_migrate(hass):
                 self.state = ENTRY_STATE_MIGRATION_ERROR
                 return
 
         try:
-            result = await component.async_setup_entry(hass, self)
+            result = await component.async_setup_entry(  # type: ignore
+                hass, self)
 
             if not isinstance(result, bool):
                 _LOGGER.error('%s.async_setup_entry did not return boolean',
-                              component.DOMAIN)
+                              integration.domain)
                 result = False
         except ConfigEntryNotReady:
             self.state = ENTRY_STATE_SETUP_RETRY
@@ -319,18 +167,19 @@ class ConfigEntry:
             async def setup_again(now):
                 """Run setup again."""
                 self._async_cancel_retry_setup = None
-                await self.async_setup(hass, component=component, tries=tries)
+                await self.async_setup(
+                    hass, integration=integration, tries=tries)
 
             self._async_cancel_retry_setup = \
                 hass.helpers.event.async_call_later(wait_time, setup_again)
             return
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error setting up entry %s for %s',
-                              self.title, component.DOMAIN)
+                              self.title, integration.domain)
             result = False
 
         # Only store setup result as state if it was not forwarded.
-        if self.domain != component.DOMAIN:
+        if self.domain != integration.domain:
             return
 
         if result:
@@ -338,15 +187,17 @@ class ConfigEntry:
         else:
             self.state = ENTRY_STATE_SETUP_ERROR
 
-    async def async_unload(self, hass, *, component=None) -> bool:
+    async def async_unload(self, hass, *, integration=None) -> bool:
         """Unload an entry.
 
         Returns if unload is possible and was successful.
         """
-        if component is None:
-            component = getattr(hass.components, self.domain)
+        if integration is None:
+            integration = await loader.async_get_integration(hass, self.domain)
 
-        if component.DOMAIN == self.domain:
+        component = integration.get_component()
+
+        if integration.domain == self.domain:
             if self.state in UNRECOVERABLE_STATES:
                 return False
 
@@ -361,7 +212,7 @@ class ConfigEntry:
         supports_unload = hasattr(component, 'async_unload_entry')
 
         if not supports_unload:
-            if component.DOMAIN == self.domain:
+            if integration.domain == self.domain:
                 self.state = ENTRY_STATE_FAILED_UNLOAD
             return False
 
@@ -371,27 +222,29 @@ class ConfigEntry:
             assert isinstance(result, bool)
 
             # Only adjust state if we unloaded the component
-            if result and component.DOMAIN == self.domain:
+            if result and integration.domain == self.domain:
                 self.state = ENTRY_STATE_NOT_LOADED
 
             return result
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error unloading entry %s for %s',
-                              self.title, component.DOMAIN)
-            if component.DOMAIN == self.domain:
+                              self.title, integration.domain)
+            if integration.domain == self.domain:
                 self.state = ENTRY_STATE_FAILED_UNLOAD
             return False
 
     async def async_remove(self, hass: HomeAssistant) -> None:
         """Invoke remove callback on component."""
-        component = getattr(hass.components, self.domain)
+        integration = await loader.async_get_integration(hass, self.domain)
+        component = integration.get_component()
         if not hasattr(component, 'async_remove_entry'):
             return
         try:
-            await component.async_remove_entry(hass, self)
+            await component.async_remove_entry(  # type: ignore
+                hass, self)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error calling entry remove callback %s for %s',
-                              self.title, component.DOMAIN)
+                              self.title, integration.domain)
 
     async def async_migrate(self, hass: HomeAssistant) -> bool:
         """Migrate an entry.
@@ -404,13 +257,15 @@ class ConfigEntry:
                           self.title, self.domain)
             return False
         # Handler may be a partial
-        while isinstance(handler, functools.partial):
+        # type ignore: https://github.com/python/typeshed/pull/3077
+        while isinstance(handler, functools.partial):  # type: ignore
             handler = handler.func
 
         if self.version == handler.VERSION:
             return True
 
-        component = getattr(hass.components, self.domain)
+        integration = await loader.async_get_integration(hass, self.domain)
+        component = integration.get_component()
         supports_migrate = hasattr(component, 'async_migrate_entry')
         if not supports_migrate:
             _LOGGER.error("Migration handler not found for entry %s for %s",
@@ -418,7 +273,9 @@ class ConfigEntry:
             return False
 
         try:
-            result = await component.async_migrate_entry(hass, self)
+            result = await component.async_migrate_entry(  # type: ignore
+                hass, self
+            )
             if not isinstance(result, bool):
                 _LOGGER.error('%s.async_migrate_entry did not return boolean',
                               self.domain)
@@ -429,7 +286,7 @@ class ConfigEntry:
             return result
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error migrating entry %s for %s',
-                              self.title, component.DOMAIN)
+                              self.title, self.domain)
             return False
 
     def add_update_listener(self, listener: Callable) -> Callable:
@@ -624,7 +481,7 @@ class ConfigEntries:
 
         self._async_schedule_save()
 
-    async def async_forward_entry_setup(self, entry, component):
+    async def async_forward_entry_setup(self, entry, domain):
         """Forward the setup of an entry to a different component.
 
         By default an entry is setup with the component it belongs to. If that
@@ -635,24 +492,26 @@ class ConfigEntries:
         setup of a component, because it can cause a deadlock.
         """
         # Setup Component if not set up yet
-        if component not in self.hass.config.components:
+        if domain not in self.hass.config.components:
             result = await async_setup_component(
-                self.hass, component, self._hass_config)
+                self.hass, domain, self._hass_config)
 
             if not result:
                 return False
 
-        await entry.async_setup(
-            self.hass, component=getattr(self.hass.components, component))
+        integration = await loader.async_get_integration(self.hass, domain)
 
-    async def async_forward_entry_unload(self, entry, component):
+        await entry.async_setup(self.hass, integration=integration)
+
+    async def async_forward_entry_unload(self, entry, domain):
         """Forward the unloading of an entry to a different component."""
         # It was never loaded.
-        if component not in self.hass.config.components:
+        if domain not in self.hass.config.components:
             return True
 
-        return await entry.async_unload(
-            self.hass, component=getattr(self.hass.components, component))
+        integration = await loader.async_get_integration(self.hass, domain)
+
+        return await entry.async_unload(self.hass, integration=integration)
 
     async def _async_finish_flow(self, flow, result):
         """Finish a config flow and add an entry."""
@@ -688,10 +547,31 @@ class ConfigEntries:
 
         Handler key is the domain of the component that we want to set up.
         """
-        integration = await loader.async_get_integration(
-            self.hass, handler_key)
+        try:
+            integration = await loader.async_get_integration(
+                self.hass, handler_key)
+        except loader.IntegrationNotFound:
+            _LOGGER.error('Cannot find integration %s', handler_key)
+            raise data_entry_flow.UnknownHandler
 
-        if integration is None:
+        # Our config flow list is based on built-in integrations. If overriden,
+        # we should not load it's config flow.
+        if not integration.is_built_in:
+            _LOGGER.error(
+                'Config flow is not supported for custom integration %s',
+                handler_key)
+            raise data_entry_flow.UnknownHandler
+
+        # Make sure requirements and dependencies of component are resolved
+        await async_process_deps_reqs(
+            self.hass, self._hass_config, integration)
+
+        try:
+            integration.get_platform('config_flow')
+        except ImportError as err:
+            _LOGGER.error(
+                'Error occurred loading config flow for integration %s: %s',
+                handler_key, err)
             raise data_entry_flow.UnknownHandler
 
         handler = HANDLERS.get(handler_key)
@@ -700,10 +580,6 @@ class ConfigEntries:
             raise data_entry_flow.UnknownHandler
 
         source = context['source']
-
-        # Make sure requirements and dependencies of component are resolved
-        await async_process_deps_reqs(
-            self.hass, self._hass_config, integration)
 
         # Create notification.
         if source in DISCOVERY_SOURCES:

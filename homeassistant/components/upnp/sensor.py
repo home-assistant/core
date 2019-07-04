@@ -3,7 +3,6 @@ from datetime import datetime
 import logging
 
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
@@ -107,9 +106,6 @@ class UpnpSensor(Entity):
         return {
             'identifiers': {
                 (DOMAIN_UPNP, self.unique_id)
-            },
-            'connections': {
-                (dr.CONNECTION_UPNP, self._device.udn)
             },
             'name': self.name,
             'manufacturer': self._device.manufacturer,

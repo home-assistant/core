@@ -14,32 +14,33 @@ import traceback
 
 from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import (
+    async_get_registry as get_dev_reg)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_component import EntityComponent
 
 from ..api import async_get_device_info
-from .channels import MAINS_POWERED, ZDOChannel
 from .const import (
     ADD_DEVICE_RELAY_LOGGERS, ATTR_MANUFACTURER, BELLOWS, CONF_BAUDRATE,
     CONF_DATABASE, CONF_RADIO_TYPE, CONF_USB_PATH, CONTROLLER, CURRENT,
-    DATA_ZHA, DATA_ZHA_BRIDGE_ID, DATA_ZHA_CORE_COMPONENT, DATA_ZHA_GATEWAY,
-    DEBUG_LEVELS, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME, DEVICE_FULL_INIT,
+    DATA_ZHA, DATA_ZHA_BRIDGE_ID, DATA_ZHA_GATEWAY, DEBUG_LEVELS,
+    DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME, DEVICE_FULL_INIT,
     DEVICE_INFO, DEVICE_JOINED, DEVICE_REMOVED, DOMAIN, IEEE, LOG_ENTRY,
     LOG_OUTPUT, MODEL, NWK, ORIGINAL, RADIO, RADIO_DESCRIPTION, RAW_INIT,
-    SIGNAL_REMOVE, SIGNATURE, TYPE, ZHA, ZHA_GW_MSG, ZIGPY, ZIGPY_DECONZ,
-    ZIGPY_XBEE)
+    SIGNAL_REMOVE, SIGNATURE, TYPE, UNKNOWN_MANUFACTURER, UNKNOWN_MODEL, ZHA,
+    ZHA_GW_MSG, ZIGPY, ZIGPY_DECONZ, ZIGPY_XBEE)
 from .device import DeviceStatus, ZHADevice
 from .discovery import (
-    async_create_device_entity, async_dispatch_discovery_info,
-    async_process_endpoint)
+    async_dispatch_discovery_info, async_process_endpoint
+)
 from .patches import apply_application_controller_patch
-from .registries import RADIO_TYPES
+from .registries import INPUT_BIND_ONLY_CLUSTERS, RADIO_TYPES
 from .store import async_get_registry
 
 _LOGGER = logging.getLogger(__name__)
 
 EntityReference = collections.namedtuple(
-    'EntityReference', 'reference_id zha_device cluster_channels device_info')
+    'EntityReference',
+    'reference_id zha_device cluster_channels device_info remove_future')
 
 
 class ZHAGateway:
@@ -49,13 +50,11 @@ class ZHAGateway:
         """Initialize the gateway."""
         self._hass = hass
         self._config = config
-        self._component = EntityComponent(_LOGGER, DOMAIN, hass)
         self._devices = {}
         self._device_registry = collections.defaultdict(list)
         self.zha_storage = None
         self.application_controller = None
         self.radio_description = None
-        hass.data[DATA_ZHA][DATA_ZHA_CORE_COMPONENT] = self._component
         hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
         self._log_levels = {
             ORIGINAL: async_capture_log_levels(),
@@ -93,6 +92,8 @@ class ZHAGateway:
 
         init_tasks = []
         for device in self.application_controller.devices.values():
+            if device.nwk == 0x0000:
+                continue
             init_tasks.append(self.async_device_initialized(device, False))
         await asyncio.gather(*init_tasks)
 
@@ -114,13 +115,10 @@ class ZHAGateway:
 
     def raw_device_initialized(self, device):
         """Handle a device initialization without quirks loaded."""
-        endpoint_ids = device.endpoints.keys()
-        ept_id = next((ept_id for ept_id in endpoint_ids if ept_id != 0), None)
-        manufacturer = 'Unknown'
-        model = 'Unknown'
-        if ept_id is not None:
-            manufacturer = device.endpoints[ept_id].manufacturer
-            model = device.endpoints[ept_id].model
+        if device.nwk == 0x0000:
+            return
+
+        manuf = device.manufacturer
         async_dispatcher_send(
             self._hass,
             ZHA_GW_MSG,
@@ -128,8 +126,8 @@ class ZHAGateway:
                 TYPE: RAW_INIT,
                 NWK: device.nwk,
                 IEEE: str(device.ieee),
-                MODEL: model,
-                ATTR_MANUFACTURER: manufacturer,
+                MODEL: device.model if device.model else UNKNOWN_MODEL,
+                ATTR_MANUFACTURER: manuf if manuf else UNKNOWN_MANUFACTURER,
                 SIGNATURE: device.get_signature()
             }
         )
@@ -143,16 +141,31 @@ class ZHAGateway:
         """Handle device leaving the network."""
         pass
 
+    async def _async_remove_device(self, device, entity_refs):
+        if entity_refs is not None:
+            remove_tasks = []
+            for entity_ref in entity_refs:
+                remove_tasks.append(entity_ref.remove_future)
+            await asyncio.wait(remove_tasks)
+        ha_device_registry = await get_dev_reg(self._hass)
+        reg_device = ha_device_registry.async_get_device(
+            {(DOMAIN, str(device.ieee))}, set())
+        if reg_device is not None:
+            ha_device_registry.async_remove_device(reg_device.id)
+
     def device_removed(self, device):
         """Handle device being removed from the network."""
-        device = self._devices.pop(device.ieee, None)
-        self._device_registry.pop(device.ieee, None)
-        if device is not None:
-            device_info = async_get_device_info(self._hass, device)
-            self._hass.async_create_task(device.async_unsub_dispatcher())
+        zha_device = self._devices.pop(device.ieee, None)
+        entity_refs = self._device_registry.pop(device.ieee, None)
+        if zha_device is not None:
+            device_info = async_get_device_info(self._hass, zha_device)
+            zha_device.async_unsub_dispatcher()
             async_dispatcher_send(
                 self._hass,
-                "{}_{}".format(SIGNAL_REMOVE, str(device.ieee))
+                "{}_{}".format(SIGNAL_REMOVE, str(zha_device.ieee))
+            )
+            asyncio.ensure_future(
+                self._async_remove_device(zha_device, entity_refs)
             )
             if device_info is not None:
                 async_dispatcher_send(
@@ -187,14 +200,15 @@ class ZHAGateway:
 
     def register_entity_reference(
             self, ieee, reference_id, zha_device, cluster_channels,
-            device_info):
+            device_info, remove_future):
         """Record the creation of a hass entity associated with ieee."""
         self._device_registry[ieee].append(
             EntityReference(
                 reference_id=reference_id,
                 zha_device=zha_device,
                 cluster_channels=cluster_channels,
-                device_info=device_info
+                device_info=device_info,
+                remove_future=remove_future
             )
         )
 
@@ -230,7 +244,6 @@ class ZHAGateway:
         if not is_new_join:
             entry = self.zha_storage.async_get_or_create(zha_device)
             zha_device.async_update_last_seen(entry.last_seen)
-            zha_device.set_power_source(entry.power_source)
         return zha_device
 
     @callback
@@ -257,48 +270,56 @@ class ZHAGateway:
 
     async def async_device_initialized(self, device, is_new_join):
         """Handle device joined and basic information discovered (async)."""
+        if device.nwk == 0x0000:
+            return
+
         zha_device = self._async_get_or_create_device(device, is_new_join)
 
-        discovery_infos = []
-        for endpoint_id, endpoint in device.endpoints.items():
-            async_process_endpoint(
-                self._hass, self._config, endpoint_id, endpoint,
-                discovery_infos, device, zha_device, is_new_join
+        is_rejoin = False
+        if zha_device.status is not DeviceStatus.INITIALIZED:
+            discovery_infos = []
+            for endpoint_id, endpoint in device.endpoints.items():
+                async_process_endpoint(
+                    self._hass, self._config, endpoint_id, endpoint,
+                    discovery_infos, device, zha_device, is_new_join
+                )
+                if endpoint_id != 0:
+                    for cluster in endpoint.in_clusters.values():
+                        cluster.bind_only = \
+                            cluster.cluster_id in INPUT_BIND_ONLY_CLUSTERS
+                    for cluster in endpoint.out_clusters.values():
+                        # output clusters are always bind only
+                        cluster.bind_only = True
+        else:
+            is_rejoin = is_new_join is True
+            _LOGGER.debug(
+                'skipping discovery for previously discovered device: %s',
+                "{} - is rejoin: {}".format(zha_device.ieee, is_rejoin)
             )
-            if endpoint_id != 0:
-                for cluster in endpoint.in_clusters.values():
-                    cluster.bind_only = False
-                for cluster in endpoint.out_clusters.values():
-                    cluster.bind_only = True
 
         if is_new_join:
             # configure the device
             await zha_device.async_configure()
             zha_device.update_available(True)
-        elif zha_device.power_source is not None\
-                and zha_device.power_source == MAINS_POWERED:
+        elif zha_device.is_mains_powered:
             # the device isn't a battery powered device so we should be able
             # to update it now
             _LOGGER.debug(
                 "attempting to request fresh state for %s %s",
                 zha_device.name,
-                "with power source: {}".format(
-                    ZDOChannel.POWER_SOURCES.get(zha_device.power_source)
-                )
+                "with power source: {}".format(zha_device.power_source)
             )
             await zha_device.async_initialize(from_cache=False)
         else:
             await zha_device.async_initialize(from_cache=True)
 
-        for discovery_info in discovery_infos:
-            async_dispatch_discovery_info(
-                self._hass,
-                is_new_join,
-                discovery_info
-            )
-
-        device_entity = async_create_device_entity(zha_device)
-        await self._component.async_add_entities([device_entity])
+        if not is_rejoin:
+            for discovery_info in discovery_infos:
+                async_dispatch_discovery_info(
+                    self._hass,
+                    is_new_join,
+                    discovery_info
+                )
 
         if is_new_join:
             device_info = async_get_device_info(self._hass, zha_device)

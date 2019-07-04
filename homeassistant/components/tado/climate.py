@@ -85,12 +85,14 @@ def create_climate_device(tado, hass, zone, name, zone_id):
 
     min_temp = float(temperatures['celsius']['min'])
     max_temp = float(temperatures['celsius']['max'])
+    step = temperatures['celsius'].get('step', PRECISION_TENTHS)
 
     data_id = 'zone {} {}'.format(name, zone_id)
     device = TadoClimate(tado,
                          name, zone_id, data_id,
                          hass.config.units.temperature(min_temp, unit),
                          hass.config.units.temperature(max_temp, unit),
+                         step,
                          ac_mode)
 
     tado.add_sensor(data_id, {
@@ -107,7 +109,7 @@ class TadoClimate(ClimateDevice):
     """Representation of a tado climate device."""
 
     def __init__(self, store, zone_name, zone_id, data_id,
-                 min_temp, max_temp, ac_mode,
+                 min_temp, max_temp, step, ac_mode,
                  tolerance=0.3):
         """Initialize of Tado climate device."""
         self._store = store
@@ -127,6 +129,7 @@ class TadoClimate(ClimateDevice):
         self._is_away = False
         self._min_temp = min_temp
         self._max_temp = max_temp
+        self._step = step
         self._target_temp = None
         self._tolerance = tolerance
         self._cooling = False
@@ -194,7 +197,7 @@ class TadoClimate(ClimateDevice):
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
-        return PRECISION_TENTHS
+        return self._step
 
     @property
     def target_temperature(self):

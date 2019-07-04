@@ -5,7 +5,9 @@
   "requirements": [],
   "dependencies": [
     "conversation",
-    "zone"
+    "zone",
+    "group",
+    "configurator"
   ],
   "codeowners": [
     "@home-assistant/core"

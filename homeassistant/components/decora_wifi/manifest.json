@@ -3,7 +3,7 @@
   "name": "Decora wifi",
   "documentation": "https://www.home-assistant.io/components/decora_wifi",
   "requirements": [
-    "decora_wifi==1.3"
+    "decora_wifi==1.4"
   ],
   "dependencies": [],
   "codeowners": []

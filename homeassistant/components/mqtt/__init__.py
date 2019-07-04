@@ -69,6 +69,7 @@ CONF_AVAILABILITY_TOPIC = 'availability_topic'
 CONF_PAYLOAD_AVAILABLE = 'payload_available'
 CONF_PAYLOAD_NOT_AVAILABLE = 'payload_not_available'
 CONF_JSON_ATTRS_TOPIC = 'json_attributes_topic'
+CONF_JSON_ATTRS_TEMPLATE = 'json_attributes_template'
 CONF_QOS = 'qos'
 CONF_RETAIN = 'retain'
 
@@ -78,7 +79,8 @@ CONF_CONNECTIONS = 'connections'
 CONF_MANUFACTURER = 'manufacturer'
 CONF_MODEL = 'model'
 CONF_SW_VERSION = 'sw_version'
-CONF_VIA_HUB = 'via_hub'
+CONF_VIA_DEVICE = 'via_device'
+CONF_DEPRECATED_VIA_HUB = 'via_hub'
 
 PROTOCOL_31 = '3.1'
 PROTOCOL_311 = '3.1.1'
@@ -228,20 +230,24 @@ MQTT_AVAILABILITY_SCHEMA = vol.Schema({
                  default=DEFAULT_PAYLOAD_NOT_AVAILABLE): cv.string,
 })
 
-MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(vol.Schema({
-    vol.Optional(CONF_IDENTIFIERS, default=list):
-        vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_CONNECTIONS, default=list):
-        vol.All(cv.ensure_list, [vol.All(vol.Length(2), [cv.string])]),
-    vol.Optional(CONF_MANUFACTURER): cv.string,
-    vol.Optional(CONF_MODEL): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_SW_VERSION): cv.string,
-    vol.Optional(CONF_VIA_HUB): cv.string,
-}), validate_device_has_at_least_one_identifier)
+MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
+    cv.deprecated(CONF_DEPRECATED_VIA_HUB, CONF_VIA_DEVICE),
+    vol.Schema({
+        vol.Optional(CONF_IDENTIFIERS, default=list):
+            vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_CONNECTIONS, default=list):
+            vol.All(cv.ensure_list, [vol.All(vol.Length(2), [cv.string])]),
+        vol.Optional(CONF_MANUFACTURER): cv.string,
+        vol.Optional(CONF_MODEL): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_SW_VERSION): cv.string,
+        vol.Optional(CONF_VIA_DEVICE): cv.string,
+    }),
+    validate_device_has_at_least_one_identifier)
 
 MQTT_JSON_ATTRS_SCHEMA = vol.Schema({
     vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
+    vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
 })
 
 MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(SCHEMA_BASE)
@@ -649,7 +655,7 @@ class MQTT:
         self.birth_message = birth_message
         self.connected = False
         self._mqttc = None  # type: mqtt.Client
-        self._paho_lock = asyncio.Lock(loop=hass.loop)
+        self._paho_lock = asyncio.Lock()
 
         if protocol == PROTOCOL_31:
             proto = mqtt.MQTTv31  # type: int
@@ -908,10 +914,18 @@ class MqttAttributes(Entity):
         """(Re)Subscribe to topics."""
         from .subscription import async_subscribe_topics
 
+        attr_tpl = self._attributes_config.get(CONF_JSON_ATTRS_TEMPLATE)
+        if attr_tpl is not None:
+            attr_tpl.hass = self.hass
+
         @callback
         def attributes_message_received(msg: Message) -> None:
             try:
-                json_dict = json.loads(msg.payload)
+                payload = msg.payload
+                if attr_tpl is not None:
+                    payload = attr_tpl.async_render_with_possible_json_value(
+                        payload)
+                json_dict = json.loads(payload)
                 if isinstance(json_dict, dict):
                     self._attributes = json_dict
                     self.async_write_ha_state()
@@ -919,7 +933,7 @@ class MqttAttributes(Entity):
                     _LOGGER.warning("JSON result was not a dictionary")
                     self._attributes = None
             except ValueError:
-                _LOGGER.warning("Erroneous JSON: %s", msg.payload)
+                _LOGGER.warning("Erroneous JSON: %s", payload)
                 self._attributes = None
 
         self._attributes_sub_state = await async_subscribe_topics(
@@ -1088,8 +1102,8 @@ class MqttEntityDeviceInfo(Entity):
         if CONF_SW_VERSION in self._device_config:
             info['sw_version'] = self._device_config[CONF_SW_VERSION]
 
-        if CONF_VIA_HUB in self._device_config:
-            info['via_hub'] = (DOMAIN, self._device_config[CONF_VIA_HUB])
+        if CONF_VIA_DEVICE in self._device_config:
+            info['via_device'] = (DOMAIN, self._device_config[CONF_VIA_DEVICE])
 
         return info
 

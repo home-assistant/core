@@ -9,7 +9,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_RECIPIENT, CONF_URL
 import homeassistant.helpers.config_validation as cv
 
-from ..huawei_lte import DATA_KEY
+from . import DATA_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
