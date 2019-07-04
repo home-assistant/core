@@ -1,8 +1,8 @@
 """Support for Lutron Caseta fans."""
 import logging
 
-from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH, SPEED_OFF,
-                                            SUPPORT_SET_SPEED, FanEntity, DOMAIN)
+from homeassistant.components.fan import (
+    SUPPORT_SET_SPEED, FanEntity, DOMAIN)
 
 from . import LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice
 
@@ -13,6 +13,7 @@ LUTRON_SPEED_LOW = 'Low'
 LUTRON_SPEED_MEDIUM = 'Medium'
 LUTRON_SPEED_MEDIUMHIGH = "MediumHigh"
 LUTRON_SPEED_HIGH = 'High'
+
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
@@ -28,6 +29,7 @@ async def async_setup_platform(
     async_add_entities(devs, True)
     return True
 
+
 class LutronCasetaFan(LutronCasetaDevice, FanEntity):
     """Representation of a Lutron Caseta fan. Including Fan Speed."""
 
@@ -39,13 +41,17 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds.
-        Note: The default Hass Speeds were all lower case and missing MediumHigh
-        Lutron Case and fan speeds specified instead."""
-        return [LUTRON_SPEED_OFF, LUTRON_SPEED_LOW, LUTRON_SPEED_MEDIUM , LUTRON_SPEED_MEDIUMHIGH, LUTRON_SPEED_HIGH]
+
+        Note: The default Hass Speeds were all lower case
+        and missing MediumHigh. Lutron Case and fan
+        speeds specified instead.
+        """
+        return [LUTRON_SPEED_OFF, LUTRON_SPEED_LOW, LUTRON_SPEED_MEDIUM,
+            LUTRON_SPEED_MEDIUMHIGH, LUTRON_SPEED_HIGH]
 
     @property
     def supported_features(self) -> int:
-        """Flag supported features. Speed Only"""
+        """Flag supported features. Speed Only."""
         return SUPPORT_SET_SPEED
 
     async def async_turn_on(self, speed: str = None, **kwargs):
@@ -66,7 +72,9 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._state["fan_speed"] in [LUTRON_SPEED_LOW, LUTRON_SPEED_MEDIUM, LUTRON_SPEED_MEDIUMHIGH, LUTRON_SPEED_HIGH]
+        return self._state["fan_speed"] in [LUTRON_SPEED_LOW,
+            LUTRON_SPEED_MEDIUM, LUTRON_SPEED_MEDIUMHIGH,
+            LUTRON_SPEED_HIGH]
 
     async def async_update(self):
         """Update when forcing a refresh of the device."""
