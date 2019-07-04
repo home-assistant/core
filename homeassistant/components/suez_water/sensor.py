@@ -38,8 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         if not client.check_credentials():
             _LOGGER.warning("Wrong username and/or password")
-        else:
-            add_entities([SuezSensor(client)], True)
+        add_entities([SuezSensor(client)], True)
 
     except PySuezError:
         _LOGGER.warning("Unable to create Suez Client")
