@@ -4,6 +4,6 @@
   "documentation": "https://www.home-assistant.io/components/vesync",
   "dependencies": [],
   "codeowners": ["@markperdue", "@webdjoe"],
-  "requirements": ["pyvesync==1.0.10"],
+  "requirements": ["pyvesync==1.0.11"],
   "config_flow": true
 }

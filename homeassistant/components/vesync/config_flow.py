@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 def configured_instances(hass):
     """Return already configured instances"""
     return set(
-        entry.data[CONF_USERNAME] 
+        entry.data[CONF_USERNAME]
         for entry in hass.config_entries.async_entries(DOMAIN))
 
 
@@ -51,15 +51,11 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
     async def async_step_user(self, user_input=None):
         """Handle a flow start"""
 
-        _LOGGER.warning("Init User Input - %s", str(user_input))
-
         if not user_input:
             return await self._show_form()
 
         if user_input[CONF_USERNAME] in configured_instances(self.hass):
             return await self._show_form({CONF_USERNAME: 'Username Exists'})
-
-        _LOGGER.warning("Second User Input - %s", str(user_input))
 
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]

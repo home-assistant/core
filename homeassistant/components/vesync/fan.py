@@ -1,9 +1,7 @@
+"""Support for VeSync Fans and Air Purifier"""
 import logging
-import voluptuous as vol
 
-from homeassistant.components.fan import (FanEntity, PLATFORM_SCHEMA,
-                                          SUPPORT_SET_SPEED)
-from homeassistant.const import (CONF_NAME, CONF_HOST, ATTR_ENTITY_ID)
+from homeassistant.components.fan import (FanEntity, SUPPORT_SET_SPEED)
 
 from . import DOMAIN
 
@@ -93,6 +91,7 @@ class VeSyncFanHA(FanEntity):
             self.smartfan.manual_mode()
             self.smartfan.change_fan_speed(FAN_SPEEDS.index(speed))
 
+    # pylint: disable=arguments-differ
     def turn_on(self):
         """Turn vesync fan on"""
         self.smartfan.turn_on()

@@ -90,7 +90,7 @@ async def async_add_entities_retry(hass,
                     add_object,
                     async_add_entities
                 )
-            except Exception as ex:
+            except Exception as ex:  # pylint: disable=broad-except
                 _LOGGER.debug(str(ex))
                 result = False
 
