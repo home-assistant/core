@@ -41,10 +41,7 @@ class TestSleepIQSensorSetup(unittest.TestCase):
         mock_responses(mock)
 
         assert setup_component(self.hass, 'sleepiq', {
-            'sleepiq': {
-                'username': '',
-                'password': '',
-            }
+            'sleepiq': self.config
         })
 
         sleepiq.setup_platform(self.hass,
