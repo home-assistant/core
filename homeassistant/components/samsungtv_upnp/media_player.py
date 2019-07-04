@@ -168,6 +168,7 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
         self._available = False
         self._source = None
         self._source_list = None
+        self._media_channel = None
         self._media_title = None
         self._subscription_renew_time = None
 
@@ -193,8 +194,8 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
             _LOGGER.debug("Device unavailable")
             return
 
-        await self._get_source();
-        await self._get_media_title();
+        await self._get_source()
+        await self._get_media_info()
 
         # do we need to (re-)subscribe?
         now = datetime.now()
@@ -249,6 +250,11 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
     def source(self):
         """Return the current playback device."""
         return self._source
+
+    @property
+    def media_channel(self):
+        """Return the media channel."""
+        return self._media_channel
 
     @property
     def media_title(self):
@@ -306,7 +312,8 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
                     node.getElementsByTagName('SourceType')[0] \
                         .firstChild.nodeValue)
 
-    async def _get_media_title(self):
+    async def _get_media_info(self):
+        self._media_channel = None
         self._media_title = None
 
         action = self._device._action('MTVA', 'GetCurrentContentRecognition')
@@ -322,5 +329,5 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
             _LOGGER.debug('unable to get media title')
             return
 
-        self._media_title = "{} - {}".format(result['ChannelName'], \
-                                             result['ProgramTitle'])
+        self._media_channel = result['ChannelName']
+        self._media_title = result['ProgramTitle']
