@@ -1,19 +1,25 @@
 """Support for the Rainforest Eagle-200 energy monitor."""
+from datetime import timedelta
 import logging
 
+from requests.exceptions import (
+    ConnectionError as ConnectError, HTTPError, Timeout)
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_IP_ADDRESS, ENERGY_KILO_WATT_HOUR)
+    CONF_IP_ADDRESS, CONF_SCAN_INTERVAL, ENERGY_KILO_WATT_HOUR)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 CONF_CLOUD_ID = 'cloud_id'
 CONF_INSTALL_CODE = 'install_code'
 POWER_KILO_WATT = 'kW'
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(seconds=30)
 
 SENSORS = {
     "instantanous_demand": (
@@ -41,21 +47,28 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ip_address = config[CONF_IP_ADDRESS]
     cloud_id = config[CONF_CLOUD_ID]
     install_code = config[CONF_INSTALL_CODE]
+    interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
+
+    eagle_data = EagleData(ip_address, cloud_id, install_code, interval)
+    eagle_data.update()
+
     monitored_conditions = list(SENSORS)
+    sensors = []
     for condition in monitored_conditions:
-        add_devices([Eagle(ip_address, cloud_id, install_code, condition,
-                           SENSORS[condition][0], SENSORS[condition][1])])
+        sensors.append(EagleSensor(
+            eagle_data, condition, SENSORS[condition][0],
+            SENSORS[condition][1]))
+
+    add_devices(sensors)
 
 
-class Eagle(Entity):
+class EagleSensor(Entity):
     """Implementation of the Rainforest Eagle-200 sensor."""
 
     def __init__(
-            self, ip_address, cloud_id, install_code, sensor_type, name, unit):
+            self, eagle_data, sensor_type, name, unit):
         """Initialize the sensor."""
-        self._ip_address = ip_address
-        self._cloud_id = cloud_id
-        self._install_code = install_code
+        self.eagle_data = eagle_data
         self._type = sensor_type
         self._name = name
         self._unit_of_measurement = unit
@@ -77,9 +90,41 @@ class Eagle(Entity):
         return self._unit_of_measurement
 
     def update(self):
-        """Get the energy demand from the Rainforest Eagle."""
+        """Get the energy information from the Rainforest Eagle."""
+        self.eagle_data.update()
+        data = self.eagle_data.data
+        self._state = self.get_state(data)
+
+    def get_state(self, data):
+        """Get the sensor value from the dictionary."""
+        state = data.get(self._type)
+        return state
+
+
+class EagleData:
+    """Get the latest data from the Eagle-200 device."""
+
+    def __init__(self, ip_address, cloud_id, install_code, interval):
+        """Initialize the data object."""
+        self._ip_address = ip_address
+        self._cloud_id = cloud_id
+        self._install_code = install_code
+        self.interval = interval
+
+        self.data = {}
+
+        # Apply throttling to update method using configured interval.
+        self.update = Throttle(interval)(self._update)
+
+    def _update(self):
+        """Get the latest data from the Eagle-200 device."""
         from eagle200_reader import EagleReader
 
-        self._state = getattr(EagleReader(
-            self._ip_address, self._cloud_id,
-            self._install_code), self._type)()
+        for sensor_type in SENSORS:
+            try:
+                self.data.update({sensor_type: getattr(EagleReader(
+                    self._ip_address, self._cloud_id, self._install_code),
+                                                       sensor_type)()})
+            except (ConnectError, HTTPError, Timeout, ValueError) as error:
+                _LOGGER.error("Unable to connect to the Eagle-200: %s", error)
+                self.data.update({sensor_type: None})
