@@ -29,7 +29,7 @@ class InComfortClimate(ClimateDevice):
         self._room = room
         self._name = 'Room {}'.format(room.room_no)
 
-    def async_added_to_hass(self) -> None:
+    async def async_added_to_hass(self) -> Awaitable[None]:
         """Set up a listener when this entity is added to HA."""
         async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
 
@@ -97,6 +97,6 @@ class InComfortClimate(ClimateDevice):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         await self._room.set_override(temperature)
 
-    def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: str) -> Awaitable[None]:
         """Set new target hvac mode."""
         pass
