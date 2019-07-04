@@ -128,7 +128,7 @@ class UniFiClientTracker(ScannerEntity):
 
     @property
     def source_type(self):
-        """Return the source type, eg gps or router, of the device."""
+        """Return the source type of the device."""
         return SOURCE_TYPE_ROUTER
 
     @property
@@ -138,8 +138,8 @@ class UniFiClientTracker(ScannerEntity):
 
     @property
     def unique_id(self) -> str:
-        """Return a unique identifier for this switch."""
-        return 'unifi-dt-{}'.format(self.client.mac)
+        """Return a unique identifier for this client."""
+        return '{}-{}'.format(self.client.mac, self.controller.site)
 
     @property
     def available(self) -> bool:
