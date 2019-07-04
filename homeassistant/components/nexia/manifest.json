@@ -2,7 +2,7 @@
   "domain": "nexia",
   "name": "Nexia",
   "documentation": "https://www.home-assistant.io/components/nexia/",
-  "requirements": ["requests", "bs4", "html5lib"],
+  "requirements": ["requests==2.21.0", "bs4==0.0.1", "html5lib==1.0.1"],
   "dependencies": [],
   "codeowners": ["ryannazaretian"]
 }
