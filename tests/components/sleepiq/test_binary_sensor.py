@@ -60,7 +60,7 @@ class TestSleepIQBinarySensorSetup(unittest.TestCase):
 
     @requests_mock.Mocker()
     def test_setup_single(self, mock):
-        """Test for successfully setting up the SleepIQ platform with a single sleeper."""
+        """Test for successfully setting up the SleepIQ platform."""
         mock_responses(mock, single=True)
 
         setup_component(self.hass, 'sleepiq', {

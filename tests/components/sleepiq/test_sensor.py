@@ -61,7 +61,7 @@ class TestSleepIQSensorSetup(unittest.TestCase):
 
     @requests_mock.Mocker()
     def test_setup_sigle(self, mock):
-        """Test for successfully setting up the SleepIQ platform for a single sleeper."""
+        """Test for successfully setting up the SleepIQ platform."""
         mock_responses(mock, single=True)
 
         assert setup_component(self.hass, 'sleepiq', {
