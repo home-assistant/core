@@ -201,7 +201,6 @@ def check(config_dir, secrets=False):
         res['components'] = hass.loop.run_until_complete(
             async_check_ha_config_file(hass))
         res['secret_cache'] = OrderedDict(yaml_loader.__SECRET_CACHE)
-
         for err in res['components'].errors:
             domain = err.domain or ERROR_STR
             res['except'].setdefault(domain, []).append(err.message)
