@@ -32,7 +32,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class NexiaBinarySensor(BinarySensorDevice):
-    """ Nexia BinarySensor Support """
+    """Provices Nexia BinarySensor support."""
 
     def __init__(self, device, scan_interval, thermostat_id, sensor_call,
                  sensor_name,
@@ -56,7 +56,6 @@ class NexiaBinarySensor(BinarySensorDevice):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
-
         data = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_MODEL: self._device.get_thermostat_model(self._thermostat_id),

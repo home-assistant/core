@@ -167,7 +167,10 @@ class NexiaThermostat:
             request = self._put_url(url, payload)
 
         self._check_response(
-            f"Failed PUT Request:\n  Url: {url}\n  Payload {payload}", request)
+            f"Failed PUT Request:\n"
+            f"  Url: {url}\n"
+            f"  Payload {payload}",
+            request)
 
         # Assume something change, so update the thermostat's JSON
         time.sleep(self.PUT_UPDATE_DELAY)
@@ -276,8 +279,8 @@ class NexiaThermostat:
                         raise Exception("Nothing in the JSON")
                 else:
                     self._check_response(
-                        "Failed to get thermostat JSON, session probably timed "
-                        "out", request)
+                        "Failed to get thermostat JSON, session probably timed"
+                        " out", request)
 
         if thermostat_id == self.ALL_IDS:
             return self.thermostat_json
@@ -328,9 +331,8 @@ class NexiaThermostat:
             raise KeyError(
                 f"Thermostat ID {thermostat_id} does not exist. Available IDs:"
                 f" {self.get_thermostat_ids()}")
-        return "/houses/" + str(self.house_id) + "/xxl_thermostats/" + str(
-            thermostat_id) + \
-               ("/" + text if text else "")
+        return f"/houses/{str(self.house_id)}/xxl_thermostats/" \
+            f"{str(thermostat_id)}/{text if text else ''}"
 
     def _get_zone_json(self, thermostat_id=None, zone_id=0):
         """
@@ -1081,21 +1083,21 @@ class NexiaThermostat:
                 cool_temperature is not None and \
                 not heat_temperature < cool_temperature:
             raise AttributeError(
-                f"The heat setpoint ({heat_temperature}) must be less than the "
-                f"cool setpoint ({cool_temperature}).")
+                f"The heat setpoint ({heat_temperature}) must be less than the"
+                f" cool setpoint ({cool_temperature}).")
         if heat_temperature is not None and \
                 cool_temperature is not None and \
                 not cool_temperature - heat_temperature >= deadband:
             raise AttributeError(
                 f"The heat and cool setpoints must be at least {deadband} "
                 f"degrees different.")
-        if heat_temperature is not None and not heat_temperature <= \
-                                                max_temperature:
+        if heat_temperature is not None and \
+                not heat_temperature <= max_temperature:
             raise AttributeError(
                 f"The heat setpoint ({heat_temperature} must be less than the "
                 f"maximum temperature of {max_temperature} degrees.")
-        if cool_temperature is not None and not cool_temperature >= \
-                                                min_temperature:
+        if cool_temperature is not None and \
+                not cool_temperature >= min_temperature:
             raise AttributeError(
                 f"The cool setpoint ({cool_temperature}) must be greater than "
                 f"the minimum temperature of {min_temperature} degrees.")

@@ -59,10 +59,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             unit = (TEMP_CELSIUS if thermostat.get_unit(
                 thermostat_id) == thermostat.UNIT_CELSIUS else TEMP_FAHRENHEIT)
             sensors.append(
-                NexiaZoneSensor(thermostat, scan_interval, thermostat_id, zone,
+                NexiaZoneSensor(thermostat,
+                                scan_interval,
+                                thermostat_id,
+                                zone,
                                 "get_zone_temperature",
                                 f"{name} Temperature",
-                                DEVICE_CLASS_TEMPERATURE, unit,
+                                DEVICE_CLASS_TEMPERATURE,
+                                unit,
                                 None))
             sensors.append(
                 NexiaZoneSensor(thermostat, scan_interval, thermostat_id, zone,
@@ -86,7 +90,7 @@ def percent_conv(val):
 
 
 class NexiaSensor(Entity):
-    """ Nexia Sensor Support """
+    """Provides Nexia sensor support."""
 
     def __init__(self, device, scan_interval, thermostat_id, sensor_call,
                  sensor_name, sensor_class,

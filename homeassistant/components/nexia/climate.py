@@ -71,7 +71,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class NexiaZone(ClimateDevice):
-    """Representation of Nexia Climate Zone."""
+    """Provides Nexia Climate support."""
 
     def __init__(self, device, scan_interval, thermostat_id, zone):
         """Initialize the thermostat."""
@@ -299,9 +299,9 @@ class NexiaZone(ClimateDevice):
     @property
     def is_away_mode_on(self):
         """Return true if away mode is on."""
-        return self._device.get_zone_preset(self._thermostat_id,
-                                            self._zone) == \
-               self._device.PRESET_MODE_AWAY
+        return self._device.get_zone_preset(
+            self._thermostat_id,
+            self._zone) == self._device.PRESET_MODE_AWAY
 
     def turn_away_mode_on(self):
         """Turn away on. """
@@ -333,8 +333,10 @@ class NexiaZone(ClimateDevice):
         operation_mode = operation_mode.upper()
 
         if operation_mode in self._device.OPERATION_MODES:
-            self._device.set_zone_mode(operation_mode, self._thermostat_id,
-                                       self._zone)
+            self._device.set_zone_mode(
+                operation_mode,
+                self._thermostat_id,
+                self._zone)
         else:
             raise KeyError(
                 f"Operation mode {operation_mode} not in the supported "

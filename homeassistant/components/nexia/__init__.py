@@ -62,7 +62,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """ Setup Nexia device """
+    """Setup Nexia device."""
     from .nexia_thermostat import NexiaThermostat
 
     conf = config[DOMAIN]
@@ -71,13 +71,16 @@ def setup(hass, config):
     password = conf[CONF_PASSWORD]
     house_id = conf[CONF_ID]
 
-    scan_interval = timedelta(seconds=conf.get(CONF_SCAN_INTERVAL,
-                                        NexiaThermostat.DEFAULT_UPDATE_RATE))
+    scan_interval = timedelta(
+        seconds=conf.get(CONF_SCAN_INTERVAL,
+                         NexiaThermostat.DEFAULT_UPDATE_RATE))
 
     try:
-        thermostat = NexiaThermostat(username=username, password=password,
-                             house_id=house_id,
-                             update_rate=NexiaThermostat.DISABLE_AUTO_UPDATE)
+        thermostat = NexiaThermostat(
+            username=username,
+            password=password,
+            house_id=house_id,
+            update_rate=NexiaThermostat.DISABLE_AUTO_UPDATE)
         hass.data[DATA_NEXIA] = {NEXIA_DEVICE: thermostat,
                                  NEXIA_SCAN_INTERVAL: scan_interval}
     except (ConnectTimeout, HTTPError) as ex:
