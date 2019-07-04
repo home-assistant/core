@@ -152,9 +152,40 @@ class HoneywellUSThermostat(ClimateDevice):
         self._fan_mode_map = {k: v for d in mappings for k, v in d.items()}
 
     @property
+    def name(self) -> Optional[str]:
+        """Return the name of the honeywell, if any."""
+        return self._device.name
+
+    @property
+    def device_state_attributes(self) -> Dict[str, Any]:
+        """Return the device specific state attributes."""
+        # pylint: disable=protected-access
+        data = {}
+        if self._device._data['hasFan']:
+            data[ATTR_FAN_ACTION] = \
+                'running' if self._device.fan_running else 'idle'
+        return data
+
+    @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
         return self._supported_features
+
+    @property
+    def temperature_unit(self) -> str:
+        """Return the unit of measurement."""
+        return (TEMP_CELSIUS if self._device.temperature_unit == 'C'
+                else TEMP_FAHRENHEIT)
+
+    @property
+    def current_humidity(self) -> Optional[int]:
+        """Return the current humidity."""
+        return self._device.current_humidity
+
+    @property
+    def hvac_mode(self) -> str:
+        """Return hvac operation ie. heat, cool mode."""
+        return HW_MODE_TO_HVAC_MODE[self._device.system_mode]
 
     @property
     def hvac_modes(self) -> List[str]:
@@ -167,64 +198,9 @@ class HoneywellUSThermostat(ClimateDevice):
         return HW_MODE_TO_HA_HVAC_ACTION[self._device.equipment_output_status]
 
     @property
-    def preset_modes(self) -> Optional[List[str]]:
-        """Return a list of available preset modes."""
-        return [PRESET_AWAY]
-
-    def set_preset_mode(self, preset_mode: str) -> None:
-        """Set new preset mode."""
-        if preset_mode == PRESET_AWAY:
-            self._turn_away_mode_on()
-        else:
-            self._turn_away_mode_off()
-
-    @property
-    def is_aux_heat(self) -> Optional[str]:
-        """Return true if aux heater."""
-        return self._device.system_mode == 'emheat'
-
-    def turn_aux_heat_on(self) -> None:
-        """Turn auxiliary heater on."""
-        self._device.system_mode = 'emheat'
-
-    def turn_aux_heat_off(self) -> None:
-        """Turn auxiliary heater off."""
-        self._device.system_mode = 'auto'
-
-    @property
-    def fan_mode(self) -> Optional[str]:
-        """Return the fan setting."""
-        return HW_FAN_MODE_TO_HA[self._device.fan_mode]
-
-    @property
-    def fan_modes(self) -> Optional[List[str]]:
-        """Return the list of available fan modes."""
-        return list(self._fan_mode_map)
-
-    def set_fan_mode(self, fan_mode: str) -> None:
-        """Set new target fan mode."""
-        self._device.fan_mode = self._fan_mode_map[fan_mode]
-
-    @property
-    def name(self) -> Optional[str]:
-        """Return the name of the honeywell, if any."""
-        return self._device.name
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return (TEMP_CELSIUS if self._device.temperature_unit == 'C'
-                else TEMP_FAHRENHEIT)
-
-    @property
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
         return self._device.current_temperature
-
-    @property
-    def current_humidity(self) -> Optional[int]:
-        """Return the current humidity."""
-        return self._device.current_humidity
 
     @property
     def target_temperature(self) -> Optional[float]:
@@ -246,9 +222,29 @@ class HoneywellUSThermostat(ClimateDevice):
         return self._device.setpoint_heat
 
     @property
-    def hvac_mode(self) -> str:
-        """Return hvac operation ie. heat, cool mode."""
-        return HW_MODE_TO_HVAC_MODE[self._device.system_mode]
+    def preset_mode(self) -> Optional[str]:
+        """Return the current preset mode, e.g., home, away, temp."""
+        return PRESET_AWAY if self._away else None
+
+    @property
+    def preset_modes(self) -> Optional[List[str]]:
+        """Return a list of available preset modes."""
+        return [PRESET_AWAY]
+
+    @property
+    def is_aux_heat(self) -> Optional[str]:
+        """Return true if aux heater."""
+        return self._device.system_mode == 'emheat'
+
+    @property
+    def fan_mode(self) -> Optional[str]:
+        """Return the fan setting."""
+        return HW_FAN_MODE_TO_HA[self._device.fan_mode]
+
+    @property
+    def fan_modes(self) -> Optional[List[str]]:
+        """Return the list of available fan modes."""
+        return list(self._fan_mode_map)
 
     def _set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
@@ -293,20 +289,13 @@ class HoneywellUSThermostat(ClimateDevice):
         except somecomfort.SomeComfortError as err:
             _LOGGER.error("Invalid temperature %s: %s", temperature, err)
 
-    @property
-    def device_state_attributes(self) -> Dict[str, Any]:
-        """Return the device specific state attributes."""
-        # pylint: disable=protected-access
-        data = {}
-        if self._device._data['hasFan']:
-            data[ATTR_FAN_ACTION] = \
-                'running' if self._device.fan_running else 'idle'
-        return data
+    def set_fan_mode(self, fan_mode: str) -> None:
+        """Set new target fan mode."""
+        self._device.fan_mode = self._fan_mode_map[fan_mode]
 
-    @property
-    def preset_mode(self) -> Optional[str]:
-        """Return the current preset mode, e.g., home, away, temp."""
-        return PRESET_AWAY if self._away else None
+    def set_hvac_mode(self, hvac_mode: str) -> None:
+        """Set new target hvac mode."""
+        self._device.system_mode = self._hvac_mode_map[hvac_mode]
 
     def _turn_away_mode_on(self) -> None:
         """Turn away on.
@@ -346,26 +335,20 @@ class HoneywellUSThermostat(ClimateDevice):
         except somecomfort.SomeComfortError:
             _LOGGER.error('Can not stop hold mode')
 
-    def set_hvac_mode(self, hvac_mode: str) -> None:
-        """Set new target hvac mode."""
-        self._device.system_mode = self._hvac_mode_map[hvac_mode]
+    def set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        if preset_mode == PRESET_AWAY:
+            self._turn_away_mode_on()
+        else:
+            self._turn_away_mode_off()
 
-    def update(self) -> None:
-        """Update the state."""
-        retries = 3
-        while retries > 0:
-            try:
-                self._device.refresh()
-                break
-            except (somecomfort.client.APIRateLimited, OSError,
-                    requests.exceptions.ReadTimeout) as exp:
-                retries -= 1
-                if retries == 0:
-                    raise exp
-                if not self._retry():
-                    raise exp
-                _LOGGER.error(
-                    "SomeComfort update failed, Retrying - Error: %s", exp)
+    def turn_aux_heat_on(self) -> None:
+        """Turn auxiliary heater on."""
+        self._device.system_mode = 'emheat'
+
+    def turn_aux_heat_off(self) -> None:
+        """Turn auxiliary heater off."""
+        self._device.system_mode = 'auto'
 
     def _retry(self) -> bool:
         """Recreate a new somecomfort client.
@@ -396,3 +379,20 @@ class HoneywellUSThermostat(ClimateDevice):
 
         self._device = devices[0]
         return True
+
+    def update(self) -> None:
+        """Update the state."""
+        retries = 3
+        while retries > 0:
+            try:
+                self._device.refresh()
+                break
+            except (somecomfort.client.APIRateLimited, OSError,
+                    requests.exceptions.ReadTimeout) as exp:
+                retries -= 1
+                if retries == 0:
+                    raise exp
+                if not self._retry():
+                    raise exp
+                _LOGGER.error(
+                    "SomeComfort update failed, Retrying - Error: %s", exp)
