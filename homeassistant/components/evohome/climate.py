@@ -71,8 +71,30 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     async_add_entities(entities, update_before_add=True)
 
 
-class EvoZone(EvoDevice, ClimateDevice):
-    """Base for a Honeywell evohome Zone device."""
+class EvoClimateDevice(EvoDevice, ClimateDevice):
+    """Base for a Honeywell evohome Climate device."""
+
+    def __init__(self, evo_broker, evo_device) -> None:
+        """Initialize the evohome Climate device."""
+        super().__init__(evo_broker, evo_device)
+
+        self._hvac_modes = self._preset_modes = None
+
+    @property  # TODO: finished
+    def hvac_modes(self) -> List[str]:
+        """Return the list of available hvac operation modes."""
+        _LOGGER.warn("hvac_modes(%s): %s", self._id, self._hvac_modes)
+        return self._hvac_modes
+
+    @property  # TODO: finished
+    def preset_modes(self) -> Optional[List[str]]:
+        """Return a list of available preset modes."""
+        _LOGGER.warn("preset_modes(%s): %s", self._id, self._preset_modes)
+        return self._preset_modes
+
+
+class EvoZone(EvoClimateDevice):
+    """Base for a Honeywell evohome Zone."""
 
     def __init__(self, evo_broker, evo_device) -> None:
         """Initialize the evohome Zone."""
@@ -122,15 +144,8 @@ class EvoZone(EvoDevice, ClimateDevice):
             return HVAC_MODE_AUTO
 
         is_off = self.target_temperature == self.min_temp
-        x = HVAC_MODE_OFF if is_off else HVAC_MODE_HEAT
-        _LOGGER.warn("hvac_mode(Zone=%s): B %s", self._id, x)
+        _LOGGER.warn("hvac_mode(Zone=%s): B %s", self._id, HVAC_MODE_OFF if is_off else HVAC_MODE_HEAT)
         return HVAC_MODE_OFF if is_off else HVAC_MODE_HEAT
-
-    @property  # TODO: finished
-    def hvac_modes(self) -> List[str]:
-        """Return the list of available hvac operation modes."""
-        _LOGGER.warn("hvac_modes(Zone=%s): %s", self._id, self._hvac_modes)
-        return self._hvac_modes
 
     @property  # TODO: finished
     def current_temperature(self) -> Optional[float]:
@@ -148,12 +163,6 @@ class EvoZone(EvoDevice, ClimateDevice):
         """Return the current preset mode, e.g., home, away, temp."""
         _LOGGER.warn("preset_mode(Zone=%s): %s", self._id, 'auto')
         return 'auto'
-
-    @property  # TODO: finished
-    def preset_modes(self) -> Optional[List[str]]:
-        """Return a list of available preset modes."""
-        _LOGGER.warn("preset_modes(Zone=%s): %s", self._id, self._preset_modes)
-        return self._preset_modes
 
     @property  # TODO: finished
     def min_temp(self) -> float:
@@ -222,8 +231,8 @@ class EvoZone(EvoDevice, ClimateDevice):
         self._available = self._evo_device.temperatureStatus['isAvailable']
 
 
-class EvoController(EvoDevice, ClimateDevice):
-    """Base for a Honeywell evohome hub/Controller device.
+class EvoController(EvoClimateDevice):
+    """Base for a Honeywell evohome Controller (hub).
 
     The Controller (aka TCS, temperature control system) is the parent of all
     the child (CH/DHW) devices.  It is also a Climate device.
@@ -257,12 +266,6 @@ class EvoController(EvoDevice, ClimateDevice):
         return HVAC_MODE_OFF if tcs_mode == EVO_HEATOFF else HVAC_MODE_HEAT
 
     @property  # TODO: finished
-    def hvac_modes(self) -> List[str]:
-        """Return the list of available hvac operation modes."""
-        _LOGGER.warn("hvac_modes(TCS=%s): %s", self._id, self._hvac_modes)
-        return self._hvac_modes
-
-    @property  # TODO: finished
     def current_temperature(self) -> Optional[float]:
         """Return the average current temperature of the heating Zones.
 
@@ -288,12 +291,6 @@ class EvoController(EvoDevice, ClimateDevice):
         tcs_mode = self._evo_device.systemModeStatus['mode']
         _LOGGER.warn("preset_mode(TCS=%s): %s", self._id, TCS_PRESET_TO_HA.get(tcs_mode))
         return TCS_PRESET_TO_HA.get(tcs_mode)
-
-    @property  # TODO: finished
-    def preset_modes(self) -> Optional[List[str]]:
-        """Return a list of available preset modes."""
-        _LOGGER.warn("preset_modes(TCS=%s): %s", self._id, self._preset_modes)
-        return self._preset_modes
 
     @property  # TODO: finished
     def min_temp(self) -> float:

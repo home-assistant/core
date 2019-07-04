@@ -1,6 +1,7 @@
 """Support for WaterHeater devices of (EMEA/EU) Honeywell TCC systems."""
 from datetime import datetime, timedelta
 import logging
+from typing import Any, Awaitable, Dict, Optional, List
 
 import requests.exceptions
 import evohomeclient2
@@ -14,9 +15,8 @@ from .const import DOMAIN, EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER
 
 _LOGGER = logging.getLogger(__name__)
 
-# For the DHW Controller
-EVO_STATE_TO_HA = {'On': STATE_ON, 'Off': STATE_OFF}
-HA_STATE_TO_EVO = {v: k for k, v in EVO_STATE_TO_HA.items()}
+HA_STATE_TO_EVO = {STATE_ON: 'On', STATE_OFF: 'Off'}
+EVO_STATE_TO_HA = {v: k for k, v in HA_STATE_TO_EVO.items()}
 
 HA_OPMODE_TO_DHW = {STATE_ON: EVO_FOLLOW, STATE_OFF: EVO_PERMOVER}
 

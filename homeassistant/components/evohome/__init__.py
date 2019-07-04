@@ -246,11 +246,8 @@ class EvoDevice(Entity):
         self._evo_device = evo_device
         self._evo_tcs = evo_broker.tcs
 
-        self._config = self._status = {}
-
-        self._id = self._name = self._icon = self._precision = None
-        self._operation_list = self._supported_features = None
-        self._state_attributes = None
+        self._name = self._icon = self._precision = None
+        self._state_attributes = self._supported_features = None
         self._available = False  # should become True after first update()
 
     @callback
