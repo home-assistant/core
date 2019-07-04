@@ -41,7 +41,7 @@ class AuroraABBSolarPVMonitorSensor(Entity):
 
     def __init__(self, client, name, typename):
         """Initialize the sensor."""
-        self._name = name + " " + typename
+        self._name = "{} {}".format(name, typename)
         self.client = client
         self._state = None
 
