@@ -147,8 +147,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     if module_name not in data.get_module_names():
                         continue
                     for condition in data.station_data.monitoredConditions(
-                        module_name
-                    ):
+                            module_name):
                         dev.append(
                             NetatmoSensor(
                                 data,
