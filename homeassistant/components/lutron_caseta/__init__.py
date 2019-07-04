@@ -46,7 +46,7 @@ async def async_setup(hass, base_config):
 
     bridge = Smartbridge.create_tls(
         hostname=config[CONF_HOST], keyfile=keyfile, certfile=certfile,
-        ca_certs=ca_certs, cert_required)
+        ca_certs=ca_certs, cert_required=cert_required)
     hass.data[LUTRON_CASETA_SMARTBRIDGE] = bridge
     await bridge.connect()
     if not hass.data[LUTRON_CASETA_SMARTBRIDGE].is_connected():
