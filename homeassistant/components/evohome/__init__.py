@@ -26,8 +26,7 @@ from homeassistant.helpers.event import (
     async_track_point_in_utc_time, async_track_time_interval)
 from homeassistant.util.dt import as_utc, parse_datetime, utcnow
 
-from .const import (
-    DOMAIN, STORAGE_VERSION, STORAGE_KEY, GWS, TCS)
+from .const import DOMAIN, STORAGE_VERSION, STORAGE_KEY, GWS, TCS
 
 _LOGGER = logging.getLogger(__name__)
 
