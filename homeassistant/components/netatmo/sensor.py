@@ -10,7 +10,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_MODE, CONF_MONITORED_CONDITIONS,
+    CONF_NAME, CONF_MODE,
     TEMP_CELSIUS, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_BATTERY)
 from homeassistant.helpers.entity import Entity
