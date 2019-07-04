@@ -164,14 +164,6 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
     @property
     def state(self):
         """Return the current state."""
-        # If the device reports its operating mode as off, it sometimes doesn't
-        # report a new state.
-        if self._current_mode == HVAC_MODE_OFF:
-            return HVAC_MODE_OFF
-
-        if self._state == HVAC_MODE_OFF and \
-                self._current_mode != HVAC_MODE_OFF:
-            return HVAC_MODE_OFF
         return self._state
 
     @property
