@@ -35,7 +35,7 @@ from .reproduce_state import async_reproduce_states  # noqa
 
 DEFAULT_MIN_TEMP = 7
 DEFAULT_MAX_TEMP = 35
-DEFAULT_MIN_HUMITIDY = 30
+DEFAULT_MIN_HUMIDITY = 30
 DEFAULT_MAX_HUMIDITY = 99
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -443,7 +443,7 @@ class ClimateDevice(Entity):
     @property
     def min_humidity(self) -> int:
         """Return the minimum humidity."""
-        return DEFAULT_MIN_HUMITIDY
+        return DEFAULT_MIN_HUMIDITY
 
     @property
     def max_humidity(self) -> int:

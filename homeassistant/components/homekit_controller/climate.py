@@ -1,12 +1,12 @@
 """Support for Homekit climate devices."""
 import logging
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import (
+    ClimateDevice, DEFAULT_MIN_HUMIDITY, DEFAULT_MAX_HUMIDITY,
+)
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF,
-
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_HUMIDITY_HIGH, SUPPORT_TARGET_HUMIDITY_LOW)
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import KNOWN_DEVICES, HomeKitEntity
@@ -62,8 +62,8 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
         self._target_humidity = None
         self._min_target_temp = None
         self._max_target_temp = None
-        self._min_target_humidity = None
-        self._max_target_humidity = None
+        self._min_target_humidity = DEFAULT_MIN_HUMIDITY
+        self._max_target_humidity = DEFAULT_MAX_HUMIDITY
         super().__init__(*args)
 
     def get_characteristic_types(self):
@@ -116,11 +116,9 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
 
         if 'minValue' in characteristic:
             self._min_target_humidity = characteristic['minValue']
-            self._features |= SUPPORT_TARGET_HUMIDITY_LOW
 
         if 'maxValue' in characteristic:
             self._max_target_humidity = characteristic['maxValue']
-            self._features |= SUPPORT_TARGET_HUMIDITY_HIGH
 
     def _update_heating_cooling_current(self, value):
         self._state = MODE_HOMEKIT_TO_HASS.get(value)
