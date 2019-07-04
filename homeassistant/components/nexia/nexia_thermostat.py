@@ -169,7 +169,7 @@ class NexiaThermostat:
         self._check_response(
             f"Failed PUT Request:\n" +
             f"  Url: {url}\n" +
-            f"  Payload {payload}",
+            f"  Payload {str(payload)}",
             request)
 
         # Assume something change, so update the thermostat's JSON
@@ -911,8 +911,8 @@ class NexiaThermostat:
         :param zone_id: The index of the zone, defaults to 0.
         :return: str
         """
-        return self._get_zone_key("name", thermostat_id=thermostat_id,
-                                  zone_id=zone_id)
+        return str(self._get_zone_key("name", thermostat_id=thermostat_id,
+                                      zone_id=zone_id))
 
     def get_zone_cooling_setpoint(self, thermostat_id=None, zone_id=0):
         """
@@ -942,9 +942,9 @@ class NexiaThermostat:
         :param zone_id: The index of the zone, defaults to 0.
         :return: str
         """
-        return self._get_zone_key("last_zone_mode",
-                                  thermostat_id=thermostat_id,
-                                  zone_id=zone_id).upper()
+        return str(self._get_zone_key("last_zone_mode",
+                                      thermostat_id=thermostat_id,
+                                      zone_id=zone_id).upper())
 
     def get_zone_requested_mode(self, thermostat_id=None, zone_id=0):
         """

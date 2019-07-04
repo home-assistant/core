@@ -62,7 +62,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the base Nexia device."""
+    """Configure the base Nexia device for Home Assistant."""
     from .nexia_thermostat import NexiaThermostat
 
     conf = config[DOMAIN]
