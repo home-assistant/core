@@ -97,6 +97,6 @@ class InComfortClimate(ClimateDevice):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         await self._room.set_override(temperature)
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None]
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
         pass
