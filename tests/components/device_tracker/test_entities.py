@@ -1,110 +1,62 @@
-"""Tests for fan platforms."""
-
-import unittest
+"""Tests for device tracker entities."""
 import pytest
 
 from homeassistant.components.device_tracker.config_entry import (
     BaseTrackerEntity, ScannerEntity
 )
 from homeassistant.components.device_tracker.const import (
-    SOURCE_TYPE_ROUTER, ATTR_SOURCE_TYPE
+    SOURCE_TYPE_ROUTER, ATTR_SOURCE_TYPE, DOMAIN
 )
 from homeassistant.const import (
     STATE_HOME,
     STATE_NOT_HOME,
     ATTR_BATTERY_LEVEL
 )
+from tests.common import MockConfigEntry
 
 
-class TestScannerEntity(unittest.TestCase):
+async def test_scanner_entity_device_tracker(hass):
+    """Test ScannerEntity based device tracker."""
+    config_entry = MockConfigEntry(domain='test')
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_forward_entry_setup(
+        config_entry, DOMAIN)
+    await hass.async_block_till_done()
+
+    entity_id = 'device_tracker.unnamed_device'
+    entity_state = hass.states.get(entity_id)
+    assert entity_state.attributes == {
+        ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER,
+        ATTR_BATTERY_LEVEL: 100
+    }
+    assert entity_state.state == STATE_NOT_HOME
+
+    entity = hass.data[DOMAIN].get_entity(entity_id)
+    entity.set_connected()
+    await hass.async_block_till_done()
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state.state == STATE_HOME
+
+
+def test_scanner_entity():
     """Test coverage for base ScannerEntity entity class."""
-
-    def setUp(self):
-        """Set up test data."""
-        self.entity = ScannerEntity()
-
-    def tearDown(self):
-        """Tear down unit test data."""
-        self.entity = None
-
-    def test_scannerentity(self):
-        """Test scanner entity methods."""
-        with pytest.raises(NotImplementedError):
-            assert self.entity.source_type is None
-        with pytest.raises(NotImplementedError):
-            assert self.entity.is_connected is None
-        with pytest.raises(NotImplementedError):
-            assert self.entity.state == STATE_NOT_HOME
-        assert self.entity.battery_level is None
+    entity = ScannerEntity()
+    with pytest.raises(NotImplementedError):
+        assert entity.source_type is None
+    with pytest.raises(NotImplementedError):
+        assert entity.is_connected is None
+    with pytest.raises(NotImplementedError):
+        assert entity.state == STATE_NOT_HOME
+    assert entity.battery_level is None
 
 
-class TestScannerImplementation(ScannerEntity):
-    """Test implementation of a ScannerEntity."""
-
-    def __init__(self):
-        """Init."""
-        self.connected = False
-
-    @property
-    def source_type(self):
-        """Return the source type, eg gps or router, of the device."""
-        return SOURCE_TYPE_ROUTER
-
-    @property
-    def battery_level(self):
-        """Return the battery level of the device.
-
-        Percentage from 0-100.
-        """
-        return 100
-
-    @property
-    def is_connected(self):
-        """Return true if the device is connected to the network."""
-        return self.connected
-
-
-class TestScannerEntityImpl(unittest.TestCase):
-    """Test coverage for base ScannerEntity entity class."""
-
-    def setUp(self):
-        """Set up test data."""
-        self.entity = TestScannerImplementation()
-
-    def tearDown(self):
-        """Tear down unit test data."""
-        self.entity = None
-
-    def test_scannerentity(self):
-        """Test scanner entity methods."""
-        assert self.entity.source_type == SOURCE_TYPE_ROUTER
-        assert self.entity.is_connected is False
-        assert self.entity.state == STATE_NOT_HOME
-        self.entity.connected = True
-        assert self.entity.is_connected is True
-        assert self.entity.state == STATE_HOME
-        assert self.entity.battery_level == 100
-        assert self.entity.state_attributes == {
-            ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER,
-            ATTR_BATTERY_LEVEL: 100
-        }
-
-
-class TestBaseTrackerEntity(unittest.TestCase):
+def test_base_tracker_entity():
     """Test coverage for base BaseTrackerEntity entity class."""
-
-    def setUp(self):
-        """Set up test data."""
-        self.entity = BaseTrackerEntity()
-
-    def tearDown(self):
-        """Tear down unit test data."""
-        self.entity = None
-
-    def test_basetrackerentity(self):
-        """Test BaseTrackerEntity entity methods."""
-        with pytest.raises(NotImplementedError):
-            assert self.entity.source_type is None
-        assert self.entity.battery_level is None
-        with pytest.raises(NotImplementedError):
-            assert self.entity.state_attributes is None
+    entity = BaseTrackerEntity()
+    with pytest.raises(NotImplementedError):
+        assert entity.source_type is None
+    assert entity.battery_level is None
+    with pytest.raises(NotImplementedError):
+        assert entity.state_attributes is None
