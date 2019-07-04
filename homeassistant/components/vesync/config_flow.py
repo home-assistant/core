@@ -1,4 +1,4 @@
-"""Config flow utilities"""
+"""Config flow utilities."""
 import logging
 from collections import OrderedDict
 import voluptuous as vol
@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @callback
 def configured_instances(hass):
-    """Return already configured instances"""
+    """Return already configured instances."""
     return set(
         entry.data[CONF_USERNAME]
         for entry in hass.config_entries.async_entries(DOMAIN))
@@ -22,12 +22,13 @@ def configured_instances(hass):
 
 @config_entries.HANDLERS.register(DOMAIN)
 class VeSyncFlowHandler(config_entries.ConfigFlow):
-    """Handle a config flow"""
+    """Handle a config flow."""
+
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
-        """Instantiate config flow"""
+        """Instantiate config flow."""
         self._username = None
         self._password = None
         self._time_zone = None
@@ -37,7 +38,7 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
         self.data_schema[vol.Optional(CONF_TIME_ZONE)] = str
 
     async def _show_form(self, errors=None):
-        """Show form to the user"""
+        """Show form to the user."""
         return self.async_show_form(
             step_id='user',
             data_schema=vol.Schema(self.data_schema),
@@ -45,12 +46,11 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
         )
 
     async def async_step_import(self, import_config):
-        """Handle external yaml configuration"""
+        """Handle external yaml configuration."""
         return await self.async_step_user(import_config)
 
     async def async_step_user(self, user_input=None):
-        """Handle a flow start"""
-
+        """Handle a flow start."""
         if not user_input:
             return await self._show_form()
 

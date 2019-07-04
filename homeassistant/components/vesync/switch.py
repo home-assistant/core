@@ -12,7 +12,7 @@ DOMAIN = 'vesync'
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up switches"""
+    """Set up switches."""
     await async_add_entities_retry(
         hass,
         async_add_entities,
@@ -23,7 +23,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 def add_entity(device, async_add_entities):
-    """Check if device is online and add entity"""
+    """Check if device is online and add entity."""
     device.update()
 
     async_add_entities([VeSyncSwitchHA(device)], update_before_add=True)

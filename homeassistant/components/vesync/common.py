@@ -1,4 +1,4 @@
-"""Common utilities for VeSync Component"""
+"""Common utilities for VeSync Component."""
 import logging
 import asyncio
 from datetime import timedelta
@@ -11,8 +11,7 @@ CONF_FANS = 'fans'
 
 
 async def async_process_devices(hass, manager):
-    """Assign devices to proper component"""
-
+    """Assign devices to proper component."""
     devices = {}
     devices[CONF_LIGHTS] = []
     devices[CONF_SWITCHES] = []
@@ -55,8 +54,7 @@ async def async_add_entities_retry(hass,
                                    objects,
                                    callback,
                                    interval=timedelta(seconds=60)):
-    """Add entities now and retry later if issues are encountered"""
-
+    """Add entities now and retry later if issues are encountered."""
     add_objects = objects.copy()
 
     is_cancelled = False

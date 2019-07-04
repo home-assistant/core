@@ -26,7 +26,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up the VeSync component."""
-
     hass.data[DOMAIN] = {}
 
     conf = config[DOMAIN]
@@ -49,7 +48,7 @@ async def async_setup(hass, config):
 
 
 async def async_setup_entry(hass, config_entry):
-    """Set up Vesync as config entry"""
+    """Set up Vesync as config entry."""
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
     time_zone = config_entry.data[CONF_TIME_ZONE]

@@ -1,4 +1,4 @@
-"""Support for VeSync Fans and Air Purifier"""
+"""Support for VeSync Fans and Air Purifier."""
 import logging
 
 from homeassistant.components.fan import (FanEntity, SUPPORT_SET_SPEED)
@@ -13,7 +13,7 @@ FAN_SPEEDS = ["auto", "low", "medium", "high"]
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up fans"""
+    """Set up fans."""
     await async_add_entities_retry(
         hass,
         async_add_entities,
@@ -24,7 +24,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 def add_entity(device, async_add_entities):
-    """Check if device is online and add entity"""
+    """Check if device is online and add entity."""
     device.update()
 
     async_add_entities([VeSyncFanHA(device)], update_before_add=True)
@@ -44,7 +44,7 @@ class VeSyncFanHA(FanEntity):
 
     @property
     def is_on(self):
-        """Return True if device is on"""
+        """Return True if device is on."""
         return self.smartfan.device_status == "on"
 
     @property
@@ -60,7 +60,7 @@ class VeSyncFanHA(FanEntity):
 
     @property
     def speed_list(self):
-        """Get the list of available speeds"""
+        """Get the list of available speeds."""
         return FAN_SPEEDS
 
     @property
@@ -85,6 +85,7 @@ class VeSyncFanHA(FanEntity):
         return attr
 
     def set_speed(self, speed):
+        """Set fan speed."""
         if speed is None or speed == "auto":
             self.smartfan.auto_mode()
         else:
@@ -93,13 +94,13 @@ class VeSyncFanHA(FanEntity):
 
     # pylint: disable=arguments-differ
     def turn_on(self):
-        """Turn vesync fan on"""
+        """Turn vesync fan on."""
         self.smartfan.turn_on()
 
     def turn_off(self, **kwargs):
-        """Turn vesync fan off"""
+        """Turn vesync fan off."""
         self.smartfan.turn_off()
 
     def update(self):
-        """Update vesync fan entity"""
+        """Update vesync fan entity."""
         self.smartfan.update()
