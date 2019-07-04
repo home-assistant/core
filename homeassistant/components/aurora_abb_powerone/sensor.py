@@ -75,7 +75,6 @@ class AuroraABBSolarPVMonitorSensor(Entity):
             self.client.connect()
             # read ADC channel 3 (grid power output)
             power_watts = self.client.measure(3, True)
-            self.client.close()
             self._state = round(power_watts, 1)
             # _LOGGER.debug("Got reading %fW" % self._state)
         except AuroraError as error:
