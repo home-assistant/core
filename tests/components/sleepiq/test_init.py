@@ -10,21 +10,25 @@ import homeassistant.components.sleepiq as sleepiq
 from tests.common import load_fixture, get_test_home_assistant
 
 
-def mock_responses(mock):
+def mock_responses(mock, single=False):
     """Mock responses for SleepIQ."""
     base_url = 'https://prod-api.sleepiq.sleepnumber.com/rest/'
+    if single:
+        suffix = '-single'
+    else:
+        suffix = ''
     mock.put(
         base_url + 'login',
         text=load_fixture('sleepiq-login.json'))
     mock.get(
         base_url + 'bed?_k=0987',
-        text=load_fixture('sleepiq-bed.json'))
+        text=load_fixture('sleepiq-bed%s.json' % suffix))
     mock.get(
         base_url + 'sleeper?_k=0987',
         text=load_fixture('sleepiq-sleeper.json'))
     mock.get(
         base_url + 'bed/familyStatus?_k=0987',
-        text=load_fixture('sleepiq-familystatus.json'))
+        text=load_fixture('sleepiq-familystatus%s.json' % suffix))
 
 
 class TestSleepIQ(unittest.TestCase):
