@@ -97,6 +97,9 @@ class EagleSensor(Entity):
 
     def get_state(self, data):
         """Get the sensor value from the dictionary."""
+        if data is None:
+            return None
+
         state = data.get(self._type)
         return state
 
@@ -120,11 +123,13 @@ class EagleData:
         """Get the latest data from the Eagle-200 device."""
         from eagle200_reader import EagleReader
 
-        for sensor_type in SENSORS:
-            try:
-                self.data.update({sensor_type: getattr(EagleReader(
-                    self._ip_address, self._cloud_id, self._install_code),
-                                                       sensor_type)()})
-            except (ConnectError, HTTPError, Timeout, ValueError) as error:
-                _LOGGER.error("Unable to connect to the Eagle-200: %s", error)
-                self.data.update({sensor_type: None})
+        try:
+            eagle_reader = EagleReader(
+                self._ip_address, self._cloud_id, self._install_code)
+
+            for sensor_type in SENSORS:
+                self.data.update({sensor_type: getattr(
+                    eagle_reader, sensor_type)()})
+        except (ConnectError, HTTPError, Timeout, ValueError) as error:
+            _LOGGER.error("Unable to connect to the Eagle-200: %s", error)
+            self.data = None
