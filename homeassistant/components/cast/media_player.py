@@ -13,7 +13,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SEEK, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_CAST)
 from homeassistant.const import (
     CONF_HOST, EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF, STATE_PAUSED,
     STATE_PLAYING)
@@ -37,9 +37,10 @@ CAST_SPLASH = 'https://home-assistant.io/images/cast/splash.png'
 
 DEFAULT_PORT = 8009
 
-SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_PLAY_MEDIA | \
+SUPPORT_MEDIA_PLAYER_CAST = SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_PLAY_MEDIA | \
                SUPPORT_STOP | SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
-               SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
+               SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
+               SUPPORT_CAST
 
 # Stores a threading.Lock that is held by the internal pychromecast discovery.
 INTERNAL_DISCOVERY_RUNNING_KEY = 'cast_discovery_running'
@@ -1117,7 +1118,7 @@ class CastDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        support = SUPPORT_CAST
+        support = SUPPORT_MEDIA_PLAYER_CAST
         media_status, _ = self._media_status()
 
         if media_status:

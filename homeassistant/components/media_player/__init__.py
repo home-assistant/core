@@ -46,7 +46,7 @@ from .const import (
     SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_STOP, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP)
+    SUPPORT_VOLUME_STEP, SUPPORT_CAST)
 from .reproduce_state import async_reproduce_states  # noqa
 
 _LOGGER = logging.getLogger(__name__)
@@ -678,6 +678,11 @@ class MediaPlayerDevice(Entity):
     def support_shuffle_set(self):
         """Boolean if shuffle is supported."""
         return bool(self.supported_features & SUPPORT_SHUFFLE_SET)
+
+    @property
+    def support_cast(self):
+        """Boolean if cast is supported."""
+        return bool(self.supported_features & SUPPORT_CAST)
 
     def async_toggle(self):
         """Toggle the power on the media player.
