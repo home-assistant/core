@@ -3,6 +3,7 @@ import enum
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.lock import DOMAIN as LOCK
@@ -25,6 +26,7 @@ ZHA_DISCOVERY_NEW = 'zha_discovery_new_{}'
 
 COMPONENTS = (
     BINARY_SENSOR,
+    DEVICE_TRACKER,
     FAN,
     LIGHT,
     LOCK,
