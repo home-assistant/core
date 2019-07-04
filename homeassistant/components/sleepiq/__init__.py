@@ -53,7 +53,7 @@ def setup(hass, config):
     try:
         DATA = SleepIQData(client)
         DATA.update()
-    except HTTPError:
+    except ValueError:
         message = """
             SleepIQ failed to login, double check your username and password"
         """
