@@ -135,7 +135,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             try:
                 data = NetatmoData(auth, data_class, config.get(CONF_STATION))
             except pyatmo.NoDevice:
-                _LOGGER.warning(
+                _LOGGER.info(
                     "No %s devices found",
                     NETATMO_DEVICE_TYPES[data_class.__name__]
                 )
@@ -144,6 +144,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             if CONF_MODULES in config:
                 module_items = config[CONF_MODULES]
                 for module_name in module_items:
+                    if module_name not in data.get_module_names():
+                        continue
                     for condition in data.station_data.monitoredConditions(
                         module_name
                     ):
