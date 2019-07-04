@@ -751,10 +751,6 @@ netdisco==2.6.0
 # homeassistant.components.neurio_energy
 neurio==0.3.1
 
-# homeasssitant.components.nexia
-bs4==0.0.1
-html5lib==1.0.1
-
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
 
@@ -1868,5 +1864,3 @@ zigpy-xbee-homeassistant==0.2.0
 
 # homeassistant.components.zoneminder
 zm-py==0.3.3
-
-
