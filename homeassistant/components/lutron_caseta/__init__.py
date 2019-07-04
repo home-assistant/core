@@ -33,6 +33,7 @@ LUTRON_CASETA_COMPONENTS = [
     'light', 'switch', 'cover', 'scene', 'fan'
 ]
 
+
 async def async_setup(hass, base_config):
     """Set up the Lutron component."""
     from pylutron_caseta.smartbridge import Smartbridge

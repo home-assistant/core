@@ -47,7 +47,7 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
         speeds specified instead.
         """
         return [LUTRON_SPEED_OFF, LUTRON_SPEED_LOW, LUTRON_SPEED_MEDIUM,
-            LUTRON_SPEED_MEDIUMHIGH, LUTRON_SPEED_HIGH]
+                LUTRON_SPEED_MEDIUMHIGH, LUTRON_SPEED_HIGH]
 
     @property
     def supported_features(self) -> int:
@@ -73,8 +73,9 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
     def is_on(self):
         """Return true if device is on."""
         return self._state["fan_speed"] in [LUTRON_SPEED_LOW,
-            LUTRON_SPEED_MEDIUM, LUTRON_SPEED_MEDIUMHIGH,
-            LUTRON_SPEED_HIGH]
+                                            LUTRON_SPEED_MEDIUM,
+                                            LUTRON_SPEED_MEDIUMHIGH,
+                                            LUTRON_SPEED_HIGH]
 
     async def async_update(self):
         """Update when forcing a refresh of the device."""
