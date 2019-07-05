@@ -36,7 +36,7 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
     @property
     def speed(self) -> str:
         """Return the current speed."""
-        return self._speed
+        return self._state["fan_speed"]
 
     @property
     def speed_list(self) -> list:
@@ -66,8 +66,7 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
 
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
-        self._speed = speed
-        self._smartbridge.set_fan(self._device_id, self._speed)
+        self._smartbridge.set_fan(self._device_id, speed)
 
     @property
     def is_on(self):
@@ -80,5 +79,4 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
     async def async_update(self):
         """Update when forcing a refresh of the device."""
         self._state = self._smartbridge.get_device_by_id(self._device_id)
-        self._speed = self._state["fan_speed"]
         _LOGGER.debug("State of this lutron fan device is %s", self._state)
