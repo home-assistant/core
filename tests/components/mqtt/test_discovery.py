@@ -77,7 +77,7 @@ async def test_only_valid_components(hass, mqtt_mock, caplog):
 
     await hass.async_block_till_done()
 
-    assert 'Component {} is not supported'.format(
+    assert 'Integration {} is not supported'.format(
         invalid_component
     ) in caplog.text
 

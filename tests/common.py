@@ -329,7 +329,7 @@ mock_mqtt_component = threadsafe_coroutine_factory(async_mock_mqtt_component)
 def mock_component(hass, component):
     """Mock a component is setup."""
     if component in hass.config.components:
-        AssertionError("Component {} is already setup".format(component))
+        AssertionError("Integration {} is already setup".format(component))
 
     hass.config.components.add(component)
 

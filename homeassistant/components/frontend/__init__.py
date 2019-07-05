@@ -162,7 +162,7 @@ def async_register_built_in_panel(hass, component_name,
     panels = hass.data.setdefault(DATA_PANELS, {})
 
     if panel.frontend_url_path in panels:
-        _LOGGER.warning("Overwriting component %s", panel.frontend_url_path)
+        _LOGGER.warning("Overwriting integration %s", panel.frontend_url_path)
 
     panels[panel.frontend_url_path] = panel
 
