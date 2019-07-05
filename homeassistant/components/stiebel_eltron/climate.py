@@ -65,7 +65,7 @@ class StiebelEltron(ClimateDevice):
         self._target_temperature = None
         self._current_temperature = None
         self._current_humidity = None
-        self._current_hvac = None
+        self._operation = None
         self._filter_alarm = None
         self._force_update = False
         self._ste_data = ste_data
@@ -84,7 +84,7 @@ class StiebelEltron(ClimateDevice):
         self._current_temperature = self._ste_data.api.get_current_temp()
         self._current_humidity = self._ste_data.api.get_current_humidity()
         self._filter_alarm = self._ste_data.api.get_filter_alarm_status()
-        self._current_operation = self._ste_data.api.get_operation()
+        self._operation = self._ste_data.api.get_operation()
 
         _LOGGER.debug("Update %s, current temp: %s", self._name,
                       self._current_temperature)
@@ -145,12 +145,12 @@ class StiebelEltron(ClimateDevice):
     @property
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
-        return STE_TO_HA_HVAC.get(self._current_operation)
+        return STE_TO_HA_HVAC.get(self._operation)
 
     @property
     def preset_mode(self):
         """Return the current preset mode, e.g., home, away, temp."""
-        return STE_TO_HA_PRESET.get(self._current_operation)
+        return STE_TO_HA_PRESET.get(self._operation)
 
     @property
     def preset_modes(self):
@@ -162,7 +162,7 @@ class StiebelEltron(ClimateDevice):
         if self.preset_mode:
             return
         new_mode = HA_TO_STE_HVAC.get(hvac_mode)
-        _LOGGER.debug("set_hvac_mode: %s -> %s", self._current_operation,
+        _LOGGER.debug("set_hvac_mode: %s -> %s", self._operation,
                       new_mode)
         self._ste_data.api.set_operation(new_mode)
         self._force_update = True
@@ -178,7 +178,7 @@ class StiebelEltron(ClimateDevice):
     def set_preset_mode(self, preset_mode: str):
         """Set new preset mode."""
         new_mode = HA_TO_STE_PRESET.get(preset_mode)
-        _LOGGER.debug("set_hvac_mode: %s -> %s", self._current_operation,
+        _LOGGER.debug("set_hvac_mode: %s -> %s", self._operation,
                       new_mode)
         self._ste_data.api.set_operation(new_mode)
         self._force_update = True
