@@ -279,18 +279,20 @@ class NotionEntity(Entity):
         Sensors can move to other bridges based on signal strength, etc.
         """
         sensor = self._notion.sensors[self._sensor_id]
-        if self._bridge_id != sensor['bridge']['id']:
-            self._bridge_id = sensor['bridge']['id']
-            device_registry = await dr.async_get_registry(self.hass)
+        if self._bridge_id == sensor['bridge']['id']:
+            return
+            
+        self._bridge_id = sensor['bridge']['id']
 
-            this_device = device_registry.async_get_device(
-                {DOMAIN: sensor['hardware_id']})
-
-            bridge = self._notion.bridges[self._bridge_id]
-            bridge_device = device_registry.async_get_device(
-                {DOMAIN: bridge['hardware_id']}, set())
-            device_registry.async_update_device(
-                this_device.id, via_device_id=bridge_device.id)
+        device_registry = await dr.async_get_registry(self.hass)
+        bridge = self._notion.bridges[self._bridge_id]
+        bridge_device = device_registry.async_get_device(
+            {DOMAIN: bridge['hardware_id']}, set())
+        this_device = device_registry.async_get_device(
+            {DOMAIN: sensor['hardware_id']})
+        
+        device_registry.async_update_device(
+            this_device.id, via_device_id=bridge_device.id)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
