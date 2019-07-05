@@ -7,7 +7,8 @@ from homeassistant.components.twilio import DATA_TWILIO
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA,
-                                             BaseNotificationService, ATTR_DATA)
+                                             BaseNotificationService,
+                                             ATTR_DATA)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,4 +54,5 @@ class TwilioSMSNotificationService(BaseNotificationService):
 
         for target in targets:
             self.client.messages.create(
-                to=target, body=message, from_=self.from_number, media_url=media)
+                to=target, body=message, from_=self.from_number,
+                media_url=media)
