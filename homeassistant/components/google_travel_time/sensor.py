@@ -184,7 +184,7 @@ class GoogleTravelTimeSensor(Entity):
         if 'distance' in _data:
             res['distance'] = _data['distance']['text']
         res['origin'] = self._origin
-        res['destination'] = self._destination 
+        res['destination'] = self._destination
         return res
 
     @property
