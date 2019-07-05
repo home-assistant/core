@@ -449,6 +449,8 @@ class TestJewishCalenderSensor():
     omer_params = [
         make_nyc_test_params(dt(2019, 4, 21, 0, 0), 1),
         make_jerusalem_test_params(dt(2019, 4, 21, 0, 0), 1),
+        make_nyc_test_params(dt(2019, 4, 21, 23, 0), 2),
+        make_jerusalem_test_params(dt(2019, 4, 21, 23, 0), 2),
         make_nyc_test_params(dt(2019, 5, 23, 0, 0), 33),
         make_jerusalem_test_params(dt(2019, 5, 23, 0, 0), 33),
         make_nyc_test_params(dt(2019, 6, 8, 0, 0), 49),
@@ -461,6 +463,8 @@ class TestJewishCalenderSensor():
     omer_test_ids = [
         "nyc_first_day_of_omer",
         "israel_first_day_of_omer",
+        "nyc_first_day_of_omer_after_tzeit",
+        "israel_first_day_of_omer_after_tzeit",
         "nyc_lag_baomer",
         "israel_lag_baomer",
         "nyc_last_day_of_omer",
