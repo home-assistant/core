@@ -1530,8 +1530,16 @@ pygtt==1.1.2
 # homeassistant.components.sensor.version
 pyhaversion==2.0.3
 
+<<<<<<< HEAD
 # homeassistant.components.binary_sensor.hikvision
 pyhik==0.1.9
+=======
+# homeassistant.components.heos
+pyheos==0.5.2
+
+# homeassistant.components.hikvision
+pyhik==0.2.3
+>>>>>>> Update pyHik library to 0.2.3 (#24957)
 
 # homeassistant.components.hive
 pyhiveapi==0.2.17
