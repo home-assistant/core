@@ -62,7 +62,7 @@ set_hvac_mode:
       example: 'climate.nest'
     hvac_mode:
       description: New value of operation mode.
-      example: Heat
+      example: heat
 set_swing_mode:
   description: Set swing operation for climate device.
   fields:
