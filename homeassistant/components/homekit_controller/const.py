@@ -19,6 +19,7 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     'window': 'cover',
     'window-covering': 'cover',
     'lock-mechanism': 'lock',
+    'contact': 'binary_sensor',
     'motion': 'binary_sensor',
     'humidity': 'sensor',
     'light': 'sensor',

@@ -1,7 +1,7 @@
 """Support for Homekit motion sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorDevice, DEVICE_CLASS_DOOR, DEVICE_CLASS_MOTION
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -20,11 +20,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     def async_add_service(aid, service):
-        if service['stype'] != 'motion':
-            return False
-        info = {'aid': aid, 'iid': service['iid']}
-        async_add_entities([HomeKitMotionSensor(conn, info)], True)
-        return True
+        if service['stype'] == 'contact':
+            info = {'aid': aid, 'iid': service['iid']}
+            async_add_entities([HomeKitContactSensor(conn, info)], True)
+            return True
+
+        if service['stype'] == 'motion':
+            info = {'aid': aid, 'iid': service['iid']}
+            async_add_entities([HomeKitMotionSensor(conn, info)], True)
+            return True
+
+        return False
 
     conn.add_listener(async_add_service)
 
@@ -52,7 +58,38 @@ class HomeKitMotionSensor(HomeKitEntity, BinarySensorDevice):
     @property
     def device_class(self):
         """Define this binary_sensor as a motion sensor."""
-        return 'motion'
+        return DEVICE_CLASS_MOTION
+
+    @property
+    def is_on(self):
+        """Has motion been detected."""
+        return self._on
+
+
+class HomeKitContactSensor(HomeKitEntity, BinarySensorDevice):
+    """Representation of a Homekit sensor."""
+
+    def __init__(self, *args):
+        """Initialise the entity."""
+        super().__init__(*args)
+        self._on = False
+
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity is tracking."""
+        # pylint: disable=import-error
+        from homekit.model.characteristics import CharacteristicsTypes
+
+        return [
+            CharacteristicsTypes.CONTACT_STATE,
+        ]
+
+    def _update_contact_state(self, value):
+        self._on = value
+
+    @property
+    def device_class(self):
+        """Define this binary_sensor as a door sensor."""
+        return DEVICE_CLASS_DOOR
 
     @property
     def is_on(self):
