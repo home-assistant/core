@@ -30,6 +30,7 @@ from . import (
     ATTR_NIGHT_SOUND, ATTR_SLEEP_TIME, ATTR_SPEECH_ENHANCE, ATTR_TIME,
     ATTR_VOLUME, ATTR_WITH_GROUP,
     SERVICE_CLEAR_TIMER, SERVICE_JOIN, SERVICE_RESTORE, SERVICE_SET_OPTION,
+    SERVICE_PLAY_QUEUE,
     SERVICE_SET_TIMER, SERVICE_SNAPSHOT, SERVICE_UNJOIN, SERVICE_UPDATE_ALARM)
 
 _LOGGER = logging.getLogger(__name__)
@@ -149,6 +150,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     call = entity.set_alarm
                 elif service == SERVICE_SET_OPTION:
                     call = entity.set_option
+                elif service == SERVICE_PLAY_QUEUE:
+                    call = entity.play_queue
 
                 hass.async_add_executor_job(call, data)
 
@@ -1074,6 +1077,11 @@ class SonosEntity(MediaPlayerDevice):
 
         if ATTR_SPEECH_ENHANCE in data and self._speech_enhance is not None:
             self.soco.dialog_mode = data[ATTR_SPEECH_ENHANCE]
+
+    @soco_error()
+    def play_queue(self, data):
+        """Start playing the queue."""
+        self.soco.play_from_queue(0)
 
     @property
     def device_state_attributes(self):
