@@ -248,7 +248,6 @@ class EvoDevice(Entity):
 
         self._name = self._icon = self._precision = None
         self._state_attributes = self._supported_features = None
-        self._available = False  # should become True after first update()
 
     @callback
     def _refresh(self, packet):
@@ -277,11 +276,6 @@ class EvoDevice(Entity):
     def icon(self) -> str:
         """Return the icon to use in the frontend UI."""
         return self._icon
-
-    @property
-    def available(self) -> bool:
-        """Return True if the device is currently available."""
-        return self._available
 
     @property
     def supported_features(self) -> int:

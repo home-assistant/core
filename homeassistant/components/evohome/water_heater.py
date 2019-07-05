@@ -89,7 +89,3 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         except (requests.exceptions.RequestException,
                 evohomeclient2.AuthenticationError) as err:
             _handle_exception(err)
-
-    async def async_update(self)  -> Awaitable[None]:
-        """Process the evohome DHW controller's state data."""
-        self._available = self._evo_device.temperatureStatus['isAvailable']

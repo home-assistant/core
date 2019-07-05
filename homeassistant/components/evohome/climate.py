@@ -1,4 +1,5 @@
 """Support for Climate devices of (EMEA/EU-based) Honeywell TCC systems."""
+from datetime import datetime, timedelta
 import logging
 from typing import Any, Awaitable, Dict, Optional, List
 
@@ -117,7 +118,7 @@ class EvoZone(EvoClimateDevice):
         self._hvac_modes = list(HA_HVAC_TO_ZONE)
         self._preset_modes = list(HA_PRESET_TO_ZONE)
 
-    @property  # TODO: finished
+    @property  # TODO: check
     def hvac_mode(self) -> str:
         """Return the current operating mode of the evohome Zone.
 
@@ -142,60 +143,63 @@ class EvoZone(EvoClimateDevice):
             return HVAC_MODE_AUTO
 
         is_off = self.target_temperature == self.min_temp
-    #   _LOGGER.warn("hvac_mode(Zone=%s): B %s", self._id, HVAC_MODE_OFF if is_off else HVAC_MODE_HEAT)
+        # _LOGGER.warn("hvac_mode(Zone=%s): B %s", self._id, HVAC_MODE_OFF if is_off else HVAC_MODE_HEAT)
         return HVAC_MODE_OFF if is_off else HVAC_MODE_HEAT
 
-    @property  # TODO: finished
+    @property  # TODO: check
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature of the evohome Zone."""
         return (self._evo_device.temperatureStatus['temperature']
                 if self._evo_device.temperatureStatus['isAvailable'] else None)
 
-    @property  # TODO: finished
+    @property  # TODO: check
     def target_temperature(self) -> Optional[float]:
         """Return the target temperature of the evohome Zone."""
         return self._evo_device.setpointStatus['targetHeatTemperature']
 
-    @property
+    @property  # TODO: check
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-    #   _LOGGER.warn("preset_mode(Zone=%s): %s", self._id, 'auto')
+        # _LOGGER.warn("preset_mode(Zone=%s): %s", self._id, 'auto')
         return 'auto'
 
-    @property  # TODO: finished
+    @property
     def min_temp(self) -> float:
         """Return the minimum target temperature of a evohome Zone.
 
-        The default is 5, but it is configurable within 5-35 (in Celsius).
+        The default is 5, but is user-configurable within 5-35 (in Celsius).
         """
         return self._evo_device.setpointCapabilities['minHeatSetpoint']
 
-    @property  # TODO: finished
+    @property
     def max_temp(self) -> float:
         """Return the maximum target temperature of a evohome Zone.
 
-        The default is 35, but it is configurable within 5-35 (in Celsius).
+        The default is 35, but is user-configurable within 5-35 (in Celsius).
         """
         return self._evo_device.setpointCapabilities['maxHeatSetpoint']
 
-    def _set_temperature(self, temperature, until=None):
+    def _set_temperature(self, temperature, until=None):  # TODO: check
         """Set the new target temperature of a Zone.
 
         temperature is required, until can be:
           - strftime('%Y-%m-%dT%H:%M:%SZ') for TemporaryOverride, or
           - None for PermanentOverride (i.e. indefinitely)
         """
+        if type(until) == datetime:
+            until = until.strftime('%Y-%m-%dT%H:%M:%SZ')
         try:
             self._evo_device.set_temperature(temperature, until)
         except (requests.exceptions.RequestException,
                 evohomeclient2.AuthenticationError) as err:
             _handle_exception(err)
 
-    def set_temperature(self, **kwargs) -> None:
-        """Set a new target temperature, indefinitely."""
-        self._set_temperature(kwargs['temperature'], until=None)
+    def set_temperature(self, **kwargs) -> None:  # TODO: check
+        """Set a new target temperature for an hour."""
+        until = kwargs.get('until', datetime.now() + timedelta(hours=1))
+        self._set_temperature(kwargs['temperature'], until=until)
 
-    def _set_operation_mode(self, op_mode) -> None:
+    def _set_operation_mode(self, op_mode) -> None:  # TODO: check
         """Set the Zone to any of its native EVO_* operating modes."""
         if op_mode == EVO_FOLLOW:
             try:
@@ -211,7 +215,7 @@ class EvoZone(EvoClimateDevice):
                     evohomeclient2.AuthenticationError) as err:
                 _handle_exception(err)
 
-    def set_hvac_mode(self, hvac_mode: str) -> None:  # TODO: finished
+    def set_hvac_mode(self, hvac_mode: str) -> None:  # TODO: check
         """Set an operating mode for the Zone."""
         if hvac_mode == HVAC_MODE_OFF:
             self._set_temperature(self.min_temp, until=None)
@@ -220,13 +224,9 @@ class EvoZone(EvoClimateDevice):
         else:
             self._set_operation_mode(HA_HVAC_TO_ZONE.get(hvac_mode))
 
-    def set_preset_mode(self, preset_mode: str) -> None:
+    def set_preset_mode(self, preset_mode: str) -> None:  # TODO: check
         """Set new preset mode."""
         self._set_operation_mode(preset_mode)
-
-    async def async_update(self) -> Awaitable[None]:  # TODO: finished
-        """Process the evohome Zone's state data."""
-        self._available = self._evo_device.temperatureStatus['isAvailable']
 
 
 class EvoController(EvoClimateDevice):
@@ -322,7 +322,3 @@ class EvoController(EvoClimateDevice):
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set a new preset mode."""
         self._set_operation_mode(HA_PRESET_TO_TCS.get(preset_mode, EVO_AUTO))
-
-    async def async_update(self) -> Awaitable[None]:
-        """Process the evohome Controller's state data."""
-        self._available = True
