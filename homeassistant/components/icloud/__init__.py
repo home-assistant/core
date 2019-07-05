@@ -1,10 +1,8 @@
 """The iCloud component."""
-import json
 import logging
 import operator
 import os
 from datetime import timedelta
-from pprint import pprint
 
 import voluptuous as vol
 from pyicloud import PyiCloudService
@@ -276,7 +274,7 @@ class IcloudAccount():
             _LOGGER.error('No iCloud Devices found!')
 
     def update_devices(self):
-        """Update iCloud devices"""
+        """Update iCloud devices."""
         if self.api is None:
             return
 
@@ -294,7 +292,7 @@ class IcloudAccount():
                     # New device, should be unique
                     if devicename in self.devices:
                         _LOGGER.error('Multiple devices with name: %s',
-                            devicename)
+                                      devicename)
                         continue
 
                     _LOGGER.debug('Adding iCloud device: %s', devicename)
@@ -313,7 +311,7 @@ class IcloudAccount():
     def determine_interval(self) -> int:
         """Calculate new interval between to API fetch (in minutes)."""
         intervals = {}
-        for devicename, device in self.devices.items():
+        for device in self.devices:
             if device.location is None:
                 continue
 
@@ -324,13 +322,9 @@ class IcloudAccount():
                 device.location['latitude'],
                 device.location['longitude']
             ).result()
-            _LOGGER.error('currentzone')
-            pprint(currentzone)
 
             if currentzone is not None:
                 intervals[device.name] = self._max_interval
-                _LOGGER.error('intervals')
-                _LOGGER.info(json.dumps(intervals, indent=2))
                 continue
 
             zones = (self._hass.states.get(entity_id) for entity_id
@@ -349,11 +343,7 @@ class IcloudAccount():
 
             if distances:
                 mindistance = min(distances)
-                _LOGGER.error('distances')
-                _LOGGER.info(json.dumps(distances, indent=2))
-                _LOGGER.error('mindistance : %s', mindistance)
             else:
-                _LOGGER.error('NO distances')
                 continue
 
             # Calculate out how long it would take for the device to drive
@@ -364,19 +354,17 @@ class IcloudAccount():
             interval = max(interval, 1)
 
             if interval > 180:
-                _LOGGER.error('interval > 180 : %s', interval)
                 # Three hour drive?
                 # This is far enough that they might be flying
                 interval = 30
 
-            if device.battery_level is not None and device.battery_level <= 33 and mindistance > 3:
+            if (device.battery_level is not None and
+                    device.battery_level <= 33 and
+                    mindistance > 3):
                 # Low battery - let's check half as often
-                _LOGGER.error('Low battery : %s', interval)
                 interval = interval * 2
 
-            _LOGGER.error('intervals')
             intervals[device.name] = interval
-            _LOGGER.info(json.dumps(intervals, indent=2))
 
         return max(
             int(min(
@@ -393,7 +381,6 @@ class IcloudAccount():
             return
 
         if self.api.requires_2fa:
-            from pyicloud.exceptions import PyiCloudException
             try:
                 if self.__trusted_device is None:
                     self.icloud_need_trusted_device()
@@ -638,5 +625,5 @@ class IcloudDevice():
         return self._seen
 
     def set_seen(self, seen):
-        """Set the seen value"""
+        """Set the seen value."""
         self._seen = seen

@@ -16,7 +16,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
 
     def see_device():
         """Handle the reporting of the iCloud device position."""
-        for accountname, icloud_account in hass.data[DATA_ICLOUD].items():
+        for icloud_account in hass.data[DATA_ICLOUD]:
             for devicename, device in icloud_account.devices.items():
 
                 # An entity will not be created by see() when track=false in
