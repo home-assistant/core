@@ -153,3 +153,30 @@ async def test_climate_read_thermostat_state(hass, utcnow):
     assert state.state == 'cool'
     assert state.attributes['current_temperature'] == 21
     assert state.attributes['current_humidity'] == 45
+
+
+async def test_hvac_mode_vs_hvac_action(hass, utcnow):
+    """Check that we haven't conflated hvac_mode and hvac_action."""
+    helper = await setup_test_component(hass, [create_thermostat_service()])
+
+    # Simulate that current temperature is above target temp
+    # Heating might be on, but hvac_action currently 'off'
+    helper.characteristics[TEMPERATURE_CURRENT].value = 22
+    helper.characteristics[TEMPERATURE_TARGET].value = 21
+    helper.characteristics[HEATING_COOLING_CURRENT].value = 0
+    helper.characteristics[HEATING_COOLING_TARGET].value = 1
+    helper.characteristics[HUMIDITY_CURRENT].value = 50
+    helper.characteristics[HUMIDITY_TARGET].value = 45
+
+    state = await helper.poll_and_get_state()
+    assert state.state == 'heat'
+    assert state.attributes['hvac_action'] == 'off'
+
+    # Simulate that current temperature is below target temp
+    # Heating might be on and hvac_action currently 'heat'
+    helper.characteristics[TEMPERATURE_CURRENT].value = 19
+    helper.characteristics[HEATING_COOLING_CURRENT].value = 1
+
+    state = await helper.poll_and_get_state()
+    assert state.state == 'heat'
+    assert state.attributes['hvac_action'] == 'heating'
