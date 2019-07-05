@@ -10,7 +10,7 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import DOMAIN as SPIDER_DOMAIN
 
-FAN_LIST = [
+SUPPORT_FAN = [
     'Auto',
     'Low',
     'Medium',
@@ -20,7 +20,7 @@ FAN_LIST = [
     'Boost 30',
 ]
 
-OPERATION_LIST = [
+SUPPORT_HVAC = [
     HVAC_MODE_HEAT,
     HVAC_MODE_COOL,
 ]
@@ -112,7 +112,7 @@ class SpiderThermostat(ClimateDevice):
     @property
     def hvac_modes(self):
         """Return the list of available operation modes."""
-        return OPERATION_LIST
+        return SUPPORT_HVAC
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -139,7 +139,7 @@ class SpiderThermostat(ClimateDevice):
     @property
     def fan_modes(self):
         """List of available fan modes."""
-        return FAN_LIST
+        return SUPPORT_FAN
 
     def update(self):
         """Get the latest data."""
