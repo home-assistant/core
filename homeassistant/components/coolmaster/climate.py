@@ -72,6 +72,7 @@ class CoolmasterClimate(ClimateDevice):
         self._device = device
         self._uid = device.uid
         self._hvac_modes = supported_modes
+        self._hvac_mode = None
         self._target_temperature = None
         self._current_temperature = None
         self._current_fan_mode = None
