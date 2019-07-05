@@ -479,8 +479,8 @@ class TestJewishCalenderSensor():
                               "tzname", "latitude", "longitude", "result"],
                              omer_params, ids=omer_test_ids)
     def test_omer_sensor(self, now, candle_lighting, havdalah,
-                                  diaspora, tzname, latitude, longitude,
-                                  result):
+                         diaspora, tzname, latitude, longitude,
+                         result):
         """Test Omer Count sensor output."""
         time_zone = get_time_zone(tzname)
         set_default_time_zone(time_zone)
@@ -498,4 +498,3 @@ class TestJewishCalenderSensor():
                 sensor.async_update(),
                 self.hass.loop).result()
             assert sensor.state == result
-
