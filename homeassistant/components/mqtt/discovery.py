@@ -242,7 +242,7 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
         component, node_id, object_id = match.groups()
 
         if component not in SUPPORTED_COMPONENTS:
-            _LOGGER.warning("Component %s is not supported", component)
+            _LOGGER.warning("Integration %s is not supported", component)
             return
 
         if payload:
