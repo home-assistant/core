@@ -168,10 +168,10 @@ async def _async_setup_component(hass: core.HomeAssistant,
     _LOGGER.info("Setup of domain %s took %.1f seconds.", domain, end - start)
 
     if result is False:
-        log_error("Component failed to initialize.")
+        log_error("Integration failed to initialize.")
         return False
     if result is not True:
-        log_error("Component {!r} did not return boolean if setup was "
+        log_error("Integration {!r} did not return boolean if setup was "
                   "successful. Disabling component.".format(domain))
         return False
 

@@ -293,7 +293,7 @@ async def check_ha_config_file(hass):
 
     def _pack_error(package, component, config, message):
         """Handle errors from packages: _log_pkg_error."""
-        message = "Package {} setup failed. Component {} {}".format(
+        message = "Package {} setup failed. Integration {} {}".format(
             package, component, message)
         domain = 'homeassistant.packages.{}.{}'.format(package, component)
         pack_config = core_config[CONF_PACKAGES].get(package, config)
@@ -355,7 +355,7 @@ async def check_ha_config_file(hass):
         try:
             component = integration.get_component()
         except ImportError:
-            result.add_error("Component not found: {}".format(domain))
+            result.add_error("Integration not found: {}".format(domain))
             continue
 
         if hasattr(component, 'CONFIG_SCHEMA'):
