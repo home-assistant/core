@@ -290,7 +290,7 @@ class NotionEntity(Entity):
             {DOMAIN: bridge['hardware_id']}, set())
         this_device = device_registry.async_get_device(
             {DOMAIN: sensor['hardware_id']})
-        
+
         device_registry.async_update_device(
             this_device.id, via_device_id=bridge_device.id)
 
