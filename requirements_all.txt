@@ -181,7 +181,7 @@ ambiclimate==0.2.0
 amcrest==1.5.3
 
 # homeassistant.components.androidtv
-androidtv==0.0.17
+androidtv==0.0.18
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -1021,7 +1021,7 @@ pyalarmdotcom==0.3.2
 pyarlo==0.2.3
 
 # homeassistant.components.netatmo
-pyatmo==2.1.0
+pyatmo==2.1.1
 
 # homeassistant.components.apple_tv
 pyatv==0.3.12
@@ -1151,7 +1151,7 @@ pyhaversion==2.2.1
 pyheos==0.5.2
 
 # homeassistant.components.hikvision
-pyhik==0.2.2
+pyhik==0.2.3
 
 # homeassistant.components.hive
 pyhiveapi==0.2.17
@@ -1366,7 +1366,7 @@ pysmarty==0.8
 pysnmp==4.4.9
 
 # homeassistant.components.sonos
-pysonos==0.0.17
+pysonos==0.0.19
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -1453,7 +1453,7 @@ python-nest==4.1.0
 python-nmap==0.6.1
 
 # homeassistant.components.pushover
-python-pushover==0.3
+python-pushover==0.4
 
 # homeassistant.components.qbittorrent
 python-qbittorrent==0.3.1

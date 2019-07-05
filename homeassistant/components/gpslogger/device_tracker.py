@@ -10,7 +10,7 @@ from homeassistant.const import (
 )
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.components.device_tracker.config_entry import (
-    DeviceTrackerEntity
+    TrackerEntity
 )
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -67,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry,
     async_add_entities(entities)
 
 
-class GPSLoggerEntity(DeviceTrackerEntity, RestoreEntity):
+class GPSLoggerEntity(TrackerEntity, RestoreEntity):
     """Represent a tracked device."""
 
     def __init__(
