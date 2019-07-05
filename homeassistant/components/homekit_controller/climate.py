@@ -1,12 +1,13 @@
 """Support for Homekit climate devices."""
 import logging
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import (
+    ClimateDevice, DEFAULT_MIN_HUMIDITY, DEFAULT_MAX_HUMIDITY,
+)
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF,
-
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_HUMIDITY_HIGH, SUPPORT_TARGET_HUMIDITY_LOW)
+    CURRENT_HVAC_OFF, CURRENT_HVAC_HEAT, CURRENT_HVAC_COOL,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import KNOWN_DEVICES, HomeKitEntity
@@ -25,6 +26,12 @@ MODE_HOMEKIT_TO_HASS = {
 MODE_HASS_TO_HOMEKIT = {v: k for k, v in MODE_HOMEKIT_TO_HASS.items()}
 
 DEFAULT_VALID_MODES = list(MODE_HOMEKIT_TO_HASS)
+
+CURRENT_MODE_HOMEKIT_TO_HASS = {
+    0: CURRENT_HVAC_OFF,
+    1: CURRENT_HVAC_HEAT,
+    2: CURRENT_HVAC_COOL,
+}
 
 
 async def async_setup_platform(
@@ -54,6 +61,7 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
     def __init__(self, *args):
         """Initialise the device."""
         self._state = None
+        self._target_mode = None
         self._current_mode = None
         self._valid_modes = []
         self._current_temp = None
@@ -62,8 +70,8 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
         self._target_humidity = None
         self._min_target_temp = None
         self._max_target_temp = None
-        self._min_target_humidity = None
-        self._max_target_humidity = None
+        self._min_target_humidity = DEFAULT_MIN_HUMIDITY
+        self._max_target_humidity = DEFAULT_MAX_HUMIDITY
         super().__init__(*args)
 
     def get_characteristic_types(self):
@@ -116,17 +124,22 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
 
         if 'minValue' in characteristic:
             self._min_target_humidity = characteristic['minValue']
-            self._features |= SUPPORT_TARGET_HUMIDITY_LOW
 
         if 'maxValue' in characteristic:
             self._max_target_humidity = characteristic['maxValue']
-            self._features |= SUPPORT_TARGET_HUMIDITY_HIGH
 
     def _update_heating_cooling_current(self, value):
-        self._state = MODE_HOMEKIT_TO_HASS.get(value)
+        # This characteristic describes the current mode of a device,
+        # e.g. a thermostat is "heating" a room to 75 degrees Fahrenheit.
+        # Can be 0 - 2 (Off, Heat, Cool)
+        self._current_mode = CURRENT_MODE_HOMEKIT_TO_HASS.get(value)
 
     def _update_heating_cooling_target(self, value):
-        self._current_mode = MODE_HOMEKIT_TO_HASS.get(value)
+        # This characteristic describes the target mode
+        # E.g. should the device start heating a room if the temperature
+        # falls below the target temperature.
+        # Can be 0 - 3 (Off, Heat, Cool, Auto)
+        self._target_mode = MODE_HOMEKIT_TO_HASS.get(value)
 
     def _update_temperature_current(self, value):
         self._current_temp = value
@@ -162,19 +175,6 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
                             'iid': self._chars['heating-cooling.target'],
                             'value': MODE_HASS_TO_HOMEKIT[hvac_mode]}]
         await self._accessory.put_characteristics(characteristics)
-
-    @property
-    def state(self):
-        """Return the current state."""
-        # If the device reports its operating mode as off, it sometimes doesn't
-        # report a new state.
-        if self._current_mode == HVAC_MODE_OFF:
-            return HVAC_MODE_OFF
-
-        if self._state == HVAC_MODE_OFF and \
-                self._current_mode != HVAC_MODE_OFF:
-            return HVAC_MODE_OFF
-        return self._state
 
     @property
     def current_temperature(self):
@@ -221,13 +221,18 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
         return self._max_target_humidity
 
     @property
-    def hvac_mode(self):
-        """Return current operation ie. heat, cool, idle."""
+    def hvac_action(self):
+        """Return the current running hvac operation."""
         return self._current_mode
 
     @property
+    def hvac_mode(self):
+        """Return hvac operation ie. heat, cool mode."""
+        return self._target_mode
+
+    @property
     def hvac_modes(self):
-        """Return the list of available operation modes."""
+        """Return the list of available hvac operation modes."""
         return self._valid_modes
 
     @property
