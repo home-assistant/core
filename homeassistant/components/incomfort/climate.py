@@ -1,5 +1,5 @@
 """Support for an Intergas boiler via an InComfort/InTouch Lan2RF gateway."""
-from typing import Dict, Optional, List
+from typing import Any, Dict, Optional, List
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -9,9 +9,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DOMAIN
-
-INTOUCH_MAX_TEMP = 30.0
-INTOUCH_MIN_TEMP = 5.0
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
@@ -32,7 +29,7 @@ class InComfortClimate(ClimateDevice):
         self._room = room
         self._name = 'Room {}'.format(room.room_no)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
         async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
 
@@ -51,7 +48,7 @@ class InComfortClimate(ClimateDevice):
         return self._name
 
     @property
-    def device_state_attributes(self) -> Dict:
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the device state attributes."""
         return {'status': self._room.status}
 
@@ -62,18 +59,12 @@ class InComfortClimate(ClimateDevice):
 
     @property
     def hvac_mode(self) -> str:
-        """Return hvac operation ie. heat, cool mode.
-
-        Need to be one of HVAC_MODE_*.
-        """
+        """Return hvac operation ie. heat, cool mode."""
         return HVAC_MODE_HEAT
 
     @property
     def hvac_modes(self) -> List[str]:
-        """Return the list of available hvac operation modes.
-
-        Need to be a subset of HVAC_MODES.
-        """
+        """Return the list of available hvac operation modes."""
         return [HVAC_MODE_HEAT]
 
     @property
@@ -94,12 +85,12 @@ class InComfortClimate(ClimateDevice):
     @property
     def min_temp(self) -> float:
         """Return max valid temperature that can be set."""
-        return INTOUCH_MIN_TEMP
+        return 5.0
 
     @property
     def max_temp(self) -> float:
         """Return max valid temperature that can be set."""
-        return INTOUCH_MAX_TEMP
+        return 30.0
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set a new target temperature for this zone."""
