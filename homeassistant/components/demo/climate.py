@@ -2,11 +2,11 @@
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT, HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT,
+    CURRENT_HVAC_HEAT, HVAC_MODE_COOL, HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL, HVAC_MODE_OFF, HVAC_MODES, SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE, SUPPORT_SWING_MODE,
     SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE)
+    SUPPORT_TARGET_TEMPERATURE_RANGE, HVAC_MODE_AUTO)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 SUPPORT_FLAGS = 0
@@ -66,7 +66,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             aux=None,
             target_temp_high=24,
             target_temp_low=21,
-            hvac_modes=[HVAC_MODE_AUTO, HVAC_MODE_COOL,
+            hvac_modes=[HVAC_MODE_HEAT_COOL, HVAC_MODE_COOL,
                         HVAC_MODE_HEAT])
     ])
 
@@ -112,7 +112,8 @@ class DemoClimate(ClimateDevice):
             self._support_flags = self._support_flags
         if aux is not None:
             self._support_flags = self._support_flags | SUPPORT_AUX_HEAT
-        if target_temp_high is not None and target_temp_low is not None:
+        if (HVAC_MODE_HEAT_COOL in hvac_modes or
+                HVAC_MODE_AUTO in hvac_modes):
             self._support_flags = \
                 self._support_flags | SUPPORT_TARGET_TEMPERATURE_RANGE
         self._target_temperature = target_temperature
@@ -172,11 +173,6 @@ class DemoClimate(ClimateDevice):
     def target_temperature_low(self):
         """Return the lowbound target temperature we try to reach."""
         return self._target_temperature_low
-
-    @property
-    def target_temperature_step(self):
-        """Return the supported step of target temperature."""
-        return 5
 
     @property
     def current_humidity(self):
