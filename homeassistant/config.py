@@ -522,7 +522,7 @@ async def async_process_ha_core_config(
 def _log_pkg_error(
         package: str, component: str, config: Dict, message: str) -> None:
     """Log an error while merging packages."""
-    message = "Package {} setup failed. Component {} {}".format(
+    message = "Package {} setup failed. Integration {} {}".format(
         package, component, message)
 
     pack_config = config[CONF_CORE][CONF_PACKAGES].get(package, config)

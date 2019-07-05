@@ -63,7 +63,7 @@ async def async_migrate_entry(hass: HomeAssistantType, entry: ConfigEntry):
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Initialize config entry which represents an installed SmartApp."""
     if not validate_webhook_requirements(hass):
-        _LOGGER.warning("The 'base_url' of the 'http' component must be "
+        _LOGGER.warning("The 'base_url' of the 'http' integration must be "
                         "configured and start with 'https://'")
         return False
 
