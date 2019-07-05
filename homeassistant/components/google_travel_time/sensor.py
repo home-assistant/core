@@ -17,6 +17,8 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTRIBUTION = "Powered by Google"
+
 CONF_DESTINATION = 'destination'
 CONF_OPTIONS = 'options'
 CONF_ORIGIN = 'origin'
