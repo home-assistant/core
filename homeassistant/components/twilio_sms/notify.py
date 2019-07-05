@@ -7,11 +7,12 @@ from homeassistant.components.twilio import DATA_TWILIO
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA,
-                                             BaseNotificationService)
+                                             BaseNotificationService, ATTR_DATA)
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_FROM_NUMBER = "from_number"
+ATTR_MEDIAURL = "media_url"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_FROM_NUMBER):
@@ -39,6 +40,12 @@ class TwilioSMSNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Send SMS to specified target user cell."""
         targets = kwargs.get(ATTR_TARGET)
+        data = kwargs.get(ATTR_DATA) or {}
+
+        # object() is twilio wrapper unset value
+        media = object()
+        if ATTR_MEDIAURL in data:
+            media = data[ATTR_MEDIAURL]
 
         if not targets:
             _LOGGER.info("At least 1 target is required")
@@ -46,4 +53,4 @@ class TwilioSMSNotificationService(BaseNotificationService):
 
         for target in targets:
             self.client.messages.create(
-                to=target, body=message, from_=self.from_number)
+                to=target, body=message, from_=self.from_number, media_url=media)
