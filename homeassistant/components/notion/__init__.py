@@ -273,8 +273,7 @@ class NotionEntity(Entity):
         """Return a unique, unchanging string that represents this sensor."""
         return self._task_id
 
-    @callback
-    def _update_bridge_id(self):
+    async def _update_bridge_id(self):
         """Update the entity's bridge ID if it has changed.
 
         Sensors can move to other bridges based on signal strength, etc.
@@ -282,13 +281,23 @@ class NotionEntity(Entity):
         sensor = self._notion.sensors[self._sensor_id]
         if self._bridge_id != sensor['bridge']['id']:
             self._bridge_id = sensor['bridge']['id']
+            device_registry = await dr.async_get_registry(self.hass)
+
+            this_device = device_registry.async_get_device(
+                {DOMAIN: sensor['hardware_id']})
+
+            bridge = self._notion.bridges[self._bridge_id]
+            bridge_device = device_registry.async_get_device(
+                {DOMAIN: bridge['hardware_id']}, set())
+            device_registry.async_update_device(
+                this_device.id, via_device_id=bridge_device.id)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
         @callback
         def update():
             """Update the entity."""
-            self._update_bridge_id()
+            self.hass.async_create_task(self._update_bridge_id())
             self.async_schedule_update_ha_state(True)
 
         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
