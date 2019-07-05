@@ -9,7 +9,7 @@ from homeassistant.components.climate.const import (
     ATTR_MAX_HUMIDITY, ATTR_MAX_TEMP, ATTR_MIN_HUMIDITY, ATTR_MIN_TEMP,
     ATTR_PRESET_MODE, ATTR_SWING_MODE, ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_STEP, CURRENT_HVAC_COOL, DOMAIN,
-    HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODES, PRESET_AWAY, PRESET_ECO)
+    HVAC_MODE_COOL, HVAC_MODE_HEAT, PRESET_AWAY, PRESET_ECO)
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
