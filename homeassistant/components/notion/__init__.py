@@ -281,7 +281,7 @@ class NotionEntity(Entity):
         sensor = self._notion.sensors[self._sensor_id]
         if self._bridge_id == sensor['bridge']['id']:
             return
-            
+
         self._bridge_id = sensor['bridge']['id']
 
         device_registry = await dr.async_get_registry(self.hass)
