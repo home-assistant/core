@@ -80,16 +80,14 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
 
         self._hvac_modes = self._preset_modes = None
 
-    @property  # TODO: finished
+    @property
     def hvac_modes(self) -> List[str]:
         """Return the list of available hvac operation modes."""
-        _LOGGER.warn("hvac_modes(%s): %s", self._id, self._hvac_modes)
         return self._hvac_modes
 
-    @property  # TODO: finished
+    @property
     def preset_modes(self) -> Optional[List[str]]:
         """Return a list of available preset modes."""
-        _LOGGER.warn("preset_modes(%s): %s", self._id, self._preset_modes)
         return self._preset_modes
 
 
@@ -135,16 +133,16 @@ class EvoZone(EvoClimateDevice):
         """
         tcs_mode = self._evo_tcs.systemModeStatus['mode']
         if tcs_mode == EVO_HEATOFF:
-            _LOGGER.warn("hvac_mode(Zone=%s): A %s", self._id, HVAC_MODE_OFF)
+        #   _LOGGER.warn("hvac_mode(Zone=%s): A %s", self._id, HVAC_MODE_OFF)
             return HVAC_MODE_OFF
 
         evo_mode = self._evo_device.setpointStatus['setpointMode']
         if evo_mode == EVO_FOLLOW:
-            _LOGGER.warn("hvac_mode(Zone=%s): B %s", self._id, HVAC_MODE_AUTO)
+        #   _LOGGER.warn("hvac_mode(Zone=%s): B %s", self._id, HVAC_MODE_AUTO)
             return HVAC_MODE_AUTO
 
         is_off = self.target_temperature == self.min_temp
-        _LOGGER.warn("hvac_mode(Zone=%s): B %s", self._id, HVAC_MODE_OFF if is_off else HVAC_MODE_HEAT)
+    #   _LOGGER.warn("hvac_mode(Zone=%s): B %s", self._id, HVAC_MODE_OFF if is_off else HVAC_MODE_HEAT)
         return HVAC_MODE_OFF if is_off else HVAC_MODE_HEAT
 
     @property  # TODO: finished
@@ -161,7 +159,7 @@ class EvoZone(EvoClimateDevice):
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        _LOGGER.warn("preset_mode(Zone=%s): %s", self._id, 'auto')
+    #   _LOGGER.warn("preset_mode(Zone=%s): %s", self._id, 'auto')
         return 'auto'
 
     @property  # TODO: finished
@@ -262,10 +260,9 @@ class EvoController(EvoClimateDevice):
     def hvac_mode(self) -> str:
         """Return the current operating mode of the evohome Controller."""
         tcs_mode = self._evo_device.systemModeStatus['mode']
-        _LOGGER.warn("hvac_mode(TCS=%s): %s", self._id, HVAC_MODE_OFF if tcs_mode == EVO_HEATOFF else HVAC_MODE_HEAT)
         return HVAC_MODE_OFF if tcs_mode == EVO_HEATOFF else HVAC_MODE_HEAT
 
-    @property  # TODO: finished
+    @property
     def current_temperature(self) -> Optional[float]:
         """Return the average current temperature of the heating Zones.
 
@@ -275,7 +272,7 @@ class EvoController(EvoClimateDevice):
                  self._evo_device._zones if z.temperatureStatus['isAvailable']]  # noqa: E501; pylint: disable=protected-access
         return round(sum(temps) / len(temps), 1) if temps else None
 
-    @property  # TODO: finished
+    @property
     def target_temperature(self) -> Optional[float]:
         """Return the average target temperature of the heating Zones.
 
@@ -285,32 +282,30 @@ class EvoController(EvoClimateDevice):
                  for z in self._evo_device._zones]                               # noqa: E501; pylint: disable=protected-access
         return round(sum(temps) / len(temps), 1) if temps else None
 
-    @property  # TODO: finished
+    @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        tcs_mode = self._evo_device.systemModeStatus['mode']
-        _LOGGER.warn("preset_mode(TCS=%s): %s", self._id, TCS_PRESET_TO_HA.get(tcs_mode))
-        return TCS_PRESET_TO_HA.get(tcs_mode)
+        return TCS_PRESET_TO_HA.get(self._evo_device.systemModeStatus['mode'])
 
-    @property  # TODO: finished
+    @property
     def min_temp(self) -> float:
-        """Return the minimum target temperature of a evohome Controller.
+        """Return the minimum target temperature  of the heating Zones.
 
-        Controllers do not have a min target temp, but one is expected by HA.
+        Controllers do not have a min target temp, but one is required by HA.
         """
         temps = [z.setpointCapabilities['minHeatSetpoint']
-                 for z in self._evo_device._zones]                               # noqa: E501; pylint: disable=protected-access
+                 for z in self._evo_device._zones]  # noqa: E501; pylint: disable=protected-access
         return min(temps) if temps else 5
 
-    @property  # TODO: finished
+    @property
     def max_temp(self) -> float:
-        """Return the maximum target temperature of a evohome Controller.
+        """Return the maximum target temperature  of the heating Zones.
 
-        Controllers do not have a max target temp, but one is expected by HA.
+        Controllers do not have a max target temp, but one is required by HA.
         """
         temps = [z.setpointCapabilities['maxHeatSetpoint']
-                 for z in self._evo_device._zones]                               # noqa: E501; pylint: disable=protected-access
-        return min(temps) if temps else 35
+                 for z in self._evo_device._zones]  # noqa: E501; pylint: disable=protected-access
+        return max(temps) if temps else 35
 
     def _set_operation_mode(self, op_mode) -> None:
         """Set the Controller to any of its native EVO_* operating modes."""
@@ -320,14 +315,14 @@ class EvoController(EvoClimateDevice):
                 evohomeclient2.AuthenticationError) as err:
             _handle_exception(err)
 
-    def set_hvac_mode(self, hvac_mode: str) -> None:  # TODO: finished
+    def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set an operating mode for the Controller."""
         self._set_operation_mode(HA_HVAC_TO_TCS.get(hvac_mode))
 
-    def set_preset_mode(self, preset_mode: str) -> None:  # TODO: finished
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set a new preset mode."""
         self._set_operation_mode(HA_PRESET_TO_TCS.get(preset_mode, EVO_AUTO))
 
-    async def async_update(self) -> Awaitable[None]:  # TODO: finished
+    async def async_update(self) -> Awaitable[None]:
         """Process the evohome Controller's state data."""
         self._available = True
