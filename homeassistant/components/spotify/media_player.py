@@ -11,7 +11,8 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_VOLUME_SET, ATTR_MEDIA_CONTENT_ID)
+    SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_VOLUME_SET,
+    ATTR_MEDIA_CONTENT_ID)
 from homeassistant.const import (
     CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.core import callback
@@ -102,7 +103,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         player.play_playlist_random_music(media_content_id)
 
     hass.services.register(
-        DOMAIN, SERVICE_PLAY_PLAYLIST_RANDOM_MUSIC, play_playlist_random_music_service,
+        DOMAIN, SERVICE_PLAY_PLAYLIST_RANDOM_MUSIC,
+        play_playlist_random_music_service,
         schema=PLAY_PLAYLIST_RANDOM_MUSIC_SCHEMA)
 
 
@@ -269,7 +271,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         self._player.start_playback(**kwargs)
 
     def play_playlist_random_music(self, media_id, **kwargs):
-        """Play random music in a playlist"""
+        """Play random music in a playlist."""
         if not media_id.startswith('spotify:playlist:'):
             _LOGGER.error("media id must be spotify playlist uri")
             return
