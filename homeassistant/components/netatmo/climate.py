@@ -24,20 +24,19 @@ _LOGGER = logging.getLogger(__name__)
 
 PRESET_FROST_GUARD = 'frost_guard'
 PRESET_MAX = 'max'
-PRESET_OFF = None
 PRESET_SCHEDULE = 'schedule'
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE)
 SUPPORT_HVAC = [HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF]
 SUPPORT_PRESET = [
-    PRESET_AWAY, PRESET_FROST_GUARD, PRESET_SCHEDULE, PRESET_MAX, PRESET_OFF
+    PRESET_AWAY, PRESET_FROST_GUARD, PRESET_SCHEDULE, PRESET_MAX,
 ]
 
 STATE_NETATMO_SCHEDULE = 'schedule'
 STATE_NETATMO_HG = 'hg'
 STATE_NETATMO_MAX = PRESET_MAX
 STATE_NETATMO_AWAY = PRESET_AWAY
-STATE_NETATMO_OFF = PRESET_OFF
+STATE_NETATMO_OFF = "off"
 STATE_NETATMO_MANUAL = 'manual'
 
 HVAC_MAP_NETATMO = {
@@ -207,7 +206,11 @@ class NetatmoThermostat(ClimateDevice):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if preset_mode in [STATE_NETATMO_MAX, STATE_NETATMO_OFF]:
+        if preset_mode is None:
+            self._data.homestatus.setroomThermpoint(
+                self._data.home_id, self._room_id, "off"
+            )
+        if preset_mode == STATE_NETATMO_MAX:
             self._data.homestatus.setroomThermpoint(
                 self._data.home_id, self._room_id, preset_mode
             )
