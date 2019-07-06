@@ -121,7 +121,6 @@ class ECSensor(Entity):
         else:
             self.entity_id = 'sensor.' + sensor_type
 
-
     @property
     def name(self):
         """Return the name of the sensor."""
