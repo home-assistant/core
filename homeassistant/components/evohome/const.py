@@ -1,5 +1,4 @@
-"""Provides the constants needed for this integration."""
-
+"""Support for (EMEA/EU-based) Honeywell TCC climate systems."""
 DOMAIN = 'evohome'
 
 STORAGE_VERSION = 1
