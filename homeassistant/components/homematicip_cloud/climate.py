@@ -6,13 +6,11 @@ from homematicip.aio.device import (
     AsyncHeatingThermostat, AsyncHeatingThermostatCompact)
 from homematicip.aio.group import AsyncHeatingGroup
 from homematicip.aio.home import AsyncHome
-from homematicip.base.enums import AbsenceType
-from homematicip.functionalHomes import IndoorClimateHome
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO, HVAC_MODE_HEAT, PRESET_AWAY, PRESET_BOOST, PRESET_COMFORT,
-    PRESET_ECO, SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_AUTO, HVAC_MODE_HEAT, PRESET_BOOST, PRESET_COMFORT, PRESET_ECO,
+    SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
@@ -112,10 +110,6 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         """
         if self._device.boostMode:
             return PRESET_BOOST
-        if (self._home.get_functionalHome(IndoorClimateHome).absenceType
-                in [AbsenceType.PERIOD, AbsenceType.PERMANENT,
-                    AbsenceType.VACATION]):
-            return PRESET_AWAY
         if self._device.controlMode == HMIP_AUTOMATIC_CM:
             return PRESET_COMFORT
         if self._device.controlMode == HMIP_ECO_CM:
