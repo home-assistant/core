@@ -540,3 +540,135 @@ class TestTemplateAlarmControlPanel:
         assert state is not None
 
         assert state.attributes.get('friendly_name') == 'Template Alarm Panel'
+
+    def test_icon_template(self):
+        """Test icon template."""
+        with assert_setup_component(1, 'alarm_control_panel'):
+            assert setup.setup_component(self.hass, 'alarm_control_panel', {
+                'alarm_control_panel': {
+                    'platform': 'template',
+                    'panels': {
+                        'test_template_panel': {
+                            'value_template':
+                                "{{ states('alarm_control_panel.test') }}",
+                            'arm_away': {
+                                'service':
+                                    'alarm_control_panel.alarm_arm_away',
+                                'entity_id': 'alarm_control_panel.test',
+                                'data': {
+                                    'code': '1234'
+                                }
+                            },
+                            'arm_home': {
+                                'service':
+                                    'alarm_control_panel.alarm_arm_home',
+                                'entity_id': 'alarm_control_panel.test',
+                                'data': {
+                                    'code': '1234'
+                                }
+                            },
+                            'arm_night': {
+                                'service':
+                                    'alarm_control_panel.alarm_arm_night',
+                                'entity_id': 'alarm_control_panel.test',
+                                'data': {
+                                    'code': '1234'
+                                }
+                            },
+                            'disarm': {
+                                'service':
+                                    'alarm_control_panel.alarm_arm_disarm',
+                                'entity_id': 'alarm_control_panel.test',
+                                'data': {
+                                    'code': '1234'
+                                }
+                            },
+                            'icon_template':
+                                "{% if states.alarm_control_panel."
+                                "test_template_panel.state == 'armed_away' %}"
+                                "mdi:check"
+                                "{% endif %}"
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('alarm_control_panel.test_template_panel')
+        assert state.attributes.get('icon') == ''
+
+        state = self.hass.states.set('alarm_control_panel.test',
+                                     STATE_ALARM_ARMED_AWAY)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('alarm_control_panel.test_template_panel')
+
+        assert state.attributes['icon'] == 'mdi:check'
+
+    def test_entity_picture_template(self):
+        """Test entity_picture template."""
+        with assert_setup_component(1, 'alarm_control_panel'):
+            assert setup.setup_component(self.hass, 'alarm_control_panel', {
+                'alarm_control_panel': {
+                    'platform': 'template',
+                    'panels': {
+                        'test_template_panel': {
+                            'value_template':
+                                "{{ states('alarm_control_panel.test') }}",
+                            'arm_away': {
+                                'service':
+                                    'alarm_control_panel.alarm_arm_away',
+                                'entity_id': 'alarm_control_panel.test',
+                                'data': {
+                                    'code': '1234'
+                                }
+                            },
+                            'arm_home': {
+                                'service':
+                                    'alarm_control_panel.alarm_arm_home',
+                                'entity_id': 'alarm_control_panel.test',
+                                'data': {
+                                    'code': '1234'
+                                }
+                            },
+                            'arm_night': {
+                                'service':
+                                    'alarm_control_panel.alarm_arm_night',
+                                'entity_id': 'alarm_control_panel.test',
+                                'data': {
+                                    'code': '1234'
+                                }
+                            },
+                            'disarm': {
+                                'service':
+                                    'alarm_control_panel.alarm_arm_disarm',
+                                'entity_id': 'alarm_control_panel.test',
+                                'data': {
+                                    'code': '1234'
+                                }
+                            },
+                            'entity_picture_template':
+                                "{% if states.alarm_control_panel."
+                                "test_template_panel.state == 'armed_away' %}"
+                                "/local/light.png"
+                                "{% endif %}"
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('alarm_control_panel.test_template_panel')
+        assert state.attributes.get('entity_picture') == ''
+
+        state = self.hass.states.set('alarm_control_panel.test',
+                                     STATE_ALARM_ARMED_AWAY)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('alarm_control_panel.test_template_panel')
+
+        assert state.attributes['entity_picture'] == '/local/light.png'
