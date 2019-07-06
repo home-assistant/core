@@ -14,14 +14,11 @@ from homeassistant.components.climate.const import (
 
 from . import CONF_LOCATION_IDX, _handle_exception, EvoDevice
 from .const import (
-    DOMAIN,
+    DOMAIN, EVO_STRFTIME,
     EVO_RESET, EVO_AUTO, EVO_AUTOECO, EVO_AWAY, EVO_DAYOFF, EVO_CUSTOM,
     EVO_HEATOFF, EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER)
 
 _LOGGER = logging.getLogger(__name__)
-
-TCS_STATE_ATTRIBUTES = []
-ZONE_STATE_ATTRIBUTES = ['activeFaults', 'setpointStatus', 'temperatureStatus']
 
 # used
 HA_HVAC_TO_TCS = {
@@ -113,67 +110,14 @@ class EvoZone(EvoClimateDevice):
 
         self._precision = \
             self._evo_device.setpointCapabilities['valueResolution']
-        self._state_attributes = ZONE_STATE_ATTRIBUTES
+        self._state_attributes = [
+            'activeFaults', 'setpointStatus', 'temperatureStatus']
 
         self._supported_features = \
             SUPPORT_PRESET_MODE | \
             SUPPORT_TARGET_TEMPERATURE
         self._hvac_modes = list(HA_HVAC_TO_ZONE)
-        self._preset_modes = list(HA_PRESET_TO_ZONE)
-
-    @property
-    def _switchpoints(self) -> Dict[str, Any]:
-        """Return the current/next scheduled switchpoints."""
-        switchpoints = {}
-        schedule = self._evo_device.schedule()  # is a costly api call
-
-        day_time = datetime.now()
-        day_of_week = int(day_time.strftime('%w'))  # 0 is Sunday
-
-        # iterate today's switchpoints until we go past time_of_day...
-        day = schedule['DailySchedules'][day_of_week]
-        sp_idx = -1  # last switchpoint of the day before
-        for i, tmp in enumerate(day['Switchpoints']):
-            if day_time.strftime('%H:%M:%S') > tmp['TimeOfDay']:
-                sp_idx = i  # current setpoint
-            else:
-                break
-
-        sp = switchpoints['current'] = {}
-        offset = -1 if sp_idx == -1 else 0  # was yesterday?
-
-        sp_date = (day_time + timedelta(days=offset)).strftime('%Y-%m-%d')
-        day = schedule['DailySchedules'][(day_of_week + offset) % 7]
-        switchpoint = day['Switchpoints'][sp_idx]
-
-        sp['target_temp'] = switchpoint['heatSetpoint']
-        sp['from_datetime'] = "{} {}".format(sp_date, switchpoint['TimeOfDay'])
-
-        sp_idx += 1  # next setpoint
-
-        sp = switchpoints['next'] = {}
-        offset = 1 if sp_idx == len(day['Switchpoints']) else 0  # is tomorrow?
-
-        sp_date = (day_time + timedelta(days=offset)).strftime('%Y-%m-%d')
-        day = schedule['DailySchedules'][(day_of_week + offset) % 7]
-        switchpoint = day['Switchpoints'][sp_idx * (1 - offset)]
-
-        sp['target_temp'] = switchpoint['heatSetpoint']
-        sp['from_datetime'] = "{} {}".format(sp_date, switchpoint['TimeOfDay'])
-
-        return switchpoints
-
-    @property
-    def device_state_attributes(self) -> Dict[str, Any]:
-        """Return the Evohome-specific state attributes."""
-        status = {}
-        for attr in self._state_attributes:
-            status[attr] = getattr(self._evo_device, attr)
-
-        # status['schedule'] = self._evo_device.schedule()
-        status['switchpoints'] = self._switchpoints
-
-        return {'status': status}
+        self._preset_modes = []  # list(HA_PRESET_TO_ZONE)
 
     @property
     def hvac_mode(self) -> str:
@@ -193,10 +137,8 @@ class EvoZone(EvoClimateDevice):
             return HVAC_MODE_OFF
         if self._evo_device.setpointStatus['setpointMode'] == EVO_FOLLOW:
             return HVAC_MODE_AUTO
-        if self._evo_device.setpointStatus['setpointMode'] == EVO_PERMOVER:
-            is_off = self.target_temperature == self.min_temp
-            return HVAC_MODE_OFF if is_off else HVAC_MODE_HEAT
-        return HVAC_MODE_HEAT
+        is_off = self.target_temperature <= self.min_temp
+        return HVAC_MODE_OFF if is_off else HVAC_MODE_HEAT
 
     @property
     def current_temperature(self) -> Optional[float]:
@@ -212,8 +154,14 @@ class EvoZone(EvoClimateDevice):
     @property
     def preset_mode(self) -> Optional[str]:  # TODO: check
         """Return the current preset mode, e.g., home, away, temp."""
-        # _LOGGER.warn("preset_mode(Zone=%s): %s", self._id, 'auto')
-        return 'auto'
+        return None
+        if self._evo_tcs.systemModeStatus['mode'] == EVO_HEATOFF:
+            return None
+        if self._evo_device.setpointStatus['setpointMode'] == EVO_FOLLOW:
+            return None
+        if self._evo_device.setpointStatus['setpointMode'] == EVO_PERMOVER:
+            return 'Manual'
+        return 'Override'
 
     @property
     def min_temp(self) -> float:
@@ -231,15 +179,13 @@ class EvoZone(EvoClimateDevice):
         """
         return self._evo_device.setpointCapabilities['maxHeatSetpoint']
 
-    def _set_temperature(self, temperature, until=None):  # TODO: check
+    def _set_temperature(self, temperature: float, until: datetime=None):  # TODO: check
         """Set the new target temperature of a Zone.
 
         temperature is required, until can be:
           - strftime('%Y-%m-%dT%H:%M:%SZ') for TemporaryOverride, or
           - None for PermanentOverride (i.e. indefinitely)
         """
-        if type(until) == datetime:
-            until = until.strftime('%Y-%m-%dT%H:%M:%SZ')
         try:
             self._evo_device.set_temperature(temperature, until)
         except (requests.exceptions.RequestException,
@@ -272,9 +218,10 @@ class EvoZone(EvoClimateDevice):
         if hvac_mode == HVAC_MODE_OFF:
             self._set_temperature(self.min_temp, until=None)
         elif hvac_mode == HVAC_MODE_HEAT:
+            until = self._switchpoints['next']['from_datetime']
             self._set_temperature(
                 self._switchpoints['next']['target_temp'],
-                until=self._switchpoints['next']['from_datetime']
+                until=datetime.strptime(until, EVO_STRFTIME)
                 )
         else:  # HVAC_MODE_AUTO
             self._set_operation_mode(EVO_FOLLOW)
@@ -305,11 +252,15 @@ class EvoController(EvoClimateDevice):
             self._config['dhw'] = '...'
 
         self._precision = None
-        self._state_attributes = TCS_STATE_ATTRIBUTES
 
         self._supported_features = SUPPORT_PRESET_MODE
         self._hvac_modes = list(HA_HVAC_TO_TCS)
         self._preset_modes = list(HA_PRESET_TO_TCS)
+
+    @property
+    def device_state_attributes(self) -> None:
+        """Return the Evohome-specific state attributes."""
+        return None
 
     @property
     def hvac_mode(self) -> str:
@@ -377,3 +328,7 @@ class EvoController(EvoClimateDevice):
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set a new preset mode."""
         self._set_operation_mode(HA_PRESET_TO_TCS.get(preset_mode, EVO_AUTO))
+
+    def update(self) -> None:
+        """Get the latest state data."""
+        pass

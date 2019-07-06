@@ -20,8 +20,6 @@ EVO_STATE_TO_HA = {v: k for k, v in HA_STATE_TO_EVO.items()}
 
 HA_OPMODE_TO_DHW = {STATE_ON: EVO_FOLLOW, STATE_OFF: EVO_PERMOVER}
 
-DHW_STATE_ATTRIBUTES = ['activeFaults', 'stateStatus', 'temperatureStatus']
-
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
                                discovery_info=None):
@@ -51,7 +49,8 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
 
         self._config = evo_broker.config['dhw']
 
-        self._state_attributes = DHW_STATE_ATTRIBUTES
+        self._state_attributes = [
+            'activeFaults', 'stateStatus', 'temperatureStatus']
         self._operation_list = list(HA_OPMODE_TO_DHW)
         self._supported_features = SUPPORT_OPERATION_MODE
 

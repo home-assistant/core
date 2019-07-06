@@ -99,7 +99,8 @@ async def async_setup(hass, hass_config):
     async_track_time_interval(
         hass,
         broker.update,
-        hass_config[DOMAIN][CONF_SCAN_INTERVAL]
+#       hass_config[DOMAIN][CONF_SCAN_INTERVAL]
+        timedelta(seconds=10)  # TODO: delete me
     )
 
     return True
@@ -233,6 +234,46 @@ class EvoBroker:
         # inform the evohome devices that state data has been updated
         async_dispatcher_send(self.hass, DOMAIN, {'signal': 'refresh'})
 
+    def get_switchpoints(self) -> Dict[str, Any]:
+        """Return the current/next scheduled switchpoints."""
+        switchpoints = {}
+        schedule = self._evo_device.schedule()  # is a costly api call
+
+        day_time = datetime.now()
+        day_of_week = int(day_time.strftime('%w'))  # 0 is Sunday
+
+        # iterate today's switchpoints until we go past time_of_day...
+        day = schedule['DailySchedules'][day_of_week]
+        sp_idx = -1  # last switchpoint of the day before
+        for i, tmp in enumerate(day['Switchpoints']):
+            if day_time.strftime('%H:%M:%S') > tmp['TimeOfDay']:
+                sp_idx = i  # current setpoint
+            else:
+                break
+
+        sp = switchpoints['current'] = {}
+        offset = -1 if sp_idx == -1 else 0  # was yesterday?
+
+        sp_date = (day_time + timedelta(days=offset)).strftime('%Y-%m-%d')
+        day = schedule['DailySchedules'][(day_of_week + offset) % 7]
+        switchpoint = day['Switchpoints'][sp_idx]
+
+        sp['target_temp'] = switchpoint['heatSetpoint']
+        sp['from_datetime'] = "{} {}".format(sp_date, switchpoint['TimeOfDay'])
+
+        sp_idx += 1  # next setpoint
+
+        sp = switchpoints['next'] = {}
+        offset = 1 if sp_idx == len(day['Switchpoints']) else 0  # is tomorrow?
+
+        sp_date = (day_time + timedelta(days=offset)).strftime('%Y-%m-%d')
+        day = schedule['DailySchedules'][(day_of_week + offset) % 7]
+        switchpoint = day['Switchpoints'][sp_idx * (1 - offset)]
+
+        sp['target_temp'] = switchpoint['heatSetpoint']
+        sp['from_datetime'] = "{} {}".format(sp_date, switchpoint['TimeOfDay'])
+
+        return switchpoints
 
 class EvoDevice(Entity):
     """Base for any evohome device.
@@ -247,12 +288,58 @@ class EvoDevice(Entity):
         self._evo_tcs = evo_broker.tcs
 
         self._name = self._icon = self._precision = None
-        self._state_attributes = self._supported_features = None
+        self._state_attributes = []
+        self._supported_features = None
+        self._switchpoints = None
 
     @callback
     def _refresh(self, packet):
         if packet['signal'] == 'refresh':
             self.async_schedule_update_ha_state(force_refresh=True)
+
+    def get_switchpoints(self) -> Dict[str, Any]:
+        """Return the current/next scheduled switchpoints.
+
+        Only Zones & DHW controllers (but not the TCS) have schedules.
+        """
+        switchpoints = {}
+        schedule = self._evo_device.schedule()
+
+        day_time = datetime.now()
+        day_of_week = int(day_time.strftime('%w'))  # 0 is Sunday
+
+        # iterate today's switchpoints until we go past time_of_day...
+        day = schedule['DailySchedules'][day_of_week]
+        sp_idx = -1  # last switchpoint of the day before
+        for i, tmp in enumerate(day['Switchpoints']):
+            if day_time.strftime('%H:%M:%S') > tmp['TimeOfDay']:
+                sp_idx = i  # current setpoint
+            else:
+                break
+
+        sp = switchpoints['current'] = {}
+        offset = -1 if sp_idx == -1 else 0  # was yesterday?
+
+        sp_date = (day_time + timedelta(days=offset)).strftime('%Y-%m-%d')
+        day = schedule['DailySchedules'][(day_of_week + offset) % 7]
+        switchpoint = day['Switchpoints'][sp_idx]
+
+        sp['target_temp'] = switchpoint['heatSetpoint']
+        sp['from_datetime'] = "{} {}".format(sp_date, switchpoint['TimeOfDay'])
+
+        sp_idx += 1  # next setpoint
+
+        sp = switchpoints['next'] = {}
+        offset = 1 if sp_idx == len(day['Switchpoints']) else 0  # is tomorrow?
+
+        sp_date = (day_time + timedelta(days=offset)).strftime('%Y-%m-%d')
+        day = schedule['DailySchedules'][(day_of_week + offset) % 7]
+        switchpoint = day['Switchpoints'][sp_idx * (1 - offset)]
+
+        sp['target_temp'] = switchpoint['heatSetpoint']
+        sp['from_datetime'] = "{} {}".format(sp_date, switchpoint['TimeOfDay'])
+
+        return switchpoints
 
     @property
     def should_poll(self) -> bool:
@@ -270,6 +357,8 @@ class EvoDevice(Entity):
         status = {}
         for attr in self._state_attributes:
             status[attr] = getattr(self._evo_device, attr)
+
+        status['switchpoints'] = self._switchpoints
         return {'status': status}
 
     @property
@@ -295,3 +384,7 @@ class EvoDevice(Entity):
     def temperature_unit(self) -> str:
         """Return the temperature unit to use in the frontend UI."""
         return TEMP_CELSIUS
+
+    def update(self) -> None:
+        """Get the latest state data."""
+        self._switchpoints = self.get_switchpoints()
