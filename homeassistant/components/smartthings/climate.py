@@ -9,8 +9,9 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN, ClimateDevice)
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT, HVAC_MODE_OFF, STATE_ECO, SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
+    CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, HVAC_MODE_AUTO,
+    HVAC_MODE_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL, HVAC_MODE_OFF, SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE_RANGE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
@@ -19,24 +20,33 @@ from .const import DATA_BROKERS, DOMAIN
 
 ATTR_OPERATION_STATE = 'operation_state'
 MODE_TO_STATE = {
-    'auto': HVAC_MODE_AUTO,
+    'auto': HVAC_MODE_HEAT_COOL,
     'cool': HVAC_MODE_COOL,
-    'eco': STATE_ECO,
-    'rush hour': STATE_ECO,
+    'eco': HVAC_MODE_AUTO,
+    'rush hour': HVAC_MODE_AUTO,
     'emergency heat': HVAC_MODE_HEAT,
     'heat': HVAC_MODE_HEAT,
     'off': HVAC_MODE_OFF
 }
 STATE_TO_MODE = {
-    HVAC_MODE_AUTO: 'auto',
+    HVAC_MODE_HEAT_COOL: 'auto',
     HVAC_MODE_COOL: 'cool',
-    STATE_ECO: 'eco',
     HVAC_MODE_HEAT: 'heat',
     HVAC_MODE_OFF: 'off'
 }
 
+OPERATING_STATE_TO_ACTION = {
+    "cooling": CURRENT_HVAC_COOL,
+    "fan only": None,
+    "heating": CURRENT_HVAC_HEAT,
+    "idle": CURRENT_HVAC_IDLE,
+    "pending cool": CURRENT_HVAC_COOL,
+    "pending heat": CURRENT_HVAC_HEAT,
+    "vent economizer": None
+}
+
 AC_MODE_TO_STATE = {
-    'auto': HVAC_MODE_AUTO,
+    'auto': HVAC_MODE_HEAT_COOL,
     'cool': HVAC_MODE_COOL,
     'dry': HVAC_MODE_DRY,
     'coolClean': HVAC_MODE_COOL,
@@ -46,7 +56,7 @@ AC_MODE_TO_STATE = {
     'fanOnly': HVAC_MODE_FAN_ONLY
 }
 STATE_TO_AC_MODE = {
-    HVAC_MODE_AUTO: 'auto',
+    HVAC_MODE_HEAT_COOL: 'auto',
     HVAC_MODE_COOL: 'cool',
     HVAC_MODE_DRY: 'dry',
     HVAC_MODE_HEAT: 'heat',
@@ -137,12 +147,10 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
         """Init the class."""
         super().__init__(device)
         self._supported_features = self._determine_features()
-        self._current_operation = None
-        self._operations = None
+        self._hvac_mode = None
+        self._hvac_modes = None
 
     def _determine_features(self):
-        from pysmartthings import Capability
-
         flags = \
             SUPPORT_TARGET_TEMPERATURE \
             | SUPPORT_TARGET_TEMPERATURE_RANGE
@@ -180,9 +188,9 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
         # Heat/cool setpoint
         heating_setpoint = None
         cooling_setpoint = None
-        if self.current_operation == HVAC_MODE_HEAT:
+        if self.hvac_mode == HVAC_MODE_HEAT:
             heating_setpoint = kwargs.get(ATTR_TEMPERATURE)
-        elif self.current_operation == HVAC_MODE_COOL:
+        elif self.hvac_mode == HVAC_MODE_COOL:
             cooling_setpoint = kwargs.get(ATTR_TEMPERATURE)
         else:
             heating_setpoint = kwargs.get(ATTR_TARGET_TEMP_LOW)
@@ -203,10 +211,10 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
     async def async_update(self):
         """Update the attributes of the climate device."""
         thermostat_mode = self._device.status.thermostat_mode
-        self._current_operation = MODE_TO_STATE.get(thermostat_mode)
-        if self._current_operation is None:
+        self._hvac_mode = MODE_TO_STATE.get(thermostat_mode)
+        if self._hvac_mode is None:
             _LOGGER.debug('Device %s (%s) returned an invalid'
-                          'thermostat mode: %s', self._device.label,
+                          'hvac mode: %s', self._device.label,
                           self._device.device_id, thermostat_mode)
 
         supported_modes = self._device.status.supported_thermostat_modes
@@ -221,16 +229,11 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
                                   'supported thermostat mode: %s',
                                   self._device.label, self._device.device_id,
                                   mode)
-            self._operations = operations
+            self._hvac_modes = operations
         else:
             _LOGGER.debug('Device %s (%s) returned invalid supported '
                           'thermostat modes: %s', self._device.label,
                           self._device.device_id, supported_modes)
-
-    @property
-    def fan_mode(self):
-        """Return the fan setting."""
-        return self._device.status.thermostat_fan_mode
 
     @property
     def current_humidity(self):
@@ -238,22 +241,14 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
         return self._device.status.humidity
 
     @property
-    def hvac_mode(self):
-        """Return current operation ie. heat, cool, idle."""
-        return self._current_operation
-
-    @property
     def current_temperature(self):
         """Return the current temperature."""
         return self._device.status.temperature
 
     @property
-    def device_state_attributes(self):
-        """Return device specific state attributes."""
-        return {
-            ATTR_OPERATION_STATE:
-                self._device.status.thermostat_operating_state
-        }
+    def fan_mode(self):
+        """Return the fan setting."""
+        return self._device.status.thermostat_fan_mode
 
     @property
     def fan_modes(self):
@@ -261,9 +256,20 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
         return self._device.status.supported_thermostat_fan_modes
 
     @property
+    def hvac_action(self) -> Optional[str]:
+        """Return the current running hvac operation if supported."""
+        return OPERATING_STATE_TO_ACTION.get(
+            self._device.status.thermostat_operating_state)
+
+    @property
+    def hvac_mode(self):
+        """Return current operation ie. heat, cool, idle."""
+        return self._hvac_mode
+
+    @property
     def hvac_modes(self):
         """Return the list of available operation modes."""
-        return self._operations
+        return self._hvac_modes
 
     @property
     def supported_features(self):
@@ -273,23 +279,23 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self.current_operation == HVAC_MODE_COOL:
+        if self.hvac_mode == HVAC_MODE_COOL:
             return self._device.status.cooling_setpoint
-        if self.current_operation == HVAC_MODE_HEAT:
+        if self.hvac_mode == HVAC_MODE_HEAT:
             return self._device.status.heating_setpoint
         return None
 
     @property
     def target_temperature_high(self):
         """Return the highbound target temperature we try to reach."""
-        if self.current_operation == HVAC_MODE_AUTO:
+        if self.hvac_mode == HVAC_MODE_HEAT_COOL:
             return self._device.status.cooling_setpoint
         return None
 
     @property
     def target_temperature_low(self):
         """Return the lowbound target temperature we try to reach."""
-        if self.current_operation == HVAC_MODE_AUTO:
+        if self.hvac_mode == HVAC_MODE_HEAT_COOL:
             return self._device.status.heating_setpoint
         return None
 
@@ -306,7 +312,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
     def __init__(self, device):
         """Init the class."""
         super().__init__(device)
-        self._operations = None
+        self._hvac_modes = None
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
@@ -329,7 +335,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
         # operation mode
         operation_mode = kwargs.get(ATTR_HVAC_MODE)
         if operation_mode:
-            tasks.append(self.async_set_operation_mode(operation_mode))
+            tasks.append(self.async_set_hvac_mode(operation_mode))
         # temperature
         tasks.append(self._device.set_cooling_setpoint(
             kwargs[ATTR_TEMPERATURE], set_status=True))
@@ -363,17 +369,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
                 _LOGGER.debug('Device %s (%s) returned an invalid supported '
                               'AC mode: %s', self._device.label,
                               self._device.device_id, mode)
-        self._operations = operations
-
-    @property
-    def fan_mode(self):
-        """Return the fan setting."""
-        return self._device.status.fan_mode
-
-    @property
-    def hvac_mode(self):
-        """Return current operation ie. heat, cool, idle."""
-        return AC_MODE_TO_STATE.get(self._device.status.air_conditioner_mode)
+        self._hvac_modes = operations
 
     @property
     def current_temperature(self):
@@ -406,25 +402,30 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
         return state_attributes
 
     @property
+    def fan_mode(self):
+        """Return the fan setting."""
+        return self._device.status.fan_mode
+
+    @property
     def fan_modes(self):
         """Return the list of available fan modes."""
         return self._device.status.supported_ac_fan_modes
 
     @property
-    def is_on(self):
-        """Return true if on."""
-        return self._device.status.switch
+    def hvac_mode(self):
+        """Return current operation ie. heat, cool, idle."""
+        return AC_MODE_TO_STATE.get(self._device.status.air_conditioner_mode)
 
     @property
     def hvac_modes(self):
         """Return the list of available operation modes."""
-        return self._operations
+        return self._hvac_modes
 
     @property
     def supported_features(self):
         """Return the supported features."""
         return SUPPORT_TARGET_TEMPERATURE \
-            | SUPPORT_FAN_MODE | SUPPORT_ON_OFF
+            | SUPPORT_FAN_MODE
 
     @property
     def target_temperature(self):
