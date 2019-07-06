@@ -262,10 +262,12 @@ class KebaProtocol(asyncio.DatagramProtocol):
     async def async_set_max_current(self, current, *_):
         """Check connection to KEBA charging station."""
         if current < 6:
-            _LOGGER.debug("current is below 6 A (%s), setting to 6 A", str(current))
+            _LOGGER.debug("current is below 6 A (%s), setting to 6 A",
+                          str(current))
             self.send("curr " + str(6000))
         if current > 63:
-            _LOGGER.debug("current is above 63 A (%s), setting to 63 A", str(current))
+            _LOGGER.debug("current is above 63 A (%s), setting to 63 A",
+                          str(current))
             self.send("curr " + str(63000))
         else:
             _LOGGER.debug("Set_max_current to %s A", str(current))
