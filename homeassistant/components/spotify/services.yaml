@@ -1,0 +1,6 @@
+play_playlist_random_music:
+  description: Play a random music from a Spotify playlist.
+  fields:
+    media_content_id:
+      description: Spotify URI of the playlist.
+      example: 'spotify:playlist:0IpRnqCHSjun48oQRX1Dy7'
