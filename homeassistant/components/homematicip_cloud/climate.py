@@ -112,14 +112,14 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         """
         if self._device.boostMode:
             return PRESET_BOOST
-        if self._device.controlMode == HMIP_AUTOMATIC_CM:
-            return PRESET_COMFORT
-        if self._device.controlMode == HMIP_ECO_CM:
-            return PRESET_ECO
         if (self._home.get_functionalHome(IndoorClimateHome).absenceType
                 in [AbsenceType.PERIOD, AbsenceType.PERMANENT,
                     AbsenceType.VACATION]):
             return PRESET_AWAY
+        if self._device.controlMode == HMIP_AUTOMATIC_CM:
+            return PRESET_COMFORT
+        if self._device.controlMode == HMIP_ECO_CM:
+            return PRESET_ECO
 
         return None
 
@@ -157,6 +157,8 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
 
     async def async_set_preset_mode(self, preset_mode: str) -> Awaitable[None]:
         """Set new preset mode."""
+        if self._device.boostMode and preset_mode != PRESET_BOOST:
+            await self._device.set_boost(False)
         if preset_mode == PRESET_BOOST:
             await self._device.set_boost()
         elif preset_mode == PRESET_COMFORT:
