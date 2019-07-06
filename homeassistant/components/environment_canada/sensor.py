@@ -110,19 +110,22 @@ class ECSensor(Entity):
         """Initialize the sensor."""
         self.sensor_type = sensor_type
         self.ec_data = ec_data
-        self.platform_name = platform_name
         self._state = None
         self._attr = None
         self._data = None
         self._name = None
         self._unit = None
 
+        if platform_name:
+            self.entity_id = 'sensor.' + '_'.join([platform_name, sensor_type])
+        else:
+            self.entity_id = 'sensor.' + sensor_type
+
+
     @property
     def name(self):
         """Return the name of the sensor."""
-        if self.platform_name is None:
-            return self._name
-        return ' '.join([self.platform_name, self._name])
+        return self._name
 
     @property
     def state(self):
