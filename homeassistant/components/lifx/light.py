@@ -148,7 +148,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             # Priority 3: default interface
             interfaces = [{}]
 
-    lifx_manager = LIFXManager(hass, async_add_entities)
+    ent_reg = await hass.helpers.entity_registry.async_get_registry()
+    lifx_manager = LIFXManager(hass, ent_reg, async_add_entities)
     hass.data[DATA_LIFX_MANAGER] = lifx_manager
 
     for interface in interfaces:
@@ -197,9 +198,17 @@ def merge_hsbk(base, change):
 class LIFXManager:
     """Representation of all known LIFX entities."""
 
-    def __init__(self, hass, async_add_entities):
+    def __init__(self, hass, ent_reg, async_add_entities):
         """Initialize the light."""
         self.entities = {}
+
+        # Restore previously found entities
+        for entity in ent_reg.entities.values():
+            if entity.platform == LIFX_DOMAIN:
+                self.entities[entity.unique_id] = LightWrapper(
+                    UnavailableLight(entity.unique_id))
+        async_add_entities(self.entities.values())
+
         self.hass = hass
         self.async_add_entities = async_add_entities
         self.effects_conductor = aiolifx_effects().Conductor(hass.loop)
@@ -313,13 +322,12 @@ class LIFXManager:
             await self.effects_conductor.stop(bulbs)
 
     async def async_service_to_entities(self, service):
-        """Return the known entities that a service call mentions."""
+        """Return the available entities that a service call mentions."""
+        entities = [e.adapter for e in self.entities.values() if e.available]
+
         entity_ids = await async_extract_entity_ids(self.hass, service)
         if entity_ids:
-            entities = [entity for entity in self.entities.values()
-                        if entity.entity_id in entity_ids]
-        else:
-            entities = list(self.entities.values())
+            entities = [e for e in entities if e.entity_id in entity_ids]
 
         return entities
 
@@ -330,47 +338,43 @@ class LIFXManager:
 
     async def register_new_bulb(self, bulb):
         """Handle newly detected bulb."""
-        if bulb.mac_addr in self.entities:
-            entity = self.entities[bulb.mac_addr]
-            entity.registered = True
-            _LOGGER.debug("%s register AGAIN", entity.who)
-            await entity.update_hass()
+        ack = AwaitAioLIFX().wait
+        color_resp = await ack(bulb.get_color)
+        if color_resp:
+            bulb.vendor = None
+            version_resp = await ack(bulb.get_version)
+
+        if color_resp is None or version_resp is None:
+            _LOGGER.error("Failed to initialize %s", bulb.ip_addr)
+            bulb.registered = False
+            return
+
+        bulb.timeout = MESSAGE_TIMEOUT
+        bulb.retry_count = MESSAGE_RETRIES
+        bulb.unregister_timeout = UNAVAILABLE_GRACE
+
+        if lifx_features(bulb)["multizone"]:
+            entity = LIFXStrip(bulb, self.effects_conductor)
+        elif lifx_features(bulb)["color"]:
+            entity = LIFXColor(bulb, self.effects_conductor)
         else:
-            _LOGGER.debug("%s register NEW", bulb.ip_addr)
+            entity = LIFXWhite(bulb, self.effects_conductor)
 
-            # Read initial state
-            ack = AwaitAioLIFX().wait
-            color_resp = await ack(bulb.get_color)
-            if color_resp:
-                version_resp = await ack(bulb.get_version)
-
-            if color_resp is None or version_resp is None:
-                _LOGGER.error("Failed to initialize %s", bulb.ip_addr)
-                bulb.registered = False
-            else:
-                bulb.timeout = MESSAGE_TIMEOUT
-                bulb.retry_count = MESSAGE_RETRIES
-                bulb.unregister_timeout = UNAVAILABLE_GRACE
-
-                if lifx_features(bulb)["multizone"]:
-                    entity = LIFXStrip(bulb, self.effects_conductor)
-                elif lifx_features(bulb)["color"]:
-                    entity = LIFXColor(bulb, self.effects_conductor)
-                else:
-                    entity = LIFXWhite(bulb, self.effects_conductor)
-
-                _LOGGER.debug("%s register READY", entity.who)
-                self.entities[bulb.mac_addr] = entity
-                self.async_add_entities([entity], True)
+        wrapper = self.entities.get(bulb.mac_addr)
+        if wrapper:
+            wrapper.set_adapter(entity)
+        else:
+            wrapper = LightWrapper(entity)
+            self.entities[bulb.mac_addr] = wrapper
+            self.async_add_entities([wrapper], True)
 
     @callback
     def unregister(self, bulb):
         """Handle aiolifx disappearing bulbs."""
-        if bulb.mac_addr in self.entities:
-            entity = self.entities[bulb.mac_addr]
-            _LOGGER.debug("%s unregister", entity.who)
-            entity.registered = False
-            self.hass.async_create_task(entity.async_update_ha_state())
+        wrapper = self.entities.get(bulb.mac_addr)
+        if wrapper:
+            entity = UnavailableLight(wrapper.unique_id, wrapper.name)
+            wrapper.set_adapter(entity)
 
 
 class AwaitAioLIFX:
@@ -407,6 +411,177 @@ def convert_16_to_8(value):
     return value >> 8
 
 
+def device_info(entity):
+    """Return information about a device."""
+    info = {
+        'identifiers': {
+            (LIFX_DOMAIN, entity.unique_id)
+        },
+        'connections': {
+            (dr.CONNECTION_NETWORK_MAC, entity.unique_id)
+        },
+        'manufacturer': 'LIFX',
+    }
+
+    if entity.name is not None:
+        info['name'] = entity.name
+
+    return info
+
+
+class LightWrapper(Light):
+    """Wrapper for a Light adapter."""
+
+    def __init__(self, light):
+        """Initialize the light."""
+        self.adapter = light
+
+    def set_adapter(self, light):
+        """Attach a new adapter."""
+        light.hass = self.adapter.hass
+        light.entity_id = self.adapter.entity_id
+        self.adapter = light
+        self.async_schedule_update_ha_state(True)
+
+    @property
+    def hass(self):
+        """Return the hass object."""
+        return self.adapter.hass
+
+    @hass.setter
+    def hass(self, hass):
+        """Set the hass object."""
+        self.adapter.hass = hass
+
+    @property
+    def entity_id(self):
+        """Return the entity_id."""
+        return self.adapter.entity_id
+
+    @entity_id.setter
+    def entity_id(self, entity_id):
+        """Set the entity_id."""
+        self.adapter.entity_id = entity_id
+
+    @property
+    def device_info(self):
+        """Return information about the device."""
+        return self.adapter.device_info
+
+    @property
+    def available(self):
+        """Return the availability of the bulb."""
+        return self.adapter.available
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self.adapter.unique_id
+
+    @property
+    def name(self):
+        """Return the name of the bulb."""
+        return self.adapter.name
+
+    @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        return self.adapter.min_mireds
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        return self.adapter.max_mireds
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return self.adapter.supported_features
+
+    @property
+    def brightness(self):
+        """Return the brightness of this light between 0..255."""
+        return self.adapter.brightness
+
+    @property
+    def color_temp(self):
+        """Return the color temperature."""
+        return self.adapter.color_temp
+
+    @property
+    def hs_color(self):
+        """Return the hs value."""
+        return self.adapter.hs_color
+
+    @property
+    def is_on(self):
+        """Return true if light is on."""
+        return self.adapter.is_on
+
+    @property
+    def effect_list(self):
+        """Return the list of supported effects for this light."""
+        return self.adapter.effect_list
+
+    @property
+    def effect(self):
+        """Return the name of the currently running effect."""
+        return self.adapter.effect
+
+    async def async_turn_on(self, **kwargs):
+        """Turn the light on."""
+        return await self.adapter.async_turn_on(**kwargs)
+
+    async def async_turn_off(self, **kwargs):
+        """Turn the light off."""
+        return await self.adapter.async_turn_off(**kwargs)
+
+    async def async_update(self):
+        """Update bulb status."""
+        return await self.adapter.async_update()
+
+
+class UnavailableLight(Light):
+    """Representation of a missing light."""
+
+    def __init__(self, mac, name=None):
+        """Initialize the light."""
+        self.mac = mac
+        self._name = name
+
+    @property
+    def available(self):
+        """Return the availability of the bulb."""
+        return False
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self.mac
+
+    @property
+    def name(self):
+        """Return the name."""
+        return self._name
+
+    @property
+    def device_info(self):
+        """Return information about the device."""
+        return device_info(self)
+
+    async def async_turn_on(self, **kwargs):
+        """Turn the light on."""
+        pass
+
+    async def async_turn_off(self, **kwargs):
+        """Turn the light off."""
+        pass
+
+    async def async_update(self):
+        """Update bulb status."""
+        pass
+
+
 class LIFXLight(Light):
     """Representation of a LIFX light."""
 
@@ -414,34 +589,19 @@ class LIFXLight(Light):
         """Initialize the light."""
         self.bulb = bulb
         self.effects_conductor = effects_conductor
-        self.registered = True
         self.postponed_update = None
         self.lock = asyncio.Lock()
 
     @property
     def device_info(self):
         """Return information about the device."""
-        info = {
-            'identifiers': {
-                (LIFX_DOMAIN, self.unique_id)
-            },
-            'name': self.name,
-            'connections': {
-                (dr.CONNECTION_NETWORK_MAC, self.bulb.mac_addr)
-            },
-            'manufacturer': 'LIFX',
-        }
+        info = device_info(self)
 
         model = aiolifx().products.product_map.get(self.bulb.product)
         if model is not None:
             info['model'] = model
 
         return info
-
-    @property
-    def available(self):
-        """Return the availability of the bulb."""
-        return self.registered
 
     @property
     def unique_id(self):
