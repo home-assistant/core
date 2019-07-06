@@ -259,10 +259,10 @@ class KNXClimate(ClimateDevice):
                        self.device.mode.operation_modes]
 
         if self.device.supports_on_off:
-            _operations[HVAC_MODE_HEAT] = HVAC_MODE_HEAT
-            _operations[HVAC_MODE_OFF] = HVAC_MODE_OFF
+            _operations.append(HVAC_MODE_HEAT)
+            _operations.append(HVAC_MODE_OFF)
 
-        return list(filter(None, _operations))
+        return [op for op in _operations if op is not None]
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set operation mode."""
