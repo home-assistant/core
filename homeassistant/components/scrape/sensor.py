@@ -110,7 +110,7 @@ class ScrapeSensor(Entity):
         """Get the latest data from the source and updates the state."""
         self.rest.update()
         if self.rest.data is None:
-            _LOGGER.error("Unable to retrieve data!")
+            _LOGGER.error("Unable to retrieve data")
             return
 
         from bs4 import BeautifulSoup
