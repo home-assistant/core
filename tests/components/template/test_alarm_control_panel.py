@@ -76,7 +76,7 @@ class TestTemplateAlarmControlPanel:
                             },
                             'disarm': {
                                 'service':
-                                    'alarm_control_panel.alarm_arm_disarm',
+                                    'alarm_control_panel.alarm_disarm',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
@@ -118,6 +118,148 @@ class TestTemplateAlarmControlPanel:
         state = self.hass.states.get('alarm_control_panel.test_template_panel')
         assert state.state == STATE_ALARM_DISARMED
 
+    def test_optimistic_states(self):
+        """Test the optimistic state."""
+        with assert_setup_component(1, 'alarm_control_panel'):
+            assert setup.setup_component(self.hass, 'alarm_control_panel', {
+                'alarm_control_panel': {
+                    'platform': 'template',
+                    'panels': {
+                        'test_template_panel': {
+                            'arm_away': {
+                                'service':
+                                    'alarm_control_panel.alarm_arm_away',
+                                'entity_id': 'alarm_control_panel.test',
+                                'data': {
+                                    'code': '1234'
+                                }
+                            },
+                            'arm_home': {
+                                'service':
+                                    'alarm_control_panel.alarm_arm_home',
+                                'entity_id': 'alarm_control_panel.test',
+                                'data': {
+                                    'code': '1234'
+                                }
+                            },
+                            'arm_night': {
+                                'service':
+                                    'alarm_control_panel.alarm_arm_night',
+                                'entity_id': 'alarm_control_panel.test',
+                                'data': {
+                                    'code': '1234'
+                                }
+                            },
+                            'disarm': {
+                                'service':
+                                    'alarm_control_panel.alarm_disarm',
+                                'entity_id': 'alarm_control_panel.test',
+                                'data': {
+                                    'code': '1234'
+                                }
+                            }
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('alarm_control_panel.test_template_panel')
+        self.hass.block_till_done()
+        assert state.state == 'unknown'
+
+        self.hass.services.call(DOMAIN, SERVICE_ALARM_ARM_AWAY, {
+            'entity_id': 'alarm_control_panel.test_template_panel'
+        })
+        self.hass.block_till_done()
+        state = self.hass.states.get('alarm_control_panel.test_template_panel')
+        self.hass.block_till_done()
+        assert state.state == STATE_ALARM_ARMED_AWAY
+
+        self.hass.services.call(DOMAIN, SERVICE_ALARM_ARM_HOME, {
+            'entity_id': 'alarm_control_panel.test_template_panel'
+        })
+        self.hass.block_till_done()
+        state = self.hass.states.get('alarm_control_panel.test_template_panel')
+        self.hass.block_till_done()
+        assert state.state == STATE_ALARM_ARMED_HOME
+
+        self.hass.services.call(DOMAIN, SERVICE_ALARM_ARM_NIGHT, {
+            'entity_id': 'alarm_control_panel.test_template_panel'
+        })
+        self.hass.block_till_done()
+        state = self.hass.states.get('alarm_control_panel.test_template_panel')
+        self.hass.block_till_done()
+        assert state.state == STATE_ALARM_ARMED_NIGHT
+
+        self.hass.services.call(DOMAIN, 'alarm_disarm', {
+            'entity_id': 'alarm_control_panel.test_template_panel'
+        })
+        self.hass.block_till_done()
+        state = self.hass.states.get('alarm_control_panel.test_template_panel')
+        self.hass.block_till_done()
+        assert state.state == STATE_ALARM_DISARMED
+
+    def test_no_action_scripts(self):
+        """Test no action scripts per state."""
+        with assert_setup_component(1, 'alarm_control_panel'):
+            assert setup.setup_component(self.hass, 'alarm_control_panel', {
+                'alarm_control_panel': {
+                    'platform': 'template',
+                    'panels': {
+                        'test_template_panel': {
+                            'value_template':
+                                "{{ states('alarm_control_panel.test') }}",
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        self.hass.states.set('alarm_control_panel.test_template_panel',
+                             STATE_ALARM_ARMED_AWAY)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('alarm_control_panel.test_template_panel')
+        self.hass.block_till_done()
+        assert state.state == STATE_ALARM_ARMED_AWAY
+
+        self.hass.services.call(DOMAIN, SERVICE_ALARM_ARM_AWAY, {
+            'entity_id': 'alarm_control_panel.test_template_panel'
+        })
+        self.hass.block_till_done()
+        state = self.hass.states.get('alarm_control_panel.test_template_panel')
+        self.hass.block_till_done()
+        assert state.state == STATE_ALARM_ARMED_AWAY
+
+        self.hass.services.call(DOMAIN, SERVICE_ALARM_ARM_HOME, {
+            'entity_id': 'alarm_control_panel.test_template_panel'
+        })
+        self.hass.block_till_done()
+        state = self.hass.states.get('alarm_control_panel.test_template_panel')
+        self.hass.block_till_done()
+        assert state.state == STATE_ALARM_ARMED_AWAY
+
+        self.hass.services.call(DOMAIN, SERVICE_ALARM_ARM_NIGHT, {
+            'entity_id': 'alarm_control_panel.test_template_panel'
+        })
+        self.hass.block_till_done()
+        state = self.hass.states.get('alarm_control_panel.test_template_panel')
+        self.hass.block_till_done()
+        assert state.state == STATE_ALARM_ARMED_AWAY
+
+        self.hass.services.call(DOMAIN, 'alarm_disarm', {
+            'entity_id': 'alarm_control_panel.test_template_panel'
+        })
+        self.hass.block_till_done()
+        state = self.hass.states.get('alarm_control_panel.test_template_panel')
+        self.hass.block_till_done()
+        assert state.state == STATE_ALARM_ARMED_AWAY
+
     def test_template_syntax_error(self):
         """Test templating syntax error."""
         with assert_setup_component(0, 'alarm_control_panel'):
@@ -154,7 +296,7 @@ class TestTemplateAlarmControlPanel:
                             },
                             'disarm': {
                                 'service':
-                                    'alarm_control_panel.alarm_arm_disarm',
+                                    'alarm_control_panel.alarm_disarm',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
@@ -206,7 +348,7 @@ class TestTemplateAlarmControlPanel:
                             },
                             'disarm': {
                                 'service':
-                                    'alarm_control_panel.alarm_arm_disarm',
+                                    'alarm_control_panel.alarm_disarm',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
@@ -341,7 +483,7 @@ class TestTemplateAlarmControlPanel:
                             },
                             'disarm': {
                                 'service':
-                                    'alarm_control_panel.alarm_arm_disarm',
+                                    'alarm_control_panel.alarm_disarm',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
@@ -399,7 +541,7 @@ class TestTemplateAlarmControlPanel:
                             },
                             'disarm': {
                                 'service':
-                                    'alarm_control_panel.alarm_arm_disarm',
+                                    'alarm_control_panel.alarm_disarm',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
@@ -457,7 +599,7 @@ class TestTemplateAlarmControlPanel:
                             },
                             'disarm': {
                                 'service':
-                                    'alarm_control_panel.alarm_arm_disarm',
+                                    'alarm_control_panel.alarm_disarm',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
@@ -522,7 +664,7 @@ class TestTemplateAlarmControlPanel:
                             },
                             'disarm': {
                                 'service':
-                                    'alarm_control_panel.alarm_arm_disarm',
+                                    'alarm_control_panel.alarm_disarm',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
@@ -577,7 +719,7 @@ class TestTemplateAlarmControlPanel:
                             },
                             'disarm': {
                                 'service':
-                                    'alarm_control_panel.alarm_arm_disarm',
+                                    'alarm_control_panel.alarm_disarm',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
@@ -643,7 +785,7 @@ class TestTemplateAlarmControlPanel:
                             },
                             'disarm': {
                                 'service':
-                                    'alarm_control_panel.alarm_arm_disarm',
+                                    'alarm_control_panel.alarm_disarm',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'

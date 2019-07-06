@@ -136,7 +136,7 @@ class AlarmControlPanelTemplate(AlarmControlPanel):
         if arm_night_action is not None:
             self._arm_night_script = Script(hass, arm_night_action)
 
-        self._state = False
+        self._state = None
         self._icon = None
         self._entity_picture = None
         self._brightness = None
