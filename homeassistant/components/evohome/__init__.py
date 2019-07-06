@@ -240,47 +240,6 @@ class EvoBroker:
         # inform the evohome devices that state data has been updated
         async_dispatcher_send(self.hass, DOMAIN, {'signal': 'refresh'})
 
-    def get_setpoints(self) -> Dict[str, Any]:
-        """Return the current/next scheduled switchpoints."""
-        switchpoints = {}
-        schedule = self._evo_device.schedule()  # is a costly api call
-
-        day_time = datetime.now()
-        day_of_week = int(day_time.strftime('%w'))  # 0 is Sunday
-
-        # iterate today's switchpoints until we go past time_of_day...
-        day = schedule['DailySchedules'][day_of_week]
-        sp_idx = -1  # last switchpoint of the day before
-        for i, tmp in enumerate(day['Switchpoints']):
-            if day_time.strftime('%H:%M:%S') > tmp['TimeOfDay']:
-                sp_idx = i  # current setpoint
-            else:
-                break
-
-        sp = switchpoints['current'] = {}
-        offset = -1 if sp_idx == -1 else 0  # was yesterday?
-
-        sp_date = (day_time + timedelta(days=offset)).strftime('%Y-%m-%d')
-        day = schedule['DailySchedules'][(day_of_week + offset) % 7]
-        switchpoint = day['Switchpoints'][sp_idx]
-
-        sp['target_temp'] = switchpoint['heatSetpoint']
-        sp['from_datetime'] = "{} {}".format(sp_date, switchpoint['TimeOfDay'])
-
-        sp_idx += 1  # next setpoint
-
-        sp = switchpoints['next'] = {}
-        offset = 1 if sp_idx == len(day['Switchpoints']) else 0  # is tomorrow?
-
-        sp_date = (day_time + timedelta(days=offset)).strftime('%Y-%m-%d')
-        day = schedule['DailySchedules'][(day_of_week + offset) % 7]
-        switchpoint = day['Switchpoints'][sp_idx * (1 - offset)]
-
-        sp['target_temp'] = switchpoint['heatSetpoint']
-        sp['from_datetime'] = "{} {}".format(sp_date, switchpoint['TimeOfDay'])
-
-        return switchpoints
-
 
 class EvoDevice(Entity):
     """Base for any evohome device.
@@ -326,14 +285,14 @@ class EvoDevice(Entity):
                 break
 
         # Did the current SP start yesterday? Does the next start SP tomorrow?
-        current_day_offset = -1 if sp_idx == -1 else 0
-        next_day_offset = 1 if sp_idx + 1 == len(day['Switchpoints']) else 0
+        current_sp_day = -1 if sp_idx == -1 else 0
+        next_sp_day = 1 if sp_idx + 1 == len(day['Switchpoints']) else 0
 
         for key, offset, idx in [
-            ('current', current_day_offset, sp_idx),
-            ('next', next_day_offset, (sp_idx + 1) * (1 - next_day_offset))]:
+                ('current', current_sp_day, sp_idx),
+                ('next', next_sp_day, (sp_idx + 1) * (1 - next_sp_day))]:
 
-            sp = switchpoints[key] = {}
+            spt = switchpoints[key] = {}
 
             sp_date = (day_time + timedelta(days=offset)).strftime('%Y-%m-%d')
             day = schedule['DailySchedules'][(day_of_week + offset) % 7]
@@ -343,8 +302,8 @@ class EvoDevice(Entity):
                 '{}T{}'.format(sp_date, switchpoint['TimeOfDay']),
                 '%Y-%m-%dT%H:%M:%S')
 
-            sp['target_temp'] = switchpoint['heatSetpoint']
-            sp['from_datetime'] = \
+            spt['target_temp'] = switchpoint['heatSetpoint']
+            spt['from_datetime'] = \
                 _local_dt_to_utc(dt_naive).strftime(EVO_STRFTIME)
 
         return switchpoints

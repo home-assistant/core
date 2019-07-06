@@ -1,7 +1,7 @@
 """Support for Climate devices of (EMEA/EU-based) Honeywell TCC systems."""
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
-from typing import Any, Awaitable, Dict, Optional, List
+from typing import Optional, List
 
 import requests.exceptions
 import evohomeclient2
@@ -119,18 +119,18 @@ class EvoZone(EvoClimateDevice):
     def hvac_mode(self) -> str:
         """Return the current operating mode of the evohome Zone.
 
-            NB: evohome Zones 'inherit' their operating mode from the controller.
+        NB: evohome Zones 'inherit' their operating mode from the controller.
 
-            Usually, Zones are in 'FollowSchedule' mode, where their setpoints are
-            a function of their schedule, and the Controller's operating_mode, e.g.
-            Economy mode is their scheduled setpoint less (usually) 3C.
+        Usually, Zones are in 'FollowSchedule' mode, where their setpoints are
+        a function of their schedule, and the Controller's operating_mode, e.g.
+        Economy mode is their scheduled setpoint less (usually) 3C.
 
-            However, Zones can override these setpoints, either for a specified
-            period of time, 'TemporaryOverride', after which they will revert back
-            to 'FollowSchedule' mode, or indefinitely, 'PermanentOverride'.
-            """
-        if self._evo_tcs.systemModeStatus['mode'] == EVO_HEATOFF:
-            return HVAC_MODE_OFF
+        However, Zones can override these setpoints, either for a specified
+        period of time, 'TemporaryOverride', after which they will revert back
+        to 'FollowSchedule' mode, or indefinitely, 'PermanentOverride'.
+        """
+        if self._evo_tcs.systemModeStatus['mode'] in [EVO_AWAY, EVO_HEATOFF]:
+            return HVAC_MODE_AUTO
         is_off = self.target_temperature <= self.min_temp
         return HVAC_MODE_OFF if is_off else HVAC_MODE_HEAT
 
@@ -143,12 +143,14 @@ class EvoZone(EvoClimateDevice):
     @property
     def target_temperature(self) -> Optional[float]:
         """Return the target temperature of the evohome Zone."""
+        if self._evo_tcs.systemModeStatus['mode'] == EVO_HEATOFF:
+            return self._evo_device.setpointCapabilities['minHeatSetpoint']
         return self._evo_device.setpointStatus['targetHeatTemperature']
 
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        if self._evo_tcs.systemModeStatus['mode'] == EVO_HEATOFF:
+        if self._evo_tcs.systemModeStatus['mode'] in [EVO_AWAY, EVO_HEATOFF]:
             return None
         return EVO_PRESET_TO_HA.get(
             self._evo_device.setpointStatus['setpointMode'], 'follow')
@@ -170,7 +172,7 @@ class EvoZone(EvoClimateDevice):
         return self._evo_device.setpointCapabilities['maxHeatSetpoint']
 
     def _set_temperature(self, temperature: float,
-                         until: Optional[datetime]=None):
+                         until: Optional[datetime] = None):
         """Set a new target temperature for the Zone.
 
         until == None means indefinitely (i.e. PermanentOverride)
@@ -181,7 +183,7 @@ class EvoZone(EvoClimateDevice):
                 evohomeclient2.AuthenticationError) as err:
             _handle_exception(err)
 
-    def set_temperature(self, **kwargs) -> None:  # TODO: check
+    def set_temperature(self, **kwargs) -> None:
         """Set a new target temperature for an hour."""
         until = kwargs.get('until')
         if until:
@@ -189,7 +191,7 @@ class EvoZone(EvoClimateDevice):
 
         self._set_temperature(kwargs['temperature'], until)
 
-    def _set_operation_mode(self, op_mode) -> None:  # TODO: check
+    def _set_operation_mode(self, op_mode) -> None:
         """Set the Zone to one of its native EVO_* operating modes."""
         if op_mode == EVO_FOLLOW:
             try:
@@ -210,7 +212,7 @@ class EvoZone(EvoClimateDevice):
 
         self._set_temperature(temperature, until=until)
 
-    def set_hvac_mode(self, hvac_mode: str) -> None:  # TODO: check
+    def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set an operating mode for the Zone."""
         if hvac_mode == HVAC_MODE_OFF:
             self._set_temperature(self.min_temp, until=None)
