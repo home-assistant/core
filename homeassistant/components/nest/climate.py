@@ -6,9 +6,9 @@ import voluptuous as vol
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, FAN_AUTO, FAN_ON,
-    HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF, STATE_ECO,
-    SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE)
+    HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF,
+    SUPPORT_PRESET_MODE, SUPPORT_FAN_MODE, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE, PRESET_AWAY, PRESET_ECO)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -23,6 +23,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 NEST_MODE_HEAT_COOL = 'heat-cool'
+NEST_MODE_ECO = 'eco'
+NEST_MODE_HEAT = 'heat'
+NEST_MODE_COOL = 'cool'
+NEST_MODE_OFF = 'off'
+
+PRESET_MODES = [PRESET_AWAY, PRESET_ECO]
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -56,10 +62,15 @@ class NestThermostat(ClimateDevice):
 
         # Set the default supported features
         self._support_flags = (SUPPORT_TARGET_TEMPERATURE |
-                               SUPPORT_AWAY_MODE)
+                               SUPPORT_PRESET_MODE)
 
         # Not all nest devices support cooling and heating remove unused
-        self._operation_list = [HVAC_MODE_OFF]
+        self._operation_list = []
+
+        if self.device.can_heat and self.device.can_cool:
+            self._operation_list.append(HVAC_MODE_AUTO)
+            self._support_flags = (self._support_flags |
+                                   SUPPORT_TARGET_TEMPERATURE_RANGE)
 
         # Add supported nest thermostat features
         if self.device.can_heat:
@@ -68,12 +79,7 @@ class NestThermostat(ClimateDevice):
         if self.device.can_cool:
             self._operation_list.append(HVAC_MODE_COOL)
 
-        if self.device.can_heat and self.device.can_cool:
-            self._operation_list.append(HVAC_MODE_AUTO)
-            self._support_flags = (self._support_flags |
-                                   SUPPORT_TARGET_TEMPERATURE_RANGE)
-
-        self._operation_list.append(STATE_ECO)
+        self._operation_list.append(HVAC_MODE_OFF)
 
         # feature of device
         self._has_fan = self.device.has_fan
@@ -152,8 +158,11 @@ class NestThermostat(ClimateDevice):
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         if self._mode in \
-                (HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_OFF, STATE_ECO):
+                (NEST_MODE_HEAT, NEST_MODE_COOL, NEST_MODE_OFF):
             return self._mode
+        if self._mode == NEST_MODE_ECO:
+            # We assume the first operation in operation list is the main one
+            return self._operation_list[0]
         if self._mode == NEST_MODE_HEAT_COOL:
             return HVAC_MODE_AUTO
         return None
@@ -161,14 +170,14 @@ class NestThermostat(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self._mode not in (NEST_MODE_HEAT_COOL, STATE_ECO):
+        if self._mode not in (NEST_MODE_HEAT_COOL, NEST_MODE_ECO):
             return self._target_temperature
         return None
 
     @property
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
-        if self._mode == STATE_ECO:
+        if self._mode == NEST_MODE_ECO:
             return self._eco_temperature[0]
         if self._mode == NEST_MODE_HEAT_COOL:
             return self._target_temperature[0]
@@ -177,16 +186,11 @@ class NestThermostat(ClimateDevice):
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
-        if self._mode == STATE_ECO:
+        if self._mode == NEST_MODE_ECO:
             return self._eco_temperature[1]
         if self._mode == NEST_MODE_HEAT_COOL:
             return self._target_temperature[1]
         return None
-
-    @property
-    def is_away_mode_on(self):
-        """Return if away mode is on."""
-        return self._away
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -212,8 +216,7 @@ class NestThermostat(ClimateDevice):
 
     def set_hvac_mode(self, hvac_mode):
         """Set operation mode."""
-        if hvac_mode in \
-                (HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_OFF, STATE_ECO):
+        if hvac_mode in (HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_OFF):
             device_mode = hvac_mode
         elif hvac_mode == HVAC_MODE_AUTO:
             device_mode = NEST_MODE_HEAT_COOL
@@ -229,13 +232,36 @@ class NestThermostat(ClimateDevice):
         """List of available operation modes."""
         return self._operation_list
 
-    def turn_away_mode_on(self):
-        """Turn away on."""
-        self.structure.away = True
+    @property
+    def preset_mode(self):
+        """Return current preset mode."""
+        if self._away:
+            return PRESET_AWAY
 
-    def turn_away_mode_off(self):
-        """Turn away off."""
-        self.structure.away = False
+        if self._mode == NEST_MODE_ECO:
+            return PRESET_ECO
+
+        return None
+
+    @property
+    def preset_modes(self):
+        """Return preset modes."""
+        return PRESET_MODES
+
+    def set_preset_mode(self, preset_mode):
+        """Set preset mode."""
+        if preset_mode == self.preset_mode:
+            return
+
+        if self._away:
+            self.structure.away = False
+        elif preset_mode == PRESET_AWAY:
+            self.structure.away = True
+
+        if self.preset_mode == PRESET_ECO:
+            self.device.mode = self._operation_list[0]
+        elif preset_mode == PRESET_ECO:
+            self.device.mode = NEST_MODE_ECO
 
     @property
     def fan_mode(self):
