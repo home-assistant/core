@@ -30,7 +30,7 @@ CONF_ATTRIBUTION = "Data provided by Environment Canada"
 CONF_STATION = 'station'
 CONF_LANGUAGE = 'language'
 
-MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=10)
+MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=1)
 
 SENSOR_TYPES = [
     'temperature',
