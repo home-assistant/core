@@ -43,6 +43,7 @@ ATTR_MASTER = 'master'
 ATTR_WITH_GROUP = 'with_group'
 ATTR_NIGHT_SOUND = 'night_sound'
 ATTR_SPEECH_ENHANCE = 'speech_enhance'
+ATTR_QUEUE_POSITION = 'queue_position'
 
 SONOS_JOIN_SCHEMA = vol.Schema({
     vol.Required(ATTR_MASTER): cv.entity_id,
@@ -85,6 +86,7 @@ SONOS_SET_OPTION_SCHEMA = vol.Schema({
 
 SONOS_PLAY_QUEUE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
+    vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int,
 })
 
 DATA_SERVICE_EVENT = 'sonos_service_idle'

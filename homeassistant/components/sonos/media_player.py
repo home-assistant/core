@@ -27,8 +27,8 @@ from . import (
     CONF_ADVERTISE_ADDR, CONF_HOSTS, CONF_INTERFACE_ADDR,
     DATA_SERVICE_EVENT, DOMAIN as SONOS_DOMAIN,
     ATTR_ALARM_ID, ATTR_ENABLED, ATTR_INCLUDE_LINKED_ZONES, ATTR_MASTER,
-    ATTR_NIGHT_SOUND, ATTR_SLEEP_TIME, ATTR_SPEECH_ENHANCE, ATTR_TIME,
-    ATTR_VOLUME, ATTR_WITH_GROUP,
+    ATTR_NIGHT_SOUND, ATTR_QUEUE_POSITION, ATTR_SLEEP_TIME,
+    ATTR_SPEECH_ENHANCE, ATTR_TIME, ATTR_VOLUME, ATTR_WITH_GROUP,
     SERVICE_CLEAR_TIMER, SERVICE_JOIN, SERVICE_PLAY_QUEUE, SERVICE_RESTORE,
     SERVICE_SET_OPTION, SERVICE_SET_TIMER, SERVICE_SNAPSHOT, SERVICE_UNJOIN,
     SERVICE_UPDATE_ALARM)
@@ -1081,7 +1081,10 @@ class SonosEntity(MediaPlayerDevice):
     @soco_error()
     def play_queue(self, data):
         """Start playing the queue."""
-        self.soco.play_from_queue(0)
+        position = 0
+        if ATTR_QUEUE_POSITION in data:
+            position = data[ATTR_QUEUE_POSITION]
+        self.soco.play_from_queue(position)
 
     @property
     def device_state_attributes(self):

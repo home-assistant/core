@@ -71,3 +71,6 @@ play_queue:
     entity_id:
       description: Name(s) of entities that will start playing.
       example: 'media_player.living_room_sonos'
+    queue_position:
+      description: Position of the song in the queue to start playing from.
+      example: '0'
