@@ -114,13 +114,3 @@ nuheat_resume_program:
     entity_id:
       description: Name(s) of entities to change.
       example: 'climate.kitchen'
-
-sensibo_assume_state:
-  description: Set Sensibo device to external state.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.kitchen'
-    state:
-      description: State to set.
-      example: 'idle'

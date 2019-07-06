@@ -6,11 +6,12 @@ import logging
 import aiohttp
 import async_timeout
 import voluptuous as vol
+import pysensibo
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
-    DOMAIN, HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
+    HVAC_MODE_HEAT_COOL, HVAC_MODE_COOL, HVAC_MODE_DRY,
+    HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_FAN_MODE,
     SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_STATE, ATTR_TEMPERATURE, CONF_API_KEY, CONF_ID,
@@ -20,12 +21,14 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.temperature import convert as convert_temperature
 
+from .const import DOMAIN as SENSIBO_DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 ALL = ['all']
 TIMEOUT = 10
 
-SERVICE_ASSUME_STATE = 'sensibo_assume_state'
+SERVICE_ASSUME_STATE = 'assume_state'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -46,14 +49,13 @@ FIELD_TO_FLAG = {
     'fanLevel':  SUPPORT_FAN_MODE,
     'swing': SUPPORT_SWING_MODE,
     'targetTemperature': SUPPORT_TARGET_TEMPERATURE,
-    'on': SUPPORT_ON_OFF,
 }
 
 SENSIBO_TO_HA = {
     "cool": HVAC_MODE_COOL,
     "heat": HVAC_MODE_HEAT,
     "fan": HVAC_MODE_FAN_ONLY,
-    "auto": HVAC_MODE_AUTO,
+    "auto": HVAC_MODE_HEAT_COOL,
     "dry": HVAC_MODE_DRY
 }
 
@@ -63,8 +65,6 @@ HA_TO_SENSIBO = {value: key for key, value in SENSIBO_TO_HA.items()}
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up Sensibo devices."""
-    import pysensibo
-
     client = pysensibo.SensiboClient(
         config[CONF_API_KEY], session=async_get_clientsession(hass),
         timeout=TIMEOUT)
@@ -80,29 +80,32 @@ async def async_setup_platform(hass, config, async_add_entities,
         _LOGGER.exception('Failed to connect to Sensibo servers.')
         raise PlatformNotReady
 
-    if devices:
-        async_add_entities(devices)
+    if not devices:
+        return
 
-        async def async_assume_state(service):
-            """Set state according to external service call.."""
-            entity_ids = service.data.get(ATTR_ENTITY_ID)
-            if entity_ids:
-                target_climate = [device for device in devices
-                                  if device.entity_id in entity_ids]
-            else:
-                target_climate = devices
+    async_add_entities(devices)
 
-            update_tasks = []
-            for climate in target_climate:
-                await climate.async_assume_state(
-                    service.data.get(ATTR_STATE))
-                update_tasks.append(climate.async_update_ha_state(True))
+    async def async_assume_state(service):
+        """Set state according to external service call.."""
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        if entity_ids:
+            target_climate = [device for device in devices
+                              if device.entity_id in entity_ids]
+        else:
+            target_climate = devices
 
-            if update_tasks:
-                await asyncio.wait(update_tasks)
-        hass.services.async_register(
-            DOMAIN, SERVICE_ASSUME_STATE, async_assume_state,
-            schema=ASSUME_STATE_SCHEMA)
+        update_tasks = []
+        for climate in target_climate:
+            await climate.async_assume_state(
+                service.data.get(ATTR_STATE))
+            update_tasks.append(climate.async_update_ha_state(True))
+
+        if update_tasks:
+            await asyncio.wait(update_tasks)
+
+    hass.services.async_register(
+        SENSIBO_DOMAIN, SERVICE_ASSUME_STATE, async_assume_state,
+        schema=ASSUME_STATE_SCHEMA)
 
 
 class SensiboClimate(ClimateDevice):
@@ -134,6 +137,7 @@ class SensiboClimate(ClimateDevice):
         capabilities = data['remoteCapabilities']
         self._operations = [SENSIBO_TO_HA[mode] for mode
                             in capabilities['modes']]
+        self._operations.append(HVAC_MODE_OFF)
         self._current_capabilities = \
             capabilities['modes'][self._ac_states['mode']]
         temperature_unit_key = data.get('temperatureUnit') or \
@@ -242,11 +246,6 @@ class SensiboClimate(ClimateDevice):
         return self._name
 
     @property
-    def is_on(self):
-        """Return true if AC is on."""
-        return self._ac_states['on']
-
-    @property
     def min_temp(self):
         """Return the minimum temperature."""
         return self._temperatures_list[0] \
@@ -294,6 +293,18 @@ class SensiboClimate(ClimateDevice):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
+        if hvac_mode == HVAC_MODE_OFF:
+            with async_timeout.timeout(TIMEOUT):
+                await self._client.async_set_ac_state_property(
+                    self._id, 'on', False, self._ac_states)
+            return
+
+        # Turn on if not currently on.
+        if not self._ac_states['on']:
+            with async_timeout.timeout(TIMEOUT):
+                await self._client.async_set_ac_state_property(
+                    self._id, 'on', True, self._ac_states)
+
         with async_timeout.timeout(TIMEOUT):
             await self._client.async_set_ac_state_property(
                 self._id, 'mode', HA_TO_SENSIBO[hvac_mode],
@@ -305,22 +316,12 @@ class SensiboClimate(ClimateDevice):
             await self._client.async_set_ac_state_property(
                 self._id, 'swing', swing_mode, self._ac_states)
 
-    async def async_turn_on(self):
-        """Turn Sensibo unit on."""
-        with async_timeout.timeout(TIMEOUT):
-            await self._client.async_set_ac_state_property(
-                self._id, 'on', True, self._ac_states)
-
-    async def async_turn_off(self):
-        """Turn Sensibo unit on."""
-        with async_timeout.timeout(TIMEOUT):
-            await self._client.async_set_ac_state_property(
-                self._id, 'on', False, self._ac_states)
-
     async def async_assume_state(self, state):
         """Set external state."""
-        change_needed = (state != HVAC_MODE_OFF and not self.is_on) \
-            or (state == HVAC_MODE_OFF and self.is_on)
+        change_needed = \
+            (state != HVAC_MODE_OFF and not self._ac_states['on']) \
+            or (state == HVAC_MODE_OFF and self._ac_states['on'])
+
         if change_needed:
             with async_timeout.timeout(TIMEOUT):
                 await self._client.async_set_ac_state_property(
@@ -338,7 +339,6 @@ class SensiboClimate(ClimateDevice):
 
     async def async_update(self):
         """Retrieve latest state."""
-        import pysensibo
         try:
             with async_timeout.timeout(TIMEOUT):
                 data = await self._client.async_get_device(
