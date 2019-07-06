@@ -86,7 +86,7 @@ SONOS_SET_OPTION_SCHEMA = vol.Schema({
 
 SONOS_PLAY_QUEUE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
-    vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int,
+    vol.Optional(ATTR_QUEUE_POSITION, default=0): cv.positive_int,
 })
 
 DATA_SERVICE_EVENT = 'sonos_service_idle'

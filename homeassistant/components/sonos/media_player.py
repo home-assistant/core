@@ -1081,10 +1081,7 @@ class SonosEntity(MediaPlayerDevice):
     @soco_error()
     def play_queue(self, data):
         """Start playing the queue."""
-        position = 0
-        if ATTR_QUEUE_POSITION in data:
-            position = data[ATTR_QUEUE_POSITION]
-        self.soco.play_from_queue(position)
+        self.soco.play_from_queue(data[ATTR_QUEUE_POSITION])
 
     @property
     def device_state_attributes(self):
