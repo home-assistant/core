@@ -106,6 +106,8 @@ async def async_setup(hass, config):
 
         keba.send('failsafe ' + str(failsafe_timeout) + ' '
                   + str(failsafe_fallback * 1000) + ' ' + str(failsafe_save))
+    else:
+        keba.send('failsafe 0 0 0')
 
     # Register services
     for service in _SERVICE_MAP:
