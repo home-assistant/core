@@ -3,6 +3,7 @@ from asynctest import patch
 import pytest
 
 from homeassistant.components import device_tracker
+from homeassistant.components.device_tracker.const import ENTITY_ID_FORMAT
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.setup import async_setup_component
 
@@ -39,7 +40,7 @@ async def test_ensure_device_tracker_platform_validation(hass):
 async def test_new_message(hass, mock_device_tracker_conf):
     """Test new message."""
     dev_id = 'paulus'
-    entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = ENTITY_ID_FORMAT.format(dev_id)
     topic = '/location/paulus'
     location = 'work'
 
@@ -58,7 +59,7 @@ async def test_new_message(hass, mock_device_tracker_conf):
 async def test_single_level_wildcard_topic(hass, mock_device_tracker_conf):
     """Test single level wildcard topic."""
     dev_id = 'paulus'
-    entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = ENTITY_ID_FORMAT.format(dev_id)
     subscription = '/location/+/paulus'
     topic = '/location/room/paulus'
     location = 'work'
@@ -78,7 +79,7 @@ async def test_single_level_wildcard_topic(hass, mock_device_tracker_conf):
 async def test_multi_level_wildcard_topic(hass, mock_device_tracker_conf):
     """Test multi level wildcard topic."""
     dev_id = 'paulus'
-    entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = ENTITY_ID_FORMAT.format(dev_id)
     subscription = '/location/#'
     topic = '/location/room/paulus'
     location = 'work'
@@ -99,7 +100,7 @@ async def test_single_level_wildcard_topic_not_matching(
         hass, mock_device_tracker_conf):
     """Test not matching single level wildcard topic."""
     dev_id = 'paulus'
-    entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = ENTITY_ID_FORMAT.format(dev_id)
     subscription = '/location/+/paulus'
     topic = '/location/paulus'
     location = 'work'
@@ -120,7 +121,7 @@ async def test_multi_level_wildcard_topic_not_matching(
         hass, mock_device_tracker_conf):
     """Test not matching multi level wildcard topic."""
     dev_id = 'paulus'
-    entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = ENTITY_ID_FORMAT.format(dev_id)
     subscription = '/location/#'
     topic = '/somewhere/room/paulus'
     location = 'work'

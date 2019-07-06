@@ -1,12 +1,13 @@
 """Device entity for Zigbee Home Automation."""
 
 import logging
+import numbers
 import time
 
 from homeassistant.core import callback
 from homeassistant.util import slugify
 from .entity import ZhaEntity
-from .const import POWER_CONFIGURATION_CHANNEL, SIGNAL_STATE_ATTR
+from .core.const import POWER_CONFIGURATION_CHANNEL, SIGNAL_STATE_ATTR
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,6 +101,18 @@ class ZhaDeviceEntity(ZhaEntity):
                 self.async_update_state_attribute)
             # only do this on add to HA because it is static
             await self._async_init_battery_values()
+
+    def async_update_state_attribute(self, key, value):
+        """Update a single device state attribute."""
+        if key == 'battery_level':
+            if not isinstance(value, numbers.Number) or value == -1:
+                return
+            value = value / 2
+            value = int(round(value))
+        self._device_state_attributes.update({
+            key: value
+        })
+        self.async_schedule_update_ha_state()
 
     async def async_update(self):
         """Handle polling."""

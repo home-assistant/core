@@ -1,0 +1,150 @@
+# https://dev.azure.com/home-assistant
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - dev
+pr: none
+
+resources:
+  containers:
+  - container: 35
+    image: homeassistant/ci-azure:3.5
+  - container: 36
+    image: homeassistant/ci-azure:3.6
+  - container: 37
+    image: homeassistant/ci-azure:3.7
+
+
+variables:
+  - name: ArtifactFeed
+    value: '2df3ae11-3bf6-49bc-a809-ba0d340d6a6d'
+  - name: PythonMain
+    value: '35'
+
+
+jobs:
+
+- job: 'Lint'
+  pool:
+    vmImage: 'ubuntu-latest'
+  container: $[ variables['PythonMain'] ]
+  steps:
+  - script: |
+      python -m venv lint
+      
+      . lint/bin/activate
+      pip install flake8
+      flake8 homeassistant tests script
+    displayName: 'Run flake8'
+
+
+- job: 'Check'
+  dependsOn:
+  - Lint
+  pool:
+    vmImage: 'ubuntu-latest'
+  strategy:
+    maxParallel: 1
+    matrix:
+      Python35:
+        python.version: '3.5'
+        python.container: '35'
+      Python36:
+        python.version: '3.6'
+        python.container: '36'
+      Python37:
+        python.version: '3.7'
+        python.container: '37'
+  container: $[ variables['python.container'] ]
+  steps:
+  - script: |
+      echo "$(python.version)" > .cache
+    displayName: 'Set python $(python.version) for requirement cache'
+
+  - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreCacheV1.RestoreCache@1
+    displayName: 'Restore artifacts based on Requirements'
+    inputs:
+      keyfile: 'requirements_test_all.txt, .cache'
+      targetfolder: './venv'
+      vstsFeed: '$(ArtifactFeed)' 
+
+  - script: |
+      set -e
+      python -m venv venv
+      
+      . venv/bin/activate
+      pip install -U pip setuptools
+      pip install -r requirements_test_all.txt -c homeassistant/package_constraints.txt
+    displayName: 'Create Virtual Environment & Install Requirements'
+    condition: and(succeeded(), ne(variables['CacheRestored'], 'true'))
+
+  - task: 1ESLighthouseEng.PipelineArtifactCaching.SaveCacheV1.SaveCache@1
+    displayName: 'Save artifacts based on Requirements'
+    inputs:
+      keyfile: 'requirements_test_all.txt, .cache'
+      targetfolder: './venv'
+      vstsFeed: '$(ArtifactFeed)'
+
+  - script: | 
+      . venv/bin/activate
+      pip install -e .
+    displayName: 'Install Home Assistant for python $(python.version)' 
+  
+  - script: | 
+      . venv/bin/activate
+      pytest --timeout=9 --durations=10 --junitxml=junit/test-results.xml -qq -o console_output_style=count -p no:sugar tests
+    displayName: 'Run pytest for python $(python.version)'
+
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFiles: '**/test-*.xml'
+      testRunTitle: 'Publish test results for Python $(python.version)'
+
+- job: 'FullCheck'
+  dependsOn:
+  - Check
+  pool:
+    vmImage: 'ubuntu-latest'
+  container: $[ variables['PythonMain'] ]
+  steps:
+  - script: |
+      echo "$(PythonMain)" > .cache
+    displayName: 'Set python $(python.version) for requirement cache'
+  - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreCacheV1.RestoreCache@1
+    displayName: 'Restore artifacts based on Requirements'
+    inputs:
+      keyfile: 'requirements_all.txt, requirements_test.txt, .cache'
+      targetfolder: './venv'
+      vstsFeed: '$(ArtifactFeed)' 
+
+  - script: |
+      set -e
+      python -m venv venv
+      
+      . venv/bin/activate
+      pip install -U pip setuptools
+      pip install -r requirements_all.txt -c homeassistant/package_constraints.txt
+      pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
+    displayName: 'Create Virtual Environment & Install Requirements'
+    condition: and(succeeded(), ne(variables['CacheRestored'], 'true'))
+
+  - task: 1ESLighthouseEng.PipelineArtifactCaching.SaveCacheV1.SaveCache@1
+    displayName: 'Save artifacts based on Requirements'
+    inputs:
+      keyfile: 'requirements_all.txt, requirements_test.txt, .cache'
+      targetfolder: './venv'
+      vstsFeed: '$(ArtifactFeed)'
+
+  - script: | 
+      . venv/bin/activate
+      pip install -e .
+    displayName: 'Install Home Assistant for python $(python.version)' 
+  
+  - script: |
+      . venv/bin/activate
+      pylint homeassistant
+    displayName: 'Run pylint'
+

@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
-from homeassistant.components.alexa import smart_home as alexa_sh
+from homeassistant.components.alexa import const as alexa_const
 from homeassistant.components.google_assistant import const as ga_c
 from homeassistant.const import (
     CONF_MODE, CONF_NAME, CONF_REGION, EVENT_HOMEASSISTANT_START,
@@ -21,7 +21,8 @@ from .const import (
     CONF_CLOUDHOOK_CREATE_URL, CONF_COGNITO_CLIENT_ID, CONF_ENTITY_CONFIG,
     CONF_FILTER, CONF_GOOGLE_ACTIONS, CONF_GOOGLE_ACTIONS_SYNC_URL,
     CONF_RELAYER, CONF_REMOTE_API_URL, CONF_SUBSCRIPTION_INFO_URL,
-    CONF_USER_POOL_ID, DOMAIN, MODE_DEV, MODE_PROD)
+    CONF_USER_POOL_ID, DOMAIN, MODE_DEV, MODE_PROD, CONF_ALEXA_ACCESS_TOKEN_URL
+)
 from .prefs import CloudPreferences
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,9 +34,9 @@ SERVICE_REMOTE_DISCONNECT = 'remote_disconnect'
 
 
 ALEXA_ENTITY_SCHEMA = vol.Schema({
-    vol.Optional(alexa_sh.CONF_DESCRIPTION): cv.string,
-    vol.Optional(alexa_sh.CONF_DISPLAY_CATEGORIES): cv.string,
-    vol.Optional(alexa_sh.CONF_NAME): cv.string,
+    vol.Optional(alexa_const.CONF_DESCRIPTION): cv.string,
+    vol.Optional(alexa_const.CONF_DISPLAY_CATEGORIES): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
 })
 
 GOOGLE_ENTITY_SCHEMA = vol.Schema({
@@ -61,7 +62,6 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_MODE, default=DEFAULT_MODE):
             vol.In([MODE_DEV, MODE_PROD]),
-        # Change to optional when we include real servers
         vol.Optional(CONF_COGNITO_CLIENT_ID): str,
         vol.Optional(CONF_USER_POOL_ID): str,
         vol.Optional(CONF_REGION): str,
@@ -73,6 +73,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_ACME_DIRECTORY_SERVER): vol.Url(),
         vol.Optional(CONF_ALEXA): ALEXA_SCHEMA,
         vol.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
+        vol.Optional(CONF_ALEXA_ACCESS_TOKEN_URL): str,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -192,8 +193,16 @@ async def async_setup(hass, config):
     hass.helpers.service.async_register_admin_service(
         DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler)
 
+    loaded_binary_sensor = False
+
     async def _on_connect():
         """Discover RemoteUI binary sensor."""
+        nonlocal loaded_binary_sensor
+
+        if loaded_binary_sensor:
+            return
+
+        loaded_binary_sensor = True
         hass.async_create_task(hass.helpers.discovery.async_load_platform(
             'binary_sensor', DOMAIN, {}, config))
 

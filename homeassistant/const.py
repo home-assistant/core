@@ -1,8 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 93
-PATCH_VERSION = '2'
+MINOR_VERSION = 95
+PATCH_VERSION = '4'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 5, 3)
@@ -59,6 +59,7 @@ CONF_CUSTOMIZE_GLOB = 'customize_glob'
 CONF_DELAY_TIME = 'delay_time'
 CONF_DEVICE = 'device'
 CONF_DEVICE_CLASS = 'device_class'
+CONF_DEVICE_ID = 'device_id'
 CONF_DEVICES = 'devices'
 CONF_DISARM_AFTER_TRIGGER = 'disarm_after_trigger'
 CONF_DISCOVERY = 'discovery'
@@ -160,21 +161,23 @@ CONF_XY = 'xy'
 CONF_ZONE = 'zone'
 
 # #### EVENTS ####
+EVENT_AUTOMATION_TRIGGERED = 'automation_triggered'
+EVENT_CALL_SERVICE = 'call_service'
+EVENT_COMPONENT_LOADED = 'component_loaded'
+EVENT_CORE_CONFIG_UPDATE = 'core_config_updated'
+EVENT_HOMEASSISTANT_CLOSE = 'homeassistant_close'
 EVENT_HOMEASSISTANT_START = 'homeassistant_start'
 EVENT_HOMEASSISTANT_STOP = 'homeassistant_stop'
-EVENT_HOMEASSISTANT_CLOSE = 'homeassistant_close'
-EVENT_STATE_CHANGED = 'state_changed'
-EVENT_TIME_CHANGED = 'time_changed'
-EVENT_CALL_SERVICE = 'call_service'
+EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 EVENT_PLATFORM_DISCOVERED = 'platform_discovered'
-EVENT_COMPONENT_LOADED = 'component_loaded'
+EVENT_SCRIPT_STARTED = 'script_started'
 EVENT_SERVICE_REGISTERED = 'service_registered'
 EVENT_SERVICE_REMOVED = 'service_removed'
-EVENT_LOGBOOK_ENTRY = 'logbook_entry'
+EVENT_STATE_CHANGED = 'state_changed'
 EVENT_THEMES_UPDATED = 'themes_updated'
 EVENT_TIMER_OUT_OF_SYNC = 'timer_out_of_sync'
-EVENT_AUTOMATION_TRIGGERED = 'automation_triggered'
-EVENT_SCRIPT_STARTED = 'script_started'
+EVENT_TIME_CHANGED = 'time_changed'
+
 
 # #### DEVICE CLASSES ####
 DEVICE_CLASS_BATTERY = 'battery'
@@ -343,6 +346,7 @@ LENGTH_MILES = 'mi'  # type: str
 # Pressure units
 PRESSURE_PA = 'Pa'  # type: str
 PRESSURE_HPA = 'hPa'  # type: str
+PRESSURE_BAR = 'bar'  # type: str
 PRESSURE_MBAR = 'mbar'  # type: str
 PRESSURE_INHG = 'inHg'  # type: str
 PRESSURE_PSI = 'psi'  # type: str
@@ -408,6 +412,7 @@ SERVICE_SET_COVER_POSITION = 'set_cover_position'
 SERVICE_SET_COVER_TILT_POSITION = 'set_cover_tilt_position'
 SERVICE_STOP_COVER = 'stop_cover'
 SERVICE_STOP_COVER_TILT = 'stop_cover_tilt'
+SERVICE_TOGGLE_COVER_TILT = 'toggle_cover_tilt'
 
 SERVICE_SELECT_OPTION = 'select_option'
 

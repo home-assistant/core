@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "not_axis_device": "Dispositivo descoberto n\u00e3o \u00e9 um dispositivo Axis"
+        },
+        "error": {
+            "already_in_progress": "O fluxo de configura\u00e7\u00e3o para o dispositivo j\u00e1 est\u00e1 em andamento.",
+            "faulty_credentials": "Credenciais do usu\u00e1rio inv\u00e1lidas"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Senha",
+                    "port": "Porta",
+                    "username": "Nome de usu\u00e1rio"
+                }
+            }
+        },
+        "title": "Dispositivo Axis"
+    }
+}

@@ -209,7 +209,7 @@ async def async_reproduce_state_legacy(
         )
 
     if domain_tasks:
-        await asyncio.wait(domain_tasks, loop=hass.loop)
+        await asyncio.wait(domain_tasks)
 
 
 def state_as_number(state: State) -> float:

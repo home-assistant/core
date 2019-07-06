@@ -10,12 +10,14 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_API_KEY, CONF_DOMAIN, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_entry_flow
 
+from .const import DOMAIN
+
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SANDBOX = 'sandbox'
 
 DEFAULT_SANDBOX = False
-DOMAIN = 'mailgun'
 
 MESSAGE_RECEIVED = '{}_message_received'.format(DOMAIN)
 
@@ -90,13 +92,3 @@ async def async_unload_entry(hass, entry):
 
 # pylint: disable=invalid-name
 async_remove_entry = config_entry_flow.webhook_async_remove_entry
-
-
-config_entry_flow.register_webhook_flow(
-    DOMAIN,
-    'Mailgun Webhook',
-    {
-        'mailgun_url': 'https://documentation.mailgun.com/en/latest/user_manual.html#webhooks',  # noqa: E501 pylint: disable=line-too-long
-        'docs_url': 'https://www.home-assistant.io/components/mailgun/'
-    }
-)

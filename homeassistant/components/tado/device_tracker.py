@@ -42,6 +42,7 @@ class TadoDeviceScanner(DeviceScanner):
 
     def __init__(self, hass, config):
         """Initialize the scanner."""
+        self.hass = hass
         self.last_results = []
 
         self.username = config[CONF_USERNAME]
@@ -60,8 +61,7 @@ class TadoDeviceScanner(DeviceScanner):
         # The API URL always needs a username and password
         self.tadoapiurl += '?username={username}&password={password}'
 
-        self.websession = async_create_clientsession(
-            hass, cookie_jar=aiohttp.CookieJar(unsafe=True, loop=hass.loop))
+        self.websession = None
 
         self.success_init = asyncio.run_coroutine_threadsafe(
             self._async_update_info(), hass.loop
@@ -91,6 +91,10 @@ class TadoDeviceScanner(DeviceScanner):
         Returns boolean if scanning successful.
         """
         _LOGGER.debug("Requesting Tado")
+
+        if self.websession is None:
+            self.websession = async_create_clientsession(
+                self.hass, cookie_jar=aiohttp.CookieJar(unsafe=True))
 
         last_results = []
 

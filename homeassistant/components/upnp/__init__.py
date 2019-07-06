@@ -7,7 +7,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.helpers import config_entry_flow
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import dispatcher
@@ -204,10 +203,3 @@ async def async_unload_entry(hass: HomeAssistantType,
     dispatcher.async_dispatcher_send(hass, SIGNAL_REMOVE_SENSOR, device)
 
     return True
-
-
-config_entry_flow.register_discovery_flow(
-    DOMAIN,
-    'UPnP/IGD',
-    Device.async_discover,
-    config_entries.CONN_CLASS_LOCAL_POLL)

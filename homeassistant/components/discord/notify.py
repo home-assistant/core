@@ -46,7 +46,7 @@ class DiscordNotificationService(BaseNotificationService):
         import discord
 
         discord.VoiceClient.warn_nacl = False
-        discord_bot = discord.Client(loop=self.hass.loop)
+        discord_bot = discord.Client()
         images = None
 
         if ATTR_TARGET not in kwargs:

@@ -1,4 +1,15 @@
 """Constants for the Alexa integration."""
+from collections import OrderedDict
+
+from homeassistant.const import (
+    STATE_OFF,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
+from homeassistant.components.climate import const as climate
+from homeassistant.components import fan
+
+
 DOMAIN = 'alexa'
 
 # Flash briefing constants
@@ -25,4 +36,73 @@ SYN_RESOLUTION_MATCH = 'ER_SUCCESS_MATCH'
 
 DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.0Z'
 
-DEFAULT_TIMEOUT = 30
+API_DIRECTIVE = 'directive'
+API_ENDPOINT = 'endpoint'
+API_EVENT = 'event'
+API_CONTEXT = 'context'
+API_HEADER = 'header'
+API_PAYLOAD = 'payload'
+API_SCOPE = 'scope'
+API_CHANGE = 'change'
+
+CONF_DESCRIPTION = 'description'
+CONF_DISPLAY_CATEGORIES = 'display_categories'
+
+API_TEMP_UNITS = {
+    TEMP_FAHRENHEIT: 'FAHRENHEIT',
+    TEMP_CELSIUS: 'CELSIUS',
+}
+
+# Needs to be ordered dict for `async_api_set_thermostat_mode` which does a
+# reverse mapping of this dict and we want to map the first occurrance of OFF
+# back to HA state.
+API_THERMOSTAT_MODES = OrderedDict([
+    (climate.STATE_HEAT, 'HEAT'),
+    (climate.STATE_COOL, 'COOL'),
+    (climate.STATE_AUTO, 'AUTO'),
+    (climate.STATE_ECO, 'ECO'),
+    (climate.STATE_MANUAL, 'AUTO'),
+    (STATE_OFF, 'OFF'),
+    (climate.STATE_IDLE, 'OFF'),
+    (climate.STATE_FAN_ONLY, 'OFF'),
+    (climate.STATE_DRY, 'OFF'),
+])
+
+PERCENTAGE_FAN_MAP = {
+    fan.SPEED_LOW: 33,
+    fan.SPEED_MEDIUM: 66,
+    fan.SPEED_HIGH: 100,
+}
+
+
+class Cause:
+    """Possible causes for property changes.
+
+    https://developer.amazon.com/docs/smarthome/state-reporting-for-a-smart-home-skill.html#cause-object
+    """
+
+    # Indicates that the event was caused by a customer interaction with an
+    # application. For example, a customer switches on a light, or locks a door
+    # using the Alexa app or an app provided by a device vendor.
+    APP_INTERACTION = 'APP_INTERACTION'
+
+    # Indicates that the event was caused by a physical interaction with an
+    # endpoint. For example manually switching on a light or manually locking a
+    # door lock
+    PHYSICAL_INTERACTION = 'PHYSICAL_INTERACTION'
+
+    # Indicates that the event was caused by the periodic poll of an appliance,
+    # which found a change in value. For example, you might poll a temperature
+    # sensor every hour, and send the updated temperature to Alexa.
+    PERIODIC_POLL = 'PERIODIC_POLL'
+
+    # Indicates that the event was caused by the application of a device rule.
+    # For example, a customer configures a rule to switch on a light if a
+    # motion sensor detects motion. In this case, Alexa receives an event from
+    # the motion sensor, and another event from the light to indicate that its
+    # state change was caused by the rule.
+    RULE_TRIGGER = 'RULE_TRIGGER'
+
+    # Indicates that the event was caused by a voice interaction with Alexa.
+    # For example a user speaking to their Echo device.
+    VOICE_INTERACTION = 'VOICE_INTERACTION'
