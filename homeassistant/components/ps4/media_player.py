@@ -113,12 +113,20 @@ class PS4Device(MediaPlayerDevice):
         self.check_region()
 
     async def async_update(self):
+        from pyps4_homeassistant.errors import NotReady
         """Retrieve the latest data."""
         if self._ps4.ddp_protocol is not None:
             # Request Status with asyncio transport.
             self._ps4.get_status()
-            if not self._ps4.connected and not self._ps4.is_standby:
-                await self._ps4.async_connect()
+
+            """Don't attempt to connect if entity is connected or if
+            PS4 is in standby or disconnected from LAN or powered off."""
+            if not self._ps4.connected and not self._ps4.is_standby and\
+                    self._ps4.is_available:
+                try:
+                    await self._ps4.async_connect()
+                except NotReady:
+                    pass
 
         # Try to ensure correct status is set on startup for device info.
         if self._ps4.ddp_protocol is None:
