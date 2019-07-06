@@ -24,6 +24,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional('failsafe_timeout', default=30): cv.positive_int,
         vol.Optional('failsafe_fallback', default=6): cv.positive_int,
         vol.Optional('failsafe_save', default=0): cv.positive_int,
+        vol.Optional('refresh_interval', default=5): cv.positive_int,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -42,8 +43,9 @@ async def async_setup(hass, config):
     # Setup KebaProtocol as communication handler
     host = config[DOMAIN][CONF_HOST]
     rfid = config[DOMAIN]['rfid']
+    refresh_interval = config[DOMAIN]['refresh_interval']
 
-    keba = KebaProtocol(hass, rfid)
+    keba = KebaProtocol(hass, rfid, refresh_interval)
     hass.data[DOMAIN] = keba
 
     await hass.loop.create_datagram_endpoint(lambda: keba,
@@ -63,7 +65,7 @@ async def async_setup(hass, config):
 
         if 'set_max_current' in function_name:
             if 'current' in call.data:
-                current = call.data['current']
+                current = float(call.data['current'])
                 if isinstance(current, (int, float)):
                     hass.async_create_task(function_call(current))
                 else:
@@ -122,20 +124,21 @@ class KebaProtocol(asyncio.DatagramProtocol):
     data = {}
     rfid = ""
 
-    def __init__(self, hass, rfid):
+    def __init__(self, hass, rfid, refresh_interval):
         """Constructor."""
         super().__init__()
         self._update_listeners = []
         self._transport = None
         self._hass = hass
         self.rfid = rfid
+        self._refresh_interval = refresh_interval
 
         hass.loop.create_task(self.periodic())
 
     async def periodic(self):
         """Send update requests asyncio style."""
         while True:
-            await asyncio.sleep(5)
+            await asyncio.sleep(self._refresh_interval)
 
             if self._transport is not None:
                 self._hass.async_create_task(self.async_request_reports())
@@ -206,7 +209,6 @@ class KebaProtocol(asyncio.DatagramProtocol):
                     json_rcv['I3'] = json_rcv['I3'] / 1000.0
                     json_rcv['P'] = round(json_rcv['P'] / 1000000.0, 2)
                     json_rcv['PF'] = json_rcv['PF'] / 1000.0
-                    json_rcv['PF'] = json_rcv['PF'] / 1000.0
                     json_rcv['E pres'] = round(json_rcv['E pres'] / 10000.0, 2)
                     json_rcv['E total'] = int(json_rcv['E total'] / 10000)
                 except KeyError:
@@ -259,9 +261,12 @@ class KebaProtocol(asyncio.DatagramProtocol):
 
     async def async_set_max_current(self, current, *_):
         """Check connection to KEBA charging station."""
-        if current < 6 or current > 63:
-            _LOGGER.warning("Set_max_current to %s A is not allowed. "
-                            "Value must be between 6 A and 63 A", str(current))
+        if current < 6:
+            _LOGGER.debug("current is below 6 A (%s), setting to 6 A", str(current))
+            self.send("curr " + str(6000))
+        if current > 63:
+            _LOGGER.debug("current is above 63 A (%s), setting to 63 A", str(current))
+            self.send("curr " + str(63000))
         else:
             _LOGGER.debug("Set_max_current to %s A", str(current))
             self.send("curr " + str(current * 1000))

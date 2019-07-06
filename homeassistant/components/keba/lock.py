@@ -61,11 +61,11 @@ class KebaLock(LockDevice):
 
     def lock(self, **kwargs):
         """Lock wallbox."""
-        self._hass.async_create_task(self._keba.async_stop())
+        self._hass.async_create_task(self._keba.async_deauthorize())
 
     def unlock(self, **kwargs):
         """Unlock wallbox."""
-        self._hass.async_create_task(self._keba.async_start())
+        self._hass.async_create_task(self._keba.async_authorize())
 
     async def async_update(self):
         """Attempt to retrieve on off state from the switch."""
