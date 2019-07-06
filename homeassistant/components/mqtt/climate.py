@@ -10,8 +10,8 @@ from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, HVAC_MODE_AUTO, HVAC_MODE_COOL,
     HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, HVAC_MODE_OFF,
-    SUPPORT_AUX_HEAT, SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE,
-    SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_AUX_HEAT, SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE,
+    SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE, PRESET_AWAY,
     SUPPORT_TARGET_TEMPERATURE_RANGE)
 from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
 from homeassistant.const import (
@@ -46,6 +46,7 @@ CONF_FAN_MODE_STATE_TOPIC = 'fan_mode_state_topic'
 CONF_HOLD_COMMAND_TOPIC = 'hold_command_topic'
 CONF_HOLD_STATE_TEMPLATE = 'hold_state_template'
 CONF_HOLD_STATE_TOPIC = 'hold_state_topic'
+CONF_HOLD_LIST = 'hold_modes'
 CONF_MODE_COMMAND_TOPIC = 'mode_command_topic'
 CONF_MODE_LIST = 'modes'
 CONF_MODE_STATE_TEMPLATE = 'mode_state_template'
@@ -132,6 +133,7 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_HOLD_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_HOLD_STATE_TEMPLATE): cv.template,
     vol.Optional(CONF_HOLD_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_HOLD_LIST, default=list): cv.ensure_list,
     vol.Optional(CONF_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_MODE_LIST,
                  default=[HVAC_MODE_AUTO, HVAC_MODE_OFF, HVAC_MODE_COOL,
@@ -441,6 +443,9 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             """Handle receiving hold mode via MQTT."""
             payload = render_template(msg, CONF_HOLD_STATE_TEMPLATE)
 
+            if payload == 'off':
+                payload = None
+
             self._hold = payload
             self.async_write_ha_state()
 
@@ -514,14 +519,26 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         return self._config[CONF_TEMP_STEP]
 
     @property
-    def is_away_mode_on(self):
-        """Return if away mode is on."""
-        return self._away
+    def preset_mode(self):
+        """Return preset mode."""
+        if self._hold:
+            return self._hold
+        if self._away:
+            return PRESET_AWAY
+        return None
 
     @property
-    def current_hold_mode(self):
-        """Return hold mode setting."""
-        return self._hold
+    def preset_modes(self):
+        """Return preset modes."""
+        presets = []
+
+        if (self._topic[CONF_AWAY_MODE_STATE_TOPIC] is not None) or \
+           (self._topic[CONF_AWAY_MODE_COMMAND_TOPIC] is not None):
+            presets.append(PRESET_AWAY)
+
+        presets.extend(self._config[CONF_HOLD_LIST])
+
+        return presets
 
     @property
     def is_aux_heat(self):
@@ -558,7 +575,7 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         """Set new target temperatures."""
         if kwargs.get(ATTR_HVAC_MODE) is not None:
             operation_mode = kwargs.get(ATTR_HVAC_MODE)
-            await self.async_set_operation_mode(operation_mode)
+            await self.async_set_hvac_mode(operation_mode)
 
         self._set_temperature(
             kwargs.get(ATTR_TEMPERATURE), CONF_TEMP_COMMAND_TOPIC,
@@ -597,22 +614,22 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self._current_fan_mode = fan_mode
             self.async_write_ha_state()
 
-    async def async_set_operation_mode(self, operation_mode) -> None:
+    async def async_set_hvac_mode(self, hvac_mode) -> None:
         """Set new operation mode."""
         if (self._current_operation == HVAC_MODE_OFF and
-                operation_mode != HVAC_MODE_OFF):
+                hvac_mode != HVAC_MODE_OFF):
             self._publish(CONF_POWER_COMMAND_TOPIC,
                           self._config[CONF_PAYLOAD_ON])
         elif (self._current_operation != HVAC_MODE_OFF and
-              operation_mode == HVAC_MODE_OFF):
+              hvac_mode == HVAC_MODE_OFF):
             self._publish(CONF_POWER_COMMAND_TOPIC,
                           self._config[CONF_PAYLOAD_OFF])
 
         self._publish(CONF_MODE_COMMAND_TOPIC,
-                      operation_mode)
+                      hvac_mode)
 
         if self._topic[CONF_MODE_STATE_TOPIC] is None:
-            self._current_operation = operation_mode
+            self._current_operation = hvac_mode
             self.async_write_ha_state()
 
     @property
@@ -625,30 +642,55 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         """List of available swing modes."""
         return self._config[CONF_SWING_MODE_LIST]
 
+    async def async_set_preset_mode(self, preset_mode):
+        """Set a preset mode."""
+        if preset_mode == self.preset_mode:
+            return
+
+        # Track if we should optimistic update the state
+        optimistic_update = False
+
+        if self._away:
+            optimistic_update = optimistic_update or self._set_away_mode(False)
+        elif preset_mode == PRESET_AWAY:
+            optimistic_update = optimistic_update or self._set_away_mode(True)
+
+        if self._hold:
+            optimistic_update = optimistic_update or self._set_hold_mode(None)
+        elif preset_mode not in (None, PRESET_AWAY):
+            optimistic_update = (optimistic_update or
+                                 self._set_hold_mode(preset_mode))
+
+        if optimistic_update:
+            self.async_write_ha_state()
+
     def _set_away_mode(self, state):
+        """Set away mode.
+
+        Returns if we should optimistically write the state.
+        """
         self._publish(CONF_AWAY_MODE_COMMAND_TOPIC,
                       self._config[CONF_PAYLOAD_ON] if state
                       else self._config[CONF_PAYLOAD_OFF])
 
-        if self._topic[CONF_AWAY_MODE_STATE_TOPIC] is None:
-            self._away = state
-            self.async_write_ha_state()
+        if self._topic[CONF_AWAY_MODE_STATE_TOPIC] is not None:
+            return False
 
-    async def async_turn_away_mode_on(self):
-        """Turn away mode on."""
-        self._set_away_mode(True)
+        self._away = state
+        return True
 
-    async def async_turn_away_mode_off(self):
-        """Turn away mode off."""
-        self._set_away_mode(False)
+    def _set_hold_mode(self, hold_mode):
+        """Set hold mode.
 
-    async def async_set_hold_mode(self, hold_mode):
-        """Update hold mode on."""
-        self._publish(CONF_HOLD_COMMAND_TOPIC, hold_mode)
+        Returns if we should optimistically write the state.
+        """
+        self._publish(CONF_HOLD_COMMAND_TOPIC, hold_mode or "off")
 
-        if self._topic[CONF_HOLD_STATE_TOPIC] is None:
-            self._hold = hold_mode
-            self.async_write_ha_state()
+        if self._topic[CONF_HOLD_STATE_TOPIC] is not None:
+            return False
+
+        self._hold = hold_mode
+        return True
 
     def _set_aux_heat(self, state):
         self._publish(CONF_AUX_COMMAND_TOPIC,
@@ -693,12 +735,10 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             support |= SUPPORT_SWING_MODE
 
         if (self._topic[CONF_AWAY_MODE_STATE_TOPIC] is not None) or \
-           (self._topic[CONF_AWAY_MODE_COMMAND_TOPIC] is not None):
-            support |= SUPPORT_AWAY_MODE
-
-        if (self._topic[CONF_HOLD_STATE_TOPIC] is not None) or \
+           (self._topic[CONF_AWAY_MODE_COMMAND_TOPIC] is not None) or \
+           (self._topic[CONF_HOLD_STATE_TOPIC] is not None) or \
            (self._topic[CONF_HOLD_COMMAND_TOPIC] is not None):
-            support |= SUPPORT_HOLD_MODE
+            support |= SUPPORT_PRESET_MODE
 
         if (self._topic[CONF_AUX_STATE_TOPIC] is not None) or \
            (self._topic[CONF_AUX_COMMAND_TOPIC] is not None):
