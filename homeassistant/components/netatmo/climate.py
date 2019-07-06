@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PRESET_FROST_GUARD = 'frost_guard'
 PRESET_MAX = 'max'
-PRESET_OFF = HVAC_MODE_OFF
+PRESET_OFF = None
 PRESET_SCHEDULE = 'schedule'
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE)
@@ -138,10 +138,9 @@ class NetatmoThermostat(ClimateDevice):
             self._module_type = self._data.room_status[room_id]['module_type']
         except KeyError:
             _LOGGER.error("Thermostat in %s not available", room_id)
-        
+
         if self._module_type == NA_THERM:
             self._operation_list.append(HVAC_MODE_OFF)
-
 
     @property
     def supported_features(self):
@@ -181,7 +180,7 @@ class NetatmoThermostat(ClimateDevice):
     @property
     def hvac_modes(self):
         """Return the list of available hvac operation modes."""
-        return SUPPORT_HVAC
+        return self._operation_list
 
     @property
     def hvac_action(self) -> Optional[str]:
