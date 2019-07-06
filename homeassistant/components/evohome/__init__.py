@@ -12,10 +12,8 @@ import voluptuous as vol
 import evohomeclient2
 
 from homeassistant.const import (
-    CONF_SCAN_INTERVAL, CONF_USERNAME, CONF_PASSWORD,
-    HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS,
-    TEMP_CELSIUS,
-    CONF_ACCESS_TOKEN, CONF_ACCESS_TOKEN_EXPIRES, CONF_REFRESH_TOKEN)
+    CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME,
+    HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS, TEMP_CELSIUS)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -26,9 +24,12 @@ from homeassistant.helpers.event import (
     async_track_point_in_utc_time, async_track_time_interval)
 from homeassistant.util.dt import as_utc, parse_datetime, utcnow
 
-from .const import DOMAIN, STORAGE_VERSION, STORAGE_KEY, GWS, TCS
+from .const import DOMAIN, EVO_STRFTIME, STORAGE_VERSION, STORAGE_KEY, GWS, TCS
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_ACCESS_TOKEN_EXPIRES = 'access_token_expires'
+CONF_REFRESH_TOKEN = 'refresh_token'
 
 CONF_LOCATION_IDX = 'location_idx'
 SCAN_INTERVAL_DEFAULT = timedelta(seconds=300)
@@ -43,6 +44,11 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(cv.time_period, vol.Range(min=SCAN_INTERVAL_MINIMUM)),
     }),
 }, extra=vol.ALLOW_EXTRA)
+
+
+def _local_dt_to_utc(dt_naive: datetime) -> datetime:
+    dt_aware = as_utc(dt_naive.replace(microsecond=0, tzinfo=tzlocal()))
+    return dt_aware.replace(tzinfo=None)
 
 
 def _handle_exception(err):
@@ -194,14 +200,14 @@ class EvoBroker:
         return (None, None, None)  # account switched: so tokens wont be valid
 
     async def _save_auth_tokens(self, *args) -> None:
-        dt_naive = self.client.access_token_expires.replace(microsecond=0)
-        dt_aware = as_utc(dt_naive.replace(tzinfo=tzlocal()))
-        access_token_expires_utc = dt_aware.replace(tzinfo=None).isoformat()
+        access_token_expires_utc = _local_dt_to_utc(
+            self.client.access_token_expires)
 
         self._app_storage[CONF_USERNAME] = self.params[CONF_USERNAME]
         self._app_storage[CONF_REFRESH_TOKEN] = self.client.refresh_token
         self._app_storage[CONF_ACCESS_TOKEN] = self.client.access_token
-        self._app_storage[CONF_ACCESS_TOKEN_EXPIRES] = access_token_expires_utc
+        self._app_storage[CONF_ACCESS_TOKEN_EXPIRES] = \
+            access_token_expires_utc.isoformat()
 
         store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         await store.async_save(self._app_storage)
@@ -209,7 +215,7 @@ class EvoBroker:
         async_track_point_in_utc_time(
             self.hass,
             self._save_auth_tokens,
-            dt_aware
+            access_token_expires_utc
         )
 
     def update(self, *args, **kwargs) -> None:
@@ -310,7 +316,7 @@ class EvoDevice(Entity):
         day_time = datetime.now()
         day_of_week = int(day_time.strftime('%w'))  # 0 is Sunday
 
-        # iterate today's switchpoints until we go past time_of_day...
+        # Iterate today's switchpoints until past the current time of day...
         day = schedule['DailySchedules'][day_of_week]
         sp_idx = -1  # last switchpoint of the day before
         for i, tmp in enumerate(day['Switchpoints']):
@@ -319,27 +325,27 @@ class EvoDevice(Entity):
             else:
                 break
 
-        sp = switchpoints['current'] = {}
-        offset = -1 if sp_idx == -1 else 0  # was yesterday?
+        # Did the current SP start yesterday? Does the next start SP tomorrow?
+        current_day_offset = -1 if sp_idx == -1 else 0
+        next_day_offset = 1 if sp_idx + 1 == len(day['Switchpoints']) else 0
 
-        sp_date = (day_time + timedelta(days=offset)).strftime('%Y-%m-%d')
-        day = schedule['DailySchedules'][(day_of_week + offset) % 7]
-        switchpoint = day['Switchpoints'][sp_idx]
+        for key, offset, idx in [
+            ('current', current_day_offset, sp_idx),
+            ('next', next_day_offset, (sp_idx + 1) * (1 - next_day_offset))]:
 
-        sp['target_temp'] = switchpoint['heatSetpoint']
-        sp['from_datetime'] = "{}T{}".format(sp_date, switchpoint['TimeOfDay'])
+            sp = switchpoints[key] = {}
 
-        sp_idx += 1  # next setpoint
+            sp_date = (day_time + timedelta(days=offset)).strftime('%Y-%m-%d')
+            day = schedule['DailySchedules'][(day_of_week + offset) % 7]
+            switchpoint = day['Switchpoints'][idx]
 
-        sp = switchpoints['next'] = {}
-        offset = 1 if sp_idx == len(day['Switchpoints']) else 0  # is tomorrow?
+            dt_naive = datetime.strptime(
+                '{}T{}'.format(sp_date, switchpoint['TimeOfDay']),
+                '%Y-%m-%dT%H:%M:%S')
 
-        sp_date = (day_time + timedelta(days=offset)).strftime('%Y-%m-%d')
-        day = schedule['DailySchedules'][(day_of_week + offset) % 7]
-        switchpoint = day['Switchpoints'][sp_idx * (1 - offset)]
-
-        sp['target_temp'] = switchpoint['heatSetpoint']
-        sp['from_datetime'] = "{} {}".format(sp_date, switchpoint['TimeOfDay'])
+            sp['target_temp'] = switchpoint['heatSetpoint']
+            sp['from_datetime'] = \
+                _local_dt_to_utc(dt_naive).strftime(EVO_STRFTIME)
 
         return switchpoints
 
