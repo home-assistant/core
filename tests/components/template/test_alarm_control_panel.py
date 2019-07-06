@@ -51,28 +51,32 @@ class TestTemplateAlarmControlPanel:
                             'value_template':
                                 "{{ states('alarm_control_panel.test') }}",
                             'arm_away': {
-                                'service': 'alarm_control_panel.alarm_arm_away',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_away',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
                                 }
                             },
                             'arm_home': {
-                                'service': 'alarm_control_panel.alarm_arm_home',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_home',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
                                 }
                             },
                             'arm_night': {
-                                'service': 'alarm_control_panel.alarm_arm_night',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_night',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
                                 }
                             },
                             'disarm': {
-                                'service': 'alarm_control_panel.alarm_arm_disarm',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_disarm',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
@@ -177,28 +181,32 @@ class TestTemplateAlarmControlPanel:
                             'value_template':
                                 "{{ disarmed }}",
                             'arm_away': {
-                                'service': 'alarm_control_panel.alarm_arm_away',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_away',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
                                 }
                             },
                             'arm_home': {
-                                'service': 'alarm_control_panel.alarm_arm_home',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_home',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
                                 }
                             },
                             'arm_night': {
-                                'service': 'alarm_control_panel.alarm_arm_night',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_night',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
                                 }
                             },
                             'disarm': {
-                                'service': 'alarm_control_panel.alarm_arm_disarm',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_disarm',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
@@ -255,21 +263,24 @@ class TestTemplateAlarmControlPanel:
                             'value_template':
                                 "{{ states('alarm_control_panel.test') }}",
                             'arm_away': {
-                                'service': 'alarm_control_panel.alarm_arm_night',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_night',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
                                 }
                             },
                             'arm_home': {
-                                'service': 'alarm_control_panel.alarm_arm_home',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_home',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
                                 }
                             },
                             'arm_night': {
-                                'service': 'alarm_control_panel.alarm_arm_night',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_night',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
@@ -313,21 +324,24 @@ class TestTemplateAlarmControlPanel:
                                 'service': 'test.automation'
                             },
                             'arm_home': {
-                                'service': 'alarm_control_panel.alarm_arm_home',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_home',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
                                 }
                             },
                             'arm_night': {
-                                'service': 'alarm_control_panel.alarm_arm_night',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_night',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
                                 }
                             },
                             'disarm': {
-                                'service': 'alarm_control_panel.alarm_arm_disarm',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_disarm',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
@@ -365,14 +379,16 @@ class TestTemplateAlarmControlPanel:
                             'value_template':
                                 "{{ states('alarm_control_panel.test') }}",
                             'arm_away': {
-                                'service': 'alarm_control_panel.alarm_arm_home',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_home',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
                                 }
                             },
                             'arm_home': {
-                                'service': 'alarm_control_panel.alarm_arm_home',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_home',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
@@ -382,7 +398,8 @@ class TestTemplateAlarmControlPanel:
                                 'service': 'test.automation'
                             },
                             'disarm': {
-                                'service': 'alarm_control_panel.alarm_arm_disarm',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_disarm',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
@@ -420,7 +437,8 @@ class TestTemplateAlarmControlPanel:
                             'value_template':
                                 "{{ states('alarm_control_panel.test') }}",
                             'arm_away': {
-                                'service': 'alarm_control_panel.alarm_arm_home',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_home',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
@@ -430,14 +448,16 @@ class TestTemplateAlarmControlPanel:
                                 'service': 'test.automation'
                             },
                             'arm_night': {
-                                'service': 'alarm_control_panel.alarm_arm_home',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_home',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
                                 }
                             },
                             'disarm': {
-                                'service': 'alarm_control_panel.alarm_arm_disarm',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_disarm',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
@@ -477,28 +497,32 @@ class TestTemplateAlarmControlPanel:
                             'value_template':
                                 "{{ disarmed }}",
                             'arm_away': {
-                                'service': 'alarm_control_panel.alarm_arm_away',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_away',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
                                 }
                             },
                             'arm_home': {
-                                'service': 'alarm_control_panel.alarm_arm_home',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_home',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
                                 }
                             },
                             'arm_night': {
-                                'service': 'alarm_control_panel.alarm_arm_night',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_night',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
                                 }
                             },
                             'disarm': {
-                                'service': 'alarm_control_panel.alarm_arm_disarm',
+                                'service':
+                                    'alarm_control_panel.alarm_arm_disarm',
                                 'entity_id': 'alarm_control_panel.test',
                                 'data': {
                                     'code': '1234'
