@@ -1,7 +1,9 @@
 """Support for Homekit motion sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice, DEVICE_CLASS_DOOR, DEVICE_CLASS_MOTION
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice, DEVICE_CLASS_DOOR, DEVICE_CLASS_MOTION
+)
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
