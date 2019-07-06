@@ -16,11 +16,11 @@ from homeassistant.helpers.entity import Entity
 from .const import (
     BINSENSOR_PORTS, CONF_CLIMATES, CONF_CONNECTIONS, CONF_DIM_MODE,
     CONF_DIMMABLE, CONF_LOCKABLE, CONF_MAX_TEMP, CONF_MIN_TEMP, CONF_MOTOR,
-    CONF_OUTPUT, CONF_OUTPUTS, CONF_REGISTER, CONF_SCENE, CONF_SCENES,
-    CONF_SETPOINT, CONF_SK_NUM_TRIES, CONF_SOURCE, CONF_TRANSITION, DATA_LCN,
-    DIM_MODES, DOMAIN, KEYS, LED_PORTS, LOGICOP_PORTS, MOTOR_PORTS,
-    OUTPUT_PORTS, RELAY_PORTS, S0_INPUTS, SETPOINTS, THRESHOLDS, VAR_UNITS,
-    VARIABLES)
+    CONF_OUTPUT, CONF_OUTPUTS, CONF_REGISTER, CONF_REVERSE_TIME, CONF_SCENE,
+    CONF_SCENES, CONF_SETPOINT, CONF_SK_NUM_TRIES, CONF_SOURCE,
+    CONF_TRANSITION, DATA_LCN, DIM_MODES, DOMAIN, KEYS, LED_PORTS,
+    LOGICOP_PORTS, MOTOR_PORTS, MOTOR_REVERSE_TIME, OUTPUT_PORTS, RELAY_PORTS,
+    S0_INPUTS, SETPOINTS, THRESHOLDS, VAR_UNITS, VARIABLES)
 from .helpers import has_unique_connection_names, is_address
 from .services import (
     DynText, Led, LockKeys, LockRegulator, OutputAbs, OutputRel, OutputToggle,
@@ -51,7 +51,9 @@ CLIMATES_SCHEMA = vol.Schema({
 COVERS_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_ADDRESS): is_address,
-    vol.Required(CONF_MOTOR): vol.All(vol.Upper, vol.In(MOTOR_PORTS))
+    vol.Required(CONF_MOTOR): vol.All(vol.Upper, vol.In(MOTOR_PORTS)),
+    vol.Optional(CONF_REVERSE_TIME, default=None):
+        vol.Any(vol.All(vol.Upper, vol.In(MOTOR_REVERSE_TIME)), None)
 })
 
 LIGHTS_SCHEMA = vol.Schema({
