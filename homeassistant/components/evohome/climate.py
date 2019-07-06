@@ -123,41 +123,40 @@ class EvoZone(EvoClimateDevice):
 
     @property
     def _switchpoints(self) -> Dict[str, Any]:
-        """Return the switchpoint for a schedule at a particular day/time"""
+        """Return the current/next scheduled switchpoints."""
         switchpoints = {}
-        schedule = self._evo_device.schedule()
+        schedule = self._evo_device.schedule()  # is a costly api call
 
         day_time = datetime.now()
         day_of_week = int(day_time.strftime('%w'))  # 0 is Sunday
-        time_of_day = day_time.strftime('%H:%M:%S')
 
-        # iterate the day's switchpoints until we go past time_of_day...
+        # iterate today's switchpoints until we go past time_of_day...
         day = schedule['DailySchedules'][day_of_week]
-        idx = -1  # last switchpoint of the day before
+        sp_idx = -1  # last switchpoint of the day before
         for i, tmp in enumerate(day['Switchpoints']):
-            if time_of_day > tmp['TimeOfDay']:
-                idx = i
+            if day_time.strftime('%H:%M:%S') > tmp['TimeOfDay']:
+                sp_idx = i  # current setpoint
             else:
                 break
 
         sp = switchpoints['current'] = {}
-        offset = -1 if idx == -1 else 0  # SP was yesterday?
+        offset = -1 if sp_idx == -1 else 0  # was yesterday?
 
         sp_date = (day_time + timedelta(days=offset)).strftime('%Y-%m-%d')
         day = schedule['DailySchedules'][(day_of_week + offset) % 7]
-        switchpoint = day['Switchpoints'][idx]
+        switchpoint = day['Switchpoints'][sp_idx]
 
         sp['target_temp'] = switchpoint['heatSetpoint']
         sp['from_datetime'] = "{} {}".format(sp_date, switchpoint['TimeOfDay'])
 
-        idx += 1
+        sp_idx += 1  # next setpoint
 
         sp = switchpoints['next'] = {}
-        offset = 1 if idx == len(day['Switchpoints']) else 0  # SP is tomorrow?
+        offset = 1 if sp_idx == len(day['Switchpoints']) else 0  # is tomorrow?
 
         sp_date = (day_time + timedelta(days=offset)).strftime('%Y-%m-%d')
         day = schedule['DailySchedules'][(day_of_week + offset) % 7]
-        switchpoint = day['Switchpoints'][idx * (1 - offset)]
+        switchpoint = day['Switchpoints'][sp_idx * (1 - offset)]
 
         sp['target_temp'] = switchpoint['heatSetpoint']
         sp['from_datetime'] = "{} {}".format(sp_date, switchpoint['TimeOfDay'])
@@ -172,7 +171,6 @@ class EvoZone(EvoClimateDevice):
             status[attr] = getattr(self._evo_device, attr)
 
         # status['schedule'] = self._evo_device.schedule()
-
         status['switchpoints'] = self._switchpoints
 
         return {'status': status}
@@ -274,8 +272,10 @@ class EvoZone(EvoClimateDevice):
         if hvac_mode == HVAC_MODE_OFF:
             self._set_temperature(self.min_temp, until=None)
         elif hvac_mode == HVAC_MODE_HEAT:
-            until = self._next_switchpoint_time
-            self._set_temperature(self.target_temperature, until=until)
+            self._set_temperature(
+                self._switchpoints['next']['target_temp'],
+                until=self._switchpoints['next']['from_datetime']
+                )
         else:  # HVAC_MODE_AUTO
             self._set_operation_mode(EVO_FOLLOW)
 
@@ -296,7 +296,7 @@ class EvoController(EvoClimateDevice):
         super().__init__(evo_broker, evo_device)
 
         self._id = evo_device.systemId
-        self._name = '_{}'.format(evo_device.location.name)
+        self._name = evo_device.location.name
         self._icon = "mdi:thermostat"
 
         self._config = dict(evo_broker.config)
