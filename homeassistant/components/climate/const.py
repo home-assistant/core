@@ -33,7 +33,7 @@ HVAC_MODES = [
 ]
 
 
-# Device is in an energy-saving mode
+# Device is running an energy-saving mode
 PRESET_ECO = 'eco'
 
 # Device is in away mode
@@ -44,9 +44,6 @@ PRESET_BOOST = 'boost'
 
 # Device is in comfort mode
 PRESET_COMFORT = 'comfort'
-
-# Device is in a user-configurable mode
-PRESET_CUSTOM = 'custom'
 
 # Device is in home mode
 PRESET_HOME = 'home'

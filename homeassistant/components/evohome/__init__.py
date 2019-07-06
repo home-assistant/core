@@ -275,6 +275,7 @@ class EvoBroker:
 
         return switchpoints
 
+
 class EvoDevice(Entity):
     """Base for any evohome device.
 
@@ -289,6 +290,7 @@ class EvoDevice(Entity):
 
         self._name = self._icon = self._precision = None
         self._state_attributes = []
+
         self._supported_features = None
         self._setpoints = None
 

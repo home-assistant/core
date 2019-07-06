@@ -50,8 +50,8 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         self._state_attributes = [
             'activeFaults', 'stateStatus', 'temperatureStatus', 'setpoints']
 
-        self._operation_list = list(HA_OPMODE_TO_DHW)
         self._supported_features = SUPPORT_OPERATION_MODE
+        self._operation_list = list(HA_OPMODE_TO_DHW)
 
         self._config = evo_broker.config['dhw']
 

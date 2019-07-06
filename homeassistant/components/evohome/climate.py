@@ -22,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 HA_HVAC_TO_TCS = {
     HVAC_MODE_OFF: EVO_HEATOFF,
+    HVAC_MODE_AUTO: EVO_RESET,
     HVAC_MODE_HEAT: EVO_AUTO,
 }
 HA_PRESET_TO_TCS = {
@@ -95,7 +96,8 @@ class EvoZone(EvoClimateDevice):
         self._state_attributes = [
             'activeFaults', 'setpointStatus', 'temperatureStatus', 'setpoints']
 
-        self._supported_features = SUPPORT_TARGET_TEMPERATURE
+        self._supported_features = SUPPORT_PRESET_MODE | \
+            SUPPORT_TARGET_TEMPERATURE
         self._hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_AUTO]
         self._preset_modes = []
 
@@ -232,11 +234,6 @@ class EvoController(EvoClimateDevice):
         self._config['zones'] = '...'
         if 'dhw' in self._config:
             self._config['dhw'] = '...'
-
-    @property
-    def device_state_attributes(self) -> None:
-        """Return the Evohome-specific state attributes."""
-        return None
 
     @property
     def hvac_mode(self) -> str:
