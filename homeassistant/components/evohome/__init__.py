@@ -100,7 +100,8 @@ async def async_setup(hass, hass_config):
 
     load_platform(hass, 'climate', DOMAIN, {}, hass_config)
     if broker.tcs.hotwater:
-        load_platform(hass, 'water_heater', DOMAIN, {}, hass_config)
+        _LOGGER.warning("DHW controller detected, however this integration "
+                        "does not currently support DHW controllers.")
 
     async_track_time_interval(
         hass, broker.update, timedelta(seconds=10)
