@@ -10,12 +10,15 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
+from homeassistant.helpers.dispatcher import (
+    dispatcher_send, async_dispatcher_connect)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'insteon'
+INSTEON_ENTITIES = 'entities'
 
 CONF_IP_PORT = 'ip_port'
 CONF_HUB_USERNAME = 'username'
@@ -46,12 +49,15 @@ SRV_X10_ALL_LIGHTS_ON = 'x10_all_lights_on'
 SRV_ALL_LINK_GROUP = 'group'
 SRV_ALL_LINK_MODE = 'mode'
 SRV_LOAD_DB_RELOAD = 'reload'
+SRV_LOAD_ALL_DATABASES = 'all'
 SRV_CONTROLLER = 'controller'
 SRV_RESPONDER = 'responder'
 SRV_HOUSECODE = 'housecode'
 SRV_SCENE_ON = 'scene_on'
 SRV_SCENE_OFF = 'scene_off'
-SRV_LOAD_ALL_DATABASES = 'load_all_databases'
+
+SIGNAL_LOAD_ALDB = 'load_aldb'
+SIGNAL_PRINT_ALDB = 'print_aldb'
 
 HOUSECODES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
               'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p']
@@ -133,8 +139,8 @@ DEL_ALL_LINK_SCHEMA = vol.Schema({
 
 
 LOAD_ALDB_SCHEMA = vol.Schema({
-    vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Optional(SRV_LOAD_DB_RELOAD, default='false'): cv.boolean,
+    vol.Required(CONF_ENTITY_ID): vol.Any(cv.entity_id, SRV_LOAD_ALL_DATABASES),
+    vol.Optional(SRV_LOAD_DB_RELOAD, default=False): cv.boolean,
     })
 
 
@@ -150,11 +156,6 @@ X10_HOUSECODE_SCHEMA = vol.Schema({
 
 TRIGGER_SCENE_SCHEMA = vol.Schema({
     vol.Required(SRV_ALL_LINK_GROUP): vol.Range(min=0, max=255)})
-
-
-LOAD_ALL_ALDB_SCHEMA = vol.Schema({
-    vol.Optional(SRV_LOAD_DB_RELOAD, default='false'): cv.boolean,
-    })
 
 
 STATE_NAME_LABEL_MAP = {
@@ -256,32 +257,27 @@ async def async_setup(hass, config):
 
     def load_aldb(service):
         """Load the device All-Link database."""
-        entity_id = service.data.get(CONF_ENTITY_ID)
-        reload = service.data.get(SRV_LOAD_DB_RELOAD)
-        entities = hass.data[DOMAIN].get('entities')
-        entity = entities.get(entity_id)
-        if entity:
-            entity.load_aldb(reload)
+        entity_id = service.data[CONF_ENTITY_ID]
+        reload = service.data[SRV_LOAD_DB_RELOAD]
+        if entity_id.lower() == SRV_LOAD_ALL_DATABASES:
+            for entity_id in hass.data[DOMAIN].get(INSTEON_ENTITIES):
+                _send_load_aldb_signal(entity_id, reload)
         else:
-            _LOGGER.error('Entity %s is not an INSTEON device', entity_id)
+            _send_load_aldb_signal(entity_id, reload)
 
-    def load_all_aldb(service):
-        """Load the ALDB for all devices."""
-        reload = service.data.get(SRV_LOAD_DB_RELOAD)
-        for entity in hass.data[DOMAIN].get('entities'):
-            entity.load_aldb(reload)
+    def _send_load_aldb_signal(entity_id, reload):
+        """Send the load All-Link database signal to INSTEON entity."""
+        signal = '{}_{}'.format(entity_id, SIGNAL_LOAD_ALDB)
+        dispatcher_send(hass, signal, reload)
 
     def print_aldb(service):
         """Print the All-Link Database for a device."""
         # For now this sends logs to the log file.
         # Furture direction is to create an INSTEON control panel.
-        entity_id = service.data.get(CONF_ENTITY_ID)
-        entities = hass.data[DOMAIN].get('entities')
-        entity = entities.get(entity_id)
-        if entity:
-            entity.print_aldb()
-        else:
-            _LOGGER.error('Entity %s is not an INSTEON device', entity_id)
+        entity_id = service.data[CONF_ENTITY_ID]
+        signal = '{}_{}'.format(entity_id, SIGNAL_PRINT_ALDB)
+        dispatcher_send(hass, signal)
+
 
     def print_im_aldb(service):
         """Print the All-Link Database for a device."""
@@ -340,9 +336,6 @@ async def async_setup(hass, config):
         hass.services.register(DOMAIN, SRV_SCENE_OFF,
                                scene_off,
                                schema=TRIGGER_SCENE_SCHEMA)
-        hass.services.register(DOMAIN, SRV_LOAD_ALL_DATABASES,
-                               load_all_aldb,
-                               schema=LOAD_ALL_ALDB_SCHEMA)
         _LOGGER.debug("Insteon Services registered")
 
     def _fire_button_on_off_event(address, group, val):
@@ -396,7 +389,7 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]['modem'] = insteon_modem
-    hass.data[DOMAIN]['entities'] = {}
+    hass.data[DOMAIN][INSTEON_ENTITIES] = {}
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, conn.close)
 
@@ -591,15 +584,19 @@ class InsteonEntity(Entity):
                       self._insteon_device_state.name)
         self._insteon_device_state.register_updates(
             self.async_entity_update)
-        self.hass.data[DOMAIN]['entities'][self.entity_id] = self
+        self.hass.data[DOMAIN][INSTEON_ENTITIES][self.entity_id] = self
+        load_signal = '{}_{}'.format(self.entity_id, SIGNAL_LOAD_ALDB)
+        async_dispatcher_connect(self.hass, load_signal, self._load_aldb) 
+        print_signal = '{}_{}'.format(self.entity_id, SIGNAL_PRINT_ALDB)
+        async_dispatcher_connect(self.hass, print_signal, self._print_aldb) 
 
-    def load_aldb(self, reload=False):
+    def _load_aldb(self, reload=False):
         """Load the device All-Link Database."""
         if reload:
             self._insteon_device.aldb.clear()
         self._insteon_device.read_aldb()
 
-    def print_aldb(self):
+    def _print_aldb(self):
         """Print the device ALDB to the log file."""
         print_aldb_to_log(self._insteon_device.aldb)
 
