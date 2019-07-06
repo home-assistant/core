@@ -11,7 +11,7 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import PRECISION_WHOLE, STATE_OFF, STATE_ON
 
 from . import _handle_exception, EvoDevice
-from .const import DOMAIN, EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER
+from .const import DOMAIN, EVO_STRFTIME, EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,16 +43,17 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         super().__init__(evo_broker, evo_device)
 
         self._id = evo_device.dhwId
-        self._name = "DHW controller"
-        self._icon = "mdi:oil-temperature"
+        self._name = 'DHW controller'
+        self._icon = 'mdi:thermometer-lines'
+
         self._precision = PRECISION_WHOLE
-
-        self._config = evo_broker.config['dhw']
-
         self._state_attributes = [
-            'activeFaults', 'stateStatus', 'temperatureStatus']
+            'activeFaults', 'stateStatus', 'temperatureStatus', 'setpoints']
+
         self._operation_list = list(HA_OPMODE_TO_DHW)
         self._supported_features = SUPPORT_OPERATION_MODE
+
+        self._config = evo_broker.config['dhw']
 
     @property
     def current_operation(self) -> str:
@@ -77,7 +78,7 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
 
         if op_mode == EVO_TEMPOVER:
             until = datetime.now() + timedelta(hours=1)
-            until = until.strftime('%Y-%m-%dT%H:%M:%SZ')
+            until = until.strftime(EVO_STRFTIME)
         else:
             until = None
 

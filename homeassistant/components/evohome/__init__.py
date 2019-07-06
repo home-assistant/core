@@ -234,7 +234,7 @@ class EvoBroker:
         # inform the evohome devices that state data has been updated
         async_dispatcher_send(self.hass, DOMAIN, {'signal': 'refresh'})
 
-    def get_switchpoints(self) -> Dict[str, Any]:
+    def get_setpoints(self) -> Dict[str, Any]:
         """Return the current/next scheduled switchpoints."""
         switchpoints = {}
         schedule = self._evo_device.schedule()  # is a costly api call
@@ -290,14 +290,14 @@ class EvoDevice(Entity):
         self._name = self._icon = self._precision = None
         self._state_attributes = []
         self._supported_features = None
-        self._switchpoints = None
+        self._setpoints = None
 
     @callback
     def _refresh(self, packet):
         if packet['signal'] == 'refresh':
             self.async_schedule_update_ha_state(force_refresh=True)
 
-    def get_switchpoints(self) -> Dict[str, Any]:
+    def get_setpoints(self) -> Dict[str, Any]:
         """Return the current/next scheduled switchpoints.
 
         Only Zones & DHW controllers (but not the TCS) have schedules.
@@ -325,7 +325,7 @@ class EvoDevice(Entity):
         switchpoint = day['Switchpoints'][sp_idx]
 
         sp['target_temp'] = switchpoint['heatSetpoint']
-        sp['from_datetime'] = "{} {}".format(sp_date, switchpoint['TimeOfDay'])
+        sp['from_datetime'] = "{}T{}".format(sp_date, switchpoint['TimeOfDay'])
 
         sp_idx += 1  # next setpoint
 
@@ -356,9 +356,12 @@ class EvoDevice(Entity):
         """Return the Evohome-specific state attributes."""
         status = {}
         for attr in self._state_attributes:
-            status[attr] = getattr(self._evo_device, attr)
+            if attr != 'setpoints':
+                status[attr] = getattr(self._evo_device, attr)
 
-        status['switchpoints'] = self._switchpoints
+        if 'setpoints' in self._state_attributes:
+            status['setpoints'] = self._setpoints
+
         return {'status': status}
 
     @property
@@ -387,4 +390,4 @@ class EvoDevice(Entity):
 
     def update(self) -> None:
         """Get the latest state data."""
-        self._switchpoints = self.get_switchpoints()
+        self._setpoints = self.get_setpoints()
