@@ -4,25 +4,25 @@ import logging
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
+    HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
 from homeassistant.const import (
-    ATTR_TEMPERATURE, PRECISION_WHOLE, STATE_ON, TEMP_CELSIUS)
+    ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS)
 
 from . import DATA_MELISSA
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLAGS = (SUPPORT_FAN_MODE |
-                 SUPPORT_ON_OFF | SUPPORT_TARGET_TEMPERATURE)
+SUPPORT_FLAGS = (SUPPORT_FAN_MODE | SUPPORT_TARGET_TEMPERATURE)
 
 OP_MODES = [
-    HVAC_MODE_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT
+    HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_OFF
 ]
 
 FAN_MODES = [
-    HVAC_MODE_AUTO, SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
+    HVAC_MODE_AUTO, SPEED_HIGH, SPEED_MEDIUM, SPEED_LOW
 ]
 
 
@@ -60,14 +60,6 @@ class MelissaClimate(ClimateDevice):
         return self._name
 
     @property
-    def is_on(self):
-        """Return current state."""
-        if self._cur_settings is not None:
-            return self._cur_settings[self._api.STATE] in (
-                self._api.STATE_ON, self._api.HVAC_MODE_OFF)
-        return None
-
-    @property
     def fan_mode(self):
         """Return the current fan mode."""
         if self._cur_settings is not None:
@@ -94,9 +86,16 @@ class MelissaClimate(ClimateDevice):
     @property
     def hvac_mode(self):
         """Return the current operation mode."""
-        if self._cur_settings is not None:
-            return self.melissa_op_to_hass(
-                self._cur_settings[self._api.MODE])
+        if self._cur_settings is None:
+            return None
+
+        is_on = self._cur_settings[self._api.STATE] in (
+            self._api.STATE_ON, self._api.STATE_IDLE)
+
+        if not is_on:
+            return HVAC_MODE_OFF
+
+        return self.melissa_op_to_hass(self._cur_settings[self._api.MODE])
 
     @property
     def hvac_modes(self):
@@ -114,13 +113,6 @@ class MelissaClimate(ClimateDevice):
         if self._cur_settings is None:
             return None
         return self._cur_settings[self._api.TEMP]
-
-    @property
-    def state(self):
-        """Return current state."""
-        if self._cur_settings is not None:
-            return self.melissa_state_to_hass(
-                self._cur_settings[self._api.STATE])
 
     @property
     def temperature_unit(self):
@@ -154,16 +146,12 @@ class MelissaClimate(ClimateDevice):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set operation mode."""
+        if hvac_mode == HVAC_MODE_OFF:
+            await self.async_send({self._api.STATE: self._api.STATE_OFF})
+            return
+
         mode = self.hass_mode_to_melissa(hvac_mode)
         await self.async_send({self._api.MODE: mode})
-
-    async def async_turn_on(self):
-        """Turn on device."""
-        await self.async_send({self._api.STATE: self._api.STATE_ON})
-
-    async def async_turn_off(self):
-        """Turn off device."""
-        await self.async_send({self._api.STATE: self._api.HVAC_MODE_OFF})
 
     async def async_send(self, value):
         """Send action to service."""
@@ -187,16 +175,6 @@ class MelissaClimate(ClimateDevice):
         except KeyError:
             _LOGGER.warning(
                 'Unable to update entity %s', self.entity_id)
-
-    def melissa_state_to_hass(self, state):
-        """Translate Melissa states to hass states."""
-        if state == self._api.STATE_ON:
-            return STATE_ON
-        if state == self._api.HVAC_MODE_OFF:
-            return HVAC_MODE_OFF
-        if state == self._api.HVAC_MODE_OFF:
-            return HVAC_MODE_OFF
-        return None
 
     def melissa_op_to_hass(self, mode):
         """Translate Melissa modes to hass states."""
