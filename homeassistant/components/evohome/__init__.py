@@ -103,10 +103,7 @@ async def async_setup(hass, hass_config):
         load_platform(hass, 'water_heater', DOMAIN, {}, hass_config)
 
     async_track_time_interval(
-        hass,
-        broker.update,
-#       hass_config[DOMAIN][CONF_SCAN_INTERVAL]
-        timedelta(seconds=10)  # TODO: delete me
+        hass, broker.update, timedelta(seconds=10)
     )
 
     return True
