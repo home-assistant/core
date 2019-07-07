@@ -20,11 +20,6 @@ ATTR_FAN = 'fan'
 ATTR_MODE = 'mode'
 
 CONF_HOLD_TEMP = 'hold_temp'
-CONF_AWAY_TEMPERATURE_HEAT = 'away_temperature_heat'
-CONF_AWAY_TEMPERATURE_COOL = 'away_temperature_cool'
-
-DEFAULT_AWAY_TEMPERATURE_HEAT = 60
-DEFAULT_AWAY_TEMPERATURE_COOL = 85
 
 STATE_CIRCULATE = "circulate"
 
@@ -86,16 +81,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return False
 
     hold_temp = config.get(CONF_HOLD_TEMP)
-    away_temps = [
-        config.get(CONF_AWAY_TEMPERATURE_HEAT),
-        config.get(CONF_AWAY_TEMPERATURE_COOL)
-    ]
     tstats = []
 
     for host in hosts:
         try:
             tstat = radiotherm.get_thermostat(host)
-            tstats.append(RadioThermostat(tstat, hold_temp, away_temps))
+            tstats.append(RadioThermostat(tstat, hold_temp))
         except OSError:
             _LOGGER.exception("Unable to connect to Radio Thermostat: %s",
                               host)
@@ -106,7 +97,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class RadioThermostat(ClimateDevice):
     """Representation of a Radio Thermostat."""
 
-    def __init__(self, device, hold_temp, away_temps):
+    def __init__(self, device, hold_temp):
         """Initialize the thermostat."""
         self.device = device
         self._target_temperature = None
@@ -119,8 +110,6 @@ class RadioThermostat(ClimateDevice):
         self._tstate = None
         self._hold_temp = hold_temp
         self._hold_set = False
-        self._away = False
-        self._away_temps = away_temps
         self._prev_temp = None
 
         # Fan circulate mode is only supported by the CT80 models.
@@ -271,7 +260,7 @@ class RadioThermostat(ClimateDevice):
         # Only change the hold if requested or if hold mode was turned
         # on and we haven't set it yet.
         if kwargs.get('hold_changed', False) or not self._hold_set:
-            if self._hold_temp or self._away:
+            if self._hold_temp:
                 self.device.hold = 1
                 self._hold_set = True
             else:
