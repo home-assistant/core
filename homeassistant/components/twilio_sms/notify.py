@@ -42,11 +42,13 @@ class TwilioSMSNotificationService(BaseNotificationService):
         """Send SMS to specified target user cell."""
         targets = kwargs.get(ATTR_TARGET)
         data = kwargs.get(ATTR_DATA) or {}
+        twilio_args = {
+            'body': message,
+            'from_': self.from_number
+        }
 
-        # object() is twilio wrapper unset value
-        media = object()
         if ATTR_MEDIAURL in data:
-            media = data[ATTR_MEDIAURL]
+            twilio_args['media_url'] = data[ATTR_MEDIAURL]
 
         if not targets:
             _LOGGER.info("At least 1 target is required")
@@ -54,5 +56,4 @@ class TwilioSMSNotificationService(BaseNotificationService):
 
         for target in targets:
             self.client.messages.create(
-                to=target, body=message, from_=self.from_number,
-                media_url=media)
+                to=target, **twilio_args)
