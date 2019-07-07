@@ -30,6 +30,7 @@ class TestSleepIQSensorSetup(unittest.TestCase):
             'username': self.username,
             'password': self.password,
         }
+        self.DEVICES = []
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
@@ -41,10 +42,7 @@ class TestSleepIQSensorSetup(unittest.TestCase):
         mock_responses(mock)
 
         assert setup_component(self.hass, 'sleepiq', {
-            'sleepiq': {
-                'username': '',
-                'password': '',
-            }
+            'sleepiq': self.config
         })
 
         sleepiq.setup_platform(self.hass,
@@ -60,3 +58,22 @@ class TestSleepIQSensorSetup(unittest.TestCase):
         right_side = self.DEVICES[0]
         assert 'SleepNumber ILE Test2 SleepNumber' == right_side.name
         assert 80 == right_side.state
+
+    @requests_mock.Mocker()
+    def test_setup_sigle(self, mock):
+        """Test for successfully setting up the SleepIQ platform."""
+        mock_responses(mock, single=True)
+
+        assert setup_component(self.hass, 'sleepiq', {
+            'sleepiq': self.config
+        })
+
+        sleepiq.setup_platform(self.hass,
+                               self.config,
+                               self.add_entities,
+                               MagicMock())
+        assert 1 == len(self.DEVICES)
+
+        right_side = self.DEVICES[0]
+        assert 'SleepNumber ILE Test1 SleepNumber' == right_side.name
+        assert 40 == right_side.state

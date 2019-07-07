@@ -332,7 +332,7 @@ rxv==0.6.0
 simplisafe-python==3.4.2
 
 # homeassistant.components.sleepiq
-sleepyq==0.6
+sleepyq==0.7
 
 # homeassistant.components.smhi
 smhi-pkg==1.0.10
