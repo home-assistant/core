@@ -60,7 +60,7 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
             'state': entry.state,
             'connection_class': entry.connection_class,
             'supports_options': hasattr(
-                config_entries.HANDLERS[entry.domain],
+                config_entries.HANDLERS.get(entry.domain),
                 'async_get_options_flow'),
         } for entry in hass.config_entries.async_entries()])
 
