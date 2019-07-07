@@ -2149,7 +2149,7 @@ skybellpy==0.3.0
 slacker==0.12.0
 
 # homeassistant.components.sleepiq
-sleepyq==0.6
+sleepyq==0.7
 
 # homeassistant.components.notify.xmpp
 slixmpp==1.4.1
