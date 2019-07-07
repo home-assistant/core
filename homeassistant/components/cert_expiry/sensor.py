@@ -77,6 +77,11 @@ class SSLCertificate(Entity):
         """Icon to use in the frontend, if any."""
         return 'mdi:certificate'
 
+    @property
+    def available(self):
+        """Icon to use in the frontend, if any."""
+        return self._available
+
     def update(self):
         """Fetch the certificate information."""
         ctx = ssl.create_default_context()
@@ -90,16 +95,20 @@ class SSLCertificate(Entity):
 
         except socket.gaierror:
             _LOGGER.error("Cannot resolve hostname: %s", self.server_name)
+            self._available = False
             return
         except socket.timeout:
             _LOGGER.error(
                 "Connection timeout with server: %s", self.server_name)
+            self._available = False
             return
         except OSError:
             _LOGGER.error("Cannot fetch certificate from %s", self.server_name, exc_info=1)
+            self._available = False
             return
 
         ts_seconds = ssl.cert_time_to_seconds(cert['notAfter'])
         timestamp = datetime.fromtimestamp(ts_seconds)
         expiry = timestamp - datetime.today()
+        self._available = True
         self._state = expiry.days
