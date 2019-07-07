@@ -9,10 +9,12 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_APP, MEDIA_TYPE_GAME)
 from homeassistant.components import ps4
 from homeassistant.components.ps4.const import (
-    ATTR_MEDIA_IMAGE_URL, CONFIG_ENTRY_VERSION as VERSION,
+    ATTR_MEDIA_IMAGE_URL, COMMANDS, CONFIG_ENTRY_VERSION as VERSION,
     DOMAIN, GAMES_FILE, PS4_DATA)
+
 from homeassistant.const import (
-    ATTR_LOCKED, ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_REGION, CONF_TOKEN)
+    ATTR_COMMAND, ATTR_LOCKED, ATTR_ENTITY_ID, CONF_HOST,
+    CONF_NAME, CONF_REGION, CONF_TOKEN)
 from homeassistant.util.json import save_json
 from homeassistant.setup import setup_component
 from tests.common import (
@@ -398,3 +400,25 @@ class TestPS4MediaServices(unittest.TestCase):
         # Test that not specified attributes remain the same.
         assert mock_games[MOCK_ID][ATTR_MEDIA_IMAGE_URL] == MOCK_URL
         assert mock_games[MOCK_ID][ATTR_MEDIA_CONTENT_TYPE] == MOCK_TYPE
+
+    def test_send_command(self):
+        """Test send_command service."""
+        self.setup_mock_component()
+        mock_func = '{}{}'.format('homeassistant.components.ps4',
+                                  '.media_player.PS4Device.async_send_command')
+
+        mock_devices = self.hass.data[PS4_DATA].devices
+        assert len(mock_devices) == 1
+        mock_entity = mock_devices[0]
+        assert mock_entity.entity_id == 'media_player.{}'.format(MOCK_NAME)
+
+        # Test that all commands call service function.
+        with patch(mock_func, return_value=mock_coro(True)) as mock_service:
+            for mock_command in COMMANDS:
+                self.hass.services.call(
+                    DOMAIN, 'send_command',
+                    {ATTR_ENTITY_ID: mock_entity.entity_id,
+                     ATTR_COMMAND: mock_command})
+                self.hass.block_till_done()
+
+        assert len(mock_service.mock_calls) == len(COMMANDS)
