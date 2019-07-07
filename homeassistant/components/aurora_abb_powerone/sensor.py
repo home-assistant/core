@@ -7,18 +7,18 @@ from aurorapy.client import AuroraSerialClient, AuroraError
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_ADDRESS, CONF_NAME, DEVICE_CLASS_POWER, POWER_WATT)
+    CONF_ADDRESS, CONF_DEVICE, CONF_NAME, DEVICE_CLASS_POWER,
+    POWER_WATT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_COMPORT = 'rs485'
 DEFAULT_ADDRESS = 2
 DEFAULT_NAME = "Solar PV"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COMPORT): cv.string,
+    vol.Required(CONF_DEVICE): cv.string,
     vol.Optional(CONF_ADDRESS, default=DEFAULT_ADDRESS): cv.positive_int,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
@@ -27,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Aurora ABB PowerOne device."""
     devices = []
-    comport = config[CONF_COMPORT]
+    comport = config[CONF_DEVICE]
     address = config[CONF_ADDRESS]
     name = config[CONF_NAME]
 
