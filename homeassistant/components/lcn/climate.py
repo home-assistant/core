@@ -146,7 +146,7 @@ class LcnClimate(LcnDevice, ClimateDevice):
                 input_obj.get_value().to_var_unit(self.unit)
         elif input_obj.get_var() == self.setpoint:
             self._is_on = not input_obj.get_value().is_locked_regulator()
-            if self.is_on:
+            if self._is_on:
                 self._target_temperature = \
                     input_obj.get_value().to_var_unit(self.unit)
 

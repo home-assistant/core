@@ -215,7 +215,7 @@ class NetatmoThermostat(ClimateDevice):
                 self._data.home_id, self._room_id, preset_mode
             )
         elif preset_mode in [
-            STATE_NETATMO_SCHEDULE, STATE_NETATMO_HG, STATE_NETATMO_AWAY
+                STATE_NETATMO_SCHEDULE, STATE_NETATMO_HG, STATE_NETATMO_AWAY
         ]:
             self._data.homestatus.setThermmode(
                 self._data.home_id, preset_mode

@@ -207,7 +207,7 @@ class HoneywellUSThermostat(ClimateDevice):
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVAC_MODE_COOL:
             return self._device.setpoint_cool
-        elif self.hvac_mode != HVAC_MODE_HEAT:
+        if self.hvac_mode != HVAC_MODE_HEAT:
             return self._device.setpoint_heat
         return None
 

@@ -213,17 +213,21 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
         self._fan_mode_device.action("setFanMode", HA_FANMODES[fan_mode])
 
     @property
-    def hvac_mode(self):
-        """Return current operation ie. heat, cool, idle."""
+    def fibaro_op_mode(self):
+        """Return the operating mode of the device."""
         if not self._op_mode_device:
-            return HVAC_MODE_FAN_ONLY
+            return 6  # Fan only
 
         if "operatingMode" in self._op_mode_device.fibaro_device.properties:
-            mode = int(self._op_mode_device.fibaro_device.
+            return int(self._op_mode_device.fibaro_device.
                        properties.operatingMode)
-        else:
-            mode = int(self._op_mode_device.fibaro_device.properties.mode)
-        return OPMODES_HVAC[mode]
+
+        return int(self._op_mode_device.fibaro_device.properties.mode)
+
+    @property
+    def hvac_mode(self):
+        """Return current operation ie. heat, cool, idle."""
+        return OPMODES_HVAC[self.fibaro_op_mode]
 
     @property
     def hvac_modes(self):
@@ -313,7 +317,6 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
         if temperature is not None:
             if "setThermostatSetpoint" in target.fibaro_device.actions:
                 target.action("setThermostatSetpoint",
-                              self._op_state_to_mode[self.current_operation],
-                              temperature)
+                              self.fibaro_op_mode, temperature)
             else:
                 target.action("setTargetLevel", temperature)

@@ -53,10 +53,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DeconzThermostat(DeconzDevice, ClimateDevice):
     """Representation of a deCONZ thermostat."""
 
-    def __init__(self, device, gateway):
-        """Set up thermostat device."""
-        super().__init__(device, gateway)
-
     @property
     def supported_features(self):
         """Return the list of supported features."""

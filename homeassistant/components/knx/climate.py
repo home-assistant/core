@@ -1,4 +1,6 @@
 """Support for KNX/IP climate devices."""
+from typing import Optional, List
+
 import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
@@ -9,7 +11,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from typing import Optional, List
 
 from . import ATTR_DISCOVER_DEVICES, DATA_KNX
 
@@ -244,7 +245,7 @@ class KNXClimate(ClimateDevice):
         """Return current operation ie. heat, cool, idle."""
         if self.device.supports_on_off and not self.device.is_on:
             return HVAC_MODE_OFF
-        elif self.device.supports_on_off and self.device.is_on:
+        if self.device.supports_on_off and self.device.is_on:
             return HVAC_MODE_HEAT
         if self.device.mode.supports_operation_mode:
             return OPERATION_MODES.get(
