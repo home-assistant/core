@@ -51,6 +51,7 @@ homeassistant/components/bt_smarthub/* @jxwolstenholme
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 homeassistant/components/buienradar/* @ties
 =======
 homeassistant/components/buienradar/* @ties
@@ -59,6 +60,11 @@ homeassistant/components/buienradar/* @ties
 homeassistant/components/buienradar/camera @ties
 homeassistant/components/buienradar/sensor @mjj4791
 homeassistant/components/buienradar/weather @mjj4791
+=======
+homeassistant/components/buienradar/camera @ties
+homeassistant/components/buienradar/sensor @mjj4791
+homeassistant/components/buienradar/weather @mjj4791
+>>>>>>> Update CODEOWNERS
 homeassistant/components/cisco_ios/* @fbradyirl
 homeassistant/components/cisco_mobility_express/* @fbradyirl
 homeassistant/components/cisco_webex_teams/* @fbradyirl
