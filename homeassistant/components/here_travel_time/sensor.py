@@ -6,12 +6,12 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_LATITUDE, ATTR_LONGITUDE, LENGTH_METERS, CONF_MODE, CONF_NAME,
+    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_MODE, CONF_NAME,
+    CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL,
     EVENT_HOMEASSISTANT_START)
 from homeassistant.helpers import location
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,8 +24,6 @@ CONF_TRAFFIC_MODE = 'traffic_mode'
 CONF_ROUTE_MODE = 'route_mode'
 
 DEFAULT_NAME = "HERE Travel Time"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 TRAVEL_MODE_CAR = 'car'
 TRAVEL_MODE_PEDESTRIAN = 'pedestrian'
@@ -44,6 +42,16 @@ ROUTE_MODE_FASTEST = 'fastest'
 ROUTE_MODE_SHORTEST = 'shortest'
 ROUTE_MODE = [ROUTE_MODE_FASTEST, ROUTE_MODE_SHORTEST]
 
+ICON_CAR = 'mdi:car'
+ICON_PEDESTRIAN = 'mdi:walk'
+ICON_PUBLIC = 'mdi:bus'
+ICON_TRUCK = 'mdi:truck'
+
+UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
+
+ATTR_DURATION = 'duration'
+ATTR_DISTANCE = 'distance'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_APP_ID): cv.string,
@@ -56,6 +64,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             CONF_ROUTE_MODE, default=ROUTE_MODE_FASTEST
         ): vol.In(ROUTE_MODE),
         vol.Optional(CONF_TRAFFIC_MODE, default=False): cv.boolean,
+        vol.Optional(CONF_UNIT_SYSTEM): vol.In(UNITS),
     }
 )
 
@@ -83,31 +92,35 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
         """
         hass.data.setdefault(DATA_KEY, [])
 
+        app_id = config[CONF_APP_ID]
+        app_code = config[CONF_APP_CODE]
+        origin = config[CONF_ORIGIN]
+        destination = config[CONF_DESTINATION]
+
         travel_mode = config.get(CONF_MODE)
         traffic_mode = config.get(CONF_TRAFFIC_MODE)
         route_mode = config.get(CONF_ROUTE_MODE)
-
         name = config.get(CONF_NAME, DEFAULT_NAME)
-        app_id = config.get(CONF_APP_ID)
-        app_code = config.get(CONF_APP_CODE)
-        origin = config.get(CONF_ORIGIN)
-        destination = config.get(CONF_DESTINATION)
+        units = config.get(CONF_UNIT_SYSTEM, hass.config.units.name)
 
-        sensor = HERETravelTimeSensor(
-            hass,
-            name,
-            app_id,
-            app_code,
-            origin,
-            destination,
-            travel_mode,
-            traffic_mode,
-            route_mode,
-        )
+        here_data = HERETravelTimeData(None,
+                                       None,
+                                       app_id,
+                                       app_code,
+                                       travel_mode,
+                                       traffic_mode,
+                                       route_mode,
+                                       units)
+
+        sensor = HERETravelTimeSensor(hass,
+                                      name,
+                                      origin,
+                                      destination,
+                                      here_data)
+
         hass.data[DATA_KEY].append(sensor)
 
-        if sensor.valid_api_connection:
-            add_entities_callback([sensor])
+        add_entities_callback([sensor])
 
     # Wait until start event is sent to load this component.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
@@ -116,53 +129,33 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
 class HERETravelTimeSensor(Entity):
     """Representation of a HERE travel time sensor."""
 
-    def __init__(
-            self,
-            hass,
-            name,
-            app_id,
-            app_code,
-            origin,
-            destination,
-            travel_mode,
-            traffic_mode,
-            route_mode,
-    ):
+    def __init__(self, hass, name, origin, destination, here_data):
         """Initialize the sensor."""
-        import herepy
-
         self._hass = hass
         self._name = name
-        self._travel_mode = travel_mode
-        self._traffic_mode = traffic_mode
-        self._route_mode = route_mode
+        self._here_data = here_data
         self._unit_of_measurement = 'min'
-        self._response = None
-        self.valid_api_connection = True
 
         # Check if location is a trackable entity
         if origin.split('.', 1)[0] in TRACKABLE_DOMAINS:
             self._origin_entity_id = origin
         else:
-            self._origin = origin
+            self._here_data.origin = origin
 
         if destination.split('.', 1)[0] in TRACKABLE_DOMAINS:
             self._destination_entity_id = destination
         else:
-            self._destination = destination
+            self._here_data.destination = destination
 
-        self._client = herepy.RoutingApi(app_id, app_code)
         self.update()
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._response is None:
-            return None
+        if self._here_data.duration is not None:
+            return round(self._here_data.duration / 60)
 
-        # pylint: disable=E1101
-        _summary = self._response.response['route'][0]['summary']
-        return round(_summary['trafficTime'] / 60)
+        return None
 
     @property
     def name(self):
@@ -172,24 +165,19 @@ class HERETravelTimeSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self._response is None:
+        if self._here_data.duration is None:
             return None
 
-        # pylint: disable=E1101
-        _summary = self._response.response['route'][0]['summary']
-        # pylint: disable=E1101
-        _route = self._response.response['route']
-
         res = {}
-        res['distance'] = _summary['distance']
-        res['distance_unit'] = LENGTH_METERS
-        res['trafficTime'] = _summary['trafficTime']
-        res['baseTime'] = _summary['baseTime']
-        res['travelTime'] = _summary['travelTime']
-        res['origin_name'] = _route[0]['waypoint'][0]['mappedRoadName']
-        res['destination_name'] = _route[0]['waypoint'][1]['mappedRoadName']
-        res[CONF_MODE] = self._travel_mode
-        res[CONF_TRAFFIC_MODE] = self._traffic_mode
+        res[ATTR_ATTRIBUTION] = self._here_data.attribution
+        res[ATTR_DURATION] = self._here_data.duration
+        res[ATTR_DISTANCE] = self._here_data.distance
+        res[CONF_UNIT_SYSTEM] = self._here_data.units
+        res['duration_without_traffic'] = self._here_data.base_time
+        res['origin_name'] = self._here_data.origin_name
+        res['destination_name'] = self._here_data.destination_name
+        res[CONF_MODE] = self._here_data.travel_mode
+        res[CONF_TRAFFIC_MODE] = self._here_data.traffic_mode
         return res
 
     @property
@@ -197,47 +185,36 @@ class HERETravelTimeSensor(Entity):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    @property
+    def icon(self):
+        """Icon to use in the frontend depending on travel_mode."""
+        if self._here_data.travel_mode == TRAVEL_MODE_PEDESTRIAN:
+            return ICON_PEDESTRIAN
+        if self._here_data.travel_mode == TRAVEL_MODE_PUBLIC:
+            return ICON_PUBLIC
+        if self._here_data.travel_mode == TRAVEL_MODE_TRUCK:
+            return ICON_TRUCK
+        return ICON_CAR
+
     def update(self):
-        """Get the latest data from HERE."""
-        import herepy
+        """Update Sensor Information."""
         # Convert device_trackers to HERE friendly location
         if hasattr(self, '_origin_entity_id'):
-            self._origin = self._get_location_from_entity(
+            self._here_data.origin = self._get_location_from_entity(
                 self._origin_entity_id
             )
 
         if hasattr(self, '_destination_entity_id'):
-            self._destination = self._get_location_from_entity(
+            self._here_data.destination = self._get_location_from_entity(
                 self._destination_entity_id
             )
 
-        self._destination = self._resolve_zone(self._destination)
-        self._origin = self._resolve_zone(self._origin)
+        self._here_data.destination = self._resolve_zone(
+            self._here_data.destination)
+        self._here_data.origin = self._resolve_zone(
+            self._here_data.origin)
 
-        # Convert location to HERE friendly location if not already so
-        if not isinstance(self._destination, list):
-            self._destination = self._destination.split(',')
-        if not isinstance(self._origin, list):
-            self._origin = self._origin.split(',')
-
-        if self._traffic_mode:
-            traffic_mode = TRAFFIC_MODE_ENABLED
-        else:
-            traffic_mode = TRAFFIC_MODE_DISABLED
-
-        if self._destination is not None and self._origin is not None:
-            response = self._client.car_route(
-                self._origin,
-                self._destination,
-                [self._travel_mode, self._route_mode, traffic_mode],
-            )
-            if isinstance(response, herepy.error.HEREError):
-                _LOGGER.error("API returned error %s", response.message)
-                self.valid_api_connection = False
-                return
-
-            self._response = response
+        self._here_data.update()
 
     def _get_location_from_entity(self, entity_id):
         """Get the location from the entity state or attributes."""
@@ -245,7 +222,6 @@ class HERETravelTimeSensor(Entity):
 
         if entity is None:
             _LOGGER.error("Unable to find entity %s", entity_id)
-            self.valid_api_connection = False
             return None
 
         # Check if the entity has location attributes
@@ -283,3 +259,70 @@ class HERETravelTimeSensor(Entity):
                 return self._get_location_from_attributes(entity)
 
         return friendly_name
+
+
+class HERETravelTimeData():
+    """HERETravelTime data object."""
+
+    def __init__(self, origin, destination, app_id, app_code, travel_mode,
+                 traffic_mode, route_mode, units):
+        """Initialize herepy."""
+        import herepy
+        self.origin = origin
+        self.destination = destination
+        self.travel_mode = travel_mode
+        self.traffic_mode = traffic_mode
+        self.route_mode = route_mode
+        self.attribution = None
+        self.duration = None
+        self.distance = None
+        self.base_time = None
+        self.origin_name = None
+        self.destination_name = None
+        self.units = units
+        self._client = herepy.RoutingApi(app_id, app_code)
+
+    def update(self):
+        """Get the latest data from HERE."""
+        import herepy
+        if self.traffic_mode:
+            traffic_mode = TRAFFIC_MODE_ENABLED
+        else:
+            traffic_mode = TRAFFIC_MODE_DISABLED
+
+        # Convert location to HERE friendly location if not already so
+        if not isinstance(self.destination, list):
+            self.destination = self.destination.split(',')
+        if not isinstance(self.origin, list):
+            self.origin = self.origin.split(',')
+
+        if self.destination is not None and self.origin is not None:
+            response = self._client.car_route(
+                self.origin,
+                self.destination,
+                [self.travel_mode, self.route_mode, traffic_mode],
+            )
+            if isinstance(response, herepy.error.HEREError):
+                _LOGGER.error("API returned error %s", response.message)
+                return
+
+            # pylint: disable=E1101
+            route = response.response['route']
+            summary = route[0]['summary']
+            waypoint = route[0]['waypoint']
+
+            self.attribution = None
+            self.base_time = summary['baseTime']
+            # Check if trafficTime is in response
+            if self.travel_mode in [TRAVEL_MODE_CAR, TRAVEL_MODE_TRUCK]:
+                self.duration = summary['trafficTime']
+            else:
+                self.duration = self.base_time
+            distance = summary['distance']
+            if self.units == CONF_UNIT_SYSTEM_IMPERIAL:
+                # Convert to miles.
+                self.distance = distance / 1609.344
+            else:
+                self.distance = distance
+            self.origin_name = waypoint[0]['mappedRoadName']
+            self.destination_name = waypoint[1]['mappedRoadName']
