@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
-from homeassistant.util.dt import utc_from_timestamp
+from homeassistant.util.dt import as_local, utc_from_timestamp
 
 from . import (
     SENSOR_TYPES, TYPE_NEAREST_STRIKE_DISTANCE, TYPE_NUM_NEARBY_STRIKES,
@@ -40,8 +40,8 @@ class WWLLNSensor(WWLLNEntity):
             self._attrs.update({
                 ATTR_LATITUDE: self._wwlln.nearest_strike['lat'],
                 ATTR_LONGITUDE: self._wwlln.nearest_strike['long'],
-                ATTR_TIMESTAMP: utc_from_timestamp(
-                    self._wwlln.nearest_strike['unixTime']),
+                ATTR_TIMESTAMP: as_local(utc_from_timestamp(
+                    self._wwlln.nearest_strike['unixTime'])),
             })
             self._state = round(self._wwlln.nearest_strike['distance'], 2)
         elif self._sensor_type == TYPE_NUM_NEARBY_STRIKES:
