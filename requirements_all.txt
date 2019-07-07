@@ -957,7 +957,11 @@ incomfort-client==0.3.0
 influxdb==5.2.0
 
 # homeassistant.components.insteon
+<<<<<<< HEAD
 insteonplm==0.15.2
+=======
+insteonplm==0.16.0
+>>>>>>> Upgrade insteonplm to 0.16.0 and add INSTEON scene triggering (#24765)
 
 # homeassistant.components.sensor.iperf3
 iperf3==0.1.10
