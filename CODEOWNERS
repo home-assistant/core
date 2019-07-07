@@ -289,6 +289,7 @@ homeassistant/components/weblink/* @home-assistant/core
 homeassistant/components/websocket_api/* @home-assistant/core
 homeassistant/components/wemo/* @sqldiablo
 homeassistant/components/worldclock/* @fabaff
+homeassistant/components/wwlln/* @bachya
 homeassistant/components/xfinity/* @cisasteelersfan
 homeassistant/components/xiaomi_aqara/* @danielhiversen @syssi
 homeassistant/components/xiaomi_miio/* @rytilahti @syssi
