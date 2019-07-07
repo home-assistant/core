@@ -1,0 +1,32 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Preview",
+            "type": "shell",
+            "command": "hass -c config",
+            "group": {
+                "kind": "test",
+                "isDefault": true,
+            }
+        },
+        {
+            "label": "Generate Requirements",
+            "type": "shell",
+            "command": "./script/gen_requirements_all.py",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Install all Requirements",
+            "type": "shell",
+            "command": "pip3 install -r requirements_all.txt -c homeassistant/package_constraints.txt",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
