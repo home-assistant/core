@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    DOMAIN, HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_PRESET_MODE,
+    HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT)
@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             thermostat.schedule_update_ha_state(True)
 
     hass.services.register(
-        DOMAIN, NUHEAT_DOMAIN, resume_program_set_service,
+        NUHEAT_DOMAIN, SERVICE_RESUME_PROGRAM, resume_program_set_service,
         schema=RESUME_PROGRAM_SCHEMA)
 
 
