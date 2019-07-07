@@ -35,7 +35,7 @@ SERVICE_REMOVE_MEDIA = 'remove_media'
 
 PS4_COMMAND_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_COMMAND): vol.All(cv.ensure_list, [COMMANDS])
+    vol.Required(ATTR_COMMAND): vol.In(list(COMMANDS))
 })
 
 PS4_LOCK_CURRENT_MEDIA_SCHEMA = vol.Schema({
@@ -233,9 +233,10 @@ async def async_service_handle(hass: HomeAssistantType):
         if data is not None:
             data[ATTR_LOCKED] = False
             games[media_content_id] = data
+            _LOGGER.debug("Setting Lock to %s", data[ATTR_LOCKED])
+            _LOGGER.debug("Edited data %s", games[media_content_id])
             save_games(hass, games)
             _LOGGER.debug("Setting Lock to %s", data[ATTR_LOCKED])
-
             _refresh_entity_media(hass, media_content_id)
         else:
             raise HomeAssistantError(
@@ -506,11 +507,13 @@ def _set_media(hass: HomeAssistantType, games: dict, media_content_id,
     _LOGGER.debug("Setting media data, %s: %s", media_content_id, data)
 
 
-def _refresh_entity_media(hass: HomeAssistantType, media_content_id):
+def _refresh_entity_media(
+        hass: HomeAssistantType, media_content_id, update_entity=True):
     """Refresh media properties if data is changed.."""
     for device in hass.data[PS4_DATA].devices:
         if device.media_content_id == media_content_id:
             device.reset_title()
-            device.schedule_update()
+            if update_entity:
+                device.schedule_update()
             _LOGGER.debug(
                 "Refreshing media data for: %s", device.entity_id)
