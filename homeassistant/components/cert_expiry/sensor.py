@@ -103,7 +103,8 @@ class SSLCertificate(Entity):
             self._available = False
             return
         except OSError:
-            _LOGGER.error("Cannot fetch certificate from %s", self.server_name, exc_info=1)
+            _LOGGER.error("Cannot fetch certificate from %s",
+                          self.server_name, exc_info=1)
             self._available = False
             return
 
