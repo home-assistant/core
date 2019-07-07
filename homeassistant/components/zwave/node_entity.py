@@ -14,7 +14,7 @@ from .const import (
     ATTR_NODE_ID, COMMAND_CLASS_WAKE_UP, ATTR_SCENE_ID, ATTR_SCENE_DATA,
     ATTR_BASIC_LEVEL, EVENT_NODE_EVENT, EVENT_SCENE_ACTIVATED,
     COMMAND_CLASS_CENTRAL_SCENE, DOMAIN)
-from .util import node_name, is_node_parsed
+from .util import node_name, is_node_parsed, node_device_id_and_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -128,13 +128,14 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
     @property
     def device_info(self):
         """Return device information."""
+        identifier, name = node_device_id_and_name(self.node)
         info = {
             'identifiers': {
-                (DOMAIN, self.node_id)
+                identifier
             },
             'manufacturer': self.node.manufacturer_name,
             'model': self.node.product_name,
-            'name': node_name(self.node)
+            'name': name
         }
         if self.node_id > 1:
             info['via_device'] = (DOMAIN, 1)
@@ -198,23 +199,22 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
 
     async def node_renamed(self, update_ids=False):
         """Rename the node and update any IDs."""
-        self._name = node_name(self.node)
+        identifier, self._name = node_device_id_and_name(self.node)
         # Set the name in the devices. If they're customised
         # the customisation will not be stored as name and will stick.
         dev_reg = await get_dev_reg(self.hass)
         device = dev_reg.async_get_device(
-            identifiers={(DOMAIN, self.node_id), },
+            identifiers={identifier, },
             connections=set())
         dev_reg.async_update_device(device.id, name=self._name)
         # update sub-devices too
         for i in count(2):
-            identifier = (DOMAIN, self.node_id, i)
+            identifier, new_name = node_device_id_and_name(self.node, i)
             device = dev_reg.async_get_device(
                 identifiers={identifier, },
                 connections=set())
             if not device:
                 break
-            new_name = "{} ({})".format(self._name, i)
             dev_reg.async_update_device(device.id, name=new_name)
 
         # Update entity ID.
@@ -230,6 +230,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
                 ent_reg.async_update_entity(
                     self.entity_id, new_entity_id=new_entity_id)
                 return
+        # else for the above two ifs, update if not using update_entity
         self.async_schedule_update_ha_state()
 
     def network_node_event(self, node, value):
