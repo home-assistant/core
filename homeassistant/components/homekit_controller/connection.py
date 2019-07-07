@@ -1,10 +1,14 @@
 """Helpers for managing a pairing with a HomeKit accessory or bridge."""
 import asyncio
+import datetime
 import logging
+
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import HOMEKIT_ACCESSORY_DISPATCH, ENTITY_MAP
 
 
+DEFAULT_SCAN_INTERVAL = datetime.timedelta(seconds=60)
 RETRY_INTERVAL = 60  # seconds
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,6 +102,12 @@ class HKDevice():
 
         self.add_entities()
 
+        async_track_time_interval(
+            self.hass,
+            self.async_update,
+            DEFAULT_SCAN_INTERVAL
+        )
+
         return True
 
     async def async_refresh_entity_map(self, config_num):
@@ -183,6 +193,11 @@ class HKDevice():
                     )
                 )
                 self.platforms.add(platform)
+
+    async def async_update(self):
+        """Poll state of all entities attached to this bridge/accessory."""
+        _LOGGER.debug("Starting HomeKit controller update")
+        _LOGGER.debug("Finished HomeKit controller update")
 
     async def get_characteristics(self, *args, **kwargs):
         """Read latest state from homekit accessory."""
