@@ -26,8 +26,6 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     CONF_NAME,
     CONF_ZONE,
-    CONF_HOST,
-    CONF_PORT,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
@@ -39,7 +37,6 @@ from .const import (
     SIGNAL_CLIENT_DATA,
     SIGNAL_CLIENT_STARTED,
     SIGNAL_CLIENT_STOPPED,
-    DEFAULT_NAME,
     DOMAIN_DATA_ENTRIES,
     DOMAIN,
 )
@@ -57,17 +54,11 @@ async def async_setup_entry(
     client = data["client"]
     config = data["config"]
 
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-
     async_add_entities(
         [
             ArcamFmj(
                 State(client, zone),
-                zone_config.get(
-                    CONF_NAME,
-                    "{} ({}:{}) - {}".format(DEFAULT_NAME, host, port, zone),
-                ),
+                zone_config[CONF_NAME],
                 zone_config.get(SERVICE_TURN_ON),
             )
             for zone, zone_config in config[CONF_ZONE].items()

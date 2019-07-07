@@ -23,6 +23,7 @@ from .const import (
     DOMAIN,
     DOMAIN_DATA_ENTRIES,
     DOMAIN_DATA_CONFIG,
+    DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     SIGNAL_CLIENT_DATA,
@@ -39,6 +40,17 @@ def _optional_zone(value):
     return ZONE_SCHEMA({})
 
 
+def _zone_name_validator(config):
+    for zone, zone_config in config[CONF_ZONE].items():
+        if CONF_NAME not in zone_config:
+            zone_config[CONF_NAME] = "{} ({}:{}) - {}".format(
+                DEFAULT_NAME,
+                config[CONF_HOST],
+                config[CONF_PORT],
+                zone)
+    return config
+
+
 ZONE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
@@ -47,14 +59,16 @@ ZONE_SCHEMA = vol.Schema(
 )
 
 DEVICE_SCHEMA = vol.Schema(
-    {
+    vol.All({
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.positive_int,
-        vol.Optional(CONF_ZONE): {vol.In([1, 2]): _optional_zone},
+        vol.Optional(
+            CONF_ZONE, default={1: _optional_zone(None)}
+        ): {vol.In([1, 2]): _optional_zone},
         vol.Optional(
             CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
         ): cv.positive_int,
-    }
+    }, _zone_name_validator)
 )
 
 CONFIG_SCHEMA = vol.Schema(
