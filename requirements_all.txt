@@ -169,7 +169,7 @@ aioswitcher==2019.4.26
 aiounifi==6
 
 # homeassistant.components.wwlln
-aiowwlln==0.3.0
+aiowwlln==0.3.1
 
 # homeassistant.components.aladdin_connect
 aladdin_connect==0.3
