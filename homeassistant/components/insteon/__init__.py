@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_ADDRESS, CONF_ENTITY_ID, CONF_HOST, CONF_PLATFORM, CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP)
+    ENTITY_MATCH_ALL, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.dispatcher import (
@@ -49,7 +49,6 @@ SRV_X10_ALL_LIGHTS_ON = 'x10_all_lights_on'
 SRV_ALL_LINK_GROUP = 'group'
 SRV_ALL_LINK_MODE = 'mode'
 SRV_LOAD_DB_RELOAD = 'reload'
-SRV_LOAD_ALL_DATABASES = 'all'
 SRV_CONTROLLER = 'controller'
 SRV_RESPONDER = 'responder'
 SRV_HOUSECODE = 'housecode'
@@ -139,7 +138,7 @@ DEL_ALL_LINK_SCHEMA = vol.Schema({
 
 
 LOAD_ALDB_SCHEMA = vol.Schema({
-    vol.Required(CONF_ENTITY_ID): vol.Any(cv.entity_id, SRV_LOAD_ALL_DATABASES),
+    vol.Required(CONF_ENTITY_ID): vol.Any(cv.entity_id, ENTITY_MATCH_ALL),
     vol.Optional(SRV_LOAD_DB_RELOAD, default=False): cv.boolean,
     })
 
@@ -259,7 +258,7 @@ async def async_setup(hass, config):
         """Load the device All-Link database."""
         entity_id = service.data[CONF_ENTITY_ID]
         reload = service.data[SRV_LOAD_DB_RELOAD]
-        if entity_id.lower() == SRV_LOAD_ALL_DATABASES:
+        if entity_id.lower() == ENTITY_MATCH_ALL:
             for entity_id in hass.data[DOMAIN].get(INSTEON_ENTITIES):
                 _send_load_aldb_signal(entity_id, reload)
         else:
@@ -277,7 +276,6 @@ async def async_setup(hass, config):
         entity_id = service.data[CONF_ENTITY_ID]
         signal = '{}_{}'.format(entity_id, SIGNAL_PRINT_ALDB)
         dispatcher_send(hass, signal)
-
 
     def print_im_aldb(service):
         """Print the All-Link Database for a device."""
@@ -586,9 +584,9 @@ class InsteonEntity(Entity):
             self.async_entity_update)
         self.hass.data[DOMAIN][INSTEON_ENTITIES][self.entity_id] = self
         load_signal = '{}_{}'.format(self.entity_id, SIGNAL_LOAD_ALDB)
-        async_dispatcher_connect(self.hass, load_signal, self._load_aldb) 
+        async_dispatcher_connect(self.hass, load_signal, self._load_aldb)
         print_signal = '{}_{}'.format(self.entity_id, SIGNAL_PRINT_ALDB)
-        async_dispatcher_connect(self.hass, print_signal, self._print_aldb) 
+        async_dispatcher_connect(self.hass, print_signal, self._print_aldb)
 
     def _load_aldb(self, reload=False):
         """Load the device All-Link Database."""
