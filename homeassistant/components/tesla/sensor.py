@@ -46,8 +46,7 @@ class TeslaSensor(TeslaDevice, Entity):
         """Return a unique ID."""
         if self.type:
             return "{}_{}".format(self.tesla_id, self.type)
-        else:
-            return self.tesla_id
+        return self.tesla_id
 
     @property
     def state(self):
