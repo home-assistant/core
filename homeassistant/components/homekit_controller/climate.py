@@ -5,7 +5,7 @@ from homeassistant.components.climate import (
     ClimateDevice, DEFAULT_MIN_HUMIDITY, DEFAULT_MAX_HUMIDITY,
 )
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF,
+    HVAC_MODE_HEAT_COOL, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF,
     CURRENT_HVAC_OFF, CURRENT_HVAC_HEAT, CURRENT_HVAC_COOL,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -19,7 +19,7 @@ MODE_HOMEKIT_TO_HASS = {
     0: HVAC_MODE_OFF,
     1: HVAC_MODE_HEAT,
     2: HVAC_MODE_COOL,
-    3: HVAC_MODE_AUTO,
+    3: HVAC_MODE_HEAT_COOL,
 }
 
 # Map of hass operation modes to homekit modes

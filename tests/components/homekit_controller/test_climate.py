@@ -1,6 +1,7 @@
 """Basic checks for HomeKitclimate."""
 from homeassistant.components.climate.const import (
     DOMAIN, SERVICE_SET_HVAC_MODE, SERVICE_SET_TEMPERATURE,
+    HVAC_MODE_HEAT_COOL, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF,
     SERVICE_SET_HUMIDITY)
 from tests.components.homekit_controller.common import (
     FakeService, setup_test_component)
@@ -74,16 +75,28 @@ async def test_climate_change_thermostat_state(hass, utcnow):
 
     await hass.services.async_call(DOMAIN, SERVICE_SET_HVAC_MODE, {
         'entity_id': 'climate.testdevice',
-        'hvac_mode': 'heat',
+        'hvac_mode': HVAC_MODE_HEAT,
     }, blocking=True)
 
     assert helper.characteristics[HEATING_COOLING_TARGET].value == 1
 
     await hass.services.async_call(DOMAIN, SERVICE_SET_HVAC_MODE, {
         'entity_id': 'climate.testdevice',
-        'hvac_mode': 'cool',
+        'hvac_mode': HVAC_MODE_COOL,
     }, blocking=True)
     assert helper.characteristics[HEATING_COOLING_TARGET].value == 2
+
+    await hass.services.async_call(DOMAIN, SERVICE_SET_HVAC_MODE, {
+        'entity_id': 'climate.testdevice',
+        'hvac_mode': HVAC_MODE_HEAT_COOL,
+    }, blocking=True)
+    assert helper.characteristics[HEATING_COOLING_TARGET].value == 3
+
+    await hass.services.async_call(DOMAIN, SERVICE_SET_HVAC_MODE, {
+        'entity_id': 'climate.testdevice',
+        'hvac_mode': HVAC_MODE_OFF,
+    }, blocking=True)
+    assert helper.characteristics[HEATING_COOLING_TARGET].value == 0
 
 
 async def test_climate_change_thermostat_temperature(hass, utcnow):
@@ -135,7 +148,7 @@ async def test_climate_read_thermostat_state(hass, utcnow):
     helper.characteristics[HUMIDITY_TARGET].value = 45
 
     state = await helper.poll_and_get_state()
-    assert state.state == 'heat'
+    assert state.state == HVAC_MODE_HEAT
     assert state.attributes['current_temperature'] == 19
     assert state.attributes['current_humidity'] == 50
     assert state.attributes['min_temp'] == 7
@@ -150,9 +163,18 @@ async def test_climate_read_thermostat_state(hass, utcnow):
     helper.characteristics[HUMIDITY_TARGET].value = 45
 
     state = await helper.poll_and_get_state()
-    assert state.state == 'cool'
+    assert state.state == HVAC_MODE_COOL
     assert state.attributes['current_temperature'] == 21
     assert state.attributes['current_humidity'] == 45
+
+    # Simulate that we are in heat/cool mode
+    helper.characteristics[TEMPERATURE_CURRENT].value = 21
+    helper.characteristics[TEMPERATURE_TARGET].value = 21
+    helper.characteristics[HEATING_COOLING_CURRENT].value = 0
+    helper.characteristics[HEATING_COOLING_TARGET].value = 3
+
+    state = await helper.poll_and_get_state()
+    assert state.state == HVAC_MODE_HEAT_COOL
 
 
 async def test_hvac_mode_vs_hvac_action(hass, utcnow):

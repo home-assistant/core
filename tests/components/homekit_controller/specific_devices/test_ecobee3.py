@@ -41,7 +41,7 @@ async def test_ecobee3_setup(hass):
         'off',
         'heat',
         'cool',
-        'auto',
+        'heat_cool',
     ]
 
     assert climate_state.attributes['min_temp'] == 7.2
