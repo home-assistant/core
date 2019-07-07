@@ -22,7 +22,7 @@ async def async_setup_platform(
     pass
 
 
-SUPPORT_HVAC = HVAC_MODE_HEAT | HVAC_MODE_OFF
+SUPPORT_HVAC = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
