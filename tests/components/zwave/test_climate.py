@@ -5,7 +5,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF)
 from homeassistant.components.zwave import climate
 from homeassistant.const import (
-    ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from tests.mock.zwave import (
     MockEntityValues, MockNode, MockValue, value_changed)
