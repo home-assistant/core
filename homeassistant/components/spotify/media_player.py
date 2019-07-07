@@ -37,10 +37,12 @@ DEFAULT_CACHE_PATH = '.spotify-token-cache'
 DEFAULT_NAME = 'Spotify'
 DOMAIN = 'spotify'
 
-SERVICE_PLAY_PLAYLIST_RANDOM_MUSIC = 'play_playlist_random_music'
+SERVICE_PLAY_PLAYLIST = 'play_playlist'
+ATTR_RANDOM_SONG = 'random_song'
 
-PLAY_PLAYLIST_RANDOM_MUSIC_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_MEDIA_CONTENT_ID): cv.string
+PLAY_PLAYLIST_SCHEMA = vol.Schema({
+    vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
+    vol.Optional(ATTR_RANDOM_SONG, default=False): cv.boolean
 })
 
 ICON = 'mdi:spotify'
@@ -98,14 +100,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         oauth, config.get(CONF_NAME, DEFAULT_NAME), config[CONF_ALIASES])
     add_entities([player], True)
 
-    def play_playlist_random_music_service(service):
+    def play_playlist_service(service):
         media_content_id = service.data.get(ATTR_MEDIA_CONTENT_ID)
-        player.play_playlist_random_music(media_content_id)
+        random_song = service.data.get(ATTR_RANDOM_SONG)
+        player.play_playlist(media_content_id, random_song)
 
     hass.services.register(
-        DOMAIN, SERVICE_PLAY_PLAYLIST_RANDOM_MUSIC,
-        play_playlist_random_music_service,
-        schema=PLAY_PLAYLIST_RANDOM_MUSIC_SCHEMA)
+        DOMAIN, SERVICE_PLAY_PLAYLIST,
+        play_playlist_service,
+        schema=PLAY_PLAYLIST_SCHEMA)
 
 
 class SpotifyAuthCallbackView(HomeAssistantView):
@@ -270,15 +273,16 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             return
         self._player.start_playback(**kwargs)
 
-    def play_playlist_random_music(self, media_id, **kwargs):
+    def play_playlist(self, media_id, random_song):
         """Play random music in a playlist."""
         if not media_id.startswith('spotify:playlist:'):
             _LOGGER.error("media id must be spotify playlist uri")
             return
-        results = self._player.user_playlist_tracks("me", media_id)
-        position = random.randint(0, results['total'] - 1)
-        offset = {'position': position}
-        kwargs = {'context_uri': media_id, 'offset': offset}
+        kwargs = {'context_uri': media_id}
+        if random_song:
+            results = self._player.user_playlist_tracks("me", media_id)
+            position = random.randint(0, results['total'] - 1)
+            kwargs['offset'] = {'position': position}
         self._player.start_playback(**kwargs)
 
     @property
