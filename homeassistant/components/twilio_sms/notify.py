@@ -48,7 +48,7 @@ class TwilioSMSNotificationService(BaseNotificationService):
         }
 
         if ATTR_MEDIAURL in data:
-            twilio_args['media_url'] = data[ATTR_MEDIAURL]
+            twilio_args[ATTR_MEDIAURL] = data[ATTR_MEDIAURL]
 
         if not targets:
             _LOGGER.info("At least 1 target is required")
