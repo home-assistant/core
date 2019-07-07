@@ -601,7 +601,7 @@ class InsteonEntity(Entity):
     @callback
     def _aldb_loaded(self):
         """All-Link Database loaded for the device."""
-        self.print_aldb()
+        self._print_aldb()
 
     def _get_label(self):
         """Get the device label for grouped devices."""
