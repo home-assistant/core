@@ -35,6 +35,8 @@ class HomeKitEntity(Entity):
         self._chars = {}
         self.setup()
 
+        accessory.entities[(self._aid, self._iid)] = self
+
     def setup(self):
         """Configure an entity baed on its HomeKit characterstics metadata."""
         # pylint: disable=import-error
