@@ -298,6 +298,9 @@ async-upnp-client==0.14.0
 =======
 async-upnp-client==0.14.10
 
+# homeassistant.components.aurora_abb_powerone
+aurorapy==0.2.6
+
 # homeassistant.components.stream
 av==6.1.2
 >>>>>>> Upgrade to async_upnp_client==0.14.10 and increase search timeout (#24685)
