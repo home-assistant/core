@@ -172,7 +172,7 @@ class TestHoneywell(unittest.TestCase):
 
     @mock.patch('evohomeclient.EvohomeClient')
     @mock.patch('homeassistant.components.honeywell.climate.'
-                'RoundThermostat')
+                'HoneywellUSThermostat')
     def test_eu_setup_full_config(self, mock_round, mock_evo):
         """Test the EU setup with complete configuration."""
         config = {
@@ -199,7 +199,7 @@ class TestHoneywell(unittest.TestCase):
 
     @mock.patch('evohomeclient.EvohomeClient')
     @mock.patch('homeassistant.components.honeywell.climate.'
-                'RoundThermostat')
+                'HoneywellUSThermostat')
     def test_eu_setup_partial_config(self, mock_round, mock_evo):
         """Test the EU setup with partial configuration."""
         config = {
@@ -223,7 +223,7 @@ class TestHoneywell(unittest.TestCase):
 
     @mock.patch('evohomeclient.EvohomeClient')
     @mock.patch('homeassistant.components.honeywell.climate.'
-                'RoundThermostat')
+                'HoneywellUSThermostat')
     def test_eu_setup_bad_temp(self, mock_round, mock_evo):
         """Test the EU setup with invalid temperature."""
         config = {
@@ -238,7 +238,7 @@ class TestHoneywell(unittest.TestCase):
 
     @mock.patch('evohomeclient.EvohomeClient')
     @mock.patch('homeassistant.components.honeywell.climate.'
-                'RoundThermostat')
+                'HoneywellUSThermostat')
     def test_eu_setup_error(self, mock_round, mock_evo):
         """Test the EU setup with errors."""
         config = {
