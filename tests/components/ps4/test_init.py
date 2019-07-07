@@ -11,7 +11,6 @@ from homeassistant.components import ps4
 from homeassistant.components.ps4.const import (
     ATTR_MEDIA_IMAGE_URL, COMMANDS, CONFIG_ENTRY_VERSION as VERSION,
     DOMAIN, GAMES_FILE, PS4_DATA)
-
 from homeassistant.const import (
     ATTR_COMMAND, ATTR_LOCKED, ATTR_ENTITY_ID, CONF_HOST,
     CONF_NAME, CONF_REGION, CONF_TOKEN)
