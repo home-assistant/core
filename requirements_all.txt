@@ -784,8 +784,13 @@ hass-nabucasa==0.15
 >>>>>>> Update hass-nabucasa to 0.14 (#24481)
 hbmqtt==0.9.4
 
+<<<<<<< HEAD
 # homeassistant.components.sensor.jewish_calendar
 hdate==0.8.7
+=======
+# homeassistant.components.jewish_calendar
+hdate==0.8.8
+>>>>>>> Upgrade hdate==0.8.8 (#25008)
 
 # homeassistant.components.climate.heatmiser
 heatmiserV3==0.9.1
