@@ -35,8 +35,9 @@ from .const import (
 from .node_entity import ZWaveBaseEntity, ZWaveNodeEntity
 from . import workaround
 from .discovery_schemas import DISCOVERY_SCHEMAS
-from .util import (check_node_schema, check_value_schema, node_name,
-                   check_has_unique_id, is_node_parsed)
+from .util import (
+    check_node_schema, check_value_schema, node_name, check_has_unique_id,
+    is_node_parsed, node_device_id_and_name)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -492,8 +493,7 @@ async def async_setup_entry(hass, config_entry):
         if hass.state == CoreState.running:
             hass.bus.fire(const.EVENT_NETWORK_STOP)
 
-    @callback
-    def rename_node(service):
+    async def rename_node(service):
         """Rename a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         node = network.nodes[node_id]
@@ -506,15 +506,14 @@ async def async_setup_entry(hass, config_entry):
         # and all the contained entities
         node_key = 'node-{}'.format(node_id)
         entity = hass.data[DATA_DEVICES][node_key]
-        hass.async_create_task(entity.node_renamed(update_ids))
+        await entity.node_renamed(update_ids)
         for key in list(hass.data[DATA_DEVICES]):
             if not key.startswith('{}-'.format(node_id)):
                 continue
             entity = hass.data[DATA_DEVICES][key]
-            hass.async_create_task(entity.value_renamed(update_ids))
+            await entity.value_renamed(update_ids)
 
-    @callback
-    def rename_value(service):
+    async def rename_value(service):
         """Rename a node value."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         value_id = service.data.get(const.ATTR_VALUE_ID)
@@ -528,7 +527,7 @@ async def async_setup_entry(hass, config_entry):
         update_ids = service.data.get(const.ATTR_UPDATE_IDS)
         value_key = '{}-{}'.format(node_id, value_id)
         entity = hass.data[DATA_DEVICES][value_key]
-        hass.async_create_task(entity.value_renamed(update_ids))
+        await entity.value_renamed(update_ids)
 
     def set_poll_intensity(service):
         """Set the polling intensity of a node value."""
@@ -1069,6 +1068,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
                 ent_reg.async_update_entity(
                     self.entity_id, new_entity_id=new_entity_id)
                 return
+        # else for the above two ifs, update if not using update_entity
         self.async_schedule_update_ha_state()
 
     async def async_added_to_hass(self):
@@ -1110,24 +1110,20 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
     @property
     def device_info(self):
         """Return device information."""
+        identifier, name = node_device_id_and_name(
+            self.node, self.values.primary.instance)
         info = {
+            'name': name,
+            'identifiers': {
+                identifier
+            },
             'manufacturer': self.node.manufacturer_name,
             'model': self.node.product_name,
         }
         if self.values.primary.instance > 1:
-            info['name'] = '{} ({})'.format(
-                node_name(self.node), self.values.primary.instance)
-            info['identifiers'] = {
-                (DOMAIN, self.node_id, self.values.primary.instance, ),
-            }
             info['via_device'] = (DOMAIN, self.node_id, )
-        else:
-            info['name'] = node_name(self.node)
-            info['identifiers'] = {
-                (DOMAIN, self.node_id),
-            }
-            if self.node_id > 1:
-                info['via_device'] = (DOMAIN, 1, )
+        elif self.node_id > 1:
+            info['via_device'] = (DOMAIN, 1, )
         return info
 
     @property

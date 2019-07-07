@@ -74,6 +74,15 @@ def node_name(node):
     return 'Unknown Node {}'.format(node.node_id)
 
 
+def node_device_id_and_name(node, instance=1):
+    """Return the name and device ID for the value with the given index."""
+    name = node_name(node)
+    if instance == 1:
+        return ((const.DOMAIN, node.node_id), name)
+    name = "{} ({})".format(name, instance)
+    return ((const.DOMAIN, node.node_id, instance), name)
+
+
 async def check_has_unique_id(entity, ready_callback, timeout_callback):
     """Wait for entity to have unique_id."""
     start_time = dt_util.utcnow()
