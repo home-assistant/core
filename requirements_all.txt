@@ -992,7 +992,7 @@ pyMetno==0.4.6
 pyRFXtrx==0.23
 
 # homeassistant.components.switchmate
-# pySwitchmate==0.4.5
+# pySwitchmate==0.4.6
 
 # homeassistant.components.tibber
 pyTibber==0.11.5
