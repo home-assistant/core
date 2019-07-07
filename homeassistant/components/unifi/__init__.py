@@ -6,7 +6,8 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from .const import (
     CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID, DOMAIN, UNIFI_CONFIG)
 from .controller import UniFiController
-from .device_tracker import PLATFORM_SCHEMA as DEVICE_TRACKER_SCHEMA
+from .device_tracker import (
+    CONF_DT_SITE_ID, PLATFORM_SCHEMA as DEVICE_TRACKER_SCHEMA)
 
 
 async def async_setup(hass, config):
@@ -20,8 +21,17 @@ async def async_setup(hass, config):
 
     hass.data[UNIFI_CONFIG] = unifi_config
 
-    if not hass.config_entries.async_entries(DOMAIN):
-        for unifi in unifi_config:
+    for unifi in unifi_config:
+        exist = False
+
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if unifi[CONF_HOST] == entry.data[CONF_CONTROLLER][CONF_HOST] and \
+                    unifi[CONF_DT_SITE_ID] == \
+                        entry.data[CONF_CONTROLLER][CONF_SITE_ID]:
+                exist = True
+                break
+
+        if not exist:
             hass.async_create_task(hass.config_entries.flow.async_init(
                 DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
                 data=unifi
