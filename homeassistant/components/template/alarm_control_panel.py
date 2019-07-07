@@ -40,7 +40,7 @@ ALARM_CONTROL_PANEL_SCHEMA = vol.Schema({
     vol.Optional(CONF_ICON_TEMPLATE): cv.template,
     vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
     vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
-    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+    vol.Optional(CONF_FRIENDLY_NAME, default="Template Alarm"): cv.string,
     vol.Optional(CONF_ENTITY_ID): cv.entity_ids
 })
 
