@@ -1,7 +1,6 @@
 """Support for SleepIQ from SleepNumber."""
 import logging
 from datetime import timedelta
-from requests.exceptions import HTTPError
 
 import voluptuous as vol
 
@@ -53,7 +52,7 @@ def setup(hass, config):
     try:
         DATA = SleepIQData(client)
         DATA.update()
-    except HTTPError:
+    except ValueError:
         message = """
             SleepIQ failed to login, double check your username and password"
         """
