@@ -43,7 +43,6 @@ def test_setup_params(hass):
     assert 54 == state.attributes.get(ATTR_CURRENT_HUMIDITY)
     assert "Off" == state.attributes.get(ATTR_SWING_MODE)
     assert STATE_OFF == state.attributes.get(ATTR_AUX_HEAT)
-    assert 5 == state.attributes.get(ATTR_TARGET_TEMP_STEP)
     assert state.attributes.get(ATTR_HVAC_MODES) == \
         ['off', 'heat', 'cool', 'auto', 'dry', 'fan_only']
 
@@ -55,7 +54,6 @@ def test_default_setup_params(hass):
     assert 35 == state.attributes.get(ATTR_MAX_TEMP)
     assert 30 == state.attributes.get(ATTR_MIN_HUMIDITY)
     assert 99 == state.attributes.get(ATTR_MAX_HUMIDITY)
-    assert 5 == state.attributes.get(ATTR_TARGET_TEMP_STEP)
 
 
 async def test_set_only_target_temp_bad_attr(hass):
