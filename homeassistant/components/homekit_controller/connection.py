@@ -85,11 +85,26 @@ class HKDevice():
         # allow one entity to use pairing at once.
         self.pairing_lock = asyncio.Lock()
 
+        self.available = True
+
+    def async_set_unavailable(self):
+        """Mark state of all entities on this connection as unavailable."""
+        self.available = False
+        for entity in self.entities.values():
+            entity.async_schedule_update_ha_state()
+
     async def async_setup(self):
         """Prepare to use a paired HomeKit device in homeassistant."""
         cache = self.hass.data[ENTITY_MAP].get_map(self.unique_id)
         if not cache:
-            return await self.async_refresh_entity_map(self.config_num)
+            if await self.async_refresh_entity_map(self.config_num):
+                async_track_time_interval(
+                    self.hass,
+                    self.async_update,
+                    DEFAULT_SCAN_INTERVAL
+                )
+                return True
+            return False
 
         self.accessories = cache['accessories']
         self.config_num = cache['config_num']
@@ -101,6 +116,8 @@ class HKDevice():
         self.async_load_platforms()
 
         self.add_entities()
+
+        await self.async_update()
 
         async_track_time_interval(
             self.hass,
@@ -141,6 +158,8 @@ class HKDevice():
 
         # Register and add new entities that are available
         self.add_entities()
+
+        await self.async_update()
 
         return True
 
@@ -193,9 +212,46 @@ class HKDevice():
                 )
                 self.platforms.add(platform)
 
-    async def async_update(self):
+    async def async_update(self, now=None):
         """Poll state of all entities attached to this bridge/accessory."""
+        # pylint: disable=import-error
+        from homekit.exceptions import (
+            AccessoryDisconnectedError, AccessoryNotFoundError,
+            EncryptionError)
+
         _LOGGER.debug("Starting HomeKit controller update")
+
+        chars_to_poll = {}
+        for entity in self.entities.values():
+            for char in entity.pollable_characteristics:
+                chars_to_poll[char] = entity
+
+        try:
+            new_values_dict = await self.get_characteristics(
+                list(chars_to_poll.keys())
+            )
+        except AccessoryNotFoundError:
+            # Not only did the connection fail, but also the accessory is not
+            # visible on the network.
+            self.async_set_unavailable()
+            return
+        except (AccessoryDisconnectedError, EncryptionError):
+            # Temporary connection failure. Device is still available but our
+            # connection was dropped.
+            return
+
+        self.available = True
+
+        for entity in self.entities.values():
+            new_values = {}
+            for key, value in new_values_dict.items():
+                if key not in chars_to_poll:
+                    _LOGGER.debug("Unsolicited characteristic value: %s", key)
+                    continue
+                if chars_to_poll[key] == entity:
+                    new_values[key] = value
+            entity.handle_new_values(new_values)
+
         _LOGGER.debug("Finished HomeKit controller update")
 
     async def get_characteristics(self, *args, **kwargs):

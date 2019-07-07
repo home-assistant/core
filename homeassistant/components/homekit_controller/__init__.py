@@ -27,7 +27,6 @@ class HomeKitEntity(Entity):
 
     def __init__(self, accessory, devinfo):
         """Initialise a generic HomeKit device."""
-        self._available = True
         self._accessory = accessory
         self._aid = devinfo['aid']
         self._iid = devinfo['iid']
@@ -36,6 +35,14 @@ class HomeKitEntity(Entity):
         self.setup()
 
         accessory.entities[(self._aid, self._iid)] = self
+
+    @property
+    def should_poll(self) -> bool:
+        """Return False.
+
+        Data update is triggered from HKDevice.
+        """
+        return False
 
     def setup(self):
         """Configure an entity baed on its HomeKit characterstics metadata."""
@@ -49,7 +56,7 @@ class HomeKitEntity(Entity):
             get_uuid(c) for c in self.get_characteristic_types()
         ]
 
-        self._chars_to_poll = []
+        self.pollable_characteristics = []
         self._chars = {}
         self._char_names = {}
 
@@ -77,7 +84,7 @@ class HomeKitEntity(Entity):
         from homekit.model.characteristics import CharacteristicsTypes
 
         # Build up a list of (aid, iid) tuples to poll on update()
-        self._chars_to_poll.append((self._aid, char['iid']))
+        self.pollable_characteristics.append((self._aid, char['iid']))
 
         # Build a map of ctype -> iid
         short_name = CharacteristicsTypes.get_short(char['type'])
@@ -93,30 +100,9 @@ class HomeKitEntity(Entity):
         # pylint: disable=not-callable
         setup_fn(char)
 
-    async def async_update(self):
-        """Obtain a HomeKit device's state."""
-        # pylint: disable=import-error
-        from homekit.exceptions import (
-            AccessoryDisconnectedError, AccessoryNotFoundError,
-            EncryptionError)
-
-        try:
-            new_values_dict = await self._accessory.get_characteristics(
-                self._chars_to_poll
-            )
-        except AccessoryNotFoundError:
-            # Not only did the connection fail, but also the accessory is not
-            # visible on the network.
-            self._available = False
-            return
-        except (AccessoryDisconnectedError, EncryptionError):
-            # Temporary connection failure. Device is still available but our
-            # connection was dropped.
-            return
-
-        self._available = True
-
-        for (_, iid), result in new_values_dict.items():
+    def handle_new_values(self, new_values):
+        """Update state from one of more characteristics fetch from device."""
+        for (_, iid), result in new_values.items():
             if 'value' not in result:
                 continue
             # Callback to update the entity with this characteristic value
@@ -126,6 +112,8 @@ class HomeKitEntity(Entity):
                 continue
             # pylint: disable=not-callable
             update_fn(result['value'])
+
+        self.async_schedule_update_ha_state()
 
     @property
     def unique_id(self):
@@ -141,7 +129,7 @@ class HomeKitEntity(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._available
+        return self._accessory.available
 
     @property
     def device_info(self):
