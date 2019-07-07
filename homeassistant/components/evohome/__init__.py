@@ -104,7 +104,7 @@ async def async_setup(hass, hass_config):
                         "does not currently support DHW controllers.")
 
     async_track_time_interval(
-        hass, broker.update, timedelta(seconds=10)
+        hass, broker.update, hass_config[DOMAIN][CONF_SCAN_INTERVAL]
     )
 
     return True
