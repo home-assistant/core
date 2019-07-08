@@ -162,7 +162,7 @@ def smartthings_mock_fixture(locations):
     with patch(COMPONENT_PREFIX + "SmartThings", new=mock), \
             patch(COMPONENT_PREFIX + "config_flow.SmartThings", new=mock), \
             patch(COMPONENT_PREFIX + "smartapp.SmartThings", new=mock):
-        yield mock
+        yield smartthings_mock
 
 
 @pytest.fixture(name='device')
