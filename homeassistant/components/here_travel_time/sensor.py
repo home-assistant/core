@@ -71,6 +71,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone', 'person']
 DATA_KEY = 'here_travel_time'
 
+NO_ROUTE_ERROR_MESSAGE = "HERE could not find a route based on the input"
+
 
 def convert_time_to_utc(timestr):
     """Take a string like 08:00:00 and convert it to a unix timestamp."""
@@ -303,7 +305,11 @@ class HERETravelTimeData():
                 [self.travel_mode, self.route_mode, traffic_mode],
             )
             if isinstance(response, herepy.error.HEREError):
-                _LOGGER.error("API returned error %s", response.message)
+                # Better error message for cryptic error code
+                if 'NGEO_ERROR_GRAPH_DISCONNECTED' in response.message:
+                    _LOGGER.error(NO_ROUTE_ERROR_MESSAGE)
+                else:
+                    _LOGGER.error("API returned error %s", response.message)
                 return
 
             # pylint: disable=E1101
