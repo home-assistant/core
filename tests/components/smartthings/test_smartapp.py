@@ -1,15 +1,13 @@
 """Tests for the smartapp module."""
-from unittest.mock import Mock, patch
 from uuid import uuid4
 
+from asynctest import CoroutineMock, Mock, patch
 from pysmartthings import AppEntity, Capability
 
 from homeassistant.components.smartthings import smartapp
 from homeassistant.components.smartthings.const import (
     CONF_INSTALLED_APP_ID, CONF_INSTALLED_APPS, CONF_LOCATION_ID,
     CONF_REFRESH_TOKEN, DATA_MANAGER, DOMAIN)
-
-from tests.common import mock_coro
 
 
 async def test_update_app(hass, app):
@@ -20,10 +18,8 @@ async def test_update_app(hass, app):
 
 async def test_update_app_updated_needed(hass, app):
     """Test update_app updates when an app is needed."""
-    mock_app = Mock(spec=AppEntity)
+    mock_app = Mock(AppEntity)
     mock_app.app_name = 'Test'
-    mock_app.refresh.return_value = mock_coro()
-    mock_app.save.return_value = mock_coro()
 
     await smartapp.update_app(hass, mock_app)
 
@@ -77,8 +73,7 @@ async def test_smartapp_install_creates_flow(
         device_factory('', [Capability.switch, Capability.switch_level]),
         device_factory('', [Capability.switch])
     ]
-    api.devices = Mock()
-    api.devices.return_value = mock_coro(return_value=devices)
+    api.devices.return_value = devices
     # Act
     await smartapp.smartapp_install(hass, request, None, app)
     # Assert
@@ -131,8 +126,7 @@ async def test_smartapp_uninstall(hass, config_entry):
     request = Mock()
     request.installed_app_id = config_entry.data['installed_app_id']
 
-    with patch.object(hass.config_entries, 'async_remove',
-                      return_value=mock_coro()) as remove:
+    with patch.object(hass.config_entries, 'async_remove') as remove:
         await smartapp.smartapp_uninstall(hass, request, None, app)
         assert remove.call_count == 1
 
@@ -140,12 +134,11 @@ async def test_smartapp_uninstall(hass, config_entry):
 async def test_smartapp_webhook(hass):
     """Test the smartapp webhook calls the manager."""
     manager = Mock()
-    manager.handle_request = Mock()
-    manager.handle_request.return_value = mock_coro(return_value={})
+    manager.handle_request = CoroutineMock(return_value={})
     hass.data[DOMAIN][DATA_MANAGER] = manager
     request = Mock()
     request.headers = []
-    request.json.return_value = mock_coro(return_value={})
+    request.json = CoroutineMock(return_value={})
     result = await smartapp.smartapp_webhook(hass, '', request)
 
     assert result.body == b'{}'
@@ -155,14 +148,12 @@ async def test_smartapp_sync_subscriptions(
         hass, smartthings_mock, device_factory, subscription_factory):
     """Test synchronization adds and removes."""
     api = smartthings_mock.return_value
-    api.delete_subscription.side_effect = lambda loc_id, sub_id: mock_coro()
-    api.create_subscription.side_effect = lambda sub: mock_coro()
     subscriptions = [
         subscription_factory(Capability.thermostat),
         subscription_factory(Capability.switch),
         subscription_factory(Capability.switch_level)
     ]
-    api.subscriptions.return_value = mock_coro(return_value=subscriptions)
+    api.subscriptions.return_value = subscriptions
     devices = [
         device_factory('', [Capability.battery, 'ping']),
         device_factory('', [Capability.switch, Capability.switch_level]),
@@ -181,14 +172,12 @@ async def test_smartapp_sync_subscriptions_up_to_date(
         hass, smartthings_mock, device_factory, subscription_factory):
     """Test synchronization does nothing when current."""
     api = smartthings_mock.return_value
-    api.delete_subscription.side_effect = lambda loc_id, sub_id: mock_coro()
-    api.create_subscription.side_effect = lambda sub: mock_coro()
     subscriptions = [
         subscription_factory(Capability.battery),
         subscription_factory(Capability.switch),
         subscription_factory(Capability.switch_level)
     ]
-    api.subscriptions.return_value = mock_coro(return_value=subscriptions)
+    api.subscriptions.return_value = subscriptions
     devices = [
         device_factory('', [Capability.battery, 'ping']),
         device_factory('', [Capability.switch, Capability.switch_level]),
@@ -207,16 +196,14 @@ async def test_smartapp_sync_subscriptions_handles_exceptions(
         hass, smartthings_mock, device_factory, subscription_factory):
     """Test synchronization does nothing when current."""
     api = smartthings_mock.return_value
-    api.delete_subscription.side_effect = \
-        lambda loc_id, sub_id: mock_coro(exception=Exception)
-    api.create_subscription.side_effect = \
-        lambda sub: mock_coro(exception=Exception)
+    api.delete_subscription.side_effect = Exception
+    api.create_subscription.side_effect = Exception
     subscriptions = [
         subscription_factory(Capability.battery),
         subscription_factory(Capability.switch),
         subscription_factory(Capability.switch_level)
     ]
-    api.subscriptions.return_value = mock_coro(return_value=subscriptions)
+    api.subscriptions.return_value = subscriptions
     devices = [
         device_factory('', [Capability.thermostat, 'ping']),
         device_factory('', [Capability.switch, Capability.switch_level]),

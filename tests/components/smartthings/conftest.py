@@ -1,12 +1,12 @@
 """Test configuration and mocks for the SmartThings component."""
 from collections import defaultdict
-from unittest.mock import Mock, patch
 from uuid import uuid4
 
+from asynctest import Mock, patch
 from pysmartthings import (
     CLASSIFICATION_AUTOMATION, AppEntity, AppOAuthClient, AppSettings,
-    DeviceEntity, InstalledApp, Location, SceneEntity, SmartThings,
-    Subscription)
+    DeviceEntity, DeviceStatus, InstalledApp, Location, SceneEntity,
+    SmartThings, Subscription)
 from pysmartthings.api import Api
 import pytest
 
@@ -21,8 +21,6 @@ from homeassistant.config_entries import (
     CONN_CLASS_CLOUD_PUSH, SOURCE_USER, ConfigEntry)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.setup import async_setup_component
-
-from tests.common import mock_coro
 
 COMPONENT_PREFIX = "homeassistant.components.smartthings."
 
@@ -81,29 +79,22 @@ def locations_fixture(location):
 @pytest.fixture(name="app")
 def app_fixture(hass, config_file):
     """Fixture for a single app."""
-    app = AppEntity(Mock())
-    app.apply_data({
-        'appName': APP_NAME_PREFIX + str(uuid4()),
-        'appId': str(uuid4()),
-        'appType': 'WEBHOOK_SMART_APP',
-        'classifications': [CLASSIFICATION_AUTOMATION],
-        'displayName': 'Home Assistant',
-        'description':
-            hass.config.location_name + " at " + hass.config.api.base_url,
-        'singleInstance': True,
-        'webhookSmartApp': {
-            'targetUrl': webhook.async_generate_url(
-                hass, hass.data[DOMAIN][CONF_WEBHOOK_ID]),
-            'publicKey': ''}
-    })
-    app.refresh = Mock()
-    app.refresh.return_value = mock_coro()
-    app.save = Mock()
-    app.save.return_value = mock_coro()
-    settings = AppSettings(app.app_id)
-    settings.settings[SETTINGS_INSTANCE_ID] = config_file[CONF_INSTANCE_ID]
-    app.settings = Mock()
-    app.settings.return_value = mock_coro(return_value=settings)
+    app = Mock(AppEntity)
+    app.app_name = APP_NAME_PREFIX + str(uuid4())
+    app.app_id = str(uuid4())
+    app.app_type = 'WEBHOOK_SMART_APP'
+    app.classifications = [CLASSIFICATION_AUTOMATION]
+    app.display_name = 'Home Assistant'
+    app.description = hass.config.location_name + " at " + \
+        hass.config.api.base_url
+    app.single_instance = True
+    app.webhook_target_url = webhook.async_generate_url(
+        hass, hass.data[DOMAIN][CONF_WEBHOOK_ID])
+
+    settings = Mock(AppSettings)
+    settings.app_id = app.app_id
+    settings.settings = {SETTINGS_INSTANCE_ID: config_file[CONF_INSTANCE_ID]}
+    app.settings.return_value = settings
     return app
 
 
@@ -161,10 +152,9 @@ def config_file_fixture():
 @pytest.fixture(name='smartthings_mock')
 def smartthings_mock_fixture(locations):
     """Fixture to mock smartthings API calls."""
-    def _location(location_id):
-        return mock_coro(
-            return_value=next(location for location in locations
-                              if location.location_id == location_id))
+    async def _location(location_id):
+        return next(location for location in locations
+                    if location.location_id == location_id)
 
     smartthings_mock = Mock(SmartThings)
     smartthings_mock.location.side_effect = _location
@@ -178,65 +168,17 @@ def smartthings_mock_fixture(locations):
 @pytest.fixture(name='device')
 def device_fixture(location):
     """Fixture representing devices loaded."""
-    item = DeviceEntity(None)
-    item.status.refresh = Mock()
-    item.status.refresh.return_value = mock_coro()
-    item.apply_data({
-        "deviceId": "743de49f-036f-4e9c-839a-2f89d57607db",
-        "name": "GE In-Wall Smart Dimmer",
-        "label": "Front Porch Lights",
-        "deviceManufacturerCode": "0063-4944-3038",
-        "locationId": location.location_id,
-        "deviceTypeId": "8a9d4b1e3b9b1fe3013b9b206a7f000d",
-        "deviceTypeName": "Dimmer Switch",
-        "deviceNetworkType": "ZWAVE",
-        "components": [
-            {
-                "id": "main",
-                "capabilities": [
-                    {
-                        "id": "switch",
-                        "version": 1
-                    },
-                    {
-                        "id": "switchLevel",
-                        "version": 1
-                    },
-                    {
-                        "id": "refresh",
-                        "version": 1
-                    },
-                    {
-                        "id": "indicator",
-                        "version": 1
-                    },
-                    {
-                        "id": "sensor",
-                        "version": 1
-                    },
-                    {
-                        "id": "actuator",
-                        "version": 1
-                    },
-                    {
-                        "id": "healthCheck",
-                        "version": 1
-                    },
-                    {
-                        "id": "light",
-                        "version": 1
-                    }
-                ]
-            }
-        ],
-        "dth": {
-            "deviceTypeId": "8a9d4b1e3b9b1fe3013b9b206a7f000d",
-            "deviceTypeName": "Dimmer Switch",
-            "deviceNetworkType": "ZWAVE",
-            "completedSetup": False
-        },
-        "type": "DTH"
-    })
+    item = Mock(DeviceEntity)
+    item.device_id = "743de49f-036f-4e9c-839a-2f89d57607db"
+    item.name = "GE In-Wall Smart Dimmer"
+    item.label = "Front Porch Lights"
+    item.location_id = location.location_id
+    item.capabilities = [
+        "switch", "switchLevel", "refresh", "indicator", "sensor", "actuator",
+        "healthCheck", "light"
+    ]
+    item.components = {"main": item.capabilities}
+    item.status = Mock(DeviceStatus)
     return item
 
 
@@ -270,8 +212,7 @@ def subscription_factory_fixture():
 def device_factory_fixture():
     """Fixture for creating mock devices."""
     api = Mock(spec=Api)
-    api.post_device_command.side_effect = \
-        lambda *args, **kwargs: mock_coro(return_value={})
+    api.post_device_command.return_value = {}
 
     def _factory(label, capabilities, status: dict = None):
         device_data = {
@@ -309,8 +250,7 @@ def device_factory_fixture():
 def scene_factory_fixture(location):
     """Fixture for creating mock devices."""
     api = Mock(spec=Api)
-    api.execute_scene.side_effect = \
-        lambda *args, **kwargs: mock_coro(return_value={})
+    api.execute_scene.return_value = {}
 
     def _factory(name):
         scene_data = {
