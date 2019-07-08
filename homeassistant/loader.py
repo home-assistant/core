@@ -123,6 +123,11 @@ class Integration:
         self.requirements = manifest['requirements']  # type: List[str]
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
 
+    @property
+    def is_built_in(self) -> bool:
+        """Test if package is a built-in integration."""
+        return self.pkg_path.startswith(PACKAGE_BUILTIN)
+
     def get_component(self) -> ModuleType:
         """Return the component."""
         cache = self.hass.data.setdefault(DATA_COMPONENTS, {})
@@ -222,7 +227,7 @@ class IntegrationNotFound(LoaderError):
 
     def __init__(self, domain: str) -> None:
         """Initialize a component not found error."""
-        super().__init__("Component {} not found.".format(domain))
+        super().__init__("Integration {} not found.".format(domain))
         self.domain = domain
 
 
@@ -424,7 +429,7 @@ def _async_mount_config_dir(hass,  # type: HomeAssistant
     Async friendly but not a coroutine.
     """
     if hass.config.config_dir is None:
-        _LOGGER.error("Can't load components - config dir is not set")
+        _LOGGER.error("Can't load integrations - config dir is not set")
         return False
     if hass.config.config_dir not in sys.path:
         sys.path.insert(0, hass.config.config_dir)

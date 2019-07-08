@@ -38,7 +38,7 @@ async def gpslogger_client(loop, hass, aiohttp_client):
 
     await hass.async_block_till_done()
 
-    with patch('homeassistant.components.device_tracker.update_config'):
+    with patch('homeassistant.components.device_tracker.legacy.update_config'):
         return await aiohttp_client(hass.http.app)
 
 
@@ -140,6 +140,12 @@ async def test_enter_and_exit(hass, gpslogger_client, webhook_id):
                                                 data['device'])).state
     assert STATE_NOT_HOME == state_name
 
+    dev_reg = await hass.helpers.device_registry.async_get_registry()
+    assert len(dev_reg.devices) == 1
+
+    ent_reg = await hass.helpers.entity_registry.async_get_registry()
+    assert len(ent_reg.entities) == 1
+
 
 async def test_enter_with_attrs(hass, gpslogger_client, webhook_id):
     """Test when additional attributes are present."""
@@ -165,12 +171,39 @@ async def test_enter_with_attrs(hass, gpslogger_client, webhook_id):
                                            data['device']))
     assert state.state == STATE_NOT_HOME
     assert state.attributes['gps_accuracy'] == 10.5
-    assert state.attributes['battery'] == 10.0
+    assert state.attributes['battery_level'] == 10.0
     assert state.attributes['speed'] == 100.0
     assert state.attributes['direction'] == 105.32
     assert state.attributes['altitude'] == 102.0
     assert state.attributes['provider'] == 'gps'
     assert state.attributes['activity'] == 'running'
+
+    data = {
+        'latitude': HOME_LATITUDE,
+        'longitude': HOME_LONGITUDE,
+        'device': '123',
+        'accuracy': 123,
+        'battery': 23,
+        'speed': 23,
+        'direction': 123,
+        'altitude': 123,
+        'provider': 'gps',
+        'activity': 'idle'
+    }
+
+    req = await gpslogger_client.post(url, data=data)
+    await hass.async_block_till_done()
+    assert req.status == HTTP_OK
+    state = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
+                                           data['device']))
+    assert state.state == STATE_HOME
+    assert state.attributes['gps_accuracy'] == 123
+    assert state.attributes['battery_level'] == 23
+    assert state.attributes['speed'] == 23
+    assert state.attributes['direction'] == 123
+    assert state.attributes['altitude'] == 123
+    assert state.attributes['provider'] == 'gps'
+    assert state.attributes['activity'] == 'idle'
 
 
 @pytest.mark.xfail(

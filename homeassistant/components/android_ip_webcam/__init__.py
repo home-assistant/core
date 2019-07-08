@@ -233,7 +233,7 @@ async def async_setup(hass, config):
 
     tasks = [async_setup_ipcamera(conf) for conf in config[DOMAIN]]
     if tasks:
-        await asyncio.wait(tasks, loop=hass.loop)
+        await asyncio.wait(tasks)
 
     return True
 

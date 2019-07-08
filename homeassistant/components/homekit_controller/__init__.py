@@ -1,23 +1,18 @@
 """Support for Homekit device discovery."""
 import logging
 
-from homeassistant.components.discovery import SERVICE_HOMEKIT
-from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
-from .config_flow import load_old_pairings
+# We need an import from .config_flow, without it .config_flow is never loaded.
+from .config_flow import HomekitControllerFlowHandler  # noqa: F401
 from .connection import get_accessory_information, HKDevice
 from .const import (
     CONTROLLER, ENTITY_MAP, KNOWN_DEVICES
 )
 from .const import DOMAIN   # noqa: pylint: disable=unused-import
 from .storage import EntityMapStorage
-
-HOMEKIT_IGNORE = [
-    'BSB002',
-    'Home Assistant Bridge',
-    'TRADFRI gateway',
-]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,7 +95,8 @@ class HomeKitEntity(Entity):
         """Obtain a HomeKit device's state."""
         # pylint: disable=import-error
         from homekit.exceptions import (
-            AccessoryDisconnectedError, AccessoryNotFoundError)
+            AccessoryDisconnectedError, AccessoryNotFoundError,
+            EncryptionError)
 
         try:
             new_values_dict = await self._accessory.get_characteristics(
@@ -111,7 +107,7 @@ class HomeKitEntity(Entity):
             # visible on the network.
             self._available = False
             return
-        except AccessoryDisconnectedError:
+        except (AccessoryDisconnectedError, EncryptionError):
             # Temporary connection failure. Device is still available but our
             # connection was dropped.
             return
@@ -145,65 +141,72 @@ class HomeKitEntity(Entity):
         """Return True if entity is available."""
         return self._available
 
+    @property
+    def device_info(self):
+        """Return the device info."""
+        accessory_serial = self._accessory_info['serial-number']
+
+        device_info = {
+            'identifiers': {
+                (DOMAIN, 'serial-number', accessory_serial),
+            },
+            'name': self._accessory_info['name'],
+            'manufacturer': self._accessory_info.get('manufacturer', ''),
+            'model': self._accessory_info.get('model', ''),
+            'sw_version': self._accessory_info.get('firmware.revision', ''),
+        }
+
+        # Some devices only have a single accessory - we don't add a
+        # via_device otherwise it would be self referential.
+        bridge_serial = self._accessory.connection_info['serial-number']
+        if accessory_serial != bridge_serial:
+            device_info['via_device'] = (
+                DOMAIN, 'serial-number', bridge_serial)
+
+        return device_info
+
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
         raise NotImplementedError
+
+
+async def async_setup_entry(hass, entry):
+    """Set up a HomeKit connection on a config entry."""
+    conn = HKDevice(hass, entry, entry.data)
+    hass.data[KNOWN_DEVICES][conn.unique_id] = conn
+
+    if not await conn.async_setup():
+        del hass.data[KNOWN_DEVICES][conn.unique_id]
+        raise ConfigEntryNotReady
+
+    conn_info = conn.connection_info
+
+    device_registry = await dr.async_get_registry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={
+            (DOMAIN, 'serial-number', conn_info['serial-number']),
+            (DOMAIN, 'accessory-id', conn.unique_id),
+        },
+        name=conn.name,
+        manufacturer=conn_info.get('manufacturer'),
+        model=conn_info.get('model'),
+        sw_version=conn_info.get('firmware.revision'),
+    )
+
+    return True
 
 
 async def async_setup(hass, config):
     """Set up for Homekit devices."""
     # pylint: disable=import-error
     import homekit
-    from homekit.controller.ip_implementation import IpPairing
 
     map_storage = hass.data[ENTITY_MAP] = EntityMapStorage(hass)
     await map_storage.async_initialize()
 
-    hass.data[CONTROLLER] = controller = homekit.Controller()
-
-    old_pairings = await hass.async_add_executor_job(
-        load_old_pairings,
-        hass
-    )
-    for hkid, pairing_data in old_pairings.items():
-        controller.pairings[hkid] = IpPairing(pairing_data)
-
-    def discovery_dispatch(service, discovery_info):
-        """Dispatcher for Homekit discovery events."""
-        # model, id
-        host = discovery_info['host']
-        port = discovery_info['port']
-
-        # Fold property keys to lower case, making them effectively
-        # case-insensitive. Some HomeKit devices capitalize them.
-        properties = {
-            key.lower(): value
-            for (key, value) in discovery_info['properties'].items()
-        }
-
-        model = properties['md']
-        hkid = properties['id']
-        config_num = int(properties['c#'])
-
-        if model in HOMEKIT_IGNORE:
-            return
-
-        # Only register a device once, but rescan if the config has changed
-        if hkid in hass.data[KNOWN_DEVICES]:
-            device = hass.data[KNOWN_DEVICES][hkid]
-            if config_num > device.config_num and \
-               device.pairing is not None:
-                device.refresh_entity_map(config_num)
-            return
-
-        _LOGGER.debug('Discovered unique device %s', hkid)
-        device = HKDevice(hass, host, port, model, hkid, config_num, config)
-        device.setup()
-
+    hass.data[CONTROLLER] = homekit.Controller()
     hass.data[KNOWN_DEVICES] = {}
-
-    await hass.async_add_executor_job(
-        discovery.listen, hass, SERVICE_HOMEKIT, discovery_dispatch)
 
     return True
 

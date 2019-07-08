@@ -48,6 +48,30 @@ async def test_arm_home_no_pending(hass):
         hass.states.get(entity_id).state
 
 
+async def test_arm_home_no_pending_when_code_not_req(hass):
+    """Test arm home method."""
+    assert await async_setup_component(
+        hass, alarm_control_panel.DOMAIN,
+        {'alarm_control_panel': {
+            'platform': 'manual',
+            'name': 'test',
+            'code': CODE,
+            'code_arm_required': False,
+            'pending_time': 0,
+            'disarm_after_trigger': False
+        }})
+
+    entity_id = 'alarm_control_panel.test'
+
+    assert STATE_ALARM_DISARMED == \
+        hass.states.get(entity_id).state
+
+    await common.async_alarm_arm_home(hass, 0)
+
+    assert STATE_ALARM_ARMED_HOME == \
+        hass.states.get(entity_id).state
+
+
 async def test_arm_home_with_pending(hass):
     """Test arm home method."""
     assert await async_setup_component(
@@ -124,6 +148,30 @@ async def test_arm_away_no_pending(hass):
         hass.states.get(entity_id).state
 
     await common.async_alarm_arm_away(hass, CODE, entity_id)
+
+    assert STATE_ALARM_ARMED_AWAY == \
+        hass.states.get(entity_id).state
+
+
+async def test_arm_away_no_pending_when_code_not_req(hass):
+    """Test arm home method."""
+    assert await async_setup_component(
+        hass, alarm_control_panel.DOMAIN,
+        {'alarm_control_panel': {
+            'platform': 'manual',
+            'name': 'test',
+            'code': CODE,
+            'code_arm_required': False,
+            'pending_time': 0,
+            'disarm_after_trigger': False
+        }})
+
+    entity_id = 'alarm_control_panel.test'
+
+    assert STATE_ALARM_DISARMED == \
+        hass.states.get(entity_id).state
+
+    await common.async_alarm_arm_away(hass, 0, entity_id)
 
     assert STATE_ALARM_ARMED_AWAY == \
         hass.states.get(entity_id).state
@@ -228,6 +276,30 @@ async def test_arm_night_no_pending(hass):
         hass.states.get(entity_id).state
 
     await common.async_alarm_arm_night(hass, CODE)
+
+    assert STATE_ALARM_ARMED_NIGHT == \
+        hass.states.get(entity_id).state
+
+
+async def test_arm_night_no_pending_when_code_not_req(hass):
+    """Test arm night method."""
+    assert await async_setup_component(
+        hass, alarm_control_panel.DOMAIN,
+        {'alarm_control_panel': {
+            'platform': 'manual',
+            'name': 'test',
+            'code': CODE,
+            'code_arm_required': False,
+            'pending_time': 0,
+            'disarm_after_trigger': False
+        }})
+
+    entity_id = 'alarm_control_panel.test'
+
+    assert STATE_ALARM_DISARMED == \
+        hass.states.get(entity_id).state
+
+    await common.async_alarm_arm_night(hass, 0)
 
     assert STATE_ALARM_ARMED_NIGHT == \
         hass.states.get(entity_id).state
@@ -1123,6 +1195,30 @@ async def test_arm_custom_bypass_no_pending(hass):
         hass.states.get(entity_id).state
 
     await common.async_alarm_arm_custom_bypass(hass, CODE)
+
+    assert STATE_ALARM_ARMED_CUSTOM_BYPASS == \
+        hass.states.get(entity_id).state
+
+
+async def test_arm_custom_bypass_no_pending_when_code_not_req(hass):
+    """Test arm custom bypass method."""
+    assert await async_setup_component(
+        hass, alarm_control_panel.DOMAIN,
+        {'alarm_control_panel': {
+            'platform': 'manual',
+            'name': 'test',
+            'code': CODE,
+            'code_arm_required': False,
+            'pending_time': 0,
+            'disarm_after_trigger': False
+        }})
+
+    entity_id = 'alarm_control_panel.test'
+
+    assert STATE_ALARM_DISARMED == \
+        hass.states.get(entity_id).state
+
+    await common.async_alarm_arm_custom_bypass(hass, 0)
 
     assert STATE_ALARM_ARMED_CUSTOM_BYPASS == \
         hass.states.get(entity_id).state

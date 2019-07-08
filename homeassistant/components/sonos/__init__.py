@@ -5,10 +5,11 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_HOSTS, ATTR_ENTITY_ID, ATTR_TIME
-from homeassistant.helpers import config_entry_flow, config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-DOMAIN = 'sonos'
+from .const import DOMAIN
+
 
 CONF_ADVERTISE_ADDR = 'advertise_addr'
 CONF_INTERFACE_ADDR = 'interface_addr'
@@ -31,6 +32,7 @@ SERVICE_SET_TIMER = 'set_sleep_timer'
 SERVICE_CLEAR_TIMER = 'clear_sleep_timer'
 SERVICE_UPDATE_ALARM = 'update_alarm'
 SERVICE_SET_OPTION = 'set_option'
+SERVICE_PLAY_QUEUE = 'play_queue'
 
 ATTR_SLEEP_TIME = 'sleep_time'
 ATTR_ALARM_ID = 'alarm_id'
@@ -41,6 +43,7 @@ ATTR_MASTER = 'master'
 ATTR_WITH_GROUP = 'with_group'
 ATTR_NIGHT_SOUND = 'night_sound'
 ATTR_SPEECH_ENHANCE = 'speech_enhance'
+ATTR_QUEUE_POSITION = 'queue_position'
 
 SONOS_JOIN_SCHEMA = vol.Schema({
     vol.Required(ATTR_MASTER): cv.entity_id,
@@ -79,6 +82,11 @@ SONOS_SET_OPTION_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Optional(ATTR_NIGHT_SOUND): cv.boolean,
     vol.Optional(ATTR_SPEECH_ENHANCE): cv.boolean,
+})
+
+SONOS_PLAY_QUEUE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
+    vol.Optional(ATTR_QUEUE_POSITION, default=0): cv.positive_int,
 })
 
 DATA_SERVICE_EVENT = 'sonos_service_idle'
@@ -133,6 +141,10 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_SET_OPTION, service_handle,
         schema=SONOS_SET_OPTION_SCHEMA)
 
+    hass.services.async_register(
+        DOMAIN, SERVICE_PLAY_QUEUE, service_handle,
+        schema=SONOS_PLAY_QUEUE_SCHEMA)
+
     return True
 
 
@@ -141,14 +153,3 @@ async def async_setup_entry(hass, entry):
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(
         entry, MP_DOMAIN))
     return True
-
-
-async def _async_has_devices(hass):
-    """Return if there are devices that can be discovered."""
-    import pysonos
-
-    return await hass.async_add_executor_job(pysonos.discover)
-
-
-config_entry_flow.register_discovery_flow(
-    DOMAIN, 'Sonos', _async_has_devices, config_entries.CONN_CLASS_LOCAL_PUSH)

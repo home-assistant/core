@@ -1,18 +1,25 @@
 """Tests for the HTTP API for the cloud component."""
 import asyncio
 from unittest.mock import patch, MagicMock
+from ipaddress import ip_network
 
 import pytest
 from jose import jwt
 from hass_nabucasa.auth import Unauthenticated, UnknownError
 from hass_nabucasa.const import STATE_CONNECTED
 
+from homeassistant.core import State
 from homeassistant.auth.providers import trusted_networks as tn_auth
 from homeassistant.components.cloud.const import (
     PREF_ENABLE_GOOGLE, PREF_ENABLE_ALEXA, PREF_GOOGLE_SECURE_DEVICES_PIN,
-    DOMAIN)
+    DOMAIN, RequireRelink)
+from homeassistant.components.google_assistant.helpers import (
+    GoogleEntity)
+from homeassistant.components.alexa.entities import LightCapabilities
+from homeassistant.components.alexa import errors as alexa_errors
 
 from tests.common import mock_coro
+from tests.components.google_assistant import MockConfig
 
 from . import mock_cloud, mock_cloud_prefs
 
@@ -32,14 +39,15 @@ def mock_cloud_login(hass, setup_api):
     """Mock cloud is logged in."""
     hass.data[DOMAIN].id_token = jwt.encode({
         'email': 'hello@home-assistant.io',
-        'custom:sub-exp': '2018-01-03'
+        'custom:sub-exp': '2018-01-03',
+        'cognito:username': 'abcdefghjkl',
     }, 'test')
 
 
 @pytest.fixture(autouse=True)
 def setup_api(hass, aioclient_mock):
     """Initialize HTTP API."""
-    mock_cloud(hass, {
+    hass.loop.run_until_complete(mock_cloud(hass, {
         'mode': 'development',
         'cognito_client_id': 'cognito_client_id',
         'user_pool_id': 'user_pool_id',
@@ -57,7 +65,7 @@ def setup_api(hass, aioclient_mock):
                 'include_entities': ['light.kitchen', 'switch.ac']
             }
         }
-    })
+    }))
     return mock_cloud_prefs(hass)
 
 
@@ -338,7 +346,7 @@ async def test_websocket_status(hass, hass_ws_client, mock_cloud_fixture,
     with patch.dict(
         'homeassistant.components.google_assistant.const.'
         'DOMAIN_TO_GOOGLE_TYPES', {'light': None}, clear=True
-    ), patch.dict('homeassistant.components.alexa.smart_home.ENTITY_ADAPTERS',
+    ), patch.dict('homeassistant.components.alexa.entities.ENTITY_ADAPTERS',
                   {'switch': None}, clear=True):
         await client.send_json({
             'id': 5,
@@ -349,21 +357,29 @@ async def test_websocket_status(hass, hass_ws_client, mock_cloud_fixture,
         'logged_in': True,
         'email': 'hello@home-assistant.io',
         'cloud': 'connected',
-        'prefs': mock_cloud_fixture,
+        'prefs': {
+            'alexa_enabled': True,
+            'cloud_user': None,
+            'cloudhooks': {},
+            'google_enabled': True,
+            'google_entity_configs': {},
+            'google_secure_devices_pin': None,
+            'alexa_entity_configs': {},
+            'alexa_report_state': False,
+            'remote_enabled': False,
+        },
         'alexa_entities': {
             'include_domains': [],
             'include_entities': ['light.kitchen', 'switch.ac'],
             'exclude_domains': [],
             'exclude_entities': [],
         },
-        'alexa_domains': ['switch'],
         'google_entities': {
             'include_domains': ['light'],
             'include_entities': [],
             'exclude_domains': [],
             'exclude_entities': [],
         },
-        'google_domains': ['light'],
         'remote_domain': None,
         'remote_connected': False,
         'remote_certificate': None,
@@ -509,6 +525,44 @@ async def test_websocket_update_preferences(hass, hass_ws_client,
     assert not setup_api[PREF_ENABLE_GOOGLE]
     assert not setup_api[PREF_ENABLE_ALEXA]
     assert setup_api[PREF_GOOGLE_SECURE_DEVICES_PIN] == '1234'
+
+
+async def test_websocket_update_preferences_require_relink(
+        hass, hass_ws_client, aioclient_mock, setup_api, mock_cloud_login):
+    """Test updating preference requires relink."""
+    client = await hass_ws_client(hass)
+
+    with patch('homeassistant.components.cloud.alexa_config.AlexaConfig'
+               '.async_get_access_token',
+               side_effect=RequireRelink):
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/update_prefs',
+            'alexa_report_state': True,
+        })
+        response = await client.receive_json()
+
+    assert not response['success']
+    assert response['error']['code'] == 'alexa_relink'
+
+
+async def test_websocket_update_preferences_no_token(
+        hass, hass_ws_client, aioclient_mock, setup_api, mock_cloud_login):
+    """Test updating preference no token available."""
+    client = await hass_ws_client(hass)
+
+    with patch('homeassistant.components.cloud.alexa_config.AlexaConfig'
+               '.async_get_access_token',
+               side_effect=alexa_errors.NoTokenAvailable):
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/update_prefs',
+            'alexa_report_state': True,
+        })
+        response = await client.receive_json()
+
+    assert not response['success']
+    assert response['error']['code'] == 'alexa_relink'
 
 
 async def test_enabling_webhook(hass, hass_ws_client, setup_api,
@@ -661,7 +715,7 @@ async def test_enabling_remote_trusted_networks_local6(
 
 async def test_enabling_remote_trusted_networks_other(
         hass, hass_ws_client, setup_api, mock_cloud_login):
-    """Test we cannot enable remote UI when trusted networks active."""
+    """Test we can enable remote UI when trusted networks active."""
     hass.auth._providers[('trusted_networks', None)] = \
         tn_auth.TrustedNetworksAuthProvider(
             hass, None, tn_auth.CONFIG_SCHEMA({
@@ -689,3 +743,196 @@ async def test_enabling_remote_trusted_networks_other(
     assert cloud.client.remote_autostart
 
     assert len(mock_connect.mock_calls) == 1
+
+
+async def test_list_google_entities(
+        hass, hass_ws_client, setup_api, mock_cloud_login):
+    """Test that we can list Google entities."""
+    client = await hass_ws_client(hass)
+    entity = GoogleEntity(
+        hass, MockConfig(should_expose=lambda *_: False), State(
+            'light.kitchen', 'on'
+        ))
+    with patch('homeassistant.components.google_assistant.helpers'
+               '.async_get_entities', return_value=[entity]):
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/google_assistant/entities',
+        })
+        response = await client.receive_json()
+
+    assert response['success']
+    assert len(response['result']) == 1
+    assert response['result'][0] == {
+        'entity_id': 'light.kitchen',
+        'might_2fa': False,
+        'traits': ['action.devices.traits.OnOff'],
+    }
+
+
+async def test_update_google_entity(
+        hass, hass_ws_client, setup_api, mock_cloud_login):
+    """Test that we can update config of a Google entity."""
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        'id': 5,
+        'type': 'cloud/google_assistant/entities/update',
+        'entity_id': 'light.kitchen',
+        'should_expose': False,
+        'override_name': 'updated name',
+        'aliases': ['lefty', 'righty'],
+        'disable_2fa': False,
+    })
+    response = await client.receive_json()
+
+    assert response['success']
+    prefs = hass.data[DOMAIN].client.prefs
+    assert prefs.google_entity_configs['light.kitchen'] == {
+        'should_expose': False,
+        'override_name': 'updated name',
+        'aliases': ['lefty', 'righty'],
+        'disable_2fa': False,
+    }
+
+
+async def test_enabling_remote_trusted_proxies_local4(
+        hass, hass_ws_client, setup_api, mock_cloud_login):
+    """Test we cannot enable remote UI when trusted networks active."""
+    hass.http.trusted_proxies.append(ip_network('127.0.0.1'))
+
+    client = await hass_ws_client(hass)
+
+    with patch(
+            'hass_nabucasa.remote.RemoteUI.connect',
+            side_effect=AssertionError
+    ) as mock_connect:
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/remote/connect',
+        })
+        response = await client.receive_json()
+
+    assert not response['success']
+    assert response['error']['code'] == 500
+    assert response['error']['message'] == \
+        'Remote UI not compatible with 127.0.0.1/::1 as trusted proxies.'
+
+    assert len(mock_connect.mock_calls) == 0
+
+
+async def test_enabling_remote_trusted_proxies_local6(
+        hass, hass_ws_client, setup_api, mock_cloud_login):
+    """Test we cannot enable remote UI when trusted networks active."""
+    hass.http.trusted_proxies.append(ip_network('::1'))
+
+    client = await hass_ws_client(hass)
+
+    with patch(
+            'hass_nabucasa.remote.RemoteUI.connect',
+            side_effect=AssertionError
+    ) as mock_connect:
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/remote/connect',
+        })
+        response = await client.receive_json()
+
+    assert not response['success']
+    assert response['error']['code'] == 500
+    assert response['error']['message'] == \
+        'Remote UI not compatible with 127.0.0.1/::1 as trusted proxies.'
+
+    assert len(mock_connect.mock_calls) == 0
+
+
+async def test_list_alexa_entities(
+        hass, hass_ws_client, setup_api, mock_cloud_login):
+    """Test that we can list Alexa entities."""
+    client = await hass_ws_client(hass)
+    entity = LightCapabilities(hass, MagicMock(entity_config={}), State(
+        'light.kitchen', 'on'
+    ))
+    with patch('homeassistant.components.alexa.entities'
+               '.async_get_entities', return_value=[entity]):
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/alexa/entities',
+        })
+        response = await client.receive_json()
+
+    assert response['success']
+    assert len(response['result']) == 1
+    assert response['result'][0] == {
+        'entity_id': 'light.kitchen',
+        'display_categories': ['LIGHT'],
+        'interfaces': ['Alexa.PowerController', 'Alexa.EndpointHealth'],
+    }
+
+
+async def test_update_alexa_entity(
+        hass, hass_ws_client, setup_api, mock_cloud_login):
+    """Test that we can update config of an Alexa entity."""
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        'id': 5,
+        'type': 'cloud/alexa/entities/update',
+        'entity_id': 'light.kitchen',
+        'should_expose': False,
+    })
+    response = await client.receive_json()
+
+    assert response['success']
+    prefs = hass.data[DOMAIN].client.prefs
+    assert prefs.alexa_entity_configs['light.kitchen'] == {
+        'should_expose': False,
+    }
+
+
+async def test_sync_alexa_entities_timeout(
+        hass, hass_ws_client, setup_api, mock_cloud_login):
+    """Test that timeout syncing Alexa entities."""
+    client = await hass_ws_client(hass)
+    with patch('homeassistant.components.cloud.alexa_config.AlexaConfig'
+               '.async_sync_entities', side_effect=asyncio.TimeoutError):
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/alexa/sync',
+        })
+        response = await client.receive_json()
+
+    assert not response['success']
+    assert response['error']['code'] == 'timeout'
+
+
+async def test_sync_alexa_entities_no_token(
+        hass, hass_ws_client, setup_api, mock_cloud_login):
+    """Test sync Alexa entities when we have no token."""
+    client = await hass_ws_client(hass)
+    with patch('homeassistant.components.cloud.alexa_config.AlexaConfig'
+               '.async_sync_entities',
+               side_effect=alexa_errors.NoTokenAvailable):
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/alexa/sync',
+        })
+        response = await client.receive_json()
+
+    assert not response['success']
+    assert response['error']['code'] == 'alexa_relink'
+
+
+async def test_enable_alexa_state_report_fail(
+        hass, hass_ws_client, setup_api, mock_cloud_login):
+    """Test enable Alexa entities state reporting when no token available."""
+    client = await hass_ws_client(hass)
+    with patch('homeassistant.components.cloud.alexa_config.AlexaConfig'
+               '.async_sync_entities',
+               side_effect=alexa_errors.NoTokenAvailable):
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/alexa/sync',
+        })
+        response = await client.receive_json()
+
+    assert not response['success']
+    assert response['error']['code'] == 'alexa_relink'

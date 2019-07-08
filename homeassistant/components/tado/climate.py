@@ -3,7 +3,9 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_ON_OFF)
+    CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, FAN_HIGH, FAN_LOW, FAN_MIDDLE,
+    FAN_OFF, HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF, PRESET_AWAY,
+    SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS)
 from homeassistant.util.temperature import convert as convert_temperature
@@ -27,23 +29,24 @@ CONST_MODE_FAN_HIGH = 'HIGH'
 CONST_MODE_FAN_MIDDLE = 'MIDDLE'
 CONST_MODE_FAN_LOW = 'LOW'
 
-FAN_MODES_LIST = {
-    CONST_MODE_FAN_HIGH: 'High',
-    CONST_MODE_FAN_MIDDLE: 'Middle',
-    CONST_MODE_FAN_LOW: 'Low',
-    CONST_MODE_OFF: 'Off',
+FAN_MAP_TADO = {
+    'HIGH': FAN_HIGH,
+    'MIDDLE': FAN_MIDDLE,
+    'LOW': FAN_LOW,
 }
 
-OPERATION_LIST = {
-    CONST_OVERLAY_MANUAL: 'Manual',
-    CONST_OVERLAY_TIMER: 'Timer',
-    CONST_OVERLAY_TADO_MODE: 'Tado mode',
-    CONST_MODE_SMART_SCHEDULE: 'Smart schedule',
-    CONST_MODE_OFF: 'Off',
+HVAC_MAP_TADO = {
+    'MANUAL': HVAC_MODE_HEAT,
+    'TIMER': HVAC_MODE_AUTO,
+    'TADO_MODE': HVAC_MODE_AUTO,
+    'SMART_SCHEDULE': HVAC_MODE_AUTO,
+    'OFF': HVAC_MODE_OFF
 }
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
-                 SUPPORT_ON_OFF)
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+SUPPORT_HVAC = [HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF]
+SUPPORT_FAN = [FAN_HIGH, FAN_MIDDLE, FAN_HIGH, FAN_OFF]
+SUPPORT_PRESET = [PRESET_AWAY]
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -85,12 +88,14 @@ def create_climate_device(tado, hass, zone, name, zone_id):
 
     min_temp = float(temperatures['celsius']['min'])
     max_temp = float(temperatures['celsius']['max'])
+    step = temperatures['celsius'].get('step', PRECISION_TENTHS)
 
     data_id = 'zone {} {}'.format(name, zone_id)
     device = TadoClimate(tado,
                          name, zone_id, data_id,
                          hass.config.units.temperature(min_temp, unit),
                          hass.config.units.temperature(max_temp, unit),
+                         step,
                          ac_mode)
 
     tado.add_sensor(data_id, {
@@ -107,7 +112,7 @@ class TadoClimate(ClimateDevice):
     """Representation of a tado climate device."""
 
     def __init__(self, store, zone_name, zone_id, data_id,
-                 min_temp, max_temp, ac_mode,
+                 min_temp, max_temp, step, ac_mode,
                  tolerance=0.3):
         """Initialize of Tado climate device."""
         self._store = store
@@ -127,6 +132,7 @@ class TadoClimate(ClimateDevice):
         self._is_away = False
         self._min_temp = min_temp
         self._max_temp = max_temp
+        self._step = step
         self._target_temp = None
         self._tolerance = tolerance
         self._cooling = False
@@ -156,30 +162,56 @@ class TadoClimate(ClimateDevice):
         return self._cur_temp
 
     @property
-    def current_operation(self):
-        """Return current readable operation mode."""
+    def hvac_mode(self):
+        """Return hvac operation ie. heat, cool mode.
+
+        Need to be one of HVAC_MODE_*.
+        """
+        return HVAC_MAP_TADO.get(self._current_operation)
+
+    @property
+    def hvac_modes(self):
+        """Return the list of available hvac operation modes.
+
+        Need to be a subset of HVAC_MODES.
+        """
+        return SUPPORT_HVAC
+
+    @property
+    def hvac_action(self):
+        """Return the current running hvac operation if supported.
+
+        Need to be one of CURRENT_HVAC_*.
+        """
         if self._cooling:
-            return "Cooling"
-        return OPERATION_LIST.get(self._current_operation)
+            return CURRENT_HVAC_COOL
+        return CURRENT_HVAC_HEAT
 
     @property
-    def operation_list(self):
-        """Return the list of available operation modes (readable)."""
-        return list(OPERATION_LIST.values())
-
-    @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         if self.ac_mode:
-            return FAN_MODES_LIST.get(self._current_fan)
+            return FAN_MAP_TADO.get(self._current_fan)
         return None
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """List of available fan modes."""
         if self.ac_mode:
-            return list(FAN_MODES_LIST.values())
+            return SUPPORT_FAN
         return None
+
+    @property
+    def preset_mode(self):
+        """Return the current preset mode, e.g., home, away, temp."""
+        if self._is_away:
+            return PRESET_AWAY
+        return None
+
+    @property
+    def preset_modes(self):
+        """Return a list of available preset modes."""
+        return SUPPORT_PRESET
 
     @property
     def temperature_unit(self):
@@ -187,40 +219,14 @@ class TadoClimate(ClimateDevice):
         return self._unit
 
     @property
-    def is_away_mode_on(self):
-        """Return true if away mode is on."""
-        return self._is_away
-
-    @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
-        return PRECISION_TENTHS
+        return self._step
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._target_temp
-
-    @property
-    def is_on(self):
-        """Return true if heater is on."""
-        return self._device_is_active
-
-    def turn_off(self):
-        """Turn device off."""
-        _LOGGER.info("Switching mytado.com to OFF for zone %s",
-                     self.zone_name)
-
-        self._current_operation = CONST_MODE_OFF
-        self._control_heating()
-
-    def turn_on(self):
-        """Turn device on."""
-        _LOGGER.info("Switching mytado.com to %s mode for zone %s",
-                     self._overlay_mode, self.zone_name)
-
-        self._current_operation = self._overlay_mode
-        self._control_heating()
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -233,19 +239,24 @@ class TadoClimate(ClimateDevice):
         self._target_temp = temperature
         self._control_heating()
 
-    # pylint: disable=arguments-differ
-    def set_operation_mode(self, readable_operation_mode):
-        """Set new operation mode."""
-        operation_mode = CONST_MODE_SMART_SCHEDULE
+    def set_hvac_mode(self, hvac_mode):
+        """Set new target hvac mode."""
+        mode = None
 
-        for mode, readable in OPERATION_LIST.items():
-            if readable == readable_operation_mode:
-                operation_mode = mode
-                break
+        if hvac_mode == HVAC_MODE_OFF:
+            mode = CONST_MODE_OFF
+        elif hvac_mode == HVAC_MODE_AUTO:
+            mode = CONST_MODE_SMART_SCHEDULE
+        elif hvac_mode == HVAC_MODE_HEAT:
+            mode = CONST_OVERLAY_MANUAL
 
-        self._current_operation = operation_mode
+        self._current_operation = mode
         self._overlay_mode = None
         self._control_heating()
+
+    def set_preset_mode(self, preset_mode):
+        """Set new preset mode."""
+        pass
 
     @property
     def min_temp(self):

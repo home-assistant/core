@@ -64,7 +64,7 @@ class AsyncHandler:
 
         if blocking:
             while self._thread.is_alive():
-                await asyncio.sleep(0, loop=self.loop)
+                await asyncio.sleep(0)
 
     def emit(self, record: Optional[logging.LogRecord]) -> None:
         """Process a record."""

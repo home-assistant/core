@@ -211,10 +211,10 @@ async def test_removing_config_entries(hass, registry, update_events):
 
     registry.async_clear_config_entry('123')
     entry = registry.async_get_device({('bridgeid', '0123')}, set())
-    entry3 = registry.async_get_device({('bridgeid', '4567')}, set())
+    entry3_removed = registry.async_get_device({('bridgeid', '4567')}, set())
 
     assert entry.config_entries == {'456'}
-    assert entry3.config_entries == set()
+    assert entry3_removed is None
 
     await hass.async_block_till_done()
 
@@ -227,7 +227,7 @@ async def test_removing_config_entries(hass, registry, update_events):
     assert update_events[2]['device_id'] == entry3.id
     assert update_events[3]['action'] == 'update'
     assert update_events[3]['device_id'] == entry.id
-    assert update_events[4]['action'] == 'update'
+    assert update_events[4]['action'] == 'remove'
     assert update_events[4]['device_id'] == entry3.id
 
 
@@ -250,71 +250,71 @@ async def test_removing_area_id(registry):
     assert entry_w_area != entry_wo_area
 
 
-async def test_specifying_hub_device_create(registry):
-    """Test specifying a hub and updating."""
-    hub = registry.async_get_or_create(
+async def test_specifying_via_device_create(registry):
+    """Test specifying a via_device and updating."""
+    via = registry.async_get_or_create(
         config_entry_id='123',
         connections={
             (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:AB:CD:EF')
         },
         identifiers={('hue', '0123')},
-        manufacturer='manufacturer', model='hub')
+        manufacturer='manufacturer', model='via')
 
     light = registry.async_get_or_create(
         config_entry_id='456',
         connections=set(),
         identifiers={('hue', '456')},
         manufacturer='manufacturer', model='light',
-        via_hub=('hue', '0123'))
+        via_device=('hue', '0123'))
 
-    assert light.hub_device_id == hub.id
+    assert light.via_device_id == via.id
 
 
-async def test_specifying_hub_device_update(registry):
-    """Test specifying a hub and updating."""
+async def test_specifying_via_device_update(registry):
+    """Test specifying a via_device and updating."""
     light = registry.async_get_or_create(
         config_entry_id='456',
         connections=set(),
         identifiers={('hue', '456')},
         manufacturer='manufacturer', model='light',
-        via_hub=('hue', '0123'))
+        via_device=('hue', '0123'))
 
-    assert light.hub_device_id is None
+    assert light.via_device_id is None
 
-    hub = registry.async_get_or_create(
+    via = registry.async_get_or_create(
         config_entry_id='123',
         connections={
             (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:AB:CD:EF')
         },
         identifiers={('hue', '0123')},
-        manufacturer='manufacturer', model='hub')
+        manufacturer='manufacturer', model='via')
 
     light = registry.async_get_or_create(
         config_entry_id='456',
         connections=set(),
         identifiers={('hue', '456')},
         manufacturer='manufacturer', model='light',
-        via_hub=('hue', '0123'))
+        via_device=('hue', '0123'))
 
-    assert light.hub_device_id == hub.id
+    assert light.via_device_id == via.id
 
 
 async def test_loading_saving_data(hass, registry):
     """Test that we load/save data correctly."""
-    orig_hub = registry.async_get_or_create(
+    orig_via = registry.async_get_or_create(
         config_entry_id='123',
         connections={
             (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:AB:CD:EF')
         },
         identifiers={('hue', '0123')},
-        manufacturer='manufacturer', model='hub')
+        manufacturer='manufacturer', model='via')
 
     orig_light = registry.async_get_or_create(
         config_entry_id='456',
         connections=set(),
         identifiers={('hue', '456')},
         manufacturer='manufacturer', model='light',
-        via_hub=('hue', '0123'))
+        via_device=('hue', '0123'))
 
     assert len(registry.devices) == 2
 
@@ -326,10 +326,10 @@ async def test_loading_saving_data(hass, registry):
     # Ensure same order
     assert list(registry.devices) == list(registry2.devices)
 
-    new_hub = registry2.async_get_device({('hue', '0123')}, set())
+    new_via = registry2.async_get_device({('hue', '0123')}, set())
     new_light = registry2.async_get_device({('hue', '456')}, set())
 
-    assert orig_hub == new_hub
+    assert orig_via == new_via
     assert orig_light == new_light
 
 
@@ -395,7 +395,7 @@ async def test_format_mac(registry):
 
 
 async def test_update(registry):
-    """Verify that we can update area_id of a device."""
+    """Verify that we can update some attributes of a device."""
     entry = registry.async_get_or_create(
         config_entry_id='1234',
         connections={
@@ -412,13 +412,14 @@ async def test_update(registry):
     with patch.object(registry, 'async_schedule_save') as mock_save:
         updated_entry = registry.async_update_device(
             entry.id, area_id='12345A', name_by_user='Test Friendly Name',
-            new_identifiers=new_identifiers)
+            new_identifiers=new_identifiers, via_device_id='98765B')
 
     assert mock_save.call_count == 1
     assert updated_entry != entry
     assert updated_entry.area_id == '12345A'
     assert updated_entry.name_by_user == 'Test Friendly Name'
     assert updated_entry.identifiers == new_identifiers
+    assert updated_entry.via_device_id == '98765B'
 
 
 async def test_loading_race_condition(hass):

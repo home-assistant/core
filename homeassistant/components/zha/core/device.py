@@ -5,23 +5,29 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
 import asyncio
+from datetime import timedelta
 from enum import Enum
 import logging
+import time
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, async_dispatcher_send
-)
+    async_dispatcher_connect, async_dispatcher_send)
+from homeassistant.helpers.event import async_track_time_interval
+
+from .channels import EventRelayChannel
 from .const import (
-    ATTR_MANUFACTURER, POWER_CONFIGURATION_CHANNEL, SIGNAL_AVAILABLE, IN, OUT,
-    ATTR_CLUSTER_ID, ATTR_ATTRIBUTE, ATTR_VALUE, ATTR_COMMAND, SERVER,
-    ATTR_COMMAND_TYPE, ATTR_ARGS, CLIENT_COMMANDS, SERVER_COMMANDS,
-    ATTR_ENDPOINT_ID, IEEE, MODEL, NAME, UNKNOWN, QUIRK_APPLIED,
-    QUIRK_CLASS, ZDO_CHANNEL, MANUFACTURER_CODE, POWER_SOURCE
-)
-from .channels import EventRelayChannel, ZDOChannel
+    ATTR_ARGS, ATTR_ATTRIBUTE, ATTR_CLUSTER_ID, ATTR_COMMAND,
+    ATTR_COMMAND_TYPE, ATTR_ENDPOINT_ID, ATTR_MANUFACTURER, ATTR_VALUE,
+    BATTERY_OR_UNKNOWN, CLIENT_COMMANDS, IEEE, IN, MAINS_POWERED,
+    MANUFACTURER_CODE, MODEL, NAME, NWK, OUT, POWER_CONFIGURATION_CHANNEL,
+    POWER_SOURCE, QUIRK_APPLIED, QUIRK_CLASS, SERVER, SERVER_COMMANDS,
+    SIGNAL_AVAILABLE, UNKNOWN_MANUFACTURER, UNKNOWN_MODEL, ZDO_CHANNEL,
+    LQI, RSSI, LAST_SEEN)
 
 _LOGGER = logging.getLogger(__name__)
+_KEEP_ALIVE_INTERVAL = 7200
+_UPDATE_ALIVE_INTERVAL = timedelta(seconds=60)
 
 
 class DeviceStatus(Enum):
@@ -38,22 +44,10 @@ class ZHADevice:
         """Initialize the gateway."""
         self.hass = hass
         self._zigpy_device = zigpy_device
-        # Get first non ZDO endpoint id to use to get manufacturer and model
-        endpoint_ids = zigpy_device.endpoints.keys()
-        self._manufacturer = UNKNOWN
-        self._model = UNKNOWN
-        ept_id = next((ept_id for ept_id in endpoint_ids if ept_id != 0), None)
-        if ept_id is not None:
-            self._manufacturer = zigpy_device.endpoints[ept_id].manufacturer
-            self._model = zigpy_device.endpoints[ept_id].model
         self._zha_gateway = zha_gateway
         self.cluster_channels = {}
         self._relay_channels = {}
         self._all_channels = []
-        self._name = "{} {}".format(
-            self.manufacturer,
-            self.model
-        )
         self._available = False
         self._available_signal = "{}_{}_{}".format(
             self.name, self.ieee, SIGNAL_AVAILABLE)
@@ -68,13 +62,17 @@ class ZHADevice:
             self._zigpy_device.__class__.__module__,
             self._zigpy_device.__class__.__name__
         )
-        self._power_source = None
+        self._available_check = async_track_time_interval(
+            self.hass,
+            self._check_available,
+            _UPDATE_ALIVE_INTERVAL
+        )
         self.status = DeviceStatus.CREATED
 
     @property
     def name(self):
         """Return device name."""
-        return self._name
+        return "{} {}".format(self.manufacturer, self.model)
 
     @property
     def ieee(self):
@@ -84,12 +82,23 @@ class ZHADevice:
     @property
     def manufacturer(self):
         """Return manufacturer for device."""
-        return self._manufacturer
+        if self._zigpy_device.manufacturer is None:
+            return UNKNOWN_MANUFACTURER
+        return self._zigpy_device.manufacturer
 
     @property
     def model(self):
         """Return model for device."""
-        return self._model
+        if self._zigpy_device.model is None:
+            return UNKNOWN_MODEL
+        return self._zigpy_device.model
+
+    @property
+    def manufacturer_code(self):
+        """Return the manufacturer code for the device."""
+        if self._zigpy_device.node_desc.is_valid:
+            return self._zigpy_device.node_desc.manufacturer_code
+        return None
 
     @property
     def nwk(self):
@@ -112,20 +121,29 @@ class ZHADevice:
         return self._zigpy_device.last_seen
 
     @property
-    def manufacturer_code(self):
-        """Return manufacturer code for device."""
-        if ZDO_CHANNEL in self.cluster_channels:
-            return self.cluster_channels.get(ZDO_CHANNEL).manufacturer_code
-        return None
+    def is_mains_powered(self):
+        """Return true if device is mains powered."""
+        return self._zigpy_device.node_desc.is_mains_powered
 
     @property
     def power_source(self):
         """Return the power source for the device."""
-        if self._power_source is not None:
-            return self._power_source
-        if ZDO_CHANNEL in self.cluster_channels:
-            return self.cluster_channels.get(ZDO_CHANNEL).power_source
-        return None
+        return MAINS_POWERED if self.is_mains_powered else BATTERY_OR_UNKNOWN
+
+    @property
+    def is_router(self):
+        """Return true if this is a routing capable device."""
+        return self._zigpy_device.node_desc.is_router
+
+    @property
+    def is_coordinator(self):
+        """Return true if this device represents the coordinator."""
+        return self._zigpy_device.node_desc.is_coordinator
+
+    @property
+    def is_end_device(self):
+        """Return true if this device is an end device."""
+        return self._zigpy_device.node_desc.is_end_device
 
     @property
     def gateway(self):
@@ -151,9 +169,15 @@ class ZHADevice:
         """Set availability from restore and prevent signals."""
         self._available = available
 
-    def set_power_source(self, power_source):
-        """Set the power source."""
-        self._power_source = power_source
+    def _check_available(self, *_):
+        if self.last_seen is None:
+            self.update_available(False)
+        else:
+            difference = time.time() - self.last_seen
+            if difference > _KEEP_ALIVE_INTERVAL:
+                self.update_available(False)
+            else:
+                self.update_available(True)
 
     def update_available(self, available):
         """Set sensor availability."""
@@ -175,15 +199,21 @@ class ZHADevice:
     def device_info(self):
         """Return a device description for device."""
         ieee = str(self.ieee)
+        time_struct = time.localtime(self.last_seen)
+        update_time = time.strftime("%Y-%m-%dT%H:%M:%S", time_struct)
         return {
             IEEE: ieee,
+            NWK: self.nwk,
             ATTR_MANUFACTURER: self.manufacturer,
             MODEL: self.model,
             NAME: self.name or ieee,
             QUIRK_APPLIED: self.quirk_applied,
             QUIRK_CLASS: self.quirk_class,
             MANUFACTURER_CODE: self.manufacturer_code,
-            POWER_SOURCE: ZDOChannel.POWER_SOURCES.get(self.power_source)
+            POWER_SOURCE: self.power_source,
+            LQI: self.lqi,
+            RSSI: self.rssi,
+            LAST_SEEN: update_time
         }
 
     def add_cluster_channel(self, cluster_channel):
@@ -256,7 +286,7 @@ class ZHADevice:
         _LOGGER.debug(
             '%s: power source: %s',
             self.name,
-            ZDOChannel.POWER_SOURCES.get(self.power_source)
+            self.power_source
         )
         self.status = DeviceStatus.INITIALIZED
         _LOGGER.debug('%s: completed initialization', self.name)
@@ -299,7 +329,8 @@ class ZHADevice:
                 ex
             )
 
-    async def async_unsub_dispatcher(self):
+    @callback
+    def async_unsub_dispatcher(self):
         """Unsubscribe the dispatcher."""
         if self._unsub:
             self._unsub()
@@ -378,7 +409,7 @@ class ZHADevice:
                 manufacturer=manufacturer
             )
             _LOGGER.debug(
-                'set: %s for attr: %s to cluster: %s for entity: %s - res: %s',
+                'set: %s for attr: %s to cluster: %s for ept: %s - res: %s',
                 value,
                 attribute,
                 cluster_id,

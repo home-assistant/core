@@ -6,7 +6,7 @@
     "@tomerfi"
   ],
   "requirements": [
-    "aioswitcher==2019.3.21"
+    "aioswitcher==2019.4.26"
   ],
   "dependencies": []
 }

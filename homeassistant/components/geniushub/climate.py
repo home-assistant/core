@@ -1,48 +1,38 @@
 """Support for Genius Hub climate devices."""
-import asyncio
 import logging
+from typing import Any, Awaitable, Dict, Optional, List
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_ECO, STATE_HEAT, STATE_MANUAL,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_ON_OFF)
-from homeassistant.const import (
-    ATTR_TEMPERATURE, TEMP_CELSIUS)
+    HVAC_MODE_OFF, HVAC_MODE_HEAT, PRESET_BOOST, PRESET_ACTIVITY,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE)
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-GH_CLIMATE_DEVICES = ['radiator']
+ATTR_DURATION = 'duration'
 
-GENIUSHUB_SUPPORT_FLAGS = \
-    SUPPORT_TARGET_TEMPERATURE | \
-    SUPPORT_ON_OFF | \
-    SUPPORT_OPERATION_MODE
-
-GENIUSHUB_MAX_TEMP = 28.0
-GENIUSHUB_MIN_TEMP = 4.0
-
-# Genius Hub Zones support only Off, Override/Boost, Footprint & Timer modes
-HA_OPMODE_TO_GH = {
-    STATE_AUTO: 'timer',
-    STATE_ECO: 'footprint',
-    STATE_MANUAL: 'override',
-}
-GH_OPMODE_OFF = 'off'
-GH_STATE_TO_HA = {
-    'timer': STATE_AUTO,
-    'footprint': STATE_ECO,
-    'away': None,
-    'override': STATE_MANUAL,
-    'early': STATE_HEAT,
-    'test': None,
-    'linked': None,
-    'other': None,
-}  # intentionally missing 'off': None
+GH_ZONES = ['radiator']
 
 # temperature is repeated here, as it gives access to high-precision temps
-GH_DEVICE_STATE_ATTRS = ['temperature', 'type', 'occupied', 'override']
+GH_STATE_ATTRS = ['mode', 'temperature', 'type', 'occupied', 'override']
+
+# GeniusHub Zones support: Off, Timer, Override/Boost, Footprint & Linked modes
+HA_HVAC_TO_GH = {
+    HVAC_MODE_OFF: 'off',
+    HVAC_MODE_HEAT: 'timer'
+}
+GH_HVAC_TO_HA = {v: k for k, v in HA_HVAC_TO_GH.items()}
+
+HA_PRESET_TO_GH = {
+    PRESET_ACTIVITY: 'footprint',
+    PRESET_BOOST: 'override'
+}
+GH_PRESET_TO_HA = {v: k for k, v in HA_PRESET_TO_GH.items()}
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
@@ -50,107 +40,111 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     """Set up the Genius Hub climate entities."""
     client = hass.data[DOMAIN]['client']
 
-    entities = [GeniusClimate(client, z)
-                for z in client.hub.zone_objs if z.type in GH_CLIMATE_DEVICES]
-
-    async_add_entities(entities)
+    async_add_entities([GeniusClimateZone(client, z)
+                        for z in client.hub.zone_objs if z.type in GH_ZONES])
 
 
-class GeniusClimate(ClimateDevice):
+class GeniusClimateZone(ClimateDevice):
     """Representation of a Genius Hub climate device."""
 
     def __init__(self, client, zone):
         """Initialize the climate device."""
         self._client = client
-        self._objref = zone
-        self._id = zone.id
-        self._name = zone.name
+        self._zone = zone
 
-        # Only some zones have movement detectors, which allows footprint mode
-        op_list = list(HA_OPMODE_TO_GH)
-        if not hasattr(self._objref, 'occupied'):
-            op_list.remove(STATE_ECO)
-        self._operation_list = op_list
+        if hasattr(self._zone, 'occupied'):  # has a movement sensor
+            self._preset_modes = list(HA_PRESET_TO_GH)
+        else:
+            self._preset_modes = [PRESET_BOOST]
+
+    async def async_added_to_hass(self) -> Awaitable[None]:
+        """Run when entity about to be added."""
+        async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
+
+    @callback
+    def _refresh(self) -> None:
+        self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the climate device."""
-        return self._objref.name
+        return self._zone.name
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the device state attributes."""
-        tmp = self._objref.__dict__.items()
-        state = {k: v for k, v in tmp if k in GH_DEVICE_STATE_ATTRS}
-
-        return {'status': state}
+        tmp = self._zone.__dict__.items()
+        return {'status': {k: v for k, v in tmp if k in GH_STATE_ATTRS}}
 
     @property
-    def current_temperature(self):
+    def should_poll(self) -> bool:
+        """Return False as the geniushub devices should not be polled."""
+        return False
+
+    @property
+    def icon(self) -> str:
+        """Return the icon to use in the frontend UI."""
+        return "mdi:radiator"
+
+    @property
+    def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
-        return self._objref.temperature
+        return self._zone.temperature
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> Optional[float]:
         """Return the temperature we try to reach."""
-        return self._objref.setpoint
+        return self._zone.setpoint
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return max valid temperature that can be set."""
-        return GENIUSHUB_MIN_TEMP
+        return 4.0
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return max valid temperature that can be set."""
-        return GENIUSHUB_MAX_TEMP
+        return 28.0
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return TEMP_CELSIUS
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Return the list of supported features."""
-        return GENIUSHUB_SUPPORT_FLAGS
+        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
     @property
-    def operation_list(self):
-        """Return the list of available operation modes."""
-        return self._operation_list
+    def hvac_mode(self) -> str:
+        """Return hvac operation ie. heat, cool mode."""
+        return GH_HVAC_TO_HA.get(self._zone.mode, HVAC_MODE_HEAT)
 
     @property
-    def current_operation(self):
-        """Return the current operation mode."""
-        return GH_STATE_TO_HA.get(self._objref.mode)
+    def hvac_modes(self) -> List[str]:
+        """Return the list of available hvac operation modes."""
+        return list(HA_HVAC_TO_GH)
 
     @property
-    def is_on(self):
-        """Return True if the device is on."""
-        return self._objref.mode in GH_STATE_TO_HA
+    def preset_mode(self) -> Optional[str]:
+        """Return the current preset mode, e.g., home, away, temp."""
+        return GH_PRESET_TO_HA.get(self._zone.mode)
 
-    async def async_set_operation_mode(self, operation_mode):
-        """Set a new operation mode for this zone."""
-        await self._objref.set_mode(HA_OPMODE_TO_GH.get(operation_mode))
+    @property
+    def preset_modes(self) -> Optional[List[str]]:
+        """Return a list of available preset modes."""
+        return self._preset_modes
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs) -> Awaitable[None]:
         """Set a new target temperature for this zone."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        await self._objref.set_override(temperature, 3600)  # 1 hour
+        await self._zone.set_override(kwargs[ATTR_TEMPERATURE],
+                                      kwargs.get(ATTR_DURATION, 3600))
 
-    async def async_turn_on(self):
-        """Turn on this heating zone."""
-        await self._objref.set_mode(HA_OPMODE_TO_GH.get(STATE_AUTO))
+    async def async_set_hvac_mode(self, hvac_mode: str) -> Awaitable[None]:
+        """Set a new hvac mode."""
+        await self._zone.set_mode(HA_HVAC_TO_GH.get(hvac_mode))
 
-    async def async_turn_off(self):
-        """Turn off this heating zone (i.e. to frost protect)."""
-        await self._objref.set_mode(GH_OPMODE_OFF)
-
-    async def async_update(self):
-        """Get the latest data from the hub."""
-        try:
-            await self._objref.update()
-        except (AssertionError, asyncio.TimeoutError) as err:
-            _LOGGER.warning("Update for %s failed, message: %s",
-                            self._id, err)
+    async def async_set_preset_mode(self, preset_mode: str) -> Awaitable[None]:
+        """Set a new preset mode."""
+        await self._zone.set_mode(HA_PRESET_TO_GH.get(preset_mode, 'timer'))
