@@ -1,14 +1,13 @@
 """Support for Nest Thermostat sensors."""
 import logging
 
-from homeassistant.components.climate.const import STATE_COOL, STATE_HEAT
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE,
     STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from . import CONF_SENSORS, DATA_NEST, DATA_NEST_CONFIG, NestSensorDevice
 
-SENSOR_TYPES = ['humidity', 'operation_mode', 'hvac_state']
+SENSOR_TYPES = ['humidity', 'operation_mode', 'hvac_mode']
 
 TEMP_SENSOR_TYPES = ['temperature', 'target']
 
@@ -19,6 +18,9 @@ PROTECT_SENSOR_TYPES = ['co_status',
                         'color_status']
 
 STRUCTURE_SENSOR_TYPES = ['eta']
+
+STATE_HEAT = 'heat'
+STATE_COOL = 'cool'
 
 # security_state is structure level sensor, but only meaningful when
 # Nest Cam exist
@@ -34,7 +36,7 @@ SENSOR_DEVICE_CLASSES = {'humidity': DEVICE_CLASS_HUMIDITY}
 VARIABLE_NAME_MAPPING = {'eta': 'eta_begin', 'operation_mode': 'mode'}
 
 VALUE_MAPPING = {
-    'hvac_state': {
+    'hvac_mode': {
         'heating': STATE_HEAT, 'cooling': STATE_COOL, 'off': STATE_OFF}}
 
 SENSOR_TYPES_DEPRECATED = ['last_ip',
