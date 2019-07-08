@@ -102,6 +102,7 @@ class RadioThermostat(ClimateDevice):
         self.device = device
         self._target_temperature = None
         self._current_temperature = None
+        self._current_humidity = None
         self._current_operation = HVAC_MODE_OFF
         self._name = None
         self._fmode = None
@@ -216,6 +217,16 @@ class RadioThermostat(ClimateDevice):
 
         current_temp = data['temp']
 
+        if self._is_model_ct80:
+            try:
+                humiditydata = self.device.tstat.humidity['raw']
+            except radiotherm.validate.RadiothermTestatError:
+                _LOGGER.warning('%s (%s) was busy (invalid value returned)',
+                                self._name, self.device.host)
+                return
+            current_humidity = humiditydata['humidity']
+            self._current_humidity = current_humidity
+            
         # Map thermostat values into various STATE_ flags.
         self._current_temperature = current_temp
         self._fmode = CODE_TO_FAN_MODE[data['fmode']]
