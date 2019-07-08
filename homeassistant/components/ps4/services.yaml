@@ -19,14 +19,14 @@ unlock_media:
   description: Unlock media data attributes to allow automatic updates to media data. Media data will be updated automatically.
   fields:
     media_content_id:
-      description: The ID or the PlayStation Store SKU ID of the title. Must be in source list. Media data will be updated automatically.
+      description: The ID or the PlayStation Store SKU ID of the title. Must be in source list.
       example: 'CUSA00123'
 
 edit_media:
   description: Edit or correct media data attributes. Media data will be locked.
   fields:
     media_content_id:
-      description: The ID or the PlayStation Store SKU ID of the title. Must be specified if 'entity_id' is not specified.
+      description: The ID or the PlayStation Store SKU ID of the title. Must be in source list.
       example: 'CUSA00123'
     media_title:
       description: The name for the media title.
@@ -57,7 +57,7 @@ edit_current_media:
   fields:
     entity_id:
       description: The entity that is playing media.
-      example: 'CUSA00123'
+      example: 'media_player.playstation_4'
     media_title:
       description: The name for the media title.
       example: 'A Title: The Name'
@@ -69,7 +69,7 @@ edit_current_media:
       example: 'game'
 
 add_media:
-  description: Manually add media data to source list. Media data will not be updated automatically.
+  description: Manually add media data to source list. Media data will be locked and not be updated automatically.
   fields:
     media_content_id:
       description: The ID or the PlayStation Store SKU ID of the title.
