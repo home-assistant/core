@@ -424,12 +424,13 @@ class ClimateDevice(Entity):
             if mode not in self.hvac_mode:
                 continue
             await self.async_set_hvac_mode(mode)
+            break
 
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
         if hasattr(self, 'turn_off'):
             # pylint: disable=no-member
-            await self.hass.async_add_executor_job(self.turn_on)
+            await self.hass.async_add_executor_job(self.turn_off)
             return
 
         # Fake turn off
