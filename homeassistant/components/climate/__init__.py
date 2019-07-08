@@ -2,13 +2,13 @@
 from datetime import timedelta
 import functools as ft
 import logging
-from typing import Any, Awaitable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, PRECISION_TENTHS, PRECISION_WHOLE,
-    STATE_OFF, STATE_ON, TEMP_CELSIUS)
+    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa
     PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
@@ -25,7 +25,8 @@ from .const import (
     ATTR_HVAC_MODE, ATTR_HVAC_MODES, ATTR_MAX_HUMIDITY, ATTR_MAX_TEMP,
     ATTR_MIN_HUMIDITY, ATTR_MIN_TEMP, ATTR_PRESET_MODE, ATTR_PRESET_MODES,
     ATTR_SWING_MODE, ATTR_SWING_MODES, ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_STEP, DOMAIN, HVAC_MODES,
+    ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_STEP, DOMAIN, HVAC_MODE_COOL,
+    HVAC_MODE_HEAT, HVAC_MODE_HEAT_COOL, HVAC_MODE_OFF, HVAC_MODES,
     SERVICE_SET_AUX_HEAT, SERVICE_SET_FAN_MODE, SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE, SERVICE_SET_PRESET_MODE, SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE, SUPPORT_AUX_HEAT, SUPPORT_FAN_MODE,
@@ -49,6 +50,9 @@ CONVERTIBLE_ATTRIBUTE = [
 
 _LOGGER = logging.getLogger(__name__)
 
+TURN_ON_OFF_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
+})
 SET_AUX_HEAT_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_AUX_HEAT): cv.boolean,
@@ -92,6 +96,14 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     await component.async_setup(config)
 
+    component.async_register_entity_service(
+        SERVICE_TURN_ON, TURN_ON_OFF_SCHEMA,
+        'async_turn_on'
+    )
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF, TURN_ON_OFF_SCHEMA,
+        'async_turn_off'
+    )
     component.async_register_entity_service(
         SERVICE_SET_HVAC_MODE, SET_HVAC_MODE_SCHEMA,
         'async_set_hvac_mode'
@@ -338,90 +350,91 @@ class ClimateDevice(Entity):
         """Set new target temperature."""
         raise NotImplementedError()
 
-    def async_set_temperature(self, **kwargs) -> Awaitable[None]:
-        """Set new target temperature.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(
+    async def async_set_temperature(self, **kwargs) -> None:
+        """Set new target temperature."""
+        await self.hass.async_add_executor_job(
             ft.partial(self.set_temperature, **kwargs))
 
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         raise NotImplementedError()
 
-    def async_set_humidity(self, humidity: int) -> Awaitable[None]:
-        """Set new target humidity.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.set_humidity, humidity)
+    async def async_set_humidity(self, humidity: int) -> None:
+        """Set new target humidity."""
+        await self.hass.async_add_executor_job(self.set_humidity, humidity)
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         raise NotImplementedError()
 
-    def async_set_fan_mode(self, fan_mode: str) -> Awaitable[None]:
-        """Set new target fan mode.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.set_fan_mode, fan_mode)
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set new target fan mode."""
+        await self.hass.async_add_executor_job(self.set_fan_mode, fan_mode)
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
         raise NotImplementedError()
 
-    def async_set_hvac_mode(self, hvac_mode: str) -> Awaitable[None]:
-        """Set new target hvac mode.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.set_hvac_mode, hvac_mode)
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+        """Set new target hvac mode."""
+        await self.hass.async_add_executor_job(self.set_hvac_mode, hvac_mode)
 
     def set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
         raise NotImplementedError()
 
-    def async_set_swing_mode(self, swing_mode: str) -> Awaitable[None]:
-        """Set new target swing operation.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.set_swing_mode, swing_mode)
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
+        """Set new target swing operation."""
+        await self.hass.async_add_executor_job(self.set_swing_mode, swing_mode)
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         raise NotImplementedError()
 
-    def async_set_preset_mode(self, preset_mode: str) -> Awaitable[None]:
-        """Set new preset mode.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.set_preset_mode, preset_mode)
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        await self.hass.async_add_executor_job(
+            self.set_preset_mode, preset_mode)
 
     def turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
         raise NotImplementedError()
 
-    def async_turn_aux_heat_on(self) -> Awaitable[None]:
-        """Turn auxiliary heater on.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.turn_aux_heat_on)
+    async def async_turn_aux_heat_on(self) -> None:
+        """Turn auxiliary heater on."""
+        await self.hass.async_add_executor_job(self.turn_aux_heat_on)
 
     def turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
         raise NotImplementedError()
 
-    def async_turn_aux_heat_off(self) -> Awaitable[None]:
-        """Turn auxiliary heater off.
+    async def async_turn_aux_heat_off(self) -> None:
+        """Turn auxiliary heater off."""
+        await self.hass.async_add_executor_job(self.turn_aux_heat_off)
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.turn_aux_heat_off)
+    async def async_turn_on(self) -> None:
+        """Turn the entity on."""
+        if hasattr(self, 'turn_on'):
+            # pylint: disable=no-member
+            await self.hass.async_add_executor_job(self.turn_on)
+            return
+
+        # Fake turn on
+        for mode in (HVAC_MODE_HEAT_COOL, HVAC_MODE_HEAT, HVAC_MODE_COOL):
+            if mode not in self.hvac_mode:
+                continue
+            await self.async_set_hvac_mode(mode)
+
+    async def async_turn_off(self) -> None:
+        """Turn the entity off."""
+        if hasattr(self, 'turn_off'):
+            # pylint: disable=no-member
+            await self.hass.async_add_executor_job(self.turn_on)
+            return
+
+        # Fake turn off
+        if HVAC_MODE_OFF in self.hvac_modes:
+            await self.async_set_hvac_mode(HVAC_MODE_OFF)
 
     @property
     def supported_features(self) -> int:
