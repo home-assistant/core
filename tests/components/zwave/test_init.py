@@ -2,26 +2,27 @@
 import asyncio
 from collections import OrderedDict
 from datetime import datetime
+import unittest
+from unittest.mock import MagicMock, patch
+
+import pytest
 from pytz import utc
 import voluptuous as vol
 
-import unittest
-from unittest.mock import patch, MagicMock
-
 from homeassistant.bootstrap import async_setup_component
-from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.components import zwave
-from homeassistant.components.zwave.binary_sensor import get_device
 from homeassistant.components.zwave import (
-    const, CONFIG_SCHEMA, CONF_DEVICE_CONFIG_GLOB, DATA_NETWORK)
+    CONF_DEVICE_CONFIG_GLOB, CONFIG_SCHEMA, DATA_NETWORK, const)
+from homeassistant.components.zwave.binary_sensor import get_device
+from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
+from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers.device_registry import (
+    async_get_registry as get_dev_reg)
 from homeassistant.setup import setup_component
-from tests.common import mock_registry
-
-import pytest
 
 from tests.common import (
-    get_test_home_assistant, async_fire_time_changed, mock_coro)
-from tests.mock.zwave import MockNetwork, MockNode, MockValue, MockEntityValues
+    async_fire_time_changed, get_test_home_assistant, mock_coro, mock_registry)
+from tests.mock.zwave import MockEntityValues, MockNetwork, MockNode, MockValue
 
 
 async def test_valid_device_config(hass, mock_openzwave):
@@ -380,6 +381,150 @@ async def test_value_discovery(hass, mock_openzwave):
 
     assert hass.states.get(
         'binary_sensor.mock_node_mock_value').state == 'off'
+
+
+async def test_value_entities(hass, mock_openzwave):
+    """Test discovery of a node."""
+    mock_receivers = {}
+
+    def mock_connect(receiver, signal, *args, **kwargs):
+        mock_receivers[signal] = receiver
+
+    with patch('pydispatch.dispatcher.connect', new=mock_connect):
+        await async_setup_component(hass, 'zwave', {'zwave': {}})
+        await hass.async_block_till_done()
+
+    zwave_network = hass.data[DATA_NETWORK]
+    zwave_network.state = MockNetwork.STATE_READY
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert mock_receivers
+
+    hass.async_add_job(
+        mock_receivers[MockNetwork.SIGNAL_ALL_NODES_QUERIED])
+    node = MockNode(node_id=11, generic=const.GENERIC_TYPE_SENSOR_BINARY)
+    zwave_network.nodes = {node.node_id: node}
+    value = MockValue(
+        data=False, node=node, index=12, instance=1,
+        command_class=const.COMMAND_CLASS_SENSOR_BINARY,
+        type=const.TYPE_BOOL, genre=const.GENRE_USER)
+    node.values = {'primary': value, value.value_id: value}
+    value2 = MockValue(
+        data=False, node=node, index=12, instance=2,
+        label="Mock Value B",
+        command_class=const.COMMAND_CLASS_SENSOR_BINARY,
+        type=const.TYPE_BOOL, genre=const.GENRE_USER)
+    node.values[value2.value_id] = value2
+
+    hass.async_add_job(
+        mock_receivers[MockNetwork.SIGNAL_NODE_ADDED], node)
+    hass.async_add_job(
+        mock_receivers[MockNetwork.SIGNAL_VALUE_ADDED], node, value)
+    hass.async_add_job(
+        mock_receivers[MockNetwork.SIGNAL_VALUE_ADDED], node, value2)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(
+        'binary_sensor.mock_node_mock_value').state == 'off'
+    assert hass.states.get(
+        'binary_sensor.mock_node_mock_value_b').state == 'off'
+
+    ent_reg = await async_get_registry(hass)
+    dev_reg = await get_dev_reg(hass)
+
+    entry = ent_reg.async_get('zwave.mock_node')
+    assert entry is not None
+    assert entry.unique_id == 'node-{}'.format(node.node_id)
+    node_dev_id = entry.device_id
+
+    entry = ent_reg.async_get('binary_sensor.mock_node_mock_value')
+    assert entry is not None
+    assert entry.unique_id == '{}-{}'.format(node.node_id, value.object_id)
+    assert entry.name is None
+    assert entry.device_id == node_dev_id
+
+    entry = ent_reg.async_get('binary_sensor.mock_node_mock_value_b')
+    assert entry is not None
+    assert entry.unique_id == '{}-{}'.format(node.node_id, value2.object_id)
+    assert entry.name is None
+    assert entry.device_id != node_dev_id
+    device_id_b = entry.device_id
+
+    device = dev_reg.async_get(node_dev_id)
+    assert device is not None
+    assert device.name == node.name
+    old_device = device
+
+    device = dev_reg.async_get(device_id_b)
+    assert device is not None
+    assert device.name == "{} ({})".format(node.name, value2.instance)
+
+    # test renaming without updating
+    await hass.services.async_call('zwave', 'rename_node', {
+        const.ATTR_NODE_ID: node.node_id,
+        const.ATTR_NAME: "Demo Node",
+    })
+    await hass.async_block_till_done()
+
+    assert node.name == "Demo Node"
+
+    entry = ent_reg.async_get('zwave.mock_node')
+    assert entry is not None
+
+    entry = ent_reg.async_get('binary_sensor.mock_node_mock_value')
+    assert entry is not None
+
+    entry = ent_reg.async_get('binary_sensor.mock_node_mock_value_b')
+    assert entry is not None
+
+    device = dev_reg.async_get(node_dev_id)
+    assert device is not None
+    assert device.id == old_device.id
+    assert device.name == node.name
+
+    device = dev_reg.async_get(device_id_b)
+    assert device is not None
+    assert device.name == "{} ({})".format(node.name, value2.instance)
+
+    # test renaming
+    await hass.services.async_call('zwave', 'rename_node', {
+        const.ATTR_NODE_ID: node.node_id,
+        const.ATTR_UPDATE_IDS: True,
+        const.ATTR_NAME: "New Node",
+    })
+    await hass.async_block_till_done()
+
+    assert node.name == "New Node"
+
+    entry = ent_reg.async_get('zwave.new_node')
+    assert entry is not None
+    assert entry.unique_id == 'node-{}'.format(node.node_id)
+
+    entry = ent_reg.async_get('binary_sensor.new_node_mock_value')
+    assert entry is not None
+    assert entry.unique_id == '{}-{}'.format(node.node_id, value.object_id)
+
+    device = dev_reg.async_get(node_dev_id)
+    assert device is not None
+    assert device.id == old_device.id
+    assert device.name == node.name
+
+    device = dev_reg.async_get(device_id_b)
+    assert device is not None
+    assert device.name == "{} ({})".format(node.name, value2.instance)
+
+    await hass.services.async_call('zwave', 'rename_value', {
+        const.ATTR_NODE_ID: node.node_id,
+        const.ATTR_VALUE_ID: value.object_id,
+        const.ATTR_UPDATE_IDS: True,
+        const.ATTR_NAME: "New Label",
+    })
+    await hass.async_block_till_done()
+
+    entry = ent_reg.async_get('binary_sensor.new_node_new_label')
+    assert entry is not None
+    assert entry.unique_id == '{}-{}'.format(node.node_id, value.object_id)
 
 
 async def test_value_discovery_existing_entity(hass, mock_openzwave):

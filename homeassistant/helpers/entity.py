@@ -10,6 +10,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
     STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES, ATTR_DEVICE_CLASS)
+from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.exceptions import NoEntitySpecifiedError
@@ -78,8 +79,8 @@ class Entity:
     # Process updates in parallel
     parallel_updates = None
 
-    # Name in the entity registry
-    registry_name = None
+    # Entry in the entity registry
+    registry_entry = None
 
     # Hold list for functions to call on remove.
     _on_remove = None
@@ -259,7 +260,9 @@ class Entity:
         if unit_of_measurement is not None:
             attr[ATTR_UNIT_OF_MEASUREMENT] = unit_of_measurement
 
-        name = self.registry_name or self.name
+        entry = self.registry_entry
+        # pylint: disable=consider-using-ternary
+        name = (entry and entry.name) or self.name
         if name is not None:
             attr[ATTR_FRIENDLY_NAME] = name
 
@@ -391,6 +394,7 @@ class Entity:
 
     async def async_remove(self):
         """Remove entity from Home Assistant."""
+        await self.async_internal_will_remove_from_hass()
         await self.async_will_remove_from_hass()
 
         if self._on_remove is not None:
@@ -399,27 +403,52 @@ class Entity:
 
         self.hass.states.async_remove(self.entity_id)
 
-    @callback
-    def async_registry_updated(self, old, new):
-        """Handle entity registry update."""
-        self.registry_name = new.name
-
-        if new.entity_id == self.entity_id:
-            self.async_schedule_update_ha_state()
-            return
-
-        async def readd():
-            """Remove and add entity again."""
-            await self.async_remove()
-            await self.platform.async_add_entities([self])
-
-        self.hass.async_create_task(readd())
-
     async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
+        """Run when entity about to be added to hass.
+
+        To be extended by integrations.
+        """
 
     async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
+        """Run when entity will be removed from hass.
+
+        To be extended by integrations.
+        """
+
+    async def async_internal_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass.
+
+        Not to be extended by integrations.
+        """
+        if self.registry_entry is not None:
+            self.async_on_remove(self.hass.bus.async_listen(
+                EVENT_ENTITY_REGISTRY_UPDATED, self._async_registry_updated))
+
+    async def async_internal_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass.
+
+        Not to be extended by integrations.
+        """
+
+    async def _async_registry_updated(self, event):
+        """Handle entity registry update."""
+        data = event.data
+        if data['action'] != 'update' and data.get(
+                'old_entity_id', data['entity_id']) != self.entity_id:
+            return
+
+        ent_reg = await self.hass.helpers.entity_registry.async_get_registry()
+        old = self.registry_entry
+        self.registry_entry = ent_reg.async_get(data['entity_id'])
+
+        if self.registry_entry.entity_id == old.entity_id:
+            self.async_write_ha_state()
+            return
+
+        await self.async_remove()
+
+        self.entity_id = self.registry_entry.entity_id
+        await self.platform.async_add_entities([self])
 
     def __eq__(self, other):
         """Return the comparison."""

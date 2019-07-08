@@ -242,6 +242,43 @@ async def test_exit_first(hass, locative_client, webhook_id):
     assert state.state == 'not_home'
 
 
+async def test_two_devices(hass, locative_client, webhook_id):
+    """Test updating two different devices."""
+    url = '/api/webhook/{}'.format(webhook_id)
+
+    data_device_1 = {
+        'latitude': 40.7855,
+        'longitude': -111.7367,
+        'device': 'device_1',
+        'id': 'Home',
+        'trigger': 'exit'
+    }
+
+    # Exit Home
+    req = await locative_client.post(url, data=data_device_1)
+    await hass.async_block_till_done()
+    assert req.status == HTTP_OK
+
+    state = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
+                                           data_device_1['device']))
+    assert state.state == 'not_home'
+
+    # Enter Home
+    data_device_2 = dict(data_device_1)
+    data_device_2['device'] = 'device_2'
+    data_device_2['trigger'] = 'enter'
+    req = await locative_client.post(url, data=data_device_2)
+    await hass.async_block_till_done()
+    assert req.status == HTTP_OK
+
+    state = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
+                                           data_device_2['device']))
+    assert state.state == 'home'
+    state = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
+                                           data_device_1['device']))
+    assert state.state == 'not_home'
+
+
 @pytest.mark.xfail(
     reason='The device_tracker component does not support unloading yet.'
 )

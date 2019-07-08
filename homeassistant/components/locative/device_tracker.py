@@ -4,7 +4,7 @@ import logging
 from homeassistant.core import callback
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.components.device_tracker.config_entry import (
-    DeviceTrackerEntity
+    TrackerEntity
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -33,7 +33,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     return True
 
 
-class LocativeEntity(DeviceTrackerEntity):
+class LocativeEntity(TrackerEntity):
     """Represent a tracked device."""
 
     def __init__(self, device, location, location_name):
@@ -85,6 +85,8 @@ class LocativeEntity(DeviceTrackerEntity):
     @callback
     def _async_receive_data(self, device, location, location_name):
         """Update device data."""
+        if device != self._name:
+            return
         self._location_name = location_name
         self._location = location
         self.async_write_ha_state()

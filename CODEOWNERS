@@ -29,6 +29,7 @@ homeassistant/components/aprs/* @PhilRW
 homeassistant/components/arduino/* @fabaff
 homeassistant/components/arest/* @fabaff
 homeassistant/components/asuswrt/* @kennedyshead
+homeassistant/components/aurora_abb_powerone/* @davet2001
 homeassistant/components/auth/* @home-assistant/core
 homeassistant/components/automatic/* @armills
 homeassistant/components/automation/* @home-assistant/core
@@ -91,6 +92,7 @@ homeassistant/components/flock/* @fabaff
 homeassistant/components/flunearyou/* @bachya
 homeassistant/components/foursquare/* @robbiet480
 homeassistant/components/freebox/* @snoof85
+homeassistant/components/fronius/* @nielstron
 homeassistant/components/frontend/* @home-assistant/frontend
 homeassistant/components/gearbest/* @HerrHofrat
 homeassistant/components/geniushub/* @zxdavb

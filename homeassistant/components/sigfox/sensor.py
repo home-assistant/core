@@ -72,7 +72,7 @@ class SigfoxAPI:
                 _LOGGER.error(
                     "Unable to login to Sigfox API, error code %s", str(
                         response.status_code))
-            raise ValueError('Sigfox component not set up')
+            raise ValueError('Sigfox integration not set up')
         return True
 
     def get_device_types(self):

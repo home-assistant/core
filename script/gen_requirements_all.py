@@ -263,7 +263,7 @@ def gather_requirements_from_manifests(errors, reqs):
 
         if not integration.manifest:
             errors.append(
-                'The manifest for component {} is invalid.'.format(domain)
+                'The manifest for integration {} is invalid.'.format(domain)
             )
             continue
 
