@@ -1,0 +1,10 @@
+{
+  "domain": "modbus_sunspec",
+  "name": "Modbus SunSpec",
+  "documentation": "https://www.home-assistant.io/components/modbus_sunspec",
+  "requirements": [
+    "pymodbus==1.5.2"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}
