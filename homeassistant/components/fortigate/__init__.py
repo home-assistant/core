@@ -15,9 +15,6 @@ DOMAIN = 'fortigate'
 
 DATA_FGT = DOMAIN
 
-ATTR_NAME = 'name'
-DEFAULT_NAME = 'Default State'
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
@@ -66,7 +63,7 @@ async def async_setup_fortigate(hass, config, host, user, apikey, devices):
             hass, 'device_tracker', DOMAIN, {}, config))
 
         async def close_fgt(event):
-            """Close Freebox connection on HA Stop."""
+            """Close Fortigate connection on HA Stop."""
             fgt.logout()
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_fgt)

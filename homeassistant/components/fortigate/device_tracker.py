@@ -38,6 +38,7 @@ Device = namedtuple('Device', ['hostname', 'mac'])
 
 
 def _build_device(device_dict):
+    """Return a Device from data."""
     return Device(
         device_dict['hostname'],
         device_dict['mac'])
@@ -60,12 +61,10 @@ class FortigateDeviceScanner(DeviceScanner):
 
         ret = []
         for result in results:
-            try:
-                # some device does not have a hostname
-                assert 'hostname' in result
-                ret.append(result)
-            except AssertionError:
-                pass
+            if 'hostname' not in result:
+                continue
+
+            ret.append(result)
 
         return ret
 
