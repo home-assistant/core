@@ -1,4 +1,5 @@
 """Support for Ecobee Thermostats."""
+import collections
 import logging
 from typing import Optional
 
@@ -31,13 +32,14 @@ PRESET_HOLD_NEXT_TRANSITION = 'next_transition'
 PRESET_HOLD_INDEFINITE = 'indefinite'
 AWAY_MODE = 'awayMode'
 
-ECOBEE_HVAC_TO_HASS = {
-    'auxHeatOnly': HVAC_MODE_HEAT,
-    'heat': HVAC_MODE_HEAT,
-    'cool': HVAC_MODE_COOL,
-    'off': HVAC_MODE_OFF,
-    'auto': HVAC_MODE_AUTO,
-}
+# Order matters, because for reverse mapping we don't want to map HEAT to AUX
+ECOBEE_HVAC_TO_HASS = collections.OrderedDict([
+    ('heat', HVAC_MODE_HEAT),
+    ('cool', HVAC_MODE_COOL),
+    ('auto', HVAC_MODE_AUTO),
+    ('off', HVAC_MODE_OFF),
+    ('auxHeatOnly', HVAC_MODE_HEAT),
+])
 
 PRESET_TO_ECOBEE_HOLD = {
     PRESET_HOLD_NEXT_TRANSITION: 'nextTransition',
