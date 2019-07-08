@@ -1,7 +1,6 @@
 """Support for Nest Thermostat sensors."""
 import logging
 
-from homeassistant.components.climate.const import STATE_COOL, STATE_HEAT
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE,
     STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
@@ -19,6 +18,9 @@ PROTECT_SENSOR_TYPES = ['co_status',
                         'color_status']
 
 STRUCTURE_SENSOR_TYPES = ['eta']
+
+STATE_HEAT = 'heat'
+STATE_COOL = 'cool'
 
 # security_state is structure level sensor, but only meaningful when
 # Nest Cam exist
