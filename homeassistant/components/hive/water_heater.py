@@ -78,7 +78,7 @@ class HiveWaterHeater(WaterHeaterDevice):
     @property
     def name(self):
         """Return the name of the water heater """
-        return self.node_name
+        return 'HotWater'
 
     @property
     def current_operation(self):

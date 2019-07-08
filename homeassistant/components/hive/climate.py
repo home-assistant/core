@@ -82,7 +82,10 @@ class HiveClimateEntity(ClimateDevice):
     @property
     def name(self):
         """Return the name of the Climate device."""
-        return self.node_name
+        friendly_name = "Heating"
+        if self.node_name is not None:
+            friendly_name = '{} {}'.format(self.node_name, friendly_name)
+        return friendly_name
 
     @property
     def device_state_attributes(self):
