@@ -146,6 +146,9 @@ class NetatmoThermostat(ClimateDevice):
         except KeyError:
             _LOGGER.error("Thermostat in %s not available", room_id)
 
+        if self._module_type == NA_VALVE:
+            self._operation_list.remove(HVAC_MODE_OFF)
+
     @property
     def supported_features(self):
         """Return the list of supported features."""
