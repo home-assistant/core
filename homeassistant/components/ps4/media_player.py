@@ -28,6 +28,8 @@ SUPPORT_PS4 = SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
 ICON = 'mdi:playstation'
 MEDIA_IMAGE_DEFAULT = None
 
+DEFAULT_RETRIES = 2
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up PS4 from a config entry."""
@@ -189,7 +191,7 @@ class PS4Device(MediaPlayerDevice):
                 if self._state != STATE_OFF:
                     self.state_off()
 
-        elif self._retry > 5:
+        elif self._retry > DEFAULT_RETRIES:
             self.state_unknown()
         else:
             self._retry += 1
@@ -224,7 +226,7 @@ class PS4Device(MediaPlayerDevice):
 
     async def async_get_title_data(self, title_id, name):
         """Get PS Store Data."""
-        from pyps4_homeassistant.errors import PSDataIncomplete
+        from pyps4_homeassistant.errors import PSDataIncomplete, PSSearchError
         _LOGGER.debug("Starting PS Store Search, %s: %s", title_id, name)
         app_name = None
         art = None
@@ -232,8 +234,7 @@ class PS4Device(MediaPlayerDevice):
         try:
             title = await self._ps4.async_get_ps_store_data(
                 name, title_id, self._region)
-
-        except PSDataIncomplete:
+        except (PSDataIncomplete, PSSearchError):
             title = None
         except asyncio.TimeoutError:
             title = None
