@@ -146,7 +146,6 @@ class HMThermostat(HMDevice, ClimateDevice):
         elif hvac_mode == HVAC_MODE_OFF:
             self._hmdevice.turnoff()
 
-
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if preset_mode == PRESET_BOOST:
