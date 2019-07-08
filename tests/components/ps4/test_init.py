@@ -325,66 +325,86 @@ class TestPS4MediaServices(unittest.TestCase):
 
     def test_lock_current_media(self):
         """Test lock_current_media service."""
+        mock_id1 = 'Mock_ID1'
+        mock_id2 = 'Mock_ID2'
+        mock_data = {mock_id1: MOCK_GAMES_DATA, mock_id2: MOCK_GAMES_DATA}
+
         self.setup_mock_component()
-        self.set_games_data(MOCK_GAMES)
+        self.set_games_data(mock_data)
         mock_games = ps4.load_games(self.hass)
+        assert len(mock_games) == 2
 
         mock_devices = self.hass.data[PS4_DATA].devices
         assert len(mock_devices) == 1
         mock_entity = mock_devices[0]
 
         # Set media_id attr
-        mock_entity._media_content_id = MOCK_ID
+        mock_entity._media_content_id = mock_id1
         assert mock_entity.entity_id == 'media_player.{}'.format(MOCK_NAME)
-        assert mock_games[MOCK_ID][ATTR_LOCKED] is False
+        assert mock_games[mock_id1][ATTR_LOCKED] is False
 
         self.hass.services.call(
             DOMAIN, 'lock_current_media',
             {ATTR_ENTITY_ID: mock_entity.entity_id})
 
         mock_games = ps4.load_games(self.hass)
-        assert mock_games[MOCK_ID][ATTR_LOCKED] is True
+        assert mock_games[mock_id1][ATTR_LOCKED] is True
+        # Ensure other data entry is unaffected.
+        assert mock_games[mock_id2][ATTR_LOCKED] is False
 
     def test_unlock_current_media(self):
         """Test unlock_current_media service."""
+        mock_id1 = 'Mock_ID1'
+        mock_id2 = 'Mock_ID2'
+        mock_data = {mock_id1: MOCK_GAMES_DATA_LOCKED,
+                     mock_id2: MOCK_GAMES_DATA_LOCKED}
+
         self.setup_mock_component()
-        self.set_games_data(MOCK_GAMES_LOCKED)
+        self.set_games_data(mock_data)
         mock_games = ps4.load_games(self.hass)
+        assert len(mock_games) == 2
 
         mock_devices = self.hass.data[PS4_DATA].devices
         assert len(mock_devices) == 1
         mock_entity = mock_devices[0]
 
-        mock_entity._media_content_id = MOCK_ID
+        mock_entity._media_content_id = mock_id1
         assert mock_entity.entity_id == 'media_player.{}'.format(MOCK_NAME)
-        assert mock_games[MOCK_ID][ATTR_LOCKED] is True
+        assert mock_games[mock_id1][ATTR_LOCKED] is True
 
         self.hass.services.call(
             DOMAIN, 'unlock_current_media',
             {ATTR_ENTITY_ID: mock_entity.entity_id})
 
         mock_games = ps4.load_games(self.hass)
-        assert mock_games[MOCK_ID][ATTR_LOCKED] is False
+        assert mock_games[mock_id1][ATTR_LOCKED] is False
+        # Ensure other data entry is unaffected.
+        assert mock_games[mock_id2][ATTR_LOCKED] is True
 
     def test_edit_current_media(self):
         """Test edit_current_media service."""
+        mock_id1 = 'Mock_ID1'
+        mock_id2 = 'Mock_ID2'
+        mock_data = {mock_id1: MOCK_GAMES_DATA, mock_id2: MOCK_GAMES_DATA}
+
         self.setup_mock_component()
-        self.set_games_data(MOCK_GAMES)
+        self.set_games_data(mock_data)
         mock_games = ps4.load_games(self.hass)
+        assert len(mock_games) == 2
 
         mock_devices = self.hass.data[PS4_DATA].devices
         assert len(mock_devices) == 1
         mock_entity = mock_devices[0]
 
         # Set media_id attr
-        mock_entity._media_content_id = MOCK_ID
+        mock_entity._media_content_id = mock_id1
 
         assert mock_entity.entity_id == 'media_player.{}'.format(MOCK_NAME)
-        assert MOCK_ID in mock_games
-        assert mock_games[MOCK_ID][ATTR_LOCKED] is False
-        assert mock_games[MOCK_ID][ATTR_MEDIA_TITLE] == MOCK_TITLE
-        assert mock_games[MOCK_ID][ATTR_MEDIA_IMAGE_URL] == MOCK_URL
-        assert mock_games[MOCK_ID][ATTR_MEDIA_CONTENT_TYPE] == MOCK_TYPE
+        assert mock_id1 in mock_games
+        assert mock_games[mock_id1][ATTR_LOCKED] is False
+        assert mock_games[mock_id1][ATTR_MEDIA_TITLE] == MOCK_TITLE
+        assert mock_games[mock_id1][ATTR_MEDIA_IMAGE_URL] == MOCK_URL
+        assert mock_games[mock_id1][ATTR_MEDIA_CONTENT_TYPE] == MOCK_TYPE
 
         # Change the playing title only.
         mock_title = 'Some New Title'
@@ -394,11 +414,17 @@ class TestPS4MediaServices(unittest.TestCase):
              ATTR_MEDIA_TITLE: mock_title})
 
         mock_games = ps4.load_games(self.hass)
-        assert mock_games[MOCK_ID][ATTR_LOCKED] is True
-        assert mock_games[MOCK_ID][ATTR_MEDIA_TITLE] == mock_title
+        assert mock_games[mock_id1][ATTR_LOCKED] is True
+        assert mock_games[mock_id1][ATTR_MEDIA_TITLE] == mock_title
         # Test that not specified attributes remain the same.
-        assert mock_games[MOCK_ID][ATTR_MEDIA_IMAGE_URL] == MOCK_URL
-        assert mock_games[MOCK_ID][ATTR_MEDIA_CONTENT_TYPE] == MOCK_TYPE
+        assert mock_games[mock_id1][ATTR_MEDIA_IMAGE_URL] == MOCK_URL
+        assert mock_games[mock_id1][ATTR_MEDIA_CONTENT_TYPE] == MOCK_TYPE
+
+        # Ensure other data entry is unaffected.
+        assert mock_games[mock_id2][ATTR_LOCKED] is False
+        assert mock_games[mock_id2][ATTR_MEDIA_TITLE] == MOCK_TITLE
+        assert mock_games[mock_id2][ATTR_MEDIA_IMAGE_URL] == MOCK_URL
+        assert mock_games[mock_id2][ATTR_MEDIA_CONTENT_TYPE] == MOCK_TYPE
 
     def test_send_command(self):
         """Test send_command service."""
