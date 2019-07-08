@@ -1,12 +1,11 @@
 """Test configuration and mocks for the SmartThings component."""
-from collections import defaultdict
 from uuid import uuid4
 
 from asynctest import Mock, patch
 from pysmartthings import (
     CLASSIFICATION_AUTOMATION, AppEntity, AppOAuthClient, AppSettings,
-    DeviceEntity, DeviceStatus, InstalledApp, Location, SceneEntity,
-    SmartThings, Subscription)
+    DeviceEntity, DeviceStatus, InstalledApp, InstalledAppStatus,
+    InstalledAppType, Location, SceneEntity, SmartThings, Subscription)
 from pysmartthings.api import Api
 import pytest
 
@@ -56,11 +55,9 @@ async def setup_component(hass, config_file, hass_storage):
 
 
 def _create_location():
-    loc = Location()
-    loc.apply_data({
-        'name': 'Test Location',
-        'locationId': str(uuid4())
-    })
+    loc = Mock(Location)
+    loc.name = 'Test Location'
+    loc.location_id = str(uuid4())
     return loc
 
 
@@ -101,29 +98,28 @@ def app_fixture(hass, config_file):
 @pytest.fixture(name="app_oauth_client")
 def app_oauth_client_fixture():
     """Fixture for a single app's oauth."""
-    return AppOAuthClient({
-        'oauthClientId': str(uuid4()),
-        'oauthClientSecret': str(uuid4())
-    })
+    client = Mock(AppOAuthClient)
+    client.client_id = str(uuid4())
+    client.client_secret = str(uuid4())
+    return client
 
 
 @pytest.fixture(name='app_settings')
 def app_settings_fixture(app, config_file):
     """Fixture for an app settings."""
-    settings = AppSettings(app.app_id)
-    settings.settings[SETTINGS_INSTANCE_ID] = config_file[CONF_INSTANCE_ID]
+    settings = Mock(AppSettings)
+    settings.app_id = app.app_id
+    settings.settings = {SETTINGS_INSTANCE_ID: config_file[CONF_INSTANCE_ID]}
     return settings
 
 
 def _create_installed_app(location_id, app_id):
-    item = InstalledApp()
-    item.apply_data(defaultdict(str, {
-        'installedAppId': str(uuid4()),
-        'installedAppStatus': 'AUTHORIZED',
-        'installedAppType': 'UNKNOWN',
-        'appId': app_id,
-        'locationId': location_id
-    }))
+    item = Mock(InstalledApp)
+    item.installed_app_id = str(uuid4())
+    item.installed_app_status = InstalledAppStatus.AUTHORIZED
+    item.installed_app_type = InstalledAppType.WEBHOOK_SMART_APP
+    item.app_id = app_id
+    item.location_id = location_id
     return item
 
 
@@ -211,7 +207,7 @@ def subscription_factory_fixture():
 @pytest.fixture(name="device_factory")
 def device_factory_fixture():
     """Fixture for creating mock devices."""
-    api = Mock(spec=Api)
+    api = Mock(Api)
     api.post_device_command.return_value = {}
 
     def _factory(label, capabilities, status: dict = None):
@@ -249,18 +245,12 @@ def device_factory_fixture():
 @pytest.fixture(name="scene_factory")
 def scene_factory_fixture(location):
     """Fixture for creating mock devices."""
-    api = Mock(spec=Api)
-    api.execute_scene.return_value = {}
-
     def _factory(name):
-        scene_data = {
-            'sceneId': str(uuid4()),
-            'sceneName': name,
-            'sceneIcon': '',
-            'sceneColor': '',
-            'locationId': location.location_id
-        }
-        return SceneEntity(api, scene_data)
+        scene = Mock(SceneEntity)
+        scene.scene_id = str(uuid4())
+        scene.name = name
+        scene.location_id = location.location_id
+        return scene
     return _factory
 
 

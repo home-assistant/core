@@ -112,8 +112,7 @@ async def test_unauthorized_installed_app_raises_not_ready(
         smartthings_mock):
     """Test config entry not ready raised when the app isn't authorized."""
     setattr(hass.config_entries, '_entries', [config_entry])
-    setattr(installed_app, '_installed_app_status',
-            InstalledAppStatus.PENDING)
+    installed_app.installed_app_status = InstalledAppStatus.PENDING
 
     smartthings_mock.app.return_value = app
     smartthings_mock.installed_app.return_value = installed_app
