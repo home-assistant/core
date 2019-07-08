@@ -96,6 +96,8 @@ MODEL_TO_DEVICE_TYPE = {
     'color2': BulbType.Color,
     'strip1': BulbType.Color,
     'bslamp1': BulbType.Color,
+    'RGBW': BulbType.Color,
+    'lamp1': BulbType.WhiteTemp,
     'ceiling1': BulbType.WhiteTemp,
     'ceiling2': BulbType.WhiteTemp,
     'ceiling3': BulbType.WhiteTemp,
