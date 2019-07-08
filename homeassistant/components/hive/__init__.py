@@ -1,6 +1,7 @@
 """Support for the Hive devices."""
 import logging
 
+from pyhiveapi import Pyhiveapi
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -45,8 +46,6 @@ class HiveSession:
 
 def setup(hass, config):
     """Set up the Hive Component."""
-    from pyhiveapi import Pyhiveapi
-
     session = HiveSession()
     session.core = Pyhiveapi()
 

@@ -599,8 +599,12 @@ eternalegypt==0.0.5
 # evdev==0.6.1
 
 # homeassistant.components.evohome
+<<<<<<< HEAD
 # homeassistant.components.climate.honeywell
 evohomeclient==0.2.8
+=======
+evohomeclient==0.3.3
+>>>>>>> Climate 1.0 (#23899)
 
 # homeassistant.components.image_processing.dlib_face_detect
 # homeassistant.components.image_processing.dlib_face_identify
@@ -837,6 +841,7 @@ holidays==0.9.9
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 home-assistant-frontend==20190109.1
 =======
 home-assistant-frontend==20190529.0
@@ -907,6 +912,9 @@ home-assistant-frontend==20190630.0
 =======
 home-assistant-frontend==20190702.0
 >>>>>>> Updated frontend to 20190702.0
+=======
+home-assistant-frontend==20190705.0
+>>>>>>> Climate 1.0 (#23899)
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.2
@@ -915,7 +923,14 @@ homeassistant-pyozw==0.1.2
 # homekit==0.12.0
 
 # homeassistant.components.homematicip_cloud
+<<<<<<< HEAD
 homematicip==0.10.3
+=======
+homematicip==0.10.9
+
+# homeassistant.components.horizon
+horimote==0.4.1
+>>>>>>> Climate 1.0 (#23899)
 
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk
