@@ -109,8 +109,7 @@ enocean==0.50
 ephem==3.7.6.0
 
 # homeassistant.components.evohome
-# homeassistant.components.honeywell
-evohomeclient==0.3.2
+evohomeclient==0.3.3
 
 # homeassistant.components.feedreader
 feedparser-homeassistant==5.2.2.dev1
@@ -160,13 +159,13 @@ hdate==0.8.8
 holidays==0.9.10
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190702.0
+home-assistant-frontend==20190705.0
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.14.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.7
+homematicip==0.10.9
 
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk

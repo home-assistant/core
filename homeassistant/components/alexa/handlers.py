@@ -33,6 +33,7 @@ from homeassistant.util.temperature import convert as convert_temperature
 from .const import (
     API_TEMP_UNITS,
     API_THERMOSTAT_MODES,
+    API_THERMOSTAT_PRESETS,
     Cause,
 )
 from .entities import async_get_entities
@@ -686,23 +687,45 @@ async def async_api_set_thermostat_mode(hass, config, directive, context):
     mode = directive.payload['thermostatMode']
     mode = mode if isinstance(mode, str) else mode['value']
 
-    operation_list = entity.attributes.get(climate.ATTR_OPERATION_LIST)
-    ha_mode = next(
-        (k for k, v in API_THERMOSTAT_MODES.items() if v == mode),
-        None
-    )
-    if ha_mode not in operation_list:
-        msg = 'The requested thermostat mode {} is not supported'.format(mode)
-        raise AlexaUnsupportedThermostatModeError(msg)
-
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
-        climate.ATTR_OPERATION_MODE: ha_mode,
     }
+
+    ha_preset = next(
+        (k for k, v in API_THERMOSTAT_PRESETS.items() if v == mode),
+        None
+    )
+
+    if ha_preset:
+        presets = entity.attributes.get(climate.ATTR_PRESET_MODES, [])
+
+        if ha_preset not in presets:
+            msg = 'The requested thermostat mode {} is not supported'.format(
+                ha_preset
+            )
+            raise AlexaUnsupportedThermostatModeError(msg)
+
+        service = climate.SERVICE_SET_PRESET_MODE
+        data[climate.ATTR_PRESET_MODE] = climate.PRESET_ECO
+
+    else:
+        operation_list = entity.attributes.get(climate.ATTR_HVAC_MODES)
+        ha_mode = next(
+            (k for k, v in API_THERMOSTAT_MODES.items() if v == mode),
+            None
+        )
+        if ha_mode not in operation_list:
+            msg = 'The requested thermostat mode {} is not supported'.format(
+                mode
+            )
+            raise AlexaUnsupportedThermostatModeError(msg)
+
+        service = climate.SERVICE_SET_HVAC_MODE
+        data[climate.ATTR_HVAC_MODE] = ha_mode
 
     response = directive.response()
     await hass.services.async_call(
-        entity.domain, climate.SERVICE_SET_OPERATION_MODE, data,
+        climate.DOMAIN, service, data,
         blocking=False, context=context)
     response.add_context_property({
         'name': 'thermostatMode',

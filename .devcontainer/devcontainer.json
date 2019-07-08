@@ -18,6 +18,7 @@
 		"python.linting.pylintEnabled": true,
 		"python.linting.enabled": true,
 		"files.trimTrailingWhitespace": true,
-		"editor.rulers": [80]
+		"editor.rulers": [80],
+		"terminal.integrated.shell.linux": "/bin/bash"
 	}
 }

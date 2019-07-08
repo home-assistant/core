@@ -39,11 +39,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     serport = connection.connection(ipaddress, port)
     serport.open()
 
-    for tstat in tstats.values():
-        add_entities([
-            HeatmiserV3Thermostat(
-                heatmiser, tstat.get(CONF_ID), tstat.get(CONF_NAME), serport)
-            ])
+    add_entities([
+        HeatmiserV3Thermostat(
+            heatmiser, tstat.get(CONF_ID), tstat.get(CONF_NAME), serport)
+        for tstat in tstats.values()], True)
 
 
 class HeatmiserV3Thermostat(ClimateDevice):
@@ -54,11 +53,10 @@ class HeatmiserV3Thermostat(ClimateDevice):
         self.heatmiser = heatmiser
         self.serport = serport
         self._current_temperature = None
+        self._target_temperature = None
         self._name = name
         self._id = device
         self.dcb = None
-        self.update()
-        self._target_temperature = int(self.dcb.get('roomset'))
 
     @property
     def supported_features(self):
@@ -78,13 +76,6 @@ class HeatmiserV3Thermostat(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        if self.dcb is not None:
-            low = self.dcb.get('floortemplow ')
-            high = self.dcb.get('floortemphigh')
-            temp = (high * 256 + low) / 10.0
-            self._current_temperature = temp
-        else:
-            self._current_temperature = None
         return self._current_temperature
 
     @property
@@ -95,16 +86,17 @@ class HeatmiserV3Thermostat(ClimateDevice):
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
-            return
         self.heatmiser.hmSendAddress(
             self._id,
             18,
             temperature,
             1,
             self.serport)
-        self._target_temperature = temperature
 
     def update(self):
         """Get the latest data."""
         self.dcb = self.heatmiser.hmReadAddress(self._id, 'prt', self.serport)
+        low = self.dcb.get('floortemplow ')
+        high = self.dcb.get('floortemphigh')
+        self._current_temperature = (high * 256 + low) / 10.0
+        self._target_temperature = int(self.dcb.get('roomset'))
