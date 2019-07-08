@@ -226,7 +226,7 @@ class RadioThermostat(ClimateDevice):
                 return
             current_humidity = humiditydata['humidity']
             self._current_humidity = current_humidity
-            
+
         # Map thermostat values into various STATE_ flags.
         self._current_temperature = current_temp
         self._fmode = CODE_TO_FAN_MODE[data['fmode']]
