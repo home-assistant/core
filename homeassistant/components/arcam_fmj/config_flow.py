@@ -1,14 +1,11 @@
-"""Config flow to configure the SimpliSafe component."""
-from collections import OrderedDict
+"""Config flow to configure the Arcam FMJ component."""
 from operator import itemgetter
-import logging
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
 _GETKEY = itemgetter(CONF_HOST, CONF_PORT)
 
 
@@ -18,10 +15,6 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-
-    def __init__(self):
-        """Initialize the config flow."""
-        self._config = OrderedDict()
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
