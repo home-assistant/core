@@ -244,20 +244,14 @@ async def async_get_integration(hass: 'HomeAssistant', domain: str)\
 
     event = cache[domain] = asyncio.Event()
 
-    try:
-        import custom_components
-        integration = await hass.async_add_executor_job(
-            Integration.resolve_from_root, hass, custom_components, domain
-        )
-        if integration is not None:
-            _LOGGER.warning(CUSTOM_WARNING, domain)
-            cache[domain] = integration
-            event.set()
-            return integration
-
-    except ImportError:
-        # Import error if "custom_components" doesn't exist
-        pass
+    # Instead of using resolve_from_root we use the cache of custom
+    # components to find the integration.
+    integration = (await async_get_custom_components(hass)).get(domain)
+    if integration is not None:
+        _LOGGER.warning(CUSTOM_WARNING, domain)
+        cache[domain] = integration
+        event.set()
+        return integration
 
     from homeassistant import components
 
