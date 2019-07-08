@@ -583,8 +583,13 @@ env_canada==0.0.10
 >>>>>>> Add Environment Canada weather, sensor, and camera platforms (#21110)
 # envirophat==0.0.6
 
+<<<<<<< HEAD
 # homeassistant.components.sensor.enphase_envoy
 envoy_reader==0.3
+=======
+# homeassistant.components.enphase_envoy
+envoy_reader==0.8
+>>>>>>> Enphase envoy individual inverter production (#24445)
 
 # homeassistant.components.sensor.season
 ephem==3.7.6.0
