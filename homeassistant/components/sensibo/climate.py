@@ -193,6 +193,8 @@ class SensiboClimate(ClimateDevice):
     @property
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
+        if not self._ac_states['on']:
+            return HVAC_MODE_OFF
         return SENSIBO_TO_HA.get(self._ac_states['mode'])
 
     @property
