@@ -102,15 +102,24 @@ async def _async_get_custom_components(
 async def async_get_custom_components(
         hass: 'HomeAssistant') -> Dict[str, 'Integration']:
     """Return cached list of custom integrations."""
-    cache = hass.data.get(DATA_CUSTOM_COMPONENTS)
-    if cache is None:
-        cache = hass.data[DATA_CUSTOM_COMPONENTS] = {}
-        cache['lock'] = asyncio.Lock()
-        cache['data'] = None
-    async with cache['lock']:
-        if cache['data'] is None:
-            cache['data'] = await _async_get_custom_components(hass)
-        return cast(Dict[str, 'Integration'], cache['data'])
+    reg_or_evt = hass.data.get(DATA_CUSTOM_COMPONENTS)
+
+    if reg_or_evt is None:
+        evt = hass.data[DATA_CUSTOM_COMPONENTS] = asyncio.Event()
+
+        reg = await _async_get_custom_components(hass)
+
+        hass.data[DATA_CUSTOM_COMPONENTS] = reg
+        evt.set()
+        return reg
+
+    if isinstance(reg_or_evt, asyncio.Event):
+        await reg_or_evt.wait()
+        return cast(Dict[str, 'Integration'],
+                    hass.data.get(DATA_CUSTOM_COMPONENTS))
+
+    return cast(Dict[str, 'Integration'],
+                reg_or_evt)
 
 
 async def async_get_config_flows(hass: 'HomeAssistant') -> List[str]:
