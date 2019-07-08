@@ -189,7 +189,7 @@ class AmbiclimateEntity(ClimateDevice):
         return SUPPORT_FLAGS
 
     @property
-    def hvac_modes(self) :
+    def hvac_modes(self):
         """Return the list of available hvac operation modes."""
         return [HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
