@@ -1,6 +1,7 @@
 """Handle the frontend for Home Assistant."""
 import json
 import logging
+import mimetypes
 import os
 import pathlib
 
@@ -19,6 +20,13 @@ from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 
 from .storage import async_setup_frontend_storage
+
+
+# Fix mimetypes for borked Windows machines
+# https://github.com/home-assistant/home-assistant-polymer/issues/3336
+mimetypes.add_type("text/css", ".css")
+mimetypes.add_type("application/javascript", ".js")
+
 
 DOMAIN = 'frontend'
 CONF_THEMES = 'themes'
