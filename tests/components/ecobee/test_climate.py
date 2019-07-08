@@ -106,7 +106,7 @@ class TestEcobee(unittest.TestCase):
         """Test operation list property."""
         assert ['auto', 'heat', 'cool', 'off'] == self.thermostat.hvac_modes
 
-    def test_hvac_mode(self):
+    def test_hvac_mode2(self):
         """Test operation mode property."""
         assert 'auto' == self.thermostat.hvac_mode
         self.ecobee['settings']['hvacMode'] = 'heat'
