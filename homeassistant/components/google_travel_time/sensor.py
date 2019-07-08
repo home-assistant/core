@@ -10,7 +10,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY, CONF_NAME, EVENT_HOMEASSISTANT_START, ATTR_LATITUDE,
-    ATTR_LONGITUDE, CONF_MODE)
+    ATTR_LONGITUDE, ATTR_ATTRIBUTION, CONF_MODE)
 from homeassistant.helpers import location
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -185,6 +185,7 @@ class GoogleTravelTimeSensor(Entity):
             res['distance'] = _data['distance']['text']
         res['origin'] = self._origin
         res['destination'] = self._destination
+        res[ATTR_ATTRIBUTION] = ATTRIBUTION
         return res
 
     @property
