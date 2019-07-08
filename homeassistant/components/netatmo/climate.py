@@ -136,7 +136,7 @@ class NetatmoThermostat(ClimateDevice):
         self._target_temperature = None
         self._preset = None
         self._away = None
-        self._operation_list = SUPPORT_HVAC
+        self._operation_list = [HVAC_MODE_HEAT, HVAC_MODE_AUTO]
         self._support_flags = SUPPORT_FLAGS
         self._hvac_mode = None
         self.update_without_throttle = False
@@ -146,8 +146,8 @@ class NetatmoThermostat(ClimateDevice):
         except KeyError:
             _LOGGER.error("Thermostat in %s not available", room_id)
 
-        if self._module_type == NA_VALVE:
-            self._operation_list.remove(HVAC_MODE_OFF)
+        if self._module_type == NA_THERM:
+            self._operation_list.append(HVAC_MODE_OFF)
 
     @property
     def supported_features(self):
