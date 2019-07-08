@@ -3,7 +3,7 @@
   "name": "Knx",
   "documentation": "https://www.home-assistant.io/components/knx",
   "requirements": [
-    "xknx==0.11.0"
+    "xknx==0.11.1"
   ],
   "dependencies": [],
   "codeowners": [

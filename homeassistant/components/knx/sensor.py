@@ -2,17 +2,21 @@
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_NAME, CONF_TYPE
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from . import ATTR_DISCOVER_DEVICES, DATA_KNX
 
+CONF_STATE_ADDRESS = 'state_address'
+CONF_SYNC_STATE = 'sync_state'
 DEFAULT_NAME = 'KNX Sensor'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ADDRESS): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_SYNC_STATE, default=True): cv.boolean,
+    vol.Required(CONF_STATE_ADDRESS): cv.string,
     vol.Required(CONF_TYPE): cv.string,
 })
 
@@ -43,7 +47,8 @@ def async_add_entities_config(hass, config, async_add_entities):
     sensor = xknx.devices.Sensor(
         hass.data[DATA_KNX].xknx,
         name=config[CONF_NAME],
-        group_address_state=config[CONF_ADDRESS],
+        group_address_state=config[CONF_STATE_ADDRESS],
+        sync_state=config[CONF_SYNC_STATE],
         value_type=config[CONF_TYPE])
     hass.data[DATA_KNX].xknx.devices.add(sensor)
     async_add_entities([KNXSensor(sensor)])

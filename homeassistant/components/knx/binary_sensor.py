@@ -3,14 +3,16 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA, BinarySensorDevice)
-from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_CLASS, CONF_NAME
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from . import ATTR_DISCOVER_DEVICES, DATA_KNX, KNXAutomation
 
+CONF_STATE_ADDRESS = 'state_address'
 CONF_SIGNIFICANT_BIT = 'significant_bit'
 CONF_DEFAULT_SIGNIFICANT_BIT = 1
+CONF_SYNC_STATE = 'sync_state'
 CONF_AUTOMATION = 'automation'
 CONF_HOOK = 'hook'
 CONF_DEFAULT_HOOK = 'on'
@@ -31,11 +33,12 @@ AUTOMATION_SCHEMA = vol.Schema({
 AUTOMATIONS_SCHEMA = vol.All(cv.ensure_list, [AUTOMATION_SCHEMA])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ADDRESS): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_DEVICE_CLASS): cv.string,
     vol.Optional(CONF_SIGNIFICANT_BIT, default=CONF_DEFAULT_SIGNIFICANT_BIT):
         cv.positive_int,
+    vol.Optional(CONF_SYNC_STATE, default=True): cv.boolean,
+    vol.Required(CONF_STATE_ADDRESS): cv.string,
+    vol.Optional(CONF_DEVICE_CLASS): cv.string,
     vol.Optional(CONF_RESET_AFTER): cv.positive_int,
     vol.Optional(CONF_AUTOMATION): AUTOMATIONS_SCHEMA,
 })
@@ -68,7 +71,8 @@ def async_add_entities_config(hass, config, async_add_entities):
     binary_sensor = xknx.devices.BinarySensor(
         hass.data[DATA_KNX].xknx,
         name=name,
-        group_address_state=config[CONF_ADDRESS],
+        group_address_state=config[CONF_STATE_ADDRESS],
+        sync_state=config[CONF_SYNC_STATE],
         device_class=config.get(CONF_DEVICE_CLASS),
         significant_bit=config[CONF_SIGNIFICANT_BIT],
         reset_after=config.get(CONF_RESET_AFTER))
