@@ -181,7 +181,7 @@ class RadioThermostat(ClimateDevice):
     def current_humidity(self):
         """Return the current temperature."""
         return self._current_humidity
-    
+
     @property
     def hvac_mode(self):
         """Return the current operation. head, cool idle."""
