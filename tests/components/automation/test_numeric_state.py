@@ -703,22 +703,26 @@ async def test_if_action(hass, calls):
 
 async def test_if_fails_setup_bad_for(hass, calls):
     """Test for setup failure for bad for."""
-    with assert_setup_component(0, automation.DOMAIN):
-        assert await async_setup_component(hass, automation.DOMAIN, {
-            automation.DOMAIN: {
-                'trigger': {
-                    'platform': 'numeric_state',
-                    'entity_id': 'test.entity',
-                    'above': 8,
-                    'below': 12,
-                    'for': {
-                        'invalid': 5
-                    },
+    assert await async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'trigger': {
+                'platform': 'numeric_state',
+                'entity_id': 'test.entity',
+                'above': 8,
+                'below': 12,
+                'for': {
+                    'invalid': 5
                 },
-                'action': {
-                    'service': 'homeassistant.turn_on',
-                }
-            }})
+            },
+            'action': {
+                'service': 'homeassistant.turn_on',
+            }
+        }})
+
+    with patch.object(automation.numeric_state, '_LOGGER') as mock_logger:
+        hass.states.async_set('test.entity', 9)
+        await hass.async_block_till_done()
+        assert mock_logger.error.called
 
 
 async def test_if_fails_setup_for_without_above_below(hass, calls):
@@ -1009,3 +1013,163 @@ async def test_if_fires_on_entities_change_overlap(hass, calls):
         await hass.async_block_till_done()
         assert 2 == len(calls)
         assert 'test.entity_2' == calls[1].data['some']
+
+
+async def test_if_fires_on_change_with_for_template_1(hass, calls):
+    """Test for firing on  change with for template."""
+    assert await async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'trigger': {
+                'platform': 'numeric_state',
+                'entity_id': 'test.entity',
+                'above': 8,
+                'below': 12,
+                'for': {
+                    'seconds': '{{ 5 }}'
+                },
+            },
+            'action': {
+                'service': 'test.automation'
+            }
+        }
+    })
+
+    hass.states.async_set('test.entity', 9)
+    await hass.async_block_till_done()
+    assert 0 == len(calls)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert 1 == len(calls)
+
+
+async def test_if_fires_on_change_with_for_template_2(hass, calls):
+    """Test for firing on  change with for template."""
+    assert await async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'trigger': {
+                'platform': 'numeric_state',
+                'entity_id': 'test.entity',
+                'above': 8,
+                'below': 12,
+                'for': '{{ 5 }}',
+            },
+            'action': {
+                'service': 'test.automation'
+            }
+        }
+    })
+
+    hass.states.async_set('test.entity', 9)
+    await hass.async_block_till_done()
+    assert 0 == len(calls)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert 1 == len(calls)
+
+
+async def test_if_fires_on_change_with_for_template_3(hass, calls):
+    """Test for firing on  change with for template."""
+    assert await async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'trigger': {
+                'platform': 'numeric_state',
+                'entity_id': 'test.entity',
+                'above': 8,
+                'below': 12,
+                'for': '00:00:{{ 5 }}',
+            },
+            'action': {
+                'service': 'test.automation'
+            }
+        }
+    })
+
+    hass.states.async_set('test.entity', 9)
+    await hass.async_block_till_done()
+    assert 0 == len(calls)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert 1 == len(calls)
+
+
+async def test_invalid_for_template(hass, calls):
+    """Test for invalid for template."""
+    assert await async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'trigger': {
+                'platform': 'numeric_state',
+                'entity_id': 'test.entity',
+                'above': 8,
+                'below': 12,
+                'for': '{{ five }}',
+            },
+            'action': {
+                'service': 'test.automation'
+            }
+        }
+    })
+
+    with patch.object(automation.numeric_state, '_LOGGER') as mock_logger:
+        hass.states.async_set('test.entity', 9)
+        await hass.async_block_till_done()
+        assert mock_logger.error.called
+
+
+async def test_if_fires_on_entities_change_overlap_for_template(hass, calls):
+    """Test for firing on entities change with overlap and for template."""
+    assert await async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'trigger': {
+                'platform': 'numeric_state',
+                'entity_id': [
+                    'test.entity_1',
+                    'test.entity_2',
+                ],
+                'above': 8,
+                'below': 12,
+                'for': '{{ 5 if trigger.entity_id == "test.entity_1"'
+                       '   else 10 }}',
+            },
+            'action': {
+                'service': 'test.automation',
+                'data_template': {
+                    'some': '{{ trigger.entity_id }} - {{ trigger.for }}',
+                },
+            }
+        }
+    })
+    await hass.async_block_till_done()
+
+    utcnow = dt_util.utcnow()
+    with patch('homeassistant.util.dt.utcnow') as mock_utcnow:
+        mock_utcnow.return_value = utcnow
+        hass.states.async_set('test.entity_1', 9)
+        await hass.async_block_till_done()
+        mock_utcnow.return_value += timedelta(seconds=1)
+        async_fire_time_changed(hass, mock_utcnow.return_value)
+        hass.states.async_set('test.entity_2', 9)
+        await hass.async_block_till_done()
+        mock_utcnow.return_value += timedelta(seconds=1)
+        async_fire_time_changed(hass, mock_utcnow.return_value)
+        hass.states.async_set('test.entity_2', 15)
+        await hass.async_block_till_done()
+        mock_utcnow.return_value += timedelta(seconds=1)
+        async_fire_time_changed(hass, mock_utcnow.return_value)
+        hass.states.async_set('test.entity_2', 9)
+        await hass.async_block_till_done()
+        assert 0 == len(calls)
+        mock_utcnow.return_value += timedelta(seconds=3)
+        async_fire_time_changed(hass, mock_utcnow.return_value)
+        await hass.async_block_till_done()
+        assert 1 == len(calls)
+        assert 'test.entity_1 - 0:00:05' == calls[0].data['some']
+
+        mock_utcnow.return_value += timedelta(seconds=3)
+        async_fire_time_changed(hass, mock_utcnow.return_value)
+        await hass.async_block_till_done()
+        assert 1 == len(calls)
+        mock_utcnow.return_value += timedelta(seconds=5)
+        async_fire_time_changed(hass, mock_utcnow.return_value)
+        await hass.async_block_till_done()
+        assert 2 == len(calls)
+        assert 'test.entity_2 - 0:00:10' == calls[1].data['some']
