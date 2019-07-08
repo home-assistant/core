@@ -5,7 +5,8 @@ import struct
 import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
-from homeassistant.components.climate.const import SUPPORT_TARGET_TEMPERATURE
+from homeassistant.components.climate.const import (
+    SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_HEAT)
 from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, CONF_SLAVE
 import homeassistant.helpers.config_validation as cv
 
@@ -23,6 +24,7 @@ DATA_TYPE_INT = 'int'
 DATA_TYPE_UINT = 'uint'
 DATA_TYPE_FLOAT = 'float'
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
+HVAC_MODES = [HVAC_MODE_HEAT]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_CURRENT_TEMP): cv.positive_int,
@@ -92,6 +94,16 @@ class ModbusThermostat(ClimateDevice):
             self._target_temperature_register)
         self._current_temperature = self.read_register(
             self._current_temperature_register)
+
+    @property
+    def hvac_mode(self):
+        """Return the current HVAC mode."""
+        return HVAC_MODE_HEAT
+
+    @property
+    def hvac_modes(self):
+        """Return the possible HVAC modes."""
+        return HVAC_MODES
 
     @property
     def name(self):
