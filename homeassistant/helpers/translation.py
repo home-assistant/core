@@ -107,7 +107,7 @@ async def async_get_component_resources(hass: HomeAssistantType,
 
     # Get the set of components
     components = (hass.config.components |
-                  set(await async_get_config_flows(hass)))
+                  await async_get_config_flows(hass))
 
     # Calculate the missing components
     missing_components = components - set(translation_cache)

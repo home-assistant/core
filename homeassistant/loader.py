@@ -122,7 +122,7 @@ async def async_get_custom_components(
                 reg_or_evt)
 
 
-async def async_get_config_flows(hass: 'HomeAssistant') -> List[str]:
+async def async_get_config_flows(hass: 'HomeAssistant') -> Set[str]:
     """Return cached list of config flows."""
     from homeassistant.generated.config_flows import FLOWS
     flows = set()  # type: Set[str]
@@ -135,7 +135,7 @@ async def async_get_config_flows(hass: 'HomeAssistant') -> List[str]:
         if integration.config_flow
     ])
 
-    return list(sorted(flows))
+    return flows
 
 
 class Integration:

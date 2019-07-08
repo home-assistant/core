@@ -224,6 +224,6 @@ async def test_get_config_flows(hass):
             'test_1': test_1_integration,
             'test_2': test_2_integration,
         }
-        flows = set(await loader.async_get_config_flows(hass))
+        flows = await loader.async_get_config_flows(hass)
         assert 'test_2' in flows
         assert 'test_1' not in flows
