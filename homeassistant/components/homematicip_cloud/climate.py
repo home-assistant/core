@@ -1,5 +1,6 @@
 """Support for HomematicIP Cloud climate devices."""
 import logging
+from typing import Awaitable
 
 from homematicip.aio.device import (
     AsyncHeatingThermostat, AsyncHeatingThermostatCompact)
@@ -8,7 +9,8 @@ from homematicip.aio.home import AsyncHome
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_MANUAL, SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_AUTO, HVAC_MODE_HEAT, PRESET_BOOST, PRESET_COMFORT, PRESET_ECO,
+    SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
@@ -17,12 +19,9 @@ from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-HA_STATE_TO_HMIP = {
-    STATE_AUTO: 'AUTOMATIC',
-    STATE_MANUAL: 'MANUAL',
-}
-
-HMIP_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_HMIP.items()}
+HMIP_AUTOMATIC_CM = 'AUTOMATIC'
+HMIP_MANUAL_CM = 'MANUAL'
+HMIP_ECO_CM = 'ECO'
 
 
 async def async_setup_platform(
@@ -63,7 +62,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
     @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
+        return SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
 
     @property
     def target_temperature(self) -> float:
@@ -83,9 +82,48 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         return self._device.humidity
 
     @property
-    def current_operation(self) -> str:
-        """Return current operation ie. automatic or manual."""
-        return HMIP_STATE_TO_HA.get(self._device.controlMode)
+    def hvac_mode(self) -> str:
+        """Return hvac operation ie. heat, cool mode.
+
+        Need to be one of HVAC_MODE_*.
+        """
+        if self._device.boostMode:
+            return HVAC_MODE_AUTO
+        if self._device.controlMode == HMIP_MANUAL_CM:
+            return HVAC_MODE_HEAT
+
+        return HVAC_MODE_AUTO
+
+    @property
+    def hvac_modes(self):
+        """Return the list of available hvac operation modes.
+
+        Need to be a subset of HVAC_MODES.
+        """
+        return [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
+
+    @property
+    def preset_mode(self):
+        """Return the current preset mode, e.g., home, away, temp.
+
+        Requires SUPPORT_PRESET_MODE.
+        """
+        if self._device.boostMode:
+            return PRESET_BOOST
+        if self._device.controlMode == HMIP_AUTOMATIC_CM:
+            return PRESET_COMFORT
+        if self._device.controlMode == HMIP_ECO_CM:
+            return PRESET_ECO
+
+        return None
+
+    @property
+    def preset_modes(self):
+        """Return a list of available preset modes.
+
+        Requires SUPPORT_PRESET_MODE.
+        """
+        return [PRESET_BOOST, PRESET_COMFORT]
 
     @property
     def min_temp(self) -> float:
@@ -103,6 +141,22 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         if temperature is None:
             return
         await self._device.set_point_temperature(temperature)
+
+    async def async_set_hvac_mode(self, hvac_mode: str) -> Awaitable[None]:
+        """Set new target hvac mode."""
+        if hvac_mode == HVAC_MODE_AUTO:
+            await self._device.set_control_mode(HMIP_AUTOMATIC_CM)
+        else:
+            await self._device.set_control_mode(HMIP_MANUAL_CM)
+
+    async def async_set_preset_mode(self, preset_mode: str) -> Awaitable[None]:
+        """Set new preset mode."""
+        if self._device.boostMode and preset_mode != PRESET_BOOST:
+            await self._device.set_boost(False)
+        if preset_mode == PRESET_BOOST:
+            await self._device.set_boost()
+        elif preset_mode == PRESET_COMFORT:
+            await self._device.set_control_mode(HMIP_AUTOMATIC_CM)
 
 
 def _get_first_heating_thermostat(heating_group: AsyncHeatingGroup):
