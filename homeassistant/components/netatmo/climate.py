@@ -136,7 +136,7 @@ class NetatmoThermostat(ClimateDevice):
         self._target_temperature = None
         self._preset = None
         self._away = None
-        self._operation_list = [HVAC_MODE_HEAT, HVAC_MODE_AUTO]
+        self._operation_list = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
         self._support_flags = SUPPORT_FLAGS
         self._hvac_mode = None
         self.update_without_throttle = False
