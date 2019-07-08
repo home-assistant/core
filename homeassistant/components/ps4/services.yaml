@@ -9,7 +9,7 @@ send_command:
       example: 'ps'
 
 lock_media:
-  description: Lock media data attributes to prevent automatic updates to media data. Media data will no longer be updated automatically.
+  description: Lock media data attributes to prevent automatic updates to media data. Media data will be locked and not be updated automatically.
   fields:
     media_content_id:
       description: The ID or the PlayStation Store SKU ID of the title. Must be in source list.
@@ -23,7 +23,7 @@ unlock_media:
       example: 'CUSA00123'
 
 edit_media:
-  description: Edit or correct media data attributes. Media data will be locked.
+  description: Edit or correct media data attributes. Media data will no longer be updated automatically.
   fields:
     media_content_id:
       description: The ID or the PlayStation Store SKU ID of the title. Must be in source list.
@@ -39,7 +39,7 @@ edit_media:
       example: 'game'
 
 lock_current_media:
-  description: Lock the attributes of the media which is currently playing. Media data will no longer be updated automatically.
+  description: Lock the attributes of the media which is currently playing. Media data will be locked and not be updated automatically.
   fields:
     entity_id: 
       description: The entity that is playing media.
@@ -53,7 +53,7 @@ unlock_current_media:
       example: 'media_player.playstation_4'
 
 edit_current_media:
-  description: Edit or correct media data attributes of the media which is currently playing. Media data will be locked.
+  description: Edit or correct media data attributes of the media which is currently playing. Media data will be locked and not be updated automatically.
   fields:
     entity_id:
       description: The entity that is playing media.
