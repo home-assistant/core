@@ -2,6 +2,8 @@
 import asyncio
 import logging
 
+from aionotion import async_get_client
+from aionotion.errors import InvalidCredentialsError, NotionError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -92,9 +94,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up Notion as a config entry."""
-    from aionotion import async_get_client
-    from aionotion.errors import InvalidCredentialsError, NotionError
-
     session = aiohttp_client.async_get_clientsession(hass)
 
     try:
@@ -175,8 +174,6 @@ class Notion:
 
     async def async_update(self):
         """Get the latest Notion data."""
-        from aionotion.errors import NotionError
-
         tasks = {
             'bridges': self._client.bridge.async_all(),
             'sensors': self._client.sensor.async_all(),
@@ -227,8 +224,7 @@ class NotionEntity(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return any(
-            self._task_id == task_id for task_id in list(self._notion.tasks))
+        return self._task_id in self._notion.tasks
 
     @property
     def device_class(self):
