@@ -1,0 +1,8 @@
+{
+  "domain": "lightwave_energy",
+  "name": "Lightwave Energy Monitor",
+  "documentation": "https://www.home-assistant.io/components/lightwaverf_energy",
+  "dependencies": [],
+  "codeowners": ["@asantaga"],
+  "requirements": []
+}
