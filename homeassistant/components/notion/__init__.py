@@ -103,7 +103,7 @@ async def async_setup_entry(hass, config_entry):
             session)
     except InvalidCredentialsError:
         _LOGGER.error('Invalid username and/or password')
-        return
+        return False
     except NotionError as err:
         _LOGGER.error('Config entry failed: %s', err)
         raise ConfigEntryNotReady
