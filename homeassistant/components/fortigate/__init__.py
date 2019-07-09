@@ -28,16 +28,14 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Start the fortigate component."""
-    conf = config.get(DOMAIN)
+    conf = config[DOMAIN]
 
-    if conf is not None:
+    host = conf.get(CONF_HOST)
+    user = conf.get(CONF_USERNAME)
+    apikey = conf.get(CONF_PASSWORD)
+    devices = conf.get(CONF_DEVICES)
 
-        host = conf.get(CONF_HOST)
-        user = conf.get(CONF_USERNAME)
-        apikey = conf.get(CONF_PASSWORD)
-        devices = conf.get(CONF_DEVICES)
-
-        await async_setup_fortigate(hass, config, host, user, apikey, devices)
+    await async_setup_fortigate(hass, config, host, user, apikey, devices)
 
     # Return boolean to indicate that initialization was successful.
     return True
