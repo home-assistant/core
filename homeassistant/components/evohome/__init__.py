@@ -47,10 +47,12 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def _local_dt_to_utc(dt_naive: datetime) -> datetime:
-    dt_aware = utcnow() + (dt_naive - datetime.now())
-    if dt_aware.microsecond >= 500000:
-        dt_aware += timedelta(seconds=1)
-    return dt_aware.replace(microsecond=0)
+    dt_aware = as_utc(dt_naive.replace(tzinfo=tzlocal()))
+    return dt_aware.replace(microsecond=0, tzinfo=None)
+
+def _utc_to_local_dt(dt_naive: datetime) -> datetime:
+    dt_aware = as_utc(dt_naive).astimezone(tzlocal())
+    return dt_aware.replace(microsecond=0, tzinfo=None)
 
 
 def _utc_to_local_dt(dt_aware: datetime) -> datetime:
@@ -206,11 +208,12 @@ class EvoBroker:
             access_token = app_storage.get(CONF_ACCESS_TOKEN)
             at_expires_str = app_storage.get(CONF_ACCESS_TOKEN_EXPIRES)
             if at_expires_str:
-                at_expires_dt = parse_datetime(at_expires_str)
+                at_expires_local_dt = _utc_to_local_dt(
+                    parse_datetime(at_expires_str))
             else:
-                at_expires_dt = None
+                at_expires_local_dt = None
 
-            return (refresh_token, access_token, at_expires_dt)
+            return (refresh_token, access_token, at_expires_local_dt)
 
         return (None, None, None)  # account switched: so tokens wont be valid
 
