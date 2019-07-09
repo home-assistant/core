@@ -168,6 +168,7 @@ homeassistant/components/miflora/* @danielhiversen @ChristianKuehnel
 homeassistant/components/mill/* @danielhiversen
 homeassistant/components/min_max/* @fabaff
 homeassistant/components/mobile_app/* @robbiet480
+homeassistant/components/modbus_sunspec/* @jkells
 homeassistant/components/monoprice/* @etsinko
 homeassistant/components/moon/* @fabaff
 homeassistant/components/mpd/* @fabaff

@@ -373,6 +373,7 @@ omit =
     homeassistant/components/mobile_app/*
     homeassistant/components/mochad/*
     homeassistant/components/modbus/*
+    homeassistant/components/modbus_sunspec/*
     homeassistant/components/modem_callerid/sensor.py
     homeassistant/components/mopar/*
     homeassistant/components/mpchc/media_player.py

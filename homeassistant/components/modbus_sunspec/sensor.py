@@ -1,14 +1,12 @@
 """Support for Modbus sensors that follow the SunSpec specification."""
 import logging
 
-import voluptuous as vol
-from pymodbus.payload import BinaryPayloadDecoder
 from pymodbus.constants import Endian
+from pymodbus.payload import BinaryPayloadDecoder
+import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_SLAVE)
+from homeassistant.const import CONF_NAME, CONF_SLAVE
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -58,8 +56,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     }]
 })
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Setup the platform"""
+    """Create sensors for SunSpec meters."""
     sensors = []
 
     for model in config.get(CONF_MODEL):
@@ -94,16 +93,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
     return True
 
+
 def get_sunspec_model_id(hub, base_register, slave):
-    """Determine the id of a SunSpec model located at base_register"""
+    """Determine the id of a SunSpec model located at base_register."""
     result = hub.read_holding_registers(slave, base_register, 2)
     decoder = BinaryPayloadDecoder.fromRegisters(result.registers,
                                                  byteorder=Endian.Big,
                                                  wordorder=Endian.Big)
     return decoder.decode_16bit_uint()
 
-def get_sunspec_scaled_register(hub, register, slave, value_offset, scale_factor_offset):
-    """Implement an atomic read of a scaled value"""
+
+def get_sunspec_scaled_register(
+        hub,
+        register,
+        slave,
+        value_offset,
+        scale_factor_offset):
+    """Atomically read of a scaled value."""
     value_register = register + value_offset
     count = scale_factor_offset + 1
     result = hub.read_holding_registers(slave, value_register, count)
@@ -161,8 +167,12 @@ class SunSpecModbusInverter(RestoreEntity):
                 INVERTER_AC_POWER_OFFSET,
                 INVERTER_AC_POWER_SCALE_FACTOR_OFFSET)
         except AttributeError:
-            _LOGGER.error("No response from hub %s, slave %s", self._hub.name, self._slave)
+            _LOGGER.error(
+                "No response from hub %s, slave %s",
+                self._hub.name,
+                self._slave)
             return
+
 
 class SunSpecModbusMeter(RestoreEntity):
     """Sunspec register sensor."""
@@ -200,11 +210,15 @@ class SunSpecModbusMeter(RestoreEntity):
     def update(self):
         """Update the state of the sensor."""
         try:
-            self._value = get_sunspec_scaled_register(self._hub,
-                                                      self._base_register,
-                                                      self._slave,
-                                                      METER_AC_POWER_OFFSET,
-                                                      METER_AC_POWER_SCALE_FACTOR_OFFSET)
+            self._value = get_sunspec_scaled_register(
+                self._hub,
+                self._base_register,
+                self._slave,
+                METER_AC_POWER_OFFSET,
+                METER_AC_POWER_SCALE_FACTOR_OFFSET)
         except AttributeError:
-            _LOGGER.error("No response from hub %s, slave %s", self._hub.name, self._slave)
+            _LOGGER.error(
+                "No response from hub %s, slave %s",
+                self._hub.name,
+                self._slave)
             return
