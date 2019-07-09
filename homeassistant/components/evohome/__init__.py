@@ -16,7 +16,7 @@ from homeassistant.const import (
     HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS, TEMP_CELSIUS)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
@@ -98,10 +98,12 @@ async def async_setup(hass, hass_config):
     if not await broker.init_client():
         return False
 
-    load_platform(hass, 'climate', DOMAIN, {}, hass_config)
+    hass.async_create_task(
+        async_load_platform(hass, 'climate', DOMAIN, {}, hass_config))
+
     if broker.tcs.hotwater:
-        _LOGGER.warning("DHW controller detected, however this integration "
-                        "does not currently support DHW controllers.")
+        hass.async_create_task(
+            async_load_platform(hass, 'water_heater', DOMAIN, {}, hass_config))
 
     async_track_time_interval(
         hass, broker.update, hass_config[DOMAIN][CONF_SCAN_INTERVAL]
