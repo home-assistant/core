@@ -26,7 +26,7 @@ SIGNAL_DELETE_ENTITY = 'delete_entity_{0}'
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up WWLLN sensors based on a config entry."""
+    """Set up WWLLN based on a config entry."""
     client = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
     manager = WWLLNEventManager(
         hass,
