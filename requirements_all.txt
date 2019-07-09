@@ -702,8 +702,12 @@ geniushub-client==0.4.12
 # homeassistant.components.geo_json_events
 # homeassistant.components.nsw_rural_fire_service_feed
 # homeassistant.components.usgs_earthquakes_feed
+<<<<<<< HEAD
 >>>>>>> Fix geniushub issue #24530 (via a client bump) & handle edge cases (#24546)
 geojson_client==0.3
+=======
+geojson_client==0.4
+>>>>>>> updated geojson_client library to version 0.4 (#25039)
 
 <<<<<<< HEAD
 # homeassistant.components.sensor.geo_rss_events
