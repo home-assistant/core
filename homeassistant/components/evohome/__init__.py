@@ -52,9 +52,11 @@ def _local_dt_to_utc(dt_naive: datetime) -> datetime:
     dt_aware = as_utc(dt_naive.replace(tzinfo=tzlocal()))
     return dt_aware.replace(microsecond=0, tzinfo=None)
 
+
 def _utc_to_local_dt(dt_naive: datetime) -> datetime:
     dt_aware = as_utc(dt_naive).astimezone(tzlocal())
     return dt_aware.replace(microsecond=0, tzinfo=None)
+
 
 def _handle_exception(err):
     try:
