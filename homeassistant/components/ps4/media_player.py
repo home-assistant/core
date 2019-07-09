@@ -333,7 +333,7 @@ class PS4Device(MediaPlayerDevice):
         """Remove Entity from Hass."""
         # Close TCP Transport.
         if self._ps4.connected:
-            self._ps4.close()
+            await self._ps4.close()
         self.hass.data[PS4_DATA].devices.remove(self)
 
     @property
