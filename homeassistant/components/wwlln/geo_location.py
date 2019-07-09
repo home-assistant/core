@@ -1,6 +1,5 @@
 """Support for WWLLN geo location events."""
 from datetime import timedelta
-from itertools import filterfalse
 import logging
 
 from aiowwlln.errors import WWLLNError
@@ -37,13 +36,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entry.data[CONF_RADIUS],
         entry.data[CONF_UNIT_SYSTEM])
     await manager.async_init()
-
-
-def get_new_strikes(old_strike_list, new_strike_list):
-    """Return new strike data by comparing old and new lists."""
-    old_iter = filterfalse(lambda x: x in old_strike_list, new_strike_list)
-    new_iter = filterfalse(lambda x: x in new_strike_list, old_strike_list)
-    return list(old_iter) + list(new_iter)
 
 
 class WWLLNEventManager:
