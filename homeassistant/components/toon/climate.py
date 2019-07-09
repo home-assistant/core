@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -78,9 +78,11 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
         return TEMP_CELSIUS
 
     @property
-    def preset_mode(self) -> str:
+    def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        return self._state.lower()
+        if self._state is not None:
+            return self._state.lower()
+        return None
 
     @property
     def preset_modes(self) -> List[str]:
@@ -88,12 +90,12 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
         return SUPPORT_PRESET
 
     @property
-    def current_temperature(self) -> float:
+    def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
         return self._current_temperature
 
     @property
-    def target_temperature(self) -> float:
+    def target_temperature(self) -> Optional[float]:
         """Return the temperature we try to reach."""
         return self._target_temperature
 
@@ -121,7 +123,8 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        self.toon.thermostat_state = preset_mode
+        if preset_mode is not None:
+            self.toon.thermostat_state = preset_mode
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
