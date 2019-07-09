@@ -256,7 +256,7 @@ class NetatmoSensor(Entity):
             elif self.type == 'rain':
                 self._state = data['Rain']
             elif self.type == 'sum_rain_1':
-                self._state = data['sum_rain_1']
+                self._state = round(data['sum_rain_1'], 1)
             elif self.type == 'sum_rain_24':
                 self._state = data['sum_rain_24']
             elif self.type == 'noise':
