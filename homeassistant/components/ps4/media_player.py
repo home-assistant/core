@@ -224,9 +224,9 @@ class PS4Device(MediaPlayerDevice):
         self._media_type = None
         self._source = None
 
-    async def async_get_title_data(self, title_id, name):
+    async def async_get_title_data(self, title_id, name, search_all=True):
         """Get PS Store Data."""
-        from pyps4_homeassistant.errors import PSDataIncomplete, PSSearchError
+        from pyps4_homeassistant.errors import PSDataIncomplete
         _LOGGER.debug("Starting PS Store Search, %s: %s", title_id, name)
         app_name = None
         art = None
@@ -234,7 +234,7 @@ class PS4Device(MediaPlayerDevice):
         try:
             title = await self._ps4.async_get_ps_store_data(
                 name, title_id, self._region)
-        except (PSDataIncomplete, PSSearchError):
+        except PSDataIncomplete:
             title = None
         except asyncio.TimeoutError:
             title = None
@@ -333,7 +333,7 @@ class PS4Device(MediaPlayerDevice):
         """Remove Entity from Hass."""
         # Close TCP Transport.
         if self._ps4.connected:
-            await self._ps4.close()
+            self._ps4.close()
         self.hass.data[PS4_DATA].devices.remove(self)
 
     @property
