@@ -185,6 +185,7 @@ class ToonEntity(Entity):
         self._state = None
         self._icon = icon
         self.toon = toon
+        self._unsub_dispatcher = None
 
     @property
     def name(self) -> str:
@@ -203,9 +204,13 @@ class ToonEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Connect to dispatcher listening for entity data notifications."""
-        async_dispatcher_connect(
+        self._unsub_dispatcher = async_dispatcher_connect(
             self.hass, DATA_TOON_UPDATED, self._schedule_immediate_update
         )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect from update signal."""
+        self._unsub_dispatcher()
 
     @callback
     def _schedule_immediate_update(self, display_name: str) -> None:
