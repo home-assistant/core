@@ -21,7 +21,8 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
-    async_track_point_in_utc_time, track_point_in_utc_time, track_time_interval)
+    async_track_point_in_utc_time, track_point_in_utc_time,
+    track_time_interval)
 from homeassistant.util.dt import as_utc, parse_datetime, utcnow
 
 from .const import DOMAIN, STORAGE_VERSION, STORAGE_KEY, GWS, TCS
@@ -54,15 +55,7 @@ def _utc_to_local_dt(dt_naive: datetime) -> datetime:
     dt_aware = as_utc(dt_naive).astimezone(tzlocal())
     return dt_aware.replace(microsecond=0, tzinfo=None)
 
-
-def _utc_to_local_dt(dt_aware: datetime) -> datetime:
-    dt_naive = datetime.now() + (dt_aware - utcnow())
-    if dt_naive.microsecond >= 500000:
-        dt_naive += timedelta(seconds=1)
-    return dt_naive.replace(microsecond=0)
-
-
-def _handle_exception(err) -> bool:
+def _handle_exception(err):
     try:
         raise err
 
