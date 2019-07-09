@@ -42,10 +42,10 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
         """Initialize the Toon climate device."""
         self._client = toon_client
 
-        self._state = None
         self._current_temperature = None
         self._target_temperature = None
         self._next_target_temperature = None
+        self._preset = None
 
         self._heating_type = None
 
@@ -85,8 +85,8 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        if self._state is not None:
-            return self._state.lower()
+        if self._preset is not None:
+            return self._preset.lower()
         return None
 
     @property
@@ -138,9 +138,9 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
     def update(self) -> None:
         """Update local state."""
         if self.toon.thermostat_state is None:
-            self._state = None
+            self._preset = None
         else:
-            self._state = self.toon.thermostat_state.name
+            self._preset = self.toon.thermostat_state.name
 
         self._current_temperature = self.toon.temperature
         self._target_temperature = self.toon.thermostat
