@@ -3,15 +3,22 @@ import logging
 
 import voluptuous as vol
 
+import datetime as dt
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, SUN_EVENT_SUNSET)
+    CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, SUN_EVENT_SUNSET, CONF_SCAN_INTERVAL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
+from homeassistant.helpers.event import async_track_sunset, async_call_later, async_track_time_change
+
+import hdate
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = dt.timedelta(days=9999)
 
 SENSOR_TYPES = {
     'date': ['Date', 'mdi:judaism'],
@@ -31,7 +38,7 @@ SENSOR_TYPES = {
     'upcoming_havdalah': ['Upcoming Havdalah', 'mdi:weather-night'],
     'issur_melacha_in_effect': ['Issur Melacha in Effect',
                                 'mdi:power-plug-off'],
-    'omer_count': ['Day of the Omer', 'mdi:counter'],
+    'omer_count': ['Day of the Omer', 'mdi:counter']
 }
 
 CONF_DIASPORA = 'diaspora'
@@ -77,7 +84,7 @@ async def async_setup_platform(
     dev = []
     for sensor_type in config[CONF_SENSORS]:
         dev.append(JewishCalSensor(
-            name, language, sensor_type, latitude, longitude,
+            hass, name, language, sensor_type, latitude, longitude,
             hass.config.time_zone, diaspora, candle_lighting_offset,
             havdalah_offset))
     async_add_entities(dev, True)
@@ -87,10 +94,11 @@ class JewishCalSensor(Entity):
     """Representation of an Jewish calendar sensor."""
 
     def __init__(
-            self, name, language, sensor_type, latitude, longitude, timezone,
+            self, hass, name, language, sensor_type, latitude, longitude, timezone,
             diaspora, candle_lighting_offset=CANDLE_LIGHT_DEFAULT,
             havdalah_offset=0):
         """Initialize the Jewish calendar sensor."""
+        self.hass = hass
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
         self.type = sensor_type
@@ -103,6 +111,41 @@ class JewishCalSensor(Entity):
         self.candle_lighting_offset = candle_lighting_offset
         self.havdalah_offset = havdalah_offset
         _LOGGER.debug("Sensor %s initialized", self.type)
+
+        def recalculate(time=0):
+          _LOGGER.debug("Sunset with offset Triggred")
+          hass.loop.create_task(self.async_update())
+
+        def recalculate_and_schedule():
+          _LOGGER.debug("Sunset without offset Triggred")
+          hass.loop.create_task(self.async_update())
+          schedule_havdalah_recalculate()
+
+        def schedule_havdalah_recalculate():
+          today = dt_util.as_local(dt_util.now()).date()
+          if self.havdalah_offset == 0:
+            location = hdate.Location(latitude=self.latitude,
+                                  longitude=self.longitude,
+                                  timezone=self.timezone,
+                                  diaspora=self.diaspora)
+            times = hdate.Zmanim(
+                today, location, self.candle_lighting_offset,
+                self.havdalah_offset, self._hebrew)
+            next_schedule = dt_util.as_local(times.zmanim["three_stars"])
+          else:
+            sunset = dt_util.as_local(get_astral_event_date(
+              self.hass, SUN_EVENT_SUNSET, today))
+            next_schedule = sunset+dt.timedelta(minutes=self.havdalah_offset)
+          _LOGGER.debug("Will also recalculate at %s", str(next_schedule))
+          now = dt_util.as_local(dt_util.now())
+          recalculate_in_seconds = int((next_schedule-now).total_seconds())+1
+          async_call_later(self.hass, recalculate_in_seconds, recalculate)
+        # We always give 1 extra second
+        async_track_sunset(self.hass, recalculate, -dt.timedelta(minutes=self.candle_lighting_offset-1,seconds=59))
+        async_track_sunset(self.hass, recalculate_and_schedule, dt.timedelta(seconds=1))
+        async_track_time_change(self.hass, recalculate, hour=0, minute=0, second=1)
+        # Just in case we got started between sunset and havdalah
+        schedule_havdalah_recalculate()
 
     @property
     def name(self):
@@ -121,7 +164,6 @@ class JewishCalSensor(Entity):
 
     async def async_update(self):
         """Update the state of the sensor."""
-        import hdate
 
         now = dt_util.as_local(dt_util.now())
         _LOGGER.debug("Now: %s Timezone = %s", now, now.tzinfo)
