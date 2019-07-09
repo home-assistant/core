@@ -225,7 +225,7 @@ class RadioThermostat(ClimateDevice):
         if self._is_model_ct80:
             try:
                 humiditydata = self.device.tstat.humidity['raw']
-            except radiotherm.validate.RadiothermTestatError:
+            except radiotherm.validate.RadiothermTstatError:
                 _LOGGER.warning('%s (%s) was busy (invalid value returned)',
                                 self._name, self.device.host)
                 return
