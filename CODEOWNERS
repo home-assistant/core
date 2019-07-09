@@ -183,6 +183,7 @@ homeassistant/components/nissan_leaf/* @filcole
 homeassistant/components/nmbs/* @thibmaek
 homeassistant/components/no_ip/* @fabaff
 homeassistant/components/notify/* @home-assistant/core
+homeassistant/components/notion/* @bachya
 homeassistant/components/nsw_fuel_station/* @nickw444
 homeassistant/components/nuki/* @pschmitt
 homeassistant/components/ohmconnect/* @robbiet480

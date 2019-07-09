@@ -156,6 +156,9 @@ aiolifx==0.6.7
 # homeassistant.components.lifx
 aiolifx_effects==0.2.2
 
+# homeassistant.components.notion
+aionotion==1.1.0
+
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==1.6.14
 
