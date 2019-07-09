@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE)
+    MEDIA_TYPE_CHANNEL, SUPPORT_SELECT_SOURCE)
 from homeassistant.const import (
     CONF_NAME, CONF_URL, EVENT_HOMEASSISTANT_STOP, STATE_OFF,
     STATE_IDLE, STATE_PLAYING)
@@ -224,7 +224,7 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
 
     @property
     def supported_features(self):
-        """Return the media player features that are supported."""
+        """Flag media player features that are supported."""
         return SAMSUNGTV_UPNP_SUPPORT
 
     @property
@@ -234,7 +234,7 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
 
     @property
     def state(self):
-        """Return the playback state."""
+        """State of the player."""
         if not self._available:
             return STATE_OFF
         elif self._source == 'TV':
@@ -243,29 +243,35 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
 
     @property
     def source_list(self):
-        """Return a list of source devices."""
-        return self._source_list
+        """List of available input sources."""
+        return list(self._source_list)
 
     @property
     def source(self):
-        """Return the current playback device."""
+        """Name of the current input source."""
         return self._source
 
     @property
     def media_channel(self):
-        """Return the media channel."""
+        """Channel currently playing"""
         return self._media_channel
 
     @property
     def media_title(self):
-        """Return the media title."""
+        """Title of current playing media."""
         return self._media_title
 
+    @property
+    def media_content_type(self):
+        """Content type of current playing media."""
+        return MEDIA_TYPE_CHANNEL if self._media_channel else None
+
     async def async_select_source(self, source):
-        """Select playback device."""
+        """Select input source."""
         if source not in self._source_list:
             _LOGGER.debug('Unsupported source')
             return
+        id = self._source_list[source]
 
         action = self._device._action('MTVA', 'SetMainTVSource')
         if not action:
@@ -273,7 +279,7 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
             return
 
         try:
-            result = await action.async_call(Source=source, ID=0, UiID=0)
+            result = await action.async_call(Source=source, ID=id, UiID=0)
         except:
             result = None
         if not result or result.get('Result') != 'OK':
@@ -283,6 +289,7 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
         self._source = source
 
     async def _get_source(self):
+        from collections import OrderedDict
         from xml.dom.minidom import parseString
 
         self._source = None
@@ -304,13 +311,13 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
         dom = parseString(result.get('SourceList'))
         self._source = dom.getElementsByTagName('CurrentSourceType')[0] \
                           .firstChild.nodeValue
-        self._source_list = []
+        self._source_list = OrderedDict()
         for node in dom.getElementsByTagName('Source'):
             if node.getElementsByTagName('Connected')[0].firstChild \
                                                         .nodeValue == 'Yes':
-                self._source_list.append(
-                    node.getElementsByTagName('SourceType')[0] \
-                        .firstChild.nodeValue)
+                name = node.getElementsByTagName('SourceType')[0] .firstChild.nodeValue
+                id = int(node.getElementsByTagName('ID')[0] .firstChild.nodeValue)
+                self._source_list[name] = id
 
     async def _get_media_info(self):
         self._media_channel = None
