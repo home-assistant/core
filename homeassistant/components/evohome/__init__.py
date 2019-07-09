@@ -21,7 +21,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
-    track_point_in_utc_time, track_time_interval)
+    async_track_point_in_utc_time, track_point_in_utc_time, track_time_interval)
 from homeassistant.util.dt import as_utc, parse_datetime, utcnow
 
 from .const import DOMAIN, STORAGE_VERSION, STORAGE_KEY, GWS, TCS
@@ -159,21 +159,18 @@ class EvoBroker:
             if not _handle_exception(err):
                 return False
 
-        else:
-            if access_token != self.client.access_token:
-                asyncio.run_coroutine_threadsafe(
-                    self._save_auth_tokens(), self.hass.loop)
-
-            track_point_in_utc_time(
-                self.hass,
-                self._save_auth_tokens,
-                _local_dt_to_utc(self.client.access_token_expires)
-            )
-
         finally:
             self.params[CONF_PASSWORD] = 'REDACTED'
 
-        self.hass.add_job(self._save_auth_tokens())
+        if access_token != client.access_token:
+            asyncio.run_coroutine_threadsafe(
+                self._save_auth_tokens(), self.hass.loop)
+        else:
+            track_point_in_utc_time(
+                self.hass,
+                self._save_auth_tokens,
+                _local_dt_to_utc(client.access_token_expires)
+            )
 
         loc_idx = self.params[CONF_LOCATION_IDX]
         try:
@@ -230,6 +227,12 @@ class EvoBroker:
 
         store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         await store.async_save(self._app_storage)
+
+        await async_track_point_in_utc_time(
+            self.hass,
+            self._save_auth_tokens,
+            access_token_expires_utc
+        )
 
     def update(self, *args, **kwargs) -> None:
         """Get the latest state data of the entire evohome Location.
