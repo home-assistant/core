@@ -3,6 +3,8 @@ from datetime import timedelta
 from itertools import filterfalse
 import logging
 
+from aiowwlln.errors import WWLLNError
+
 from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, CONF_UNIT_SYSTEM,
@@ -18,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_EVENT_NAME = 'Lightning Strike'
 DEFAULT_ICON = 'mdi:flash'
-DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
+DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
 
 SIGNAL_DELETE_ENTITY = 'delete_entity_{0}'
 
@@ -26,7 +28,7 @@ SIGNAL_DELETE_ENTITY = 'delete_entity_{0}'
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up WWLLN sensors based on a config entry."""
     client = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
-    WWLLNEventManager(
+    manager = WWLLNEventManager(
         hass,
         async_add_entities,
         client,
@@ -34,6 +36,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entry.data[CONF_LONGITUDE],
         entry.data[CONF_RADIUS],
         entry.data[CONF_UNIT_SYSTEM])
+    await manager.async_init()
 
 
 def get_new_strikes(old_strike_list, new_strike_list):
@@ -71,13 +74,6 @@ class WWLLNEventManager:
         else:
             self._unit = LENGTH_KILOMETERS
 
-        self._init_regular_updates()
-
-    async def _init_regular_updates(self):
-        """Schedule regular updates based on configured time interval."""
-        async_track_time_interval(
-            self._hass, self._refresh, DEFAULT_UPDATE_INTERVAL)
-
     @callback
     def _create_events(self, ids_to_create):
         """Create new geo location events."""
@@ -101,9 +97,15 @@ class WWLLNEventManager:
             async_dispatcher_send(
                 self._hass, SIGNAL_DELETE_ENTITY.format(strike_id))
 
-    async def _refresh(self):
+    async def async_init(self):
+        """Schedule regular updates based on configured time interval."""
+        await self.async_update()
+        async_track_time_interval(
+            self._hass, self.async_update, DEFAULT_UPDATE_INTERVAL)
+
+    async def async_update(self):
         """Refresh data."""
-        from aiowwlln.errors import WWLLNError
+        _LOGGER.debug('Refreshing WWLLN data')
 
         try:
             self._strikes = await self._client.within_radius(
@@ -117,10 +119,10 @@ class WWLLNEventManager:
 
         new_strike_ids = set(self._strikes)
         ids_to_remove = self._managed_strike_ids.difference(new_strike_ids)
-        self._hass.async_create_task(self._remove_events(ids_to_remove))
+        self._remove_events(ids_to_remove)
 
         ids_to_create = new_strike_ids.difference(self._managed_strike_ids)
-        self._hass.async_create_task(self._create_events(ids_to_create))
+        self._create_events(ids_to_create)
 
 
 class WWLLNEvent(GeolocationEvent):

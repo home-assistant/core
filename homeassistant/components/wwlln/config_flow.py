@@ -3,7 +3,9 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.helpers import config_validation as cv
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
+from homeassistant.const import (
+    CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, CONF_UNIT_SYSTEM,
+    CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
 from homeassistant.core import callback
 
 from .const import DEFAULT_RADIUS, DOMAIN
@@ -53,5 +55,10 @@ class WWLLNFlowHandler(config_entries.ConfigFlow):
             user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE])
         if identifier in configured_instances(self.hass):
             return await self._show_form({'base': 'identifier_exists'})
+
+        if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
+            user_input[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_IMPERIAL
+        else:
+            user_input[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_METRIC
 
         return self.async_create_entry(title=identifier, data=user_input)
