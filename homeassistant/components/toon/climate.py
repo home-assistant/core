@@ -6,7 +6,8 @@ from typing import Any, Dict, List, Optional
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT, PRESET_AWAY, PRESET_COMFORT, PRESET_HOME, PRESET_SLEEP,
-    SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE)
+    SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE, CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
@@ -42,10 +43,11 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
         """Initialize the Toon climate device."""
         self._client = toon_client
 
-        self._state = None
         self._current_temperature = None
         self._target_temperature = None
+        self._heating = False
         self._next_target_temperature = None
+        self._preset = None
 
         self._heating_type = None
 
@@ -63,19 +65,20 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
 
     @property
     def hvac_mode(self) -> str:
-        """Return hvac operation ie. heat, cool mode.
-
-        Need to be one of HVAC_MODE_*.
-        """
+        """Return hvac operation ie. heat, cool mode."""
         return HVAC_MODE_HEAT
 
     @property
     def hvac_modes(self) -> List[str]:
-        """Return the list of available hvac operation modes.
-
-        Need to be a subset of HVAC_MODES.
-        """
+        """Return the list of available hvac operation modes."""
         return [HVAC_MODE_HEAT]
+
+    @property
+    def hvac_action(self) -> Optional[str]:
+        """Return the current running hvac operation."""
+        if self._heating:
+            return CURRENT_HVAC_HEAT
+        return CURRENT_HVAC_IDLE
 
     @property
     def temperature_unit(self) -> str:
@@ -85,8 +88,8 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        if self._state is not None:
-            return self._state.lower()
+        if self._preset is not None:
+            return self._preset.lower()
         return None
 
     @property
@@ -122,13 +125,13 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
     def set_temperature(self, **kwargs) -> None:
         """Change the setpoint of the thermostat."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        self._client.thermostat = temperature
+        self._client.thermostat = self._target_temperature = temperature
         self.schedule_update_ha_state()
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if preset_mode is not None:
-            self._client.thermostat_state = preset_mode
+            self._client.thermostat_state = self._preset = preset_mode
             self.schedule_update_ha_state()
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
@@ -138,10 +141,11 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
     def update(self) -> None:
         """Update local state."""
         if self.toon.thermostat_state is None:
-            self._state = None
+            self._preset = None
         else:
-            self._state = self.toon.thermostat_state.name
+            self._preset = self.toon.thermostat_state.name
 
         self._current_temperature = self.toon.temperature
         self._target_temperature = self.toon.thermostat
         self._heating_type = self.toon.agreement.heating_type
+        self._heating = self.toon.thermostat_info.burner_info == 1
