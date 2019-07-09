@@ -10,34 +10,42 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF,
-    PRESET_AWAY,
+    PRESET_AWAY, PRESET_BOOST,
     CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE,
+    DEFAULT_MIN_TEMP
 )
 from homeassistant.const import (
-    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES)
+    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES, STATE_OFF)
 from homeassistant.util import Throttle
 
 from .const import DATA_NETATMO_AUTH
 
 _LOGGER = logging.getLogger(__name__)
 
-PRESET_FROST_GUARD = 'frost_guard'
-PRESET_MAX = 'max'
+PRESET_FROST_GUARD = 'frost guard'
 PRESET_SCHEDULE = 'schedule'
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE)
 SUPPORT_HVAC = [HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF]
 SUPPORT_PRESET = [
-    PRESET_AWAY, PRESET_FROST_GUARD, PRESET_SCHEDULE, PRESET_MAX,
+    PRESET_AWAY, PRESET_BOOST, PRESET_FROST_GUARD, PRESET_SCHEDULE,
 ]
 
-STATE_NETATMO_SCHEDULE = 'schedule'
+STATE_NETATMO_SCHEDULE = PRESET_SCHEDULE
 STATE_NETATMO_HG = 'hg'
-STATE_NETATMO_MAX = PRESET_MAX
+STATE_NETATMO_MAX = 'max'
 STATE_NETATMO_AWAY = PRESET_AWAY
-STATE_NETATMO_OFF = "off"
+STATE_NETATMO_OFF = STATE_OFF
 STATE_NETATMO_MANUAL = 'manual'
+
+PRESET_MAP_NETATMO = {
+    PRESET_FROST_GUARD: STATE_NETATMO_HG,
+    PRESET_BOOST: STATE_NETATMO_MAX,
+    PRESET_SCHEDULE: STATE_NETATMO_SCHEDULE,
+    PRESET_AWAY: STATE_NETATMO_AWAY,
+    STATE_NETATMO_OFF: STATE_NETATMO_OFF
+}
 
 HVAC_MAP_NETATMO = {
     STATE_NETATMO_SCHEDULE: HVAC_MODE_AUTO,
@@ -132,11 +140,8 @@ class NetatmoThermostat(ClimateDevice):
         self._support_flags = SUPPORT_FLAGS
         self._hvac_mode = None
         self.update_without_throttle = False
-
-        try:
-            self._module_type = self._data.room_status[room_id]['module_type']
-        except KeyError:
-            _LOGGER.error("Thermostat in %s not available", room_id)
+        self._module_type = \
+            self._data.room_status[room_id].get('module_type', NA_VALVE)
 
         if self._module_type == NA_THERM:
             self._operation_list.append(HVAC_MODE_OFF)
@@ -206,20 +211,28 @@ class NetatmoThermostat(ClimateDevice):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if preset_mode is None:
+        if self.target_temperature == 0:
             self._data.homestatus.setroomThermpoint(
-                self._data.home_id, self._room_id, "off"
+                self._data.home_id,
+                self._room_id,
+                STATE_NETATMO_MANUAL,
+                DEFAULT_MIN_TEMP
             )
-        if preset_mode == STATE_NETATMO_MAX:
+
+        if preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX, STATE_NETATMO_OFF]:
             self._data.homestatus.setroomThermpoint(
-                self._data.home_id, self._room_id, preset_mode
+                self._data.home_id,
+                self._room_id,
+                PRESET_MAP_NETATMO[preset_mode]
             )
         elif preset_mode in [
-                STATE_NETATMO_SCHEDULE, STATE_NETATMO_HG, STATE_NETATMO_AWAY
+                PRESET_SCHEDULE, PRESET_FROST_GUARD, PRESET_AWAY
         ]:
             self._data.homestatus.setThermmode(
-                self._data.home_id, preset_mode
+                self._data.home_id, PRESET_MAP_NETATMO[preset_mode]
             )
+        self.update_without_throttle = True
+        self.schedule_update_ha_state()
 
     @property
     def preset_mode(self) -> Optional[str]:
@@ -239,6 +252,7 @@ class NetatmoThermostat(ClimateDevice):
         self._data.homestatus.setroomThermpoint(
             self._data.homedata.gethomeId(self._data.home),
             self._room_id, STATE_NETATMO_MANUAL, temp)
+
         self.update_without_throttle = True
         self.schedule_update_ha_state()
 
