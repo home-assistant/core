@@ -1,6 +1,5 @@
 """Support for Toon thermostat."""
 
-from datetime import timedelta
 import logging
 from typing import Any, Dict, List, Optional
 
@@ -12,39 +11,45 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import ToonDisplayDeviceEntity
-from .const import DATA_TOON_CLIENT, DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN
+from . import ToonData, ToonDisplayDeviceEntity
+from .const import (
+    DATA_TOON_CLIENT,
+    DATA_TOON,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 SUPPORT_PRESET = [PRESET_AWAY, PRESET_COMFORT, PRESET_HOME, PRESET_SLEEP]
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
-SCAN_INTERVAL = timedelta(seconds=300)
 
-
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,
-                            async_add_entities) -> None:
+async def async_setup_entry(
+        hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
     """Set up a Toon binary sensors based on a config entry."""
-    toon = hass.data[DATA_TOON_CLIENT][entry.entry_id]
-    async_add_entities([ToonThermostatDevice(toon)], True)
+    toon_client = hass.data[DATA_TOON_CLIENT][entry.entry_id]
+    toon_data = hass.data[DATA_TOON][entry.entry_id]
+    async_add_entities([ToonThermostatDevice(toon_client, toon_data)], True)
 
 
 class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
     """Representation of a Toon climate device."""
 
-    def __init__(self, toon) -> None:
+    def __init__(self, toon_client, toon_data: ToonData) -> None:
         """Initialize the Toon climate device."""
-        self._state = None
+        self._client = toon_client
 
+        self._state = None
         self._current_temperature = None
         self._target_temperature = None
         self._next_target_temperature = None
 
         self._heating_type = None
 
-        super().__init__(toon, "Toon Thermostat", 'mdi:thermostat')
+        super().__init__(toon_data, "Toon Thermostat", 'mdi:thermostat')
 
     @property
     def unique_id(self) -> str:
@@ -112,19 +117,19 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
         """Return the current state of the burner."""
-        return {
-            'heating_type': self._heating_type,
-        }
+        return {'heating_type': self._heating_type}
 
     def set_temperature(self, **kwargs) -> None:
         """Change the setpoint of the thermostat."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        self.toon.thermostat = temperature
+        self._client.thermostat = temperature
+        self.schedule_update_ha_state()
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if preset_mode is not None:
-            self.toon.thermostat_state = preset_mode
+            self._client.thermostat_state = preset_mode
+            self.schedule_update_ha_state()
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
