@@ -96,12 +96,10 @@ def _handle_exception(err):
 def setup(hass, hass_config):
     """Create a (EMEA/EU-based) Honeywell evohome system."""
     broker = EvoBroker(hass, hass_config[DOMAIN])
-
     if not broker.init_client():
         return False
 
     load_platform(hass, 'climate', DOMAIN, {}, hass_config)
-
     if broker.tcs.hotwater:
         load_platform(hass, 'water_heater', DOMAIN, {}, hass_config)
 
