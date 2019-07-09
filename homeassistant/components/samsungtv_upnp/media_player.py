@@ -276,7 +276,7 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
             result = await action.async_call(Source=source, ID=0, UiID=0)
         except:
             result = None
-        if not result or result['Result'] != 'OK':
+        if not result or result.get('Result') != 'OK':
             _LOGGER.debug('unable to select source')
             return
 
@@ -297,11 +297,11 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
             result = await action.async_call()
         except:
             result = None
-        if not result or result['Result'] != 'OK':
+        if not result or result.get('Result') != 'OK':
             _LOGGER.debug('unable to get sources')
             return
 
-        dom = parseString(result['SourceList'])
+        dom = parseString(result.get('SourceList'))
         self._source = dom.getElementsByTagName('CurrentSourceType')[0] \
                           .firstChild.nodeValue
         self._source_list = []
@@ -325,9 +325,9 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
             result = await action.async_call()
         except:
             result = None
-        if not result or result['Result'] != 'OK':
+        if not result or result.get('Result') != 'OK':
             _LOGGER.debug('unable to get media title')
             return
 
-        self._media_channel = result['ChannelName']
-        self._media_title = result['ProgramTitle']
+        self._media_channel = result.get('ChannelName')
+        self._media_title = result.get('ProgramTitle')
