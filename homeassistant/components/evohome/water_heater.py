@@ -1,6 +1,7 @@
 """Support for WaterHeater devices of (EMEA/EU) Honeywell TCC systems."""
+from datetime import datetime, timedelta
 import logging
-from typing import List
+from typing import Any, Awaitable, Dict, Optional, List
 
 import requests.exceptions
 import evohomeclient2
@@ -8,7 +9,6 @@ import evohomeclient2
 from homeassistant.components.water_heater import (
     SUPPORT_OPERATION_MODE, WaterHeaterDevice)
 from homeassistant.const import PRECISION_WHOLE, STATE_OFF, STATE_ON
-from homeassistant.util.dt import parse_datetime
 
 from . import _handle_exception, EvoDevice
 from .const import DOMAIN, EVO_STRFTIME, EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER
@@ -21,8 +21,8 @@ EVO_STATE_TO_HA = {v: k for k, v in HA_STATE_TO_EVO.items()}
 HA_OPMODE_TO_DHW = {STATE_ON: EVO_FOLLOW, STATE_OFF: EVO_PERMOVER}
 
 
-def setup_platform(hass, hass_config, add_entities,
-                   discovery_info=None) -> None:
+async def async_setup_platform(hass, hass_config, async_add_entities,
+                               discovery_info=None):
     """Create the DHW controller."""
     broker = hass.data[DOMAIN]['broker']
 
@@ -32,7 +32,7 @@ def setup_platform(hass, hass_config, add_entities,
 
     evo_dhw = EvoDHW(broker, broker.tcs.hotwater)
 
-    add_entities([evo_dhw], update_before_add=True)
+    async_add_entities([evo_dhw], update_before_add=True)
 
 
 class EvoDHW(EvoDevice, WaterHeaterDevice):
@@ -75,13 +75,12 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         op_mode = HA_OPMODE_TO_DHW[operation_mode]
 
         state = '' if op_mode == EVO_FOLLOW else HA_STATE_TO_EVO[STATE_OFF]
-        until = None  # EVO_FOLLOW, EVO_PERMOVER
 
         if op_mode == EVO_TEMPOVER:
-            self._setpoints = self.get_setpoints()
-            if self._setpoints:
-                until = parse_datetime(self._setpoints['next']['from'])
-                until = until.strftime(EVO_STRFTIME)
+            until = datetime.now() + timedelta(hours=1)
+            until = until.strftime(EVO_STRFTIME)
+        else:
+            until = None
 
         data = {'Mode': op_mode, 'State': state, 'UntilTime': until}
 
