@@ -43,8 +43,8 @@ HA_PRESET_TO_EVO = {
 EVO_PRESET_TO_HA = {v: k for k, v in HA_PRESET_TO_EVO.items()}
 
 
-def setup_platform(hass, hass_config, add_entities,
-                   discovery_info=None) -> None:
+async def async_setup_platform(hass, hass_config, async_add_entities,
+                               discovery_info=None) -> None:
     """Create the evohome Controller, and its Zones, if any."""
     broker = hass.data[DOMAIN]['broker']
     loc_idx = broker.params[CONF_LOCATION_IDX]
@@ -66,7 +66,7 @@ def setup_platform(hass, hass_config, add_entities,
 
     entities = [controller] + zones
 
-    add_entities(entities, update_before_add=True)
+    async_add_entities(entities, update_before_add=True)
 
 
 class EvoClimateDevice(EvoDevice, ClimateDevice):
