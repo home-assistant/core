@@ -1,7 +1,7 @@
 """Support for WaterHeater devices of (EMEA/EU) Honeywell TCC systems."""
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Awaitable, Dict, Optional, List
+from typing import List
 
 import requests.exceptions
 import evohomeclient2
@@ -21,8 +21,8 @@ EVO_STATE_TO_HA = {v: k for k, v in HA_STATE_TO_EVO.items()}
 HA_OPMODE_TO_DHW = {STATE_ON: EVO_FOLLOW, STATE_OFF: EVO_PERMOVER}
 
 
-async def async_setup_platform(hass, hass_config, async_add_entities,
-                               discovery_info=None):
+def setup_platform(hass, hass_config, add_entities,
+                   discovery_info=None) -> None:
     """Create the DHW controller."""
     broker = hass.data[DOMAIN]['broker']
 
@@ -32,7 +32,7 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
 
     evo_dhw = EvoDHW(broker, broker.tcs.hotwater)
 
-    async_add_entities([evo_dhw], update_before_add=True)
+    add_entities([evo_dhw], update_before_add=True)
 
 
 class EvoDHW(EvoDevice, WaterHeaterDevice):

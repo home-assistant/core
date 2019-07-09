@@ -5,7 +5,7 @@ Such systems include evohome (multi-zone), and Round Thermostat (single zone).
 import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Dict, Optional, Tuple
+from typing import Awaitable, Any, Dict, Tuple
 
 import requests.exceptions
 import voluptuous as vol
@@ -16,13 +16,13 @@ from homeassistant.const import (
     HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS, TEMP_CELSIUS)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
-    async_track_point_in_utc_time, track_time_interval)
-from homeassistant.util.dt import parse_datetime, utcnow
+    track_point_in_utc_time, track_time_interval)
+from homeassistant.util.dt import as_utc, parse_datetime, utcnow
 
 from .const import DOMAIN, STORAGE_VERSION, STORAGE_KEY, GWS, TCS
 
@@ -101,18 +101,17 @@ def _handle_exception(err) -> bool:
         raise  # we don't expect/handle any other HTTPErrors
 
 
-def setup(hass, hass_config) -> bool:
+def setup(hass, hass_config):
     """Create a (EMEA/EU-based) Honeywell evohome system."""
     broker = EvoBroker(hass, hass_config[DOMAIN])
+
     if not broker.init_client():
         return False
 
-    hass.async_create_task(
-        async_load_platform(hass, 'climate', DOMAIN, {}, hass_config))
+    load_platform(hass, 'climate', DOMAIN, {}, hass_config)
 
     if broker.tcs.hotwater:
-        hass.async_create_task(
-            async_load_platform(hass, 'water_heater', DOMAIN, {}, hass_config))
+        load_platform(hass, 'water_heater', DOMAIN, {}, hass_config)
 
     track_time_interval(
         hass, broker.update, hass_config[DOMAIN][CONF_SCAN_INTERVAL]
@@ -146,10 +145,6 @@ class EvoBroker:
             asyncio.run_coroutine_threadsafe(
                 self._load_auth_tokens(), self.hass.loop).result()
 
-        # evohomeclient2 uses local datetimes
-        if access_token_expires is not None:
-            access_token_expires = _utc_to_local_dt(access_token_expires)
-
         try:
             client = self.client = evohomeclient2.EvohomeClient(
                 self.params[CONF_USERNAME],
@@ -163,6 +158,17 @@ class EvoBroker:
                 evohomeclient2.AuthenticationError) as err:
             if not _handle_exception(err):
                 return False
+
+        else:
+            if access_token != self.client.access_token:
+                asyncio.run_coroutine_threadsafe(
+                    self._save_auth_tokens(), self.hass.loop)
+
+            track_point_in_utc_time(
+                self.hass,
+                self._save_auth_tokens,
+                _local_dt_to_utc(self.client.access_token_expires)
+            )
 
         finally:
             self.params[CONF_PASSWORD] = 'REDACTED'
@@ -193,8 +199,7 @@ class EvoBroker:
 
         return True
 
-    async def _load_auth_tokens(self) -> Tuple[
-            Optional[str], Optional[str], Optional[datetime]]:
+    async def _load_auth_tokens(self) -> Awaitable[Tuple[str, str, datetime]]:
         store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         app_storage = self._app_storage = await store.async_load()
 
@@ -224,12 +229,6 @@ class EvoBroker:
 
         store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         await store.async_save(self._app_storage)
-
-        async_track_point_in_utc_time(
-            self.hass,
-            self._save_auth_tokens,
-            access_token_expires + self.params[CONF_SCAN_INTERVAL]
-        )
 
     def update(self, *args, **kwargs) -> None:
         """Get the latest state data of the entire evohome Location.
@@ -318,7 +317,8 @@ class EvoDevice(Entity):
                 '{}T{}'.format(sp_date, switchpoint['TimeOfDay']),
                 '%Y-%m-%dT%H:%M:%S')
 
-            spt['from'] = _local_dt_to_utc(dt_naive).isoformat()
+            spt['from'] = \
+                _local_dt_to_utc(dt_naive).strftime(EVO_STRFTIME)
             try:
                 spt['temperature'] = switchpoint['heatSetpoint']
             except KeyError:
