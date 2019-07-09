@@ -218,7 +218,7 @@ class EvoBroker:
         store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         await store.async_save(self._app_storage)
 
-        await async_track_point_in_utc_time(
+        async_track_point_in_utc_time(
             self.hass,
             self._save_auth_tokens,
             access_token_expires_utc
