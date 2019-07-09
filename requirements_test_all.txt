@@ -57,6 +57,9 @@ aiohttp_cors==0.7.0
 # homeassistant.components.hue
 aiohue==1.9.1
 
+# homeassistant.components.notion
+aionotion==1.1.0
+
 # homeassistant.components.switcher_kis
 aioswitcher==2019.4.26
 

@@ -409,6 +409,8 @@ omit =
     homeassistant/components/nissan_leaf/*
     homeassistant/components/nmap_tracker/device_tracker.py
     homeassistant/components/nmbs/sensor.py
+    homeassistant/components/notion/binary_sensor.py
+    homeassistant/components/notion/sensor.py
     homeassistant/components/noaa_tides/sensor.py
     homeassistant/components/norway_air/air_quality.py
     homeassistant/components/nsw_fuel_station/sensor.py

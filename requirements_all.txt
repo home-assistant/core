@@ -211,7 +211,14 @@ aiolifx==0.6.7
 # homeassistant.components.light.lifx
 aiolifx_effects==0.2.1
 
+<<<<<<< HEAD
 # homeassistant.components.scene.hunterdouglas_powerview
+=======
+# homeassistant.components.notion
+aionotion==1.1.0
+
+# homeassistant.components.hunterdouglas_powerview
+>>>>>>> Add support for Notion Home Monitoring (#24634)
 aiopvapi==1.6.14
 
 <<<<<<< HEAD
