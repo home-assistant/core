@@ -2,29 +2,13 @@
 from collections import namedtuple
 import logging
 
-import voluptuous as vol
-
-from homeassistant.const import CONF_HOST, CONF_USERNAME, \
-    CONF_PASSWORD, CONF_DEVICES
 from homeassistant.components.device_tracker import DeviceScanner
-from homeassistant.helpers import config_validation as cv
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA
-
 
 from . import DATA_FGT
 
 _LOGGER = logging.getLogger(__name__)
 
 DETECTED_DEVICES = "/monitor/user/detected-device"
-
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_DEVICES, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
-})
 
 
 async def async_get_scanner(hass, config):

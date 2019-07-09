@@ -30,10 +30,10 @@ async def async_setup(hass, config):
     """Start the fortigate component."""
     conf = config[DOMAIN]
 
-    host = conf.get(CONF_HOST)
-    user = conf.get(CONF_USERNAME)
-    apikey = conf.get(CONF_PASSWORD)
-    devices = conf.get(CONF_DEVICES)
+    host = conf[CONF_HOST]
+    user = conf[CONF_USERNAME]
+    apikey = conf[CONF_PASSWORD]
+    devices = conf[CONF_DEVICES]
 
     await async_setup_fortigate(hass, config, host, user, apikey, devices)
 
