@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def async_get_scanner(hass, config):
-    """Validate the configuration and return a Freebox scanner."""
+    """Validate the configuration and return a Fortigate scanner."""
     scanner = FortigateDeviceScanner(hass.data[DATA_FGT])
     await scanner.async_connect()
     return scanner if scanner.success_init else None
