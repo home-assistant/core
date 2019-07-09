@@ -507,7 +507,7 @@ geniushub-client==0.4.12
 # homeassistant.components.geo_json_events
 # homeassistant.components.nsw_rural_fire_service_feed
 # homeassistant.components.usgs_earthquakes_feed
-geojson_client==0.3
+geojson_client==0.4
 
 # homeassistant.components.aprs
 geopy==1.19.0
