@@ -234,7 +234,6 @@ class FibaroFGRM222(ZwaveRollershutter):
         self._open_tilt_position = 50  # type: int
         if open_tilt_position is not None:
             self._open_tilt_position = open_tilt_position
-        _LOGGER.debug('open_tilt_position: %s', open_tilt_position)
         super().__init__(hass, values, invert_buttons, invert_percent)
 
     @property
