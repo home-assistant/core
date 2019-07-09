@@ -6,7 +6,8 @@ from typing import Any, Dict, List, Optional
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT, PRESET_AWAY, PRESET_COMFORT, PRESET_HOME, PRESET_SLEEP,
-    SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE)
+    SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE, CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
@@ -44,6 +45,7 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
 
         self._current_temperature = None
         self._target_temperature = None
+        self._heating = False
         self._next_target_temperature = None
         self._preset = None
 
@@ -70,6 +72,13 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
     def hvac_modes(self) -> List[str]:
         """Return the list of available hvac operation modes."""
         return [HVAC_MODE_HEAT]
+
+    @property
+    def hvac_action(self) -> Optional[str]:
+        """Return the current running hvac operation."""
+        if self._heating:
+            return CURRENT_HVAC_HEAT
+        return CURRENT_HVAC_IDLE
 
     @property
     def temperature_unit(self) -> str:
@@ -139,3 +148,4 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
         self._current_temperature = self.toon.temperature
         self._target_temperature = self.toon.thermostat
         self._heating_type = self.toon.agreement.heating_type
+        self._heating = self.toon.thermostat_info.burner_info == 1
