@@ -137,7 +137,7 @@ class TestPS4MediaServices(unittest.TestCase):
 
     def test_media_player_is_setup(self):
         """Test media_player is setup correctly."""
-        self.setup_mock_component()
+        self.setup_mock_media_player()
         assert len(self.hass.data[PS4_DATA].devices) == 1
 
     def test_file_created_if_none(self):
