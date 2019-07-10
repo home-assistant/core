@@ -23,7 +23,7 @@ ATTR_EXTERNAL_ID = 'external_id'
 ATTR_PUBLICATION_DATE = 'publication_date'
 
 DEFAULT_ATTRIBUTION = 'Data provided by the WWLLN'
-DEFAULT_EVENT_NAME = 'Lightning Strike'
+DEFAULT_EVENT_NAME = 'Lightning Strike: {0}'
 DEFAULT_ICON = 'mdi:flash'
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
 
@@ -187,7 +187,7 @@ class WWLLNEvent(GeolocationEvent):
     @property
     def name(self):
         """Return the name of the event."""
-        return DEFAULT_EVENT_NAME
+        return DEFAULT_EVENT_NAME.format(self._strike_id)
 
     @property
     def source(self) -> str:
