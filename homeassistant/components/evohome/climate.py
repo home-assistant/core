@@ -201,14 +201,14 @@ class EvoZone(EvoClimateDevice):
                 _handle_exception(err)
             return
 
-        self._setpoints = self.get_setpoints()
         temperature = self._evo_device.setpointStatus['targetHeatTemperature']
+        until = None
 
         if op_mode == EVO_TEMPOVER:
-            until = self._setpoints['next']['from_datetime']
-            until = datetime.strptime(until, EVO_STRFTIME)
-        else:  # EVO_PERMOVER:
-            until = None
+            self._setpoints = self.get_setpoints()
+            if self._setpoints:
+                until = self._setpoints['next']['from_datetime']
+                until = datetime.strptime(until, EVO_STRFTIME)
 
         self._set_temperature(temperature, until=until)
 
