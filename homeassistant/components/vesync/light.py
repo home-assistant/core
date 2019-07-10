@@ -36,7 +36,7 @@ def add_entity(device, async_add_entities):
     device.update()
 
     async_add_entities(
-        [VeSyncBulbESL100(device)],
+        [VeSyncSmartBulb(device)],
         update_before_add=True
     )
 
@@ -56,10 +56,10 @@ class VeSyncSmartBulb(Light):
     @property
     def unique_id(self):
         """Return the ID of this bulb."""
-        if isinstance(self.smartplug.sub_device_no, int):
-            return (self.smartplug.cid + str(self.smartplug.sub_device_no))
+        if isinstance(self.smartbulb.sub_device_no, int):
+            return (self.smartbulb.cid + str(self.smartbulb.sub_device_no))
         else:
-            return self.smartplug.cid
+            return self.smartbulb.cid
 
     @property
     def name(self):

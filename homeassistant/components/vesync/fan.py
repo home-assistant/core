@@ -66,10 +66,10 @@ class VeSyncFanHA(FanEntity):
     @property
     def unique_info(self):
         """Return the ID of this fan."""
-        if isinstance(self.smartplug.sub_device_no, int):
-            return (self.smartplug.cid + str(self.smartplug.sub_device_no))
+        if isinstance(self.fan.sub_device_no, int):
+            return (self.fan.cid + str(self.fan.sub_device_no))
         else:
-            return self.smartplug.cid
+            return self.fan.cid
 
     @property
     def name(self):
