@@ -15,8 +15,6 @@ from tests.common import (
     mock_state_change_event
 )
 
-
-
 class TestSplunk(unittest.TestCase):
     """Test the Splunk component."""
 
@@ -159,7 +157,6 @@ class TestSplunk(unittest.TestCase):
         """Test event listener."""
         self._setup_with_filter(mock_requests)
 
-        now = dt_util.now()
         testdata = [
             {
                 'entity_id': 'other_domain.other_entity',
@@ -180,11 +177,8 @@ class TestSplunk(unittest.TestCase):
             self.hass.block_till_done()
 
             if test['filter_expected']:
-                """Verify that the request post did not occur for a filtered events"""
                 assert not splunk.post_request.called
             else:
-                """Verify that the request post did occur for a non-filtered events"""
                 assert splunk.post_request.called
 
             splunk.post_request.reset_mock()
-

@@ -38,14 +38,15 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def post_request(event_collector, body, headers, verify_ssl):
+    """Post request to Splunk."""
     try:
         payload = {
             "host": event_collector,
             "event": body,
         }
         requests.post(event_collector,
-                    data=json.dumps(payload, cls=JSONEncoder),
-                    headers=headers, timeout=10, verify=verify_ssl)
+                      data=json.dumps(payload, cls=JSONEncoder),
+                      headers=headers, timeout=10, verify=verify_ssl)
 
     except requests.exceptions.RequestException as error:
         _LOGGER.exception("Error saving event to Splunk: %s", error)
@@ -95,7 +96,6 @@ def setup(hass, config):
         ]
 
         post_request(event_collector, json_body, headers, verify_ssl)
-
 
     hass.bus.listen(EVENT_STATE_CHANGED, splunk_event_listener)
 
