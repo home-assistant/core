@@ -178,6 +178,11 @@ class EvoBroker:
                 client.locations[loc_idx]._gateways[0]._control_systems[0]  # noqa: E501; pylint: disable=protected-access
 
         _LOGGER.debug("Config = %s", self.config)
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            # don't do an I/O unless required
+            _LOGGER.debug(
+                "Status = %s",
+                client.locations[loc_idx].status()[GWS][0][TCS][0])
 
         return True
 
