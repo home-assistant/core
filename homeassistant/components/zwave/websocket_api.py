@@ -5,6 +5,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.core import callback
 
 from .const import DATA_NETWORK
 
@@ -26,7 +27,7 @@ def websocket_network_status(hass, connection, msg):
         'state_str': network.state_str
     })
 
-
+@callback
 def async_load_websocket_api(hass):
     """Set up the web socket API."""
     websocket_api.async_register_command(hass, websocket_network_status)
