@@ -192,4 +192,3 @@ class TestDarkSkySetup(unittest.TestCase):
             'Dark Sky Summary'
         state = self.hass.states.get('sensor.dark_sky_alerts')
         assert state.state == '2'
-
