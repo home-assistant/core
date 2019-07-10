@@ -84,6 +84,13 @@ VALID_TRANSITION = vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553))
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 
+
+def _csv(value):
+    if isinstance(value, str):
+        return tuple(member.strip() for member in value.split(','))
+    return value
+
+
 LIGHT_TURN_ON_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
     ATTR_TRANSITION: VALID_TRANSITION,
@@ -91,15 +98,18 @@ LIGHT_TURN_ON_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
     vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
     vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP):
-        vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
+        vol.All(_csv,
+                vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
                 vol.Coerce(tuple)),
     vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP):
-        vol.All(vol.ExactSequence((cv.small_float, cv.small_float)),
+        vol.All(_csv,
+                vol.ExactSequence((cv.small_float, cv.small_float)),
                 vol.Coerce(tuple)),
     vol.Exclusive(ATTR_HS_COLOR, COLOR_GROUP):
-        vol.All(vol.ExactSequence(
-            (vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
-             vol.All(vol.Coerce(float), vol.Range(min=0, max=100)))),
+        vol.All(_csv,
+                vol.ExactSequence(
+                    (vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
+                     vol.All(vol.Coerce(float), vol.Range(min=0, max=100)))),
                 vol.Coerce(tuple)),
     vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP):
         vol.All(vol.Coerce(int), vol.Range(min=1)),

@@ -220,6 +220,28 @@ class TestLight(unittest.TestCase):
             light.ATTR_HS_COLOR: (71.059, 100),
         } == data
 
+        # Ensure all attributes process correctly when using csv string
+        common.turn_on(self.hass, dev1.entity_id, rgb_color='255, 255, 255')
+        common.turn_on(self.hass, dev2.entity_id, xy_color='.4, .6')
+        common.turn_on(self.hass, dev3.entity_id, hs_color='180.5, 50.5')
+
+        self.hass.block_till_done()
+
+        method, data = dev1.last_call('turn_on')
+        assert {
+            light.ATTR_HS_COLOR: (0, 0),
+        } == data
+
+        method, data = dev2.last_call('turn_on')
+        assert {
+            light.ATTR_HS_COLOR: (71.059, 100),
+        } == data
+
+        method, data = dev3.last_call('turn_on')
+        assert {
+            light.ATTR_HS_COLOR: (180.5, 50.5),
+        } == data
+
         # Ensure attributes are filtered when light is turned off
         common.turn_on(self.hass, dev1.entity_id,
                        transition=10, brightness=0, color_name='blue')
