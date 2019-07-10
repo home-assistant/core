@@ -381,44 +381,47 @@ class ThermostatData:
                 roomstatus = {}
                 homestatus_room = self.homestatus.rooms[room]
                 homedata_room = self.homedata.rooms[self.home][room]
+
                 roomstatus["roomID"] = homestatus_room["id"]
-                roomstatus["roomname"] = homedata_room["name"]
-                roomstatus["target_temperature"] = homestatus_room[
-                    "therm_setpoint_temperature"
-                ]
-                roomstatus["setpoint_mode"] = homestatus_room[
-                    "therm_setpoint_mode"
-                ]
-                roomstatus["current_temperature"] = homestatus_room[
-                    "therm_measured_temperature"
-                ]
-                roomstatus["module_type"] = self.homestatus.thermostatType(
-                    self.home, room
-                )
-                roomstatus["module_id"] = None
-                roomstatus["heating_status"] = None
-                roomstatus["heating_power_request"] = None
-                for module_id in homedata_room["module_ids"]:
-                    if (self.homedata.modules[self.home][module_id]["type"]
-                            == NA_THERM
-                            or roomstatus["module_id"] is None):
-                        roomstatus["module_id"] = module_id
-                if roomstatus["module_type"] == NA_THERM:
-                    self.boilerstatus = self.homestatus.boilerStatus(
-                        rid=roomstatus["module_id"]
-                    )
-                    roomstatus["heating_status"] = self.boilerstatus
-                elif roomstatus["module_type"] == NA_VALVE:
-                    roomstatus["heating_power_request"] = homestatus_room[
-                        "heating_power_request"
+                if homestatus_room["reachable"]:
+                    roomstatus["roomname"] = homedata_room["name"]
+                    roomstatus["target_temperature"] = homestatus_room[
+                        "therm_setpoint_temperature"
                     ]
-                    roomstatus["heating_status"] = (
-                        roomstatus["heating_power_request"] > 0
+                    roomstatus["setpoint_mode"] = homestatus_room[
+                        "therm_setpoint_mode"
+                    ]
+                    roomstatus["current_temperature"] = homestatus_room[
+                        "therm_measured_temperature"
+                    ]
+                    roomstatus["module_type"] = self.homestatus.thermostatType(
+                        self.home, room
                     )
-                    if self.boilerstatus is not None:
-                        roomstatus["heating_status"] = (
-                            self.boilerstatus and roomstatus["heating_status"]
+                    roomstatus["module_id"] = None
+                    roomstatus["heating_status"] = None
+                    roomstatus["heating_power_request"] = None
+                    for module_id in homedata_room["module_ids"]:
+                        if (self.homedata.modules[self.home][module_id]["type"]
+                                == NA_THERM
+                                or roomstatus["module_id"] is None):
+                            roomstatus["module_id"] = module_id
+                    if roomstatus["module_type"] == NA_THERM:
+                        self.boilerstatus = self.homestatus.boilerStatus(
+                            rid=roomstatus["module_id"]
                         )
+                        roomstatus["heating_status"] = self.boilerstatus
+                    elif roomstatus["module_type"] == NA_VALVE:
+                        roomstatus["heating_power_request"] = homestatus_room[
+                            "heating_power_request"
+                        ]
+                        roomstatus["heating_status"] = (
+                            roomstatus["heating_power_request"] > 0
+                        )
+                        if self.boilerstatus is not None:
+                            roomstatus["heating_status"] = (
+                                self.boilerstatus
+                                and roomstatus["heating_status"]
+                            )
                 self.room_status[room] = roomstatus
             except KeyError as err:
                 _LOGGER.error("Update of room %s failed. Error: %s", room, err)
