@@ -27,8 +27,6 @@ LOGGER = logging.getLogger(__name__)
 
 CONF_PORT = 'port'
 CONF_DT_SITE_ID = 'site_id'
-CONF_DETECTION_TIME = 'detection_time'
-CONF_SSID_FILTER = 'ssid_filter'
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8443
@@ -42,13 +40,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): vol.Any(
-        cv.boolean, cv.isfile),
-    vol.Optional(CONF_DETECTION_TIME, default=DEFAULT_DETECTION_TIME): vol.All(
-        cv.time_period, cv.positive_timedelta),
-    vol.Optional(CONF_MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_SSID_FILTER): vol.All(cv.ensure_list, [cv.string])
-})
+        cv.boolean, cv.isfile)
+}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup_scanner(hass, config, sync_see, discovery_info):
