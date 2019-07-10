@@ -1,41 +1,34 @@
 """Support for devices connected to UniFi POE."""
+from datetime import timedelta
+
+import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
+import homeassistant.helpers.config_validation as cv
+
 from .const import (
-    CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID, DOMAIN, UNIFI_CONFIG)
+    CONF_CONTROLLER, CONF_DETECTION_TIME, CONF_SITE_ID, CONF_SSID_FILTER,
+    CONTROLLER_ID, DOMAIN, UNIFI_CONFIG)
 from .controller import UniFiController
-from .device_tracker import (
-    CONF_DT_SITE_ID, PLATFORM_SCHEMA as DEVICE_TRACKER_SCHEMA)
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_DETECTION_TIME): vol.All(
+            cv.time_period, cv.positive_timedelta),
+        vol.Optional(CONF_SSID_FILTER): vol.All(cv.ensure_list, [cv.string])
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
     """Component doesn't support configuration through configuration.yaml."""
-    unifi_config = []
+    hass.data[UNIFI_CONFIG] = []
 
-    if 'device_tracker' in config:
-        for dt_conf in config['device_tracker']:
-            if dt_conf['platform'] == DOMAIN:
-                unifi_config.append(DEVICE_TRACKER_SCHEMA(dt_conf))
-
-    hass.data[UNIFI_CONFIG] = unifi_config
-
-    for unifi in unifi_config:
-        exist = False
-
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if unifi[CONF_HOST] == entry.data[CONF_CONTROLLER][CONF_HOST] and \
-                    unifi[CONF_DT_SITE_ID] == \
-                        entry.data[CONF_CONTROLLER][CONF_SITE_ID]:
-                exist = True
-                break
-
-        if not exist:
-            hass.async_create_task(hass.config_entries.flow.async_init(
-                DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
-                data=unifi
-            ))
+    if DOMAIN in config:
+        hass.data[UNIFI_CONFIG] = config[DOMAIN]
 
     return True
 

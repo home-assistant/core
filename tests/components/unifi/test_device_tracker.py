@@ -132,11 +132,10 @@ async def test_tracked_devices(hass, mock_controller):
     """Test the update_items function with some clients."""
     client_1 = copy(CLIENT_1)
     client_1['last_seen'] = dt_util.as_timestamp(dt_util.utcnow())
-    mock_controller.mock_client_responses.append([client_1, CLIENT_2, CLIENT_3])
+    mock_controller.mock_client_responses.append(
+        [client_1, CLIENT_2, CLIENT_3])
     mock_controller.mock_device_responses.append({})
-    mock_controller.unifi_config[unifi_dt.CONF_DETECTION_TIME] = \
-        unifi_dt.DEFAULT_DETECTION_TIME
-    mock_controller.unifi_config[unifi_dt.CONF_SSID_FILTER] = ['ssid']
+    hass.data[UNIFI_CONFIG] = {unifi_dt.CONF_SSID_FILTER: ['ssid']}
 
     await setup_controller(hass, mock_controller)
     assert len(mock_controller.mock_requests) == 2

@@ -4,7 +4,8 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.components.unifi.const import CONF_CONTROLLER, CONF_SITE_ID
+from homeassistant.components.unifi.const import (
+    CONF_CONTROLLER, CONF_SITE_ID, UNIFI_CONFIG)
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL)
 from homeassistant.components.unifi import controller, errors
@@ -35,7 +36,7 @@ ENTRY_CONFIG = {
 async def test_controller_setup():
     """Successful setup."""
     hass = Mock()
-    hass.data = {controller.UNIFI_CONFIG: []}
+    hass.data = {UNIFI_CONFIG: []}
     entry = Mock()
     entry.data = ENTRY_CONFIG
     api = Mock()
@@ -59,7 +60,6 @@ async def test_controller_setup():
 async def test_controller_host():
     """Config entry host and controller host are the same."""
     hass = Mock()
-    hass.data = {controller.UNIFI_CONFIG: []}
     entry = Mock()
     entry.data = ENTRY_CONFIG
 
@@ -71,7 +71,6 @@ async def test_controller_host():
 async def test_controller_site():
     """Config entry site and controller site are the same."""
     hass = Mock()
-    hass.data = {controller.UNIFI_CONFIG: []}
     entry = Mock()
     entry.data = ENTRY_CONFIG
 
@@ -83,7 +82,6 @@ async def test_controller_site():
 async def test_controller_mac():
     """Test that it is possible to identify controller mac."""
     hass = Mock()
-    hass.data = {controller.UNIFI_CONFIG: []}
     entry = Mock()
     entry.data = ENTRY_CONFIG
     client = Mock()
@@ -106,7 +104,6 @@ async def test_controller_mac():
 async def test_controller_no_mac():
     """Test that it works to not find the controllers mac."""
     hass = Mock()
-    hass.data = {controller.UNIFI_CONFIG: []}
     entry = Mock()
     entry.data = ENTRY_CONFIG
     client = Mock()
@@ -128,7 +125,6 @@ async def test_controller_no_mac():
 async def test_controller_not_accessible():
     """Retry to login gets scheduled when connection fails."""
     hass = Mock()
-    hass.data = {controller.UNIFI_CONFIG: []}
     entry = Mock()
     entry.data = ENTRY_CONFIG
     api = Mock()
@@ -145,7 +141,6 @@ async def test_controller_not_accessible():
 async def test_controller_unknown_error():
     """Unknown errors are handled."""
     hass = Mock()
-    hass.data = {controller.UNIFI_CONFIG: []}
     entry = Mock()
     entry.data = ENTRY_CONFIG
     api = Mock()
@@ -162,7 +157,6 @@ async def test_controller_unknown_error():
 async def test_reset_if_entry_had_wrong_auth():
     """Calling reset when the entry contains wrong auth."""
     hass = Mock()
-    hass.data = {controller.UNIFI_CONFIG: []}
     entry = Mock()
     entry.data = ENTRY_CONFIG
 
@@ -180,7 +174,6 @@ async def test_reset_if_entry_had_wrong_auth():
 async def test_reset_unloads_entry_if_setup():
     """Calling reset when the entry has been setup."""
     hass = Mock()
-    hass.data = {controller.UNIFI_CONFIG: []}
     entry = Mock()
     entry.data = ENTRY_CONFIG
     api = Mock()

@@ -12,9 +12,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import (
-    CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID, LOGGER, UNIFI_CONFIG)
-from .device_tracker import CONF_DT_SITE_ID
+from .const import CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID, LOGGER
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -29,13 +27,6 @@ class UniFiController:
         self.api = None
         self.progress = None
         self.site_role = None
-        self.unifi_config = {}
-
-        for unifi_config in hass.data[UNIFI_CONFIG]:
-            if unifi_config[CONF_HOST] == self.host and \
-                    unifi_config[CONF_DT_SITE_ID] == self.site:
-                self.unifi_config = unifi_config
-                break
 
     @property
     def host(self):
