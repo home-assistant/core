@@ -141,7 +141,7 @@ class NetatmoThermostat(ClimateDevice):
         self._hvac_mode = None
         self.update_without_throttle = False
         self._module_type = \
-            self._data.room_status[room_id].get('module_type', NA_VALVE)
+            self._data.room_status[room_id].get('module_type', None)
 
         if self._module_type == NA_THERM:
             self._operation_list.append(HVAC_MODE_OFF)
@@ -269,6 +269,9 @@ class NetatmoThermostat(ClimateDevice):
                           "got exception.")
             return
         try:
+            if self._module_type is None:
+                self._module_type = \
+                    self._data.room_status[self._room_id]['module_type']
             self._current_temperature = \
                 self._data.room_status[self._room_id]['current_temperature']
             self._target_temperature = \
