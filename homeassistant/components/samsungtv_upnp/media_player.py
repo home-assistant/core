@@ -198,7 +198,6 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
             return
 
         await self._get_source()
-        await self._get_media_info()
         await self._get_program_info()
 
         # do we need to (re-)subscribe?
@@ -342,30 +341,12 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
             if con == 'Yes':
                 self._source_list[name] = id
 
-    async def _get_media_info(self):
-        self._media_channel = None
-        self._media_title = None
-
-        action = self._device._action('MTVA', 'GetCurrentContentRecognition')
-        if not action:
-            _LOGGER.debug('Missing action MTVA/GetCurrentContentRecognition')
-            return
-
-        try:
-            result = await action.async_call()
-        except:
-            result = None
-        if not result or result.get('Result') != 'OK':
-            _LOGGER.debug('unable to get media title')
-            return
-
-        self._media_channel = result.get('ChannelName')
-        self._media_title = result.get('ProgramTitle')
-
     async def _get_program_info(self):
         self._media_duration = None
         self._media_position = None
         self._media_position_updated = None
+        self._media_channel = None
+        self._media_title = None
 
         action = self._device._action('MTVA', 'GetCurrentMainTVChannel')
         if not action:
@@ -415,6 +396,8 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
             pr = item.getElementsByTagName('ProgNum')[0].firstChild.nodeValue
             be = item.getElementsByTagName('StartTime')[0].firstChild.nodeValue
             en = item.getElementsByTagName('EndTime')[0].firstChild.nodeValue
+            ch = item.getElementsByTagName('DispChName')[0].firstChild.nodeValue
+            ti = item.getElementsByTagName('Title')[0].firstChild.nodeValue
             if ma == major and mi == minor and pr == prog and be and en:
                 start = datetime.combine(date.today(), dt.parse_time(be))
                 end = datetime.combine(date.today(), dt.parse_time(en))
@@ -424,5 +407,7 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
                 self._media_duration = (end - start).total_seconds()
                 self._media_position = (now - start).total_seconds()
                 self._media_position_updated = dt.utcnow()
+                self._media_channel = ch
+                self._media_title = ti
                 break
 
