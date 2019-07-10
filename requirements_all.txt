@@ -231,8 +231,14 @@ aioswitcher==2019.4.26
 aiounifi==6
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 # homeassistant.components.cover.aladdin_connect
 =======
+=======
+# homeassistant.components.wwlln
+aiowwlln==1.0.0
+
+>>>>>>> Add support for World Wide Lightning Location Network (#25001)
 # homeassistant.components.aladdin_connect
 >>>>>>> Revert Zeroconf back to previously used library (#24139)
 aladdin_connect==0.3
