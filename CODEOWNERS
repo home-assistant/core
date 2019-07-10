@@ -116,7 +116,6 @@ homeassistant/components/history/* @home-assistant/core
 homeassistant/components/history_graph/* @andrey-git
 homeassistant/components/hive/* @Rendili @KJonline
 homeassistant/components/homeassistant/* @home-assistant/core
-homeassistant/components/homekit/* @cdce8p
 homeassistant/components/homekit_controller/* @Jc2k
 homeassistant/components/homematic/* @pvizeli @danielperna84
 homeassistant/components/honeywell/* @zxdavb
@@ -308,5 +307,4 @@ homeassistant/components/zoneminder/* @rohankapoorcom
 homeassistant/components/zwave/* @home-assistant/z-wave
 
 # Individual files
-homeassistant/components/group/cover @cdce8p
 homeassistant/components/demo/weather @fabaff
