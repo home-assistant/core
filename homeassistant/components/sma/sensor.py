@@ -127,11 +127,7 @@ async def async_setup_platform(
             backoff -= 1
             return
 
-        try:
-            values = await sma.read(used_sensors)
-        except TypeError:
-            values = None
-
+        values = await sma.read(used_sensors)
         if not values:
             try:
                 backoff = [1, 1, 1, 6, 30][backoff_step]
