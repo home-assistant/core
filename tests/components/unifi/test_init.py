@@ -247,41 +247,6 @@ async def test_controller_site_already_configured(hass):
     assert result['type'] == 'abort'
 
 
-async def test_user_permissions_low(hass, aioclient_mock):
-    """Test config flow."""
-    flow = config_flow.UnifiFlowHandler()
-    flow.hass = hass
-
-    with patch('aiounifi.Controller') as mock_controller:
-        def mock_constructor(
-                host, username, password, port, site, websession, sslcontext):
-            """Fake the controller constructor."""
-            mock_controller.host = host
-            mock_controller.username = username
-            mock_controller.password = password
-            mock_controller.port = port
-            mock_controller.site = site
-            return mock_controller
-
-        mock_controller.side_effect = mock_constructor
-        mock_controller.login.return_value = mock_coro()
-        mock_controller.sites.return_value = mock_coro({
-            'site1': {'name': 'default', 'role': 'viewer', 'desc': 'site name'}
-        })
-
-        await flow.async_step_user(user_input={
-            CONF_HOST: '1.2.3.4',
-            CONF_USERNAME: 'username',
-            CONF_PASSWORD: 'password',
-            CONF_PORT: 1234,
-            CONF_VERIFY_SSL: True
-        })
-
-        result = await flow.async_step_site(user_input={})
-
-    assert result['type'] == 'abort'
-
-
 async def test_user_credentials_faulty(hass, aioclient_mock):
     """Test config flow."""
     flow = config_flow.UnifiFlowHandler()

@@ -12,7 +12,8 @@ from aiounifi.devices import Devices
 
 from homeassistant import config_entries
 from homeassistant.components import unifi
-from homeassistant.components.unifi.const import CONF_CONTROLLER, CONF_SITE_ID
+from homeassistant.components.unifi.const import (
+    CONF_CONTROLLER, CONF_SITE_ID, UNIFI_CONFIG)
 from homeassistant.setup import async_setup_component
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL)
@@ -188,7 +189,10 @@ CONTROLLER_ID = unifi.CONTROLLER_ID.format(host='mock-host', site='mock-site')
 @pytest.fixture
 def mock_controller(hass):
     """Mock a UniFi Controller."""
+    hass.data[UNIFI_CONFIG] = []
     controller = unifi.UniFiController(hass, None)
+
+    controller.site_role = 'admin'
 
     controller.api = Mock()
     controller.mock_requests = []
@@ -258,12 +262,12 @@ async def test_controller_not_client(hass, mock_controller):
 
 
 async def test_switches(hass, mock_controller):
-    """Test the update_items function with some lights."""
+    """Test the update_items function with some clients."""
     mock_controller.mock_client_responses.append([CLIENT_1, CLIENT_4])
     mock_controller.mock_device_responses.append([DEVICE_1])
+
     await setup_controller(hass, mock_controller)
     assert len(mock_controller.mock_requests) == 2
-    # 1 All Lights group, 2 lights
     assert len(hass.states.async_all()) == 2
 
     switch_1 = hass.states.get('switch.client_1')
@@ -346,7 +350,7 @@ async def test_failed_update_unreachable_controller(hass, mock_controller):
     await hass.services.async_call('switch', 'turn_off', {
         'entity_id': 'switch.client_1'
     }, blocking=True)
-    # 2x light update, 1 turn on request
+
     assert len(mock_controller.mock_requests) == 3
     assert len(hass.states.async_all()) == 3
 

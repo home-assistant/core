@@ -11,6 +11,13 @@ from homeassistant.components.unifi import controller, errors
 
 from tests.common import mock_coro
 
+CONTROLLER_SITES = {
+    'site1': {
+        'name': 'site',
+        'role': 'admin'
+    }
+}
+
 CONTROLLER_DATA = {
     CONF_HOST: '1.2.3.4',
     CONF_USERNAME: 'username',
@@ -28,10 +35,12 @@ ENTRY_CONFIG = {
 async def test_controller_setup():
     """Successful setup."""
     hass = Mock()
+    hass.data = {controller.UNIFI_CONFIG: []}
     entry = Mock()
     entry.data = ENTRY_CONFIG
     api = Mock()
     api.initialize.return_value = mock_coro(True)
+    api.sites.return_value = mock_coro(CONTROLLER_SITES)
 
     unifi_controller = controller.UniFiController(hass, entry)
 
@@ -40,25 +49,41 @@ async def test_controller_setup():
         assert await unifi_controller.async_setup() is True
 
     assert unifi_controller.api is api
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 1
+    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 2
     assert hass.config_entries.async_forward_entry_setup.mock_calls[0][1] == \
+        (entry, 'device_tracker')
+    assert hass.config_entries.async_forward_entry_setup.mock_calls[1][1] == \
         (entry, 'switch')
 
 
 async def test_controller_host():
     """Config entry host and controller host are the same."""
     hass = Mock()
+    hass.data = {controller.UNIFI_CONFIG: []}
     entry = Mock()
     entry.data = ENTRY_CONFIG
 
     unifi_controller = controller.UniFiController(hass, entry)
 
-    assert unifi_controller.host == '1.2.3.4'
+    assert unifi_controller.host == CONTROLLER_DATA[CONF_HOST]
+
+
+async def test_controller_site():
+    """Config entry site and controller site are the same."""
+    hass = Mock()
+    hass.data = {controller.UNIFI_CONFIG: []}
+    entry = Mock()
+    entry.data = ENTRY_CONFIG
+
+    unifi_controller = controller.UniFiController(hass, entry)
+
+    assert unifi_controller.site == CONTROLLER_DATA[CONF_SITE_ID]
 
 
 async def test_controller_mac():
     """Test that it is possible to identify controller mac."""
     hass = Mock()
+    hass.data = {controller.UNIFI_CONFIG: []}
     entry = Mock()
     entry.data = ENTRY_CONFIG
     client = Mock()
@@ -67,6 +92,7 @@ async def test_controller_mac():
     api = Mock()
     api.initialize.return_value = mock_coro(True)
     api.clients = {'client1': client}
+    api.sites.return_value = mock_coro(CONTROLLER_SITES)
 
     unifi_controller = controller.UniFiController(hass, entry)
 
@@ -80,6 +106,7 @@ async def test_controller_mac():
 async def test_controller_no_mac():
     """Test that it works to not find the controllers mac."""
     hass = Mock()
+    hass.data = {controller.UNIFI_CONFIG: []}
     entry = Mock()
     entry.data = ENTRY_CONFIG
     client = Mock()
@@ -87,6 +114,7 @@ async def test_controller_no_mac():
     api = Mock()
     api.initialize.return_value = mock_coro(True)
     api.clients = {'client1': client}
+    api.sites.return_value = mock_coro(CONTROLLER_SITES)
 
     unifi_controller = controller.UniFiController(hass, entry)
 
@@ -100,6 +128,7 @@ async def test_controller_no_mac():
 async def test_controller_not_accessible():
     """Retry to login gets scheduled when connection fails."""
     hass = Mock()
+    hass.data = {controller.UNIFI_CONFIG: []}
     entry = Mock()
     entry.data = ENTRY_CONFIG
     api = Mock()
@@ -116,6 +145,7 @@ async def test_controller_not_accessible():
 async def test_controller_unknown_error():
     """Unknown errors are handled."""
     hass = Mock()
+    hass.data = {controller.UNIFI_CONFIG: []}
     entry = Mock()
     entry.data = ENTRY_CONFIG
     api = Mock()
@@ -132,6 +162,7 @@ async def test_controller_unknown_error():
 async def test_reset_if_entry_had_wrong_auth():
     """Calling reset when the entry contains wrong auth."""
     hass = Mock()
+    hass.data = {controller.UNIFI_CONFIG: []}
     entry = Mock()
     entry.data = ENTRY_CONFIG
 
@@ -149,10 +180,12 @@ async def test_reset_if_entry_had_wrong_auth():
 async def test_reset_unloads_entry_if_setup():
     """Calling reset when the entry has been setup."""
     hass = Mock()
+    hass.data = {controller.UNIFI_CONFIG: []}
     entry = Mock()
     entry.data = ENTRY_CONFIG
     api = Mock()
     api.initialize.return_value = mock_coro(True)
+    api.sites.return_value = mock_coro(CONTROLLER_SITES)
 
     unifi_controller = controller.UniFiController(hass, entry)
 
@@ -160,13 +193,13 @@ async def test_reset_unloads_entry_if_setup():
                       return_value=mock_coro(api)):
         assert await unifi_controller.async_setup() is True
 
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 1
+    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 2
 
     hass.config_entries.async_forward_entry_unload.return_value = \
         mock_coro(True)
     assert await unifi_controller.async_reset()
 
-    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 1
+    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 2
 
 
 async def test_get_controller(hass):

@@ -28,7 +28,7 @@ class UniFiController:
         self.available = True
         self.api = None
         self.progress = None
-        self.sites = None
+        self.site_role = None
         self.unifi_config = {}
 
         for unifi_config in hass.data[UNIFI_CONFIG]:
@@ -111,7 +111,12 @@ class UniFiController:
             self.api = await get_controller(
                 self.hass, **self.config_entry.data[CONF_CONTROLLER])
             await self.api.initialize()
-            self.sites = await self.api.sites()
+
+            sites = await self.api.sites()
+            for site in sites.values():
+                if self.site == site['name']:
+                    self.site_role = site['role']
+                    break
 
         except CannotConnect:
             raise ConfigEntryNotReady
@@ -139,7 +144,7 @@ class UniFiController:
             return True
 
         for platform in ['device_tracker', 'switch']:
-            await self.hass.config_entries.async_forward_entry_setup(
+            await self.hass.config_entries.async_forward_entry_unload(
                 self.config_entry, platform)
 
         return True

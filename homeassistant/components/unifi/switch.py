@@ -30,11 +30,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
     controller = hass.data[unifi.DOMAIN][controller_id]
 
-    for site in controller.sites.values():
-        if controller.site == site['name']:
-            if site['role'] != 'admin':
-                return
-            break
+    if controller.site_role != 'admin':
+        return
 
     switches = {}
 

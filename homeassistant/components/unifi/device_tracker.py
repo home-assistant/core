@@ -92,7 +92,8 @@ def update_items(controller, async_add_entities, tracked):
 
         client = controller.api.clients[client_id]
 
-        if CONF_SSID_FILTER in controller.unifi_config and \
+        if not client.is_wired and \
+                CONF_SSID_FILTER in controller.unifi_config and \
                 client.essid not in controller.unifi_config[CONF_SSID_FILTER]:
             continue
 
