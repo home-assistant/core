@@ -13,6 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 TYPE = 'type'
 ID = 'id'
 
+
 @websocket_api.require_admin
 @websocket_api.websocket_command({
     vol.Required(TYPE): 'zwave/network_status'
@@ -21,8 +22,8 @@ def websocket_network_status(hass, connection, msg):
     """Get Z-Wave network status."""
     network = hass.data[DATA_NETWORK]
     connection.send_result(msg[ID], {
-        'state' : network.state,
-        'state_str' : network.state_str
+        'state': network.state,
+        'state_str': network.state_str
     })
 
 
