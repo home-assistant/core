@@ -35,10 +35,10 @@ async def async_setup(hass, config):
     apikey = conf[CONF_PASSWORD]
     devices = conf[CONF_DEVICES]
 
-    await async_setup_fortigate(hass, config, host, user, apikey, devices)
+    is_success = await async_setup_fortigate(hass, config, host, user, apikey, devices)
 
     # Return boolean to indicate that initialization was successful.
-    return True
+    return is_success
 
 
 async def async_setup_fortigate(hass, config, host, user, apikey, devices):
@@ -51,6 +51,7 @@ async def async_setup_fortigate(hass, config, host, user, apikey, devices):
         fgt.login()
     except FGTConnectionError:
         _LOGGER.exception('Failed to connect to Fortigate')
+        return False
 
     else:
         hass.data[DATA_FGT] = {'fgt': fgt,
@@ -65,3 +66,5 @@ async def async_setup_fortigate(hass, config, host, user, apikey, devices):
             fgt.logout()
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_fgt)
+
+        return True
