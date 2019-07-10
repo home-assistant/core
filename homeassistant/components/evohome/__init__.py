@@ -158,15 +158,8 @@ class EvoBroker:
         finally:
             self.params[CONF_PASSWORD] = 'REDACTED'
 
-        if access_token != client.access_token:
-            asyncio.run_coroutine_threadsafe(
-                self._save_auth_tokens(), self.hass.loop)
-        else:
-            track_point_in_utc_time(
-                self.hass,
-                self._save_auth_tokens,
-                _local_dt_to_utc(client.access_token_expires)
-            )
+        asyncio.run_coroutine_threadsafe(
+            self._save_auth_tokens(), self.hass.loop)
 
         loc_idx = self.params[CONF_LOCATION_IDX]
         try:
