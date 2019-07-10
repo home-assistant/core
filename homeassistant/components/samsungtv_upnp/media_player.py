@@ -168,6 +168,9 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
         self._available = False
         self._source = None
         self._source_list = None
+        self._media_duration = None
+        self._media_position = None
+        self._media_position_updated = None
         self._media_channel = None
         self._media_title = None
         self._subscription_renew_time = None
@@ -196,6 +199,7 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
 
         await self._get_source()
         await self._get_media_info()
+        await self._get_program_info()
 
         # do we need to (re-)subscribe?
         now = datetime.now()
@@ -252,6 +256,26 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
         return self._source
 
     @property
+    def media_content_type(self):
+        """Content type of current playing media."""
+        return MEDIA_TYPE_CHANNEL if self._media_channel else None
+
+    @property
+    def media_duration(self):
+        """Duration of current playing media in seconds."""
+        return self._media_duration
+
+    @property
+    def media_position(self):
+        """Position of current playing media in seconds."""
+        return self._media_position
+
+    @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid."""
+        return self._media_position_updated
+
+    @property
     def media_channel(self):
         """Channel currently playing"""
         return self._media_channel
@@ -289,9 +313,6 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
         self._source = source
 
     async def _get_source(self):
-        from collections import OrderedDict
-        from xml.dom.minidom import parseString
-
         self._source = None
         self._source_list = None
 
@@ -308,15 +329,17 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
             _LOGGER.debug('unable to get sources')
             return
 
+        from collections import OrderedDict
+        from xml.dom.minidom import parseString
         dom = parseString(result.get('SourceList'))
         self._source = dom.getElementsByTagName('CurrentSourceType')[0] \
                           .firstChild.nodeValue
         self._source_list = OrderedDict()
         for node in dom.getElementsByTagName('Source'):
-            if node.getElementsByTagName('Connected')[0].firstChild \
-                                                        .nodeValue == 'Yes':
-                name = node.getElementsByTagName('SourceType')[0] .firstChild.nodeValue
-                id = int(node.getElementsByTagName('ID')[0] .firstChild.nodeValue)
+            con = node.getElementsByTagName('Connected')[0].firstChild.nodeValue
+            name = node.getElementsByTagName('SourceType')[0] .firstChild.nodeValue
+            id = int(node.getElementsByTagName('ID')[0] .firstChild.nodeValue)
+            if con == 'Yes':
                 self._source_list[name] = id
 
     async def _get_media_info(self):
@@ -338,3 +361,68 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
 
         self._media_channel = result.get('ChannelName')
         self._media_title = result.get('ProgramTitle')
+
+    async def _get_program_info(self):
+        self._media_duration = None
+        self._media_position = None
+        self._media_position_updated = None
+
+        action = self._device._action('MTVA', 'GetCurrentMainTVChannel')
+        if not action:
+            _LOGGER.debug('Missing action MTVA/GetCurrentMainTVChannel')
+            return
+
+        try:
+            result = await action.async_call()
+        except:
+            result = None
+        if not result or result.get('Result') != 'OK':
+            _LOGGER.debug('unable to current channel')
+            return
+
+        from xml.dom.minidom import parseString
+        dom = parseString(result.get('CurrentChannel'))
+        major = dom.getElementsByTagName('MajorCh')[0].firstChild.nodeValue
+        minor = dom.getElementsByTagName('MinorCh')[0].firstChild.nodeValue
+        prog = dom.getElementsByTagName('ProgNum')[0].firstChild.nodeValue
+
+        action = self._device._action('MTVA', 'GetCurrentProgramInformationURL')
+        if not action:
+            _LOGGER.debug('Missing action MTVA/GetCurrentProgramInformationURL')
+            return
+
+        try:
+            result = await action.async_call()
+        except:
+            result = None
+        if not result or result.get('Result') != 'OK':
+            _LOGGER.debug('unable to get program info')
+            return
+        url = result.get('CurrentProgInfoURL')
+
+        from aiohttp import ClientSession
+        session = ClientSession()
+        response = await session.get(url)
+        xml = await response.text()
+        await session.close()
+
+        from datetime import date, datetime, timedelta
+        from homeassistant.util import dt
+        dom = parseString(xml)
+        for item in dom.getElementsByTagName('ProgramInfo'):
+            ma = item.getElementsByTagName('MajorCh')[0].firstChild.nodeValue
+            mi = item.getElementsByTagName('MinorCh')[0].firstChild.nodeValue
+            pr = item.getElementsByTagName('ProgNum')[0].firstChild.nodeValue
+            be = item.getElementsByTagName('StartTime')[0].firstChild.nodeValue
+            en = item.getElementsByTagName('EndTime')[0].firstChild.nodeValue
+            if ma == major and mi == minor and pr == prog and be and en:
+                start = datetime.combine(date.today(), dt.parse_time(be))
+                end = datetime.combine(date.today(), dt.parse_time(en))
+                now = datetime.now()
+                if end < start:
+                    end = end + timedelta(days=1)
+                self._media_duration = (end - start).total_seconds()
+                self._media_position = (now - start).total_seconds()
+                self._media_position_updated = dt.utcnow()
+                break
+
