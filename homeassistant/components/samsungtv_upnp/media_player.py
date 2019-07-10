@@ -89,7 +89,8 @@ async def async_start_event_handler(
         callback_url=callback_url_override)
     await server.start_server()
     _LOGGER.info(
-        'Samsung TV UPNP event handler listening, url: %s', server.callback_url)
+        'Samsung TV UPNP event handler listening, url: %s',
+        server.callback_url)
     hass_data['notify_server'] = server
     hass_data['event_handler'] = server.event_handler
 
@@ -335,8 +336,10 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
                           .firstChild.nodeValue
         self._source_list = OrderedDict()
         for node in dom.getElementsByTagName('Source'):
-            con = node.getElementsByTagName('Connected')[0].firstChild.nodeValue
-            name = node.getElementsByTagName('SourceType')[0] .firstChild.nodeValue
+            con = node.getElementsByTagName('Connected')[0].firstChild\
+                                                           .nodeValue
+            name = node.getElementsByTagName('SourceType')[0].firstChild\
+                                                             .nodeValue
             id = int(node.getElementsByTagName('ID')[0] .firstChild.nodeValue)
             if con == 'Yes':
                 self._source_list[name] = id
@@ -370,9 +373,11 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
         minor = dom.getElementsByTagName('MinorCh')[0].firstChild.nodeValue
         prog = dom.getElementsByTagName('ProgNum')[0].firstChild.nodeValue
 
-        action = self._device._action('MTVA', 'GetCurrentProgramInformationURL')
+        action = self._device._action('MTVA',
+                                      'GetCurrentProgramInformationURL')
         if not action:
-            _LOGGER.debug('Missing action MTVA/GetCurrentProgramInformationURL')
+            _LOGGER.debug('Missing action ' \
+                          'MTVA/GetCurrentProgramInformationURL')
             return
 
         try:
@@ -397,9 +402,11 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
             ma = item.getElementsByTagName('MajorCh')[0].firstChild.nodeValue
             mi = item.getElementsByTagName('MinorCh')[0].firstChild.nodeValue
             pr = item.getElementsByTagName('ProgNum')[0].firstChild.nodeValue
-            be = item.getElementsByTagName('StartTime')[0].firstChild.nodeValue
+            be = item.getElementsByTagName('StartTime')[0].firstChild\
+                                                          .nodeValue
             en = item.getElementsByTagName('EndTime')[0].firstChild.nodeValue
-            ch = item.getElementsByTagName('DispChName')[0].firstChild.nodeValue
+            ch = item.getElementsByTagName('DispChName')[0].firstChild\
+                                                           .nodeValue
             ti = item.getElementsByTagName('Title')[0].firstChild.nodeValue
             if ma == major and mi == minor and pr == prog and be and en:
                 start = datetime.combine(date.today(), dt.parse_time(be))
