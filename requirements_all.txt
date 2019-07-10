@@ -2574,6 +2574,7 @@ ziggo-mediabox-xl==1.1.0
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 zigpy-xbee==0.1.1
 
 # homeassistant.components.zha
@@ -2586,13 +2587,20 @@ zigpy-deconz==0.1.6
 =======
 zigpy-deconz==0.1.6
 >>>>>>> Bump ZHA dependencies. (#24637)
+=======
+zigpy-deconz==0.2.1
+>>>>>>> Bump up ZHA dependencies. (#25062)
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.6.1
+zigpy-homeassistant==0.7.0
 
 # homeassistant.components.zha
+<<<<<<< HEAD
 zigpy-xbee-homeassistant==0.3.0
 >>>>>>> ZHA requirements version bump. (#24228)
+=======
+zigpy-xbee-homeassistant==0.4.0
+>>>>>>> Bump up ZHA dependencies. (#25062)
 
 # homeassistant.components.zoneminder
 zm-py==0.3.0
