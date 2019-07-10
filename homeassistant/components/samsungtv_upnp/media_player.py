@@ -348,6 +348,9 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
         self._media_channel = None
         self._media_title = None
 
+        if self._source != 'TV':
+            return
+
         action = self._device._action('MTVA', 'GetCurrentMainTVChannel')
         if not action:
             _LOGGER.debug('Missing action MTVA/GetCurrentMainTVChannel')
