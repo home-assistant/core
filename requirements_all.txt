@@ -2543,6 +2543,7 @@ zeroconf==0.23.0
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 zha-quirks==0.0.6
 =======
 zha-quirks==0.0.14
@@ -2559,6 +2560,9 @@ zha-quirks==0.0.17
 =======
 zha-quirks==0.0.17
 >>>>>>> Bump ZHA quirks module (#24802)
+=======
+zha-quirks==0.0.18
+>>>>>>> bump zha-quirks version (#25059)
 
 # homeassistant.components.climate.zhong_hong
 zhong_hong_hvac==1.0.9
