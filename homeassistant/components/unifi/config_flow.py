@@ -79,7 +79,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow):
         errors = {}
 
         if user_input is not None:
-
             try:
                 desc = user_input.get(CONF_SITE_ID, self.desc)
 
@@ -110,6 +109,12 @@ class UnifiFlowHandler(config_entries.ConfigFlow):
             self.desc = next(iter(self.sites.values()))['desc']
             return await self.async_step_site(user_input={})
 
+        if self.desc is not None:
+            for site in self.sites.values():
+                if self.desc == site['name']:
+                    self.desc = site['desc']
+                    return await self.async_step_site(user_input={})
+
         sites = []
         for site in self.sites.values():
             sites.append(site['desc'])
@@ -121,3 +126,17 @@ class UnifiFlowHandler(config_entries.ConfigFlow):
             }),
             errors=errors,
         )
+
+    async def async_step_import(self, import_config):
+        """Import from UniFi device tracker config."""
+        config = {
+            CONF_HOST: import_config[CONF_HOST],
+            CONF_USERNAME: import_config[CONF_USERNAME],
+            CONF_PASSWORD: import_config[CONF_PASSWORD],
+            CONF_PORT: import_config.get(CONF_PORT),
+            CONF_VERIFY_SSL: import_config.get(CONF_VERIFY_SSL),
+        }
+
+        self.desc = import_config[CONF_SITE_ID]
+
+        return await self.async_step_user(user_input=config)

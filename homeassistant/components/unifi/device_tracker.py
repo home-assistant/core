@@ -1,28 +1,76 @@
 """Support for Unifi WAP controllers."""
 from datetime import timedelta
-import logging
 
+import logging
+import voluptuous as vol
+
+from homeassistant import config_entries
 from homeassistant.components import unifi
+from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
 from homeassistant.core import callback
-from homeassistant.const import CONF_HOST
+from homeassistant.const import (
+    CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_VERIFY_SSL,
+    CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
 from .const import (
     CONF_CONTROLLER, CONF_DETECTION_TIME, CONF_SITE_ID, CONF_SSID_FILTER,
-    CONTROLLER_ID, UNIFI_CONFIG)
+    CONTROLLER_ID, DOMAIN as UNIFI_DOMAIN, UNIFI_CONFIG)
 
 LOGGER = logging.getLogger(__name__)
 
+CONF_PORT = 'port'
+CONF_DT_SITE_ID = 'site_id'
+CONF_DETECTION_TIME = 'detection_time'
+CONF_SSID_FILTER = 'ssid_filter'
+
+DEFAULT_HOST = 'localhost'
+DEFAULT_PORT = 8443
+DEFAULT_VERIFY_SSL = True
 DEFAULT_DETECTION_TIME = timedelta(seconds=300)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_DT_SITE_ID, default='default'): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): vol.Any(
+        cv.boolean, cv.isfile),
+    vol.Optional(CONF_DETECTION_TIME, default=DEFAULT_DETECTION_TIME): vol.All(
+        cv.time_period, cv.positive_timedelta),
+    vol.Optional(CONF_MONITORED_CONDITIONS):
+        vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_SSID_FILTER): vol.All(cv.ensure_list, [cv.string])
+})
 
 
 async def async_setup_scanner(hass, config, sync_see, discovery_info):
     """Set up the Unifi integration."""
+    config[CONF_SITE_ID] = config.pop(CONF_DT_SITE_ID)  # Current from legacy
+
+    exist = False
+
+    for entry in hass.config_entries.async_entries(UNIFI_DOMAIN):
+        print('ENTER')
+        if config[CONF_HOST] == entry.data[CONF_CONTROLLER][CONF_HOST] and \
+                config[CONF_SITE_ID] == \
+                    entry.data[CONF_CONTROLLER][CONF_SITE_ID]:
+            exist = True
+            break
+
+    if not exist:
+        hass.async_create_task(hass.config_entries.flow.async_init(
+            UNIFI_DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
+            data=config
+        ))
+
     return True
 
 
