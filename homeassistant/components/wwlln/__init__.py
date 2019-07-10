@@ -1,6 +1,7 @@
 """Support for World Wide Lightning Location Network."""
 import logging
 
+from aiowwlln import Client
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -10,7 +11,8 @@ from homeassistant.const import (
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .config_flow import configured_instances
-from .const import DATA_CLIENT, DEFAULT_RADIUS, DOMAIN
+from .const import (
+    CONF_WINDOW, DATA_CLIENT, DEFAULT_RADIUS, DEFAULT_WINDOW, DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,6 +21,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_LATITUDE): cv.latitude,
         vol.Optional(CONF_LONGITUDE): cv.longitude,
         vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): cv.positive_int,
+        vol.Optional(CONF_WINDOW, default=DEFAULT_WINDOW):
+            cv.positive_timedelta,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -53,6 +57,7 @@ async def async_setup(hass, config):
                 CONF_LATITUDE: latitude,
                 CONF_LONGITUDE: longitude,
                 CONF_RADIUS: conf[CONF_RADIUS],
+                CONF_WINDOW: conf[CONF_WINDOW],
                 CONF_UNIT_SYSTEM: unit_system,
             }))
 
@@ -61,8 +66,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up the WWLLN as config entry."""
-    from aiowwlln import Client
-
     websession = aiohttp_client.async_get_clientsession(hass)
 
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = Client(websession)

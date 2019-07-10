@@ -8,7 +8,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
 from homeassistant.core import callback
 
-from .const import DEFAULT_RADIUS, DOMAIN
+from .const import CONF_WINDOW, DEFAULT_RADIUS, DEFAULT_WINDOW, DOMAIN
 
 
 @callback
@@ -31,11 +31,10 @@ class WWLLNFlowHandler(config_entries.ConfigFlow):
     async def _show_form(self, errors=None):
         """Show the form to the user."""
         data_schema = vol.Schema({
-            vol.Optional(
-                CONF_LATITUDE, default=self.hass.config.latitude): cv.latitude,
-            vol.Optional(
-                CONF_LONGITUDE,
-                default=self.hass.config.longitude): cv.longitude,
+            vol.Optional(CONF_LATITUDE, default=self.hass.config.latitude):
+                cv.latitude,
+            vol.Optional(CONF_LONGITUDE, default=self.hass.config.longitude):
+                cv.longitude,
             vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): cv.positive_int,
         })
 
@@ -60,5 +59,7 @@ class WWLLNFlowHandler(config_entries.ConfigFlow):
             user_input[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_IMPERIAL
         else:
             user_input[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_METRIC
+
+        user_input[CONF_WINDOW] = DEFAULT_WINDOW.total_seconds()
 
         return self.async_create_entry(title=identifier, data=user_input)

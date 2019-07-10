@@ -1,6 +1,6 @@
 """Define tests for the WWLLN config flow."""
 from homeassistant import data_entry_flow
-from homeassistant.components.wwlln import DOMAIN, config_flow
+from homeassistant.components.wwlln import CONF_WINDOW, DOMAIN, config_flow
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, CONF_UNIT_SYSTEM)
 
@@ -41,6 +41,7 @@ async def test_step_import(hass):
         CONF_LONGITUDE: -104.9812612,
         CONF_RADIUS: 25,
         CONF_UNIT_SYSTEM: 'metric',
+        CONF_WINDOW: 600.0,
     }
 
     flow = config_flow.WWLLNFlowHandler()
@@ -54,6 +55,7 @@ async def test_step_import(hass):
         CONF_LONGITUDE: -104.9812612,
         CONF_RADIUS: 25,
         CONF_UNIT_SYSTEM: 'metric',
+        CONF_WINDOW: 600.0,
     }
 
 
@@ -76,4 +78,5 @@ async def test_step_user(hass):
         CONF_LONGITUDE: -104.9812612,
         CONF_RADIUS: 25,
         CONF_UNIT_SYSTEM: 'metric',
+        CONF_WINDOW: 600.0,
     }

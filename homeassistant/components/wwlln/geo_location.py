@@ -6,20 +6,26 @@ from aiowwlln.errors import WWLLNError
 
 from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.const import (
-    CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL, LENGTH_KILOMETERS, LENGTH_MILES)
+    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS,
+    CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL, LENGTH_KILOMETERS,
+    LENGTH_MILES)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.dt import as_local, utc_from_timestamp
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import CONF_WINDOW, DATA_CLIENT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_EXTERNAL_ID = 'external_id'
+ATTR_PUBLICATION_DATE = 'publication_date'
+
+DEFAULT_ATTRIBUTION = 'Data provided by the WWLLN'
 DEFAULT_EVENT_NAME = 'Lightning Strike'
 DEFAULT_ICON = 'mdi:flash'
-DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
+DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
 
 SIGNAL_DELETE_ENTITY = 'delete_entity_{0}'
 
@@ -34,6 +40,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entry.data[CONF_LATITUDE],
         entry.data[CONF_LONGITUDE],
         entry.data[CONF_RADIUS],
+        entry.data[CONF_WINDOW],
         entry.data[CONF_UNIT_SYSTEM])
     await manager.async_init()
 
@@ -49,6 +56,7 @@ class WWLLNEventManager:
             latitude,
             longitude,
             radius,
+            window_seconds,
             unit_system):
         """Initialize."""
         self._async_add_entities = async_add_entities
@@ -59,6 +67,7 @@ class WWLLNEventManager:
         self._managed_strike_ids = set()
         self._radius = radius
         self._strikes = {}
+        self._window_seconds = window_seconds
 
         self._unit_system = unit_system
         if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
@@ -73,11 +82,12 @@ class WWLLNEventManager:
         for strike_id in ids_to_create:
             strike = self._strikes[strike_id]
             event = WWLLNEvent(
-                strike["distance"],
-                strike["lat"],
-                strike["long"],
+                strike['distance'],
+                strike['lat'],
+                strike['long'],
                 self._unit,
-                strike_id)
+                strike_id,
+                strike['unixTime'])
             events.append(event)
 
         self._async_add_entities(events)
@@ -91,9 +101,12 @@ class WWLLNEventManager:
 
     async def async_init(self):
         """Schedule regular updates based on configured time interval."""
+        async def update(event_time):
+            """Update."""
+            await self.async_update()
+
         await self.async_update()
-        async_track_time_interval(
-            self._hass, self.async_update, DEFAULT_UPDATE_INTERVAL)
+        async_track_time_interval(self._hass, update, DEFAULT_UPDATE_INTERVAL)
 
     async def async_update(self):
         """Refresh data."""
@@ -104,7 +117,8 @@ class WWLLNEventManager:
                 self._latitude,
                 self._longitude,
                 self._radius,
-                unit=self._unit_system)
+                unit=self._unit_system,
+                window=timedelta(seconds=self._window_seconds))
         except WWLLNError as err:
             _LOGGER.error('Error while updating WWLLN data: %s', err)
             return
@@ -120,14 +134,35 @@ class WWLLNEventManager:
 class WWLLNEvent(GeolocationEvent):
     """Define a lightning strike event."""
 
-    def __init__(self, distance, latitude, longitude, unit, strike_id):
+    def __init__(
+            self,
+            distance,
+            latitude,
+            longitude,
+            unit,
+            strike_id,
+            publication_date):
         """Initialize entity with data provided."""
         self._distance = distance
         self._latitude = latitude
         self._longitude = longitude
+        self._publication_date = publication_date
         self._remove_signal_delete = None
         self._strike_id = strike_id
         self._unit_of_measurement = unit
+
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        attributes = {}
+        for key, value in (
+                (ATTR_EXTERNAL_ID, self._strike_id),
+                (ATTR_ATTRIBUTION, DEFAULT_ATTRIBUTION),
+                (ATTR_PUBLICATION_DATE, as_local(
+                    utc_from_timestamp(self._publication_date))),
+        ):
+            attributes[key] = value
+        return attributes
 
     @property
     def distance(self):
@@ -161,7 +196,7 @@ class WWLLNEvent(GeolocationEvent):
 
     @property
     def should_poll(self):
-        """No polling needed for a demo geolocation event."""
+        """Disable polling."""
         return False
 
     @property
