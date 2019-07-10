@@ -1945,13 +1945,13 @@ zhong_hong_hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-deconz==0.1.6
+zigpy-deconz==0.2.1
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.6.1
+zigpy-homeassistant==0.7.0
 
 # homeassistant.components.zha
-zigpy-xbee-homeassistant==0.3.0
+zigpy-xbee-homeassistant==0.4.0
 
 # homeassistant.components.zoneminder
 zm-py==0.3.3
