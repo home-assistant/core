@@ -303,5 +303,4 @@ class KNXLight(Light):
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        del kwargs
         await self.device.set_off()
