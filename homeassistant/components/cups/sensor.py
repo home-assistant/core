@@ -13,6 +13,10 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_MARKER_TYPE = 'marker_type'
+ATTR_MARKER_LOW_LEVEL = 'marker_low_level'
+ATTR_MARKER_HIGH_LEVEL = 'marker_high_level'
+ATTR_PRINTER_NAME = 'printer_name'
 ATTR_DEVICE_URI = 'device_uri'
 ATTR_PRINTER_INFO = 'printer_info'
 ATTR_PRINTER_IS_SHARED = 'printer_is_shared'
@@ -30,7 +34,8 @@ DEFAULT_HOST = '127.0.0.1'
 DEFAULT_PORT = 631
 DEFAULT_IS_CUPS_SERVER = True
 
-ICON = 'mdi:printer'
+ICON_PRINTER = 'mdi:printer'
+ICON_MARKER = 'mdi:water'
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -71,6 +76,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 continue
             dev.append(CupsSensor(data, printer))
 
+            if "marker-names" in data.attributes[printer]:
+                for marker in data.attributes[printer]["marker-names"]:
+                    dev.append(MarkerSensor(data, printer, marker, True))
+
         add_entities(dev, True)
         return
 
@@ -84,6 +93,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     dev = []
     for printer in printers:
         dev.append(IPPSensor(data, printer))
+
+        if "marker-names" in data.attributes[printer]:
+            for marker in data.attributes[printer]["marker-names"]:
+                dev.append(MarkerSensor(data, printer, marker, False))
 
     add_entities(dev, True)
 
@@ -120,7 +133,7 @@ class CupsSensor(Entity):
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        return ICON
+        return ICON_PRINTER
 
     @property
     def device_state_attributes(self):
@@ -171,7 +184,7 @@ class IPPSensor(Entity):
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        return ICON
+        return ICON_PRINTER
 
     @property
     def available(self):
@@ -224,6 +237,82 @@ class IPPSensor(Entity):
         self._available = self.data.available
 
 
+class MarkerSensor(Entity):
+    """Implementation of the MarkerSensor.
+
+    This sensor represents the percentage of ink or toner.
+    """
+
+    def __init__(self, data, printer, name, is_cups):
+        """Initialize the sensor."""
+        self.data = data
+        self._name = name
+        self._printer = printer
+        self._index = data.attributes[printer]['marker-names'].index(name)
+        self._is_cups = is_cups
+        self._attributes = None
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        return ICON_MARKER
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        if self._attributes is None:
+            return None
+
+        return self._attributes[self._printer]['marker-levels'][self._index]
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return "%"
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the sensor."""
+        if self._attributes is None:
+            return None
+
+        high_level = self._attributes[self._printer]['marker-high-levels']
+        if isinstance(high_level, list):
+            high_level = high_level[self._index]
+
+        low_level = self._attributes[self._printer]['marker-low-levels']
+        if isinstance(low_level, list):
+            low_level = low_level[self._index]
+
+        marker_types = self._attributes[self._printer]['marker-types']
+        if isinstance(marker_types, list):
+            marker_types = marker_types[self._index]
+
+        if self._is_cups:
+            printer_name = self._printer
+        else:
+            printer_name = \
+                self._attributes[self._printer]['printer-make-and-model']
+
+        return {
+            ATTR_MARKER_HIGH_LEVEL: high_level,
+            ATTR_MARKER_LOW_LEVEL: low_level,
+            ATTR_MARKER_TYPE: marker_types,
+            ATTR_PRINTER_NAME: printer_name
+
+        }
+
+    def update(self):
+        """Update the state of the sensor."""
+        # Data fetching is done by CupsSensor/IPPSensor
+        self._attributes = self.data.attributes
+
+
 # pylint: disable=no-name-in-module
 class CupsData:
     """Get the latest data from CUPS and update the state."""
@@ -246,6 +335,9 @@ class CupsData:
             conn = cups.Connection(host=self._host, port=self._port)
             if self.is_cups:
                 self.printers = conn.getPrinters()
+                for printer in self.printers:
+                    self.attributes[printer] = conn.getPrinterAttributes(
+                        name=printer)
             else:
                 for ipp_printer in self._ipp_printers:
                     self.attributes[ipp_printer] = conn.getPrinterAttributes(
