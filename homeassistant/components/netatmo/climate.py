@@ -16,7 +16,9 @@ from homeassistant.components.climate.const import (
     DEFAULT_MIN_TEMP
 )
 from homeassistant.const import (
-    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES, STATE_OFF)
+    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES, STATE_OFF,
+    ATTR_BATTERY_LEVEL
+)
 from homeassistant.util import Throttle
 
 from .const import DATA_NETATMO_AUTH
@@ -139,6 +141,7 @@ class NetatmoThermostat(ClimateDevice):
         self._operation_list = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
         self._support_flags = SUPPORT_FLAGS
         self._hvac_mode = None
+        self._battery_level = None
         self.update_without_throttle = False
         self._module_type = \
             self._data.room_status[room_id].get('module_type', NA_VALVE)
@@ -256,6 +259,16 @@ class NetatmoThermostat(ClimateDevice):
         self.update_without_throttle = True
         self.schedule_update_ha_state()
 
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the thermostat."""
+        attr = {}
+
+        if self._battery_level is not None:
+            attr[ATTR_BATTERY_LEVEL] = self._battery_level
+
+        return attr
+
     def update(self):
         """Get the latest data from NetAtmo API and updates the states."""
         try:
@@ -275,6 +288,8 @@ class NetatmoThermostat(ClimateDevice):
                 self._data.room_status[self._room_id]['target_temperature']
             self._preset = \
                 self._data.room_status[self._room_id]["setpoint_mode"]
+            self._battery_level = \
+                self._data.room_status[self._room_id].get('battery_level')
         except KeyError:
             _LOGGER.error(
                 "The thermostat in room %s seems to be out of reach.",
