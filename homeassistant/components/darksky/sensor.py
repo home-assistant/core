@@ -473,7 +473,6 @@ class DarkSkyAlertSensor(Entity):
                 else:
                     dkey = attr
                 alerts[dkey] = getattr(alert, attr)
-            i += 1
         self._alerts = alerts
 
         return len(data)
