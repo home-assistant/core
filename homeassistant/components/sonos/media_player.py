@@ -100,7 +100,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     _LOGGER.debug("seen %s", entity)
                     hass.add_job(entity.async_seen())
             except SoCoException as ex:
-                _LOGGER.debug("SoCoException, ex=%s")
+                _LOGGER.debug("SoCoException, ex=%s", ex)
 
         if hosts:
             for host in hosts:
