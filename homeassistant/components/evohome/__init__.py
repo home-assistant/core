@@ -22,8 +22,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
-    async_track_point_in_utc_time, track_point_in_utc_time,
-    track_time_interval)
+    async_track_point_in_utc_time, track_time_interval)
 from homeassistant.util.dt import as_utc, parse_datetime, utcnow
 
 from .const import DOMAIN, EVO_STRFTIME, STORAGE_VERSION, STORAGE_KEY, GWS, TCS
