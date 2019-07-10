@@ -55,7 +55,7 @@ def setup(hass, config):
                       password, host, host_password)
 
     if not smappee.is_local_active and not smappee.is_remote_active:
-        _LOGGER.error("Neither Smappee server or local component enabled.")
+        _LOGGER.error("Neither Smappee server or local integration enabled.")
         return False
 
     hass.data[DATA_SMAPPEE] = smappee
@@ -85,7 +85,7 @@ class Smappee:
                     "Smappee server authentication failed (%s)",
                     error)
         else:
-            _LOGGER.warning("Smappee server component init skipped.")
+            _LOGGER.warning("Smappee server integration init skipped.")
 
         if host is not None:
             try:
@@ -98,7 +98,7 @@ class Smappee:
                     "Local Smappee device authentication failed (%s)",
                     error)
         else:
-            _LOGGER.warning("Smappee local component init skipped.")
+            _LOGGER.warning("Smappee local integration init skipped.")
 
         self.locations = {}
         self.info = {}

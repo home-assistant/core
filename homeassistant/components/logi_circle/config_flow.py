@@ -157,7 +157,7 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
             client_secret=client_secret,
             api_key=api_key,
             redirect_uri=redirect_uri,
-            cache_file=DEFAULT_CACHEDB)
+            cache_file=self.hass.config.path(DEFAULT_CACHEDB))
 
         try:
             with async_timeout.timeout(_TIMEOUT):

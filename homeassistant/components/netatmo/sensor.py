@@ -10,7 +10,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_MODE, CONF_MONITORED_CONDITIONS,
+    CONF_NAME, CONF_MODE,
     TEMP_CELSIUS, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_BATTERY)
 from homeassistant.helpers.entity import Entity
@@ -72,21 +72,15 @@ SENSOR_TYPES = {
     'health_idx': ['Health', '', 'mdi:cloud', None],
 }
 
-MODULE_SCHEMA = vol.Schema({
-    vol.Required(cv.string): vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-})
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATION): cv.string,
-    vol.Optional(CONF_MODULES): MODULE_SCHEMA,
+    vol.Optional(CONF_MODULES): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_AREAS): vol.All(cv.ensure_list, [
         {
             vol.Required(CONF_LAT_NE): cv.latitude,
             vol.Required(CONF_LAT_SW): cv.latitude,
             vol.Required(CONF_LON_NE): cv.longitude,
             vol.Required(CONF_LON_SW): cv.longitude,
-            vol.Required(CONF_MONITORED_CONDITIONS): [vol.In(
-                SUPPORTED_PUBLIC_SENSOR_TYPES)],
             vol.Optional(CONF_MODE, default=DEFAULT_MODE): vol.In(MODE_TYPES),
             vol.Optional(CONF_NAME, default=DEFAULT_NAME_PUBLIC): cv.string
         }
@@ -97,6 +91,12 @@ MODULE_TYPE_OUTDOOR = 'NAModule1'
 MODULE_TYPE_WIND = 'NAModule2'
 MODULE_TYPE_RAIN = 'NAModule3'
 MODULE_TYPE_INDOOR = 'NAModule4'
+
+
+NETATMO_DEVICE_TYPES = {
+    'WeatherStationData': 'weather station',
+    'HomeCoachData': 'home coach'
+}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -113,7 +113,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 lat_sw=area[CONF_LAT_SW],
                 lon_sw=area[CONF_LON_SW]
             )
-            for sensor_type in area[CONF_MONITORED_CONDITIONS]:
+            for sensor_type in SUPPORTED_PUBLIC_SENSOR_TYPES:
                 dev.append(NetatmoPublicSensor(
                     area[CONF_NAME],
                     data,
@@ -132,15 +132,30 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         import pyatmo
         for data_class in [pyatmo.WeatherStationData, pyatmo.HomeCoachData]:
-            data = NetatmoData(auth, data_class, config.get(CONF_STATION))
+            try:
+                data = NetatmoData(auth, data_class, config.get(CONF_STATION))
+            except pyatmo.NoDevice:
+                _LOGGER.info(
+                    "No %s devices found",
+                    NETATMO_DEVICE_TYPES[data_class.__name__]
+                )
+                continue
             # Test if manually configured
             if CONF_MODULES in config:
-                module_items = config[CONF_MODULES].items()
-                for module_name, monitored_conditions in module_items:
-                    for condition in monitored_conditions:
-                        dev.append(NetatmoSensor(
-                            data, module_name, condition.lower(),
-                            config.get(CONF_STATION)))
+                module_items = config[CONF_MODULES]
+                for module_name in module_items:
+                    if module_name not in data.get_module_names():
+                        continue
+                    for condition in data.station_data.monitoredConditions(
+                            module_name):
+                        dev.append(
+                            NetatmoSensor(
+                                data,
+                                module_name,
+                                condition.lower(),
+                                data.station
+                            )
+                        )
                 continue
 
             # otherwise add all modules and conditions
@@ -157,18 +172,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 def find_devices(data):
     """Find all devices."""
     dev = []
-    not_handled = []
-    for module_name in data.get_module_names():
-        if (module_name not in data.get_module_names()
-                and module_name not in not_handled):
-            not_handled.append(not_handled)
-            continue
+    module_names = data.get_module_names()
+    for module_name in module_names:
         for condition in data.station_data.monitoredConditions(module_name):
             dev.append(NetatmoSensor(
                 data, module_name, condition.lower(), data.station))
-
-    for module_name in not_handled:
-        _LOGGER.error('Module name: "%s" not found', module_name)
     return dev
 
 
@@ -187,12 +195,11 @@ class NetatmoSensor(Entity):
         self._device_class = SENSOR_TYPES[self.type][3]
         self._icon = SENSOR_TYPES[self.type][2]
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
-        self._module_type = self.netatmo_data. \
-            station_data.moduleByName(module=module_name)['type']
-        module_id = self.netatmo_data. \
-            station_data.moduleByName(station=self.station_name,
-                                      module=module_name)['_id']
-        self._unique_id = '{}-{}'.format(module_id, self.type)
+        module = self.netatmo_data.station_data.moduleByName(
+            station=self.station_name, module=module_name
+        )
+        self._module_type = module['type']
+        self._unique_id = '{}-{}'.format(module['_id'], self.type)
 
     @property
     def name(self):
@@ -515,15 +522,16 @@ class NetatmoData:
         self.auth = auth
         self.data_class = data_class
         self.data = {}
-        self.station_data = None
+        self.station_data = self.data_class(self.auth)
         self.station = station
         self._next_update = time()
         self._update_in_progress = threading.Lock()
 
     def get_module_names(self):
         """Return all module available on the API as a list."""
-        self.update()
-        return self.data.keys()
+        if self.station is not None:
+            return self.station_data.modulesNamesList(station=self.station)
+        return self.station_data.modulesNamesList()
 
     def update(self):
         """Call the Netatmo API to update the data.

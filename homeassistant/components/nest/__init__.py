@@ -7,8 +7,6 @@ import threading
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.climate.const import (
-    ATTR_AWAY_MODE, SERVICE_SET_AWAY_MODE)
 from homeassistant.const import (
     CONF_BINARY_SENSORS, CONF_FILENAME, CONF_MONITORED_CONDITIONS,
     CONF_SENSORS, CONF_STRUCTURE, EVENT_HOMEASSISTANT_START,
@@ -44,6 +42,9 @@ ATTR_TRIP_ID = 'trip_id'
 
 AWAY_MODE_AWAY = 'away'
 AWAY_MODE_HOME = 'home'
+
+ATTR_AWAY_MODE = 'away_mode'
+SERVICE_SET_AWAY_MODE = 'set_away_mode'
 
 SENSOR_SCHEMA = vol.Schema({
     vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list),

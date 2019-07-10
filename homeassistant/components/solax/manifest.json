@@ -3,7 +3,7 @@
     "name": "Solax Inverter",
     "documentation": "https://www.home-assistant.io/components/solax",
     "requirements": [
-      "solax==0.1.0"
+      "solax==0.1.1"
     ],
     "dependencies": [],
     "codeowners": ["@squishykid"]

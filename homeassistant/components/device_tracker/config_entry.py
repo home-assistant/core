@@ -37,7 +37,7 @@ async def async_unload_entry(hass, entry):
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
-class DeviceTrackerEntity(Entity):
+class BaseTrackerEntity(Entity):
     """Represent a tracked device."""
 
     @property
@@ -47,6 +47,27 @@ class DeviceTrackerEntity(Entity):
         Percentage from 0-100.
         """
         return None
+
+    @property
+    def source_type(self):
+        """Return the source type, eg gps or router, of the device."""
+        raise NotImplementedError
+
+    @property
+    def state_attributes(self):
+        """Return the device state attributes."""
+        attr = {
+            ATTR_SOURCE_TYPE: self.source_type
+        }
+
+        if self.battery_level:
+            attr[ATTR_BATTERY_LEVEL] = self.battery_level
+
+        return attr
+
+
+class TrackerEntity(BaseTrackerEntity):
+    """Represent a tracked device."""
 
     @property
     def location_accuracy(self):
@@ -72,11 +93,6 @@ class DeviceTrackerEntity(Entity):
         return NotImplementedError
 
     @property
-    def source_type(self):
-        """Return the source type, eg gps or router, of the device."""
-        raise NotImplementedError
-
-    @property
     def state(self):
         """Return the state of the device."""
         if self.location_name:
@@ -99,16 +115,27 @@ class DeviceTrackerEntity(Entity):
     @property
     def state_attributes(self):
         """Return the device state attributes."""
-        attr = {
-            ATTR_SOURCE_TYPE: self.source_type
-        }
-
+        attr = {}
+        attr.update(super().state_attributes)
         if self.latitude is not None:
             attr[ATTR_LATITUDE] = self.latitude
             attr[ATTR_LONGITUDE] = self.longitude
             attr[ATTR_GPS_ACCURACY] = self.location_accuracy
 
-        if self.battery_level:
-            attr[ATTR_BATTERY_LEVEL] = self.battery_level
-
         return attr
+
+
+class ScannerEntity(BaseTrackerEntity):
+    """Represent a tracked device that is on a scanned network."""
+
+    @property
+    def state(self):
+        """Return the state of the device."""
+        if self.is_connected:
+            return STATE_HOME
+        return STATE_NOT_HOME
+
+    @property
+    def is_connected(self):
+        """Return true if the device is connected to the network."""
+        raise NotImplementedError

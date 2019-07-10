@@ -270,9 +270,8 @@ class HomeAssistant:
 
         # Check for partials to properly determine if coroutine function
         check_target = target
-        # type ignores: https://github.com/python/typeshed/pull/3077
-        while isinstance(check_target, functools.partial):  # type: ignore
-            check_target = check_target.func  # type: ignore
+        while isinstance(check_target, functools.partial):
+            check_target = check_target.func
 
         if asyncio.iscoroutine(check_target):
             task = self.loop.create_task(target)  # type: ignore
@@ -947,9 +946,8 @@ class Service:
         self.func = func
         self.schema = schema
         # Properly detect wrapped functions
-        # type ignores: https://github.com/python/typeshed/pull/3077
-        while isinstance(func, functools.partial):  # type: ignore
-            func = func.func  # type: ignore
+        while isinstance(func, functools.partial):
+            func = func.func
         self.is_callback = is_callback(func)
         self.is_coroutinefunction = asyncio.iscoroutinefunction(func)
 

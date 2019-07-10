@@ -3,7 +3,7 @@
   "name": "Pushover",
   "documentation": "https://www.home-assistant.io/components/pushover",
   "requirements": [
-    "python-pushover==0.3"
+    "python-pushover==0.4"
   ],
   "dependencies": [],
   "codeowners": []

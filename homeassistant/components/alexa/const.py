@@ -2,7 +2,6 @@
 from collections import OrderedDict
 
 from homeassistant.const import (
-    STATE_OFF,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -57,16 +56,17 @@ API_TEMP_UNITS = {
 # reverse mapping of this dict and we want to map the first occurrance of OFF
 # back to HA state.
 API_THERMOSTAT_MODES = OrderedDict([
-    (climate.STATE_HEAT, 'HEAT'),
-    (climate.STATE_COOL, 'COOL'),
-    (climate.STATE_AUTO, 'AUTO'),
-    (climate.STATE_ECO, 'ECO'),
-    (climate.STATE_MANUAL, 'AUTO'),
-    (STATE_OFF, 'OFF'),
-    (climate.STATE_IDLE, 'OFF'),
-    (climate.STATE_FAN_ONLY, 'OFF'),
-    (climate.STATE_DRY, 'OFF'),
+    (climate.HVAC_MODE_HEAT, 'HEAT'),
+    (climate.HVAC_MODE_COOL, 'COOL'),
+    (climate.HVAC_MODE_HEAT_COOL, 'AUTO'),
+    (climate.HVAC_MODE_AUTO, 'AUTO'),
+    (climate.HVAC_MODE_OFF, 'OFF'),
+    (climate.HVAC_MODE_FAN_ONLY, 'OFF'),
+    (climate.HVAC_MODE_DRY, 'OFF'),
 ])
+API_THERMOSTAT_PRESETS = {
+    climate.PRESET_ECO: 'ECO'
+}
 
 PERCENTAGE_FAN_MAP = {
     fan.SPEED_LOW: 33,
