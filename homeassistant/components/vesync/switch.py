@@ -26,7 +26,10 @@ def add_entity(device, async_add_entities):
     """Check if device is online and add entity."""
     device.update()
 
-    async_add_entities([VeSyncSwitchHA(device)], update_before_add=True)
+    async_add_entities(
+        [VeSyncSwitchHA(device)],
+        update_before_add=True
+    )
 
 
 class VeSyncSwitchHA(SwitchDevice):
@@ -39,7 +42,10 @@ class VeSyncSwitchHA(SwitchDevice):
     @property
     def unique_id(self):
         """Return the ID of this switch."""
-        return self.smartplug.cid
+        if isinstance(self.smartplug.sub_device_no, int):
+            return (self.smartplug.cid + str(self.smartplug.sub_device_no))
+        else:
+            return self.smartplug.cid
 
     @property
     def name(self):

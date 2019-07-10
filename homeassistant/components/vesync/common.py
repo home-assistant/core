@@ -21,6 +21,7 @@ async def async_process_devices(hass, manager):
 
     if manager.bulbs:
         devices[CONF_LIGHTS].extend(manager.bulbs)
+        _LOGGER.info(str(devices[CONF_LIGHTS]))
         _LOGGER.info("%d VeSync light bulbs found", len(manager.bulbs))
 
     if manager.fans:

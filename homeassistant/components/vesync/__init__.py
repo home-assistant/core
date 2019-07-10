@@ -28,12 +28,14 @@ async def async_setup(hass, config):
     """Set up the VeSync component."""
     hass.data[DOMAIN] = {}
 
-    conf = config[DOMAIN]
+    conf = config.get('vesync')
 
-    if conf[CONF_USERNAME] in configured_instances(hass):
+    if isinstance(conf, dict) and\
+            conf[CONF_USERNAME] in configured_instances(hass):
         return True
 
-    if conf[CONF_USERNAME] not in configured_instances(hass):
+    if isinstance(conf, dict) and\
+            conf[CONF_USERNAME] not in configured_instances(hass):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -52,10 +54,6 @@ async def async_setup_entry(hass, config_entry):
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
     time_zone = config_entry.data[CONF_TIME_ZONE]
-
-    hass.data[DOMAIN][CONF_SWITCHES] = []
-    hass.data[DOMAIN][CONF_FANS] = []
-    hass.data[DOMAIN][CONF_LIGHTS] = []
 
     if config_entry.data[CONF_TIME_ZONE]:
         time_zone = config_entry.data[CONF_TIME_ZONE]
@@ -77,7 +75,7 @@ async def async_setup_entry(hass, config_entry):
     login = await hass.async_add_executor_job(manager.login)
 
     if not login:
-        _LOGGER.error("Unable to login")
+        _LOGGER.error("Unable to login to the VeSync server")
         return False
 
     device_dict = await async_process_devices(hass, manager)
@@ -99,7 +97,7 @@ async def async_setup_entry(hass, config_entry):
     if device_dict[CONF_FANS]:
         fans.extend(device_dict[CONF_FANS])
         hass.async_create_task(forward_setup(config_entry, 'fan'))
-
+    _LOGGER.debug(str(lights))
     return True
 
 
