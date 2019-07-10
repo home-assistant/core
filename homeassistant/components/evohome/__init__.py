@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 import logging
 from typing import Awaitable, Any, Dict, Tuple
 
-from dateutil.tz import tzlocal
 import requests.exceptions
 import voluptuous as vol
 import evohomeclient2
@@ -23,7 +22,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time, track_time_interval)
-from homeassistant.util.dt import as_utc, parse_datetime, utcnow
+from homeassistant.util.dt import parse_datetime, utcnow, UTC
 
 from .const import DOMAIN, EVO_STRFTIME, STORAGE_VERSION, STORAGE_KEY, GWS, TCS
 
@@ -48,13 +47,13 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def _local_dt_to_utc(dt_naive: datetime) -> datetime:
-    dt_aware = as_utc(dt_naive.replace(tzinfo=tzlocal()))
+    dt_aware = utcnow() + (dt_naive - datetime.now())
     return dt_aware.replace(microsecond=0, tzinfo=None)
 
 
 def _utc_to_local_dt(dt_naive: datetime) -> datetime:
-    dt_aware = as_utc(dt_naive).astimezone(tzlocal())
-    return dt_aware.replace(microsecond=0, tzinfo=None)
+    dt_naive = datetime.now() + (dt_naive - utcnow().replace(tzinfo=None))
+    return dt_naive.replace(microsecond=0)
 
 
 def _handle_exception(err):
@@ -157,8 +156,7 @@ class EvoBroker:
         finally:
             self.params[CONF_PASSWORD] = 'REDACTED'
 
-        asyncio.run_coroutine_threadsafe(
-            self._save_auth_tokens(), self.hass.loop)
+        self.hass.add_job(self._save_auth_tokens())
 
         loc_idx = self.params[CONF_LOCATION_IDX]
         try:
@@ -215,10 +213,12 @@ class EvoBroker:
         store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         await store.async_save(self._app_storage)
 
+        access_token_expires_utc += self.params[CONF_SCAN_INTERVAL]
+
         async_track_point_in_utc_time(
             self.hass,
             self._save_auth_tokens,
-            access_token_expires_utc
+            access_token_expires_utc.replace(tzinfo=UTC)
         )
 
     def update(self, *args, **kwargs) -> None:
