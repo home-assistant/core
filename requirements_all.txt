@@ -1829,8 +1829,13 @@ pysesame==0.1.0
 # homeassistant.components.goalfeed
 pysher==1.0.1
 
+<<<<<<< HEAD
 # homeassistant.components.sensor.sma
 pysma==0.3.1
+=======
+# homeassistant.components.sma
+pysma==0.3.2
+>>>>>>> SMA catch error (#25045)
 
 <<<<<<< HEAD
 # homeassistant.components.device_tracker.snmp
