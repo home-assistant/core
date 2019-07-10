@@ -165,11 +165,11 @@ class TestDarkSkySetup(unittest.TestCase):
     @MockDependency('forecastio')
     @patch('forecastio.load_forecast', new=load_forecastMock)
     def test_setup_with_alerts_config(self, mock_forecastio):
-        """Test the platform setup with language configuration."""
+        """Test the platform setup with alert configuration."""
         setup_component(self.hass, 'sensor', VALID_CONFIG_ALERTS)
 
-        state = self.hass.states.get('sensor.dark_sky_summary')
-        assert state is None
+        state = self.hass.states.get('sensor.dark_sky_alerts')
+        assert '0' == state.state
 
     @requests_mock.Mocker()
     @patch('forecastio.api.get_forecast', wraps=forecastio.api.get_forecast)
@@ -190,3 +190,5 @@ class TestDarkSkySetup(unittest.TestCase):
         assert state.state == 'Clear'
         assert state.attributes.get('friendly_name') == \
             'Dark Sky Summary'
+        state = self.hass.states.get('sensor.dark_sky_alerts')
+        assert '2' == state.state

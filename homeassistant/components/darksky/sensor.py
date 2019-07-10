@@ -200,6 +200,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.Range(min=0, max=48)]),
 })
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dark Sky sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
@@ -234,11 +235,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             _LOGGER.warning("Monitored condition %s is deprecated", variable)
         if (not SENSOR_TYPES[variable][7] or
                 'currently' in SENSOR_TYPES[variable][7]):
-            if 'alerts' not in variable:
-                sensors.append(DarkSkySensor(forecast_data, variable, name))
-            else:
+            if variable == 'alerts':
                 sensors.append(DarkSkyAlertSensor(
                     forecast_data, variable, name))
+            else:
+                sensors.append(DarkSkySensor(forecast_data, variable, name))
+
         if forecast is not None and 'daily' in SENSOR_TYPES[variable][7]:
             for forecast_day in forecast:
                 sensors.append(DarkSkySensor(
@@ -416,7 +418,7 @@ class DarkSkyAlertSensor(Entity):
         self.type = sensor_type
         self._state = None
         self._icon = None
-        self._alerts = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._alerts = None
 
     @property
     def name(self):
@@ -433,7 +435,7 @@ class DarkSkyAlertSensor(Entity):
     def icon(self):
         """Icon to use in the frontend, if any."""
         if self._state is not None and self._state > 0:
-            return "mdi:alert-circle-outline"
+            return "mdi:alert-circle"
         return "mdi:alert-circle-outline"
 
     @property
@@ -448,11 +450,9 @@ class DarkSkyAlertSensor(Entity):
         # of time to prevent hitting API limits. Note that Dark Sky will
         # charge users for too many calls in 1 day, so take care when updating.
         self.forecast_data.update()
-
-        if self.type == 'alerts':
-            self.forecast_data.update_alerts()
-            alerts = self.forecast_data.data_alerts
-            self._state = self.get_state(alerts)
+        self.forecast_data.update_alerts()
+        alerts = self.forecast_data.data_alerts
+        self._state = self.get_state(alerts)
 
     def get_state(self, data):
         """
@@ -465,9 +465,8 @@ class DarkSkyAlertSensor(Entity):
             self._alerts = alerts
             return data
 
-        i = 0
         multiple_alerts = len(data) > 1
-        for alert in data:
+        for i, alert in enumerate(data):
             for attr in ALERTS_ATTRS:
                 if multiple_alerts:
                     dkey = attr + '_' + str(i)
