@@ -80,3 +80,27 @@ async def test_step_user(hass):
         CONF_UNIT_SYSTEM: 'metric',
         CONF_WINDOW: 600.0,
     }
+
+
+async def test_custom_window(hass):
+    """Test that a custom window is stored correctly."""
+    conf = {
+        CONF_LATITUDE: 39.128712,
+        CONF_LONGITUDE: -104.9812612,
+        CONF_RADIUS: 25,
+        CONF_WINDOW: 300
+    }
+
+    flow = config_flow.WWLLNFlowHandler()
+    flow.hass = hass
+
+    result = await flow.async_step_user(user_input=conf)
+    assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result['title'] == '39.128712, -104.9812612'
+    assert result['data'] == {
+        CONF_LATITUDE: 39.128712,
+        CONF_LONGITUDE: -104.9812612,
+        CONF_RADIUS: 25,
+        CONF_UNIT_SYSTEM: 'metric',
+        CONF_WINDOW: 300,
+    }

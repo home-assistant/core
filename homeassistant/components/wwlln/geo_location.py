@@ -13,9 +13,9 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util.dt import as_local, utc_from_timestamp
+from homeassistant.util.dt import utc_from_timestamp
 
-from .const import CONF_WINDOW, DATA_CLIENT, DOMAIN
+from .const import CONF_WINDOW, DATA_CLIENT, DEFAULT_WINDOW, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +25,6 @@ ATTR_PUBLICATION_DATE = 'publication_date'
 DEFAULT_ATTRIBUTION = 'Data provided by the WWLLN'
 DEFAULT_EVENT_NAME = 'Lightning Strike: {0}'
 DEFAULT_ICON = 'mdi:flash'
-DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
 
 SIGNAL_DELETE_ENTITY = 'delete_entity_{0}'
 
@@ -67,7 +66,7 @@ class WWLLNEventManager:
         self._managed_strike_ids = set()
         self._radius = radius
         self._strikes = {}
-        self._window_seconds = window_seconds
+        self._window = timedelta(seconds=window_seconds)
 
         self._unit_system = unit_system
         if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
@@ -106,7 +105,7 @@ class WWLLNEventManager:
             await self.async_update()
 
         await self.async_update()
-        async_track_time_interval(self._hass, update, DEFAULT_UPDATE_INTERVAL)
+        async_track_time_interval(self._hass, update, DEFAULT_WINDOW)
 
     async def async_update(self):
         """Refresh data."""
@@ -118,7 +117,7 @@ class WWLLNEventManager:
                 self._longitude,
                 self._radius,
                 unit=self._unit_system,
-                window=timedelta(seconds=self._window_seconds))
+                window=self._window)
         except WWLLNError as err:
             _LOGGER.error('Error while updating WWLLN data: %s', err)
             return
@@ -158,8 +157,8 @@ class WWLLNEvent(GeolocationEvent):
         for key, value in (
                 (ATTR_EXTERNAL_ID, self._strike_id),
                 (ATTR_ATTRIBUTION, DEFAULT_ATTRIBUTION),
-                (ATTR_PUBLICATION_DATE, as_local(
-                    utc_from_timestamp(self._publication_date))),
+                (ATTR_PUBLICATION_DATE, utc_from_timestamp(
+                    self._publication_date)),
         ):
             attributes[key] = value
         return attributes

@@ -22,7 +22,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_LONGITUDE): cv.longitude,
         vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): cv.positive_int,
         vol.Optional(CONF_WINDOW, default=DEFAULT_WINDOW):
-            cv.positive_timedelta,
+            vol.All(cv.time_period, cv.positive_timedelta)
     })
 }, extra=vol.ALLOW_EXTRA)
 
