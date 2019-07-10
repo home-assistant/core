@@ -745,13 +745,13 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> Optional[str]:
 
     This method is a coroutine.
     """
-    from homeassistant.scripts.check_config import check_ha_config_file
+    import homeassistant.helpers.check_config as check_config
 
-    res = await check_ha_config_file(hass)  # type: ignore
+    res = await check_config.async_check_ha_config_file(hass)
 
     if not res.errors:
         return None
-    return '\n'.join([err.message for err in res.errors])
+    return res.error_str
 
 
 @callback
