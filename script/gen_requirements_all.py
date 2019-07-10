@@ -52,6 +52,7 @@ TEST_REQUIREMENTS = (
     'aionotion',
     'aiounifi',
     'aioswitcher',
+    'aiowwlln',
     'apns2',
     'aprslib',
     'av',
