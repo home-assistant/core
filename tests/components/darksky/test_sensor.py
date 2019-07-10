@@ -169,7 +169,7 @@ class TestDarkSkySetup(unittest.TestCase):
         setup_component(self.hass, 'sensor', VALID_CONFIG_ALERTS)
 
         state = self.hass.states.get('sensor.dark_sky_alerts')
-        assert '0' == state.state
+        assert state.state == '0'
 
     @requests_mock.Mocker()
     @patch('forecastio.api.get_forecast', wraps=forecastio.api.get_forecast)
@@ -191,4 +191,5 @@ class TestDarkSkySetup(unittest.TestCase):
         assert state.attributes.get('friendly_name') == \
             'Dark Sky Summary'
         state = self.hass.states.get('sensor.dark_sky_alerts')
-        assert '2' == state.state
+        assert state.state == '2'
+
