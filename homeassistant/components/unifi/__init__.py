@@ -1,9 +1,6 @@
 """Support for devices connected to UniFi POE."""
-from datetime import timedelta
-
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 

@@ -64,7 +64,7 @@ def update_items(controller, async_add_entities, tracked):
         if not client.is_wired and \
                 CONF_SSID_FILTER in controller.hass.data[UNIFI_CONFIG] and \
                 client.essid not in \
-                    controller.hass.data[UNIFI_CONFIG][CONF_SSID_FILTER]:
+                controller.hass.data[UNIFI_CONFIG][CONF_SSID_FILTER]:
             continue
 
         tracked[client_id] = UniFiClientTracker(client, controller)
