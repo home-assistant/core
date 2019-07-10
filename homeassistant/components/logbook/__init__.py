@@ -486,7 +486,7 @@ def _keep_event(event, entities_filter):
 def _entry_message_from_state(domain, state):
     """Convert a state to a message for the logbook."""
     # We pass domain in so we don't have to split entity_id again
-    if domain == 'device_tracker':
+    if domain in ['device_tracker', 'person']:
         if state.state == STATE_NOT_HOME:
             return 'is away'
         return 'is at {}'.format(state.state)
@@ -495,6 +495,59 @@ def _entry_message_from_state(domain, state):
         if state.state == sun.STATE_ABOVE_HORIZON:
             return 'has risen'
         return 'has set'
+
+    device_class = state.attributes.get('device_class')
+    if domain == 'binary_sensor' and device_class:
+        if device_class == 'battery':
+            if state.state == STATE_ON:
+                return "is low"
+            if state.state == STATE_OFF:
+                return "is normal"
+
+        if device_class == 'connectivity':
+            if state.state == STATE_ON:
+                return "is connected"
+            if state.state == STATE_OFF:
+                return "is disconnected"
+
+        if device_class in ['door', 'garage_door', 'opening', 'window']:
+            if state.state == STATE_ON:
+                return "is opened"
+            if state.state == STATE_OFF:
+                return "is closed"
+
+        if device_class == 'lock':
+            if state.state == STATE_ON:
+                return "is unlocked"
+            if state.state == STATE_OFF:
+                return "is locked"
+
+        if device_class == 'plug':
+            if state.state == STATE_ON:
+                return "is plugged in"
+            if state.state == STATE_OFF:
+                return "is unplugged"
+
+        if device_class == 'presence':
+            if state.state == STATE_ON:
+                return "is at home"
+            if state.state == STATE_OFF:
+                return "is away"
+
+        if device_class == 'safety':
+            if state.state == STATE_ON:
+                return "is unsafe"
+            if state.state == STATE_OFF:
+                return "is safe"
+
+        if (device_class in [
+                'cold', 'gas', 'heat', 'light', 'moisture', 'motion',
+                'occupancy', 'power', 'problem', 'smoke', 'sound', 'vibration'
+                ]):
+            if state.state == STATE_ON:
+                return "detected {}".format(device_class)
+            if state.state == STATE_OFF:
+                return "cleared (no {} detected)".format(device_class)
 
     if state.state == STATE_ON:
         # Future: combine groups and its entity entries ?
