@@ -35,7 +35,9 @@ async def async_setup(hass, config):
     apikey = conf[CONF_PASSWORD]
     devices = conf[CONF_DEVICES]
 
-    is_success = await async_setup_fortigate(hass, config, host, user, apikey, devices)
+    is_success = await async_setup_fortigate(
+        hass, config, host, user, apikey, devices
+    )
 
     # Return boolean to indicate that initialization was successful.
     return is_success
