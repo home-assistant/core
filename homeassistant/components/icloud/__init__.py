@@ -116,7 +116,7 @@ ICLOUD_COMPONENTS = [
 
 def setup(hass, config):
     """Set up the iCloud component."""
-    async def play_sound(service):
+    def play_sound(service):
         """Play sound on the device."""
         accountname = service.data.get(ATTR_ACCOUNTNAME)
         accountname = slugify(accountname.partition('@')[0])
@@ -127,7 +127,7 @@ def setup(hass, config):
     hass.services.register(DOMAIN, SERVICE_ICLOUD_PLAY_SOUND, play_sound,
                            schema=SERVICE_SCHEMA_PLAY_SOUND)
 
-    async def display_message(service):
+    def display_message(service):
         """Display a message on the device."""
         accountname = service.data.get(ATTR_ACCOUNTNAME)
         accountname = slugify(accountname.partition('@')[0])
@@ -144,7 +144,7 @@ def setup(hass, config):
                            display_message,
                            schema=SERVICE_SCHEMA_DISPLAY_MESSAGE)
 
-    async def lost_device(service):
+    def lost_device(service):
         """Make the device in lost state."""
         accountname = service.data.get(ATTR_ACCOUNTNAME)
         accountname = slugify(accountname.partition('@')[0])
@@ -159,7 +159,7 @@ def setup(hass, config):
     hass.services.register(DOMAIN, SERVICE_ICLOUD_LOST_DEVICE, lost_device,
                            schema=SERVICE_SCHEMA_LOST_DEVICE)
 
-    async def update(service):
+    def update(service):
         """Call the update function of an iCloud account."""
         accountname = service.data.get(ATTR_ACCOUNTNAME)
 
@@ -172,7 +172,7 @@ def setup(hass, config):
     hass.services.register(DOMAIN, SERVICE_ICLOUD_UPDATE, update,
                            schema=SERVICE_SCHEMA)
 
-    async def reset_account(service):
+    def reset_account(service):
         """Reset an iCloud account."""
         accountname = service.data.get(ATTR_ACCOUNTNAME)
 
@@ -199,6 +199,7 @@ def setup(hass, config):
 
         account = IcloudAccount(hass, username, password, account_name,
                                 max_interval, gps_accuracy_threshold)
+        account.reset_account()
 
         if account.api is not None:
             hass.data[DATA_ICLOUD][account.name] = account
@@ -237,8 +238,6 @@ class IcloudAccount():
 
         self.__trusted_device = None
         self.__verification_code = None
-
-        self.reset_account()
 
     def reset_account(self):
         """Reset an iCloud account."""
