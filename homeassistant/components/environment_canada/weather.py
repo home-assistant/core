@@ -96,7 +96,7 @@ class ECWeather(WeatherEntity):
         """Return the name of the weather entity."""
         if self.platform_name:
             return self.platform_name
-        return self.ec_data.conditions.get('location').get('value')
+        return self.ec_data.metadata.get('location')
 
     @property
     def temperature(self):
@@ -154,7 +154,7 @@ class ECWeather(WeatherEntity):
         condition = self.ec_data.conditions.get('condition').get('value')
         if condition:
             return condition
-        return 'Condition not observed'
+        return ''
 
     @property
     def forecast(self):

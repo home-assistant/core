@@ -12,8 +12,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, CONF_NAME, CONF_LATITUDE,
-    CONF_LONGITUDE, ATTR_ATTRIBUTION, ATTR_LOCATION, ATTR_HIDDEN)
+    TEMP_CELSIUS, CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, ATTR_ATTRIBUTION,
+    ATTR_LOCATION, ATTR_HIDDEN)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt
@@ -32,32 +32,6 @@ CONF_LANGUAGE = 'language'
 
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=1)
 
-SENSOR_TYPES = [
-    'temperature',
-    'dewpoint',
-    'wind_chill',
-    'humidex',
-    'pressure',
-    'tendency',
-    'humidity',
-    'visibility',
-    'condition',
-    'wind_speed',
-    'wind_gust',
-    'wind_dir',
-    'wind_bearing',
-    'forecast_period',
-    'text_summary',
-    'high_temp',
-    'low_temp',
-    'pop',
-    'warnings',
-    'watches',
-    'advisories',
-    'statements',
-    'endings'
-]
-
 
 def validate_station(station):
     """Check that the station ID is well-formed."""
@@ -69,8 +43,6 @@ def validate_station(station):
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Required(CONF_LANGUAGE, default='english'):
         vol.In(['english', 'french']),
     vol.Optional(CONF_NAME): cv.string,
@@ -96,10 +68,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                       hass.config.longitude),
                          language=config.get(CONF_LANGUAGE))
 
+    sensor_list = list(ec_data.conditions.keys()) + list(ec_data.alerts.keys())
     add_devices([ECSensor(sensor_type,
                           ec_data,
                           config.get(CONF_NAME))
-                 for sensor_type in config[CONF_MONITORED_CONDITIONS]],
+                 for sensor_type in sensor_list],
                 True)
 
 
@@ -148,6 +121,7 @@ class ECSensor(Entity):
         self.ec_data.conditions.update(self.ec_data.alerts)
 
         conditions = self.ec_data.conditions
+        metadata = self.ec_data.metadata
         sensor_data = conditions.get(self.sensor_type)
 
         self._attr = {}
@@ -171,7 +145,7 @@ class ECSensor(Entity):
         else:
             self._unit = sensor_data.get('unit')
 
-        timestamp = self.ec_data.conditions.get('timestamp').get('value')
+        timestamp = metadata.get('timestamp')
         if timestamp:
             updated_utc = datetime.datetime.strptime(timestamp, '%Y%m%d%H%M%S')
             updated_local = dt.as_local(updated_utc).isoformat()
@@ -183,7 +157,7 @@ class ECSensor(Entity):
         self._attr.update({
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             ATTR_UPDATED: updated_local,
-            ATTR_LOCATION: conditions.get('location').get('value'),
-            ATTR_STATION: conditions.get('station').get('value'),
+            ATTR_LOCATION: metadata.get('location'),
+            ATTR_STATION: metadata.get('station'),
             ATTR_HIDDEN: hidden
         })
