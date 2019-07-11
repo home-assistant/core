@@ -203,7 +203,7 @@ def _encode_complex(value):
             _encode(key): _encode_complex(value)
             for key, value in value.items()
         }
-    elif isinstance(value, list):
+    if isinstance(value, list):
         return [_encode_complex(val) for val in value]
 
     new_value = _encode(value)
