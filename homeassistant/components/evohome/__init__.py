@@ -53,8 +53,8 @@ def _local_dt_to_utc(dt_naive: datetime) -> datetime:
     return dt_aware.replace(microsecond=0)
 
 
-def _utc_to_local_dt(dt_naive: datetime) -> datetime:
-    dt_naive = datetime.now() + (dt_naive - utcnow())
+def _utc_to_local_dt(dt_aware: datetime) -> datetime:
+    dt_naive = datetime.now() + (dt_aware - utcnow())
     if dt_naive.microsecond >= 500000:
         dt_naive += timedelta(seconds=1)
     return dt_naive.replace(microsecond=0)
