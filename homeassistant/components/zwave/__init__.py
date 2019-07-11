@@ -26,6 +26,7 @@ from homeassistant.helpers.dispatcher import (
 
 from . import const
 from . import config_flow  # noqa pylint: disable=unused-import
+from . import websocket_api as wsapi
 from .const import (
     CONF_AUTOHEAL, CONF_DEBUG, CONF_POLLING_INTERVAL,
     CONF_USB_STICK_PATH, CONF_CONFIG_PATH, CONF_NETWORK_KEY,
@@ -300,6 +301,8 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DATA_ENTITY_VALUES] = []
 
     registry = await async_get_registry(hass)
+
+    wsapi.async_load_websocket_api(hass)
 
     if use_debug:  # pragma: no cover
         def log_all(signal, value=None):
