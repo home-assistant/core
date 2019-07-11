@@ -192,7 +192,7 @@ class EvoZone(EvoClimateDevice):
 
         self._set_temperature(kwargs['temperature'], until)
 
-    def _set_operation_mode(self, op_mode) -> None:
+    def _set_operation_mode(self, op_mode: str) -> None:
         """Set the Zone to one of its native EVO_* operating modes."""
         if op_mode == EVO_FOLLOW:
             try:
@@ -220,7 +220,7 @@ class EvoZone(EvoClimateDevice):
         else:  # HVAC_MODE_HEAT
             self._set_operation_mode(EVO_FOLLOW)
 
-    def set_preset_mode(self, preset_mode: str) -> None:
+    def set_preset_mode(self, preset_mode: Optional[str]) -> None:
         """Set a new preset mode.
 
         If preset_mode is None, then revert to following the schedule.
@@ -312,7 +312,7 @@ class EvoController(EvoClimateDevice):
                  for z in self._evo_device._zones]  # noqa: E501; pylint: disable=protected-access
         return max(temps) if temps else 35
 
-    def _set_operation_mode(self, op_mode) -> None:
+    def _set_operation_mode(self, op_mode: str) -> None:
         """Set the Controller to any of its native EVO_* operating modes."""
         try:
             self._evo_device._set_status(op_mode)  # noqa: E501; pylint: disable=protected-access
@@ -324,7 +324,7 @@ class EvoController(EvoClimateDevice):
         """Set an operating mode for the Controller."""
         self._set_operation_mode(HA_HVAC_TO_TCS.get(hvac_mode))
 
-    def set_preset_mode(self, preset_mode: str) -> None:
+    def set_preset_mode(self, preset_mode: Optional[str]) -> None:
         """Set a new preset mode.
 
         If preset_mode is None, then revert to 'Auto' mode.
