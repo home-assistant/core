@@ -9,6 +9,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import Throttle
+from n26 import api as n26_api, config as n26_config
 
 from .const import DATA, DOMAIN
 
@@ -34,10 +35,7 @@ N26_COMPONENTS = [
 
 def setup(hass, config):
     """Set up N26 Component."""
-    if config[DOMAIN] and isinstance(config[DOMAIN], list):
-        acc_list = config[DOMAIN]
-    else:
-        acc_list = [config[DOMAIN]]
+    acc_list = config[DOMAIN]
 
     api_data_list = []
 
@@ -45,8 +43,7 @@ def setup(hass, config):
         user = acc[CONF_USERNAME]
         password = acc[CONF_PASSWORD]
 
-        from n26 import api, config as api_config
-        api = api.Api(api_config.Config(user, password))
+        api = n26_api.Api(n26_config.Config(user, password))
 
         from requests import HTTPError
         try:

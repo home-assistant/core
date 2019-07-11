@@ -30,14 +30,14 @@ ICON_SPACE = 'mdi:crop-square'
 def setup_platform(
         hass, config, add_entities, discovery_info=None):
     """Set up the N26 sensor platform."""
-    api_data = hass.data[DOMAIN][DATA]
-    if api_data and isinstance(api_data, list):
-        api_list = api_data
-    else:
-        api_list = [api_data]
+    api_list = hass.data[DOMAIN][DATA]
 
+    if api_list is None:
+        return
+
+    sensor_entities = []
     for api_data in api_list:
-        sensor_entities = [N26Account(api_data)]
+        sensor_entities.append(N26Account(api_data))
 
         for card in api_data.cards:
             sensor_entities.append(N26Card(api_data, card))
@@ -45,7 +45,7 @@ def setup_platform(
         for space in api_data.spaces["spaces"]:
             sensor_entities.append(N26Space(api_data, space))
 
-        add_entities(sensor_entities)
+    add_entities(sensor_entities)
 
 
 class N26Account(Entity):
