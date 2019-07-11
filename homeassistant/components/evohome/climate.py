@@ -173,7 +173,7 @@ class EvoZone(EvoClimateDevice):
         return self._evo_device.setpointCapabilities['maxHeatSetpoint']
 
     def _set_temperature(self, temperature: float,
-                         until: Optional[datetime] = None):
+                         until: Optional[datetime] = None) -> None:
         """Set a new target temperature for the Zone.
 
         until == None means indefinitely (i.e. PermanentOverride)
