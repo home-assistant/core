@@ -312,8 +312,7 @@ class EvoDevice(Entity):
                 '{}T{}'.format(sp_date, switchpoint['TimeOfDay']),
                 '%Y-%m-%dT%H:%M:%S')
 
-            spt['from'] = \
-                as_local(_local_dt_to_utc(dt_naive)).isoformat()
+            spt['from'] = _local_dt_to_utc(dt_naive).isoformat()
             try:
                 spt['temperature'] = switchpoint['heatSetpoint']
             except KeyError:
