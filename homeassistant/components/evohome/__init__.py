@@ -5,7 +5,7 @@ Such systems include evohome (multi-zone), and Round Thermostat (single zone).
 import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Awaitable, Any, Dict, Tuple
+from typing import Awaitable, Any, Dict, Optional, Tuple
 
 import requests.exceptions
 import voluptuous as vol
@@ -186,7 +186,8 @@ class EvoBroker:
 
         return True
 
-    async def _load_auth_tokens(self) -> Awaitable[Tuple[str, str, datetime]]:
+    async def _load_auth_tokens(self) -> Awaitable[
+            Tuple[Optional[str], Optional[str], Optional[datetime]]]:
         store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         app_storage = self._app_storage = await store.async_load()
 
