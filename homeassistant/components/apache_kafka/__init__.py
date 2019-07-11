@@ -4,7 +4,6 @@ import json
 import logging
 
 from aiokafka import AIOKafkaProducer
-from aiokafka.errors import KafkaError
 import voluptuous as vol
 
 from homeassistant.const import (
