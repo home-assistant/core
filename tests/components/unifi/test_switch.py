@@ -189,7 +189,7 @@ CONTROLLER_ID = unifi.CONTROLLER_ID.format(host='mock-host', site='mock-site')
 @pytest.fixture
 def mock_controller(hass):
     """Mock a UniFi Controller."""
-    hass.data[UNIFI_CONFIG] = []
+    hass.data[UNIFI_CONFIG] = {}
     controller = unifi.UniFiController(hass, None)
 
     controller.site_role = 'admin'

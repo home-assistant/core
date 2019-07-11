@@ -36,7 +36,7 @@ ENTRY_CONFIG = {
 async def test_controller_setup():
     """Successful setup."""
     hass = Mock()
-    hass.data = {UNIFI_CONFIG: []}
+    hass.data = {UNIFI_CONFIG: {}}
     entry = Mock()
     entry.data = ENTRY_CONFIG
     api = Mock()

@@ -22,7 +22,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Component doesn't support configuration through configuration.yaml."""
-    hass.data[UNIFI_CONFIG] = []
+    hass.data[UNIFI_CONFIG] = {}
 
     if DOMAIN in config:
         hass.data[UNIFI_CONFIG] = config[DOMAIN]
