@@ -421,7 +421,7 @@ class ClimateDevice(Entity):
 
         # Fake turn on
         for mode in (HVAC_MODE_HEAT_COOL, HVAC_MODE_HEAT, HVAC_MODE_COOL):
-            if mode not in self.hvac_mode:
+            if mode not in self.hvac_modes:
                 continue
             await self.async_set_hvac_mode(mode)
             break
