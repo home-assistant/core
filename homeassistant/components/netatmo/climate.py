@@ -193,8 +193,8 @@ class NetatmoThermostat(ClimateDevice):
             return CURRENT_HVAC_MAP_NETATMO[self._data.boilerstatus]
         # Maybe it is a valve
         if self._room_id in self._data.room_status:
-            if (self._data
-                    .room_status[self._room_id]['heating_power_request'] > 0):
+            if (self._data.room_status[self._room_id]
+                    .get('heating_power_request', 0) > 0):
                 return CURRENT_HVAC_HEAT
         return CURRENT_HVAC_IDLE
 
