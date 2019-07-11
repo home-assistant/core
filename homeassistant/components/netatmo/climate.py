@@ -278,12 +278,12 @@ class NetatmoThermostat(ClimateDevice):
                 self._data.room_status[self._room_id]['target_temperature']
             self._preset = \
                 self._data.room_status[self._room_id]["setpoint_mode"]
+            self._hvac_mode = HVAC_MAP_NETATMO[self._preset]
         except KeyError:
             _LOGGER.error(
                 "The thermostat in room %s seems to be out of reach.",
                 self._room_id
             )
-        self._hvac_mode = HVAC_MAP_NETATMO[self._preset]
         self._away = self._hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
 
 
