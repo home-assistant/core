@@ -4,7 +4,8 @@ import logging
 from homeassistant.components.device_tracker.const import ENTITY_ID_FORMAT
 from homeassistant.helpers.dispatcher import dispatcher_connect
 
-from . import DATA_ICLOUD, SIGNAL_UPDATE_ICLOUD, IcloudDevice
+from . import IcloudDevice
+from .const import DATA_ICLOUD, SIGNAL_UPDATE_ICLOUD
 
 _LOGGER = logging.getLogger(__name__)
 

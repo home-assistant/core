@@ -1,32 +1,45 @@
 """Battery state for iCloud devices."""
 import logging
 
-from homeassistant.const import DEVICE_CLASS_BATTERY
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_USERNAME, DEVICE_CLASS_BATTERY
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util import slugify
 
-from . import DATA_ICLOUD
+from .const import CONF_ACCOUNTNAME, DATA_ICLOUD
 
 _LOGGER = logging.getLogger(__name__)
 
+async def async_setup_entry(
+        hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
+    """Set up iCloud devices sensors based on a config entry."""
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Sensors setup."""
-    if discovery_info is None:
-        return
+    username = entry.data[CONF_USERNAME]
+    account_name = entry.data.get(
+        CONF_ACCOUNTNAME,
+        slugify(username.partition('@')[0])
+    )
+    icloud = hass.data[DATA_ICLOUD][account_name]
+
+    # try:
+    #     version = await adguard.version()
+    # except AdGuardHomeConnectionError as exception:
+    #     raise PlatformNotReady from exception
 
     devices = []
-    for accountname, icloud_account in hass.data[DATA_ICLOUD].items():
-        for devicename, icloud_device in icloud_account.devices.items():
-            if icloud_device.battery_level is not None:
-                _LOGGER.debug("Adding sensors from iCloud device=%s",
-                              devicename)
-                devices.append(IcloudDeviceBatterySensor(hass,
-                                                         accountname,
-                                                         devicename))
+    for devicename, icloud_device in icloud.devices.items():
+        if icloud_device.battery_level is not None:
+            _LOGGER.debug("Adding sensors from iCloud device=%s", devicename)
+            devices.append(
+                IcloudDeviceBatterySensor(hass,
+                                          icloud.name,
+                                          devicename)
+            )
 
-    add_entities(devices, True)
-
+    async_add_entities(devices, True)
 
 class IcloudDeviceBatterySensor(Entity):
     """iCloud device Battery Sensor."""

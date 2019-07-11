@@ -13,29 +13,25 @@ from pyicloud.services.findmyiphone import AppleDevice
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.zone import async_active_zone
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import slugify
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.dt import utcnow
 from homeassistant.util.location import distance
 
-DOMAIN = 'icloud'
-DATA_ICLOUD = 'icloud_data'
+from .config_flow import IcloudFlowHandler  # noqa
+from .const import (CONF_ACCOUNTNAME, CONF_GPS_ACCURACY_THRESHOLD,
+                    CONF_MAX_INTERVAL, DATA_ICLOUD, DOMAIN, ICLOUD_COMPONENTS,
+                    SIGNAL_UPDATE_ICLOUD)
 
 ATTRIBUTION = "Data provided by Apple iCloud"
 
-SIGNAL_UPDATE_ICLOUD = 'icloud_update'
-
-# iCloud dev tracker comp
-CONF_ACCOUNTNAME = 'account_name'
-CONF_MAX_INTERVAL = 'max_interval'
-CONF_GPS_ACCURACY_THRESHOLD = 'gps_accuracy_threshold'
-
 # entity attributes
-ATTR_ACCOUNTNAME = 'account_name'
 ATTR_BATTERY = 'battery'
 ATTR_BATTERYSTATUS = 'battery_status'
 ATTR_DEVICENAME = 'device_name'
@@ -77,23 +73,23 @@ SERVICE_ATTR_LOST_DEVICE_NUMBER = 'number'
 SERVICE_ATTR_LOST_DEVICE_SOUND = 'sound'
 
 SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ACCOUNTNAME): cv.string,
+    vol.Optional(CONF_ACCOUNTNAME): cv.string,
 })
 
 SERVICE_SCHEMA_PLAY_SOUND = vol.Schema({
-    vol.Required(ATTR_ACCOUNTNAME): cv.string,
+    vol.Required(CONF_ACCOUNTNAME): cv.string,
     vol.Required(ATTR_DEVICENAME): cv.string,
 })
 
 SERVICE_SCHEMA_DISPLAY_MESSAGE = vol.Schema({
-    vol.Required(ATTR_ACCOUNTNAME): cv.string,
+    vol.Required(CONF_ACCOUNTNAME): cv.string,
     vol.Required(ATTR_DEVICENAME): cv.string,
     vol.Required(SERVICE_ATTR_LOST_DEVICE_MESSAGE): cv.string,
     vol.Optional(SERVICE_ATTR_LOST_DEVICE_SOUND): cv.boolean,
 })
 
 SERVICE_SCHEMA_LOST_DEVICE = vol.Schema({
-    vol.Required(ATTR_ACCOUNTNAME): cv.string,
+    vol.Required(CONF_ACCOUNTNAME): cv.string,
     vol.Required(ATTR_DEVICENAME): cv.string,
     vol.Required(SERVICE_ATTR_LOST_DEVICE_NUMBER): cv.string,
     vol.Required(SERVICE_ATTR_LOST_DEVICE_MESSAGE): cv.string,
@@ -103,33 +99,68 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(ATTR_ACCOUNTNAME): cv.slugify,
+        vol.Optional(CONF_ACCOUNTNAME): cv.slugify,
         vol.Optional(CONF_MAX_INTERVAL, default=30): cv.positive_int,
         vol.Optional(CONF_GPS_ACCURACY_THRESHOLD, default=500): cv.positive_int
     })])
 }, extra=vol.ALLOW_EXTRA)
 
-ICLOUD_COMPONENTS = [
-    'sensor', 'device_tracker'
-]
+_LOGGER.error('ICLOUD_INIT_:')
 
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+    """Set up the iCloud components."""
+    _LOGGER.error('ICLOUD_INIT_:setup')
+    return True
 
-def setup(hass, config):
-    """Set up the iCloud component."""
+async def async_setup_entry(
+        hass: HomeAssistantType, entry: ConfigEntry
+) -> bool:
+    """Set up an iCloud account from a config entry."""
+
+    _LOGGER.error('ICLOUD_INIT_:entry')
+
+    username = entry.data[CONF_USERNAME]
+    password = entry.data[CONF_PASSWORD]
+    account_name = entry.data.get(
+        CONF_ACCOUNTNAME,
+        slugify(username.partition('@')[0])
+    )
+    max_interval = entry.data[CONF_MAX_INTERVAL]
+    gps_accuracy_threshold = entry.data[CONF_GPS_ACCURACY_THRESHOLD]
+
+    account = IcloudAccount(
+        hass,
+        username,
+        password,
+        account_name,
+        max_interval,
+        gps_accuracy_threshold
+    )
+    account.reset_account()
+
+    if account.api is None:
+        _LOGGER.error("No iCloud data added for account=%s", account_name)
+        return False
+
+    hass.data[DATA_ICLOUD][account.name] = account
+
+    for component in ICLOUD_COMPONENTS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
+
     def play_sound(service):
         """Play sound on the device."""
-        accountname = service.data.get(ATTR_ACCOUNTNAME)
+        accountname = service.data.get(CONF_ACCOUNTNAME)
         accountname = slugify(accountname.partition('@')[0])
         devicename = service.data.get(ATTR_DEVICENAME)
         devicename = slugify(devicename.replace(' ', '', 99))
 
         hass.data[DATA_ICLOUD][accountname].devices[devicename].play_sound()
-    hass.services.register(DOMAIN, SERVICE_ICLOUD_PLAY_SOUND, play_sound,
-                           schema=SERVICE_SCHEMA_PLAY_SOUND)
 
     def display_message(service):
         """Display a message on the device."""
-        accountname = service.data.get(ATTR_ACCOUNTNAME)
+        accountname = service.data.get(CONF_ACCOUNTNAME)
         accountname = slugify(accountname.partition('@')[0])
         devicename = service.data.get(ATTR_DEVICENAME)
         devicename = slugify(devicename.replace(' ', '', 99))
@@ -140,13 +171,10 @@ def setup(hass, config):
             devicename].display_message(
                 message,
                 sound)
-    hass.services.register(DOMAIN, SERVICE_ICLOUD_DISPLAY_MESSAGE,
-                           display_message,
-                           schema=SERVICE_SCHEMA_DISPLAY_MESSAGE)
 
     def lost_device(service):
         """Make the device in lost state."""
-        accountname = service.data.get(ATTR_ACCOUNTNAME)
+        accountname = service.data.get(CONF_ACCOUNTNAME)
         accountname = slugify(accountname.partition('@')[0])
         devicename = service.data.get(ATTR_DEVICENAME)
         devicename = slugify(devicename.replace(' ', '', 99))
@@ -156,12 +184,10 @@ def setup(hass, config):
         hass.data[DATA_ICLOUD][accountname].devices[devicename].lost_device(
             number,
             message)
-    hass.services.register(DOMAIN, SERVICE_ICLOUD_LOST_DEVICE, lost_device,
-                           schema=SERVICE_SCHEMA_LOST_DEVICE)
 
     def update(service):
         """Call the update function of an iCloud account."""
-        accountname = service.data.get(ATTR_ACCOUNTNAME)
+        accountname = service.data.get(CONF_ACCOUNTNAME)
 
         if accountname is None:
             for accountname, account in hass.data[DATA_ICLOUD].items():
@@ -169,12 +195,10 @@ def setup(hass, config):
         else:
             accountname = slugify(accountname.partition('@')[0])
             hass.data[DATA_ICLOUD][accountname].keep_alive(utcnow())
-    hass.services.register(DOMAIN, SERVICE_ICLOUD_UPDATE, update,
-                           schema=SERVICE_SCHEMA)
-
+    
     def reset_account(service):
         """Reset an iCloud account."""
-        accountname = service.data.get(ATTR_ACCOUNTNAME)
+        accountname = service.data.get(CONF_ACCOUNTNAME)
 
         if accountname is None:
             for accountname, account in hass.data[DATA_ICLOUD].items():
@@ -183,40 +207,42 @@ def setup(hass, config):
             accountname = slugify(accountname.partition('@')[0])
             hass.data[DATA_ICLOUD][accountname].reset_account()
 
-    hass.services.register(DOMAIN, SERVICE_ICLOUD_RESET,
-                           reset_account, schema=SERVICE_SCHEMA)
+    hass.services.register(
+        DOMAIN, SERVICE_ICLOUD_PLAY_SOUND, play_sound,
+        schema=SERVICE_SCHEMA_PLAY_SOUND
+    )
 
-    def setup_icloud(icloud_config):
-        """Set up an iCloud account."""
-        _LOGGER.debug("Logging into iCloud...")
+    hass.services.register(
+        DOMAIN, SERVICE_ICLOUD_DISPLAY_MESSAGE, display_message,
+        schema=SERVICE_SCHEMA_DISPLAY_MESSAGE
+    )
+    
+    hass.services.register(
+        DOMAIN, SERVICE_ICLOUD_LOST_DEVICE, lost_device,
+        schema=SERVICE_SCHEMA_LOST_DEVICE
+    )
 
-        username = icloud_config.get(CONF_USERNAME)
-        password = icloud_config.get(CONF_PASSWORD)
-        account_name = icloud_config.get(CONF_ACCOUNTNAME,
-                                         slugify(username.partition('@')[0]))
-        max_interval = icloud_config.get(CONF_MAX_INTERVAL)
-        gps_accuracy_threshold = icloud_config.get(CONF_GPS_ACCURACY_THRESHOLD)
+    hass.services.register(
+        DOMAIN, SERVICE_ICLOUD_UPDATE, update,
+        schema=SERVICE_SCHEMA
+    )
 
-        account = IcloudAccount(hass, username, password, account_name,
-                                max_interval, gps_accuracy_threshold)
-        account.reset_account()
-
-        if account.api is not None:
-            hass.data[DATA_ICLOUD][account.name] = account
-
-        else:
-            _LOGGER.error("No iCloud data added for account=%s", account_name)
-            return False
-
-        for component in ICLOUD_COMPONENTS:
-            load_platform(hass, component, DOMAIN, {}, icloud_config)
-
-    hass.data[DATA_ICLOUD] = {}
-    for icloud_config in config[DOMAIN]:
-        setup_icloud(icloud_config)
+    hass.services.register(
+        DOMAIN, SERVICE_ICLOUD_RESET, reset_account,
+        schema=SERVICE_SCHEMA
+    )
 
     return True
 
+async def async_unload_entry(
+        hass: HomeAssistantType, entry: ConfigType
+) -> bool:
+    """Unload iCloud config entry."""
+    # for component in 'sensor', 'switch':
+    #     await hass.config_entries.async_forward_entry_unload(entry, component)
+
+    hass.data[DOMAIN].pop(entry.data[CONF_ACCOUNTNAME])
+    return True
 
 class IcloudAccount():
     """Representation of an iCloud account."""
@@ -270,7 +296,7 @@ class IcloudAccount():
             self.update_devices()
 
         except PyiCloudNoDevicesException:
-            _LOGGER.error('No iCloud Devices found!')
+            _LOGGER.error('No iCloud Devices found')
 
     def update_devices(self):
         """Update iCloud devices."""
@@ -379,107 +405,9 @@ class IcloudAccount():
         if self.api is None:
             return
 
-        if self.api.requires_2fa:
-            try:
-                if self.__trusted_device is None:
-                    self.icloud_need_trusted_device()
-                    return
-
-                if self.__verification_code is None:
-                    self.icloud_need_verification_code()
-                    return
-
-                self.api.authenticate()
-                if self.api.requires_2fa:
-                    raise Exception('Unknown failure')
-
-                self.__trusted_device = None
-                self.__verification_code = None
-            except PyiCloudException as error:
-                _LOGGER.error("Error setting up 2FA: %s", error)
-        else:
-            self.api.authenticate()
-
+        self.api.authenticate()
         self.update_devices()
 
-    def icloud_trusted_device_callback(self, callback_data):
-        """Handle chosen trusted devices."""
-        self.__trusted_device = int(callback_data.get('trusted_device'))
-        self.__trusted_device = self.api.trusted_devices[self.__trusted_device]
-
-        if not self.api.send_verification_code(self.__trusted_device):
-            _LOGGER.error("Failed to send verification code")
-            self.__trusted_device = None
-            return
-
-        if self._accountname in _CONFIGURING:
-            request_id = _CONFIGURING.pop(self._accountname)
-            configurator = self._hass.components.configurator
-            configurator.request_done(request_id)
-
-        # Trigger the next step immediately
-        self.icloud_need_verification_code()
-
-    def icloud_need_trusted_device(self):
-        """We need a trusted device."""
-        configurator = self._hass.components.configurator
-        if self._accountname in _CONFIGURING:
-            return
-
-        devicesstring = ''
-        devices = self.api.trusted_devices
-        for i, device in enumerate(devices):
-            devicename = device.get(
-                'deviceName', 'SMS to %s' % device.get('phoneNumber'))
-            devicesstring += "{}: {};".format(i, devicename)
-
-        _CONFIGURING[self._accountname] = configurator.request_config(
-            'iCloud {}'.format(self._accountname),
-            self.icloud_trusted_device_callback,
-            description=(
-                'Please choose your trusted device by entering'
-                ' the index from this list: ' + devicesstring),
-            entity_picture="/static/images/config_icloud.png",
-            submit_caption='Confirm',
-            fields=[{'id': 'trusted_device', 'name': 'Trusted Device'}]
-        )
-
-    def icloud_verification_callback(self, callback_data):
-        """Handle the chosen trusted device."""
-        self.__verification_code = callback_data.get('code')
-
-        try:
-            if not self.api.validate_verification_code(
-                    self.__trusted_device, self.__verification_code):
-                raise PyiCloudException('Unknown failure')
-        except PyiCloudException as error:
-            # Reset to the initial 2FA state to allow the user to retry
-            _LOGGER.error("Failed to verify verification code: %s", error)
-            self.__trusted_device = None
-            self.__verification_code = None
-
-            # Trigger the next step immediately
-            self.icloud_need_trusted_device()
-
-        if self._accountname in _CONFIGURING:
-            request_id = _CONFIGURING.pop(self._accountname)
-            configurator = self._hass.components.configurator
-            configurator.request_done(request_id)
-
-    def icloud_need_verification_code(self):
-        """Return the verification code."""
-        configurator = self._hass.components.configurator
-        if self._accountname in _CONFIGURING:
-            return
-
-        _CONFIGURING[self._accountname] = configurator.request_config(
-            'iCloud {}'.format(self._accountname),
-            self.icloud_verification_callback,
-            description=('Please enter the validation code:'),
-            entity_picture="/static/images/config_icloud.png",
-            submit_caption='Confirm',
-            fields=[{'id': 'code', 'name': 'code'}]
-        )
 
     @property
     def name(self):
@@ -526,7 +454,7 @@ class IcloudDevice():
             'deviceStatus'], 'error')
 
         self._attrs = {
-            ATTR_ACCOUNTNAME: self._accountname,
+            CONF_ACCOUNTNAME: self._accountname,
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_DEVICENAME: self._device_name,
             ATTR_DEVICESTATUS: self._device_status,

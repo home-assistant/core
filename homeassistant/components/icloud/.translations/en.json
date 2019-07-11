@@ -1,0 +1,15 @@
+{
+    "config": {
+        "step": {
+            "init": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Enter your credentials",
+                "title": "iCloud account"
+            }
+        },
+        "title": "Apple iCloud"
+    }
+}
