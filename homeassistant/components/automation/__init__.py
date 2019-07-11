@@ -227,9 +227,9 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         state = await self.async_get_last_state()
         if state:
             enable_automation = state.state == STATE_ON
-            self._last_triggered = state.attributes.get('last_triggered')
-            if isinstance(self._last_triggered, str):
-                self._last_triggered = parse_datetime(self._last_triggered)
+            last_triggered = state.attributes.get('last_triggered')
+            if last_triggered is not None:
+                self._last_triggered = parse_datetime(last_triggered)
             _LOGGER.debug("Loaded automation %s with state %s from state "
                           " storage last state %s", self.entity_id,
                           enable_automation, state)
