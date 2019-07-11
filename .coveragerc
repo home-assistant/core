@@ -38,6 +38,8 @@ omit =
     homeassistant/components/apple_tv/*
     homeassistant/components/aqualogic/*
     homeassistant/components/aquostv/media_player.py
+    homeassistant/components/arcam_fmj/media_player.py
+    homeassistant/components/arcam_fmj/__init__.py
     homeassistant/components/arduino/*
     homeassistant/components/arest/binary_sensor.py
     homeassistant/components/arest/sensor.py
@@ -407,6 +409,8 @@ omit =
     homeassistant/components/nissan_leaf/*
     homeassistant/components/nmap_tracker/device_tracker.py
     homeassistant/components/nmbs/sensor.py
+    homeassistant/components/notion/binary_sensor.py
+    homeassistant/components/notion/sensor.py
     homeassistant/components/noaa_tides/sensor.py
     homeassistant/components/norway_air/air_quality.py
     homeassistant/components/nsw_fuel_station/sensor.py
@@ -688,6 +692,8 @@ omit =
     homeassistant/components/worldtidesinfo/sensor.py
     homeassistant/components/worxlandroid/sensor.py
     homeassistant/components/wunderlist/*
+    homeassistant/components/wwlln/__init__.py
+    homeassistant/components/wwlln/geo_location.py
     homeassistant/components/x10/light.py
     homeassistant/components/xbox_live/sensor.py
     homeassistant/components/xeoma/camera.py
