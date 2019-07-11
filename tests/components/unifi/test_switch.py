@@ -261,6 +261,18 @@ async def test_controller_not_client(hass, mock_controller):
     assert cloudkey is None
 
 
+async def test_not_admin(hass, mock_controller):
+    """Test that switch platform only work on an admin account."""
+    mock_controller.mock_client_responses.append([CLIENT_1])
+    mock_controller.mock_device_responses.append([])
+
+    mock_controller.site_role = 'viewer'
+
+    await setup_controller(hass, mock_controller)
+    assert len(mock_controller.mock_requests) == 2
+    assert len(hass.states.async_all()) == 0
+
+
 async def test_switches(hass, mock_controller):
     """Test the update_items function with some clients."""
     mock_controller.mock_client_responses.append([CLIENT_1, CLIENT_4])
@@ -280,8 +292,8 @@ async def test_switches(hass, mock_controller):
     assert switch_1.attributes['port'] == 1
     assert switch_1.attributes['poe_mode'] == 'auto'
 
-    switch = hass.states.get('switch.client_4')
-    assert switch is None
+    switch_4 = hass.states.get('switch.client_4')
+    assert switch_4 is None
 
 
 async def test_new_client_discovered(hass, mock_controller):
@@ -300,13 +312,37 @@ async def test_new_client_discovered(hass, mock_controller):
     await hass.services.async_call('switch', 'turn_off', {
         'entity_id': 'switch.client_1'
     }, blocking=True)
-    # 2x light update, 1 turn on request
     assert len(mock_controller.mock_requests) == 5
     assert len(hass.states.async_all()) == 3
+    assert mock_controller.mock_requests[2] == {
+        'json': {
+            'port_overrides': [{
+                'port_idx': 1,
+                'portconf_id': '1a1',
+                'poe_mode': 'off'}]
+        },
+        'method': 'put',
+        'path': 's/{site}/rest/device/mock-id'
+    }
 
-    switch = hass.states.get('switch.client_2')
-    assert switch is not None
-    assert switch.state == 'on'
+    await hass.services.async_call('switch', 'turn_on', {
+        'entity_id': 'switch.client_1'
+    }, blocking=True)
+    assert len(mock_controller.mock_requests) == 7
+    assert mock_controller.mock_requests[5] == {
+        'json': {
+            'port_overrides': [{
+                'port_idx': 1,
+                'portconf_id': '1a1',
+                'poe_mode': 'auto'}]
+        },
+        'method': 'put',
+        'path': 's/{site}/rest/device/mock-id'
+    }
+
+    switch_2 = hass.states.get('switch.client_2')
+    assert switch_2 is not None
+    assert switch_2.state == 'on'
 
 
 async def test_failed_update_successful_login(hass, mock_controller):

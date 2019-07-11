@@ -130,10 +130,8 @@ async def test_no_clients(hass, mock_controller):
 
 async def test_tracked_devices(hass, mock_controller):
     """Test the update_items function with some clients."""
-    client_1 = copy(CLIENT_1)
-    client_1['last_seen'] = dt_util.as_timestamp(dt_util.utcnow())
     mock_controller.mock_client_responses.append(
-        [client_1, CLIENT_2, CLIENT_3])
+        [CLIENT_1, CLIENT_2, CLIENT_3])
     mock_controller.mock_device_responses.append({})
     hass.data[UNIFI_CONFIG] = {unifi_dt.CONF_SSID_FILTER: ['ssid']}
 
@@ -143,7 +141,7 @@ async def test_tracked_devices(hass, mock_controller):
 
     device_1 = hass.states.get('device_tracker.client_1')
     assert device_1 is not None
-    assert device_1.state == 'home'
+    assert device_1.state == 'not_home'
 
     device_2 = hass.states.get('device_tracker.wired_client')
     assert device_2 is not None
@@ -151,3 +149,13 @@ async def test_tracked_devices(hass, mock_controller):
 
     device_3 = hass.states.get('device_tracker.client_3')
     assert device_3 is None
+
+    client_1 = copy(CLIENT_1)
+    client_1['last_seen'] = dt_util.as_timestamp(dt_util.utcnow())
+    mock_controller.mock_client_responses.append([client_1])
+    mock_controller.mock_device_responses.append({})
+    await mock_controller.async_update()
+    await hass.async_block_till_done()
+
+    device_1 = hass.states.get('device_tracker.client_1')
+    assert device_1.state == 'home'

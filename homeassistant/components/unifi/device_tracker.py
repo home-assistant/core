@@ -11,7 +11,7 @@ from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
 from homeassistant.core import callback
 from homeassistant.const import (
-    CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_VERIFY_SSL)
+    CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_VERIFY_SSL)
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -24,7 +24,6 @@ from .const import (
 
 LOGGER = logging.getLogger(__name__)
 
-CONF_PORT = 'port'
 CONF_DT_SITE_ID = 'site_id'
 
 DEFAULT_HOST = 'localhost'

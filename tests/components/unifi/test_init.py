@@ -1,4 +1,5 @@
 """Test UniFi setup process."""
+from datetime import timedelta
 from unittest.mock import Mock, patch
 
 from homeassistant.components import unifi
@@ -15,6 +16,23 @@ async def test_setup_with_no_config(hass):
     """Test that we do not discover anything or try to set up a bridge."""
     assert await async_setup_component(hass, unifi.DOMAIN, {}) is True
     assert unifi.DOMAIN not in hass.data
+    assert hass.data[unifi.UNIFI_CONFIG] == {}
+
+
+async def test_setup_with_config(hass):
+    """Test that we do not discover anything or try to set up a bridge."""
+    config = {
+        unifi.DOMAIN: {
+            unifi.CONF_DETECTION_TIME: 3,
+            unifi.CONF_SSID_FILTER: ['ssid']
+        }
+    }
+    assert await async_setup_component(hass, unifi.DOMAIN, config) is True
+    assert unifi.DOMAIN not in hass.data
+    assert hass.data[unifi.UNIFI_CONFIG] == {
+        unifi.CONF_DETECTION_TIME: timedelta(seconds=3),
+        unifi.CONF_SSID_FILTER: ['ssid']
+    }
 
 
 async def test_successful_config_entry(hass):
