@@ -833,6 +833,16 @@ def test_deprecated_with_replacement_key_invalidation_version_default(
             "invalid in version 0.1.0") == str(exc_info.value)
 
 
+def test_deprecated_cant_find_module():
+    """Test if the current module cannot be inspected."""
+    with patch('inspect.getmodule', return_value=None):
+        # This used to raise.
+        cv.deprecated(
+            'mars', replacement_key='jupiter', invalidation_version='1.0.0',
+            default=False
+        )
+
+
 def test_key_dependency():
     """Test key_dependency validator."""
     schema = vol.Schema(cv.key_dependency('beer', 'soda'))

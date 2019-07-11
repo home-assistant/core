@@ -549,7 +549,13 @@ def deprecated(key: str,
         - Once the invalidation_version is crossed, raises vol.Invalid if key
         is detected
     """
-    module_name = inspect.getmodule(inspect.stack()[1][0]).__name__
+    module = inspect.getmodule(inspect.stack()[1][0])
+    if module is not None:
+        module_name = module.__name__
+    else:
+        # Unclear when it is None, but it happens, so let's guard.
+        # https://github.com/home-assistant/home-assistant/issues/24982
+        module_name = __name__
 
     if replacement_key and invalidation_version:
         warning = ("The '{key}' option (with value '{value}') is"
