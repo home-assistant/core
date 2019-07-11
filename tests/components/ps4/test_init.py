@@ -116,7 +116,7 @@ class TestPS4MediaServices(unittest.TestCase):
         self.hass.block_till_done()
 
     def setUp(self):
-        """Setup test environment."""
+        """Set up test environment."""
         self.hass = get_test_home_assistant()
         self.hass.start()
         self.hass.block_till_done()
@@ -128,7 +128,7 @@ class TestPS4MediaServices(unittest.TestCase):
         self.cleanup()
 
     def setup_mock_component(self):
-        """Setup Mock Media Player."""
+        """Set up Mock Media Player."""
         entry = MockConfigEntry(
             domain=ps4.DOMAIN, data=MOCK_DATA, version=VERSION)
         entry.add_to_manager(self.hass.config_entries)
