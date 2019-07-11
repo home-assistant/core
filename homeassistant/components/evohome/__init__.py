@@ -5,7 +5,7 @@ Such systems include evohome (multi-zone), and Round Thermostat (single zone).
 import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Awaitable, Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import requests.exceptions
 import voluptuous as vol
