@@ -267,7 +267,8 @@ class NotionEntity(Entity):
     @property
     def unique_id(self):
         """Return a unique, unchanging string that represents this sensor."""
-        return self._task_id
+        task = self._notion.tasks[self._task_id]
+        return '{0}_{1}'.format(self._sensor_id, task['task_type'])
 
     async def _update_bridge_id(self):
         """Update the entity's bridge ID if it has changed.
