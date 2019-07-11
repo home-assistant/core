@@ -192,8 +192,10 @@ class NetatmoThermostat(ClimateDevice):
         if self._module_type == NA_THERM:
             return CURRENT_HVAC_MAP_NETATMO[self._data.boilerstatus]
         # Maybe it is a valve
-        if self._data.room_status[self._room_id]['heating_power_request'] > 0:
-            return CURRENT_HVAC_HEAT
+        if self._room_id in self._data.room_status:
+            if (self._data
+                    .room_status[self._room_id]['heating_power_request'] > 0):
+                return CURRENT_HVAC_HEAT
         return CURRENT_HVAC_IDLE
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
