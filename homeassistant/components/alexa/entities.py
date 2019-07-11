@@ -339,15 +339,11 @@ class MediaPlayerCapabilities(AlexaEntity):
     def interfaces(self):
         """Yield the supported interfaces."""
         yield AlexaEndpointHealth(self.hass, self.entity)
+        yield AlexaPowerController(self.entity)
 
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & media_player.const.SUPPORT_VOLUME_SET:
             yield AlexaSpeaker(self.entity)
-
-        power_features = (media_player.SUPPORT_TURN_ON |
-                          media_player.SUPPORT_TURN_OFF)
-        if supported & power_features:
-            yield AlexaPowerController(self.entity)
 
         step_volume_features = (media_player.const.SUPPORT_VOLUME_MUTE |
                                 media_player.const.SUPPORT_VOLUME_STEP)
