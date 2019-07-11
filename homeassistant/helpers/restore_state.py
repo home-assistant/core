@@ -177,10 +177,41 @@ class RestoreStateData():
         # When an entity is being removed from hass, store its last state. This
         # allows us to support state restoration if the entity is removed, then
         # re-added while hass is still running.
-        self.last_states[entity_id] = StoredState(
-            self.hass.states.get(entity_id), dt_util.utcnow())
+        state = self.hass.states.get(entity_id)
+        # To fully mimic all the attribute data types when loaded from storage,
+        # we're going to serialize it to JSON and then re-load it.
+        if state is not None:
+            state = State.from_dict(_encode_complex(state.as_dict()))
+
+        self.last_states[entity_id] = StoredState(state, dt_util.utcnow())
 
         self.entity_ids.remove(entity_id)
+
+
+def _encode(value):
+    """Little helper to JSON encode a value."""
+    try:
+        return JSONEncoder.default(None, value)
+    except TypeError:
+        return value
+
+
+def _encode_complex(value):
+    """Recursively encode all values with the JSONEncoder."""
+    if isinstance(value, dict):
+        return {
+            _encode(key): _encode_complex(value)
+            for key, value in value.items()
+        }
+    elif isinstance(value, list):
+        return [_encode_complex(val) for val in value]
+
+    new_value = _encode(value)
+
+    if isinstance(new_value, type(value)):
+        return new_value
+
+    return _encode_complex(new_value)
 
 
 class RestoreEntity(Entity):
