@@ -22,7 +22,6 @@ from ..const import (
 )
 from ..registries import CLUSTER_REPORT_CONFIGS
 
-ZIGBEE_CHANNEL_REGISTRY = {}
 _LOGGER = logging.getLogger(__name__)
 
 

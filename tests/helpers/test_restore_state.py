@@ -1,6 +1,8 @@
 """The tests for the Restore component."""
 from datetime import datetime
 
+from asynctest import patch
+
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import CoreState, State
 from homeassistant.exceptions import HomeAssistantError
@@ -10,7 +12,6 @@ from homeassistant.helpers.restore_state import (
     STORAGE_KEY)
 from homeassistant.util import dt as dt_util
 
-from asynctest import patch
 
 from tests.common import mock_coro
 
@@ -104,12 +105,12 @@ async def test_dump_data(hass):
     entity = Entity()
     entity.hass = hass
     entity.entity_id = 'input_boolean.b0'
-    await entity.async_added_to_hass()
+    await entity.async_internal_added_to_hass()
 
     entity = RestoreEntity()
     entity.hass = hass
     entity.entity_id = 'input_boolean.b1'
-    await entity.async_added_to_hass()
+    await entity.async_internal_added_to_hass()
 
     data = await RestoreStateData.async_get_instance(hass)
     now = dt_util.utcnow()
@@ -144,7 +145,7 @@ async def test_dump_data(hass):
     assert written_states[1]['state']['state'] == 'off'
 
     # Test that removed entities are not persisted
-    await entity.async_will_remove_from_hass()
+    await entity.async_remove()
 
     with patch('homeassistant.helpers.restore_state.Store.async_save'
                ) as mock_write_data, patch.object(
@@ -170,12 +171,12 @@ async def test_dump_error(hass):
     entity = Entity()
     entity.hass = hass
     entity.entity_id = 'input_boolean.b0'
-    await entity.async_added_to_hass()
+    await entity.async_internal_added_to_hass()
 
     entity = RestoreEntity()
     entity.hass = hass
     entity.entity_id = 'input_boolean.b1'
-    await entity.async_added_to_hass()
+    await entity.async_internal_added_to_hass()
 
     data = await RestoreStateData.async_get_instance(hass)
 
@@ -206,19 +207,29 @@ async def test_state_saved_on_remove(hass):
     entity = RestoreEntity()
     entity.hass = hass
     entity.entity_id = 'input_boolean.b0'
-    await entity.async_added_to_hass()
+    await entity.async_internal_added_to_hass()
 
-    hass.states.async_set('input_boolean.b0', 'on')
+    now = dt_util.utcnow()
+    hass.states.async_set('input_boolean.b0', 'on', {
+        'complicated': {
+            'value': {1, 2, now}
+        }
+    })
 
     data = await RestoreStateData.async_get_instance(hass)
 
     # No last states should currently be saved
     assert not data.last_states
 
-    await entity.async_will_remove_from_hass()
+    await entity.async_remove()
 
     # We should store the input boolean state when it is removed
-    assert data.last_states['input_boolean.b0'].state.state == 'on'
+    state = data.last_states['input_boolean.b0'].state
+    assert state.state == 'on'
+    assert isinstance(state.attributes['complicated']['value'], list)
+    assert set(state.attributes['complicated']['value']) == {
+        1, 2, now.isoformat()
+    }
 
 
 async def test_restoring_invalid_entity_id(hass, hass_storage):
