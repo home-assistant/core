@@ -120,7 +120,6 @@ stages:
 - stage: 'Publish'
   jobs:
   - job: 'ReleaseHassio'
-    condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags')
     pool:
       vmImage: 'ubuntu-latest'
     steps:
