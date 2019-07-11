@@ -22,9 +22,9 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time, track_time_interval)
-from homeassistant.util.dt import parse_datetime, utcnow, UTC
+from homeassistant.util.dt import as_local, parse_datetime, utcnow, UTC
 
-from .const import DOMAIN, EVO_STRFTIME, STORAGE_VERSION, STORAGE_KEY, GWS, TCS
+from .const import DOMAIN, STORAGE_VERSION, STORAGE_KEY, GWS, TCS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,11 +48,15 @@ CONFIG_SCHEMA = vol.Schema({
 
 def _local_dt_to_utc(dt_naive: datetime) -> datetime:
     dt_aware = utcnow() + (dt_naive - datetime.now())
-    return dt_aware.replace(microsecond=0, tzinfo=None)
+    if dt_aware.microsecond >= 500000:
+        dt_aware += timedelta(seconds=1)
+    return dt_aware.replace(microsecond=0)
 
 
 def _utc_to_local_dt(dt_naive: datetime) -> datetime:
-    dt_naive = datetime.now() + (dt_naive - utcnow().replace(tzinfo=None))
+    dt_naive = datetime.now() + (dt_naive - utcnow())
+    if dt_naive.microsecond >= 500000:
+        dt_naive += timedelta(seconds=1)
     return dt_naive.replace(microsecond=0)
 
 
@@ -309,7 +313,7 @@ class EvoDevice(Entity):
                 '%Y-%m-%dT%H:%M:%S')
 
             spt['from'] = \
-                _local_dt_to_utc(dt_naive).strftime(EVO_STRFTIME)
+                as_local(_local_dt_to_utc(dt_naive)).isoformat()
             try:
                 spt['temperature'] = switchpoint['heatSetpoint']
             except KeyError:
