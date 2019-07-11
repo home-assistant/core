@@ -137,7 +137,7 @@ class TestPS4MediaServices(unittest.TestCase):
 
     def test_media_player_is_setup(self):
         """Test media_player is setup correctly."""
-        self.setup_mock_media_player()
+        self.setup_mock_component()
         assert len(self.hass.data[PS4_DATA].devices) == 1
 
     def test_file_created_if_none(self):
@@ -145,8 +145,8 @@ class TestPS4MediaServices(unittest.TestCase):
         self.cleanup()
         mock_empty = ps4.load_games(self.hass)
 
-        assert type(mock_empty) == dict
-        assert len(mock_empty) == 0
+        assert isinstance(mock_empty, dict)
+        assert mock_empty is None
         assert self.mock_file == '{}/{}'.format(
             self.hass.config.path(), GAMES_FILE)
 
@@ -156,12 +156,13 @@ class TestPS4MediaServices(unittest.TestCase):
         mock_games = ps4.load_games(self.hass)
 
         # New format is a nested dict.
-        assert type(mock_games) == dict
+        assert isinstance(mock_games, dict)
         assert mock_games['mock_id'][ATTR_MEDIA_TITLE] == 'mock_title'
         assert mock_games['mock_id2'][ATTR_MEDIA_TITLE] == 'mock_title2'
-        for mock_game, mock_title in mock_games.items():
+        for mock_game in mock_games:
             mock_data = mock_games[mock_game]
-            assert type(mock_data) == dict
+            assert isinstance(mock_data, dict)
+            assert mock_data
             assert mock_data[ATTR_MEDIA_IMAGE_URL] is None
             assert mock_data[ATTR_LOCKED] is False
             assert mock_data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_GAME
@@ -170,10 +171,10 @@ class TestPS4MediaServices(unittest.TestCase):
         """Test that games are loaded correctly."""
         self.set_games_data(MOCK_GAMES)
         mock_games = ps4.load_games(self.hass)
+        assert isinstance(mock_games, dict)
 
-        assert type(mock_games) == dict
         mock_data = mock_games[MOCK_ID]
-        assert type(mock_data) == dict
+        assert isinstance(mock_data, dict)
         assert mock_data[ATTR_MEDIA_TITLE] == MOCK_TITLE
         assert mock_data[ATTR_MEDIA_IMAGE_URL] == MOCK_URL
         assert mock_data[ATTR_LOCKED] is False
@@ -300,7 +301,7 @@ class TestPS4MediaServices(unittest.TestCase):
         self.hass.services.call(
             DOMAIN, 'remove_media', {ATTR_MEDIA_CONTENT_ID: MOCK_ID})
         mock_games = ps4.load_games(self.hass)
-        assert len(mock_games) == 0
+        assert mock_games is None
 
     def test_add_media(self):
         """Test media entry is added."""
@@ -308,7 +309,7 @@ class TestPS4MediaServices(unittest.TestCase):
         self.set_games_data({})
         mock_games = ps4.load_games(self.hass)
 
-        assert len(mock_games) == 0
+        assert mock_games is None
         self.hass.services.call(
             DOMAIN, 'add_media', {ATTR_MEDIA_CONTENT_ID: MOCK_ID,
                                   ATTR_MEDIA_TITLE: MOCK_TITLE,
@@ -339,7 +340,7 @@ class TestPS4MediaServices(unittest.TestCase):
         mock_entity = mock_devices[0]
 
         # Set media_id attr
-        mock_entity._media_content_id = mock_id1
+        mock_entity._media_content_id = mock_id1  # noqa: pylint: disable=protected-access
         assert mock_entity.entity_id == 'media_player.{}'.format(MOCK_NAME)
         assert mock_games[mock_id1][ATTR_LOCKED] is False
 
@@ -368,7 +369,7 @@ class TestPS4MediaServices(unittest.TestCase):
         assert len(mock_devices) == 1
         mock_entity = mock_devices[0]
 
-        mock_entity._media_content_id = mock_id1
+        mock_entity._media_content_id = mock_id1  # noqa: pylint: disable=protected-access
         assert mock_entity.entity_id == 'media_player.{}'.format(MOCK_NAME)
         assert mock_games[mock_id1][ATTR_LOCKED] is True
 
@@ -397,7 +398,7 @@ class TestPS4MediaServices(unittest.TestCase):
         mock_entity = mock_devices[0]
 
         # Set media_id attr
-        mock_entity._media_content_id = mock_id1
+        mock_entity._media_content_id = mock_id1  # noqa: pylint: disable=protected-access
 
         assert mock_entity.entity_id == 'media_player.{}'.format(MOCK_NAME)
         assert mock_id1 in mock_games
