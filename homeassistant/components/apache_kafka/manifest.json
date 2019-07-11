@@ -6,5 +6,7 @@
     "aiokafka==0.5.1"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@bachya"
+  ]
 }
