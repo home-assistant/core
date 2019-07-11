@@ -146,7 +146,7 @@ class TestPS4MediaServices(unittest.TestCase):
         mock_empty = ps4.load_games(self.hass)
 
         assert isinstance(mock_empty, dict)
-        assert mock_empty is None
+        assert not mock_empty
         assert self.mock_file == '{}/{}'.format(
             self.hass.config.path(), GAMES_FILE)
 
@@ -301,7 +301,7 @@ class TestPS4MediaServices(unittest.TestCase):
         self.hass.services.call(
             DOMAIN, 'remove_media', {ATTR_MEDIA_CONTENT_ID: MOCK_ID})
         mock_games = ps4.load_games(self.hass)
-        assert mock_games is None
+        assert not mock_games
 
     def test_add_media(self):
         """Test media entry is added."""
@@ -309,7 +309,7 @@ class TestPS4MediaServices(unittest.TestCase):
         self.set_games_data({})
         mock_games = ps4.load_games(self.hass)
 
-        assert mock_games is None
+        assert not mock_games
         self.hass.services.call(
             DOMAIN, 'add_media', {ATTR_MEDIA_CONTENT_ID: MOCK_ID,
                                   ATTR_MEDIA_TITLE: MOCK_TITLE,
