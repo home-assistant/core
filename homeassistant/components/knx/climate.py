@@ -69,11 +69,6 @@ PRESET_MODES_INV = dict((
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
-    vol.Required(CONF_TARGET_TEMPERATURE_STATE_ADDRESS): cv.string,
-    vol.Optional(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
-    vol.Optional(CONF_SETPOINT_SHIFT_ADDRESS): cv.string,
-    vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_SETPOINT_SHIFT_STEP,
                  default=DEFAULT_SETPOINT_SHIFT_STEP): vol.All(
                      float, vol.Range(min=0, max=2)),
@@ -81,6 +76,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(int, vol.Range(min=0, max=32)),
     vol.Optional(CONF_SETPOINT_SHIFT_MIN, default=DEFAULT_SETPOINT_SHIFT_MIN):
         vol.All(int, vol.Range(min=-32, max=0)),
+    vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
+    vol.Required(CONF_TARGET_TEMPERATURE_STATE_ADDRESS): cv.string,
+    vol.Optional(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
+    vol.Optional(CONF_SETPOINT_SHIFT_ADDRESS): cv.string,
+    vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS): cv.string,
@@ -125,7 +125,7 @@ def async_add_entities_config(hass, config, async_add_entities):
 
     climate_mode = xknx.devices.ClimateMode(
         hass.data[DATA_KNX].xknx,
-        name=config.get(CONF_NAME) + " Mode",
+        name=config[CONF_NAME] + " Mode",
         group_address_operation_mode=config.get(CONF_OPERATION_MODE_ADDRESS),
         group_address_operation_mode_state=config.get(
             CONF_OPERATION_MODE_STATE_ADDRESS),
@@ -149,7 +149,7 @@ def async_add_entities_config(hass, config, async_add_entities):
 
     climate = xknx.devices.Climate(
         hass.data[DATA_KNX].xknx,
-        name=config.get(CONF_NAME),
+        name=config[CONF_NAME],
         group_address_temperature=config[CONF_TEMPERATURE_ADDRESS],
         group_address_target_temperature=config.get(
             CONF_TARGET_TEMPERATURE_ADDRESS),
@@ -158,9 +158,9 @@ def async_add_entities_config(hass, config, async_add_entities):
         group_address_setpoint_shift=config.get(CONF_SETPOINT_SHIFT_ADDRESS),
         group_address_setpoint_shift_state=config.get(
             CONF_SETPOINT_SHIFT_STATE_ADDRESS),
-        setpoint_shift_step=config.get(CONF_SETPOINT_SHIFT_STEP),
-        setpoint_shift_max=config.get(CONF_SETPOINT_SHIFT_MAX),
-        setpoint_shift_min=config.get(CONF_SETPOINT_SHIFT_MIN),
+        setpoint_shift_step=config[CONF_SETPOINT_SHIFT_STEP],
+        setpoint_shift_max=config[CONF_SETPOINT_SHIFT_MAX],
+        setpoint_shift_min=config[CONF_SETPOINT_SHIFT_MIN],
         group_address_on_off=config.get(CONF_ON_OFF_ADDRESS),
         group_address_on_off_state=config.get(CONF_ON_OFF_STATE_ADDRESS),
         min_temp=config.get(CONF_MIN_TEMP),

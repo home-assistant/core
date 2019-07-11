@@ -44,9 +44,9 @@ def async_add_entities_config(hass, config, async_add_entities):
     import xknx
     scene = xknx.devices.Scene(
         hass.data[DATA_KNX].xknx,
-        name=config.get(CONF_NAME),
-        group_address=config.get(CONF_ADDRESS),
-        scene_number=config.get(CONF_SCENE_NUMBER))
+        name=config[CONF_NAME],
+        group_address=config[CONF_ADDRESS],
+        scene_number=config[CONF_SCENE_NUMBER])
     hass.data[DATA_KNX].xknx.devices.add(scene)
     async_add_entities([KNXScene(scene)])
 
