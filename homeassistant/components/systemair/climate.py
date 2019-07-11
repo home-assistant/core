@@ -12,8 +12,8 @@ from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import (
-    ATTR_CURRENT_HUMIDITY, ATTR_CURRENT_OPERATION, ATTR_TARGET_TEMPERATURE,
+from homeassistant.components.systemair import (
+    ATTR_CURRENT_HUMIDITY, ATTR_TARGET_TEMPERATURE,
     PRESET_AUTO, PRESET_CROWDED, PRESET_FIREPLACE, PRESET_HOLIDAY, PRESET_IDLE,
     PRESET_MANUAL, PRESET_REFRESH, SIGNAL_SYSTEMAIR_UPDATE_DONE)
 
@@ -54,7 +54,8 @@ SYSTEMAIR_TRANSLATE_TO_HA = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up Systemair climate based on config_entry."""
     from systemair.savecair.const import (
         SENSOR_CURRENT_FAN_MODE,

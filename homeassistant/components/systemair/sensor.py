@@ -5,7 +5,7 @@ from homeassistant.const import CONF_RESOURCES, TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from . import (
+from homeassistant.components.systemair import (
     ATTR_ALARM_BYPASS_DAMPER, ATTR_ALARM_BYPASS_DAMPER_2,
     ATTR_ALARM_CHANGE_FILTER, ATTR_ALARM_CO2, ATTR_ALARM_DEFROST,
     ATTR_ALARM_EFFICIENCY_TEMP_SENSOR, ATTR_ALARM_ELECTRICAL_HEATER,

@@ -1485,6 +1485,9 @@ python-songpal==0.0.9.1
 # homeassistant.components.synologydsm
 python-synology==0.2.0
 
+# homeassistant.components.systemair
+python-systemair-savecair==2.0.0
+
 # homeassistant.components.tado
 python-tado==0.2.9
 
@@ -1958,6 +1961,3 @@ zigpy-xbee-homeassistant==0.4.0
 
 # homeassistant.components.zoneminder
 zm-py==0.3.3
-
-# homeassistant.components.systemair
-python-systemair-savecair==2.0.0
