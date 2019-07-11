@@ -1,5 +1,4 @@
 """Support for WaterHeater devices of (EMEA/EU) Honeywell TCC systems."""
-from datetime import datetime, timedelta
 import logging
 from typing import List
 
@@ -9,6 +8,7 @@ import evohomeclient2
 from homeassistant.components.water_heater import (
     SUPPORT_OPERATION_MODE, WaterHeaterDevice)
 from homeassistant.const import PRECISION_WHOLE, STATE_OFF, STATE_ON
+from homeassistant.util.dt import parse_datetime
 
 from . import _handle_exception, EvoDevice
 from .const import DOMAIN, EVO_STRFTIME, EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER
