@@ -19,7 +19,6 @@ stages:
 - stage: 'Validate'
   jobs:
   - job: 'VersionValidate'
-    condition: startsWith(variables['Build.SourceBranch'], 'refs/tags')
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -54,7 +53,7 @@ stages:
 - stage: 'Build'
   jobs:
   - job: 'ReleasePython'
-    condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded('VersionValidate'))
+    condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded())
     dependsOn:
     - 'VersionValidate'
     pool:
@@ -75,7 +74,7 @@ stages:
         twine upload dist/* --skip-existing
       displayName: 'Upload pypi'
   - job: 'ReleaseDocker'
-    condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded('VersionValidate'))
+    condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded())
     dependsOn:
     - 'VersionValidate'
     timeoutInMinutes: 240
@@ -127,7 +126,7 @@ stages:
 - stage: 'Publish'
   jobs:
   - job: 'ReleaseHassio'
-    condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded('ReleaseDocker'))
+    condition: and(startsWith(variables['Build.SourceBranch'], 'refs/tags'), succeeded())
     dependsOn:
       - 'ReleaseDocker'
     pool:
