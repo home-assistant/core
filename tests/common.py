@@ -28,9 +28,11 @@ from homeassistant.const import (
     ATTR_DISCOVERED, ATTR_SERVICE, DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE, EVENT_PLATFORM_DISCOVERED, EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED, SERVER_PORT, STATE_ON, STATE_OFF)
+from homeassistant.core import State
 from homeassistant.helpers import (
     area_registry, device_registry, entity, entity_platform, entity_registry,
     intent, restore_state, storage)
+from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.util.async_ import (
@@ -761,9 +763,14 @@ def mock_restore_cache(hass, states):
     data = restore_state.RestoreStateData(hass)
     now = date_util.utcnow()
 
-    data.last_states = {
-        state.entity_id: restore_state.StoredState(state, now)
-        for state in states}
+    last_states = {}
+    for state in states:
+        restored_state = state.as_dict()
+        restored_state['attributes'] = json.loads(json.dumps(
+            restored_state['attributes'], cls=JSONEncoder))
+        last_states[state.entity_id] = restore_state.StoredState(
+            State.from_dict(restored_state), now)
+    data.last_states = last_states
     _LOGGER.debug('Restore cache: %s', data.last_states)
     assert len(data.last_states) == len(states), \
         "Duplicate entity_id? {}".format(states)
