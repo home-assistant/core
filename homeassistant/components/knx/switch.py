@@ -43,8 +43,8 @@ def async_add_entities_config(hass, config, async_add_entities):
     import xknx
     switch = xknx.devices.Switch(
         hass.data[DATA_KNX].xknx,
-        name=config.get(CONF_NAME),
-        group_address=config.get(CONF_ADDRESS),
+        name=config[CONF_NAME],
+        group_address=config[CONF_ADDRESS],
         group_address_state=config.get(CONF_STATE_ADDRESS))
     hass.data[DATA_KNX].xknx.devices.add(switch)
     async_add_entities([KNXSwitch(switch)])
