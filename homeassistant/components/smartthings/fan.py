@@ -1,6 +1,8 @@
 """Support for fans through the SmartThings cloud API."""
 from typing import Optional, Sequence
 
+from pysmartthings import Capability
+
 from homeassistant.components.fan import (
     SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF, SUPPORT_SET_SPEED,
     FanEntity)
@@ -34,8 +36,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
     """Return all capabilities supported if minimum required are present."""
-    from pysmartthings import Capability
-
     supported = [Capability.switch, Capability.fan_speed]
     # Must have switch and fan_speed
     if all(capability in capabilities for capability in supported):

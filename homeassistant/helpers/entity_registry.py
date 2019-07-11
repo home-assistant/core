@@ -12,11 +12,11 @@ from collections import OrderedDict
 from itertools import chain
 import logging
 from typing import List, Optional, cast
-import weakref
 
 import attr
 
 from homeassistant.core import callback, split_entity_id, valid_entity_id
+from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.loader import bind_hass
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.yaml import load_yaml
@@ -49,8 +49,6 @@ class RegistryEntry:
     disabled_by = attr.ib(
         type=str, default=None,
         validator=attr.validators.in_((DISABLED_HASS, DISABLED_USER, None)))
-    update_listeners = attr.ib(type=list, default=attr.Factory(list),
-                               repr=False)
     domain = attr.ib(type=str, init=False, repr=False)
 
     @domain.default
@@ -63,18 +61,6 @@ class RegistryEntry:
         """Return if entry is disabled."""
         return self.disabled_by is not None
 
-    def add_update_listener(self, listener):
-        """Listen for when entry is updated.
-
-        Listener: Callback function(old_entry, new_entry)
-
-        Returns function to unlisten.
-        """
-        weak_listener = weakref.ref(listener)
-        self.update_listeners.append(weak_listener)
-
-        return lambda: self.update_listeners.remove(weak_listener)
-
 
 class EntityRegistry:
     """Class to hold a registry of entities."""
@@ -84,6 +70,10 @@ class EntityRegistry:
         self.hass = hass
         self.entities = None
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self.hass.bus.async_listen(
+            EVENT_DEVICE_REGISTRY_UPDATED,
+            self.async_device_removed
+        )
 
     @callback
     def async_is_registered(self, entity_id):
@@ -170,6 +160,19 @@ class EntityRegistry:
         self.async_schedule_save()
 
     @callback
+    def async_device_removed(self, event):
+        """Handle the removal of a device.
+
+        Remove entities from the registry that are associated to a device when
+        the device is removed.
+        """
+        if event.data['action'] != 'remove':
+            return
+        entities = async_entries_for_device(self, event.data['device_id'])
+        for entity in entities:
+            self.async_remove(entity.entity_id)
+
+    @callback
     def async_update_entity(self, entity_id, *, name=_UNDEF,
                             new_entity_id=_UNDEF, new_unique_id=_UNDEF):
         """Update properties of an entity."""
@@ -229,26 +232,17 @@ class EntityRegistry:
 
         new = self.entities[entity_id] = attr.evolve(old, **changes)
 
-        to_remove = []
-        for listener_ref in new.update_listeners:
-            listener = listener_ref()
-            if listener is None:
-                to_remove.append(listener_ref)
-            else:
-                try:
-                    listener.async_registry_updated(old, new)
-                except Exception:  # pylint: disable=broad-except
-                    _LOGGER.exception('Error calling update listener')
-
-        for ref in to_remove:
-            new.update_listeners.remove(ref)
-
         self.async_schedule_save()
 
-        self.hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, {
+        data = {
             'action': 'update',
-            'entity_id': entity_id
-        })
+            'entity_id': entity_id,
+        }
+
+        if old.entity_id != entity_id:
+            data['old_entity_id'] = old.entity_id
+
+        self.hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, data)
 
         return new
 

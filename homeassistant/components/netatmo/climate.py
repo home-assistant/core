@@ -1,6 +1,7 @@
 """Support for Netatmo Smart thermostats."""
-import logging
 from datetime import timedelta
+import logging
+from typing import Optional, List
 
 import requests
 import voluptuous as vol
@@ -8,21 +9,62 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    STATE_HEAT, SUPPORT_ON_OFF, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE, STATE_MANUAL, STATE_AUTO,
-    STATE_ECO, STATE_COOL)
+    HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF,
+    PRESET_AWAY, PRESET_BOOST,
+    CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE,
+    DEFAULT_MIN_TEMP
+)
 from homeassistant.const import (
-    STATE_OFF, TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME)
+    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES, STATE_OFF)
 from homeassistant.util import Throttle
 
 from .const import DATA_NETATMO_AUTH
 
 _LOGGER = logging.getLogger(__name__)
 
+PRESET_FROST_GUARD = 'frost guard'
+PRESET_SCHEDULE = 'schedule'
+
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE)
+SUPPORT_HVAC = [HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF]
+SUPPORT_PRESET = [
+    PRESET_AWAY, PRESET_BOOST, PRESET_FROST_GUARD, PRESET_SCHEDULE,
+]
+
+STATE_NETATMO_SCHEDULE = PRESET_SCHEDULE
+STATE_NETATMO_HG = 'hg'
+STATE_NETATMO_MAX = 'max'
+STATE_NETATMO_AWAY = PRESET_AWAY
+STATE_NETATMO_OFF = STATE_OFF
+STATE_NETATMO_MANUAL = 'manual'
+
+PRESET_MAP_NETATMO = {
+    PRESET_FROST_GUARD: STATE_NETATMO_HG,
+    PRESET_BOOST: STATE_NETATMO_MAX,
+    PRESET_SCHEDULE: STATE_NETATMO_SCHEDULE,
+    PRESET_AWAY: STATE_NETATMO_AWAY,
+    STATE_NETATMO_OFF: STATE_NETATMO_OFF
+}
+
+HVAC_MAP_NETATMO = {
+    STATE_NETATMO_SCHEDULE: HVAC_MODE_AUTO,
+    STATE_NETATMO_HG: HVAC_MODE_AUTO,
+    STATE_NETATMO_MAX: HVAC_MODE_HEAT,
+    STATE_NETATMO_OFF: HVAC_MODE_OFF,
+    STATE_NETATMO_MANUAL: HVAC_MODE_AUTO,
+    STATE_NETATMO_AWAY: HVAC_MODE_AUTO
+}
+
+CURRENT_HVAC_MAP_NETATMO = {
+    True: CURRENT_HVAC_HEAT,
+    False: CURRENT_HVAC_IDLE,
+}
+
 CONF_HOMES = 'homes'
 CONF_ROOMS = 'rooms'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
 HOME_CONFIG_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
@@ -32,34 +74,6 @@ HOME_CONFIG_SCHEMA = vol.Schema({
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOMES): vol.All(cv.ensure_list, [HOME_CONFIG_SCHEMA])
 })
-
-STATE_NETATMO_SCHEDULE = 'schedule'
-STATE_NETATMO_HG = 'hg'
-STATE_NETATMO_MAX = 'max'
-STATE_NETATMO_AWAY = 'away'
-STATE_NETATMO_OFF = STATE_OFF
-STATE_NETATMO_MANUAL = STATE_MANUAL
-
-DICT_NETATMO_TO_HA = {
-    STATE_NETATMO_SCHEDULE: STATE_AUTO,
-    STATE_NETATMO_HG: STATE_COOL,
-    STATE_NETATMO_MAX: STATE_HEAT,
-    STATE_NETATMO_AWAY: STATE_ECO,
-    STATE_NETATMO_OFF: STATE_OFF,
-    STATE_NETATMO_MANUAL: STATE_MANUAL
-}
-
-DICT_HA_TO_NETATMO = {
-    STATE_AUTO: STATE_NETATMO_SCHEDULE,
-    STATE_COOL: STATE_NETATMO_HG,
-    STATE_HEAT: STATE_NETATMO_MAX,
-    STATE_ECO: STATE_NETATMO_AWAY,
-    STATE_OFF: STATE_NETATMO_OFF,
-    STATE_MANUAL: STATE_NETATMO_MANUAL
-}
-
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
-                 SUPPORT_AWAY_MODE)
 
 NA_THERM = 'NATherm1'
 NA_VALVE = 'NRV'
@@ -115,27 +129,22 @@ class NetatmoThermostat(ClimateDevice):
         self._data = data
         self._state = None
         self._room_id = room_id
-        room_name = self._data.homedata.rooms[self._data.home][room_id]['name']
-        self._name = 'netatmo_{}'.format(room_name)
+        self._room_name = self._data.homedata.rooms[
+            self._data.home][room_id]['name']
+        self._name = 'netatmo_{}'.format(self._room_name)
+        self._current_temperature = None
         self._target_temperature = None
+        self._preset = None
         self._away = None
-        self._module_type = self._data.room_status[room_id]['module_type']
-        if self._module_type == NA_VALVE:
-            self._operation_list = [DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
-                                    DICT_NETATMO_TO_HA[STATE_NETATMO_MANUAL],
-                                    DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY],
-                                    DICT_NETATMO_TO_HA[STATE_NETATMO_HG]]
-            self._support_flags = SUPPORT_FLAGS
-        elif self._module_type == NA_THERM:
-            self._operation_list = [DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
-                                    DICT_NETATMO_TO_HA[STATE_NETATMO_MANUAL],
-                                    DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY],
-                                    DICT_NETATMO_TO_HA[STATE_NETATMO_HG],
-                                    DICT_NETATMO_TO_HA[STATE_NETATMO_MAX],
-                                    DICT_NETATMO_TO_HA[STATE_NETATMO_OFF]]
-            self._support_flags = SUPPORT_FLAGS | SUPPORT_ON_OFF
-        self._operation_mode = None
+        self._operation_list = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
+        self._support_flags = SUPPORT_FLAGS
+        self._hvac_mode = None
         self.update_without_throttle = False
+        self._module_type = \
+            self._data.room_status[room_id].get('module_type', NA_VALVE)
+
+        if self._module_type == NA_THERM:
+            self._operation_list.append(HVAC_MODE_OFF)
 
     @property
     def supported_features(self):
@@ -155,113 +164,95 @@ class NetatmoThermostat(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self._data.room_status[self._room_id]['current_temperature']
+        return self._current_temperature
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self._data.room_status[self._room_id]['target_temperature']
+        return self._target_temperature
 
     @property
-    def current_operation(self):
-        """Return the current state of the thermostat."""
-        return self._operation_mode
+    def target_temperature_step(self) -> Optional[float]:
+        """Return the supported step of target temperature."""
+        return PRECISION_HALVES
 
     @property
-    def operation_list(self):
-        """Return the operation modes list."""
+    def hvac_mode(self):
+        """Return hvac operation ie. heat, cool mode."""
+        return self._hvac_mode
+
+    @property
+    def hvac_modes(self):
+        """Return the list of available hvac operation modes."""
         return self._operation_list
 
     @property
-    def device_state_attributes(self):
-        """Return device specific state attributes."""
-        module_type = self._data.room_status[self._room_id]['module_type']
-        if module_type not in (NA_THERM, NA_VALVE):
-            return {}
-        state_attributes = {
-            "home_id": self._data.homedata.gethomeId(self._data.home),
-            "room_id": self._room_id,
-            "setpoint_default_duration": self._data.setpoint_duration,
-            "away_temperature": self._data.away_temperature,
-            "hg_temperature": self._data.hg_temperature,
-            "operation_mode": self._operation_mode,
-            "module_type": module_type,
-            "module_id": self._data.room_status[self._room_id]['module_id']
-        }
-        if module_type == NA_THERM:
-            state_attributes["boiler_status"] = self._data.boilerstatus
-        elif module_type == NA_VALVE:
-            state_attributes["heating_power_request"] = \
-                self._data.room_status[self._room_id]['heating_power_request']
-        return state_attributes
+    def hvac_action(self) -> Optional[str]:
+        """Return the current running hvac operation if supported."""
+        if self._module_type == NA_THERM:
+            return CURRENT_HVAC_MAP_NETATMO[self._data.boilerstatus]
+        # Maybe it is a valve
+        if self._data.room_status[self._room_id]['heating_power_request'] > 0:
+            return CURRENT_HVAC_HEAT
+        return CURRENT_HVAC_IDLE
 
-    @property
-    def is_away_mode_on(self):
-        """Return true if away mode is on."""
-        return self._away
+    def set_hvac_mode(self, hvac_mode: str) -> None:
+        """Set new target hvac mode."""
+        mode = None
 
-    @property
-    def is_on(self):
-        """Return true if on."""
-        return self.target_temperature > 0
+        if hvac_mode == HVAC_MODE_OFF:
+            mode = STATE_NETATMO_OFF
+        elif hvac_mode == HVAC_MODE_AUTO:
+            mode = STATE_NETATMO_SCHEDULE
+        elif hvac_mode == HVAC_MODE_HEAT:
+            mode = STATE_NETATMO_MAX
 
-    def turn_away_mode_on(self):
-        """Turn away on."""
-        self.set_operation_mode(DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY])
+        self.set_preset_mode(mode)
 
-    def turn_away_mode_off(self):
-        """Turn away off."""
-        self.set_operation_mode(DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE])
-
-    def turn_off(self):
-        """Turn Netatmo off."""
-        _LOGGER.debug("Switching off ...")
-        self.set_operation_mode(DICT_NETATMO_TO_HA[STATE_NETATMO_OFF])
-        self.update_without_throttle = True
-        self.schedule_update_ha_state()
-
-    def turn_on(self):
-        """Turn Netatmo on."""
-        _LOGGER.debug("Switching on ...")
-        _LOGGER.debug("Setting temperature first to %d ...",
-                      self._data.hg_temperature)
-        self._data.homestatus.setroomThermpoint(
-            self._data.homedata.gethomeId(self._data.home),
-            self._room_id, STATE_NETATMO_MANUAL, self._data.hg_temperature)
-        _LOGGER.debug("Setting operation mode to schedule ...")
-        self._data.homestatus.setThermmode(
-            self._data.homedata.gethomeId(self._data.home),
-            STATE_NETATMO_SCHEDULE)
-        self.update_without_throttle = True
-        self.schedule_update_ha_state()
-
-    def set_operation_mode(self, operation_mode):
-        """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
-        if not self.is_on:
-            self.turn_on()
-        if operation_mode in [DICT_NETATMO_TO_HA[STATE_NETATMO_MAX],
-                              DICT_NETATMO_TO_HA[STATE_NETATMO_OFF]]:
+    def set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        if self.target_temperature == 0:
             self._data.homestatus.setroomThermpoint(
-                self._data.homedata.gethomeId(self._data.home),
-                self._room_id, DICT_HA_TO_NETATMO[operation_mode])
-        elif operation_mode in [DICT_NETATMO_TO_HA[STATE_NETATMO_HG],
-                                DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
-                                DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY]]:
+                self._data.home_id,
+                self._room_id,
+                STATE_NETATMO_MANUAL,
+                DEFAULT_MIN_TEMP
+            )
+
+        if preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX, STATE_NETATMO_OFF]:
+            self._data.homestatus.setroomThermpoint(
+                self._data.home_id,
+                self._room_id,
+                PRESET_MAP_NETATMO[preset_mode]
+            )
+        elif preset_mode in [
+                PRESET_SCHEDULE, PRESET_FROST_GUARD, PRESET_AWAY
+        ]:
             self._data.homestatus.setThermmode(
-                self._data.homedata.gethomeId(self._data.home),
-                DICT_HA_TO_NETATMO[operation_mode])
+                self._data.home_id, PRESET_MAP_NETATMO[preset_mode]
+            )
         self.update_without_throttle = True
         self.schedule_update_ha_state()
+
+    @property
+    def preset_mode(self) -> Optional[str]:
+        """Return the current preset mode, e.g., home, away, temp."""
+        return self._preset
+
+    @property
+    def preset_modes(self) -> Optional[List[str]]:
+        """Return a list of available preset modes."""
+        return SUPPORT_PRESET
 
     def set_temperature(self, **kwargs):
         """Set new target temperature for 2 hours."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is None:
             return
-        mode = STATE_NETATMO_MANUAL
         self._data.homestatus.setroomThermpoint(
             self._data.homedata.gethomeId(self._data.home),
-            self._room_id, DICT_HA_TO_NETATMO[mode], temp)
+            self._room_id, STATE_NETATMO_MANUAL, temp)
+
         self.update_without_throttle = True
         self.schedule_update_ha_state()
 
@@ -277,12 +268,20 @@ class NetatmoThermostat(ClimateDevice):
             _LOGGER.error("NetatmoThermostat::update() "
                           "got exception.")
             return
-        self._target_temperature = \
-            self._data.room_status[self._room_id]['target_temperature']
-        self._operation_mode = DICT_NETATMO_TO_HA[
-            self._data.room_status[self._room_id]['setpoint_mode']]
-        self._away = self._operation_mode == DICT_NETATMO_TO_HA[
-            STATE_NETATMO_AWAY]
+        try:
+            self._current_temperature = \
+                self._data.room_status[self._room_id]['current_temperature']
+            self._target_temperature = \
+                self._data.room_status[self._room_id]['target_temperature']
+            self._preset = \
+                self._data.room_status[self._room_id]["setpoint_mode"]
+        except KeyError:
+            _LOGGER.error(
+                "The thermostat in room %s seems to be out of reach.",
+                self._room_id
+            )
+        self._hvac_mode = HVAC_MAP_NETATMO[self._preset]
+        self._away = self._hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
 
 
 class HomeData:

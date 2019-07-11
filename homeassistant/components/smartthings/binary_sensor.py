@@ -1,32 +1,34 @@
 """Support for binary sensors through the SmartThings cloud API."""
 from typing import Optional, Sequence
 
+from pysmartthings import Attribute, Capability
+
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
 CAPABILITY_TO_ATTRIB = {
-    'accelerationSensor': 'acceleration',
-    'contactSensor': 'contact',
-    'filterStatus': 'filterStatus',
-    'motionSensor': 'motion',
-    'presenceSensor': 'presence',
-    'soundSensor': 'sound',
-    'tamperAlert': 'tamper',
-    'valve': 'valve',
-    'waterSensor': 'water',
+    Capability.acceleration_sensor: Attribute.acceleration,
+    Capability.contact_sensor: Attribute.contact,
+    Capability.filter_status: Attribute.filter_status,
+    Capability.motion_sensor: Attribute.motion,
+    Capability.presence_sensor: Attribute.presence,
+    Capability.sound_sensor: Attribute.sound,
+    Capability.tamper_alert: Attribute.tamper,
+    Capability.valve: Attribute.valve,
+    Capability.water_sensor: Attribute.water,
 }
 ATTRIB_TO_CLASS = {
-    'acceleration': 'moving',
-    'contact': 'opening',
-    'filterStatus': 'problem',
-    'motion': 'motion',
-    'presence': 'presence',
-    'sound': 'sound',
-    'tamper': 'problem',
-    'valve': 'opening',
-    'water': 'moisture',
+    Attribute.acceleration: 'moving',
+    Attribute.contact: 'opening',
+    Attribute.filter_status: 'problem',
+    Attribute.motion: 'motion',
+    Attribute.presence: 'presence',
+    Attribute.sound: 'sound',
+    Attribute.tamper: 'problem',
+    Attribute.valve: 'opening',
+    Attribute.water: 'moisture',
 }
 
 

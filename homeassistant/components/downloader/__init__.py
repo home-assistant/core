@@ -79,6 +79,11 @@ def setup(hass, config):
                         "downloading '%s' failed, status_code=%d",
                         url,
                         req.status_code)
+                    hass.bus.fire(
+                        "{}_{}".format(DOMAIN, DOWNLOAD_FAILED_EVENT), {
+                            'url': url,
+                            'filename': filename
+                            })
 
                 else:
                     if filename is None and \

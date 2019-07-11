@@ -1,32 +1,26 @@
 """The tests for the generic_thermostat."""
 import datetime
-import pytest
-from asynctest import mock
-import pytz
 
+from asynctest import mock
+import pytest
+import pytz
 import voluptuous as vol
 
-import homeassistant.core as ha
-from homeassistant.core import (
-    callback, DOMAIN as HASS_DOMAIN, CoreState, State)
-from homeassistant.setup import async_setup_component
-from homeassistant.const import (
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-    STATE_OFF,
-    STATE_IDLE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    ATTR_TEMPERATURE
-)
-from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.components import input_boolean, switch
 from homeassistant.components.climate.const import (
-    ATTR_OPERATION_MODE, STATE_HEAT, STATE_COOL, DOMAIN)
+    ATTR_PRESET_MODE, DOMAIN, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF,
+    PRESET_AWAY)
+from homeassistant.const import (
+    ATTR_TEMPERATURE, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT)
+import homeassistant.core as ha
+from homeassistant.core import (
+    DOMAIN as HASS_DOMAIN, CoreState, State, callback)
+from homeassistant.setup import async_setup_component
+from homeassistant.util.unit_system import METRIC_SYSTEM
+
 from tests.common import assert_setup_component, mock_restore_cache
 from tests.components.climate import common
-
 
 ENTITY = 'climate.test'
 ENT_SENSOR = 'sensor.test'
@@ -44,6 +38,7 @@ HOT_TOLERANCE = 0.5
 async def test_setup_missing_conf(hass):
     """Test set up heat_control with missing config values."""
     config = {
+        'platform': 'generic_thermostat',
         'name': 'test',
         'target_sensor': ENT_SENSOR
     }
@@ -82,7 +77,8 @@ async def test_heater_input_boolean(hass, setup_comp_1):
         'platform': 'generic_thermostat',
         'name': 'test',
         'heater': heater_switch,
-        'target_sensor': ENT_SENSOR
+        'target_sensor': ENT_SENSOR,
+        'initial_hvac_mode': HVAC_MODE_HEAT
     }})
 
     assert STATE_OFF == \
@@ -109,7 +105,8 @@ async def test_heater_switch(hass, setup_comp_1):
         'platform': 'generic_thermostat',
         'name': 'test',
         'heater': heater_switch,
-        'target_sensor': ENT_SENSOR
+        'target_sensor': ENT_SENSOR,
+        'initial_hvac_mode': HVAC_MODE_HEAT
     }})
 
     await hass.async_block_till_done()
@@ -141,13 +138,25 @@ def setup_comp_2(hass):
             'hot_tolerance': 4,
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
-            'away_temp': 16
+            'away_temp': 16,
+            'initial_hvac_mode': HVAC_MODE_HEAT
         }}))
 
 
-async def test_setup_defaults_to_unknown(hass, setup_comp_2):
+async def test_setup_defaults_to_unknown(hass):
     """Test the setting of defaults to unknown."""
-    assert STATE_IDLE == hass.states.get(ENTITY).state
+    hass.config.units = METRIC_SYSTEM
+    await async_setup_component(
+        hass, DOMAIN, {'climate': {
+            'platform': 'generic_thermostat',
+            'name': 'test',
+            'cold_tolerance': 2,
+            'hot_tolerance': 4,
+            'heater': ENT_SWITCH,
+            'target_sensor': ENT_SENSOR,
+            'away_temp': 16
+        }})
+    assert HVAC_MODE_OFF == hass.states.get(ENTITY).state
 
 
 async def test_default_setup_params(hass, setup_comp_2):
@@ -158,11 +167,11 @@ async def test_default_setup_params(hass, setup_comp_2):
     assert 7 == state.attributes.get('temperature')
 
 
-async def test_get_operation_modes(hass, setup_comp_2):
+async def test_get_hvac_modes(hass, setup_comp_2):
     """Test that the operation list returns the correct modes."""
     state = hass.states.get(ENTITY)
-    modes = state.attributes.get('operation_list')
-    assert [STATE_HEAT, STATE_OFF] == modes
+    modes = state.attributes.get('hvac_modes')
+    assert [HVAC_MODE_HEAT, HVAC_MODE_OFF] == modes
 
 
 async def test_set_target_temp(hass, setup_comp_2):
@@ -179,7 +188,7 @@ async def test_set_target_temp(hass, setup_comp_2):
 async def test_set_away_mode(hass, setup_comp_2):
     """Test the setting away mode."""
     await common.async_set_temperature(hass, 23)
-    await common.async_set_away_mode(hass, True)
+    await common.async_set_preset_mode(hass, PRESET_AWAY)
     state = hass.states.get(ENTITY)
     assert 16 == state.attributes.get('temperature')
 
@@ -190,10 +199,10 @@ async def test_set_away_mode_and_restore_prev_temp(hass, setup_comp_2):
     Verify original temperature is restored.
     """
     await common.async_set_temperature(hass, 23)
-    await common.async_set_away_mode(hass, True)
+    await common.async_set_preset_mode(hass, PRESET_AWAY)
     state = hass.states.get(ENTITY)
     assert 16 == state.attributes.get('temperature')
-    await common.async_set_away_mode(hass, False)
+    await common.async_set_preset_mode(hass, None)
     state = hass.states.get(ENTITY)
     assert 23 == state.attributes.get('temperature')
 
@@ -204,11 +213,11 @@ async def test_set_away_mode_twice_and_restore_prev_temp(hass, setup_comp_2):
     Verify original temperature is restored.
     """
     await common.async_set_temperature(hass, 23)
-    await common.async_set_away_mode(hass, True)
-    await common.async_set_away_mode(hass, True)
+    await common.async_set_preset_mode(hass, PRESET_AWAY)
+    await common.async_set_preset_mode(hass, PRESET_AWAY)
     state = hass.states.get(ENTITY)
     assert 16 == state.attributes.get('temperature')
-    await common.async_set_away_mode(hass, False)
+    await common.async_set_preset_mode(hass, None)
     state = hass.states.get(ENTITY)
     assert 23 == state.attributes.get('temperature')
 
@@ -295,11 +304,11 @@ async def test_temp_change_heater_off_outside_tolerance(hass, setup_comp_2):
     assert ENT_SWITCH == call.data['entity_id']
 
 
-async def test_running_when_operating_mode_is_off(hass, setup_comp_2):
+async def test_running_when_hvac_mode_is_off(hass, setup_comp_2):
     """Test that the switch turns off when enabled is set False."""
     calls = _setup_switch(hass, True)
     await common.async_set_temperature(hass, 30)
-    await common.async_set_operation_mode(hass, STATE_OFF)
+    await common.async_set_hvac_mode(hass, HVAC_MODE_OFF)
     assert 1 == len(calls)
     call = calls[0]
     assert HASS_DOMAIN == call.domain
@@ -307,34 +316,27 @@ async def test_running_when_operating_mode_is_off(hass, setup_comp_2):
     assert ENT_SWITCH == call.data['entity_id']
 
 
-async def test_no_state_change_when_operation_mode_off(hass, setup_comp_2):
+async def test_no_state_change_when_hvac_mode_off(hass, setup_comp_2):
     """Test that the switch doesn't turn on when enabled is False."""
     calls = _setup_switch(hass, False)
     await common.async_set_temperature(hass, 30)
-    await common.async_set_operation_mode(hass, STATE_OFF)
+    await common.async_set_hvac_mode(hass, HVAC_MODE_OFF)
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     assert 0 == len(calls)
 
 
-@mock.patch('logging.Logger.error')
-async def test_invalid_operating_mode(log_mock, hass, setup_comp_2):
-    """Test error handling for invalid operation mode."""
-    await common.async_set_operation_mode(hass, 'invalid mode')
-    assert log_mock.call_count == 1
-
-
-async def test_operating_mode_heat(hass, setup_comp_2):
+async def test_hvac_mode_heat(hass, setup_comp_2):
     """Test change mode from OFF to HEAT.
 
     Switch turns on when temp below setpoint and mode changes.
     """
-    await common.async_set_operation_mode(hass, STATE_OFF)
+    await common.async_set_hvac_mode(hass, HVAC_MODE_OFF)
     await common.async_set_temperature(hass, 30)
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     calls = _setup_switch(hass, False)
-    await common.async_set_operation_mode(hass, STATE_HEAT)
+    await common.async_set_hvac_mode(hass, HVAC_MODE_HEAT)
     assert 1 == len(calls)
     call = calls[0]
     assert HASS_DOMAIN == call.domain
@@ -371,7 +373,8 @@ def setup_comp_3(hass):
             'away_temp': 30,
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
-            'ac_mode': True
+            'ac_mode': True,
+            'initial_hvac_mode': HVAC_MODE_COOL,
         }}))
 
 
@@ -394,22 +397,22 @@ async def test_turn_away_mode_on_cooling(hass, setup_comp_3):
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 19)
-    await common.async_set_away_mode(hass, True)
+    await common.async_set_preset_mode(hass, PRESET_AWAY)
     state = hass.states.get(ENTITY)
     assert 30 == state.attributes.get('temperature')
 
 
-async def test_operating_mode_cool(hass, setup_comp_3):
+async def test_hvac_mode_cool(hass, setup_comp_3):
     """Test change mode from OFF to COOL.
 
     Switch turns on when temp below setpoint and mode changes.
     """
-    await common.async_set_operation_mode(hass, STATE_OFF)
+    await common.async_set_hvac_mode(hass, HVAC_MODE_OFF)
     await common.async_set_temperature(hass, 25)
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     calls = _setup_switch(hass, False)
-    await common.async_set_operation_mode(hass, STATE_COOL)
+    await common.async_set_hvac_mode(hass, HVAC_MODE_COOL)
     assert 1 == len(calls)
     call = calls[0]
     assert HASS_DOMAIN == call.domain
@@ -478,7 +481,7 @@ async def test_running_when_operating_mode_is_off_2(hass, setup_comp_3):
     """Test that the switch turns off when enabled is set False."""
     calls = _setup_switch(hass, True)
     await common.async_set_temperature(hass, 30)
-    await common.async_set_operation_mode(hass, STATE_OFF)
+    await common.async_set_hvac_mode(hass, HVAC_MODE_OFF)
     assert 1 == len(calls)
     call = calls[0]
     assert HASS_DOMAIN == call.domain
@@ -490,7 +493,7 @@ async def test_no_state_change_when_operation_mode_off_2(hass, setup_comp_3):
     """Test that the switch doesn't turn on when enabled is False."""
     calls = _setup_switch(hass, False)
     await common.async_set_temperature(hass, 30)
-    await common.async_set_operation_mode(hass, STATE_OFF)
+    await common.async_set_hvac_mode(hass, HVAC_MODE_OFF)
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
     assert 0 == len(calls)
@@ -509,7 +512,8 @@ def setup_comp_4(hass):
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
             'ac_mode': True,
-            'min_cycle_duration': datetime.timedelta(minutes=10)
+            'min_cycle_duration': datetime.timedelta(minutes=10),
+            'initial_hvac_mode': HVAC_MODE_COOL,
         }}))
 
 
@@ -572,7 +576,7 @@ async def test_mode_change_ac_trigger_off_not_long_enough(hass, setup_comp_4):
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    await common.async_set_operation_mode(hass, STATE_OFF)
+    await common.async_set_hvac_mode(hass, HVAC_MODE_OFF)
     assert 1 == len(calls)
     call = calls[0]
     assert 'homeassistant' == call.domain
@@ -587,7 +591,7 @@ async def test_mode_change_ac_trigger_on_not_long_enough(hass, setup_comp_4):
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    await common.async_set_operation_mode(hass, STATE_HEAT)
+    await common.async_set_hvac_mode(hass, HVAC_MODE_HEAT)
     assert 1 == len(calls)
     call = calls[0]
     assert 'homeassistant' == call.domain
@@ -608,7 +612,8 @@ def setup_comp_5(hass):
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
             'ac_mode': True,
-            'min_cycle_duration': datetime.timedelta(minutes=10)
+            'min_cycle_duration': datetime.timedelta(minutes=10),
+            'initial_hvac_mode': HVAC_MODE_COOL,
         }}))
 
 
@@ -673,7 +678,7 @@ async def test_mode_change_ac_trigger_off_not_long_enough_2(
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    await common.async_set_operation_mode(hass, STATE_OFF)
+    await common.async_set_hvac_mode(hass, HVAC_MODE_OFF)
     assert 1 == len(calls)
     call = calls[0]
     assert 'homeassistant' == call.domain
@@ -688,7 +693,7 @@ async def test_mode_change_ac_trigger_on_not_long_enough_2(hass, setup_comp_5):
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    await common.async_set_operation_mode(hass, STATE_HEAT)
+    await common.async_set_hvac_mode(hass, HVAC_MODE_HEAT)
     assert 1 == len(calls)
     call = calls[0]
     assert 'homeassistant' == call.domain
@@ -708,7 +713,8 @@ def setup_comp_6(hass):
             'hot_tolerance': 0.3,
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
-            'min_cycle_duration': datetime.timedelta(minutes=10)
+            'min_cycle_duration': datetime.timedelta(minutes=10),
+            'initial_hvac_mode': HVAC_MODE_HEAT,
         }}))
 
 
@@ -774,7 +780,7 @@ async def test_mode_change_heater_trigger_off_not_long_enough(
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    await common.async_set_operation_mode(hass, STATE_OFF)
+    await common.async_set_hvac_mode(hass, HVAC_MODE_OFF)
     assert 1 == len(calls)
     call = calls[0]
     assert 'homeassistant' == call.domain
@@ -790,7 +796,7 @@ async def test_mode_change_heater_trigger_on_not_long_enough(
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    await common.async_set_operation_mode(hass, STATE_HEAT)
+    await common.async_set_hvac_mode(hass, HVAC_MODE_HEAT)
     assert 1 == len(calls)
     call = calls[0]
     assert 'homeassistant' == call.domain
@@ -813,7 +819,8 @@ def setup_comp_7(hass):
             'target_sensor': ENT_SENSOR,
             'ac_mode': True,
             'min_cycle_duration': datetime.timedelta(minutes=15),
-            'keep_alive': datetime.timedelta(minutes=10)
+            'keep_alive': datetime.timedelta(minutes=10),
+            'initial_hvac_mode': HVAC_MODE_COOL,
         }}))
 
 
@@ -882,7 +889,8 @@ def setup_comp_8(hass):
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
             'min_cycle_duration': datetime.timedelta(minutes=15),
-            'keep_alive': datetime.timedelta(minutes=10)
+            'keep_alive': datetime.timedelta(minutes=10),
+            'initial_hvac_mode': HVAC_MODE_HEAT,
         }}))
 
 
@@ -936,82 +944,6 @@ async def test_temp_change_heater_trigger_off_long_enough_2(
 @pytest.fixture
 def setup_comp_9(hass):
     """Initialize components."""
-    hass.config.temperature_unit = TEMP_CELSIUS
-    assert hass.loop.run_until_complete(async_setup_component(
-        hass, DOMAIN, {'climate': [
-            {
-                'platform': 'generic_thermostat',
-                'name': 'test_heat',
-                'heater': ENT_SWITCH,
-                'target_sensor': ENT_SENSOR
-            },
-            {
-                'platform': 'generic_thermostat',
-                'name': 'test_cool',
-                'heater': ENT_SWITCH,
-                'ac_mode': True,
-                'target_sensor': ENT_SENSOR
-            }
-        ]}))
-
-
-async def test_turn_on_when_off(hass, setup_comp_9):
-    """Test if climate.turn_on turns on a turned off device."""
-    await common.async_set_operation_mode(hass, STATE_OFF)
-    await hass.services.async_call('climate', SERVICE_TURN_ON)
-    await hass.async_block_till_done()
-    state_heat = hass.states.get(HEAT_ENTITY)
-    state_cool = hass.states.get(COOL_ENTITY)
-    assert STATE_HEAT == \
-        state_heat.attributes.get('operation_mode')
-    assert STATE_COOL == \
-        state_cool.attributes.get('operation_mode')
-
-
-async def test_turn_on_when_on(hass, setup_comp_9):
-    """Test if climate.turn_on does nothing to a turned on device."""
-    await common.async_set_operation_mode(hass, STATE_HEAT, HEAT_ENTITY)
-    await common.async_set_operation_mode(hass, STATE_COOL, COOL_ENTITY)
-    await hass.services.async_call('climate', SERVICE_TURN_ON)
-    await hass.async_block_till_done()
-    state_heat = hass.states.get(HEAT_ENTITY)
-    state_cool = hass.states.get(COOL_ENTITY)
-    assert STATE_HEAT == \
-        state_heat.attributes.get('operation_mode')
-    assert STATE_COOL == \
-        state_cool.attributes.get('operation_mode')
-
-
-async def test_turn_off_when_on(hass, setup_comp_9):
-    """Test if climate.turn_off turns off a turned on device."""
-    await common.async_set_operation_mode(hass, STATE_HEAT, HEAT_ENTITY)
-    await common.async_set_operation_mode(hass, STATE_COOL, COOL_ENTITY)
-    await hass.services.async_call('climate', SERVICE_TURN_OFF)
-    await hass.async_block_till_done()
-    state_heat = hass.states.get(HEAT_ENTITY)
-    state_cool = hass.states.get(COOL_ENTITY)
-    assert STATE_OFF == \
-        state_heat.attributes.get('operation_mode')
-    assert STATE_OFF == \
-        state_cool.attributes.get('operation_mode')
-
-
-async def test_turn_off_when_off(hass, setup_comp_9):
-    """Test if climate.turn_off does nothing to a turned off device."""
-    await common.async_set_operation_mode(hass, STATE_OFF)
-    await hass.services.async_call('climate', SERVICE_TURN_OFF)
-    await hass.async_block_till_done()
-    state_heat = hass.states.get(HEAT_ENTITY)
-    state_cool = hass.states.get(COOL_ENTITY)
-    assert STATE_OFF == \
-        state_heat.attributes.get('operation_mode')
-    assert STATE_OFF == \
-        state_cool.attributes.get('operation_mode')
-
-
-@pytest.fixture
-def setup_comp_10(hass):
-    """Initialize components."""
     hass.config.temperature_unit = TEMP_FAHRENHEIT
     assert hass.loop.run_until_complete(async_setup_component(
         hass, DOMAIN, {'climate': {
@@ -1028,11 +960,8 @@ def setup_comp_10(hass):
         }}))
 
 
-async def test_precision(hass, setup_comp_10):
+async def test_precision(hass, setup_comp_9):
     """Test that setting precision to tenths works as intended."""
-    await common.async_set_operation_mode(hass, STATE_OFF)
-    await hass.services.async_call('climate', SERVICE_TURN_OFF)
-    await hass.async_block_till_done()
     await common.async_set_temperature(hass, 23.27)
     state = hass.states.get(ENTITY)
     assert 23.3 == state.attributes.get('temperature')
@@ -1060,9 +989,10 @@ async def test_custom_setup_params(hass):
 async def test_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(hass, (
-        State('climate.test_thermostat', '0', {ATTR_TEMPERATURE: "20",
-                                               ATTR_OPERATION_MODE: "off",
-                                               ATTR_AWAY_MODE: "on"}),
+        State(
+            'climate.test_thermostat', HVAC_MODE_OFF,
+            {ATTR_TEMPERATURE: "20", ATTR_PRESET_MODE: PRESET_AWAY}
+        ),
     ))
 
     hass.state = CoreState.starting
@@ -1073,12 +1003,13 @@ async def test_restore_state(hass):
             'name': 'test_thermostat',
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
+            'away_temp': 14,
         }})
 
     state = hass.states.get('climate.test_thermostat')
     assert(state.attributes[ATTR_TEMPERATURE] == 20)
-    assert(state.attributes[ATTR_OPERATION_MODE] == "off")
-    assert(state.state == STATE_OFF)
+    assert(state.attributes[ATTR_PRESET_MODE] == PRESET_AWAY)
+    assert(state.state == HVAC_MODE_OFF)
 
 
 async def test_no_restore_state(hass):
@@ -1087,9 +1018,10 @@ async def test_no_restore_state(hass):
     Allows for graceful reboot.
     """
     mock_restore_cache(hass, (
-        State('climate.test_thermostat', '0', {ATTR_TEMPERATURE: "20",
-                                               ATTR_OPERATION_MODE: "off",
-                                               ATTR_AWAY_MODE: "on"}),
+        State(
+            'climate.test_thermostat', HVAC_MODE_OFF,
+            {ATTR_TEMPERATURE: "20", ATTR_PRESET_MODE: PRESET_AWAY}
+        ),
     ))
 
     hass.state = CoreState.starting
@@ -1105,7 +1037,7 @@ async def test_no_restore_state(hass):
 
     state = hass.states.get('climate.test_thermostat')
     assert(state.attributes[ATTR_TEMPERATURE] == 22)
-    assert(state.state == STATE_OFF)
+    assert(state.state == HVAC_MODE_OFF)
 
 
 async def test_restore_state_uncoherence_case(hass):
@@ -1124,17 +1056,13 @@ async def test_restore_state_uncoherence_case(hass):
 
     state = hass.states.get(ENTITY)
     assert 20 == state.attributes[ATTR_TEMPERATURE]
-    assert STATE_OFF == \
-        state.attributes[ATTR_OPERATION_MODE]
-    assert STATE_OFF == state.state
+    assert HVAC_MODE_OFF == state.state
     assert 0 == len(calls)
 
     calls = _setup_switch(hass, False)
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY)
-    assert STATE_OFF == \
-        state.attributes[ATTR_OPERATION_MODE]
-    assert STATE_OFF == state.state
+    assert HVAC_MODE_OFF == state.state
 
 
 async def _setup_climate(hass):
@@ -1150,10 +1078,9 @@ async def _setup_climate(hass):
     }})
 
 
-def _mock_restore_cache(hass, temperature=20, operation_mode=STATE_OFF):
+def _mock_restore_cache(hass, temperature=20, hvac_mode=HVAC_MODE_OFF):
     mock_restore_cache(hass, (
-        State(ENTITY, '0', {
+        State(ENTITY, hvac_mode, {
             ATTR_TEMPERATURE: str(temperature),
-            ATTR_OPERATION_MODE: operation_mode,
-            ATTR_AWAY_MODE: "on"}),
+            ATTR_PRESET_MODE: PRESET_AWAY}),
     ))
