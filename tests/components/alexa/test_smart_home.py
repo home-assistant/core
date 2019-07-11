@@ -558,11 +558,22 @@ async def test_media_player_power(hass):
     assert_endpoint_capabilities(
         appliance,
         'Alexa.InputController',
+        'Alexa.PowerController',
         'Alexa.Speaker',
         'Alexa.StepSpeaker',
         'Alexa.PlaybackController',
         'Alexa.EndpointHealth',
     )
+
+    await assert_request_calls_service(
+        'Alexa.PowerController', 'TurnOn', 'media_player#test',
+        'media_player.media_play',
+        hass)
+
+    await assert_request_calls_service(
+        'Alexa.PowerController', 'TurnOff', 'media_player#test',
+        'media_player.media_stop',
+        hass)
 
 
 async def test_alert(hass):
