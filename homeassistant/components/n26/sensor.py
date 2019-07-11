@@ -32,9 +32,6 @@ def setup_platform(
     """Set up the N26 sensor platform."""
     api_list = hass.data[DOMAIN][DATA]
 
-    if api_list is None:
-        return
-
     sensor_entities = []
     for api_data in api_list:
         sensor_entities.append(N26Account(api_data))
