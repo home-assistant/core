@@ -11,8 +11,7 @@ from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
 from homeassistant.core import callback
 from homeassistant.const import (
-    CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_VERIFY_SSL,
-    CONF_MONITORED_CONDITIONS)
+    CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_VERIFY_SSL)
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -51,10 +50,9 @@ async def async_setup_scanner(hass, config, sync_see, discovery_info):
     exist = False
 
     for entry in hass.config_entries.async_entries(UNIFI_DOMAIN):
-        print('ENTER')
         if config[CONF_HOST] == entry.data[CONF_CONTROLLER][CONF_HOST] and \
                 config[CONF_SITE_ID] == \
-                    entry.data[CONF_CONTROLLER][CONF_SITE_ID]:
+                entry.data[CONF_CONTROLLER][CONF_SITE_ID]:
             exist = True
             break
 
