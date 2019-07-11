@@ -4,12 +4,13 @@ import logging
 
 import voluptuous as vol
 
+from n26 import api as n26_api, config as n26_config
+
 from homeassistant.const import (
     CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import Throttle
-from n26 import api as n26_api, config as n26_config
 
 from .const import DATA, DOMAIN
 
@@ -19,12 +20,12 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
 # define configuration parameters
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(cv.ensure_list, vol.Schema([{
+    DOMAIN: vol.All(cv.ensure_list, [{
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_SCAN_INTERVAL,
                      default=DEFAULT_SCAN_INTERVAL): cv.time_period,
-    }]))
+    }])
 }, extra=vol.ALLOW_EXTRA)
 
 N26_COMPONENTS = [
