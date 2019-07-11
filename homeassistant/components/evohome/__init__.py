@@ -22,7 +22,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time, track_time_interval)
-from homeassistant.util.dt import as_local, parse_datetime, utcnow, UTC
+from homeassistant.util.dt import as_local, parse_datetime, utcnow
 
 from .const import DOMAIN, STORAGE_VERSION, STORAGE_KEY, GWS, TCS
 
@@ -205,7 +205,6 @@ class EvoBroker:
         return (None, None, None)  # account switched: so tokens wont be valid
 
     async def _save_auth_tokens(self, *args) -> None:
-        # evohomeclient2 uses local datetimes
         access_token_expires = _local_dt_to_utc(
             self.client.access_token_expires)
 
@@ -218,12 +217,12 @@ class EvoBroker:
         store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         await store.async_save(self._app_storage)
 
-        access_token_expires_utc += self.params[CONF_SCAN_INTERVAL]
+        access_token_expires += self.params[CONF_SCAN_INTERVAL]
 
         async_track_point_in_utc_time(
             self.hass,
             self._save_auth_tokens,
-            access_token_expires_utc.replace(tzinfo=UTC)
+            access_token_expires
         )
 
     def update(self, *args, **kwargs) -> None:
