@@ -115,8 +115,9 @@ class PS4Device(MediaPlayerDevice):
         self.check_region()
 
     async def async_update(self):
-        from pyps4_homeassistant.errors import NotReady
         """Retrieve the latest data."""
+        from pyps4_homeassistant.errors import NotReady
+
         if self._ps4.ddp_protocol is not None:
             # Request Status with asyncio transport.
             self._ps4.get_status()
