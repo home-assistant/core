@@ -468,7 +468,7 @@ def load_games(hass: HomeAssistantType) -> dict:
     # Convert str format to dict format if not already.
     if games is not None:
         for game, data in games.items():
-            if type(data) is not dict:
+            if not isinstance(data, dict):
                 games[game] = {ATTR_MEDIA_TITLE: data,
                                ATTR_MEDIA_IMAGE_URL: None,
                                ATTR_LOCKED: False,
@@ -486,7 +486,7 @@ def save_games(hass: HomeAssistantType, games: dict):
 
     # Retry loading file
     if games is None:
-        load_games()
+        load_games(hass)
 
 
 def _set_media(hass: HomeAssistantType, games: dict, media_content_id,
