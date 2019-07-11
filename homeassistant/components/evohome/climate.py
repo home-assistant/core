@@ -11,7 +11,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF,
     PRESET_AWAY, PRESET_ECO, PRESET_HOME,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE)
-from homeassistant.util.dt import as_local, parse_datetime
+from homeassistant.util.dt import parse_datetime
 
 from . import CONF_LOCATION_IDX, _handle_exception, EvoDevice
 from .const import (
@@ -209,8 +209,7 @@ class EvoZone(EvoClimateDevice):
         if op_mode == EVO_TEMPOVER:
             self._setpoints = self.get_setpoints()
             if self._setpoints:
-                until = self._setpoints['next']['from']
-                until = as_local(parse_datetime(until))
+                until = parse_datetime(self._setpoints['next']['from'])
 
         self._set_temperature(temperature, until=until)
 
