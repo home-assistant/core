@@ -1,6 +1,5 @@
 """Support for restoring entity states on startup."""
 import asyncio
-import json
 import logging
 from datetime import timedelta, datetime
 from typing import Any, Dict, List, Set, Optional  # noqa  pylint_disable=unused-import
