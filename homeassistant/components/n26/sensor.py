@@ -35,17 +35,17 @@ def setup_platform(
     if api_list is None:
         return
 
-    sensor_entities = []
+    entities = []
     for api_data in api_list:
-        sensor_entities.append(N26Account(api_data))
+        entities.append(N26Account(api_data))
 
         for card in api_data.cards:
-            sensor_entities.append(N26Card(api_data, card))
+            entities.append(N26Card(api_data, card))
 
         for space in api_data.spaces["spaces"]:
-            sensor_entities.append(N26Space(api_data, space))
+            entities.append(N26Space(api_data, space))
 
-    add_entities(sensor_entities)
+    add_entities(entities)
 
 
 class N26Account(Entity):
