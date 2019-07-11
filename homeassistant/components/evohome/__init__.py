@@ -217,12 +217,10 @@ class EvoBroker:
         store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         await store.async_save(self._app_storage)
 
-        access_token_expires += self.params[CONF_SCAN_INTERVAL]
-
         async_track_point_in_utc_time(
             self.hass,
             self._save_auth_tokens,
-            access_token_expires
+            access_token_expires + self.params[CONF_SCAN_INTERVAL]
         )
 
     def update(self, *args, **kwargs) -> None:
