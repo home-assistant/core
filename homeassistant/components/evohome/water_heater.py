@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 HA_STATE_TO_EVO = {STATE_ON: 'On', STATE_OFF: 'Off'}
 EVO_STATE_TO_HA = {v: k for k, v in HA_STATE_TO_EVO.items()}
 
-HA_OPMODE_TO_DHW = {STATE_ON: EVO_FOLLOW, STATE_OFF: EVO_TEMPOVER}
+HA_OPMODE_TO_DHW = {STATE_ON: EVO_FOLLOW, STATE_OFF: EVO_PERMOVER}
 
 
 def setup_platform(hass, hass_config, add_entities,
@@ -75,7 +75,7 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         op_mode = HA_OPMODE_TO_DHW[operation_mode]
 
         state = '' if op_mode == EVO_FOLLOW else HA_STATE_TO_EVO[STATE_OFF]
-        until = None  # EVO_PERMOVER
+        until = None  # EVO_FOLLOW, EVO_PERMOVER
 
         if op_mode == EVO_TEMPOVER:
             self._setpoints = self.get_setpoints()
