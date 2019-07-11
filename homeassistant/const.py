@@ -3,6 +3,7 @@
 MAJOR_VERSION = 0
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 MINOR_VERSION = 93
 PATCH_VERSION = '2'
 =======
@@ -64,6 +65,9 @@ MINOR_VERSION = 95
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+MINOR_VERSION = 97
+>>>>>>> Version bump to 0.97.0dev0
 PATCH_VERSION = '0.dev0'
 >>>>>>> Bump version to 0.95.0.dev0
 =======
