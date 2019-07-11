@@ -29,11 +29,6 @@ HA_STATE_TO_SYSTEMAIR = {
 
 }
 
-SYSTEMAIR_TO_HA_STATE = {
-    'auto': HVAC_MODE_AUTO,
-    'off': HVAC_MODE_OFF,
-}
-
 HA_PRESET_TO_SYSTEMAIR = {
     PRESET_AUTO: 'auto',
     PRESET_MANUAL: 'manual',
@@ -46,11 +41,6 @@ HA_PRESET_TO_SYSTEMAIR = {
 }
 
 FAN_MAXIMUM = 'maximum'
-
-SYSTEMAIR_TO_HA_ATTR = {
-    ATTR_TARGET_TEMPERATURE: ATTR_TEMPERATURE,
-    ATTR_PRESET_MODE: ATTR_CURRENT_OPERATION
-}
 
 HA_SET_ATTR_TO_SYSTEMAIR = {}
 HA_ATTR_TO_SYSTEMAIR = {}
@@ -234,8 +224,3 @@ class SystemAIRClimate(ClimateDevice):
     async def async_update(self):
         """Retrieve latest state."""
         await self._sab.update()
-
-    # @property
-    # def device_info(self):
-    #    """Return a device description for device registry."""
-    #    return self._api.device_info

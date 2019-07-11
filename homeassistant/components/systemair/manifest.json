@@ -1,11 +1,11 @@
 {
   "domain": "systemair",
   "name": "Systemair",
-  "config_flow": true,
+  "config_flow": false,
   "documentation": "https://www.home-assistant.io/components/systemair",
   "requirements": [
-
+    "python-systemair-savecair==2.0.0"
   ],
-  "dependencies": ["python-systemair-savecair==2.0.0"],
+  "dependencies": [],
   "codeowners": ["@perara"]
 }
