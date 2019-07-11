@@ -224,7 +224,7 @@ class PS4Device(MediaPlayerDevice):
         self._media_type = None
         self._source = None
 
-    async def async_get_title_data(self, title_id, name, search_all=True):
+    async def async_get_title_data(self, title_id, name):
         """Get PS Store Data."""
         from pyps4_homeassistant.errors import PSDataIncomplete
         _LOGGER.debug("Starting PS Store Search, %s: %s", title_id, name)
