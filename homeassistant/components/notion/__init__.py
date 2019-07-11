@@ -16,7 +16,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util import slugify
 
 from .config_flow import configured_instances
 from .const import (
@@ -268,7 +267,8 @@ class NotionEntity(Entity):
     @property
     def unique_id(self):
         """Return a unique, unchanging string that represents this sensor."""
-        return '{0}_{1}'.format(self._sensor_id, slugify(self._name))
+        task = self._notion.tasks[self._task_id]
+        return '{0}_{1}'.format(self._sensor_id, task['task_type'])
 
     async def _update_bridge_id(self):
         """Update the entity's bridge ID if it has changed.
