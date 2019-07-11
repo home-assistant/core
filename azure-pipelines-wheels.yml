@@ -11,7 +11,7 @@ trigger:
 pr: none
 variables:
   - name: versionWheels
-    value: '0.11-3.7-alpine3.10'
+    value: '1.0-3.7-alpine3.10'
   - group: wheels
 
 
