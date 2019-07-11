@@ -1958,3 +1958,6 @@ zigpy-xbee-homeassistant==0.4.0
 
 # homeassistant.components.zoneminder
 zm-py==0.3.3
+
+# homeassistant.components.systemair
+python-systemair-savecair==2.0.0
