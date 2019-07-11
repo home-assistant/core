@@ -142,7 +142,7 @@ class EvoZone(EvoClimateDevice):
                 if self._evo_device.temperatureStatus['isAvailable'] else None)
 
     @property
-    def target_temperature(self) -> Optional[float]:
+    def target_temperature(self) -> float:
         """Return the target temperature of the evohome Zone."""
         if self._evo_tcs.systemModeStatus['mode'] == EVO_HEATOFF:
             return self._evo_device.setpointCapabilities['minHeatSetpoint']

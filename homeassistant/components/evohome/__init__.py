@@ -60,7 +60,7 @@ def _utc_to_local_dt(dt_aware: datetime) -> datetime:
     return dt_naive.replace(microsecond=0)
 
 
-def _handle_exception(err):
+def _handle_exception(err) -> bool:
     try:
         raise err
 
@@ -101,7 +101,7 @@ def _handle_exception(err):
         raise  # we don't expect/handle any other HTTPErrors
 
 
-def setup(hass, hass_config):
+def setup(hass, hass_config) -> bool:
     """Create a (EMEA/EU-based) Honeywell evohome system."""
     broker = EvoBroker(hass, hass_config[DOMAIN])
     if not broker.init_client():
@@ -186,8 +186,8 @@ class EvoBroker:
 
         return True
 
-    async def _load_auth_tokens(self) -> Awaitable[
-            Tuple[Optional[str], Optional[str], Optional[datetime]]]:
+    async def _load_auth_tokens(self) -> Tuple[
+            Optional[str], Optional[str], Optional[datetime]]:
         store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         app_storage = self._app_storage = await store.async_load()
 
@@ -270,7 +270,7 @@ class EvoDevice(Entity):
         if packet['signal'] == 'refresh':
             self.async_schedule_update_ha_state(force_refresh=True)
 
-    def get_setpoints(self) -> Dict[str, Any]:
+    def get_setpoints(self) -> Optional[Dict[str, Any]]:
         """Return the current/next scheduled switchpoints.
 
         Only Zones & DHW controllers (but not the TCS) have schedules.
