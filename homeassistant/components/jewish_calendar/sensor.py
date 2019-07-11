@@ -185,6 +185,8 @@ class JewishCalSensor(Entity):
             self._state = times.havdalah
         elif self.type == 'issur_melacha_in_effect':
             self._state = make_zmanim(now).issur_melacha_in_effect
+        elif self.type == 'omer_count':
+            self._state = date.omer_day
         else:
             times = make_zmanim(today).zmanim
             self._state = times[self.type].time()

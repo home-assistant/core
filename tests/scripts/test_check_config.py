@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import homeassistant.scripts.check_config as check_config
 from homeassistant.config import YAML_CONFIG_FILE
-from tests.common import patch_yaml_files, get_test_config_dir
+from tests.common import get_test_config_dir, patch_yaml_files
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +34,6 @@ def normalize_yaml_files(check_dict):
             for key in sorted(check_dict['yaml_files'].keys())]
 
 
-# pylint: disable=no-self-use,invalid-name
 @patch('os.path.isfile', return_value=True)
 def test_bad_core_config(isfile_patch, loop):
     """Test a bad core config setup."""

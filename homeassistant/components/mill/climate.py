@@ -1,17 +1,15 @@
 """Support for mill wifi-enabled home heaters."""
-
 import logging
 
+from mill import Mill
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
-    DOMAIN, STATE_HEAT,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE,
-    SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE)
+    DOMAIN, HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_FAN_MODE,
+    SUPPORT_TARGET_TEMPERATURE, FAN_ON)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_PASSWORD, CONF_USERNAME,
-    STATE_ON, STATE_OFF, TEMP_CELSIUS)
+    ATTR_TEMPERATURE, CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -25,8 +23,7 @@ MAX_TEMP = 35
 MIN_TEMP = 5
 SERVICE_SET_ROOM_TEMP = 'mill_set_room_temperature'
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
-                 SUPPORT_FAN_MODE)
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -44,7 +41,6 @@ SET_ROOM_TEMP_SCHEMA = vol.Schema({
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Mill heater."""
-    from mill import Mill
     mill_data_connection = Mill(config[CONF_USERNAME],
                                 config[CONF_PASSWORD],
                                 websession=async_get_clientsession(hass))
@@ -85,9 +81,7 @@ class MillHeater(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        if self._heater.is_gen1:
-            return SUPPORT_FLAGS
-        return SUPPORT_FLAGS | SUPPORT_ON_OFF | SUPPORT_OPERATION_MODE
+        return SUPPORT_FLAGS
 
     @property
     def available(self):
@@ -141,21 +135,14 @@ class MillHeater(ClimateDevice):
         return self._heater.current_temp
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
-        return STATE_ON if self._heater.fan_status == 1 else STATE_OFF
+        return FAN_ON if self._heater.fan_status == 1 else HVAC_MODE_OFF
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """List of available fan modes."""
-        return [STATE_ON, STATE_OFF]
-
-    @property
-    def is_on(self):
-        """Return true if heater is on."""
-        if self._heater.is_gen1:
-            return True
-        return self._heater.power_status == 1
+        return [FAN_ON, HVAC_MODE_OFF]
 
     @property
     def min_temp(self):
@@ -168,50 +155,48 @@ class MillHeater(ClimateDevice):
         return MAX_TEMP
 
     @property
-    def current_operation(self):
-        """Return current operation."""
-        return STATE_HEAT if self.is_on else STATE_OFF
+    def hvac_mode(self) -> str:
+        """Return hvac operation ie. heat, cool mode.
+
+        Need to be one of HVAC_MODE_*.
+        """
+        if self._heater.is_gen1 or self._heater.power_status == 1:
+            return HVAC_MODE_HEAT
+        return HVAC_MODE_OFF
 
     @property
-    def operation_list(self):
-        """List of available operation modes."""
+    def hvac_modes(self):
+        """Return the list of available hvac operation modes.
+
+        Need to be a subset of HVAC_MODES.
+        """
         if self._heater.is_gen1:
-            return None
-        return [STATE_HEAT, STATE_OFF]
+            return [HVAC_MODE_HEAT]
+        return [HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        await self._conn.set_heater_temp(self._heater.device_id,
-                                         int(temperature))
+        await self._conn.set_heater_temp(
+            self._heater.device_id, int(temperature))
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
-        fan_status = 1 if fan_mode == STATE_ON else 0
-        await self._conn.heater_control(self._heater.device_id,
-                                        fan_status=fan_status)
+        fan_status = 1 if fan_mode == FAN_ON else 0
+        await self._conn.heater_control(
+            self._heater.device_id, fan_status=fan_status)
 
-    async def async_turn_on(self):
-        """Turn Mill unit on."""
-        await self._conn.heater_control(self._heater.device_id,
-                                        power_status=1)
-
-    async def async_turn_off(self):
-        """Turn Mill unit off."""
-        await self._conn.heater_control(self._heater.device_id,
-                                        power_status=0)
+    async def async_set_hvac_mode(self, hvac_mode):
+        """Set new target hvac mode."""
+        if hvac_mode == HVAC_MODE_HEAT:
+            await self._conn.heater_control(
+                self._heater.device_id, power_status=1)
+        elif hvac_mode == HVAC_MODE_OFF and not self._heater.is_gen1:
+            await self._conn.heater_control(
+                self._heater.device_id, power_status=0)
 
     async def async_update(self):
         """Retrieve latest state."""
         self._heater = await self._conn.update_device(self._heater.device_id)
-
-    async def async_set_operation_mode(self, operation_mode):
-        """Set operation mode."""
-        if operation_mode == STATE_HEAT:
-            await self.async_turn_on()
-        elif operation_mode == STATE_OFF and not self._heater.is_gen1:
-            await self.async_turn_off()
-        else:
-            _LOGGER.error("Unrecognized operation mode: %s", operation_mode)

@@ -1,10 +1,12 @@
 """Sensors on Zigbee Home Automation networks."""
 import logging
+import numbers
 
 from homeassistant.core import callback
 from homeassistant.components.sensor import (
     DOMAIN, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_PRESSURE, DEVICE_CLASS_POWER
+    DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_PRESSURE, DEVICE_CLASS_POWER,
+    DEVICE_CLASS_BATTERY
 )
 from homeassistant.const import (
     TEMP_CELSIUS, POWER_WATT, ATTR_UNIT_OF_MEASUREMENT
@@ -14,11 +16,28 @@ from .core.const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, HUMIDITY, TEMPERATURE,
     ILLUMINANCE, PRESSURE, METERING, ELECTRICAL_MEASUREMENT,
     GENERIC, SENSOR_TYPE, ATTRIBUTE_CHANNEL, ELECTRICAL_MEASUREMENT_CHANNEL,
-    SIGNAL_ATTR_UPDATED, SIGNAL_STATE_ATTR, UNKNOWN)
+    SIGNAL_ATTR_UPDATED, SIGNAL_STATE_ATTR, UNKNOWN, BATTERY,
+    POWER_CONFIGURATION_CHANNEL)
 from .entity import ZhaEntity
 
 PARALLEL_UPDATES = 5
 _LOGGER = logging.getLogger(__name__)
+
+BATTERY_SIZES = {
+    0: 'No battery',
+    1: 'Built in',
+    2: 'Other',
+    3: 'AA',
+    4: 'AAA',
+    5: 'C',
+    6: 'D',
+    7: 'CR2',
+    8: 'CR123A',
+    9: 'CR2450',
+    10: 'CR2032',
+    11: 'CR1632',
+    255: 'Unknown'
+}
 
 
 # Formatter functions
@@ -63,6 +82,29 @@ def pressure_formatter(value):
     return round(float(value))
 
 
+def battery_percentage_remaining_formatter(value):
+    """Return the state of the entity."""
+    # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
+    if not isinstance(value, numbers.Number) or value == -1:
+        return value
+    value = value / 2
+    value = int(round(value))
+    return value
+
+
+async def async_battery_device_state_attr_provider(channel):
+    """Return device statr attrs for battery sensors."""
+    state_attrs = {}
+    battery_size = await channel.get_attribute_value('battery_size')
+    if battery_size is not None:
+        state_attrs['battery_size'] = BATTERY_SIZES.get(
+            battery_size, 'Unknown')
+    battery_quantity = await channel.get_attribute_value('battery_quantity')
+    if battery_quantity is not None:
+        state_attrs['battery_quantity'] = battery_quantity
+    return state_attrs
+
+
 FORMATTER_FUNC_REGISTRY = {
     HUMIDITY: humidity_formatter,
     TEMPERATURE: temperature_formatter,
@@ -70,6 +112,7 @@ FORMATTER_FUNC_REGISTRY = {
     ELECTRICAL_MEASUREMENT: active_power_formatter,
     ILLUMINANCE: illuminance_formatter,
     GENERIC: pass_through_formatter,
+    BATTERY: battery_percentage_remaining_formatter
 }
 
 UNIT_REGISTRY = {
@@ -79,11 +122,13 @@ UNIT_REGISTRY = {
     ILLUMINANCE: 'lx',
     METERING: POWER_WATT,
     ELECTRICAL_MEASUREMENT: POWER_WATT,
-    GENERIC: None
+    GENERIC: None,
+    BATTERY: '%'
 }
 
 CHANNEL_REGISTRY = {
     ELECTRICAL_MEASUREMENT: ELECTRICAL_MEASUREMENT_CHANNEL,
+    BATTERY: POWER_CONFIGURATION_CHANNEL
 }
 
 POLLING_REGISTRY = {
@@ -101,7 +146,13 @@ DEVICE_CLASS_REGISTRY = {
     PRESSURE: DEVICE_CLASS_PRESSURE,
     ILLUMINANCE: DEVICE_CLASS_ILLUMINANCE,
     METERING: DEVICE_CLASS_POWER,
-    ELECTRICAL_MEASUREMENT: DEVICE_CLASS_POWER
+    ELECTRICAL_MEASUREMENT: DEVICE_CLASS_POWER,
+    BATTERY: DEVICE_CLASS_BATTERY
+}
+
+
+DEVICE_STATE_ATTR_PROVIDER_REGISTRY = {
+    BATTERY: async_battery_device_state_attr_provider
 }
 
 
@@ -172,10 +223,18 @@ class Sensor(ZhaEntity):
             self._sensor_type,
             None
         )
+        self.state_attr_provider = DEVICE_STATE_ATTR_PROVIDER_REGISTRY.get(
+            self._sensor_type,
+            None
+        )
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
+        if self.state_attr_provider is not None:
+            self._device_state_attributes = await self.state_attr_provider(
+                self._channel
+            )
         await self.async_accept_signal(
             self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state)
         await self.async_accept_signal(

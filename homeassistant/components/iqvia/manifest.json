@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/iqvia",
   "requirements": [
-    "numpy==1.16.3",
+    "numpy==1.16.4",
     "pyiqvia==0.2.1"
   ],
   "dependencies": [],

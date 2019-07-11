@@ -2,6 +2,7 @@
 import logging
 
 from aiohttp import ClientResponseError
+from pysmartthings import APIResponseError, AppOAuth, SmartThings
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -54,8 +55,6 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Get access token and validate it."""
-        from pysmartthings import APIResponseError, AppOAuth, SmartThings
-
         errors = {}
         if user_input is None or CONF_ACCESS_TOKEN not in user_input:
             return self._show_step_user(errors)
@@ -182,8 +181,6 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
         Launched when the user completes the flow or when the SmartApp
         is installed into an additional location.
         """
-        from pysmartthings import SmartThings
-
         if not self.api:
             # Launched from the SmartApp install event handler
             self.api = SmartThings(

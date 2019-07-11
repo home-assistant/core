@@ -7,11 +7,8 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_ON_OFF, STATE_HEAT)
-from homeassistant.const import ATTR_NAME
-from homeassistant.const import (ATTR_TEMPERATURE,
-                                 STATE_OFF, TEMP_CELSIUS)
+    SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_OFF, HVAC_MODE_HEAT)
+from homeassistant.const import ATTR_NAME, ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import (ATTR_VALUE, CONF_CLIENT_ID, CONF_CLIENT_SECRET,
@@ -20,8 +17,7 @@ from .const import (ATTR_VALUE, CONF_CLIENT_ID, CONF_CLIENT_SECRET,
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
-                 SUPPORT_ON_OFF)
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 
 SEND_COMFORT_FEEDBACK_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
@@ -178,11 +174,6 @@ class AmbiclimateEntity(ClimateDevice):
         return self._data.get('humidity')
 
     @property
-    def is_on(self):
-        """Return true if heater is on."""
-        return self._data.get('power', '').lower() == 'on'
-
-    @property
     def min_temp(self):
         """Return the minimum temperature."""
         return self._heater.get_min_temp()
@@ -198,9 +189,17 @@ class AmbiclimateEntity(ClimateDevice):
         return SUPPORT_FLAGS
 
     @property
-    def current_operation(self):
+    def hvac_modes(self):
+        """Return the list of available hvac operation modes."""
+        return [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+
+    @property
+    def hvac_mode(self):
         """Return current operation."""
-        return STATE_HEAT if self.is_on else STATE_OFF
+        if self._data.get('power', '').lower() == 'on':
+            return HVAC_MODE_HEAT
+
+        return HVAC_MODE_OFF
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -209,13 +208,13 @@ class AmbiclimateEntity(ClimateDevice):
             return
         await self._heater.set_target_temperature(temperature)
 
-    async def async_turn_on(self):
-        """Turn device on."""
-        await self._heater.turn_on()
-
-    async def async_turn_off(self):
-        """Turn device off."""
-        await self._heater.turn_off()
+    async def async_set_hvac_mode(self, hvac_mode):
+        """Set new target hvac mode."""
+        if hvac_mode == HVAC_MODE_HEAT:
+            await self._heater.turn_on()
+            return
+        if hvac_mode == HVAC_MODE_OFF:
+            await self._heater.turn_off()
 
     async def async_update(self):
         """Retrieve latest state."""

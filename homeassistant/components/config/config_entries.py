@@ -1,12 +1,11 @@
 """Http views to control the config manager."""
-
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView, FlowManagerResourceView)
-from homeassistant.generated import config_flows
+from homeassistant.loader import async_get_config_flows
 
 
 async def async_setup(hass):
@@ -61,7 +60,7 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
             'state': entry.state,
             'connection_class': entry.connection_class,
             'supports_options': hasattr(
-                config_entries.HANDLERS[entry.domain],
+                config_entries.HANDLERS.get(entry.domain),
                 'async_get_options_flow'),
         } for entry in hass.config_entries.async_entries()])
 
@@ -173,7 +172,8 @@ class ConfigManagerAvailableFlowView(HomeAssistantView):
 
     async def get(self, request):
         """List available flow handlers."""
-        return self.json(config_flows.FLOWS)
+        hass = request.app['hass']
+        return self.json(await async_get_config_flows(hass))
 
 
 class OptionManagerFlowIndexView(FlowManagerIndexView):

@@ -6,6 +6,12 @@ from urllib.parse import urlparse
 from uuid import uuid4
 
 from aiohttp import web
+from pysmartapp import Dispatcher, SmartAppManager
+from pysmartapp.const import SETTINGS_APP_ID
+from pysmartthings import (
+    APP_TYPE_WEBHOOK, CAPABILITIES, CLASSIFICATION_AUTOMATION, App, AppOAuth,
+    AppSettings, InstalledAppStatus, SmartThings, SourceType, Subscription,
+    SubscriptionEntity)
 
 from homeassistant.components import cloud, webhook
 from homeassistant.const import CONF_WEBHOOK_ID
@@ -43,8 +49,6 @@ async def validate_installed_app(api, installed_app_id: str):
     Query the API for the installed SmartApp and validate that it is tied to
     the specified app_id and is in an authorized state.
     """
-    from pysmartthings import InstalledAppStatus
-
     installed_app = await api.installed_app(installed_app_id)
     if installed_app.installed_app_status != InstalledAppStatus.AUTHORIZED:
         raise RuntimeWarning("Installed SmartApp instance '{}' ({}) is not "
@@ -77,8 +81,6 @@ def get_webhook_url(hass: HomeAssistantType) -> str:
 
 
 def _get_app_template(hass: HomeAssistantType):
-    from pysmartthings import APP_TYPE_WEBHOOK, CLASSIFICATION_AUTOMATION
-
     endpoint = "at " + hass.config.api.base_url
     cloudhook_url = hass.data[DOMAIN][CONF_CLOUDHOOK_URL]
     if cloudhook_url is not None:
@@ -98,9 +100,6 @@ def _get_app_template(hass: HomeAssistantType):
 
 async def create_app(hass: HomeAssistantType, api):
     """Create a SmartApp for this instance of hass."""
-    from pysmartthings import App, AppOAuth, AppSettings
-    from pysmartapp.const import SETTINGS_APP_ID
-
     # Create app from template attributes
     template = _get_app_template(hass)
     app = App()
@@ -170,8 +169,6 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
     SmartApps are an extension point within the SmartThings ecosystem and
     is used to receive push updates (i.e. device updates) from the cloud.
     """
-    from pysmartapp import Dispatcher, SmartAppManager
-
     data = hass.data.get(DOMAIN)
     if data:
         # already setup
@@ -264,11 +261,6 @@ async def smartapp_sync_subscriptions(
         hass: HomeAssistantType, auth_token: str, location_id: str,
         installed_app_id: str, devices):
     """Synchronize subscriptions of an installed up."""
-    from pysmartthings import (
-        CAPABILITIES, SmartThings, SourceType, Subscription,
-        SubscriptionEntity
-    )
-
     api = SmartThings(async_get_clientsession(hass), auth_token)
     tasks = []
 
