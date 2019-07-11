@@ -15,6 +15,7 @@ from tests.common import (
     mock_state_change_event
 )
 
+
 class TestSplunk(unittest.TestCase):
     """Test the Splunk component."""
 
