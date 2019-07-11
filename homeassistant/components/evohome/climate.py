@@ -60,8 +60,8 @@ def setup_platform(hass, hass_config, add_entities,
     for zone_idx in broker.tcs.zones:
         evo_zone = broker.tcs.zones[zone_idx]
         _LOGGER.debug(
-            "Found Zone, id=%s [%s - %s], name=%s",
-            evo_zone.zoneId, evo_zone.zoneType, evo_zone.modelType,
+            "Found %s, id=%s [%s], name=%s",
+            evo_zone.zoneType, evo_zone.zoneId, evo_zone.modelType,
             evo_zone.name)
         zones.append(EvoZone(broker, evo_zone))
 
