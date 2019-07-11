@@ -413,27 +413,44 @@ class ThermostatData:
                 roomstatus["module_id"] = None
                 roomstatus["heating_status"] = None
                 roomstatus["heating_power_request"] = None
+                batterylevel = None
                 for module_id in homedata_room["module_ids"]:
                     if (self.homedata.modules[self.home][module_id]["type"]
                             == NA_THERM
                             or roomstatus["module_id"] is None):
                         roomstatus["module_id"] = module_id
-                if roomstatus["module_type"] == NA_THERM:
-                    self.boilerstatus = self.homestatus.boilerStatus(
-                        rid=roomstatus["module_id"]
-                    )
-                    roomstatus["heating_status"] = self.boilerstatus
-                elif roomstatus["module_type"] == NA_VALVE:
-                    roomstatus["heating_power_request"] = homestatus_room[
-                        "heating_power_request"
-                    ]
-                    roomstatus["heating_status"] = (
-                        roomstatus["heating_power_request"] > 0
-                    )
-                    if self.boilerstatus is not None:
-                        roomstatus["heating_status"] = (
-                            self.boilerstatus and roomstatus["heating_status"]
+
+                    if roomstatus["module_type"] == NA_THERM:
+                        self.boilerstatus = self.homestatus.boilerStatus(
+                            rid=roomstatus["module_id"]
                         )
+                        roomstatus["heating_status"] = self.boilerstatus
+                        batterylevel = (
+                            self.homestatus
+                            .thermostats[roomstatus["module_id"]]
+                            .get("battery_level"))
+                    elif roomstatus["module_type"] == NA_VALVE:
+                        roomstatus["heating_power_request"] = homestatus_room[
+                            "heating_power_request"
+                        ]
+                        roomstatus["heating_status"] = (
+                            roomstatus["heating_power_request"] > 0
+                        )
+                        if self.boilerstatus is not None:
+                            roomstatus["heating_status"] = (
+                                self.boilerstatus and
+                                roomstatus["heating_status"]
+                            )
+                        batterylevel = (
+                            self.homestatus.valves[roomstatus["module_id"]]
+                            .get("battery_level"))
+
+                    if batterylevel:
+                        if (roomstatus.get("battery_level") and
+                                batterylevel < roomstatus["battery_level"]):
+                            roomstatus["battery_level"] = batterylevel
+                        else:
+                            roomstatus["battery_level"] = batterylevel
                 self.room_status[room] = roomstatus
             except KeyError as err:
                 _LOGGER.error("Update of room %s failed. Error: %s", room, err)
