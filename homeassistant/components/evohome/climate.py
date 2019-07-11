@@ -15,8 +15,7 @@ from homeassistant.util.dt import parse_datetime
 
 from . import CONF_LOCATION_IDX, _handle_exception, EvoDevice
 from .const import (
-    DOMAIN, EVO_STRFTIME,
-    EVO_RESET, EVO_AUTO, EVO_AUTOECO, EVO_AWAY, EVO_DAYOFF, EVO_CUSTOM,
+    DOMAIN, EVO_RESET, EVO_AUTO, EVO_AUTOECO, EVO_AWAY, EVO_DAYOFF, EVO_CUSTOM,
     EVO_HEATOFF, EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER)
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,8 +60,8 @@ def setup_platform(hass, hass_config, add_entities,
     for zone_idx in broker.tcs.zones:
         evo_zone = broker.tcs.zones[zone_idx]
         _LOGGER.debug(
-            "Found Zone, id=%s [%s - %s], name=%s",
-            evo_zone.zoneId, evo_zone.zoneType, evo_zone.modelType,
+            "Found %s, id=%s [%s], name=%s",
+            evo_zone.zoneType, evo_zone.zoneId, evo_zone.modelType,
             evo_zone.name)
         zones.append(EvoZone(broker, evo_zone))
 
@@ -189,7 +188,7 @@ class EvoZone(EvoClimateDevice):
         """Set a new target temperature for an hour."""
         until = kwargs.get('until')
         if until:
-            until = datetime.strptime(until, EVO_STRFTIME)
+            until = parse_datetime(until)
 
         self._set_temperature(kwargs['temperature'], until)
 
