@@ -24,8 +24,8 @@ def websocket_network_status(hass, connection, msg):
     network = hass.data[DATA_NETWORK]
     connection.send_result(msg[ID], {
         'state': network.state,
-        'state_str': network.state_str
     })
+
 
 @callback
 def async_load_websocket_api(hass):
