@@ -168,7 +168,7 @@ class PS4Device(MediaPlayerDevice):
                     if self._media_content_id != title_id:
                         self._media_content_id = title_id
 
-                        use_data = self._get_media_attrs(title_id, name)
+                        use_data = self._get_media_attrs()
 
                         if not use_data:
                             # Get data from PS Store.
@@ -187,7 +187,7 @@ class PS4Device(MediaPlayerDevice):
         else:
             self._retry += 1
 
-    def _get_media_attrs(self, title_id, name):
+    def _get_media_attrs(self):
         """Get media attributes."""
         if self._media_content_id in self._games:
             store = self._games[self._media_content_id]
