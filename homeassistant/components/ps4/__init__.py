@@ -1,15 +1,26 @@
 """Support for PlayStation 4 consoles."""
 import logging
 
+import voluptuous as vol
+
+from homeassistant.const import (
+    ATTR_COMMAND, ATTR_ENTITY_ID, CONF_REGION, CONF_TOKEN)
 from homeassistant.core import split_entity_id
-from homeassistant.const import CONF_REGION, CONF_TOKEN
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry, config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import location
 
 from .config_flow import PlayStation4FlowHandler  # noqa: pylint: disable=unused-import
-from .const import DOMAIN, PS4_DATA  # noqa: pylint: disable=unused-import
+from .const import COMMANDS, DOMAIN, PS4_DATA
 
 _LOGGER = logging.getLogger(__name__)
+
+SERVICE_COMMAND = 'send_command'
+
+PS4_COMMAND_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_COMMAND): vol.In(list(COMMANDS))
+})
 
 
 class PS4Data():
@@ -30,6 +41,7 @@ async def async_setup(hass, config):
     transport, protocol = await async_create_ddp_endpoint()
     hass.data[PS4_DATA].protocol = protocol
     _LOGGER.debug("PS4 DDP endpoint created: %s, %s", transport, protocol)
+    service_handle(hass)
     return True
 
 
@@ -124,3 +136,18 @@ def format_unique_id(creds, mac_address):
     """Use last 4 Chars of credential as suffix. Unique ID per PSN user."""
     suffix = creds[-4:]
     return "{}_{}".format(mac_address, suffix)
+
+
+def service_handle(hass: HomeAssistantType):
+    """Handle for services."""
+    async def async_service_command(call):
+        """Service for sending commands."""
+        entity_ids = call.data[ATTR_ENTITY_ID]
+        command = call.data[ATTR_COMMAND]
+        for device in hass.data[PS4_DATA].devices:
+            if device.entity_id in entity_ids:
+                await device.async_send_command(command)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_COMMAND, async_service_command,
+        schema=PS4_COMMAND_SCHEMA)
