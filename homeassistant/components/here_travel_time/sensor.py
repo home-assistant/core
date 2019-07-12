@@ -84,7 +84,7 @@ def convert_time_to_utc(timestr):
     return dt_util.as_timestamp(combined)
 
 
-def setup_platform(hass, config, async_add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the HERE travel time platform."""
     hass.data.setdefault(DATA_KEY, [])
 
@@ -116,7 +116,7 @@ def setup_platform(hass, config, async_add_entities, discovery_info=None):
 
     hass.data[DATA_KEY].append(sensor)
 
-    async_add_entities([sensor], True)
+    add_entities([sensor], True)
 
 
 class HERETravelTimeSensor(Entity):
