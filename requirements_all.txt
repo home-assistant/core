@@ -661,7 +661,7 @@ incomfort-client==0.3.0
 influxdb==5.2.0
 
 # homeassistant.components.insteon
-insteonplm==0.16.0
+insteonplm==0.16.3
 
 # homeassistant.components.iperf3
 iperf3==0.1.10
