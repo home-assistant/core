@@ -2,6 +2,7 @@
 import logging
 
 import voluptuous as vol
+from pyFGT.fortigate import FortiGate, FGTConnectionError
 
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD, \
     CONF_DEVICES, EVENT_HOMEASSISTANT_STOP
@@ -45,28 +46,25 @@ async def async_setup(hass, config):
 
 async def async_setup_fortigate(hass, config, host, user, apikey, devices):
     """Start up the Fortigate component platforms."""
-    from pyFGT.fortigate import FortiGate, FGTConnectionError
-
     fgt = FortiGate(host, user, apikey=apikey, disable_request_warnings=True)
 
     try:
         fgt.login()
     except FGTConnectionError:
-        _LOGGER.exception('Failed to connect to Fortigate')
+        _LOGGER.error('Failed to connect to Fortigate')
         return False
 
-    else:
-        hass.data[DATA_FGT] = {'fgt': fgt,
-                               'devices': devices
-                               }
+    hass.data[DATA_FGT] = {'fgt': fgt,
+                           'devices': devices
+                           }
 
-        hass.async_create_task(async_load_platform(
-            hass, 'device_tracker', DOMAIN, {}, config))
+    hass.async_create_task(async_load_platform(
+        hass, 'device_tracker', DOMAIN, {}, config))
 
-        async def close_fgt(event):
-            """Close Fortigate connection on HA Stop."""
-            fgt.logout()
+    async def close_fgt(event):
+        """Close Fortigate connection on HA Stop."""
+        fgt.logout()
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_fgt)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_fgt)
 
-        return True
+    return True
