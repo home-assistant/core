@@ -11,11 +11,11 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF,
     PRESET_AWAY, PRESET_ECO, PRESET_HOME,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE)
+from homeassistant.util.dt import parse_datetime
 
 from . import CONF_LOCATION_IDX, _handle_exception, EvoDevice
 from .const import (
-    DOMAIN, EVO_STRFTIME,
-    EVO_RESET, EVO_AUTO, EVO_AUTOECO, EVO_AWAY, EVO_DAYOFF, EVO_CUSTOM,
+    DOMAIN, EVO_RESET, EVO_AUTO, EVO_AUTOECO, EVO_AWAY, EVO_DAYOFF, EVO_CUSTOM,
     EVO_HEATOFF, EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER)
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,8 +43,8 @@ HA_PRESET_TO_EVO = {
 EVO_PRESET_TO_HA = {v: k for k, v in HA_PRESET_TO_EVO.items()}
 
 
-async def async_setup_platform(hass, hass_config, async_add_entities,
-                               discovery_info=None) -> None:
+def setup_platform(hass, hass_config, add_entities,
+                   discovery_info=None) -> None:
     """Create the evohome Controller, and its Zones, if any."""
     broker = hass.data[DOMAIN]['broker']
     loc_idx = broker.params[CONF_LOCATION_IDX]
@@ -60,13 +60,14 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     for zone_idx in broker.tcs.zones:
         evo_zone = broker.tcs.zones[zone_idx]
         _LOGGER.debug(
-            "Found Zone, id=%s [%s], name=%s",
-            evo_zone.zoneId, evo_zone.zone_type, evo_zone.name)
+            "Found %s, id=%s [%s], name=%s",
+            evo_zone.zoneType, evo_zone.zoneId, evo_zone.modelType,
+            evo_zone.name)
         zones.append(EvoZone(broker, evo_zone))
 
     entities = [controller] + zones
 
-    async_add_entities(entities, update_before_add=True)
+    add_entities(entities, update_before_add=True)
 
 
 class EvoClimateDevice(EvoDevice, ClimateDevice):
@@ -141,7 +142,7 @@ class EvoZone(EvoClimateDevice):
                 if self._evo_device.temperatureStatus['isAvailable'] else None)
 
     @property
-    def target_temperature(self) -> Optional[float]:
+    def target_temperature(self) -> float:
         """Return the target temperature of the evohome Zone."""
         if self._evo_tcs.systemModeStatus['mode'] == EVO_HEATOFF:
             return self._evo_device.setpointCapabilities['minHeatSetpoint']
@@ -172,7 +173,7 @@ class EvoZone(EvoClimateDevice):
         return self._evo_device.setpointCapabilities['maxHeatSetpoint']
 
     def _set_temperature(self, temperature: float,
-                         until: Optional[datetime] = None):
+                         until: Optional[datetime] = None) -> None:
         """Set a new target temperature for the Zone.
 
         until == None means indefinitely (i.e. PermanentOverride)
@@ -187,11 +188,11 @@ class EvoZone(EvoClimateDevice):
         """Set a new target temperature for an hour."""
         until = kwargs.get('until')
         if until:
-            until = datetime.strptime(until, EVO_STRFTIME)
+            until = parse_datetime(until)
 
         self._set_temperature(kwargs['temperature'], until)
 
-    def _set_operation_mode(self, op_mode) -> None:
+    def _set_operation_mode(self, op_mode: str) -> None:
         """Set the Zone to one of its native EVO_* operating modes."""
         if op_mode == EVO_FOLLOW:
             try:
@@ -201,14 +202,13 @@ class EvoZone(EvoClimateDevice):
                 _handle_exception(err)
             return
 
-        self._setpoints = self.get_setpoints()
         temperature = self._evo_device.setpointStatus['targetHeatTemperature']
+        until = None  # EVO_PERMOVER
 
         if op_mode == EVO_TEMPOVER:
-            until = self._setpoints['next']['from_datetime']
-            until = datetime.strptime(until, EVO_STRFTIME)
-        else:  # EVO_PERMOVER:
-            until = None
+            self._setpoints = self.get_setpoints()
+            if self._setpoints:
+                until = parse_datetime(self._setpoints['next']['from'])
 
         self._set_temperature(temperature, until=until)
 
@@ -220,7 +220,7 @@ class EvoZone(EvoClimateDevice):
         else:  # HVAC_MODE_HEAT
             self._set_operation_mode(EVO_FOLLOW)
 
-    def set_preset_mode(self, preset_mode: str) -> None:
+    def set_preset_mode(self, preset_mode: Optional[str]) -> None:
         """Set a new preset mode.
 
         If preset_mode is None, then revert to following the schedule.
@@ -244,14 +244,19 @@ class EvoController(EvoClimateDevice):
         self._icon = 'mdi:thermostat'
 
         self._precision = None
-        self._state_attributes = [
-            'activeFaults', 'systemModeStatus']
+        self._state_attributes = ['activeFaults', 'systemModeStatus']
 
         self._supported_features = SUPPORT_PRESET_MODE
         self._hvac_modes = list(HA_HVAC_TO_TCS)
-        self._preset_modes = list(HA_PRESET_TO_TCS)
 
         self._config = dict(evo_broker.config)
+
+        # special case of RoundThermostat
+        if self._config['zones'][0]['modelType'] == 'RoundModulation':
+            self._preset_modes = [PRESET_AWAY, PRESET_ECO]
+        else:
+            self._preset_modes = list(HA_PRESET_TO_TCS)
+
         self._config['zones'] = '...'
         if 'dhw' in self._config:
             self._config['dhw'] = '...'
@@ -307,7 +312,7 @@ class EvoController(EvoClimateDevice):
                  for z in self._evo_device._zones]  # noqa: E501; pylint: disable=protected-access
         return max(temps) if temps else 35
 
-    def _set_operation_mode(self, op_mode) -> None:
+    def _set_operation_mode(self, op_mode: str) -> None:
         """Set the Controller to any of its native EVO_* operating modes."""
         try:
             self._evo_device._set_status(op_mode)  # noqa: E501; pylint: disable=protected-access
@@ -319,7 +324,7 @@ class EvoController(EvoClimateDevice):
         """Set an operating mode for the Controller."""
         self._set_operation_mode(HA_HVAC_TO_TCS.get(hvac_mode))
 
-    def set_preset_mode(self, preset_mode: str) -> None:
+    def set_preset_mode(self, preset_mode: Optional[str]) -> None:
         """Set a new preset mode.
 
         If preset_mode is None, then revert to 'Auto' mode.
