@@ -9,7 +9,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 
 from .const import (
     ERR_PROTOCOL_ERROR, ERR_DEVICE_OFFLINE, ERR_UNKNOWN_ERROR,
-    EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED, EVENT_QUERY_RECEIVED
+    EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED, EVENT_IDENTIFY_RECEIVED, EVENT_QUERY_RECEIVED
 )
 from .helpers import RequestData, GoogleEntity, async_get_entities
 from .error import SmartHomeError
@@ -94,6 +94,27 @@ async def async_devices_sync(hass, data, payload):
 
     return response
 
+
+@HANDLERS.register('action.devices.IDENTIFY')
+async def async_devices_identify(hass, data, payload):
+    """Handle action.devices.IDENTIFY request.
+    
+    https://developers.google.com/actions/smarthome/develop/local
+    """
+    device = payload.get('device')
+    devid = device['id']
+    
+    hass.bus.async_fire(
+        EVENT_IDENTIFY_RECEIVED,
+        {
+            'request_id': data.request_id,
+            ATTR_ENTITY_ID: devid,
+        },
+        context=data.context)
+
+    response = entity.identify()
+
+    return response
 
 @HANDLERS.register('action.devices.QUERY')
 async def async_devices_query(hass, data, payload):
