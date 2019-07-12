@@ -20,7 +20,7 @@ import homeassistant.util.dt as dt_util
 
 from .const import (
     CONF_CONTROLLER, CONF_DETECTION_TIME, CONF_SITE_ID, CONF_SSID_FILTER,
-    CONTROLLER_ID, DOMAIN as UNIFI_DOMAIN, UNIFI_CONFIG)
+    CONTROLLER_ID, DOMAIN as UNIFI_DOMAIN)
 
 LOGGER = logging.getLogger(__name__)
 
