@@ -128,6 +128,9 @@ class GoogleEntity:
 
         device = {
             'id': state.entity_id,
+            'otherDeviceIds': [{
+                'deviceId': state.entity_id
+            }],
             'name': {
                 'name': name
             },
@@ -168,6 +171,29 @@ class GoogleEntity:
         if area_entry and area_entry.name:
             device['roomHint'] = area_entry.name
 
+        return device
+    
+    async def identify(self):
+        """Indentify local devices.
+        
+        https://developers.google.com/actions/smarthome/develop/local
+        """
+        state = self.state
+
+        domain = state.domain
+        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+
+        device_type = get_google_type(domain,
+                                      device_class)
+
+        device = {
+            'id': state.entity_id,
+            'verificationId': state.entity_id,
+            'isLocalOnly': False,
+            'isProxy': False,
+            'type': device_type,
+        }
+        
         return device
 
     @callback
