@@ -67,9 +67,7 @@ class WWLLNFlowHandler(config_entries.ConfigFlow):
         # timedeltas aren't JSON-serializable, so we can't store them in a
         # config entry as-is; instead, we save the total seconds as an int:
         if CONF_WINDOW in user_input:
-            if isinstance(user_input[CONF_WINDOW], timedelta):
-                user_input[CONF_WINDOW] = user_input[
-                    CONF_WINDOW].total_seconds()
+            user_input[CONF_WINDOW] = user_input[CONF_WINDOW].total_seconds()
         else:
             user_input[CONF_WINDOW] = DEFAULT_WINDOW.total_seconds()
 
