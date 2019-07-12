@@ -14,10 +14,10 @@ SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL
 def setup_platform(
         hass, config, add_entities, discovery_info=None):
     """Set up the N26 switch platform."""
-    api_list = hass.data[DOMAIN][DATA]
-
     if discovery_info is None:
         return
+
+    api_list = hass.data[DOMAIN][DATA]
 
     switch_entities = []
     for api_data in api_list:

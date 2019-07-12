@@ -30,7 +30,6 @@ ICON_SPACE = 'mdi:crop-square'
 def setup_platform(
         hass, config, add_entities, discovery_info=None):
     """Set up the N26 sensor platform."""
-
     if discovery_info is None:
         return
 
