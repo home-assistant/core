@@ -112,6 +112,7 @@ async def async_devices_identify(hass, data, payload):
         },
         context=data.context)
 
+    entity = GoogleEntity(hass, data.config, state)
     response = entity.identify()
 
     return response
