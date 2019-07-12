@@ -2,8 +2,6 @@
 import logging
 import asyncio
 
-import voluptuous as vol
-
 from homeassistant.core import callback
 from homeassistant.components.media_player import (
     ENTITY_IMAGE_URL, MediaPlayerDevice)
@@ -12,9 +10,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PAUSE, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
 from homeassistant.components.ps4 import format_unique_id
 from homeassistant.const import (
-    ATTR_COMMAND, ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_REGION,
+    CONF_HOST, CONF_NAME, CONF_REGION,
     CONF_TOKEN, STATE_IDLE, STATE_OFF, STATE_PLAYING)
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.util.json import load_json, save_json
 
@@ -30,45 +27,12 @@ ICON = 'mdi:playstation'
 GAMES_FILE = '.ps4-games.json'
 MEDIA_IMAGE_DEFAULT = None
 
-COMMANDS = (
-    'up',
-    'down',
-    'right',
-    'left',
-    'enter',
-    'back',
-    'option',
-    'ps',
-)
-
-SERVICE_COMMAND = 'send_command'
-
-PS4_COMMAND_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_COMMAND): vol.In(list(COMMANDS))
-})
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up PS4 from a config entry."""
     config = config_entry
     await async_setup_platform(
         hass, config, async_add_entities, discovery_info=None)
-
-    async def async_service_handle(hass):
-        """Handle for services."""
-        async def async_service_command(call):
-            entity_ids = call.data[ATTR_ENTITY_ID]
-            command = call.data[ATTR_COMMAND]
-            for device in hass.data[PS4_DATA].devices:
-                if device.entity_id in entity_ids:
-                    await device.async_send_command(command)
-
-        hass.services.async_register(
-            PS4_DOMAIN, SERVICE_COMMAND, async_service_command,
-            schema=PS4_COMMAND_SCHEMA)
-
-    await async_service_handle(hass)
 
 
 async def async_setup_platform(
