@@ -13,16 +13,14 @@ VALUE_TO_SPEED = {
     'Off': SPEED_OFF,
     'Low': SPEED_LOW,
     'Medium': SPEED_MEDIUM,
-    'High': SPEED_HIGH,
-    'MediumHigh': 'mediumhigh'
+    'High': SPEED_HIGH
 }
 
 SPEED_TO_VALUE = {
     SPEED_OFF: 'Off',
     SPEED_LOW: 'Low',
     SPEED_MEDIUM: 'Medium',
-    SPEED_HIGH: 'High',
-    'mediumhigh': 'MediumHigh'
+    SPEED_HIGH: 'High'
 }
 
 
@@ -52,7 +50,7 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, 'mediumhigh', SPEED_HIGH]
+        return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
     @property
     def supported_features(self) -> int:
@@ -62,7 +60,7 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
     async def async_turn_on(self, speed: str = None, **kwargs):
         """Turn the fan on."""
         if speed is None:
-            speed = 'mediumhigh'
+            speed = SPEED_MEDIUM
         await self.async_set_speed(speed)
 
     async def async_turn_off(self, **kwargs):
@@ -78,7 +76,6 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
         """Return true if device is on."""
         return VALUE_TO_SPEED[self._state["fan_speed"]] in [SPEED_LOW,
                                                             SPEED_MEDIUM,
-                                                            'mediumhigh',
                                                             SPEED_HIGH]
 
     async def async_update(self):
