@@ -144,7 +144,7 @@ class NetatmoThermostat(ClimateDevice):
         self._hvac_mode = None
         self.update_without_throttle = False
         self._module_type = \
-            self._data.room_status[room_id].get('module_type')
+            self._data.room_status.get(room_id, {}).get('module_type')
 
         if self._module_type == NA_THERM:
             self._operation_list.append(HVAC_MODE_OFF)
