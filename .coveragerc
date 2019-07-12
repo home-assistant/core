@@ -201,6 +201,7 @@ omit =
     homeassistant/components/fints/sensor.py
     homeassistant/components/fitbit/sensor.py
     homeassistant/components/fixer/sensor.py
+    homeassistant/components/fleetgo/device_tracker.py
     homeassistant/components/flexit/climate.py
     homeassistant/components/flic/binary_sensor.py
     homeassistant/components/flock/notify.py
@@ -514,7 +515,6 @@ omit =
     homeassistant/components/rfxtrx/*
     homeassistant/components/ring/camera.py
     homeassistant/components/ripple/sensor.py
-    homeassistant/components/ritassist/device_tracker.py
     homeassistant/components/rocketchat/notify.py
     homeassistant/components/roku/*
     homeassistant/components/roomba/vacuum.py
