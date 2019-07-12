@@ -23,7 +23,7 @@ jobs:
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
-    maxParallel: 3
+    maxParallel: 5
     matrix:
       amd64:
         buildArch: 'amd64'
