@@ -41,7 +41,7 @@ async def async_setup(hass, config):
     transport, protocol = await async_create_ddp_endpoint()
     hass.data[PS4_DATA].protocol = protocol
     _LOGGER.debug("PS4 DDP endpoint created: %s, %s", transport, protocol)
-    await async_service_handle(hass)
+    service_handle(hass)
     return True
 
 
@@ -138,7 +138,7 @@ def format_unique_id(creds, mac_address):
     return "{}_{}".format(mac_address, suffix)
 
 
-async def async_service_handle(hass: HomeAssistantType):
+def service_handle(hass: HomeAssistantType):
     """Handle for services."""
     async def async_service_command(call):
         """Service for sending commands."""
