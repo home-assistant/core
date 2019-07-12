@@ -79,6 +79,7 @@ ERR_USER_CANCELLED = 'userCancelled'
 EVENT_COMMAND_RECEIVED = 'google_assistant_command'
 EVENT_QUERY_RECEIVED = 'google_assistant_query'
 EVENT_SYNC_RECEIVED = 'google_assistant_sync'
+EVENT_IDENTIFY_RECEIVED = 'google_assistant_identify'
 
 DOMAIN_TO_GOOGLE_TYPES = {
     camera.DOMAIN: TYPE_CAMERA,
