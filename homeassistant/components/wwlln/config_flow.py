@@ -60,11 +60,14 @@ class WWLLNFlowHandler(config_entries.ConfigFlow):
         else:
             user_input[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_METRIC
 
-        # To simplify things, we don't allow users of the config flow to
-        # input a window; instead, we make a sane assumption to use the
-        # default (stored as seconds, since timedelta's aren't
-        # JSON-serializable):
-        if CONF_WINDOW not in user_input:
+        # When importing from `configuration.yaml`, we give the user
+        # flexibility by allowing the `window` parameter to be any type
+        # of time period. This will always return a timedelta; unfortunately,
+        # timedeltas aren't JSON-serializable, so we can't store them in a
+        # config entry as-is; instead, we save the total seconds as an int:
+        if CONF_WINDOW in user_input:
+            user_input[CONF_WINDOW] = user_input[CONF_WINDOW].total_seconds()
+        else:
             user_input[CONF_WINDOW] = DEFAULT_WINDOW.total_seconds()
 
         return self.async_create_entry(title=identifier, data=user_input)
