@@ -28,7 +28,7 @@ DEFAULT_TIMEOUT = 1
 KEY_PRESS_TIMEOUT = 1.2
 KNOWN_DEVICES_KEY = 'samsungtv_known_devices'
 SOURCES = {
-    'TV':   'KEY_TV',
+    'TV': 'KEY_TV',
     'HDMI': 'KEY_HDMI',
 }
 
