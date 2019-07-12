@@ -168,23 +168,12 @@ class PS4Device(MediaPlayerDevice):
                     if self._media_content_id != title_id:
                         self._media_content_id = title_id
 
-                        if self._media_content_id in self._games:
-                            store = self._games[self._media_content_id]
+                        use_data = self._get_media_attrs(title_id, name)
 
-                            # If locked get attributes from file.
-                            locked = store.get(ATTR_LOCKED)
-                            if locked:
-                                self._media_title = store.get(ATTR_MEDIA_TITLE)
-                                self._source = self._media_title
-                                self._media_image = store.get(
-                                    ATTR_MEDIA_IMAGE_URL)
-                                self._media_type = store.get(
-                                    ATTR_MEDIA_CONTENT_TYPE)
-                                return
-
-                        # Get data from PS Store.
-                        asyncio.ensure_future(
-                            self.async_get_title_data(title_id, name))
+                        if not use_data:
+                            # Get data from PS Store.
+                            asyncio.ensure_future(
+                                self.async_get_title_data(title_id, name))
 
                 else:
                     if self._state != STATE_IDLE:
@@ -197,6 +186,23 @@ class PS4Device(MediaPlayerDevice):
             self.state_unknown()
         else:
             self._retry += 1
+
+    def _get_media_attrs(self, title_id, name):
+        """Get media attributes."""
+        if self._media_content_id in self._games:
+            store = self._games[self._media_content_id]
+
+            # If locked get attributes from file.
+            locked = store.get(ATTR_LOCKED)
+            if locked:
+                self._media_title = store.get(ATTR_MEDIA_TITLE)
+                self._source = self._media_title
+                self._media_image = store.get(
+                    ATTR_MEDIA_IMAGE_URL)
+                self._media_type = store.get(
+                    ATTR_MEDIA_CONTENT_TYPE)
+                return True
+        return False
 
     def idle(self):
         """Set states for state idle."""
