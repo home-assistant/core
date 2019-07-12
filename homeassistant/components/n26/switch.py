@@ -16,6 +16,9 @@ def setup_platform(
     """Set up the N26 switch platform."""
     api_list = hass.data[DOMAIN][DATA]
 
+    if discovery_info is None:
+        return
+
     switch_entities = []
     for api_data in api_list:
         for card in api_data.cards:
