@@ -97,7 +97,6 @@ class SystemAIRClimate(ClimateDevice):
 
     def __init__(self, hass, sab):
         """Initialize the climate device."""
-
         self._sab = sab
         self._list = {
             ATTR_HVAC_MODE: list(HA_STATE_TO_SYSTEMAIR),
@@ -123,7 +122,6 @@ class SystemAIRClimate(ClimateDevice):
 
     def get(self, key):
         """Retrieve device settings from API library cache."""
-
         sa_key = HA_ATTR_TO_SYSTEMAIR.get(key)
 
         if sa_key not in self._sab.data:
@@ -136,7 +134,6 @@ class SystemAIRClimate(ClimateDevice):
 
     async def _set(self, settings):
         """Set device settings using API."""
-
         for ha_key in HA_SET_ATTR_TO_SYSTEMAIR:
             value = settings.get(ha_key)
             if value is None:

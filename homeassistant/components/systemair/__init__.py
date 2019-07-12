@@ -122,7 +122,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up the SystemAIR bridge."""
-
     conf = config[DOMAIN]
 
     iam_id = conf.get(CONF_ID)
@@ -146,8 +145,10 @@ async def async_setup(hass, config):
 
 
 class SystemAIRBridge:
-    """SystemAIR Savecair API bride"""
+    """SystemAIR Savecair API bridge."""
+
     def __init__(self, hass, iam_id, password, name, scan_interval):
+        """Initialize the Savecair API bridge."""
         from systemair.savecair.systemair import SystemAIR
 
         self.hass = hass
@@ -174,17 +175,17 @@ class SystemAIRBridge:
         await self.systemair.shutdown()
 
     async def on_sensor_update(self, var, value):
-        """Callback function from SystemAIR stream."""
+        """Sensor update callback."""
         self.data[var] = value
         async_dispatcher_send(self.hass, SIGNAL_SYSTEMAIR_UPDATE_RECEIVED, var)
 
     async def on_sensor_update_done(self, data):
-        """Callback for when an update is completed for all sensors."""
+        """Completed sensor update callback."""
         self.data.update(data)
         async_dispatcher_send(self.hass, SIGNAL_SYSTEMAIR_UPDATE_DONE, data)
 
     def register_sensor(self, sensor_name):
-        """Registers a sensor to the endpoint."""
+        """Register a sensor to the endpoint."""
         _LOGGER.debug("Subscribed to sensor: %s", sensor_name)
         self.systemair.subscribe(sensor_name)
 
