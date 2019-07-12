@@ -1615,7 +1615,7 @@ rflink==0.0.46
 # homeassistant.components.ring
 ring_doorbell==0.2.3
 
-# homeassistant.components.ritassist
+# homeassistant.components.fleetgo
 ritassist==0.9.2
 
 # homeassistant.components.rejseplanen
