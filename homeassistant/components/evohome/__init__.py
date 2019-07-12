@@ -2,11 +2,11 @@
 
 Such systems include evohome (multi-zone), and Round Thermostat (single zone).
 """
+import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 
-from dateutil.tz import tzlocal
 import requests.exceptions
 import voluptuous as vol
 import evohomeclient2
@@ -21,10 +21,10 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
-    async_track_point_in_utc_time, async_track_time_interval)
-from homeassistant.util.dt import as_utc, parse_datetime, utcnow
+    async_track_point_in_utc_time, track_time_interval)
+from homeassistant.util.dt import parse_datetime, utcnow
 
-from .const import DOMAIN, EVO_STRFTIME, STORAGE_VERSION, STORAGE_KEY, GWS, TCS
+from .const import DOMAIN, STORAGE_VERSION, STORAGE_KEY, GWS, TCS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,11 +47,20 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def _local_dt_to_utc(dt_naive: datetime) -> datetime:
-    dt_aware = as_utc(dt_naive.replace(microsecond=0, tzinfo=tzlocal()))
-    return dt_aware.replace(tzinfo=None)
+    dt_aware = utcnow() + (dt_naive - datetime.now())
+    if dt_aware.microsecond >= 500000:
+        dt_aware += timedelta(seconds=1)
+    return dt_aware.replace(microsecond=0)
 
 
-def _handle_exception(err):
+def _utc_to_local_dt(dt_aware: datetime) -> datetime:
+    dt_naive = datetime.now() + (dt_aware - utcnow())
+    if dt_naive.microsecond >= 500000:
+        dt_naive += timedelta(seconds=1)
+    return dt_naive.replace(microsecond=0)
+
+
+def _handle_exception(err) -> bool:
     try:
         raise err
 
@@ -92,18 +101,17 @@ def _handle_exception(err):
         raise  # we don't expect/handle any other HTTPErrors
 
 
-async def async_setup(hass, hass_config):
+def setup(hass, hass_config) -> bool:
     """Create a (EMEA/EU-based) Honeywell evohome system."""
     broker = EvoBroker(hass, hass_config[DOMAIN])
-    if not await broker.init_client():
+    if not broker.init_client():
         return False
 
     load_platform(hass, 'climate', DOMAIN, {}, hass_config)
     if broker.tcs.hotwater:
-        _LOGGER.warning("DHW controller detected, however this integration "
-                        "does not currently support DHW controllers.")
+        load_platform(hass, 'water_heater', DOMAIN, {}, hass_config)
 
-    async_track_time_interval(
+    track_time_interval(
         hass, broker.update, hass_config[DOMAIN][CONF_SCAN_INTERVAL]
     )
 
@@ -126,23 +134,26 @@ class EvoBroker:
         hass.data[DOMAIN] = {}
         hass.data[DOMAIN]['broker'] = self
 
-    async def init_client(self) -> bool:
+    def init_client(self) -> bool:
         """Initialse the evohome data broker.
 
         Return True if this is successful, otherwise return False.
         """
         refresh_token, access_token, access_token_expires = \
-            await self._load_auth_tokens()
+            asyncio.run_coroutine_threadsafe(
+                self._load_auth_tokens(), self.hass.loop).result()
+
+        # evohomeclient2 uses local datetimes
+        if access_token_expires is not None:
+            access_token_expires = _utc_to_local_dt(access_token_expires)
 
         try:
-            client = self.client = await self.hass.async_add_executor_job(
-                evohomeclient2.EvohomeClient,
+            client = self.client = evohomeclient2.EvohomeClient(
                 self.params[CONF_USERNAME],
                 self.params[CONF_PASSWORD],
-                False,
-                refresh_token,
-                access_token,
-                access_token_expires
+                refresh_token=refresh_token,
+                access_token=access_token,
+                access_token_expires=access_token_expires
             )
 
         except (requests.exceptions.RequestException,
@@ -150,12 +161,10 @@ class EvoBroker:
             if not _handle_exception(err):
                 return False
 
-        else:
-            if access_token != self.client.access_token:
-                await self._save_auth_tokens()
-
         finally:
             self.params[CONF_PASSWORD] = 'REDACTED'
+
+        self.hass.add_job(self._save_auth_tokens())
 
         loc_idx = self.params[CONF_LOCATION_IDX]
         try:
@@ -170,15 +179,19 @@ class EvoBroker:
             )
             return False
 
-        else:
-            self.tcs = \
-                client.locations[loc_idx]._gateways[0]._control_systems[0]  # noqa: E501; pylint: disable=protected-access
+        self.tcs = client.locations[loc_idx]._gateways[0]._control_systems[0]  # noqa: E501; pylint: disable=protected-access
 
         _LOGGER.debug("Config = %s", self.config)
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            # don't do an I/O unless required
+            _LOGGER.debug(
+                "Status = %s",
+                client.locations[loc_idx].status()[GWS][0][TCS][0])
 
         return True
 
-    async def _load_auth_tokens(self) -> Tuple[str, str, datetime]:
+    async def _load_auth_tokens(self) -> Tuple[
+            Optional[str], Optional[str], Optional[datetime]]:
         store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         app_storage = self._app_storage = await store.async_load()
 
@@ -187,9 +200,7 @@ class EvoBroker:
             access_token = app_storage.get(CONF_ACCESS_TOKEN)
             at_expires_str = app_storage.get(CONF_ACCESS_TOKEN_EXPIRES)
             if at_expires_str:
-                at_expires_dt = as_utc(parse_datetime(at_expires_str))
-                at_expires_dt = at_expires_dt.astimezone(tzlocal())
-                at_expires_dt = at_expires_dt.replace(tzinfo=None)
+                at_expires_dt = parse_datetime(at_expires_str)
             else:
                 at_expires_dt = None
 
@@ -198,14 +209,15 @@ class EvoBroker:
         return (None, None, None)  # account switched: so tokens wont be valid
 
     async def _save_auth_tokens(self, *args) -> None:
-        access_token_expires_utc = _local_dt_to_utc(
+        # evohomeclient2 uses local datetimes
+        access_token_expires = _local_dt_to_utc(
             self.client.access_token_expires)
 
         self._app_storage[CONF_USERNAME] = self.params[CONF_USERNAME]
         self._app_storage[CONF_REFRESH_TOKEN] = self.client.refresh_token
         self._app_storage[CONF_ACCESS_TOKEN] = self.client.access_token
         self._app_storage[CONF_ACCESS_TOKEN_EXPIRES] = \
-            access_token_expires_utc.isoformat()
+            access_token_expires.isoformat()
 
         store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         await store.async_save(self._app_storage)
@@ -213,7 +225,7 @@ class EvoBroker:
         async_track_point_in_utc_time(
             self.hass,
             self._save_auth_tokens,
-            access_token_expires_utc
+            access_token_expires + self.params[CONF_SCAN_INTERVAL]
         )
 
     def update(self, *args, **kwargs) -> None:
@@ -262,13 +274,16 @@ class EvoDevice(Entity):
         if packet['signal'] == 'refresh':
             self.async_schedule_update_ha_state(force_refresh=True)
 
-    def get_setpoints(self) -> Dict[str, Any]:
+    def get_setpoints(self) -> Optional[Dict[str, Any]]:
         """Return the current/next scheduled switchpoints.
 
         Only Zones & DHW controllers (but not the TCS) have schedules.
         """
         switchpoints = {}
         schedule = self._evo_device.schedule()
+
+        if not schedule['DailySchedules']:
+            return None
 
         day_time = datetime.now()
         day_of_week = int(day_time.strftime('%w'))  # 0 is Sunday
@@ -300,9 +315,11 @@ class EvoDevice(Entity):
                 '{}T{}'.format(sp_date, switchpoint['TimeOfDay']),
                 '%Y-%m-%dT%H:%M:%S')
 
-            spt['target_temp'] = switchpoint['heatSetpoint']
-            spt['from_datetime'] = \
-                _local_dt_to_utc(dt_naive).strftime(EVO_STRFTIME)
+            spt['from'] = _local_dt_to_utc(dt_naive).isoformat()
+            try:
+                spt['temperature'] = switchpoint['heatSetpoint']
+            except KeyError:
+                spt['state'] = switchpoint['DhwState']
 
         return switchpoints
 
