@@ -123,7 +123,8 @@ class PS4Device(MediaPlayerDevice):
             self._ps4.get_status()
 
             """Don't attempt to connect if entity is connected or if
-            PS4 is in standby or disconnected from LAN or powered off."""
+            PS4 is in standby or disconnected from LAN or powered off.
+            """
             if not self._ps4.connected and not self._ps4.is_standby and\
                     self._ps4.is_available:
                 try:
