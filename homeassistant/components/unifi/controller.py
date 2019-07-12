@@ -12,7 +12,8 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID, LOGGER
+from .const import (
+    CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID, LOGGER, UNIFI_CONFIG)
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -26,7 +27,10 @@ class UniFiController:
         self.available = True
         self.api = None
         self.progress = None
-        self.site_role = None
+
+        self._site_name = None
+        self._site_role = None
+        self.unifi_config = {}
 
     @property
     def host(self):
@@ -37,6 +41,16 @@ class UniFiController:
     def site(self):
         """Return the site of this config entry."""
         return self.config_entry.data[CONF_CONTROLLER][CONF_SITE_ID]
+
+    @property
+    def site_name(self):
+        """Return the nice name of site."""
+        return self._site_name
+
+    @property
+    def site_role(self):
+        """Return the site user role of this controller."""
+        return self._site_role
 
     @property
     def mac(self):
@@ -104,9 +118,11 @@ class UniFiController:
             await self.api.initialize()
 
             sites = await self.api.sites()
+
             for site in sites.values():
                 if self.site == site['name']:
-                    self.site_role = site['role']
+                    self._site_name = site['desc']
+                    self._site_role = site['role']
                     break
 
         except CannotConnect:
@@ -116,6 +132,12 @@ class UniFiController:
             LOGGER.error(
                 'Unknown error connecting with UniFi controller.')
             return False
+
+        for unifi_config in hass.data[UNIFI_CONFIG]:
+            if self.host == unifi_config[CONF_HOST] and \
+                    self.site == unifi_config[CONF_SITE_ID]:
+                self.unifi_config = unifi_config
+                break
 
         for platform in ['device_tracker', 'switch']:
             hass.async_create_task(

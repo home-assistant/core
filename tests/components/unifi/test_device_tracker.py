@@ -48,7 +48,6 @@ CLIENT_3 = {
     'mac': '00:00:00:00:00:03',
 }
 
-
 CONTROLLER_DATA = {
     CONF_HOST: 'mock-host',
     CONF_USERNAME: 'mock-user',
@@ -133,7 +132,7 @@ async def test_tracked_devices(hass, mock_controller):
     mock_controller.mock_client_responses.append(
         [CLIENT_1, CLIENT_2, CLIENT_3])
     mock_controller.mock_device_responses.append({})
-    hass.data[UNIFI_CONFIG] = {unifi_dt.CONF_SSID_FILTER: ['ssid']}
+    mock_controller.unifi_config = {unifi_dt.CONF_SSID_FILTER: ['ssid']}
 
     await setup_controller(hass, mock_controller)
     assert len(mock_controller.mock_requests) == 2

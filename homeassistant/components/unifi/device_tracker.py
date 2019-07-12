@@ -100,9 +100,8 @@ def update_items(controller, async_add_entities, tracked):
         client = controller.api.clients[client_id]
 
         if not client.is_wired and \
-                CONF_SSID_FILTER in controller.hass.data[UNIFI_CONFIG] and \
-                client.essid not in \
-                controller.hass.data[UNIFI_CONFIG][CONF_SSID_FILTER]:
+                CONF_SSID_FILTER in controller.unifi_config and \
+                client.essid not in controller.unifi_config[CONF_SSID_FILTER]:
             continue
 
         tracked[client_id] = UniFiClientTracker(client, controller)
@@ -128,7 +127,7 @@ class UniFiClientTracker(ScannerEntity):
     @property
     def is_connected(self):
         """Return true if the device is connected to the network."""
-        detection_time = self.controller.hass.data[UNIFI_CONFIG].get(
+        detection_time = self.controller.unifi_config.get(
             CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME)
 
         if (dt_util.utcnow() - dt_util.utc_from_timestamp(float(

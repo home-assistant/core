@@ -192,7 +192,7 @@ def mock_controller(hass):
     hass.data[UNIFI_CONFIG] = {}
     controller = unifi.UniFiController(hass, None)
 
-    controller.site_role = 'admin'
+    controller._site_role = 'admin'
 
     controller.api = Mock()
     controller.mock_requests = []
@@ -266,7 +266,7 @@ async def test_not_admin(hass, mock_controller):
     mock_controller.mock_client_responses.append([CLIENT_1])
     mock_controller.mock_device_responses.append([])
 
-    mock_controller.site_role = 'viewer'
+    mock_controller._site_role = 'viewer'
 
     await setup_controller(hass, mock_controller)
     assert len(mock_controller.mock_requests) == 2

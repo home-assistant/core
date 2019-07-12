@@ -11,21 +11,30 @@ from .const import (
     CONTROLLER_ID, DOMAIN, UNIFI_CONFIG)
 from .controller import UniFiController
 
+CONF_CONTROLLERS = 'controllers'
+
+CONTROLLER_SCHEMA = vol.Schema({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_SITE_ID): cv.string,
+    vol.Optional(CONF_DETECTION_TIME): vol.All(
+        cv.time_period, cv.positive_timedelta),
+    vol.Optional(CONF_SSID_FILTER): vol.All(cv.ensure_list, [cv.string])
+})
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_DETECTION_TIME): vol.All(
-            cv.time_period, cv.positive_timedelta),
-        vol.Optional(CONF_SSID_FILTER): vol.All(cv.ensure_list, [cv.string])
+        vol.Required(CONF_CONTROLLERS):
+            vol.All(cv.ensure_list, [CONTROLLER_SCHEMA]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
     """Component doesn't support configuration through configuration.yaml."""
-    hass.data[UNIFI_CONFIG] = {}
+    hass.data[UNIFI_CONFIG] = []
 
     if DOMAIN in config:
-        hass.data[UNIFI_CONFIG] = config[DOMAIN]
+        hass.data[UNIFI_CONFIG] = config[DOMAIN][CONF_CONTROLLERS]
 
     return True
 

@@ -14,6 +14,7 @@ from tests.common import mock_coro
 
 CONTROLLER_SITES = {
     'site1': {
+        'desc': 'nice name',
         'name': 'site',
         'role': 'admin'
     }
@@ -82,6 +83,7 @@ async def test_controller_site():
 async def test_controller_mac():
     """Test that it is possible to identify controller mac."""
     hass = Mock()
+    hass.data = {UNIFI_CONFIG: {}}
     entry = Mock()
     entry.data = ENTRY_CONFIG
     client = Mock()
@@ -104,6 +106,7 @@ async def test_controller_mac():
 async def test_controller_no_mac():
     """Test that it works to not find the controllers mac."""
     hass = Mock()
+    hass.data = {UNIFI_CONFIG: {}}
     entry = Mock()
     entry.data = ENTRY_CONFIG
     client = Mock()
@@ -174,6 +177,7 @@ async def test_reset_if_entry_had_wrong_auth():
 async def test_reset_unloads_entry_if_setup():
     """Calling reset when the entry has been setup."""
     hass = Mock()
+    hass.data = {UNIFI_CONFIG: {}}
     entry = Mock()
     entry.data = ENTRY_CONFIG
     api = Mock()
