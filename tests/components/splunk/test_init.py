@@ -133,7 +133,7 @@ class TestSplunk(unittest.TestCase):
                     timeout=10, verify=True)
             self.mock_post.reset_mock()
 
-    def _setup_with_filter(self, mock_requests):
+    def _setup_with_filter(self):
         """Test the setup."""
         config = {
             'splunk': {
@@ -156,7 +156,7 @@ class TestSplunk(unittest.TestCase):
     @mock.patch.object(splunk, 'post_request')
     def test_splunk_entityfilter(self, mock_requests):
         """Test event listener."""
-        self._setup_with_filter(mock_requests)
+        self._setup_with_filter()
 
         testdata = [
             {
