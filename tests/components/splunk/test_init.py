@@ -8,8 +8,12 @@ import homeassistant.components.splunk as splunk
 from homeassistant.const import STATE_ON, STATE_OFF, EVENT_STATE_CHANGED
 from homeassistant.helpers import state as state_helper
 import homeassistant.util.dt as dt_util
+from homeassistant.core import State
 
-from tests.common import get_test_home_assistant
+from tests.common import (
+    get_test_home_assistant,
+    mock_state_change_event
+)
 
 
 class TestSplunk(unittest.TestCase):
@@ -33,6 +37,14 @@ class TestSplunk(unittest.TestCase):
                 'ssl': 'False',
                 'verify_ssl': 'True',
                 'name': 'hostname',
+                'filter': {
+                    'exclude_domains': [
+                          'fake'
+                    ],
+                    'exclude_entities': [
+                        'fake.entity'
+                    ],
+                }
             }
         }
 
@@ -120,3 +132,54 @@ class TestSplunk(unittest.TestCase):
                     headers={'Authorization': 'Splunk secret'},
                     timeout=10, verify=True)
             self.mock_post.reset_mock()
+
+    def _setup_with_filter(self):
+        """Test the setup."""
+        config = {
+            'splunk': {
+                'host': 'host',
+                'token': 'secret',
+                'port': 8088,
+                'filter': {
+                    'exclude_domains': [
+                        'excluded_domain'
+                    ],
+                    'exclude_entities': [
+                        'other_domain.excluded_entity'
+                    ]
+                }
+            }
+        }
+
+        setup_component(self.hass, splunk.DOMAIN, config)
+
+    @mock.patch.object(splunk, 'post_request')
+    def test_splunk_entityfilter(self, mock_requests):
+        """Test event listener."""
+        self._setup_with_filter()
+
+        testdata = [
+            {
+                'entity_id': 'other_domain.other_entity',
+                'filter_expected': False
+            },
+            {
+                'entity_id': 'other_domain.excluded_entity',
+                'filter_expected': True
+            },
+            {
+                'entity_id': 'excluded_domain.other_entity',
+                'filter_expected': True
+            }
+        ]
+
+        for test in testdata:
+            mock_state_change_event(self.hass, State(test['entity_id'], 'on'))
+            self.hass.block_till_done()
+
+            if test['filter_expected']:
+                assert not splunk.post_request.called
+            else:
+                assert splunk.post_request.called
+
+            splunk.post_request.reset_mock()
