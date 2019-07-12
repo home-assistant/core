@@ -103,6 +103,8 @@ class ECWeather(WeatherEntity):
         """Return the temperature."""
         if self.ec_data.conditions.get('temperature').get('value'):
             return float(self.ec_data.conditions['temperature']['value'])
+        if self.ec_data.hourly_forecasts[0].get('temperature'):
+            return float(self.ec_data.hourly_forecasts[0]['temperature'])
         return None
 
     @property
@@ -148,12 +150,15 @@ class ECWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the weather condition."""
-        icon_code = self.ec_data.conditions.get('icon_code').get('value')
+        icon_code = None
+
+        if self.ec_data.conditions.get('icon_code').get('value'):
+            icon_code = self.ec_data.conditions['icon_code']['value']
+        elif self.ec_data.hourly_forecasts[0].get('icon_code'):
+            icon_code = self.ec_data.hourly_forecasts[0]['icon_code']
+
         if icon_code:
             return icon_code_to_condition(int(icon_code))
-        condition = self.ec_data.conditions.get('condition').get('value')
-        if condition:
-            return condition
         return ''
 
     @property
