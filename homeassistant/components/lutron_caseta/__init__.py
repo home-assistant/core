@@ -17,7 +17,6 @@ DOMAIN = 'lutron_caseta'
 CONF_KEYFILE = 'keyfile'
 CONF_CERTFILE = 'certfile'
 CONF_CA_CERTS = 'ca_certs'
-CONF_CERT_REQUIRED = 'cert_required'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -25,7 +24,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_KEYFILE): cv.string,
         vol.Required(CONF_CERTFILE): cv.string,
         vol.Required(CONF_CA_CERTS): cv.string,
-        vol.Optional(CONF_CERT_REQUIRED, default=False): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -42,11 +40,10 @@ async def async_setup(hass, base_config):
     keyfile = hass.config.path(config[CONF_KEYFILE])
     certfile = hass.config.path(config[CONF_CERTFILE])
     ca_certs = hass.config.path(config[CONF_CA_CERTS])
-    cert_required = config[CONF_CERT_REQUIRED]
 
     bridge = Smartbridge.create_tls(
         hostname=config[CONF_HOST], keyfile=keyfile, certfile=certfile,
-        ca_certs=ca_certs, cert_required=cert_required)
+        ca_certs=ca_certs)
     hass.data[LUTRON_CASETA_SMARTBRIDGE] = bridge
     await bridge.connect()
     if not hass.data[LUTRON_CASETA_SMARTBRIDGE].is_connected():
