@@ -4,6 +4,10 @@ config2/*
 tests/testing_config/deps
 tests/testing_config/home-assistant.log
 
+# hass-release
+data/
+.token
+
 # Hide sublime text stuff
 *.sublime-project
 *.sublime-workspace
