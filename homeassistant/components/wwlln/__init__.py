@@ -29,9 +29,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up the WWLLN component."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_CLIENT] = {}
-
     if DOMAIN not in config:
         return True
 
@@ -66,6 +63,9 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up the WWLLN as config entry."""
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][DATA_CLIENT] = {}
+
     websession = aiohttp_client.async_get_clientsession(hass)
 
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = Client(websession)

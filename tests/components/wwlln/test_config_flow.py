@@ -1,15 +1,16 @@
 """Define tests for the WWLLN config flow."""
 from datetime import timedelta
 
+from asynctest import patch
+
 from homeassistant import data_entry_flow
-from homeassistant.components.wwlln import CONF_WINDOW, DOMAIN, config_flow
+from homeassistant.components.wwlln import (
+    CONF_WINDOW, DATA_CLIENT, DOMAIN, async_setup_entry, config_flow)
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, CONF_UNIT_SYSTEM)
 
-from tests.common import MockConfigEntry
 
-
-async def test_duplicate_error(hass):
+async def test_duplicate_error(hass, config_entry):
     """Test that errors are shown when duplicates are added."""
     conf = {
         CONF_LATITUDE: 39.128712,
@@ -17,7 +18,7 @@ async def test_duplicate_error(hass):
         CONF_RADIUS: 25,
     }
 
-    MockConfigEntry(domain=DOMAIN, data=conf).add_to_hass(hass)
+    config_entry.add_to_hass(hass)
     flow = config_flow.WWLLNFlowHandler()
     flow.hass = hass
 
@@ -108,3 +109,15 @@ async def test_custom_window(hass):
         CONF_UNIT_SYSTEM: 'metric',
         CONF_WINDOW: 3600,
     }
+
+
+async def test_component_load_config_entry(hass, config_entry):
+    """Test that loading an existing config entry yields a client."""
+    config_entry.add_to_hass(hass)
+    with patch.object(
+            hass.config_entries, 'async_forward_entry_setup') as forward_mock:
+        assert await async_setup_entry(hass, config_entry)
+
+        await hass.async_block_till_done()
+        assert forward_mock.call_count == 1
+        assert len(hass.data[DOMAIN][DATA_CLIENT]) == 1
