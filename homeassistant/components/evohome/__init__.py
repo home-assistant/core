@@ -143,6 +143,10 @@ class EvoBroker:
             asyncio.run_coroutine_threadsafe(
                 self._load_auth_tokens(), self.hass.loop).result()
 
+        # evohomeclient2 uses local datetimes
+        if access_token_expires is not None:
+            access_token_expires = _utc_to_local_dt(access_token_expires)
+
         try:
             client = self.client = evohomeclient2.EvohomeClient(
                 self.params[CONF_USERNAME],
@@ -196,16 +200,16 @@ class EvoBroker:
             access_token = app_storage.get(CONF_ACCESS_TOKEN)
             at_expires_str = app_storage.get(CONF_ACCESS_TOKEN_EXPIRES)
             if at_expires_str:
-                at_expires_local_dt = _utc_to_local_dt(
-                    parse_datetime(at_expires_str))
+                at_expires_dt = parse_datetime(at_expires_str)
             else:
-                at_expires_local_dt = None
+                at_expires_dt = None
 
-            return (refresh_token, access_token, at_expires_local_dt)
+            return (refresh_token, access_token, at_expires_dt)
 
         return (None, None, None)  # account switched: so tokens wont be valid
 
     async def _save_auth_tokens(self, *args) -> None:
+        # evohomeclient2 uses local datetimes
         access_token_expires = _local_dt_to_utc(
             self.client.access_token_expires)
 
