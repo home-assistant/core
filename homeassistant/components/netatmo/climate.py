@@ -13,7 +13,7 @@ from homeassistant.components.climate.const import (
     PRESET_AWAY, PRESET_BOOST,
     CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE,
-    DEFAULT_MIN_TEMP
+    DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP
 )
 from homeassistant.const import (
     TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES, STATE_OFF)
@@ -222,7 +222,20 @@ class NetatmoThermostat(ClimateDevice):
                 DEFAULT_MIN_TEMP
             )
 
-        if preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX, STATE_NETATMO_OFF]:
+        if (
+                preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX]
+                and self._module_type == NA_VALVE
+        ):
+            self._data.homestatus.setroomThermpoint(
+                self._data.home_id,
+                self._room_id,
+                STATE_NETATMO_MANUAL,
+                DEFAULT_MAX_TEMP
+            )
+        elif (
+                preset_mode
+                in [PRESET_BOOST, STATE_NETATMO_MAX, STATE_NETATMO_OFF]
+        ):
             self._data.homestatus.setroomThermpoint(
                 self._data.home_id,
                 self._room_id,
@@ -309,8 +322,10 @@ class HomeData:
         if self.homedata is None:
             return []
         for home in self.homedata.homes:
-            if 'therm_schedules' in self.homedata.homes[home] and 'modules' \
-               in self.homedata.homes[home]:
+            if (
+                    'therm_schedules' in self.homedata.homes[home]
+                    and 'modules' in self.homedata.homes[home]
+            ):
                 self.home_names.append(self.homedata.homes[home]['name'])
         return self.home_names
 
