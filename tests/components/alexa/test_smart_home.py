@@ -855,6 +855,7 @@ async def test_thermostat(hass):
 
     assert_endpoint_capabilities(
         appliance,
+        'Alexa.PowerController',
         'Alexa.ThermostatController',
         'Alexa.TemperatureSensor',
         'Alexa.EndpointHealth',
