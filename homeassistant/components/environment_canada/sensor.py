@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    TEMP_CELSIUS, CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, ATTR_ATTRIBUTION,
+    TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE, ATTR_ATTRIBUTION,
     ATTR_LOCATION, ATTR_HIDDEN)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -45,7 +45,6 @@ def validate_station(station):
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_LANGUAGE, default='english'):
         vol.In(['english', 'french']),
-    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_STATION): validate_station,
     vol.Inclusive(CONF_LATITUDE, 'latlon'): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'latlon'): cv.longitude,
@@ -70,8 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensor_list = list(ec_data.conditions.keys()) + list(ec_data.alerts.keys())
     add_devices([ECSensor(sensor_type,
-                          ec_data,
-                          config.get(CONF_NAME))
+                          ec_data)
                  for sensor_type in sensor_list],
                 True)
 
@@ -79,20 +77,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ECSensor(Entity):
     """Implementation of an Environment Canada sensor."""
 
-    def __init__(self, sensor_type, ec_data, platform_name):
+    def __init__(self, sensor_type, ec_data):
         """Initialize the sensor."""
         self.sensor_type = sensor_type
         self.ec_data = ec_data
+
+        self._unique_id = None
+        self._name = None
         self._state = None
         self._attr = None
-        self._data = None
-        self._name = None
         self._unit = None
 
-        if platform_name:
-            self.entity_id = 'sensor.' + '_'.join([platform_name, sensor_type])
-        else:
-            self.entity_id = 'sensor.' + sensor_type
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID of the sensor"""
+        return self._unique_id
 
     @property
     def name(self):
@@ -124,6 +123,7 @@ class ECSensor(Entity):
         metadata = self.ec_data.metadata
         sensor_data = conditions.get(self.sensor_type)
 
+        self._unique_id = '-'.join([metadata['location'], self.sensor_type])
         self._attr = {}
         self._name = sensor_data.get('label')
         value = sensor_data.get('value')
@@ -152,7 +152,9 @@ class ECSensor(Entity):
         else:
             updated_local = None
 
-        hidden = bool(self._state is None or self._state == '')
+        hidden = bool(self._state is None or
+                      self._state == '' or
+                      self.sensor_type == 'icon_code')
 
         self._attr.update({
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
