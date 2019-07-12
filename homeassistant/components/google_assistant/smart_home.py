@@ -116,6 +116,7 @@ async def async_devices_identify(hass, data, payload):
 
     return response
 
+
 @HANDLERS.register('action.devices.QUERY')
 async def async_devices_query(hass, data, payload):
     """Handle action.devices.QUERY request.
