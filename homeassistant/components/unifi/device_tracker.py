@@ -24,6 +24,13 @@ from .const import (
 
 LOGGER = logging.getLogger(__name__)
 
+DEVICE_ATTRIBUTES = [
+    '_is_guest_by_uap', 'ap_mac', 'authorized', 'bssid', 'ccq',
+    'channel', 'essid', 'hostname', 'ip', 'is_11r', 'is_guest', 'is_wired',
+    'mac', 'name', 'noise', 'noted', 'oui', 'qos_policy_applied', 'radio',
+    'radio_proto', 'rssi', 'signal', 'site_id', 'vlan'
+]
+
 CONF_DT_SITE_ID = 'site_id'
 
 DEFAULT_HOST = 'localhost'
@@ -161,3 +168,14 @@ class UniFiClientTracker(ScannerEntity):
         return {
             'connections': {(CONNECTION_NETWORK_MAC, self.client.mac)}
         }
+
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        attributes = {}
+
+        for variable in DEVICE_ATTRIBUTES:
+            if variable in self.client.raw:
+                attributes[variable] = self.client.raw[variable]
+
+        return attributes
