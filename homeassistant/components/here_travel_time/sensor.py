@@ -2,13 +2,13 @@
 from datetime import datetime, timedelta
 import logging
 
+import herepy
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_MODE, CONF_NAME,
-    CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL,
-    EVENT_HOMEASSISTANT_START)
+    CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
 from homeassistant.helpers import location
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -58,7 +58,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_APP_CODE): cv.string,
         vol.Required(CONF_DESTINATION): cv.string,
         vol.Required(CONF_ORIGIN): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_MODE, default=TRAVEL_MODE_CAR): vol.In(TRAVEL_MODE),
         vol.Optional(
             CONF_ROUTE_MODE, default=ROUTE_MODE_FASTEST
@@ -84,48 +84,39 @@ def convert_time_to_utc(timestr):
     return dt_util.as_timestamp(combined)
 
 
-def setup_platform(hass, config, add_entities_callback, discovery_info=None):
+def setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the HERE travel time platform."""
-    def run_setup(event):
-        """
-        Delay the setup until Home Assistant is fully initialized.
+    hass.data.setdefault(DATA_KEY, [])
 
-        This allows any entities to be created already
-        """
-        hass.data.setdefault(DATA_KEY, [])
+    app_id = config[CONF_APP_ID]
+    app_code = config[CONF_APP_CODE]
+    origin = config[CONF_ORIGIN]
+    destination = config[CONF_DESTINATION]
 
-        app_id = config[CONF_APP_ID]
-        app_code = config[CONF_APP_CODE]
-        origin = config[CONF_ORIGIN]
-        destination = config[CONF_DESTINATION]
+    travel_mode = config.get(CONF_MODE)
+    traffic_mode = config.get(CONF_TRAFFIC_MODE)
+    route_mode = config.get(CONF_ROUTE_MODE)
+    name = config.get(CONF_NAME)
+    units = config.get(CONF_UNIT_SYSTEM, hass.config.units.name)
 
-        travel_mode = config.get(CONF_MODE)
-        traffic_mode = config.get(CONF_TRAFFIC_MODE)
-        route_mode = config.get(CONF_ROUTE_MODE)
-        name = config.get(CONF_NAME, DEFAULT_NAME)
-        units = config.get(CONF_UNIT_SYSTEM, hass.config.units.name)
+    here_data = HERETravelTimeData(None,
+                                   None,
+                                   app_id,
+                                   app_code,
+                                   travel_mode,
+                                   traffic_mode,
+                                   route_mode,
+                                   units)
 
-        here_data = HERETravelTimeData(None,
-                                       None,
-                                       app_id,
-                                       app_code,
-                                       travel_mode,
-                                       traffic_mode,
-                                       route_mode,
-                                       units)
+    sensor = HERETravelTimeSensor(hass,
+                                  name,
+                                  origin,
+                                  destination,
+                                  here_data)
 
-        sensor = HERETravelTimeSensor(hass,
-                                      name,
-                                      origin,
-                                      destination,
-                                      here_data)
+    hass.data[DATA_KEY].append(sensor)
 
-        hass.data[DATA_KEY].append(sensor)
-
-        add_entities_callback([sensor])
-
-    # Wait until start event is sent to load this component.
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
+    async_add_entities([sensor], True)
 
 
 class HERETravelTimeSensor(Entity):
@@ -137,6 +128,8 @@ class HERETravelTimeSensor(Entity):
         self._name = name
         self._here_data = here_data
         self._unit_of_measurement = 'min'
+        self._origin_entity_id = None
+        self._destination_entity_id = None
 
         # Check if location is a trackable entity
         if origin.split('.', 1)[0] in TRACKABLE_DOMAINS:
@@ -148,8 +141,6 @@ class HERETravelTimeSensor(Entity):
             self._destination_entity_id = destination
         else:
             self._here_data.destination = destination
-
-        self.update()
 
     @property
     def state(self):
@@ -201,12 +192,12 @@ class HERETravelTimeSensor(Entity):
     def update(self):
         """Update Sensor Information."""
         # Convert device_trackers to HERE friendly location
-        if hasattr(self, '_origin_entity_id'):
+        if self._origin_entity_id is not None:
             self._here_data.origin = self._get_location_from_entity(
                 self._origin_entity_id
             )
 
-        if hasattr(self, '_destination_entity_id'):
+        if self._destination_entity_id is not None:
             self._here_data.destination = self._get_location_from_entity(
                 self._destination_entity_id
             )
@@ -269,7 +260,6 @@ class HERETravelTimeData():
     def __init__(self, origin, destination, app_id, app_code, travel_mode,
                  traffic_mode, route_mode, units):
         """Initialize herepy."""
-        import herepy
         self.origin = origin
         self.destination = destination
         self.travel_mode = travel_mode
@@ -286,7 +276,6 @@ class HERETravelTimeData():
 
     def update(self):
         """Get the latest data from HERE."""
-        import herepy
         if self.traffic_mode:
             traffic_mode = TRAFFIC_MODE_ENABLED
         else:
@@ -312,7 +301,7 @@ class HERETravelTimeData():
                     _LOGGER.error("API returned error %s", response.message)
                 return
 
-            # pylint: disable=E1101
+            # pylint: disable=no-member
             route = response.response['route']
             summary = route[0]['summary']
             waypoint = route[0]['waypoint']
