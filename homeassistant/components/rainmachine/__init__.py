@@ -73,7 +73,7 @@ SENSORS = {
     TYPE_FLOW_SENSOR_CONSUMED_LITERS: (
         'Flow Sensor Consumed Liters', 'mdi:water-pump', 'liter', None),
     TYPE_FLOW_SENSOR_START_INDEX: (
-        'Flow Sensor Start Index', 'mdi:water-pump', None),
+        'Flow Sensor Start Index', 'mdi:water-pump', 'index', None),
     TYPE_FLOW_SENSOR_WATERING_CLICKS: (
         'Flow Sensor Clicks', 'mdi:water-pump', 'clicks', None),
     TYPE_FREEZE_TEMP: (
