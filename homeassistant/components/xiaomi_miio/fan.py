@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.fan import (FanEntity, PLATFORM_SCHEMA,
                                           SUPPORT_SET_SPEED, DOMAIN, )
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN,
-                                 ATTR_ENTITY_ID, )
+                                 ATTR_ENTITY_ID, STATE_OFF, )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
@@ -248,13 +248,13 @@ AVAILABLE_ATTRIBUTES_AIRFRESH = {
     ATTR_EXTRA_FEATURES: 'extra_features',
 }
 
-OPERATION_MODES_AIRPURIFIER = ['Auto', 'Silent', 'Favorite', 'Idle']
-OPERATION_MODES_AIRPURIFIER_PRO = ['Auto', 'Silent', 'Favorite']
+OPERATION_MODES_AIRPURIFIER = [STATE_OFF, 'Auto', 'Silent', 'Favorite', 'Idle']
+OPERATION_MODES_AIRPURIFIER_PRO = [STATE_OFF, 'Auto', 'Silent', 'Favorite']
 OPERATION_MODES_AIRPURIFIER_PRO_V7 = OPERATION_MODES_AIRPURIFIER_PRO
-OPERATION_MODES_AIRPURIFIER_2S = ['Auto', 'Silent', 'Favorite']
-OPERATION_MODES_AIRPURIFIER_V3 = ['Auto', 'Silent', 'Favorite', 'Idle',
+OPERATION_MODES_AIRPURIFIER_2S = [STATE_OFF, 'Auto', 'Silent', 'Favorite']
+OPERATION_MODES_AIRPURIFIER_V3 = [STATE_OFF, 'Auto', 'Silent', 'Favorite', 'Idle',
                                   'Medium', 'High', 'Strong']
-OPERATION_MODES_AIRFRESH = ['Auto', 'Silent', 'Interval', 'Low',
+OPERATION_MODES_AIRFRESH = [STATE_OFF, 'Auto', 'Silent', 'Interval', 'Low',
                             'Middle', 'Strong']
 
 SUCCESS = ['ok']
@@ -688,6 +688,10 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
         if self.supported_features & SUPPORT_SET_SPEED == 0:
             return
 
+        if speed == STATE_OFF:
+            await self.async_turn_off()
+            return
+
         from miio.airpurifier import OperationMode
 
         _LOGGER.debug("Setting the operation mode to: %s", speed)
@@ -966,6 +970,10 @@ class XiaomiAirFresh(XiaomiGenericDevice):
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
         if self.supported_features & SUPPORT_SET_SPEED == 0:
+            return
+
+        if speed == STATE_OFF:
+            await self.async_turn_off()
             return
 
         from miio.airfresh import OperationMode
