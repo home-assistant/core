@@ -169,7 +169,17 @@ class CoolmasterClimate(ClimateDevice):
                       hvac_mode)
 
         if hvac_mode == HVAC_MODE_OFF:
-            self._device.turn_off()
+            self.turn_off()
         else:
             self._device.set_mode(HA_STATE_TO_CM[hvac_mode])
-            self._device.turn_on()
+            self.turn_on()
+
+    def turn_on(self):
+        """Turn on."""
+        _LOGGER.debug("Turning %s on", self.unique_id)
+        self._device.turn_on()
+
+    def turn_off(self):
+        """Turn off."""
+        _LOGGER.debug("Turning %s off", self.unique_id)
+        self._device.turn_off()
