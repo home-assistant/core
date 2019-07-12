@@ -25,6 +25,7 @@ SPEED_TO_VALUE = {
     'mediumhigh': 'MediumHigh'
 }
 
+
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up Lutron fan."""
@@ -76,9 +77,9 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
     def is_on(self):
         """Return true if device is on."""
         return VALUE_TO_SPEED[self._state["fan_speed"]] in [SPEED_LOW,
-                                            SPEED_MEDIUM,
-                                            'mediumhigh',
-                                            SPEED_HIGH]
+                                                            SPEED_MEDIUM,
+                                                            'mediumhigh',
+                                                            SPEED_HIGH]
 
     async def async_update(self):
         """Update when forcing a refresh of the device."""
