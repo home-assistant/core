@@ -7,9 +7,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.fan import (FanEntity, PLATFORM_SCHEMA,
-                                          SUPPORT_SET_SPEED, DOMAIN, )
+                                          SUPPORT_SET_SPEED, SPEED_OFF, DOMAIN, )
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN,
-                                 ATTR_ENTITY_ID, STATE_OFF, )
+                                 ATTR_ENTITY_ID, )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
@@ -248,13 +248,13 @@ AVAILABLE_ATTRIBUTES_AIRFRESH = {
     ATTR_EXTRA_FEATURES: 'extra_features',
 }
 
-OPERATION_MODES_AIRPURIFIER = [STATE_OFF, 'Auto', 'Silent', 'Favorite', 'Idle']
-OPERATION_MODES_AIRPURIFIER_PRO = [STATE_OFF, 'Auto', 'Silent', 'Favorite']
+OPERATION_MODES_AIRPURIFIER = [SPEED_OFF, 'Auto', 'Silent', 'Favorite', 'Idle']
+OPERATION_MODES_AIRPURIFIER_PRO = [SPEED_OFF, 'Auto', 'Silent', 'Favorite']
 OPERATION_MODES_AIRPURIFIER_PRO_V7 = OPERATION_MODES_AIRPURIFIER_PRO
-OPERATION_MODES_AIRPURIFIER_2S = [STATE_OFF, 'Auto', 'Silent', 'Favorite']
-OPERATION_MODES_AIRPURIFIER_V3 = [STATE_OFF, 'Auto', 'Silent', 'Favorite', 'Idle',
+OPERATION_MODES_AIRPURIFIER_2S = [SPEED_OFF, 'Auto', 'Silent', 'Favorite']
+OPERATION_MODES_AIRPURIFIER_V3 = [SPEED_OFF, 'Auto', 'Silent', 'Favorite', 'Idle',
                                   'Medium', 'High', 'Strong']
-OPERATION_MODES_AIRFRESH = [STATE_OFF, 'Auto', 'Silent', 'Interval', 'Low',
+OPERATION_MODES_AIRFRESH = [SPEED_OFF, 'Auto', 'Silent', 'Interval', 'Low',
                             'Middle', 'Strong']
 
 SUCCESS = ['ok']
@@ -688,7 +688,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
         if self.supported_features & SUPPORT_SET_SPEED == 0:
             return
 
-        if speed == STATE_OFF:
+        if speed == SPEED_OFF:
             await self.async_turn_off()
             return
 
@@ -972,7 +972,7 @@ class XiaomiAirFresh(XiaomiGenericDevice):
         if self.supported_features & SUPPORT_SET_SPEED == 0:
             return
 
-        if speed == STATE_OFF:
+        if speed == SPEED_OFF:
             await self.async_turn_off()
             return
 
