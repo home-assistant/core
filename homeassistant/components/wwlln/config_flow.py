@@ -1,5 +1,4 @@
 """Config flow to configure the WWLLN integration."""
-from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant import config_entries
