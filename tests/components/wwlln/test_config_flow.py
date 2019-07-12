@@ -1,4 +1,6 @@
 """Define tests for the WWLLN config flow."""
+from datetime import timedelta
+
 from homeassistant import data_entry_flow
 from homeassistant.components.wwlln import CONF_WINDOW, DOMAIN, config_flow
 from homeassistant.const import (
@@ -36,12 +38,14 @@ async def test_show_form(hass):
 
 async def test_step_import(hass):
     """Test that the import step works."""
+    # `configuration.yaml` will always return a timedelta for the `window`
+    # parameter, FYI:
     conf = {
         CONF_LATITUDE: 39.128712,
         CONF_LONGITUDE: -104.9812612,
         CONF_RADIUS: 25,
         CONF_UNIT_SYSTEM: 'metric',
-        CONF_WINDOW: 600.0,
+        CONF_WINDOW: timedelta(minutes=10)
     }
 
     flow = config_flow.WWLLNFlowHandler()
@@ -88,7 +92,7 @@ async def test_custom_window(hass):
         CONF_LATITUDE: 39.128712,
         CONF_LONGITUDE: -104.9812612,
         CONF_RADIUS: 25,
-        CONF_WINDOW: 300
+        CONF_WINDOW: timedelta(hours=1)
     }
 
     flow = config_flow.WWLLNFlowHandler()
@@ -102,5 +106,5 @@ async def test_custom_window(hass):
         CONF_LONGITUDE: -104.9812612,
         CONF_RADIUS: 25,
         CONF_UNIT_SYSTEM: 'metric',
-        CONF_WINDOW: 300,
+        CONF_WINDOW: 3600,
     }
