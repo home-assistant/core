@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
@@ -54,12 +54,12 @@ async def async_setup_entry(
             twentemilieu = hass.data[DOMAIN].get(unique_id, None)
             if twentemilieu is not None:
                 await twentemilieu.update()
-                dispatcher_send(hass, DATA_UPDATE, unique_id)
+                async_dispatcher_send(hass, DATA_UPDATE, unique_id)
         else:
             for twentemilieu in hass.data[DOMAIN].values():
                 unique_id = await twentemilieu.unique_id()
                 await twentemilieu.update()
-                dispatcher_send(hass, DATA_UPDATE, unique_id)
+                async_dispatcher_send(hass, DATA_UPDATE, unique_id)
 
     hass.services.async_register(
         DOMAIN, "update", update, schema=SERVICE_SCHEMA
