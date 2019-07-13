@@ -127,6 +127,36 @@ async def test_setup_existing_cloud_user(hass, hass_storage):
     assert hass_storage[STORAGE_KEY]['data']['cloud_user'] == user.id
 
 
+async def test_setup_invalid_cloud_user(hass, hass_storage):
+    """Test setup with API push default data."""
+    hass_storage[STORAGE_KEY] = {
+        'version': 1,
+        'data': {
+            'cloud_user': 'non-existing'
+        }
+    }
+    with patch('hass_nabucasa.Cloud.start', return_value=mock_coro()):
+        result = await async_setup_component(hass, 'cloud', {
+            'http': {},
+            'cloud': {
+                cloud.CONF_MODE: cloud.MODE_DEV,
+                'cognito_client_id': 'test-cognito_client_id',
+                'user_pool_id': 'test-user_pool_id',
+                'region': 'test-region',
+                'relayer': 'test-relayer',
+            }
+        })
+        assert result
+
+    assert hass_storage[STORAGE_KEY]['data']['cloud_user'] != 'non-existing'
+    cloud_user = await hass.auth.async_get_user(
+        hass_storage[STORAGE_KEY]['data']['cloud_user']
+    )
+
+    assert cloud_user
+    assert cloud_user.groups[0].id == GROUP_ID_ADMIN
+
+
 async def test_setup_setup_cloud_user(hass, hass_storage):
     """Test setup with API push default data."""
     hass_storage[STORAGE_KEY] = {
