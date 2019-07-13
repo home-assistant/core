@@ -20,7 +20,8 @@ from homeassistant.const import (
     CONF_ENTITY_NAMESPACE, CONF_PLATFORM, CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC, CONF_VALUE_TEMPLATE,
     CONF_TIMEOUT, ENTITY_MATCH_ALL, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET,
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, WEEKDAYS, __version__)
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, WEEKDAYS, __version__, ATTR_AREA_ID,
+    ATTR_ENTITY_ID)
 from homeassistant.core import valid_entity_id, split_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.logging import KeywordStyleAdapter
@@ -641,6 +642,11 @@ PLATFORM_SCHEMA = vol.Schema({
 
 PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({
 }, extra=vol.ALLOW_EXTRA)
+
+ENTITY_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
+    vol.Optional(ATTR_AREA_ID): vol.All(ensure_list, [str]),
+})
 
 EVENT_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): string,
