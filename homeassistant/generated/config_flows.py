@@ -52,6 +52,7 @@ FLOWS = [
     "toon",
     "tplink",
     "tradfri",
+    "twentemilieu",
     "twilio",
     "unifi",
     "upnp",
