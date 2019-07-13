@@ -1,0 +1,12 @@
+{
+  "domain": "smsapi",
+  "name": "SMSAPI",
+  "documentation": "https://www.home-assistant.io/components/smspi",
+  "requirements": [
+    "smsapi-client==2.1.4"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@zen"
+  ]
+}
