@@ -160,7 +160,7 @@ def save_games(hass: HomeAssistantType, games: dict):
 
     # Retry loading file
     if games is None:
-        load_games()
+        load_games(hass)
 
 
 def service_handle(hass: HomeAssistantType):
