@@ -128,6 +128,12 @@ def _check_for_insteon_type(hass: HomeAssistant, node,
                 hass.data[ISY994_NODES]['light'].append(node)
                 return True
 
+            # Hacky special-case just for Thermostats, which has a "Heat" and
+            # "Cool" sub-node on address 2 and 3
+            if domain == 'climate' and int(node.nid[-1]) in [2, 3]:
+                hass.data[ISY994_NODES]['binary_sensor'].append(node)
+                return True
+
             hass.data[ISY994_NODES][domain].append(node)
             return True
 

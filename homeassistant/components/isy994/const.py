@@ -106,11 +106,18 @@ NODE_FILTERS = {
                         'Siren_ADV'],
         'insteon_type': ['2.', '9.10.', '9.11.'],
         'zwave_cat': ['121', '122', '123', '137', '141', '147']
+    },
+    'climate': {
+        'uom': ['2'],
+        'states': ['heating', 'cooling', 'idle', 'fan_only', STATE_OFF],
+        'node_def_id': ['TempLinc', 'Thermostat'],
+        'insteon_type': ['5.'],
+        'zwave_cat': ['140']
     }
 }
 
 SUPPORTED_DOMAINS = ['binary_sensor', 'sensor', 'lock', 'fan', 'cover',
-                     'light', 'switch']
+                     'light', 'switch', 'climate']
 SUPPORTED_PROGRAM_DOMAINS = ['binary_sensor', 'lock', 'fan', 'cover', 'switch']
 SUPPORTED_VARIABLE_DOMAINS = ['binary_sensor', 'sensor', 'switch']
 
@@ -122,6 +129,15 @@ ISY994_NODES = "isy994_nodes"
 ISY994_WEATHER = "isy994_weather"
 ISY994_PROGRAMS = "isy994_programs"
 ISY994_VARIABLES = "isy994_variables"
+
+ISY_CURRENT_TEMPERATURE = 'ST'
+ISY_CURRENT_HUMIDITY = 'CLIHUM'
+ISY_TARGET_TEMP_HIGH = 'CLISPC'
+ISY_TARGET_TEMP_LOW = 'CLISPH'
+ISY_OPERATION_MODE = 'CLIMD'
+ISY_OPERATION_STATE = 'CLIHCS'
+ISY_FAN_MODE = 'CLIFS'
+ISY_UOM = 'UOM'
 
 ISY994_EVENT_FRIENDLY_NAME = {
     'OL': 'on_level',
