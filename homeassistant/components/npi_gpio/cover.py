@@ -47,13 +47,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NPi cover platform."""
-    initial = config.get(CONF_INITIAL)
-    relay_time = config.get(CONF_RELAY_TIME)
-    state_pull_mode = config.get(CONF_STATE_PULL_MODE)
-    invert_state = config.get(CONF_INVERT_STATE)
-    invert_relay = config.get(CONF_INVERT_RELAY)
+    initial = config[CONF_INITIAL]
+    relay_time = config[CONF_RELAY_TIME]
+    state_pull_mode = config[CONF_STATE_PULL_MODE]
+    invert_state = config[CONF_INVERT_STATE]
+    invert_relay = config[CONF_INVERT_RELAY]
     covers = []
-    covers_conf = config.get(CONF_COVERS)
+    covers_conf = config[CONF_COVERS]
 
     for cover in covers_conf:
         covers.append(NPiGPIOCover(cover[CONF_NAME], cover[CONF_RELAY_PORT],
