@@ -1,7 +1,6 @@
 """Etekcity VeSync integration."""
 import logging
 import voluptuous as vol
-from itertools import chain
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
                                  CONF_TIME_ZONE)
 from homeassistant.helpers import config_validation as cv
@@ -104,16 +103,17 @@ async def async_setup_entry(hass, config_entry):
         hass.async_create_task(forward_setup(config_entry, 'fan'))
     _LOGGER.debug(str(lights))
 
-    async def async_new_device_discovery(hass):
+    async def async_new_device_discovery(service):
         """Discover if new devices should be added."""
-        if hass[DOMAIN].get('manager') is None:
-            _LOGGER.warning('Cannot get new devices - VeSync manager not loaded')
+        if hass.data[DOMAIN].get('manager') is None:
+            _LOGGER.warning(
+                'Cannot get new devices - VeSync manager not loaded')
             return
 
-        manager = hass[DOMAIN]['manager']
-        lights = hass[DOMAIN][CONF_LIGHTS]
-        fans = hass[DOMAIN][CONF_FANS]
-        switches = hass[DOMAIN][CONF_SWITCHES]
+        manager = hass.data[DOMAIN]['manager']
+        lights = hass.data[DOMAIN][CONF_LIGHTS]
+        fans = hass.data[DOMAIN][CONF_FANS]
+        switches = hass.data[DOMAIN][CONF_SWITCHES]
 
         dev_dict = await async_process_devices(hass, manager)
         fan_devs = dev_dict.get(CONF_FANS, [])
@@ -126,7 +126,7 @@ async def async_setup_entry(hass, config_entry):
             fan_len = len(new_fans)
             fans.extend(new_fans)
             async_dispatcher_send(hass, VS_DISCOVERY.format(CONF_FANS),
-                                  fans[-fan_len:])
+                                  fan_len)
 
         if light_devs:
             light_set = set(light_devs)
@@ -134,7 +134,7 @@ async def async_setup_entry(hass, config_entry):
             light_len = len(new_lights)
             lights.extend(new_lights)
             async_dispatcher_send(hass, VS_DISCOVERY.format(CONF_LIGHTS),
-                                  lights[-light_len:])
+                                  light_len)
 
         if switch_devs:
             switch_set = set(switch_devs)
@@ -142,7 +142,7 @@ async def async_setup_entry(hass, config_entry):
             switch_len = len(new_switches)
             switches.extend(new_switches)
             async_dispatcher_send(hass, VS_DISCOVERY.format(CONF_SWITCHES),
-                                  switches[-switch_len:])
+                                  switch_len)
 
     hass.services.async_register(DOMAIN,
                                  SERVICE_UPDATE_DEVS,

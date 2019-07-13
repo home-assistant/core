@@ -14,18 +14,17 @@ DOMAIN = 'vesync'
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up switches."""
-    async def async_discover(devices):
-        await async_add_entities_retry(
-            hass,
-            async_add_entities,
-            devices,
-            _async_setup_entity)
+    async def async_discover(dev_len):
+        if dev_len > 0:
+            dev_slice = hass.data[DOMAIN][CONF_SWITCHES][-dev_len:]
+            for dev in dev_slice:
+                await _async_setup_entity(dev, async_add_entities)
 
     disp = async_dispatcher_connect(
         hass, VS_DISCOVERY.format(CONF_SWITCHES), async_discover)
 
     hass.data[DOMAIN][VS_DISPATCHERS].append(disp)
-
+    _LOGGER.debug('SWITCH ENTITY RETRY CALLED')
     await async_add_entities_retry(
         hass,
         async_add_entities,
