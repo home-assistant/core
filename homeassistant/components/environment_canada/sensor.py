@@ -4,7 +4,7 @@ Support for the Environment Canada weather service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.environment_canada/
 """
-import datetime
+from datetime import datetime, timedelta
 import logging
 import re
 
@@ -12,11 +12,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, CONF_NAME, CONF_LATITUDE,
-    CONF_LONGITUDE, ATTR_ATTRIBUTION, ATTR_LOCATION, ATTR_HIDDEN)
+    TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE, ATTR_ATTRIBUTION,
+    ATTR_LOCATION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.util.dt as dt
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,43 +27,9 @@ ATTR_TIME = 'alert time'
 
 CONF_ATTRIBUTION = "Data provided by Environment Canada"
 CONF_STATION = 'station'
+CONF_LANGUAGE = 'language'
 
-MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=10)
-
-SENSOR_TYPES = {
-    'temperature': {'name': 'Temperature',
-                    'unit': TEMP_CELSIUS},
-    'dewpoint': {'name': 'Dew Point',
-                 'unit': TEMP_CELSIUS},
-    'wind_chill': {'name': 'Wind Chill',
-                   'unit': TEMP_CELSIUS},
-    'humidex': {'name': 'Humidex',
-                'unit': TEMP_CELSIUS},
-    'pressure': {'name': 'Pressure',
-                 'unit': 'kPa'},
-    'tendency': {'name': 'Tendency'},
-    'humidity': {'name': 'Humidity',
-                 'unit': '%'},
-    'visibility': {'name': 'Visibility',
-                   'unit': 'km'},
-    'condition': {'name': 'Condition'},
-    'wind_speed': {'name': 'Wind Speed',
-                   'unit': 'km/h'},
-    'wind_gust': {'name': 'Wind Gust',
-                  'unit': 'km/h'},
-    'wind_dir': {'name': 'Wind Direction'},
-    'high_temp': {'name': 'High Temperature',
-                  'unit': TEMP_CELSIUS},
-    'low_temp': {'name': 'Low Temperature',
-                 'unit': TEMP_CELSIUS},
-    'pop': {'name': 'Chance of Precip.',
-            'unit': '%'},
-    'warnings': {'name': 'Warnings'},
-    'watches': {'name': 'Watches'},
-    'advisories': {'name': 'Advisories'},
-    'statements': {'name': 'Statements'},
-    'endings': {'name': 'Ended'}
-}
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 
 def validate_station(station):
@@ -77,52 +42,58 @@ def validate_station(station):
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_NAME): cv.string,
+    vol.Required(CONF_LANGUAGE, default='english'):
+        vol.In(['english', 'french']),
     vol.Optional(CONF_STATION): validate_station,
     vol.Inclusive(CONF_LATITUDE, 'latlon'): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'latlon'): cv.longitude,
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Environment Canada sensor."""
     from env_canada import ECData
 
     if config.get(CONF_STATION):
-        ec_data = ECData(station_id=config[CONF_STATION])
-    elif config.get(CONF_LATITUDE) and config.get(CONF_LONGITUDE):
-        ec_data = ECData(coordinates=(config[CONF_LATITUDE],
-                                      config[CONF_LONGITUDE]))
+        ec_data = ECData(station_id=config[CONF_STATION],
+                         language=config.get(CONF_LANGUAGE))
     else:
-        ec_data = ECData(coordinates=(hass.config.latitude,
-                                      hass.config.longitude))
+        lat = config.get(CONF_LATITUDE, hass.config.latitude)
+        lon = config.get(CONF_LONGITUDE, hass.config.longitude)
+        ec_data = ECData(coordinates=(lat, lon),
+                         language=config.get(CONF_LANGUAGE))
 
-    add_devices([ECSensor(sensor_type, ec_data, config.get(CONF_NAME))
-                 for sensor_type in config[CONF_MONITORED_CONDITIONS]],
-                True)
+    sensor_list = list(ec_data.conditions.keys()) + list(ec_data.alerts.keys())
+    sensor_list.remove('icon_code')
+    add_entities([ECSensor(sensor_type,
+                           ec_data)
+                  for sensor_type in sensor_list],
+                 True)
 
 
 class ECSensor(Entity):
     """Implementation of an Environment Canada sensor."""
 
-    def __init__(self, sensor_type, ec_data, platform_name):
+    def __init__(self, sensor_type, ec_data):
         """Initialize the sensor."""
         self.sensor_type = sensor_type
         self.ec_data = ec_data
-        self.platform_name = platform_name
+
+        self._unique_id = None
+        self._name = None
         self._state = None
         self._attr = None
+        self._unit = None
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID of the sensor."""
+        return self._unique_id
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        if self.platform_name is None:
-            return SENSOR_TYPES[self.sensor_type]['name']
-
-        return ' '.join([self.platform_name,
-                         SENSOR_TYPES[self.sensor_type]['name']])
+        return self._name
 
     @property
     def state(self):
@@ -137,7 +108,7 @@ class ECSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the units of measurement."""
-        return SENSOR_TYPES[self.sensor_type].get('unit')
+        return self._unit
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -145,34 +116,43 @@ class ECSensor(Entity):
         self.ec_data.update()
         self.ec_data.conditions.update(self.ec_data.alerts)
 
-        self._attr = {}
+        conditions = self.ec_data.conditions
+        metadata = self.ec_data.metadata
+        sensor_data = conditions.get(self.sensor_type)
 
-        sensor_data = self.ec_data.conditions.get(self.sensor_type)
-        if isinstance(sensor_data, list):
+        self._unique_id = '{}-{}'.format(metadata['location'],
+                                         self.sensor_type)
+        self._attr = {}
+        self._name = sensor_data.get('label')
+        value = sensor_data.get('value')
+
+        if isinstance(value, list):
             self._state = ' | '.join([str(s.get('title'))
-                                      for s in sensor_data])
+                                      for s in value])
             self._attr.update({
                 ATTR_DETAIL: ' | '.join([str(s.get('detail'))
-                                         for s in sensor_data]),
+                                         for s in value]),
                 ATTR_TIME: ' | '.join([str(s.get('date'))
-                                       for s in sensor_data])
+                                       for s in value])
             })
         else:
-            self._state = sensor_data
+            self._state = value
 
-        timestamp = self.ec_data.conditions.get('timestamp')
-        if timestamp:
-            updated_utc = datetime.datetime.strptime(timestamp, '%Y%m%d%H%M%S')
-            updated_local = dt.as_local(updated_utc).isoformat()
+        if sensor_data.get('unit') == 'C':
+            self._unit = TEMP_CELSIUS
         else:
-            updated_local = None
+            self._unit = sensor_data.get('unit')
 
-        hidden = bool(self._state is None or self._state == '')
+        timestamp = metadata.get('timestamp')
+        if timestamp:
+            updated_utc = datetime.strptime(timestamp,
+                                            '%Y%m%d%H%M%S').isoformat()
+        else:
+            updated_utc = None
 
         self._attr.update({
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            ATTR_UPDATED: updated_local,
-            ATTR_LOCATION: self.ec_data.conditions.get('location'),
-            ATTR_STATION: self.ec_data.conditions.get('station'),
-            ATTR_HIDDEN: hidden
+            ATTR_UPDATED: updated_utc,
+            ATTR_LOCATION: metadata.get('location'),
+            ATTR_STATION: metadata.get('station'),
         })
