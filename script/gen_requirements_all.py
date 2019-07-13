@@ -148,6 +148,7 @@ TEST_REQUIREMENTS = (
     'srpenergy',
     'statsd',
     'toonapilib',
+    'twentemilieu',
     'uvcclient',
     'vsure',
     'warrant',
