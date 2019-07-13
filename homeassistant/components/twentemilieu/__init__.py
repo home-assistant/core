@@ -75,11 +75,11 @@ async def async_setup_entry(
 
 
 async def async_unload_entry(
-        hass: HomeAssistantType, entry: ConfigType
+        hass: HomeAssistantType, entry: ConfigEntry
 ) -> bool:
     """Unload Twente Milieu config entry."""
     await hass.config_entries.async_forward_entry_unload(entry, "sensor")
 
-    del hass.data[DOMAIN]
+    del hass.data[DOMAIN][entry.data[CONF_ID]]
 
     return True
