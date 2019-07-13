@@ -2,6 +2,9 @@
 import logging
 import asyncio
 
+import pyps4_homeassistant.ps4 as pyps4
+from pyps4_homeassistant.errors import NotReady
+
 from homeassistant.core import callback
 from homeassistant.components.media_player import (
     ENTITY_IMAGE_URL, MediaPlayerDevice)
@@ -27,6 +30,8 @@ ICON = 'mdi:playstation'
 GAMES_FILE = '.ps4-games.json'
 MEDIA_IMAGE_DEFAULT = None
 
+DEFAULT_RETRIES = 2
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up PS4 from a config entry."""
@@ -38,7 +43,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up PS4 Platform."""
-    import pyps4_homeassistant.ps4 as pyps4
     games_file = hass.config.path(GAMES_FILE)
     creds = config.data[CONF_TOKEN]
     device_list = []
@@ -118,8 +122,15 @@ class PS4Device(MediaPlayerDevice):
         if self._ps4.ddp_protocol is not None:
             # Request Status with asyncio transport.
             self._ps4.get_status()
-            if not self._ps4.connected and not self._ps4.is_standby:
-                await self._ps4.async_connect()
+
+            # Don't attempt to connect if entity is connected or if,
+            # PS4 is in standby or disconnected from LAN or powered off.
+            if not self._ps4.connected and not self._ps4.is_standby and\
+                    self._ps4.is_available:
+                try:
+                    await self._ps4.async_connect()
+                except NotReady:
+                    pass
 
         # Try to ensure correct status is set on startup for device info.
         if self._ps4.ddp_protocol is None:
@@ -162,7 +173,7 @@ class PS4Device(MediaPlayerDevice):
                 if self._state != STATE_OFF:
                     self.state_off()
 
-        elif self._retry > 5:
+        elif self._retry > DEFAULT_RETRIES:
             self.state_unknown()
         else:
             self._retry += 1
