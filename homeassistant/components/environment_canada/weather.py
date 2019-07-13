@@ -67,12 +67,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Environment Canada weather."""
     if config.get(CONF_STATION):
         ec_data = ECData(station_id=config[CONF_STATION])
-    elif config.get(CONF_LATITUDE) and config.get(CONF_LONGITUDE):
-        ec_data = ECData(coordinates=(config[CONF_LATITUDE],
-                                      config[CONF_LONGITUDE]))
     else:
-        ec_data = ECData(coordinates=(hass.config.latitude,
-                                      hass.config.longitude))
+        lat = config.get(CONF_LATITUDE, hass.config.latitude)
+        lon = config.get(CONF_LONGITUDE, hass.config.longitude)
+        ec_data = ECData(coordinates=(lat, lon))
 
     add_devices([ECWeather(ec_data, config)])
 
@@ -96,13 +94,15 @@ class ECWeather(WeatherEntity):
         """Return the name of the weather entity."""
         if self.platform_name:
             return self.platform_name
-        return self.ec_data.conditions['location']
+        return self.ec_data.metadata.get('location')
 
     @property
     def temperature(self):
         """Return the temperature."""
-        if self.ec_data.conditions.get('temperature'):
-            return float(self.ec_data.conditions['temperature'])
+        if self.ec_data.conditions.get('temperature').get('value'):
+            return float(self.ec_data.conditions['temperature']['value'])
+        if self.ec_data.hourly_forecasts[0].get('temperature'):
+            return float(self.ec_data.hourly_forecasts[0]['temperature'])
         return None
 
     @property
@@ -113,48 +113,51 @@ class ECWeather(WeatherEntity):
     @property
     def humidity(self):
         """Return the humidity."""
-        if self.ec_data.conditions.get('humidity'):
-            return float(self.ec_data.conditions['humidity'])
+        if self.ec_data.conditions.get('humidity').get('value'):
+            return float(self.ec_data.conditions['humidity']['value'])
         return None
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        if self.ec_data.conditions.get('wind_speed'):
-            return float(self.ec_data.conditions['wind_speed'])
+        if self.ec_data.conditions.get('wind_speed').get('value'):
+            return float(self.ec_data.conditions['wind_speed']['value'])
         return None
 
     @property
     def wind_bearing(self):
         """Return the wind bearing."""
-        if self.ec_data.conditions.get('wind_bearing'):
-            return float(self.ec_data.conditions['wind_bearing'])
+        if self.ec_data.conditions.get('wind_bearing').get('value'):
+            return float(self.ec_data.conditions['wind_bearing']['value'])
         return None
 
     @property
     def pressure(self):
         """Return the pressure."""
-        if self.ec_data.conditions.get('pressure'):
-            return 10 * float(self.ec_data.conditions['pressure'])
+        if self.ec_data.conditions.get('pressure').get('value'):
+            return 10 * float(self.ec_data.conditions['pressure']['value'])
         return None
 
     @property
     def visibility(self):
         """Return the visibility."""
-        if self.ec_data.conditions.get('visibility'):
-            return float(self.ec_data.conditions['visibility'])
+        if self.ec_data.conditions.get('visibility').get('value'):
+            return float(self.ec_data.conditions['visibility']['value'])
         return None
 
     @property
     def condition(self):
         """Return the weather condition."""
-        icon_code = self.ec_data.conditions.get('icon_code')
+        icon_code = None
+
+        if self.ec_data.conditions.get('icon_code').get('value'):
+            icon_code = self.ec_data.conditions['icon_code']['value']
+        elif self.ec_data.hourly_forecasts[0].get('icon_code'):
+            icon_code = self.ec_data.hourly_forecasts[0]['icon_code']
+
         if icon_code:
             return icon_code_to_condition(int(icon_code))
-        condition = self.ec_data.conditions.get('condition')
-        if condition:
-            return condition
-        return 'Condition not observed'
+        return ''
 
     @property
     def forecast(self):
