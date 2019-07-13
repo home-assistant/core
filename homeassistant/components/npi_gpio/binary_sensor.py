@@ -35,12 +35,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Raspberry PI GPIO devices."""
-    pull_mode = config.get(CONF_PULL_MODE)
-    bouncetime = config.get(CONF_BOUNCETIME)
-    invert_logic = config.get(CONF_INVERT_LOGIC)
+    pull_mode = config[CONF_PULL_MODE]
+    bouncetime = config[CONF_BOUNCETIME]
+    invert_logic = config[CONF_INVERT_LOGIC]
 
     binary_sensors = []
-    ports = config.get(CONF_PORTS)
+    ports = config[CONF_PORTS]
     for port_num, port_name in ports.items():
         binary_sensors.append(NPiGPIOBinarySensor(port_name, port_num,
                                                   pull_mode, bouncetime,
