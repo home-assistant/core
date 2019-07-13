@@ -627,24 +627,22 @@ async def test_temperature_setting_climate_onoff(hass):
             climate.ATTR_MAX_TEMP: None,
         }), BASIC_CONFIG)
     assert trt.sync_attributes() == {
-        'availableThermostatModes': 'off,cool,heat,heatcool',
+        'availableThermostatModes': 'off,cool,heat,heatcool,on',
         'thermostatTemperatureUnit': 'F',
     }
     assert trt.can_execute(trait.COMMAND_THERMOSTAT_SET_MODE, {})
 
-    calls = async_mock_service(
-        hass, climate.DOMAIN, climate.SERVICE_SET_HVAC_MODE)
+    calls = async_mock_service(hass, climate.DOMAIN, SERVICE_TURN_ON)
     await trt.execute(trait.COMMAND_THERMOSTAT_SET_MODE, BASIC_DATA, {
         'thermostatMode': 'on',
     }, {})
     assert len(calls) == 1
-    assert calls[0].data[climate.ATTR_HVAC_MODE] == climate.HVAC_MODE_HEAT_COOL
 
+    calls = async_mock_service(hass, climate.DOMAIN, SERVICE_TURN_OFF)
     await trt.execute(trait.COMMAND_THERMOSTAT_SET_MODE, BASIC_DATA, {
         'thermostatMode': 'off',
     }, {})
-    assert len(calls) == 2
-    assert calls[1].data[climate.ATTR_HVAC_MODE] == climate.HVAC_MODE_OFF
+    assert len(calls) == 1
 
 
 async def test_temperature_setting_climate_range(hass):
@@ -671,7 +669,7 @@ async def test_temperature_setting_climate_range(hass):
             climate.ATTR_MAX_TEMP: 80
         }), BASIC_CONFIG)
     assert trt.sync_attributes() == {
-        'availableThermostatModes': 'off,cool,heat,auto',
+        'availableThermostatModes': 'off,cool,heat,auto,on',
         'thermostatTemperatureUnit': 'F',
     }
     assert trt.query_attributes() == {
