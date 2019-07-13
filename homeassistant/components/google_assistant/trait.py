@@ -580,16 +580,6 @@ class TemperatureSettingTrait(_Trait):
 
         return modes
 
-    @property
-    def climate_on_mode(self):
-        """Return the mode that should be considered on."""
-        modes = [m for m in self.climate_google_modes if m != 'off']
-
-        if len(modes) == 1:
-            return modes[0]
-
-        return None
-
     def sync_attributes(self):
         """Return temperature point and modes attributes for a sync request."""
         response = {}
@@ -605,8 +595,8 @@ class TemperatureSettingTrait(_Trait):
 
         elif domain == climate.DOMAIN:
             modes = self.climate_google_modes
-            on_mode = self.climate_on_mode
-            if on_mode is not None:
+            if 'off' in modes and any(mode in modes for mode
+                                      in ('heatcool', 'heat', 'cool')):
                 modes.append('on')
             response['availableThermostatModes'] = ','.join(modes)
 
@@ -761,6 +751,26 @@ class TemperatureSettingTrait(_Trait):
             target_mode = params['thermostatMode']
             supported = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
 
+            if target_mode == 'on':
+                await self.hass.services.async_call(
+                    climate.DOMAIN, SERVICE_TURN_ON,
+                    {
+                        ATTR_ENTITY_ID: self.state.entity_id
+                    },
+                    blocking=True, context=data.context
+                )
+                return
+
+            if target_mode == 'off':
+                await self.hass.services.async_call(
+                    climate.DOMAIN, SERVICE_TURN_OFF,
+                    {
+                        ATTR_ENTITY_ID: self.state.entity_id
+                    },
+                    blocking=True, context=data.context
+                )
+                return
+
             if target_mode in self.google_to_preset:
                 await self.hass.services.async_call(
                     climate.DOMAIN, climate.SERVICE_SET_PRESET_MODE,
@@ -772,22 +782,6 @@ class TemperatureSettingTrait(_Trait):
                     blocking=True, context=data.context
                 )
                 return
-
-            if target_mode == 'on':
-                # When targetting 'on', we're going to try best effort.
-                modes = [m for m in self.climate_google_modes
-                         if m != climate.HVAC_MODE_OFF]
-
-                if len(modes) == 1:
-                    target_mode = modes[0]
-                elif 'auto' in modes:
-                    target_mode = 'auto'
-                elif 'heatcool' in modes:
-                    target_mode = 'heatcool'
-                else:
-                    raise SmartHomeError(
-                        ERR_FUNCTION_NOT_SUPPORTED,
-                        "Unable to translate 'on' to a HVAC mode.")
 
             await self.hass.services.async_call(
                 climate.DOMAIN, climate.SERVICE_SET_HVAC_MODE, {
