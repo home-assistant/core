@@ -146,7 +146,7 @@ def load_games(hass: HomeAssistantType) -> dict:
     # If file does not exist, create empty file.
     except FileNotFoundError:
         games = {}
-        save_games(games)
+        save_games(hass, games)
     return games
 
 
