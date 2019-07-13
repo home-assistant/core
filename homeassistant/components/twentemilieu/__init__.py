@@ -49,9 +49,9 @@ async def async_setup_entry(
 
     async def update(call) -> None:
         """Service call to manually update the data."""
-        unique_id = call.data.get(CONF_ID, None)
+        unique_id = call.data.get(CONF_ID)
         if unique_id is not None:
-            twentemilieu = hass.data[DOMAIN].get(unique_id, None)
+            twentemilieu = hass.data[DOMAIN].get(unique_id)
             if twentemilieu is not None:
                 await twentemilieu.update()
                 async_dispatcher_send(hass, DATA_UPDATE, unique_id)
