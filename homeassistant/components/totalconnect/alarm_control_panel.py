@@ -19,7 +19,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     
     alarms = []
 
-    client = hass.data[TOTALCONNECT_DOMAIN]._client
+    client = hass.data[TOTALCONNECT_DOMAIN].client
 
     for location in client.locations:
         location_id = location.get('LocationID')
@@ -33,7 +33,6 @@ class TotalConnectAlarm(alarm.AlarmControlPanel):
 
     def __init__(self, name, location_id, client):
         """Initialize the TotalConnect status."""
-        _LOGGER.debug("Setting up TotalConnect...")
         self._name = name
         self._location_id = location_id
         self._client = client

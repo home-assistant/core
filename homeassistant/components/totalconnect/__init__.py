@@ -1,9 +1,11 @@
 """The totalconnect component."""
 import logging
 import voluptuous as vol
+
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME)
+
 from total_connect_client import TotalConnectClient
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,6 +32,7 @@ def setup(hass, config):
     client = TotalConnectClient.TotalConnectClient(username, password)
 
     if client.token is False:
+        _LOGGER.error("TotalConnect authentication failed.")
         return False
 
     hass.data[DOMAIN] = TotalConnectSystem(username, password, client)
@@ -48,4 +51,4 @@ class TotalConnectSystem:
 
         self._username = username
         self._password = password
-        self._client = client
+        self.client = client
