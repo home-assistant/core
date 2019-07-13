@@ -2,6 +2,8 @@
 import logging
 
 import voluptuous as vol
+from pyps4_homeassistant.ddp import async_create_ddp_endpoint
+from pyps4_homeassistant.media_art import COUNTRIES
 
 from homeassistant.const import (
     ATTR_COMMAND, ATTR_ENTITY_ID, CONF_REGION, CONF_TOKEN)
@@ -9,9 +11,10 @@ from homeassistant.core import split_entity_id
 from homeassistant.helpers import entity_registry, config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import location
+from homeassistant.util.json import load_json, save_json
 
 from .config_flow import PlayStation4FlowHandler  # noqa: pylint: disable=unused-import
-from .const import COMMANDS, DOMAIN, PS4_DATA
+from .const import COMMANDS, DOMAIN, GAMES_FILE, PS4_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,8 +37,6 @@ class PS4Data():
 
 async def async_setup(hass, config):
     """Set up the PS4 Component."""
-    from pyps4_homeassistant.ddp import async_create_ddp_endpoint
-
     hass.data[PS4_DATA] = PS4Data()
 
     transport, protocol = await async_create_ddp_endpoint()
@@ -61,8 +62,6 @@ async def async_unload_entry(hass, entry):
 
 async def async_migrate_entry(hass, entry):
     """Migrate old entry."""
-    from pyps4_homeassistant.media_art import COUNTRIES
-
     config_entries = hass.config_entries
     data = entry.data
     version = entry.version
@@ -136,6 +135,32 @@ def format_unique_id(creds, mac_address):
     """Use last 4 Chars of credential as suffix. Unique ID per PSN user."""
     suffix = creds[-4:]
     return "{}_{}".format(mac_address, suffix)
+
+
+def load_games(hass: HomeAssistantType) -> dict:
+    """Load games for sources."""
+    g_file = hass.config.path(GAMES_FILE)
+    try:
+        games = load_json(g_file)
+
+    # If file does not exist, create empty file.
+    except FileNotFoundError:
+        games = {}
+        save_games(hass, games)
+    return games
+
+
+def save_games(hass: HomeAssistantType, games: dict):
+    """Save games to file."""
+    g_file = hass.config.path(GAMES_FILE)
+    try:
+        save_json(g_file, games)
+    except OSError as error:
+        _LOGGER.error("Could not save game list, %s", error)
+
+    # Retry loading file
+    if games is None:
+        load_games(hass)
 
 
 def service_handle(hass: HomeAssistantType):

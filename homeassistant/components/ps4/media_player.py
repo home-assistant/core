@@ -11,12 +11,12 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_GAME, MEDIA_TYPE_APP, SUPPORT_SELECT_SOURCE,
     SUPPORT_PAUSE, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
-from homeassistant.components.ps4 import format_unique_id
+from homeassistant.components.ps4 import (
+    format_unique_id, load_games, save_games)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_REGION,
     CONF_TOKEN, STATE_IDLE, STATE_OFF, STATE_PLAYING)
 from homeassistant.helpers import device_registry, entity_registry
-from homeassistant.util.json import load_json, save_json
 
 from .const import (DEFAULT_ALIAS, DOMAIN as PS4_DOMAIN, PS4_DATA,
                     REGIONS as deprecated_regions)
@@ -27,7 +27,6 @@ SUPPORT_PS4 = SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
     SUPPORT_PAUSE | SUPPORT_STOP | SUPPORT_SELECT_SOURCE
 
 ICON = 'mdi:playstation'
-GAMES_FILE = '.ps4-games.json'
 MEDIA_IMAGE_DEFAULT = None
 
 DEFAULT_RETRIES = 2
@@ -43,7 +42,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up PS4 Platform."""
-    games_file = hass.config.path(GAMES_FILE)
     creds = config.data[CONF_TOKEN]
     device_list = []
     for device in config.data['devices']:
@@ -52,14 +50,14 @@ async def async_setup_platform(
         name = device[CONF_NAME]
         ps4 = pyps4.Ps4Async(host, creds, device_name=DEFAULT_ALIAS)
         device_list.append(PS4Device(
-            config, name, host, region, ps4, creds, games_file))
+            config, name, host, region, ps4, creds))
     async_add_entities(device_list, update_before_add=True)
 
 
 class PS4Device(MediaPlayerDevice):
     """Representation of a PS4."""
 
-    def __init__(self, config, name, host, region, ps4, creds, games_file):
+    def __init__(self, config, name, host, region, ps4, creds):
         """Initialize the ps4 device."""
         self._entry_id = config.entry_id
         self._ps4 = ps4
@@ -68,7 +66,6 @@ class PS4Device(MediaPlayerDevice):
         self._region = region
         self._creds = creds
         self._state = None
-        self._games_filename = games_file
         self._media_content_id = None
         self._media_title = None
         self._media_image = None
@@ -149,7 +146,7 @@ class PS4Device(MediaPlayerDevice):
         status = self._ps4.status
 
         if status is not None:
-            self._games = self.load_games()
+            self._games = load_games(self.hass)
             if self._games is not None:
                 self._source_list = list(sorted(self._games.values()))
             self._retry = 0
@@ -254,33 +251,9 @@ class PS4Device(MediaPlayerDevice):
 
         if self._media_content_id not in self._games:
             self.add_games(self._media_content_id, self._media_title)
-            self._games = self.load_games()
+            self._games = load_games(self.hass)
 
         self._source_list = list(sorted(self._games.values()))
-
-    def load_games(self):
-        """Load games for sources."""
-        g_file = self._games_filename
-        try:
-            games = load_json(g_file)
-
-        # If file does not exist, create empty file.
-        except FileNotFoundError:
-            games = {}
-            self.save_games(games)
-        return games
-
-    def save_games(self, games):
-        """Save games to file."""
-        g_file = self._games_filename
-        try:
-            save_json(g_file, games)
-        except OSError as error:
-            _LOGGER.error("Could not save game list, %s", error)
-
-        # Retry loading file
-        if games is None:
-            self.load_games()
 
     def add_games(self, title_id, app_name):
         """Add games to list."""
@@ -288,7 +261,7 @@ class PS4Device(MediaPlayerDevice):
         if title_id is not None and title_id not in games:
             game = {title_id: app_name}
             games.update(game)
-            self.save_games(games)
+            save_games(self.hass, games)
 
     async def async_get_device_info(self, status):
         """Set device info for registry."""
