@@ -40,7 +40,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     invert_logic = config.get(CONF_INVERT_LOGIC)
 
     binary_sensors = []
-    ports = config.get('ports')
+    ports = config.get(CONF_PORTS)
     for port_num, port_name in ports.items():
         binary_sensors.append(NPiGPIOBinarySensor(port_name, port_num,
                                                   pull_mode, bouncetime,
