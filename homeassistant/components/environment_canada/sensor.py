@@ -4,7 +4,7 @@ Support for the Environment Canada weather service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.environment_canada/
 """
-import datetime
+from datetime import datetime, timedelta
 import logging
 import re
 
@@ -13,10 +13,9 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE, ATTR_ATTRIBUTION,
-    ATTR_LOCATION, ATTR_HIDDEN)
+    ATTR_LOCATION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.util.dt as dt
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,7 +29,7 @@ CONF_ATTRIBUTION = "Data provided by Environment Canada"
 CONF_STATION = 'station'
 CONF_LANGUAGE = 'language'
 
-MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=1)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 
 def validate_station(station):
@@ -51,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Environment Canada sensor."""
     from env_canada import ECData
 
@@ -68,10 +67,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                          language=config.get(CONF_LANGUAGE))
 
     sensor_list = list(ec_data.conditions.keys()) + list(ec_data.alerts.keys())
-    add_devices([ECSensor(sensor_type,
-                          ec_data)
-                 for sensor_type in sensor_list],
-                True)
+    sensor_list.remove('icon_code')
+    add_entities([ECSensor(sensor_type,
+                           ec_data)
+                  for sensor_type in sensor_list],
+                 True)
 
 
 class ECSensor(Entity):
@@ -123,7 +123,8 @@ class ECSensor(Entity):
         metadata = self.ec_data.metadata
         sensor_data = conditions.get(self.sensor_type)
 
-        self._unique_id = '-'.join([metadata['location'], self.sensor_type])
+        self._unique_id = '{}-{}'.format(metadata['location'],
+                                         self.sensor_type)
         self._attr = {}
         self._name = sensor_data.get('label')
         value = sensor_data.get('value')
@@ -147,19 +148,14 @@ class ECSensor(Entity):
 
         timestamp = metadata.get('timestamp')
         if timestamp:
-            updated_utc = datetime.datetime.strptime(timestamp, '%Y%m%d%H%M%S')
-            updated_local = dt.as_local(updated_utc).isoformat()
+            updated_utc = datetime.strptime(timestamp,
+                                            '%Y%m%d%H%M%S').isoformat()
         else:
-            updated_local = None
-
-        hidden = bool(self._state is None or
-                      self._state == '' or
-                      self.sensor_type == 'icon_code')
+            updated_utc = None
 
         self._attr.update({
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            ATTR_UPDATED: updated_local,
+            ATTR_UPDATED: updated_utc,
             ATTR_LOCATION: metadata.get('location'),
             ATTR_STATION: metadata.get('station'),
-            ATTR_HIDDEN: hidden
         })
