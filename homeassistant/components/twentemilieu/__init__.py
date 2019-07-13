@@ -1,9 +1,8 @@
 """Support for Twente Milieu."""
 from datetime import timedelta
 import logging
-from typing import Any, Dict
 
-from twentemilieu import TwenteMilieu, TwenteMilieuError
+from twentemilieu import TwenteMilieu
 import voluptuous as vol
 
 from homeassistant.components.twentemilieu.const import (
@@ -17,11 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    dispatcher_send,
-)
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
