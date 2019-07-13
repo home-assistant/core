@@ -45,14 +45,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if config.get(CONF_STATION):
         radar_object = ECRadar(station_id=config[CONF_STATION],
                                precip_type=config.get(CONF_PRECIP_TYPE))
-    elif config.get(CONF_LATITUDE) and config.get(CONF_LONGITUDE):
-        radar_object = ECRadar(coordinates=(config[CONF_LATITUDE],
-                                            config[CONF_LONGITUDE]),
-                               precip_type=config.get(CONF_PRECIP_TYPE))
     else:
-        radar_object = ECRadar(coordinates=(hass.config.latitude,
-                                            hass.config.longitude),
-                               precip_type=config.get(CONF_PRECIP_TYPE))
+        lat = config.get(CONF_LATITUDE, hass.config.latitude)
+        lon = config.get(CONF_LONGITUDE, hass.config.longitude)
+        radar_object = ECRadar(coordinates=(lat, lon))
 
     add_devices([ECCamera(radar_object, config.get(CONF_NAME))], True)
 

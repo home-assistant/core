@@ -67,12 +67,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Environment Canada weather."""
     if config.get(CONF_STATION):
         ec_data = ECData(station_id=config[CONF_STATION])
-    elif config.get(CONF_LATITUDE) and config.get(CONF_LONGITUDE):
-        ec_data = ECData(coordinates=(config[CONF_LATITUDE],
-                                      config[CONF_LONGITUDE]))
     else:
-        ec_data = ECData(coordinates=(hass.config.latitude,
-                                      hass.config.longitude))
+        lat = config.get(CONF_LATITUDE, hass.config.latitude)
+        lon = config.get(CONF_LONGITUDE, hass.config.longitude)
+        ec_data = ECData(coordinates=(lat, lon))
 
     add_devices([ECWeather(ec_data, config)])
 
