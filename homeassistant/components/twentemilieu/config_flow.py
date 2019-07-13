@@ -27,11 +27,7 @@ class TwenteMilieuFlowHandler(ConfigFlow):
     """Handle a Twente Milieu config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-
-    def __init__(self):
-        """Initialize Twente Milieu flow."""
-        pass
+    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def _show_setup_form(self, errors=None):
         """Show the setup form to the user."""
