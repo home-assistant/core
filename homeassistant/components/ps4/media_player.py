@@ -30,7 +30,7 @@ ICON = 'mdi:playstation'
 GAMES_FILE = '.ps4-games.json'
 MEDIA_IMAGE_DEFAULT = None
 
-DEFAULT_ENTRIES = 2
+DEFAULT_RETRIES = 2
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up PS4 from a config entry."""
@@ -172,7 +172,7 @@ class PS4Device(MediaPlayerDevice):
                 if self._state != STATE_OFF:
                     self.state_off()
 
-        elif self._retry > DEFAULT_ENTRIES:
+        elif self._retry > DEFAULT_RETRIES:
             self.state_unknown()
         else:
             self._retry += 1
