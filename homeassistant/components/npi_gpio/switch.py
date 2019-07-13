@@ -32,11 +32,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nano PI GPIO devices."""
-    initial = config.get(CONF_INITIAL)
-    invert_logic = config.get(CONF_INVERT_LOGIC)
+    initial = config[CONF_INITIAL]
+    invert_logic = config[CONF_INVERT_LOGIC]
 
     switches = []
-    ports = config.get(CONF_PORTS)
+    ports = config[CONF_PORTS]
     for port, name in ports.items():
         switches.append(NPiGPIOSwitch(name, port, initial, invert_logic))
     add_entities(switches)
