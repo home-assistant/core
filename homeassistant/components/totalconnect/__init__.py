@@ -48,7 +48,6 @@ class TotalConnectSystem:
 
     def __init__(self, username, password, client):
         """Initialize the TotalConnect system."""
-
         self._username = username
         self._password = password
         self.client = client

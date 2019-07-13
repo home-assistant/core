@@ -16,7 +16,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an alarm control panel for a TotalConnect device."""
     if discovery_info is None:
         return
-    
+
     alarms = []
 
     client = hass.data[TOTALCONNECT_DOMAIN].client
@@ -64,7 +64,7 @@ class TotalConnectAlarm(alarm.AlarmControlPanel):
             'low_battery': self._client.low_battery,
             'triggered_source': None,
             'triggered_zone': None
-                }
+        }
 
         if status == self._client.DISARMED:
             state = STATE_ALARM_DISARMED
@@ -109,18 +109,18 @@ class TotalConnectAlarm(alarm.AlarmControlPanel):
         self._state = state
         self._device_state_attributes = attr
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self):
         """Send disarm command."""
         self._client.disarm(self._name)
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self):
         """Send arm home command."""
         self._client.arm_stay(self._name)
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self):
         """Send arm away command."""
         self._client.arm_away(self._name)
 
-    def alarm_arm_night(self, code=None):
+    def alarm_arm_night(self):
         """Send arm night command."""
         self._client.arm_stay_night(self._name)
