@@ -32,7 +32,7 @@ def setup(hass, config):
     client = TotalConnectClient.TotalConnectClient(username, password)
 
     if client.token is False:
-        _LOGGER.error("TotalConnect authentication failed.")
+        _LOGGER.error("TotalConnect authentication failed")
         return False
 
     hass.data[DOMAIN] = TotalConnectSystem(username, password, client)
