@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA
-from homeassistant.components import npi_gpio
+from . import setup_output, write_output 
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
@@ -51,8 +51,8 @@ class NPiGPIOSwitch(ToggleEntity):
         self._port = port
         self._invert_logic = invert_logic
         self._state = initial
-        npi_gpio.setup_output(self._port)
-        npi_gpio.write_output(self._port, 1 if self._invert_logic else 0)
+        setup_output(self._port)
+        write_output(self._port, 1 if self._invert_logic else 0)
 
     @property
     def name(self):
@@ -71,12 +71,12 @@ class NPiGPIOSwitch(ToggleEntity):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        npi_gpio.write_output(self._port, 0 if self._invert_logic else 1)
+        write_output(self._port, 0 if self._invert_logic else 1)
         self._state = True
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        npi_gpio.write_output(self._port, 1 if self._invert_logic else 0)
+        write_output(self._port, 1 if self._invert_logic else 0)
         self._state = False
         self.schedule_update_ha_state()
