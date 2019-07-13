@@ -1,4 +1,5 @@
 """Support for Twente Milieu."""
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -56,9 +57,12 @@ async def async_setup_entry(
                 await twentemilieu.update()
                 async_dispatcher_send(hass, DATA_UPDATE, unique_id)
         else:
+            tasks = []
             for twentemilieu in hass.data[DOMAIN].values():
-                unique_id = await twentemilieu.unique_id()
-                await twentemilieu.update()
+                tasks.append(twentemilieu.update())
+            await asyncio.wait(tasks)
+
+            for unique_id in hass.data[DOMAIN]:
                 async_dispatcher_send(hass, DATA_UPDATE, unique_id)
 
     hass.services.async_register(
