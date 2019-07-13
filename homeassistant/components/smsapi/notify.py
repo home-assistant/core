@@ -8,8 +8,6 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_RECIPIENT
 import homeassistant.helpers.config_validation as cv
 
-#REQUIREMENTS = ['smsapi-client==2.1.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
