@@ -97,12 +97,12 @@ class NPiGPIOCover(CoverDevice):
       
     async def _async_trigger(self):
         """Trigger the cover."""
-        await hass.async_add_executor_job(
+        await self.hass.async_add_executor_job(
           write_output,
           self._relay_port,
           1 if self._invert_relay else 0)
         await asleep(self._relay_time)
-        await hass.async_add_executor_job(
+        await self.hass.async_add_executor_job(
           write_output,
           self._relay_port,
           0 if self._invert_relay else 1)
