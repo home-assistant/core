@@ -1,6 +1,6 @@
 """Support for controlling a Nano Pi cover."""
 import logging
-from time import sleep
+from asyncio import sleep as asleep
 
 import voluptuous as vol
 
@@ -94,19 +94,25 @@ class NPiGPIOCover(CoverDevice):
     def is_closed(self):
         """Return true if cover is closed."""
         return self._state != self._invert_state
-
-    def _trigger(self):
+      
+    async def _async_trigger(self):
         """Trigger the cover."""
-        write_output(self._relay_port, 1 if self._invert_relay else 0)
-        sleep(self._relay_time)
-        write_output(self._relay_port, 0 if self._invert_relay else 1)
-
-    def close_cover(self, **kwargs):
+        await hass.async_add_executor_job(
+          write_output,
+          self._relay_port,
+          1 if self._invert_relay else 0)
+        await asleep(self._relay_time)
+        await hass.async_add_executor_job(
+          write_output,
+          self._relay_port,
+          0 if self._invert_relay else 1)
+        
+    async def async_close_cover(self, **kwargs):
         """Close the cover."""
         if not self.is_closed:
-            self._trigger()
-
-    def open_cover(self, **kwargs):
+            await self._async_trigger()    
+            
+    async def async_open_cover(self, **kwargs):
         """Open the cover."""
         if self.is_closed:
-            self._trigger()
+            await self._async_trigger()
