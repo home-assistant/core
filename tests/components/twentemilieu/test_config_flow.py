@@ -65,7 +65,7 @@ async def test_invalid_address(hass, aioclient_mock):
 
 
 async def test_address_already_set_up(hass, aioclient_mock):
-    """Test we abort is address has already been set up."""
+    """Test we abort if address has already been set up."""
     MockConfigEntry(
         domain=DOMAIN, data=FIXTURE_USER_INPUT, title="12345"
     ).add_to_hass(hass)
