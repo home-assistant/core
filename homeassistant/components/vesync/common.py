@@ -2,8 +2,12 @@
 import logging
 import asyncio
 from datetime import timedelta
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from .const import SERVICE_UPDATE_DEVS, VS_DISCOVERY, VS_DISPATCHERS
 
 _LOGGER = logging.getLogger(__name__)
+
+DOMAIN = 'vesync'
 
 CONF_LIGHTS = 'lights'
 CONF_SWITCHES = 'switches'

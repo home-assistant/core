@@ -2,11 +2,11 @@
 import logging
 
 from homeassistant.components.fan import (FanEntity, SUPPORT_SET_SPEED)
-
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import DOMAIN
 
 from .common import CONF_FANS, async_add_entities_retry
-
+from .const import VS_DISCOVERY, VS_DISPATCHERS
 _LOGGER = logging.getLogger(__name__)
 
 FAN_SPEEDS = ["auto", "low", "medium", "high"]
@@ -14,19 +14,29 @@ FAN_SPEEDS = ["auto", "low", "medium", "high"]
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up fans."""
+    async def async_discover(devices):
+        await async_add_entities_retry(
+            hass,
+            async_add_entities,
+            devices,
+            _async_setup_entity)
+
+    disp = async_dispatcher_connect(hass, VS_DISCOVERY.format(CONF_FANS),
+                                    async_discover)
+
+    hass.data[DOMAIN][VS_DISPATCHERS].append(disp)
+
     await async_add_entities_retry(
         hass,
         async_add_entities,
         hass.data[DOMAIN][CONF_FANS],
-        add_entity
+        _async_setup_entity
     )
     return True
 
 
-def add_entity(device, async_add_entities):
+async def _async_setup_entity(device, async_add_entities):
     """Check if device is online and add entity."""
-    device.update()
-
     async_add_entities([VeSyncFanHA(device)], update_before_add=True)
 
 

@@ -1,8 +1,9 @@
 """Support for Etekcity VeSync switches."""
 import logging
 from homeassistant.components.switch import (SwitchDevice)
-
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .common import CONF_SWITCHES, async_add_entities_retry
+from .const import VS_DISCOVERY, VS_DISPATCHERS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -13,19 +14,29 @@ DOMAIN = 'vesync'
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up switches."""
+    async def async_discover(devices):
+        await async_add_entities_retry(
+            hass,
+            async_add_entities,
+            devices,
+            _async_setup_entity)
+
+    disp = async_dispatcher_connect(
+        hass, VS_DISCOVERY.format(CONF_SWITCHES), async_discover)
+
+    hass.data[DOMAIN][VS_DISPATCHERS].append(disp)
+
     await async_add_entities_retry(
         hass,
         async_add_entities,
         hass.data[DOMAIN][CONF_SWITCHES],
-        add_entity
+        _async_setup_entity
     )
     return True
 
 
-def add_entity(device, async_add_entities):
+async def _async_setup_entity(device, async_add_entities):
     """Check if device is online and add entity."""
-    device.update()
-
     async_add_entities(
         [VeSyncSwitchHA(device)],
         update_before_add=True

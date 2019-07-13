@@ -1,13 +1,16 @@
 """Etekcity VeSync integration."""
 import logging
 import voluptuous as vol
+from itertools import chain
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
                                  CONF_TIME_ZONE)
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.config_entries import SOURCE_IMPORT
 from .common import (async_process_devices, CONF_FANS,
                      CONF_LIGHTS, CONF_SWITCHES)
 from .config_flow import configured_instances
+from .const import VS_DISPATCHERS, VS_DISCOVERY, SERVICE_UPDATE_DEVS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,6 +91,8 @@ async def async_setup_entry(hass, config_entry):
     switches = hass.data[DOMAIN][CONF_SWITCHES] = []
     fans = hass.data[DOMAIN][CONF_FANS] = []
 
+    hass.data[DOMAIN][VS_DISPATCHERS] = []
+
     if device_dict[CONF_LIGHTS]:
         lights.extend(device_dict[CONF_LIGHTS])
         hass.async_create_task(forward_setup(config_entry, 'light'))
@@ -98,6 +103,52 @@ async def async_setup_entry(hass, config_entry):
         fans.extend(device_dict[CONF_FANS])
         hass.async_create_task(forward_setup(config_entry, 'fan'))
     _LOGGER.debug(str(lights))
+
+    async def async_new_device_discovery(hass):
+        """Discover if new devices should be added."""
+        if hass[DOMAIN].get('manager') is None:
+            _LOGGER.warning('Cannot get new devices - VeSync manager not loaded')
+            return
+
+        manager = hass[DOMAIN]['manager']
+        lights = hass[DOMAIN][CONF_LIGHTS]
+        fans = hass[DOMAIN][CONF_FANS]
+        switches = hass[DOMAIN][CONF_SWITCHES]
+
+        dev_dict = await async_process_devices(hass, manager)
+        fan_devs = dev_dict.get(CONF_FANS, [])
+        light_devs = dev_dict.get(CONF_LIGHTS, [])
+        switch_devs = dev_dict.get(CONF_SWITCHES, [])
+
+        if fan_devs:
+            fan_set = set(fan_devs)
+            new_fans = list(fan_set.difference(fans))
+            fan_len = len(new_fans)
+            fans.extend(new_fans)
+            async_dispatcher_send(hass, VS_DISCOVERY.format(CONF_FANS),
+                                  fans[-fan_len:])
+
+        if light_devs:
+            light_set = set(light_devs)
+            new_lights = list(light_set.difference(lights))
+            light_len = len(new_lights)
+            lights.extend(new_lights)
+            async_dispatcher_send(hass, VS_DISCOVERY.format(CONF_LIGHTS),
+                                  lights[-light_len:])
+
+        if switch_devs:
+            switch_set = set(switch_devs)
+            new_switches = list(switch_set.difference(switches))
+            switch_len = len(new_switches)
+            switches.extend(new_switches)
+            async_dispatcher_send(hass, VS_DISCOVERY.format(CONF_SWITCHES),
+                                  switches[-switch_len:])
+
+    hass.services.async_register(DOMAIN,
+                                 SERVICE_UPDATE_DEVS,
+                                 async_new_device_discovery
+                                 )
+
     return True
 
 
