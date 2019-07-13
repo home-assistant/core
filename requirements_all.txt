@@ -1707,6 +1707,9 @@ smarthab==0.20
 # homeassistant.components.smhi
 smhi-pkg==1.0.10
 
+# homeassistant.components.smsapi
+smsapi-client==2.1.4
+
 # homeassistant.components.snapcast
 snapcast==2.0.9
 

@@ -232,6 +232,7 @@ homeassistant/components/sma/* @kellerza
 homeassistant/components/smarthab/* @outadoc
 homeassistant/components/smartthings/* @andrewsayre
 homeassistant/components/smarty/* @z0mbieprocess
+homeassistant/components/smsapi/* @zen
 homeassistant/components/smtp/* @fabaff
 homeassistant/components/solaredge_local/* @drobtravels
 homeassistant/components/solax/* @squishykid
