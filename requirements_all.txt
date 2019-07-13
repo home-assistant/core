@@ -1160,7 +1160,7 @@ pyheos==0.5.2
 pyhik==0.2.3
 
 # homeassistant.components.hive
-pyhiveapi==0.2.18
+pyhiveapi==0.2.18.01
 
 # homeassistant.components.homematic
 pyhomematic==0.1.59
