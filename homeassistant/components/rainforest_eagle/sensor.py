@@ -2,13 +2,15 @@
 from datetime import timedelta
 import logging
 
+from eagle200_reader import EagleReader
 from requests.exceptions import (
     ConnectionError as ConnectError, HTTPError, Timeout)
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_IP_ADDRESS, CONF_SCAN_INTERVAL, ENERGY_KILO_WATT_HOUR)
+    CONF_IP_ADDRESS, CONF_SCAN_INTERVAL, DEVICE_CLASS_POWER,
+    ENERGY_KILO_WATT_HOUR)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -19,7 +21,7 @@ POWER_KILO_WATT = 'kW'
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=30)
+MIN_SCAN_INTERVAL = timedelta(seconds=30)
 
 SENSORS = {
     "instantanous_demand": (
@@ -42,24 +44,28 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the Eagle-200 sensor."""
     ip_address = config[CONF_IP_ADDRESS]
     cloud_id = config[CONF_CLOUD_ID]
     install_code = config[CONF_INSTALL_CODE]
-    interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
+    interval = config.get(CONF_SCAN_INTERVAL)
 
-    eagle_data = EagleData(ip_address, cloud_id, install_code, interval)
-    eagle_data.update()
+    try:
+        eagle_data = EagleData(ip_address, cloud_id, install_code, interval)
+    except (ConnectError, HTTPError, Timeout, ValueError) as error:
+        _LOGGER.error("Failed to setup Eagle-200 sensor: %s", error)
+    else:
+        eagle_data.update()
 
-    monitored_conditions = list(SENSORS)
-    sensors = []
-    for condition in monitored_conditions:
-        sensors.append(EagleSensor(
-            eagle_data, condition, SENSORS[condition][0],
-            SENSORS[condition][1]))
+        monitored_conditions = list(SENSORS)
+        sensors = []
+        for condition in monitored_conditions:
+            sensors.append(EagleSensor(
+                eagle_data, condition, SENSORS[condition][0],
+                SENSORS[condition][1]))
 
-    add_devices(sensors)
+        add_entities(sensors)
 
 
 class EagleSensor(Entity):
@@ -73,6 +79,11 @@ class EagleSensor(Entity):
         self._name = name
         self._unit_of_measurement = unit
         self._state = None
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_POWER
 
     @property
     def name(self):
@@ -89,11 +100,17 @@ class EagleSensor(Entity):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
+    @Throttle(MIN_SCAN_INTERVAL)
     def update(self):
         """Get the energy information from the Rainforest Eagle."""
-        self.eagle_data.update()
-        data = self.eagle_data.data
-        self._state = self.get_state(data)
+        try:
+            self.eagle_data.update()
+        except (ConnectError, HTTPError, Timeout, ValueError) as error:
+            _LOGGER.error("Unable to update Eagle-200 %s: %s",
+                          self._name, error)
+        else:
+            data = self.eagle_data.data
+            self._state = self.get_state(data)
 
     def get_state(self, data):
         """Get the sensor value from the dictionary."""
@@ -113,23 +130,22 @@ class EagleData:
         self._cloud_id = cloud_id
         self._install_code = install_code
         self.interval = interval
-
         self.data = {}
+
+        try:
+            self.eagle_reader = EagleReader(
+                self._ip_address, self._cloud_id, self._install_code)
+        except (ConnectError, HTTPError, Timeout, ValueError) as error:
+            _LOGGER.error("Unable to connect during setup: %s", error)
+            self.data = None
 
         # Apply throttling to update method using configured interval.
         self.update = Throttle(interval)(self._update)
 
     def _update(self):
         """Get the latest data from the Eagle-200 device."""
-        from eagle200_reader import EagleReader
-
         try:
-            eagle_reader = EagleReader(
-                self._ip_address, self._cloud_id, self._install_code)
-
-            for sensor_type in SENSORS:
-                self.data.update({sensor_type: getattr(
-                    eagle_reader, sensor_type)()})
+            self.data = self.eagle_reader.update()
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
-            _LOGGER.error("Unable to connect to the Eagle-200: %s", error)
+            _LOGGER.error("Unable to connect during update: %s", error)
             self.data = None
