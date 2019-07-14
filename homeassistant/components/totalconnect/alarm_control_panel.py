@@ -109,18 +109,18 @@ class TotalConnectAlarm(alarm.AlarmControlPanel):
         self._state = state
         self._device_state_attributes = attr
 
-    def alarm_disarm(self):
+    def alarm_disarm(self, code=None):
         """Send disarm command."""
         self._client.disarm(self._name)
 
-    def alarm_arm_home(self):
+    def alarm_arm_home(self, code=None):
         """Send arm home command."""
         self._client.arm_stay(self._name)
 
-    def alarm_arm_away(self):
+    def alarm_arm_away(self, code=None):
         """Send arm away command."""
         self._client.arm_away(self._name)
 
-    def alarm_arm_night(self):
+    def alarm_arm_night(self, code=None):
         """Send arm night command."""
         self._client.arm_stay_night(self._name)

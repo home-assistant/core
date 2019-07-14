@@ -2,12 +2,12 @@
 import logging
 
 import voluptuous as vol
+from total_connect_client import TotalConnectClient
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME)
 
-from total_connect_client import TotalConnectClient
 
 _LOGGER = logging.getLogger(__name__)
 
