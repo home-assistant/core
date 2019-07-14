@@ -1,7 +1,7 @@
 """Support for Climate devices of (EMEA/EU-based) Honeywell TCC systems."""
 from datetime import datetime
 import logging
-from typing import Optional, List
+from typing import Any, Dict, Optional, List
 
 import requests.exceptions
 import evohomeclient2
@@ -109,7 +109,8 @@ class EvoZone(EvoClimateDevice):
         self._precision = \
             self._evo_device.setpointCapabilities['valueResolution']
         self._state_attributes = [
-            'activeFaults', 'setpointStatus', 'temperatureStatus', 'setpoints']
+            'zoneId', 'activeFaults', 'setpointStatus', 'temperatureStatus',
+            'setpoints']
 
         self._supported_features = SUPPORT_PRESET_MODE | \
             SUPPORT_TARGET_TEMPERATURE
@@ -243,7 +244,8 @@ class EvoController(EvoClimateDevice):
         self._icon = 'mdi:thermostat'
 
         self._precision = None
-        self._state_attributes = ['activeFaults', 'systemModeStatus']
+        self._state_attributes = [
+            'systemId', 'activeFaults', 'systemModeStatus']
 
         self._supported_features = SUPPORT_PRESET_MODE
         self._hvac_modes = list(HA_HVAC_TO_TCS)
@@ -339,6 +341,15 @@ class EvoThermostat(EvoZone):
         self._hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_HEAT]
         self._preset_modes = list(HA_PRESET_TO_EVO)
 
+    @property
+    def device_state_attributes(self) -> Dict[str, Any]:
+        """Return the Evohome-specific state attributes."""
+        status = super().device_state_attributes['status']
+
+        status['systemModeStatus'] = getattr(self._evo_tcs, 'systemModeStatus')
+        status['activeFaults'] += getattr(self._evo_tcs, 'activeFaults')
+
+        return {'status': status}
 
     @property
     def hvac_mode(self) -> str:

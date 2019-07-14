@@ -47,7 +47,8 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
 
         self._precision = PRECISION_WHOLE
         self._state_attributes = [
-            'activeFaults', 'stateStatus', 'temperatureStatus', 'setpoints']
+            'dhwId', 'activeFaults', 'stateStatus', 'temperatureStatus',
+            'setpoints']
 
         self._supported_features = SUPPORT_OPERATION_MODE
         self._operation_list = list(HA_OPMODE_TO_DHW)
