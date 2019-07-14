@@ -100,7 +100,22 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
             _handle_exception(err)
 
     def _set_zone_mode(self, op_mode: str) -> None:
-        """Set the Zone to one of its native EVO_* operating modes."""
+        """Set the Zone to one of its native EVO_* operating modes.
+
+        NB: evohome Zones 'inherit' their operating mode from the Controller.
+
+        Usually, Zones are in 'FollowSchedule' mode, where their setpoints are
+        a function of their schedule, and the Controller's operating_mode, e.g.
+        Economy mode is their scheduled setpoint less (usually) 3C.
+
+        However, Zones can override these setpoints, either for a specified
+        period of time, 'TemporaryOverride', after which they will revert back
+        to 'FollowSchedule' mode, or indefinitely, 'PermanentOverride'.
+
+        Some of the Controller's operating_mode are 'forced' upon the Zone,
+        regardless of its override state, e.g. 'HeatingOff' (Zones to min_temp)
+        and 'Away' (Zones to 12C).
+        """
         if op_mode == EVO_FOLLOW:
             try:
                 self._evo_device.cancel_temp_override()
@@ -161,18 +176,7 @@ class EvoZone(EvoClimateDevice):
 
     @property
     def hvac_mode(self) -> str:
-        """Return the current operating mode of the evohome Zone.
-
-        NB: evohome Zones 'inherit' their operating mode from the controller.
-
-        Usually, Zones are in 'FollowSchedule' mode, where their setpoints are
-        a function of their schedule, and the Controller's operating_mode, e.g.
-        Economy mode is their scheduled setpoint less (usually) 3C.
-
-        However, Zones can override these setpoints, either for a specified
-        period of time, 'TemporaryOverride', after which they will revert back
-        to 'FollowSchedule' mode, or indefinitely, 'PermanentOverride'.
-        """
+        """Return the current operating mode of the evohome Zone."""
         if self._evo_tcs.systemModeStatus['mode'] in [EVO_AWAY, EVO_HEATOFF]:
             return HVAC_MODE_AUTO
         is_off = self.target_temperature <= self.min_temp
