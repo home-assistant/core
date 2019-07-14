@@ -38,5 +38,5 @@ class SMSApiNotificationService(BaseNotificationService):
 
         try:
             self.smsapi.sms.send(to=self._recipient, message=message)
-        except SmsApiException as e:
-            _LOGGER.error(str(e))
+        except SmsApiException as exception:
+            _LOGGER.error(str(exception))
