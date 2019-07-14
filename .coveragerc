@@ -472,7 +472,6 @@ omit =
     homeassistant/components/prometheus/*
     homeassistant/components/prowl/notify.py
     homeassistant/components/proxy/camera.py
-    homeassistant/components/ps4/__init__.py
     homeassistant/components/ps4/media_player.py
     homeassistant/components/ptvsd/*
     homeassistant/components/pulseaudio_loopback/switch.py
