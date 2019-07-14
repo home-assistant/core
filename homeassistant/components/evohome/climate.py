@@ -194,7 +194,7 @@ class EvoZone(EvoClimateDevice):
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        if self._evo_tcs.systemModeStatus['mode'] in [EVO_HEATOFF, EVO_AWAY]:
+        if self._evo_tcs.systemModeStatus['mode'] in [EVO_AWAY, EVO_HEATOFF]:
             return TCS_PRESET_TO_HA.get(self._evo_tcs.systemModeStatus['mode'])
         return EVO_PRESET_TO_HA.get(
             self._evo_device.setpointStatus['setpointMode'], 'follow')
