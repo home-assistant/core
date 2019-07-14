@@ -49,10 +49,22 @@ def setup_platform(hass, hass_config, add_entities,
     broker = hass.data[DOMAIN]['broker']
     loc_idx = broker.params[CONF_LOCATION_IDX]
 
-    _LOGGER.debug(
+    _LOGGER.warn(
         "Found Controller, id=%s [%s], name=%s (location_idx=%s)",
         broker.tcs.systemId, broker.tcs.modelType, broker.tcs.location.name,
         loc_idx)
+
+    # special case of RoundThermostat
+    if broker.config['zones'][0]['modelType'] == 'RoundModulation':
+        evo_zone = broker.tcs._zones[0]
+        _LOGGER.warn(
+            "Found %s, id=%s [%s], name=%s",
+            evo_zone.zoneType, evo_zone.zoneId, evo_zone.modelType,
+            evo_zone.name)
+
+        add_entities([EvoTermostat(broker, evo_zone)], update_before_add=True)
+
+        return
 
     controller = EvoController(broker, broker.tcs)
 
@@ -334,3 +346,54 @@ class EvoController(EvoClimateDevice):
     def update(self) -> None:
         """Get the latest state data."""
         pass
+
+
+class EvoThermostat(EvoZone):
+    """Base for a Honeywell evohome Zone."""
+
+    def __init__(self, evo_broker, evo_device) -> None:
+        """Initialize the evohome Zone."""
+        super().__init__(evo_broker, evo_device)
+
+        self._id = evo_device.zoneId
+        self._name = "_" + evo_device.name
+        self._icon = 'mdi:radiator'
+
+        self._hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_HEAT]
+        self._preset_modes = list(HA_PRESET_TO_EVO)
+
+        for _zone in evo_broker.config['zones']:
+            if _zone['zoneId'] == self._id:
+                self._config = _zone
+                break
+
+    @property
+    def hvac_mode(self) -> str:
+        """Return the current operating mode of the evohome Zone."""
+        if self._evo_tcs.systemModeStatus['mode'] == EVO_HEATOFF:
+            return HVAC_MODE_OFF
+        is_off = self.target_temperature <= self.min_temp
+        return HVAC_MODE_OFF if is_off else HVAC_MODE_HEAT
+
+    @property
+    def preset_mode(self) -> Optional[str]:
+        """Return the current preset mode, e.g., home, away, temp."""
+        if self._evo_tcs.systemModeStatus['mode'] == EVO_HEATOFF:
+            return None
+        if self._evo_tcs.systemModeStatus['mode'] == EVO_AWAY:
+            return 'Away (x)'
+        if self._evo_tcs.systemModeStatus['mode'] == EVO_AUTOECO:
+            return 'Evo (x)'
+        return EVO_PRESET_TO_HA.get(
+            self._evo_device.setpointStatus['setpointMode'], 'follow')
+
+    def set_hvac_mode(self, hvac_mode: str) -> None:
+        """Set an operating mode for the Thermostat."""
+        self._set_operation_mode(HA_HVAC_TO_TCS.get(hvac_mode))
+
+    def set_preset_mode(self, preset_mode: Optional[str]) -> None:
+        """Set a new preset mode.
+
+        If preset_mode is None, then revert to following the schedule.
+        """
+        self._set_operation_mode(HA_PRESET_TO_EVO.get(preset_mode, EVO_FOLLOW))
