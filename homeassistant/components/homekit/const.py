@@ -36,6 +36,7 @@ EVENT_HOMEKIT_CHANGED = 'homekit_state_change'
 
 # #### HomeKit Component Services ####
 SERVICE_HOMEKIT_START = 'start'
+SERVICE_HOMEKIT_RESET_ACCESSORY = 'reset_accessory'
 
 # #### String Constants ####
 BRIDGE_MODEL = 'Bridge'
