@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Optional
 
 from twentemilieu import TwenteMilieu
 import voluptuous as vol
@@ -29,34 +30,35 @@ SERVICE_UPDATE = "update"
 SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_ID): cv.string})
 
 
+async def _update_twentemilieu(
+        hass: HomeAssistantType,
+        unique_id: Optional[str]
+) -> None:
+    """Update Twente Milieu."""
+    if unique_id is not None:
+        twentemilieu = hass.data[DOMAIN].get(unique_id)
+        if twentemilieu is not None:
+            await twentemilieu.update()
+            async_dispatcher_send(hass, DATA_UPDATE, unique_id)
+    else:
+        tasks = []
+        for twentemilieu in hass.data[DOMAIN].values():
+            tasks.append(twentemilieu.update())
+        await asyncio.wait(tasks)
+
+        for uid in hass.data[DOMAIN]:
+            async_dispatcher_send(hass, DATA_UPDATE, uid)
+
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the Twente Milieu components."""
     async def update(call) -> None:
         """Service call to manually update the data."""
         unique_id = call.data.get(CONF_ID)
-        if unique_id is not None:
-            twentemilieu = hass.data[DOMAIN].get(unique_id)
-            if twentemilieu is not None:
-                await twentemilieu.update()
-                async_dispatcher_send(hass, DATA_UPDATE, unique_id)
-        else:
-            tasks = []
-            for twentemilieu in hass.data[DOMAIN].values():
-                tasks.append(twentemilieu.update())
-            await asyncio.wait(tasks)
-
-            for unique_id in hass.data[DOMAIN]:
-                async_dispatcher_send(hass, DATA_UPDATE, unique_id)
+        await _update_twentemilieu(hass, unique_id)
 
     hass.services.async_register(
         DOMAIN, SERVICE_UPDATE, update, schema=SERVICE_SCHEMA
     )
-
-    async def _interval_update(now=None) -> None:
-        """Update Twente Milieu data."""
-        await hass.services.async_call(DOMAIN, SERVICE_UPDATE)
-
-    async_track_time_interval(hass, _interval_update, SCAN_INTERVAL)
 
     return True
 
@@ -79,6 +81,12 @@ async def async_setup_entry(
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "sensor")
     )
+
+    async def _interval_update(now=None) -> None:
+        """Update Twente Milieu data."""
+        await _update_twentemilieu(hass, unique_id)
+
+    async_track_time_interval(hass, _interval_update, SCAN_INTERVAL)
 
     return True
 
