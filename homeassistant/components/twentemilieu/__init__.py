@@ -25,29 +25,12 @@ SCAN_INTERVAL = timedelta(seconds=3600)
 
 _LOGGER = logging.getLogger(__name__)
 
+SERVICE_UPDATE = "update"
 SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_ID): cv.string})
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the Twente Milieu components."""
-    return True
-
-
-async def async_setup_entry(
-        hass: HomeAssistantType, entry: ConfigEntry
-) -> bool:
-    """Set up Twente Milieu from a config entry."""
-    session = async_get_clientsession(hass)
-    twentemilieu = TwenteMilieu(
-        post_code=entry.data[CONF_POST_CODE],
-        house_number=entry.data[CONF_HOUSE_NUMBER],
-        house_letter=entry.data[CONF_HOUSE_LETTER],
-        session=session,
-    )
-
-    unique_id = entry.data[CONF_ID]
-    hass.data.setdefault(DOMAIN, {})[unique_id] = twentemilieu
-
     async def update(call) -> None:
         """Service call to manually update the data."""
         unique_id = call.data.get(CONF_ID)
@@ -66,10 +49,32 @@ async def async_setup_entry(
                 async_dispatcher_send(hass, DATA_UPDATE, unique_id)
 
     hass.services.async_register(
-        DOMAIN, "update", update, schema=SERVICE_SCHEMA
+        DOMAIN, SERVICE_UPDATE, update, schema=SERVICE_SCHEMA
+    )
+    
+    async def _interval_update(now=None) -> None:
+        """Update Twente Milieu data."""
+        await hass.services.async_call(DOMAIN, SERVICE_UPDATE)
+
+    async_track_time_interval(hass, _interval_update, SCAN_INTERVAL)
+
+    return True
+
+
+async def async_setup_entry(
+        hass: HomeAssistantType, entry: ConfigEntry
+) -> bool:
+    """Set up Twente Milieu from a config entry."""
+    session = async_get_clientsession(hass)
+    twentemilieu = TwenteMilieu(
+        post_code=entry.data[CONF_POST_CODE],
+        house_number=entry.data[CONF_HOUSE_NUMBER],
+        house_letter=entry.data[CONF_HOUSE_LETTER],
+        session=session,
     )
 
-    async_track_time_interval(hass, update, SCAN_INTERVAL)
+    unique_id = entry.data[CONF_ID]
+    hass.data.setdefault(DOMAIN, {})[unique_id] = twentemilieu
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "sensor")
