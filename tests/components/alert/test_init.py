@@ -363,7 +363,6 @@ class TestAlert(unittest.TestCase):
         self.assertEqual(last_event.data[notify.ATTR_DATA],
                          COMBINED_TEST_DATA)
 
-
     def test_skipfirst(self):
         """Test skipping first notification."""
         config = deepcopy(TEST_CONFIG)

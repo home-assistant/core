@@ -276,7 +276,8 @@ class Alert(ToggleEntity):
         for target in self._notifiers:
             if self._notifier_data.get(target) is not None:
                 data = {}
-                data.update(self._data)
+                if self._data is not None:
+                    data.update(self._data)
                 data.update(self._notifier_data.get(target))
                 msg_payload.update({ATTR_DATA: data})
 
