@@ -164,7 +164,7 @@ async def test_config_flow_entry_migrate(hass):
 
 
 class TestPS4Integration(unittest.TestCase):
-    """Test services for PS4."""
+    """Test methods for PS4 Integration."""
 
     def cleanup(self):
         """Cleanup any data created from the tests."""
