@@ -110,7 +110,7 @@ class TwenteMilieuSensor(Entity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this sensor."""
-        return "_".join([DOMAIN, self._unique_id, self._waste_type])
+        return "{}_{}_{}".format(DOMAIN, self._unique_id, self._waste_type)
 
     @property
     def should_poll(self) -> bool:
