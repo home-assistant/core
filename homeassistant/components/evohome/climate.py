@@ -38,11 +38,13 @@ HA_PRESET_TO_TCS = {
 }
 TCS_PRESET_TO_HA = {v: k for k, v in HA_PRESET_TO_TCS.items()}
 
-HA_PRESET_TO_EVO = {
-    'temporary': EVO_TEMPOVER,
-    'permanent': EVO_PERMOVER,
+EVO_PRESET_TO_HA = {
+    EVO_FOLLOW: None,
+    EVO_TEMPOVER: 'temporary',
+    EVO_PERMOVER: 'permanent',
 }
-EVO_PRESET_TO_HA = {v: k for k, v in HA_PRESET_TO_EVO.items()}
+HA_PRESET_TO_EVO = {v: k for k, v in EVO_PRESET_TO_HA.items()
+                    if v is not None}
 
 
 def setup_platform(hass, hass_config, add_entities,
@@ -85,7 +87,7 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
         """Initialize the evohome Climate device."""
         super().__init__(evo_broker, evo_device)
 
-        self._hvac_modes = self._preset_modes = None
+        self._preset_modes = None
 
     def _set_temperature(self, temperature: float,
                          until: Optional[datetime] = None) -> None:
@@ -145,7 +147,7 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
     @property
     def hvac_modes(self) -> List[str]:
         """Return the list of available hvac operation modes."""
-        return self._hvac_modes
+        return [HVAC_MODE_OFF, HVAC_MODE_HEAT]
 
     @property
     def preset_modes(self) -> Optional[List[str]]:
@@ -171,7 +173,6 @@ class EvoZone(EvoClimateDevice):
 
         self._supported_features = SUPPORT_PRESET_MODE | \
             SUPPORT_TARGET_TEMPERATURE
-        self._hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_HEAT]
         self._preset_modes = list(HA_PRESET_TO_EVO)
 
     @property
@@ -262,7 +263,6 @@ class EvoController(EvoClimateDevice):
             'systemId', 'activeFaults', 'systemModeStatus']
 
         self._supported_features = SUPPORT_PRESET_MODE
-        self._hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_HEAT]
         self._preset_modes = list(HA_PRESET_TO_TCS)
 
     @property
@@ -346,7 +346,6 @@ class EvoThermostat(EvoZone):
         self._name = evo_broker.tcs.location.name
         self._icon = 'mdi:radiator'
 
-        self._hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_HEAT]
         self._preset_modes = [PRESET_AWAY, PRESET_ECO]
 
     @property
