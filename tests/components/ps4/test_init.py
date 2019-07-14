@@ -203,13 +203,15 @@ class TestPS4Integration(unittest.TestCase):
 
     def test_file_created_if_none(self):
         """Test that games file is created if it does not exist."""
+        # Test that file does not exist.
         self.cleanup()
+        assert not os.path.isfile(self.mock_file)
+
         mock_empty = ps4.load_games(self.hass)
 
+        # Test that file is created and empty.
         assert isinstance(mock_empty, dict)
-        assert not mock_empty
-        assert self.mock_file == '{}/{}'.format(
-            self.hass.config.path(), GAMES_FILE)
+        assert os.path.isfile(self.mock_file)
 
     def test_games_reformat_to_dict(self):
         """Test old data format is converted to new format."""
