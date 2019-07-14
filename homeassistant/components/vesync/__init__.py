@@ -21,7 +21,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_TIME_ZONE): cv.string,
+        vol.Optional(CONF_TIME_ZONE): cv.time_zone,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -45,7 +45,7 @@ async def async_setup(hass, config):
                 data={
                     CONF_USERNAME: conf[CONF_USERNAME],
                     CONF_PASSWORD: conf[CONF_PASSWORD],
-                    CONF_TIME_ZONE: conf.get(CONF_TIME_ZONE, None)
+                    CONF_TIME_ZONE: conf.get(CONF_TIME_ZONE)
                 }))
 
     return True
@@ -57,7 +57,7 @@ async def async_setup_entry(hass, config_entry):
     password = config_entry.data[CONF_PASSWORD]
     time_zone = config_entry.data[CONF_TIME_ZONE]
 
-    if config_entry.data[CONF_TIME_ZONE]:
+    if config_entry.data[CONF_TIME_ZONE] != '':
         time_zone = config_entry.data[CONF_TIME_ZONE]
     else:
         if hass.config.time_zone is not None:
@@ -155,7 +155,7 @@ async def async_setup_entry(hass, config_entry):
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     forward_unload = hass.config_entries.async_forward_entry_unload
-    remove_lights = remove_switches = False
+    remove_lights = remove_switches = remove_fans = False
     if hass.data[DOMAIN][CONF_LIGHTS]:
         remove_lights = await forward_unload(entry, 'light')
     if hass.data[DOMAIN][CONF_SWITCHES]:
@@ -164,7 +164,8 @@ async def async_unload_entry(hass, entry):
         remove_fans = await forward_unload(entry, 'fan')
 
     if remove_lights or remove_switches or remove_fans:
-        hass.data[DOMAIN].clear()
+        hass.services.async_remove(DOMAIN, SERVICE_UPDATE_DEVS)
+        del hass.data[DOMAIN]
         return True
 
     return False

@@ -12,7 +12,7 @@
       }
     },
     "error": {
-      "identifier_exists": "Account already registered",
+      "alread_setup": "You can only configure one vesync instance",
       "invalid_credentials": "Invalid credentials"
     }
   }

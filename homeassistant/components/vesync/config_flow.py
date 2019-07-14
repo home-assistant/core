@@ -3,9 +3,9 @@ import logging
 from collections import OrderedDict
 import voluptuous as vol
 from homeassistant import config_entries
+from homeassistant.helpers import config_validation as cv
 from homeassistant.core import callback
 from homeassistant.const import (CONF_TIME_ZONE, CONF_USERNAME, CONF_PASSWORD)
-
 
 DOMAIN = 'vesync'
 
@@ -15,9 +15,9 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def configured_instances(hass):
     """Return already configured instances."""
-    return set(
+    return [
         entry.data[CONF_USERNAME]
-        for entry in hass.config_entries.async_entries(DOMAIN))
+        for entry in hass.config_entries.async_entries(DOMAIN)]
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -51,15 +51,21 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
+        if configured_instances(self.hass):
+            return self.async_abort(reason='already_setup')
+
         if not user_input:
             return await self._show_form()
 
-        if user_input[CONF_USERNAME] in configured_instances(self.hass):
-            return await self._show_form({CONF_USERNAME: 'Username Exists'})
-
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
-        self._time_zone = user_input.get(CONF_TIME_ZONE, None)
+
+        if user_input.get(CONF_TIME_ZONE, None) is not None:
+            try:
+                self._time_zone = cv.time_zone(user_input.get(CONF_TIME_ZONE))
+            except vol.Invalid as e:
+                _LOGGER.warning(e)
+                self._time_zone = None
 
         return self.async_create_entry(
             title=self._username,

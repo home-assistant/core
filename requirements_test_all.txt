@@ -358,6 +358,9 @@ uvcclient==0.11.0
 # homeassistant.components.verisure
 vsure==1.5.2
 
+# homeassistant.components.vesync
+pyvesync==1.0.11
+
 # homeassistant.components.vultr
 vultr==0.1.2
 
