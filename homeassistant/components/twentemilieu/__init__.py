@@ -21,7 +21,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-SCAN_INTERVAL = timedelta(seconds=86400)
+SCAN_INTERVAL = timedelta(seconds=3600)
 
 _LOGGER = logging.getLogger(__name__)
 
