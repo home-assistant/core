@@ -649,6 +649,8 @@ omit =
     homeassistant/components/transmission/*
     homeassistant/components/travisci/sensor.py
     homeassistant/components/tuya/*
+    homeassistant/components/twentemilieu/const.py
+    homeassistant/components/twentemilieu/sensor.py
     homeassistant/components/twilio_call/notify.py
     homeassistant/components/twilio_sms/notify.py
     homeassistant/components/twitch/sensor.py

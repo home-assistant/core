@@ -1830,6 +1830,9 @@ transmissionrpc==0.11
 # homeassistant.components.tuya
 tuyaha==0.0.2
 
+# homeassistant.components.twentemilieu
+twentemilieu==0.1.0
+
 # homeassistant.components.twilio
 twilio==6.19.1
 
