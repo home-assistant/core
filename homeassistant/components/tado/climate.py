@@ -361,9 +361,6 @@ class TadoClimate(ClimateDevice):
             _LOGGER.info("Obtained current and target temperature. "
                          "Tado thermostat active")
 
-        if not self._active or self._current_operation == self._overlay_mode:
-            return
-
         if self._current_operation == CONST_MODE_SMART_SCHEDULE:
             _LOGGER.info("Switching mytado.com to SCHEDULE (default) "
                          "for zone %s", self.zone_name)
