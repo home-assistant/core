@@ -195,6 +195,9 @@ class EvoBroker:
         store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         app_storage = self._app_storage = await store.async_load()
 
+        if app_storage is None:
+            app_storage = self._app_storage = {}
+
         if app_storage.get(CONF_USERNAME) == self.params[CONF_USERNAME]:
             refresh_token = app_storage.get(CONF_REFRESH_TOKEN)
             access_token = app_storage.get(CONF_ACCESS_TOKEN)
