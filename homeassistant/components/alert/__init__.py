@@ -80,7 +80,7 @@ async def async_setup(hass, config):
         can_ack = cfg.get(CONF_CAN_ACK)
         title_template = cfg.get(CONF_TITLE)
         data = cfg.get(CONF_DATA)
-        notifier_data = cfg.get(CONF_NOTIFIER_DATA)
+        notifier_data = cfg[CONF_NOTIFIER_DATA]
 
         entities.append(Alert(hass, object_id, name,
                               watched_entity_id, alert_state, repeat,
@@ -278,7 +278,7 @@ class Alert(ToggleEntity):
                 data = {}
                 if self._data is not None:
                     data.update(self._data)
-                data.update(self._notifier_data.get(target))
+                data.update(self._notifier_data[target])
                 msg_payload.update({ATTR_DATA: data})
 
             await self.hass.services.async_call(
