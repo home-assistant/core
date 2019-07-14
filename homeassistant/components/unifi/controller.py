@@ -52,6 +52,10 @@ class UniFiController:
         """Return the site user role of this controller."""
         return self._site_role
 
+    def block_clients(self):
+        """Return list of clients to block."""
+        return ['dc:a6:32:05:81:90']
+
     @property
     def mac(self):
         """Return the mac address of this controller."""

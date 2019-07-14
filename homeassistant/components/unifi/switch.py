@@ -51,13 +51,35 @@ def update_items(controller, async_add_entities, switches):
     new_switches = []
     devices = controller.api.devices
 
+    # block client
+    for client_id in controller.block_clients:
+
+        block_client_id = 'block-{}'.format(client_id)
+
+        if block_client_id in switches:
+            LOGGER.debug("Updating UniFi block switch %s (%s)",
+                         switches[block_client_id].entity_id,
+                         switches[block_client_id].client.mac)
+            print(controller.api.clients[client_id])
+            switches[block_client_id].async_schedule_update_ha_state()
+            continue
+
+        client = controller.api.clients[client_id]
+        switches[block_client_id] = UniFiBlockClientSwitch(client, controller)
+        new_switches.append(switches[block_client_id])
+        LOGGER.debug(
+            "New UniFi Block switch %s (%s)", client.hostname, client.mac)
+
+    # control poe
     for client_id in controller.api.clients:
 
-        if client_id in switches:
-            LOGGER.debug("Updating UniFi switch %s (%s)",
-                         switches[client_id].entity_id,
-                         switches[client_id].client.mac)
-            switches[client_id].async_schedule_update_ha_state()
+        poe_client_id = 'poe-{}'.format(client_id)
+
+        if poe_client_id in switches:
+            LOGGER.debug("Updating UniFi POE switch %s (%s)",
+                         switches[poe_client_id].entity_id,
+                         switches[poe_client_id].client.mac)
+            switches[poe_client_id].async_schedule_update_ha_state()
             continue
 
         client = controller.api.clients[client_id]
@@ -80,24 +102,22 @@ def update_items(controller, async_add_entities, switches):
         if multi_clients_on_port:
             continue
 
-        switches[client_id] = UniFiSwitch(client, controller)
-        new_switches.append(switches[client_id])
-        LOGGER.debug("New UniFi switch %s (%s)", client.hostname, client.mac)
+        switches[poe_client_id] = UniFiPOEClientSwitch(client, controller)
+        new_switches.append(switches[poe_client_id])
+        LOGGER.debug(
+            "New UniFi POE switch %s (%s)", client.hostname, client.mac)
 
     if new_switches:
         async_add_entities(new_switches)
 
 
-class UniFiSwitch(SwitchDevice):
-    """Representation of a client that uses POE."""
+class UniFiClient:
+    """Base class for UniFi switches."""
 
     def __init__(self, client, controller):
         """Set up switch."""
         self.client = client
         self.controller = controller
-        self.poe_mode = None
-        if self.port.poe_mode != 'off':
-            self.poe_mode = self.port.poe_mode
 
     async def async_update(self):
         """Synchronize state with controller."""
@@ -105,8 +125,26 @@ class UniFiSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """Return the name of the switch."""
-        return self.client.hostname
+        """Return the name of the client."""
+        return self.client.name or self.client.hostname
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        return {
+            'connections': {(CONNECTION_NETWORK_MAC, self.client.mac)}
+        }
+
+
+class UniFiPOEClientSwitch(UniFiClient, SwitchDevice):
+    """Representation of a client that uses POE."""
+
+    def __init__(self, client, controller):
+        """Set up POE switch."""
+        super().__init__(client, controller)
+        self.poe_mode = None
+        if self.port.poe_mode != 'off':
+            self.poe_mode = self.port.poe_mode
 
     @property
     def unique_id(self):
@@ -147,13 +185,6 @@ class UniFiSwitch(SwitchDevice):
         return attributes
 
     @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return {
-            'connections': {(CONNECTION_NETWORK_MAC, self.client.mac)}
-        }
-
-    @property
     def device(self):
         """Shortcut to the switch that client is connected to."""
         return self.controller.api.devices[self.client.sw_mac]
@@ -162,3 +193,39 @@ class UniFiSwitch(SwitchDevice):
     def port(self):
         """Shortcut to the switch port that client is connected to."""
         return self.device.ports[self.client.sw_port]
+
+
+class UniFiBlockClientSwitch(UniFiClient, SwitchDevice):
+    """Representation of a blockable client."""
+
+    def __init__(self, client, controller):
+        """Set up block client switch."""
+        super().__init__(client, controller)
+        self.blocked = None
+        if self.blocked != True:
+            self.blocked = False
+
+    @property
+    def unique_id(self):
+        """Return a unique identifier for this switch."""
+        return 'block-{}'.format(self.client.mac)
+
+    @property
+    def is_on(self):
+        """Return true if POE is active."""
+        return self.blocked is not True
+
+    @property
+    def available(self):
+        """Return if switch is available."""
+        return self.controller.available
+
+    async def async_turn_on(self, **kwargs):
+        """Enable POE for client."""
+        self.blocked = False
+        await self.controller.api.clients.async_unblock(self.client.mac)
+
+    async def async_turn_off(self, **kwargs):
+        """Disable POE for client."""
+        self.blocked = True
+        await self.controller.api.clients.async_block(self.client.mac)
