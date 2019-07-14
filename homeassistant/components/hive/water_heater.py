@@ -1,5 +1,5 @@
 """Support for hive water heaters."""
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import TEMP_CELSIUS
 
 from homeassistant.components.water_heater import (
     STATE_ECO, STATE_ON, STATE_OFF, SUPPORT_OPERATION_MODE, WaterHeaterDevice)
