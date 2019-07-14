@@ -25,6 +25,11 @@ TEST_DATA = {
         'inline_keyboard': ['Close garage:/close_garage']
     }
 }
+NOTIFIER_TEST_DATA = {
+    'icon': 'garage-door'
+}
+COMBINED_TEST_DATA = NOTIFIER_TEST_DATA.copy()
+COMBINED_TEST_DATA.update(TEST_DATA)
 TEST_CONFIG = \
     {alert.DOMAIN: {
         NAME: {
@@ -40,7 +45,8 @@ TEST_CONFIG = \
         }
     }}
 TEST_NOACK = [NAME, NAME, "sensor.test",
-              STATE_ON, [30], False, None, None, NOTIFIER, False, None, None]
+              STATE_ON, [30], False, None, None, NOTIFIER, False, None, None,
+              {}]
 ENTITY_ID = alert.ENTITY_ID_FORMAT.format(NAME)
 
 
@@ -315,6 +321,8 @@ class TestAlert(unittest.TestCase):
 
         config = deepcopy(TEST_CONFIG)
         config[alert.DOMAIN][NAME][alert.CONF_DATA] = TEST_DATA
+        config[alert.DOMAIN][NAME][alert.CONF_NOTIFIER_DATA] = \
+            {'some-other-notifier': NOTIFIER_TEST_DATA}
         assert setup_component(self.hass, alert.DOMAIN, config)
 
         self.hass.states.set(TEST_ENTITY, STATE_ON)
@@ -322,6 +330,39 @@ class TestAlert(unittest.TestCase):
         self.assertEqual(1, len(events))
         last_event = events[-1]
         self.assertEqual(last_event.data[notify.ATTR_DATA], TEST_DATA)
+
+    def test_sending_notifier_specific_data_notification(self):
+        """Test notifier specific data."""
+        events = self._setup_notify()
+
+        config = deepcopy(TEST_CONFIG)
+        config[alert.DOMAIN][NAME][alert.CONF_NOTIFIER_DATA] = \
+            {NOTIFIER: NOTIFIER_TEST_DATA}
+        assert setup_component(self.hass, alert.DOMAIN, config)
+
+        self.hass.states.set(TEST_ENTITY, STATE_ON)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(events))
+        last_event = events[-1]
+        self.assertEqual(last_event.data[notify.ATTR_DATA], NOTIFIER_TEST_DATA)
+
+    def test_sending_notifier_specific_data_gets_merged_with_data(self):
+        """Test notifier specific data is merged with top level data."""
+        events = self._setup_notify()
+
+        config = deepcopy(TEST_CONFIG)
+        config[alert.DOMAIN][NAME][alert.CONF_DATA] = TEST_DATA
+        config[alert.DOMAIN][NAME][alert.CONF_NOTIFIER_DATA] = \
+            {NOTIFIER: NOTIFIER_TEST_DATA}
+        assert setup_component(self.hass, alert.DOMAIN, config)
+
+        self.hass.states.set(TEST_ENTITY, STATE_ON)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(events))
+        last_event = events[-1]
+        self.assertEqual(last_event.data[notify.ATTR_DATA],
+                         COMBINED_TEST_DATA)
+
 
     def test_skipfirst(self):
         """Test skipping first notification."""

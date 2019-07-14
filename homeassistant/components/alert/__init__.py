@@ -28,6 +28,7 @@ CONF_ALERT_MESSAGE = 'message'
 CONF_DONE_MESSAGE = 'done_message'
 CONF_TITLE = 'title'
 CONF_DATA = 'data'
+CONF_NOTIFIER_DATA = 'notifier_data'
 
 DEFAULT_CAN_ACK = True
 DEFAULT_SKIP_FIRST = False
@@ -43,6 +44,7 @@ ALERT_SCHEMA = vol.Schema({
     vol.Optional(CONF_DONE_MESSAGE): cv.template,
     vol.Optional(CONF_TITLE): cv.template,
     vol.Optional(CONF_DATA): dict,
+    vol.Optional(CONF_NOTIFIER_DATA, default={}): dict,
     vol.Required(CONF_NOTIFIERS): cv.ensure_list})
 
 CONFIG_SCHEMA = vol.Schema({
@@ -78,12 +80,13 @@ async def async_setup(hass, config):
         can_ack = cfg.get(CONF_CAN_ACK)
         title_template = cfg.get(CONF_TITLE)
         data = cfg.get(CONF_DATA)
+        notifier_data = cfg.get(CONF_NOTIFIER_DATA)
 
         entities.append(Alert(hass, object_id, name,
                               watched_entity_id, alert_state, repeat,
                               skip_first, message_template,
                               done_message_template, notifiers,
-                              can_ack, title_template, data))
+                              can_ack, title_template, data, notifier_data))
 
     if not entities:
         return False
@@ -129,13 +132,14 @@ class Alert(ToggleEntity):
     def __init__(self, hass, entity_id, name, watched_entity_id,
                  state, repeat, skip_first, message_template,
                  done_message_template, notifiers, can_ack, title_template,
-                 data):
+                 data, notifier_data):
         """Initialize the alert."""
         self.hass = hass
         self._name = name
         self._alert_state = state
         self._skip_first = skip_first
         self._data = data
+        self._notifier_data = notifier_data
 
         self._message_template = message_template
         if self._message_template is not None:
@@ -270,6 +274,12 @@ class Alert(ToggleEntity):
         _LOGGER.debug(msg_payload)
 
         for target in self._notifiers:
+            if self._notifier_data.get(target) is not None:
+                data = {}
+                data.update(self._data)
+                data.update(self._notifier_data.get(target))
+                msg_payload.update({ATTR_DATA: data})
+
             await self.hass.services.async_call(
                 DOMAIN_NOTIFY, target, msg_payload)
 
