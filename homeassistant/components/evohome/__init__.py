@@ -129,7 +129,7 @@ class EvoBroker:
         self.config = self.status = self.timers = {}
 
         self.client = self.tcs = None
-        self._app_storage = None
+        self._app_storage = {}
 
         hass.data[DOMAIN] = {}
         hass.data[DOMAIN]['broker'] = self
@@ -194,6 +194,9 @@ class EvoBroker:
             Optional[str], Optional[str], Optional[datetime]]:
         store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         app_storage = self._app_storage = await store.async_load()
+
+        if app_storage is None:
+            app_storage = self._app_storage = {}
 
         if app_storage.get(CONF_USERNAME) == self.params[CONF_USERNAME]:
             refresh_token = app_storage.get(CONF_REFRESH_TOKEN)
