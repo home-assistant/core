@@ -51,7 +51,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     hass.services.async_register(
         DOMAIN, SERVICE_UPDATE, update, schema=SERVICE_SCHEMA
     )
-    
+
     async def _interval_update(now=None) -> None:
         """Update Twente Milieu data."""
         await hass.services.async_call(DOMAIN, SERVICE_UPDATE)
