@@ -45,11 +45,14 @@ class HiveClimateEntity(ClimateDevice):
         """Initialize the Climate device."""
         self.node_id = hivedevice["Hive_NodeID"]
         self.node_name = hivedevice["Hive_NodeName"]
+        self.device_type = hivedevice["HA_DeviceType"]
         self.thermostat_node_id = hivedevice["Thermostat_NodeID"]
         self.session = hivesession
         self.attributes = {}
-        self.data_updatesource = 'Heating.{}'.format(self.node_id)
-        self._unique_id = '{}-Heating'.format(self.node_id)
+        self.data_updatesource = '{}.{}'.format(
+            self.device_type, self.node_id)
+        self._unique_id = '{}-{}'.format(self.node_id, self.device_type)
+        self.session.entities.append(self)
 
     @property
     def unique_id(self):
@@ -73,7 +76,7 @@ class HiveClimateEntity(ClimateDevice):
 
     def handle_update(self, updatesource):
         """Handle the new update request."""
-        if 'Heating.{}'.format(self.node_id) not in updatesource:
+        if '{}.{}'.format(self.device_type, self.node_id) not in updatesource:
             self.schedule_update_ha_state()
 
     @property
