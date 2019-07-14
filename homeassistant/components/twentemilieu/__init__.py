@@ -49,6 +49,7 @@ async def _update_twentemilieu(
         for uid in hass.data[DOMAIN]:
             async_dispatcher_send(hass, DATA_UPDATE, uid)
 
+
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the Twente Milieu components."""
     async def update(call) -> None:
