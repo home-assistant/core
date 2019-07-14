@@ -275,7 +275,7 @@ class PS4Device(MediaPlayerDevice):
                 self._media_image, self._media_type)
             self._games = load_games(self.hass)
 
-        self._get_source_list()
+        self.get_source_list()
 
     def get_source_list(self):
         """Parse data entry and update source list."""
