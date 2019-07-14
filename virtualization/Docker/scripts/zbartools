@@ -1,0 +1,13 @@
+#!/bin/bash
+# Sets up zbar tools.
+
+# Stop on errors
+set -e
+
+PACKAGES=(
+  # homeassistant.components.image_processing.qrcode
+  libzbar0 zbar-tools
+)
+
+apt-get install -y --no-install-recommends ${PACKAGES[@]}
+
