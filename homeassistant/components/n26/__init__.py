@@ -4,6 +4,8 @@ import logging
 
 import voluptuous as vol
 
+from n26 import api as n26_api, config as n26_config
+
 from homeassistant.const import (
     CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
@@ -18,12 +20,12 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
 # define configuration parameters
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
+    DOMAIN: vol.All(cv.ensure_list, [{
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_SCAN_INTERVAL,
                      default=DEFAULT_SCAN_INTERVAL): cv.time_period,
-    }),
+    }])
 }, extra=vol.ALLOW_EXTRA)
 
 N26_COMPONENTS = [
@@ -34,24 +36,30 @@ N26_COMPONENTS = [
 
 def setup(hass, config):
     """Set up N26 Component."""
-    user = config[DOMAIN][CONF_USERNAME]
-    password = config[DOMAIN][CONF_PASSWORD]
+    acc_list = config[DOMAIN]
 
-    from n26 import api, config as api_config
-    api = api.Api(api_config.Config(user, password))
+    api_data_list = []
 
-    from requests import HTTPError
-    try:
-        api.get_token()
-    except HTTPError as err:
-        _LOGGER.error(str(err))
-        return False
+    for acc in acc_list:
+        user = acc[CONF_USERNAME]
+        password = acc[CONF_PASSWORD]
 
-    api_data = N26Data(api)
-    api_data.update()
+        api = n26_api.Api(n26_config.Config(user, password))
+
+        from requests import HTTPError
+        try:
+            api.get_token()
+        except HTTPError as err:
+            _LOGGER.error(str(err))
+            return False
+
+        api_data = N26Data(api)
+        api_data.update()
+
+        api_data_list.append(api_data)
 
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA] = api_data
+    hass.data[DOMAIN][DATA] = api_data_list
 
     # Load components for supported devices
     for component in N26_COMPONENTS:

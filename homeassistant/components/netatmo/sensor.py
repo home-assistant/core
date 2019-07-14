@@ -41,7 +41,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
 
 SUPPORTED_PUBLIC_SENSOR_TYPES = [
     'temperature', 'pressure', 'humidity', 'rain', 'windstrength',
-    'guststrength'
+    'guststrength', 'sum_rain_1', 'sum_rain_24'
 ]
 
 SENSOR_TYPES = {
@@ -256,7 +256,7 @@ class NetatmoSensor(Entity):
             elif self.type == 'rain':
                 self._state = data['Rain']
             elif self.type == 'sum_rain_1':
-                self._state = data['sum_rain_1']
+                self._state = round(data['sum_rain_1'], 1)
             elif self.type == 'sum_rain_24':
                 self._state = data['sum_rain_24']
             elif self.type == 'noise':
@@ -467,6 +467,10 @@ class NetatmoPublicSensor(Entity):
             data = self.netatmo_data.data.getLatestHumidities()
         elif self.type == 'rain':
             data = self.netatmo_data.data.getLatestRain()
+        elif self.type == 'sum_rain_1':
+            data = self.netatmo_data.data.get60minRain()
+        elif self.type == 'sum_rain_24':
+            data = self.netatmo_data.data.get24hRain()
         elif self.type == 'windstrength':
             data = self.netatmo_data.data.getLatestWindStrengths()
         elif self.type == 'guststrength':
@@ -478,10 +482,11 @@ class NetatmoPublicSensor(Entity):
             self._state = None
             return
 
+        values = [x for x in data.values() if x is not None]
         if self._mode == 'avg':
-            self._state = round(sum(data.values()) / len(data), 1)
+            self._state = round(sum(values) / len(values), 1)
         elif self._mode == 'max':
-            self._state = max(data.values())
+            self._state = max(values)
 
 
 class NetatmoPublicData:

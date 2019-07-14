@@ -30,7 +30,7 @@ from homeassistant.components.config.automation import (
     CONFIG_PATH as AUTOMATIONS_CONFIG_PATH)
 from homeassistant.components.config.script import (
     CONFIG_PATH as SCRIPTS_CONFIG_PATH)
-import homeassistant.scripts.check_config as check_config
+import homeassistant.helpers.check_config as check_config
 
 from tests.common import (
     get_test_config_dir, patch_yaml_files)
@@ -555,7 +555,7 @@ async def test_loading_configuration_from_packages(hass):
 
 
 @asynctest.mock.patch(
-    'homeassistant.scripts.check_config.check_ha_config_file')
+    'homeassistant.helpers.check_config.async_check_ha_config_file')
 async def test_check_ha_config_file_correct(mock_check, hass):
     """Check that restart propagates to stop."""
     mock_check.return_value = check_config.HomeAssistantConfig()
@@ -563,7 +563,7 @@ async def test_check_ha_config_file_correct(mock_check, hass):
 
 
 @asynctest.mock.patch(
-    'homeassistant.scripts.check_config.check_ha_config_file')
+    'homeassistant.helpers.check_config.async_check_ha_config_file')
 async def test_check_ha_config_file_wrong(mock_check, hass):
     """Check that restart with a bad config doesn't propagate to stop."""
     mock_check.return_value = check_config.HomeAssistantConfig()

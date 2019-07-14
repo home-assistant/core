@@ -88,8 +88,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         except somecomfort.AuthError:
             _LOGGER.error("Failed to login to honeywell account %s", username)
             return
-        except somecomfort.SomeComfortError as ex:
-            _LOGGER.error("Failed to initialize honeywell client: %s", str(ex))
+        except somecomfort.SomeComfortError:
+            _LOGGER.error("Failed to initialize the Honeywell client: "
+                          "Check your configuration (username, password), "
+                          "or maybe you have exceeded the API rate limit?")
             return
 
         dev_id = config.get('thermostat')

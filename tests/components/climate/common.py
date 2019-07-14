@@ -10,7 +10,8 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_LOW, DOMAIN, SERVICE_SET_AUX_HEAT, SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY, SERVICE_SET_HVAC_MODE, SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SWING_MODE, SERVICE_SET_TEMPERATURE)
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_TEMPERATURE, SERVICE_TURN_OFF, SERVICE_TURN_ON)
 from homeassistant.loader import bind_hass
 
 
@@ -188,3 +189,25 @@ def set_swing_mode(hass, swing_mode, entity_id=None):
         data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_SET_SWING_MODE, data)
+
+
+async def async_turn_on(hass, entity_id=None):
+    """Turn on device."""
+    data = {}
+
+    if entity_id is not None:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_ON, data, blocking=True)
+
+
+async def async_turn_off(hass, entity_id=None):
+    """Turn off device."""
+    data = {}
+
+    if entity_id is not None:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, data, blocking=True)

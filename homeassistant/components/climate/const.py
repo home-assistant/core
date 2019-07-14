@@ -80,6 +80,7 @@ CURRENT_HVAC_HEAT = 'heating'
 CURRENT_HVAC_COOL = 'cooling'
 CURRENT_HVAC_DRY = 'drying'
 CURRENT_HVAC_IDLE = 'idle'
+CURRENT_HVAC_FAN = 'fan'
 
 
 ATTR_AUX_HEAT = 'aux_heat'

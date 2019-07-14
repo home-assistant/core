@@ -4,12 +4,12 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.climate.const import (
-    ATTR_AUX_HEAT, ATTR_CURRENT_HUMIDITY, ATTR_HVAC_ACTIONS,
-    ATTR_CURRENT_TEMPERATURE, ATTR_FAN_MODE, ATTR_HUMIDITY, ATTR_HVAC_MODES,
+    ATTR_AUX_HEAT, ATTR_CURRENT_HUMIDITY, ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE, ATTR_HUMIDITY, ATTR_HVAC_ACTIONS, ATTR_HVAC_MODES,
     ATTR_MAX_HUMIDITY, ATTR_MAX_TEMP, ATTR_MIN_HUMIDITY, ATTR_MIN_TEMP,
     ATTR_PRESET_MODE, ATTR_SWING_MODE, ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW, CURRENT_HVAC_COOL, DOMAIN,
-    HVAC_MODE_COOL, HVAC_MODE_HEAT, PRESET_AWAY, PRESET_ECO)
+    ATTR_TARGET_TEMP_LOW, CURRENT_HVAC_COOL, DOMAIN, HVAC_MODE_COOL,
+    HVAC_MODE_HEAT, HVAC_MODE_OFF, PRESET_AWAY, PRESET_ECO)
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -279,3 +279,25 @@ async def test_set_aux_heat_off(hass):
 
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get(ATTR_AUX_HEAT) == STATE_OFF
+
+
+async def test_turn_on(hass):
+    """Test turn on device."""
+    await common.async_set_hvac_mode(hass, HVAC_MODE_OFF, ENTITY_CLIMATE)
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.state == HVAC_MODE_OFF
+
+    await common.async_turn_on(hass, ENTITY_CLIMATE)
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.state == HVAC_MODE_HEAT
+
+
+async def test_turn_off(hass):
+    """Test turn on device."""
+    await common.async_set_hvac_mode(hass, HVAC_MODE_HEAT, ENTITY_CLIMATE)
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.state == HVAC_MODE_HEAT
+
+    await common.async_turn_off(hass, ENTITY_CLIMATE)
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.state == HVAC_MODE_OFF

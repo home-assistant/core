@@ -2,7 +2,8 @@
 import logging
 import asyncio
 
-import voluptuous as vol
+import pyps4_homeassistant.ps4 as pyps4
+from pyps4_homeassistant.errors import NotReady
 
 from homeassistant.core import callback
 from homeassistant.components.media_player import (
@@ -10,13 +11,12 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_GAME, MEDIA_TYPE_APP, SUPPORT_SELECT_SOURCE,
     SUPPORT_PAUSE, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
-from homeassistant.components.ps4 import format_unique_id
+from homeassistant.components.ps4 import (
+    format_unique_id, load_games, save_games)
 from homeassistant.const import (
-    ATTR_COMMAND, ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_REGION,
+    CONF_HOST, CONF_NAME, CONF_REGION,
     CONF_TOKEN, STATE_IDLE, STATE_OFF, STATE_PLAYING)
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import device_registry, entity_registry
-from homeassistant.util.json import load_json, save_json
 
 from .const import (DEFAULT_ALIAS, DOMAIN as PS4_DOMAIN, PS4_DATA,
                     REGIONS as deprecated_regions)
@@ -27,26 +27,9 @@ SUPPORT_PS4 = SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
     SUPPORT_PAUSE | SUPPORT_STOP | SUPPORT_SELECT_SOURCE
 
 ICON = 'mdi:playstation'
-GAMES_FILE = '.ps4-games.json'
 MEDIA_IMAGE_DEFAULT = None
 
-COMMANDS = (
-    'up',
-    'down',
-    'right',
-    'left',
-    'enter',
-    'back',
-    'option',
-    'ps',
-)
-
-SERVICE_COMMAND = 'send_command'
-
-PS4_COMMAND_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_COMMAND): vol.In(list(COMMANDS))
-})
+DEFAULT_RETRIES = 2
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -55,27 +38,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await async_setup_platform(
         hass, config, async_add_entities, discovery_info=None)
 
-    async def async_service_handle(hass):
-        """Handle for services."""
-        async def async_service_command(call):
-            entity_ids = call.data[ATTR_ENTITY_ID]
-            command = call.data[ATTR_COMMAND]
-            for device in hass.data[PS4_DATA].devices:
-                if device.entity_id in entity_ids:
-                    await device.async_send_command(command)
-
-        hass.services.async_register(
-            PS4_DOMAIN, SERVICE_COMMAND, async_service_command,
-            schema=PS4_COMMAND_SCHEMA)
-
-    await async_service_handle(hass)
-
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up PS4 Platform."""
-    import pyps4_homeassistant.ps4 as pyps4
-    games_file = hass.config.path(GAMES_FILE)
     creds = config.data[CONF_TOKEN]
     device_list = []
     for device in config.data['devices']:
@@ -84,14 +50,14 @@ async def async_setup_platform(
         name = device[CONF_NAME]
         ps4 = pyps4.Ps4Async(host, creds, device_name=DEFAULT_ALIAS)
         device_list.append(PS4Device(
-            config, name, host, region, ps4, creds, games_file))
+            config, name, host, region, ps4, creds))
     async_add_entities(device_list, update_before_add=True)
 
 
 class PS4Device(MediaPlayerDevice):
     """Representation of a PS4."""
 
-    def __init__(self, config, name, host, region, ps4, creds, games_file):
+    def __init__(self, config, name, host, region, ps4, creds):
         """Initialize the ps4 device."""
         self._entry_id = config.entry_id
         self._ps4 = ps4
@@ -100,7 +66,6 @@ class PS4Device(MediaPlayerDevice):
         self._region = region
         self._creds = creds
         self._state = None
-        self._games_filename = games_file
         self._media_content_id = None
         self._media_title = None
         self._media_image = None
@@ -154,8 +119,15 @@ class PS4Device(MediaPlayerDevice):
         if self._ps4.ddp_protocol is not None:
             # Request Status with asyncio transport.
             self._ps4.get_status()
-            if not self._ps4.connected and not self._ps4.is_standby:
-                await self._ps4.async_connect()
+
+            # Don't attempt to connect if entity is connected or if,
+            # PS4 is in standby or disconnected from LAN or powered off.
+            if not self._ps4.connected and not self._ps4.is_standby and\
+                    self._ps4.is_available:
+                try:
+                    await self._ps4.async_connect()
+                except NotReady:
+                    pass
 
         # Try to ensure correct status is set on startup for device info.
         if self._ps4.ddp_protocol is None:
@@ -174,7 +146,7 @@ class PS4Device(MediaPlayerDevice):
         status = self._ps4.status
 
         if status is not None:
-            self._games = self.load_games()
+            self._games = load_games(self.hass)
             if self._games is not None:
                 self._source_list = list(sorted(self._games.values()))
             self._retry = 0
@@ -198,7 +170,7 @@ class PS4Device(MediaPlayerDevice):
                 if self._state != STATE_OFF:
                     self.state_off()
 
-        elif self._retry > 5:
+        elif self._retry > DEFAULT_RETRIES:
             self.state_unknown()
         else:
             self._retry += 1
@@ -279,33 +251,9 @@ class PS4Device(MediaPlayerDevice):
 
         if self._media_content_id not in self._games:
             self.add_games(self._media_content_id, self._media_title)
-            self._games = self.load_games()
+            self._games = load_games(self.hass)
 
         self._source_list = list(sorted(self._games.values()))
-
-    def load_games(self):
-        """Load games for sources."""
-        g_file = self._games_filename
-        try:
-            games = load_json(g_file)
-
-        # If file does not exist, create empty file.
-        except FileNotFoundError:
-            games = {}
-            self.save_games(games)
-        return games
-
-    def save_games(self, games):
-        """Save games to file."""
-        g_file = self._games_filename
-        try:
-            save_json(g_file, games)
-        except OSError as error:
-            _LOGGER.error("Could not save game list, %s", error)
-
-        # Retry loading file
-        if games is None:
-            self.load_games()
 
     def add_games(self, title_id, app_name):
         """Add games to list."""
@@ -313,7 +261,7 @@ class PS4Device(MediaPlayerDevice):
         if title_id is not None and title_id not in games:
             game = {title_id: app_name}
             games.update(game)
-            self.save_games(games)
+            save_games(self.hass, games)
 
     async def async_get_device_info(self, status):
         """Set device info for registry."""

@@ -203,7 +203,7 @@ class TestEcobee(unittest.TestCase):
         self.data.reset_mock()
         self.thermostat.set_hvac_mode('heat')
         self.data.ecobee.set_hvac_mode.assert_has_calls(
-            [mock.call(1, 'auxHeatOnly')])
+            [mock.call(1, 'heat')])
 
     def test_set_fan_min_on_time(self):
         """Test fan min on time setter."""

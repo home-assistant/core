@@ -3,7 +3,7 @@
   "name": "Insteon",
   "documentation": "https://www.home-assistant.io/components/insteon",
   "requirements": [
-    "insteonplm==0.16.0"
+    "insteonplm==0.16.3"
   ],
   "dependencies": [],
   "codeowners": []

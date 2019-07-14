@@ -10,34 +10,43 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF,
-    PRESET_AWAY,
+    PRESET_AWAY, PRESET_BOOST,
     CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE,
+    DEFAULT_MIN_TEMP
 )
 from homeassistant.const import (
-    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES)
+    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES, STATE_OFF)
 from homeassistant.util import Throttle
 
 from .const import DATA_NETATMO_AUTH
 
 _LOGGER = logging.getLogger(__name__)
 
-PRESET_FROST_GUARD = 'frost_guard'
-PRESET_MAX = 'max'
+PRESET_FROST_GUARD = 'frost guard'
 PRESET_SCHEDULE = 'schedule'
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE)
 SUPPORT_HVAC = [HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF]
 SUPPORT_PRESET = [
-    PRESET_AWAY, PRESET_FROST_GUARD, PRESET_SCHEDULE, PRESET_MAX,
+    PRESET_AWAY, PRESET_BOOST, PRESET_FROST_GUARD, PRESET_SCHEDULE,
 ]
 
-STATE_NETATMO_SCHEDULE = 'schedule'
+STATE_NETATMO_SCHEDULE = PRESET_SCHEDULE
 STATE_NETATMO_HG = 'hg'
-STATE_NETATMO_MAX = PRESET_MAX
+STATE_NETATMO_MAX = 'max'
 STATE_NETATMO_AWAY = PRESET_AWAY
-STATE_NETATMO_OFF = "off"
+STATE_NETATMO_OFF = STATE_OFF
 STATE_NETATMO_MANUAL = 'manual'
+
+PRESET_MAP_NETATMO = {
+    PRESET_FROST_GUARD: STATE_NETATMO_HG,
+    PRESET_BOOST: STATE_NETATMO_MAX,
+    STATE_NETATMO_MAX: STATE_NETATMO_MAX,
+    PRESET_SCHEDULE: STATE_NETATMO_SCHEDULE,
+    PRESET_AWAY: STATE_NETATMO_AWAY,
+    STATE_NETATMO_OFF: STATE_NETATMO_OFF
+}
 
 HVAC_MAP_NETATMO = {
     STATE_NETATMO_SCHEDULE: HVAC_MODE_AUTO,
@@ -66,6 +75,8 @@ HOME_CONFIG_SCHEMA = vol.Schema({
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOMES): vol.All(cv.ensure_list, [HOME_CONFIG_SCHEMA])
 })
+
+DEFAULT_MAX_TEMP = 30
 
 NA_THERM = 'NATherm1'
 NA_VALVE = 'NRV'
@@ -132,11 +143,8 @@ class NetatmoThermostat(ClimateDevice):
         self._support_flags = SUPPORT_FLAGS
         self._hvac_mode = None
         self.update_without_throttle = False
-
-        try:
-            self._module_type = self._data.room_status[room_id]['module_type']
-        except KeyError:
-            _LOGGER.error("Thermostat in %s not available", room_id)
+        self._module_type = \
+            self._data.room_status.get(room_id, {}).get('module_type')
 
         if self._module_type == NA_THERM:
             self._operation_list.append(HVAC_MODE_OFF)
@@ -187,8 +195,10 @@ class NetatmoThermostat(ClimateDevice):
         if self._module_type == NA_THERM:
             return CURRENT_HVAC_MAP_NETATMO[self._data.boilerstatus]
         # Maybe it is a valve
-        if self._data.room_status[self._room_id]['heating_power_request'] > 0:
-            return CURRENT_HVAC_HEAT
+        if self._room_id in self._data.room_status:
+            if (self._data.room_status[self._room_id]
+                    .get('heating_power_request', 0) > 0):
+                return CURRENT_HVAC_HEAT
         return CURRENT_HVAC_IDLE
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
@@ -206,20 +216,41 @@ class NetatmoThermostat(ClimateDevice):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if preset_mode is None:
+        if self.target_temperature == 0:
             self._data.homestatus.setroomThermpoint(
-                self._data.home_id, self._room_id, "off"
+                self._data.home_id,
+                self._room_id,
+                STATE_NETATMO_MANUAL,
+                DEFAULT_MIN_TEMP
             )
-        if preset_mode == STATE_NETATMO_MAX:
+
+        if (
+                preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX]
+                and self._module_type == NA_VALVE
+        ):
             self._data.homestatus.setroomThermpoint(
-                self._data.home_id, self._room_id, preset_mode
+                self._data.home_id,
+                self._room_id,
+                STATE_NETATMO_MANUAL,
+                DEFAULT_MAX_TEMP
+            )
+        elif (
+                preset_mode
+                in [PRESET_BOOST, STATE_NETATMO_MAX, STATE_NETATMO_OFF]
+        ):
+            self._data.homestatus.setroomThermpoint(
+                self._data.home_id,
+                self._room_id,
+                PRESET_MAP_NETATMO[preset_mode]
             )
         elif preset_mode in [
-                STATE_NETATMO_SCHEDULE, STATE_NETATMO_HG, STATE_NETATMO_AWAY
+                PRESET_SCHEDULE, PRESET_FROST_GUARD, PRESET_AWAY
         ]:
             self._data.homestatus.setThermmode(
-                self._data.home_id, preset_mode
+                self._data.home_id, PRESET_MAP_NETATMO[preset_mode]
             )
+        self.update_without_throttle = True
+        self.schedule_update_ha_state()
 
     @property
     def preset_mode(self) -> Optional[str]:
@@ -239,6 +270,7 @@ class NetatmoThermostat(ClimateDevice):
         self._data.homestatus.setroomThermpoint(
             self._data.homedata.gethomeId(self._data.home),
             self._room_id, STATE_NETATMO_MANUAL, temp)
+
         self.update_without_throttle = True
         self.schedule_update_ha_state()
 
@@ -255,18 +287,21 @@ class NetatmoThermostat(ClimateDevice):
                           "got exception.")
             return
         try:
+            if self._module_type is None:
+                self._module_type = \
+                    self._data.room_status[self._room_id]['module_type']
             self._current_temperature = \
                 self._data.room_status[self._room_id]['current_temperature']
             self._target_temperature = \
                 self._data.room_status[self._room_id]['target_temperature']
             self._preset = \
                 self._data.room_status[self._room_id]["setpoint_mode"]
+            self._hvac_mode = HVAC_MAP_NETATMO[self._preset]
         except KeyError:
             _LOGGER.error(
                 "The thermostat in room %s seems to be out of reach.",
                 self._room_id
             )
-        self._hvac_mode = HVAC_MAP_NETATMO[self._preset]
         self._away = self._hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
 
 
@@ -289,8 +324,10 @@ class HomeData:
         if self.homedata is None:
             return []
         for home in self.homedata.homes:
-            if 'therm_schedules' in self.homedata.homes[home] and 'modules' \
-               in self.homedata.homes[home]:
+            if (
+                    'therm_schedules' in self.homedata.homes[home]
+                    and 'modules' in self.homedata.homes[home]
+            ):
                 self.home_names.append(self.homedata.homes[home]['name'])
         return self.home_names
 
@@ -367,44 +404,47 @@ class ThermostatData:
                 roomstatus = {}
                 homestatus_room = self.homestatus.rooms[room]
                 homedata_room = self.homedata.rooms[self.home][room]
+
                 roomstatus["roomID"] = homestatus_room["id"]
-                roomstatus["roomname"] = homedata_room["name"]
-                roomstatus["target_temperature"] = homestatus_room[
-                    "therm_setpoint_temperature"
-                ]
-                roomstatus["setpoint_mode"] = homestatus_room[
-                    "therm_setpoint_mode"
-                ]
-                roomstatus["current_temperature"] = homestatus_room[
-                    "therm_measured_temperature"
-                ]
-                roomstatus["module_type"] = self.homestatus.thermostatType(
-                    self.home, room
-                )
-                roomstatus["module_id"] = None
-                roomstatus["heating_status"] = None
-                roomstatus["heating_power_request"] = None
-                for module_id in homedata_room["module_ids"]:
-                    if (self.homedata.modules[self.home][module_id]["type"]
-                            == NA_THERM
-                            or roomstatus["module_id"] is None):
-                        roomstatus["module_id"] = module_id
-                if roomstatus["module_type"] == NA_THERM:
-                    self.boilerstatus = self.homestatus.boilerStatus(
-                        rid=roomstatus["module_id"]
-                    )
-                    roomstatus["heating_status"] = self.boilerstatus
-                elif roomstatus["module_type"] == NA_VALVE:
-                    roomstatus["heating_power_request"] = homestatus_room[
-                        "heating_power_request"
+                if homestatus_room["reachable"]:
+                    roomstatus["roomname"] = homedata_room["name"]
+                    roomstatus["target_temperature"] = homestatus_room[
+                        "therm_setpoint_temperature"
                     ]
-                    roomstatus["heating_status"] = (
-                        roomstatus["heating_power_request"] > 0
+                    roomstatus["setpoint_mode"] = homestatus_room[
+                        "therm_setpoint_mode"
+                    ]
+                    roomstatus["current_temperature"] = homestatus_room[
+                        "therm_measured_temperature"
+                    ]
+                    roomstatus["module_type"] = self.homestatus.thermostatType(
+                        self.home, room
                     )
-                    if self.boilerstatus is not None:
-                        roomstatus["heating_status"] = (
-                            self.boilerstatus and roomstatus["heating_status"]
+                    roomstatus["module_id"] = None
+                    roomstatus["heating_status"] = None
+                    roomstatus["heating_power_request"] = None
+                    for module_id in homedata_room["module_ids"]:
+                        if (self.homedata.modules[self.home][module_id]["type"]
+                                == NA_THERM
+                                or roomstatus["module_id"] is None):
+                            roomstatus["module_id"] = module_id
+                    if roomstatus["module_type"] == NA_THERM:
+                        self.boilerstatus = self.homestatus.boilerStatus(
+                            rid=roomstatus["module_id"]
                         )
+                        roomstatus["heating_status"] = self.boilerstatus
+                    elif roomstatus["module_type"] == NA_VALVE:
+                        roomstatus["heating_power_request"] = homestatus_room[
+                            "heating_power_request"
+                        ]
+                        roomstatus["heating_status"] = (
+                            roomstatus["heating_power_request"] > 0
+                        )
+                        if self.boilerstatus is not None:
+                            roomstatus["heating_status"] = (
+                                self.boilerstatus
+                                and roomstatus["heating_status"]
+                            )
                 self.room_status[room] = roomstatus
             except KeyError as err:
                 _LOGGER.error("Update of room %s failed. Error: %s", room, err)

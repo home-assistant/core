@@ -11,7 +11,7 @@ trigger:
 pr: none
 variables:
   - name: versionWheels
-    value: '0.7'
+    value: '1.0-3.7-alpine3.10'
   - group: wheels
 
 
@@ -23,7 +23,7 @@ jobs:
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
-    maxParallel: 3
+    maxParallel: 5
     matrix:
       amd64:
         buildArch: 'amd64'

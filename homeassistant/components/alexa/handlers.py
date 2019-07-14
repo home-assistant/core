@@ -4,45 +4,26 @@ import logging
 import math
 
 from homeassistant import core as ha
-from homeassistant.util.decorator import Registry
-import homeassistant.util.color as color_util
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    SERVICE_LOCK,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_STOP,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_UNLOCK,
-    SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_UP,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
-from homeassistant.components.climate import const as climate
 from homeassistant.components import cover, fan, group, light, media_player
+from homeassistant.components.climate import const as climate
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE, SERVICE_LOCK,
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
+    SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    SERVICE_UNLOCK, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET, SERVICE_VOLUME_UP, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+import homeassistant.util.color as color_util
+from homeassistant.util.decorator import Registry
 from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import (
-    API_TEMP_UNITS,
-    API_THERMOSTAT_MODES,
-    API_THERMOSTAT_PRESETS,
-    Cause,
-)
+    API_TEMP_UNITS, API_THERMOSTAT_MODES, API_THERMOSTAT_PRESETS, Cause)
 from .entities import async_get_entities
-from .state_report import async_enable_proactive_mode
 from .errors import (
-    AlexaInvalidValueError,
-    AlexaTempRangeError,
-    AlexaUnsupportedThermostatModeError,
-)
+    AlexaInvalidValueError, AlexaTempRangeError,
+    AlexaUnsupportedThermostatModeError)
+from .state_report import async_enable_proactive_mode
 
 _LOGGER = logging.getLogger(__name__)
 HANDLERS = Registry()
@@ -99,6 +80,12 @@ async def async_api_turn_on(hass, config, directive, context):
     service = SERVICE_TURN_ON
     if domain == cover.DOMAIN:
         service = cover.SERVICE_OPEN_COVER
+    elif domain == media_player.DOMAIN:
+        supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        power_features = (media_player.SUPPORT_TURN_ON |
+                          media_player.SUPPORT_TURN_OFF)
+        if not supported & power_features:
+            service = media_player.SERVICE_MEDIA_PLAY
 
     await hass.services.async_call(domain, service, {
         ATTR_ENTITY_ID: entity.entity_id
@@ -118,6 +105,12 @@ async def async_api_turn_off(hass, config, directive, context):
     service = SERVICE_TURN_OFF
     if entity.domain == cover.DOMAIN:
         service = cover.SERVICE_CLOSE_COVER
+    elif domain == media_player.DOMAIN:
+        supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        power_features = (media_player.SUPPORT_TURN_ON |
+                          media_player.SUPPORT_TURN_OFF)
+        if not supported & power_features:
+            service = media_player.SERVICE_MEDIA_STOP
 
     await hass.services.async_call(domain, service, {
         ATTR_ENTITY_ID: entity.entity_id

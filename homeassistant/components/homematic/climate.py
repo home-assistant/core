@@ -3,8 +3,9 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT, PRESET_BOOST, PRESET_COMFORT, PRESET_ECO)
+    HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF, PRESET_BOOST,
+    PRESET_COMFORT, PRESET_ECO, SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import ATTR_DISCOVER_DEVICES, HM_ATTRIBUTE_SUPPORT, HMDevice
@@ -82,8 +83,8 @@ class HMThermostat(HMDevice, ClimateDevice):
         Need to be a subset of HVAC_MODES.
         """
         if "AUTO_MODE" in self._hmdevice.ACTIONNODE:
-            return [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
-        return [HVAC_MODE_HEAT]
+            return [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
+        return [HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
     @property
     def preset_mode(self):
@@ -140,8 +141,10 @@ class HMThermostat(HMDevice, ClimateDevice):
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_AUTO:
             self._hmdevice.MODE = self._hmdevice.AUTO_MODE
-        else:
+        elif hvac_mode == HVAC_MODE_HEAT:
             self._hmdevice.MODE = self._hmdevice.MANU_MODE
+        elif hvac_mode == HVAC_MODE_OFF:
+            self._hmdevice.turnoff()
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
