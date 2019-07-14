@@ -50,7 +50,7 @@ def setup_platform(hass, hass_config, add_entities,
     broker = hass.data[DOMAIN]['broker']
     loc_idx = broker.params[CONF_LOCATION_IDX]
 
-    _LOGGER.warn(
+    _LOGGER.debug(
         "Found Location/Controller, id=%s [%s], name=%s (location_idx=%s)",
         broker.tcs.systemId, broker.tcs.modelType, broker.tcs.location.name,
         loc_idx)
@@ -58,7 +58,7 @@ def setup_platform(hass, hass_config, add_entities,
     # special case of RoundThermostat (is single zone)
     if broker.config['zones'][0]['modelType'] == 'RoundModulation':
         zone = list(broker.tcs.zones.values())[0]
-        _LOGGER.warn(
+        _LOGGER.debug(
             "Found %s, id=%s [%s], name=%s",
             zone.zoneType, zone.zoneId, zone.modelType, zone.name)
 
@@ -69,7 +69,7 @@ def setup_platform(hass, hass_config, add_entities,
 
     zones = []
     for zone in broker.tcs.zones.values():
-        _LOGGER.warn(
+        _LOGGER.debug(
             "Found %s, id=%s [%s], name=%s",
             zone.zoneType, zone.zoneId, zone.modelType, zone.name)
         zones.append(EvoZone(broker, zone))
