@@ -34,6 +34,14 @@ SENSOR_TYPES = {
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=120)
 
+ATTR_TORRENT = 'torrent'
+
+SERVICE_ADD_TORRENT = 'add_torrent'
+
+SERVICE_ADD_TORRENT_SCHEMA = vol.Schema({
+    vol.Required(ATTR_TORRENT): cv.string,
+})
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
@@ -81,6 +89,14 @@ def setup(hass, config):
         tm_data.update()
 
     track_time_interval(hass, refresh, scan_interval)
+
+    def add_torrent(service):
+        """Add new torrent to download."""
+        torrent = service.data[ATTR_TORRENT]
+        api.add_torrent(torrent)
+
+    hass.services.register(DOMAIN, SERVICE_ADD_TORRENT, add_torrent,
+                           schema=SERVICE_ADD_TORRENT_SCHEMA)
 
     sensorconfig = {
         'sensors': config[DOMAIN][CONF_MONITORED_CONDITIONS],
