@@ -39,7 +39,8 @@ def setup(hass, base_config):
     hass.data[LUTRON_DEVICES] = {'light': [],
                                  'cover': [],
                                  'switch': [],
-                                 'scene': []}
+                                 'scene': [],
+                                 'fan': []}
 
     config = base_config.get(DOMAIN)
     hass.data[LUTRON_CONTROLLER] = Lutron(
@@ -54,6 +55,9 @@ def setup(hass, base_config):
         for output in area.outputs:
             if output.type == 'SYSTEM_SHADE':
                 hass.data[LUTRON_DEVICES]['cover'].append((area.name, output))
+            elif output.type == 'CEILING_FAN_TYPE':
+                # print('---------- Found a ceiling fan: ' +str(output))
+                hass.data[LUTRON_DEVICES]['fan'].append((area.name, output))
             elif output.is_dimmable:
                 hass.data[LUTRON_DEVICES]['light'].append((area.name, output))
             else:
@@ -73,7 +77,7 @@ def setup(hass, base_config):
                 hass.data[LUTRON_BUTTONS].append(
                     LutronButton(hass, keypad, button))
 
-    for component in ('light', 'cover', 'switch', 'scene'):
+    for component in ('light', 'cover', 'switch', 'scene', 'fan'):
         discovery.load_platform(hass, component, DOMAIN, None, base_config)
     return True
 
