@@ -342,12 +342,21 @@ class SonosEntity(MediaPlayerDevice):
         self._seen_timer = self.hass.helpers.event.async_call_later(
             2.5*DISCOVERY_INTERVAL, self.async_unseen)
 
-        if not was_available:
-            await self.hass.async_add_executor_job(self._attach_player)
-            self.async_schedule_update_ha_state()
+        if was_available:
+            return
+
+        self._poll_timer = self.hass.helpers.event.async_track_time_interval(
+            self.update, datetime.timedelta(seconds=SCAN_INTERVAL))
+
+        done = await self.hass.async_add_executor_job(self._attach_player)
+        if not done:
+            self._seen_timer()
+            self.async_unseen()
+
+        self.async_schedule_update_ha_state()
 
     @callback
-    def async_unseen(self, now):
+    def async_unseen(self, now=None):
         """Make this player unavailable when it was not seen recently."""
         self._seen_timer = None
 
@@ -396,29 +405,31 @@ class SonosEntity(MediaPlayerDevice):
 
     def _attach_player(self):
         """Get basic information and add event subscriptions."""
-        self._shuffle = self.soco.shuffle
-        self.update_volume()
-        self._set_favorites()
+        try:
+            self._shuffle = self.soco.shuffle
+            self.update_volume()
+            self._set_favorites()
 
-        self._poll_timer = self.hass.helpers.event.track_time_interval(
-            self.update, datetime.timedelta(seconds=SCAN_INTERVAL))
+            # New player available, build the current group topology
+            for entity in self.hass.data[DATA_SONOS].entities:
+                entity.update_groups()
 
-        # New player available, build the current group topology
-        for entity in self.hass.data[DATA_SONOS].entities:
-            entity.update_groups()
+            player = self.soco
 
-        player = self.soco
+            def subscribe(service, action):
+                """Add a subscription to a pysonos service."""
+                queue = _ProcessSonosEventQueue(action)
+                sub = service.subscribe(auto_renew=True, event_queue=queue)
+                self._subscriptions.append(sub)
 
-        def subscribe(service, action):
-            """Add a subscription to a pysonos service."""
-            queue = _ProcessSonosEventQueue(action)
-            sub = service.subscribe(auto_renew=True, event_queue=queue)
-            self._subscriptions.append(sub)
-
-        subscribe(player.avTransport, self.update_media)
-        subscribe(player.renderingControl, self.update_volume)
-        subscribe(player.zoneGroupTopology, self.update_groups)
-        subscribe(player.contentDirectory, self.update_content)
+            subscribe(player.avTransport, self.update_media)
+            subscribe(player.renderingControl, self.update_volume)
+            subscribe(player.zoneGroupTopology, self.update_groups)
+            subscribe(player.contentDirectory, self.update_content)
+            return True
+        except SoCoException as ex:
+            _LOGGER.warning("Could not connect %s: %s", self.entity_id, ex)
+            return False
 
     @property
     def should_poll(self):
@@ -656,6 +667,11 @@ class SonosEntity(MediaPlayerDevice):
 
         async def _async_handle_group_event(event):
             """Get async lock and handle event."""
+            if event and self._poll_timer:
+                # Cancel poll timer since we do receive events
+                self._poll_timer()
+                self._poll_timer = None
+
             async with self.hass.data[DATA_SONOS].topology_condition:
                 group = await _async_extract_group(event)
 
@@ -664,14 +680,8 @@ class SonosEntity(MediaPlayerDevice):
 
                     self.hass.data[DATA_SONOS].topology_condition.notify_all()
 
-        if event:
-            # Cancel poll timer since we do receive events
-            if self._poll_timer:
-                self._poll_timer()
-                self._poll_timer = None
-
-            if not hasattr(event, 'zone_player_uui_ds_in_group'):
-                return
+        if event and not hasattr(event, 'zone_player_uui_ds_in_group'):
+            return
 
         self.hass.add_job(_async_handle_group_event(event))
 
