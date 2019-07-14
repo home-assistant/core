@@ -1,4 +1,5 @@
 """Constants for PlayStation 4."""
+ATTR_MEDIA_IMAGE_URL = 'media_image_url'
 DEFAULT_NAME = "PlayStation 4"
 DEFAULT_REGION = "United States"
 DEFAULT_ALIAS = 'Home-Assistant'
