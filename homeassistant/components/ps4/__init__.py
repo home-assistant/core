@@ -1,5 +1,6 @@
 """Support for PlayStation 4 consoles."""
 import logging
+import os
 
 import voluptuous as vol
 from pyps4_homeassistant.ddp import async_create_ddp_endpoint
@@ -143,11 +144,11 @@ def format_unique_id(creds, mac_address):
 def load_games(hass: HomeAssistantType) -> dict:
     """Load games for sources."""
     g_file = hass.config.path(GAMES_FILE)
-    try:
-        games = load_json(g_file)
+    games = load_json(g_file)
 
     # If file does not exist, create empty file.
-    except FileNotFoundError:
+    if not os.path.isfile(g_file):
+        _LOGGER.info("Creating PS4 Games File")
         games = {}
         save_games(hass, games)
     else:
@@ -162,10 +163,6 @@ def save_games(hass: HomeAssistantType, games: dict):
         save_json(g_file, games)
     except OSError as error:
         _LOGGER.error("Could not save game list, %s", error)
-
-    # Retry loading file
-    if games is None:
-        load_games(hass)
 
 
 def _reformat_data(hass: HomeAssistantType, games: dict) -> dict:
