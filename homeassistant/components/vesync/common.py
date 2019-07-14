@@ -7,45 +7,26 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'vesync'
 
-CONF_LIGHTS = 'lights'
 CONF_SWITCHES = 'switches'
-CONF_FANS = 'fans'
 
 
 async def async_process_devices(hass, manager):
     """Assign devices to proper component."""
     devices = {}
-    devices[CONF_LIGHTS] = []
     devices[CONF_SWITCHES] = []
-    devices[CONF_FANS] = []
 
     await hass.async_add_executor_job(manager.update)
 
-    if manager.bulbs:
-        devices[CONF_LIGHTS].extend(manager.bulbs)
-        _LOGGER.info(str(devices[CONF_LIGHTS]))
-        _LOGGER.info("%d VeSync light bulbs found", len(manager.bulbs))
-
-    if manager.fans:
-        devices[CONF_FANS].extend(manager.fans)
-        _LOGGER.info("%d VeSync fans found", len(manager.fans))
-
     if manager.outlets:
         devices[CONF_SWITCHES].extend(manager.outlets)
-        _LOGGER.info("%d VeSync outlets found", len(manager.switches))
+        _LOGGER.info("%d VeSync outlets found", len(manager.switches))\
 
-    dim_switch = 0
     reg_switch = 0
     if manager.switches:
         for switch in manager.switches:
-            if switch.is_dimmable():
-                devices[CONF_LIGHTS].append(switch)
-                dim_switch += 1
-            else:
+            if not switch.is_dimmable():
                 devices[CONF_SWITCHES].append(switch)
                 reg_switch += 1
-        if dim_switch > 0:
-            _LOGGER.info("%d VeSync dimmable switches found", dim_switch)
         if reg_switch > 0:
             _LOGGER.info("%d VeSync standard switches found", reg_switch)
 

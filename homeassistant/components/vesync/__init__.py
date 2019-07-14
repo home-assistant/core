@@ -6,8 +6,7 @@ from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.config_entries import SOURCE_IMPORT
-from .common import (async_process_devices, CONF_FANS,
-                     CONF_LIGHTS, CONF_SWITCHES)
+from .common import (async_process_devices, CONF_SWITCHES)
 from .config_flow import configured_instances
 from .const import VS_DISPATCHERS, VS_DISCOVERY, SERVICE_UPDATE_DEVS
 
@@ -86,22 +85,13 @@ async def async_setup_entry(hass, config_entry):
 
     forward_setup = hass.config_entries.async_forward_entry_setup
 
-    lights = hass.data[DOMAIN][CONF_LIGHTS] = []
     switches = hass.data[DOMAIN][CONF_SWITCHES] = []
-    fans = hass.data[DOMAIN][CONF_FANS] = []
 
     hass.data[DOMAIN][VS_DISPATCHERS] = []
 
-    if device_dict[CONF_LIGHTS]:
-        lights.extend(device_dict[CONF_LIGHTS])
-        hass.async_create_task(forward_setup(config_entry, 'light'))
     if device_dict[CONF_SWITCHES]:
         switches.extend(device_dict[CONF_SWITCHES])
         hass.async_create_task(forward_setup(config_entry, 'switch'))
-    if device_dict[CONF_FANS]:
-        fans.extend(device_dict[CONF_FANS])
-        hass.async_create_task(forward_setup(config_entry, 'fan'))
-    _LOGGER.debug(str(lights))
 
     async def async_new_device_discovery(service):
         """Discover if new devices should be added."""
@@ -111,30 +101,10 @@ async def async_setup_entry(hass, config_entry):
             return
 
         manager = hass.data[DOMAIN]['manager']
-        lights = hass.data[DOMAIN][CONF_LIGHTS]
-        fans = hass.data[DOMAIN][CONF_FANS]
         switches = hass.data[DOMAIN][CONF_SWITCHES]
 
         dev_dict = await async_process_devices(hass, manager)
-        fan_devs = dev_dict.get(CONF_FANS, [])
-        light_devs = dev_dict.get(CONF_LIGHTS, [])
         switch_devs = dev_dict.get(CONF_SWITCHES, [])
-
-        if fan_devs:
-            fan_set = set(fan_devs)
-            new_fans = list(fan_set.difference(fans))
-            fan_len = len(new_fans)
-            fans.extend(new_fans)
-            async_dispatcher_send(hass, VS_DISCOVERY.format(CONF_FANS),
-                                  fan_len)
-
-        if light_devs:
-            light_set = set(light_devs)
-            new_lights = list(light_set.difference(lights))
-            light_len = len(new_lights)
-            lights.extend(new_lights)
-            async_dispatcher_send(hass, VS_DISCOVERY.format(CONF_LIGHTS),
-                                  light_len)
 
         if switch_devs:
             switch_set = set(switch_devs)
@@ -155,15 +125,11 @@ async def async_setup_entry(hass, config_entry):
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     forward_unload = hass.config_entries.async_forward_entry_unload
-    remove_lights = remove_switches = remove_fans = False
-    if hass.data[DOMAIN][CONF_LIGHTS]:
-        remove_lights = await forward_unload(entry, 'light')
+    remove_switches = False
     if hass.data[DOMAIN][CONF_SWITCHES]:
         remove_switches = await forward_unload(entry, 'switch')
-    if hass.data[DOMAIN][CONF_FANS]:
-        remove_fans = await forward_unload(entry, 'fan')
 
-    if remove_lights or remove_switches or remove_fans:
+    if remove_switches:
         hass.services.async_remove(DOMAIN, SERVICE_UPDATE_DEVS)
         del hass.data[DOMAIN]
         return True
