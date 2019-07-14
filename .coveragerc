@@ -633,7 +633,7 @@ omit =
     homeassistant/components/tomato/device_tracker.py
     homeassistant/components/toon/*
     homeassistant/components/torque/sensor.py
-    homeassistant/components/totalconnect/alarm_control_panel.py
+    homeassistant/components/totalconnect/*
     homeassistant/components/touchline/climate.py
     homeassistant/components/tplink/device_tracker.py
     homeassistant/components/tplink/light.py
