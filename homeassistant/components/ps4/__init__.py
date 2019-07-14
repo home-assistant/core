@@ -5,6 +5,8 @@ import voluptuous as vol
 from pyps4_homeassistant.ddp import async_create_ddp_endpoint
 from pyps4_homeassistant.media_art import COUNTRIES
 
+from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_TITLE, MEDIA_TYPE_GAME)
 from homeassistant.const import (
     ATTR_COMMAND, ATTR_ENTITY_ID, CONF_REGION, CONF_TOKEN)
 from homeassistant.core import split_entity_id
@@ -14,7 +16,8 @@ from homeassistant.util import location
 from homeassistant.util.json import load_json, save_json
 
 from .config_flow import PlayStation4FlowHandler  # noqa: pylint: disable=unused-import
-from .const import COMMANDS, DOMAIN, GAMES_FILE, PS4_DATA
+from .const import (
+    ATTR_MEDIA_IMAGE_URL, ATTR_LOCKED, COMMANDS, DOMAIN, GAMES_FILE, PS4_DATA)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -147,6 +150,8 @@ def load_games(hass: HomeAssistantType) -> dict:
     except FileNotFoundError:
         games = {}
         save_games(hass, games)
+    else:
+        games = _verify_format(games)
     return games
 
 
@@ -161,6 +166,19 @@ def save_games(hass: HomeAssistantType, games: dict):
     # Retry loading file
     if games is None:
         load_games(hass)
+
+
+def _verify_format(games):
+    """Reformat data to correct format."""
+    # Convert str format to dict format if not already.
+    if games is not None:
+        for game, data in games.items():
+            if isinstance(data, str):
+                games[game] = {ATTR_MEDIA_TITLE: data,
+                               ATTR_MEDIA_IMAGE_URL: None,
+                               ATTR_LOCKED: False,
+                               ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_GAME}
+    return games
 
 
 def service_handle(hass: HomeAssistantType):
