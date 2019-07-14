@@ -117,11 +117,6 @@ class EvoZone(EvoClimateDevice):
         self._hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_HEAT]
         self._preset_modes = list(HA_PRESET_TO_EVO)
 
-        for _zone in evo_broker.config['zones']:
-            if _zone['zoneId'] == self._id:
-                self._config = _zone
-                break
-
     @property
     def hvac_mode(self) -> str:
         """Return the current operating mode of the evohome Zone.
@@ -255,18 +250,6 @@ class EvoController(EvoClimateDevice):
         self._supported_features = SUPPORT_PRESET_MODE
         self._hvac_modes = list(HA_HVAC_TO_TCS)
 
-        self._config = dict(evo_broker.config)
-
-        # special case of RoundThermostat
-        if self._config['zones'][0]['modelType'] == 'RoundModulation':
-            self._preset_modes = [PRESET_AWAY, PRESET_ECO]
-        else:
-            self._preset_modes = list(HA_PRESET_TO_TCS)
-
-        self._config['zones'] = '...'
-        if 'dhw' in self._config:
-            self._config['dhw'] = '...'
-
     @property
     def hvac_mode(self) -> str:
         """Return the current operating mode of the evohome Controller."""
@@ -343,23 +326,22 @@ class EvoController(EvoClimateDevice):
 
 
 class EvoThermostat(EvoZone):
-    """Base for a Honeywell evohome Zone."""
+    """Base for a Honeywell Round Thermostat.
+
+    Implemented as a combined Controller/Zone.
+    """
 
     def __init__(self, evo_broker, evo_device) -> None:
         """Initialize the evohome Zone."""
         super().__init__(evo_broker, evo_device)
 
         self._id = evo_device.zoneId
-        self._name = "_" + evo_device.name
+        self._name = evo_broker.tcs.location.name
         self._icon = 'mdi:radiator'
 
         self._hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_HEAT]
         self._preset_modes = list(HA_PRESET_TO_EVO)
 
-        for _zone in evo_broker.config['zones']:
-            if _zone['zoneId'] == self._id:
-                self._config = _zone
-                break
 
     @property
     def hvac_mode(self) -> str:

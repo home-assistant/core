@@ -27,8 +27,8 @@ def setup_platform(hass, hass_config, add_entities,
     broker = hass.data[DOMAIN]['broker']
 
     _LOGGER.debug(
-        "Found DHW device, id: %s [%s]",
-        broker.tcs.hotwater.zoneId, broker.tcs.hotwater.zone_type)
+        "Found %s, id: %s",
+        broker.tcs.hotwater.zone_type, broker.tcs.hotwater.zoneId)
 
     evo_dhw = EvoDHW(broker, broker.tcs.hotwater)
 
