@@ -258,7 +258,8 @@ class EvoController(EvoClimateDevice):
             'systemId', 'activeFaults', 'systemModeStatus']
 
         self._supported_features = SUPPORT_PRESET_MODE
-        self._hvac_modes = list(HA_HVAC_TO_TCS)
+        self._hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_HEAT]
+        self._preset_modes = list(HA_PRESET_TO_TCS)
 
     @property
     def hvac_mode(self) -> str:
@@ -341,7 +342,7 @@ class EvoThermostat(EvoZone):
         self._name = evo_broker.tcs.location.name
         self._icon = 'mdi:radiator'
 
-        self._hvac_modes = list(HA_HVAC_TO_TCS)
+        self._hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_HEAT]
         self._preset_modes = [PRESET_AWAY, PRESET_ECO]
 
     @property
