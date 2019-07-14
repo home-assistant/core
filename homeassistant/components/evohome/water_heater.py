@@ -53,8 +53,6 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         self._supported_features = SUPPORT_OPERATION_MODE
         self._operation_list = list(HA_OPMODE_TO_DHW)
 
-        self._config = evo_broker.config['dhw']
-
     @property
     def current_operation(self) -> str:
         """Return the current operating mode (On, or Off)."""
