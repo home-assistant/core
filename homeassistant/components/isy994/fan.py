@@ -7,7 +7,8 @@ from homeassistant.components.fan import (
     FanEntity)
 from homeassistant.helpers.typing import ConfigType
 
-from . import ISY994_NODES, ISY994_PROGRAMS, ISYDevice
+from . import ISYDevice
+from .const import ISY994_NODES, ISY994_PROGRAMS
 
 _LOGGER = logging.getLogger(__name__)
 

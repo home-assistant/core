@@ -6,7 +6,8 @@ from homeassistant.components.lock import DOMAIN, LockDevice
 from homeassistant.const import STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED
 from homeassistant.helpers.typing import ConfigType
 
-from . import ISY994_NODES, ISY994_PROGRAMS, ISYDevice
+from . import ISYDevice
+from .const import ISY994_NODES, ISY994_PROGRAMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,11 +33,6 @@ def setup_platform(hass, config: ConfigType,
 class ISYLockDevice(ISYDevice, LockDevice):
     """Representation of an ISY994 lock device."""
 
-    def __init__(self, node) -> None:
-        """Initialize the ISY994 lock device."""
-        super().__init__(node)
-        self._conn = node.parent.parent.conn
-
     @property
     def is_locked(self) -> bool:
         """Get whether the lock is in locked state."""
@@ -51,24 +47,14 @@ class ISYLockDevice(ISYDevice, LockDevice):
 
     def lock(self, **kwargs) -> None:
         """Send the lock command to the ISY994 device."""
-        # Hack until PyISY is updated
-        req_url = self._conn.compileURL(['nodes', self.unique_id, 'cmd',
-                                         'SECMD', '1'])
-        response = self._conn.request(req_url)
-
-        if response is None:
+        if not self._node.secure_lock():
             _LOGGER.error('Unable to lock device')
 
         self._node.update(0.5)
 
     def unlock(self, **kwargs) -> None:
         """Send the unlock command to the ISY994 device."""
-        # Hack until PyISY is updated
-        req_url = self._conn.compileURL(['nodes', self.unique_id, 'cmd',
-                                         'SECMD', '0'])
-        response = self._conn.request(req_url)
-
-        if response is None:
+        if not self._node.secure_unlock():
             _LOGGER.error('Unable to lock device')
 
         self._node.update(0.5)

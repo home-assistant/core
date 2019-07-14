@@ -5,7 +5,8 @@ from typing import Callable
 from homeassistant.components.light import DOMAIN, SUPPORT_BRIGHTNESS, Light
 from homeassistant.helpers.typing import ConfigType
 
-from . import ISY994_NODES, ISYDevice
+from . import ISYDevice
+from .const import ISY994_NODES
 
 _LOGGER = logging.getLogger(__name__)
 
