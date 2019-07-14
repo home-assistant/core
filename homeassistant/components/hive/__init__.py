@@ -16,6 +16,7 @@ DATA_HIVE = 'data_hive'
 DEVICETYPES = {
     'binary_sensor': 'device_list_binary_sensor',
     'climate': 'device_list_climate',
+    'water_heater': 'device_list_water_heater',
     'light': 'device_list_light',
     'switch': 'device_list_plug',
     'sensor': 'device_list_sensor',
