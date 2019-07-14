@@ -302,7 +302,7 @@ brottsplatskartan==0.0.1
 brunt==0.1.3
 
 # homeassistant.components.bluetooth_tracker
-bt_proximity==0.1.2
+bt_proximity==0.2
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
