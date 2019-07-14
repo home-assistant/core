@@ -108,7 +108,9 @@ def setup_scanner(hass, config, see, discovery_info=None):
                 result = bluetooth.lookup_name(mac, timeout=5)
                 rssi = None
                 if request_rssi:
-                    rssi = BluetoothRSSI(mac).request_rssi()
+                    client = BluetoothRSSI(mac)
+                    rssi = client.request_rssi()
+                    client.close()
                 if result is None:
                     # Could not lookup device name
                     continue
