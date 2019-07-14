@@ -28,6 +28,7 @@ HA_HVAC_TO_TCS = {
     HVAC_MODE_OFF: EVO_HEATOFF,
     HVAC_MODE_HEAT: EVO_AUTO,
 }
+
 HA_PRESET_TO_TCS = {
     PRESET_AWAY: EVO_AWAY,
     PRESET_CUSTOM: EVO_CUSTOM,
@@ -85,6 +86,46 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
         super().__init__(evo_broker, evo_device)
 
         self._hvac_modes = self._preset_modes = None
+
+    def _set_temperature(self, temperature: float,
+                         until: Optional[datetime] = None) -> None:
+        """Set a new target temperature for the Zone.
+
+        until == None means indefinitely (i.e. PermanentOverride)
+        """
+        try:
+            self._evo_device.set_temperature(temperature, until)
+        except (requests.exceptions.RequestException,
+                evohomeclient2.AuthenticationError) as err:
+            _handle_exception(err)
+
+    def _set_zone_mode(self, op_mode: str) -> None:
+        """Set the Zone to one of its native EVO_* operating modes."""
+        if op_mode == EVO_FOLLOW:
+            try:
+                self._evo_device.cancel_temp_override()
+            except (requests.exceptions.RequestException,
+                    evohomeclient2.AuthenticationError) as err:
+                _handle_exception(err)
+            return
+
+        temperature = self._evo_device.setpointStatus['targetHeatTemperature']
+        until = None  # EVO_PERMOVER
+
+        if op_mode == EVO_TEMPOVER:
+            self._setpoints = self.get_setpoints()
+            if self._setpoints:
+                until = parse_datetime(self._setpoints['next']['from'])
+
+        self._set_temperature(temperature, until=until)
+
+    def _set_tcs_mode(self, op_mode: str) -> None:
+        """Set the Controller to any of its native EVO_* operating modes."""
+        try:
+            self._evo_tcs._set_status(op_mode)  # noqa: E501; pylint: disable=protected-access
+        except (requests.exceptions.RequestException,
+                evohomeclient2.AuthenticationError) as err:
+            _handle_exception(err)
 
     @property
     def hvac_modes(self) -> List[str]:
@@ -153,8 +194,10 @@ class EvoZone(EvoClimateDevice):
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        if self._evo_tcs.systemModeStatus['mode'] in [EVO_AWAY, EVO_HEATOFF]:
+        if self._evo_tcs.systemModeStatus['mode'] == EVO_HEATOFF:
             return None
+        if self._evo_tcs.systemModeStatus['mode'] == EVO_AWAY:
+            return PRESET_AWAY
         return EVO_PRESET_TO_HA.get(
             self._evo_device.setpointStatus['setpointMode'], 'follow')
 
@@ -174,18 +217,6 @@ class EvoZone(EvoClimateDevice):
         """
         return self._evo_device.setpointCapabilities['maxHeatSetpoint']
 
-    def _set_temperature(self, temperature: float,
-                         until: Optional[datetime] = None) -> None:
-        """Set a new target temperature for the Zone.
-
-        until == None means indefinitely (i.e. PermanentOverride)
-        """
-        try:
-            self._evo_device.set_temperature(temperature, until)
-        except (requests.exceptions.RequestException,
-                evohomeclient2.AuthenticationError) as err:
-            _handle_exception(err)
-
     def set_temperature(self, **kwargs) -> None:
         """Set a new target temperature for an hour."""
         until = kwargs.get('until')
@@ -194,40 +225,20 @@ class EvoZone(EvoClimateDevice):
 
         self._set_temperature(kwargs['temperature'], until)
 
-    def _set_operation_mode(self, op_mode: str) -> None:
-        """Set the Zone to one of its native EVO_* operating modes."""
-        if op_mode == EVO_FOLLOW:
-            try:
-                self._evo_device.cancel_temp_override()
-            except (requests.exceptions.RequestException,
-                    evohomeclient2.AuthenticationError) as err:
-                _handle_exception(err)
-            return
-
-        temperature = self._evo_device.setpointStatus['targetHeatTemperature']
-        until = None  # EVO_PERMOVER
-
-        if op_mode == EVO_TEMPOVER:
-            self._setpoints = self.get_setpoints()
-            if self._setpoints:
-                until = parse_datetime(self._setpoints['next']['from'])
-
-        self._set_temperature(temperature, until=until)
-
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set an operating mode for the Zone."""
         if hvac_mode == HVAC_MODE_OFF:
             self._set_temperature(self.min_temp, until=None)
 
         else:  # HVAC_MODE_HEAT
-            self._set_operation_mode(EVO_FOLLOW)
+            self._set_zone_mode(EVO_FOLLOW)
 
     def set_preset_mode(self, preset_mode: Optional[str]) -> None:
         """Set a new preset mode.
 
         If preset_mode is None, then revert to following the schedule.
         """
-        self._set_operation_mode(HA_PRESET_TO_EVO.get(preset_mode, EVO_FOLLOW))
+        self._set_zone_mode(HA_PRESET_TO_EVO.get(preset_mode, EVO_FOLLOW))
 
 
 class EvoController(EvoClimateDevice):
@@ -303,24 +314,16 @@ class EvoController(EvoClimateDevice):
                  for z in self._evo_device.zones.values()]
         return max(temps) if temps else 35
 
-    def _set_operation_mode(self, op_mode: str) -> None:
-        """Set the Controller to any of its native EVO_* operating modes."""
-        try:
-            self._evo_device._set_status(op_mode)  # noqa: E501; pylint: disable=protected-access
-        except (requests.exceptions.RequestException,
-                evohomeclient2.AuthenticationError) as err:
-            _handle_exception(err)
-
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set an operating mode for the Controller."""
-        self._set_operation_mode(HA_HVAC_TO_TCS.get(hvac_mode))
+        self._set_tcs_mode(HA_HVAC_TO_TCS.get(hvac_mode))
 
     def set_preset_mode(self, preset_mode: Optional[str]) -> None:
         """Set a new preset mode.
 
         If preset_mode is None, then revert to 'Auto' mode.
         """
-        self._set_operation_mode(HA_PRESET_TO_TCS.get(preset_mode, EVO_AUTO))
+        self._set_tcs_mode(HA_PRESET_TO_TCS.get(preset_mode, EVO_AUTO))
 
     def update(self) -> None:
         """Get the latest state data."""
@@ -334,18 +337,18 @@ class EvoThermostat(EvoZone):
     """
 
     def __init__(self, evo_broker, evo_device) -> None:
-        """Initialize the evohome Zone."""
+        """Initialize the Round Thermostat."""
         super().__init__(evo_broker, evo_device)
 
         self._name = evo_broker.tcs.location.name
         self._icon = 'mdi:radiator'
 
-        self._hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_HEAT]
-        self._preset_modes = list(HA_PRESET_TO_EVO)
+        self._hvac_modes = list(HA_HVAC_TO_TCS)
+        self._preset_modes = [PRESET_AWAY, PRESET_ECO]
 
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
-        """Return the Evohome-specific state attributes."""
+        """Return the device-specific state attributes."""
         status = super().device_state_attributes['status']
 
         status['systemModeStatus'] = getattr(self._evo_tcs, 'systemModeStatus')
@@ -355,31 +358,31 @@ class EvoThermostat(EvoZone):
 
     @property
     def hvac_mode(self) -> str:
-        """Return the current operating mode of the evohome Zone."""
+        """Return the current operating mode."""
         if self._evo_tcs.systemModeStatus['mode'] == EVO_HEATOFF:
             return HVAC_MODE_OFF
-        is_off = self.target_temperature <= self.min_temp
-        return HVAC_MODE_OFF if is_off else HVAC_MODE_HEAT
+
+        return super().hvac_mode
 
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        if self._evo_tcs.systemModeStatus['mode'] == EVO_HEATOFF:
-            return None
-        if self._evo_tcs.systemModeStatus['mode'] == EVO_AWAY:
-            return 'Away (x)'
         if self._evo_tcs.systemModeStatus['mode'] == EVO_AUTOECO:
-            return 'Evo (x)'
-        return EVO_PRESET_TO_HA.get(
-            self._evo_device.setpointStatus['setpointMode'], 'follow')
+            if self._evo_device.setpointStatus['setpointMode'] == EVO_FOLLOW:
+                return PRESET_ECO
+
+        return super().preset_mode
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
-        """Set an operating mode for the Thermostat."""
-        self._set_operation_mode(HA_HVAC_TO_TCS.get(hvac_mode))
+        """Set an operating mode."""
+        self._set_tcs_mode(HA_HVAC_TO_TCS.get(hvac_mode))
 
     def set_preset_mode(self, preset_mode: Optional[str]) -> None:
         """Set a new preset mode.
 
         If preset_mode is None, then revert to following the schedule.
         """
-        self._set_operation_mode(HA_PRESET_TO_EVO.get(preset_mode, EVO_FOLLOW))
+        if preset_mode in list(HA_PRESET_TO_TCS):
+            self._set_tcs_mode(HA_PRESET_TO_TCS.get(preset_mode))
+        else:
+            self._set_zone_mode(HA_PRESET_TO_EVO.get(preset_mode, EVO_FOLLOW))

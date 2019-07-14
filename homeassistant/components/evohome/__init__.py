@@ -112,7 +112,7 @@ def setup(hass, hass_config) -> bool:
         load_platform(hass, 'water_heater', DOMAIN, {}, hass_config)
 
     track_time_interval(
-        hass, broker.update, hass_config[DOMAIN][CONF_SCAN_INTERVAL]
+        hass, broker.update, timedelta(seconds=10)  # TODO: hass_config[DOMAIN][CONF_SCAN_INTERVAL]
     )
 
     return True
