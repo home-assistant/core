@@ -11,6 +11,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF,
     PRESET_AWAY, PRESET_ECO, PRESET_HOME,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE)
+from homeassistant.const import PRECISION_TENTHS
 from homeassistant.util.dt import parse_datetime
 
 from . import CONF_LOCATION_IDX, _handle_exception, EvoDevice
@@ -243,7 +244,7 @@ class EvoController(EvoClimateDevice):
         self._name = evo_device.location.name
         self._icon = 'mdi:thermostat'
 
-        self._precision = None
+        self._precision = PRECISION_TENTHS
         self._state_attributes = [
             'systemId', 'activeFaults', 'systemModeStatus']
 
@@ -262,8 +263,9 @@ class EvoController(EvoClimateDevice):
 
         Controllers do not have a current temp, but one is expected by HA.
         """
-        temps = [z.temperatureStatus['temperature'] for z in
-                 self._evo_device._zones if z.temperatureStatus['isAvailable']]  # noqa: E501; pylint: disable=protected-access
+        temps = [z.temperatureStatus['temperature']
+                 for z in self._evo_device.zones.values()
+                 if z.temperatureStatus['isAvailable']]
         return round(sum(temps) / len(temps), 1) if temps else None
 
     @property
@@ -273,7 +275,7 @@ class EvoController(EvoClimateDevice):
         Controllers do not have a target temp, but one is expected by HA.
         """
         temps = [z.setpointStatus['targetHeatTemperature']
-                 for z in self._evo_device._zones]  # noqa: E501; pylint: disable=protected-access
+                 for z in self._evo_device.zones.values()]
         return round(sum(temps) / len(temps), 1) if temps else None
 
     @property
@@ -288,7 +290,7 @@ class EvoController(EvoClimateDevice):
         Controllers do not have a min target temp, but one is required by HA.
         """
         temps = [z.setpointCapabilities['minHeatSetpoint']
-                 for z in self._evo_device._zones]  # noqa: E501; pylint: disable=protected-access
+                 for z in self._evo_device.zones.values()]
         return min(temps) if temps else 5
 
     @property
@@ -298,7 +300,7 @@ class EvoController(EvoClimateDevice):
         Controllers do not have a max target temp, but one is required by HA.
         """
         temps = [z.setpointCapabilities['maxHeatSetpoint']
-                 for z in self._evo_device._zones]  # noqa: E501; pylint: disable=protected-access
+                 for z in self._evo_device.zones.values()]
         return max(temps) if temps else 35
 
     def _set_operation_mode(self, op_mode: str) -> None:
