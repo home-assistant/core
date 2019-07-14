@@ -129,7 +129,7 @@ class EvoBroker:
         self.config = self.status = self.timers = {}
 
         self.client = self.tcs = None
-        self._app_storage = None
+        self._app_storage = {}
 
         hass.data[DOMAIN] = {}
         hass.data[DOMAIN]['broker'] = self
