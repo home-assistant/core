@@ -135,6 +135,7 @@ class FritzboxThermostat(ClimateDevice):
         if self._target_temperature == self._eco_temperature:
             return PRESET_ECO
 
+    @property
     def preset_modes(self):
         """Return supported preset modes."""
         return [PRESET_ECO, PRESET_COMFORT]
