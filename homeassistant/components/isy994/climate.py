@@ -1,47 +1,26 @@
 """Support for Insteon Thermostats via ISY994 Platform."""
 import logging
+from typing import List, Optional
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    DOMAIN, STATE_AUTO, STATE_COOL, STATE_FAN_ONLY, STATE_HEAT, STATE_IDLE,
-    SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE, SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
+    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, DOMAIN, FAN_AUTO, FAN_ON,
+    HVAC_MODE_COOL, HVAC_MODE_HEAT, SUPPORT_FAN_MODE,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE_RANGE)
 from homeassistant.const import (
-    PRECISION_TENTHS, STATE_OFF, STATE_ON, TEMP_CELSIUS, TEMP_FAHRENHEIT)
-from homeassistant.util.temperature import convert as convert_temperature
+    ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from . import ISYDevice
 from .const import (
-    ISY994_NODES, ISY_CURRENT_HUMIDITY, ISY_FAN_MODE,
-    ISY_OPERATION_MODE, ISY_OPERATION_STATE, ISY_TARGET_TEMP_HIGH,
-    ISY_TARGET_TEMP_LOW, ISY_UOM, UOM_TO_STATES)
+    HA_FAN_TO_ISY, HA_HVAC_TO_ISY, ISY994_NODES, ISY_CURRENT_HUMIDITY,
+    ISY_FAN_MODE, ISY_HVAC_MODE, ISY_HVAC_MODES, ISY_HVAC_STATE,
+    ISY_TARGET_TEMP_HIGH, ISY_TARGET_TEMP_LOW, ISY_UOM, UOM_TO_STATES)
 
 _LOGGER = logging.getLogger(__name__)
 
-
-DEFAULT_MIN_TEMP = 10
-DEFAULT_MAX_TEMP = 30
-
-# Translate ISY Operation Mode to HASS States & Hold Modes
-VALUE_TO_HASS_MODE = {
-    0: (STATE_OFF, 'temp'),
-    1: (STATE_HEAT, 'temp'),
-    2: (STATE_COOL, 'temp'),
-    3: (STATE_AUTO, 'temp'),
-    4: (STATE_FAN_ONLY, 'temp'),
-    5: (STATE_AUTO, 'program'),
-    6: (STATE_HEAT, 'program'),
-    7: (STATE_COOL, 'program')
-}
-
-ISY_OPERATION_LIST = [STATE_HEAT, STATE_COOL, STATE_AUTO,
-                      STATE_FAN_ONLY, STATE_OFF]
-
-ISY_SUPPORTED_MODES = (SUPPORT_OPERATION_MODE |
-                       SUPPORT_FAN_MODE |
-                       SUPPORT_HOLD_MODE |
-                       SUPPORT_TARGET_TEMPERATURE_HIGH |
-                       SUPPORT_TARGET_TEMPERATURE_LOW)
+ISY_SUPPORTED_FEATURES = (SUPPORT_FAN_MODE |
+                          SUPPORT_TARGET_TEMPERATURE |
+                          SUPPORT_TARGET_TEMPERATURE_RANGE)
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -63,43 +42,38 @@ class ISYThermostatDevice(ISYDevice, ClimateDevice):
         """Initialize the ISY Thermostat Device."""
         super().__init__(node)
         self._node = node
-        self._uom = ''
-        if len(self._node.uom) == 1:
+        self._uom = self._node.uom
+        if isinstance(self._uom, list):
             self._uom = self._node.uom[0]
-        self._current_status = None
-        self._current_hold_mode = None
+        self._hvac_action = None
+        self._hvac_mode = None
+        self._fan_mode = None
+        self._temp_unit = None
         self._current_humidity = 0
         self._target_temp_low = 0
         self._target_temp_high = 0
-        self._fan_mode = None
-        self._current_operation = None
-        self._current_isy_operation = None
-        self._temp_unit = None
 
     async def async_added_to_hass(self):
         """Delayed completion of initialization."""
-        current_humidity = next((i for i in self._node.aux_properties.values()
-                                 if i['id'] == ISY_CURRENT_HUMIDITY), False)
+        current_humidity = self._node.aux_properties.get(
+            ISY_CURRENT_HUMIDITY)
         if current_humidity:
-            self._current_humidity = current_humidity['value']
+            self._current_humidity = int(current_humidity.get('value', 0))
 
-        target_temp_high = next((i for i in self._node.aux_properties.values()
-                                 if i['id'] == ISY_TARGET_TEMP_HIGH), False)
+        target_temp_high = self._node.aux_properties.get(ISY_TARGET_TEMP_HIGH)
         if target_temp_high:
-            self._target_temp_high = self.fix_temp(target_temp_high['value'])
+            self._target_temp_high = \
+                self.fix_temp(target_temp_high.get('value'))
 
-        target_temp_low = next((i for i in self._node.aux_properties.values()
-                                if i['id'] == ISY_TARGET_TEMP_LOW), False)
+        target_temp_low = self._node.aux_properties.get(ISY_TARGET_TEMP_LOW)
         if target_temp_low:
-            self._target_temp_low = self.fix_temp(target_temp_low['value'])
+            self._target_temp_low = \
+                self.fix_temp(target_temp_low.get('value'))
 
-        current_operation = next((i for i in self._node.aux_properties.values()
-                                  if i['id'] == ISY_OPERATION_MODE), False)
-        if current_operation:
-            self._current_isy_operation = UOM_TO_STATES['98'].get(
-                str(current_operation['value']), None)
-            self._current_operation, self._current_hold_mode = \
-                VALUE_TO_HASS_MODE.get(current_operation['value'], None)
+        hvac_mode = self._node.aux_properties.get(ISY_HVAC_MODE)
+        if hvac_mode:
+            self._hvac_mode = UOM_TO_STATES['98']. \
+                get(str(hvac_mode.get('value')))
 
         self._node.controlEvents.subscribe(self._node_control_handler)
         await super().async_added_to_hass()
@@ -110,21 +84,18 @@ class ISYThermostatDevice(ISYDevice, ClimateDevice):
         The ISY does not report some properties on the root of the node,
             they only show up in the event log:
 
-        ISY_FAN_MODE, ISY_OPERATION_STATE, ISY_UOM will be set the first
+        ISY_FAN_MODE, ISY_HVAC_STATE, ISY_UOM will be set the first
             time the event is fired by the ISY for those controls.
 
         Current Temperature is updated by PyISY in node.status and we don't
             need to listen for it here.
         """
         if event.event == ISY_FAN_MODE:
-            self._fan_mode = UOM_TO_STATES['99'].get(event.nval, None)
-        elif event.event == ISY_OPERATION_STATE:
-            self._current_status = UOM_TO_STATES['66'].get(event.nval, None)
-        elif event.event == ISY_OPERATION_MODE:
-            self._current_isy_operation = \
-                UOM_TO_STATES['98'].get(event.nval, None)
-            self._current_operation, self._current_hold_mode = \
-                VALUE_TO_HASS_MODE.get(int(event.nval), None)
+            self._fan_mode = UOM_TO_STATES['99'].get(str(event.nval))
+        elif event.event == ISY_HVAC_STATE:
+            self._hvac_action = UOM_TO_STATES['66'].get(str(event.nval))
+        elif event.event == ISY_HVAC_MODE:
+            self._hvac_mode = UOM_TO_STATES['98'].get(str(event.nval))
         elif event.event == ISY_UOM:
             if int(event.nval) == 1:
                 self._temp_unit = TEMP_CELSIUS
@@ -133,25 +104,20 @@ class ISYThermostatDevice(ISYDevice, ClimateDevice):
         elif event.event == ISY_CURRENT_HUMIDITY:
             self._current_humidity = int(event.nval)
         elif event.event == ISY_TARGET_TEMP_HIGH:
-            self._target_temp_high = self.fix_temp(int(event.nval))
+            self._target_temp_high = self.fix_temp(event.nval)
         elif event.event == ISY_TARGET_TEMP_LOW:
-            self._target_temp_low = self.fix_temp(int(event.nval))
+            self._target_temp_low = self.fix_temp(event.nval)
         self.schedule_update_ha_state()
 
     @property
-    def state(self):
-        """Return the current state."""
-        return self._current_status
+    def supported_features(self):
+        """Return the list of supported features."""
+        return ISY_SUPPORTED_FEATURES
 
     @property
     def precision(self):
         """Return the precision of the system."""
         return PRECISION_TENTHS
-
-    @property
-    def value(self):
-        """Get the current value of the device."""
-        return self.fix_temp(self._node.status)
 
     @property
     def temperature_unit(self):
@@ -166,14 +132,27 @@ class ISYThermostatDevice(ISYDevice, ClimateDevice):
         return self._current_humidity
 
     @property
-    def current_operation(self) -> str:
-        """Return current operation ie. heat, cool, idle."""
-        return self._current_operation
+    def hvac_mode(self) -> str:
+        """Return hvac operation ie. heat, cool mode."""
+        return self._hvac_mode
 
     @property
-    def operation_list(self):
-        """Return the list of available operation modes."""
-        return ISY_OPERATION_LIST
+    def hvac_modes(self) -> List[str]:
+        """Return the list of available hvac operation modes."""
+        return ISY_HVAC_MODES
+
+    @property
+    def hvac_action(self) -> Optional[str]:
+        """Return the current running hvac operation if supported."""
+        return self._hvac_action
+
+    @property
+    def value(self):
+        """Get the current value of the device.
+
+        Required to override the default ISYDevice method.
+        """
+        return self.fix_temp(self._node.status)
 
     @property
     def current_temperature(self):
@@ -186,6 +165,15 @@ class ISYThermostatDevice(ISYDevice, ClimateDevice):
         return 1
 
     @property
+    def target_temperature(self):
+        """Return the temperature we try to reach."""
+        if self.hvac_mode == HVAC_MODE_COOL:
+            return self._target_temp_high
+        if self.hvac_mode == HVAC_MODE_HEAT:
+            return self._target_temp_low
+        return None
+
+    @property
     def target_temperature_high(self):
         """Return the highbound target temperature we try to reach."""
         return self._target_temp_high
@@ -196,82 +184,49 @@ class ISYThermostatDevice(ISYDevice, ClimateDevice):
         return self._target_temp_low
 
     @property
-    def current_hold_mode(self):
-        """Return the current hold mode, e.g., home, away, temp."""
-        return self._current_hold_mode
-
-    @property
-    def is_on(self):
-        """Return if the unit is on or off based on operation status."""
-        if self._current_status not in [STATE_OFF, STATE_IDLE, None]:
-            return True
-        return False
-
-    @property
-    def fan_list(self):
+    def fan_modes(self):
         """Return the list of available fan modes."""
-        return [STATE_AUTO, STATE_ON]
+        return [FAN_AUTO, FAN_ON]
 
     @property
-    def current_fan_mode(self) -> str:
+    def fan_mode(self) -> str:
         """Return the current fan mode ie. auto, on."""
         return self._fan_mode
 
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return ISY_SUPPORTED_MODES
-
-    @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        return convert_temperature(DEFAULT_MIN_TEMP, TEMP_CELSIUS,
-                                   self.temperature_unit)
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        return convert_temperature(DEFAULT_MAX_TEMP, TEMP_CELSIUS,
-                                   self.temperature_unit)
-
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        if 'target_temp_high' in kwargs and kwargs['target_temp_high'] != \
-                self._target_temp_high:
-            self._node.climate_setpoint_cool(int(kwargs['target_temp_high']))
-            self._target_temp_high = kwargs['target_temp_high']
-        if 'target_temp_low' in kwargs and kwargs['target_temp_low'] != \
-                self._target_temp_low:
-            self._node.climate_setpoint_heat(int(kwargs['target_temp_low']))
-            self._target_temp_low = kwargs['target_temp_low']
+        target_temp = kwargs.get(ATTR_TEMPERATURE)
+        target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
+        target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        if target_temp is not None:
+            if self.hvac_mode == HVAC_MODE_COOL:
+                target_temp_high = target_temp
+            if self.hvac_mode == HVAC_MODE_HEAT:
+                target_temp_low = target_temp
+        if target_temp_low is not None:
+            self._node.climate_setpoint_heat(int(target_temp_low))
+            # Presumptive setting--event stream will correct if cmd fails:
+            self._target_temp_low = target_temp_low
+        if target_temp_high is not None:
+            self._node.climate_setpoint_cool(int(target_temp_high))
+            # Presumptive setting--event stream will correct if cmd fails:
+            self._target_temp_high = target_temp_high
         self.schedule_update_ha_state()
 
     def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
         _LOGGER.debug('Requested fan mode %s', fan_mode)
-        self._node.fan_by_mode(fan_mode)
+        self._node.fan_state(HA_FAN_TO_ISY.get(fan_mode))
+        # Presumptive setting--event stream will correct if cmd fails:
         self._fan_mode = fan_mode
         self.schedule_update_ha_state()
 
-    def set_operation_mode(self, operation_mode):
-        """Set new target operation mode."""
-        _LOGGER.debug('Requested operation mode %s', operation_mode)
-        if operation_mode in [STATE_AUTO, STATE_COOL, STATE_HEAT] and \
-                self._current_hold_mode == 'program':
-            self._current_hold_mode = 'temp'
-        self._node.climate_by_mode(operation_mode)
-        self._current_operation = operation_mode
-        self.schedule_update_ha_state()
-
-    def set_hold_mode(self, hold_mode):
-        """Set new target hold mode."""
-        _LOGGER.debug('Requested hold mode %s', hold_mode)
-        if hold_mode == 'program' and self._current_hold_mode != 'program':
-            self._node.climate_by_mode('program_auto')
-            self._current_operation = STATE_AUTO
-        elif hold_mode == 'temp' and self._current_hold_mode != 'temp':
-            self._node.climate_by_mode(self._current_operation)
-        self._current_hold_mode = hold_mode
+    def set_hvac_mode(self, hvac_mode: str) -> None:
+        """Set new target hvac mode."""
+        _LOGGER.debug('Requested operation mode %s', hvac_mode)
+        self._node.climate_mode(HA_HVAC_TO_ISY.get(hvac_mode))
+        # Presumptive setting--event stream will correct if cmd fails:
+        self._hvac_mode = hvac_mode
         self.schedule_update_ha_state()
 
     def fix_temp(self, temp) -> float:
@@ -284,4 +239,7 @@ class ISYThermostatDevice(ISYDevice, ClimateDevice):
             return None
         if self._uom == '101' or self._uom == 'degrees':
             return round(int(temp) / 2.0, 1)
-        return round(int(temp) / 10, 1)
+        if self._node.prec is not None and self._node.prec != '0':
+            return round(float(temp) * pow(10, -int(self._node.prec)),
+                         int(self._node.prec))
+        return int(temp)
