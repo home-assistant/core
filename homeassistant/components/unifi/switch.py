@@ -1,5 +1,4 @@
 """Support for devices connected to UniFi POE."""
-from datetime import timedelta
 import logging
 
 from homeassistant.components import unifi
@@ -10,8 +9,6 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID
-
-SCAN_INTERVAL = timedelta(seconds=15)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +29,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         site=config_entry.data[CONF_CONTROLLER][CONF_SITE_ID],
     )
     controller = hass.data[unifi.DOMAIN][controller_id]
+
+    if controller.site_role != 'admin':
+        return
+
     switches = {}
 
     @callback
