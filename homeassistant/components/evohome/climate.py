@@ -50,36 +50,30 @@ def setup_platform(hass, hass_config, add_entities,
     loc_idx = broker.params[CONF_LOCATION_IDX]
 
     _LOGGER.warn(
-        "Found Controller, id=%s [%s], name=%s (location_idx=%s)",
+        "Found Location/Controller, id=%s [%s], name=%s (location_idx=%s)",
         broker.tcs.systemId, broker.tcs.modelType, broker.tcs.location.name,
         loc_idx)
 
-    # special case of RoundThermostat
+    # special case of RoundThermostat (is single zone)
     if broker.config['zones'][0]['modelType'] == 'RoundModulation':
-        evo_zone = broker.tcs._zones[0]
+        zone = list(broker.tcs.zones.values())[0]
         _LOGGER.warn(
             "Found %s, id=%s [%s], name=%s",
-            evo_zone.zoneType, evo_zone.zoneId, evo_zone.modelType,
-            evo_zone.name)
+            zone.zoneType, zone.zoneId, zone.modelType, zone.name)
 
-        add_entities([EvoTermostat(broker, evo_zone)], update_before_add=True)
-
+        add_entities([EvoThermostat(broker, zone)], update_before_add=True)
         return
 
     controller = EvoController(broker, broker.tcs)
 
     zones = []
-    for zone_idx in broker.tcs.zones:
-        evo_zone = broker.tcs.zones[zone_idx]
-        _LOGGER.debug(
+    for zone in broker.tcs.zones.values():
+        _LOGGER.warn(
             "Found %s, id=%s [%s], name=%s",
-            evo_zone.zoneType, evo_zone.zoneId, evo_zone.modelType,
-            evo_zone.name)
-        zones.append(EvoZone(broker, evo_zone))
+            zone.zoneType, zone.zoneId, zone.modelType, zone.name)
+        zones.append(EvoZone(broker, zone))
 
-    entities = [controller] + zones
-
-    add_entities(entities, update_before_add=True)
+    add_entities([controller] + zones, update_before_add=True)
 
 
 class EvoClimateDevice(EvoDevice, ClimateDevice):
@@ -296,7 +290,7 @@ class EvoController(EvoClimateDevice):
         Controllers do not have a target temp, but one is expected by HA.
         """
         temps = [z.setpointStatus['targetHeatTemperature']
-                 for z in self._evo_device._zones]                               # noqa: E501; pylint: disable=protected-access
+                 for z in self._evo_device._zones]  # noqa: E501; pylint: disable=protected-access
         return round(sum(temps) / len(temps), 1) if temps else None
 
     @property
