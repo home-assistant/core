@@ -103,7 +103,6 @@ class EvoZone(EvoClimateDevice):
         """Initialize the evohome Zone."""
         super().__init__(evo_broker, evo_device)
 
-        self._id = evo_device.zoneId
         self._name = evo_device.name
         self._icon = 'mdi:radiator'
 
@@ -240,7 +239,6 @@ class EvoController(EvoClimateDevice):
         """Initialize the evohome Controller (hub)."""
         super().__init__(evo_broker, evo_device)
 
-        self._id = evo_device.systemId
         self._name = evo_device.location.name
         self._icon = 'mdi:thermostat'
 
@@ -335,7 +333,6 @@ class EvoThermostat(EvoZone):
         """Initialize the evohome Zone."""
         super().__init__(evo_broker, evo_device)
 
-        self._id = evo_device.zoneId
         self._name = evo_broker.tcs.location.name
         self._icon = 'mdi:radiator'
 
