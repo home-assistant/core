@@ -8,7 +8,7 @@ from pyps4_homeassistant.media_art import COUNTRIES
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_TITLE, MEDIA_TYPE_GAME)
 from homeassistant.const import (
-    ATTR_COMMAND, ATTR_ENTITY_ID, CONF_REGION, CONF_TOKEN)
+    ATTR_COMMAND, ATTR_ENTITY_ID, ATTR_LOCKED, CONF_REGION, CONF_TOKEN)
 from homeassistant.core import split_entity_id
 from homeassistant.helpers import entity_registry, config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
@@ -17,7 +17,7 @@ from homeassistant.util.json import load_json, save_json
 
 from .config_flow import PlayStation4FlowHandler  # noqa: pylint: disable=unused-import
 from .const import (
-    ATTR_MEDIA_IMAGE_URL, ATTR_LOCKED, COMMANDS, DOMAIN, GAMES_FILE, PS4_DATA)
+    ATTR_MEDIA_IMAGE_URL, COMMANDS, DOMAIN, GAMES_FILE, PS4_DATA)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -151,7 +151,7 @@ def load_games(hass: HomeAssistantType) -> dict:
         games = {}
         save_games(hass, games)
     else:
-        games = _verify_format(games)
+        games = _reformat_data(hass, games)
     return games
 
 
@@ -168,16 +168,26 @@ def save_games(hass: HomeAssistantType, games: dict):
         load_games(hass)
 
 
-def _verify_format(games):
+def _reformat_data(hass: HomeAssistantType, games: dict) -> dict:
     """Reformat data to correct format."""
-    # Convert str format to dict format if not already.
+    data_reformatted = False
     if games is not None:
         for game, data in games.items():
-            if isinstance(data, str):
-                games[game] = {ATTR_MEDIA_TITLE: data,
+
+            # Convert str format to dict format.
+            if not isinstance(data, dict):
+                # Use existing title. Assign defaults.
+                games[game] = {ATTR_LOCKED: False,
+                               ATTR_MEDIA_TITLE: data,
                                ATTR_MEDIA_IMAGE_URL: None,
-                               ATTR_LOCKED: False,
                                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_GAME}
+                data_reformatted = True
+
+                _LOGGER.info(
+                    "Reformatting media data for item: %s, %s", game, data)
+
+        if data_reformatted:
+            save_games(hass, games)
     return games
 
 
