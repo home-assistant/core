@@ -9,7 +9,7 @@ from homematicip.aio.home import AsyncHome
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO, HVAC_MODE_HEAT, PRESET_BOOST, PRESET_COMFORT, PRESET_ECO,
+    HVAC_MODE_AUTO, HVAC_MODE_HEAT, PRESET_BOOST, PRESET_ECO,
     SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -110,8 +110,6 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         """
         if self._device.boostMode:
             return PRESET_BOOST
-        if self._device.controlMode == HMIP_AUTOMATIC_CM:
-            return PRESET_COMFORT
         if self._device.controlMode == HMIP_ECO_CM:
             return PRESET_ECO
 
@@ -123,7 +121,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
 
         Requires SUPPORT_PRESET_MODE.
         """
-        return [PRESET_BOOST, PRESET_COMFORT]
+        return [PRESET_BOOST]
 
     @property
     def min_temp(self) -> float:
@@ -155,8 +153,6 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
             await self._device.set_boost(False)
         if preset_mode == PRESET_BOOST:
             await self._device.set_boost()
-        elif preset_mode == PRESET_COMFORT:
-            await self._device.set_control_mode(HMIP_AUTOMATIC_CM)
 
 
 def _get_first_heating_thermostat(heating_group: AsyncHeatingGroup):

@@ -705,8 +705,17 @@ async def async_process_component_config(
 
         try:
             p_integration = await async_get_integration(hass, p_name)
+        except IntegrationNotFound:
+            continue
+
+        if (not hass.config.skip_pip and p_integration.requirements and
+                not await async_process_requirements(
+                    hass, p_integration.domain, p_integration.requirements)):
+            continue
+
+        try:
             platform = p_integration.get_platform(domain)
-        except (IntegrationNotFound, ImportError):
+        except ImportError:
             continue
 
         # Validate platform specific schema

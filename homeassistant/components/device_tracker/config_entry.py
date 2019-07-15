@@ -1,8 +1,7 @@
 """Code to set up a device tracker platform using a config entry."""
 from typing import Optional
 
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.components import zone
 from homeassistant.const import (
     STATE_NOT_HOME,
     STATE_HOME,
@@ -11,7 +10,8 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     ATTR_BATTERY_LEVEL,
 )
-from homeassistant.components import zone
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
 
 from .const import (
     ATTR_SOURCE_TYPE,

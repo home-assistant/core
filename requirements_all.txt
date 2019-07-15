@@ -302,7 +302,7 @@ brottsplatskartan==0.0.1
 brunt==0.1.3
 
 # homeassistant.components.bluetooth_tracker
-bt_proximity==0.1.2
+bt_proximity==0.2
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -1169,10 +1169,10 @@ pyheos==0.5.2
 pyhik==0.2.3
 
 # homeassistant.components.hive
-pyhiveapi==0.2.17
+pyhiveapi==0.2.18.1
 
 # homeassistant.components.homematic
-pyhomematic==0.1.59
+pyhomematic==0.1.60
 
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6

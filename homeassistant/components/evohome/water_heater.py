@@ -27,8 +27,8 @@ def setup_platform(hass, hass_config, add_entities,
     broker = hass.data[DOMAIN]['broker']
 
     _LOGGER.debug(
-        "Found DHW device, id: %s [%s]",
-        broker.tcs.hotwater.zoneId, broker.tcs.hotwater.zone_type)
+        "Found %s, id: %s",
+        broker.tcs.hotwater.zone_type, broker.tcs.hotwater.zoneId)
 
     evo_dhw = EvoDHW(broker, broker.tcs.hotwater)
 
@@ -42,18 +42,16 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         """Initialize the evohome DHW controller."""
         super().__init__(evo_broker, evo_device)
 
-        self._id = evo_device.dhwId
         self._name = 'DHW controller'
         self._icon = 'mdi:thermometer-lines'
 
         self._precision = PRECISION_WHOLE
         self._state_attributes = [
-            'activeFaults', 'stateStatus', 'temperatureStatus', 'setpoints']
+            'dhwId', 'activeFaults', 'stateStatus', 'temperatureStatus',
+            'setpoints']
 
         self._supported_features = SUPPORT_OPERATION_MODE
         self._operation_list = list(HA_OPMODE_TO_DHW)
-
-        self._config = evo_broker.config['dhw']
 
     @property
     def current_operation(self) -> str:
