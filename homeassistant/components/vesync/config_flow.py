@@ -93,9 +93,11 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
         if not login:
             return self.async_abort(reason='invalid_login')
 
+        self.hass.data[DOMAIN][CONF_MANAGER] = manager
+
         return self.async_create_entry(
             title=self._username,
             data={
-                CONF_MANAGER: manager,
+                CONF_USERNAME: self._username,
             },
         )
