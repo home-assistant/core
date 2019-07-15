@@ -369,9 +369,9 @@ class EvoThermostat(EvoZone):
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        if self._evo_tcs.systemModeStatus['mode'] == EVO_AUTOECO:
-            if self._evo_device.setpointStatus['setpointMode'] == EVO_FOLLOW:
-                return PRESET_ECO
+        if self._evo_tcs.systemModeStatus['mode'] == EVO_AUTOECO and \
+                self._evo_device.setpointStatus['setpointMode'] == EVO_FOLLOW:
+            return PRESET_ECO
 
         return super().preset_mode
 
