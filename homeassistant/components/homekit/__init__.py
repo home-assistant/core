@@ -63,7 +63,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 RESET_ACCESSORY_SERVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids
 })
 
 
@@ -281,7 +281,7 @@ class HomeKit():
         """Try adding accessory to bridge if configured beforehand."""
         acc = None
         if aid in self.bridge.accessories:
-            acc = self.bridge.accessories.pop(aid, {})
+            acc = self.bridge.accessories.pop(aid)
         return acc
 
     def start(self, *args):
