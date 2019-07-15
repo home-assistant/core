@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_IP_ADDRESS, CONF_SCAN_INTERVAL, DEVICE_CLASS_POWER,
+    CONF_IP_ADDRESS, DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -49,10 +49,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     ip_address = config[CONF_IP_ADDRESS]
     cloud_id = config[CONF_CLOUD_ID]
     install_code = config[CONF_INSTALL_CODE]
-    interval = config.get(CONF_SCAN_INTERVAL)
 
     try:
-        eagle_data = EagleData(ip_address, cloud_id, install_code, interval)
+        eagle_data = EagleData(ip_address, cloud_id, install_code)
     except (ConnectError, HTTPError, Timeout, ValueError) as error:
         _LOGGER.error("Failed to setup Eagle-200 sensor: %s", error)
     else:
@@ -82,8 +81,9 @@ class EagleSensor(Entity):
 
     @property
     def device_class(self):
-        """Return the device class of the sensor."""
-        return DEVICE_CLASS_POWER
+        """Return the power device class for the instantanous_demand sensor."""
+        if self._type == 'instantanous_demand':
+            return DEVICE_CLASS_POWER
 
     @property
     def name(self):
@@ -105,12 +105,11 @@ class EagleSensor(Entity):
         """Get the energy information from the Rainforest Eagle."""
         try:
             self.eagle_data.update()
+            data = self.eagle_data.data
+            self._state = self.get_state(data)
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
             _LOGGER.error("Unable to update Eagle-200 %s: %s",
                           self._name, error)
-        else:
-            data = self.eagle_data.data
-            self._state = self.get_state(data)
 
     def get_state(self, data):
         """Get the sensor value from the dictionary."""
@@ -124,12 +123,11 @@ class EagleSensor(Entity):
 class EagleData:
     """Get the latest data from the Eagle-200 device."""
 
-    def __init__(self, ip_address, cloud_id, install_code, interval):
+    def __init__(self, ip_address, cloud_id, install_code):
         """Initialize the data object."""
         self._ip_address = ip_address
         self._cloud_id = cloud_id
         self._install_code = install_code
-        self.interval = interval
         self.data = {}
 
         try:
@@ -139,10 +137,7 @@ class EagleData:
             _LOGGER.error("Unable to connect during setup: %s", error)
             self.data = None
 
-        # Apply throttling to update method using configured interval.
-        self.update = Throttle(interval)(self._update)
-
-    def _update(self):
+    def update(self):
         """Get the latest data from the Eagle-200 device."""
         try:
             self.data = self.eagle_reader.update()
