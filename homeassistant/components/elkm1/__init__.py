@@ -3,7 +3,6 @@ import logging
 import re
 
 import voluptuous as vol
-from getmac import get_mac_address
 from homeassistant.const import (
     CONF_EXCLUDE, CONF_HOST, CONF_INCLUDE, CONF_PASSWORD,
     CONF_TEMPERATURE_UNIT, CONF_USERNAME)
@@ -104,23 +103,6 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def _get_mac_for(elk_host):
-    hostname_pattern = re.compile(r"^elks?://([^:]+)")
-    digits_pattern = re.compile(r"^[0-9.]+$")
-    hp_m = hostname_pattern.search(elk_host)
-    if hp_m:
-        ip_host = hp_m.group(1)
-        dp_m = digits_pattern.match(ip_host)
-        if dp_m:
-            mac_addr = get_mac_address(ip=ip_host)
-        else:
-            mac_addr = get_mac_address(hostname=ip_host)
-        _LOGGER.info("elkm1 at %s (%s) has mac %s",
-                     elk_host, ip_host, mac_addr)
-        return mac_addr
-    return None
-
-
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Elk M1 platform."""
     from elkm1_lib.const import Max
@@ -170,7 +152,6 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
                          conf[CONF_USERNAME],
                          'password': conf[CONF_PASSWORD]})
         elk.connect()
-        elk.mac_address = _get_mac_for(conf[CONF_HOST])
 
         devices[prefix] = elk
         elk_datas[prefix] = {'elk': elk,
@@ -235,8 +216,8 @@ class ElkEntity(Entity):
         self._element = element
         self._prefix = elk_data['prefix']
         self._temperature_unit = elk_data['config']['temperature_unit']
-        self._unique_id = 'elkm1_{mac}_{name}'.format(
-            mac=elk.mac_address,
+        self._unique_id = 'elkm1_{prefix}_{name}'.format(
+            prefix=self._prefix,
             name=self._element.default_name('_')).lower()
 
     @property
