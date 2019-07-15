@@ -260,7 +260,7 @@ pydispatcher==2.0.5
 pyheos==0.5.2
 
 # homeassistant.components.homematic
-pyhomematic==0.1.59
+pyhomematic==0.1.60
 
 # homeassistant.components.iqvia
 pyiqvia==0.2.1
