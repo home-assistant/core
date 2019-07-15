@@ -101,7 +101,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([player], True)
 
     def play_playlist_service(service):
-        media_content_id = service.data.get(ATTR_MEDIA_CONTENT_ID)
+        media_content_id = service.data[ATTR_MEDIA_CONTENT_ID]
         random_song = service.data.get(ATTR_RANDOM_SONG)
         player.play_playlist(media_content_id, random_song)
 
