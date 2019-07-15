@@ -268,7 +268,7 @@ class EvoController(EvoClimateDevice):
     @property
     def hvac_mode(self) -> str:
         """Return the current operating mode of the evohome Controller."""
-        tcs_mode = self._evo_device.systemModeStatus['mode']
+        tcs_mode = self._evo_tcs.systemModeStatus['mode']
         return HVAC_MODE_OFF if tcs_mode == EVO_HEATOFF else HVAC_MODE_HEAT
 
     @property
@@ -278,7 +278,7 @@ class EvoController(EvoClimateDevice):
         Controllers do not have a current temp, but one is expected by HA.
         """
         temps = [z.temperatureStatus['temperature']
-                 for z in self._evo_device.zones.values()
+                 for z in self._evo_tcs.zones.values()
                  if z.temperatureStatus['isAvailable']]
         return round(sum(temps) / len(temps), 1) if temps else None
 
@@ -289,13 +289,13 @@ class EvoController(EvoClimateDevice):
         Controllers do not have a target temp, but one is expected by HA.
         """
         temps = [z.setpointStatus['targetHeatTemperature']
-                 for z in self._evo_device.zones.values()]
+                 for z in self._evo_tcs.zones.values()]
         return round(sum(temps) / len(temps), 1) if temps else None
 
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        return TCS_PRESET_TO_HA.get(self._evo_device.systemModeStatus['mode'])
+        return TCS_PRESET_TO_HA.get(self._evo_tcs.systemModeStatus['mode'])
 
     @property
     def min_temp(self) -> float:
@@ -304,7 +304,7 @@ class EvoController(EvoClimateDevice):
         Controllers do not have a min target temp, but one is required by HA.
         """
         temps = [z.setpointCapabilities['minHeatSetpoint']
-                 for z in self._evo_device.zones.values()]
+                 for z in self._evo_tcs.zones.values()]
         return min(temps) if temps else 5
 
     @property
@@ -314,7 +314,7 @@ class EvoController(EvoClimateDevice):
         Controllers do not have a max target temp, but one is required by HA.
         """
         temps = [z.setpointCapabilities['maxHeatSetpoint']
-                 for z in self._evo_device.zones.values()]
+                 for z in self._evo_tcs.zones.values()]
         return max(temps) if temps else 35
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
@@ -344,8 +344,6 @@ class EvoThermostat(EvoZone):
         super().__init__(evo_broker, evo_device)
 
         self._name = evo_broker.tcs.location.name
-        self._icon = 'mdi:radiator'
-
         self._preset_modes = [PRESET_AWAY, PRESET_ECO]
 
     @property
@@ -353,8 +351,8 @@ class EvoThermostat(EvoZone):
         """Return the device-specific state attributes."""
         status = super().device_state_attributes['status']
 
-        status['systemModeStatus'] = getattr(self._evo_tcs, 'systemModeStatus')
-        status['activeFaults'] += getattr(self._evo_tcs, 'activeFaults')
+        status['systemModeStatus'] = self._evo_tcs.systemModeStatus
+        status['activeFaults'] += self._evo_tcs.activeFaults
 
         return {'status': status}
 
