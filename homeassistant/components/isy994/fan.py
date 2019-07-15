@@ -26,8 +26,9 @@ for key in VALUE_TO_STATE:
     STATE_TO_VALUE[VALUE_TO_STATE[key]] = key
 
 
-def setup_platform(hass, config: ConfigType,
-                   add_entities: Callable[[list], None], discovery_info=None):
+async def async_setup_platform(hass, config: ConfigType,
+                               async_add_entities: Callable[[list], None],
+                               discovery_info=None):
     """Set up the ISY994 fan platform."""
     devices = []
 
@@ -37,7 +38,7 @@ def setup_platform(hass, config: ConfigType,
     for name, status, actions in hass.data[ISY994_PROGRAMS][DOMAIN]:
         devices.append(ISYFanProgram(name, status, actions))
 
-    add_entities(devices)
+    async_add_entities(devices)
 
 
 class ISYFanDevice(ISYDevice, FanEntity):

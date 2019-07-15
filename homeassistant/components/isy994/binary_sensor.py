@@ -20,8 +20,9 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config: ConfigType,
-                   add_entities: Callable[[list], None], discovery_info=None):
+async def async_setup_platform(hass, config: ConfigType,
+                               async_add_entities: Callable[[list], None],
+                               discovery_info=None):
     """Set up the ISY994 binary sensor platform."""
     devices = []
     devices_by_nid = {}
@@ -104,7 +105,7 @@ def setup_platform(hass, config: ConfigType,
     for vcfg, vname, vobj in hass.data[ISY994_VARIABLES][DOMAIN]:
         devices.append(ISYBinarySensorVariableDevice(vcfg, vname, vobj))
 
-    add_entities(devices)
+    async_add_entities(devices)
 
 
 def _detect_device_type(node) -> (str, str):

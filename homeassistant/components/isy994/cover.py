@@ -12,8 +12,9 @@ from .const import ISY994_NODES, ISY994_PROGRAMS, UOM_TO_STATES
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config: ConfigType,
-                   add_entities: Callable[[list], None], discovery_info=None):
+async def async_setup_platform(hass, config: ConfigType,
+                               async_add_entities: Callable[[list], None],
+                               discovery_info=None):
     """Set up the ISY994 cover platform."""
     devices = []
     for node in hass.data[ISY994_NODES][DOMAIN]:
@@ -22,7 +23,7 @@ def setup_platform(hass, config: ConfigType,
     for name, status, actions in hass.data[ISY994_PROGRAMS][DOMAIN]:
         devices.append(ISYCoverProgram(name, status, actions))
 
-    add_entities(devices)
+    async_add_entities(devices)
 
 
 class ISYCoverDevice(ISYDevice, CoverDevice):

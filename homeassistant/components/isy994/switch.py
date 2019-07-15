@@ -14,8 +14,9 @@ from .const import ISY994_NODES, ISY994_PROGRAMS, ISY994_VARIABLES
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config: ConfigType,
-                   add_entities: Callable[[list], None], discovery_info=None):
+async def async_setup_platform(hass, config: ConfigType,
+                               async_add_entities: Callable[[list], None],
+                               discovery_info=None):
     """Set up the ISY994 switch platform."""
     devices = []
     for node in hass.data[ISY994_NODES][DOMAIN]:
@@ -27,7 +28,7 @@ def setup_platform(hass, config: ConfigType,
     for vcfg, vname, vobj in hass.data[ISY994_VARIABLES][DOMAIN]:
         devices.append(ISYSwitchVariableDevice(vcfg, vname, vobj))
 
-    add_entities(devices)
+    async_add_entities(devices)
 
 
 class ISYSwitchDevice(ISYDevice, SwitchDevice):

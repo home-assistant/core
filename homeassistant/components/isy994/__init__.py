@@ -12,7 +12,7 @@ from homeassistant.const import (
     CONF_BINARY_SENSORS, CONF_DEVICE_CLASS, CONF_HOST, CONF_ICON, CONF_ID,
     CONF_NAME, CONF_PASSWORD, CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON, CONF_SENSORS,
     CONF_SWITCHES, CONF_TYPE, CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity import Entity
@@ -340,7 +340,7 @@ def _categorize_weather(hass: HomeAssistant, climate) -> None:
     hass.data[ISY994_WEATHER].extend(weather_nodes)
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ISY 994 platform."""
     hass.data[ISY994_NODES] = {}
     for domain in SUPPORTED_DOMAINS:
@@ -398,18 +398,27 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if enable_climate and isy.configuration.get('Weather Information'):
         _categorize_weather(hass, isy.climate)
 
-    def stop(event: object) -> None:
+    async def start(event: object) -> None:
+        """Start ISY auto updates."""
+        _LOGGER.debug("ISY Starting Event Stream and automatic updates.")
+        isy.auto_update = True
+
+    async def stop(event: object) -> None:
         """Stop ISY auto updates."""
         isy.auto_update = False
 
+    # only start fetching data after HA boots to prevent delaying the boot
+    # process
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start)
+
     # Listen for HA stop to disconnect.
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop)
 
     # Load platforms for the devices in the ISY controller that we support.
     for component in SUPPORTED_DOMAINS:
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+        await discovery.async_load_platform(hass, component, DOMAIN,
+                                            {}, config)
 
-    isy.auto_update = True
     return True
 
 
@@ -489,7 +498,7 @@ class ISYDevice(Entity):
             friendly_value = _process_values(self.hass, event.nval,
                                              event.uom, event.prec,
                                              self._node.type)
-            event_data['freindly_value'] = friendly_value
+            event_data['friendly_value'] = friendly_value
             self._attrs[attr_name] = friendly_value
             self.schedule_update_ha_state()
 
