@@ -15,7 +15,7 @@ import traceback
 from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import (
-    async_get_registry as get_dev_reg)
+    CONNECTION_ZIGBEE, async_get_registry as get_dev_reg)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from ..api import async_get_device_info
@@ -46,7 +46,7 @@ EntityReference = collections.namedtuple(
 class ZHAGateway:
     """Gateway that handles events that happen on the ZHA Zigbee network."""
 
-    def __init__(self, hass, config):
+    def __init__(self, hass, config, config_entry):
         """Initialize the gateway."""
         self._hass = hass
         self._config = config
@@ -62,14 +62,15 @@ class ZHAGateway:
         }
         self.debug_enabled = False
         self._log_relay_handler = LogRelayHandler(hass, self)
+        self._config_entry = config_entry
 
-    async def async_initialize(self, config_entry):
+    async def async_initialize(self):
         """Initialize controller and connect radio."""
         self.zha_storage = await async_get_registry(self._hass)
 
-        usb_path = config_entry.data.get(CONF_USB_PATH)
+        usb_path = self._config_entry.data.get(CONF_USB_PATH)
         baudrate = self._config.get(CONF_BAUDRATE, DEFAULT_BAUDRATE)
-        radio_type = config_entry.data.get(CONF_RADIO_TYPE)
+        radio_type = self._config_entry.data.get(CONF_RADIO_TYPE)
 
         radio_details = RADIO_TYPES[radio_type][RADIO]()
         radio = radio_details[RADIO]
@@ -322,6 +323,25 @@ class ZHAGateway:
                 )
 
         if is_new_join:
+            ha_device_registry = await get_dev_reg(self._hass)
+            ha_device_registry.async_get_or_create(
+                config_entry_id=self._config_entry.entry_id,
+                connections={
+                    (
+                        CONNECTION_ZIGBEE,
+                        str(zha_device.ieee)
+                    )
+                },
+                identifiers={
+                    (
+                        DOMAIN,
+                        str(zha_device.ieee)
+                    )
+                },
+                name=zha_device.name,
+                manufacturer=zha_device.manufacturer,
+                model=zha_device.model
+            )
             device_info = async_get_device_info(self._hass, zha_device)
             async_dispatcher_send(
                 self._hass,
