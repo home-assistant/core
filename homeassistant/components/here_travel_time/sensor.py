@@ -51,6 +51,7 @@ UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
 
 ATTR_DURATION = 'duration'
 ATTR_DISTANCE = 'distance'
+ATTR_ROUTE = 'route'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -165,6 +166,7 @@ class HERETravelTimeSensor(Entity):
         res[ATTR_ATTRIBUTION] = self._here_data.attribution
         res[ATTR_DURATION] = self._here_data.duration
         res[ATTR_DISTANCE] = self._here_data.distance
+        res[ATTR_ROUTE] = self._here_data.route
         res[CONF_UNIT_SYSTEM] = self._here_data.units
         res['duration_without_traffic'] = self._here_data.base_time
         res['origin_name'] = self._here_data.origin_name
@@ -268,6 +270,7 @@ class HERETravelTimeData():
         self.attribution = None
         self.duration = None
         self.distance = None
+        self.route = None
         self.base_time = None
         self.origin_name = None
         self.destination_name = None
@@ -305,6 +308,7 @@ class HERETravelTimeData():
             route = response.response['route']
             summary = route[0]['summary']
             waypoint = route[0]['waypoint']
+            maneuver = route[0]['leg'][0]['maneuver']
 
             self.attribution = None
             self.base_time = summary['baseTime']
@@ -318,6 +322,40 @@ class HERETravelTimeData():
                 # Convert to miles.
                 self.distance = distance / 1609.344
             else:
-                self.distance = distance
+                # Convert to kilometers
+                self.distance = distance / 1000
+            self.route = self._get_route_from_maneuver(maneuver)
             self.origin_name = waypoint[0]['mappedRoadName']
             self.destination_name = waypoint[1]['mappedRoadName']
+
+    @staticmethod
+    def _get_route_from_maneuver(maneuver):
+        """Extract a Waze-like route from the maneuver instructions."""
+        road_names = []
+
+        for step in maneuver:
+            instruction = step['instruction']
+            try:
+                road_number = instruction.split(
+                    "<span class=\"number\">"
+                )[1].split("</span>")[0]
+                road_name = road_number.replace("(", "").replace(")","")
+
+                try:
+                    street_name = instruction.split(
+                        "<span class=\"next-street\">"
+                    )[1].split("</span>")[0]
+                    street_name = street_name.replace("(", "").replace(")","")
+
+                    road_name += " - " + street_name
+                except IndexError:
+                    pass # No street name found in this maneuver step
+                
+                # Only add if it does not repeat
+                if len(road_names) == 0 or road_names[-1] != road_name:
+                    road_names.append(road_name)
+            except IndexError:
+                pass  # No road number found in this maneuver step
+
+        route = "; ".join(list(map(str,road_names)))
+        return route
