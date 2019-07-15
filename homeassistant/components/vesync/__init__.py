@@ -29,7 +29,7 @@ CONFIG_SCHEMA = vol.Schema({
 async def async_setup(hass, config):
     """Set up the VeSync component."""
     hass.data[DOMAIN] = {}
-    hass.data[CONF_SWITCHES] = []
+    hass.data[DOMAIN][CONF_SWITCHES] = []
 
     conf = config.get('vesync')
 
