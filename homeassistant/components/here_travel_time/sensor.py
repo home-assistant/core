@@ -164,11 +164,11 @@ class HERETravelTimeSensor(Entity):
 
         res = {}
         res[ATTR_ATTRIBUTION] = self._here_data.attribution
-        res[ATTR_DURATION] = self._here_data.duration
+        res[ATTR_DURATION] = self._here_data.duration / 60
         res[ATTR_DISTANCE] = self._here_data.distance
         res[ATTR_ROUTE] = self._here_data.route
         res[CONF_UNIT_SYSTEM] = self._here_data.units
-        res['duration_without_traffic'] = self._here_data.base_time
+        res['duration_without_traffic'] = self._here_data.base_time / 60
         res['origin_name'] = self._here_data.origin_name
         res['destination_name'] = self._here_data.destination_name
         res[CONF_MODE] = self._here_data.travel_mode
@@ -284,13 +284,13 @@ class HERETravelTimeData():
         else:
             traffic_mode = TRAFFIC_MODE_DISABLED
 
-        # Convert location to HERE friendly location if not already so
-        if not isinstance(self.destination, list):
-            self.destination = self.destination.split(',')
-        if not isinstance(self.origin, list):
-            self.origin = self.origin.split(',')
-
         if self.destination is not None and self.origin is not None:
+            # Convert location to HERE friendly location if not already so
+            if not isinstance(self.destination, list):
+                self.destination = self.destination.split(',')
+            if not isinstance(self.origin, list):
+                self.origin = self.origin.split(',')
+
             response = self._client.car_route(
                 self.origin,
                 self.destination,
