@@ -8,7 +8,7 @@ trigger:
 pr: none
 variables:
   - name: versionBuilder
-    value: '5.1'
+    value: '5.2'
   - group: docker
   - group: github
   - group: twine
@@ -88,10 +88,10 @@ stages:
           buildMachine: 'qemuarm,raspberrypi'
         armv7:
           buildArch: 'armv7'
-          buildMachine: 'raspberrypi2,raspberrypi3,odroid-xu,tinker'
+          buildMachine: 'raspberrypi2,raspberrypi3,raspberrypi4,odroid-xu,tinker'
         aarch64:
           buildArch: 'aarch64'
-          buildMachine: 'qemuarm-64,raspberrypi3-64,odroid-c2,orangepi-prime'
+          buildMachine: 'qemuarm-64,raspberrypi3-64,raspberrypi4-64,odroid-c2,orangepi-prime'
     steps:
     - script: sudo docker login -u $(dockerUser) -p $(dockerPassword)
       displayName: 'Docker hub login'
