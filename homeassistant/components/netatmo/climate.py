@@ -470,10 +470,9 @@ class ThermostatData:
                             .get("battery_level"))
 
                     if batterylevel:
-                        if (roomstatus.get("battery_level") and
-                                batterylevel < roomstatus["battery_level"]):
+                        if roomstatus.get("battery_level") is None:
                             roomstatus["battery_level"] = batterylevel
-                        else:
+                        elif batterylevel < roomstatus["battery_level"]:
                             roomstatus["battery_level"] = batterylevel
                 self.room_status[room] = roomstatus
             except KeyError as err:
