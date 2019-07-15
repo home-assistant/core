@@ -11,19 +11,18 @@ trigger:
 pr: none
 variables:
   - name: versionWheels
-    value: '0.7'
+    value: '1.0-3.7-alpine3.10'
   - group: wheels
 
 
 jobs:
 
 - job: 'Wheels'
-  condition: or(eq(variables['Build.SourceBranchName'], 'dev'), eq(variables['Build.SourceBranchName'], 'master'))
   timeoutInMinutes: 360
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
-    maxParallel: 3
+    maxParallel: 5
     matrix:
       amd64:
         buildArch: 'amd64'
