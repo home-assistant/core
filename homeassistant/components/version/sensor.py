@@ -45,7 +45,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up the Version sensor platform."""
-    from pyhaversion import LocalVersion, DockerVersion, HassioVersion, PyPiVersion
+    from pyhaversion import (
+        LocalVersion, DockerVersion, HassioVersion, PyPiVersion)
     beta = config.get(CONF_BETA)
     image = config.get(CONF_IMAGE)
     name = config.get(CONF_NAME)
@@ -59,13 +60,17 @@ async def async_setup_platform(
         branch = 'stable'
 
     if source == 'pypi':
-        haversion = VersionData(PyPiVersion(hass.loop, session, branch))
+        haversion = VersionData(
+            PyPiVersion(hass.loop, session, branch))
     elif source == 'hassio':
-        haversion = VersionData(HassioVersion(hass.loop, session, branch, image))
+        haversion = VersionData(
+            HassioVersion(hass.loop, session, branch, image))
     elif source == 'docker':
-        haversion = VersionData(DockerVersion(hass.loop, session, branch, image))
+        haversion = VersionData(
+            DockerVersion(hass.loop, session, branch, image))
     else:
-        haversion = VersionData(LocalVersion(hass.loop, session))
+        haversion = VersionData(
+            LocalVersion(hass.loop, session))
 
     if not name:
         if source == DEFAULT_SOURCE:
