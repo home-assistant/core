@@ -42,8 +42,8 @@ class LutronFan(LutronDevice, FanEntity):
     @property
     def is_on(self):
         """Return true if device is on."""
-        # return self._lutron_device.last_level() > SPEED_OFF
-        return self._is_on
+        return self._lutron_device.last_level() > SPEED_MAPPING[SPEED_OFF]
+        # return self._is_on
 
     # @property
     # def speed(self) -> str:
@@ -88,10 +88,10 @@ class LutronFan(LutronDevice, FanEntity):
             _LOGGER.debug("Unknown speed %s, setting to %s", speed, SPEED_HIGH)
             self._speed = SPEED_HIGH
         else:
-            self._speed = self._prev_speed                                        # TODO returns 0.0 right now....
+            self._speed = self._prev_speed
             # self._speed = SPEED_MAPPING[SPEED_MEDIUM_HIGH]
             
-        print('+++++++++++++++++++++ ' +str(self._lutron_device)+ ', '+str(self._speed))
+        # print('+++++++++++++++++++++ ' +str(self._lutron_device)+ ', '+str(self._speed))
         self._lutron_device.level = SPEED_MAPPING[self._speed]
 
     def turn_off(self, **kwargs):
