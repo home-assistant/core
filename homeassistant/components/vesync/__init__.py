@@ -53,11 +53,9 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up Vesync as config entry."""
-    manager = config_entry.data[CONF_MANAGER]
+    manager = hass.data[DOMAIN][CONF_MANAGER]
 
     device_dict = await async_process_devices(hass, manager)
-
-    hass.data[DOMAIN]['manager'] = manager
 
     forward_setup = hass.config_entries.async_forward_entry_setup
 
