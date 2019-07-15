@@ -9,7 +9,7 @@ from homeassistant.const import (
     CONF_CODE, CONF_HOST, CONF_IP_ADDRESS, CONF_NAME, CONF_REGION, CONF_TOKEN)
 from homeassistant.util import location
 
-from .const import DEFAULT_ALIAS, DEFAULT_NAME, DOMAIN
+from .const import CONFIG_ENTRY_VERSION, DEFAULT_ALIAS, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ PORT_MSG = {UDP_PORT: 'port_987_bind_error', TCP_PORT: 'port_997_bind_error'}
 class PlayStation4FlowHandler(config_entries.ConfigFlow):
     """Handle a PlayStation 4 config flow."""
 
-    VERSION = 3
+    VERSION = CONFIG_ENTRY_VERSION
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
