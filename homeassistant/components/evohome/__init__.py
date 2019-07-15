@@ -22,6 +22,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time, track_time_interval)
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.dt import parse_datetime, utcnow
 
 from .const import DOMAIN, STORAGE_VERSION, STORAGE_KEY, GWS, TCS
@@ -101,7 +102,7 @@ def _handle_exception(err) -> bool:
         raise  # we don't expect/handle any other HTTPErrors
 
 
-def setup(hass, hass_config) -> bool:
+def setup(hass: HomeAssistantType, hass_config: ConfigType) -> bool:
     """Create a (EMEA/EU-based) Honeywell evohome system."""
     broker = EvoBroker(hass, hass_config[DOMAIN])
     if not broker.init_client():
