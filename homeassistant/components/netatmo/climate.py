@@ -83,21 +83,6 @@ DEFAULT_MAX_TEMP = 30
 NA_THERM = 'NATherm1'
 NA_VALVE = 'NRV'
 
-NA_BATTERY_LEVELS = {
-    NA_THERM: {
-        'full': 4100,
-        'high': 3600,
-        'medium': 3300,
-        'low': 3000,
-        'empty': 2800},
-    NA_VALVE: {
-        'full': 3200,
-        'high': 2700,
-        'medium': 2400,
-        'low': 2200,
-        'empty': 2200},
-}
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NetAtmo Thermostat."""
@@ -501,10 +486,25 @@ class ThermostatData:
 
 def interpolate(batterylevel, module_type):
     """Interpolate battery level depending on device type."""
-    levels = list(reversed(list(NA_BATTERY_LEVELS[module_type].values())))
+    na_battery_levels = {
+        NA_THERM: {
+            'full': 4100,
+            'high': 3600,
+            'medium': 3300,
+            'low': 3000,
+            'empty': 2800},
+        NA_VALVE: {
+            'full': 3200,
+            'high': 2700,
+            'medium': 2400,
+            'low': 2200,
+            'empty': 2200},
+    }
+
+    levels = sorted(na_battery_levels[module_type].values())
     steps = [20, 50, 80, 100]
 
-    na_battery_level = NA_BATTERY_LEVELS[module_type]
+    na_battery_level = na_battery_levels[module_type]
     if batterylevel >= na_battery_level['full']:
         return 100
     if batterylevel >= na_battery_level['high']:
