@@ -254,7 +254,7 @@ class ONVIFHassCamera(Camera):
             _LOGGER.error("Couldn't setup camera '%s'. Error: %s",
                           self._name, err)
 
-    async def setup_ptz(self):
+    def setup_ptz(self):
         """Set up PTZ if available."""
         _LOGGER.debug("Setting up the ONVIF PTZ service")
         if self._camera.get_service('ptz', create=False) is None:
