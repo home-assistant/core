@@ -13,7 +13,7 @@
     },
     "error": {
       "alread_setup": "You can only configure one vesync instance",
-      "invalid_credentials": "Invalid credentials"
+      "invalid_login": "Cannot login with that username and password"
     }
   }
 }

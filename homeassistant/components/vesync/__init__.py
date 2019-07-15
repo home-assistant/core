@@ -8,7 +8,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.config_entries import SOURCE_IMPORT
 from .common import (async_process_devices, CONF_SWITCHES)
 from .config_flow import configured_instances
-from .const import VS_DISPATCHERS, VS_DISCOVERY, SERVICE_UPDATE_DEVS
+from .const import VS_DISPATCHERS, VS_DISCOVERY, SERVICE_UPDATE_DEVS, CONF_MANAGER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,32 +52,7 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up Vesync as config entry."""
-    username = config_entry.data[CONF_USERNAME]
-    password = config_entry.data[CONF_PASSWORD]
-    time_zone = config_entry.data[CONF_TIME_ZONE]
-
-    if config_entry.data[CONF_TIME_ZONE] != '':
-        time_zone = config_entry.data[CONF_TIME_ZONE]
-    else:
-        if hass.config.time_zone is not None:
-            time_zone = str(hass.config.time_zone)
-            _LOGGER.debug("Time zone - %s", time_zone)
-
-    from pyvesync import VeSync
-
-    if time_zone is not None:
-
-        manager = VeSync(username, password, time_zone)
-
-    else:
-
-        manager = VeSync(username, password)
-
-    login = await hass.async_add_executor_job(manager.login)
-
-    if not login:
-        _LOGGER.error("Unable to login to the VeSync server")
-        return False
+    manager = config_entry.data[CONF_MANAGER]
 
     device_dict = await async_process_devices(hass, manager)
 

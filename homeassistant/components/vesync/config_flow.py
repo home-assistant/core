@@ -5,7 +5,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.helpers import config_validation as cv
 from homeassistant.core import callback
-from homeassistant.const import (CONF_TIME_ZONE, CONF_USERNAME, CONF_PASSWORD)
+from homeassistant.const import (CONF_TIME_ZONE, CONF_USERNAME,
+                                 CONF_PASSWORD, CONF_MANAGER)
 
 DOMAIN = 'vesync'
 
@@ -18,6 +19,10 @@ def configured_instances(hass):
     return [
         entry.data[CONF_USERNAME]
         for entry in hass.config_entries.async_entries(DOMAIN)]
+
+
+def pvesync_login(config_entries):
+    """Login to vesync server"""
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -67,11 +72,29 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
                 _LOGGER.warning(e)
                 self._time_zone = None
 
+        if self._time_zone is not None:
+            time_zone = self._time_zone
+        else:
+            if self.hass.config.time_zone is not None:
+                time_zone = str(self.hass.config.time_zone)
+                _LOGGER.debug("Time zone - %s", time_zone)
+
+        import pyvesync
+
+        if self._time_zone is not None:
+            manager = pyvesync.VeSync(
+                self._username, self._password, self._time_zone)
+        else:
+            manager = pyvesync.VeSync(self._username, self._password)
+
+        login = await self.hass.add_executor_job(manager.login())
+
+        if not login:
+            return self.async_abort(reason='invalid_login')
+
         return self.async_create_entry(
             title=self._username,
             data={
-                CONF_USERNAME: self._username,
-                CONF_PASSWORD: self._password,
-                CONF_TIME_ZONE: self._time_zone,
+                CONF_MANAGER: manager,
             },
         )
