@@ -42,6 +42,8 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
         self.data_schema[vol.Required(CONF_USERNAME)] = str
         self.data_schema[vol.Required(CONF_PASSWORD)] = str
         self.data_schema[vol.Optional(CONF_TIME_ZONE)] = str
+        if self.hass.data.get(DOMAIN) is None:
+            self.hass.data[DOMAIN] = {}
 
     async def _show_form(self, errors=None):
         """Show form to the user."""

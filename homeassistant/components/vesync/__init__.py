@@ -29,6 +29,7 @@ CONFIG_SCHEMA = vol.Schema({
 async def async_setup(hass, config):
     """Set up the VeSync component."""
     hass.data[DOMAIN] = {}
+    hass.data[CONF_SWITCHES] = []
 
     conf = config.get('vesync')
 
@@ -57,7 +58,7 @@ async def async_setup_entry(hass, config_entry):
     password = config_entry.data[CONF_PASSWORD]
     time_zone = config_entry.data[CONF_TIME_ZONE]
 
-    if config_entry.data[CONF_TIME_ZONE] != '':
+    if config_entry.data[CONF_TIME_ZONE] is not None:
         time_zone = config_entry.data[CONF_TIME_ZONE]
     else:
         if hass.config.time_zone is not None:
@@ -85,7 +86,7 @@ async def async_setup_entry(hass, config_entry):
 
     forward_setup = hass.config_entries.async_forward_entry_setup
 
-    switches = hass.data[DOMAIN][CONF_SWITCHES] = []
+    switches = hass.data[DOMAIN][CONF_SWITCHES]
 
     hass.data[DOMAIN][VS_DISPATCHERS] = []
 
