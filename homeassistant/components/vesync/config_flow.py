@@ -88,7 +88,7 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
         else:
             manager = pyvesync.VeSync(self._username, self._password)
 
-        login = await self.hass.add_executor_job(manager.login())
+        login = await self.hass.async_add_executor_job(manager.login())
 
         if not login:
             return self.async_abort(reason='invalid_login')
