@@ -34,7 +34,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     water_heater = HiveWaterHeater(session, discovery_info)
 
     add_entities([water_heater])
-    session.entities.append(water_heater)
 
 
 class HiveWaterHeater(WaterHeaterDevice):

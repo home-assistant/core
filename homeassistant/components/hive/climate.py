@@ -35,7 +35,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     climate = HiveClimateEntity(session, discovery_info)
 
     add_entities([climate])
-    session.entities.append(climate)
 
 
 class HiveClimateEntity(ClimateDevice):
