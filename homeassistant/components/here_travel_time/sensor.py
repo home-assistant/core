@@ -339,23 +339,23 @@ class HERETravelTimeData():
                 road_number = instruction.split(
                     "<span class=\"number\">"
                 )[1].split("</span>")[0]
-                road_name = road_number.replace("(", "").replace(")","")
+                road_name = road_number.replace("(", "").replace(")", "")
 
                 try:
                     street_name = instruction.split(
                         "<span class=\"next-street\">"
                     )[1].split("</span>")[0]
-                    street_name = street_name.replace("(", "").replace(")","")
+                    street_name = street_name.replace("(", "").replace(")", "")
 
                     road_name += " - " + street_name
                 except IndexError:
-                    pass # No street name found in this maneuver step
-                
+                    pass  # No street name found in this maneuver step
+
                 # Only add if it does not repeat
-                if len(road_names) == 0 or road_names[-1] != road_name:
+                if not road_names or road_names[-1] != road_name:
                     road_names.append(road_name)
             except IndexError:
                 pass  # No road number found in this maneuver step
 
-        route = "; ".join(list(map(str,road_names)))
+        route = "; ".join(list(map(str, road_names)))
         return route
