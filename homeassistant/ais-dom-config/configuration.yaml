@@ -33,6 +33,9 @@ conversation:
 # Show links to resources in log and frontend
 introduction:
 
+# Enables a map showing the location of tracked devices
+map:
+
 # for restore_state on input_select (radio stations etc.)
 recorder:
   purge_keep_days: 3

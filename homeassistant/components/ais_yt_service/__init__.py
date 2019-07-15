@@ -72,14 +72,23 @@ class YouTubeData:
         """Search in service."""
         global G_YT_KEY
         query = None
+        prev_page_token = None
+        next_page_token = None
         if ATTR_QUERY in call.data:
             query = call.data[ATTR_QUERY]
 
-        if query is None or len(query.strip()) == 0:
+        if 'prevPageToken' in call.data:
+            prev_page_token = call.data['prevPageToken'].replace('prevPageToken_', '')
+
+        if 'nextPageToken' in call.data:
+            next_page_token = call.data['nextPageToken'].replace('nextPageToken_', '')
+
+        if (query is None or len(query.strip()) == 0) and prev_page_token is None and next_page_token is None:
             # get tracks from favorites
             yield from self.hass.services.async_call(
                 'ais_bookmarks', 'get_favorites', {"audio_source": ais_global.G_AN_MUSIC})
             return
+
         if G_YT_KEY is None:
             try:
                 ws_resp = aisCloud.key("ytsearch")
@@ -96,23 +105,54 @@ class YouTubeData:
         params = dict(order='relevance',
                       part='snippet',
                       key=G_YT_KEY,
-                      maxResults=50)
+                      maxResults=10,
+                      type='video',
+                      fields='items/id/videoId, items/snippet/title, items/snippet/thumbnails/medium/url, '
+                             'pageInfo/totalResults, nextPageToken, prevPageToken')
         params.update({'q': query})
+        if prev_page_token is not None:
+            params.update({'pageToken': prev_page_token})
+        if next_page_token is not None:
+            params.update({'pageToken': next_page_token})
         data = requests.get(URL_BASE, params=params).json()
+        total_results = data['pageInfo']['totalResults']
         list_info = {}
         list_idx = 0
+
+        if 'prevPageToken' in data:
+            list_info[list_idx] = {}
+            list_info[list_idx]["title"] = "pobierz poprzednią stronę wyników wyszukania"
+            list_info[list_idx]["name"] = "pobierz poprzednią stronę wyników wyszukania"
+            list_info[list_idx]["thumbnail"] = "/static/icons/favicon-100x100.png"
+            list_info[list_idx]["uri"] = 'prevPageToken_' + data['prevPageToken']
+            list_info[list_idx]["media_source"] = ais_global.G_AN_MUSIC
+            list_info[list_idx]["audio_type"] = ais_global.G_AN_MUSIC
+            list_info[list_idx]["icon"] = 'mdi:page-previous'
+            list_info[list_idx]["query"] = query
+            list_idx = list_idx + 1
+
         for item in data['items']:
-            if item['id']['kind'] == 'youtube#video':
-                list_info[list_idx] = {}
-                list_info[list_idx]["title"] = item['snippet']['title']
-                list_info[list_idx]["name"] = item['snippet']['title']
-                # item['snippet']['description']
-                list_info[list_idx]["thumbnail"] = item['snippet']['thumbnails']['medium']['url']
-                list_info[list_idx]["uri"] = item['id']['videoId']
-                list_info[list_idx]["media_source"] = ais_global.G_AN_MUSIC
-                list_info[list_idx]["audio_type"] = ais_global.G_AN_MUSIC
-                list_info[list_idx]["icon"] = 'mdi:play'
-                list_idx = list_idx + 1
+            list_info[list_idx] = {}
+            list_info[list_idx]["title"] = item['snippet']['title']
+            list_info[list_idx]["name"] = item['snippet']['title']
+            # item['snippet']['description']
+            list_info[list_idx]["thumbnail"] = item['snippet']['thumbnails']['medium']['url']
+            list_info[list_idx]["uri"] = item['id']['videoId']
+            list_info[list_idx]["media_source"] = ais_global.G_AN_MUSIC
+            list_info[list_idx]["audio_type"] = ais_global.G_AN_MUSIC
+            list_info[list_idx]["icon"] = 'mdi:play'
+            list_idx = list_idx + 1
+
+        if 'nextPageToken' in data:
+            list_info[list_idx] = {}
+            list_info[list_idx]["title"] = "pobierz następną stronę wyników wyszukania"
+            list_info[list_idx]["name"] = "pobierz następną stronę wyników wyszukania"
+            list_info[list_idx]["thumbnail"] = "/static/icons/favicon-100x100.png"
+            list_info[list_idx]["uri"] = 'nextPageToken_' + data['nextPageToken']
+            list_info[list_idx]["media_source"] = ais_global.G_AN_MUSIC
+            list_info[list_idx]["audio_type"] = ais_global.G_AN_MUSIC
+            list_info[list_idx]["icon"] = 'mdi:page-next'
+            list_info[list_idx]["query"] = query
 
         # update list
         self.hass.states.async_set("sensor.youtubelist", -1, list_info)
@@ -123,10 +163,20 @@ class YouTubeData:
             if ais_ai.CURR_ENTITIE == 'input_text.ais_music_query' and ais_ai.CURR_BUTTON_CODE == 4:
                 ais_ai.set_curr_entity(self.hass, 'sensor.youtubelist')
                 ais_ai.CURR_ENTITIE_ENTERED = True
-                text = "Znaleziono: %s, wybierz pozycję którą mam włączyć" % (str(len(list_info)))
+                text = "Znaleziono: %s, wybierz pozycję którą mam włączyć" % (str(total_results))
             else:
-                text = "Znaleziono: %s, włączam pierwszy: %s" % (str(len(list_info)), list_info[0]["title"])
-                yield from self.hass.services.async_call('ais_yt_service', 'select_track_uri', {"id": 0})
+                if next_page_token is None and prev_page_token is None:
+                    text = "Znaleziono: %s, włączam pierwszy: %s" % (str(total_results), list_info[0]["title"])
+                    yield from self.hass.services.async_call('ais_yt_service', 'select_track_uri', {"id": 0})
+                elif next_page_token is not None:
+                    text = "Pobrano następną stronę wyników, włączam pierwszy: %s" % (list_info[1]["title"])
+                    yield from self.hass.services.async_call('ais_yt_service', 'select_track_uri', {"id": 1})
+                elif prev_page_token is not None:
+                    text = "Pobrano poprzednią stronę wyników, włączam ostatni: %s" \
+                           % (list_info[len(list_info) - 2]["title"])
+                    yield from self.hass.services.async_call(
+                        'ais_yt_service', 'select_track_uri', {"id": len(list_info) - 2})
+
         else:
             text = "Brak wnyników na YouTube dla zapytania %s" % query
         # info to user
@@ -152,6 +202,16 @@ class YouTubeData:
         url = "https://www.youtube.com/watch?v="
         # update list
         self.hass.states.async_set(list_sensor, call_id, attr)
+
+        # get prev / next results
+        if track["uri"].startswith('prevPageToken_'):
+            self.hass.services.call(
+                'ais_yt_service', 'search', {"prevPageToken": track["uri"], "query": track["query"]})
+            return
+        if track["uri"].startswith('nextPageToken_'):
+            self.hass.services.call(
+                'ais_yt_service', 'search', {"nextPageToken": track["uri"], "query": track["query"]})
+            return
 
         # try to get media url from AIS cloud
         media_url = None

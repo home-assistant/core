@@ -33,6 +33,10 @@ class OwnTracksFlow(config_entries.ConfigFlow):
             )
 
         webhook_id, webhook_url, cloudhook = await self._get_webhook_id()
+        #
+        from homeassistant.ais_dom import ais_global
+        gate_id = ais_global.get_sercure_android_id_dom()
+        webhook_url = webhook_url.replace("localhost:8180", gate_id + '.paczka.pro')
 
         secret = generate_secret(16)
 
@@ -53,7 +57,7 @@ class OwnTracksFlow(config_entries.ConfigFlow):
                 CONF_CLOUDHOOK: cloudhook,
             },
             description_placeholders={
-                'secret': secret_desc,
+                'secret': "",
                 'webhook_url': webhook_url,
                 'android_url':
                 'https://play.google.com/store/apps/details?'
@@ -61,7 +65,7 @@ class OwnTracksFlow(config_entries.ConfigFlow):
                 'ios_url':
                 'https://itunes.apple.com/us/app/owntracks/id692424691?mt=8',
                 'docs_url':
-                'https://www.home-assistant.io/components/owntracks/'
+                'https://sviete.github.io/AIS-docs/docs/en/next/ais_bramka_presence_detection.html'
             }
         )
 
