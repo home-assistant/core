@@ -16,7 +16,9 @@ from homeassistant.components.climate.const import (
     DEFAULT_MIN_TEMP
 )
 from homeassistant.const import (
-    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES, STATE_OFF)
+    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES, STATE_OFF,
+    ATTR_BATTERY_LEVEL
+)
 from homeassistant.util import Throttle
 
 from .const import DATA_NETATMO_AUTH
@@ -153,6 +155,7 @@ class NetatmoThermostat(ClimateDevice):
         self._operation_list = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
         self._support_flags = SUPPORT_FLAGS
         self._hvac_mode = None
+        self._battery_level = None
         self.update_without_throttle = False
         self._module_type = \
             self._data.room_status.get(room_id, {}).get('module_type')
@@ -286,6 +289,16 @@ class NetatmoThermostat(ClimateDevice):
 
         self.update_without_throttle = True
         self.schedule_update_ha_state()
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the thermostat."""
+        attr = {}
+
+        if self._battery_level is not None:
+            attr[ATTR_BATTERY_LEVEL] = self._battery_level
+
+        return attr
 
     def update(self):
         """Get the latest data from NetAtmo API and updates the states."""
@@ -439,6 +452,7 @@ class ThermostatData:
                     roomstatus["module_id"] = None
                     roomstatus["heating_status"] = None
                     roomstatus["heating_power_request"] = None
+                    batterylevel = None
                     for module_id in homedata_room["module_ids"]:
                         if (self.homedata.modules[self.home][module_id]["type"]
                                 == NA_THERM
@@ -449,6 +463,10 @@ class ThermostatData:
                             rid=roomstatus["module_id"]
                         )
                         roomstatus["heating_status"] = self.boilerstatus
+                        batterylevel = (
+                            self.homestatus
+                            .thermostats[roomstatus["module_id"]]
+                            .get("battery_level"))
                     elif roomstatus["module_type"] == NA_VALVE:
                         roomstatus["heating_power_request"] = homestatus_room[
                             "heating_power_request"
@@ -461,6 +479,15 @@ class ThermostatData:
                                 self.boilerstatus
                                 and roomstatus["heating_status"]
                             )
+                        batterylevel = (
+                            self.homestatus.valves[roomstatus["module_id"]]
+                            .get("battery_level"))
+
+                    if batterylevel:
+                        if roomstatus.get("battery_level") is None:
+                            roomstatus["battery_level"] = batterylevel
+                        elif batterylevel < roomstatus["battery_level"]:
+                            roomstatus["battery_level"] = batterylevel
                 self.room_status[room] = roomstatus
             except KeyError as err:
                 _LOGGER.error("Update of room %s failed. Error: %s", room, err)
