@@ -38,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(METHODS),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PAYLOAD): cv.string,
+    vol.Optional(CONF_PAYLOAD): cv.template,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_USERNAME): cv.string,
@@ -65,9 +65,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     json_attrs = config.get(CONF_JSON_ATTRS)
     force_update = config.get(CONF_FORCE_UPDATE)
     timeout = config.get(CONF_TIMEOUT)
-
     if value_template is not None:
         value_template.hass = hass
+    if payload is not None:
+        payload.hass = hass
+        parsed_payload = payload.async_render()
+    else:
+        parsed_payload = None
+		
 
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
@@ -76,7 +81,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             auth = HTTPBasicAuth(username, password)
     else:
         auth = None
-    rest = RestData(method, resource, auth, headers, payload, verify_ssl,
+    rest = RestData(method, resource, auth, headers, parsed_payload, verify_ssl,
                     timeout)
     rest.update()
     if rest.data is None:
