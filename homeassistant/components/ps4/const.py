@@ -1,4 +1,5 @@
 """Constants for PlayStation 4."""
+CONFIG_ENTRY_VERSION = 3
 DEFAULT_NAME = "PlayStation 4"
 DEFAULT_REGION = "United States"
 DEFAULT_ALIAS = 'Home-Assistant'
