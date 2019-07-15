@@ -7,7 +7,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.core import callback
 from homeassistant.const import (CONF_TIME_ZONE, CONF_USERNAME,
                                  CONF_PASSWORD)
-from .const import CONF_MANAGER
 
 DOMAIN = 'vesync'
 
@@ -20,10 +19,6 @@ def configured_instances(hass):
     return [
         entry.data[CONF_USERNAME]
         for entry in hass.config_entries.async_entries(DOMAIN)]
-
-
-def pvesync_login(config_entries):
-    """Login to vesync server"""
 
 
 @config_entries.HANDLERS.register(DOMAIN)
