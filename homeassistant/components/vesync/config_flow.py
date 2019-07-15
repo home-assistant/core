@@ -6,7 +6,8 @@ from homeassistant import config_entries
 from homeassistant.helpers import config_validation as cv
 from homeassistant.core import callback
 from homeassistant.const import (CONF_TIME_ZONE, CONF_USERNAME,
-                                 CONF_PASSWORD, CONF_MANAGER)
+                                 CONF_PASSWORD)
+from .const import CONF_MANAGER
 
 DOMAIN = 'vesync'
 

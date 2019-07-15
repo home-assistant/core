@@ -8,7 +8,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.config_entries import SOURCE_IMPORT
 from .common import (async_process_devices, CONF_SWITCHES)
 from .config_flow import configured_instances
-from .const import VS_DISPATCHERS, VS_DISCOVERY, SERVICE_UPDATE_DEVS, CONF_MANAGER
+from .const import (VS_DISPATCHERS, VS_DISCOVERY,
+                    SERVICE_UPDATE_DEVS, CONF_MANAGER)
 
 _LOGGER = logging.getLogger(__name__)
 
