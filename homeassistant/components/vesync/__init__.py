@@ -79,7 +79,6 @@ async def async_setup_entry(hass, config_entry):
 
     if not login:
         _LOGGER.error("Unable to login to the VeSync server")
-        await async_unload_entry(hass, config_entry)
         return False
 
     device_dict = await async_process_devices(hass, manager)
