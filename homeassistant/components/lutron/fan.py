@@ -43,12 +43,7 @@ class LutronFan(LutronDevice, FanEntity):
     def is_on(self):
         """Return true if device is on."""
         return self._lutron_device.last_level() > SPEED_MAPPING[SPEED_OFF]
-        # return self._is_on
 
-    # @property
-    # def speed(self) -> str:
-    #     """Return the current speed."""
-    #     return self._speed
     @property
     def speed(self):
         """Return the brightness of the fan."""
@@ -63,7 +58,6 @@ class LutronFan(LutronDevice, FanEntity):
         return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_MEDIUM_HIGH, SPEED_HIGH]
 
     @property
-    # def state_attributes(self):
     def device_state_attributes(self):
         """Return the state attributes."""
         attr = {'lutron_integration_id': self._lutron_device.id}
@@ -77,7 +71,7 @@ class LutronFan(LutronDevice, FanEntity):
     def turn_on(self, speed: str = None, **kwargs):
         """Instruct the fan to turn on."""
         if speed is None:
-            speed = SPEED_HIGH
+            speed = SPEED_MAPPING[SPEED_HIGH]
         self._prev_speed = speed
         self.set_speed(speed)
     
@@ -85,13 +79,11 @@ class LutronFan(LutronDevice, FanEntity):
         """Set speed of the fan"""
         self._speed = speed
         if speed not in SPEED_MAPPING:
-            _LOGGER.debug("Unknown speed %s, setting to %s", speed, SPEED_HIGH)
-            self._speed = SPEED_HIGH
+            _LOGGER.debug("Unknown speed %s, setting to %s", speed, SPEED_MAPPING[SPEED_HIGH])
+            self._speed = SPEED_MAPPING[SPEED_HIGH]
         else:
             self._speed = self._prev_speed
-            # self._speed = SPEED_MAPPING[SPEED_MEDIUM_HIGH]
             
-        # print('+++++++++++++++++++++ ' +str(self._lutron_device)+ ', '+str(self._speed))
         self._lutron_device.level = SPEED_MAPPING[self._speed]
 
     def turn_off(self, **kwargs):
@@ -100,13 +92,9 @@ class LutronFan(LutronDevice, FanEntity):
 
     # def update(self, self._speed):
     def update(self):
-        print('........Inside of update_state...')
         """Update internal state and fan speed."""
         if self._prev_speed is None:
             self._prev_speed = self._lutron_device.level
-
-        print(str(self._lutron_device.level))
-
 
         self._is_on = self._lutron_device.level > SPEED_MAPPING[SPEED_OFF]
         if self._lutron_device.level in range(SPEED_MAPPING[SPEED_MEDIUM_HIGH] + 1, SPEED_MAPPING[SPEED_HIGH] + 1):
