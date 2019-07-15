@@ -272,7 +272,7 @@ async def async_setup(hass, config):
 
     async_register_built_in_panel(
         hass, "developer-tools", require_admin=True,
-        sidebar_title="Developer Tools", sidebar_icon="hass:hammer")
+        sidebar_title="developer_tools", sidebar_icon="hass:hammer")
 
     if DATA_EXTRA_HTML_URL not in hass.data:
         hass.data[DATA_EXTRA_HTML_URL] = set()
