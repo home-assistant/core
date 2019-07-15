@@ -18,7 +18,6 @@ variables:
 jobs:
 
 - job: 'Wheels'
-  condition: or(eq(variables['Build.SourceBranchName'], 'dev'), eq(variables['Build.SourceBranchName'], 'master'))
   timeoutInMinutes: 360
   pool:
     vmImage: 'ubuntu-latest'
