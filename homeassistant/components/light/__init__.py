@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import UnknownUser, Unauthorized
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa
-    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE, ENTITY_SERVICE_SCHEMA)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers import intent
@@ -84,8 +84,7 @@ VALID_TRANSITION = vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553))
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 
-LIGHT_TURN_ON_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.comp_entity_ids,
+LIGHT_TURN_ON_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
     ATTR_TRANSITION: VALID_TRANSITION,
     ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
@@ -111,8 +110,7 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_EFFECT: cv.string,
 })
 
-LIGHT_TURN_OFF_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.comp_entity_ids,
+LIGHT_TURN_OFF_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     ATTR_TRANSITION: VALID_TRANSITION,
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
 })
