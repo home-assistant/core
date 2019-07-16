@@ -1283,7 +1283,7 @@ pynetgear==0.6.1
 pynetio==0.1.9.1
 
 # homeassistant.components.nuki
-pynuki==1.3.2
+pynuki==1.3.3
 
 # homeassistant.components.nut
 pynut2==2.1.2
