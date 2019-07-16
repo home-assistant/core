@@ -7,14 +7,15 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_TITLE, MEDIA_TYPE_GAME)
 from homeassistant.components.ps4.const import (
     ATTR_MEDIA_IMAGE_URL, COMMANDS, CONFIG_ENTRY_VERSION as VERSION,
-    DEFAULT_REGION, DOMAIN, GAMES_FILE, PS4_DATA)
+    DEFAULT_REGION, DOMAIN, PS4_DATA)
 from homeassistant.const import (
     ATTR_COMMAND, ATTR_ENTITY_ID, ATTR_LOCKED, CONF_HOST,
     CONF_NAME, CONF_REGION, CONF_TOKEN)
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import location
 from homeassistant.setup import async_setup_component
 from tests.common import (
-    get_test_config_dir, MockConfigEntry, mock_coro, mock_registry)
+    MockConfigEntry, mock_coro, mock_registry)
 
 MOCK_HOST = '192.168.0.1'
 MOCK_NAME = 'test_ps4'
@@ -65,8 +66,6 @@ MOCK_ENTRY_VERSION_1 = MockConfigEntry(
     domain=DOMAIN, data=MOCK_DATA_VERSION_1, entry_id=MOCK_ENTRY_ID, version=1)
 
 MOCK_UNIQUE_ID = 'someuniqueid'
-
-MOCK_FILE = get_test_config_dir(GAMES_FILE)
 
 MOCK_ID = 'CUSA00123'
 MOCK_URL = 'http://someurl.jpeg'
