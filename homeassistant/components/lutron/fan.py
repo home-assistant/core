@@ -34,22 +34,40 @@ class LutronFan(LutronDevice, FanEntity):
         self._area_name = str(area_name)
         self._name = str(area_name) + ' Fan'
         self._is_on = False
-        self._speed = SPEED_MAPPING[SPEED_OFF]
+        self._speed = SPEED_OFF
         self._prev_speed = None
         super().__init__(area_name, lutron_device, controller)
 
     @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._lutron_device.last_level() > SPEED_MAPPING[SPEED_OFF]
+    def integration(self):
+        """Return the Integration ID."""
+        return self._integration
 
     @property
-    def speed(self):
-        """Return the brightness of the fan."""
-        new_speed = self._lutron_device.last_level()
-        if new_speed != SPEED_MAPPING[SPEED_OFF]:
-            self._prev_speed = new_speed
-        return new_speed
+    def name(self):
+        """Return the display name of this fan."""
+        return self._name
+
+    @property
+    def should_poll(self):
+        """No polling needed for fan."""
+        return False
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        attr = {'lutron_integration_id': self._lutron_device.id}
+        return attr
+
+    @property
+    def is_on(self):
+        """Return true if fan is on."""
+        return self._is_on
+
+    @property
+    def speed(self) -> str:
+        """Return the current speed."""
+        return self._speed
 
     @property
     def speed_list(self) -> list:
@@ -57,60 +75,45 @@ class LutronFan(LutronDevice, FanEntity):
         return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_MEDIUM_HIGH, SPEED_HIGH]
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attr = {'lutron_integration_id': self._lutron_device.id}
-        return attr
-
-    @property
     def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORT_SET_SPEED
 
-    def turn_on(self, speed: str = None, **kwargs):
+    def turn_on(self, speed: str = None, **kwargs) -> None:
         """Instruct the fan to turn on."""
         if speed is None:
-            speed = SPEED_MAPPING[SPEED_HIGH]
-        self._prev_speed = speed
+            speed = SPEED_HIGH
         self.set_speed(speed)
-    
-    def set_speed(self, speed: str):
-        """Set speed of the fan"""
+
+    def set_speed(self, speed: str) -> None:
+        """Set the speed of the fan."""
         self._speed = speed
         if speed not in SPEED_MAPPING:
-            _LOGGER.debug("Unknown speed %s, setting to %s", speed, SPEED_MAPPING[SPEED_HIGH])
+            _LOGGER.debug("Unknown speed %s, setting to %s", speed, SPEED_HIGH)
             self._speed = SPEED_HIGH
-        else:
-            self._speed = self._prev_speed
-            
         self._lutron_device.level = SPEED_MAPPING[self._speed]
 
-    def turn_off(self, **kwargs):
-        """Turn the fan off."""
-        self._lutron_device.level = SPEED_MAPPING[SPEED_OFF]
+    def turn_off(self, **kwargs) -> None:
+        """Instruct the fan to turn off."""
+        self.set_speed(SPEED_OFF)
 
-    # def update(self, self._speed):
     def update(self):
         """Update internal state and fan speed."""
-        if self._prev_speed is None:
-            self._prev_speed = self._lutron_device.level
+        value = self._lutron_device.level
+        self._is_on = value > SPEED_MAPPING[SPEED_OFF]
 
-        self._is_on = self._lutron_device.level > SPEED_MAPPING[SPEED_OFF]
-        if self._lutron_device.level in range(SPEED_MAPPING[SPEED_MEDIUM_HIGH] + 1, SPEED_MAPPING[SPEED_HIGH] + 1):
-            self._lutron_device.level = SPEED_MAPPING[SPEED_HIGH]
-        elif self._lutron_device.level in range(SPEED_MAPPING[SPEED_MEDIUM] + 1, SPEED_MAPPING[SPEED_MEDIUM_HIGH] + 1):
+        print('++++++++++++++++++++++ ' +str(self._is_on))
+
+        if value in range(SPEED_MAPPING[SPEED_MEDIUM_HIGH] + 1, SPEED_MAPPING[SPEED_HIGH] + 1):
+            self._speed = SPEED_HIGH
+        elif value in range(SPEED_MAPPING[SPEED_MEDIUM] + 1, SPEED_MAPPING[SPEED_MEDIUM_HIGH] + 1):
             # 51% - 55% are missing from Lutron integration protocol
             # we will treat as medium_high
-            self._lutron_device.level = SPEED_MAPPING[SPEED_MEDIUM_HIGH]
-        elif self._lutron_device.level in range(SPEED_MAPPING[SPEED_LOW] + 1, SPEED_MAPPING[SPEED_MEDIUM] + 1):
-            self._lutron_device.level = SPEED_MAPPING[SPEED_MEDIUM]
-        elif self._lutron_device.level in range(SPEED_MAPPING[SPEED_OFF] + 1, SPEED_MAPPING[SPEED_LOW] + 1):
-            self._lutron_device.level = SPEED_MAPPING[SPEED_LOW]
-        elif self._lutron_device.level == SPEED_MAPPING[SPEED_OFF]:
-            self._lutron_device.level = SPEED_MAPPING[SPEED_OFF]
+            self._speed = SPEED_MEDIUM_HIGH
+        elif value in range(SPEED_MAPPING[SPEED_LOW] + 1, SPEED_MAPPING[SPEED_MEDIUM] + 1):
+            self._speed = SPEED_MEDIUM
+        elif value in range(SPEED_MAPPING[SPEED_OFF] + 1, SPEED_MAPPING[SPEED_LOW] + 1):
+            self._speed = SPEED_LOW
+        elif value == SPEED_MAPPING[SPEED_OFF]:
+            self._speed = SPEED_OFF
         _LOGGER.debug("Fan speed is %s", self._speed)
-
-    @property
-    def name(self):
-        """Return the display name of this fan."""
-        return self._name
