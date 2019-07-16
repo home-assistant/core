@@ -1,12 +1,15 @@
 """Support for PlayStation 4 consoles."""
 import logging
+import os
 
 import voluptuous as vol
 from pyps4_homeassistant.ddp import async_create_ddp_endpoint
 from pyps4_homeassistant.media_art import COUNTRIES
 
+from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_TITLE, MEDIA_TYPE_GAME)
 from homeassistant.const import (
-    ATTR_COMMAND, ATTR_ENTITY_ID, CONF_REGION, CONF_TOKEN)
+    ATTR_COMMAND, ATTR_ENTITY_ID, ATTR_LOCKED, CONF_REGION, CONF_TOKEN)
 from homeassistant.core import split_entity_id
 from homeassistant.helpers import entity_registry, config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
@@ -14,7 +17,8 @@ from homeassistant.util import location
 from homeassistant.util.json import load_json, save_json
 
 from .config_flow import PlayStation4FlowHandler  # noqa: pylint: disable=unused-import
-from .const import COMMANDS, DOMAIN, GAMES_FILE, PS4_DATA
+from .const import (
+    ATTR_MEDIA_IMAGE_URL, COMMANDS, DOMAIN, GAMES_FILE, PS4_DATA)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,13 +144,15 @@ def format_unique_id(creds, mac_address):
 def load_games(hass: HomeAssistantType) -> dict:
     """Load games for sources."""
     g_file = hass.config.path(GAMES_FILE)
-    try:
-        games = load_json(g_file)
+    games = load_json(g_file)
 
     # If file does not exist, create empty file.
-    except FileNotFoundError:
+    if not os.path.isfile(g_file):
+        _LOGGER.info("Creating PS4 Games File")
         games = {}
         save_games(hass, games)
+    else:
+        games = _reformat_data(hass, games)
     return games
 
 
@@ -158,9 +164,28 @@ def save_games(hass: HomeAssistantType, games: dict):
     except OSError as error:
         _LOGGER.error("Could not save game list, %s", error)
 
-    # Retry loading file
-    if games is None:
-        load_games(hass)
+
+def _reformat_data(hass: HomeAssistantType, games: dict) -> dict:
+    """Reformat data to correct format."""
+    data_reformatted = False
+    if games is not None:
+        for game, data in games.items():
+
+            # Convert str format to dict format.
+            if not isinstance(data, dict):
+                # Use existing title. Assign defaults.
+                games[game] = {ATTR_LOCKED: False,
+                               ATTR_MEDIA_TITLE: data,
+                               ATTR_MEDIA_IMAGE_URL: None,
+                               ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_GAME}
+                data_reformatted = True
+
+                _LOGGER.info(
+                    "Reformatting media data for item: %s, %s", game, data)
+
+        if data_reformatted:
+            save_games(hass, games)
+    return games
 
 
 def service_handle(hass: HomeAssistantType):
