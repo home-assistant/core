@@ -279,6 +279,12 @@ class AisCloudWS:
         ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
         return ws_resp
 
+    def new_key(self, service, old_key):
+        self.setCloudToken()
+        rest_url = self.url + "new_key?service=" + service + "&old_key=" + old_key
+        ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
+        return ws_resp
+
     def extract_media(self, url):
         self.setCloudToken()
         rest_url = self.url + "extract_media?url=" + url

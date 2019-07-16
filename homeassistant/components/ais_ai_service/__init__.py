@@ -2599,9 +2599,12 @@ def _process(hass, text, callback):
                 # no message / no match
                 m = 'Nie rozumiem ' + text
             # asking without the suffix
-            ws_resp = aisCloudWS.ask(text, m)
-            _LOGGER.debug('ws_resp: ' + ws_resp.text)
-            m = ws_resp.text.split('---')[0]
+            if text != '':
+                ws_resp = aisCloudWS.ask(text, m)
+                _LOGGER.debug('ws_resp: ' + ws_resp.text)
+                m = ws_resp.text.split('---')[0]
+            else:
+                m = 'Co proszę? Nic nie słyszę!'
 
     except Exception as e:
         _LOGGER.warning('_process: ' + str(e))
