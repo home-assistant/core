@@ -14,8 +14,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import location
 from homeassistant.setup import async_setup_component
-from tests.common import (
-    MockConfigEntry, mock_coro, mock_registry)
+from tests.common import (MockConfigEntry, mock_coro, mock_registry)
 
 MOCK_HOST = '192.168.0.1'
 MOCK_NAME = 'test_ps4'
