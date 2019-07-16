@@ -8,7 +8,7 @@ coveralls==1.2.0
 flake8-docstrings==1.3.0
 flake8==3.7.8
 mock-open==1.3.1
-mypy==0.711
+mypy==0.720
 pydocstyle==3.0.0
 pylint==2.3.1
 pytest-aiohttp==0.3.0
