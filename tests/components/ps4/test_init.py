@@ -1,5 +1,4 @@
 """Tests for the PS4 Integration."""
-import os
 from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
@@ -12,7 +11,7 @@ from homeassistant.components.ps4.const import (
 from homeassistant.const import (
     ATTR_COMMAND, ATTR_ENTITY_ID, ATTR_LOCKED, CONF_HOST,
     CONF_NAME, CONF_REGION, CONF_TOKEN)
-from homeassistant.util import location, json
+from homeassistant.util import location
 from homeassistant.setup import async_setup_component
 from tests.common import (
     get_test_config_dir, MockConfigEntry, mock_coro, mock_registry)
