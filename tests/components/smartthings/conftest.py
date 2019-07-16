@@ -21,6 +21,8 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
+
 COMPONENT_PREFIX = "homeassistant.components.smartthings."
 
 
@@ -190,8 +192,9 @@ def config_entry_fixture(hass, installed_app, location):
         CONF_OAUTH_CLIENT_ID: str(uuid4()),
         CONF_OAUTH_CLIENT_SECRET: str(uuid4())
     }
-    return ConfigEntry(2, DOMAIN, location.name, data, SOURCE_USER,
-                       CONN_CLASS_CLOUD_PUSH)
+    return MockConfigEntry(domain=DOMAIN, data=data, title=location.name,
+                           version=2, source=SOURCE_USER,
+                           connection_class=CONN_CLASS_CLOUD_PUSH)
 
 
 @pytest.fixture(name="subscription_factory")

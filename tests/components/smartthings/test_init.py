@@ -21,7 +21,7 @@ async def test_migration_creates_new_flow(
         hass, smartthings_mock, config_entry):
     """Test migration deletes app and creates new flow."""
     config_entry.version = 1
-    setattr(hass.config_entries, '_entries', [config_entry])
+    config_entry.add_to_hass(hass)
 
     await smartthings.async_migrate_entry(hass, config_entry)
     await hass.async_block_till_done()
@@ -44,7 +44,7 @@ async def test_unrecoverable_api_errors_create_new_flow(
     403 (forbidden/not found): Occurs when the app or installed app could
         not be retrieved/found (likely deleted?)
     """
-    setattr(hass.config_entries, '_entries', [config_entry])
+    config_entry.add_to_hass(hass)
     smartthings_mock.app.side_effect = \
         ClientResponseError(None, None, status=401)
 
@@ -65,7 +65,7 @@ async def test_unrecoverable_api_errors_create_new_flow(
 async def test_recoverable_api_errors_raise_not_ready(
         hass, config_entry, smartthings_mock):
     """Test config entry not ready raised for recoverable API errors."""
-    setattr(hass.config_entries, '_entries', [config_entry])
+    config_entry.add_to_hass(hass)
     smartthings_mock.app.side_effect = \
         ClientResponseError(None, None, status=500)
 
@@ -76,7 +76,7 @@ async def test_recoverable_api_errors_raise_not_ready(
 async def test_scenes_api_errors_raise_not_ready(
         hass, config_entry, app, installed_app, smartthings_mock):
     """Test if scenes are unauthorized we continue to load platforms."""
-    setattr(hass.config_entries, '_entries', [config_entry])
+    config_entry.add_to_hass(hass)
     smartthings_mock.app.return_value = app
     smartthings_mock.installed_app.return_value = installed_app
     smartthings_mock.scenes.side_effect = \
@@ -88,7 +88,7 @@ async def test_scenes_api_errors_raise_not_ready(
 async def test_connection_errors_raise_not_ready(
         hass, config_entry, smartthings_mock):
     """Test config entry not ready raised for connection errors."""
-    setattr(hass.config_entries, '_entries', [config_entry])
+    config_entry.add_to_hass(hass)
     smartthings_mock.app.side_effect = ClientConnectionError()
 
     with pytest.raises(ConfigEntryNotReady):
@@ -99,7 +99,7 @@ async def test_base_url_no_longer_https_does_not_load(
         hass, config_entry, app, smartthings_mock):
     """Test base_url no longer valid creates a new flow."""
     hass.config.api.base_url = 'http://0.0.0.0'
-    setattr(hass.config_entries, '_entries', [config_entry])
+    config_entry.add_to_hass(hass)
     smartthings_mock.app.return_value = app
 
     # Assert setup returns false
@@ -111,7 +111,7 @@ async def test_unauthorized_installed_app_raises_not_ready(
         hass, config_entry, app, installed_app,
         smartthings_mock):
     """Test config entry not ready raised when the app isn't authorized."""
-    setattr(hass.config_entries, '_entries', [config_entry])
+    config_entry.add_to_hass(hass)
     installed_app.installed_app_status = InstalledAppStatus.PENDING
 
     smartthings_mock.app.return_value = app
@@ -125,7 +125,7 @@ async def test_scenes_unauthorized_loads_platforms(
         hass, config_entry, app, installed_app,
         device, smartthings_mock, subscription_factory):
     """Test if scenes are unauthorized we continue to load platforms."""
-    setattr(hass.config_entries, '_entries', [config_entry])
+    config_entry.add_to_hass(hass)
     smartthings_mock.app.return_value = app
     smartthings_mock.installed_app.return_value = installed_app
     smartthings_mock.devices.return_value = [device]
@@ -151,7 +151,7 @@ async def test_config_entry_loads_platforms(
         hass, config_entry, app, installed_app,
         device, smartthings_mock, subscription_factory, scene):
     """Test config entry loads properly and proxies to platforms."""
-    setattr(hass.config_entries, '_entries', [config_entry])
+    config_entry.add_to_hass(hass)
     smartthings_mock.app.return_value = app
     smartthings_mock.installed_app.return_value = installed_app
     smartthings_mock.devices.return_value = [device]
@@ -176,7 +176,7 @@ async def test_config_entry_loads_unconnected_cloud(
         hass, config_entry, app, installed_app,
         device, smartthings_mock, subscription_factory, scene):
     """Test entry loads during startup when cloud isn't connected."""
-    setattr(hass.config_entries, '_entries', [config_entry])
+    config_entry.add_to_hass(hass)
     hass.data[DOMAIN][CONF_CLOUDHOOK_URL] = "https://test.cloud"
     hass.config.api.base_url = 'http://0.0.0.0'
     smartthings_mock.app.return_value = app
@@ -230,7 +230,7 @@ async def test_remove_entry(hass, config_entry, smartthings_mock):
 async def test_remove_entry_cloudhook(hass, config_entry, smartthings_mock):
     """Test that the installed app, app, and cloudhook are removed up."""
     # Arrange
-    setattr(hass.config_entries, '_entries', [config_entry])
+    config_entry.add_to_hass(hass)
     hass.data[DOMAIN][CONF_CLOUDHOOK_URL] = "https://test.cloud"
     # Act
     with patch.object(cloud, 'async_is_logged_in',
@@ -248,10 +248,11 @@ async def test_remove_entry_cloudhook(hass, config_entry, smartthings_mock):
 async def test_remove_entry_app_in_use(hass, config_entry, smartthings_mock):
     """Test app is not removed if in use by another config entry."""
     # Arrange
+    config_entry.add_to_hass(hass)
     data = config_entry.data.copy()
     data[CONF_INSTALLED_APP_ID] = str(uuid4())
     entry2 = MockConfigEntry(version=2, domain=DOMAIN, data=data)
-    setattr(hass.config_entries, '_entries', [config_entry, entry2])
+    entry2.add_to_hass(hass)
     # Act
     await smartthings.async_remove_entry(hass, config_entry)
     # Assert
