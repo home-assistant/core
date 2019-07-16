@@ -128,6 +128,8 @@ SENSOR_TYPES = {
                      'mdi:white-balance-sunny', ['daily']],
     'sunset_time': ['Sunset', None, None, None, None, None,
                     'mdi:weather-night', ['daily']],
+    'alerts': ['Alerts', None, None, None, None, None,
+               'mdi:alert-circle-outline', []]
 }
 
 CONDITION_PICTURES = {
@@ -163,6 +165,16 @@ LANGUAGE_CODES = [
 ]
 
 ALLOWED_UNITS = ['auto', 'si', 'us', 'ca', 'uk', 'uk2']
+
+ALERTS_ATTRS = [
+    'time',
+    'description',
+    'expires',
+    'severity',
+    'uri',
+    'regions',
+    'title'
+]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_CONDITIONS):
@@ -223,7 +235,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             _LOGGER.warning("Monitored condition %s is deprecated", variable)
         if (not SENSOR_TYPES[variable][7] or
                 'currently' in SENSOR_TYPES[variable][7]):
-            sensors.append(DarkSkySensor(forecast_data, variable, name))
+            if variable == 'alerts':
+                sensors.append(DarkSkyAlertSensor(
+                    forecast_data, variable, name))
+            else:
+                sensors.append(DarkSkySensor(forecast_data, variable, name))
+
         if forecast is not None and 'daily' in SENSOR_TYPES[variable][7]:
             for forecast_day in forecast:
                 sensors.append(DarkSkySensor(
@@ -390,6 +407,77 @@ class DarkSkySensor(Entity):
         return state
 
 
+class DarkSkyAlertSensor(Entity):
+    """Implementation of a Dark Sky sensor."""
+
+    def __init__(self, forecast_data, sensor_type, name):
+        """Initialize the sensor."""
+        self.client_name = name
+        self._name = SENSOR_TYPES[sensor_type][0]
+        self.forecast_data = forecast_data
+        self.type = sensor_type
+        self._state = None
+        self._icon = None
+        self._alerts = None
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return '{} {}'.format(
+            self.client_name, self._name)
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        if self._state is not None and self._state > 0:
+            return "mdi:alert-circle"
+        return "mdi:alert-circle-outline"
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return self._alerts
+
+    def update(self):
+        """Get the latest data from Dark Sky and updates the states."""
+        # Call the API for new forecast data. Each sensor will re-trigger this
+        # same exact call, but that's fine. We cache results for a short period
+        # of time to prevent hitting API limits. Note that Dark Sky will
+        # charge users for too many calls in 1 day, so take care when updating.
+        self.forecast_data.update()
+        self.forecast_data.update_alerts()
+        alerts = self.forecast_data.data_alerts
+        self._state = self.get_state(alerts)
+
+    def get_state(self, data):
+        """
+        Return a new state based on the type.
+
+        If the sensor type is unknown, the current state is returned.
+        """
+        alerts = {}
+        if data is None:
+            self._alerts = alerts
+            return data
+
+        multiple_alerts = len(data) > 1
+        for i, alert in enumerate(data):
+            for attr in ALERTS_ATTRS:
+                if multiple_alerts:
+                    dkey = attr + '_' + str(i)
+                else:
+                    dkey = attr
+                alerts[dkey] = getattr(alert, attr)
+        self._alerts = alerts
+
+        return len(data)
+
+
 def convert_to_camel(data):
     """
     Convert snake case (foo_bar_bat) to camel case (fooBarBat).
@@ -418,6 +506,7 @@ class DarkSkyData:
         self.data_minutely = None
         self.data_hourly = None
         self.data_daily = None
+        self.data_alerts = None
 
         # Apply throttling to methods using configured interval
         self.update = Throttle(interval)(self._update)
@@ -425,6 +514,7 @@ class DarkSkyData:
         self.update_minutely = Throttle(interval)(self._update_minutely)
         self.update_hourly = Throttle(interval)(self._update_hourly)
         self.update_daily = Throttle(interval)(self._update_daily)
+        self.update_alerts = Throttle(interval)(self._update_alerts)
 
     def _update(self):
         """Get the latest data from Dark Sky."""
@@ -454,3 +544,7 @@ class DarkSkyData:
     def _update_daily(self):
         """Update daily data."""
         self.data_daily = self.data and self.data.daily()
+
+    def _update_alerts(self):
+        """Update alerts data."""
+        self.data_alerts = self.data and self.data.alerts()
