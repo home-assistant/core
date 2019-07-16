@@ -490,10 +490,11 @@ HA_FAN_TO_ISY = {
 SUPPORTED_BIN_SENS_CLASSES = ['moisture', 'opening', 'motion', 'climate']
 
 ISY_BIN_SENS_DEVICE_TYPES = {
-    'moisture': ['16.8', '16.13', '16.14'],
-    'opening': ['16.9', '16.6', '16.7', '16.2', '16.17', '16.20', '16.21'],
-    'motion': ['16.1', '16.4', '16.5', '16.3'],
-    'climate': ['5.11', '5.10']
+    'moisture': ['16.8.', '16.13.', '16.14.'],
+    'opening': ['16.9.', '16.6.', '16.7.', '16.2.', '16.17.',
+                '16.20.', '16.21.'],
+    'motion': ['16.1.', '16.4.', '16.5.', '16.3.', '16.22.'],
+    'climate': ['5.11.', '5.10.']
 }
 
 ZWAVE_BIN_SENS_DEVICE_TYPES = {

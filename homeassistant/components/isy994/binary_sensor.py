@@ -50,7 +50,6 @@ async def async_setup_platform(hass, config: ConfigType,
                               "was created for the parent. Skipping.",
                               node.nid, node.parent_nid)
             else:
-                subnode_id = int(node.nid[-1], 16)
                 if device_class in ('opening', 'moisture'):
 
                     # These sensors use an optional "negative" subnode 2 to
@@ -64,8 +63,9 @@ async def async_setup_platform(hass, config: ConfigType,
                         parent_device.add_heartbeat_device(device)
                         devices.append(device)
                 elif device_class == 'motion' and device_type is not None and \
-                        device_type.startswith('16.1.65.'):
-                    # Special case for Insteon Motion Sensor (1st Gen):
+                        (device_type.startswith('16.1.') or
+                         device_type.startswith('16.22.')):
+                    # Special case for Insteon Motion Sensors I & II:
                     if subnode_id == 2:
                         # Subnode 2 is the Dusk/Dawn sensor
                         device = ISYBinarySensorDevice(node, 'light')
@@ -79,6 +79,10 @@ async def async_setup_platform(hass, config: ConfigType,
                                              else False
                         device = ISYBinarySensorDevice(node, 'battery',
                                                        inital_state)
+                        devices.append(device)
+                    elif subnode_id == 13:
+                        # Motion Disabled Sub-node for MS II.
+                        device = ISYBinarySensorDevice(node, 'None')
                         devices.append(device)
                 else:
                     # We don't yet have any special logic for other sensor
