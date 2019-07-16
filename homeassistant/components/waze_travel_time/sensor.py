@@ -16,8 +16,10 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_DESTINATION = 'destination'
 ATTR_DURATION = 'duration'
 ATTR_DISTANCE = 'distance'
+ATTR_ORIGIN = 'origin'
 ATTR_ROUTE = 'route'
 
 ATTRIBUTION = "Powered by Waze"
@@ -147,6 +149,8 @@ class WazeTravelTime(Entity):
         res[ATTR_DURATION] = self._waze_data.duration
         res[ATTR_DISTANCE] = self._waze_data.distance
         res[ATTR_ROUTE] = self._waze_data.route
+        res[ATTR_ORIGIN] = self._waze_data.origin
+        res[ATTR_DESTINATION] = self._waze_data.destination
         return res
 
     def _get_location_from_entity(self, entity_id):
