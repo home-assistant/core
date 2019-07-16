@@ -1,4 +1,4 @@
-"""Device tracker for Fortigate Firewalls."""
+"""Device tracker for Fortigate firewalls."""
 from collections import namedtuple
 import logging
 
@@ -29,7 +29,7 @@ def _build_device(device_dict):
 
 
 class FortigateDeviceScanner(DeviceScanner):
-    """Queries the Fortigate firewall."""
+    """Query the Fortigate firewall."""
 
     def __init__(self, hass_data):
         """Initialize the scanner."""
@@ -39,7 +39,7 @@ class FortigateDeviceScanner(DeviceScanner):
         self.devices = hass_data['devices']
 
     def get_results(self):
-        """Get the results from the fortigate."""
+        """Get the results from the Fortigate."""
         results = self.connection.get(
             DETECTED_DEVICES, "vdom=root")[1]['results']
 
@@ -54,7 +54,7 @@ class FortigateDeviceScanner(DeviceScanner):
 
     async def async_connect(self):
         """Initialize connection to the router."""
-        # Test the firewall is accessible.
+        # Test if the firewall is accessible
         data = self.get_results()
         self.success_init = data is not None
 
@@ -72,21 +72,21 @@ class FortigateDeviceScanner(DeviceScanner):
 
     async def async_update_info(self):
         """Ensure the information from the Fortigate firewall is up to date."""
-        _LOGGER.debug('Checking Devices')
+        _LOGGER.debug("Checking devices")
 
         hosts = self.get_results()
 
         all_results = [_build_device(device) for device in hosts
                        if device['is_online']]
 
-        # if the 'devices' configuration field is filled
+        # If the 'devices' configuration field is filled
         if self.devices is not None:
             last_results = [
                 device for device in all_results
                 if device.hostname in self.devices
             ]
             _LOGGER.debug(last_results)
-        # if the 'devices' configuration field is not filled
+        # If the 'devices' configuration field is not filled
         else:
             last_results = all_results
 
