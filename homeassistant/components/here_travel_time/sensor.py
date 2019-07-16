@@ -1,6 +1,7 @@
 """Support for HERE travel time sensors."""
 from datetime import datetime, timedelta
 import logging
+import re
 
 import herepy
 import voluptuous as vol
@@ -53,6 +54,13 @@ ATTR_DURATION = 'duration'
 ATTR_DISTANCE = 'distance'
 ATTR_ROUTE = 'route'
 
+SCAN_INTERVAL = timedelta(minutes=5)
+
+TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone', 'person']
+DATA_KEY = 'here_travel_time'
+
+NO_ROUTE_ERROR_MESSAGE = "HERE could not find a route based on the input"
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_APP_ID): cv.string,
@@ -68,11 +76,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIT_SYSTEM): vol.In(UNITS),
     }
 )
-
-TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone', 'person']
-DATA_KEY = 'here_travel_time'
-
-NO_ROUTE_ERROR_MESSAGE = "HERE could not find a route based on the input"
 
 
 def convert_time_to_utc(timestr):
@@ -285,6 +288,18 @@ class HERETravelTimeData():
             traffic_mode = TRAFFIC_MODE_DISABLED
 
         if self.destination is not None and self.origin is not None:
+            # Check for correct pattern
+            pattern = r"-?\d{1,2}\.\d+,-?\d{1,3}\.\d+"
+            if not re.fullmatch(pattern, self.origin):
+                _LOGGER.error(
+                    "Origin has the wrong format: %s", self.origin
+                )
+                return
+            if not re.fullmatch(pattern, self.destination):
+                _LOGGER.error(
+                    "Destination has the wrong format: %s", self.destination
+                )
+                return
             # Convert location to HERE friendly location if not already so
             if not isinstance(self.destination, list):
                 self.destination = self.destination.split(',')
