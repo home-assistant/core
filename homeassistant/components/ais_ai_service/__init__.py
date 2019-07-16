@@ -739,6 +739,9 @@ def say_curr_entity(hass):
             info = ais_drives_service.get_pozycji_variety(len(files))
             _say_it(hass, info, None)
         return
+    elif entity_id == 'sensor.ais_secure_android_id_dom':
+        _say_it(hass, info_name + " " + info_data + ". Aby przeliterować naciśnij OK.", None)
+        return
     elif entity_id == 'input_select.ais_bookmark_last_played':
         _say_it(hass, info_name + " " + info_data.replace("Local;", ""), None)
         return
@@ -1096,6 +1099,13 @@ def select_entity(hass, long_press):
                     hass.services.call('ais_shell_command', 'execute_upgrade')
                 else:
                     _say_it(hass, "Twoja wersja jest aktualna", None)
+            elif CURR_ENTITIE == 'sensor.ais_secure_android_id_dom':
+                # spelling
+                state = hass.states.get('sensor.ais_secure_android_id_dom')
+                dom_id = state.state.replace('dom-', '')
+                dom_id = "; ".join(dom_id)
+                _say_it(hass, dom_id, None)
+                return
             else:
                 _say_it(hass, "Tej pozycji nie można zmieniać", None)
 
