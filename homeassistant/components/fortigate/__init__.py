@@ -2,13 +2,12 @@
 import logging
 
 import voluptuous as vol
-from pyFGT.fortigate import FortiGate, FGTConnectionError
 
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD, \
-    CONF_DEVICES, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_DEVICES, CONF_HOST, CONF_API_KEY, CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +19,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_DEVICES, default=[]):
             vol.All(cv.ensure_list, [cv.string]),
     })
@@ -28,35 +27,37 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 async def async_setup(hass, config):
-    """Start the fortigate component."""
+    """Start the Fortigate component."""
     conf = config[DOMAIN]
 
     host = conf[CONF_HOST]
     user = conf[CONF_USERNAME]
-    apikey = conf[CONF_PASSWORD]
+    api_key = conf[CONF_API_KEY]
     devices = conf[CONF_DEVICES]
 
     is_success = await async_setup_fortigate(
-        hass, config, host, user, apikey, devices
+        hass, config, host, user, api_key, devices
     )
 
-    # Return boolean to indicate that initialization was successful.
     return is_success
 
 
-async def async_setup_fortigate(hass, config, host, user, apikey, devices):
+async def async_setup_fortigate(hass, config, host, user, api_key, devices):
     """Start up the Fortigate component platforms."""
-    fgt = FortiGate(host, user, apikey=apikey, disable_request_warnings=True)
+    from pyFGT.fortigate import FGTConnectionError, FortiGate
+
+    fgt = FortiGate(host, user, apikey=api_key, disable_request_warnings=True)
 
     try:
         fgt.login()
     except FGTConnectionError:
-        _LOGGER.error('Failed to connect to Fortigate')
+        _LOGGER.error("Failed to connect to Fortigate")
         return False
 
-    hass.data[DATA_FGT] = {'fgt': fgt,
-                           'devices': devices
-                           }
+    hass.data[DATA_FGT] = {
+        'fgt': fgt,
+        'devices': devices
+    }
 
     hass.async_create_task(async_load_platform(
         hass, 'device_tracker', DOMAIN, {}, config))
