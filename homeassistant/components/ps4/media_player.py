@@ -163,6 +163,9 @@ class PS4Device(MediaPlayerDevice):
 
                     if self._media_content_id != title_id:
                         self._media_content_id = title_id
+                        self._media_title = name
+                        self._source = self._media_title
+                        self._media_type = None
 
                         if self._use_saved():
                             return
