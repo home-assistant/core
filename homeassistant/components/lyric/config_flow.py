@@ -26,6 +26,7 @@ class LyricFlowHandler(ConfigFlow):
         """Initialize Lyric flow."""
         self.client_id = None
         self.client_secret = None
+        self.code = None
         pass
 
     async def _show_setup_form(self, errors=None):
@@ -90,28 +91,31 @@ class LyricFlowHandler(ConfigFlow):
 
     async def async_step_code(self, code):
         """Received code for authentication."""
+        self.code = code
         return self.async_external_step_done(next_step_id="creation")
 
-    async def async_step_creation(self, user_input):
+    async def async_step_creation(self, user_input=None):
         """Create Lyric api and entries."""
         client_id = self.client_id
         client_secret = self.client_secret
         token_cache_file = self.hass.config.path(CONF_LYRIC_CONFIG_FILE)
+        redirect_uri = '{}{}'.format(
+            self.hass.config.api.base_url, AUTH_CALLBACK_PATH)
 
-        lyric = Lyric(app_name='Home Assistant', token=user_input,
-                      client_id=client_id, client_secret=client_secret,
+        lyric = Lyric(app_name='Home Assistant', client_id=client_id,
+                      client_secret=client_secret, redirect_uri=redirect_uri,
                       token_cache_file=token_cache_file)
 
-        token = lyric.token
-
-        _LOGGER.info('Successfully authenticated Lyric')
+        # pylint: disable=pointless-statement
+        lyric.getauthorize_url
+        lyric.authorization_code(self.code, self.flow_id)
 
         return self.async_create_entry(
             title='Lyric',
             data={
-                'token': token,
                 'client_id': client_id,
-                'client_secret': client_secret
+                'client_secret': client_secret,
+                'token': lyric.token
             }
         )
 
