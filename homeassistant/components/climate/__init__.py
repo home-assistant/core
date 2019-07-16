@@ -307,7 +307,7 @@ class ClimateDevice(Entity):
         raise NotImplementedError
 
     @property
-    def is_aux_heat(self) -> Optional[str]:
+    def is_aux_heat(self) -> Optional[bool]:
         """Return true if aux heater.
 
         Requires SUPPORT_AUX_HEAT.
