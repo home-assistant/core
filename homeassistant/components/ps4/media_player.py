@@ -149,7 +149,7 @@ class PS4Device(MediaPlayerDevice):
 
         if status is not None:
             self._games = load_games(self.hass)
-            if self._games is not None:
+            if self._games:
                 self.get_source_list()
 
             self._retry = 0
