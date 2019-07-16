@@ -176,35 +176,11 @@ async def setup_mock_component(hass):
     await hass.async_block_till_done()
 
 
-def cleanup():
-    """Cleanup any data created from the tests."""
-    if os.path.isfile(MOCK_FILE):
-        os.remove(MOCK_FILE)
-
-
-def set_games_data(mock_data):
-    """Set data in games file for tests."""
-    json.save_json(MOCK_FILE, mock_data)
-
-
-def test_file_created_if_none(hass):
-    """Test that games file is created if it does not exist."""
-    # Test that file does not exist.
-    cleanup()
-    assert not os.path.isfile(MOCK_FILE)
-
-    mock_empty = ps4.load_games(hass)
-
-    # Test that file is created and empty.
-    assert isinstance(mock_empty, dict)
-    assert os.path.isfile(MOCK_FILE)
-    cleanup()
-
-
 def test_games_reformat_to_dict(hass):
     """Test old data format is converted to new format."""
-    set_games_data(MOCK_GAMES_DATA_OLD_STR_FORMAT)
-    mock_games = ps4.load_games(hass)
+    with patch('homeassistant.components.ps4.load_json',
+               return_value=MOCK_GAMES_DATA_OLD_STR_FORMAT):
+        mock_games = ps4.load_games(hass)
 
     # New format is a nested dict.
     assert isinstance(mock_games, dict)
@@ -217,13 +193,14 @@ def test_games_reformat_to_dict(hass):
         assert mock_data[ATTR_MEDIA_IMAGE_URL] is None
         assert mock_data[ATTR_LOCKED] is False
         assert mock_data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_GAME
-    cleanup()
 
 
 def test_load_games(hass):
     """Test that games are loaded correctly."""
-    set_games_data(MOCK_GAMES)
-    mock_games = ps4.load_games(hass)
+    with patch('homeassistant.components.ps4.load_json',
+               return_value=MOCK_GAMES):
+        mock_games = ps4.load_games(hass)
+
     assert isinstance(mock_games, dict)
 
     mock_data = mock_games[MOCK_ID]
@@ -232,7 +209,6 @@ def test_load_games(hass):
     assert mock_data[ATTR_MEDIA_IMAGE_URL] == MOCK_URL
     assert mock_data[ATTR_LOCKED] is False
     assert mock_data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_GAME
-    cleanup()
 
 
 async def test_send_command(hass):
