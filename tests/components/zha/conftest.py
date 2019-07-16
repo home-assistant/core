@@ -5,6 +5,8 @@ from homeassistant import config_entries
 from homeassistant.components.zha.core.const import (
     DOMAIN, DATA_ZHA, COMPONENTS
 )
+from homeassistant.helpers.device_registry import (
+    async_get_registry as get_dev_reg)
 from homeassistant.components.zha.core.gateway import ZHAGateway
 from homeassistant.components.zha.core.registries import \
     establish_device_mappings
@@ -37,8 +39,10 @@ async def zha_gateway_fixture(hass, config_entry):
             hass.data[DATA_ZHA].get(component, {})
         )
     zha_storage = await async_get_registry(hass)
+    dev_reg = await get_dev_reg(hass)
     gateway = ZHAGateway(hass, {}, config_entry)
     gateway.zha_storage = zha_storage
+    gateway.ha_device_registry = dev_reg
     return gateway
 
 

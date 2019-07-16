@@ -53,7 +53,7 @@ class ZHAGateway:
         self._devices = {}
         self._device_registry = collections.defaultdict(list)
         self.zha_storage = None
-        self._ha_device_registry = None
+        self.ha_device_registry = None
         self.application_controller = None
         self.radio_description = None
         hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
@@ -68,7 +68,7 @@ class ZHAGateway:
     async def async_initialize(self):
         """Initialize controller and connect radio."""
         self.zha_storage = await async_get_registry(self._hass)
-        self._ha_device_registry = await get_dev_reg(self._hass)
+        self.ha_device_registry = await get_dev_reg(self._hass)
 
         usb_path = self._config_entry.data.get(CONF_USB_PATH)
         baudrate = self._config.get(CONF_BAUDRATE, DEFAULT_BAUDRATE)
@@ -150,10 +150,10 @@ class ZHAGateway:
             for entity_ref in entity_refs:
                 remove_tasks.append(entity_ref.remove_future)
             await asyncio.wait(remove_tasks)
-        reg_device = self._ha_device_registry.async_get_device(
+        reg_device = self.ha_device_registry.async_get_device(
             {(DOMAIN, str(device.ieee))}, set())
         if reg_device is not None:
-            self._ha_device_registry.async_remove_device(reg_device.id)
+            self.ha_device_registry.async_remove_device(reg_device.id)
 
     def device_removed(self, device):
         """Handle device being removed from the network."""
@@ -243,7 +243,7 @@ class ZHAGateway:
         if zha_device is None:
             zha_device = ZHADevice(self._hass, zigpy_device, self)
             self._devices[zigpy_device.ieee] = zha_device
-            self._ha_device_registry.async_get_or_create(
+            self.ha_device_registry.async_get_or_create(
                 config_entry_id=self._config_entry.entry_id,
                 connections={(CONNECTION_ZIGBEE, str(zha_device.ieee))},
                 identifiers={(DOMAIN, str(zha_device.ieee))},
@@ -335,7 +335,7 @@ class ZHAGateway:
             device_info = async_get_device_info(
                 self._hass,
                 zha_device,
-                self._ha_device_registry
+                self.ha_device_registry
             )
             async_dispatcher_send(
                 self._hass,
