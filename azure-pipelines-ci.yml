@@ -140,7 +140,7 @@ stages:
     - script: |
         python --version > .cache
       displayName: 'Set python $(python.version) for requirement cache'
-    - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreAndSaveCacheV1.RestoreAndSaveCache1@1
+    - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreAndSaveCacheV1.RestoreAndSaveCache@1
       displayName: 'Restore artifacts based on Requirements'
       inputs:
         keyfile: 'requirements_all.txt, requirements_test.txt, .cache'
