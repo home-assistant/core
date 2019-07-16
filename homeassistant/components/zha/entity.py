@@ -14,6 +14,7 @@ from homeassistant.util import slugify
 from .core.const import (
     ATTR_MANUFACTURER, DATA_ZHA, DATA_ZHA_BRIDGE_ID, DOMAIN, MODEL, NAME,
     SIGNAL_REMOVE)
+from .core.helpers import LogMixin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ ENTITY_SUFFIX = 'entity_suffix'
 RESTART_GRACE_PERIOD = 7200  # 2 hours
 
 
-class ZhaEntity(RestoreEntity, entity.Entity):
+class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
     """A base class for ZHA entities."""
 
     _domain = None  # Must be overridden by subclasses
@@ -186,3 +187,8 @@ class ZhaEntity(RestoreEntity, entity.Entity):
                 func
             )
         self._unsubs.append(unsub)
+
+    def log(self, level, msg, *args):
+        msg = '%s: ' + msg
+        args = (self.entity_id, ) + args
+        _LOGGER.log(level, msg, *args)
