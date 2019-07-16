@@ -163,13 +163,14 @@ class PS4Device(MediaPlayerDevice):
 
                     if self._media_content_id != title_id:
                         self._media_content_id = title_id
+                        if self._use_saved():
+                            _LOGGER.debug(
+                                "Using saved data for media: %s", title_id)
+                            return
+
                         self._media_title = name
                         self._source = self._media_title
                         self._media_type = None
-
-                        if self._use_saved():
-                            return
-
                         # Get data from PS Store.
                         asyncio.ensure_future(
                             self.async_get_title_data(title_id, name))
