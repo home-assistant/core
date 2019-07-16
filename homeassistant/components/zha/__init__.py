@@ -90,8 +90,8 @@ async def async_setup_entry(hass, config_entry):
         # pylint: disable=W0611, W0612
         import zhaquirks  # noqa
 
-    zha_gateway = ZHAGateway(hass, config)
-    await zha_gateway.async_initialize(config_entry)
+    zha_gateway = ZHAGateway(hass, config, config_entry)
+    await zha_gateway.async_initialize()
 
     device_registry = await \
         hass.helpers.device_registry.async_get_registry()
