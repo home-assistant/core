@@ -54,17 +54,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         eagle_data = EagleData(ip_address, cloud_id, install_code)
     except (ConnectError, HTTPError, Timeout, ValueError) as error:
         _LOGGER.error("Failed to setup Eagle-200 sensor: %s", error)
-    else:
-        eagle_data.update()
 
-        monitored_conditions = list(SENSORS)
-        sensors = []
-        for condition in monitored_conditions:
-            sensors.append(EagleSensor(
-                eagle_data, condition, SENSORS[condition][0],
-                SENSORS[condition][1]))
+    eagle_data.update()
+    monitored_conditions = list(SENSORS)
+    sensors = []
+    for condition in monitored_conditions:
+        sensors.append(EagleSensor(
+            eagle_data, condition, SENSORS[condition][0],
+            SENSORS[condition][1]))
 
-        add_entities(sensors)
+    add_entities(sensors)
 
 
 class EagleSensor(Entity):
@@ -85,6 +84,8 @@ class EagleSensor(Entity):
         if self._type == 'instantanous_demand':
             return DEVICE_CLASS_POWER
 
+        return None
+
     @property
     def name(self):
         """Return the name of the sensor."""
@@ -100,16 +101,16 @@ class EagleSensor(Entity):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
-    @Throttle(MIN_SCAN_INTERVAL)
     def update(self):
         """Get the energy information from the Rainforest Eagle."""
         try:
             self.eagle_data.update()
-            data = self.eagle_data.data
-            self._state = self.get_state(data)
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
             _LOGGER.error("Unable to update Eagle-200 %s: %s",
                           self._name, error)
+
+        data = self.eagle_data.data
+        self._state = self.get_state(data)
 
     def get_state(self, data):
         """Get the sensor value from the dictionary."""
@@ -137,10 +138,12 @@ class EagleData:
             _LOGGER.error("Unable to connect during setup: %s", error)
             self.data = None
 
+    @Throttle(MIN_SCAN_INTERVAL)
     def update(self):
         """Get the latest data from the Eagle-200 device."""
         try:
             self.data = self.eagle_reader.update()
+            _LOGGER.debug("API data: %s", self.data)
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
             _LOGGER.error("Unable to connect during update: %s", error)
             self.data = None
