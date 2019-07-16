@@ -11,6 +11,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     ATTR_COMMAND, ATTR_ENTITY_ID, ATTR_LOCKED, CONF_REGION, CONF_TOKEN)
 from homeassistant.core import split_entity_id
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry, config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import location
@@ -144,7 +145,11 @@ def format_unique_id(creds, mac_address):
 def load_games(hass: HomeAssistantType) -> dict:
     """Load games for sources."""
     g_file = hass.config.path(GAMES_FILE)
-    games = load_json(g_file)
+    try:
+        games = load_json(g_file)
+    except HomeAssistantError as error:
+        games = {}
+        _LOGGER.error("Failed to load games file: %s", error)
 
     # If file does not exist, create empty file.
     if not os.path.isfile(g_file):
@@ -167,8 +172,11 @@ def save_games(hass: HomeAssistantType, games: dict):
 
 def _reformat_data(hass: HomeAssistantType, games: dict) -> dict:
     """Reformat data to correct format."""
+    if not isinstance(games, dict):
+        _LOGGER.error("Games file was not parsed correctly")
+        return {}
     data_reformatted = False
-    if not games:
+    if games:
         for game, data in games.items():
 
             # Convert str format to dict format.
