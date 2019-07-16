@@ -1,17 +1,21 @@
 """Tests for the PS4 Integration."""
+import os
 from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ps4
+from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_TITLE, MEDIA_TYPE_GAME)
 from homeassistant.components.ps4.const import (
-    COMMANDS, CONFIG_ENTRY_VERSION as VERSION,
-    DEFAULT_REGION, DOMAIN, PS4_DATA)
+    ATTR_MEDIA_IMAGE_URL, COMMANDS, CONFIG_ENTRY_VERSION as VERSION,
+    DEFAULT_REGION, DOMAIN, GAMES_FILE, PS4_DATA)
 from homeassistant.const import (
-    ATTR_COMMAND, ATTR_ENTITY_ID, CONF_HOST,
+    ATTR_COMMAND, ATTR_ENTITY_ID, ATTR_LOCKED, CONF_HOST,
     CONF_NAME, CONF_REGION, CONF_TOKEN)
-from homeassistant.util import location
+from homeassistant.util import location, json
 from homeassistant.setup import async_setup_component
-from tests.common import (MockConfigEntry, mock_coro, mock_registry)
+from tests.common import (
+    get_test_config_dir, MockConfigEntry, mock_coro, mock_registry)
 
 MOCK_HOST = '192.168.0.1'
 MOCK_NAME = 'test_ps4'
@@ -62,6 +66,31 @@ MOCK_ENTRY_VERSION_1 = MockConfigEntry(
     domain=DOMAIN, data=MOCK_DATA_VERSION_1, entry_id=MOCK_ENTRY_ID, version=1)
 
 MOCK_UNIQUE_ID = 'someuniqueid'
+
+MOCK_FILE = get_test_config_dir(GAMES_FILE)
+
+MOCK_ID = 'CUSA00123'
+MOCK_URL = 'http://someurl.jpeg'
+MOCK_TITLE = 'Some Title'
+MOCK_TYPE = MEDIA_TYPE_GAME
+
+MOCK_GAMES_DATA_OLD_STR_FORMAT = {'mock_id': 'mock_title',
+                                  'mock_id2': 'mock_title2'}
+
+MOCK_GAMES_DATA = {
+    ATTR_LOCKED: False,
+    ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_GAME,
+    ATTR_MEDIA_IMAGE_URL: MOCK_URL,
+    ATTR_MEDIA_TITLE: MOCK_TITLE}
+
+MOCK_GAMES_DATA_LOCKED = {
+    ATTR_LOCKED: True,
+    ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_GAME,
+    ATTR_MEDIA_IMAGE_URL: MOCK_URL,
+    ATTR_MEDIA_TITLE: MOCK_TITLE}
+
+MOCK_GAMES = {MOCK_ID: MOCK_GAMES_DATA}
+MOCK_GAMES_LOCKED = {MOCK_ID: MOCK_GAMES_DATA_LOCKED}
 
 
 async def test_ps4_integration_setup(hass):
@@ -145,6 +174,65 @@ async def setup_mock_component(hass):
     entry.add_to_manager(hass.config_entries)
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
+
+
+def cleanup():
+    """Cleanup any data created from the tests."""
+    if os.path.isfile(MOCK_FILE):
+        os.remove(MOCK_FILE)
+
+
+def set_games_data(mock_data):
+    """Set data in games file for tests."""
+    json.save_json(MOCK_FILE, mock_data)
+
+
+def test_file_created_if_none(hass):
+    """Test that games file is created if it does not exist."""
+    # Test that file does not exist.
+    cleanup()
+    assert not os.path.isfile(MOCK_FILE)
+
+    mock_empty = ps4.load_games(hass)
+
+    # Test that file is created and empty.
+    assert isinstance(mock_empty, dict)
+    assert os.path.isfile(MOCK_FILE)
+    cleanup()
+
+
+def test_games_reformat_to_dict(hass):
+    """Test old data format is converted to new format."""
+    set_games_data(MOCK_GAMES_DATA_OLD_STR_FORMAT)
+    mock_games = ps4.load_games(hass)
+
+    # New format is a nested dict.
+    assert isinstance(mock_games, dict)
+    assert mock_games['mock_id'][ATTR_MEDIA_TITLE] == 'mock_title'
+    assert mock_games['mock_id2'][ATTR_MEDIA_TITLE] == 'mock_title2'
+    for mock_game in mock_games:
+        mock_data = mock_games[mock_game]
+        assert isinstance(mock_data, dict)
+        assert mock_data
+        assert mock_data[ATTR_MEDIA_IMAGE_URL] is None
+        assert mock_data[ATTR_LOCKED] is False
+        assert mock_data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_GAME
+    cleanup()
+
+
+def test_load_games(hass):
+    """Test that games are loaded correctly."""
+    set_games_data(MOCK_GAMES)
+    mock_games = ps4.load_games(hass)
+    assert isinstance(mock_games, dict)
+
+    mock_data = mock_games[MOCK_ID]
+    assert isinstance(mock_data, dict)
+    assert mock_data[ATTR_MEDIA_TITLE] == MOCK_TITLE
+    assert mock_data[ATTR_MEDIA_IMAGE_URL] == MOCK_URL
+    assert mock_data[ATTR_LOCKED] is False
+    assert mock_data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_GAME
+    cleanup()
 
 
 async def test_send_command(hass):
