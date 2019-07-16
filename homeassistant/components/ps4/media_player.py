@@ -164,19 +164,8 @@ class PS4Device(MediaPlayerDevice):
                     if self._media_content_id != title_id:
                         self._media_content_id = title_id
 
-                        if self._media_content_id in self._games:
-                            store = self._games[self._media_content_id]
-
-                            # If locked get attributes from file.
-                            locked = store.get(ATTR_LOCKED)
-                            if locked:
-                                self._media_title = store.get(ATTR_MEDIA_TITLE)
-                                self._source = self._media_title
-                                self._media_image = store.get(
-                                    ATTR_MEDIA_IMAGE_URL)
-                                self._media_type = store.get(
-                                    ATTR_MEDIA_CONTENT_TYPE)
-                                return
+                        if self._use_saved():
+                            return
 
                         # Get data from PS Store.
                         asyncio.ensure_future(
@@ -192,6 +181,23 @@ class PS4Device(MediaPlayerDevice):
             self.state_unknown()
         else:
             self._retry += 1
+
+    def _use_saved(self) -> bool:
+        """Return True, Set media attrs if data is locked."""
+        if self._media_content_id in self._games:
+            store = self._games[self._media_content_id]
+
+            # If locked get attributes from file.
+            locked = store.get(ATTR_LOCKED)
+            if locked:
+                self._media_title = store.get(ATTR_MEDIA_TITLE)
+                self._source = self._media_title
+                self._media_image = store.get(
+                    ATTR_MEDIA_IMAGE_URL)
+                self._media_type = store.get(
+                    ATTR_MEDIA_CONTENT_TYPE)
+                return True
+        return False
 
     def idle(self):
         """Set states for state idle."""
