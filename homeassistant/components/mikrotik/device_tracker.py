@@ -16,6 +16,10 @@ _LOGGER = logging.getLogger(__name__)
 MTK_DEFAULT_API_PORT = '8728'
 MTK_DEFAULT_API_SSL_PORT = '8729'
 
+CONF_LOGIN_METHOD = 'login_method'
+MTK_LOGIN_PLAIN = 'plain'
+MTK_LOGIN_TOKEN = 'token'
+
 CONF_ENCODING = 'encoding'
 DEFAULT_ENCODING = 'utf-8'
 
@@ -24,6 +28,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_METHOD): cv.string,
+    vol.Optional(CONF_LOGIN_METHOD, default=MTK_LOGIN_PLAIN):
+        vol.Any(MTK_LOGIN_PLAIN, MTK_LOGIN_TOKEN),
     vol.Optional(CONF_PORT): cv.port,
     vol.Optional(CONF_SSL, default=False): cv.boolean,
     vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
@@ -54,6 +60,7 @@ class MikrotikScanner(DeviceScanner):
                 self.port = MTK_DEFAULT_API_PORT
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
+        self.login_method = config.get(CONF_LOGIN_METHOD)
         self.method = config.get(CONF_METHOD)
         self.encoding = config[CONF_ENCODING]
 
@@ -72,10 +79,21 @@ class MikrotikScanner(DeviceScanner):
     def connect_to_device(self):
         """Connect to Mikrotik method."""
         import librouteros
+        from librouteros.login import login_plain, login_token
+
+        login_methods = {
+            MTK_LOGIN_PLAIN: login_plain,
+            MTK_LOGIN_TOKEN: login_token
+        }
+
         try:
             kwargs = {
                 'port': self.port,
-                'encoding': self.encoding
+                'encoding': self.encoding,
+                'login_methods': (
+                    login_methods.get(self.login_method),
+                    login_plain
+                )
             }
             if self.ssl:
                 ssl_context = ssl.create_default_context()
