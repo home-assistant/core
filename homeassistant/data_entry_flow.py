@@ -155,7 +155,7 @@ class FlowHandler:
     hass = None
     handler = None
     cur_step = None
-    context = None
+    context = None  # type: Optional[Dict]
 
     # Set by _async_create_flow callback
     init_step = 'init'

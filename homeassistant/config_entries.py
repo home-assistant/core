@@ -3,7 +3,9 @@ import asyncio
 import logging
 import functools
 import uuid
-from typing import Callable, List, Optional, Set  # noqa pylint: disable=unused-import
+from typing import (
+    Any, Callable, List, Optional, Set  # noqa pylint: disable=unused-import
+)
 import weakref
 
 from homeassistant import data_entry_flow, loader
@@ -121,7 +123,8 @@ class ConfigEntry:
         self.update_listeners = []  # type: list
 
         # Function to cancel a scheduled retry
-        self._async_cancel_retry_setup = None
+        self._async_cancel_retry_setup = \
+            None  # type: Optional[Callable[[], Any]]
 
     async def async_setup(
             self, hass: HomeAssistant, *,

@@ -574,7 +574,7 @@ def _recursive_merge(
 
 
 async def merge_packages_config(hass: HomeAssistant, config: Dict,
-                                packages: Dict,
+                                packages: Dict[str, Any],
                                 _log_pkg_error: Callable = _log_pkg_error) \
         -> Dict:
     """Merge packages into the top-level configuration. Mutate config."""
@@ -641,11 +641,6 @@ async def merge_packages_config(hass: HomeAssistant, config: Dict,
                 _log_pkg_error(
                     pack_name, comp_name, config,
                     "cannot be merged. Dict expected in main config.")
-                continue
-            if not isinstance(comp_conf, dict):
-                _log_pkg_error(
-                    pack_name, comp_name, config,
-                    "cannot be merged. Dict expected in package.")
                 continue
 
             error = _recursive_merge(conf=config[comp_name],
