@@ -470,13 +470,55 @@ class ThermostatData:
                             .get("battery_level"))
 
                     if batterylevel:
+                        batterypct = interpolate(
+                            batterylevel, roomstatus["module_type"])
                         if roomstatus.get("battery_level") is None:
-                            roomstatus["battery_level"] = batterylevel
-                        elif batterylevel < roomstatus["battery_level"]:
-                            roomstatus["battery_level"] = batterylevel
+                            roomstatus["battery_level"] = batterypct
+                        elif batterypct < roomstatus["battery_level"]:
+                            roomstatus["battery_level"] = batterypct
                 self.room_status[room] = roomstatus
             except KeyError as err:
                 _LOGGER.error("Update of room %s failed. Error: %s", room, err)
         self.away_temperature = self.homestatus.getAwaytemp(self.home)
         self.hg_temperature = self.homestatus.getHgtemp(self.home)
         self.setpoint_duration = self.homedata.setpoint_duration[self.home]
+
+
+def interpolate(batterylevel, module_type):
+    """Interpolate battery level depending on device type."""
+    na_battery_levels = {
+        NA_THERM: {
+            'full': 4100,
+            'high': 3600,
+            'medium': 3300,
+            'low': 3000,
+            'empty': 2800},
+        NA_VALVE: {
+            'full': 3200,
+            'high': 2700,
+            'medium': 2400,
+            'low': 2200,
+            'empty': 2200},
+    }
+
+    levels = sorted(na_battery_levels[module_type].values())
+    steps = [20, 50, 80, 100]
+
+    na_battery_level = na_battery_levels[module_type]
+    if batterylevel >= na_battery_level['full']:
+        return 100
+    if batterylevel >= na_battery_level['high']:
+        i = 3
+    elif batterylevel >= na_battery_level['medium']:
+        i = 2
+    elif batterylevel >= na_battery_level['low']:
+        i = 1
+    else:
+        return 0
+
+    pct = steps[i-1] + (
+        (steps[i] - steps[i-1]) *
+        (batterylevel - levels[i]) /
+        (levels[i+1] - levels[i])
+    )
+    return int(pct)
