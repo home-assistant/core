@@ -742,6 +742,12 @@ def say_curr_entity(hass):
     elif entity_id == 'sensor.ais_secure_android_id_dom':
         _say_it(hass, info_name + " " + info_data + ". Aby przeliterować naciśnij OK.", None)
         return
+    elif entity_id == 'sensor.ais_connect_iot_device_info':
+        info = "Instrukcja. Podłącz urządzenie do prądu. Upewnij się, że urządzenie znajduje się w zasięgu routera WiFi oraz bramki AIS dom. " \
+               "Żeby uruchomić tryb parowania naciśnij szybko 4 razy przycisk na urządzeniu i poczekaj aż jego dioda zacznie mrugać. " \
+               "Następnie naciśnij OK aby rozpocząć wyszukiwanie urządzenia."
+        _say_it(hass, info, None)
+        return
     elif entity_id == 'input_select.ais_bookmark_last_played':
         _say_it(hass, info_name + " " + info_data.replace("Local;", ""), None)
         return
@@ -1105,6 +1111,10 @@ def select_entity(hass, long_press):
                 dom_id = state.state.replace('dom-', '')
                 dom_id = "; ".join(dom_id)
                 _say_it(hass, dom_id, None)
+                return
+            elif CURR_ENTITIE == 'sensor.ais_connect_iot_device_info':
+                # start searching for the device
+                hass.services.call("script", "ais_scan_iot_devices_in_network")
                 return
             else:
                 _say_it(hass, "Tej pozycji nie można zmieniać", None)
