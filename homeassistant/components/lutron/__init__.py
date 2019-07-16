@@ -56,7 +56,6 @@ def setup(hass, base_config):
             if output.type == 'SYSTEM_SHADE':
                 hass.data[LUTRON_DEVICES]['cover'].append((area.name, output))
             elif output.type == 'CEILING_FAN_TYPE':
-                # print('---------- Found a ceiling fan: ' +str(output))
                 hass.data[LUTRON_DEVICES]['fan'].append((area.name, output))
             elif output.is_dimmable:
                 hass.data[LUTRON_DEVICES]['light'].append((area.name, output))
