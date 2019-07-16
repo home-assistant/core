@@ -9,6 +9,7 @@ import evohomeclient2
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF,
+    CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, CURRENT_HVAC_OFF,
     PRESET_AWAY, PRESET_ECO, PRESET_HOME,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE)
 from homeassistant.const import PRECISION_TENTHS
@@ -184,6 +185,17 @@ class EvoZone(EvoClimateDevice):
         return HVAC_MODE_OFF if is_off else HVAC_MODE_HEAT
 
     @property
+    def hvac_action(self) -> Optional[str]:
+        """Return the current running hvac operation if supported."""
+        if self._evo_tcs.systemModeStatus['mode'] == EVO_HEATOFF:
+            return CURRENT_HVAC_OFF
+        if self.target_temperature <= self.min_temp:
+            return CURRENT_HVAC_OFF
+        if self.target_temperature <= self.current_temperature:
+            return CURRENT_HVAC_HEAT
+        return CURRENT_HVAC_IDLE
+
+    @property
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature of the evohome Zone."""
         return (self._evo_device.temperatureStatus['temperature']
@@ -221,7 +233,7 @@ class EvoZone(EvoClimateDevice):
         return self._evo_device.setpointCapabilities['maxHeatSetpoint']
 
     def set_temperature(self, **kwargs) -> None:
-        """Set a new target temperature for an hour."""
+        """Set a new target temperature."""
         until = kwargs.get('until')
         if until:
             until = parse_datetime(until)
@@ -268,7 +280,7 @@ class EvoController(EvoClimateDevice):
     @property
     def hvac_mode(self) -> str:
         """Return the current operating mode of the evohome Controller."""
-        tcs_mode = self._evo_device.systemModeStatus['mode']
+        tcs_mode = self._evo_tcs.systemModeStatus['mode']
         return HVAC_MODE_OFF if tcs_mode == EVO_HEATOFF else HVAC_MODE_HEAT
 
     @property
@@ -278,44 +290,18 @@ class EvoController(EvoClimateDevice):
         Controllers do not have a current temp, but one is expected by HA.
         """
         temps = [z.temperatureStatus['temperature']
-                 for z in self._evo_device.zones.values()
+                 for z in self._evo_tcs.zones.values()
                  if z.temperatureStatus['isAvailable']]
-        return round(sum(temps) / len(temps), 1) if temps else None
-
-    @property
-    def target_temperature(self) -> Optional[float]:
-        """Return the average target temperature of the heating Zones.
-
-        Controllers do not have a target temp, but one is expected by HA.
-        """
-        temps = [z.setpointStatus['targetHeatTemperature']
-                 for z in self._evo_device.zones.values()]
         return round(sum(temps) / len(temps), 1) if temps else None
 
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        return TCS_PRESET_TO_HA.get(self._evo_device.systemModeStatus['mode'])
+        return TCS_PRESET_TO_HA.get(self._evo_tcs.systemModeStatus['mode'])
 
-    @property
-    def min_temp(self) -> float:
-        """Return the minimum target temperature  of the heating Zones.
-
-        Controllers do not have a min target temp, but one is required by HA.
-        """
-        temps = [z.setpointCapabilities['minHeatSetpoint']
-                 for z in self._evo_device.zones.values()]
-        return min(temps) if temps else 5
-
-    @property
-    def max_temp(self) -> float:
-        """Return the maximum target temperature  of the heating Zones.
-
-        Controllers do not have a max target temp, but one is required by HA.
-        """
-        temps = [z.setpointCapabilities['maxHeatSetpoint']
-                 for z in self._evo_device.zones.values()]
-        return max(temps) if temps else 35
+    def set_temperature(self, **kwargs) -> None:
+        """The evohome Controller doesn't have a targert temperature."""
+        return
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set an operating mode for the Controller."""
@@ -330,7 +316,7 @@ class EvoController(EvoClimateDevice):
 
     def update(self) -> None:
         """Get the latest state data."""
-        pass
+        return
 
 
 class EvoThermostat(EvoZone):
@@ -344,8 +330,6 @@ class EvoThermostat(EvoZone):
         super().__init__(evo_broker, evo_device)
 
         self._name = evo_broker.tcs.location.name
-        self._icon = 'mdi:radiator'
-
         self._preset_modes = [PRESET_AWAY, PRESET_ECO]
 
     @property
@@ -353,8 +337,8 @@ class EvoThermostat(EvoZone):
         """Return the device-specific state attributes."""
         status = super().device_state_attributes['status']
 
-        status['systemModeStatus'] = getattr(self._evo_tcs, 'systemModeStatus')
-        status['activeFaults'] += getattr(self._evo_tcs, 'activeFaults')
+        status['systemModeStatus'] = self._evo_tcs.systemModeStatus
+        status['activeFaults'] += self._evo_tcs.activeFaults
 
         return {'status': status}
 
@@ -369,9 +353,9 @@ class EvoThermostat(EvoZone):
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        if self._evo_tcs.systemModeStatus['mode'] == EVO_AUTOECO:
-            if self._evo_device.setpointStatus['setpointMode'] == EVO_FOLLOW:
-                return PRESET_ECO
+        if self._evo_tcs.systemModeStatus['mode'] == EVO_AUTOECO and \
+                self._evo_device.setpointStatus['setpointMode'] == EVO_FOLLOW:
+            return PRESET_ECO
 
         return super().preset_mode
 
