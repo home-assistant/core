@@ -1,5 +1,5 @@
 """Tests for the PS4 Integration."""
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ps4
@@ -178,7 +178,10 @@ async def setup_mock_component(hass):
 def test_games_reformat_to_dict(hass):
     """Test old data format is converted to new format."""
     with patch('homeassistant.components.ps4.load_json',
-               return_value=MOCK_GAMES_DATA_OLD_STR_FORMAT):
+               return_value=MOCK_GAMES_DATA_OLD_STR_FORMAT),\
+            patch('homeassistant.components.ps4.save_json',
+                  side_effect=MagicMock()),\
+            patch('os.path.isfile', return_value=True):
         mock_games = ps4.load_games(hass)
 
     # New format is a nested dict.
@@ -197,7 +200,10 @@ def test_games_reformat_to_dict(hass):
 def test_load_games(hass):
     """Test that games are loaded correctly."""
     with patch('homeassistant.components.ps4.load_json',
-               return_value=MOCK_GAMES):
+               return_value=MOCK_GAMES),\
+            patch('homeassistant.components.ps4.save_json',
+                  side_effect=MagicMock()),\
+            patch('os.path.isfile', return_value=True):
         mock_games = ps4.load_games(hass)
 
     assert isinstance(mock_games, dict)
