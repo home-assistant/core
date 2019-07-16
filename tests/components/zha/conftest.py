@@ -24,7 +24,7 @@ def config_entry_fixture(hass):
 
 
 @pytest.fixture(name='zha_gateway')
-async def zha_gateway_fixture(hass):
+async def zha_gateway_fixture(hass, config_entry):
     """Fixture representing a zha gateway.
 
     Create a ZHAGateway object that can be used to interact with as if we
@@ -37,7 +37,7 @@ async def zha_gateway_fixture(hass):
             hass.data[DATA_ZHA].get(component, {})
         )
     zha_storage = await async_get_registry(hass)
-    gateway = ZHAGateway(hass, {})
+    gateway = ZHAGateway(hass, {}, config_entry)
     gateway.zha_storage = zha_storage
     return gateway
 
