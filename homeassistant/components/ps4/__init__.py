@@ -168,7 +168,7 @@ def save_games(hass: HomeAssistantType, games: dict):
 def _reformat_data(hass: HomeAssistantType, games: dict) -> dict:
     """Reformat data to correct format."""
     data_reformatted = False
-    if games is not None:
+    if not games:
         for game, data in games.items():
 
             # Convert str format to dict format.
