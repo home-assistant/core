@@ -1122,6 +1122,9 @@ pyephember==0.2.0
 # homeassistant.components.everlights
 pyeverlights==0.1.0
 
+# homeassistant.components.fortigate
+pyfgt==0.5.1
+
 # homeassistant.components.fido
 pyfido==2.1.1
 
