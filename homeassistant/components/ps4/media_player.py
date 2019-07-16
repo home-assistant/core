@@ -440,7 +440,8 @@ class PS4Device(MediaPlayerDevice):
 
     async def async_select_source(self, source):
         """Select input source."""
-        for title_id, game in self._games.items():
+        for title_id, data in self._games.items():
+            game = data[ATTR_MEDIA_TITLE]
             if source.lower().encode(encoding='utf-8') == \
                game.lower().encode(encoding='utf-8') \
                or source == title_id:
