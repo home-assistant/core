@@ -2,7 +2,6 @@
 import logging
 
 from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH, SPEED_OFF, SUPPORT_SET_SPEED, FanEntity)
-# from homeassistant.const import (CONF_DEVICES, CONF_HOST, CONF_MAC, CONF_NAME, CONF_ID)
 
 from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
 
@@ -80,7 +79,7 @@ class LutronFan(LutronDevice, FanEntity):
         self._speed = speed
         if speed not in SPEED_MAPPING:
             _LOGGER.debug("Unknown speed %s, setting to %s", speed, SPEED_MAPPING[SPEED_HIGH])
-            self._speed = SPEED_MAPPING[SPEED_HIGH]
+            self._speed = SPEED_HIGH
         else:
             self._speed = self._prev_speed
             
