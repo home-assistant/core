@@ -30,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SERVICE_HOLD_TIME = 'set_hold_time'
 PRESET_NO_HOLD = 'NoHold'
+PRESET_TEMPORARY_HOLD = 'TemporaryHold'
 PRESET_PERMANENT_HOLD = 'PermanentHold'
 PRESET_VACATION_HOLD = 'VacationHold'
 
@@ -201,7 +202,8 @@ class LyricThermostat(LyricDeviceEntity, ClimateDevice):
     @property
     def preset_modes(self) -> Optional[List[str]]:
         """Return preset modes."""
-        return [PRESET_NO_HOLD, PRESET_PERMANENT_HOLD, PRESET_VACATION_HOLD]
+        return [PRESET_NO_HOLD, PRESET_TEMPORARY_HOLD,
+                PRESET_PERMANENT_HOLD, PRESET_VACATION_HOLD]
 
     @property
     def min_temp(self) -> float:
