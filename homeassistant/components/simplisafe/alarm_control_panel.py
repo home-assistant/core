@@ -14,6 +14,14 @@ from .const import DATA_CLIENT, DOMAIN, TOPIC_UPDATE
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ALARM_ACTIVE = 'alarm_active'
+ATTR_BATTERY_BACKUP_POWER_LEVEL = 'battery_backup_power_level'
+ATTR_GSM_STRENGTH = 'gsm_strength'
+ATTR_RF_JAMMING = 'rf_jamming'
+ATTR_SERIAL = 'serial'
+ATTR_SYSTEM_ID = 'system_id'
+ATTR_VERSION = 'version'
+ATTR_WALL_POWER_LEVEL = 'wall_power_level'
+ATTR_WIFI_STRENGTH = 'wifi_strength'
 
 
 async def async_setup_platform(
@@ -27,7 +35,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     systems = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
     async_add_entities([
         SimpliSafeAlarm(system, entry.data.get(CONF_CODE))
-        for system in systems
+        for system in systems.values()
     ], True)
 
 
@@ -37,10 +45,24 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
     def __init__(self, system, code):
         """Initialize the SimpliSafe alarm."""
         self._async_unsub_dispatcher_connect = None
-        self._attrs = {}
         self._code = code
         self._system = system
         self._state = None
+
+        self._attrs = {
+            ATTR_SERIAL: system.serial,
+            ATTR_SYSTEM_ID: system.system_id,
+            ATTR_VERSION: system.version,
+        }
+
+        # Some properties only exist for V2 or V3 systems:
+        for prop in (
+                ATTR_BATTERY_BACKUP_POWER_LEVEL, ATTR_GSM_STRENGTH,
+                ATTR_RF_JAMMING, ATTR_WALL_POWER_LEVEL, ATTR_WIFI_STRENGTH):
+            value = getattr(system, prop, None)
+            if not value:
+                continue
+            self._attrs[prop] = value
 
     @property
     def unique_id(self):

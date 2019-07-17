@@ -106,9 +106,9 @@ async def async_setup_entry(hass, config_entry):
 
     async def refresh(event_time):
         """Refresh data from the SimpliSafe account."""
-        tasks = [system.update() for system in systems]
+        tasks = [system.update() for system in systems.values()]
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        for system, result in zip(systems, results):
+        for system, result in zip(systems.values(), results):
             if isinstance(result, SimplipyError):
                 _LOGGER.error(
                     'There was error updating "%s": %s', system.address,
