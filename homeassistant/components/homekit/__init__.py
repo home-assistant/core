@@ -8,11 +8,11 @@ import voluptuous as vol
 from homeassistant.components import cover
 from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
-    CONF_IP_ADDRESS, CONF_NAME, CONF_PORT, CONF_TYPE, DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS,
-    TEMP_FAHRENHEIT)
+    ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES,
+    ATTR_UNIT_OF_MEASUREMENT, CONF_IP_ADDRESS, CONF_NAME, CONF_PORT,
+    CONF_TYPE, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_TEMPERATURE, EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.util import get_local_ip
@@ -22,8 +22,10 @@ from .const import (
     BRIDGE_NAME, CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FEATURE_LIST,
     CONF_FILTER, CONF_SAFE_MODE, DEFAULT_AUTO_START, DEFAULT_PORT,
     DEFAULT_SAFE_MODE, DEVICE_CLASS_CO, DEVICE_CLASS_CO2, DEVICE_CLASS_PM25,
-    DOMAIN, HOMEKIT_FILE, SERVICE_HOMEKIT_START, TYPE_FAUCET, TYPE_OUTLET,
-    TYPE_SHOWER, TYPE_SPRINKLER, TYPE_SWITCH, TYPE_VALVE)
+    DOMAIN, HOMEKIT_FILE, SERVICE_HOMEKIT_START,
+    SERVICE_HOMEKIT_RESET_ACCESSORY, TYPE_FAUCET, TYPE_OUTLET, TYPE_SHOWER,
+    TYPE_SPRINKLER, TYPE_SWITCH, TYPE_VALVE)
+
 from .util import (
     show_setup_message, validate_entity_config, validate_media_player_features)
 
@@ -60,6 +62,10 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+RESET_ACCESSORY_SERVICE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids
+})
+
 
 async def async_setup(hass, config):
     """Set up the HomeKit component."""
@@ -77,6 +83,21 @@ async def async_setup(hass, config):
     homekit = HomeKit(hass, name, port, ip_address, entity_filter,
                       entity_config, safe_mode)
     await hass.async_add_executor_job(homekit.setup)
+
+    def handle_homekit_reset_accessory(service):
+        """Handle start HomeKit service call."""
+        if homekit.status != STATUS_RUNNING:
+            _LOGGER.warning(
+                'HomeKit is not running. Either it is waiting to be '
+                'started or has been stopped.')
+            return
+
+        entity_ids = service.data.get('entity_id')
+        homekit.reset_accessories(entity_ids)
+
+    hass.services.async_register(DOMAIN, SERVICE_HOMEKIT_RESET_ACCESSORY,
+                                 handle_homekit_reset_accessory,
+                                 schema=RESET_ACCESSORY_SERVICE_SCHEMA)
 
     if auto_start:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, homekit.start)
@@ -229,6 +250,23 @@ class HomeKit():
             _LOGGER.debug('Safe_mode selected')
             self.driver.safe_mode = True
 
+    def reset_accessories(self, entity_ids):
+        """Reset the accessory to load the latest configuration."""
+        removed = []
+        for entity_id in entity_ids:
+            aid = generate_aid(entity_id)
+            if aid not in self.bridge.accessories:
+                _LOGGER.warning('Could not reset accessory. entity_id '
+                                'not found %s', entity_id)
+                continue
+            acc = self.remove_bridge_accessory(aid)
+            removed.append(acc)
+        self.driver.config_changed()
+
+        for acc in removed:
+            self.bridge.add_accessory(acc)
+        self.driver.config_changed()
+
     def add_bridge_accessory(self, state):
         """Try adding accessory to bridge if configured beforehand."""
         if not state or not self._filter(state.entity_id):
@@ -238,6 +276,13 @@ class HomeKit():
         acc = get_accessory(self.hass, self.driver, state, aid, conf)
         if acc is not None:
             self.bridge.add_accessory(acc)
+
+    def remove_bridge_accessory(self, aid):
+        """Try adding accessory to bridge if configured beforehand."""
+        acc = None
+        if aid in self.bridge.accessories:
+            acc = self.bridge.accessories.pop(aid)
+        return acc
 
     def start(self, *args):
         """Start the accessory driver."""

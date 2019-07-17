@@ -4,7 +4,8 @@ import logging
 from homematicip.aio.device import (
     AsyncBrandSwitchMeasuring, AsyncFullFlushSwitchMeasuring, AsyncMultiIOBox,
     AsyncOpenCollector8Module, AsyncPlugableSwitch,
-    AsyncPlugableSwitchMeasuring)
+    AsyncPlugableSwitchMeasuring, AsyncPrintedCircuitBoardSwitch2,
+    AsyncPrintedCircuitBoardSwitchBattery)
 from homematicip.aio.group import AsyncSwitchingGroup
 from homematicip.aio.home import AsyncHome
 
@@ -38,12 +39,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
         elif isinstance(device, (AsyncPlugableSwitchMeasuring,
                                  AsyncFullFlushSwitchMeasuring)):
             devices.append(HomematicipSwitchMeasuring(home, device))
-        elif isinstance(device, AsyncPlugableSwitch):
+        elif isinstance(device, (AsyncPlugableSwitch,
+                                 AsyncPrintedCircuitBoardSwitchBattery)):
             devices.append(HomematicipSwitch(home, device))
         elif isinstance(device, AsyncOpenCollector8Module):
             for channel in range(1, 9):
                 devices.append(HomematicipMultiSwitch(home, device, channel))
         elif isinstance(device, AsyncMultiIOBox):
+            for channel in range(1, 3):
+                devices.append(HomematicipMultiSwitch(home, device, channel))
+        elif isinstance(device, AsyncPrintedCircuitBoardSwitch2):
             for channel in range(1, 3):
                 devices.append(HomematicipMultiSwitch(home, device, channel))
 

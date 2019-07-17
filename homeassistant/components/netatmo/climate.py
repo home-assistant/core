@@ -16,7 +16,9 @@ from homeassistant.components.climate.const import (
     DEFAULT_MIN_TEMP
 )
 from homeassistant.const import (
-    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES, STATE_OFF)
+    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES, STATE_OFF,
+    ATTR_BATTERY_LEVEL
+)
 from homeassistant.util import Throttle
 
 from .const import DATA_NETATMO_AUTH
@@ -142,6 +144,7 @@ class NetatmoThermostat(ClimateDevice):
         self._operation_list = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
         self._support_flags = SUPPORT_FLAGS
         self._hvac_mode = None
+        self._battery_level = None
         self.update_without_throttle = False
         self._module_type = \
             self._data.room_status.get(room_id, {}).get('module_type')
@@ -274,6 +277,16 @@ class NetatmoThermostat(ClimateDevice):
         self.update_without_throttle = True
         self.schedule_update_ha_state()
 
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the thermostat."""
+        attr = {}
+
+        if self._battery_level is not None:
+            attr[ATTR_BATTERY_LEVEL] = self._battery_level
+
+        return attr
+
     def update(self):
         """Get the latest data from NetAtmo API and updates the states."""
         try:
@@ -297,6 +310,8 @@ class NetatmoThermostat(ClimateDevice):
             self._preset = \
                 self._data.room_status[self._room_id]["setpoint_mode"]
             self._hvac_mode = HVAC_MAP_NETATMO[self._preset]
+            self._battery_level = \
+                self._data.room_status[self._room_id].get('battery_level')
         except KeyError:
             _LOGGER.error(
                 "The thermostat in room %s seems to be out of reach.",
@@ -423,6 +438,7 @@ class ThermostatData:
                     roomstatus["module_id"] = None
                     roomstatus["heating_status"] = None
                     roomstatus["heating_power_request"] = None
+                    batterylevel = None
                     for module_id in homedata_room["module_ids"]:
                         if (self.homedata.modules[self.home][module_id]["type"]
                                 == NA_THERM
@@ -433,6 +449,10 @@ class ThermostatData:
                             rid=roomstatus["module_id"]
                         )
                         roomstatus["heating_status"] = self.boilerstatus
+                        batterylevel = (
+                            self.homestatus
+                            .thermostats[roomstatus["module_id"]]
+                            .get("battery_level"))
                     elif roomstatus["module_type"] == NA_VALVE:
                         roomstatus["heating_power_request"] = homestatus_room[
                             "heating_power_request"
@@ -445,9 +465,60 @@ class ThermostatData:
                                 self.boilerstatus
                                 and roomstatus["heating_status"]
                             )
+                        batterylevel = (
+                            self.homestatus.valves[roomstatus["module_id"]]
+                            .get("battery_level"))
+
+                    if batterylevel:
+                        batterypct = interpolate(
+                            batterylevel, roomstatus["module_type"])
+                        if roomstatus.get("battery_level") is None:
+                            roomstatus["battery_level"] = batterypct
+                        elif batterypct < roomstatus["battery_level"]:
+                            roomstatus["battery_level"] = batterypct
                 self.room_status[room] = roomstatus
             except KeyError as err:
                 _LOGGER.error("Update of room %s failed. Error: %s", room, err)
         self.away_temperature = self.homestatus.getAwaytemp(self.home)
         self.hg_temperature = self.homestatus.getHgtemp(self.home)
         self.setpoint_duration = self.homedata.setpoint_duration[self.home]
+
+
+def interpolate(batterylevel, module_type):
+    """Interpolate battery level depending on device type."""
+    na_battery_levels = {
+        NA_THERM: {
+            'full': 4100,
+            'high': 3600,
+            'medium': 3300,
+            'low': 3000,
+            'empty': 2800},
+        NA_VALVE: {
+            'full': 3200,
+            'high': 2700,
+            'medium': 2400,
+            'low': 2200,
+            'empty': 2200},
+    }
+
+    levels = sorted(na_battery_levels[module_type].values())
+    steps = [20, 50, 80, 100]
+
+    na_battery_level = na_battery_levels[module_type]
+    if batterylevel >= na_battery_level['full']:
+        return 100
+    if batterylevel >= na_battery_level['high']:
+        i = 3
+    elif batterylevel >= na_battery_level['medium']:
+        i = 2
+    elif batterylevel >= na_battery_level['low']:
+        i = 1
+    else:
+        return 0
+
+    pct = steps[i-1] + (
+        (steps[i] - steps[i-1]) *
+        (batterylevel - levels[i]) /
+        (levels[i+1] - levels[i])
+    )
+    return int(pct)

@@ -14,7 +14,7 @@ python-slugify==3.0.2
 pytz>=2019.01
 pyyaml==5.1.1
 requests==2.22.0
-ruamel.yaml==0.15.97
+ruamel.yaml==0.15.99
 voluptuous==0.11.5
 voluptuous-serialize==2.1.0
 
@@ -37,7 +37,7 @@ Adafruit-SHT31==1.0.2
 HAP-python==2.5.0
 
 # homeassistant.components.mastodon
-Mastodon.py==1.4.3
+Mastodon.py==1.4.5
 
 # homeassistant.components.orangepi_gpio
 OPi.GPIO==0.3.6
@@ -302,7 +302,7 @@ brottsplatskartan==0.0.1
 brunt==0.1.3
 
 # homeassistant.components.bluetooth_tracker
-bt_proximity==0.1.2
+bt_proximity==0.2
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -382,7 +382,7 @@ directpy==0.5
 discogs_client==2.2.1
 
 # homeassistant.components.discord
-discord.py==1.2.2
+discord.py==1.2.3
 
 # homeassistant.components.updater
 distro==1.4.0
@@ -613,7 +613,7 @@ hole==0.3.0
 holidays==0.9.10
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190712.0
+home-assistant-frontend==20190717.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.4
@@ -739,7 +739,7 @@ logi_circle==0.2.2
 london-tube-status==0.2
 
 # homeassistant.components.luftdaten
-luftdaten==0.6.1
+luftdaten==0.6.2
 
 # homeassistant.components.lupusec
 lupupy==0.0.17
@@ -1122,6 +1122,9 @@ pyephember==0.2.0
 # homeassistant.components.everlights
 pyeverlights==0.1.0
 
+# homeassistant.components.fortigate
+pyfgt==0.5.1
+
 # homeassistant.components.fido
 pyfido==2.1.1
 
@@ -1160,7 +1163,7 @@ pygtfs==0.1.5
 pygtt==1.1.2
 
 # homeassistant.components.version
-pyhaversion==2.2.1
+pyhaversion==3.0.2
 
 # homeassistant.components.heos
 pyheos==0.5.2
@@ -1172,7 +1175,7 @@ pyhik==0.2.3
 pyhiveapi==0.2.18.1
 
 # homeassistant.components.homematic
-pyhomematic==0.1.59
+pyhomematic==0.1.60
 
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6
@@ -1280,7 +1283,7 @@ pynetgear==0.6.1
 pynetio==0.1.9.1
 
 # homeassistant.components.nuki
-pynuki==1.3.2
+pynuki==1.3.3
 
 # homeassistant.components.nut
 pynut2==2.1.2
@@ -1381,7 +1384,7 @@ pysmarty==0.8
 pysnmp==4.4.9
 
 # homeassistant.components.sonos
-pysonos==0.0.20
+pysonos==0.0.21
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -1936,7 +1939,7 @@ yeelight==0.5.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2019.07.12
+youtube_dl==2019.07.16
 
 # homeassistant.components.zengge
 zengge==0.2

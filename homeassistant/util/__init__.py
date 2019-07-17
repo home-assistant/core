@@ -53,7 +53,7 @@ def repr_helper(inp: Any) -> str:
     return str(inp)
 
 
-def convert(value: T, to_type: Callable[[T], U],
+def convert(value: Optional[T], to_type: Callable[[T], U],
             default: Optional[U] = None) -> Optional[U]:
     """Convert value to to_type, returns default if fails."""
     try:

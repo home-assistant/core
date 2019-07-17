@@ -210,6 +210,7 @@ omit =
     homeassistant/components/folder/sensor.py
     homeassistant/components/folder_watcher/*
     homeassistant/components/foobot/sensor.py
+    homeassistant/components/fortigate/*
     homeassistant/components/foscam/camera.py
     homeassistant/components/foursquare/*
     homeassistant/components/free_mobile/notify.py
@@ -472,7 +473,6 @@ omit =
     homeassistant/components/prometheus/*
     homeassistant/components/prowl/notify.py
     homeassistant/components/proxy/camera.py
-    homeassistant/components/ps4/__init__.py
     homeassistant/components/ps4/media_player.py
     homeassistant/components/ptvsd/*
     homeassistant/components/pulseaudio_loopback/switch.py

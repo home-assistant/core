@@ -9,6 +9,8 @@ from homeassistant.components.smartthings.const import (
     CONF_INSTALLED_APP_ID, CONF_INSTALLED_APPS, CONF_LOCATION_ID,
     CONF_REFRESH_TOKEN, DATA_MANAGER, DOMAIN)
 
+from tests.common import MockConfigEntry
+
 
 async def test_update_app(hass, app):
     """Test update_app does not save if app is current."""
@@ -59,7 +61,7 @@ async def test_smartapp_install_creates_flow(
         hass, smartthings_mock, config_entry, location, device_factory):
     """Test installation creates flow."""
     # Arrange
-    setattr(hass.config_entries, '_entries', [config_entry])
+    config_entry.add_to_hass(hass)
     app = Mock()
     app.app_id = config_entry.data['app_id']
     request = Mock()
@@ -95,14 +97,11 @@ async def test_smartapp_update_saves_token(
         hass, smartthings_mock, location, device_factory):
     """Test update saves token."""
     # Arrange
-    entry = Mock()
-    entry.data = {
+    entry = MockConfigEntry(domain=DOMAIN, data={
         'installed_app_id': str(uuid4()),
         'app_id': str(uuid4())
-    }
-    entry.domain = DOMAIN
-
-    setattr(hass.config_entries, '_entries', [entry])
+    })
+    entry.add_to_hass(hass)
     app = Mock()
     app.app_id = entry.data['app_id']
     request = Mock()
@@ -119,7 +118,7 @@ async def test_smartapp_update_saves_token(
 
 async def test_smartapp_uninstall(hass, config_entry):
     """Test the config entry is unloaded when the app is uninstalled."""
-    setattr(hass.config_entries, '_entries', [config_entry])
+    config_entry.add_to_hass(hass)
     app = Mock()
     app.app_id = config_entry.data['app_id']
     request = Mock()
