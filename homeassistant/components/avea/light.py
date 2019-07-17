@@ -1,5 +1,6 @@
 """Support for the Elgato Avea lights."""
 import logging
+import avea
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
@@ -13,9 +14,8 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_AVEA = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Avea platform."""
-    import avea
 
     try:
         nearby_bulbs = avea.discover_avea_bulbs()
@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except OSError as err:
         raise PlatformNotReady from err
 
-    add_devices(AveaLight(bulb) for bulb in nearby_bulbs)
+    add_entities(AveaLight(bulb) for bulb in nearby_bulbs)
 
 
 class AveaLight(Light):
@@ -63,11 +63,7 @@ class AveaLight(Light):
         return self._state
 
     def turn_on(self, **kwargs):
-        """Instruct the light to turn on.
-
-        You can skip the brightness part if your light does not support
-        brightness control.
-        """
+        """Instruct the light to turn on."""
         if not kwargs:
             self._light.set_brightness(4095)
         else:
