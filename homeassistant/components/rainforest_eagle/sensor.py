@@ -54,6 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         eagle_data = EagleData(ip_address, cloud_id, install_code)
     except (ConnectError, HTTPError, Timeout, ValueError) as error:
         _LOGGER.error("Failed to setup Eagle-200 sensor: %s", error)
+        return
 
     eagle_data.update()
     monitored_conditions = list(SENSORS)
@@ -108,6 +109,8 @@ class EagleSensor(Entity):
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
             _LOGGER.error("Unable to update Eagle-200 %s: %s",
                           self._name, error)
+            self._name = None
+            return
 
         data = self.eagle_data.data
         self._state = self.get_state(data)
