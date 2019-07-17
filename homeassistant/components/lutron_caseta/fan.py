@@ -23,6 +23,7 @@ SPEED_TO_VALUE = {
     SPEED_HIGH: 'High'
 }
 
+FAN_SPEEDS = [STATE_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
@@ -36,7 +37,6 @@ async def async_setup_platform(
         devs.append(dev)
 
     async_add_entities(devs, True)
-    return True
 
 
 class LutronCasetaFan(LutronCasetaDevice, FanEntity):
@@ -50,7 +50,7 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+        return FAN_SPEEDS
 
     @property
     def supported_features(self) -> int:
