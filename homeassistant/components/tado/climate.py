@@ -79,7 +79,12 @@ def create_climate_device(tado, hass, zone, name, zone_id):
     ac_mode = capabilities['type'] == 'AIR_CONDITIONING'
 
     if ac_mode:
-        temperatures = capabilities['HEAT']['temperatures']
+        # Only use heat if available (you don't have to setup a heat mode, but cool is required)
+        # Heat is preferred as it generally has a lower minimum temperature
+        if 'HEAT' in capabilities:
+            temperatures = capabilities['HEAT']['temperatures']
+        else:
+            temperatures = capabilities['COOL']['temperatures']
     elif 'temperatures' in capabilities:
         temperatures = capabilities['temperatures']
     else:
@@ -371,13 +376,18 @@ class TadoClimate(ClimateDevice):
         if self._current_operation == CONST_MODE_OFF:
             _LOGGER.info("Switching mytado.com to OFF for zone %s",
                          self.zone_name)
-            self._store.set_zone_off(self.zone_id, CONST_OVERLAY_MANUAL)
+            if self.ac_mode:
+                self._store.set_zone_off(self.zone_id, CONST_OVERLAY_MANUAL, 'AIR_CONDITIONING')
+            else:
+                self._store.set_zone_off(self.zone_id, CONST_OVERLAY_MANUAL, 'HEATING')
             self._overlay_mode = self._current_operation
             return
 
         _LOGGER.info("Switching mytado.com to %s mode for zone %s",
                      self._current_operation, self.zone_name)
-        self._store.set_zone_overlay(
-            self.zone_id, self._current_operation, self._target_temp)
+        if self.ac_mode:
+            self._store.set_zone_overlay(self.zone_id, self._current_operation, self._target_temp, None, 'AIR_CONDITIONING', 'COOL')
+        else:
+            self._store.set_zone_overlay(self.zone_id, self._current_operation, self._target_temp, None, 'HEATING')
 
         self._overlay_mode = self._current_operation
