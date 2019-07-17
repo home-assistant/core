@@ -25,7 +25,7 @@ DEVICES = 'devices'
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 DOMAIN = 'somfy'
 
@@ -146,15 +146,16 @@ class SomfyEntity(Entity):
         return bool([c for c in capabilities if c.name == capability])
 
 
-@Throttle(MIN_TIME_BETWEEN_UPDATES)
+@Throttle(SCAN_INTERVAL)
 async def update_all_devices(hass):
     """Update all the devices."""
     from requests import HTTPError
+    from oauthlib.oauth2 import TokenExpiredError
     try:
         data = hass.data[DOMAIN]
         data[DEVICES] = await hass.async_add_executor_job(
             data[API].get_devices)
+    except TokenExpiredError:
+        _LOGGER.warning("Cannot update devices due to expired token")
     except HTTPError:
         _LOGGER.warning("Cannot update devices")
-        return False
-    return True
