@@ -153,7 +153,7 @@ def load_games(hass: HomeAssistantType) -> dict:
 
     if not isinstance(games, dict):
         _LOGGER.error("Games file was not parsed correctly")
-        return {}
+        games = {}
 
     # If file does not exist, create empty file.
     if not os.path.isfile(g_file):
