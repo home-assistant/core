@@ -1,0 +1,16 @@
+{
+  "config": {
+    "title": "Velbus interface",
+    "step": {
+      "user": {
+        "title": "Define the velbus connection type",
+        "data": {
+            "name": "The name for this velbus connection",
+            "device": "Connection string"
+        }
+      }
+    },
+    "error": {
+      "name_exists": "Name already exists"
+    }
+}

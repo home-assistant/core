@@ -7,9 +7,9 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_PORT
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
-DOMAIN = 'velbus'
+_LOGGER = logging.getLogger(__name__)
 
 VELBUS_MESSAGE = 'velbus.message'
 
