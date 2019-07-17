@@ -185,7 +185,6 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             self._mapdata[self._robot_serial]['maps'][0]['run_charge_at_end'])
 
         if self._robot_has_map:
-            robot_map_id = {}
             if self._state['availableServices']['maps'] != "basic-1":
                 if self._robot_maps[self._robot_serial]:
                     allmaps = self._robot_maps[self._robot_serial]
