@@ -88,7 +88,8 @@ def convert_time_to_utc(timestr):
     return dt_util.as_timestamp(combined)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the HERE travel time platform."""
     hass.data.setdefault(DATA_KEY, [])
 
@@ -120,7 +121,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     hass.data[DATA_KEY].append(sensor)
 
-    add_entities([sensor], True)
+    async_add_entities([sensor], True)
 
 
 class HERETravelTimeSensor(Entity):
@@ -194,27 +195,27 @@ class HERETravelTimeSensor(Entity):
             return ICON_TRUCK
         return ICON_CAR
 
-    def update(self):
+    async def async_update(self):
         """Update Sensor Information."""
         # Convert device_trackers to HERE friendly location
         if self._origin_entity_id is not None:
-            self._here_data.origin = self._get_location_from_entity(
+            self._here_data.origin = await self._get_location_from_entity(
                 self._origin_entity_id
             )
 
         if self._destination_entity_id is not None:
-            self._here_data.destination = self._get_location_from_entity(
+            self._here_data.destination = await self._get_location_from_entity(
                 self._destination_entity_id
             )
 
-        self._here_data.destination = self._resolve_zone(
+        self._here_data.destination = await self._resolve_zone(
             self._here_data.destination)
-        self._here_data.origin = self._resolve_zone(
+        self._here_data.origin = await self._resolve_zone(
             self._here_data.origin)
 
-        self._here_data.update()
+        await self._hass.async_add_executor_job(self._here_data.update)
 
-    def _get_location_from_entity(self, entity_id):
+    async def _get_location_from_entity(self, entity_id):
         """Get the location from the entity state or attributes."""
         entity = self._hass.states.get(entity_id)
 
@@ -227,7 +228,8 @@ class HERETravelTimeSensor(Entity):
             return self._get_location_from_attributes(entity)
 
         # Check if device is in a zone
-        zone_entity = self._hass.states.get("zone.{}".format(entity.state))
+        zone_entity = self._hass.states.get(
+            "zone.{}".format(entity.state))
         if location.has_location(zone_entity):
             _LOGGER.debug(
                 "%s is in %s, getting zone location",
@@ -250,8 +252,8 @@ class HERETravelTimeSensor(Entity):
             attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE)
         )
 
-    def _resolve_zone(self, friendly_name):
-        entities = self._hass.states.all()
+    async def _resolve_zone(self, friendly_name):
+        entities = self._hass.states.async_all()
         for entity in entities:
             if entity.domain == 'zone' and entity.name == friendly_name:
                 return self._get_location_from_attributes(entity)
@@ -300,15 +302,14 @@ class HERETravelTimeData():
                     "Destination has the wrong format: %s", self.destination
                 )
                 return
-            # Convert location to HERE friendly location if not already so
-            if not isinstance(self.destination, list):
-                self.destination = self.destination.split(',')
-            if not isinstance(self.origin, list):
-                self.origin = self.origin.split(',')
+
+            # Convert location to HERE friendly location
+            destination = self.destination.split(',')
+            origin = self.origin.split(',')
 
             response = self._client.car_route(
-                self.origin,
-                self.destination,
+                origin,
+                destination,
                 [self.travel_mode, self.route_mode, traffic_mode],
             )
             if isinstance(response, herepy.error.HEREError):
