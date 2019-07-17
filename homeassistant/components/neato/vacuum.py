@@ -193,7 +193,6 @@ class NeatoConnectedVacuum(StateVacuumDevice):
                         robot_map_id[allmaps.index(maps)] = maps['id']
 
                     for map_id, neatomap in robot_map_id.items():
-                        neatomap = robot_map_id[map_id]
                         self._robot_boundaries = self.robot.get_map_boundaries(
                             neatomap).json()
 
