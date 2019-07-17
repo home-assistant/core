@@ -1,7 +1,5 @@
 """Common utilities for VeSync Component."""
 import logging
-import asyncio
-from datetime import timedelta
 
 _LOGGER = logging.getLogger(__name__)
 
