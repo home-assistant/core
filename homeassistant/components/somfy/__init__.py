@@ -150,11 +150,12 @@ class SomfyEntity(Entity):
 async def update_all_devices(hass):
     """Update all the devices."""
     from requests import HTTPError
+    from oauthlib.oauth2 import TokenExpiredError
     try:
         data = hass.data[DOMAIN]
         data[DEVICES] = await hass.async_add_executor_job(
             data[API].get_devices)
+    except TokenExpiredError:
+        _LOGGER.warning("Cannot update devices due expired token")
     except HTTPError:
         _LOGGER.warning("Cannot update devices")
-        return False
-    return True
