@@ -28,7 +28,7 @@ SERVICE_CREATE_TASK = 'create_task'
 SERVICE_SCHEMA_CREATE_TASK = vol.Schema({
     vol.Required(CONF_LIST_NAME): cv.string,
     vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_STARRED): cv.boolean,
+    vol.Optional(CONF_STARRED, default=False): cv.boolean,
 })
 
 
@@ -42,7 +42,10 @@ def setup(hass, config):
         _LOGGER.error("Invalid credentials")
         return False
 
-    hass.services.register(DOMAIN, 'create_task', data.create_task)
+    hass.services.register(
+        DOMAIN, 'create_task', data.create_task,
+        schema=SERVICE_SCHEMA_CREATE_TASK
+    )
     return True
 
 
