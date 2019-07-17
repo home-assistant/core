@@ -83,7 +83,7 @@ stages:
     - script: |
         python --version > .cache
       displayName: 'Set python $(python.container) for requirement cache'
-    - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreAndSaveCacheV1.RestoreAndSaveCache@1
+    - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreCacheV1.RestoreCache@1
       displayName: 'Restore artifacts based on Requirements'
       inputs:
         keyfile: 'requirements_test_all.txt, .cache'
@@ -99,6 +99,14 @@ stages:
         pip install pytest-azurepipelines -c homeassistant/package_constraints.txt
       displayName: 'Create Virtual Environment & Install Requirements'
       condition: and(succeeded(), ne(variables['CacheRestored'], 'true'))
+    # Explicit Cache Save (instead of using RestoreAndSaveCache)
+    # Dont wait with cache save for all the other task in this job to complete (±30 minutes), other parallel jobs might utilize this 
+    - task: 1ESLighthouseEng.PipelineArtifactCaching.SaveCacheV1.SaveCache@1	
+      displayName: 'Save artifacts based on Requirements'	
+      inputs:	
+        keyfile: 'requirements_test_all.txt, .cache'	
+        targetfolder: './venv'	
+        vstsFeed: '$(ArtifactFeed)'
     - script: | 
         . venv/bin/activate
         pip install -e .
@@ -140,7 +148,7 @@ stages:
     - script: |
         python --version > .cache
       displayName: 'Set python $(python.version) for requirement cache'
-    - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreAndSaveCacheV1.RestoreAndSaveCache@1
+    - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreCacheV1.RestoreCache@1
       displayName: 'Restore artifacts based on Requirements'
       inputs:
         keyfile: 'requirements_all.txt, requirements_test.txt, .cache'
@@ -156,6 +164,12 @@ stages:
         pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
       displayName: 'Create Virtual Environment & Install Requirements'
       condition: and(succeeded(), ne(variables['CacheRestored'], 'true'))
+    - task: 1ESLighthouseEng.PipelineArtifactCaching.SaveCacheV1.SaveCache@1	
+      displayName: 'Save artifacts based on Requirements'	
+      inputs:	
+        keyfile: 'requirements_all.txt, requirements_test.txt, .cache'	
+        targetfolder: './venv'	
+        vstsFeed: '$(ArtifactFeed)'
     - script: | 
         . venv/bin/activate
         pip install -e .
