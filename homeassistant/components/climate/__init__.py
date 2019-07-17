@@ -31,7 +31,7 @@ from .const import (
     SERVICE_SET_HVAC_MODE, SERVICE_SET_PRESET_MODE, SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE, SUPPORT_AUX_HEAT, SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE, SUPPORT_SWING_MODE, SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE_RANGE)
+    SUPPORT_TARGET_TEMPERATURE_RANGE, SUPPORT_TARGET_TEMPERATURE)
 from .reproduce_state import async_reproduce_states  # noqa
 
 DEFAULT_MIN_TEMP = 7
@@ -176,13 +176,15 @@ class ClimateDevice(Entity):
             ATTR_MAX_TEMP: show_temp(
                 self.hass, self.max_temp, self.temperature_unit,
                 self.precision),
-            ATTR_TEMPERATURE: show_temp(
-                self.hass, self.target_temperature, self.temperature_unit,
-                self.precision),
         }
 
         if self.target_temperature_step:
             data[ATTR_TARGET_TEMP_STEP] = self.target_temperature_step
+
+        if supported_features & SUPPORT_TARGET_TEMPERATURE:
+            data[ATTR_TEMPERATURE] = show_temp(
+                self.hass, self.target_temperature, self.temperature_unit,
+                self.precision)
 
         if supported_features & SUPPORT_TARGET_TEMPERATURE_RANGE:
             data[ATTR_TARGET_TEMP_HIGH] = show_temp(
