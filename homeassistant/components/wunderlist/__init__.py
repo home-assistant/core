@@ -71,8 +71,8 @@ class Wunderlist:
 
     def create_task(self, call):
         """Create a new task on a list of Wunderlist."""
-        list_name = call.data.get(CONF_LIST_NAME)
-        task_title = call.data.get(CONF_NAME)
+        list_name = call.data[CONF_LIST_NAME]
+        task_title = call.data[CONF_NAME]
         starred = call.data[CONF_STARRED]
         list_id = self._list_by_name(list_name)
         self._client.create_task(list_id, task_title, starred=starred)
