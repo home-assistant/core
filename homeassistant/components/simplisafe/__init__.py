@@ -170,13 +170,13 @@ async def async_setup_entry(hass, config_entry):
     @_verify_domain_control
     async def remove_pin(call):
         """Remove a PIN."""
-        system = systems[call.data[CONF_SYSTEM_ID]]
+        system = systems[int(call.data[CONF_SYSTEM_ID])]
         await system.remove_pin(call.data[CONF_PIN_LABEL_OR_VALUE])
 
     @_verify_domain_control
     async def set_pin(call):
         """Set a PIN."""
-        system = systems[call.data[CONF_SYSTEM_ID]]
+        system = systems[int(call.data[CONF_SYSTEM_ID])]
         await system.set_pin(
             call.data[CONF_PIN_LABEL], call.data[CONF_PIN_VALUE])
 
