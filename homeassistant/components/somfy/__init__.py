@@ -156,6 +156,6 @@ async def update_all_devices(hass):
         data[DEVICES] = await hass.async_add_executor_job(
             data[API].get_devices)
     except TokenExpiredError:
-        _LOGGER.warning("Cannot update devices due expired token")
+        _LOGGER.warning("Cannot update devices due to expired token")
     except HTTPError:
         _LOGGER.warning("Cannot update devices")
