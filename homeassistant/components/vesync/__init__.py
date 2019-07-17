@@ -69,7 +69,6 @@ async def async_setup_entry(hass, config_entry):
     else:
         manager = VeSync(username, password)
 
-    hass.data[DOMAIN][CONF_MANAGER] = manager
     login = await hass.async_add_executor_job(manager.login)
 
     if not login:
@@ -79,6 +78,8 @@ async def async_setup_entry(hass, config_entry):
     device_dict = await async_process_devices(hass, manager)
 
     forward_setup = hass.config_entries.async_forward_entry_setup
+
+    hass.data[DOMAIN][CONF_MANAGER] = manager
 
     switches = hass.data[DOMAIN][CONF_SWITCHES]
 
