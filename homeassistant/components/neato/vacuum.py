@@ -190,11 +190,8 @@ class NeatoConnectedVacuum(StateVacuumDevice):
                 if self._robot_maps[self._robot_serial]:
                     allmaps = self._robot_maps[self._robot_serial]
                     for maps in allmaps:
-                        robot_map_id[allmaps.index(maps)] = maps['id']
-
-                    for neatomap in robot_map_id.values():
                         self._robot_boundaries = self.robot.get_map_boundaries(
-                            neatomap).json()
+                            maps['id']).json()
 
     @property
     def name(self):
