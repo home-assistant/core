@@ -23,8 +23,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_VENDOR, default='neato'): cv.string
-    })
+        vol.Optional(CONF_VENDOR, default='neato'): vol.In(
+            ['neato', 'vorwerk'])    })
 }, extra=vol.ALLOW_EXTRA)
 
 MODE = {
