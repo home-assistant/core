@@ -12,6 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES_CLASS = {
     'IPShutterContact': 'opening',
+    'IPShutterContactSabotage': 'opening',
     'MaxShutterContact': 'opening',
     'Motion': 'motion',
     'MotionV2': 'motion',

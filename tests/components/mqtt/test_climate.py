@@ -1,10 +1,10 @@
 """The tests for the mqtt climate component."""
 import copy
 import json
-import pytest
 import unittest
 from unittest.mock import ANY
 
+import pytest
 import voluptuous as vol
 
 from homeassistant.components import mqtt
@@ -12,11 +12,11 @@ from homeassistant.components.climate import (
     DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP)
 from homeassistant.components.climate.const import (
     DOMAIN as CLIMATE_DOMAIN,
-    SUPPORT_AUX_HEAT, SUPPORT_AWAY_MODE,
-    SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE, SUPPORT_OPERATION_MODE,
-    SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE, STATE_AUTO,
-    STATE_COOL, STATE_HEAT, STATE_DRY, STATE_FAN_ONLY,
-    SUPPORT_TARGET_TEMPERATURE_LOW, SUPPORT_TARGET_TEMPERATURE_HIGH)
+    SUPPORT_AUX_HEAT, SUPPORT_PRESET_MODE,
+    SUPPORT_FAN_MODE,
+    SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_AUTO,
+    HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY,
+    SUPPORT_TARGET_TEMPERATURE_RANGE)
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 
@@ -51,7 +51,7 @@ async def test_setup_params(hass, mqtt_mock):
     assert state.attributes.get('temperature') == 21
     assert state.attributes.get('fan_mode') == 'low'
     assert state.attributes.get('swing_mode') == 'off'
-    assert state.attributes.get('operation_mode') == 'off'
+    assert state.state == 'off'
     assert state.attributes.get('min_temp') == DEFAULT_MIN_TEMP
     assert state.attributes.get('max_temp') == DEFAULT_MAX_TEMP
 
@@ -61,24 +61,23 @@ async def test_supported_features(hass, mqtt_mock):
     assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
 
     state = hass.states.get(ENTITY_CLIMATE)
-    support = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
-               SUPPORT_SWING_MODE | SUPPORT_FAN_MODE | SUPPORT_AWAY_MODE |
-               SUPPORT_HOLD_MODE | SUPPORT_AUX_HEAT |
-               SUPPORT_TARGET_TEMPERATURE_LOW |
-               SUPPORT_TARGET_TEMPERATURE_HIGH)
+    support = (SUPPORT_TARGET_TEMPERATURE |
+               SUPPORT_SWING_MODE | SUPPORT_FAN_MODE | SUPPORT_PRESET_MODE |
+               SUPPORT_AUX_HEAT |
+               SUPPORT_TARGET_TEMPERATURE_RANGE)
 
     assert state.attributes.get("supported_features") == support
 
 
-async def test_get_operation_modes(hass, mqtt_mock):
+async def test_get_hvac_modes(hass, mqtt_mock):
     """Test that the operation list returns the correct modes."""
     assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
 
     state = hass.states.get(ENTITY_CLIMATE)
-    modes = state.attributes.get('operation_list')
+    modes = state.attributes.get('hvac_modes')
     assert [
-        STATE_AUTO, STATE_OFF, STATE_COOL,
-        STATE_HEAT, STATE_DRY, STATE_FAN_ONLY
+        HVAC_MODE_AUTO, STATE_OFF, HVAC_MODE_COOL,
+        HVAC_MODE_HEAT, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY
     ] == modes
 
 
@@ -90,15 +89,13 @@ async def test_set_operation_bad_attr_and_state(hass, mqtt_mock, caplog):
     assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('operation_mode') == 'off'
     assert state.state == 'off'
     with pytest.raises(vol.Invalid) as excinfo:
-        await common.async_set_operation_mode(hass, None, ENTITY_CLIMATE)
-    assert ("string value is None for dictionary value @ "
-            "data['operation_mode']")\
+        await common.async_set_hvac_mode(hass, None, ENTITY_CLIMATE)
+    assert ("value is not allowed for dictionary value @ "
+            "data['hvac_mode']")\
         in str(excinfo.value)
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('operation_mode') == 'off'
     assert state.state == 'off'
 
 
@@ -107,11 +104,10 @@ async def test_set_operation(hass, mqtt_mock):
     assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('operation_mode') == 'off'
     assert state.state == 'off'
-    await common.async_set_operation_mode(hass, 'cool', ENTITY_CLIMATE)
+    await common.async_set_hvac_mode(hass, 'cool', ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('operation_mode') == 'cool'
+    assert state.state == 'cool'
     assert state.state == 'cool'
     mqtt_mock.async_publish.assert_called_once_with(
         'mode-topic', 'cool', 0, False)
@@ -124,22 +120,18 @@ async def test_set_operation_pessimistic(hass, mqtt_mock):
     assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('operation_mode') is None
     assert state.state == 'unknown'
 
-    await common.async_set_operation_mode(hass, 'cool', ENTITY_CLIMATE)
+    await common.async_set_hvac_mode(hass, 'cool', ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('operation_mode') is None
     assert state.state == 'unknown'
 
     async_fire_mqtt_message(hass, 'mode-state', 'cool')
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('operation_mode') == 'cool'
     assert state.state == 'cool'
 
     async_fire_mqtt_message(hass, 'mode-state', 'bogus mode')
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('operation_mode') == 'cool'
     assert state.state == 'cool'
 
 
@@ -150,21 +142,18 @@ async def test_set_operation_with_power_command(hass, mqtt_mock):
     assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('operation_mode') == 'off'
     assert state.state == 'off'
-    await common.async_set_operation_mode(hass, 'on', ENTITY_CLIMATE)
+    await common.async_set_hvac_mode(hass, 'cool', ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('operation_mode') == 'on'
-    assert state.state == 'on'
+    assert state.state == 'cool'
     mqtt_mock.async_publish.assert_has_calls([
         unittest.mock.call('power-command', 'ON', 0, False),
-        unittest.mock.call('mode-topic', 'on', 0, False)
+        unittest.mock.call('mode-topic', 'cool', 0, False)
     ])
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_set_operation_mode(hass, 'off', ENTITY_CLIMATE)
+    await common.async_set_hvac_mode(hass, 'off', ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('operation_mode') == 'off'
     assert state.state == 'off'
     mqtt_mock.async_publish.assert_has_calls([
         unittest.mock.call('power-command', 'OFF', 0, False),
@@ -277,9 +266,9 @@ async def test_set_target_temperature(hass, mqtt_mock):
 
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get('temperature') == 21
-    await common.async_set_operation_mode(hass, 'heat', ENTITY_CLIMATE)
+    await common.async_set_hvac_mode(hass, 'heat', ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('operation_mode') == 'heat'
+    assert state.state == 'heat'
     mqtt_mock.async_publish.assert_called_once_with(
         'mode-topic', 'heat', 0, False)
     mqtt_mock.async_publish.reset_mock()
@@ -293,10 +282,10 @@ async def test_set_target_temperature(hass, mqtt_mock):
     # also test directly supplying the operation mode to set_temperature
     mqtt_mock.async_publish.reset_mock()
     await common.async_set_temperature(hass, temperature=21,
-                                       operation_mode='cool',
+                                       hvac_mode='cool',
                                        entity_id=ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('operation_mode') == 'cool'
+    assert state.state == 'cool'
     assert state.attributes.get('temperature') == 21
     mqtt_mock.async_publish.assert_has_calls([
         unittest.mock.call('mode-topic', 'cool', 0, False),
@@ -313,7 +302,7 @@ async def test_set_target_temperature_pessimistic(hass, mqtt_mock):
 
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get('temperature') is None
-    await common.async_set_operation_mode(hass, 'heat', ENTITY_CLIMATE)
+    await common.async_set_hvac_mode(hass, 'heat', ENTITY_CLIMATE)
     await common.async_set_temperature(hass, temperature=47,
                                        entity_id=ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
@@ -400,23 +389,23 @@ async def test_set_away_mode_pessimistic(hass, mqtt_mock):
     assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('away_mode') == 'off'
+    assert state.attributes.get('preset_mode') is None
 
-    await common.async_set_away_mode(hass, True, ENTITY_CLIMATE)
+    await common.async_set_preset_mode(hass, "away", ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('away_mode') == 'off'
+    assert state.attributes.get('preset_mode') is None
 
     async_fire_mqtt_message(hass, 'away-state', 'ON')
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('away_mode') == 'on'
+    assert state.attributes.get('preset_mode') == 'away'
 
     async_fire_mqtt_message(hass, 'away-state', 'OFF')
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('away_mode') == 'off'
+    assert state.attributes.get('preset_mode') is None
 
     async_fire_mqtt_message(hass, 'away-state', 'nonsense')
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('away_mode') == 'off'
+    assert state.attributes.get('preset_mode') is None
 
 
 async def test_set_away_mode(hass, mqtt_mock):
@@ -428,19 +417,19 @@ async def test_set_away_mode(hass, mqtt_mock):
     assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('away_mode') == 'off'
-    await common.async_set_away_mode(hass, True, ENTITY_CLIMATE)
+    assert state.attributes.get('preset_mode') is None
+    await common.async_set_preset_mode(hass, "away", ENTITY_CLIMATE)
     mqtt_mock.async_publish.assert_called_once_with(
         'away-mode-topic', 'AN', 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('away_mode') == 'on'
+    assert state.attributes.get('preset_mode') == 'away'
 
-    await common.async_set_away_mode(hass, False, ENTITY_CLIMATE)
+    await common.async_set_preset_mode(hass, None, ENTITY_CLIMATE)
     mqtt_mock.async_publish.assert_called_once_with(
         'away-mode-topic', 'AUS', 0, False)
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('away_mode') == 'off'
+    assert state.attributes.get('preset_mode') is None
 
 
 async def test_set_hold_pessimistic(hass, mqtt_mock):
@@ -452,17 +441,17 @@ async def test_set_hold_pessimistic(hass, mqtt_mock):
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get('hold_mode') is None
 
-    await common.async_set_hold_mode(hass, 'on', ENTITY_CLIMATE)
+    await common.async_set_preset_mode(hass, 'hold', ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get('hold_mode') is None
 
     async_fire_mqtt_message(hass, 'hold-state', 'on')
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('hold_mode') == 'on'
+    assert state.attributes.get('preset_mode') == 'on'
 
     async_fire_mqtt_message(hass, 'hold-state', 'off')
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('hold_mode') == 'off'
+    assert state.attributes.get('preset_mode') is None
 
 
 async def test_set_hold(hass, mqtt_mock):
@@ -470,19 +459,19 @@ async def test_set_hold(hass, mqtt_mock):
     assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('hold_mode') is None
-    await common.async_set_hold_mode(hass, 'on', ENTITY_CLIMATE)
+    assert state.attributes.get('preset_mode') is None
+    await common.async_set_preset_mode(hass, 'hold-on', ENTITY_CLIMATE)
     mqtt_mock.async_publish.assert_called_once_with(
-        'hold-topic', 'on', 0, False)
+        'hold-topic', 'hold-on', 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('hold_mode') == 'on'
+    assert state.attributes.get('preset_mode') == 'hold-on'
 
-    await common.async_set_hold_mode(hass, 'off', ENTITY_CLIMATE)
+    await common.async_set_preset_mode(hass, None, ENTITY_CLIMATE)
     mqtt_mock.async_publish.assert_called_once_with(
         'hold-topic', 'off', 0, False)
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('hold_mode') == 'off'
+    assert state.attributes.get('preset_mode') is None
 
 
 async def test_set_aux_pessimistic(hass, mqtt_mock):
@@ -579,10 +568,9 @@ async def test_set_with_templates(hass, mqtt_mock, caplog):
 
     # Operation Mode
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('operation_mode') is None
     async_fire_mqtt_message(hass, 'mode-state', '"cool"')
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('operation_mode') == 'cool'
+    assert state.state == 'cool'
 
     # Fan Mode
     assert state.attributes.get('fan_mode') is None
@@ -611,27 +599,26 @@ async def test_set_with_templates(hass, mqtt_mock, caplog):
     assert state.attributes.get('temperature') == 1031
 
     # Away Mode
-    assert state.attributes.get('away_mode') == 'off'
+    assert state.attributes.get('preset_mode') is None
     async_fire_mqtt_message(hass, 'away-state', '"ON"')
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('away_mode') == 'on'
+    assert state.attributes.get('preset_mode') == 'away'
 
     # Away Mode with JSON values
     async_fire_mqtt_message(hass, 'away-state', 'false')
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('away_mode') == 'off'
+    assert state.attributes.get('preset_mode') is None
 
     async_fire_mqtt_message(hass, 'away-state', 'true')
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('away_mode') == 'on'
+    assert state.attributes.get('preset_mode') == 'away'
 
     # Hold Mode
-    assert state.attributes.get('hold_mode') is None
     async_fire_mqtt_message(hass, 'hold-state', """
         { "attribute": "somemode" }
     """)
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get('hold_mode') == 'somemode'
+    assert state.attributes.get('preset_mode') == 'somemode'
 
     # Aux mode
     assert state.attributes.get('aux_heat') == 'off'

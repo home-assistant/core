@@ -254,7 +254,7 @@ class WazeTravelTimeData():
 
                 if self.exclude is not None:
                     routes = {k: v for k, v in routes.items() if
-                              self.exclude.lower() in k.lower()}
+                              self.exclude.lower() not in k.lower()}
 
                 route = sorted(routes, key=(lambda key: routes[key][0]))[0]
 

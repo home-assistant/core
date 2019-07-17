@@ -107,7 +107,8 @@ async def test_climate_devices(hass):
         {'state': {'on': False}})
 
     await hass.services.async_call(
-        'climate', 'turn_on', {'entity_id': 'climate.climate_1_name'},
+        'climate', 'set_hvac_mode',
+        {'entity_id': 'climate.climate_1_name', 'hvac_mode': 'heat'},
         blocking=True
     )
     gateway.api.session.put.assert_called_with(
@@ -116,7 +117,8 @@ async def test_climate_devices(hass):
     )
 
     await hass.services.async_call(
-        'climate', 'turn_off', {'entity_id': 'climate.climate_1_name'},
+        'climate', 'set_hvac_mode',
+        {'entity_id': 'climate.climate_1_name', 'hvac_mode': 'off'},
         blocking=True
     )
     gateway.api.session.put.assert_called_with(
@@ -143,7 +145,7 @@ async def test_verify_state_update(hass):
     assert "climate.climate_1_name" in gateway.deconz_ids
 
     thermostat = hass.states.get('climate.climate_1_name')
-    assert thermostat.state == 'on'
+    assert thermostat.state == 'off'
 
     state_update = {
         "t": "event",

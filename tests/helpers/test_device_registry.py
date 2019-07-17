@@ -395,7 +395,7 @@ async def test_format_mac(registry):
 
 
 async def test_update(registry):
-    """Verify that we can update area_id of a device."""
+    """Verify that we can update some attributes of a device."""
     entry = registry.async_get_or_create(
         config_entry_id='1234',
         connections={
@@ -412,13 +412,14 @@ async def test_update(registry):
     with patch.object(registry, 'async_schedule_save') as mock_save:
         updated_entry = registry.async_update_device(
             entry.id, area_id='12345A', name_by_user='Test Friendly Name',
-            new_identifiers=new_identifiers)
+            new_identifiers=new_identifiers, via_device_id='98765B')
 
     assert mock_save.call_count == 1
     assert updated_entry != entry
     assert updated_entry.area_id == '12345A'
     assert updated_entry.name_by_user == 'Test Friendly Name'
     assert updated_entry.identifiers == new_identifiers
+    assert updated_entry.via_device_id == '98765B'
 
 
 async def test_loading_race_condition(hass):

@@ -11,7 +11,7 @@ from homeassistant.const import (
 from homeassistant.components.device_tracker.const import (
     ENTITY_ID_FORMAT, ATTR_SOURCE_TYPE, SOURCE_TYPE_GPS)
 from homeassistant.components.device_tracker.config_entry import (
-    DeviceTrackerEntity
+    TrackerEntity
 )
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers import device_registry
@@ -62,7 +62,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     return True
 
 
-class OwnTracksEntity(DeviceTrackerEntity, RestoreEntity):
+class OwnTracksEntity(TrackerEntity, RestoreEntity):
     """Represent a tracked device."""
 
     def __init__(self, dev_id, data=None):

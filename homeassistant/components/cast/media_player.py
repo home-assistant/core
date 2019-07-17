@@ -286,7 +286,7 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
     """
     _LOGGER.warning(
         'Setting configuration for Cast via platform is deprecated. '
-        'Configure via Cast component instead.')
+        'Configure via Cast integration instead.')
     await _async_setup_platform(
         hass, config, async_add_entities, discovery_info)
 

@@ -44,7 +44,7 @@ def request_stream(hass, stream_source, *, fmt='hls',
                    keepalive=False, options=None):
     """Set up stream with token."""
     if DOMAIN not in hass.config.components:
-        raise HomeAssistantError("Stream component is not set up.")
+        raise HomeAssistantError("Stream integration is not set up.")
 
     if options is None:
         options = {}

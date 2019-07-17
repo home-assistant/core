@@ -12,6 +12,7 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/climate.flexit/
 """
 import logging
+from typing import List
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -20,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_FAN_MODE)
+    SUPPORT_FAN_MODE, HVAC_MODE_COOL)
 from homeassistant.components.modbus import (
     CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN)
 import homeassistant.helpers.config_validation as cv
@@ -57,7 +58,7 @@ class Flexit(ClimateDevice):
         self._current_temperature = None
         self._current_fan_mode = None
         self._current_operation = None
-        self._fan_list = ['Off', 'Low', 'Medium', 'High']
+        self._fan_modes = ['Off', 'Low', 'Medium', 'High']
         self._current_operation = None
         self._filter_hours = None
         self._filter_alarm = None
@@ -81,7 +82,7 @@ class Flexit(ClimateDevice):
         self._target_temperature = self.unit.get_target_temp
         self._current_temperature = self.unit.get_temp
         self._current_fan_mode =\
-            self._fan_list[self.unit.get_fan_speed]
+            self._fan_modes[self.unit.get_fan_speed]
         self._filter_hours = self.unit.get_filter_hours
         # Mechanical heat recovery, 0-100%
         self._heat_recovery = self.unit.get_heat_recovery
@@ -134,19 +135,27 @@ class Flexit(ClimateDevice):
         return self._target_temperature
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         return self._current_operation
 
     @property
-    def current_fan_mode(self):
+    def hvac_modes(self) -> List[str]:
+        """Return the list of available hvac operation modes.
+
+        Need to be a subset of HVAC_MODES.
+        """
+        return [HVAC_MODE_COOL]
+
+    @property
+    def fan_mode(self):
         """Return the fan setting."""
         return self._current_fan_mode
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """Return the list of available fan modes."""
-        return self._fan_list
+        return self._fan_modes
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -156,4 +165,4 @@ class Flexit(ClimateDevice):
 
     def set_fan_mode(self, fan_mode):
         """Set new fan mode."""
-        self.unit.set_fan_speed(self._fan_list.index(fan_mode))
+        self.unit.set_fan_speed(self._fan_modes.index(fan_mode))

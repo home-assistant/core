@@ -3,7 +3,7 @@ from pydeconz.sensor import Thermostat
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    SUPPORT_ON_OFF, SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, TEMP_CELSIUS)
 from homeassistant.core import callback
@@ -12,6 +12,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import ATTR_OFFSET, ATTR_VALVE, NEW_SENSOR
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
+
+SUPPORT_HVAC = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
 
 async def async_setup_platform(
@@ -51,32 +53,28 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DeconzThermostat(DeconzDevice, ClimateDevice):
     """Representation of a deCONZ thermostat."""
 
-    def __init__(self, device, gateway):
-        """Set up thermostat device."""
-        super().__init__(device, gateway)
-
-        self._features = SUPPORT_ON_OFF
-        self._features |= SUPPORT_TARGET_TEMPERATURE
-
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return self._features
+        return SUPPORT_TARGET_TEMPERATURE
 
     @property
-    def is_on(self):
-        """Return true if on."""
-        return self._device.state_on
+    def hvac_mode(self):
+        """Return hvac operation ie. heat, cool mode.
 
-    async def async_turn_on(self):
-        """Turn on switch."""
-        data = {'mode': 'auto'}
-        await self._device.async_set_config(data)
+        Need to be one of HVAC_MODE_*.
+        """
+        if self._device.on:
+            return HVAC_MODE_HEAT
+        return HVAC_MODE_OFF
 
-    async def async_turn_off(self):
-        """Turn off switch."""
-        data = {'mode': 'off'}
-        await self._device.async_set_config(data)
+    @property
+    def hvac_modes(self):
+        """Return the list of available hvac operation modes.
+
+        Need to be a subset of HVAC_MODES.
+        """
+        return SUPPORT_HVAC
 
     @property
     def current_temperature(self):
@@ -94,6 +92,15 @@ class DeconzThermostat(DeconzDevice, ClimateDevice):
 
         if ATTR_TEMPERATURE in kwargs:
             data['heatsetpoint'] = kwargs[ATTR_TEMPERATURE] * 100
+
+        await self._device.async_set_config(data)
+
+    async def async_set_hvac_mode(self, hvac_mode):
+        """Set new target hvac mode."""
+        if hvac_mode == HVAC_MODE_HEAT:
+            data = {'mode': 'auto'}
+        elif hvac_mode == HVAC_MODE_OFF:
+            data = {'mode': 'off'}
 
         await self._device.async_set_config(data)
 

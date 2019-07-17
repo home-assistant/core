@@ -22,24 +22,37 @@ CONF_TEXT_TYPE = 'text'
 SUPPORTED_VOICES = [
     "de-DE_BirgitVoice",
     "de-DE_BirgitV2Voice",
+    "de-DE_BirgitV3Voice",
     "de-DE_DieterVoice",
     "de-DE_DieterV2Voice",
+    "de-DE_DieterV3Voice",
     "en-GB_KateVoice",
+    "en-GB_KateV3Voice",
     "en-US_AllisonVoice",
     "en-US_AllisonV2Voice",
+    "en-US_AllisonV3Voice",
     "en-US_LisaVoice",
     "en-US_LisaV2Voice",
+    "en-US_LisaV3Voice",
     "en-US_MichaelVoice",
     "en-US_MichaelV2Voice",
+    "en-US_MichaelV3Voice",
     "es-ES_EnriqueVoice",
+    "es-ES_EnriqueV3Voice",
     "es-ES_LauraVoice",
+    "es-ES_LauraV3Voice",
     "es-LA_SofiaVoice",
+    "es-LA_SofiaV3Voice",
     "es-US_SofiaVoice",
+    "es-US_SofiaV3Voice",
     "fr-FR_ReneeVoice",
+    "fr-FR_ReneeV3Voice",
     "it-IT_FrancescaVoice",
     "it-IT_FrancescaV2Voice",
+    "it-IT_FrancescaV3Voice",
     "ja-JP_EmiVoice",
-    "pt-BR_IsabelaVoice"
+    "pt-BR_IsabelaVoice",
+    "pt-BR_IsabelaV3Voice"
 ]
 
 SUPPORTED_OUTPUT_FORMATS = [

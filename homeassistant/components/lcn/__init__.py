@@ -33,7 +33,7 @@ BINARY_SENSORS_SCHEMA = vol.Schema({
     vol.Required(CONF_ADDRESS): is_address,
     vol.Required(CONF_SOURCE): vol.All(vol.Upper, vol.In(SETPOINTS + KEYS +
                                                          BINSENSOR_PORTS))
-    })
+})
 
 CLIMATES_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
@@ -52,7 +52,7 @@ COVERS_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_ADDRESS): is_address,
     vol.Required(CONF_MOTOR): vol.All(vol.Upper, vol.In(MOTOR_PORTS))
-    })
+})
 
 LIGHTS_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
@@ -102,7 +102,7 @@ CONNECTION_SCHEMA = vol.Schema({
     vol.Required(CONF_PORT): cv.port,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_SK_NUM_TRIES, default=3): cv.positive_int,
+    vol.Optional(CONF_SK_NUM_TRIES, default=0): cv.positive_int,
     vol.Optional(CONF_DIM_MODE, default='steps50'): vol.All(vol.Upper,
                                                             vol.In(DIM_MODES)),
     vol.Optional(CONF_NAME): cv.string
