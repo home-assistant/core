@@ -2,7 +2,7 @@
 import logging
 from homeassistant.components.switch import (SwitchDevice)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from .common import CONF_SWITCHES, async_add_devices
+from .common import CONF_SWITCHES
 from .const import VS_DISCOVERY, VS_DISPATCHERS
 
 _LOGGER = logging.getLogger(__name__)
@@ -14,29 +14,29 @@ DOMAIN = 'vesync'
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up switches."""
-    async def async_discover(dev_len):
-        if dev_len > 0:
-            dev_slice = hass.data[DOMAIN][CONF_SWITCHES][-dev_len:]
-            for dev in dev_slice:
-                await _async_setup_entity(dev, async_add_entities)
+    async def async_discover(devices):
+        """Add new devices to platform"""
+        await _async_setup_entities(devices, async_add_entities)
 
     disp = async_dispatcher_connect(
         hass, VS_DISCOVERY.format(CONF_SWITCHES), async_discover)
-
     hass.data[DOMAIN][VS_DISPATCHERS].append(disp)
-    await async_add_devices(
-        hass,
-        async_add_entities,
+
+    await _async_setup_entities(
         hass.data[DOMAIN][CONF_SWITCHES],
-        _async_setup_entity
+        async_add_entities
     )
     return True
 
 
-async def _async_setup_entity(device, async_add_entities):
+async def _async_setup_entities(devices, async_add_entities):
     """Check if device is online and add entity."""
+    dev_list = []
+    for dev in devices:
+        dev_list.append(VeSyncSwitchHA(dev))
+
     async_add_entities(
-        [VeSyncSwitchHA(device)],
+        dev_list,
         update_before_add=True
     )
 
@@ -108,7 +108,5 @@ class VeSyncSwitchHA(SwitchDevice):
     def update(self):
         """Handle data changes for node values."""
         self.smartplug.update()
-        try:
+        if hasattr(self.smartplug, 'update_energy'):
             self.smartplug.update_energy()
-        except AttributeError:
-            pass

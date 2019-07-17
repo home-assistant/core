@@ -2,37 +2,28 @@
 import logging
 import voluptuous as vol
 from pyvesync import VeSync
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
-                                 CONF_TIME_ZONE)
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.config_entries import SOURCE_IMPORT
 from .common import (async_process_devices, CONF_SWITCHES)
 from .config_flow import configured_instances
-from .const import (VS_DISPATCHERS, VS_DISCOVERY,
+from .const import (DOMAIN, VS_DISPATCHERS, VS_DISCOVERY,
                     SERVICE_UPDATE_DEVS, CONF_MANAGER)
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = 'vesync'
-
-DEFAULT_SCAN_INTERVAL = 36000
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_TIME_ZONE): cv.time_zone,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
     """Set up the VeSync component."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][CONF_SWITCHES] = []
-
-    conf = config.get('vesync')
+    conf = config.get(DOMAIN)
 
     if conf is None:
         return True
@@ -44,8 +35,7 @@ async def async_setup(hass, config):
                 context={'source': SOURCE_IMPORT},
                 data={
                     CONF_USERNAME: conf[CONF_USERNAME],
-                    CONF_PASSWORD: conf[CONF_PASSWORD],
-                    CONF_TIME_ZONE: conf.get(CONF_TIME_ZONE)
+                    CONF_PASSWORD: conf[CONF_PASSWORD]
                 }))
 
     return True
@@ -55,19 +45,10 @@ async def async_setup_entry(hass, config_entry):
     """Set up Vesync as config entry."""
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
-    time_zone = config_entry.data[CONF_TIME_ZONE]
 
-    if config_entry.data[CONF_TIME_ZONE] is not None:
-        time_zone = config_entry.data[CONF_TIME_ZONE]
-    else:
-        if hass.config.time_zone is not None:
-            time_zone = str(hass.config.time_zone)
-            _LOGGER.debug("Time zone - %s", time_zone)
+    time_zone = str(hass.config.time_zone)
 
-    if time_zone is not None:
-        manager = VeSync(username, password, time_zone)
-    else:
-        manager = VeSync(username, password)
+    manager = VeSync(username, password, time_zone)
 
     login = await hass.async_add_executor_job(manager.login)
 
@@ -79,9 +60,10 @@ async def async_setup_entry(hass, config_entry):
 
     forward_setup = hass.config_entries.async_forward_entry_setup
 
+    hass.data[DOMAIN] = {}
     hass.data[DOMAIN][CONF_MANAGER] = manager
 
-    switches = hass.data[DOMAIN][CONF_SWITCHES]
+    switches = hass.data[DOMAIN][CONF_SWITCHES] = []
 
     hass.data[DOMAIN][VS_DISPATCHERS] = []
 
@@ -91,12 +73,7 @@ async def async_setup_entry(hass, config_entry):
 
     async def async_new_device_discovery(service):
         """Discover if new devices should be added."""
-        if hass.data[DOMAIN].get('manager') is None:
-            _LOGGER.warning(
-                'Cannot get new devices - VeSync manager not loaded')
-            return
-
-        manager = hass.data[DOMAIN]['manager']
+        manager = hass.data[DOMAIN][CONF_MANAGER]
         switches = hass.data[DOMAIN][CONF_SWITCHES]
 
         dev_dict = await async_process_devices(hass, manager)
@@ -106,9 +83,15 @@ async def async_setup_entry(hass, config_entry):
             switch_set = set(switch_devs)
             new_switches = list(switch_set.difference(switches))
             switch_len = len(new_switches)
-            switches.extend(new_switches)
-            async_dispatcher_send(hass, VS_DISCOVERY.format(CONF_SWITCHES),
-                                  switch_len)
+            if switch_len > 0:
+                switches.extend(new_switches)
+                if switches:
+                    async_dispatcher_send(hass,
+                                          VS_DISCOVERY.format(CONF_SWITCHES),
+                                          switches[-switch_len:])
+                else:
+                    hass.async_create_task(
+                        forward_setup(config_entry, 'switch'))
 
     hass.services.async_register(DOMAIN,
                                  SERVICE_UPDATE_DEVS,

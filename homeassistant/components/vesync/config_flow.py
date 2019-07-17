@@ -3,12 +3,9 @@ import logging
 from collections import OrderedDict
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.helpers import config_validation as cv
 from homeassistant.core import callback
-from homeassistant.const import (CONF_TIME_ZONE, CONF_USERNAME,
-                                 CONF_PASSWORD)
-
-DOMAIN = 'vesync'
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +33,6 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
         self.data_schema = OrderedDict()
         self.data_schema[vol.Required(CONF_USERNAME)] = str
         self.data_schema[vol.Required(CONF_PASSWORD)] = str
-        self.data_schema[vol.Optional(CONF_TIME_ZONE)] = str
 
     async def _show_form(self, errors=None):
         """Show form to the user."""
@@ -61,18 +57,10 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
 
-        if user_input.get(CONF_TIME_ZONE) is not None:
-            try:
-                self._time_zone = cv.time_zone(user_input.get(CONF_TIME_ZONE))
-            except vol.Invalid as e:
-                _LOGGER.warning(e)
-                self._time_zone = None
-
         return self.async_create_entry(
             title=self._username,
             data={
                 CONF_USERNAME: self._username,
                 CONF_PASSWORD: self._password,
-                CONF_TIME_ZONE: self._time_zone,
             },
         )
