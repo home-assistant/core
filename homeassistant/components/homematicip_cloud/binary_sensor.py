@@ -2,6 +2,7 @@
 import logging
 
 from homematicip.aio.device import (
+    AsyncContactInterface,
     AsyncDevice,
     AsyncFullFlushContactInterface,
     AsyncMotionDetectorIndoor,
@@ -63,7 +64,8 @@ async def async_setup_entry(
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for device in home.devices:
-        if isinstance(device, AsyncFullFlushContactInterface):
+        if isinstance(device, (AsyncContactInterface,
+                               AsyncFullFlushContactInterface)):
             devices.append(HomematicipContactInterface(home, device))
         if isinstance(device, (AsyncShutterContact, AsyncRotaryHandleSensor)):
             devices.append(HomematicipShutterContact(home, device))
