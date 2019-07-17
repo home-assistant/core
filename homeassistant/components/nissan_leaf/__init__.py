@@ -471,7 +471,7 @@ class LeafEntity(Entity):
     def log_registration(self):
         """Log registration."""
         _LOGGER.debug(
-            "Registered %s component for VIN %s",
+            "Registered %s integration for VIN %s",
             self.__class__.__name__, self.car.leaf.vin)
 
     @property

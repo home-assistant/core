@@ -1,6 +1,8 @@
 """Support for covers through the SmartThings cloud API."""
 from typing import Optional, Sequence
 
+from pysmartthings import Attribute, Capability
+
 from homeassistant.components.cover import (
     ATTR_POSITION, DEVICE_CLASS_DOOR, DEVICE_CLASS_GARAGE, DEVICE_CLASS_SHADE,
     DOMAIN as COVER_DOMAIN, STATE_CLOSED, STATE_CLOSING, STATE_OPEN,
@@ -37,8 +39,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
     """Return all capabilities supported if minimum required are present."""
-    from pysmartthings import Capability
-
     min_required = [
         Capability.door_control,
         Capability.garage_door_control,
@@ -58,8 +58,6 @@ class SmartThingsCover(SmartThingsEntity, CoverDevice):
 
     def __init__(self, device):
         """Initialize the cover class."""
-        from pysmartthings import Capability
-
         super().__init__(device)
         self._device_class = None
         self._state = None
@@ -93,8 +91,6 @@ class SmartThingsCover(SmartThingsEntity, CoverDevice):
 
     async def async_update(self):
         """Update the attrs of the cover."""
-        from pysmartthings import Attribute, Capability
-
         value = None
         if Capability.door_control in self._device.capabilities:
             self._device_class = DEVICE_CLASS_DOOR

@@ -1,4 +1,5 @@
 """Support for LCN climate control."""
+
 import pypck
 
 from homeassistant.components.climate import ClimateDevice, const
@@ -53,10 +54,6 @@ class LcnClimate(LcnDevice, ClimateDevice):
         self._target_temperature = None
         self._is_on = None
 
-        self.support = const.SUPPORT_TARGET_TEMPERATURE
-        if self.is_lockable:
-            self.support |= const.SUPPORT_ON_OFF
-
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
@@ -68,7 +65,7 @@ class LcnClimate(LcnDevice, ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return self.support
+        return const.SUPPORT_TARGET_TEMPERATURE
 
     @property
     def temperature_unit(self):
@@ -86,9 +83,25 @@ class LcnClimate(LcnDevice, ClimateDevice):
         return self._target_temperature
 
     @property
-    def is_on(self):
-        """Return true if the device is on."""
-        return self._is_on
+    def hvac_mode(self):
+        """Return hvac operation ie. heat, cool mode.
+
+        Need to be one of HVAC_MODE_*.
+        """
+        if self._is_on:
+            return const.HVAC_MODE_HEAT
+        return const.HVAC_MODE_OFF
+
+    @property
+    def hvac_modes(self):
+        """Return the list of available hvac operation modes.
+
+        Need to be a subset of HVAC_MODES.
+        """
+        modes = [const.HVAC_MODE_HEAT]
+        if self.is_lockable:
+            modes.append(const.HVAC_MODE_OFF)
+        return modes
 
     @property
     def max_temp(self):
@@ -100,18 +113,17 @@ class LcnClimate(LcnDevice, ClimateDevice):
         """Return the minimum temperature."""
         return self._min_temp
 
-    async def async_turn_on(self):
-        """Turn on."""
-        self._is_on = True
-        self.address_connection.lock_regulator(self.regulator_id, False)
-        await self.async_update_ha_state()
+    async def async_set_hvac_mode(self, hvac_mode):
+        """Set new target hvac mode."""
+        if hvac_mode == const.HVAC_MODE_HEAT:
+            self._is_on = True
+            self.address_connection.lock_regulator(self.regulator_id, False)
+        elif hvac_mode == const.HVAC_MODE_OFF:
+            self._is_on = False
+            self.address_connection.lock_regulator(self.regulator_id, True)
+            self._target_temperature = None
 
-    async def async_turn_off(self):
-        """Turn off."""
-        self._is_on = False
-        self.address_connection.lock_regulator(self.regulator_id, True)
-        self._target_temperature = None
-        await self.async_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -122,7 +134,7 @@ class LcnClimate(LcnDevice, ClimateDevice):
         self._target_temperature = temperature
         self.address_connection.var_abs(
             self.setpoint, self._target_temperature, self.unit)
-        await self.async_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     def input_received(self, input_obj):
         """Set temperature value when LCN input object is received."""
@@ -134,7 +146,7 @@ class LcnClimate(LcnDevice, ClimateDevice):
                 input_obj.get_value().to_var_unit(self.unit)
         elif input_obj.get_var() == self.setpoint:
             self._is_on = not input_obj.get_value().is_locked_regulator()
-            if self.is_on:
+            if self._is_on:
                 self._target_temperature = \
                     input_obj.get_value().to_var_unit(self.unit)
 

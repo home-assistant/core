@@ -14,7 +14,6 @@ from .const import DATA_CLIENT, DOMAIN, TOPIC_UPDATE
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ALARM_ACTIVE = 'alarm_active'
-ATTR_TEMPERATURE = 'temperature'
 
 
 async def async_setup_platform(
@@ -120,8 +119,6 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
         from simplipy.system import SystemStates
 
         self._attrs[ATTR_ALARM_ACTIVE] = self._system.alarm_going_off
-        if self._system.temperature:
-            self._attrs[ATTR_TEMPERATURE] = self._system.temperature
 
         if self._system.state == SystemStates.error:
             return

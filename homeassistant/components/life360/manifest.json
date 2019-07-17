@@ -8,6 +8,6 @@
     "@pnbruckner"
   ],
   "requirements": [
-    "life360==4.0.0"
+    "life360==4.0.1"
   ]
 }

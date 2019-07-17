@@ -46,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up Tuya Component."""
-    from tuyapy import TuyaApi
+    from tuyaha import TuyaApi
 
     tuya = TuyaApi()
     username = config[DOMAIN][CONF_USERNAME]

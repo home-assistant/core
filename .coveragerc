@@ -38,6 +38,8 @@ omit =
     homeassistant/components/apple_tv/*
     homeassistant/components/aqualogic/*
     homeassistant/components/aquostv/media_player.py
+    homeassistant/components/arcam_fmj/media_player.py
+    homeassistant/components/arcam_fmj/__init__.py
     homeassistant/components/arduino/*
     homeassistant/components/arest/binary_sensor.py
     homeassistant/components/arest/sensor.py
@@ -49,6 +51,7 @@ omit =
     homeassistant/components/asterisk_mbox/*
     homeassistant/components/asuswrt/device_tracker.py
     homeassistant/components/august/*
+    homeassistant/components/aurora_abb_powerone/sensor.py
     homeassistant/components/automatic/device_tracker.py
     homeassistant/components/avion/light.py
     homeassistant/components/azure_event_hub/*
@@ -214,6 +217,7 @@ omit =
     homeassistant/components/fritzbox_callmonitor/sensor.py
     homeassistant/components/fritzbox_netmonitor/sensor.py
     homeassistant/components/fritzdect/switch.py
+    homeassistant/components/fronius/sensor.py
     homeassistant/components/frontier_silicon/media_player.py
     homeassistant/components/futurenow/light.py
     homeassistant/components/garadget/cover.py
@@ -405,6 +409,8 @@ omit =
     homeassistant/components/nissan_leaf/*
     homeassistant/components/nmap_tracker/device_tracker.py
     homeassistant/components/nmbs/sensor.py
+    homeassistant/components/notion/binary_sensor.py
+    homeassistant/components/notion/sensor.py
     homeassistant/components/noaa_tides/sensor.py
     homeassistant/components/norway_air/air_quality.py
     homeassistant/components/nsw_fuel_station/sensor.py
@@ -637,6 +643,7 @@ omit =
     homeassistant/components/trackr/device_tracker.py
     homeassistant/components/tradfri/*
     homeassistant/components/tradfri/light.py
+    homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/sensor.py
     homeassistant/components/transmission/*
     homeassistant/components/travisci/sensor.py
@@ -655,6 +662,7 @@ omit =
     homeassistant/components/uptimerobot/binary_sensor.py
     homeassistant/components/uscis/sensor.py
     homeassistant/components/usps/*
+    homeassistant/components/vallox/*
     homeassistant/components/vasttrafik/sensor.py
     homeassistant/components/velbus/*
     homeassistant/components/velux/*
@@ -684,6 +692,8 @@ omit =
     homeassistant/components/worldtidesinfo/sensor.py
     homeassistant/components/worxlandroid/sensor.py
     homeassistant/components/wunderlist/*
+    homeassistant/components/wwlln/__init__.py
+    homeassistant/components/wwlln/geo_location.py
     homeassistant/components/x10/light.py
     homeassistant/components/xbox_live/sensor.py
     homeassistant/components/xeoma/camera.py

@@ -26,6 +26,7 @@ from homeassistant.helpers.dispatcher import (
 
 from . import const
 from . import config_flow  # noqa pylint: disable=unused-import
+from . import websocket_api as wsapi
 from .const import (
     CONF_AUTOHEAL, CONF_DEBUG, CONF_POLLING_INTERVAL,
     CONF_USB_STICK_PATH, CONF_CONFIG_PATH, CONF_NETWORK_KEY,
@@ -35,8 +36,9 @@ from .const import (
 from .node_entity import ZWaveBaseEntity, ZWaveNodeEntity
 from . import workaround
 from .discovery_schemas import DISCOVERY_SCHEMAS
-from .util import (check_node_schema, check_value_schema, node_name,
-                   check_has_unique_id, is_node_parsed)
+from .util import (
+    check_node_schema, check_value_schema, node_name, check_has_unique_id,
+    is_node_parsed, node_device_id_and_name)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,12 +70,14 @@ SUPPORTED_PLATFORMS = ['binary_sensor', 'climate', 'cover', 'fan',
 RENAME_NODE_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
     vol.Required(const.ATTR_NAME): cv.string,
+    vol.Optional(const.ATTR_UPDATE_IDS, default=False): cv.boolean,
 })
 
 RENAME_VALUE_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
     vol.Required(const.ATTR_VALUE_ID): vol.Coerce(int),
     vol.Required(const.ATTR_NAME): cv.string,
+    vol.Optional(const.ATTR_UPDATE_IDS, default=False): cv.boolean,
 })
 
 SET_CONFIG_PARAMETER_SCHEMA = vol.Schema({
@@ -298,6 +302,8 @@ async def async_setup_entry(hass, config_entry):
 
     registry = await async_get_registry(hass)
 
+    wsapi.async_load_websocket_api(hass)
+
     if use_debug:  # pragma: no cover
         def log_all(signal, value=None):
             """Log all the signals."""
@@ -389,8 +395,7 @@ async def async_setup_entry(hass, config_entry):
                 entity.node_id, sec)
             hass.async_add_job(_add_node_to_component)
 
-        hass.add_job(check_has_unique_id, entity, _on_ready, _on_timeout,
-                     hass.loop)
+        hass.add_job(check_has_unique_id, entity, _on_ready, _on_timeout)
 
     def node_removed(node):
         node_id = node.node_id
@@ -491,7 +496,7 @@ async def async_setup_entry(hass, config_entry):
         if hass.state == CoreState.running:
             hass.bus.fire(const.EVENT_NETWORK_STOP)
 
-    def rename_node(service):
+    async def rename_node(service):
         """Rename a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         node = network.nodes[node_id]
@@ -499,8 +504,19 @@ async def async_setup_entry(hass, config_entry):
         node.name = name
         _LOGGER.info(
             "Renamed Z-Wave node %d to %s", node_id, name)
+        update_ids = service.data.get(const.ATTR_UPDATE_IDS)
+        # We want to rename the device, the node entity,
+        # and all the contained entities
+        node_key = 'node-{}'.format(node_id)
+        entity = hass.data[DATA_DEVICES][node_key]
+        await entity.node_renamed(update_ids)
+        for key in list(hass.data[DATA_DEVICES]):
+            if not key.startswith('{}-'.format(node_id)):
+                continue
+            entity = hass.data[DATA_DEVICES][key]
+            await entity.value_renamed(update_ids)
 
-    def rename_value(service):
+    async def rename_value(service):
         """Rename a node value."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         value_id = service.data.get(const.ATTR_VALUE_ID)
@@ -511,6 +527,10 @@ async def async_setup_entry(hass, config_entry):
         _LOGGER.info(
             "Renamed Z-Wave value (Node %d Value %d) to %s",
             node_id, value_id, name)
+        update_ids = service.data.get(const.ATTR_UPDATE_IDS)
+        value_key = '{}-{}'.format(node_id, value_id)
+        entity = hass.data[DATA_DEVICES][value_key]
+        await entity.value_renamed(update_ids)
 
     def set_poll_intensity(service):
         """Set the polling intensity of a node value."""
@@ -996,7 +1016,7 @@ class ZWaveDeviceEntityValues():
             self._hass.add_job(discover_device, component, device)
         else:
             self._hass.add_job(check_has_unique_id, device, _on_ready,
-                               _on_timeout, self._hass.loop)
+                               _on_timeout)
 
 
 class ZWaveDeviceEntity(ZWaveBaseEntity):
@@ -1033,6 +1053,26 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         self._update_attributes()
         self.update_properties()
         self.maybe_schedule_update()
+
+    async def value_renamed(self, update_ids=False):
+        """Rename the node and update any IDs."""
+        self._name = _value_name(self.values.primary)
+        if update_ids:
+            # Update entity ID.
+            ent_reg = await async_get_registry(self.hass)
+            new_entity_id = ent_reg.async_generate_entity_id(
+                self.platform.domain,
+                self._name,
+                self.platform.entities.keys() - {self.entity_id})
+            if new_entity_id != self.entity_id:
+                # Don't change the name attribute, it will be None unless
+                # customised and if it's been customised, keep the
+                # customisation.
+                ent_reg.async_update_entity(
+                    self.entity_id, new_entity_id=new_entity_id)
+                return
+        # else for the above two ifs, update if not using update_entity
+        self.async_schedule_update_ha_state()
 
     async def async_added_to_hass(self):
         """Add device to dict."""
@@ -1073,24 +1113,20 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
     @property
     def device_info(self):
         """Return device information."""
+        identifier, name = node_device_id_and_name(
+            self.node, self.values.primary.instance)
         info = {
+            'name': name,
+            'identifiers': {
+                identifier
+            },
             'manufacturer': self.node.manufacturer_name,
             'model': self.node.product_name,
         }
         if self.values.primary.instance > 1:
-            info['name'] = '{} ({})'.format(
-                node_name(self.node), self.values.primary.instance)
-            info['identifiers'] = {
-                (DOMAIN, self.node_id, self.values.primary.instance, ),
-            }
             info['via_device'] = (DOMAIN, self.node_id, )
-        else:
-            info['name'] = node_name(self.node)
-            info['identifiers'] = {
-                (DOMAIN, self.node_id),
-            }
-            if self.node_id > 1:
-                info['via_device'] = (DOMAIN, 1, )
+        elif self.node_id > 1:
+            info['via_device'] = (DOMAIN, 1, )
         return info
 
     @property

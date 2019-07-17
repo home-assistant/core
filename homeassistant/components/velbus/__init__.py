@@ -38,6 +38,7 @@ async def async_setup(hass, config):
     def callback():
         modules = controller.get_modules()
         discovery_info = {
+            'cover': [],
             'switch': [],
             'binary_sensor': [],
             'climate': [],
@@ -59,6 +60,8 @@ async def async_setup(hass, config):
                       discovery_info['binary_sensor'], config)
         load_platform(hass, 'sensor', DOMAIN,
                       discovery_info['sensor'], config)
+        load_platform(hass, 'cover', DOMAIN,
+                      discovery_info['cover'], config)
 
     def syn_clock(self, service=None):
         controller.sync_clock()

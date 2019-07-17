@@ -45,18 +45,38 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up the Version sensor platform."""
-    from pyhaversion import Version
+    from pyhaversion import (
+        LocalVersion, DockerVersion, HassioVersion, PyPiVersion)
     beta = config.get(CONF_BETA)
     image = config.get(CONF_IMAGE)
     name = config.get(CONF_NAME)
     source = config.get(CONF_SOURCE)
 
     session = async_get_clientsession(hass)
+
     if beta:
         branch = 'beta'
     else:
         branch = 'stable'
-    haversion = VersionData(Version(hass.loop, session, branch, image), source)
+
+    if source == 'pypi':
+        haversion = VersionData(
+            PyPiVersion(hass.loop, session, branch))
+    elif source == 'hassio':
+        haversion = VersionData(
+            HassioVersion(hass.loop, session, branch, image))
+    elif source == 'docker':
+        haversion = VersionData(
+            DockerVersion(hass.loop, session, branch, image))
+    else:
+        haversion = VersionData(
+            LocalVersion(hass.loop, session))
+
+    if not name:
+        if source == DEFAULT_SOURCE:
+            name = DEFAULT_NAME_LOCAL
+        else:
+            name = DEFAULT_NAME_LATEST
 
     async_add_entities([VersionSensor(haversion, name)], True)
 
@@ -64,7 +84,7 @@ async def async_setup_platform(
 class VersionSensor(Entity):
     """Representation of a Home Assistant version sensor."""
 
-    def __init__(self, haversion, name=''):
+    def __init__(self, haversion, name):
         """Initialize the Version sensor."""
         self.haversion = haversion
         self._name = name
@@ -77,11 +97,7 @@ class VersionSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        if self._name:
-            return self._name
-        if self.haversion.source == DEFAULT_SOURCE:
-            return DEFAULT_NAME_LOCAL
-        return DEFAULT_NAME_LATEST
+        return self._name
 
     @property
     def state(self):
@@ -102,19 +118,11 @@ class VersionSensor(Entity):
 class VersionData:
     """Get the latest data and update the states."""
 
-    def __init__(self, api, source):
+    def __init__(self, api):
         """Initialize the data object."""
         self.api = api
-        self.source = source
 
     @Throttle(TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest version information."""
-        if self.source == 'pypi':
-            await self.api.get_pypi_version()
-        elif self.source == 'hassio':
-            await self.api.get_hassio_version()
-        elif self.source == 'docker':
-            await self.api.get_docker_version()
-        else:
-            await self.api.get_local_version()
+        await self.api.get_version()

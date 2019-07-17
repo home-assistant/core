@@ -3,6 +3,7 @@ import enum
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.lock import DOMAIN as LOCK
@@ -19,13 +20,13 @@ DATA_ZHA = 'zha'
 DATA_ZHA_CONFIG = 'config'
 DATA_ZHA_BRIDGE_ID = 'zha_bridge_id'
 DATA_ZHA_DISPATCHERS = 'zha_dispatchers'
-DATA_ZHA_CORE_COMPONENT = 'zha_core_component'
 DATA_ZHA_CORE_EVENTS = 'zha_core_events'
 DATA_ZHA_GATEWAY = 'zha_gateway'
 ZHA_DISCOVERY_NEW = 'zha_discovery_new_{}'
 
 COMPONENTS = (
     BINARY_SENSOR,
+    DEVICE_TRACKER,
     FAN,
     LIGHT,
     LOCK,
@@ -67,6 +68,9 @@ SERVER = 'server'
 IEEE = 'ieee'
 MODEL = 'model'
 NAME = 'name'
+LQI = 'lqi'
+RSSI = 'rssi'
+LAST_SEEN = 'last_seen'
 
 SENSOR_TYPE = 'sensor_type'
 HUMIDITY = 'humidity'
@@ -76,7 +80,10 @@ PRESSURE = 'pressure'
 METERING = 'metering'
 ELECTRICAL_MEASUREMENT = 'electrical_measurement'
 GENERIC = 'generic'
+BATTERY = 'battery'
 UNKNOWN = 'unknown'
+UNKNOWN_MANUFACTURER = 'unk_manufacturer'
+UNKNOWN_MODEL = 'unk_model'
 OPENING = 'opening'
 OCCUPANCY = 'occupancy'
 ACCELERATION = 'acceleration'
