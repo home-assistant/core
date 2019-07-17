@@ -2,6 +2,8 @@
 import asyncio
 from typing import Optional, Sequence
 
+from pysmartthings import Capability
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_TRANSITION,
@@ -28,8 +30,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
     """Return all capabilities supported if minimum required are present."""
-    from pysmartthings import Capability
-
     supported = [
         Capability.switch,
         Capability.switch_level,
@@ -69,8 +69,6 @@ class SmartThingsLight(SmartThingsEntity, Light):
 
     def _determine_features(self):
         """Get features supported by the device."""
-        from pysmartthings.device import Capability
-
         features = 0
         # Brightness and transition
         if Capability.switch_level in self._device.capabilities:

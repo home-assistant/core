@@ -161,13 +161,12 @@ class PS4Device(MediaPlayerDevice):
         if self._ps4.ddp_protocol is None:
             # Use socket.socket.
             await self.hass.async_add_executor_job(self._ps4.get_status)
+            if self._info is None:
+                # Add entity to registry.
+                await self.async_get_device_info(self._ps4.status)
             self._ps4.ddp_protocol = self.hass.data[PS4_DATA].protocol
             self.subscribe_to_protocol()
 
-            if self._ps4.status is not None:
-                if self._info is None:
-                    # Add entity to registry.
-                    await self.async_get_device_info(self._ps4.status)
         self._parse_status()
 
     def _parse_status(self):

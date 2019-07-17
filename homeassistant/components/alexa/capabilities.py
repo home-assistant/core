@@ -23,6 +23,7 @@ import homeassistant.util.color as color_util
 from .const import (
     API_TEMP_UNITS,
     API_THERMOSTAT_MODES,
+    API_THERMOSTAT_PRESETS,
     DATE_FORMAT,
     PERCENTAGE_FAN_MAP,
 )
@@ -180,9 +181,13 @@ class AlexaPowerController(AlexaCapibility):
         if name != 'powerState':
             raise UnsupportedProperty(name)
 
-        if self.entity.state == STATE_OFF:
-            return 'OFF'
-        return 'ON'
+        if self.entity.domain == climate.DOMAIN:
+            is_on = self.entity.state != climate.HVAC_MODE_OFF
+
+        else:
+            is_on = self.entity.state != STATE_OFF
+
+        return 'ON' if is_on else 'OFF'
 
 
 class AlexaLockController(AlexaCapibility):
@@ -546,16 +551,13 @@ class AlexaThermostatController(AlexaCapibility):
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        properties = []
+        properties = [{'name': 'thermostatMode'}]
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & climate.SUPPORT_TARGET_TEMPERATURE:
             properties.append({'name': 'targetSetpoint'})
-        if supported & climate.SUPPORT_TARGET_TEMPERATURE_LOW:
+        if supported & climate.SUPPORT_TARGET_TEMPERATURE_RANGE:
             properties.append({'name': 'lowerSetpoint'})
-        if supported & climate.SUPPORT_TARGET_TEMPERATURE_HIGH:
             properties.append({'name': 'upperSetpoint'})
-        if supported & climate.SUPPORT_OPERATION_MODE:
-            properties.append({'name': 'thermostatMode'})
         return properties
 
     def properties_proactively_reported(self):
@@ -569,13 +571,18 @@ class AlexaThermostatController(AlexaCapibility):
     def get_property(self, name):
         """Read and return a property."""
         if name == 'thermostatMode':
-            ha_mode = self.entity.attributes.get(climate.ATTR_OPERATION_MODE)
-            mode = API_THERMOSTAT_MODES.get(ha_mode)
-            if mode is None:
-                _LOGGER.error("%s (%s) has unsupported %s value '%s'",
-                              self.entity.entity_id, type(self.entity),
-                              climate.ATTR_OPERATION_MODE, ha_mode)
-                raise UnsupportedProperty(name)
+            preset = self.entity.attributes.get(climate.ATTR_PRESET_MODE)
+
+            if preset in API_THERMOSTAT_PRESETS:
+                mode = API_THERMOSTAT_PRESETS[preset]
+            else:
+                mode = API_THERMOSTAT_MODES.get(self.entity.state)
+                if mode is None:
+                    _LOGGER.error(
+                        "%s (%s) has unsupported state value '%s'",
+                        self.entity.entity_id, type(self.entity),
+                        self.entity.state)
+                    raise UnsupportedProperty(name)
             return mode
 
         unit = self.hass.config.units.temperature_unit

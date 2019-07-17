@@ -5,10 +5,11 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    STATE_HEAT, STATE_AUTO, SUPPORT_AUX_HEAT, SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_HEAT, HVAC_MODE_HEAT_COOL, SUPPORT_AUX_HEAT,
+    SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_OFF, CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, TEMP_CELSIUS, CONF_USERNAME, CONF_PASSWORD, STATE_OFF)
+    ATTR_TEMPERATURE, TEMP_CELSIUS, CONF_USERNAME, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 # Return cached results if last scan was less then this time ago
 SCAN_INTERVAL = timedelta(seconds=120)
 
-OPERATION_LIST = [STATE_AUTO, STATE_HEAT, STATE_OFF]
+OPERATION_LIST = [HVAC_MODE_HEAT_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -24,9 +25,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 EPH_TO_HA_STATE = {
-    'AUTO': STATE_AUTO,
-    'ON': STATE_HEAT,
-    'OFF': STATE_OFF
+    'AUTO': HVAC_MODE_HEAT_COOL,
+    'ON': HVAC_MODE_HEAT,
+    'OFF': HVAC_MODE_OFF
 }
 
 HA_STATE_TO_EPH = {value: key for key, value in EPH_TO_HA_STATE.items()}
@@ -65,11 +66,10 @@ class EphEmberThermostat(ClimateDevice):
     def supported_features(self):
         """Return the list of supported features."""
         if self._hot_water:
-            return SUPPORT_AUX_HEAT | SUPPORT_OPERATION_MODE
+            return SUPPORT_AUX_HEAT
 
         return (SUPPORT_TARGET_TEMPERATURE |
-                SUPPORT_AUX_HEAT |
-                SUPPORT_OPERATION_MODE)
+                SUPPORT_AUX_HEAT)
 
     @property
     def name(self):
@@ -100,43 +100,35 @@ class EphEmberThermostat(ClimateDevice):
         return 1
 
     @property
-    def device_state_attributes(self):
-        """Show Device Attributes."""
-        attributes = {
-            'currently_active': self._zone['isCurrentlyActive']
-        }
-        return attributes
+    def hvac_action(self):
+        """Return current HVAC action."""
+        if self._zone['isCurrentlyActive']:
+            return CURRENT_HVAC_HEAT
+
+        return CURRENT_HVAC_IDLE
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         from pyephember.pyephember import ZoneMode
         mode = ZoneMode(self._zone['mode'])
         return self.map_mode_eph_hass(mode)
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the supported operations."""
         return OPERATION_LIST
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set the operation mode."""
-        mode = self.map_mode_hass_eph(operation_mode)
+        mode = self.map_mode_hass_eph(hvac_mode)
         if mode is not None:
             self._ember.set_mode_by_name(self._zone_name, mode)
         else:
-            _LOGGER.error("Invalid operation mode provided %s", operation_mode)
+            _LOGGER.error("Invalid operation mode provided %s", hvac_mode)
 
     @property
-    def is_on(self):
-        """Return current state."""
-        if self._zone['isCurrentlyActive']:
-            return True
-
-        return None
-
-    @property
-    def is_aux_heat_on(self):
+    def is_aux_heat(self):
         """Return true if aux heater."""
         return self._zone['isBoostActive']
 
@@ -197,4 +189,4 @@ class EphEmberThermostat(ClimateDevice):
     @staticmethod
     def map_mode_eph_hass(operation_mode):
         """Map from eph mode to home assistant mode."""
-        return EPH_TO_HA_STATE.get(operation_mode.name, STATE_AUTO)
+        return EPH_TO_HA_STATE.get(operation_mode.name, HVAC_MODE_HEAT_COOL)

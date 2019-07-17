@@ -553,14 +553,6 @@ class ConfigEntries:
             _LOGGER.error('Cannot find integration %s', handler_key)
             raise data_entry_flow.UnknownHandler
 
-        # Our config flow list is based on built-in integrations. If overriden,
-        # we should not load it's config flow.
-        if not integration.is_built_in:
-            _LOGGER.error(
-                'Config flow is not supported for custom integration %s',
-                handler_key)
-            raise data_entry_flow.UnknownHandler
-
         # Make sure requirements and dependencies of component are resolved
         await async_process_deps_reqs(
             self.hass, self._hass_config, integration)
