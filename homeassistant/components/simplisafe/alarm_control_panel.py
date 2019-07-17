@@ -59,10 +59,9 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
         for prop in (
                 ATTR_BATTERY_BACKUP_POWER_LEVEL, ATTR_GSM_STRENGTH,
                 ATTR_RF_JAMMING, ATTR_WALL_POWER_LEVEL, ATTR_WIFI_STRENGTH):
-            value = getattr(system, prop, None)
-            if not value:
-                continue
-            self._attrs[prop] = value
+            # value = getattr(system, prop, None)
+            if hasattr(system, prop):
+                self._attrs[prop] = getattr(system, prop)
 
     @property
     def unique_id(self):
