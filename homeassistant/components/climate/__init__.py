@@ -184,7 +184,7 @@ class ClimateDevice(Entity):
         if supported_features & SUPPORT_TARGET_TEMPERATURE:
             data[ATTR_TEMPERATURE] = show_temp(
                 self.hass, self.target_temperature, self.temperature_unit,
-                self.precision),
+                self.precision)
 
         if supported_features & SUPPORT_TARGET_TEMPERATURE_RANGE:
             data[ATTR_TARGET_TEMP_HIGH] = show_temp(
