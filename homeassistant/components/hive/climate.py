@@ -51,7 +51,7 @@ class HiveClimateEntity(ClimateDevice):
         self.data_updatesource = '{}.{}'.format(
             self.device_type, self.node_id)
         self._unique_id = '{}-{}'.format(self.node_id, self.device_type)
-        
+
     @property
     def unique_id(self):
         """Return unique ID of entity."""
