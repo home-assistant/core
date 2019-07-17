@@ -17,6 +17,7 @@ ATTR_ALARM_ACTIVE = 'alarm_active'
 ATTR_BATTERY_BACKUP_POWER_LEVEL = 'battery_backup_power_level'
 ATTR_GSM_STRENGTH = 'gsm_strength'
 ATTR_RF_JAMMING = 'rf_jamming'
+ATTR_SYSTEM_ID = 'system_id'
 ATTR_WALL_POWER_LEVEL = 'wall_power_level'
 ATTR_WIFI_STRENGTH = 'wifi_strength'
 
@@ -42,7 +43,7 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
     def __init__(self, system, code):
         """Initialize the SimpliSafe alarm."""
         self._async_unsub_dispatcher_connect = None
-        self._attrs = {}
+        self._attrs = {ATTR_SYSTEM_ID: system.system_id}
         self._code = code
         self._system = system
         self._state = None
