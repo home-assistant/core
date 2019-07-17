@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_METHOD): cv.string,
-    vol.Optional(CONF_LOGIN_METHOD, default=MTK_LOGIN_PLAIN):
+    vol.Optional(CONF_LOGIN_METHOD):
         vol.Any(MTK_LOGIN_PLAIN, MTK_LOGIN_TOKEN),
     vol.Optional(CONF_PORT): cv.port,
     vol.Optional(CONF_SSL, default=False): cv.boolean,
