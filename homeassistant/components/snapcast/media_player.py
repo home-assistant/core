@@ -17,7 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
         DOMAIN, SERVICE_SNAPSHOT, SERVICE_RESTORE, SERVICE_JOIN,
-        SERVICE_UNJOIN, ATTR_MASTER, DATA_SERVICE_EVENT)
+        SERVICE_UNJOIN, ATTR_MASTER)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT, CONTROL_PORT)
 
-    async def async_service_handle(service, data):
+    async def async_service_handle(service_event, service, data):
         """Handle dispatched services."""
         entity_ids = data.get(ATTR_ENTITY_ID)
         devices = [device for device in hass.data[DATA_KEY]
@@ -67,7 +67,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                 if isinstance(device, SnapcastClientDevice):
                     await device.async_unjoin()
 
-        hass.data[DATA_SERVICE_EVENT].set()
+        service_event.set()
 
     async_dispatcher_connect(hass, DOMAIN, async_service_handle)
 

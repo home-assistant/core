@@ -24,18 +24,16 @@ JOIN_SERVICE_SCHEMA = SERVICE_SCHEMA.extend({
     vol.Required(ATTR_MASTER): cv.entity_id,
 })
 
-DATA_SERVICE_EVENT = 'snapcast_service_idle'
-
 
 async def async_setup(hass, config):
     """Handle service configuration."""
-    hass.data[DATA_SERVICE_EVENT] = asyncio.Event()
+    service_event = asyncio.Event()
 
     async def service_handle(service):
         """Dispatch a service call."""
-        hass.data[DATA_SERVICE_EVENT].clear()
-        async_dispatcher_send(hass, DOMAIN, service.service, service.data)
-        await hass.data[DATA_SERVICE_EVENT].wait()
+        service_event.clear()
+        async_dispatcher_send(hass, DOMAIN, service_event, service.service, service.data)
+        await service_event.wait()
 
     hass.services.async_register(
         DOMAIN, SERVICE_SNAPSHOT, service_handle, schema=SERVICE_SCHEMA)
