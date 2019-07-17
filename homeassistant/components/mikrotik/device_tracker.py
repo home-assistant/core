@@ -81,20 +81,20 @@ class MikrotikScanner(DeviceScanner):
         import librouteros
         from librouteros.login import login_plain, login_token
 
-        login_methods = {
-            MTK_LOGIN_PLAIN: login_plain,
-            MTK_LOGIN_TOKEN: login_token
-        }
+        if self.login_method == MTK_LOGIN_PLAIN:
+            login_method = (login_plain,)
+        elif self.login_method == MTK_LOGIN_TOKEN:
+            login_method = (login_token,)
+        else:
+            login_method = (login_plain, login_token)
 
         try:
             kwargs = {
                 'port': self.port,
                 'encoding': self.encoding,
-                'login_methods': (
-                    login_methods.get(self.login_method),
-                    login_plain
-                )
+                'login_methods': login_method
             }
+
             if self.ssl:
                 ssl_context = ssl.create_default_context()
                 ssl_context.check_hostname = False
