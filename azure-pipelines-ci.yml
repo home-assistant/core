@@ -99,11 +99,13 @@ stages:
         pip install pytest-azurepipelines -c homeassistant/package_constraints.txt
       displayName: 'Create Virtual Environment & Install Requirements'
       condition: and(succeeded(), ne(variables['CacheRestored'], 'true'))
-    - task: 1ESLighthouseEng.PipelineArtifactCaching.SaveCacheV1.SaveCache@1
-      displayName: 'Save artifacts based on Requirements'
-      inputs:
-        keyfile: 'requirements_test_all.txt, .cache'
-        targetfolder: './venv'
+    # Explicit Cache Save (instead of using RestoreAndSaveCache)
+    # Dont wait with cache save for all the other task in this job to complete (±30 minutes), other parallel jobs might utilize this 
+    - task: 1ESLighthouseEng.PipelineArtifactCaching.SaveCacheV1.SaveCache@1	
+      displayName: 'Save artifacts based on Requirements'	
+      inputs:	
+        keyfile: 'requirements_test_all.txt, .cache'	
+        targetfolder: './venv'	
         vstsFeed: '$(ArtifactFeed)'
     - script: | 
         . venv/bin/activate
