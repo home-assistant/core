@@ -176,7 +176,8 @@ def setup(hass, config):
     if config[DOMAIN][CONF_VENDOR] == 'neato':
         hass.data[NEATO_LOGIN] = NeatoHub(hass, config[DOMAIN], Account, Neato)
     elif config[DOMAIN][CONF_VENDOR] == 'vorwerk':
-        hass.data[NEATO_LOGIN] = NeatoHub(hass, config[DOMAIN], Account, Vorwerk)
+        hass.data[NEATO_LOGIN] = NeatoHub(hass, config[DOMAIN], Account,
+                                          Vorwerk)
     hub = hass.data[NEATO_LOGIN]
     if not hub.login():
         _LOGGER.debug("Failed to login to Neato API")
