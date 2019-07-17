@@ -39,8 +39,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
         elif isinstance(device, (AsyncPlugableSwitchMeasuring,
                                  AsyncFullFlushSwitchMeasuring)):
             devices.append(HomematicipSwitchMeasuring(home, device))
-        elif isinstance(device, AsyncPlugableSwitch,
-                        AsyncPrintedCircuitBoardSwitchBattery):
+        elif isinstance(device, (AsyncPlugableSwitch,
+                                 AsyncPrintedCircuitBoardSwitchBattery)):
             devices.append(HomematicipSwitch(home, device))
         elif isinstance(device, AsyncOpenCollector8Module):
             for channel in range(1, 9):
