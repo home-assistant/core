@@ -10,7 +10,7 @@ from homeassistant.const import (
     CONF_CODE, CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_USERNAME)
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -47,6 +47,20 @@ def _async_save_refresh_token(hass, config_entry, token):
         config_entry, data={
             **config_entry.data, CONF_TOKEN: token
         })
+
+
+async def async_register_base_station(hass, system, config_entry_id):
+    """Register a new bridge."""
+    device_registry = await dr.async_get_registry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry_id,
+        identifiers={
+            (DOMAIN, system.serial)
+        },
+        manufacturer='SimpliSafe',
+        model=system.version,
+        name=system.address,
+    )
 
 
 async def async_setup(hass, config):
@@ -128,6 +142,12 @@ async def async_setup_entry(hass, config_entry):
             hass,
             refresh,
             timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL]))
+
+    # Register the base station for each system:
+    for system in systems.values():
+        hass.async_create_task(
+            async_register_base_station(
+                hass, system, config_entry.entry_id))
 
     return True
 

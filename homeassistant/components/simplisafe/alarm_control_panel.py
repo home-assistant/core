@@ -17,9 +17,6 @@ ATTR_ALARM_ACTIVE = 'alarm_active'
 ATTR_BATTERY_BACKUP_POWER_LEVEL = 'battery_backup_power_level'
 ATTR_GSM_STRENGTH = 'gsm_strength'
 ATTR_RF_JAMMING = 'rf_jamming'
-ATTR_SERIAL = 'serial'
-ATTR_SYSTEM_ID = 'system_id'
-ATTR_VERSION = 'version'
 ATTR_WALL_POWER_LEVEL = 'wall_power_level'
 ATTR_WIFI_STRENGTH = 'wifi_strength'
 
@@ -45,15 +42,10 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
     def __init__(self, system, code):
         """Initialize the SimpliSafe alarm."""
         self._async_unsub_dispatcher_connect = None
+        self._attrs = {}
         self._code = code
         self._system = system
         self._state = None
-
-        self._attrs = {
-            ATTR_SERIAL: system.serial,
-            ATTR_SYSTEM_ID: system.system_id,
-            ATTR_VERSION: system.version,
-        }
 
         # Some properties only exist for V2 or V3 systems:
         for prop in (
@@ -62,16 +54,6 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
             # value = getattr(system, prop, None)
             if hasattr(system, prop):
                 self._attrs[prop] = getattr(system, prop)
-
-    @property
-    def unique_id(self):
-        """Return the unique ID."""
-        return self._system.system_id
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._system.address
 
     @property
     def code_format(self):
@@ -83,14 +65,39 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
         return alarm.FORMAT_TEXT
 
     @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
+    def device_info(self):
+        """Return device registry information for this entity."""
+        return {
+            'identifiers': {
+                (DOMAIN, self._system.system_id)
+            },
+            'manufacturer': 'SimpliSafe',
+            'model': self._system.version,
+            # The name should become more dynamic once we deduce a way to
+            # get various other sensors from SimpliSafe in a reliable manner:
+            'name': 'Keypad',
+            'via_device': (DOMAIN, self._system.serial)
+        }
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return self._attrs
+
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return self._system.address
+
+    @property
+    def state(self):
+        """Return the state of the device."""
+        return self._state
+
+    @property
+    def unique_id(self):
+        """Return the unique ID."""
+        return self._system.system_id
 
     def _validate_code(self, code, state):
         """Validate given code."""
