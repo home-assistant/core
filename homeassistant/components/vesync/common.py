@@ -19,46 +19,25 @@ async def async_process_devices(hass, manager):
 
     if manager.outlets:
         devices[CONF_SWITCHES].extend(manager.outlets)
-        _LOGGER.info("%d VeSync outlets found", len(manager.switches))\
+        _LOGGER.info("%d VeSync outlets found", len(manager.outlets))
 
-    reg_switch = 0
     if manager.switches:
         for switch in manager.switches:
-            if not switch.is_dimmable():
+            if not switch.dimmable_feature:
                 devices[CONF_SWITCHES].append(switch)
-                reg_switch += 1
-        if reg_switch > 0:
-            _LOGGER.info("%d VeSync standard switches found", reg_switch)
+        if manager.switches:
+            _LOGGER.info(
+                "%d VeSync standard switches found", len(manager.switches))
 
     return devices
 
 
-async def async_add_entities_retry(hass,
-                                   async_add_entities,
-                                   objects,
-                                   callback,
-                                   interval=timedelta(seconds=60)):
+async def async_add_devices(hass,
+                            async_add_entities,
+                            objects,
+                            callback):
     """Add entities now and retry later if issues are encountered."""
     add_objects = objects.copy()
-
-    is_cancelled = False
-
-    def cancel_interval_callback():
-        nonlocal is_cancelled
-        is_cancelled = True
-
-    async def process_objects_loop(delay: int):
-        if is_cancelled:
-            return
-
-        await process_objects()
-
-        if not add_objects:
-            return
-
-        await asyncio.sleep(delay)
-
-        hass.async_create_task(process_objects_loop(delay))
 
     async def process_objects(*args):
 
@@ -82,6 +61,6 @@ async def async_add_entities_retry(hass,
             else:
                 _LOGGER.debug("Failed to add object will try again")
 
-    await process_objects_loop(interval.seconds)
+    await process_objects()
 
-    return cancel_interval_callback
+    return True

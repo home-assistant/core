@@ -61,7 +61,7 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
 
-        if user_input.get(CONF_TIME_ZONE, None) is not None:
+        if user_input.get(CONF_TIME_ZONE) is not None:
             try:
                 self._time_zone = cv.time_zone(user_input.get(CONF_TIME_ZONE))
             except vol.Invalid as e:

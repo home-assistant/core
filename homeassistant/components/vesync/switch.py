@@ -2,7 +2,7 @@
 import logging
 from homeassistant.components.switch import (SwitchDevice)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from .common import CONF_SWITCHES, async_add_entities_retry
+from .common import CONF_SWITCHES, async_add_devices
 from .const import VS_DISCOVERY, VS_DISPATCHERS
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,8 +24,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hass, VS_DISCOVERY.format(CONF_SWITCHES), async_discover)
 
     hass.data[DOMAIN][VS_DISPATCHERS].append(disp)
-    _LOGGER.debug('SWITCH ENTITY RETRY CALLED')
-    await async_add_entities_retry(
+    await async_add_devices(
         hass,
         async_add_entities,
         hass.data[DOMAIN][CONF_SWITCHES],
@@ -53,9 +52,9 @@ class VeSyncSwitchHA(SwitchDevice):
     def unique_id(self):
         """Return the ID of this switch."""
         if isinstance(self.smartplug.sub_device_no, int):
-            return (self.smartplug.cid + str(self.smartplug.sub_device_no))
-        else:
-            return self.smartplug.cid
+            return ('{}{}'.format(
+                self.smartplug.cid + str(self.smartplug.sub_device_no)))
+        return self.smartplug.cid
 
     @property
     def name(self):
@@ -79,12 +78,14 @@ class VeSyncSwitchHA(SwitchDevice):
         """Return the current power usage in W."""
         if hasattr(self.smartplug, 'power'):
             return self.smartplug.power
+        return None
 
     @property
     def today_energy_kwh(self):
         """Return the today total energy usage in kWh."""
         if hasattr(self.smartplug, 'energy_today'):
             return self.smartplug.energy_today
+        return None
 
     @property
     def available(self) -> bool:

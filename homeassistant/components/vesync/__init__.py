@@ -1,6 +1,7 @@
 """Etekcity VeSync integration."""
 import logging
 import voluptuous as vol
+from pyvesync import VeSync
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
                                  CONF_TIME_ZONE)
 from homeassistant.helpers import config_validation as cv
@@ -9,7 +10,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from .common import (async_process_devices, CONF_SWITCHES)
 from .config_flow import configured_instances
 from .const import (VS_DISPATCHERS, VS_DISCOVERY,
-                    SERVICE_UPDATE_DEVS)
+                    SERVICE_UPDATE_DEVS, CONF_MANAGER)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,12 +34,10 @@ async def async_setup(hass, config):
 
     conf = config.get('vesync')
 
-    if isinstance(conf, dict) and\
-            conf[CONF_USERNAME] in configured_instances(hass):
+    if conf is None:
         return True
 
-    if isinstance(conf, dict) and\
-            conf[CONF_USERNAME] not in configured_instances(hass):
+    if isinstance(conf, dict) and not configured_instances(hass):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -65,16 +64,12 @@ async def async_setup_entry(hass, config_entry):
             time_zone = str(hass.config.time_zone)
             _LOGGER.debug("Time zone - %s", time_zone)
 
-    from pyvesync import VeSync
-
     if time_zone is not None:
-
         manager = VeSync(username, password, time_zone)
-
     else:
-
         manager = VeSync(username, password)
 
+    hass.data[DOMAIN][CONF_MANAGER] = manager
     login = await hass.async_add_executor_job(manager.login)
 
     if not login:
