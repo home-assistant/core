@@ -271,29 +271,29 @@ class EvoDevice(Entity):
         self._state_attributes = []
 
         self._supported_features = None
-        self._setpoints = None
+        self._schedule: Dict[str, Any] = {}
 
     @callback
     def _refresh(self, packet):
         if packet['signal'] == 'refresh':
             self.async_schedule_update_ha_state(force_refresh=True)
 
-    def get_setpoints(self) -> Optional[Dict[str, Any]]:
-        """Return the current/next scheduled switchpoints.
+    @property
+    def setpoints(self) -> Optional[Dict[str, Any]]:
+        """Return the current/next setpoints from the schedule.
 
-        Only Zones & DHW controllers (but not the TCS) have schedules.
+        Only Zones & DHW controllers (but not the TCS) can have schedules.
         """
-        switchpoints = {}
-        schedule = self._evo_device.schedule()
+        if not self._schedule['DailySchedules']:
+            return {}
 
-        if not schedule['DailySchedules']:
-            return None
+        switchpoints: Dict[str, Any] = {}
 
         day_time = datetime.now()
         day_of_week = int(day_time.strftime('%w'))  # 0 is Sunday
 
         # Iterate today's switchpoints until past the current time of day...
-        day = schedule['DailySchedules'][day_of_week]
+        day = self._schedule['DailySchedules'][day_of_week]
         sp_idx = -1  # last switchpoint of the day before
         for i, tmp in enumerate(day['Switchpoints']):
             if day_time.strftime('%H:%M:%S') > tmp['TimeOfDay']:
@@ -312,7 +312,7 @@ class EvoDevice(Entity):
             spt = switchpoints[key] = {}
 
             sp_date = (day_time + timedelta(days=offset)).strftime('%Y-%m-%d')
-            day = schedule['DailySchedules'][(day_of_week + offset) % 7]
+            day = self._schedule['DailySchedules'][(day_of_week + offset) % 7]
             switchpoint = day['Switchpoints'][idx]
 
             dt_naive = datetime.strptime(
@@ -346,7 +346,7 @@ class EvoDevice(Entity):
                 status[attr] = getattr(self._evo_device, attr)
 
         if 'setpoints' in self._state_attributes:
-            status['setpoints'] = self._setpoints
+            status['setpoints'] = self.setpoints
 
         return {'status': status}
 
@@ -376,4 +376,4 @@ class EvoDevice(Entity):
 
     def update(self) -> None:
         """Get the latest state data."""
-        self._setpoints = self.get_setpoints()
+        self._schedule = self._evo_device.schedule()
