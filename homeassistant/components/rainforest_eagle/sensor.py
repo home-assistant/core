@@ -109,7 +109,7 @@ class EagleSensor(Entity):
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
             _LOGGER.error("Unable to update Eagle-200 %s: %s",
                           self._name, error)
-            self._name = None
+            self._state = None
             return
 
         data = self.eagle_data.data
