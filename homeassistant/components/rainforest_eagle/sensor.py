@@ -107,17 +107,7 @@ class EagleSensor(Entity):
         """Get the energy information from the Rainforest Eagle."""
         self.eagle_data.update()
         data = self.eagle_data.data
-        self._state = self.get_state(data)
-
-    def get_state(self, data):
-        """Get the sensor value from the dictionary."""
-        if data is None:
-            _LOGGER.debug("Empty data during update")
-            return None
-
-        state = data.get(self._type)
-        _LOGGER.debug("Updating: %s - %s", self._type, data.get(self._type))
-        return state
+        self._state = EagleData.get_state(data, self._type)
 
 
 class EagleData:
@@ -137,3 +127,14 @@ class EagleData:
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
             _LOGGER.error("Unable to connect during update: %s", error)
             self.data = None
+
+    @staticmethod
+    def get_state(data, sensor_type):
+        """Get the sensor value from the dictionary."""
+        if data is None:
+            _LOGGER.debug("Empty data during update")
+            return None
+
+        state = data.get(sensor_type)
+        _LOGGER.debug("Updating: %s - %s", sensor_type, data.get(sensor_type))
+        return state
