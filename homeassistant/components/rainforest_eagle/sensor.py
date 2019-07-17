@@ -51,11 +51,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     install_code = config[CONF_INSTALL_CODE]
 
     try:
-        eagle_data = EagleData(ip_address, cloud_id, install_code)
+        eagle_reader = EagleReader(ip_address, cloud_id, install_code)
     except (ConnectError, HTTPError, Timeout, ValueError) as error:
-        _LOGGER.error("Failed to setup Eagle-200 sensor: %s", error)
+        _LOGGER.error("Failed to connect during setup: %s", error)
         return
 
+    eagle_data = EagleData(eagle_reader)
     eagle_data.update()
     monitored_conditions = list(SENSORS)
     sensors = []
@@ -104,48 +105,34 @@ class EagleSensor(Entity):
 
     def update(self):
         """Get the energy information from the Rainforest Eagle."""
-        try:
-            self.eagle_data.update()
-        except (ConnectError, HTTPError, Timeout, ValueError) as error:
-            _LOGGER.error("Unable to update Eagle-200 %s: %s",
-                          self._name, error)
-            self._state = None
-            return
-
+        self.eagle_data.update()
         data = self.eagle_data.data
         self._state = self.get_state(data)
 
     def get_state(self, data):
         """Get the sensor value from the dictionary."""
         if data is None:
+            _LOGGER.debug("Empty data during update")
             return None
 
         state = data.get(self._type)
+        _LOGGER.debug("Updating: %s - %s", self._type, data.get(self._type))
         return state
 
 
 class EagleData:
     """Get the latest data from the Eagle-200 device."""
 
-    def __init__(self, ip_address, cloud_id, install_code):
+    def __init__(self, eagle_reader):
         """Initialize the data object."""
-        self._ip_address = ip_address
-        self._cloud_id = cloud_id
-        self._install_code = install_code
+        self._eagle_reader = eagle_reader
         self.data = {}
-
-        try:
-            self.eagle_reader = EagleReader(
-                self._ip_address, self._cloud_id, self._install_code)
-        except (ConnectError, HTTPError, Timeout, ValueError) as error:
-            _LOGGER.error("Unable to connect during setup: %s", error)
-            self.data = None
 
     @Throttle(MIN_SCAN_INTERVAL)
     def update(self):
         """Get the latest data from the Eagle-200 device."""
         try:
-            self.data = self.eagle_reader.update()
+            self.data = self._eagle_reader.update()
             _LOGGER.debug("API data: %s", self.data)
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
             _LOGGER.error("Unable to connect during update: %s", error)
