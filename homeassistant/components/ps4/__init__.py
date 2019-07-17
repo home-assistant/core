@@ -151,6 +151,10 @@ def load_games(hass: HomeAssistantType) -> dict:
         games = {}
         _LOGGER.error("Failed to load games file: %s", error)
 
+    if not isinstance(games, dict):
+        _LOGGER.error("Games file was not parsed correctly")
+        return {}
+
     # If file does not exist, create empty file.
     if not os.path.isfile(g_file):
         _LOGGER.info("Creating PS4 Games File")
@@ -172,9 +176,6 @@ def save_games(hass: HomeAssistantType, games: dict):
 
 def _reformat_data(hass: HomeAssistantType, games: dict) -> dict:
     """Reformat data to correct format."""
-    if not isinstance(games, dict):
-        _LOGGER.error("Games file was not parsed correctly")
-        return {}
     data_reformatted = False
 
     for game, data in games.items():
