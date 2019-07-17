@@ -23,7 +23,7 @@ async def async_process_devices(hass, manager):
 
     if manager.switches:
         for switch in manager.switches:
-            if not switch.dimmable_feature:
+            if not switch.is_dimmable():
                 devices[CONF_SWITCHES].append(switch)
         if manager.switches:
             _LOGGER.info(
