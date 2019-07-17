@@ -146,7 +146,7 @@ def load_games(hass: HomeAssistantType) -> dict:
     """Load games for sources."""
     g_file = hass.config.path(GAMES_FILE)
     try:
-        games = load_json(g_file)
+        games = load_json(g_file, dict)
     except HomeAssistantError as error:
         games = {}
         _LOGGER.error("Failed to load games file: %s", error)
@@ -176,23 +176,22 @@ def _reformat_data(hass: HomeAssistantType, games: dict) -> dict:
         _LOGGER.error("Games file was not parsed correctly")
         return {}
     data_reformatted = False
-    if games:
-        for game, data in games.items():
 
-            # Convert str format to dict format.
-            if not isinstance(data, dict):
-                # Use existing title. Assign defaults.
-                games[game] = {ATTR_LOCKED: False,
-                               ATTR_MEDIA_TITLE: data,
-                               ATTR_MEDIA_IMAGE_URL: None,
-                               ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_GAME}
-                data_reformatted = True
+    for game, data in games.items():
+        # Convert str format to dict format.
+        if not isinstance(data, dict):
+            # Use existing title. Assign defaults.
+            games[game] = {ATTR_LOCKED: False,
+                           ATTR_MEDIA_TITLE: data,
+                           ATTR_MEDIA_IMAGE_URL: None,
+                           ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_GAME}
+            data_reformatted = True
 
-                _LOGGER.info(
-                    "Reformatting media data for item: %s, %s", game, data)
+            _LOGGER.debug(
+                "Reformatting media data for item: %s, %s", game, data)
 
-        if data_reformatted:
-            save_games(hass, games)
+    if data_reformatted:
+        save_games(hass, games)
     return games
 
 
