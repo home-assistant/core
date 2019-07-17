@@ -32,7 +32,8 @@ async def async_setup(hass, config):
     async def service_handle(service):
         """Dispatch a service call."""
         service_event.clear()
-        async_dispatcher_send(hass, DOMAIN, service_event, service.service, service.data)
+        async_dispatcher_send(hass, DOMAIN, service_event, service.service,
+                              service.data)
         await service_event.wait()
 
     hass.services.async_register(
