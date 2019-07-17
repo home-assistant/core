@@ -23,7 +23,7 @@ SPEED_TO_VALUE = {
     SPEED_HIGH: 'High'
 }
 
-FAN_SPEEDS = [STATE_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+FAN_SPEEDS = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
