@@ -15,7 +15,7 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL, SUPPORT_PRESET_MODE
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT, TEMP_CELSIUS)
+    ATTR_ENTITY_ID, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 
 _CONFIGURING = {}
@@ -168,9 +168,6 @@ class Thermostat(ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        if self.thermostat['settings']['useCelsius']:
-            return TEMP_CELSIUS
-
         return TEMP_FAHRENHEIT
 
     @property
