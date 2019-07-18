@@ -226,6 +226,9 @@ class HKDevice():
             for char in entity.pollable_characteristics:
                 chars_to_poll[char] = entity
 
+        if not chars_to_poll:
+            return
+
         try:
             new_values_dict = await self.get_characteristics(
                 list(chars_to_poll.keys())
