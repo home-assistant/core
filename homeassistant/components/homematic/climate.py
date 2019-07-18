@@ -66,6 +66,8 @@ class HMThermostat(HMDevice, ClimateDevice):
 
         Need to be one of HVAC_MODE_*.
         """
+        if self.current_temperature <= self._hmdevice.OFF_VALUE + 0.5:
+            return HVAC_MODE_OFF
         if "MANU_MODE" in self._hmdevice.ACTIONNODE:
             if self._hm_controll_mode == self._hmdevice.MANU_MODE:
                 return HVAC_MODE_HEAT
@@ -157,12 +159,12 @@ class HMThermostat(HMDevice, ClimateDevice):
 
     @property
     def min_temp(self):
-        """Return the minimum temperature - 4.5 means off."""
+        """Return the minimum temperature."""
         return 4.5
 
     @property
     def max_temp(self):
-        """Return the maximum temperature - 30.5 means on."""
+        """Return the maximum temperature."""
         return 30.5
 
     @property
