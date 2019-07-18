@@ -105,12 +105,12 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
     def _set_zone_mode(self, op_mode: str) -> None:
         """Set a Zone to one of its native EVO_* operating modes.
 
-        Zones _inherit_ their _effective_ operating mode from the Controller.
+        Zones inherit their _effective_ operating mode from the Controller.
 
         Usually, Zones are in 'FollowSchedule' mode, where their setpoints are
-        a function of their schedule and the Controller's operating mode, e.g.
-        'AutoWithEco' mode means their setpoint is (by default) 3C less than
-        scheduled.
+        a function of their own schedule and the Controller's operating mode,
+        e.g. 'AutoWithEco' mode means their setpoint is (by default) 3C less
+        than scheduled.
 
         However, Zones can _override_ these setpoints, either indefinitely,
         'PermanentOverride' mode, or for a period of time, 'TemporaryOverride',
