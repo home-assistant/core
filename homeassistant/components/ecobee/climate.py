@@ -169,9 +169,6 @@ class Thermostat(ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        if self.thermostat['settings']['useCelsius']:
-            return TEMP_CELSIUS
-
         return TEMP_FAHRENHEIT
 
     @property
