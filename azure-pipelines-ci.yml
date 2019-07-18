@@ -4,9 +4,13 @@ trigger:
   batch: true
   branches:
     include:
+    - rc
     - dev
+    - master
 pr:
+  - rc
   - dev
+  - master
 
 resources:
   containers:
