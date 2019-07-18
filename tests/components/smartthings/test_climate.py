@@ -245,7 +245,7 @@ async def test_air_conditioner_entity_state(hass, air_conditioner):
         SUPPORT_TARGET_TEMPERATURE
     assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
         HVAC_MODE_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT,
-        HVAC_MODE_HEAT_COOL]
+        HVAC_MODE_HEAT_COOL, HVAC_MODE_OFF]
     assert state.attributes[ATTR_FAN_MODE] == 'medium'
     assert sorted(state.attributes[ATTR_FAN_MODES]) == \
         ['auto', 'high', 'low', 'medium', 'turbo']
@@ -277,8 +277,8 @@ async def test_set_fan_mode(hass, thermostat, air_conditioner):
         assert state.attributes[ATTR_FAN_MODE] == 'auto', entity_id
 
 
-async def test_set_operation_mode(hass, thermostat, air_conditioner):
-    """Test the operation mode is set successfully."""
+async def test_set_hvac_mode(hass, thermostat, air_conditioner):
+    """Test the hvac mode is set successfully."""
     await setup_platform(hass, CLIMATE_DOMAIN,
                          devices=[thermostat, air_conditioner])
     entity_ids = ['climate.thermostat', 'climate.air_conditioner']
@@ -291,6 +291,20 @@ async def test_set_operation_mode(hass, thermostat, air_conditioner):
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)
         assert state.state == HVAC_MODE_COOL, entity_id
+
+
+async def test_ac_set_hvac_mode_off(hass, air_conditioner):
+    """Test the AC HVAC mode can be turned off set successfully."""
+    await setup_platform(hass, CLIMATE_DOMAIN, devices=[air_conditioner])
+    state = hass.states.get('climate.air_conditioner')
+    assert state.state != HVAC_MODE_OFF
+    await hass.services.async_call(
+        CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE, {
+            ATTR_ENTITY_ID: 'climate.air_conditioner',
+            ATTR_HVAC_MODE: HVAC_MODE_OFF},
+        blocking=True)
+    state = hass.states.get('climate.air_conditioner')
+    assert state.state == HVAC_MODE_OFF
 
 
 async def test_set_temperature_heat_mode(hass, thermostat):

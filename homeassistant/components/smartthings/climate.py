@@ -323,6 +323,9 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
+        if hvac_mode == HVAC_MODE_OFF:
+            await self.async_turn_off()
+            return
         await self._device.set_air_conditioner_mode(
             STATE_TO_AC_MODE[hvac_mode], set_status=True)
         # State is set optimistically in the command above, therefore update
@@ -360,16 +363,16 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
 
     async def async_update(self):
         """Update the calculated fields of the AC."""
-        operations = set()
+        modes = {HVAC_MODE_OFF}
         for mode in self._device.status.supported_ac_modes:
             state = AC_MODE_TO_STATE.get(mode)
             if state is not None:
-                operations.add(state)
+                modes.add(state)
             else:
                 _LOGGER.debug('Device %s (%s) returned an invalid supported '
                               'AC mode: %s', self._device.label,
                               self._device.device_id, mode)
-        self._hvac_modes = operations
+        self._hvac_modes = modes
 
     @property
     def current_temperature(self):
