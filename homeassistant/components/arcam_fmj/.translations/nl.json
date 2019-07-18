@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "one": "Een",
+            "other": "Ander"
+        },
+        "error": {
+            "one": "Een",
+            "other": "Ander"
+        },
+        "step": {
+            "one": "Een",
+            "other": "Ander"
+        },
+        "title": "Arcam FMJ"
+    }
+}

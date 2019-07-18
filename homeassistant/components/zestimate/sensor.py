@@ -10,7 +10,6 @@ from homeassistant.const import (CONF_API_KEY,
                                  CONF_NAME, ATTR_ATTRIBUTION)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'http://www.zillow.com/webservice/GetZestimate.htm'
@@ -39,8 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
+SCAN_INTERVAL = timedelta(minutes=30)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -100,7 +98,6 @@ class ZestimateDataSensor(Entity):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data and update the states."""
         import xmltodict

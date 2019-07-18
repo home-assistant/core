@@ -41,6 +41,7 @@ FLOWS = [
     "mobile_app",
     "mqtt",
     "nest",
+    "notion",
     "openuv",
     "owntracks",
     "plaato",
@@ -60,6 +61,7 @@ FLOWS = [
     "unifi",
     "upnp",
     "wemo",
+    "wwlln",
     "zha",
     "zone",
     "zwave"

@@ -8,11 +8,9 @@ from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.config_validation import (  # noqa
-    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
-import homeassistant.helpers.config_validation as cv
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE, ENTITY_SERVICE_SCHEMA)
 from homeassistant.const import (
-    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
-    ATTR_ENTITY_ID)
+    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
 from homeassistant.components import group
 
 DOMAIN = 'switch'
@@ -43,10 +41,6 @@ DEVICE_CLASSES = [
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
-SWITCH_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-})
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -67,17 +61,17 @@ async def async_setup(hass, config):
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, SWITCH_SERVICE_SCHEMA,
+        SERVICE_TURN_OFF, ENTITY_SERVICE_SCHEMA,
         'async_turn_off'
     )
 
     component.async_register_entity_service(
-        SERVICE_TURN_ON, SWITCH_SERVICE_SCHEMA,
+        SERVICE_TURN_ON, ENTITY_SERVICE_SCHEMA,
         'async_turn_on'
     )
 
     component.async_register_entity_service(
-        SERVICE_TOGGLE, SWITCH_SERVICE_SCHEMA,
+        SERVICE_TOGGLE, ENTITY_SERVICE_SCHEMA,
         'async_toggle'
     )
 

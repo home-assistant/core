@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Enheten \u00e4r redan konfigurerad",
             "bad_config_file": "Felaktig data fr\u00e5n config fil",
-            "link_local_address": "Link local addresses are not supported"
+            "link_local_address": "Link local addresses are not supported",
+            "not_axis_device": "Uppt\u00e4ckte enhet som inte \u00e4r en Axis enhet"
         },
         "error": {
             "already_configured": "Enheten \u00e4r redan konfigurerad",

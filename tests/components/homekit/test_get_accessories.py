@@ -63,8 +63,7 @@ def test_customize_options(config, name):
      {ATTR_CODE: '1234'}),
     ('Thermostat', 'climate.test', 'auto', {}, {}),
     ('Thermostat', 'climate.test', 'auto',
-     {ATTR_SUPPORTED_FEATURES: climate.SUPPORT_TARGET_TEMPERATURE_LOW |
-      climate.SUPPORT_TARGET_TEMPERATURE_HIGH}, {}),
+     {ATTR_SUPPORTED_FEATURES: climate.SUPPORT_TARGET_TEMPERATURE_RANGE}, {}),
     ('WaterHeater', 'water_heater.test', 'auto', {}, {}),
 ])
 def test_types(type_name, entity_id, state, attrs, config):

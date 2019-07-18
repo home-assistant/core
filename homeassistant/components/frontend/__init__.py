@@ -1,6 +1,7 @@
 """Handle the frontend for Home Assistant."""
 import json
 import logging
+import mimetypes
 import os
 import pathlib
 
@@ -19,6 +20,13 @@ from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 
 from .storage import async_setup_frontend_storage
+
+
+# Fix mimetypes for borked Windows machines
+# https://github.com/home-assistant/home-assistant-polymer/issues/3336
+mimetypes.add_type("text/css", ".css")
+mimetypes.add_type("application/javascript", ".js")
+
 
 DOMAIN = 'frontend'
 CONF_THEMES = 'themes'
@@ -162,7 +170,7 @@ def async_register_built_in_panel(hass, component_name,
     panels = hass.data.setdefault(DATA_PANELS, {})
 
     if panel.frontend_url_path in panels:
-        _LOGGER.warning("Overwriting component %s", panel.frontend_url_path)
+        _LOGGER.warning("Overwriting integration %s", panel.frontend_url_path)
 
     panels[panel.frontend_url_path] = panel
 
@@ -256,9 +264,15 @@ async def async_setup(hass, config):
     for panel in ('kiosk', 'states', 'profile'):
         async_register_built_in_panel(hass, panel)
 
-    for panel in ('dev-event', 'dev-info', 'dev-service', 'dev-state',
-                  'dev-template', 'dev-mqtt'):
-        async_register_built_in_panel(hass, panel, require_admin=True)
+    # To smooth transition to new urls, add redirects to new urls of dev tools
+    # Added June 27, 2019. Can be removed in 2021.
+    for panel in ('event', 'info', 'service', 'state', 'template', 'mqtt'):
+        hass.http.register_redirect('/dev-{}'.format(panel),
+                                    '/developer-tools/{}'.format(panel))
+
+    async_register_built_in_panel(
+        hass, "developer-tools", require_admin=True,
+        sidebar_title="developer_tools", sidebar_icon="hass:hammer")
 
     if DATA_EXTRA_HTML_URL not in hass.data:
         hass.data[DATA_EXTRA_HTML_URL] = set()
