@@ -12,8 +12,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON)
 from homeassistant.const import (
-    CONF_HOST, CONF_ICON, CONF_NAME, CONF_PORT, STATE_OFF, STATE_PAUSED,
-    STATE_PLAYING)
+    CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
@@ -33,7 +32,6 @@ SUPPORT_HORIZON = SUPPORT_NEXT_TRACK | SUPPORT_PAUSE | SUPPORT_PLAY | \
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
@@ -45,7 +43,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     host = config[CONF_HOST]
     name = config[CONF_NAME]
-    icon = config[CONF_ICON]
     port = config[CONF_PORT]
 
     try:
@@ -60,17 +57,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     _LOGGER.info("Connection to %s at %s established", name, host)
 
-    add_entities([HorizonDevice(client, name, icon, keys)], True)
+    add_entities([HorizonDevice(client, name, keys)], True)
 
 
 class HorizonDevice(MediaPlayerDevice):
     """Representation of a Horizon HD Recorder."""
 
-    def __init__(self, client, name, icon, keys):
+    def __init__(self, client, name, keys):
         """Initialize the entity."""
         self._client = client
         self._name = name
-        self._icon = icon
+        self._icon = DEFAULT_ICON
         self._state = None
         self._keys = keys
 
