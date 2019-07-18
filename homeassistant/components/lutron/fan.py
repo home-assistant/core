@@ -1,8 +1,12 @@
 """Support for Lutron fans."""
 import logging
 
-from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH, SPEED_OFF, SUPPORT_SET_SPEED, FanEntity)
-
+from homeassistant.components.fan import (SPEED_LOW, 
+                                          SPEED_MEDIUM, 
+                                          SPEED_HIGH, 
+                                          SPEED_OFF, 
+                                          SUPPORT_SET_SPEED, 
+                                          FanEntity)
 from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,6 +20,7 @@ SPEED_MAPPING = {
     SPEED_HIGH: 100
 }
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Lutron fans."""
     devs = []
@@ -26,6 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities(devs, True)
 
+    
 class LutronFan(LutronDevice, FanEntity):
     """Representation of a Lutron Fan, including dimmable."""
 
@@ -72,8 +78,8 @@ class LutronFan(LutronDevice, FanEntity):
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_MEDIUM_HIGH, SPEED_HIGH]
-
+        return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, 
+                SPEED_MEDIUM_HIGH, SPEED_HIGH]
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
@@ -102,15 +108,19 @@ class LutronFan(LutronDevice, FanEntity):
         """Update internal state and fan speed."""
         value = self._lutron_device.level
         self._is_on = value > SPEED_MAPPING[SPEED_OFF]
-        if value in range(SPEED_MAPPING[SPEED_MEDIUM_HIGH] + 1, SPEED_MAPPING[SPEED_HIGH] + 1):
+        if value in range(SPEED_MAPPING[SPEED_MEDIUM_HIGH] + 1, 
+                          SPEED_MAPPING[SPEED_HIGH] + 1):
             self._speed = SPEED_HIGH
-        elif value in range(SPEED_MAPPING[SPEED_MEDIUM] + 1, SPEED_MAPPING[SPEED_MEDIUM_HIGH] + 1):
+        elif value in range(SPEED_MAPPING[SPEED_MEDIUM] + 1, 
+                            SPEED_MAPPING[SPEED_MEDIUM_HIGH] + 1):
             # 51% - 55% are missing from Lutron integration protocol
             # we will treat as medium_high
             self._speed = SPEED_MEDIUM_HIGH
-        elif value in range(SPEED_MAPPING[SPEED_LOW] + 1, SPEED_MAPPING[SPEED_MEDIUM] + 1):
+        elif value in range(SPEED_MAPPING[SPEED_LOW] + 1, 
+                            SPEED_MAPPING[SPEED_MEDIUM] + 1):
             self._speed = SPEED_MEDIUM
-        elif value in range(SPEED_MAPPING[SPEED_OFF] + 1, SPEED_MAPPING[SPEED_LOW] + 1):
+        elif value in range(SPEED_MAPPING[SPEED_OFF] + 1, 
+                            SPEED_MAPPING[SPEED_LOW] + 1):
             self._speed = SPEED_LOW
         elif value == SPEED_MAPPING[SPEED_OFF]:
             self._speed = SPEED_OFF
