@@ -271,7 +271,7 @@ class EvoDevice(Entity):
         self._state_attributes = []
 
         self._supported_features = None
-        self._schedule: Dict[str, Any] = {}
+        self._schedule = {}
 
     @callback
     def _refresh(self, packet):
