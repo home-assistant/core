@@ -325,7 +325,8 @@ class Thermostat(ClimateDevice):
         elif preset_mode == PRESET_TEMPERATURE:
             self.set_temp_hold(self.current_temperature)
 
-        elif preset_mode in (PRESET_HOLD_NEXT_TRANSITION, PRESET_HOLD_INDEFINITE):
+        elif preset_mode in (PRESET_HOLD_NEXT_TRANSITION,
+        PRESET_HOLD_INDEFINITE):
             self.data.ecobee.set_climate_hold(
                 self.thermostat_index, PRESET_TO_ECOBEE_HOLD[preset_mode],
                 self.hold_preference())
@@ -334,9 +335,9 @@ class Thermostat(ClimateDevice):
             self.data.ecobee.resume_program(self.thermostat_index)
 
         else:
-          self.data.ecobee.set_climate_hold(
-            self.thermostat_index, preset_mode, self.hold_preference())
-          self.update_without_throttle = True
+            self.data.ecobee.set_climate_hold(
+                self.thermostat_index, preset_mode, self.hold_preference())
+            self.update_without_throttle = True
 
     @property
     def preset_modes(self):
