@@ -15,7 +15,8 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE_RANGE)
 from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_DEVICE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_ON)
+    ATTR_TEMPERATURE, CONF_DEVICE, CONF_NAME, CONF_VALUE_TEMPLATE,
+    PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE, STATE_ON)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -58,6 +59,7 @@ CONF_PAYLOAD_ON = 'payload_on'
 CONF_POWER_COMMAND_TOPIC = 'power_command_topic'
 CONF_POWER_STATE_TEMPLATE = 'power_state_template'
 CONF_POWER_STATE_TOPIC = 'power_state_topic'
+CONF_PRECISION = 'precision'
 CONF_SEND_IF_OFF = 'send_if_off'
 CONF_SWING_MODE_COMMAND_TOPIC = 'swing_mode_command_topic'
 CONF_SWING_MODE_LIST = 'swing_modes'
@@ -151,6 +153,8 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_POWER_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_POWER_STATE_TEMPLATE): cv.template,
     vol.Optional(CONF_POWER_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_PRECISION): vol.In(
+        [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
     vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
     vol.Optional(CONF_SEND_IF_OFF, default=True): cv.boolean,
     vol.Optional(CONF_ACTION_TEMPLATE): cv.template,
@@ -779,3 +783,10 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     def max_temp(self):
         """Return the maximum temperature."""
         return self._config[CONF_TEMP_MAX]
+
+    @property
+    def precision(self):
+        """Return the precision of the system."""
+        if self._config.get(CONF_PRECISION) is not None:
+            return self._config.get(CONF_PRECISION)
+        return super().precision
