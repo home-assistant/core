@@ -278,6 +278,12 @@ class EvoDevice(Entity):
         if packet['signal'] == 'refresh':
             self.async_schedule_update_ha_state(force_refresh=True)
 
+    def _update_schedule(self) -> None:
+        """Get the latest state data."""
+        if not self._schedule.get('DailySchedules') or \
+                parse_datetime(self.setpoints['next']['from']) < utcnow():
+            self._schedule = self._evo_device.schedule()
+
     @property
     def setpoints(self) -> Optional[Dict[str, Any]]:
         """Return the current/next setpoints from the schedule.
@@ -376,6 +382,4 @@ class EvoDevice(Entity):
 
     def update(self) -> None:
         """Get the latest state data."""
-        if not self._schedule or \
-                parse_datetime(self.setpoints['next']['from']) < utcnow():
-            self._schedule = self._evo_device.schedule()
+        self._update_schedule()

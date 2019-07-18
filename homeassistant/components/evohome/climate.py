@@ -132,7 +132,8 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
         until = None  # EVO_PERMOVER
 
         if op_mode == EVO_TEMPOVER and self._schedule['DailySchedules']:
-                self._schedule = self._evo_device.schedule()
+            self._update_schedule()
+            if self.setpoints:
                 until = parse_datetime(self.setpoints['next']['from'])
 
         self._set_temperature(temperature, until=until)
