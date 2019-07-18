@@ -76,6 +76,7 @@ INTENT_CLIMATE_SET_AWAY = 'AisClimateSetAway'
 INTENT_CLIMATE_UNSET_AWAY = 'AisClimateUnSetAway'
 INTENT_CLIMATE_SET_ALL_ON = 'AisClimateSetAllOn'
 INTENT_CLIMATE_SET_ALL_OFF = 'AisClimateSetAllOff'
+INTENT_SPELL_STATUS = 'AisSpellStatusInfo'
 
 REGEX_TYPE = type(re.compile(''))
 
@@ -1777,6 +1778,7 @@ async def async_setup(hass, config):
     hass.helpers.intent.async_register(AisPrev())
     hass.helpers.intent.async_register(AisSceneActive())
     hass.helpers.intent.async_register(AisSayIt())
+    hass.helpers.intent.async_register(SpellStatusIntent())
 
     async_register(hass, INTENT_GET_WEATHER, [
             '[aktualna] pogoda',
@@ -1878,6 +1880,7 @@ async def async_setup(hass, config):
         'Informację na temat {item}', 'Co wiesz o {item}',
         'Co wiesz na temat {item}', 'Opowiedz o {item}',
         'Kim są {item}', 'Kto to {item}'])
+    async_register(hass, INTENT_SPELL_STATUS, ['Przeliteruj {item}', 'Literuj {item}'])
     async_register(hass, INTENT_ASKWIKI_QUESTION, ['Wikipedia {item}', 'wiki {item}', 'encyklopedia {item}'])
     async_register(hass, INTENT_OPEN_COVER, ['Otwórz {item}', 'Odsłoń {item}'])
     async_register(hass, INTENT_CLOSE_COVER, ['Zamknij {item}', 'Zasłoń {item}'])
@@ -2772,6 +2775,38 @@ class StatusIntent(intent.IntentHandler):
             else:
                 value = "{} {}".format(state, unit)
             message = format(entity.name) + ': ' + value
+            success = True
+        return message, success
+
+
+class SpellStatusIntent(intent.IntentHandler):
+    """Handle spell status item on intents."""
+
+    intent_type = INTENT_SPELL_STATUS
+    slot_schema = {
+        'item': cv.string,
+    }
+
+    @asyncio.coroutine
+    def async_handle(self, intent_obj):
+        """Handle status intent."""
+        hass = intent_obj.hass
+        slots = self.async_validate_slots(intent_obj.slots)
+        name = slots['item']['value']
+        entity = _match_entity(hass, name)
+        success = False
+
+        if not entity:
+            message = "; ".join(name)
+            success = True
+        else:
+            unit = entity.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            state = translate_state(entity)
+            if unit is None:
+                value = state
+            else:
+                value = "{} {}".format(state, unit)
+            message = "; ".join(value)
             success = True
         return message, success
 
