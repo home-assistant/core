@@ -1,18 +1,19 @@
 """Climate control on Zigbee Home Automation networks."""
 import logging
 
-from homeassistant.core import callback
 from homeassistant.const import (
-    ATTR_TEMPERATURE, STATE_ON, STATE_OFF, STATE_UNKNOWN, TEMP_CELSIUS)
+    ATTR_TEMPERATURE, STATE_UNKNOWN, TEMP_CELSIUS)
 from homeassistant.components.fan import (
     SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH)
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH, ATTR_OPERATION_MODE,
-    DOMAIN, STATE_HEAT, STATE_COOL, STATE_IDLE, STATE_AUTO, STATE_DRY,
-    STATE_FAN_ONLY, SUPPORT_AUX_HEAT, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
-    SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE, SUPPORT_OPERATION_MODE)
+    ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH,
+    DOMAIN, SUPPORT_AUX_HEAT, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE, SUPPORT_FAN_MODE,
+    HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_FAN_ONLY, HVAC_MODE_DRY, HVAC_MODE_OFF,
+    CURRENT_HVAC_HEAT, CURRENT_HVAC_COOL, CURRENT_HVAC_FAN,
+    CURRENT_HVAC_OFF)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .core.const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, THERMOSTAT_CHANNEL,
@@ -40,16 +41,16 @@ RUNNING_STATE_FAN2 = 32
 RUNNING_STATE_FAN3 = 64
 
 SYSTEM_MODE_LIST = [
-    STATE_OFF,
-    STATE_AUTO,
+    HVAC_MODE_OFF,
+    HVAC_MODE_HEAT_COOL,
     STATE_UNKNOWN,
-    STATE_COOL,
-    STATE_HEAT,
-    STATE_HEAT,
-    STATE_COOL,
-    STATE_FAN_ONLY,
-    STATE_DRY,
-    STATE_IDLE
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_COOL,
+    HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_DRY,
+    HVAC_MODE_OFF
 ]
 
 EMERGENCY_HEAT_MODE = 5
@@ -66,7 +67,7 @@ SPEED_LIST = [
 
 SPEED_TO_VALUE = {speed: i for i, speed in enumerate(SPEED_LIST)}
 
-SUPPORT_FLAGS = SUPPORT_OPERATION_MODE | SUPPORT_AUX_HEAT
+SUPPORT_FLAGS = SUPPORT_AUX_HEAT
 
 TEMP_TO_VALUE = 100
 
@@ -111,8 +112,7 @@ class ZhaThermostat(ZhaEntity, ClimateDevice):
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Init this sensor."""
 
-        self._state = STATE_UNKNOWN
-        self._hold_mode = None
+        self._action = None
         self._fan_mode = None
         self._fan_speed_list = None
         self._local_temperature = None
@@ -122,8 +122,8 @@ class ZhaThermostat(ZhaEntity, ClimateDevice):
         self._max_cool_setpoint = None
         self._min_heat_setpoint = None
         self._max_heat_setpoint = None
-        self._operation_mode = STATE_OFF
-        self._available_states = [ STATE_OFF ]
+        self._operation_mode = HVAC_MODE_OFF
+        self._available_actions = [HVAC_MODE_OFF]
         self._emergency_heat = None
         self._support_flags = SUPPORT_FLAGS
 
@@ -142,7 +142,7 @@ class ZhaThermostat(ZhaEntity, ClimateDevice):
             value = await self._fan_channel.get_attribute_value(
                 'fan_mode_sequence')
             if value is not None and value < len(SEQUENCE_LIST):
-                """Thermostat fans don't support off mode."""
+                # Thermostat fans don't support off mode.
                 self._fan_speed_list = SEQUENCE_LIST[value].copy()
                 self._fan_speed_list.remove(SPEED_OFF)
 
@@ -169,28 +169,18 @@ class ZhaThermostat(ZhaEntity, ClimateDevice):
 
         value = await self._thermostat_channel.get_attribute_value(
             'ctrl_seqe_of_oper')
-        if value == CTRLSEQ_COOLING_ONLY or value == CTRLSEQ_COOLING_REHEAT:
-            self._available_states = [ STATE_OFF, STATE_COOL ]
+        if value in (CTRLSEQ_COOLING_ONLY, CTRLSEQ_COOLING_REHEAT):
+            self._available_actions = [HVAC_MODE_OFF, HVAC_MODE_COOL]
             self._support_flags |= SUPPORT_TARGET_TEMPERATURE
-        elif value == CTRLSEQ_HEATING_ONLY or value == CTRLSEQ_HEATING_REHEAT:
-            self._available_states = [ STATE_OFF, STATE_HEAT ]
+        elif value in (CTRLSEQ_HEATING_ONLY, CTRLSEQ_HEATING_REHEAT):
+            self._available_actions = [HVAC_MODE_OFF, HVAC_MODE_HEAT]
             self._support_flags |= SUPPORT_TARGET_TEMPERATURE
-        elif (value == CTRLSEQ_COOLING_HEATING or
-               value == CTRLSEQ_COOLING_HEATING_REHEAT):
-            self._available_states = [ STATE_OFF, STATE_HEAT, STATE_COOL, STATE_AUTO ]
-            self._support_flags |= SUPPORT_TARGET_TEMPERATURE_HIGH | SUPPORT_TARGET_TEMPERATURE_LOW
-
-        value = await self._thermostat_channel.get_attribute_value(
-            'temp_setpoint_hold')
-        if value is not None:
-            self._support_flags |= SUPPORT_HOLD_MODE
+        elif value in (CTRLSEQ_COOLING_HEATING, CTRLSEQ_COOLING_HEATING_REHEAT):
+            self._available_actions = [HVAC_MODE_OFF, HVAC_MODE_HEAT,
+                                       HVAC_MODE_COOL, HVAC_MODE_HEAT_COOL]
+            self._support_flags |= SUPPORT_TARGET_TEMPERATURE_RANGE
 
         self.async_schedule_update_ha_state()
-
-    @callback
-    def async_restore_last_state(self, last_state):
-        """Restore previous state."""
-        self._state = last_state.state
 
     @property
     def supported_features(self):
@@ -205,71 +195,65 @@ class ZhaThermostat(ZhaEntity, ClimateDevice):
     @property
     def min_temp(self):
         """Return the minimum setpoint temperature."""
-        if (self._operation_mode == STATE_COOL or
-            STATE_HEAT not in self._available_states):
+        if (self._operation_mode == HVAC_MODE_COOL or
+                HVAC_MODE_HEAT not in self._available_actions):
             if self._min_cool_setpoint:
                 return self._min_cool_setpoint
             return super().min_temp
-        else:
-            if self._min_heat_setpoint:
-                return self._min_heat_setpoint
-            return super().min_temp
+
+        if self._min_heat_setpoint:
+            return self._min_heat_setpoint
+        return super().min_temp
 
     @property
     def max_temp(self):
         """Return the maximum setpoint temperature."""
-        if (self._operation_mode == STATE_HEAT or
-            STATE_COOL not in self._available_states):
+        if (self._operation_mode == HVAC_MODE_HEAT or
+                HVAC_MODE_COOL not in self._available_actions):
             if self._max_heat_setpoint:
                 return self._max_heat_setpoint
             return super().max_temp
-        else:
-            if self._max_cool_setpoint:
-                return self._max_cool_setpoint
-            return super().max_temp
+
+        if self._max_cool_setpoint:
+            return self._max_cool_setpoint
+        return super().max_temp
 
     @property
-    def current_hold_mode(self):
-        """Return the current hold mode, e.g., home, away, temp."""
-        return self._hold_mode
-
-    @property
-    def is_aux_heat_on(self):
+    def is_aux_heat(self):
         """Returns true if aux heater is on."""
         return self._emergency_heat
 
     @property
     def is_on(self):
         """Returns true if device is currently on."""
-        if self._state is None:
+        if self._action is None:
             return None
-        return self._state != STATE_OFF
+        return self._action != CURRENT_HVAC_OFF
 
-    """Paulus says "State property is not controlled by integrations but by the abstract base class.", so this violates that"""
     @property
-    def state(self):
+    def hvac_action(self):
         """Return the current state."""
-        return self._state
+        return self._action
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return the current operating mode."""
         return self._operation_mode
 
     @property
-    def current_fan_mode(self):
+    def hvac_modes(self):
+        """List of available operation modes."""
+        return self._available_actions
+
+    @property
+    def fan_mode(self):
         """Return the fan setting."""
         return self._fan_mode
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """Return the list of available fan modes."""
         return self._fan_speed_list
-
-    @property
-    def operation_list(self):
-        """List of available operation modes."""
-        return self._available_states
 
     @property
     def current_temperature(self):
@@ -279,18 +263,14 @@ class ZhaThermostat(ZhaEntity, ClimateDevice):
     @property
     def target_temperature(self):
         """Return the target temperature."""
-        if STATE_AUTO in self._available_states:
-          if self._operation_mode == STATE_COOL:
-              return self._occupied_cooling_setpoint
-          elif self._operation_mode == STATE_HEAT:
-              return self._occupied_heating_setpoint
-          else:
-              return self._occupied_heating_setpoint
-        else:
-          if STATE_COOL in self._available_states:
-              return self._occupied_cooling_setpoint
-          elif STATE_HEAT in self._available_states:
-              return self._occupied_heating_setpoint
+        if HVAC_MODE_HEAT_COOL in self._available_actions:
+            if self._operation_mode == HVAC_MODE_COOL:
+                return self._occupied_cooling_setpoint
+            return self._occupied_heating_setpoint
+
+        if HVAC_MODE_COOL in self._available_actions:
+            return self._occupied_cooling_setpoint
+        return self._occupied_heating_setpoint
 
     @property
     def target_temperature_high(self):
@@ -323,39 +303,23 @@ class ZhaThermostat(ZhaEntity, ClimateDevice):
                 self._emergency_heat = (value == EMERGENCY_HEAT_MODE)
         if name == 'running_state':
             self._get_running_state(value)
-        if name == 'temp_setpoint_hold':
-            if value is not None:
-                if value == 1:
-                    self._hold_mode = STATE_ON
-                if value == 0:
-                    self._hold_mode = STATE_OFF
 
         self.async_schedule_update_ha_state()
-
-    async def async_set_hold_mode(self, hold_mode):
-        """Set new target hold mode."""
-        if hold_mode == STATE_ON:
-            mode = 1
-        elif hold_mode == STATE_OFF:
-            mode = 0
-        else:
-            raise ValueError("set_hold_mode must be %s or %s" % (STATE_ON, STATE_OFF))
-        await self._thermostat_channel.async_set_hold_mode(mode)
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new target fan mode"""
         if self._fan_channel:
             await self._fan_channel.async_set_speed(SPEED_LIST.index(fan_mode))
 
-    async def async_set_operation_mode(self, operation_mode):
+    async def async_set_hvac_mode(self, hvac_mode):
         """Set operation mode."""
-        if operation_mode not in SYSTEM_MODE_LIST:
+        if hvac_mode not in SYSTEM_MODE_LIST:
             return
 
-        if operation_mode is STATE_HEAT and self._emergency_heat is True:
+        if hvac_mode is HVAC_MODE_HEAT and self._emergency_heat is True:
             await self._thermostat_channel.async_set_system_mode(EMERGENCY_HEAT_MODE)
 
-        await self._thermostat_channel.async_set_system_mode(SYSTEM_MODE_LIST.index(operation_mode))
+        await self._thermostat_channel.async_set_system_mode(SYSTEM_MODE_LIST.index(hvac_mode))
 
     async def async_turn_aux_heat_on(self):
         """Turn auxiliary heater on."""
@@ -364,11 +328,11 @@ class ZhaThermostat(ZhaEntity, ClimateDevice):
     async def async_turn_aux_heat_off(self):
         """Turn auxiliary heater off."""
         await self._thermostat_channel.async_set_system_mode(
-            SYSTEM_MODE_LIST.index(STATE_HEAT))
+            SYSTEM_MODE_LIST.index(HVAC_MODE_HEAT))
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
-        if STATE_AUTO in self._available_states:
+        if HVAC_MODE_HEAT_COOL in self._available_actions:
             low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
             high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
             if low_temp is not None:
@@ -379,13 +343,13 @@ class ZhaThermostat(ZhaEntity, ClimateDevice):
                 self._limit_temp(high_temp)
                 await self._thermostat_channel.async_set_cooling_setpoint(
                     high_temp * TEMP_TO_VALUE)
-        elif STATE_COOL in self._available_states:
+        elif HVAC_MODE_COOL in self._available_actions:
             temperature = kwargs.get(ATTR_TEMPERATURE)
             if temperature is not None:
                 self._limit_temp(temperature)
                 await self._thermostat_channel.async_set_cooling_setpoint(
                     temperature * TEMP_TO_VALUE)
-        elif STATE_HEAT in self._available_states:
+        elif HVAC_MODE_HEAT in self._available_actions:
             temperature = kwargs.get(ATTR_TEMPERATURE)
             if temperature is not None:
                 self._limit_temp(temperature)
@@ -420,32 +384,25 @@ class ZhaThermostat(ZhaEntity, ClimateDevice):
             value = await self._thermostat_channel.get_attribute_value(
                 'system_mode')
             if value is not None and value < len(SYSTEM_MODE_LIST):
-                    self._operation_mode = SYSTEM_MODE_LIST[value]
-                    self._emergency_heat = (value == EMERGENCY_HEAT_MODE)
+                self._operation_mode = SYSTEM_MODE_LIST[value]
+                self._emergency_heat = (value == EMERGENCY_HEAT_MODE)
 
             value = await self._thermostat_channel.get_attribute_value(
                 'running_state')
             if value is not None:
                 self._get_running_state(value)
-            value = await self._thermostat_channel.get_attribute_value(
-                'temp_setpoint_hold')
-            if value is not None:
-                if value == 1:
-                    self._hold_mode = STATE_ON
-                if value == 0:
-                    self._hold_mode = STATE_OFF
 
 
     def _get_running_state(self, value):
         if value & RUNNING_STATE_COOL or value & RUNNING_STATE_COOL2:
-            self._state = STATE_COOL
+            self._action = CURRENT_HVAC_COOL
         elif value & RUNNING_STATE_HEAT or value & RUNNING_STATE_HEAT2:
-            self._state = STATE_HEAT
+            self._action = CURRENT_HVAC_HEAT
         elif (value & RUNNING_STATE_FAN or value & RUNNING_STATE_FAN2 or
-            value & RUNNING_STATE_FAN3):
-            self._state = STATE_FAN_ONLY
+              value & RUNNING_STATE_FAN3):
+            self._action = CURRENT_HVAC_FAN
         else:
-            self._state = STATE_OFF
+            self._action = CURRENT_HVAC_OFF
 
     def _limit_temp(self, temp):
         """Limit temperature between min and max."""
