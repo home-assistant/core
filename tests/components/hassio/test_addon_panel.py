@@ -56,7 +56,7 @@ async def test_hassio_addon_panel_startup(hass, aioclient_mock, hassio_env):
         })
         await hass.async_block_till_done()
 
-        assert aioclient_mock.call_count == 2
+        assert aioclient_mock.call_count == 3
         assert mock_panel.called
         mock_panel.assert_called_with(
             hass, 'test1', {
@@ -98,7 +98,7 @@ async def test_hassio_addon_panel_api(hass, aioclient_mock, hassio_env,
         })
         await hass.async_block_till_done()
 
-        assert aioclient_mock.call_count == 2
+        assert aioclient_mock.call_count == 3
         assert mock_panel.called
         mock_panel.assert_called_with(
             hass, 'test1', {

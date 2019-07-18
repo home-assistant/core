@@ -43,7 +43,7 @@ def test_setup_api_ping(hass, aioclient_mock):
         result = yield from async_setup_component(hass, 'hassio', {})
         assert result
 
-    assert aioclient_mock.call_count == 4
+    assert aioclient_mock.call_count == 5
     assert hass.components.hassio.get_homeassistant_version() == "10.0"
     assert hass.components.hassio.is_hassio()
 
@@ -82,7 +82,7 @@ def test_setup_api_push_api_data(hass, aioclient_mock):
         })
         assert result
 
-    assert aioclient_mock.call_count == 4
+    assert aioclient_mock.call_count == 5
     assert not aioclient_mock.mock_calls[1][2]['ssl']
     assert aioclient_mock.mock_calls[1][2]['port'] == 9999
     assert aioclient_mock.mock_calls[1][2]['watchdog']
@@ -101,7 +101,7 @@ def test_setup_api_push_api_data_server_host(hass, aioclient_mock):
         })
         assert result
 
-    assert aioclient_mock.call_count == 4
+    assert aioclient_mock.call_count == 5
     assert not aioclient_mock.mock_calls[1][2]['ssl']
     assert aioclient_mock.mock_calls[1][2]['port'] == 9999
     assert not aioclient_mock.mock_calls[1][2]['watchdog']
@@ -117,7 +117,7 @@ async def test_setup_api_push_api_data_default(hass, aioclient_mock,
         })
         assert result
 
-    assert aioclient_mock.call_count == 4
+    assert aioclient_mock.call_count == 5
     assert not aioclient_mock.mock_calls[1][2]['ssl']
     assert aioclient_mock.mock_calls[1][2]['port'] == 8123
     refresh_token = aioclient_mock.mock_calls[1][2]['refresh_token']
@@ -177,26 +177,28 @@ async def test_setup_api_existing_hassio_user(hass, aioclient_mock,
         })
         assert result
 
-    assert aioclient_mock.call_count == 4
+    assert aioclient_mock.call_count == 5
     assert not aioclient_mock.mock_calls[1][2]['ssl']
     assert aioclient_mock.mock_calls[1][2]['port'] == 8123
     assert aioclient_mock.mock_calls[1][2]['refresh_token'] == token.token
 
 
-@asyncio.coroutine
-def test_setup_core_push_timezone(hass, aioclient_mock):
+async def test_setup_core_push_timezone(hass, aioclient_mock):
     """Test setup with API push default data."""
+    hass.config.time_zone = 'testzone'
+
     with patch.dict(os.environ, MOCK_ENVIRON):
-        result = yield from async_setup_component(hass, 'hassio', {
+        result = await async_setup_component(hass, 'hassio', {
             'hassio': {},
-            'homeassistant': {
-                'time_zone': 'testzone',
-            },
         })
         assert result
 
     assert aioclient_mock.call_count == 5
     assert aioclient_mock.mock_calls[2][2]['timezone'] == "testzone"
+
+    await hass.config.async_update(time_zone='America/New_York')
+    await hass.async_block_till_done()
+    assert aioclient_mock.mock_calls[-1][2]['timezone'] == "America/New_York"
 
 
 @asyncio.coroutine
@@ -209,7 +211,7 @@ def test_setup_hassio_no_additional_data(hass, aioclient_mock):
         })
         assert result
 
-    assert aioclient_mock.call_count == 4
+    assert aioclient_mock.call_count == 5
     assert aioclient_mock.mock_calls[-1][3]['X-Hassio-Key'] == "123456"
 
 
@@ -288,14 +290,14 @@ def test_service_calls(hassio_env, hass, aioclient_mock):
         'hassio', 'addon_stdin', {'addon': 'test', 'input': 'test'})
     yield from hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 6
+    assert aioclient_mock.call_count == 7
     assert aioclient_mock.mock_calls[-1][2] == 'test'
 
     yield from hass.services.async_call('hassio', 'host_shutdown', {})
     yield from hass.services.async_call('hassio', 'host_reboot', {})
     yield from hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 8
+    assert aioclient_mock.call_count == 9
 
     yield from hass.services.async_call('hassio', 'snapshot_full', {})
     yield from hass.services.async_call('hassio', 'snapshot_partial', {
@@ -305,7 +307,7 @@ def test_service_calls(hassio_env, hass, aioclient_mock):
     })
     yield from hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 10
+    assert aioclient_mock.call_count == 11
     assert aioclient_mock.mock_calls[-1][2] == {
         'addons': ['test'], 'folders': ['ssl'], 'password': "123456"}
 
@@ -321,7 +323,7 @@ def test_service_calls(hassio_env, hass, aioclient_mock):
     })
     yield from hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 12
+    assert aioclient_mock.call_count == 13
     assert aioclient_mock.mock_calls[-1][2] == {
         'addons': ['test'], 'folders': ['ssl'], 'homeassistant': False,
         'password': "123456"
@@ -341,12 +343,12 @@ def test_service_calls_core(hassio_env, hass, aioclient_mock):
     yield from hass.services.async_call('homeassistant', 'stop')
     yield from hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 3
+    assert aioclient_mock.call_count == 4
 
     yield from hass.services.async_call('homeassistant', 'check_config')
     yield from hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 3
+    assert aioclient_mock.call_count == 4
 
     with patch(
         'homeassistant.config.async_check_ha_config_file',
@@ -356,4 +358,4 @@ def test_service_calls_core(hassio_env, hass, aioclient_mock):
         yield from hass.async_block_till_done()
         assert mock_check_config.called
 
-    assert aioclient_mock.call_count == 4
+    assert aioclient_mock.call_count == 5

@@ -46,28 +46,27 @@ class DiscordNotificationService(BaseNotificationService):
         import discord
 
         discord.VoiceClient.warn_nacl = False
-        discord_bot = discord.Client(loop=self.hass.loop)
+        discord_bot = discord.Client()
         images = None
 
         if ATTR_TARGET not in kwargs:
             _LOGGER.error("No target specified")
             return None
 
-        if ATTR_DATA in kwargs:
-            data = kwargs.get(ATTR_DATA)
+        data = kwargs.get(ATTR_DATA) or {}
 
-            if ATTR_IMAGES in data:
-                images = list()
+        if ATTR_IMAGES in data:
+            images = list()
 
-                for image in data.get(ATTR_IMAGES):
-                    image_exists = await self.hass.async_add_executor_job(
-                        self.file_exists,
-                        image)
+            for image in data.get(ATTR_IMAGES):
+                image_exists = await self.hass.async_add_executor_job(
+                    self.file_exists,
+                    image)
 
-                    if image_exists:
-                        images.append(image)
-                    else:
-                        _LOGGER.warning("Image not found: %s", image)
+                if image_exists:
+                    images.append(image)
+                else:
+                    _LOGGER.warning("Image not found: %s", image)
 
         # pylint: disable=unused-variable
         @discord_bot.event

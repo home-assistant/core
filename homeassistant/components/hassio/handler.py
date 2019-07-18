@@ -11,7 +11,7 @@ from homeassistant.components.http import (
     CONF_SERVER_PORT,
     CONF_SSL_CERTIFICATE,
 )
-from homeassistant.const import CONF_TIME_ZONE, SERVER_PORT
+from homeassistant.const import SERVER_PORT
 
 from .const import X_HASSIO
 
@@ -140,13 +140,13 @@ class HassIO:
                                        payload=options)
 
     @_api_bool
-    def update_hass_timezone(self, core_config):
+    def update_hass_timezone(self, timezone):
         """Update Home-Assistant timezone data on Hass.io.
 
         This method return a coroutine.
         """
         return self.send_command("/supervisor/options", payload={
-            'timezone': core_config.get(CONF_TIME_ZONE)
+            'timezone': timezone
         })
 
     async def send_command(self, command, method="post", payload=None,
@@ -156,7 +156,7 @@ class HassIO:
         This method is a coroutine.
         """
         try:
-            with async_timeout.timeout(timeout, loop=self.loop):
+            with async_timeout.timeout(timeout):
                 request = await self.websession.request(
                     method, "http://{}{}".format(self._ip, command),
                     json=payload, headers={

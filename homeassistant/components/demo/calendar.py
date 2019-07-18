@@ -1,7 +1,6 @@
 """Demo platform that has two fake binary sensors."""
 import copy
 
-from homeassistant.components.google import CONF_DEVICE_ID, CONF_NAME
 import homeassistant.util.dt as dt_util
 
 from homeassistant.components.calendar import CalendarEventDevice, get_date
@@ -12,27 +11,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     calendar_data_future = DemoGoogleCalendarDataFuture()
     calendar_data_current = DemoGoogleCalendarDataCurrent()
     add_entities([
-        DemoGoogleCalendar(hass, calendar_data_future, {
-            CONF_NAME: 'Calendar 1',
-            CONF_DEVICE_ID: 'calendar_1',
-        }),
-
-        DemoGoogleCalendar(hass, calendar_data_current, {
-            CONF_NAME: 'Calendar 2',
-            CONF_DEVICE_ID: 'calendar_2',
-        }),
+        DemoGoogleCalendar(hass, calendar_data_future, 'Calendar 1'),
+        DemoGoogleCalendar(hass, calendar_data_current, 'Calendar 2'),
     ])
 
 
 class DemoGoogleCalendarData:
     """Representation of a Demo Calendar element."""
 
-    event = {}
-
-    # pylint: disable=no-self-use
-    def update(self):
-        """Return true so entity knows we have new data."""
-        return True
+    event = None
 
     async def async_get_events(self, hass, start_date, end_date):
         """Get all events in a specific time frame."""
@@ -84,11 +71,21 @@ class DemoGoogleCalendarDataCurrent(DemoGoogleCalendarData):
 class DemoGoogleCalendar(CalendarEventDevice):
     """Representation of a Demo Calendar element."""
 
-    def __init__(self, hass, calendar_data, data):
-        """Initialize Google Calendar but without the API calls."""
+    def __init__(self, hass, calendar_data, name):
+        """Initialize demo calendar."""
         self.data = calendar_data
-        super().__init__(hass, data)
+        self._name = name
+
+    @property
+    def event(self):
+        """Return the next upcoming event."""
+        return self.data.event
+
+    @property
+    def name(self):
+        """Return the name of the entity."""
+        return self._name
 
     async def async_get_events(self, hass, start_date, end_date):
-        """Get all events in a specific time frame."""
+        """Return calendar events within a datetime range."""
         return await self.data.async_get_events(hass, start_date, end_date)

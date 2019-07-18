@@ -48,6 +48,7 @@ class HMCover(HMDevice, CoverDevice):
         """Return if the cover is closed."""
         if self.current_cover_position is not None:
             return self.current_cover_position == 0
+        return None
 
     def open_cover(self, **kwargs):
         """Open the cover."""

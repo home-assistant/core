@@ -70,7 +70,7 @@ async def async_setup(hass, config):
 
         tasks = [scene.async_activate() for scene in target_scenes]
         if tasks:
-            await asyncio.wait(tasks, loop=hass.loop)
+            await asyncio.wait(tasks)
 
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_ON, async_handle_scene_service,

@@ -436,6 +436,68 @@ async def test_track_sunrise(hass):
     assert len(offset_runs) == 1
 
 
+async def test_track_sunrise_update_location(hass):
+    """Test track the sunrise."""
+    # Setup sun component
+    hass.config.latitude = 32.87336
+    hass.config.longitude = 117.22743
+    assert await async_setup_component(hass, sun.DOMAIN, {
+        sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
+
+    # Get next sunrise
+    astral = Astral()
+    utc_now = datetime(2014, 5, 24, 12, 0, 0, tzinfo=dt_util.UTC)
+    utc_today = utc_now.date()
+
+    mod = -1
+    while True:
+        next_rising = (astral.sunrise_utc(
+            utc_today + timedelta(days=mod),
+            hass.config.latitude, hass.config.longitude))
+        if next_rising > utc_now:
+            break
+        mod += 1
+
+    # Track sunrise
+    runs = []
+    with patch('homeassistant.util.dt.utcnow', return_value=utc_now):
+        async_track_sunrise(hass, lambda: runs.append(1))
+
+    # Mimick sunrise
+    _send_time_changed(hass, next_rising)
+    await hass.async_block_till_done()
+    assert len(runs) == 1
+
+    # Move!
+    with patch('homeassistant.util.dt.utcnow', return_value=utc_now):
+        await hass.config.async_update(
+            latitude=40.755931,
+            longitude=-73.984606,
+        )
+        await hass.async_block_till_done()
+
+    # Mimick sunrise
+    _send_time_changed(hass, next_rising)
+    await hass.async_block_till_done()
+    # Did not increase
+    assert len(runs) == 1
+
+    # Get next sunrise
+    mod = -1
+    while True:
+        next_rising = (astral.sunrise_utc(
+            utc_today + timedelta(days=mod),
+            hass.config.latitude, hass.config.longitude))
+        if next_rising > utc_now:
+            break
+        mod += 1
+
+    # Mimick sunrise at new location
+    _send_time_changed(hass, next_rising)
+    await hass.async_block_till_done()
+    assert len(runs) == 2
+
+
 async def test_track_sunset(hass):
     """Test track the sunset."""
     latitude = 32.87336

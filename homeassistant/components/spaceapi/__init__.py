@@ -28,6 +28,7 @@ ATTR_SPACE = 'space'
 ATTR_UNIT = 'unit'
 ATTR_URL = 'url'
 ATTR_VALUE = 'value'
+ATTR_SENSOR_LOCATION = 'location'
 
 CONF_CONTACT = 'contact'
 CONF_HUMIDITY = 'humidity'
@@ -72,9 +73,10 @@ STATE_SCHEMA = vol.Schema({
     vol.Inclusive(CONF_ICON_OPEN, CONF_ICONS): cv.url,
 }, required=False)
 
-SENSOR_SCHEMA = vol.Schema(
-    {vol.In(SENSOR_TYPES): [cv.entity_id]}
-)
+SENSOR_SCHEMA = vol.Schema({
+    vol.In(SENSOR_TYPES): [cv.entity_id],
+    cv.string: [cv.entity_id]
+})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -104,6 +106,27 @@ class APISpaceApiView(HomeAssistantView):
 
     url = URL_API_SPACEAPI
     name = 'api:spaceapi'
+
+    @staticmethod
+    def get_sensor_data(hass, spaceapi, sensor):
+        """Get data from a sensor."""
+        sensor_state = hass.states.get(sensor)
+        if not sensor_state:
+            return None
+        sensor_data = {
+            ATTR_NAME: sensor_state.name,
+            ATTR_VALUE: sensor_state.state
+        }
+        if ATTR_SENSOR_LOCATION in sensor_state.attributes:
+            sensor_data[ATTR_LOCATION] = \
+                sensor_state.attributes[ATTR_SENSOR_LOCATION]
+        else:
+            sensor_data[ATTR_LOCATION] = spaceapi[CONF_SPACE]
+        # Some sensors don't have a unit of measurement
+        if ATTR_UNIT_OF_MEASUREMENT in sensor_state.attributes:
+            sensor_data[ATTR_UNIT] = \
+                sensor_state.attributes[ATTR_UNIT_OF_MEASUREMENT]
+        return sensor_data
 
     @ha.callback
     def get(self, request):
@@ -154,15 +177,7 @@ class APISpaceApiView(HomeAssistantView):
             for sensor_type in is_sensors:
                 sensors[sensor_type] = []
                 for sensor in spaceapi['sensors'][sensor_type]:
-                    sensor_state = hass.states.get(sensor)
-                    unit = sensor_state.attributes[ATTR_UNIT_OF_MEASUREMENT]
-                    value = sensor_state.state
-                    sensor_data = {
-                        ATTR_LOCATION: spaceapi[CONF_SPACE],
-                        ATTR_NAME: sensor_state.name,
-                        ATTR_UNIT: unit,
-                        ATTR_VALUE: value,
-                    }
+                    sensor_data = self.get_sensor_data(hass, spaceapi, sensor)
                     sensors[sensor_type].append(sensor_data)
             data[ATTR_SENSORS] = sensors
 

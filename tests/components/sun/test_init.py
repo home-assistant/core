@@ -119,6 +119,14 @@ async def test_state_change(hass):
     assert sun.STATE_ABOVE_HORIZON == \
         hass.states.get(sun.ENTITY_ID).state
 
+    with patch('homeassistant.helpers.condition.dt_util.utcnow',
+               return_value=now):
+        await hass.config.async_update(longitude=hass.config.longitude+90)
+        await hass.async_block_till_done()
+
+    assert sun.STATE_ABOVE_HORIZON == \
+        hass.states.get(sun.ENTITY_ID).state
+
 
 async def test_norway_in_june(hass):
     """Test location in Norway where the sun doesn't set in summer."""
@@ -141,6 +149,8 @@ async def test_norway_in_june(hass):
     assert dt_util.parse_datetime(
         state.attributes[sun.STATE_ATTR_NEXT_SETTING]) == \
         datetime(2016, 7, 26, 22, 19, 1, tzinfo=dt_util.UTC)
+
+    assert state.state == sun.STATE_ABOVE_HORIZON
 
 
 @mark.skip

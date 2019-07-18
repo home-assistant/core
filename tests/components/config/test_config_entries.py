@@ -128,7 +128,7 @@ def test_available_flows(hass, client):
             '/api/config/config_entries/flow_handlers')
         assert resp.status == 200
         data = yield from resp.json()
-        assert data == ['hello', 'world']
+        assert set(data) == set(['hello', 'world'])
 
 
 ############################

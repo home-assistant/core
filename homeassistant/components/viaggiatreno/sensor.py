@@ -67,7 +67,7 @@ async def async_http_request(hass, uri):
     """Perform actual request."""
     try:
         session = hass.helpers.aiohttp_client.async_get_clientsession(hass)
-        with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
+        with async_timeout.timeout(REQUEST_TIMEOUT):
             req = await session.get(uri)
         if req.status != 200:
             return {'error': req.status}

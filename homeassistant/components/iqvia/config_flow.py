@@ -4,7 +4,7 @@ from collections import OrderedDict
 import voluptuous as vol
 
 from pyiqvia import Client
-from pyiqvia.errors import IQVIAError
+from pyiqvia.errors import InvalidZipError
 
 from homeassistant import config_entries
 from homeassistant.core import callback
@@ -54,11 +54,10 @@ class IQVIAFlowHandler(config_entries.ConfigFlow):
             return await self._show_form({CONF_ZIP_CODE: 'identifier_exists'})
 
         websession = aiohttp_client.async_get_clientsession(self.hass)
-        client = Client(user_input[CONF_ZIP_CODE], websession)
 
         try:
-            await client.allergens.current()
-        except IQVIAError:
+            Client(user_input[CONF_ZIP_CODE], websession)
+        except InvalidZipError:
             return await self._show_form({CONF_ZIP_CODE: 'invalid_zip_code'})
 
         return self.async_create_entry(

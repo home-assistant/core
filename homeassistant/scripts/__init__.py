@@ -9,9 +9,9 @@ from typing import List
 
 from homeassistant.bootstrap import async_mount_local_lib_path
 from homeassistant.config import get_default_config_dir
-from homeassistant.core import HomeAssistant
-from homeassistant.requirements import pip_kwargs, PackageLoadable
-from homeassistant.util.package import install_package, is_virtual_env
+from homeassistant.requirements import pip_kwargs
+from homeassistant.util.package import (
+    install_package, is_virtual_env, is_installed)
 
 
 def run(args: List) -> int:
@@ -49,17 +49,15 @@ def run(args: List) -> int:
 
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
-    hass = HomeAssistant(loop)
-    pkgload = PackageLoadable(hass)
     for req in getattr(script, 'REQUIREMENTS', []):
-        if loop.run_until_complete(pkgload.loadable(req)):
+        if is_installed(req):
             continue
 
         if not install_package(req, **_pip_kwargs):
             print('Aborting script, could not install dependency', req)
             return 1
 
-    return script.run(args[1:])  # type: ignore
+    return script.run(args[1:])
 
 
 def extract_config_dir(args=None) -> str:

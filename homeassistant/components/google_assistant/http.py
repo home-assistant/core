@@ -17,33 +17,50 @@ from .const import (
     CONF_SECURE_DEVICES_PIN,
 )
 from .smart_home import async_handle_message
-from .helpers import Config
+from .helpers import AbstractConfig
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@callback
-def async_register_http(hass, cfg):
-    """Register HTTP views for Google Assistant."""
-    expose_by_default = cfg.get(CONF_EXPOSE_BY_DEFAULT)
-    exposed_domains = cfg.get(CONF_EXPOSED_DOMAINS)
-    entity_config = cfg.get(CONF_ENTITY_CONFIG) or {}
-    secure_devices_pin = cfg.get(CONF_SECURE_DEVICES_PIN)
+class GoogleConfig(AbstractConfig):
+    """Config for manual setup of Google."""
 
-    def is_exposed(entity) -> bool:
-        """Determine if an entity should be exposed to Google Assistant."""
-        if entity.attributes.get('view') is not None:
+    def __init__(self, config):
+        """Initialize the config."""
+        self._config = config
+
+    @property
+    def agent_user_id(self):
+        """Return Agent User Id to use for query responses."""
+        return None
+
+    @property
+    def entity_config(self):
+        """Return entity config."""
+        return self._config.get(CONF_ENTITY_CONFIG) or {}
+
+    @property
+    def secure_devices_pin(self):
+        """Return entity config."""
+        return self._config.get(CONF_SECURE_DEVICES_PIN)
+
+    def should_expose(self, state) -> bool:
+        """Return if entity should be exposed."""
+        expose_by_default = self._config.get(CONF_EXPOSE_BY_DEFAULT)
+        exposed_domains = self._config.get(CONF_EXPOSED_DOMAINS)
+
+        if state.attributes.get('view') is not None:
             # Ignore entities that are views
             return False
 
-        if entity.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
+        if state.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
             return False
 
         explicit_expose = \
-            entity_config.get(entity.entity_id, {}).get(CONF_EXPOSE)
+            self.entity_config.get(state.entity_id, {}).get(CONF_EXPOSE)
 
         domain_exposed_by_default = \
-            expose_by_default and entity.domain in exposed_domains
+            expose_by_default and state.domain in exposed_domains
 
         # Expose an entity if the entity's domain is exposed by default and
         # the configuration doesn't explicitly exclude it from being
@@ -53,13 +70,15 @@ def async_register_http(hass, cfg):
 
         return is_default_exposed or explicit_expose
 
-    config = Config(
-        should_expose=is_exposed,
-        entity_config=entity_config,
-        secure_devices_pin=secure_devices_pin
-    )
+    def should_2fa(self, state):
+        """If an entity should have 2FA checked."""
+        return True
 
-    hass.http.register_view(GoogleAssistantView(config))
+
+@callback
+def async_register_http(hass, cfg):
+    """Register HTTP views for Google Assistant."""
+    hass.http.register_view(GoogleAssistantView(GoogleConfig(cfg)))
 
 
 class GoogleAssistantView(HomeAssistantView):

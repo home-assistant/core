@@ -3,7 +3,8 @@ import logging
 from datetime import timedelta
 
 from homeassistant.const import (
-    CONF_ELEVATION, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
+    CONF_ELEVATION, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET,
+    EVENT_CORE_CONFIG_UPDATE)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -70,7 +71,7 @@ async def async_setup(hass, config):
         _LOGGER.warning(
             "Elevation is now configured in home assistant core. "
             "See https://home-assistant.io/docs/configuration/basic/")
-    Sun(hass, get_astral_location(hass))
+    Sun(hass)
     return True
 
 
@@ -79,18 +80,23 @@ class Sun(Entity):
 
     entity_id = ENTITY_ID
 
-    def __init__(self, hass, location):
+    def __init__(self, hass):
         """Initialize the sun."""
         self.hass = hass
-        self.location = location
+        self.location = None
         self._state = self.next_rising = self.next_setting = None
         self.next_dawn = self.next_dusk = None
         self.next_midnight = self.next_noon = None
         self.solar_elevation = self.solar_azimuth = None
         self.rising = self.phase = None
-
         self._next_change = None
-        self.update_events(dt_util.utcnow())
+
+        def update_location(event):
+            self.location = get_astral_location(self.hass)
+            self.update_events(dt_util.utcnow())
+        update_location(None)
+        self.hass.bus.async_listen(
+            EVENT_CORE_CONFIG_UPDATE, update_location)
 
     @property
     def name(self):
@@ -100,7 +106,8 @@ class Sun(Entity):
     @property
     def state(self):
         """Return the state of the sun."""
-        if self.next_rising > self.next_setting:
+        # 0.8333 is the same value as astral uses
+        if self.solar_elevation > -0.833:
             return STATE_ABOVE_HORIZON
 
         return STATE_BELOW_HORIZON
@@ -163,6 +170,7 @@ class Sun(Entity):
             utc_point_in_time, 'dusk', PHASE_ASTRONOMICAL_TWILIGHT)
         self.next_midnight = self._check_event(
             utc_point_in_time, 'solar_midnight', None)
+        self.location.solar_depression = 'civil'
 
         # if the event was solar midday or midnight, phase will now
         # be None. Solar noon doesn't always happen when the sun is

@@ -124,7 +124,7 @@ class TtnDataStorage:
         """Get the current state from The Things Network Data Storage."""
         try:
             session = async_get_clientsession(self._hass)
-            with async_timeout.timeout(DEFAULT_TIMEOUT, loop=self._hass.loop):
+            with async_timeout.timeout(DEFAULT_TIMEOUT):
                 response = await session.get(self._url, headers=self._headers)
 
         except (asyncio.TimeoutError, aiohttp.ClientError):

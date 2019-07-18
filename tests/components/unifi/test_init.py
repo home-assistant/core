@@ -1,11 +1,11 @@
 """Test UniFi setup process."""
+from datetime import timedelta
 from unittest.mock import Mock, patch
 
 from homeassistant.components import unifi
 from homeassistant.components.unifi import config_flow
 from homeassistant.setup import async_setup_component
-from homeassistant.components.unifi.const import (
-    CONF_POE_CONTROL, CONF_CONTROLLER, CONF_SITE_ID)
+from homeassistant.components.unifi.const import CONF_CONTROLLER, CONF_SITE_ID
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL)
 
@@ -16,6 +16,29 @@ async def test_setup_with_no_config(hass):
     """Test that we do not discover anything or try to set up a bridge."""
     assert await async_setup_component(hass, unifi.DOMAIN, {}) is True
     assert unifi.DOMAIN not in hass.data
+    assert hass.data[unifi.UNIFI_CONFIG] == []
+
+
+async def test_setup_with_config(hass):
+    """Test that we do not discover anything or try to set up a bridge."""
+    config = {
+        unifi.DOMAIN: {
+            unifi.CONF_CONTROLLERS: {
+                unifi.CONF_HOST: '1.2.3.4',
+                unifi.CONF_SITE_ID: 'My site',
+                unifi.CONF_DETECTION_TIME: 3,
+                unifi.CONF_SSID_FILTER: ['ssid']
+            }
+        }
+    }
+    assert await async_setup_component(hass, unifi.DOMAIN, config) is True
+    assert unifi.DOMAIN not in hass.data
+    assert hass.data[unifi.UNIFI_CONFIG] == [{
+        unifi.CONF_HOST: '1.2.3.4',
+        unifi.CONF_SITE_ID: 'My site',
+        unifi.CONF_DETECTION_TIME: timedelta(seconds=3),
+        unifi.CONF_SSID_FILTER: ['ssid']
+    }]
 
 
 async def test_successful_config_entry(hass):
@@ -146,7 +169,8 @@ async def test_flow_works(hass, aioclient_mock):
     flow.hass = hass
 
     with patch('aiounifi.Controller') as mock_controller:
-        def mock_constructor(host, username, password, port, site, websession):
+        def mock_constructor(
+                host, username, password, port, site, websession, sslcontext):
             """Fake the controller constructor."""
             mock_controller.host = host
             mock_controller.username = username
@@ -185,8 +209,7 @@ async def test_flow_works(hass, aioclient_mock):
             CONF_PORT: 1234,
             CONF_SITE_ID: 'default',
             CONF_VERIFY_SSL: True
-        },
-        CONF_POE_CONTROL: True
+        }
     }
 
 
@@ -244,40 +267,6 @@ async def test_controller_site_already_configured(hass):
     }
 
     result = await flow.async_step_site()
-
-    assert result['type'] == 'abort'
-
-
-async def test_user_permissions_low(hass, aioclient_mock):
-    """Test config flow."""
-    flow = config_flow.UnifiFlowHandler()
-    flow.hass = hass
-
-    with patch('aiounifi.Controller') as mock_controller:
-        def mock_constructor(host, username, password, port, site, websession):
-            """Fake the controller constructor."""
-            mock_controller.host = host
-            mock_controller.username = username
-            mock_controller.password = password
-            mock_controller.port = port
-            mock_controller.site = site
-            return mock_controller
-
-        mock_controller.side_effect = mock_constructor
-        mock_controller.login.return_value = mock_coro()
-        mock_controller.sites.return_value = mock_coro({
-            'site1': {'name': 'default', 'role': 'viewer', 'desc': 'site name'}
-        })
-
-        await flow.async_step_user(user_input={
-            CONF_HOST: '1.2.3.4',
-            CONF_USERNAME: 'username',
-            CONF_PASSWORD: 'password',
-            CONF_PORT: 1234,
-            CONF_VERIFY_SSL: True
-        })
-
-        result = await flow.async_step_site(user_input={})
 
     assert result['type'] == 'abort'
 

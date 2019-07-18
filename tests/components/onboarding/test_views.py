@@ -9,8 +9,15 @@ from homeassistant.components import onboarding
 from homeassistant.components.onboarding import const, views
 
 from tests.common import CLIENT_ID, register_auth_provider
+from tests.components.met.conftest import mock_weather  # noqa
 
 from . import mock_storage
+
+
+@pytest.fixture(autouse=True)
+def always_mock_weather(mock_weather):  # noqa
+    """Mock the Met weather provider."""
+    pass
 
 
 @pytest.fixture(autouse=True)
@@ -224,3 +231,21 @@ async def test_onboarding_integration_requires_auth(hass, hass_storage,
     })
 
     assert resp.status == 401
+
+
+async def test_onboarding_core_sets_up_met(hass, hass_storage, hass_client):
+    """Test finishing the core step."""
+    mock_storage(hass_storage, {
+        'done': [const.STEP_USER]
+    })
+
+    assert await async_setup_component(hass, 'onboarding', {})
+
+    client = await hass_client()
+
+    resp = await client.post('/api/onboarding/core_config')
+
+    assert resp.status == 200
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids('weather')) == 1

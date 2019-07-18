@@ -105,7 +105,7 @@ async def async_setup_entry(hass, entry):
         client_secret=entry.data[CONF_CLIENT_SECRET],
         api_key=entry.data[CONF_API_KEY],
         redirect_uri=entry.data[CONF_REDIRECT_URI],
-        cache_file=DEFAULT_CACHEDB
+        cache_file=hass.config.path(DEFAULT_CACHEDB)
     )
 
     if not logi_circle.authorized:
@@ -118,7 +118,7 @@ async def async_setup_entry(hass, entry):
         return False
 
     try:
-        with async_timeout.timeout(_TIMEOUT, loop=hass.loop):
+        with async_timeout.timeout(_TIMEOUT):
             # Ensure the cameras property returns the same Camera objects for
             # all devices. Performs implicit login and session validation.
             await logi_circle.synchronize_cameras()

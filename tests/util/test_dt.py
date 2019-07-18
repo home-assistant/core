@@ -213,7 +213,7 @@ def test_find_next_time_expression_time_basic():
     assert datetime(2018, 10, 7, 10, 30, 0) == \
         find(datetime(2018, 10, 7, 10, 30, 0), '*', '/30', 0)
 
-    assert datetime(2018, 10, 7, 12, 30, 30) == \
+    assert datetime(2018, 10, 7, 12, 0, 30) == \
         find(datetime(2018, 10, 7, 10, 30, 0), '/3', '/30', [30, 45])
 
     assert datetime(2018, 10, 8, 5, 0, 0) == \

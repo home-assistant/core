@@ -13,6 +13,7 @@ from tests.components.remote import common
 
 TEST_PLATFORM = {remote.DOMAIN: {CONF_PLATFORM: 'test'}}
 SERVICE_SEND_COMMAND = 'send_command'
+SERVICE_LEARN_COMMAND = 'learn_command'
 
 
 class TestRemote(unittest.TestCase):
@@ -53,7 +54,7 @@ class TestRemote(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        assert 1 == len(turn_on_calls)
+        assert len(turn_on_calls) == 1
         call = turn_on_calls[-1]
 
         assert remote.DOMAIN == call.domain
@@ -68,12 +69,12 @@ class TestRemote(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        assert 1 == len(turn_off_calls)
+        assert len(turn_off_calls) == 1
         call = turn_off_calls[-1]
 
-        assert remote.DOMAIN == call.domain
-        assert SERVICE_TURN_OFF == call.service
-        assert 'entity_id_val' == call.data[ATTR_ENTITY_ID]
+        assert call.domain == remote.DOMAIN
+        assert call.service == SERVICE_TURN_OFF
+        assert call.data[ATTR_ENTITY_ID] == 'entity_id_val'
 
     def test_send_command(self):
         """Test send_command."""
@@ -87,9 +88,28 @@ class TestRemote(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        assert 1 == len(send_command_calls)
+        assert len(send_command_calls) == 1
         call = send_command_calls[-1]
 
-        assert remote.DOMAIN == call.domain
-        assert SERVICE_SEND_COMMAND == call.service
-        assert 'entity_id_val' == call.data[ATTR_ENTITY_ID]
+        assert call.domain == remote.DOMAIN
+        assert call.service == SERVICE_SEND_COMMAND
+        assert call.data[ATTR_ENTITY_ID] == 'entity_id_val'
+
+    def test_learn_command(self):
+        """Test learn_command."""
+        learn_command_calls = mock_service(
+            self.hass, remote.DOMAIN, SERVICE_LEARN_COMMAND)
+
+        common.learn_command(
+            self.hass, entity_id='entity_id_val',
+            device='test_device', command=['test_command'],
+            alternative=True, timeout=20)
+
+        self.hass.block_till_done()
+
+        assert len(learn_command_calls) == 1
+        call = learn_command_calls[-1]
+
+        assert call.domain == remote.DOMAIN
+        assert call.service == SERVICE_LEARN_COMMAND
+        assert call.data[ATTR_ENTITY_ID] == 'entity_id_val'

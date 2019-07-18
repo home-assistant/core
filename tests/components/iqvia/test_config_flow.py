@@ -1,25 +1,16 @@
 """Define tests for the IQVIA config flow."""
-from pyiqvia.errors import IQVIAError
 import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.iqvia import CONF_ZIP_CODE, DOMAIN, config_flow
 
-from tests.common import MockConfigEntry, MockDependency, mock_coro
+from tests.common import MockConfigEntry, MockDependency
 
 
 @pytest.fixture
-def allergens_current_response():
-    """Define a fixture for a successful allergens.current response."""
-    return mock_coro()
-
-
-@pytest.fixture
-def mock_pyiqvia(allergens_current_response):
+def mock_pyiqvia():
     """Mock the pyiqvia library."""
     with MockDependency('pyiqvia') as mock_pyiqvia_:
-        mock_pyiqvia_.Client().allergens.current.return_value = (
-            allergens_current_response)
         yield mock_pyiqvia_
 
 
@@ -37,8 +28,6 @@ async def test_duplicate_error(hass):
     assert result['errors'] == {CONF_ZIP_CODE: 'identifier_exists'}
 
 
-@pytest.mark.parametrize(
-    'allergens_current_response', [mock_coro(exception=IQVIAError)])
 async def test_invalid_zip_code(hass, mock_pyiqvia):
     """Test that an invalid ZIP code key throws an error."""
     conf = {

@@ -31,6 +31,7 @@ SENSOR_TYPES = {
     'next_rain': ['Next rain', 'min'],
     'temperature': ['Temperature', TEMP_CELSIUS],
     'uv': ['UV', None],
+    'weather_alert': ['Weather Alert', None],
 }
 
 CONDITION_CLASSES = {
@@ -77,6 +78,28 @@ def setup(hass, config):
     """Set up the Meteo-France component."""
     hass.data[DATA_METEO_FRANCE] = {}
 
+    # Check if at least weather alert have to be monitored for one location.
+    need_weather_alert_watcher = False
+    for location in config[DOMAIN]:
+        if CONF_MONITORED_CONDITIONS in location \
+                 and 'weather_alert' in location[CONF_MONITORED_CONDITIONS]:
+            need_weather_alert_watcher = True
+
+    # If weather alert monitoring is expected initiate a client to be used by
+    # all weather_alert entities.
+    if need_weather_alert_watcher:
+        from vigilancemeteo import VigilanceMeteoFranceProxy, \
+            VigilanceMeteoError
+
+        weather_alert_client = VigilanceMeteoFranceProxy()
+        try:
+            weather_alert_client.update_data()
+        except VigilanceMeteoError as exp:
+            _LOGGER.error(exp)
+    else:
+        weather_alert_client = None
+    hass.data[DATA_METEO_FRANCE]['weather_alert_client'] = weather_alert_client
+
     for location in config[DOMAIN]:
 
         city = location[CONF_CITY]
@@ -98,6 +121,7 @@ def setup(hass, config):
 
         if CONF_MONITORED_CONDITIONS in location:
             monitored_conditions = location[CONF_MONITORED_CONDITIONS]
+            _LOGGER.debug("meteo_france sensor platfrom loaded for %s", city)
             load_platform(
                 hass, 'sensor', DOMAIN, {
                     CONF_CITY: city,

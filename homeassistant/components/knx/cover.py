@@ -67,7 +67,7 @@ def async_add_entities_config(hass, config, async_add_entities):
     import xknx
     cover = xknx.devices.Cover(
         hass.data[DATA_KNX].xknx,
-        name=config.get(CONF_NAME),
+        name=config[CONF_NAME],
         group_address_long=config.get(CONF_MOVE_LONG_ADDRESS),
         group_address_short=config.get(CONF_MOVE_SHORT_ADDRESS),
         group_address_position_state=config.get(
@@ -75,10 +75,10 @@ def async_add_entities_config(hass, config, async_add_entities):
         group_address_angle=config.get(CONF_ANGLE_ADDRESS),
         group_address_angle_state=config.get(CONF_ANGLE_STATE_ADDRESS),
         group_address_position=config.get(CONF_POSITION_ADDRESS),
-        travel_time_down=config.get(CONF_TRAVELLING_TIME_DOWN),
-        travel_time_up=config.get(CONF_TRAVELLING_TIME_UP),
-        invert_position=config.get(CONF_INVERT_POSITION),
-        invert_angle=config.get(CONF_INVERT_ANGLE))
+        travel_time_down=config[CONF_TRAVELLING_TIME_DOWN],
+        travel_time_up=config[CONF_TRAVELLING_TIME_UP],
+        invert_position=config[CONF_INVERT_POSITION],
+        invert_angle=config[CONF_INVERT_ANGLE])
 
     hass.data[DATA_KNX].xknx.devices.add(cover)
     async_add_entities([KNXCover(cover)])

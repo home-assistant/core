@@ -12,6 +12,7 @@ from homeassistant.components import (
     media_player,
     scene,
     script,
+    sensor,
     switch,
     vacuum,
 )
@@ -53,7 +54,6 @@ TYPE_SENSOR = PREFIX_TYPES + 'SENSOR'
 TYPE_DOOR = PREFIX_TYPES + 'DOOR'
 TYPE_TV = PREFIX_TYPES + 'TV'
 TYPE_SPEAKER = PREFIX_TYPES + 'SPEAKER'
-TYPE_MEDIA = PREFIX_TYPES + 'MEDIA'
 
 SERVICE_REQUEST_SYNC = 'request_sync'
 HOMEGRAPH_URL = 'https://homegraph.googleapis.com/'
@@ -89,7 +89,7 @@ DOMAIN_TO_GOOGLE_TYPES = {
     input_boolean.DOMAIN: TYPE_SWITCH,
     light.DOMAIN: TYPE_LIGHT,
     lock.DOMAIN: TYPE_LOCK,
-    media_player.DOMAIN: TYPE_MEDIA,
+    media_player.DOMAIN: TYPE_SWITCH,
     scene.DOMAIN: TYPE_SCENE,
     script.DOMAIN: TYPE_SCENE,
     switch.DOMAIN: TYPE_SWITCH,
@@ -109,6 +109,7 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_WINDOW): TYPE_SENSOR,
     (media_player.DOMAIN, media_player.DEVICE_CLASS_TV): TYPE_TV,
     (media_player.DOMAIN, media_player.DEVICE_CLASS_SPEAKER): TYPE_SPEAKER,
+    (sensor.DOMAIN, sensor.DEVICE_CLASS_TEMPERATURE): TYPE_SENSOR,
 }
 
 CHALLENGE_ACK_NEEDED = 'ackNeeded'

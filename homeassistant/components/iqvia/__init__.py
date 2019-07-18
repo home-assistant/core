@@ -82,8 +82,9 @@ async def async_setup_entry(hass, config_entry):
             Client(config_entry.data[CONF_ZIP_CODE], websession),
             config_entry.data.get(CONF_MONITORED_CONDITIONS, list(SENSORS)))
         await iqvia.async_update()
-    except IQVIAError as err:
-        _LOGGER.error('Unable to set up IQVIA: %s', err)
+    except InvalidZipError:
+        _LOGGER.error(
+            'Invalid ZIP code provided: %s', config_entry.data[CONF_ZIP_CODE])
         return False
 
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = iqvia
@@ -157,16 +158,7 @@ class IQVIAData:
 
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
 
-        # IQVIA sites require a bit more complicated error handling, given that
-        # they sometimes have parts (but not the whole thing) go down:
-        #   1. If `InvalidZipError` is thrown, quit everything immediately.
-        #   2. If a single request throws any other error, try the others.
         for key, result in zip(tasks, results):
-            if isinstance(result, InvalidZipError):
-                _LOGGER.error("No data for ZIP: %s", self._client.zip_code)
-                self.data = {}
-                return
-
             if isinstance(result, IQVIAError):
                 _LOGGER.error('Unable to get %s data: %s', key, result)
                 self.data[key] = {}

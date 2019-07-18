@@ -116,10 +116,8 @@ async def test_detect_location_info_ip_api(aioclient_mock, session):
 
 async def test_detect_location_info_both_queries_fail(session):
     """Ensure we return None if both queries fail."""
-    with patch('homeassistant.util.location.async_get_elevation',
-               return_value=mock_coro(0)), \
-        patch('homeassistant.util.location._get_ipapi',
-              return_value=mock_coro(None)), \
+    with patch('homeassistant.util.location._get_ipapi',
+               return_value=mock_coro(None)), \
         patch('homeassistant.util.location._get_ip_api',
               return_value=mock_coro(None)):
         info = await location_util.async_detect_location_info(
@@ -137,26 +135,3 @@ async def test_ip_api_query_raises(raising_session):
     """Test ip api query when the request to API fails."""
     info = await location_util._get_ip_api(raising_session)
     assert info is None
-
-
-async def test_elevation_query_raises(raising_session):
-    """Test elevation when the request to API fails."""
-    elevation = await location_util.async_get_elevation(
-        raising_session, 10, 10, _test_real=True)
-    assert elevation == 0
-
-
-async def test_elevation_query_fails(aioclient_mock, session):
-    """Test elevation when the request to API fails."""
-    aioclient_mock.get(location_util.ELEVATION_URL, text='{}', status=401)
-    elevation = await location_util.async_get_elevation(
-        session, 10, 10, _test_real=True)
-    assert elevation == 0
-
-
-async def test_elevation_query_nonjson(aioclient_mock, session):
-    """Test if elevation API returns a non JSON value."""
-    aioclient_mock.get(location_util.ELEVATION_URL, text='{ I am not JSON }')
-    elevation = await location_util.async_get_elevation(
-        session, 10, 10, _test_real=True)
-    assert elevation == 0

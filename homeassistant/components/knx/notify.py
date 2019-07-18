@@ -43,8 +43,8 @@ def async_get_service_config(hass, config):
     import xknx
     notification = xknx.devices.Notification(
         hass.data[DATA_KNX].xknx,
-        name=config.get(CONF_NAME),
-        group_address=config.get(CONF_ADDRESS))
+        name=config[CONF_NAME],
+        group_address=config[CONF_ADDRESS])
     hass.data[DATA_KNX].xknx.devices.add(notification)
     return KNXNotificationService([notification, ])
 

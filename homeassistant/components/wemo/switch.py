@@ -12,7 +12,7 @@ from homeassistant.util import convert
 from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
 
-from . import SUBSCRIPTION_REGISTRY
+from . import SUBSCRIPTION_REGISTRY, DOMAIN as WEMO_DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -92,6 +92,14 @@ class WemoSwitch(SwitchDevice):
     def name(self):
         """Return the name of the switch if any."""
         return self._name
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            'name': self._name,
+            'identifiers': {(WEMO_DOMAIN, self._serialnumber)},
+        }
 
     @property
     def device_state_attributes(self):

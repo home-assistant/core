@@ -12,7 +12,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED)
 from homeassistant.core import HomeAssistant
 
-from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
+from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,56 +34,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
     for group in home.groups:
         if isinstance(group, AsyncSecurityZoneGroup):
             security_zones.append(group)
-            # To be removed in a later release.
-            devices.append(HomematicipSecurityZone(home, group))
-            _LOGGER.warning("Homematic IP: alarm_control_panel.%s is "
-                            "deprecated. Please switch to "
-                            "alarm_control_panel.*hmip_alarm_control_panel.",
-                            group.label)
+
     if security_zones:
         devices.append(HomematicipAlarmControlPanel(home, security_zones))
 
     if devices:
         async_add_entities(devices)
-
-
-class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
-    """Representation of an HomematicIP Cloud security zone group."""
-
-    def __init__(self, home: AsyncHome, device) -> None:
-        """Initialize the security zone group."""
-        device.modelType = 'Group-SecurityZone'
-        device.windowState = None
-        super().__init__(home, device)
-
-    @property
-    def state(self) -> str:
-        """Return the state of the device."""
-        if self._device.active:
-            if (self._device.sabotage or self._device.motionDetected or
-                    self._device.windowState == WindowState.OPEN or
-                    self._device.windowState == WindowState.TILTED):
-                return STATE_ALARM_TRIGGERED
-
-            active = self._home.get_security_zones_activation()
-            if active == (True, True):
-                return STATE_ALARM_ARMED_AWAY
-            if active == (False, True):
-                return STATE_ALARM_ARMED_HOME
-
-        return STATE_ALARM_DISARMED
-
-    async def async_alarm_disarm(self, code=None):
-        """Send disarm command."""
-        await self._home.set_security_zones_activation(False, False)
-
-    async def async_alarm_arm_home(self, code=None):
-        """Send arm home command."""
-        await self._home.set_security_zones_activation(False, True)
-
-    async def async_alarm_arm_away(self, code=None):
-        """Send arm away command."""
-        await self._home.set_security_zones_activation(True, True)
 
 
 class HomematicipAlarmControlPanel(AlarmControlPanel):

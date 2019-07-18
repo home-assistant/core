@@ -140,3 +140,15 @@ async def test_cors_middleware_with_cors_allowed_view(hass):
 
     hass.http.app._on_startup.freeze()
     await hass.http.app.startup()
+
+
+async def test_cors_works_with_frontend(hass, hass_client):
+    """Test CORS works with the frontend."""
+    assert await async_setup_component(hass, 'frontend', {
+        'http': {
+            'cors_allowed_origins': ['http://home-assistant.io']
+        }
+    })
+    client = await hass_client()
+    resp = await client.get('/')
+    assert resp.status == 200

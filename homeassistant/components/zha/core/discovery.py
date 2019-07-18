@@ -18,14 +18,14 @@ from .channels import (
 from .channels.registry import ZIGBEE_CHANNEL_REGISTRY
 from .const import (
     CONF_DEVICE_CONFIG, COMPONENTS, ZHA_DISCOVERY_NEW, DATA_ZHA,
-    SENSOR_TYPE, UNKNOWN, GENERIC, POWER_CONFIGURATION_CHANNEL
+    SENSOR_TYPE, UNKNOWN, GENERIC
 )
 from .registries import (
-    BINARY_SENSOR_TYPES, NO_SENSOR_CLUSTERS, EVENT_RELAY_CLUSTERS,
+    BINARY_SENSOR_TYPES, CHANNEL_ONLY_CLUSTERS, EVENT_RELAY_CLUSTERS,
     SENSOR_TYPES, DEVICE_CLASS, COMPONENT_CLUSTERS,
-    SINGLE_INPUT_CLUSTER_DEVICE_CLASS, SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS
+    SINGLE_INPUT_CLUSTER_DEVICE_CLASS, SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS,
+    OUTPUT_CHANNEL_ONLY_CLUSTERS, REMOTE_DEVICE_TYPES
 )
-from ..device_entity import ZhaDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,6 +87,12 @@ def async_process_endpoint(
 def _async_create_cluster_channel(cluster, zha_device, is_new_join,
                                   channels=None, channel_class=None):
     """Create a cluster channel and attach it to a device."""
+    # really ugly hack to deal with xiaomi using the door lock cluster
+    # incorrectly.
+    if hasattr(cluster, 'ep_attribute') and \
+            cluster.ep_attribute == 'multistate_input':
+        channel_class = AttributeListeningChannel
+    # end of ugly hack
     if channel_class is None:
         channel_class = ZIGBEE_CHANNEL_REGISTRY.get(cluster.cluster_id,
                                                     AttributeListeningChannel)
@@ -161,19 +167,29 @@ def _async_handle_single_cluster_matches(hass, endpoint, zha_device,
                                          profile_clusters, device_key,
                                          is_new_join):
     """Dispatch single cluster matches to HA components."""
+    from zigpy.zcl.clusters.general import OnOff, PowerConfiguration
     cluster_matches = []
     cluster_match_results = []
+    matched_power_configuration = False
     for cluster in endpoint.in_clusters.values():
-        # don't let profiles prevent these channels from being created
-        if cluster.cluster_id in NO_SENSOR_CLUSTERS:
+        if cluster.cluster_id in CHANNEL_ONLY_CLUSTERS:
             cluster_match_results.append(
                 _async_handle_channel_only_cluster_match(
                     zha_device,
                     cluster,
                     is_new_join,
                 ))
+            continue
 
         if cluster.cluster_id not in profile_clusters:
+            # Only create one battery sensor per device
+            if cluster.cluster_id == PowerConfiguration.cluster_id and \
+                    (zha_device.is_mains_powered or
+                     matched_power_configuration):
+                continue
+            elif cluster.cluster_id == PowerConfiguration.cluster_id and not \
+                    zha_device.is_mains_powered:
+                matched_power_configuration = True
             cluster_match_results.append(_async_handle_single_cluster_match(
                 hass,
                 zha_device,
@@ -184,15 +200,33 @@ def _async_handle_single_cluster_matches(hass, endpoint, zha_device,
             ))
 
     for cluster in endpoint.out_clusters.values():
+        if cluster.cluster_id in OUTPUT_CHANNEL_ONLY_CLUSTERS:
+            cluster_match_results.append(
+                _async_handle_channel_only_cluster_match(
+                    zha_device,
+                    cluster,
+                    is_new_join,
+                ))
+            continue
+
+        device_type = cluster.endpoint.device_type
+        profile_id = cluster.endpoint.profile_id
+
         if cluster.cluster_id not in profile_clusters:
-            cluster_match_results.append(_async_handle_single_cluster_match(
-                hass,
-                zha_device,
-                cluster,
-                device_key,
-                SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS,
-                is_new_join,
-            ))
+            # prevent remotes and controllers from getting entities
+            if not (cluster.cluster_id == OnOff.cluster_id and profile_id in
+                    REMOTE_DEVICE_TYPES and device_type in
+                    REMOTE_DEVICE_TYPES[profile_id]):
+                cluster_match_results.append(
+                    _async_handle_single_cluster_match(
+                        hass,
+                        zha_device,
+                        cluster,
+                        device_key,
+                        SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS,
+                        is_new_join,
+                    )
+                )
 
         if cluster.cluster_id in EVENT_RELAY_CLUSTERS:
             _async_create_cluster_channel(
@@ -253,13 +287,3 @@ def _async_handle_single_cluster_match(hass, zha_device, cluster, device_key,
         })
 
     return discovery_info
-
-
-@callback
-def async_create_device_entity(zha_device):
-    """Create ZHADeviceEntity."""
-    device_entity_channels = []
-    if POWER_CONFIGURATION_CHANNEL in zha_device.cluster_channels:
-        channel = zha_device.cluster_channels.get(POWER_CONFIGURATION_CHANNEL)
-        device_entity_channels.append(channel)
-    return ZhaDeviceEntity(zha_device, device_entity_channels)

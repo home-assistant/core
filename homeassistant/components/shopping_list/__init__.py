@@ -117,7 +117,7 @@ def async_setup(hass, config):
         'What is on my shopping list'
     ])
 
-    yield from hass.components.frontend.async_register_built_in_panel(
+    hass.components.frontend.async_register_built_in_panel(
         'shopping-list', 'shopping_list', 'mdi:cart')
 
     hass.components.websocket_api.async_register_command(

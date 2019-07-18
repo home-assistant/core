@@ -1,7 +1,6 @@
 """Support for the Broadlink RM2 Pro (only temperature) and A1 devices."""
 import binascii
 import logging
-import socket
 from datetime import timedelta
 
 import voluptuous as vol
@@ -60,6 +59,7 @@ class BroadlinkSensor(Entity):
         """Initialize the sensor."""
         self._name = '{} {}'.format(name, SENSOR_TYPES[sensor_type][0])
         self._state = None
+        self._is_available = False
         self._type = sensor_type
         self._broadlink_data = broadlink_data
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
@@ -75,6 +75,11 @@ class BroadlinkSensor(Entity):
         return self._state
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._is_available
+
+    @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
@@ -83,8 +88,11 @@ class BroadlinkSensor(Entity):
         """Get the latest data from the sensor."""
         self._broadlink_data.update()
         if self._broadlink_data.data is None:
+            self._state = None
+            self._is_available = False
             return
         self._state = self._broadlink_data.data[self._type]
+        self._is_available = True
 
 
 class BroadlinkData:
@@ -119,8 +127,9 @@ class BroadlinkData:
             if data is not None:
                 self.data = self._schema(data)
                 return
-        except socket.timeout as error:
+        except OSError as error:
             if retry < 1:
+                self.data = None
                 _LOGGER.error(error)
                 return
         except (vol.Invalid, vol.MultipleInvalid):
@@ -131,7 +140,7 @@ class BroadlinkData:
     def _auth(self, retry=3):
         try:
             auth = self._device.auth()
-        except socket.timeout:
+        except OSError:
             auth = False
         if not auth and retry > 0:
             self._connect()

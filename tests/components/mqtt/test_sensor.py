@@ -693,7 +693,7 @@ async def test_entity_device_info_with_hub(hass, mqtt_mock):
         'state_topic': 'test-topic',
         'device': {
             'identifiers': ['helloworld'],
-            'via_hub': 'hub-id',
+            'via_device': 'hub-id',
         },
         'unique_id': 'veryunique'
     })
@@ -702,4 +702,4 @@ async def test_entity_device_info_with_hub(hass, mqtt_mock):
 
     device = registry.async_get_device({('mqtt', 'helloworld')}, set())
     assert device is not None
-    assert device.hub_device_id == hub.id
+    assert device.via_device_id == hub.id

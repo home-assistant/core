@@ -15,6 +15,8 @@ from .bridge import get_bridge
 from .const import DOMAIN, LOGGER
 from .errors import AuthenticationRequired, CannotConnect
 
+HUE_MANUFACTURERURL = 'http://www.philips.com'
+
 
 @callback
 def configured_hosts(hass):
@@ -137,17 +139,27 @@ class HueFlowHandler(config_entries.ConfigFlow):
             errors=errors,
         )
 
-    async def async_step_discovery(self, discovery_info):
+    async def async_step_ssdp(self, discovery_info):
         """Handle a discovered Hue bridge.
 
-        This flow is triggered by the discovery component. It will check if the
+        This flow is triggered by the SSDP component. It will check if the
         host is already configured and delegate to the import step if not.
         """
+        from homeassistant.components.ssdp import ATTR_MANUFACTURERURL
+
+        if discovery_info[ATTR_MANUFACTURERURL] != HUE_MANUFACTURERURL:
+            return self.async_abort(reason='not_hue_bridge')
+
         # Filter out emulated Hue
         if "HASS Bridge" in discovery_info.get('name', ''):
             return self.async_abort(reason='already_configured')
 
-        host = discovery_info.get('host')
+        # pylint: disable=unsupported-assignment-operation
+        host = self.context['host'] = discovery_info.get('host')
+
+        if any(host == flow['context']['host']
+               for flow in self._async_in_progress()):
+            return self.async_abort(reason='already_in_progress')
 
         if host in configured_hosts(self.hass):
             return self.async_abort(reason='already_configured')
@@ -162,6 +174,22 @@ class HueFlowHandler(config_entries.ConfigFlow):
             'host': host,
             # This format is the legacy format that Hue used for discovery
             'path': 'phue-{}.conf'.format(serial)
+        })
+
+    async def async_step_homekit(self, homekit_info):
+        """Handle HomeKit discovery."""
+        # pylint: disable=unsupported-assignment-operation
+        host = self.context['host'] = homekit_info.get('host')
+
+        if any(host == flow['context']['host']
+               for flow in self._async_in_progress()):
+            return self.async_abort(reason='already_in_progress')
+
+        if host in configured_hosts(self.hass):
+            return self.async_abort(reason='already_configured')
+
+        return await self.async_step_import({
+            'host': host,
         })
 
     async def async_step_import(self, import_info):

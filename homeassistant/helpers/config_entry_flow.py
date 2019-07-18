@@ -81,6 +81,10 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 
         return await self.async_step_confirm()
 
+    async_step_zeroconf = async_step_discovery
+    async_step_ssdp = async_step_discovery
+    async_step_homekit = async_step_discovery
+
     async def async_step_import(self, _):
         """Handle a flow initialized by import."""
         if self._async_in_progress() or self._async_current_entries():

@@ -99,7 +99,7 @@ def test_valid_credentials(
 
     @asyncio.coroutine
     def ws_connect():
-        return asyncio.Future(loop=hass.loop)
+        return asyncio.Future()
 
     mock_ws_connect.side_effect = ws_connect
 

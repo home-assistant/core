@@ -26,6 +26,7 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
+EVENT_LOVELACE_UPDATED = 'lovelace_updated'
 
 LOVELACE_CONFIG_FILE = 'ui-lovelace.yaml'
 
@@ -52,7 +53,7 @@ async def async_setup(hass, config):
     # Pass in default to `get` because defaults not set if loaded as dep
     mode = config.get(DOMAIN, {}).get(CONF_MODE, MODE_STORAGE)
 
-    await hass.components.frontend.async_register_built_in_panel(
+    hass.components.frontend.async_register_built_in_panel(
         DOMAIN, config={
             'mode': mode
         })
@@ -83,6 +84,7 @@ class LovelaceStorage:
         """Initialize Lovelace config based on storage helper."""
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         self._data = None
+        self._hass = hass
 
     async def async_get_info(self):
         """Return the YAML storage mode."""
@@ -114,6 +116,8 @@ class LovelaceStorage:
             await self._load()
         self._data['config'] = config
         await self._store.async_save(self._data)
+
+        self._hass.bus.async_fire(EVENT_LOVELACE_UPDATED)
 
     async def _load(self):
         """Load the config."""

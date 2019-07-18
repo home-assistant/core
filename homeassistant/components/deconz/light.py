@@ -15,7 +15,7 @@ from .gateway import get_gateway_from_config_entry
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up deCONZ lights and group."""
+    """Old way of setting up deCONZ platforms."""
     pass
 
 

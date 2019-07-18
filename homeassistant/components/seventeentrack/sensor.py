@@ -288,22 +288,30 @@ class SeventeenTrackData:
             if not self.show_delivered:
                 packages = [p for p in packages if p.status != VALUE_DELIVERED]
 
+            packages_map = {p.tracking_number: p for p in packages}
             # Add new packages:
-            to_add = set(packages) - set(self.packages)
+
+            already_tracked_nbr = [p.tracking_number for p in self.packages]
+            received_tracked_nbr = [p.tracking_number for p in packages]
+
+            to_add = set(received_tracked_nbr) - set(already_tracked_nbr)
+            _LOGGER.debug('Will add new tracking numbers: %s', to_add)
             if self.packages and to_add:
                 self._async_add_entities([
-                    SeventeenTrackPackageSensor(self, package)
-                    for package in to_add
+                    SeventeenTrackPackageSensor(self,
+                                                packages_map[tracking_number])
+                    for tracking_number in to_add
                 ], True)
 
             # Remove archived packages from the entity registry:
-            to_remove = set(self.packages) - set(packages)
+            to_remove = set(received_tracked_nbr) - set(already_tracked_nbr)
+            _LOGGER.debug('Will remove tracking number: %s', to_remove)
             reg = await self._hass.helpers.entity_registry.async_get_registry()
-            for package in to_remove:
+            for tracking_number in to_remove:
                 entity_id = reg.async_get_entity_id(
                     'sensor', 'seventeentrack',
                     ENTITY_ID_TEMPLATE.format(
-                        self.account_id, package.tracking_number))
+                        self.account_id, tracking_number))
                 if not entity_id:
                     continue
                 self._hass.async_create_task(reg.async_remove(entity_id))

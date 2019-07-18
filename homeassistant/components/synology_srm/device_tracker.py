@@ -80,7 +80,7 @@ class SynologySrmDeviceScanner(DeviceScanner):
         """Check the router for connected devices."""
         _LOGGER.debug("Scanning for connected devices")
 
-        devices = self.client.mesh.network_wifidevice()
+        devices = self.client.core.network_nsm_device({'is_online': True})
         last_results = []
 
         for device in devices:

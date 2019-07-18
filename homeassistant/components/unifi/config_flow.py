@@ -5,12 +5,9 @@ from homeassistant import config_entries
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL)
 
-from .const import (CONF_CONTROLLER, CONF_POE_CONTROL, CONF_SITE_ID,
-                    DOMAIN, LOGGER)
+from .const import CONF_CONTROLLER, CONF_SITE_ID, DOMAIN, LOGGER
 from .controller import get_controller
-from .errors import (
-    AlreadyConfigured, AuthenticationRequired, CannotConnect, UserLevel)
-
+from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
 
 DEFAULT_PORT = 8443
 DEFAULT_SITE_ID = 'default'
@@ -45,6 +42,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow):
                     CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL),
                     CONF_SITE_ID: DEFAULT_SITE_ID,
                 }
+
                 controller = await get_controller(self.hass, **self.config)
 
                 self.sites = await controller.sites()
@@ -81,13 +79,11 @@ class UnifiFlowHandler(config_entries.ConfigFlow):
         errors = {}
 
         if user_input is not None:
-
             try:
                 desc = user_input.get(CONF_SITE_ID, self.desc)
+
                 for site in self.sites.values():
                     if desc == site['desc']:
-                        if site['role'] != 'admin':
-                            raise UserLevel
                         self.config[CONF_SITE_ID] = site['name']
                         break
 
@@ -98,8 +94,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow):
                         raise AlreadyConfigured
 
                 data = {
-                    CONF_CONTROLLER: self.config,
-                    CONF_POE_CONTROL: True
+                    CONF_CONTROLLER: self.config
                 }
 
                 return self.async_create_entry(
@@ -110,12 +105,15 @@ class UnifiFlowHandler(config_entries.ConfigFlow):
             except AlreadyConfigured:
                 return self.async_abort(reason='already_configured')
 
-            except UserLevel:
-                return self.async_abort(reason='user_privilege')
-
         if len(self.sites) == 1:
             self.desc = next(iter(self.sites.values()))['desc']
             return await self.async_step_site(user_input={})
+
+        if self.desc is not None:
+            for site in self.sites.values():
+                if self.desc == site['name']:
+                    self.desc = site['desc']
+                    return await self.async_step_site(user_input={})
 
         sites = []
         for site in self.sites.values():
@@ -128,3 +126,17 @@ class UnifiFlowHandler(config_entries.ConfigFlow):
             }),
             errors=errors,
         )
+
+    async def async_step_import(self, import_config):
+        """Import from UniFi device tracker config."""
+        config = {
+            CONF_HOST: import_config[CONF_HOST],
+            CONF_USERNAME: import_config[CONF_USERNAME],
+            CONF_PASSWORD: import_config[CONF_PASSWORD],
+            CONF_PORT: import_config.get(CONF_PORT),
+            CONF_VERIFY_SSL: import_config.get(CONF_VERIFY_SSL),
+        }
+
+        self.desc = import_config[CONF_SITE_ID]
+
+        return await self.async_step_user(user_input=config)

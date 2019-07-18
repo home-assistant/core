@@ -58,6 +58,8 @@ class FlowManager:
                          context: Optional[Dict] = None,
                          data: Any = None) -> Any:
         """Start a configuration flow."""
+        if context is None:
+            context = {}
         flow = await self._async_create_flow(
             handler, context=context, data=data)
         flow.hass = self.hass
@@ -153,7 +155,7 @@ class FlowHandler:
     hass = None
     handler = None
     cur_step = None
-    context = None
+    context = None  # type: Optional[Dict]
 
     # Set by _async_create_flow callback
     init_step = 'init'

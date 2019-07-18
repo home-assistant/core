@@ -24,6 +24,7 @@ from homeassistant.helpers.event import track_point_in_time
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CODE_TEMPLATE = 'code_template'
+CONF_CODE_ARM_REQUIRED = 'code_arm_required'
 
 CONF_PAYLOAD_DISARM = 'payload_disarm'
 CONF_PAYLOAD_ARM_HOME = 'payload_arm_home'
@@ -108,6 +109,7 @@ PLATFORM_SCHEMA = vol.Schema(vol.All(mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
         _state_schema(STATE_ALARM_TRIGGERED),
     vol.Required(mqtt.CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Required(mqtt.CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
     vol.Optional(CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY): cv.string,
     vol.Optional(CONF_PAYLOAD_ARM_HOME, default=DEFAULT_ARM_HOME): cv.string,
     vol.Optional(CONF_PAYLOAD_ARM_NIGHT, default=DEFAULT_ARM_NIGHT): cv.string,
@@ -126,6 +128,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         config.get(mqtt.CONF_STATE_TOPIC),
         config.get(mqtt.CONF_COMMAND_TOPIC),
         config.get(mqtt.CONF_QOS),
+        config.get(CONF_CODE_ARM_REQUIRED),
         config.get(CONF_PAYLOAD_DISARM),
         config.get(CONF_PAYLOAD_ARM_HOME),
         config.get(CONF_PAYLOAD_ARM_AWAY),
@@ -146,9 +149,9 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
     """
 
     def __init__(self, hass, name, code, code_template, disarm_after_trigger,
-                 state_topic, command_topic, qos, payload_disarm,
-                 payload_arm_home, payload_arm_away, payload_arm_night,
-                 config):
+                 state_topic, command_topic, qos, code_arm_required,
+                 payload_disarm, payload_arm_home, payload_arm_away,
+                 payload_arm_night, config):
         """Init the manual MQTT alarm panel."""
         self._state = STATE_ALARM_DISARMED
         self._hass = hass
@@ -175,6 +178,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
         self._state_topic = state_topic
         self._command_topic = command_topic
         self._qos = qos
+        self._code_arm_required = code_arm_required
         self._payload_disarm = payload_disarm
         self._payload_arm_home = payload_arm_home
         self._payload_arm_away = payload_arm_away
@@ -237,6 +241,11 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
             return alarm.FORMAT_NUMBER
         return alarm.FORMAT_TEXT
 
+    @property
+    def code_arm_required(self):
+        """Whether the code is required for arm actions."""
+        return self._code_arm_required
+
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         if not self._validate_code(code, STATE_ALARM_DISARMED):
@@ -248,21 +257,24 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        if not self._validate_code(code, STATE_ALARM_ARMED_HOME):
+        if self._code_arm_required and not \
+                self._validate_code(code, STATE_ALARM_ARMED_HOME):
             return
 
         self._update_state(STATE_ALARM_ARMED_HOME)
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        if not self._validate_code(code, STATE_ALARM_ARMED_AWAY):
+        if self._code_arm_required and not \
+                self._validate_code(code, STATE_ALARM_ARMED_AWAY):
             return
 
         self._update_state(STATE_ALARM_ARMED_AWAY)
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
-        if not self._validate_code(code, STATE_ALARM_ARMED_NIGHT):
+        if self._code_arm_required and not \
+                self._validate_code(code, STATE_ALARM_ARMED_NIGHT):
             return
 
         self._update_state(STATE_ALARM_ARMED_NIGHT)

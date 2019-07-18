@@ -9,7 +9,8 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components.homeassistant import SERVICE_CHECK_CONFIG
 import homeassistant.config as conf_util
 from homeassistant.const import (
-    ATTR_NAME, SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP)
+    ATTR_NAME, SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP,
+    EVENT_CORE_CONFIG_UPDATE)
 from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -194,8 +195,13 @@ async def async_setup(hass, config):
 
     await hassio.update_hass_api(config.get('http', {}), refresh_token.token)
 
-    if 'homeassistant' in config:
-        await hassio.update_hass_timezone(config['homeassistant'])
+    async def push_config(_):
+        """Push core config to Hass.io."""
+        await hassio.update_hass_timezone(str(hass.config.time_zone))
+
+    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, push_config)
+
+    await push_config(None)
 
     async def async_service_handler(service):
         """Handle service calls for Hass.io."""

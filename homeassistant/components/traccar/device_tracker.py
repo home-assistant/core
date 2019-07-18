@@ -7,43 +7,24 @@ import voluptuous as vol
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL,
-    CONF_PASSWORD, CONF_USERNAME, ATTR_BATTERY_LEVEL,
-    CONF_SCAN_INTERVAL, CONF_MONITORED_CONDITIONS,
-    CONF_EVENT)
+    CONF_PASSWORD, CONF_USERNAME, CONF_SCAN_INTERVAL,
+    CONF_MONITORED_CONDITIONS, CONF_EVENT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import slugify
+from .const import (
+    ATTR_ADDRESS, ATTR_CATEGORY, ATTR_GEOFENCE,
+    ATTR_MOTION, ATTR_SPEED, ATTR_TRACKER, ATTR_TRACCAR_ID, ATTR_STATUS,
+    EVENT_DEVICE_MOVING, EVENT_COMMAND_RESULT, EVENT_DEVICE_FUEL_DROP,
+    EVENT_GEOFENCE_ENTER, EVENT_DEVICE_OFFLINE, EVENT_DRIVER_CHANGED,
+    EVENT_GEOFENCE_EXIT, EVENT_DEVICE_OVERSPEED, EVENT_DEVICE_ONLINE,
+    EVENT_DEVICE_STOPPED, EVENT_MAINTENANCE, EVENT_ALARM, EVENT_TEXT_MESSAGE,
+    EVENT_DEVICE_UNKNOWN, EVENT_IGNITION_OFF, EVENT_IGNITION_ON,
+    EVENT_ALL_EVENTS, CONF_MAX_ACCURACY, CONF_SKIP_ACCURACY_ON)
 
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_ADDRESS = 'address'
-ATTR_CATEGORY = 'category'
-ATTR_GEOFENCE = 'geofence'
-ATTR_MOTION = 'motion'
-ATTR_SPEED = 'speed'
-ATTR_TRACKER = 'tracker'
-ATTR_TRACCAR_ID = 'traccar_id'
-ATTR_STATUS = 'status'
-
-EVENT_DEVICE_MOVING = 'device_moving'
-EVENT_COMMAND_RESULT = 'command_result'
-EVENT_DEVICE_FUEL_DROP = 'device_fuel_drop'
-EVENT_GEOFENCE_ENTER = 'geofence_enter'
-EVENT_DEVICE_OFFLINE = 'device_offline'
-EVENT_DRIVER_CHANGED = 'driver_changed'
-EVENT_GEOFENCE_EXIT = 'geofence_exit'
-EVENT_DEVICE_OVERSPEED = 'device_overspeed'
-EVENT_DEVICE_ONLINE = 'device_online'
-EVENT_DEVICE_STOPPED = 'device_stopped'
-EVENT_MAINTENANCE = 'maintenance'
-EVENT_ALARM = 'alarm'
-EVENT_TEXT_MESSAGE = 'text_message'
-EVENT_DEVICE_UNKNOWN = 'device_unknown'
-EVENT_IGNITION_OFF = 'ignition_off'
-EVENT_IGNITION_ON = 'ignition_on'
-EVENT_ALL_EVENTS = 'all_events'
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL
@@ -55,6 +36,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=8082): cv.port,
     vol.Optional(CONF_SSL, default=False): cv.boolean,
     vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+    vol.Required(CONF_MAX_ACCURACY, default=0): vol.All(vol.Coerce(int),
+                                                        vol.Range(min=0)),
+    vol.Optional(CONF_SKIP_ACCURACY_ON,
+                 default=[]): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_MONITORED_CONDITIONS,
                  default=[]): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_EVENT,
@@ -91,6 +76,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     scanner = TraccarScanner(
         api, hass, async_see,
         config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
+        config[CONF_MAX_ACCURACY], config[CONF_SKIP_ACCURACY_ON],
         config[CONF_MONITORED_CONDITIONS], config[CONF_EVENT])
 
     return await scanner.async_init()
@@ -99,9 +85,8 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
 class TraccarScanner:
     """Define an object to retrieve Traccar data."""
 
-    def __init__(self, api, hass, async_see, scan_interval,
-                 custom_attributes,
-                 event_types):
+    def __init__(self, api, hass, async_see, scan_interval, max_accuracy,
+                 skip_accuracy_on, custom_attributes, event_types):
         """Initialize."""
         from stringcase import camelcase
         self._event_types = {camelcase(evt): evt for evt in event_types}
@@ -111,6 +96,8 @@ class TraccarScanner:
         self._api = api
         self.connected = False
         self._hass = hass
+        self._max_accuracy = max_accuracy
+        self._skip_accuracy_on = skip_accuracy_on
 
     async def async_init(self):
         """Further initialize connection to Traccar."""
@@ -148,6 +135,8 @@ class TraccarScanner:
             device_info = self._api.device_info[device_unique_id]
             device = None
             attr = {}
+            skip_accuracy_filter = False
+
             attr[ATTR_TRACKER] = 'traccar'
             if device_info.get('address') is not None:
                 attr[ATTR_ADDRESS] = device_info['address']
@@ -157,8 +146,6 @@ class TraccarScanner:
                 attr[ATTR_CATEGORY] = device_info['category']
             if device_info.get('speed') is not None:
                 attr[ATTR_SPEED] = device_info['speed']
-            if device_info.get('battery') is not None:
-                attr[ATTR_BATTERY_LEVEL] = device_info['battery']
             if device_info.get('motion') is not None:
                 attr[ATTR_MOTION] = device_info['motion']
             if device_info.get('traccar_id') is not None:
@@ -172,11 +159,24 @@ class TraccarScanner:
             for custom_attr in self._custom_attributes:
                 if device_info.get(custom_attr) is not None:
                     attr[custom_attr] = device_info[custom_attr]
+                    if custom_attr in self._skip_accuracy_on:
+                        skip_accuracy_filter = True
+
+            accuracy = 0.0
+            if device_info.get('accuracy') is not None:
+                accuracy = device_info['accuracy']
+            if (not skip_accuracy_filter and self._max_accuracy > 0 and
+                    accuracy > self._max_accuracy):
+                _LOGGER.debug('Excluded position by accuracy filter: %f (%s)',
+                              accuracy, attr[ATTR_TRACCAR_ID])
+                continue
+
             await self._async_see(
                 dev_id=slugify(device_info['device_id']),
                 gps=(device_info.get('latitude'),
                      device_info.get('longitude')),
-                gps_accuracy=(device_info.get('accuracy')),
+                gps_accuracy=accuracy,
+                battery=device_info.get('battery'),
                 attributes=attr)
 
     async def import_events(self):

@@ -17,6 +17,7 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import async_mock_service
 
+
 GOOGLE_CONFIG = {
     CONF_CLIENT_ID: 'client_id',
     CONF_CLIENT_SECRET: 'client_secret',
@@ -304,7 +305,7 @@ async def test_all_day_offset_event(hass, mock_next_event):
     }
 
 
-async def test_update_false(hass, google_service):
+async def test_update_error(hass, google_service):
     """Test that the calendar handles a server error."""
     google_service.return_value.get = Mock(
         side_effect=httplib2.ServerNotFoundError("unit test"))

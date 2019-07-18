@@ -7,12 +7,14 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from .const import (ATTR_DEVICE_ID, ATTR_DEVICE_NAME,
                     ATTR_MANUFACTURER, ATTR_MODEL, ATTR_OS_VERSION,
                     DATA_BINARY_SENSOR, DATA_CONFIG_ENTRIES, DATA_DELETED_IDS,
-                    DATA_DEVICES, DATA_SENSOR, DATA_STORE, DOMAIN, STORAGE_KEY,
-                    STORAGE_VERSION)
+                    DATA_DEVICES, DATA_SENSOR, DATA_STORE,
+                    DOMAIN, STORAGE_KEY, STORAGE_VERSION)
 
 from .http_api import RegistrationsView
 from .webhook import handle_webhook
 from .websocket_api import register_websocket_handlers
+
+PLATFORMS = 'sensor', 'binary_sensor', 'device_tracker'
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
@@ -24,7 +26,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
             DATA_BINARY_SENSOR: {},
             DATA_CONFIG_ENTRIES: {},
             DATA_DELETED_IDS: [],
-            DATA_DEVICES: {},
             DATA_SENSOR: {}
         }
 
@@ -83,10 +84,8 @@ async def async_setup_entry(hass, entry):
     webhook_register(hass, DOMAIN, registration_name, webhook_id,
                      handle_webhook)
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry,
-                                                      DATA_BINARY_SENSOR))
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, DATA_SENSOR))
+    for domain in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, domain))
 
     return True

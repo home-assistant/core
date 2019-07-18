@@ -1,11 +1,12 @@
 """Support for Genius Hub sensor devices."""
-from datetime import datetime
+from datetime import timedelta
 import logging
 
 from homeassistant.const import DEVICE_CLASS_BATTERY
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from homeassistant.util.dt import utc_from_timestamp, utcnow
 
 from . import DOMAIN
 
@@ -13,6 +14,12 @@ _LOGGER = logging.getLogger(__name__)
 
 GH_HAS_BATTERY = [
     'Room Thermostat', 'Genius Valve', 'Room Sensor', 'Radiator Valve']
+
+GH_LEVEL_MAPPING = {
+    'error': 'Errors',
+    'warning': 'Warnings',
+    'information': 'Information'
+}
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -23,7 +30,10 @@ async def async_setup_platform(hass, config, async_add_entities,
     sensors = [GeniusDevice(client, d)
                for d in client.hub.device_objs if d.type in GH_HAS_BATTERY]
 
-    async_add_entities(sensors)
+    issues = [GeniusIssue(client, i)
+              for i in list(GH_LEVEL_MAPPING)]
+
+    async_add_entities(sensors + issues, update_before_add=True)
 
 
 class GeniusDevice(Entity):
@@ -50,6 +60,29 @@ class GeniusDevice(Entity):
         return self._name
 
     @property
+    def icon(self):
+        """Return the icon of the sensor."""
+        values = self._device._info_raw['childValues']  # noqa; pylint: disable=protected-access
+
+        last_comms = utc_from_timestamp(values['lastComms']['val'])
+        interval = timedelta(seconds=values['WakeUp_Interval']['val'])
+
+        if last_comms < utcnow() - interval * 3:
+            return 'mdi:battery-unknown'
+
+        battery_level = self._device.state['batteryLevel']
+        if battery_level == 255:
+            return 'mdi:battery-unknown'
+        if battery_level < 40:
+            return 'mdi:battery-alert'
+
+        icon = 'mdi:battery'
+        if battery_level <= 95:
+            icon += '-{}'.format(int(round(battery_level / 10 - .01)) * 10)
+
+        return icon
+
+    @property
     def device_class(self):
         """Return the device class of the sensor."""
         return DEVICE_CLASS_BATTERY
@@ -67,7 +100,8 @@ class GeniusDevice(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._device.state['batteryLevel']
+        level = self._device.state['batteryLevel']
+        return level if level != 255 else 0
 
     @property
     def device_state_attributes(self):
@@ -76,7 +110,50 @@ class GeniusDevice(Entity):
         attrs['assigned_zone'] = self._device.assignedZones[0]['name']
 
         last_comms = self._device._info_raw['childValues']['lastComms']['val']  # noqa; pylint: disable=protected-access
-        attrs['last_comms'] = datetime.utcfromtimestamp(
-            last_comms).isoformat()
+        attrs['last_comms'] = utc_from_timestamp(last_comms).isoformat()
 
         return {**attrs}
+
+
+class GeniusIssue(Entity):
+    """Representation of a Genius Hub sensor."""
+
+    def __init__(self, client, level):
+        """Initialize the sensor."""
+        self._hub = client.hub
+        self._name = GH_LEVEL_MAPPING[level]
+        self._level = level
+        self._issues = []
+
+    async def async_added_to_hass(self):
+        """Set up a listener when this entity is added to HA."""
+        async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
+
+    @callback
+    def _refresh(self):
+        self.async_schedule_update_ha_state(force_refresh=True)
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def should_poll(self) -> bool:
+        """Return False as the geniushub devices should not be polled."""
+        return False
+
+    @property
+    def state(self):
+        """Return the number of issues."""
+        return len(self._issues)
+
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        return {'{}_list'.format(self._level): self._issues}
+
+    async def async_update(self):
+        """Process the sensor's state data."""
+        self._issues = [i['description']
+                        for i in self._hub.issues if i['level'] == self._level]

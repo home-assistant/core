@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import json
 import logging
 import os
-from unittest.mock import call
+from unittest.mock import Mock, call
 
 from asynctest import patch
 import pytest
@@ -12,9 +12,9 @@ from homeassistant.components import zone
 import homeassistant.components.device_tracker as device_tracker
 from homeassistant.components.device_tracker import const, legacy
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN,
-    ATTR_ICON, CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME,
-    ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_GPS_ACCURACY)
+    ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME, ATTR_GPS_ACCURACY,
+    ATTR_HIDDEN, ATTR_ICON, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_PLATFORM,
+    STATE_HOME, STATE_NOT_HOME)
 from homeassistant.core import State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
@@ -23,8 +23,8 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
-    assert_setup_component, async_fire_time_changed, mock_restore_cache,
-    patch_yaml_files)
+    assert_setup_component, async_fire_time_changed, mock_registry,
+    mock_restore_cache, patch_yaml_files)
 from tests.components.device_tracker import common
 
 TEST_PLATFORM = {device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}}
@@ -319,6 +319,26 @@ async def test_see_service(mock_see, hass):
     assert mock_see.call_count == 1
     assert mock_see.call_count == 1
     assert mock_see.call_args == call(**params)
+
+
+async def test_see_service_guard_config_entry(hass, mock_device_tracker_conf):
+    """Test the guard if the device is registered in the entity registry."""
+    mock_entry = Mock()
+    dev_id = 'test'
+    entity_id = const.ENTITY_ID_FORMAT.format(dev_id)
+    mock_registry(hass, {entity_id: mock_entry})
+    devices = mock_device_tracker_conf
+    assert await async_setup_component(
+        hass, device_tracker.DOMAIN, TEST_PLATFORM)
+    params = {
+        'dev_id': dev_id,
+        'gps': [.3, .8],
+    }
+
+    common.async_see(hass, **params)
+    await hass.async_block_till_done()
+
+    assert not devices
 
 
 async def test_new_device_event_fired(hass, mock_device_tracker_conf):

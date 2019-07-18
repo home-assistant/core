@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 from typing import Dict
 
+from pyheos import CommandError, Heos, const as heos_const
 import voluptuous as vol
 
 from homeassistant.components.media_player.const import (
@@ -57,7 +58,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Initialize config entry which represents the HEOS controller."""
-    from pyheos import Heos, CommandError
     host = entry.data[CONF_HOST]
     # Setting all_progress_events=False ensures that we only receive a
     # media position update upon start of playback or when media changes
@@ -137,16 +137,15 @@ class ControllerManager:
 
     async def connect_listeners(self):
         """Subscribe to events of interest."""
-        from pyheos import const
         self._device_registry, self._entity_registry = await asyncio.gather(
             self._hass.helpers.device_registry.async_get_registry(),
             self._hass.helpers.entity_registry.async_get_registry())
         # Handle controller events
         self._signals.append(self.controller.dispatcher.connect(
-            const.SIGNAL_CONTROLLER_EVENT, self._controller_event))
+            heos_const.SIGNAL_CONTROLLER_EVENT, self._controller_event))
         # Handle connection-related events
         self._signals.append(self.controller.dispatcher.connect(
-            const.SIGNAL_HEOS_EVENT, self._heos_event))
+            heos_const.SIGNAL_HEOS_EVENT, self._heos_event))
 
     async def disconnect(self):
         """Disconnect subscriptions."""
@@ -158,21 +157,19 @@ class ControllerManager:
 
     async def _controller_event(self, event, data):
         """Handle controller event."""
-        from pyheos import const
-        if event == const.EVENT_PLAYERS_CHANGED:
-            self.update_ids(data[const.DATA_MAPPED_IDS])
+        if event == heos_const.EVENT_PLAYERS_CHANGED:
+            self.update_ids(data[heos_const.DATA_MAPPED_IDS])
         # Update players
         self._hass.helpers.dispatcher.async_dispatcher_send(
             SIGNAL_HEOS_UPDATED)
 
     async def _heos_event(self, event):
         """Handle connection event."""
-        from pyheos import CommandError, const
-        if event == const.EVENT_CONNECTED:
+        if event == heos_const.EVENT_CONNECTED:
             try:
                 # Retrieve latest players and refresh status
                 data = await self.controller.load_players()
-                self.update_ids(data[const.DATA_MAPPED_IDS])
+                self.update_ids(data[heos_const.DATA_MAPPED_IDS])
             except (CommandError, asyncio.TimeoutError, ConnectionError) as ex:
                 _LOGGER.error("Unable to refresh players: %s", ex)
         # Update players
@@ -241,9 +238,8 @@ class SourceManager:
 
     def get_current_source(self, now_playing_media):
         """Determine current source from now playing media."""
-        from pyheos import const
         # Match input by input_name:media_id
-        if now_playing_media.source_id == const.MUSIC_SOURCE_AUX_INPUT:
+        if now_playing_media.source_id == heos_const.MUSIC_SOURCE_AUX_INPUT:
             return next((input_source.name for input_source in self.inputs
                          if input_source.input_name ==
                          now_playing_media.media_id), None)
@@ -260,8 +256,6 @@ class SourceManager:
         physical event therefore throttle it. Retrieving sources immediately
         after the event may fail so retry.
         """
-        from pyheos import CommandError, const
-
         @Throttle(MIN_UPDATE_SOURCES)
         async def get_sources():
             retry_attempts = 0
@@ -286,9 +280,9 @@ class SourceManager:
                         return
 
         async def update_sources(event, data=None):
-            if event in (const.EVENT_SOURCES_CHANGED,
-                         const.EVENT_USER_CHANGED,
-                         const.EVENT_CONNECTED):
+            if event in (heos_const.EVENT_SOURCES_CHANGED,
+                         heos_const.EVENT_USER_CHANGED,
+                         heos_const.EVENT_CONNECTED):
                 sources = await get_sources()
                 # If throttled, it will return None
                 if sources:
@@ -300,6 +294,6 @@ class SourceManager:
                         SIGNAL_HEOS_UPDATED)
 
         controller.dispatcher.connect(
-            const.SIGNAL_CONTROLLER_EVENT, update_sources)
+            heos_const.SIGNAL_CONTROLLER_EVENT, update_sources)
         controller.dispatcher.connect(
-            const.SIGNAL_HEOS_EVENT, update_sources)
+            heos_const.SIGNAL_HEOS_EVENT, update_sources)

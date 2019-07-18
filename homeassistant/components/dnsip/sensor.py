@@ -63,7 +63,7 @@ class WanIpSensor(Entity):
         self.hass = hass
         self._name = name
         self.hostname = hostname
-        self.resolver = aiodns.DNSResolver(loop=self.hass.loop)
+        self.resolver = aiodns.DNSResolver()
         self.resolver.nameservers = [resolver]
         self.querytype = 'AAAA' if ipv6 else 'A'
         self._state = None

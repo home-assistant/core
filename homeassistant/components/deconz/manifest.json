@@ -4,8 +4,13 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/deconz",
   "requirements": [
-    "pydeconz==58"
+    "pydeconz==60"
   ],
+  "ssdp": {
+    "manufacturer": [
+      "Royal Philips Electronics"
+    ]
+  },
   "dependencies": [],
   "codeowners": [
     "@kane610"

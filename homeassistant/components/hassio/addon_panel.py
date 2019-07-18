@@ -61,7 +61,7 @@ class HassIOAddonPanel(HomeAssistantView):
 
     async def delete(self, request, addon):
         """Handle remove add-on panel requests."""
-        # Currently not supported by backend / frontend
+        self.hass.components.frontend.async_remove_panel(addon)
         return web.Response()
 
     async def get_panels(self):

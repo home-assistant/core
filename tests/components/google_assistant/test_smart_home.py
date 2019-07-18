@@ -4,14 +4,14 @@ import pytest
 
 from homeassistant.core import State, EVENT_CALL_SERVICE
 from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
+    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
 from homeassistant.setup import async_setup_component
 from homeassistant.components import camera
 from homeassistant.components.climate.const import (
-    ATTR_MIN_TEMP, ATTR_MAX_TEMP, STATE_HEAT, SUPPORT_OPERATION_MODE
+    ATTR_MIN_TEMP, ATTR_MAX_TEMP, HVAC_MODE_HEAT
 )
 from homeassistant.components.google_assistant import (
-    const, trait, helpers, smart_home as sh,
+    const, trait, smart_home as sh,
     EVENT_COMMAND_RECEIVED, EVENT_QUERY_RECEIVED, EVENT_SYNC_RECEIVED)
 from homeassistant.components.demo.binary_sensor import DemoBinarySensor
 from homeassistant.components.demo.cover import DemoCover
@@ -23,9 +23,8 @@ from homeassistant.helpers import device_registry
 from tests.common import (mock_device_registry, mock_registry,
                           mock_area_registry, mock_coro)
 
-BASIC_CONFIG = helpers.Config(
-    should_expose=lambda state: True,
-)
+from . import BASIC_CONFIG, MockConfig
+
 REQ_ID = 'ff36a3cc-ec34-11e6-b1a0-64510650abcf'
 
 
@@ -57,7 +56,7 @@ async def test_sync_message(hass):
     # Excluded via config
     hass.states.async_set('light.not_expose', 'on')
 
-    config = helpers.Config(
+    config = MockConfig(
         should_expose=lambda state: state.entity_id != 'light.not_expose',
         entity_config={
             'light.demo_light': {
@@ -145,7 +144,7 @@ async def test_sync_in_area(hass, registries):
     light.entity_id = entity.entity_id
     await light.async_update_ha_state()
 
-    config = helpers.Config(
+    config = MockConfig(
         should_expose=lambda _: True,
         entity_config={}
     )
@@ -426,10 +425,9 @@ async def test_execute(hass):
 
 async def test_raising_error_trait(hass):
     """Test raising an error while executing a trait command."""
-    hass.states.async_set('climate.bla', STATE_HEAT, {
+    hass.states.async_set('climate.bla', HVAC_MODE_HEAT, {
         ATTR_MIN_TEMP: 15,
         ATTR_MAX_TEMP: 30,
-        ATTR_SUPPORTED_FEATURES: SUPPORT_OPERATION_MODE,
         ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
     })
 
@@ -510,34 +508,6 @@ async def test_unavailable_state_doesnt_sync(hass):
     light.hass = hass
     light.entity_id = 'light.demo_light'
     light._available = False    # pylint: disable=protected-access
-    await light.async_update_ha_state()
-
-    result = await sh.async_handle_message(
-        hass, BASIC_CONFIG, 'test-agent',
-        {
-            "requestId": REQ_ID,
-            "inputs": [{
-                "intent": "action.devices.SYNC"
-            }]
-        })
-
-    assert result == {
-        'requestId': REQ_ID,
-        'payload': {
-            'agentUserId': 'test-agent',
-            'devices': []
-        }
-    }
-
-
-async def test_empty_name_doesnt_sync(hass):
-    """Test that an entity with empty name does not sync over."""
-    light = DemoLight(
-        None, ' ',
-        state=False,
-    )
-    light.hass = hass
-    light.entity_id = 'light.demo_light'
     await light.async_update_ha_state()
 
     result = await sh.async_handle_message(
@@ -686,7 +656,7 @@ async def test_device_class_cover(hass, device_class, google_type):
 
 
 @pytest.mark.parametrize("device_class,google_type", [
-    ('non_existing_class', 'action.devices.types.MEDIA'),
+    ('non_existing_class', 'action.devices.types.SWITCH'),
     ('speaker', 'action.devices.types.SPEAKER'),
     ('tv', 'action.devices.types.TV'),
 ])

@@ -8,11 +8,10 @@ import logging
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
-from . import ZigbeeChannel, parse_and_log_command, MAINS_POWERED
+from . import ZigbeeChannel, parse_and_log_command
 from ..helpers import get_attr_id_by_name
 from ..const import (
-    SIGNAL_ATTR_UPDATED, SIGNAL_MOVE_LEVEL, SIGNAL_SET_LEVEL,
-    SIGNAL_STATE_ATTR
+    SIGNAL_ATTR_UPDATED, SIGNAL_MOVE_LEVEL, SIGNAL_SET_LEVEL
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,7 +86,7 @@ class OnOffChannel(ZigbeeChannel):
 
     async def async_update(self):
         """Initialize channel."""
-        from_cache = not self.device.power_source == MAINS_POWERED
+        from_cache = not self.device.is_mains_powered
         _LOGGER.debug(
             "%s is attempting to update onoff state - from cache: %s",
             self._unique_id,
@@ -202,8 +201,7 @@ class PowerConfigurationChannel(ZigbeeChannel):
         if attrid == attr_id:
             async_dispatcher_send(
                 self._zha_device.hass,
-                "{}_{}".format(self.unique_id, SIGNAL_STATE_ATTR),
-                'battery_level',
+                "{}_{}".format(self.unique_id, SIGNAL_ATTR_UPDATED),
                 value
             )
 
