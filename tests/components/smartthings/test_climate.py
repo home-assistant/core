@@ -20,8 +20,8 @@ from homeassistant.components.climate.const import (
 from homeassistant.components.smartthings import climate
 from homeassistant.components.smartthings.const import DOMAIN
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE, STATE_OFF,
-    STATE_UNKNOWN)
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE,
+    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_UNKNOWN)
 
 from .conftest import setup_platform
 
@@ -375,6 +375,31 @@ async def test_set_temperature_with_mode(hass, thermostat):
     state = hass.states.get('climate.thermostat')
     assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 25.5
     assert state.attributes[ATTR_TARGET_TEMP_LOW] == 22.2
+    assert state.state == HVAC_MODE_HEAT_COOL
+
+
+async def test_set_turn_off(hass, air_conditioner):
+    """Test the a/c is turned off successfully."""
+    await setup_platform(hass, CLIMATE_DOMAIN, devices=[air_conditioner])
+    state = hass.states.get('climate.air_conditioner')
+    assert state.state == HVAC_MODE_HEAT_COOL
+    await hass.services.async_call(
+        CLIMATE_DOMAIN, SERVICE_TURN_OFF,
+        blocking=True)
+    state = hass.states.get('climate.air_conditioner')
+    assert state.state == STATE_OFF
+
+
+async def test_set_turn_on(hass, air_conditioner):
+    """Test the a/c is turned on successfully."""
+    air_conditioner.status.update_attribute_value(Attribute.switch, 'off')
+    await setup_platform(hass, CLIMATE_DOMAIN, devices=[air_conditioner])
+    state = hass.states.get('climate.air_conditioner')
+    assert state.state == STATE_OFF
+    await hass.services.async_call(
+        CLIMATE_DOMAIN, SERVICE_TURN_ON,
+        blocking=True)
+    state = hass.states.get('climate.air_conditioner')
     assert state.state == HVAC_MODE_HEAT_COOL
 
 
