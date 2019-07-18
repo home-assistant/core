@@ -376,4 +376,6 @@ class EvoDevice(Entity):
 
     def update(self) -> None:
         """Get the latest state data."""
-        self._schedule = self._evo_device.schedule()
+        if not self._schedule or \
+                parse_datetime(self.setpoints['next']['from']) < utcnow():
+            self._schedule = self._evo_device.schedule()
