@@ -15,7 +15,7 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL, SUPPORT_PRESET_MODE
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT, TEMP_CELSIUS)
+    ATTR_ENTITY_ID, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 
 _CONFIGURING = {}
