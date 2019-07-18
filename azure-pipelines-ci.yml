@@ -22,8 +22,6 @@ variables:
   - name: PythonMain
     value: '35'
   - group: codecov
-  - name: system.debug
-    value: true
 
 stages:
 
