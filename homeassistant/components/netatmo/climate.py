@@ -25,8 +25,8 @@ from .const import DATA_NETATMO_AUTH
 
 _LOGGER = logging.getLogger(__name__)
 
-PRESET_FROST_GUARD = 'frost guard'
-PRESET_SCHEDULE = 'schedule'
+PRESET_FROST_GUARD = 'Frost Guard'
+PRESET_SCHEDULE = 'Schedule'
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE)
 SUPPORT_HVAC = [HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF]
@@ -50,9 +50,19 @@ PRESET_MAP_NETATMO = {
     STATE_NETATMO_OFF: STATE_NETATMO_OFF
 }
 
+NETATMO_MAP_PRESET = {
+    STATE_NETATMO_HG: PRESET_FROST_GUARD,
+    STATE_NETATMO_MAX: PRESET_BOOST,
+    STATE_NETATMO_SCHEDULE: PRESET_SCHEDULE,
+    STATE_NETATMO_AWAY: PRESET_AWAY,
+    STATE_NETATMO_OFF: STATE_NETATMO_OFF,
+    STATE_NETATMO_MANUAL: 'Manual',
+}
+
 HVAC_MAP_NETATMO = {
     STATE_NETATMO_SCHEDULE: HVAC_MODE_AUTO,
     STATE_NETATMO_HG: HVAC_MODE_AUTO,
+    PRESET_FROST_GUARD: HVAC_MODE_AUTO,
     STATE_NETATMO_MAX: HVAC_MODE_HEAT,
     STATE_NETATMO_OFF: HVAC_MODE_OFF,
     STATE_NETATMO_MANUAL: HVAC_MODE_AUTO,
@@ -307,8 +317,9 @@ class NetatmoThermostat(ClimateDevice):
                 self._data.room_status[self._room_id]['current_temperature']
             self._target_temperature = \
                 self._data.room_status[self._room_id]['target_temperature']
-            self._preset = \
+            self._preset = NETATMO_MAP_PRESET[
                 self._data.room_status[self._room_id]["setpoint_mode"]
+            ]
             self._hvac_mode = HVAC_MAP_NETATMO[self._preset]
             self._battery_level = \
                 self._data.room_status[self._room_id].get('battery_level')
