@@ -326,7 +326,7 @@ class Thermostat(ClimateDevice):
             self.set_temp_hold(self.current_temperature)
 
         elif preset_mode in (
-            PRESET_HOLD_NEXT_TRANSITION, PRESET_HOLD_INDEFINITE):
+                PRESET_HOLD_NEXT_TRANSITION, PRESET_HOLD_INDEFINITE):
             self.data.ecobee.set_climate_hold(
                 self.thermostat_index, PRESET_TO_ECOBEE_HOLD[preset_mode],
                 self.hold_preference())
