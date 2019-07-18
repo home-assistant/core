@@ -22,23 +22,24 @@ from .const import DATA_CLIENT, DEFAULT_SCAN_INTERVAL, DOMAIN, TOPIC_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_PIN_LABEL = 'label'
+ATTR_PIN_LABEL_OR_VALUE = 'label_or_pin'
+ATTR_PIN_VALUE = 'pin'
+
 CONF_ACCOUNTS = 'accounts'
-CONF_PIN_LABEL = 'label'
-CONF_PIN_LABEL_OR_VALUE = 'label_or_pin'
-CONF_PIN_VALUE = 'pin'
 CONF_SYSTEM_ID = 'system_id'
 
 DATA_LISTENER = 'listener'
 
 SERVICE_REMOVE_PIN_SCHEMA = vol.Schema({
-    vol.Required(CONF_SYSTEM_ID): cv.string,
-    vol.Required(CONF_PIN_LABEL_OR_VALUE): cv.string,
+    vol.Required(ATTR_SYSTEM_ID): cv.string,
+    vol.Required(ATTR_PIN_LABEL_OR_VALUE): cv.string,
 })
 
 SERVICE_SET_PIN_SCHEMA = vol.Schema({
-    vol.Required(CONF_SYSTEM_ID): cv.string,
-    vol.Required(CONF_PIN_LABEL): cv.string,
-    vol.Required(CONF_PIN_VALUE): cv.string,
+    vol.Required(ATTR_SYSTEM_ID): cv.string,
+    vol.Required(ATTR_PIN_LABEL): cv.string,
+    vol.Required(ATTR_PIN_VALUE): cv.string,
 })
 
 ACCOUNT_CONFIG_SCHEMA = vol.Schema({
@@ -170,15 +171,15 @@ async def async_setup_entry(hass, config_entry):
     @_verify_domain_control
     async def remove_pin(call):
         """Remove a PIN."""
-        system = systems[int(call.data[CONF_SYSTEM_ID])]
-        await system.remove_pin(call.data[CONF_PIN_LABEL_OR_VALUE])
+        system = systems[int(call.data[ATTR_SYSTEM_ID])]
+        await system.remove_pin(call.data[ATTR_PIN_LABEL_OR_VALUE])
 
     @_verify_domain_control
     async def set_pin(call):
         """Set a PIN."""
-        system = systems[int(call.data[CONF_SYSTEM_ID])]
+        system = systems[int(call.data[ATTR_SYSTEM_ID])]
         await system.set_pin(
-            call.data[CONF_PIN_LABEL], call.data[CONF_PIN_VALUE])
+            call.data[ATTR_PIN_LABEL], call.data[ATTR_PIN_VALUE])
 
     for service, method, schema in [
             ('remove_pin', remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
