@@ -787,8 +787,6 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     @property
     def precision(self):
         """Return the precision of the system."""
-        # p = self._config[CONF_PRECISION]
-        # return p if p else super().precision
         if self._config.get(CONF_PRECISION) is not None:
             return self._config.get(CONF_PRECISION)
         return super().precision
