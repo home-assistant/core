@@ -211,6 +211,7 @@ homeassistant/components/qnap/* @colinodell
 homeassistant/components/quantum_gateway/* @cisasteelersfan
 homeassistant/components/qwikswitch/* @kellerza
 homeassistant/components/raincloud/* @vanstinator
+homeassistant/components/rainforest_eagle/* @gtdiehl
 homeassistant/components/rainmachine/* @bachya
 homeassistant/components/random/* @fabaff
 homeassistant/components/repetier/* @MTrab
