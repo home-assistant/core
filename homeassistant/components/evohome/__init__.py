@@ -293,7 +293,7 @@ class EvoDevice(Entity):
         if not self._schedule['DailySchedules']:
             return {}
 
-        switchpoints: Dict[str, Any] = {}
+        switchpoints = {}
 
         day_time = datetime.now()
         day_of_week = int(day_time.strftime('%w'))  # 0 is Sunday
