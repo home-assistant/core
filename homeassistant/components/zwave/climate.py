@@ -37,7 +37,7 @@ HVAC_STATE_MAPPINGS = {
     'Heat Mode': HVAC_MODE_HEAT,
     'Heat (Default)': HVAC_MODE_HEAT,
     'Aux Heat': HVAC_MODE_HEAT,
-    'Furnance': HVAC_MODE_HEAT,
+    'Furnace': HVAC_MODE_HEAT,
     'Fan Only': HVAC_MODE_FAN_ONLY,
     'Dry Air': HVAC_MODE_DRY,
     'Moist Air': HVAC_MODE_DRY,
