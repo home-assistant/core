@@ -19,9 +19,7 @@ class JLRSensor(JLREntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        _LOGGER.info('Getting state of %s sensor', self._attribute)
-
-        val = self._get_vehicle_status(self.vehicle.info.get('vehicleStatus'))
+        val = JLREntity.get_vehicle_status(self.vehicle.info.get('vehicleStatus'))
         if val is None:
             return val
         if val:
@@ -37,13 +35,6 @@ class JLRSensor(JLREntity):
 
         return int(float(val))
 
-    @staticmethod
-    def _get_vehicle_status(vehicle):
-        dict_only = {}
-        for element in vehicle:
-            dict_only[element.get('key')] = element.get('value')
-        return dict_only
-
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
@@ -53,8 +44,3 @@ class JLRSensor(JLREntity):
     def icon(self):
         """Return the icon."""
         return RESOURCES[self._attribute][2]
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return True

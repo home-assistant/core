@@ -20,8 +20,7 @@ class JLRSensor(JLREntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        _LOGGER.debug('Getting state of %s binary sensor', self._attribute)
-        val = self._get_vehicle_status(self.vehicle.info.get('vehicleStatus'))
+        val = JLREntity.get_vehicle_status(self.vehicle.info.get('vehicleStatus'))
         if val is None:
             return val
 
@@ -34,13 +33,6 @@ class JLRSensor(JLREntity, BinarySensorDevice):
             return bool(val == 'FALSE')
 
         return val
-
-    @staticmethod
-    def _get_vehicle_status(vehicle):
-        dict_only = {}
-        for element in vehicle:
-            dict_only[element.get('key')] = element.get('value')
-        return dict_only
 
     @property
     def device_class(self):

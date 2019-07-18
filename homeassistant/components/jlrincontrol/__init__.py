@@ -1,8 +1,12 @@
 """Support for Jaguar/Land Rover InControl services."""
 import logging
 from datetime import timedelta
+import urllib.error
 
 import voluptuous as vol
+
+import jlrpy
+
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, \
@@ -14,7 +18,10 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-__LOGGER = logging.getLogger(__name__)
+
+
+
+_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'jlrincontrol'
 SIGNAL_VEHICLE_SEEN = '{}.vehicle_seen'.format(DOMAIN)
@@ -44,7 +51,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_UPDATE_INTERVAL):
             vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)),
-        vol.Required(CONF_NAME, default={}): vol.Schema(
+        vol.Required(CONF_NAME): vol.Schema(
             {cv.slug: cv.string}),
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -52,21 +59,23 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the jlrpy component."""
-    import jlrpy
 
-    username = config[DOMAIN].get(CONF_USERNAME)
-    password = config[DOMAIN].get(CONF_PASSWORD)
+    username = config[DOMAIN][CONF_USERNAME]
+    password = config[DOMAIN][CONF_PASSWORD]
 
     state = hass.data[DATA_KEY] = JLRData(config)
 
-    interval = config[DOMAIN].get(CONF_SCAN_INTERVAL)
+    interval = config[DOMAIN][CONF_SCAN_INTERVAL]
 
-    connection = jlrpy.Connection(username, password)
-    vehicles = connection.vehicles
+    connection = None
+    try:
+        connection = jlrpy.Connection(username, password)
+    except urllib.error.HTTPError:
+        _LOGGER.error("Could not connect to JLR. Please check your credentials")
+        return False
 
     vehicles = []
     for vehicle in connection.vehicles:
-        __LOGGER.info("Populating vehicle info")
         vehicle.info = vehicle.get_status()
         vehicles.append(vehicle)
 
@@ -80,7 +89,7 @@ def setup(hass, config):
 
     def update_vehicle(vehicle):
         """Update information on vehicle."""
-        __LOGGER.info("Pulling info from JLR")
+        _LOGGER.info("Pulling info from JLR")
 
         state.vehicles[vehicle.vin] = vehicle
         if vehicle.vin not in state.entities:
@@ -93,10 +102,10 @@ def setup(hass, config):
 
     def update(now):
         """Update status from the online service."""
-        __LOGGER.info("Update method in INIT")
+        _LOGGER.info("Update method in INIT")
         try:
             if not connection:
-                __LOGGER.warning("Could not get data from service")
+                _LOGGER.warning("Could not get data from service")
                 return False
 
             for vehicle in vehicles:
@@ -106,8 +115,6 @@ def setup(hass, config):
         finally:
             track_point_in_utc_time(hass, update,
                                     utcnow() + interval)
-
-    __LOGGER.info("Logging into InControl")
 
     return update(utcnow())
 
@@ -144,9 +151,10 @@ class JLREntity(Entity):
         self._state.entities[self._vin].append(self)
 
     @staticmethod
-    def _get_vehicle_status(vehicle):
+    def get_vehicle_status(vehicle_status):
+        """Converts a weird quasi-dict returned by jlrpy into a proper dict"""
         dict_only = {}
-        for element in vehicle.get_status().get('vehicleStatus'):
+        for element in vehicle_status:
             dict_only[element.get('key')] = element.get('value')
         return dict_only
 
