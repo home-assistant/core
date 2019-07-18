@@ -31,6 +31,8 @@ PRESET_AUX_HEAT_ONLY = 'aux_heat_only'
 PRESET_HOLD_NEXT_TRANSITION = 'next_transition'
 PRESET_HOLD_INDEFINITE = 'indefinite'
 AWAY_MODE = 'awayMode'
+PRESET_HOME = 'home'
+PRESET_SLEEP = 'sleep'
 
 # Order matters, because for reverse mapping we don't want to map HEAT to AUX
 ECOBEE_HVAC_TO_HASS = collections.OrderedDict([
@@ -48,9 +50,8 @@ PRESET_TO_ECOBEE_HOLD = {
 
 PRESET_MODES = [
     PRESET_AWAY,
-    PRESET_TEMPERATURE,
-    PRESET_HOLD_NEXT_TRANSITION,
-    PRESET_HOLD_INDEFINITE
+    PRESET_HOME,
+    PRESET_SLEEP
 ]
 
 SERVICE_SET_FAN_MIN_ON_TIME = 'ecobee_set_fan_min_on_time'
@@ -168,6 +169,9 @@ class Thermostat(ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
+        if self.thermostat['settings']['useCelsius']:
+            return TEMP_CELSIUS
+
         return TEMP_FAHRENHEIT
 
     @property
@@ -305,9 +309,9 @@ class Thermostat(ClimateDevice):
         """Return true if aux heater."""
         return 'auxHeat' in self.thermostat['equipmentStatus']
 
-    def set_preset(self, preset):
+    def set_preset_mode(self, preset_mode):
         """Activate a preset."""
-        if preset == self.preset_mode:
+        if preset_mode == self.preset_mode:
             return
 
         self.update_without_throttle = True
@@ -317,23 +321,25 @@ class Thermostat(ClimateDevice):
             self.data.ecobee.delete_vacation(
                 self.thermostat_index, self.vacation)
 
-        if preset == PRESET_AWAY:
+        if preset_mode == PRESET_AWAY:
             self.data.ecobee.set_climate_hold(self.thermostat_index, 'away',
                                               'indefinite')
 
-        elif preset == PRESET_TEMPERATURE:
+        elif preset_mode == PRESET_TEMPERATURE:
             self.set_temp_hold(self.current_temperature)
 
-        elif preset in (PRESET_HOLD_NEXT_TRANSITION, PRESET_HOLD_INDEFINITE):
+        elif preset_mode in (PRESET_HOLD_NEXT_TRANSITION, PRESET_HOLD_INDEFINITE):
             self.data.ecobee.set_climate_hold(
-                self.thermostat_index, PRESET_TO_ECOBEE_HOLD[preset],
+                self.thermostat_index, PRESET_TO_ECOBEE_HOLD[preset_mode],
                 self.hold_preference())
 
-        elif preset is None:
+        elif preset_mode is None:
             self.data.ecobee.resume_program(self.thermostat_index)
 
         else:
-            _LOGGER.warning("Received invalid preset: %s", preset)
+          self.data.ecobee.set_climate_hold(
+            self.thermostat_index, preset_mode, self.hold_preference())
+          self.update_without_throttle = True
 
     @property
     def preset_modes(self):
