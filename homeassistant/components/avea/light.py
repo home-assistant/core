@@ -50,11 +50,7 @@ class AveaLight(Light):
 
     @property
     def brightness(self):
-        """Return the brightness of the light.
-
-        This method is optional. Removing it indicates to Home Assistant
-        that brightness is not supported for this light.
-        """
+        """Return the brightness of the light."""
         return self._brightness
 
     @property
