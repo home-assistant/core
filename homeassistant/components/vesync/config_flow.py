@@ -2,6 +2,7 @@
 import logging
 from collections import OrderedDict
 import voluptuous as vol
+from pyvesync import VeSync
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
@@ -13,9 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def configured_instances(hass):
     """Return already configured instances."""
-    return [
-        entry.data[CONF_USERNAME]
-        for entry in hass.config_entries.async_entries(DOMAIN)]
+    return hass.config_entries.async_entries(DOMAIN)
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -56,6 +55,11 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
 
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
+
+        manager = VeSync(self._username, self._password)
+        login = await self.hass.async_add_executor_job(manager.login)
+        if not login:
+            return await self._show_form(errors={'base': 'invalid_login'})
 
         return self.async_create_entry(
             title=self._username,

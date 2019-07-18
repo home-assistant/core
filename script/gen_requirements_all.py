@@ -130,6 +130,7 @@ TEST_REQUIREMENTS = (
     'pytradfri[async]',
     'pyunifi',
     'pyupnp-async',
+    'pyvesync',
     'pywebpush',
     'pyHS100',
     'PyNaCl',

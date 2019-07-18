@@ -1,29 +1,36 @@
 """Support for Etekcity VeSync switches."""
 import logging
-from homeassistant.components.switch import (SwitchDevice)
+from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.light import Light
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from .common import CONF_SWITCHES
-from .const import VS_DISCOVERY, VS_DISPATCHERS
+from .const import VS_DISCOVERY, VS_DISPATCHERS, VS_SWITCHES, DOMAIN
+from .common import VeSyncDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-ENERGY_UPDATE_INT = 21600
-
-DOMAIN = 'vesync'
+DEV_TYPE_TO_HA = {
+    'wifi-switch-1.3': 'outlet',
+    'ESW03-USA': 'outlet',
+    'ESW01-EU': 'outlet',
+    'ESW15-USA': 'outlet',
+    'ESWL01': 'switch',
+    'ESWL03': 'switch',
+    'ESO15-TB': 'outlet'
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up switches."""
     async def async_discover(devices):
-        """Add new devices to platform"""
+        """Add new devices to platform."""
         await _async_setup_entities(devices, async_add_entities)
 
     disp = async_dispatcher_connect(
-        hass, VS_DISCOVERY.format(CONF_SWITCHES), async_discover)
+        hass, VS_DISCOVERY.format(VS_SWITCHES), async_discover)
     hass.data[DOMAIN][VS_DISPATCHERS].append(disp)
 
     await _async_setup_entities(
-        hass.data[DOMAIN][CONF_SWITCHES],
+        hass.data[DOMAIN][VS_SWITCHES],
         async_add_entities
     )
     return True
@@ -33,7 +40,14 @@ async def _async_setup_entities(devices, async_add_entities):
     """Check if device is online and add entity."""
     dev_list = []
     for dev in devices:
-        dev_list.append(VeSyncSwitchHA(dev))
+        if DEV_TYPE_TO_HA.get(dev.device_type) == 'outlet':
+            dev_list.append(VeSyncSwitchHA(dev))
+        elif DEV_TYPE_TO_HA.get(dev.device_type) == 'switch':
+            dev_list.append(VeSyncLightSwitch(dev))
+        else:
+            _LOGGER.warning("%s - Unkown device type - %s",
+                            dev.device_name, dev.device_type)
+            continue
 
     async_add_entities(
         dev_list,
@@ -41,25 +55,13 @@ async def _async_setup_entities(devices, async_add_entities):
     )
 
 
-class VeSyncSwitchHA(SwitchDevice):
+class VeSyncSwitchHA(VeSyncDevice, SwitchDevice):
     """Representation of a VeSync switch."""
 
     def __init__(self, plug):
         """Initialize the VeSync switch device."""
+        super().__init__(plug)
         self.smartplug = plug
-
-    @property
-    def unique_id(self):
-        """Return the ID of this switch."""
-        if isinstance(self.smartplug.sub_device_no, int):
-            return ('{}{}'.format(
-                self.smartplug.cid, str(self.smartplug.sub_device_no)))
-        return self.smartplug.cid
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self.smartplug.device_name
 
     @property
     def device_state_attributes(self):
@@ -87,26 +89,17 @@ class VeSyncSwitchHA(SwitchDevice):
             return self.smartplug.energy_today
         return None
 
-    @property
-    def available(self) -> bool:
-        """Return True if switch is available."""
-        return self.smartplug.connection_status == "online"
-
-    @property
-    def is_on(self):
-        """Return True if switch is on."""
-        return self.smartplug.device_status == "on"
-
-    def turn_on(self, **kwargs):
-        """Turn the switch on."""
-        self.smartplug.turn_on()
-
-    def turn_off(self, **kwargs):
-        """Turn the switch off."""
-        self.smartplug.turn_off()
-
     def update(self):
-        """Handle data changes for node values."""
+        """Update outlet details and energy usage."""
         self.smartplug.update()
         if hasattr(self.smartplug, 'update_energy'):
             self.smartplug.update_energy()
+
+
+class VeSyncLightSwitch(VeSyncDevice, Light):
+    """Handle representation of VeSync Light Switch."""
+
+    def __init__(self, switch):
+        """Initialize Light Switch device class."""
+        super().__init__(switch)
+        self.switch = switch

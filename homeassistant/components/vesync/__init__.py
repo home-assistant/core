@@ -6,10 +6,10 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.config_entries import SOURCE_IMPORT
-from .common import (async_process_devices, CONF_SWITCHES)
+from .common import async_process_devices
 from .config_flow import configured_instances
-from .const import (DOMAIN, VS_DISPATCHERS, VS_DISCOVERY,
-                    SERVICE_UPDATE_DEVS, CONF_MANAGER)
+from .const import (DOMAIN, VS_DISPATCHERS, VS_DISCOVERY, VS_SWITCHES,
+                    SERVICE_UPDATE_DEVS, VS_MANAGER)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ async def async_setup(hass, config):
     if conf is None:
         return True
 
-    if isinstance(conf, dict) and not configured_instances(hass):
+    if configured_instances(hass) is None:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -61,35 +61,35 @@ async def async_setup_entry(hass, config_entry):
     forward_setup = hass.config_entries.async_forward_entry_setup
 
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][CONF_MANAGER] = manager
+    hass.data[DOMAIN][VS_MANAGER] = manager
 
-    switches = hass.data[DOMAIN][CONF_SWITCHES] = []
+    switches = hass.data[DOMAIN][VS_SWITCHES] = []
 
     hass.data[DOMAIN][VS_DISPATCHERS] = []
 
-    if device_dict[CONF_SWITCHES]:
-        switches.extend(device_dict[CONF_SWITCHES])
+    if device_dict[VS_SWITCHES]:
+        switches.extend(device_dict[VS_SWITCHES])
         hass.async_create_task(forward_setup(config_entry, 'switch'))
 
     async def async_new_device_discovery(service):
         """Discover if new devices should be added."""
-        manager = hass.data[DOMAIN][CONF_MANAGER]
-        switches = hass.data[DOMAIN][CONF_SWITCHES]
+        manager = hass.data[DOMAIN][VS_MANAGER]
+        switches = hass.data[DOMAIN][VS_SWITCHES]
 
         dev_dict = await async_process_devices(hass, manager)
-        switch_devs = dev_dict.get(CONF_SWITCHES, [])
+        switch_devs = dev_dict.get(VS_SWITCHES, [])
 
         if switch_devs:
             switch_set = set(switch_devs)
             new_switches = list(switch_set.difference(switches))
-            switch_len = len(new_switches)
-            if switch_len > 0:
-                switches.extend(new_switches)
+            if new_switches:
                 if switches:
+                    switches.extend(new_switches)
                     async_dispatcher_send(hass,
-                                          VS_DISCOVERY.format(CONF_SWITCHES),
-                                          switches[-switch_len:])
+                                          VS_DISCOVERY.format(VS_SWITCHES),
+                                          new_switches)
                 else:
+                    switches.extend(new_switches)
                     hass.async_create_task(
                         forward_setup(config_entry, 'switch'))
 
@@ -105,7 +105,7 @@ async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     forward_unload = hass.config_entries.async_forward_entry_unload
     remove_switches = False
-    if hass.data[DOMAIN][CONF_SWITCHES]:
+    if hass.data[DOMAIN][VS_SWITCHES]:
         remove_switches = await forward_unload(entry, 'switch')
 
     if remove_switches:
