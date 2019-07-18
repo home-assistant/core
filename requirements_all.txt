@@ -872,7 +872,7 @@ opensensemap-api==0.1.5
 openwebifpy==3.1.1
 
 # homeassistant.components.luci
-openwrt-luci-rpc==1.0.5
+openwrt-luci-rpc==1.1.0
 
 # homeassistant.components.orvibo
 orvibo==1.1.1
