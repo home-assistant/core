@@ -45,11 +45,6 @@ class LutronFan(LutronDevice, FanEntity):
         super().__init__(area_name, lutron_device, controller)
 
     @property
-    def integration(self):
-        """Return the Integration ID."""
-        return self._integration
-
-    @property
     def name(self):
         """Return the display name of this fan."""
         return self._name
