@@ -432,6 +432,20 @@ async def test_set_away_mode(hass, mqtt_mock):
     assert state.attributes.get('preset_mode') is None
 
 
+async def test_set_hvac_action(hass, mqtt_mock):
+    """Test setting of the HVAC action."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config['climate']['action_topic'] = 'action'
+    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get('hvac_action') is None
+
+    async_fire_mqtt_message(hass, 'action', 'cool')
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get('hvac_action') == 'cool'
+
+
 async def test_set_hold_pessimistic(hass, mqtt_mock):
     """Test setting the hold mode in pessimistic mode."""
     config = copy.deepcopy(DEFAULT_CONFIG)
@@ -548,6 +562,7 @@ async def test_set_with_templates(hass, mqtt_mock, caplog):
     config = copy.deepcopy(DEFAULT_CONFIG)
     # By default, just unquote the JSON-strings
     config['climate']['value_template'] = '{{ value_json }}'
+    config['climate']['action_template'] = '{{ value_json }}'
     # Something more complicated for hold mode
     config['climate']['hold_state_template'] = \
         '{{ value_json.attribute }}'
@@ -555,6 +570,7 @@ async def test_set_with_templates(hass, mqtt_mock, caplog):
     config['climate']['aux_state_template'] = \
         "{{ value == 'switchmeon' }}"
 
+    config['climate']['action_topic'] = 'action'
     config['climate']['mode_state_topic'] = 'mode-state'
     config['climate']['fan_mode_state_topic'] = 'fan-state'
     config['climate']['swing_mode_state_topic'] = 'swing-state'
@@ -635,6 +651,11 @@ async def test_set_with_templates(hass, mqtt_mock, caplog):
     async_fire_mqtt_message(hass, 'current-temperature', '"74656"')
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get('current_temperature') == 74656
+
+    # Action
+    async_fire_mqtt_message(hass, 'action', '"cool"')
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get('hvac_action') == 'cool'
 
 
 async def test_min_temp_custom(hass, mqtt_mock):
