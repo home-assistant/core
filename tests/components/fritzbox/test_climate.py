@@ -66,10 +66,10 @@ class TestFritzboxClimate(unittest.TestCase):
         assert 19.5 == self.thermostat.target_temperature
 
         self.thermostat._target_temperature = 126.5
-        assert self.thermostat.target_temperature is None
+        assert self.thermostat.target_temperature == 0.0
 
         self.thermostat._target_temperature = 127.0
-        assert self.thermostat.target_temperature is None
+        assert self.thermostat.target_temperature == 30.0
 
     @patch.object(FritzboxThermostat, 'set_hvac_mode')
     def test_set_temperature_operation_mode(self, mock_set_op):
