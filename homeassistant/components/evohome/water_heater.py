@@ -77,7 +77,7 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
 
         if op_mode == EVO_TEMPOVER and self._schedule['DailySchedules']:
             self._update_schedule()
-            if self.setpoints:
+            if self._schedule['DailySchedules']:
                 until = parse_datetime(self.setpoints['next']['from'])
                 until = until.strftime(EVO_STRFTIME)
 
