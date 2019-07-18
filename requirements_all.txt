@@ -402,6 +402,9 @@ dsmr_parser==0.12
 # homeassistant.components.dweet
 dweepy==0.3.0
 
+# homeassistant.components.rainforest_eagle
+eagle200_reader==0.2.1
+
 # homeassistant.components.ebusd
 ebusdpy==0.0.16
 
