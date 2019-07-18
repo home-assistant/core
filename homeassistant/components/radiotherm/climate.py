@@ -224,13 +224,12 @@ class RadioThermostat(ClimateDevice):
 
         if self._is_model_ct80:
             try:
-                humiditydata = self.device.tstat.humidity['raw']
+                humiditydata = self.device.humidity['raw']
             except radiotherm.validate.RadiothermTstatError:
                 _LOGGER.warning('%s (%s) was busy (invalid value returned)',
                                 self._name, self.device.host)
                 return
-            current_humidity = humiditydata['humidity']
-            self._current_humidity = current_humidity
+            self._current_humidity = humiditydata
 
         # Map thermostat values into various STATE_ flags.
         self._current_temperature = current_temp
