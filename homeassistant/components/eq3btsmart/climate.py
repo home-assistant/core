@@ -66,9 +66,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for name, device_cfg in config[CONF_DEVICES].items():
         mac = device_cfg[CONF_MAC]
-        devices.append(EQ3BTSmartThermostat(mac, name), True)
+        devices.append(EQ3BTSmartThermostat(mac, name))
 
-    add_entities(devices)
+    add_entities(devices, True)
 
 
 class EQ3BTSmartThermostat(ClimateDevice):
