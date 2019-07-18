@@ -1012,3 +1012,40 @@ async def test_entity_id_update(hass, mqtt_mock):
     assert mock_mqtt.async_subscribe.call_count == 2
     mock_mqtt.async_subscribe.assert_any_call('test-topic', ANY, 0, 'utf-8')
     mock_mqtt.async_subscribe.assert_any_call('avty-topic', ANY, 0, 'utf-8')
+
+
+async def test_precision_default(hass, mqtt_mock):
+    """Test that setting precision to tenths works as intended."""
+    assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
+
+    await common.async_set_temperature(hass, temperature=23.67,
+                                       entity_id=ENTITY_CLIMATE)
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get('temperature') == 23.7
+    mqtt_mock.async_publish.reset_mock()
+
+
+async def test_precision_halves(hass, mqtt_mock):
+    """Test that setting precision to halves works as intended."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config['climate']['precision'] = 0.5
+    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+
+    await common.async_set_temperature(hass, temperature=23.67,
+                                       entity_id=ENTITY_CLIMATE)
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get('temperature') == 23.5
+    mqtt_mock.async_publish.reset_mock()
+
+
+async def test_precision_whole(hass, mqtt_mock):
+    """Test that setting precision to whole works as intended."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config['climate']['precision'] = 1.0
+    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+
+    await common.async_set_temperature(hass, temperature=23.67,
+                                       entity_id=ENTITY_CLIMATE)
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get('temperature') == 24.0
+    mqtt_mock.async_publish.reset_mock()
