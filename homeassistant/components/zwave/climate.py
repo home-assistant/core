@@ -4,8 +4,9 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, CURRENT_HVAC_OFF,
-    DOMAIN, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_HEAT_COOL, HVAC_MODE_OFF,
+    CURRENT_HVAC_COOL, CURRENT_HVAC_FAN, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF, DOMAIN, HVAC_MODE_COOL, HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY, HVAC_MODE_OFF,
     SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
@@ -35,6 +36,11 @@ HVAC_STATE_MAPPINGS = {
     'Heat': HVAC_MODE_HEAT,
     'Heat Mode': HVAC_MODE_HEAT,
     'Heat (Default)': HVAC_MODE_HEAT,
+    'Aux Heat': HVAC_MODE_HEAT,
+    'Furnace': HVAC_MODE_HEAT,
+    'Fan Only': HVAC_MODE_FAN_ONLY,
+    'Dry Air': HVAC_MODE_DRY,
+    'Moist Air': HVAC_MODE_DRY,
     'Cool': HVAC_MODE_COOL,
     'Auto': HVAC_MODE_HEAT_COOL,
 }
@@ -43,7 +49,13 @@ HVAC_STATE_MAPPINGS = {
 HVAC_CURRENT_MAPPINGS = {
     "Idle": CURRENT_HVAC_IDLE,
     "Heat": CURRENT_HVAC_HEAT,
+    "Pending Heat": CURRENT_HVAC_HEAT,
+    "Heating": CURRENT_HVAC_HEAT,
     "Cool": CURRENT_HVAC_COOL,
+    "Pending Cool": CURRENT_HVAC_COOL,
+    "Cooling": CURRENT_HVAC_COOL,
+    "Fan Only": CURRENT_HVAC_FAN,
+    "Vent / Economiser":  CURRENT_HVAC_FAN,
     "Off": CURRENT_HVAC_OFF,
 }
 
