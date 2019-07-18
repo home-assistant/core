@@ -25,9 +25,9 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_PIN_LABEL = 'label'
 ATTR_PIN_LABEL_OR_VALUE = 'label_or_pin'
 ATTR_PIN_VALUE = 'pin'
+ATTR_SYSTEM_ID = 'system_id'
 
 CONF_ACCOUNTS = 'accounts'
-CONF_SYSTEM_ID = 'system_id'
 
 DATA_LISTENER = 'listener'
 
