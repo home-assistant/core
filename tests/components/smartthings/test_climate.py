@@ -13,7 +13,7 @@ from homeassistant.components.climate.const import (
     ATTR_FAN_MODES, ATTR_HVAC_ACTIONS, ATTR_HVAC_MODE, ATTR_HVAC_MODES,
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, CURRENT_HVAC_IDLE,
     DOMAIN as CLIMATE_DOMAIN, HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, HVAC_MODE_HEAT_COOL, HVAC_MODE_OFF,
     SERVICE_SET_FAN_MODE, SERVICE_SET_HVAC_MODE, SERVICE_SET_TEMPERATURE,
     SUPPORT_FAN_MODE, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE)
@@ -21,7 +21,7 @@ from homeassistant.components.smartthings import climate
 from homeassistant.components.smartthings.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE,
-    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_UNKNOWN)
+    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_UNKNOWN)
 
 from .conftest import setup_platform
 
@@ -172,7 +172,7 @@ async def test_legacy_thermostat_entity_state(hass, legacy_thermostat):
     assert state.attributes[ATTR_HVAC_ACTIONS] == 'idle'
     assert state.attributes[ATTR_HVAC_MODES] == {
         HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT_COOL, HVAC_MODE_HEAT,
-        STATE_OFF}
+        HVAC_MODE_OFF}
     assert state.attributes[ATTR_FAN_MODE] == 'auto'
     assert state.attributes[ATTR_FAN_MODES] == ['auto', 'on']
     assert state.attributes[ATTR_TARGET_TEMP_LOW] == 20  # celsius
@@ -184,12 +184,12 @@ async def test_basic_thermostat_entity_state(hass, basic_thermostat):
     """Tests the state attributes properly match the thermostat type."""
     await setup_platform(hass, CLIMATE_DOMAIN, devices=[basic_thermostat])
     state = hass.states.get('climate.basic_thermostat')
-    assert state.state == STATE_OFF
+    assert state.state == HVAC_MODE_OFF
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == \
         SUPPORT_TARGET_TEMPERATURE_RANGE | SUPPORT_TARGET_TEMPERATURE
     assert ATTR_HVAC_ACTIONS not in state.attributes
     assert state.attributes[ATTR_HVAC_MODES] == {
-        STATE_OFF, HVAC_MODE_HEAT_COOL, HVAC_MODE_HEAT, HVAC_MODE_COOL}
+        HVAC_MODE_OFF, HVAC_MODE_HEAT_COOL, HVAC_MODE_HEAT, HVAC_MODE_COOL}
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.1  # celsius
 
 
@@ -205,7 +205,7 @@ async def test_thermostat_entity_state(hass, thermostat):
     assert state.attributes[ATTR_HVAC_ACTIONS] == CURRENT_HVAC_IDLE
     assert state.attributes[ATTR_HVAC_MODES] == {
         HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_HEAT_COOL,
-        STATE_OFF}
+        HVAC_MODE_OFF}
     assert state.attributes[ATTR_FAN_MODE] == 'on'
     assert state.attributes[ATTR_FAN_MODES] == ['auto', 'on']
     assert state.attributes[ATTR_TEMPERATURE] == 20  # celsius
@@ -387,7 +387,7 @@ async def test_set_turn_off(hass, air_conditioner):
         CLIMATE_DOMAIN, SERVICE_TURN_OFF,
         blocking=True)
     state = hass.states.get('climate.air_conditioner')
-    assert state.state == STATE_OFF
+    assert state.state == HVAC_MODE_OFF
 
 
 async def test_set_turn_on(hass, air_conditioner):
@@ -395,7 +395,7 @@ async def test_set_turn_on(hass, air_conditioner):
     air_conditioner.status.update_attribute_value(Attribute.switch, 'off')
     await setup_platform(hass, CLIMATE_DOMAIN, devices=[air_conditioner])
     state = hass.states.get('climate.air_conditioner')
-    assert state.state == STATE_OFF
+    assert state.state == HVAC_MODE_OFF
     await hass.services.async_call(
         CLIMATE_DOMAIN, SERVICE_TURN_ON,
         blocking=True)
