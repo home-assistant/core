@@ -186,7 +186,7 @@ def _get_camera_from_entity_id(hass, entity_id):
     component = hass.data.get(DOMAIN)
 
     if component is None:
-        raise HomeAssistantError('Camera component not set up')
+        raise HomeAssistantError('Camera integration not set up')
 
     camera = component.get_entity(entity_id)
 

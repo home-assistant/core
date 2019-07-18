@@ -59,7 +59,7 @@ def setup(hass, config):
         conf.get(CONF_HOST), conf.get(CONF_PORT))
 
     try:
-        _LOGGER.debug("Ebusd component setup started")
+        _LOGGER.debug("Ebusd integration setup started")
         import ebusdpy
         ebusdpy.init(server_address)
         hass.data[DOMAIN] = EbusdData(server_address, circuit)
@@ -74,7 +74,7 @@ def setup(hass, config):
         hass.services.register(
             DOMAIN, SERVICE_EBUSD_WRITE, hass.data[DOMAIN].write)
 
-        _LOGGER.debug("Ebusd component setup completed")
+        _LOGGER.debug("Ebusd integration setup completed")
         return True
     except (socket.timeout, socket.error):
         return False

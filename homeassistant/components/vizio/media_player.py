@@ -223,13 +223,19 @@ class VizioDevice(MediaPlayerDevice):
 
     def volume_up(self):
         """Increasing volume of the device."""
-        self._volume_level += self._volume_step / self._max_volume
         self._device.vol_up(num=self._volume_step)
+        if self._volume_level is not None:
+            self._volume_level = min(1.,
+                                     self._volume_level +
+                                     self._volume_step / self._max_volume)
 
     def volume_down(self):
         """Decreasing volume of the device."""
-        self._volume_level -= self._volume_step / self._max_volume
         self._device.vol_down(num=self._volume_step)
+        if self._volume_level is not None:
+            self._volume_level = max(0.,
+                                     self._volume_level -
+                                     self._volume_step / self._max_volume)
 
     def validate_setup(self):
         """Validate if host is available and auth token is correct."""

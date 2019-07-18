@@ -383,66 +383,14 @@ def test_put_light_state_climate_set_temperature(hass_hue, hue_client):
     assert len(hvac_result_json) == 2
 
     hvac = hass_hue.states.get('climate.hvac')
-    assert hvac.state == climate.const.STATE_COOL
+    assert hvac.state == climate.const.HVAC_MODE_COOL
     assert hvac.attributes[climate.ATTR_TEMPERATURE] == temperature
-    assert hvac.attributes[climate.ATTR_OPERATION_MODE] == \
-        climate.const.STATE_COOL
 
     # Make sure we can't change the ecobee temperature since it's not exposed
     ecobee_result = yield from perform_put_light_state(
         hass_hue, hue_client,
         'climate.ecobee', True)
     assert ecobee_result.status == 404
-
-
-@asyncio.coroutine
-def test_put_light_state_climate_turn_on(hass_hue, hue_client):
-    """Test inability to turn climate on."""
-    yield from hass_hue.services.async_call(
-        climate.DOMAIN, const.SERVICE_TURN_OFF,
-        {const.ATTR_ENTITY_ID: 'climate.heatpump'},
-        blocking=True)
-
-    # Somehow after calling the above service the device gets unexposed,
-    # so we need to expose it again
-    hp_entity = hass_hue.states.get('climate.heatpump')
-    attrs = dict(hp_entity.attributes)
-    attrs[emulated_hue.ATTR_EMULATED_HUE_HIDDEN] = False
-    hass_hue.states.async_set(
-        hp_entity.entity_id, hp_entity.state, attributes=attrs
-    )
-
-    hp_result = yield from perform_put_light_state(
-        hass_hue, hue_client,
-        'climate.heatpump', True)
-
-    hp_result_json = yield from hp_result.json()
-
-    assert hp_result.status == 200
-    assert len(hp_result_json) == 1
-
-    hp = hass_hue.states.get('climate.heatpump')
-    assert hp.state == STATE_OFF
-    assert hp.attributes[climate.ATTR_OPERATION_MODE] == \
-        climate.const.STATE_HEAT
-
-
-@asyncio.coroutine
-def test_put_light_state_climate_turn_off(hass_hue, hue_client):
-    """Test inability to turn climate off."""
-    hp_result = yield from perform_put_light_state(
-        hass_hue, hue_client,
-        'climate.heatpump', False)
-
-    hp_result_json = yield from hp_result.json()
-
-    assert hp_result.status == 200
-    assert len(hp_result_json) == 1
-
-    hp = hass_hue.states.get('climate.heatpump')
-    assert hp.state == climate.const.STATE_HEAT
-    assert hp.attributes[climate.ATTR_OPERATION_MODE] == \
-        climate.const.STATE_HEAT
 
 
 @asyncio.coroutine

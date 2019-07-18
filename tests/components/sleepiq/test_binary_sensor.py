@@ -30,6 +30,7 @@ class TestSleepIQBinarySensorSetup(unittest.TestCase):
             'username': self.username,
             'password': self.password,
         }
+        self.DEVICES = []
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
@@ -56,3 +57,21 @@ class TestSleepIQBinarySensorSetup(unittest.TestCase):
         right_side = self.DEVICES[0]
         assert 'SleepNumber ILE Test2 Is In Bed' == right_side.name
         assert 'off' == right_side.state
+
+    @requests_mock.Mocker()
+    def test_setup_single(self, mock):
+        """Test for successfully setting up the SleepIQ platform."""
+        mock_responses(mock, single=True)
+
+        setup_component(self.hass, 'sleepiq', {
+            'sleepiq': self.config})
+
+        sleepiq.setup_platform(self.hass,
+                               self.config,
+                               self.add_entities,
+                               MagicMock())
+        assert 1 == len(self.DEVICES)
+
+        right_side = self.DEVICES[0]
+        assert 'SleepNumber ILE Test1 Is In Bed' == right_side.name
+        assert 'on' == right_side.state

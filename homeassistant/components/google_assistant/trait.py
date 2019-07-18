@@ -537,25 +537,48 @@ class TemperatureSettingTrait(_Trait):
     ]
     # We do not support "on" as we are unable to know how to restore
     # the last mode.
-    hass_to_google = {
-        climate.STATE_HEAT: 'heat',
-        climate.STATE_COOL: 'cool',
-        STATE_OFF: 'off',
-        climate.STATE_AUTO: 'heatcool',
-        climate.STATE_FAN_ONLY: 'fan-only',
-        climate.STATE_DRY: 'dry',
-        climate.STATE_ECO: 'eco'
+    hvac_to_google = {
+        climate.HVAC_MODE_HEAT: 'heat',
+        climate.HVAC_MODE_COOL: 'cool',
+        climate.HVAC_MODE_OFF: 'off',
+        climate.HVAC_MODE_AUTO: 'auto',
+        climate.HVAC_MODE_HEAT_COOL: 'heatcool',
+        climate.HVAC_MODE_FAN_ONLY: 'fan-only',
+        climate.HVAC_MODE_DRY: 'dry',
     }
-    google_to_hass = {value: key for key, value in hass_to_google.items()}
+    google_to_hvac = {value: key for key, value in hvac_to_google.items()}
+
+    preset_to_google = {
+        climate.PRESET_ECO: 'eco'
+    }
+    google_to_preset = {value: key for key, value in preset_to_google.items()}
 
     @staticmethod
     def supported(domain, features, device_class):
         """Test if state is supported."""
         if domain == climate.DOMAIN:
-            return features & climate.SUPPORT_OPERATION_MODE
+            return True
 
         return (domain == sensor.DOMAIN
                 and device_class == sensor.DEVICE_CLASS_TEMPERATURE)
+
+    @property
+    def climate_google_modes(self):
+        """Return supported Google modes."""
+        modes = []
+        attrs = self.state.attributes
+
+        for mode in attrs.get(climate.ATTR_HVAC_MODES, []):
+            google_mode = self.hvac_to_google.get(mode)
+            if google_mode and google_mode not in modes:
+                modes.append(google_mode)
+
+        for preset in attrs.get(climate.ATTR_PRESET_MODES, []):
+            google_mode = self.preset_to_google.get(preset)
+            if google_mode and google_mode not in modes:
+                modes.append(google_mode)
+
+        return modes
 
     def sync_attributes(self):
         """Return temperature point and modes attributes for a sync request."""
@@ -571,18 +594,10 @@ class TemperatureSettingTrait(_Trait):
                 response["queryOnlyTemperatureSetting"] = True
 
         elif domain == climate.DOMAIN:
-            modes = []
-            supported = attrs.get(ATTR_SUPPORTED_FEATURES)
-
-            if supported & climate.SUPPORT_ON_OFF != 0:
-                modes.append(STATE_OFF)
-                modes.append(STATE_ON)
-
-            if supported & climate.SUPPORT_OPERATION_MODE != 0:
-                for mode in attrs.get(climate.ATTR_OPERATION_LIST, []):
-                    google_mode = self.hass_to_google.get(mode)
-                    if google_mode and google_mode not in modes:
-                        modes.append(google_mode)
+            modes = self.climate_google_modes
+            if 'off' in modes and any(mode in modes for mode
+                                      in ('heatcool', 'heat', 'cool')):
+                modes.append('on')
             response['availableThermostatModes'] = ','.join(modes)
 
         return response
@@ -606,17 +621,14 @@ class TemperatureSettingTrait(_Trait):
                         ), 1)
 
         elif domain == climate.DOMAIN:
-            operation = attrs.get(climate.ATTR_OPERATION_MODE)
-            supported = attrs.get(ATTR_SUPPORTED_FEATURES)
+            operation = self.state.state
+            preset = attrs.get(climate.ATTR_PRESET_MODE)
+            supported = attrs.get(ATTR_SUPPORTED_FEATURES, 0)
 
-            if (supported & climate.SUPPORT_ON_OFF
-                    and self.state.state == STATE_OFF):
-                response['thermostatMode'] = 'off'
-            elif (supported & climate.SUPPORT_OPERATION_MODE
-                  and operation in self.hass_to_google):
-                response['thermostatMode'] = self.hass_to_google[operation]
-            elif supported & climate.SUPPORT_ON_OFF:
-                response['thermostatMode'] = 'on'
+            if preset in self.preset_to_google:
+                response['thermostatMode'] = self.preset_to_google[preset]
+            else:
+                response['thermostatMode'] = self.hvac_to_google.get(operation)
 
             current_temp = attrs.get(climate.ATTR_CURRENT_TEMPERATURE)
             if current_temp is not None:
@@ -631,9 +643,9 @@ class TemperatureSettingTrait(_Trait):
             if current_humidity is not None:
                 response['thermostatHumidityAmbient'] = current_humidity
 
-            if operation == climate.STATE_AUTO:
-                if (supported & climate.SUPPORT_TARGET_TEMPERATURE_HIGH and
-                        supported & climate.SUPPORT_TARGET_TEMPERATURE_LOW):
+            if operation in (climate.HVAC_MODE_AUTO,
+                             climate.HVAC_MODE_HEAT_COOL):
+                if supported & climate.SUPPORT_TARGET_TEMPERATURE_RANGE:
                     response['thermostatTemperatureSetpointHigh'] = \
                         round(temp_util.convert(
                             attrs[climate.ATTR_TARGET_TEMP_HIGH],
@@ -725,8 +737,7 @@ class TemperatureSettingTrait(_Trait):
                 ATTR_ENTITY_ID: self.state.entity_id,
             }
 
-            if(supported & climate.SUPPORT_TARGET_TEMPERATURE_HIGH
-               and supported & climate.SUPPORT_TARGET_TEMPERATURE_LOW):
+            if supported & climate.SUPPORT_TARGET_TEMPERATURE_RANGE:
                 svc_data[climate.ATTR_TARGET_TEMP_HIGH] = temp_high
                 svc_data[climate.ATTR_TARGET_TEMP_LOW] = temp_low
             else:
@@ -740,22 +751,44 @@ class TemperatureSettingTrait(_Trait):
             target_mode = params['thermostatMode']
             supported = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
 
-            if (target_mode in [STATE_ON, STATE_OFF] and
-                    supported & climate.SUPPORT_ON_OFF):
+            if target_mode == 'on':
                 await self.hass.services.async_call(
-                    climate.DOMAIN,
-                    (SERVICE_TURN_ON
-                     if target_mode == STATE_ON
-                     else SERVICE_TURN_OFF),
-                    {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=True, context=data.context)
-            elif supported & climate.SUPPORT_OPERATION_MODE:
+                    climate.DOMAIN, SERVICE_TURN_ON,
+                    {
+                        ATTR_ENTITY_ID: self.state.entity_id
+                    },
+                    blocking=True, context=data.context
+                )
+                return
+
+            if target_mode == 'off':
                 await self.hass.services.async_call(
-                    climate.DOMAIN, climate.SERVICE_SET_OPERATION_MODE, {
-                        ATTR_ENTITY_ID: self.state.entity_id,
-                        climate.ATTR_OPERATION_MODE:
-                            self.google_to_hass[target_mode],
-                    }, blocking=True, context=data.context)
+                    climate.DOMAIN, SERVICE_TURN_OFF,
+                    {
+                        ATTR_ENTITY_ID: self.state.entity_id
+                    },
+                    blocking=True, context=data.context
+                )
+                return
+
+            if target_mode in self.google_to_preset:
+                await self.hass.services.async_call(
+                    climate.DOMAIN, climate.SERVICE_SET_PRESET_MODE,
+                    {
+                        climate.ATTR_PRESET_MODE:
+                        self.google_to_preset[target_mode],
+                        ATTR_ENTITY_ID: self.state.entity_id
+                    },
+                    blocking=True, context=data.context
+                )
+                return
+
+            await self.hass.services.async_call(
+                climate.DOMAIN, climate.SERVICE_SET_HVAC_MODE, {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    climate.ATTR_HVAC_MODE:
+                        self.google_to_hvac[target_mode],
+                }, blocking=True, context=data.context)
 
 
 @register_trait

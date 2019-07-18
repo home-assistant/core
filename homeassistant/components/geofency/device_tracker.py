@@ -8,7 +8,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.components.device_tracker.config_entry import (
-    DeviceTrackerEntity
+    TrackerEntity
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -52,7 +52,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     return True
 
 
-class GeofencyEntity(DeviceTrackerEntity, RestoreEntity):
+class GeofencyEntity(TrackerEntity, RestoreEntity):
     """Represent a tracked device."""
 
     def __init__(self, device, gps=None, location_name=None, attributes=None):

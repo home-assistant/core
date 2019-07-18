@@ -11,8 +11,7 @@ from homeassistant.helpers.event import async_call_later
 from . import ZigbeeChannel, parse_and_log_command
 from ..helpers import get_attr_id_by_name
 from ..const import (
-    SIGNAL_ATTR_UPDATED, SIGNAL_MOVE_LEVEL, SIGNAL_SET_LEVEL,
-    SIGNAL_STATE_ATTR
+    SIGNAL_ATTR_UPDATED, SIGNAL_MOVE_LEVEL, SIGNAL_SET_LEVEL
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -202,8 +201,7 @@ class PowerConfigurationChannel(ZigbeeChannel):
         if attrid == attr_id:
             async_dispatcher_send(
                 self._zha_device.hass,
-                "{}_{}".format(self.unique_id, SIGNAL_STATE_ATTR),
-                'battery_level',
+                "{}_{}".format(self.unique_id, SIGNAL_ATTR_UPDATED),
                 value
             )
 

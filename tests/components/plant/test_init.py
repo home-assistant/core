@@ -4,8 +4,8 @@ import unittest
 import pytest
 from datetime import datetime, timedelta
 
-from homeassistant.const import (ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
-                                 STATE_PROBLEM, STATE_OK)
+from homeassistant.const import (ATTR_UNIT_OF_MEASUREMENT, STATE_UNAVAILABLE,
+                                 STATE_UNKNOWN, STATE_PROBLEM, STATE_OK)
 from homeassistant.components import recorder
 import homeassistant.components.plant as plant
 from homeassistant.setup import setup_component
@@ -117,6 +117,48 @@ class TestPlant(unittest.TestCase):
         state = self.hass.states.get('plant.'+plant_name)
         assert STATE_PROBLEM == state.state
         assert 5 == state.attributes[plant.READING_MOISTURE]
+
+    def test_unavailable_state(self):
+        """Test updating the state with unavailable.
+
+        Make sure that plant processes this correctly.
+        """
+        plant_name = 'some_plant'
+        assert setup_component(self.hass, plant.DOMAIN, {
+            plant.DOMAIN: {
+                plant_name: GOOD_CONFIG
+            }
+        })
+        self.hass.states.set(MOISTURE_ENTITY, STATE_UNAVAILABLE,
+                             {ATTR_UNIT_OF_MEASUREMENT: 'us/cm'})
+        self.hass.block_till_done()
+        state = self.hass.states.get('plant.'+plant_name)
+        assert state.state == STATE_PROBLEM
+        assert state.attributes[plant.READING_MOISTURE] == STATE_UNAVAILABLE
+
+    def test_state_problem_if_unavailable(self):
+        """Test updating the state with unavailable after setting it to valid value.
+
+        Make sure that plant processes this correctly.
+        """
+        plant_name = 'some_plant'
+        assert setup_component(self.hass, plant.DOMAIN, {
+            plant.DOMAIN: {
+                plant_name: GOOD_CONFIG
+            }
+        })
+        self.hass.states.set(MOISTURE_ENTITY, 42,
+                             {ATTR_UNIT_OF_MEASUREMENT: 'us/cm'})
+        self.hass.block_till_done()
+        state = self.hass.states.get('plant.' + plant_name)
+        assert state.state == STATE_OK
+        assert state.attributes[plant.READING_MOISTURE] == 42
+        self.hass.states.set(MOISTURE_ENTITY, STATE_UNAVAILABLE,
+                             {ATTR_UNIT_OF_MEASUREMENT: 'us/cm'})
+        self.hass.block_till_done()
+        state = self.hass.states.get('plant.'+plant_name)
+        assert state.state == STATE_PROBLEM
+        assert state.attributes[plant.READING_MOISTURE] == STATE_UNAVAILABLE
 
     @pytest.mark.skipif(plant.ENABLE_LOAD_HISTORY is False,
                         reason="tests for loading from DB are unstable, thus"

@@ -4,44 +4,26 @@ import logging
 import math
 
 from homeassistant import core as ha
-from homeassistant.util.decorator import Registry
-import homeassistant.util.color as color_util
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    SERVICE_LOCK,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_STOP,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_UNLOCK,
-    SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_UP,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
-from homeassistant.components.climate import const as climate
 from homeassistant.components import cover, fan, group, light, media_player
+from homeassistant.components.climate import const as climate
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE, SERVICE_LOCK,
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
+    SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    SERVICE_UNLOCK, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET, SERVICE_VOLUME_UP, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+import homeassistant.util.color as color_util
+from homeassistant.util.decorator import Registry
 from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import (
-    API_TEMP_UNITS,
-    API_THERMOSTAT_MODES,
-    Cause,
-)
+    API_TEMP_UNITS, API_THERMOSTAT_MODES, API_THERMOSTAT_PRESETS, Cause)
 from .entities import async_get_entities
-from .state_report import async_enable_proactive_mode
 from .errors import (
-    AlexaInvalidValueError,
-    AlexaTempRangeError,
-    AlexaUnsupportedThermostatModeError,
-)
+    AlexaInvalidValueError, AlexaTempRangeError,
+    AlexaUnsupportedThermostatModeError)
+from .state_report import async_enable_proactive_mode
 
 _LOGGER = logging.getLogger(__name__)
 HANDLERS = Registry()
@@ -98,6 +80,12 @@ async def async_api_turn_on(hass, config, directive, context):
     service = SERVICE_TURN_ON
     if domain == cover.DOMAIN:
         service = cover.SERVICE_OPEN_COVER
+    elif domain == media_player.DOMAIN:
+        supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        power_features = (media_player.SUPPORT_TURN_ON |
+                          media_player.SUPPORT_TURN_OFF)
+        if not supported & power_features:
+            service = media_player.SERVICE_MEDIA_PLAY
 
     await hass.services.async_call(domain, service, {
         ATTR_ENTITY_ID: entity.entity_id
@@ -117,6 +105,12 @@ async def async_api_turn_off(hass, config, directive, context):
     service = SERVICE_TURN_OFF
     if entity.domain == cover.DOMAIN:
         service = cover.SERVICE_CLOSE_COVER
+    elif domain == media_player.DOMAIN:
+        supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        power_features = (media_player.SUPPORT_TURN_ON |
+                          media_player.SUPPORT_TURN_OFF)
+        if not supported & power_features:
+            service = media_player.SERVICE_MEDIA_STOP
 
     await hass.services.async_call(domain, service, {
         ATTR_ENTITY_ID: entity.entity_id
@@ -686,23 +680,45 @@ async def async_api_set_thermostat_mode(hass, config, directive, context):
     mode = directive.payload['thermostatMode']
     mode = mode if isinstance(mode, str) else mode['value']
 
-    operation_list = entity.attributes.get(climate.ATTR_OPERATION_LIST)
-    ha_mode = next(
-        (k for k, v in API_THERMOSTAT_MODES.items() if v == mode),
-        None
-    )
-    if ha_mode not in operation_list:
-        msg = 'The requested thermostat mode {} is not supported'.format(mode)
-        raise AlexaUnsupportedThermostatModeError(msg)
-
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
-        climate.ATTR_OPERATION_MODE: ha_mode,
     }
+
+    ha_preset = next(
+        (k for k, v in API_THERMOSTAT_PRESETS.items() if v == mode),
+        None
+    )
+
+    if ha_preset:
+        presets = entity.attributes.get(climate.ATTR_PRESET_MODES, [])
+
+        if ha_preset not in presets:
+            msg = 'The requested thermostat mode {} is not supported'.format(
+                ha_preset
+            )
+            raise AlexaUnsupportedThermostatModeError(msg)
+
+        service = climate.SERVICE_SET_PRESET_MODE
+        data[climate.ATTR_PRESET_MODE] = climate.PRESET_ECO
+
+    else:
+        operation_list = entity.attributes.get(climate.ATTR_HVAC_MODES)
+        ha_mode = next(
+            (k for k, v in API_THERMOSTAT_MODES.items() if v == mode),
+            None
+        )
+        if ha_mode not in operation_list:
+            msg = 'The requested thermostat mode {} is not supported'.format(
+                mode
+            )
+            raise AlexaUnsupportedThermostatModeError(msg)
+
+        service = climate.SERVICE_SET_HVAC_MODE
+        data[climate.ATTR_HVAC_MODE] = ha_mode
 
     response = directive.response()
     await hass.services.async_call(
-        entity.domain, climate.SERVICE_SET_OPERATION_MODE, data,
+        climate.DOMAIN, service, data,
         blocking=False, context=context)
     response.add_context_property({
         'name': 'thermostatMode',

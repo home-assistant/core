@@ -569,6 +569,23 @@ class TestComponentLogbook(unittest.TestCase):
         message = logbook._entry_message_from_state(to_state.domain, to_state)
         assert 'is at work' == message
 
+    def test_entry_message_from_state_person(self):
+        """Test if logbook message is correctly created for a person."""
+        pointA = dt_util.utcnow()
+
+        # message for a device tracker "not home" state
+        eventA = self.create_state_changed_event(pointA, 'person.john',
+                                                 STATE_NOT_HOME)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'is away' == message
+
+        # message for a device tracker "home" state
+        eventA = self.create_state_changed_event(pointA, 'person.john', 'work')
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'is at work' == message
+
     def test_entry_message_from_state_sun(self):
         """Test if logbook message is correctly created for sun."""
         pointA = dt_util.utcnow()
@@ -586,6 +603,448 @@ class TestComponentLogbook(unittest.TestCase):
         to_state = ha.State.from_dict(eventA.data.get('new_state'))
         message = logbook._entry_message_from_state(to_state.domain, to_state)
         assert 'has set' == message
+
+    def test_entry_message_from_state_binary_sensor_battery(self):
+        """Test if logbook message is correctly created for a binary_sensor."""
+        pointA = dt_util.utcnow()
+        attributes = {'device_class': 'battery'}
+
+        # message for a binary_sensor battery "low" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.battery',
+                                                 STATE_ON, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'is low' == message
+
+        # message for a binary_sensor battery "normal" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.battery',
+                                                 STATE_OFF, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'is normal' == message
+
+    def test_entry_message_from_state_binary_sensor_connectivity(self):
+        """Test if logbook message is correctly created for a binary_sensor."""
+        pointA = dt_util.utcnow()
+        attributes = {'device_class': 'connectivity'}
+
+        # message for a binary_sensor connectivity "connected" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.connectivity',
+                                                 STATE_ON, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'is connected' == message
+
+        # message for a binary_sensor connectivity "disconnected" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.connectivity',
+                                                 STATE_OFF, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'is disconnected' == message
+
+    def test_entry_message_from_state_binary_sensor_door(self):
+        """Test if logbook message is correctly created for a binary_sensor."""
+        pointA = dt_util.utcnow()
+        attributes = {'device_class': 'door'}
+
+        # message for a binary_sensor door "open" state
+        eventA = self.create_state_changed_event(pointA, 'binary_sensor.door',
+                                                 STATE_ON, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'is opened' == message
+
+        # message for a binary_sensor door "closed" state
+        eventA = self.create_state_changed_event(pointA, 'binary_sensor.door',
+                                                 STATE_OFF, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'is closed' == message
+
+    def test_entry_message_from_state_binary_sensor_garage_door(self):
+        """Test if logbook message is correctly created for a binary_sensor."""
+        pointA = dt_util.utcnow()
+        attributes = {'device_class': 'garage_door'}
+
+        # message for a binary_sensor garage_door "open" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.garage_door',
+                                                 STATE_ON, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'is opened' == message
+
+        # message for a binary_sensor garage_door "closed" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.garage_door',
+                                                 STATE_OFF, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'is closed' == message
+
+    def test_entry_message_from_state_binary_sensor_opening(self):
+        """Test if logbook message is correctly created for a binary_sensor."""
+        pointA = dt_util.utcnow()
+        attributes = {'device_class': 'opening'}
+
+        # message for a binary_sensor opening "open" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.opening',
+                                                 STATE_ON, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'is opened' == message
+
+        # message for a binary_sensor opening "closed" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.opening',
+                                                 STATE_OFF, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'is closed' == message
+
+    def test_entry_message_from_state_binary_sensor_window(self):
+        """Test if logbook message is correctly created for a binary_sensor."""
+        pointA = dt_util.utcnow()
+        attributes = {'device_class': 'window'}
+
+        # message for a binary_sensor window "open" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.window',
+                                                 STATE_ON, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'is opened' == message
+
+        # message for a binary_sensor window "closed" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.window',
+                                                 STATE_OFF, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'is closed' == message
+
+    def test_entry_message_from_state_binary_sensor_lock(self):
+        """Test if logbook message is correctly created for a binary_sensor."""
+        pointA = dt_util.utcnow()
+        attributes = {'device_class': 'lock'}
+
+        # message for a binary_sensor lock "unlocked" state
+        eventA = self.create_state_changed_event(pointA, 'binary_sensor.lock',
+                                                 STATE_ON, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'is unlocked' == message
+
+        # message for a binary_sensor lock "locked" state
+        eventA = self.create_state_changed_event(pointA, 'binary_sensor.lock',
+                                                 STATE_OFF, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'is locked' == message
+
+    def test_entry_message_from_state_binary_sensor_plug(self):
+        """Test if logbook message is correctly created for a binary_sensor."""
+        pointA = dt_util.utcnow()
+        attributes = {'device_class': 'plug'}
+
+        # message for a binary_sensor plug "unpluged" state
+        eventA = self.create_state_changed_event(pointA, 'binary_sensor.plug',
+                                                 STATE_ON, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'is plugged in' == message
+
+        # message for a binary_sensor plug "pluged" state
+        eventA = self.create_state_changed_event(pointA, 'binary_sensor.plug',
+                                                 STATE_OFF, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'is unplugged' == message
+
+    def test_entry_message_from_state_binary_sensor_presence(self):
+        """Test if logbook message is correctly created for a binary_sensor."""
+        pointA = dt_util.utcnow()
+        attributes = {'device_class': 'presence'}
+
+        # message for a binary_sensor presence "home" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.presence',
+                                                 STATE_ON, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'is at home' == message
+
+        # message for a binary_sensor presence "away" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.presence',
+                                                 STATE_OFF, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'is away' == message
+
+    def test_entry_message_from_state_binary_sensor_safety(self):
+        """Test if logbook message is correctly created for a binary_sensor."""
+        pointA = dt_util.utcnow()
+        attributes = {'device_class': 'safety'}
+
+        # message for a binary_sensor safety "unsafe" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.safety',
+                                                 STATE_ON, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'is unsafe' == message
+
+        # message for a binary_sensor safety "safe" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.safety',
+                                                 STATE_OFF, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'is safe' == message
+
+    def test_entry_message_from_state_binary_sensor_cold(self):
+        """Test if logbook message is correctly created for a binary_sensor."""
+        pointA = dt_util.utcnow()
+        attributes = {'device_class': 'cold'}
+
+        # message for a binary_sensor cold "detected" state
+        eventA = self.create_state_changed_event(pointA, 'binary_sensor.cold',
+                                                 STATE_ON, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'detected cold' == message
+
+        # message for a binary_sensori cold "cleared" state
+        eventA = self.create_state_changed_event(pointA, 'binary_sensor.cold',
+                                                 STATE_OFF, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'cleared (no cold detected)' == message
+
+    def test_entry_message_from_state_binary_sensor_gas(self):
+        """Test if logbook message is correctly created for a binary_sensor."""
+        pointA = dt_util.utcnow()
+        attributes = {'device_class': 'gas'}
+
+        # message for a binary_sensor gas "detected" state
+        eventA = self.create_state_changed_event(pointA, 'binary_sensor.gas',
+                                                 STATE_ON, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'detected gas' == message
+
+        # message for a binary_sensori gas "cleared" state
+        eventA = self.create_state_changed_event(pointA, 'binary_sensor.gas',
+                                                 STATE_OFF, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'cleared (no gas detected)' == message
+
+    def test_entry_message_from_state_binary_sensor_heat(self):
+        """Test if logbook message is correctly created for a binary_sensor."""
+        pointA = dt_util.utcnow()
+        attributes = {'device_class': 'heat'}
+
+        # message for a binary_sensor heat "detected" state
+        eventA = self.create_state_changed_event(pointA, 'binary_sensor.heat',
+                                                 STATE_ON, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'detected heat' == message
+
+        # message for a binary_sensori heat "cleared" state
+        eventA = self.create_state_changed_event(pointA, 'binary_sensor.heat',
+                                                 STATE_OFF, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'cleared (no heat detected)' == message
+
+    def test_entry_message_from_state_binary_sensor_light(self):
+        """Test if logbook message is correctly created for a binary_sensor."""
+        pointA = dt_util.utcnow()
+        attributes = {'device_class': 'light'}
+
+        # message for a binary_sensor light "detected" state
+        eventA = self.create_state_changed_event(pointA, 'binary_sensor.light',
+                                                 STATE_ON, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'detected light' == message
+
+        # message for a binary_sensori light "cleared" state
+        eventA = self.create_state_changed_event(pointA, 'binary_sensor.light',
+                                                 STATE_OFF, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'cleared (no light detected)' == message
+
+    def test_entry_message_from_state_binary_sensor_moisture(self):
+        """Test if logbook message is correctly created for a binary_sensor."""
+        pointA = dt_util.utcnow()
+        attributes = {'device_class': 'moisture'}
+
+        # message for a binary_sensor moisture "detected" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.moisture',
+                                                 STATE_ON, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'detected moisture' == message
+
+        # message for a binary_sensori moisture "cleared" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.moisture',
+                                                 STATE_OFF, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'cleared (no moisture detected)' == message
+
+    def test_entry_message_from_state_binary_sensor_motion(self):
+        """Test if logbook message is correctly created for a binary_sensor."""
+        pointA = dt_util.utcnow()
+        attributes = {'device_class': 'motion'}
+
+        # message for a binary_sensor motion "detected" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.motion',
+                                                 STATE_ON, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'detected motion' == message
+
+        # message for a binary_sensori motion "cleared" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.motion',
+                                                 STATE_OFF, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'cleared (no motion detected)' == message
+
+    def test_entry_message_from_state_binary_sensor_occupancy(self):
+        """Test if logbook message is correctly created for a binary_sensor."""
+        pointA = dt_util.utcnow()
+        attributes = {'device_class': 'occupancy'}
+
+        # message for a binary_sensor occupancy "detected" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.occupancy',
+                                                 STATE_ON, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'detected occupancy' == message
+
+        # message for a binary_sensori occupancy "cleared" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.occupancy',
+                                                 STATE_OFF, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'cleared (no occupancy detected)' == message
+
+    def test_entry_message_from_state_binary_sensor_power(self):
+        """Test if logbook message is correctly created for a binary_sensor."""
+        pointA = dt_util.utcnow()
+        attributes = {'device_class': 'power'}
+
+        # message for a binary_sensor power "detected" state
+        eventA = self.create_state_changed_event(pointA, 'binary_sensor.power',
+                                                 STATE_ON, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'detected power' == message
+
+        # message for a binary_sensori power "cleared" state
+        eventA = self.create_state_changed_event(pointA, 'binary_sensor.power',
+                                                 STATE_OFF, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'cleared (no power detected)' == message
+
+    def test_entry_message_from_state_binary_sensor_problem(self):
+        """Test if logbook message is correctly created for a binary_sensor."""
+        pointA = dt_util.utcnow()
+        attributes = {'device_class': 'problem'}
+
+        # message for a binary_sensor problem "detected" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.problem',
+                                                 STATE_ON, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'detected problem' == message
+
+        # message for a binary_sensori problem "cleared" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.problem',
+                                                 STATE_OFF, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'cleared (no problem detected)' == message
+
+    def test_entry_message_from_state_binary_sensor_smoke(self):
+        """Test if logbook message is correctly created for a binary_sensor."""
+        pointA = dt_util.utcnow()
+        attributes = {'device_class': 'smoke'}
+
+        # message for a binary_sensor smoke "detected" state
+        eventA = self.create_state_changed_event(pointA, 'binary_sensor.smoke',
+                                                 STATE_ON, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'detected smoke' == message
+
+        # message for a binary_sensori smoke "cleared" state
+        eventA = self.create_state_changed_event(pointA, 'binary_sensor.smoke',
+                                                 STATE_OFF, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'cleared (no smoke detected)' == message
+
+    def test_entry_message_from_state_binary_sensor_sound(self):
+        """Test if logbook message is correctly created for a binary_sensor."""
+        pointA = dt_util.utcnow()
+        attributes = {'device_class': 'sound'}
+
+        # message for a binary_sensor sound "detected" state
+        eventA = self.create_state_changed_event(pointA, 'binary_sensor.sound',
+                                                 STATE_ON, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'detected sound' == message
+
+        # message for a binary_sensori sound "cleared" state
+        eventA = self.create_state_changed_event(pointA, 'binary_sensor.sound',
+                                                 STATE_OFF, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'cleared (no sound detected)' == message
+
+    def test_entry_message_from_state_binary_sensor_vibration(self):
+        """Test if logbook message is correctly created for a binary_sensor."""
+        pointA = dt_util.utcnow()
+        attributes = {'device_class': 'vibration'}
+
+        # message for a binary_sensor vibration "detected" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.vibration',
+                                                 STATE_ON, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'detected vibration' == message
+
+        # message for a binary_sensori vibration "cleared" state
+        eventA = self.create_state_changed_event(pointA,
+                                                 'binary_sensor.vibration',
+                                                 STATE_OFF, attributes)
+        to_state = ha.State.from_dict(eventA.data.get('new_state'))
+        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        assert 'cleared (no vibration detected)' == message
 
     def test_process_custom_logbook_entries(self):
         """Test if custom log book entries get added as an entry."""

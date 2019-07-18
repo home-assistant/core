@@ -2,7 +2,6 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.const import (
     LENGTH_KILOMETERS, LENGTH_MILES, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
@@ -41,10 +40,13 @@ class TeslaSensor(TeslaDevice, Entity):
 
         if self.type:
             self._name = '{} ({})'.format(self.tesla_device.name, self.type)
-            self.entity_id = ENTITY_ID_FORMAT.format(
-                '{}_{}'.format(self.tesla_id, self.type))
-        else:
-            self.entity_id = ENTITY_ID_FORMAT.format(self.tesla_id)
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        if self.type:
+            return "{}_{}".format(self.tesla_id, self.type)
+        return self.tesla_id
 
     @property
     def state(self):

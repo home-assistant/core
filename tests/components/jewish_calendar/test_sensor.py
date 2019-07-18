@@ -445,3 +445,56 @@ class TestJewishCalenderSensor():
                 sensor.async_update(),
                 self.hass.loop).result()
             assert sensor.state == result
+
+    omer_params = [
+        make_nyc_test_params(dt(2019, 4, 21, 0, 0), 1),
+        make_jerusalem_test_params(dt(2019, 4, 21, 0, 0), 1),
+        make_nyc_test_params(dt(2019, 4, 21, 23, 0), 2),
+        make_jerusalem_test_params(dt(2019, 4, 21, 23, 0), 2),
+        make_nyc_test_params(dt(2019, 5, 23, 0, 0), 33),
+        make_jerusalem_test_params(dt(2019, 5, 23, 0, 0), 33),
+        make_nyc_test_params(dt(2019, 6, 8, 0, 0), 49),
+        make_jerusalem_test_params(dt(2019, 6, 8, 0, 0), 49),
+        make_nyc_test_params(dt(2019, 6, 9, 0, 0), 0),
+        make_jerusalem_test_params(dt(2019, 6, 9, 0, 0), 0),
+        make_nyc_test_params(dt(2019, 1, 1, 0, 0), 0),
+        make_jerusalem_test_params(dt(2019, 1, 1, 0, 0), 0),
+    ]
+    omer_test_ids = [
+        "nyc_first_day_of_omer",
+        "israel_first_day_of_omer",
+        "nyc_first_day_of_omer_after_tzeit",
+        "israel_first_day_of_omer_after_tzeit",
+        "nyc_lag_baomer",
+        "israel_lag_baomer",
+        "nyc_last_day_of_omer",
+        "israel_last_day_of_omer",
+        "nyc_shavuot_no_omer",
+        "israel_shavuot_no_omer",
+        "nyc_jan_1st_no_omer",
+        "israel_jan_1st_no_omer",
+    ]
+
+    @pytest.mark.parametrize(["now", "candle_lighting", "havdalah", "diaspora",
+                              "tzname", "latitude", "longitude", "result"],
+                             omer_params, ids=omer_test_ids)
+    def test_omer_sensor(self, now, candle_lighting, havdalah,
+                         diaspora, tzname, latitude, longitude,
+                         result):
+        """Test Omer Count sensor output."""
+        time_zone = get_time_zone(tzname)
+        set_default_time_zone(time_zone)
+        test_time = time_zone.localize(now)
+        self.hass.config.latitude = latitude
+        self.hass.config.longitude = longitude
+        sensor = JewishCalSensor(
+            name='test', language='english',
+            sensor_type='omer_count',
+            latitude=latitude, longitude=longitude,
+            timezone=time_zone, diaspora=diaspora)
+        sensor.hass = self.hass
+        with patch('homeassistant.util.dt.now', return_value=test_time):
+            run_coroutine_threadsafe(
+                sensor.async_update(),
+                self.hass.loop).result()
+            assert sensor.state == result

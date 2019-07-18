@@ -18,7 +18,7 @@ from .channels import (
 from .channels.registry import ZIGBEE_CHANNEL_REGISTRY
 from .const import (
     CONF_DEVICE_CONFIG, COMPONENTS, ZHA_DISCOVERY_NEW, DATA_ZHA,
-    SENSOR_TYPE, UNKNOWN, GENERIC, POWER_CONFIGURATION_CHANNEL
+    SENSOR_TYPE, UNKNOWN, GENERIC
 )
 from .registries import (
     BINARY_SENSOR_TYPES, CHANNEL_ONLY_CLUSTERS, EVENT_RELAY_CLUSTERS,
@@ -26,7 +26,6 @@ from .registries import (
     SINGLE_INPUT_CLUSTER_DEVICE_CLASS, SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS,
     OUTPUT_CHANNEL_ONLY_CLUSTERS, REMOTE_DEVICE_TYPES
 )
-from ..device_entity import ZhaDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -168,9 +167,10 @@ def _async_handle_single_cluster_matches(hass, endpoint, zha_device,
                                          profile_clusters, device_key,
                                          is_new_join):
     """Dispatch single cluster matches to HA components."""
-    from zigpy.zcl.clusters.general import OnOff
+    from zigpy.zcl.clusters.general import OnOff, PowerConfiguration
     cluster_matches = []
     cluster_match_results = []
+    matched_power_configuration = False
     for cluster in endpoint.in_clusters.values():
         if cluster.cluster_id in CHANNEL_ONLY_CLUSTERS:
             cluster_match_results.append(
@@ -182,6 +182,14 @@ def _async_handle_single_cluster_matches(hass, endpoint, zha_device,
             continue
 
         if cluster.cluster_id not in profile_clusters:
+            # Only create one battery sensor per device
+            if cluster.cluster_id == PowerConfiguration.cluster_id and \
+                    (zha_device.is_mains_powered or
+                     matched_power_configuration):
+                continue
+            elif cluster.cluster_id == PowerConfiguration.cluster_id and not \
+                    zha_device.is_mains_powered:
+                matched_power_configuration = True
             cluster_match_results.append(_async_handle_single_cluster_match(
                 hass,
                 zha_device,
@@ -279,13 +287,3 @@ def _async_handle_single_cluster_match(hass, zha_device, cluster, device_key,
         })
 
     return discovery_info
-
-
-@callback
-def async_create_device_entity(zha_device):
-    """Create ZHADeviceEntity."""
-    device_entity_channels = []
-    if POWER_CONFIGURATION_CHANNEL in zha_device.cluster_channels:
-        channel = zha_device.cluster_channels.get(POWER_CONFIGURATION_CHANNEL)
-        device_entity_channels.append(channel)
-    return ZhaDeviceEntity(zha_device, device_entity_channels)

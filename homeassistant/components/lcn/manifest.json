@@ -3,7 +3,7 @@
   "name": "Lcn",
   "documentation": "https://www.home-assistant.io/components/lcn",
   "requirements": [
-    "pypck==0.6.1"
+    "pypck==0.6.2"
   ],
   "dependencies": [],
   "codeowners": [
