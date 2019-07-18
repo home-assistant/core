@@ -122,7 +122,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     websession = async_get_clientsession(hass)
     # ID request as being from HA, pynws prepends the api_key in addition
-    api_key_ha = f"{api_key} homeassistant"
+    api_key_ha = "{} homeassistant".format(api_key)
     nws = SimpleNWS(latitude, longitude, api_key_ha, mode, websession)
 
     _LOGGER.debug("Setting up station: %s", station)
