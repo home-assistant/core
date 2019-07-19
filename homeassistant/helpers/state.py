@@ -140,10 +140,10 @@ async def async_reproduce_state(
 
     if to_call:
         # run all domains in parallel
-        await asyncio.gather(*[
+        await asyncio.gather(*(
             worker(domain, data)
             for domain, data in to_call.items()
-        ])
+        ))
 
 
 @bind_hass
