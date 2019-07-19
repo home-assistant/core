@@ -66,7 +66,7 @@ class HMThermostat(HMDevice, ClimateDevice):
 
         Need to be one of HVAC_MODE_*.
         """
-        if self.current_temperature <= self._hmdevice.OFF_VALUE + 0.5:
+        if self.target_temperature <= self._hmdevice.OFF_VALUE + 0.5:
             return HVAC_MODE_OFF
         if "MANU_MODE" in self._hmdevice.ACTIONNODE:
             if self._hm_controll_mode == self._hmdevice.MANU_MODE:
