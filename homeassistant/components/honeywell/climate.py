@@ -128,7 +128,6 @@ class HoneywellUSThermostat(ClimateDevice):
         self._password = password
 
         self._supported_features = (SUPPORT_PRESET_MODE |
-                                    SUPPORT_TARGET_TEMPERATURE |
                                     SUPPORT_TARGET_TEMPERATURE_RANGE)
 
         # pylint: disable=protected-access
