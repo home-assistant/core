@@ -7,21 +7,45 @@ https://home-assistant.io/components/lyric
 import logging
 from typing import Any, Dict
 
+import voluptuous as vol
+
 from lyric import Lyric
 
 from homeassistant.const import CONF_TOKEN
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from .const import (DATA_LYRIC_CLIENT, DOMAIN,
-                    CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_LYRIC_CONFIG_FILE)
+                    CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_LYRIC_CONFIG_FILE,
+                    DATA_LYRIC_CONFIG)
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_CLIENT_ID): cv.string,
+                vol.Required(CONF_CLIENT_SECRET): cv.string
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the Lyric component."""
+    if DOMAIN not in config:
+        return True
+
+    conf = config[DOMAIN]
+
+    # Store config to be used during entry setup
+    hass.data[DATA_LYRIC_CONFIG] = conf
+
     return True
 
 
@@ -29,8 +53,10 @@ async def async_setup_entry(
         hass: HomeAssistantType, entry: ConfigEntry
 ) -> bool:
     """Set up Lyric from a config entry."""
-    client_id = entry.data[CONF_CLIENT_ID]
-    client_secret = entry.data[CONF_CLIENT_SECRET]
+    conf = hass.data.get(DATA_LYRIC_CONFIG)
+
+    client_id = conf[CONF_CLIENT_ID]
+    client_secret = conf[CONF_CLIENT_SECRET]
     token = entry.data[CONF_TOKEN]
     token_cache_file = hass.config.path(CONF_LYRIC_CONFIG_FILE)
 

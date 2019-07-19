@@ -7,6 +7,7 @@ DOMAIN = 'lyric'
 
 DATA_LYRIC_DEVICES = 'lyric_devices'
 DATA_LYRIC_CLIENT = 'lyric_client'
+DATA_LYRIC_CONFIG = 'lyric_config'
 
 CONF_CLIENT_ID = 'client_id'
 CONF_CLIENT_SECRET = 'client_secret'

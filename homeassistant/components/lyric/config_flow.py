@@ -4,13 +4,13 @@ import logging
 
 import async_timeout
 from lyric import Lyric
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigFlow
 from .const import (AUTH_CALLBACK_NAME, AUTH_CALLBACK_PATH, DOMAIN,
-                    CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_LYRIC_CONFIG_FILE)
+                    CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_LYRIC_CONFIG_FILE,
+                    DATA_LYRIC_CONFIG)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,42 +29,30 @@ class LyricFlowHandler(ConfigFlow):
         self.code = None
         pass
 
-    async def _show_setup_form(self, errors=None):
-        """Show the setup form to the user."""
-        return self.async_show_form(
-            step_id='user',
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_CLIENT_ID): str,
-                    vol.Required(CONF_CLIENT_SECRET): str
-                }
-            ),
-            errors=errors or {},
-        )
-
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, code=None):
         """Handle a flow initiated by the user."""
         if self._async_current_entries():
             return self.async_abort(reason='single_instance_allowed')
 
-        if user_input is None:
-            return await self._show_setup_form(user_input)
+        if not self.hass.data.get(DATA_LYRIC_CONFIG):
+            return self.async_abort(reason='no_config')
 
-        return await self.async_step_auth(user_input)
+        conf = self.hass.data.get(DATA_LYRIC_CONFIG)
 
-    async def async_step_auth(self, user_input):
+        self.client_id = conf[CONF_CLIENT_ID]
+        self.client_secret = conf[CONF_CLIENT_SECRET]
+
+        return await self.async_step_auth(code)
+
+    async def async_step_auth(self, code):
         """Create an entry for auth."""
         # Flow has been triggered from Lyric api
-        if isinstance(user_input, str):
-            return await self.async_step_code(user_input)
-
-        self.client_id = user_input.get(CONF_CLIENT_ID)
-        self.client_secret = user_input.get(CONF_CLIENT_SECRET)
+        if isinstance(code, str):
+            return await self.async_step_code(code)
 
         try:
             with async_timeout.timeout(10):
-                url = await self._get_authorization_url(self.client_id,
-                                                        self.client_secret)
+                url = await self._get_authorization_url()
         except asyncio.TimeoutError:
             return self.async_abort(reason='authorize_url_timeout')
 
@@ -73,11 +61,18 @@ class LyricFlowHandler(ConfigFlow):
             url=url
         )
 
-    async def _get_authorization_url(self, client_id, client_secret):
+    async def _get_authorization_url(self):
         """Get Lyric authorization url."""
+        client_id = self.client_id
+        client_secret = self.client_secret
         redirect_uri = '{}{}'.format(
             self.hass.config.api.base_url, AUTH_CALLBACK_PATH)
         token_cache_file = self.hass.config.path(CONF_LYRIC_CONFIG_FILE)
+
+        _LOGGER.warning(client_id)
+        _LOGGER.warning(client_secret)
+        _LOGGER.warning(redirect_uri)
+        _LOGGER.warning(token_cache_file)
 
         lyric = Lyric(app_name='Home Assistant', client_id=client_id,
                       client_secret=client_secret, redirect_uri=redirect_uri,
@@ -98,9 +93,9 @@ class LyricFlowHandler(ConfigFlow):
         """Create Lyric api and entries."""
         client_id = self.client_id
         client_secret = self.client_secret
-        token_cache_file = self.hass.config.path(CONF_LYRIC_CONFIG_FILE)
         redirect_uri = '{}{}'.format(
             self.hass.config.api.base_url, AUTH_CALLBACK_PATH)
+        token_cache_file = self.hass.config.path(CONF_LYRIC_CONFIG_FILE)
 
         lyric = Lyric(app_name='Home Assistant', client_id=client_id,
                       client_secret=client_secret, redirect_uri=redirect_uri,
