@@ -5,8 +5,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
-    ATTR_NAME, ATTR_LOCATION, CONF_API_KEY, CONF_MONITORED_CONDITIONS,
-    EVENT_HOMEASSISTANT_STOP)
+    ATTR_NAME, ATTR_LOCATION, CONF_API_KEY, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
@@ -218,8 +217,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Schema({
             vol.Required(CONF_APP_KEY): cv.string,
             vol.Required(CONF_API_KEY): cv.string,
-            vol.Optional(CONF_MONITORED_CONDITIONS):
-                vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
         })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -264,9 +261,7 @@ async def async_setup_entry(hass, config_entry):
             hass, config_entry,
             Client(
                 config_entry.data[CONF_API_KEY],
-                config_entry.data[CONF_APP_KEY], session),
-            hass.data[DOMAIN].get(DATA_CONFIG, {}).get(
-                CONF_MONITORED_CONDITIONS, []))
+                config_entry.data[CONF_APP_KEY], session))
         hass.loop.create_task(ambient.ws_connect())
         hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = ambient
     except WebsocketError as err:
@@ -294,7 +289,7 @@ async def async_unload_entry(hass, config_entry):
 class AmbientStation:
     """Define a class to handle the Ambient websocket."""
 
-    def __init__(self, hass, config_entry, client, monitored_conditions):
+    def __init__(self, hass, config_entry, client):
         """Initialize."""
         self._config_entry = config_entry
         self._entry_setup_complete = False
@@ -302,7 +297,7 @@ class AmbientStation:
         self._watchdog_listener = None
         self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
         self.client = client
-        self.monitored_conditions = monitored_conditions
+        self.monitored_conditions = []
         self.stations = {}
 
     async def _attempt_connect(self):
@@ -360,14 +355,10 @@ class AmbientStation:
 
                 _LOGGER.debug('New station subscription: %s', data)
 
-                # If the user hasn't specified monitored conditions, use only
-                # those that their station supports (and which are defined
-                # here):
-                if not self.monitored_conditions:
-                    self.monitored_conditions = [
-                        k for k in station['lastData'].keys()
-                        if k in SENSOR_TYPES
-                    ]
+                self.monitored_conditions = [
+                    k for k in station['lastData'].keys()
+                    if k in SENSOR_TYPES
+                ]
 
                 # If the user is monitoring brightness (in W/m^2),
                 # make sure we also add a calculated sensor for the
