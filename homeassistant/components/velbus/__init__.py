@@ -146,7 +146,7 @@ class VelbusEntity(Entity):
         return {
             'identifiers': {
                 (DOMAIN, self._module.get_module_address(),
-                    self._module.serial)
+                 self._module.serial)
             },
             'name': "{} {}".format(
                 self._module.get_module_address(),
