@@ -69,11 +69,6 @@ class LyricFlowHandler(ConfigFlow):
             self.hass.config.api.base_url, AUTH_CALLBACK_PATH)
         token_cache_file = self.hass.config.path(CONF_LYRIC_CONFIG_FILE)
 
-        _LOGGER.warning(client_id)
-        _LOGGER.warning(client_secret)
-        _LOGGER.warning(redirect_uri)
-        _LOGGER.warning(token_cache_file)
-
         lyric = Lyric(app_name='Home Assistant', client_id=client_id,
                       client_secret=client_secret, redirect_uri=redirect_uri,
                       token_cache_file=token_cache_file)
