@@ -326,8 +326,13 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
         if hvac_mode == HVAC_MODE_OFF:
             await self.async_turn_off()
             return
-        await self._device.set_air_conditioner_mode(
-            STATE_TO_AC_MODE[hvac_mode], set_status=True)
+        tasks = []
+        # Turn on the device if it's off before setting mode.
+        if not self._device.status.switch:
+            tasks.append(self._device.switch_on(set_status=True))
+        tasks.append(self._device.set_air_conditioner_mode(
+            STATE_TO_AC_MODE[hvac_mode], set_status=True))
+        await asyncio.gather(*tasks)
         # State is set optimistically in the command above, therefore update
         # the entity state ahead of receiving the confirming push updates
         self.async_schedule_update_ha_state()
@@ -338,7 +343,12 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
         # operation mode
         operation_mode = kwargs.get(ATTR_HVAC_MODE)
         if operation_mode:
-            tasks.append(self.async_set_hvac_mode(operation_mode))
+            if operation_mode == HVAC_MODE_OFF:
+                tasks.append(self._device.switch_off(set_status=True))
+            else:
+                if not self._device.status.switch:
+                    tasks.append(self._device.switch_on(set_status=True))
+                tasks.append(self.async_set_hvac_mode(operation_mode))
         # temperature
         tasks.append(self._device.set_cooling_setpoint(
             kwargs[ATTR_TEMPERATURE], set_status=True))
