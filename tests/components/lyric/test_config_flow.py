@@ -1,6 +1,5 @@
 """Tests for the Honeywell Lyric config flow."""
 from unittest.mock import patch
-import logging
 
 import pytest
 
@@ -11,7 +10,7 @@ from homeassistant.components.lyric.const import (DATA_LYRIC_CONFIG, DOMAIN,
                                                   CONF_CLIENT_SECRET)
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, MockDependency
+from tests.common import MockDependency
 
 FIXTURE_APP = {
     DOMAIN: {
@@ -25,8 +24,6 @@ FIXTURE_API = {
         'base_url': 'http://localhost:8123',
     }
 }
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture
