@@ -10,7 +10,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from . import (DOMAIN, EVENT_NOONLIGHT_TOKEN_REFRESHED,
         NOTIFICATION_ALARM_CREATE_FAILURE)
 
-DEFAULT_NAME = 'noonlight_switch'
+DEFAULT_NAME = 'Noonlight Switch'
 
 CONST_ALARM_STATUS_ACTIVE = 'ACTIVE'
 CONST_ALARM_STATUS_CANCELED = 'CANCELED'

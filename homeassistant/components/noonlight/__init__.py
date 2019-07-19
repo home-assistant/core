@@ -64,7 +64,7 @@ async def async_setup(hass, config):
             persistent_notification.create(
                     hass,
                     "Noonlight API token failed to renew {} time{}!\n"
-                    "HomeAssistant will automatically attempt to renew the "
+                    "Home Assistant will automatically attempt to renew the "
                     "API token in 3 minutes.".format(
                             check_api_token.fail_count,
                             's' if check_api_token.fail_count > 1 else ''
@@ -100,7 +100,7 @@ async def async_setup(hass, config):
     return True
 
 class NoonlightPlatform():
-    """Platform for interacting with Noonlight from HomeAssistant"""
+    """Platform for interacting with Noonlight from Home Assistant"""
     def __init__(self, hass, conf):
         self.hass = hass
         self.config = conf
@@ -143,6 +143,8 @@ class NoonlightPlatform():
         if self._client is None:
             import noonlight as nl
             self._client = nl.NoonlightClient(token=self.access_token)
+            api_url = self.config.get(CONF_API_ENDPOINT)
+            self._client._base_url = api_url
         return self._client
 
     async def check_api_token(self, force_renew=False):
