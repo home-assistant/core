@@ -83,7 +83,7 @@ class LyricClient:
                 else:
                     _LOGGER.debug("Ignoring location %s, not in %s",
                                   location.name, self._location)
-        except TypeError:
+        except ConnectionError:
             _LOGGER.error(
                 "Connection error logging into the Lyric web service.")
 
