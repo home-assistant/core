@@ -388,6 +388,6 @@ class DailyHistory:
             oldest = self._days.popleft()
             del self._max_dict[oldest]
         self._days.append(day)
-        if value is None or not isinstance(value, (int, float)):
+        if not isinstance(value, (int, float)):
             return
         self._max_dict[day] = value
