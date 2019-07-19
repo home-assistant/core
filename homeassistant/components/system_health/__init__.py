@@ -65,10 +65,10 @@ async def handle_info(hass: HomeAssistantType,
         await hass.helpers.system_info.async_get_system_info()
 
     if info_callbacks:
-        for domain, domain_data in zip(info_callbacks, await asyncio.gather(*[
+        for domain, domain_data in zip(info_callbacks, await asyncio.gather(*(
                 _info_wrapper(hass, info_callback) for info_callback
                 in info_callbacks.values()
-        ])):
+        ))):
             data[domain] = domain_data
 
     connection.send_message(websocket_api.result_message(msg['id'], data))
