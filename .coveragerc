@@ -392,7 +392,6 @@ omit =
     homeassistant/components/lyft/sensor.py
     homeassistant/components/lyric/__init__.py
     homeassistant/components/lyric/climate.py
-    homeassistant/components/lyric/config_flow.py
     homeassistant/components/lyric/const.py
     homeassistant/components/lyric/sensor.py
     homeassistant/components/magicseaweed/sensor.py
