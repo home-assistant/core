@@ -192,7 +192,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         """Return true if aux heater."""
         if 'aux' not in self.wink.hvac_modes():
             return None
-        if self.wink.hvac_action_mode() == 'aux':
+        if self.wink.current_hvac_mode() == 'aux':
             return True
         return False
 
