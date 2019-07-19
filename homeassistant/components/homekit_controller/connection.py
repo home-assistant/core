@@ -99,6 +99,10 @@ class HKDevice():
 
         self._pollable_characteristics = []
 
+        # If this is set polling is active and can be disabled by calling
+        # this method.
+        self._polling_interval_remover = None
+
     def add_pollable_characteristics(self, characteristics):
         """Add (aid, iid) pairs that we need to poll."""
         self._pollable_characteristics.extend(characteristics)
@@ -122,7 +126,7 @@ class HKDevice():
         cache = self.hass.data[ENTITY_MAP].get_map(self.unique_id)
         if not cache:
             if await self.async_refresh_entity_map(self.config_num):
-                async_track_time_interval(
+                self._polling_interval_remover = async_track_time_interval(
                     self.hass,
                     self.async_update,
                     DEFAULT_SCAN_INTERVAL
@@ -143,7 +147,7 @@ class HKDevice():
 
         await self.async_update()
 
-        async_track_time_interval(
+        self._polling_interval_remover = async_track_time_interval(
             self.hass,
             self.async_update,
             DEFAULT_SCAN_INTERVAL
@@ -153,6 +157,9 @@ class HKDevice():
 
     async def async_unload(self):
         """Stop interacting with device and prepare for removal from hass."""
+        if self._polling_interval_remover:
+            self._polling_interval_remover()
+
         unloads = []
         for platform in self.platforms:
             unloads.append(
