@@ -1714,7 +1714,7 @@ smarthab==0.20
 smhi-pkg==1.0.10
 
 # homeassistant.components.snapcast
-snapcast==2.0.9
+snapcast==2.0.10
 
 # homeassistant.components.socialblade
 socialbladeclient==0.2
