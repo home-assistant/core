@@ -25,7 +25,7 @@ COMPONENT_TYPES = ['switch', 'sensor', 'binary_sensor', 'cover', 'climate']
 
 async def async_setup(hass, config):
     """Set up the Velbus platform."""
-    """Import from the configuration file if needed"""
+    #Import from the configuration file if needed
     if DOMAIN not in config:
         return True
 
@@ -84,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         for category in COMPONENT_TYPES:
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(
-                entry, category))
+                    entry, category))
 
 
     controller.scan(callback)
@@ -148,8 +148,10 @@ class VelbusEntity(Entity):
             'identifiers': {
                 (DOMAIN, self._module.get_module_address(), self._module.serial)
             },
-            'name': "{} {}".format(self._module.get_module_address(), self._module.get_module_name()),
+            'name': "{} {}".format(
+                self._module.get_module_address(), self._module.get_module_name()),
             'manufacturer': 'Velleman',
             'model': self._module.get_module_name(),
-            'sw_version': "{}.{}-{}".format(self._module.memory_map_version , self._module.build_year, self._module.build_week)
+            'sw_version': "{}.{}-{}".format(
+                self._module.memory_map_version, self._module.build_year, self._module.build_week)
         }

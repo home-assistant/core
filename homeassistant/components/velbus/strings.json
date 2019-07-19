@@ -11,6 +11,6 @@
       }
     },
     "error": {
-      "name_exists": "Name already exists"
+      "port_exists": "This port is already configured"
     }
 }
