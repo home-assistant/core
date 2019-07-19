@@ -12,7 +12,7 @@ from .const import DOMAIN
 @callback
 def velbus_entries(hass: HomeAssistant):
     """Return connections for Velbus domain."""
-    return set((slugify(entry.data[CONF_PORT])) for
+    return set((entry.data[CONF_PORT]) for
                entry in hass.config_entries.async_entries(DOMAIN))
 
 
@@ -36,7 +36,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
 
     def _prt_in_configuration_exists(self, prt: str) -> bool:
         """Return True if port exists in configuration."""
-        if slugify(prt) in velbus_entries(self.hass):
+        if prt in velbus_entries(self.hass):
             return True
         return False
 
@@ -45,7 +45,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
         self._errors = {}
         if user_input is not None:
             name = slugify(user_input[CONF_NAME])
-            prt = slugify(user_input.get(CONF_PORT))
+            prt = user_input.get(CONF_PORT)
             # name must be unique
             if not self._prt_in_configuration_exists(prt):
                 return await self._create_device(name, prt)

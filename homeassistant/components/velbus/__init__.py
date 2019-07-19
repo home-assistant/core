@@ -1,4 +1,5 @@
 """Support for Velbus devices."""
+import asyncio
 import logging
 import voluptuous as vol
 
@@ -51,16 +52,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Establish connection with velbus."""
     import velbus
 
-    hass.data[DOMAIN] = {}
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
 
     controller = velbus.Controller(entry.data[CONF_PORT])
-
-    def stop_velbus(event):
-        """Disconnect from serial port."""
-        _LOGGER.debug("Shutting down ")
-        controller.stop()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_velbus)
 
     def callback():
         modules = controller.get_modules()
@@ -101,9 +96,14 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Remove the velbus connection"""
-    print(hass.data)
-    hass.data[DOMAIN]['cntrl'].stop()
-    hass.data[DOMAIN] = {}
+    await asyncio.wait([
+        hass.config_entries.async_forward_entry_unload(entry, component)
+        for component in COMPONENT_TYPES
+        ])
+    hass.data[DOMAIN][entry.entry_id]['cntrl'].stop()
+    hass.data[DOMAIN].pop(entry.entry_id)
+    if not hass.data[DOMAIN]:
+        hass.data.pop(DOMAIN)
     return True
 
 
