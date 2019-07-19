@@ -93,6 +93,7 @@ TYPE_SOILTEMP7F = 'soiltemp7f'
 TYPE_SOILTEMP8F = 'soiltemp8f'
 TYPE_SOILTEMP9F = 'soiltemp9f'
 TYPE_SOLARRADIATION = 'solarradiation'
+TYPE_SOLARRADIATION_LX = 'solarradiation_lx'
 TYPE_TEMP10F = 'temp10f'
 TYPE_TEMP1F = 'temp1f'
 TYPE_TEMP2F = 'temp2f'
@@ -183,7 +184,9 @@ SENSOR_TYPES = {
     TYPE_SOILTEMP7F: ('Soil Temp 7', '°F', TYPE_SENSOR, 'temperature'),
     TYPE_SOILTEMP8F: ('Soil Temp 8', '°F', TYPE_SENSOR, 'temperature'),
     TYPE_SOILTEMP9F: ('Soil Temp 9', '°F', TYPE_SENSOR, 'temperature'),
-    TYPE_SOLARRADIATION: ('Solar Rad', 'W/m^2', TYPE_SENSOR, None),
+    TYPE_SOLARRADIATION: ('Solar Rad', 'W/m^2', TYPE_SENSOR, 'illuminance'),
+    TYPE_SOLARRADIATION_LX: (
+        'Solar Rad (lx)', 'lx', TYPE_SENSOR, 'illuminance'),
     TYPE_TEMP10F: ('Temp 10', '°F', TYPE_SENSOR, 'temperature'),
     TYPE_TEMP1F: ('Temp 1', '°F', TYPE_SENSOR, 'temperature'),
     TYPE_TEMP2F: ('Temp 2', '°F', TYPE_SENSOR, 'temperature'),
@@ -366,6 +369,13 @@ class AmbientStation:
                         if k in SENSOR_TYPES
                     ]
 
+                # If the user is monitoring brightness (in W/m^2),
+                # make sure we also add a calculated sensor for the
+                # same data measured in lx:
+                if TYPE_SOLARRADIATION in self.monitored_conditions:
+                    self.monitored_conditions.append(
+                        TYPE_SOLARRADIATION_LX)
+
                 self.stations[station['macAddress']] = {
                     ATTR_LAST_DATA: station['lastData'],
                     ATTR_LOCATION: station.get('info', {}).get('location'),
@@ -450,7 +460,7 @@ class AmbientWeatherEntity(Entity):
     @property
     def unique_id(self):
         """Return a unique, unchanging string that represents this sensor."""
-        return '{0}_{1}'.format(self._mac_address, self._sensor_name)
+        return '{0}_{1}'.format(self._mac_address, self._sensor_type)
 
     async def async_added_to_hass(self):
         """Register callbacks."""

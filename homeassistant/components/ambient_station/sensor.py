@@ -3,7 +3,9 @@ import logging
 
 from homeassistant.const import ATTR_NAME
 
-from . import SENSOR_TYPES, AmbientWeatherEntity
+from . import (
+    SENSOR_TYPES, TYPE_SOLARRADIATION, TYPE_SOLARRADIATION_LX,
+    AmbientWeatherEntity)
 from .const import ATTR_LAST_DATA, DATA_CLIENT, DOMAIN, TYPE_SENSOR
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,5 +63,12 @@ class AmbientWeatherSensor(AmbientWeatherEntity):
 
     async def async_update(self):
         """Fetch new state data for the sensor."""
-        self._state = self._ambient.stations[
-            self._mac_address][ATTR_LAST_DATA].get(self._sensor_type)
+        if self._sensor_type == TYPE_SOLARRADIATION_LX:
+            # Converting W/m^2 to lx isn't a direct formula, but a very
+            # accurate approximation exists for sunlight:
+            w_m2_brightness_val = self._ambient.stations[
+                self._mac_address][ATTR_LAST_DATA].get(TYPE_SOLARRADIATION)
+            self._state = round(float(w_m2_brightness_val)/0.0079)
+        else:
+            self._state = self._ambient.stations[
+                self._mac_address][ATTR_LAST_DATA].get(self._sensor_type)
