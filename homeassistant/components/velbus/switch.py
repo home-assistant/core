@@ -14,6 +14,7 @@ async def async_setup_platform(
     """ Old way """
     pass
 
+
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Velbus switch based on config_entry."""
     cntrl = hass.data[DOMAIN][entry.entry_id]['cntrl']

@@ -11,10 +11,12 @@ from . import VelbusEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up Velbus binary sensors."""
     pass
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Velbus binary sensor based on config_entry."""
