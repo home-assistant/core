@@ -428,6 +428,13 @@ class AmbientWeatherEntity(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
+        # Since the solarradiation_lx sensor is created only if the
+        # user shows a solarradiation sensor, ensure that the
+        # solarradiation_lx sensor shows as available if the solarradiation
+        # sensor is available:
+        if self._sensor_type == TYPE_SOLARRADIATION_LX:
+            return self._ambient.stations[self._mac_address][
+                ATTR_LAST_DATA].get(TYPE_SOLARRADIATION) is not None
         return self._ambient.stations[self._mac_address][ATTR_LAST_DATA].get(
             self._sensor_type) is not None
 

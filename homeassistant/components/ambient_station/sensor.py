@@ -64,8 +64,9 @@ class AmbientWeatherSensor(AmbientWeatherEntity):
     async def async_update(self):
         """Fetch new state data for the sensor."""
         if self._sensor_type == TYPE_SOLARRADIATION_LX:
-            # Converting W/m^2 to lx isn't a direct formula, but a very
-            # accurate approximation exists for sunlight:
+            # If the user requests the solarradiation_lx sensor, use the
+            # value of the solarradiation sensor and apply a very accurate
+            # approximation of converting sunlight W/m^2 to lx:
             w_m2_brightness_val = self._ambient.stations[
                 self._mac_address][ATTR_LAST_DATA].get(TYPE_SOLARRADIATION)
             self._state = round(float(w_m2_brightness_val)/0.0079)
