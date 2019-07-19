@@ -103,7 +103,7 @@ class TestFritzboxClimate(unittest.TestCase):
         self.thermostat._target_temperature = 127.0
         assert 'heat' == self.thermostat.hvac_mode
         self.thermostat._target_temperature = 126.5
-        assert 'heat' == self.thermostat.hvac_mode
+        assert 'off' == self.thermostat.hvac_mode
         self.thermostat._target_temperature = 22.0
         assert 'heat' == self.thermostat.hvac_mode
         self.thermostat._target_temperature = 16.0
