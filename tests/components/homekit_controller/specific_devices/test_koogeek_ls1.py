@@ -80,7 +80,8 @@ async def test_recover_from_failure(hass, utcnow, failure_cls):
         state = await helper.poll_and_get_state()
         assert state.state == 'off'
 
-        get_char.assert_called_with([(1, 8), (1, 9), (1, 10), (1, 11)])
+        chars = get_char.call_args[0][0]
+        assert set(chars) == {(1, 8), (1, 9), (1, 10), (1, 11)}
 
     # Test that entity changes state when network error goes away
     next_update += timedelta(seconds=60)

@@ -34,7 +34,30 @@ class HomeKitEntity(Entity):
         self._chars = {}
         self.setup()
 
-        accessory.entities[(self._aid, self._iid)] = self
+        self._signals = []
+
+    async def async_added_to_hass(self):
+        """Entity added to hass."""
+        self._signals.append(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                self._accessory.signal_state_updated,
+                self.async_state_changed,
+            )
+        )
+
+        self._accessory.add_pollable_characteristics(
+            self.pollable_characteristics,
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Prepare to be removed from hass."""
+        self._accessory.remove_pollable_characteristics(
+            self._aid,
+        )
+
+        for signal_remove in self._signals:
+            signal_remove()
+        self._signals.clear()
 
     @property
     def should_poll(self) -> bool:
@@ -100,9 +123,10 @@ class HomeKitEntity(Entity):
         # pylint: disable=not-callable
         setup_fn(char)
 
-    def handle_new_values(self, new_values):
-        """Update state from one of more characteristics fetch from device."""
-        for (_, iid), result in new_values.items():
+    async def async_state_changed(self):
+        """Collect new data from bridge and update the entity state in hass."""
+        accessory_state = self._accessory.current_state.get(self._aid, {})
+        for iid, result in accessory_state.items():
             if 'value' not in result:
                 continue
             # Callback to update the entity with this characteristic value
@@ -113,7 +137,7 @@ class HomeKitEntity(Entity):
             # pylint: disable=not-callable
             update_fn(result['value'])
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def unique_id(self):
@@ -204,4 +228,9 @@ async def async_setup(hass, config):
 async def async_remove_entry(hass, entry):
     """Cleanup caches before removing config entry."""
     hkid = entry.data['AccessoryPairingID']
+
+    if hkid in hass.data[KNOWN_DEVICES]:
+        connection = hass.data[KNOWN_DEVICES][hkid]
+        await connection.async_unload()
+
     hass.data[ENTITY_MAP].async_delete_map(hkid)

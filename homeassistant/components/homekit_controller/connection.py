@@ -5,7 +5,7 @@ import logging
 
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import HOMEKIT_ACCESSORY_DISPATCH, ENTITY_MAP
+from .const import DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, ENTITY_MAP
 
 
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(seconds=60)
@@ -87,11 +87,35 @@ class HKDevice():
 
         self.available = True
 
+        self.signal_state_updated = '_'.join((
+            DOMAIN,
+            self.unique_id,
+            'state_updated',
+        ))
+
+        # Current values of all characteristics homekit_controller is tracking.
+        # Key is a (accessory_id, characteristic_id) tuple.
+        self.current_state = {}
+
+        self._pollable_characteristics = []
+
+    def add_pollable_characteristics(self, characteristics):
+        """Add (aid, iid) pairs that we need to poll."""
+        self._pollable_characteristics.extend(characteristics)
+
+    def remove_pollable_characteristics(self, accessory_id):
+        """Remove all pollable characteristics by accessory id."""
+        self._pollable_characteristics = [
+            char for char in self._pollable_characteristics
+            if char[0] != accessory_id
+        ]
+
     def async_set_unavailable(self):
         """Mark state of all entities on this connection as unavailable."""
         self.available = False
-        for entity in self.entities.values():
-            entity.async_schedule_update_ha_state()
+        self.hass.helpers.dispatcher.async_dispatcher_send(
+            self.signal_state_updated,
+        )
 
     async def async_setup(self):
         """Prepare to use a paired HomeKit device in homeassistant."""
@@ -126,6 +150,21 @@ class HKDevice():
         )
 
         return True
+
+    async def async_unload(self):
+        """Stop interacting with device and prepare for removal from hass."""
+        unloads = []
+        for platform in self.platforms:
+            unloads.append(
+                self.hass.config_entries.async_forward_entry_unload(
+                    self.config_entry,
+                    platform
+                )
+            )
+
+        results = await asyncio.gather(*unloads)
+
+        return False not in results
 
     async def async_refresh_entity_map(self, config_num):
         """Handle setup of a HomeKit accessory."""
@@ -219,19 +258,17 @@ class HKDevice():
             AccessoryDisconnectedError, AccessoryNotFoundError,
             EncryptionError)
 
-        _LOGGER.debug("Starting HomeKit controller update")
-
-        chars_to_poll = {}
-        for entity in self.entities.values():
-            for char in entity.pollable_characteristics:
-                chars_to_poll[char] = entity
-
-        if not chars_to_poll:
+        if not self._pollable_characteristics:
+            _LOGGER.debug(
+                "HomeKit connection not polling any characteristics."
+            )
             return
+
+        _LOGGER.debug("Starting HomeKit controller update")
 
         try:
             new_values_dict = await self.get_characteristics(
-                list(chars_to_poll.keys())
+                self._pollable_characteristics,
             )
         except AccessoryNotFoundError:
             # Not only did the connection fail, but also the accessory is not
@@ -245,15 +282,13 @@ class HKDevice():
 
         self.available = True
 
-        for entity in self.entities.values():
-            new_values = {}
-            for key, value in new_values_dict.items():
-                if key not in chars_to_poll:
-                    _LOGGER.debug("Unsolicited characteristic value: %s", key)
-                    continue
-                if chars_to_poll[key] == entity:
-                    new_values[key] = value
-            entity.handle_new_values(new_values)
+        for (aid, cid), value in new_values_dict.items():
+            accessory = self.current_state.setdefault(aid, {})
+            accessory[cid] = value
+
+        self.hass.helpers.dispatcher.async_dispatcher_send(
+            self.signal_state_updated,
+        )
 
         _LOGGER.debug("Finished HomeKit controller update")
 
