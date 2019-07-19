@@ -79,7 +79,7 @@ class HKDevice():
 
         # This just tracks aid/iid pairs so we know if a HK service has been
         # mapped to a HA entity.
-        self.entities = {}
+        self.entities = []
 
         # There are multiple entities sharing a single connection - only
         # allow one entity to use pairing at once.
@@ -234,6 +234,7 @@ class HKDevice():
 
                 for listener in callbacks:
                     if listener(aid, service):
+                        self.entities.append((aid, iid))
                         break
 
     def async_load_platforms(self):
