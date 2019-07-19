@@ -363,7 +363,7 @@ class DailyHistory:
     def add_measurement(self, value, timestamp=None):
         """Add a new measurement for a certain day."""
         day = (timestamp or datetime.now()).date()
-        if value is None or not isinstance(value, (int, float)):
+        if not isinstance(value, (int, float)):
             return
         if self._days is None:
             self._days = deque()
