@@ -28,7 +28,7 @@ async def async_setup(hass, config):
     if conf is None:
         return True
 
-    if configured_instances(hass) is None:
+    if not configured_instances(hass):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -79,19 +79,17 @@ async def async_setup_entry(hass, config_entry):
         dev_dict = await async_process_devices(hass, manager)
         switch_devs = dev_dict.get(VS_SWITCHES, [])
 
-        if switch_devs:
-            switch_set = set(switch_devs)
-            new_switches = list(switch_set.difference(switches))
-            if new_switches:
-                if switches:
-                    switches.extend(new_switches)
-                    async_dispatcher_send(hass,
-                                          VS_DISCOVERY.format(VS_SWITCHES),
-                                          new_switches)
-                else:
-                    switches.extend(new_switches)
-                    hass.async_create_task(
-                        forward_setup(config_entry, 'switch'))
+        switch_set = set(switch_devs)
+        new_switches = list(switch_set.difference(switches))
+        if new_switches and switches:
+            switches.extend(new_switches)
+            async_dispatcher_send(hass,
+                                  VS_DISCOVERY.format(VS_SWITCHES),
+                                  new_switches)
+            return
+        if new_switches and not switches:
+            switches.extend(new_switches)
+            hass.async_create_task(forward_setup(config_entry, 'switch'))
 
     hass.services.async_register(DOMAIN,
                                  SERVICE_UPDATE_DEVS,

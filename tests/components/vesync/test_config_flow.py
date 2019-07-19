@@ -1,20 +1,19 @@
 """Test for vesync config flow."""
 from unittest.mock import patch
-import pyvesync  # pylint: disable=W0611
 from homeassistant import data_entry_flow
-from homeassistant.components.vesync import config_flow
+from homeassistant.components.vesync import config_flow, DOMAIN
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from tests.common import MockConfigEntry
 
 
 async def test_abort_already_setup(hass):
     """Test if we abort because component is already setup."""
     flow = config_flow.VeSyncFlowHandler()
     flow.hass = hass
-
-    with patch(
-            "homeassistant.components.vesync.config_flow.configured_instances",
-            return_value=[{CONF_USERNAME: 'test'}]):
-        result = await flow.async_step_user()
+    MockConfigEntry(
+        domain=DOMAIN, title='user', data={'user': 'pass'}
+        ).add_to_hass(hass)
+    result = await flow.async_step_user()
 
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
     assert result['reason'] == 'already_setup'

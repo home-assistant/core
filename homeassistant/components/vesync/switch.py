@@ -1,5 +1,6 @@
 """Support for Etekcity VeSync switches."""
 import logging
+from homeassistant.core import callback
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.light import Light
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -23,20 +24,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up switches."""
     async def async_discover(devices):
         """Add new devices to platform."""
-        await _async_setup_entities(devices, async_add_entities)
+        _async_setup_entities(devices, async_add_entities)
 
     disp = async_dispatcher_connect(
         hass, VS_DISCOVERY.format(VS_SWITCHES), async_discover)
     hass.data[DOMAIN][VS_DISPATCHERS].append(disp)
 
-    await _async_setup_entities(
+    _async_setup_entities(
         hass.data[DOMAIN][VS_SWITCHES],
         async_add_entities
     )
     return True
 
 
-async def _async_setup_entities(devices, async_add_entities):
+@callback
+def _async_setup_entities(devices, async_add_entities):
     """Check if device is online and add entity."""
     dev_list = []
     for dev in devices:
@@ -78,22 +80,17 @@ class VeSyncSwitchHA(VeSyncDevice, SwitchDevice):
     @property
     def current_power_w(self):
         """Return the current power usage in W."""
-        if hasattr(self.smartplug, 'power'):
-            return self.smartplug.power
-        return None
+        return self.smartplug.power
 
     @property
     def today_energy_kwh(self):
         """Return the today total energy usage in kWh."""
-        if hasattr(self.smartplug, 'energy_today'):
-            return self.smartplug.energy_today
-        return None
+        return self.smartplug.energy_today
 
     def update(self):
         """Update outlet details and energy usage."""
         self.smartplug.update()
-        if hasattr(self.smartplug, 'update_energy'):
-            self.smartplug.update_energy()
+        self.smartplug.update_energy()
 
 
 class VeSyncLightSwitch(VeSyncDevice, Light):

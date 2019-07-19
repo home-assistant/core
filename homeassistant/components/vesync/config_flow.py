@@ -33,7 +33,8 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
         self.data_schema[vol.Required(CONF_USERNAME)] = str
         self.data_schema[vol.Required(CONF_PASSWORD)] = str
 
-    async def _show_form(self, errors=None):
+    @callback
+    def _show_form(self, errors=None):
         """Show form to the user."""
         return self.async_show_form(
             step_id='user',
@@ -51,7 +52,7 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
             return self.async_abort(reason='already_setup')
 
         if not user_input:
-            return await self._show_form()
+            return self._show_form()
 
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
@@ -59,7 +60,7 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
         manager = VeSync(self._username, self._password)
         login = await self.hass.async_add_executor_job(manager.login)
         if not login:
-            return await self._show_form(errors={'base': 'invalid_login'})
+            return self._show_form(errors={'base': 'invalid_login'})
 
         return self.async_create_entry(
             title=self._username,
