@@ -137,7 +137,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
     @property
     def preset_mode(self):
         """Return the current preset mode, e.g., home, away, temp."""
-        mode = self.wink.current_mode()
+        mode = self.wink.current_hvac_mode()
         if mode == "eco":
             return PRESET_ECO
         if self.wink.away():
@@ -205,7 +205,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         if not self.wink.is_on():
             return HVAC_MODE_OFF
 
-        wink_mode = self.wink.current_mode()
+        wink_mode = self.wink.current_hvac_mode()
         if wink_mode == "aux":
             return HVAC_MODE_HEAT
         if wink_mode == "eco":
@@ -220,7 +220,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         """
         hvac_list = [HVAC_MODE_OFF]
 
-        modes = self.wink.modes()
+        modes = self.wink.hvac_modes()
         for mode in modes:
             if mode in ("eco", "aux"):
                 continue
@@ -409,7 +409,7 @@ class WinkAC(WinkDevice, ClimateDevice):
         if not self.wink.is_on():
             return HVAC_MODE_OFF
 
-        wink_mode = self.wink.current_mode()
+        wink_mode = self.wink.current_hvac_mode()
         if wink_mode == "auto_eco":
             return HVAC_MODE_AUTO
         return WINK_HVAC_TO_HA.get(wink_mode)
@@ -422,7 +422,7 @@ class WinkAC(WinkDevice, ClimateDevice):
         """
         hvac_list = [HVAC_MODE_OFF]
 
-        modes = self.wink.modes()
+        modes = self.wink.hvac_modes()
         for mode in modes:
             if mode == "auto_eco":
                 continue
