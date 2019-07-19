@@ -3,22 +3,26 @@ import logging
 
 from homeassistant.components.switch import SwitchDevice
 
-from . import DOMAIN as VELBUS_DOMAIN, VelbusEntity
+from . import VelbusEntity
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
-    """Set up the Velbus Switch platform."""
-    if discovery_info is None:
-        return
-    switches = []
-    for switch in discovery_info:
-        module = hass.data[VELBUS_DOMAIN].get_module(switch[0])
-        channel = switch[1]
-        switches.append(VelbusSwitch(module, channel))
-    async_add_entities(switches)
+    """ Old way """
+    pass
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Velbus switch based on config_entry."""
+    cntrl = hass.data[DOMAIN][entry.entry_id]['cntrl']
+    entities = []
+    for entitie in hass.data[DOMAIN][entry.entry_id]['switch']:
+        module = cntrl.get_module(entitie[0])
+        channel = entitie[1]
+        entities.append(VelbusSwitch(module, channel))
+    async_add_entities(entities)
 
 
 class VelbusSwitch(VelbusEntity, SwitchDevice):

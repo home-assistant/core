@@ -3,9 +3,11 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_PORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_PORT, CONF_NAME
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
 
@@ -19,14 +21,39 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+COMPONENT_TYPES = ['switch', 'sensor', 'binary_sensor', 'cover', 'climate']
 
 async def async_setup(hass, config):
     """Set up the Velbus platform."""
-    import velbus
-    port = config[DOMAIN].get(CONF_PORT)
-    controller = velbus.Controller(port)
+    """Import from the configuration file if needed"""
+    if DOMAIN not in config:
+        return True
 
-    hass.data[DOMAIN] = controller
+    port = config[DOMAIN].get(CONF_PORT)
+
+    if not port:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={'source': SOURCE_IMPORT}))
+    else:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={'source': SOURCE_IMPORT},
+                data={
+                    CONF_PORT: port,
+                    CONF_NAME: 'Velbus import'
+                }))
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+    """Establish connection with velbus."""
+    import velbus
+
+    hass.data[DOMAIN] = {}
+
+    controller = velbus.Controller(entry.data[CONF_PORT])
 
     def stop_velbus(event):
         """Disconnect from serial port."""
@@ -38,39 +65,45 @@ async def async_setup(hass, config):
     def callback():
         modules = controller.get_modules()
         discovery_info = {
-            'cover': [],
-            'switch': [],
-            'binary_sensor': [],
-            'climate': [],
-            'sensor': []
+            'cntrl': controller
         }
+        for category in COMPONENT_TYPES:
+            discovery_info[category] = []
+
         for module in modules:
             for channel in range(1, module.number_of_channels() + 1):
-                for category in discovery_info:
+                for category in COMPONENT_TYPES:
                     if category in module.get_categories(channel):
                         discovery_info[category].append((
                             module.get_module_address(),
                             channel
                         ))
-        load_platform(hass, 'switch', DOMAIN,
-                      discovery_info['switch'], config)
-        load_platform(hass, 'climate', DOMAIN,
-                      discovery_info['climate'], config)
-        load_platform(hass, 'binary_sensor', DOMAIN,
-                      discovery_info['binary_sensor'], config)
-        load_platform(hass, 'sensor', DOMAIN,
-                      discovery_info['sensor'], config)
-        load_platform(hass, 'cover', DOMAIN,
-                      discovery_info['cover'], config)
+
+        hass.data[DOMAIN][entry.entry_id] = discovery_info
+
+        for category in COMPONENT_TYPES:
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(
+                entry, category))
+
+
+    controller.scan(callback)
 
     def syn_clock(self, service=None):
         controller.sync_clock()
 
-    controller.scan(callback)
     hass.services.async_register(
         DOMAIN, 'sync_clock', syn_clock,
         schema=vol.Schema({}))
 
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+    """Remove the velbus connection"""
+    print(hass.data)
+    hass.data[DOMAIN]['cntrl'].stop()
+    hass.data[DOMAIN] = {}
     return True
 
 
@@ -108,3 +141,15 @@ class VelbusEntity(Entity):
 
     def _on_update(self, state):
         self.schedule_update_ha_state()
+
+    @property
+    def device_info(self):
+        return {
+            'identifiers': {
+                (DOMAIN, self._module.get_module_address(), self._module.serial)
+            },
+            'name': "{} {}".format(self._module.get_module_address(), self._module.get_module_name()),
+            'manufacturer': 'Velleman',
+            'model': self._module.get_module_name(),
+            'sw_version': "{}.{}-{}".format(self._module.memory_map_version , self._module.build_year, self._module.build_week)
+        }
