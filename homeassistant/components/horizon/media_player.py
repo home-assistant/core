@@ -67,7 +67,6 @@ class HorizonDevice(MediaPlayerDevice):
         """Initialize the entity."""
         self._client = client
         self._name = name
-        self._icon = DEFAULT_ICON
         self._state = None
         self._keys = keys
 
@@ -79,7 +78,7 @@ class HorizonDevice(MediaPlayerDevice):
     @property
     def icon(self):
         """Return the icon of the entity."""
-        return self._icon
+        return DEFAULT_ICON
 
     @property
     def state(self):
