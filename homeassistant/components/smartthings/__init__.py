@@ -109,8 +109,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
                               device.label, device.device_id, exc_info=True)
                 devices.remove(device)
 
-        await asyncio.gather(*[retrieve_device_status(d)
-                               for d in devices.copy()])
+        await asyncio.gather(*(retrieve_device_status(d)
+                               for d in devices.copy()))
 
         # Sync device subscriptions
         await smartapp_sync_subscriptions(

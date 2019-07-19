@@ -57,10 +57,10 @@ async def async_get_device_automation_triggers(hass, device_id):
     for entity in entities:
         domains.add(split_entity_id(entity.entity_id)[0])
 
-    device_triggers = await asyncio.gather(*[
+    device_triggers = await asyncio.gather(*(
         _async_get_device_automation_triggers(hass, domain, device_id)
         for domain in domains
-    ])
+    ))
     for device_trigger in device_triggers:
         if device_trigger is not None:
             triggers.extend(device_trigger)

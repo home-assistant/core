@@ -81,11 +81,11 @@ async def async_devices_sync(hass, data, payload):
         {'request_id': data.request_id},
         context=data.context)
 
-    devices = await asyncio.gather(*[
+    devices = await asyncio.gather(*(
         entity.sync_serialize() for entity in
         async_get_entities(hass, data.config)
         if data.config.should_expose(entity.state)
-    ])
+    ))
 
     response = {
         'agentUserId': data.config.agent_user_id or data.context.user_id,
