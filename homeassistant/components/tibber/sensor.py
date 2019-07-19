@@ -130,6 +130,12 @@ class TibberSensorElPrice(Entity):
         max_price = 0
         min_price = 10000
         sum_price = 0
+        off_peak_1 = 0
+        off_peak = 0
+        off_peak_2 = 0
+        n1 = 0
+        n0 = 0
+        n2 = 0
         num = 0
         now = dt_util.now()
         for key, price_total in self._tibber_home.price_total.items():
@@ -146,6 +152,15 @@ class TibberSensorElPrice(Entity):
             if now.date() == price_time.date():
                 max_price = max(max_price, price_total)
                 min_price = min(min_price, price_total)
+                if price_time.hour < 8:
+                    off_peak_1 = max(off_peak_1, price_total)
+                    n1 += 1
+                elif price_time.hour < 20:
+                    off_peak = max(off_peak, price_total)
+                    n0 += 1
+                else:
+                    off_peak_2 = max(off_peak_2, price_total)
+                    n2 += 1
                 num += 1
                 sum_price += price_total
         self._state = state
@@ -153,6 +168,9 @@ class TibberSensorElPrice(Entity):
         self._device_state_attributes['avg_price'] = round(sum_price / num, 3)
         self._device_state_attributes['min_price'] = min_price
         self._device_state_attributes['price_level'] = level
+        self._device_state_attributes['off_peak_1'] = off_peak_1 / n1
+        self._device_state_attributes['off_peak'] = off_peak / n0
+        self._device_state_attributes['off_peak_2'] = off_peak_2 / n2
         return state is not None
 
 
