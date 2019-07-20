@@ -58,27 +58,27 @@ class ISYSensorDevice(ISYDevice):
         if self.is_unknown():
             return None
 
-        if len(self._node.uom) == 1:
-            if self._node.uom[0] in UOM_TO_STATES:
-                states = UOM_TO_STATES.get(self._node.uom[0])
-                if self.value in states:
-                    return states.get(self.value)
-            elif self._node.prec and self._node.prec != [0]:
-                str_val = str(self.value)
-                int_prec = int(self._node.prec)
-                decimal_part = str_val[-int_prec:]
-                whole_part = str_val[:len(str_val) - int_prec]
-                val = float('{}.{}'.format(whole_part, decimal_part))
-                raw_units = self.raw_unit_of_measurement
-                if raw_units in (
-                        TEMP_CELSIUS, TEMP_FAHRENHEIT):
-                    val = self.hass.config.units.temperature(val, raw_units)
+        uom = self._node.uom
+        if isinstance(uom, list):
+            uom = uom[0]
+        if not uom:
+            return None
 
-                return str(val)
-            else:
-                return self.value
-
-        return None
+        states = UOM_TO_STATES.get(uom)
+        if states and states.get(self.value):
+            return states.get(self.value)
+        if self._node.prec and self._node.prec != 0:
+            str_val = str(self.value)
+            int_prec = int(self._node.prec)
+            decimal_part = str_val[-int_prec:]
+            whole_part = str_val[:len(str_val) - int_prec]
+            val = float('{}.{}'.format(whole_part, decimal_part))
+            raw_units = self.raw_unit_of_measurement
+            if raw_units in (
+                    TEMP_CELSIUS, TEMP_FAHRENHEIT):
+                val = self.hass.config.units.temperature(val, raw_units)
+            return str(val)
+        return self.value
 
     @property
     def unit_of_measurement(self) -> str:

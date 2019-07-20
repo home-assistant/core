@@ -208,7 +208,7 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
 
     def _negative_node_control_handler(self, event: object) -> None:
         """Handle an "On" control event from the "negative" node."""
-        if event == 'DON':
+        if event.event == 'DON':
             _LOGGER.debug("Sensor %s turning Off via the Negative node "
                           "sending a DON command", self.name)
             self._computed_state = False
@@ -222,13 +222,13 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
         will come to this node, with the negative node representing Off
         events
         """
-        if event == 'DON':
+        if event.event == 'DON':
             _LOGGER.debug("Sensor %s turning On via the Primary node "
                           "sending a DON command", self.name)
             self._computed_state = True
             self.schedule_update_ha_state()
             self._heartbeat()
-        if event == 'DOF':
+        if event.event == 'DOF':
             _LOGGER.debug("Sensor %s turning Off via the Primary node "
                           "sending a DOF command", self.name)
             self._computed_state = False
@@ -326,7 +326,7 @@ class ISYBinarySensorHeartbeat(ISYDevice, BinarySensorDevice):
 
         The ISY uses both DON and DOF commands (alternating) for a heartbeat.
         """
-        if event in ['DON', 'DOF']:
+        if event.event in ['DON', 'DOF']:
             self.heartbeat()
 
     def heartbeat(self):
