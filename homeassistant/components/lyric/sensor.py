@@ -119,7 +119,7 @@ class LyricSensor(LyricDeviceEntity):
             else:
                 state = getattr(self.device, self.key)
                 if self._device_class == DEVICE_CLASS_TIMESTAMP:
-                    date = datetime.today()
+                    date = datetime.now()
                     time = datetime.strptime(state, '%H:%M:%S').replace(
                         day=date.day, month=date.month, year=date.year)
                     if time <= datetime.now():
