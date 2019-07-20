@@ -97,7 +97,7 @@ class HKDevice():
         # Key is a (accessory_id, characteristic_id) tuple.
         self.current_state = {}
 
-        self._pollable_characteristics = []
+        self.pollable_characteristics = []
 
         # If this is set polling is active and can be disabled by calling
         # this method.
@@ -105,12 +105,12 @@ class HKDevice():
 
     def add_pollable_characteristics(self, characteristics):
         """Add (aid, iid) pairs that we need to poll."""
-        self._pollable_characteristics.extend(characteristics)
+        self.pollable_characteristics.extend(characteristics)
 
     def remove_pollable_characteristics(self, accessory_id):
         """Remove all pollable characteristics by accessory id."""
-        self._pollable_characteristics = [
-            char for char in self._pollable_characteristics
+        self.pollable_characteristics = [
+            char for char in self.pollable_characteristics
             if char[0] != accessory_id
         ]
 
@@ -266,7 +266,7 @@ class HKDevice():
             AccessoryDisconnectedError, AccessoryNotFoundError,
             EncryptionError)
 
-        if not self._pollable_characteristics:
+        if not self.pollable_characteristics:
             _LOGGER.debug(
                 "HomeKit connection not polling any characteristics."
             )
@@ -276,7 +276,7 @@ class HKDevice():
 
         try:
             new_values_dict = await self.get_characteristics(
-                self._pollable_characteristics,
+                self.pollable_characteristics,
             )
         except AccessoryNotFoundError:
             # Not only did the connection fail, but also the accessory is not
