@@ -289,6 +289,17 @@ class DaikinClimate(ClimateDevice):
         """Retrieve latest state."""
         await self._api.async_update()
 
+    async def async_turn_on(self):
+        """Turn device on."""
+        await self._api.device.set({})
+
+    async def async_turn_off(self):
+        """Turn device off."""
+        await self._api.device.set({
+            HA_ATTR_TO_DAIKIN[ATTR_HVAC_MODE]:
+            HA_STATE_TO_DAIKIN[HVAC_MODE_OFF]
+        })
+
     @property
     def device_info(self):
         """Return a device description for device registry."""
