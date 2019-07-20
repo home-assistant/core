@@ -124,8 +124,6 @@ class LyricThermostat(LyricDeviceEntity, ClimateDevice):
             self._hvac_modes.append(HVAC_MODE_HEAT_COOL)
 
         # data attributes
-        self._location = None
-        self._name = None
         self._humidity = None
         self._target_temperature = None
         self._setpoint_status = None
@@ -137,12 +135,8 @@ class LyricThermostat(LyricDeviceEntity, ClimateDevice):
         self._mode = None
         self._min_temperature = None
         self._max_temperature = None
-        self._next_period_time = None
         self._schedule_type = None
         self._schedule_sub_type = None
-        self._current_schedule_period = None
-        self._current_schedule_period_day = None
-        self._vacation_hold = None
 
         super().__init__(device, location, unique_id, None, None, None)
 
@@ -249,12 +243,9 @@ class LyricThermostat(LyricDeviceEntity, ClimateDevice):
     async def _lyric_update(self) -> None:
         """Get values from lyric."""
         if self.device:
-            self._location = self.device.where
-            self._name = self.device.name
             self._humidity = self.device.indoorHumidity
             self._temperature = self.device.indoorTemperature
             self._mode = self.device.operationMode.upper()
-            self._next_period_time = self.device.nextPeriodTime
             self._setpoint_status = self.device.thermostatSetpointStatus
             self._target_temperature = self.device.temperatureSetpoint
             self._target_temp_heat = self.device.heatSetpoint
@@ -264,13 +255,6 @@ class LyricThermostat(LyricDeviceEntity, ClimateDevice):
             self._max_temperature = self.device.maxSetpoint
             self._schedule_type = self.device.scheduleType
             self._schedule_sub_type = self.device.scheduleSubType
-            self._vacation_hold = self.device.vacationHold
-            if self.device.currentSchedulePeriod:
-                csp = self.device.currentSchedulePeriod
-                if 'period' in csp:
-                    self._current_schedule_period = csp['period']
-                if 'day' in csp:
-                    self._current_schedule_period = csp['day']
             if self.device.units == 'Celsius':
                 self._temperature_scale = TEMP_CELSIUS
             else:
