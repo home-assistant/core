@@ -128,7 +128,8 @@ class ConfigEntry:
 
     async def async_setup(
             self, hass: HomeAssistant, *,
-            integration: Optional[loader.Integration] = None, tries=0) -> None:
+            integration: Optional[loader.Integration] = None, tries: int = 0) \
+            -> None:
         """Set up an entry."""
         if integration is None:
             integration = await loader.async_get_integration(hass, self.domain)
@@ -190,7 +191,9 @@ class ConfigEntry:
         else:
             self.state = ENTRY_STATE_SETUP_ERROR
 
-    async def async_unload(self, hass, *, integration=None) -> bool:
+    async def async_unload(
+            self, hass: HomeAssistant, *,
+            integration: Optional[loader.Integration] = None) -> bool:
         """Unload an entry.
 
         Returns if unload is possible and was successful.
@@ -220,7 +223,8 @@ class ConfigEntry:
             return False
 
         try:
-            result = await component.async_unload_entry(hass, self)
+            result = await component.async_unload_entry(  # type: ignore
+                hass, self)
 
             assert isinstance(result, bool)
 
