@@ -97,11 +97,14 @@ async def async_migrate_entry(hass, config_entry):
     version = config_entry.version
     data = config_entry.data
 
-    _LOGGER.debug('Migrating WWLLN from version %s', version)
+    default_total_seconds = DEFAULT_WINDOW.total_seconds()
 
-    # Version 1 -> Version 2: Expanding the default window to 1 hour
+    _LOGGER.debug('Migrating from version %s', version)
+
+    # 1 -> 2: Expanding the default window to 1 hour (if needed):
     if version == 1:
-        data[CONF_WINDOW] = DEFAULT_WINDOW.total_seconds()
+        if data[CONF_WINDOW] < default_total_seconds:
+            data[CONF_WINDOW] = default_total_seconds
         version = config_entry.version = 2
         hass.config_entries.async_update_entry(config_entry, data=data)
         _LOGGER.info('Migration to version %s successful', version)
