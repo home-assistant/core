@@ -61,7 +61,7 @@ async def async_setup_entry(
 
     try:
         devices = lyric.devices()
-    except Exception as exception:
+    except ConnectionError as exception:
         raise PlatformNotReady from exception
 
     hass.data[DOMAIN][DATA_LYRIC_DEVICES] = devices
@@ -220,30 +220,6 @@ class LyricThermostat(LyricDeviceEntity, ClimateDevice):
     def max_temp(self) -> float:
         """Identify max_temp in Lyric API or defaults if not available."""
         return self._max_temperature
-
-    @property
-    def device_state_attributes(self) -> Optional[List[str]]:
-        """Return device specific state attributes."""
-        attrs = {"schedule": self._schedule_type}
-        if self._schedule_sub_type:
-            attrs["schedule_sub"] = self._schedule_sub_type
-        if self._vacation_hold:
-            attrs["vacation"] = self._vacation_hold
-        if self._current_schedule_period_day:
-            attrs["current_schedule_day"] = self._current_schedule_period_day
-        if self._current_schedule_period:
-            attrs["current_schedule_period"] = self._current_schedule_period
-        if self._next_period_time:
-            attrs["next_period_time"] = self._next_period_time
-        if self._setpoint_status:
-            attrs["setpoint_status"] = self._setpoint_status
-        if self._dual_setpoint:
-            attrs["dual_setpoint"] = self._dual_setpoint
-        if self._vacation_hold:
-            attrs["vacation_hold"] = self._vacation_hold
-        if self._temperature_scale:
-            attrs["temperature_scale"] = self._temperature_scale
-        return attrs
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
