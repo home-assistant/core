@@ -8,6 +8,7 @@ import logging
 from datetime import datetime, timedelta
 import voluptuous as vol
 
+
 from homeassistant.components.lyric import LyricDeviceEntity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_SCAN_INTERVAL, DEVICE_CLASS_HUMIDITY,
@@ -16,6 +17,7 @@ from homeassistant.const import (CONF_SCAN_INTERVAL, DEVICE_CLASS_HUMIDITY,
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util import dt as dt_util
 from .const import DATA_LYRIC_CLIENT, DATA_LYRIC_DEVICES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -119,12 +121,11 @@ class LyricSensor(LyricDeviceEntity):
             else:
                 state = getattr(self.device, self.key)
                 if self._device_class == DEVICE_CLASS_TIMESTAMP:
-                    date = datetime.now()
-                    time = datetime.strptime(state, '%H:%M:%S').replace(
-                        day=date.day, month=date.month, year=date.year)
-                    if time <= datetime.now():
-                        date = date + timedelta(days=1)
-                        time = time.replace(day=date.day)
-                    state = time
+                    time = dt_util.parse_time(state)
+                    now = dt_util.utcnow()
+                    if time <= now.time():
+                        now = now + timedelta(days=1)
+                    state = dt_util.as_local(dt_util.as_utc(
+                        datetime.combine(now.date(), time)))
                 self._state = state
             self._available = True
