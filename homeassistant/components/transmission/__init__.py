@@ -97,8 +97,8 @@ def setup(hass, config):
            hass.config.is_allowed_path(torrent):
             api.add_torrent(torrent)
         else:
-            _LOGGER.warn('Could not add torrent: '
-                         'unsupported type or no permission')
+            _LOGGER.warning('Could not add torrent: '
+                            'unsupported type or no permission')
 
     hass.services.register(DOMAIN, SERVICE_ADD_TORRENT, add_torrent,
                            schema=SERVICE_ADD_TORRENT_SCHEMA)
