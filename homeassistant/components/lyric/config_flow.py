@@ -59,7 +59,8 @@ class LyricFlowHandler(ConfigFlow):
                 token_cache_file = self.hass.config.path(
                     CONF_LYRIC_CONFIG_FILE)
 
-                self.lyric = Lyric(app_name='Home Assistant', client_id=client_id,
+                self.lyric = Lyric(app_name='Home Assistant',
+                                   client_id=client_id,
                                    client_secret=client_secret,
                                    redirect_uri=redirect_uri,
                                    token_cache_file=token_cache_file)
