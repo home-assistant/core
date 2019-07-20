@@ -246,7 +246,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         """
         if self.values.mode:
             return self._hvac_list
-        return [HVAC_MODE_HEAT]
+        return []
 
     @property
     def hvac_action(self):
