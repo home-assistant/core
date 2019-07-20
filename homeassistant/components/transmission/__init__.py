@@ -93,9 +93,12 @@ def setup(hass, config):
     def add_torrent(service):
         """Add new torrent to download."""
         torrent = service.data[ATTR_TORRENT]
-        if torrent.startswith(('http:', 'https:', 'ftp:', 'magnet:')) or \
+        if torrent.startswith(('http', 'ftp:', 'magnet:')) or \
            hass.config.is_allowed_path(torrent):
             api.add_torrent(torrent)
+        else:
+            _LOGGER.warn('Could not add torrent: '
+                         'unsupported type or no permission')
 
     hass.services.register(DOMAIN, SERVICE_ADD_TORRENT, add_torrent,
                            schema=SERVICE_ADD_TORRENT_SCHEMA)
