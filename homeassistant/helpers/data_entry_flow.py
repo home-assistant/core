@@ -7,6 +7,8 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 
 
+# mypy: allow-untyped-calls, allow-untyped-defs
+
 class _BaseFlowManagerView(HomeAssistantView):
     """Foundation for flow manager views."""
 

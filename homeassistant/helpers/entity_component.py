@@ -17,6 +17,9 @@ from homeassistant.loader import bind_hass, async_get_integration
 from homeassistant.util import slugify
 from .entity_platform import EntityPlatform
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
 DATA_INSTANCES = 'entity_components'
 

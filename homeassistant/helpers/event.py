@@ -14,6 +14,9 @@ from homeassistant.const import (
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 
+
+# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: no-check-untyped-defs
 # PyLint does not like the use of threaded_listener_factory
 # pylint: disable=invalid-name
 

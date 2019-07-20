@@ -18,6 +18,10 @@ from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util import dt as dt_util
 
+
+# mypy: allow-incomplete-defs, allow-untyped-defs, no-check-untyped-defs
+# mypy: no-warn-return-any
+
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
 

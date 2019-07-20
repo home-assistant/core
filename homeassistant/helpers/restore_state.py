@@ -15,6 +15,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import Store  # noqa  pylint_disable=unused-import
 
+
+# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
+# mypy: no-warn-return-any
+
 DATA_RESTORE_STATE_TASK = 'restore_state_task'
 
 _LOGGER = logging.getLogger(__name__)

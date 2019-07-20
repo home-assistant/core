@@ -23,6 +23,10 @@ from homeassistant.util.yaml import load_yaml
 
 from .typing import HomeAssistantType
 
+
+# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: no-check-untyped-defs, no-warn-return-any
+
 PATH_REGISTRY = 'entity_registry.yaml'
 DATA_REGISTRY = 'entity_registry'
 EVENT_ENTITY_REGISTRY_UPDATED = 'entity_registry_updated'

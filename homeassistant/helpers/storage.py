@@ -11,6 +11,10 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import json as json_util
 from homeassistant.helpers.event import async_call_later
 
+
+# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: no-warn-return-any
+
 STORAGE_DIR = '.storage'
 _LOGGER = logging.getLogger(__name__)
 

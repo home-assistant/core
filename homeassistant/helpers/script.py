@@ -20,6 +20,10 @@ import homeassistant.util.dt as date_util
 from homeassistant.util.async_ import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 
+
+# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: no-check-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ALIAS = 'alias'
