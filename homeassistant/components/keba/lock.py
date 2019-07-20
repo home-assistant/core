@@ -33,11 +33,12 @@ class KebaLock(LockDevice):
         }
 
     def open(self, **kwargs):
+        """Open the door latch."""
         return False
 
     @property
     def should_poll(self):
-        """"Data updated by KebaHandler."""
+        """Deactivate polling. Data updated by KebaHandler."""
         return False
 
     @property

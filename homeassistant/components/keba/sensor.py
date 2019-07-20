@@ -16,11 +16,16 @@ async def async_setup_platform(hass, config,
     keba = hass.data[DOMAIN]
 
     sensors = [
-        KebaSensor('Curr user', keba, 'Max current', 'mdi:flash', 'A'),
-        KebaSensor('Setenergy', keba, 'Energy target', 'mdi:gauge', ENERGY_KILO_WATT_HOUR),
-        KebaSensor('P', keba, 'Charging power', 'mdi:flash', 'kW'),
-        KebaSensor('E pres', keba, 'Session energy', 'mdi:gauge', ENERGY_KILO_WATT_HOUR),
-        KebaSensor('E total', keba, 'Total Energy', 'mdi:gauge', ENERGY_KILO_WATT_HOUR)
+        KebaSensor('Curr user', keba, 'Max current', 'mdi:flash',
+                   'A'),
+        KebaSensor('Setenergy', keba, 'Energy target', 'mdi:gauge',
+                   ENERGY_KILO_WATT_HOUR),
+        KebaSensor('P', keba, 'Charging power', 'mdi:flash',
+                   'kW'),
+        KebaSensor('E pres', keba, 'Session energy', 'mdi:gauge',
+                   ENERGY_KILO_WATT_HOUR),
+        KebaSensor('E total', keba, 'Total Energy', 'mdi:gauge',
+                   ENERGY_KILO_WATT_HOUR)
     ]
     async_add_entities(sensors)
 
@@ -40,7 +45,7 @@ class KebaSensor(Entity):
 
     @property
     def should_poll(self):
-        """"Data updated by KebaHandler."""
+        """Deactivate polling. Data updated by KebaHandler."""
         return False
 
     @property
