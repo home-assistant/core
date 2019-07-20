@@ -77,7 +77,7 @@ class HiveWaterHeater(WaterHeaterDevice):
 
     @property
     def name(self):
-        """Return the name of the water heater """
+        """Return the name of the water heater."""
         if self.node_name is None:
             self.node_name = "Hot Water"
         return self.node_name
@@ -89,7 +89,7 @@ class HiveWaterHeater(WaterHeaterDevice):
 
     @property
     def current_operation(self):
-        """ Return current operation. """
+        """Return current operation."""
         return HIVE_TO_HASS_STATE[self.session.hotwater.get_mode(self.node_id)]
 
     @property
