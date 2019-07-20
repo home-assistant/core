@@ -5,8 +5,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
-    ATTR_NAME, ATTR_LOCATION, CONF_API_KEY, CONF_MONITORED_CONDITIONS,
-    EVENT_HOMEASSISTANT_STOP)
+    ATTR_NAME, ATTR_LOCATION, CONF_API_KEY, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
@@ -93,6 +92,7 @@ TYPE_SOILTEMP7F = 'soiltemp7f'
 TYPE_SOILTEMP8F = 'soiltemp8f'
 TYPE_SOILTEMP9F = 'soiltemp9f'
 TYPE_SOLARRADIATION = 'solarradiation'
+TYPE_SOLARRADIATION_LX = 'solarradiation_lx'
 TYPE_TEMP10F = 'temp10f'
 TYPE_TEMP1F = 'temp1f'
 TYPE_TEMP2F = 'temp2f'
@@ -183,7 +183,9 @@ SENSOR_TYPES = {
     TYPE_SOILTEMP7F: ('Soil Temp 7', '°F', TYPE_SENSOR, 'temperature'),
     TYPE_SOILTEMP8F: ('Soil Temp 8', '°F', TYPE_SENSOR, 'temperature'),
     TYPE_SOILTEMP9F: ('Soil Temp 9', '°F', TYPE_SENSOR, 'temperature'),
-    TYPE_SOLARRADIATION: ('Solar Rad', 'lx', TYPE_SENSOR, 'illuminance'),
+    TYPE_SOLARRADIATION: ('Solar Rad', 'W/m^2', TYPE_SENSOR, None),
+    TYPE_SOLARRADIATION_LX: (
+        'Solar Rad (lx)', 'lx', TYPE_SENSOR, 'illuminance'),
     TYPE_TEMP10F: ('Temp 10', '°F', TYPE_SENSOR, 'temperature'),
     TYPE_TEMP1F: ('Temp 1', '°F', TYPE_SENSOR, 'temperature'),
     TYPE_TEMP2F: ('Temp 2', '°F', TYPE_SENSOR, 'temperature'),
@@ -215,8 +217,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Schema({
             vol.Required(CONF_APP_KEY): cv.string,
             vol.Required(CONF_API_KEY): cv.string,
-            vol.Optional(CONF_MONITORED_CONDITIONS):
-                vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
         })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -261,9 +261,7 @@ async def async_setup_entry(hass, config_entry):
             hass, config_entry,
             Client(
                 config_entry.data[CONF_API_KEY],
-                config_entry.data[CONF_APP_KEY], session),
-            hass.data[DOMAIN].get(DATA_CONFIG, {}).get(
-                CONF_MONITORED_CONDITIONS, []))
+                config_entry.data[CONF_APP_KEY], session))
         hass.loop.create_task(ambient.ws_connect())
         hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = ambient
     except WebsocketError as err:
@@ -291,7 +289,7 @@ async def async_unload_entry(hass, config_entry):
 class AmbientStation:
     """Define a class to handle the Ambient websocket."""
 
-    def __init__(self, hass, config_entry, client, monitored_conditions):
+    def __init__(self, hass, config_entry, client):
         """Initialize."""
         self._config_entry = config_entry
         self._entry_setup_complete = False
@@ -299,7 +297,7 @@ class AmbientStation:
         self._watchdog_listener = None
         self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
         self.client = client
-        self.monitored_conditions = monitored_conditions
+        self.monitored_conditions = []
         self.stations = {}
 
     async def _attempt_connect(self):
@@ -357,14 +355,17 @@ class AmbientStation:
 
                 _LOGGER.debug('New station subscription: %s', data)
 
-                # If the user hasn't specified monitored conditions, use only
-                # those that their station supports (and which are defined
-                # here):
-                if not self.monitored_conditions:
-                    self.monitored_conditions = [
-                        k for k in station['lastData'].keys()
-                        if k in SENSOR_TYPES
-                    ]
+                self.monitored_conditions = [
+                    k for k in station['lastData']
+                    if k in SENSOR_TYPES
+                ]
+
+                # If the user is monitoring brightness (in W/m^2),
+                # make sure we also add a calculated sensor for the
+                # same data measured in lx:
+                if TYPE_SOLARRADIATION in self.monitored_conditions:
+                    self.monitored_conditions.append(
+                        TYPE_SOLARRADIATION_LX)
 
                 self.stations[station['macAddress']] = {
                     ATTR_LAST_DATA: station['lastData'],
@@ -418,6 +419,13 @@ class AmbientWeatherEntity(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
+        # Since the solarradiation_lx sensor is created only if the
+        # user shows a solarradiation sensor, ensure that the
+        # solarradiation_lx sensor shows as available if the solarradiation
+        # sensor is available:
+        if self._sensor_type == TYPE_SOLARRADIATION_LX:
+            return self._ambient.stations[self._mac_address][
+                ATTR_LAST_DATA].get(TYPE_SOLARRADIATION) is not None
         return self._ambient.stations[self._mac_address][ATTR_LAST_DATA].get(
             self._sensor_type) is not None
 
@@ -450,7 +458,7 @@ class AmbientWeatherEntity(Entity):
     @property
     def unique_id(self):
         """Return a unique, unchanging string that represents this sensor."""
-        return '{0}_{1}'.format(self._mac_address, self._sensor_name)
+        return '{0}_{1}'.format(self._mac_address, self._sensor_type)
 
     async def async_added_to_hass(self):
         """Register callbacks."""

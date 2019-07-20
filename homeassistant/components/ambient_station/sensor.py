@@ -3,7 +3,9 @@ import logging
 
 from homeassistant.const import ATTR_NAME
 
-from . import SENSOR_TYPES, TYPE_SOLARRADIATION, AmbientWeatherEntity
+from . import (
+    SENSOR_TYPES, TYPE_SOLARRADIATION, TYPE_SOLARRADIATION_LX,
+    AmbientWeatherEntity)
 from .const import ATTR_LAST_DATA, DATA_CLIENT, DOMAIN, TYPE_SENSOR
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,13 +63,13 @@ class AmbientWeatherSensor(AmbientWeatherEntity):
 
     async def async_update(self):
         """Fetch new state data for the sensor."""
-        new_state = self._ambient.stations[
-            self._mac_address][ATTR_LAST_DATA].get(self._sensor_type)
-
-        if self._sensor_type == TYPE_SOLARRADIATION:
-            # Ambient's units for solar radiation (illuminance) are
-            # W/m^2; since those aren't commonly used in the HASS
-            # world, transform them to lx:
-            self._state = round(float(new_state)/0.0079)
+        if self._sensor_type == TYPE_SOLARRADIATION_LX:
+            # If the user requests the solarradiation_lx sensor, use the
+            # value of the solarradiation sensor and apply a very accurate
+            # approximation of converting sunlight W/m^2 to lx:
+            w_m2_brightness_val = self._ambient.stations[
+                self._mac_address][ATTR_LAST_DATA].get(TYPE_SOLARRADIATION)
+            self._state = round(float(w_m2_brightness_val)/0.0079)
         else:
-            self._state = new_state
+            self._state = self._ambient.stations[
+                self._mac_address][ATTR_LAST_DATA].get(self._sensor_type)
