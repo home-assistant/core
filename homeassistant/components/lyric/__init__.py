@@ -3,7 +3,6 @@ import logging
 from typing import Any, Dict
 
 import voluptuous as vol
-
 from lyric import Lyric
 
 from homeassistant.const import CONF_TOKEN
@@ -48,7 +47,7 @@ async def async_setup_entry(
         hass: HomeAssistantType, entry: ConfigEntry
 ) -> bool:
     """Set up Lyric from a config entry."""
-    conf = hass.data.get(DATA_LYRIC_CONFIG)
+    conf = hass.data[DATA_LYRIC_CONFIG]
 
     client_id = conf[CONF_CLIENT_ID]
     client_secret = conf[CONF_CLIENT_SECRET]
@@ -89,7 +88,6 @@ class LyricClient:
         self.lyric = lyric
 
         if not lyric.locations:
-            _LOGGER.warning("No locations found.")
             return
 
         self._location = [location.name for location in lyric.locations]
@@ -113,11 +111,13 @@ class LyricEntity(Entity):
     """Defines a base Lyric entity."""
 
     def __init__(self, device, location,
-                 unique_id: str, name: str, icon: str) -> None:
+                 unique_id: str, name: str,
+                 icon: str, device_class: str) -> None:
         """Initialize the Lyric entity."""
         self._unique_id = unique_id
         self._name = name
         self._icon = icon
+        self._device_class = device_class
         self._available = False
         self.device = device
         self.location = location
@@ -136,6 +136,11 @@ class LyricEntity(Entity):
     def icon(self) -> str:
         """Return the mdi icon of the entity."""
         return self._icon
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device."""
+        return self._device_class
 
     @property
     def available(self) -> bool:

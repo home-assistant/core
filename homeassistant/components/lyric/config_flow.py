@@ -27,7 +27,6 @@ class LyricFlowHandler(ConfigFlow):
         self.client_id = None
         self.client_secret = None
         self.code = None
-        pass
 
     async def async_step_user(self, code=None):
         """Handle a flow initiated by the user."""
@@ -47,37 +46,32 @@ class LyricFlowHandler(ConfigFlow):
     async def async_step_auth(self, code):
         """Create an entry for auth."""
         # Flow has been triggered from Lyric api
-        if isinstance(code, str):
+        if code is not None:
             return await self.async_step_code(code)
 
         try:
             with async_timeout.timeout(10):
-                url = await self._get_authorization_url()
+                client_id = self.client_id
+                client_secret = self.client_secret
+                redirect_uri = '{}{}'.format(
+                    self.hass.config.api.base_url, AUTH_CALLBACK_PATH)
+                token_cache_file = self.hass.config.path(
+                    CONF_LYRIC_CONFIG_FILE)
+
+                lyric = Lyric(app_name='Home Assistant', client_id=client_id,
+                              client_secret=client_secret,
+                              redirect_uri=redirect_uri,
+                              token_cache_file=token_cache_file)
+
+                self.hass.http.register_view(LyricAuthCallbackView())
+
+                url = lyric.getauthorize_url
+
+                return self.async_external_step(
+                    step_id='auth',
+                    url=url[:url.find('&state=') + 7] + self.flow_id)
         except asyncio.TimeoutError:
             return self.async_abort(reason='authorize_url_timeout')
-
-        return self.async_external_step(
-            step_id='auth',
-            url=url
-        )
-
-    async def _get_authorization_url(self):
-        """Get Lyric authorization url."""
-        client_id = self.client_id
-        client_secret = self.client_secret
-        redirect_uri = '{}{}'.format(
-            self.hass.config.api.base_url, AUTH_CALLBACK_PATH)
-        token_cache_file = self.hass.config.path(CONF_LYRIC_CONFIG_FILE)
-
-        lyric = Lyric(app_name='Home Assistant', client_id=client_id,
-                      client_secret=client_secret, redirect_uri=redirect_uri,
-                      token_cache_file=token_cache_file)
-
-        self.hass.http.register_view(LyricAuthCallbackView())
-
-        url = lyric.getauthorize_url
-
-        return url[:url.find('&state=') + 7] + self.flow_id
 
     async def async_step_code(self, code):
         """Received code for authentication."""
@@ -124,7 +118,8 @@ class LyricAuthCallbackView(HomeAssistantView):
 
         if 'code' not in request.query or 'state' not in request.query:
             return web_response.Response(
-                text="Missing code or state parameter in " + request.url
+                text="Missing code or state parameter in %s".format(
+                    request.url)
             )
 
         hass = request.app['hass']

@@ -5,18 +5,18 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/lyric
 """
 import logging
-
+from datetime import datetime, timedelta
 import voluptuous as vol
 
 from homeassistant.components.lyric import LyricDeviceEntity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.const import (CONF_SCAN_INTERVAL, DEVICE_CLASS_HUMIDITY,
+                                 DEVICE_CLASS_TEMPERATURE,
+                                 DEVICE_CLASS_TIMESTAMP)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 from .const import DATA_LYRIC_CLIENT, DATA_LYRIC_DEVICES, DOMAIN
-
-DEPENDENCIES = ['lyric']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,28 +44,32 @@ async def async_setup_entry(
         if device.indoorTemperature:
             devices.append(LyricSensor(
                 device, location, hass, 'indoorTemperature', 'Temperature',
-                hass.config.units.temperature_unit, 'mdi:thermometer'))
+                hass.config.units.temperature_unit, 'mdi:thermometer',
+                DEVICE_CLASS_TEMPERATURE))
         if device.indoorHumidity:
             devices.append(LyricSensor(
                 device, location, hass, 'indoorHumidity', 'Humidity',
-                '%', 'mdi:water-percent'))
+                '%', 'mdi:water-percent', DEVICE_CLASS_HUMIDITY))
         if device.outdoorTemperature:
             devices.append(LyricSensor(
                 device, location, hass, 'outdoorTemperature',
                 'Temperature Outside',
-                hass.config.units.temperature_unit, 'mdi:thermometer'))
+                hass.config.units.temperature_unit, 'mdi:thermometer',
+                DEVICE_CLASS_TEMPERATURE))
         if device.displayedOutdoorHumidity:
             devices.append(LyricSensor(
                 device, location, hass, 'displayedOutdoorHumidity',
-                'Humidity Outside', '%', 'mdi:water-percent'))
+                'Humidity Outside', '%', 'mdi:water-percent',
+                DEVICE_CLASS_HUMIDITY))
         if device.nextPeriodTime:
             devices.append(LyricSensor(
                 device, location, hass, 'nextPeriodTime',
-                'Next Period Time', '', 'mdi:clock'))
+                'Next Period Time', '', 'mdi:clock',
+                DEVICE_CLASS_TIMESTAMP))
         if device.thermostatSetpointStatus:
             devices.append(LyricSensor(
                 device, location, hass, 'thermostatSetpointStatus',
-                'Status', '', 'mdi:thermostat'))
+                'Status', '', 'mdi:thermostat', None))
 
     async_add_entities(devices, True)
 
@@ -74,7 +78,8 @@ class LyricSensor(LyricDeviceEntity):
     """Representation of a Lyric thermostat."""
 
     def __init__(self, device, location, hass, key, key_name,
-                 unit_of_measurement=None, icon=None) -> None:
+                 unit_of_measurement=None, icon=None,
+                 device_class=None) -> None:
         """Initialize the sensor."""
         unique_id = '{}_{}'.format(
             device.macID, key_name.replace(" ", "_"))
@@ -85,7 +90,7 @@ class LyricSensor(LyricDeviceEntity):
 
         name = '{} {}'.format(device.name, key_name)
 
-        super().__init__(device, location, unique_id, name, icon)
+        super().__init__(device, location, unique_id, name, icon, device_class)
 
     @property
     def state(self):
@@ -112,5 +117,14 @@ class LyricSensor(LyricDeviceEntity):
                 elif status == 'VacationHold':
                     self._state = 'Holiday'
             else:
-                self._state = getattr(self.device, self.key)
+                state = getattr(self.device, self.key)
+                if self._device_class == DEVICE_CLASS_TIMESTAMP:
+                    date = datetime.today()
+                    time = datetime.strptime(state, '%H:%M:%S').replace(
+                        day=date.day, month=date.month, year=date.year)
+                    if time <= datetime.now():
+                        date = date + timedelta(days=1)
+                        time = time.replace(day=date.day)
+                    state = time
+                self._state = state
             self._available = True

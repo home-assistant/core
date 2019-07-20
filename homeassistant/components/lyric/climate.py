@@ -9,22 +9,19 @@ from typing import List, Optional
 
 import voluptuous as vol
 
-from homeassistant.components.lyric import LyricDeviceEntity
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    HVAC_MODE_HEAT_COOL, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_OFF,
+    HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_HEAT_COOL,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE)
-from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_TEMPERATURE, ATTR_TIME, CONF_SCAN_INTERVAL,
-    STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.const import (ATTR_ENTITY_ID, ATTR_TEMPERATURE, ATTR_TIME,
+                                 TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
+from . import LyricDeviceEntity
 from .const import DATA_LYRIC_CLIENT, DATA_LYRIC_DEVICES, DOMAIN
-
-DEPENDENCIES = ['lyric']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,15 +33,24 @@ PRESET_VACATION_HOLD = 'VacationHold'
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SCAN_INTERVAL):
-        vol.All(vol.Coerce(int), vol.Range(min=1))
+HOLD_PERIOD_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
+    vol.Required(ATTR_TIME): cv.string
 })
 
-HOLD_PERIOD_SCHEMA = vol.Schema({
-    vol.Required(ATTR_TIME): cv.string,
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
-})
+LYRIC_HVAC_MODES = {
+    HVAC_MODE_OFF: 'OFF',
+    HVAC_MODE_HEAT: 'HEAT',
+    HVAC_MODE_COOL: 'COOL',
+    HVAC_MODE_HEAT_COOL: 'HEAT_COOL'
+}
+
+HVAC_MODES = {
+    'OFF': HVAC_MODE_OFF,
+    'HEAT': HVAC_MODE_HEAT,
+    'COOL': HVAC_MODE_COOL,
+    'HEAT_COOL': HVAC_MODE_HEAT_COOL
+}
 
 
 async def async_setup_entry(
@@ -61,18 +67,17 @@ async def async_setup_entry(
     hass.data[DOMAIN][DATA_LYRIC_DEVICES] = devices
 
     temp_unit = hass.config.units.temperature_unit
-    devices = [LyricThermostat(device, location, temp_unit, hass)
-               for location, device in lyric.devices()]
+    entities = [LyricThermostat(device, location, temp_unit)
+                for location, device in lyric.devices()]
 
-    async_add_entities(devices, True)
+    async_add_entities(entities, True)
 
     async def hold_time_service(service) -> None:
         """Set the time to hold until."""
-        entity_id = service.data.get(ATTR_ENTITY_ID)
-        time = service.data.get(ATTR_TIME)
+        entity_id = service.data[ATTR_ENTITY_ID]
+        time = service.data[ATTR_TIME]
 
-        _LOGGER.debug('hold_time_service entity_id: %s', entity_id)
-        _LOGGER.debug('hold_time_service time: %s', time)
+        _LOGGER.debug('hold_time_service: %s; %s', entity_id, time)
 
         if entity_id:
             target_thermostats = [device for device in devices
@@ -81,7 +86,7 @@ async def async_setup_entry(
             target_thermostats = devices
 
         for thermostat in target_thermostats:
-            thermostat.async_set_preset_period(time)
+            await thermostat.async_set_preset_period(time)
 
     hass.services.async_register(
         DOMAIN, SERVICE_HOLD_TIME, hold_time_service,
@@ -98,23 +103,23 @@ async def async_unload_entry(
 class LyricThermostat(LyricDeviceEntity, ClimateDevice):
     """Representation of a Lyric thermostat."""
 
-    def __init__(self, device, location, temp_unit, hass) -> None:
+    def __init__(self, device, location, temp_unit) -> None:
         """Initialize the thermostat."""
         unique_id = '{}_climate'.format(device.macID)
         self._unit = temp_unit
 
-        # Not all lyric devices support cooling and heating remove unused
-        self._operation_list = [HVAC_MODE_OFF]
+        # Setup supported hvac modes
+        self._hvac_modes = [HVAC_MODE_OFF]
 
         # Add supported lyric thermostat features
         if device.can_heat:
-            self._operation_list.append(HVAC_MODE_HEAT)
+            self._hvac_modes.append(HVAC_MODE_HEAT)
 
         if device.can_cool:
-            self._operation_list.append(HVAC_MODE_COOL)
+            self._hvac_modes.append(HVAC_MODE_COOL)
 
         if device.can_heat and device.can_cool:
-            self._operation_list.append(HVAC_MODE_HEAT_COOL)
+            self._hvac_modes.append(HVAC_MODE_HEAT_COOL)
 
         # data attributes
         self._location = None
@@ -137,7 +142,7 @@ class LyricThermostat(LyricDeviceEntity, ClimateDevice):
         self._current_schedule_period_day = None
         self._vacation_hold = None
 
-        super().__init__(device, location, unique_id, None, None)
+        super().__init__(device, location, unique_id, None, None, None)
 
     @property
     def supported_features(self) -> int:
@@ -155,20 +160,19 @@ class LyricThermostat(LyricDeviceEntity, ClimateDevice):
         return self._temperature
 
     @property
+    def current_humidity(self) -> Optional[int]:
+        """Return the current humidity."""
+        return self._humidity
+
+    @property
     def hvac_mode(self) -> str:
-        """Return hvac mode ie. heat, cool, off."""
-        hvac_mode = None
-        if self._mode in [HVAC_MODE_HEAT_COOL, HVAC_MODE_HEAT, HVAC_MODE_COOL,
-                          HVAC_MODE_OFF]:
-            hvac_mode = self._mode
-        else:
-            hvac_mode = STATE_UNKNOWN
-        return hvac_mode
+        """Return the hvac mode."""
+        return HVAC_MODES[self._mode]
 
     @property
     def hvac_modes(self) -> List[str]:
-        """List of available operation modes."""
-        return self._operation_list
+        """List of available hvac modes."""
+        return self._hvac_modes
 
     @property
     def target_temperature(self) -> Optional[float]:
@@ -227,8 +231,6 @@ class LyricThermostat(LyricDeviceEntity, ClimateDevice):
             attrs["current_schedule_day"] = self._current_schedule_period_day
         if self._current_schedule_period:
             attrs["current_schedule_period"] = self._current_schedule_period
-        if self._humidity:
-            attrs["humidity"] = self._humidity
         if self._next_period_time:
             attrs["next_period_time"] = self._next_period_time
         if self._setpoint_status:
@@ -254,13 +256,9 @@ class LyricThermostat(LyricDeviceEntity, ClimateDevice):
         self.device.temperatureSetpoint = temp
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
-        """Set operation mode."""
-        _LOGGER.debug('Set operation mode: %s', hvac_mode)
-
-        if hvac_mode in [HVAC_MODE_HEAT_COOL, HVAC_MODE_HEAT, HVAC_MODE_COOL,
-                         HVAC_MODE_OFF]:
-            device_mode = hvac_mode
-        self.device.operationMode = device_mode.capitalize()
+        """Set hvac mode."""
+        _LOGGER.debug('Set hvac mode: %s', hvac_mode)
+        self.device.operationMode = LYRIC_HVAC_MODES[hvac_mode]
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset (PermanentHold, HoldUntil, NoHold, VacationHold) mode."""
@@ -277,7 +275,7 @@ class LyricThermostat(LyricDeviceEntity, ClimateDevice):
             self._name = self.device.name
             self._humidity = self.device.indoorHumidity
             self._temperature = self.device.indoorTemperature
-            self._mode = self.device.operationMode.lower()
+            self._mode = self.device.operationMode.upper()
             self._next_period_time = self.device.nextPeriodTime
             self._setpoint_status = self.device.thermostatSetpointStatus
             self._target_temperature = self.device.temperatureSetpoint
