@@ -45,7 +45,7 @@ async def test_koogeek_ls1_setup(hass):
     assert device.name == 'Koogeek-LS1-20833F'
     assert device.model == 'LS1'
     assert device.sw_version == '2.2.15'
-    assert device.hub_device_id is None
+    assert device.via_device_id is None
 
 
 @pytest.mark.parametrize('failure_cls', [

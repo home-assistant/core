@@ -40,13 +40,16 @@ class HueLightLevel(GenericHueGaugeSensorEntity):
         # scale used because the human eye adjusts to light levels and small
         # changes at low lux levels are more noticeable than at high lux
         # levels.
-        return 10 ** ((self.sensor.lightlevel - 1) / 10000)
+        return round(float(10 ** ((self.sensor.lightlevel - 1) / 10000)), 2)
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         attributes = super().device_state_attributes
         attributes.update({
+            "lightlevel": self.sensor.lightlevel,
+            "daylight": self.sensor.daylight,
+            "dark": self.sensor.dark,
             "threshold_dark": self.sensor.tholddark,
             "threshold_offset": self.sensor.tholdoffset,
         })

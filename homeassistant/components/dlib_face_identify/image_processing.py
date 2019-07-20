@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.core import split_entity_id
 from homeassistant.components.image_processing import (
     ImageProcessingFaceEntity, PLATFORM_SCHEMA, CONF_SOURCE, CONF_ENTITY_ID,
-    CONF_NAME)
+    CONF_NAME, CONF_CONFIDENCE)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,6 +17,7 @@ CONF_FACES = 'faces'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_FACES): {cv.string: cv.isfile},
+    vol.Optional(CONF_CONFIDENCE, default=0.6): vol.Coerce(float),
 })
 
 
@@ -25,7 +26,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     entities = []
     for camera in config[CONF_SOURCE]:
         entities.append(DlibFaceIdentifyEntity(
-            camera[CONF_ENTITY_ID], config[CONF_FACES], camera.get(CONF_NAME)
+            camera[CONF_ENTITY_ID], config[CONF_FACES], camera.get(CONF_NAME),
+            config[CONF_CONFIDENCE]
         ))
 
     add_entities(entities)
@@ -34,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
     """Dlib Face API entity for identify."""
 
-    def __init__(self, camera_entity, faces, name=None):
+    def __init__(self, camera_entity, faces, name, tolerance):
         """Initialize Dlib face identify entry."""
         # pylint: disable=import-error
         import face_recognition
@@ -56,6 +58,8 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
                     face_recognition.face_encodings(image)[0]
             except IndexError as err:
                 _LOGGER.error("Failed to parse %s. Error: %s", face_file, err)
+
+        self._tolerance = tolerance
 
     @property
     def camera_entity(self):
@@ -82,7 +86,10 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
         found = []
         for unknown_face in unknowns:
             for name, face in self._faces.items():
-                result = face_recognition.compare_faces([face], unknown_face)
+                result = face_recognition.compare_faces(
+                    [face],
+                    unknown_face,
+                    tolerance=self._tolerance)
                 if result[0]:
                     found.append({
                         ATTR_NAME: name

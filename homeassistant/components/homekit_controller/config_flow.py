@@ -13,9 +13,7 @@ from .connection import get_bridge_information, get_accessory_name
 
 
 HOMEKIT_IGNORE = [
-    'BSB002',
     'Home Assistant Bridge',
-    'TRADFRI gateway',
 ]
 HOMEKIT_DIR = '.homekit'
 PAIRING_FILE = 'pairing.json'
@@ -109,7 +107,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             })
         )
 
-    async def async_step_discovery(self, discovery_info):
+    async def async_step_zeroconf(self, discovery_info):
         """Handle a discovered HomeKit accessory.
 
         This flow is triggered by the discovery component.
@@ -126,14 +124,23 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         # It changes if a device is factory reset.
         hkid = properties['id']
         model = properties['md']
-
+        name = discovery_info['name'].replace('._hap._tcp.local.', '')
         status_flags = int(properties['sf'])
         paired = not status_flags & 0x01
 
+        _LOGGER.debug("Discovered device %s (%s - %s)", name, model, hkid)
+
         # pylint: disable=unsupported-assignment-operation
+        self.context['hkid'] = hkid
         self.context['title_placeholders'] = {
-            'name': discovery_info['name'],
+            'name': name,
         }
+
+        # If multiple HomekitControllerFlowHandler end up getting created
+        # for the same accessory dont  let duplicates hang around
+        active_flows = self._async_in_progress()
+        if any(hkid == flow['context']['hkid'] for flow in active_flows):
+            return self.async_abort(reason='already_in_progress')
 
         # The configuration number increases every time the characteristic map
         # needs updating. Some devices use a slightly off-spec name so handle

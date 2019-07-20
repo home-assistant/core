@@ -148,6 +148,10 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
 
             await self._async_mark_done(hass)
 
+            await hass.config_entries.flow.async_init('met', context={
+                'source': 'onboarding'
+            })
+
             return self.json({})
 
 

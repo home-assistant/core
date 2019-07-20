@@ -2,19 +2,20 @@
 import logging
 
 from homematicip.aio.device import (
-    AsyncDevice, AsyncMotionDetectorIndoor, AsyncMotionDetectorOutdoor,
-    AsyncMotionDetectorPushButton, AsyncPresenceDetectorIndoor,
-    AsyncRotaryHandleSensor, AsyncShutterContact, AsyncSmokeDetector,
-    AsyncWaterSensor, AsyncWeatherSensor, AsyncWeatherSensorPlus,
-    AsyncWeatherSensorPro)
+    AsyncDevice, AsyncFullFlushContactInterface, AsyncMotionDetectorIndoor,
+    AsyncMotionDetectorOutdoor, AsyncMotionDetectorPushButton,
+    AsyncPresenceDetectorIndoor, AsyncRotaryHandleSensor, AsyncShutterContact,
+    AsyncSmokeDetector, AsyncWaterSensor, AsyncWeatherSensor,
+    AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
 from homematicip.aio.group import AsyncSecurityGroup, AsyncSecurityZoneGroup
 from homematicip.aio.home import AsyncHome
 from homematicip.base.enums import SmokeDetectorAlarmType, WindowState
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY, DEVICE_CLASS_DOOR, DEVICE_CLASS_LIGHT,
-    DEVICE_CLASS_MOISTURE, DEVICE_CLASS_MOTION, DEVICE_CLASS_PRESENCE,
-    DEVICE_CLASS_SAFETY, DEVICE_CLASS_SMOKE, BinarySensorDevice)
+    DEVICE_CLASS_MOISTURE, DEVICE_CLASS_MOTION, DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_PRESENCE, DEVICE_CLASS_SAFETY, DEVICE_CLASS_SMOKE,
+    BinarySensorDevice)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -23,6 +24,7 @@ from .device import ATTR_GROUP_MEMBER_UNREACHABLE
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_LOW_BATTERY = 'low_battery'
 ATTR_MOTIONDETECTED = 'motion detected'
 ATTR_PRESENCEDETECTED = 'presence detected'
 ATTR_POWERMAINSFAILURE = 'power mains failure'
@@ -45,6 +47,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for device in home.devices:
+        if isinstance(device, AsyncFullFlushContactInterface):
+            devices.append(HomematicipContactInterface(home, device))
         if isinstance(device, (AsyncShutterContact, AsyncRotaryHandleSensor)):
             devices.append(HomematicipShutterContact(home, device))
         if isinstance(device, (AsyncMotionDetectorIndoor,
@@ -75,6 +79,25 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
 
     if devices:
         async_add_entities(devices)
+
+
+class HomematicipContactInterface(HomematicipGenericDevice,
+                                  BinarySensorDevice):
+    """Representation of a HomematicIP Cloud contact interface."""
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this sensor."""
+        return DEVICE_CLASS_OPENING
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if the contact interface is on/open."""
+        if hasattr(self._device, 'sabotage') and self._device.sabotage:
+            return True
+        if self._device.windowState is None:
+            return None
+        return self._device.windowState != WindowState.CLOSED
 
 
 class HomematicipShutterContact(HomematicipGenericDevice, BinarySensorDevice):
@@ -312,7 +335,8 @@ class HomematicipSecuritySensorGroup(HomematicipSecurityZoneSensorGroup,
             attr[ATTR_MOISTUREDETECTED] = True
         if self._device.waterlevelDetected:
             attr[ATTR_WATERLEVELDETECTED] = True
-
+        if self._device.lowBat:
+            attr[ATTR_LOW_BATTERY] = True
         if self._device.smokeDetectorAlarmType is not None and \
                 self._device.smokeDetectorAlarmType != \
                 SmokeDetectorAlarmType.IDLE_OFF:

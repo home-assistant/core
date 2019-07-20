@@ -62,7 +62,7 @@ def trusted_networks_deprecated(value):
         return value
 
     _LOGGER.warning(
-        "Configuring trusted_networks via the http component has been"
+        "Configuring trusted_networks via the http integration has been"
         " deprecated. Use the trusted networks auth provider instead."
         " For instructions, see https://www.home-assistant.io/docs/"
         "authentication/providers/#trusted-networks")
@@ -75,7 +75,7 @@ def api_password_deprecated(value):
         return value
 
     _LOGGER.warning(
-        "Configuring api_password via the http component has been"
+        "Configuring api_password via the http integration has been"
         " deprecated. Use the legacy api password auth provider instead."
         " For instructions, see https://www.home-assistant.io/docs/"
         "authentication/providers/#legacy-api-password")
@@ -228,6 +228,7 @@ class HomeAssistantHTTP:
         self.ssl_key = ssl_key
         self.server_host = server_host
         self.server_port = server_port
+        self.trusted_proxies = trusted_proxies
         self.is_ban_enabled = is_ban_enabled
         self.ssl_profile = ssl_profile
         self._handler = None

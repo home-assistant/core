@@ -90,7 +90,8 @@ class TestDemoMediaPlayer(unittest.TestCase):
 
         assert False is state.attributes.get('is_volume_muted')
 
-        common.mute_volume(self.hass, None, entity_id)
+        with pytest.raises(vol.Invalid):
+            common.mute_volume(self.hass, None, entity_id)
         self.hass.block_till_done()
         state = self.hass.states.get(entity_id)
         assert False is state.attributes.get('is_volume_muted')

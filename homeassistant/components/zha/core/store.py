@@ -26,8 +26,6 @@ class ZhaDeviceEntry:
 
     name = attr.ib(type=str, default=None)
     ieee = attr.ib(type=str, default=None)
-    power_source = attr.ib(type=int, default=None)
-    manufacturer_code = attr.ib(type=int, default=None)
     last_seen = attr.ib(type=float, default=None)
 
 
@@ -46,8 +44,6 @@ class ZhaDeviceStorage:
         device_entry = ZhaDeviceEntry(
             name=device.name,
             ieee=str(device.ieee),
-            power_source=device.power_source,
-            manufacturer_code=device.manufacturer_code,
             last_seen=device.last_seen
 
         )
@@ -85,13 +81,6 @@ class ZhaDeviceStorage:
         old = self.devices[ieee_str]
 
         changes = {}
-
-        if device.power_source != old.power_source:
-            changes['power_source'] = device.power_source
-
-        if device.manufacturer_code != old.manufacturer_code:
-            changes['manufacturer_code'] = device.manufacturer_code
-
         changes['last_seen'] = device.last_seen
 
         new = self.devices[ieee_str] = attr.evolve(old, **changes)
@@ -109,8 +98,6 @@ class ZhaDeviceStorage:
                 devices[device['ieee']] = ZhaDeviceEntry(
                     name=device['name'],
                     ieee=device['ieee'],
-                    power_source=device['power_source'],
-                    manufacturer_code=device['manufacturer_code'],
                     last_seen=device['last_seen'] if 'last_seen' in device
                     else None
                 )
@@ -135,8 +122,6 @@ class ZhaDeviceStorage:
             {
                 'name': entry.name,
                 'ieee': entry.ieee,
-                'power_source': entry.power_source,
-                'manufacturer_code': entry.manufacturer_code,
                 'last_seen': entry.last_seen
             } for entry in self.devices.values()
         ]

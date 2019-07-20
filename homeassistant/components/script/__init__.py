@@ -79,9 +79,14 @@ async def async_setup(hass, config):
     async def turn_off_service(service):
         """Cancel a script."""
         # Stopping a script is ok to be done in parallel
+        scripts = await component.async_extract_from_service(service)
+
+        if not scripts:
+            return
+
         await asyncio.wait([
             script.async_turn_off() for script
-            in await component.async_extract_from_service(service)
+            in scripts
         ])
 
     async def toggle_service(service):

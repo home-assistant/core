@@ -1,6 +1,8 @@
 """Support for ESPHome lights."""
 import logging
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import List, Optional, Tuple
+
+from aioesphomeapi import LightInfo, LightState
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
@@ -11,11 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.color as color_util
 
-from . import EsphomeEntity, platform_async_setup_entry, esphome_state_property
-
-if TYPE_CHECKING:
-    # pylint: disable=unused-import
-    from aioesphomeapi import LightInfo, LightState  # noqa
+from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,9 +27,6 @@ FLASH_LENGTHS = {
 async def async_setup_entry(hass: HomeAssistantType,
                             entry: ConfigEntry, async_add_entities) -> None:
     """Set up ESPHome lights based on a config entry."""
-    # pylint: disable=redefined-outer-name
-    from aioesphomeapi import LightInfo, LightState  # noqa
-
     await platform_async_setup_entry(
         hass, entry, async_add_entities,
         component_key='light',
@@ -44,11 +39,11 @@ class EsphomeLight(EsphomeEntity, Light):
     """A switch implementation for ESPHome."""
 
     @property
-    def _static_info(self) -> 'LightInfo':
+    def _static_info(self) -> LightInfo:
         return super()._static_info
 
     @property
-    def _state(self) -> Optional['LightState']:
+    def _state(self) -> Optional[LightState]:
         return super()._state
 
     @esphome_state_property

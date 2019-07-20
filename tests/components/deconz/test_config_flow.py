@@ -1,9 +1,10 @@
 """Tests for deCONZ config flow."""
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import asyncio
 
 from homeassistant.components.deconz import config_flow
+from homeassistant.components.ssdp import ATTR_MANUFACTURERURL, ATTR_SERIAL
 from tests.common import MockConfigEntry
 
 import pydeconz
@@ -168,20 +169,37 @@ async def test_link_no_api_key(hass):
     assert result['errors'] == {'base': 'no_key'}
 
 
-async def test_bridge_discovery(hass):
-    """Test a bridge being discovered."""
+async def test_bridge_ssdp_discovery(hass):
+    """Test a bridge being discovered over ssdp."""
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         data={
             config_flow.CONF_HOST: '1.2.3.4',
             config_flow.CONF_PORT: 80,
-            config_flow.CONF_SERIAL: 'id',
+            ATTR_SERIAL: 'id',
+            ATTR_MANUFACTURERURL:
+                config_flow.DECONZ_MANUFACTURERURL,
+            config_flow.ATTR_UUID: 'uuid:1234'
         },
-        context={'source': 'discovery'}
+        context={'source': 'ssdp'}
     )
 
     assert result['type'] == 'form'
     assert result['step_id'] == 'link'
+
+
+async def test_bridge_ssdp_discovery_not_deconz_bridge(hass):
+    """Test a non deconz bridge being discovered over ssdp."""
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        data={
+            ATTR_MANUFACTURERURL: 'not deconz bridge'
+        },
+        context={'source': 'ssdp'}
+    )
+
+    assert result['type'] == 'abort'
+    assert result['reason'] == 'not_deconz_bridge'
 
 
 async def test_bridge_discovery_update_existing_entry(hass):
@@ -191,13 +209,21 @@ async def test_bridge_discovery_update_existing_entry(hass):
     })
     entry.add_to_hass(hass)
 
+    gateway = Mock()
+    gateway.config_entry = entry
+    gateway.api.config.uuid = '1234'
+    hass.data[config_flow.DOMAIN] = {'id': gateway}
+
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         data={
             config_flow.CONF_HOST: 'mock-deconz',
-            config_flow.CONF_SERIAL: 'id',
+            ATTR_SERIAL: 'id',
+            ATTR_MANUFACTURERURL:
+                config_flow.DECONZ_MANUFACTURERURL,
+            config_flow.ATTR_UUID: 'uuid:1234'
         },
-        context={'source': 'discovery'}
+        context={'source': 'ssdp'}
     )
 
     assert result['type'] == 'abort'

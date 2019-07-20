@@ -706,11 +706,11 @@ async def test_entity_registry_updates_invalid_entity_id(hass):
 async def test_device_info_called(hass):
     """Test device info is forwarded correctly."""
     registry = await hass.helpers.device_registry.async_get_registry()
-    hub = registry.async_get_or_create(
+    via = registry.async_get_or_create(
         config_entry_id='123',
         connections=set(),
-        identifiers={('hue', 'hub-id')},
-        manufacturer='manufacturer', model='hub'
+        identifiers={('hue', 'via-id')},
+        manufacturer='manufacturer', model='via'
     )
 
     async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -726,7 +726,7 @@ async def test_device_info_called(hass):
                 'model': 'test-model',
                 'name': 'test-name',
                 'sw_version': 'test-sw',
-                'via_hub': ('hue', 'hub-id'),
+                'via_device': ('hue', 'via-id'),
             }),
         ])
         return True
@@ -754,7 +754,7 @@ async def test_device_info_called(hass):
     assert device.model == 'test-model'
     assert device.name == 'test-name'
     assert device.sw_version == 'test-sw'
-    assert device.hub_device_id == hub.id
+    assert device.via_device_id == via.id
 
 
 async def test_device_info_not_overrides(hass):

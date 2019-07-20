@@ -484,7 +484,8 @@ class LIFXLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return convert_16_to_8(self.bulb.color[2])
+        fade = self.bulb.power_level / 65535
+        return convert_16_to_8(int(fade * self.bulb.color[2]))
 
     @property
     def color_temp(self):

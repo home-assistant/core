@@ -334,7 +334,7 @@ class HueLight(Light):
             'model': self.light.productname or self.light.modelid,
             # Not yet exposed as properties in aiohue
             'sw_version': self.light.raw['swversion'],
-            'via_hub': (hue.DOMAIN, self.bridge.api.config.bridgeid),
+            'via_device': (hue.DOMAIN, self.bridge.api.config.bridgeid),
         }
 
     async def async_turn_on(self, **kwargs):

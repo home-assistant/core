@@ -232,7 +232,7 @@ class TestMQTTComponent(unittest.TestCase):
             'model': 'Glass',
             'sw_version': '0.1-beta',
         })
-        # full device info with via_hub
+        # full device info with via_device
         mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA({
             'identifiers': ['helloworld', 'hello'],
             'connections': [
@@ -243,7 +243,7 @@ class TestMQTTComponent(unittest.TestCase):
             'name': 'Beer',
             'model': 'Glass',
             'sw_version': '0.1-beta',
-            'via_hub': 'test-hub',
+            'via_device': 'test-hub',
         })
         # no identifiers
         with pytest.raises(vol.Invalid):

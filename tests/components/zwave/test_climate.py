@@ -1,13 +1,14 @@
 """Test Z-Wave climate devices."""
 import pytest
 
-from homeassistant.components.climate.const import STATE_COOL, STATE_HEAT
+from homeassistant.components.climate.const import (
+    HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF)
 from homeassistant.components.zwave import climate
 from homeassistant.const import (
-    STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
+    ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from tests.mock.zwave import (
-    MockNode, MockValue, MockEntityValues, value_changed)
+    MockEntityValues, MockNode, MockValue, value_changed)
 
 
 @pytest.fixture
@@ -69,7 +70,7 @@ def test_zxt_120_swing_mode(device_zxt_120):
     """Test operation of the zxt 120 swing mode."""
     device = device_zxt_120
 
-    assert device.swing_list == [6, 7, 8]
+    assert device.swing_modes == [6, 7, 8]
     assert device._zxt_120 == 1
 
     # Test set mode
@@ -79,10 +80,10 @@ def test_zxt_120_swing_mode(device_zxt_120):
 
     # Test mode changed
     value_changed(device.values.zxt_120_swing_mode)
-    assert device.current_swing_mode == 'test_swing_set'
+    assert device.swing_mode == 'test_swing_set'
     device.values.zxt_120_swing_mode.data = 'test_swing_updated'
     value_changed(device.values.zxt_120_swing_mode)
-    assert device.current_swing_mode == 'test_swing_updated'
+    assert device.swing_mode == 'test_swing_updated'
 
 
 def test_temperature_unit(device):
@@ -106,8 +107,8 @@ def test_default_target_temperature(device):
 
 def test_data_lists(device):
     """Test data lists from zwave value items."""
-    assert device.fan_list == [3, 4, 5]
-    assert device.operation_list == [0, 1, 2]
+    assert device.fan_modes == [3, 4, 5]
+    assert device.hvac_modes == [0, 1, 2]
 
 
 def test_target_value_set(device):
@@ -124,7 +125,7 @@ def test_target_value_set(device):
 def test_operation_value_set(device):
     """Test values changed for climate device."""
     assert device.values.mode.data == 'test1'
-    device.set_operation_mode('test_set')
+    device.set_hvac_mode('test_set')
     assert device.values.mode.data == 'test_set'
 
 
@@ -132,11 +133,11 @@ def test_operation_value_set_mapping(device_mapping):
     """Test values changed for climate device. Mapping."""
     device = device_mapping
     assert device.values.mode.data == 'Off'
-    device.set_operation_mode(STATE_HEAT)
+    device.set_hvac_mode(HVAC_MODE_HEAT)
     assert device.values.mode.data == 'Heat'
-    device.set_operation_mode(STATE_COOL)
+    device.set_hvac_mode(HVAC_MODE_COOL)
     assert device.values.mode.data == 'Cool'
-    device.set_operation_mode(STATE_OFF)
+    device.set_hvac_mode(HVAC_MODE_OFF)
     assert device.values.mode.data == 'Off'
 
 
@@ -165,46 +166,30 @@ def test_temperature_value_changed(device):
 
 def test_operation_value_changed(device):
     """Test values changed for climate device."""
-    assert device.current_operation == 'test1'
+    assert device.hvac_mode == 'test1'
     device.values.mode.data = 'test_updated'
     value_changed(device.values.mode)
-    assert device.current_operation == 'test_updated'
+    assert device.hvac_mode == 'test_updated'
 
 
 def test_operation_value_changed_mapping(device_mapping):
     """Test values changed for climate device. Mapping."""
     device = device_mapping
-    assert device.current_operation == 'off'
+    assert device.hvac_mode == 'off'
     device.values.mode.data = 'Heat'
     value_changed(device.values.mode)
-    assert device.current_operation == STATE_HEAT
+    assert device.hvac_mode == HVAC_MODE_HEAT
     device.values.mode.data = 'Cool'
     value_changed(device.values.mode)
-    assert device.current_operation == STATE_COOL
+    assert device.hvac_mode == HVAC_MODE_COOL
     device.values.mode.data = 'Off'
     value_changed(device.values.mode)
-    assert device.current_operation == STATE_OFF
+    assert device.hvac_mode == HVAC_MODE_OFF
 
 
 def test_fan_mode_value_changed(device):
     """Test values changed for climate device."""
-    assert device.current_fan_mode == 'test2'
+    assert device.fan_mode == 'test2'
     device.values.fan_mode.data = 'test_updated_fan'
     value_changed(device.values.fan_mode)
-    assert device.current_fan_mode == 'test_updated_fan'
-
-
-def test_operating_state_value_changed(device):
-    """Test values changed for climate device."""
-    assert device.device_state_attributes[climate.ATTR_OPERATING_STATE] == 6
-    device.values.operating_state.data = 8
-    value_changed(device.values.operating_state)
-    assert device.device_state_attributes[climate.ATTR_OPERATING_STATE] == 8
-
-
-def test_fan_state_value_changed(device):
-    """Test values changed for climate device."""
-    assert device.device_state_attributes[climate.ATTR_FAN_STATE] == 7
-    device.values.fan_state.data = 9
-    value_changed(device.values.fan_state)
-    assert device.device_state_attributes[climate.ATTR_FAN_STATE] == 9
+    assert device.fan_mode == 'test_updated_fan'

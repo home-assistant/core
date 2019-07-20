@@ -4,20 +4,20 @@ import logging
 from pyhap.const import CATEGORY_THERMOSTAT
 
 from homeassistant.components.climate.const import (
-    ATTR_CURRENT_TEMPERATURE, ATTR_MAX_TEMP, ATTR_MIN_TEMP,
-    ATTR_OPERATION_LIST, ATTR_OPERATION_MODE, ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW, DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP,
-    DOMAIN as DOMAIN_CLIMATE,
-    SERVICE_SET_OPERATION_MODE as SERVICE_SET_OPERATION_MODE_THERMOSTAT,
-    SERVICE_SET_TEMPERATURE as SERVICE_SET_TEMPERATURE_THERMOSTAT, STATE_AUTO,
-    STATE_COOL, STATE_HEAT, SUPPORT_ON_OFF, SUPPORT_TARGET_TEMPERATURE_HIGH,
-    SUPPORT_TARGET_TEMPERATURE_LOW)
+    ATTR_CURRENT_TEMPERATURE, ATTR_HVAC_ACTIONS, ATTR_HVAC_MODE, ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
+    ATTR_TARGET_TEMP_STEP, CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE, CURRENT_HVAC_OFF, DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP,
+    DOMAIN as DOMAIN_CLIMATE, HVAC_MODE_COOL, HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL, HVAC_MODE_OFF,
+    SERVICE_SET_HVAC_MODE as SERVICE_SET_HVAC_MODE_THERMOSTAT,
+    SERVICE_SET_TEMPERATURE as SERVICE_SET_TEMPERATURE_THERMOSTAT,
+    SUPPORT_TARGET_TEMPERATURE_RANGE)
 from homeassistant.components.water_heater import (
     DOMAIN as DOMAIN_WATER_HEATER,
     SERVICE_SET_TEMPERATURE as SERVICE_SET_TEMPERATURE_WATER_HEATER)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE,
-    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, TEMP_CELSIUS,
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE, TEMP_CELSIUS,
     TEMP_FAHRENHEIT)
 
 from . import TYPES
@@ -35,12 +35,16 @@ _LOGGER = logging.getLogger(__name__)
 
 UNIT_HASS_TO_HOMEKIT = {TEMP_CELSIUS: 0, TEMP_FAHRENHEIT: 1}
 UNIT_HOMEKIT_TO_HASS = {c: s for s, c in UNIT_HASS_TO_HOMEKIT.items()}
-HC_HASS_TO_HOMEKIT = {STATE_OFF: 0, STATE_HEAT: 1,
-                      STATE_COOL: 2, STATE_AUTO: 3}
+HC_HASS_TO_HOMEKIT = {HVAC_MODE_OFF: 0, HVAC_MODE_HEAT: 1,
+                      HVAC_MODE_COOL: 2, HVAC_MODE_HEAT_COOL: 3}
 HC_HOMEKIT_TO_HASS = {c: s for s, c in HC_HASS_TO_HOMEKIT.items()}
 
-SUPPORT_TEMP_RANGE = SUPPORT_TARGET_TEMPERATURE_LOW | \
-            SUPPORT_TARGET_TEMPERATURE_HIGH
+HC_HASS_TO_HOMEKIT_ACTION = {
+    CURRENT_HVAC_OFF: 0,
+    CURRENT_HVAC_IDLE: 0,
+    CURRENT_HVAC_HEAT: 1,
+    CURRENT_HVAC_COOL: 2,
+}
 
 
 @TYPES.register('Thermostat')
@@ -55,16 +59,15 @@ class Thermostat(HomeAccessory):
         self._flag_temperature = False
         self._flag_coolingthresh = False
         self._flag_heatingthresh = False
-        self.support_power_state = False
         min_temp, max_temp = self.get_temperature_range()
+        temp_step = self.hass.states.get(self.entity_id) \
+            .attributes.get(ATTR_TARGET_TEMP_STEP, 0.5)
 
         # Add additional characteristics if auto mode is supported
         self.chars = []
         features = self.hass.states.get(self.entity_id) \
             .attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if features & SUPPORT_ON_OFF:
-            self.support_power_state = True
-        if features & SUPPORT_TEMP_RANGE:
+        if features & SUPPORT_TARGET_TEMPERATURE_RANGE:
             self.chars.extend((CHAR_COOLING_THRESHOLD_TEMPERATURE,
                                CHAR_HEATING_THRESHOLD_TEMPERATURE))
 
@@ -84,7 +87,7 @@ class Thermostat(HomeAccessory):
             CHAR_TARGET_TEMPERATURE, value=21.0,
             properties={PROP_MIN_VALUE: min_temp,
                         PROP_MAX_VALUE: max_temp,
-                        PROP_MIN_STEP: 0.5},
+                        PROP_MIN_STEP: temp_step},
             setter_callback=self.set_target_temperature)
 
         # Display units characteristic
@@ -99,14 +102,14 @@ class Thermostat(HomeAccessory):
                 CHAR_COOLING_THRESHOLD_TEMPERATURE, value=23.0,
                 properties={PROP_MIN_VALUE: min_temp,
                             PROP_MAX_VALUE: max_temp,
-                            PROP_MIN_STEP: 0.5},
+                            PROP_MIN_STEP: temp_step},
                 setter_callback=self.set_cooling_threshold)
         if CHAR_HEATING_THRESHOLD_TEMPERATURE in self.chars:
             self.char_heating_thresh_temp = serv_thermostat.configure_char(
                 CHAR_HEATING_THRESHOLD_TEMPERATURE, value=19.0,
                 properties={PROP_MIN_VALUE: min_temp,
                             PROP_MAX_VALUE: max_temp,
-                            PROP_MIN_STEP: 0.5},
+                            PROP_MIN_STEP: temp_step},
                 setter_callback=self.set_heating_threshold)
 
     def get_temperature_range(self):
@@ -130,17 +133,13 @@ class Thermostat(HomeAccessory):
         _LOGGER.debug('%s: Set heat-cool to %d', self.entity_id, value)
         self._flag_heat_cool = True
         hass_value = HC_HOMEKIT_TO_HASS[value]
-        if self.support_power_state is True:
-            params = {ATTR_ENTITY_ID: self.entity_id}
-            if hass_value == STATE_OFF:
-                self.call_service(DOMAIN_CLIMATE, SERVICE_TURN_OFF, params)
-                return
-            self.call_service(DOMAIN_CLIMATE, SERVICE_TURN_ON, params)
-        params = {ATTR_ENTITY_ID: self.entity_id,
-                  ATTR_OPERATION_MODE: hass_value}
+        params = {
+            ATTR_ENTITY_ID: self.entity_id,
+            ATTR_HVAC_MODE: hass_value
+        }
         self.call_service(
-            DOMAIN_CLIMATE, SERVICE_SET_OPERATION_MODE_THERMOSTAT,
-            params, hass_value)
+            DOMAIN_CLIMATE, SERVICE_SET_HVAC_MODE_THERMOSTAT, params,
+            hass_value)
 
     @debounce
     def set_cooling_threshold(self, value):
@@ -229,56 +228,18 @@ class Thermostat(HomeAccessory):
             self.char_display_units.set_value(UNIT_HASS_TO_HOMEKIT[self._unit])
 
         # Update target operation mode
-        operation_mode = new_state.attributes.get(ATTR_OPERATION_MODE)
-        if self.support_power_state is True and new_state.state == STATE_OFF:
-            self.char_target_heat_cool.set_value(0)  # Off
-        elif operation_mode and operation_mode in HC_HASS_TO_HOMEKIT:
+        hvac_mode = new_state.state
+        if hvac_mode and hvac_mode in HC_HASS_TO_HOMEKIT:
             if not self._flag_heat_cool:
                 self.char_target_heat_cool.set_value(
-                    HC_HASS_TO_HOMEKIT[operation_mode])
+                    HC_HASS_TO_HOMEKIT[hvac_mode])
         self._flag_heat_cool = False
 
-        # Set current operation mode based on temperatures and target mode
-        if self.support_power_state is True and new_state.state == STATE_OFF:
-            current_operation_mode = STATE_OFF
-        elif operation_mode == STATE_HEAT:
-            if isinstance(target_temp, float) and current_temp < target_temp:
-                current_operation_mode = STATE_HEAT
-            else:
-                current_operation_mode = STATE_OFF
-        elif operation_mode == STATE_COOL:
-            if isinstance(target_temp, float) and current_temp > target_temp:
-                current_operation_mode = STATE_COOL
-            else:
-                current_operation_mode = STATE_OFF
-        elif operation_mode == STATE_AUTO:
-            # Check if auto is supported
-            if self.char_cooling_thresh_temp:
-                lower_temp = self.char_heating_thresh_temp.value
-                upper_temp = self.char_cooling_thresh_temp.value
-                if current_temp < lower_temp:
-                    current_operation_mode = STATE_HEAT
-                elif current_temp > upper_temp:
-                    current_operation_mode = STATE_COOL
-                else:
-                    current_operation_mode = STATE_OFF
-            else:
-                # Check if heating or cooling are supported
-                heat = STATE_HEAT in new_state.attributes[ATTR_OPERATION_LIST]
-                cool = STATE_COOL in new_state.attributes[ATTR_OPERATION_LIST]
-                if isinstance(target_temp, float) and \
-                        current_temp < target_temp and heat:
-                    current_operation_mode = STATE_HEAT
-                elif isinstance(target_temp, float) and \
-                        current_temp > target_temp and cool:
-                    current_operation_mode = STATE_COOL
-                else:
-                    current_operation_mode = STATE_OFF
-        else:
-            current_operation_mode = STATE_OFF
-
-        self.char_current_heat_cool.set_value(
-            HC_HASS_TO_HOMEKIT[current_operation_mode])
+        # Set current operation mode for supported thermostats
+        hvac_action = new_state.attributes.get(ATTR_HVAC_ACTIONS)
+        if hvac_action:
+            self.char_current_heat_cool.set_value(
+                HC_HASS_TO_HOMEKIT_ACTION[hvac_action])
 
 
 @TYPES.register('WaterHeater')
@@ -334,7 +295,7 @@ class WaterHeater(HomeAccessory):
         _LOGGER.debug('%s: Set heat-cool to %d', self.entity_id, value)
         self._flag_heat_cool = True
         hass_value = HC_HOMEKIT_TO_HASS[value]
-        if hass_value != STATE_HEAT:
+        if hass_value != HVAC_MODE_HEAT:
             self.char_target_heat_cool.set_value(1)  # Heat
 
     @debounce
@@ -367,7 +328,7 @@ class WaterHeater(HomeAccessory):
             self.char_display_units.set_value(UNIT_HASS_TO_HOMEKIT[self._unit])
 
         # Update target operation mode
-        operation_mode = new_state.attributes.get(ATTR_OPERATION_MODE)
+        operation_mode = new_state.state
         if operation_mode and not self._flag_heat_cool:
             self.char_target_heat_cool.set_value(1)  # Heat
         self._flag_heat_cool = False

@@ -1,11 +1,14 @@
 """Support for monitoring a Sense energy sensor."""
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TIMEOUT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,6 +18,7 @@ DEFAULT_TIMEOUT = 5
 DOMAIN = 'sense'
 
 SENSE_DATA = 'sense_data'
+SENSE_DEVICE_UPDATE = 'sense_devices_update'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -27,7 +31,9 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up the Sense sensor."""
-    from sense_energy import ASyncSenseable, SenseAuthenticationException
+    from sense_energy import (
+        ASyncSenseable, SenseAuthenticationException,
+        SenseAPITimeoutException)
 
     username = config[DOMAIN][CONF_EMAIL]
     password = config[DOMAIN][CONF_PASSWORD]
@@ -45,4 +51,15 @@ async def async_setup(hass, config):
         async_load_platform(hass, 'sensor', DOMAIN, {}, config))
     hass.async_create_task(
         async_load_platform(hass, 'binary_sensor', DOMAIN, {}, config))
+
+    async def async_sense_update(now):
+        """Retrieve latest state."""
+        try:
+            await hass.data[SENSE_DATA].update_realtime()
+            async_dispatcher_send(hass, SENSE_DEVICE_UPDATE)
+        except SenseAPITimeoutException:
+            _LOGGER.error("Timeout retrieving data")
+
+    async_track_time_interval(hass, async_sense_update,
+                              timedelta(seconds=ACTIVE_UPDATE_RATE))
     return True

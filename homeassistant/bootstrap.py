@@ -17,7 +17,6 @@ from homeassistant.util.logging import AsyncHandler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
 from homeassistant.util.yaml import clear_secret_cache
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,49 +93,11 @@ async def async_from_config_dict(config: Dict[str, Any],
     stop = time()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop-start)
 
-    # TEMP: warn users for invalid slugs
-    # Remove after 0.94 or 1.0
-    if cv.INVALID_SLUGS_FOUND or cv.INVALID_ENTITY_IDS_FOUND:
-        msg = []
-
-        if cv.INVALID_ENTITY_IDS_FOUND:
-            msg.append(
-                "Your configuration contains invalid entity ID references. "
-                "Please find and update the following. "
-                "This will become a breaking change."
-            )
-            msg.append('\n'.join('- {} -> {}'.format(*item)
-                                 for item
-                                 in cv.INVALID_ENTITY_IDS_FOUND.items()))
-
-        if cv.INVALID_SLUGS_FOUND:
-            msg.append(
-                "Your configuration contains invalid slugs. "
-                "Please find and update the following. "
-                "This will become a breaking change."
-            )
-            msg.append('\n'.join('- {} -> {}'.format(*item)
-                                 for item in cv.INVALID_SLUGS_FOUND.items()))
-
+    if sys.version_info[:3] < (3, 6, 0):
         hass.components.persistent_notification.async_create(
-            '\n\n'.join(msg), "Config Warning", "config_warning"
-        )
-
-    # TEMP: warn users of invalid extra keys
-    # Remove after 0.92
-    if cv.INVALID_EXTRA_KEYS_FOUND:
-        msg = []
-        msg.append(
-            "Your configuration contains extra keys "
-            "that the platform does not support (but were silently "
-            "accepted before 0.88). Please find and remove the following."
-            "This will become a breaking change."
-        )
-        msg.append('\n'.join('- {}'.format(it)
-                             for it in cv.INVALID_EXTRA_KEYS_FOUND))
-
-        hass.components.persistent_notification.async_create(
-            '\n\n'.join(msg), "Config Warning", "config_warning"
+            "Python 3.5 support is deprecated and will "
+            "be removed in the first release after August 1. Please "
+            "upgrade Python.", "Python version", "python_version"
         )
 
     return hass
@@ -311,25 +272,25 @@ async def _async_set_up_integrations(
     debuggers = domains & DEBUGGER_INTEGRATIONS
     if debuggers:
         _LOGGER.debug("Starting up debuggers %s", debuggers)
-        await asyncio.gather(*[
+        await asyncio.gather(*(
             async_setup_component(hass, domain, config)
-            for domain in debuggers])
+            for domain in debuggers))
         domains -= DEBUGGER_INTEGRATIONS
 
     # Resolve all dependencies of all components so we can find the logging
     # and integrations that need faster initialization.
-    resolved_domains_task = asyncio.gather(*[
+    resolved_domains_task = asyncio.gather(*(
         loader.async_component_dependencies(hass, domain)
         for domain in domains
-    ], return_exceptions=True)
+    ), return_exceptions=True)
 
     # Set up core.
     _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)
 
-    if not all(await asyncio.gather(*[
+    if not all(await asyncio.gather(*(
             async_setup_component(hass, domain, config)
             for domain in CORE_INTEGRATIONS
-    ])):
+    ))):
         _LOGGER.error("Home Assistant core failed to initialize. "
                       "Further initialization aborted")
         return
@@ -351,10 +312,10 @@ async def _async_set_up_integrations(
     if logging_domains:
         _LOGGER.info("Setting up %s", logging_domains)
 
-        await asyncio.gather(*[
+        await asyncio.gather(*(
             async_setup_component(hass, domain, config)
             for domain in logging_domains
-        ])
+        ))
 
     # Kick off loading the registries. They don't need to be awaited.
     asyncio.gather(
@@ -363,18 +324,18 @@ async def _async_set_up_integrations(
         hass.helpers.area_registry.async_get_registry())
 
     if stage_1_domains:
-        await asyncio.gather(*[
+        await asyncio.gather(*(
             async_setup_component(hass, domain, config)
             for domain in stage_1_domains
-        ])
+        ))
 
     # Load all integrations
     after_dependencies = {}  # type: Dict[str, Set[str]]
 
-    for int_or_exc in await asyncio.gather(*[
+    for int_or_exc in await asyncio.gather(*(
             loader.async_get_integration(hass, domain)
             for domain in stage_2_domains
-    ], return_exceptions=True):
+    ), return_exceptions=True):
         # Exceptions are handled in async_setup_component.
         if (isinstance(int_or_exc, loader.Integration) and
                 int_or_exc.after_dependencies):
@@ -399,10 +360,10 @@ async def _async_set_up_integrations(
 
         _LOGGER.debug("Setting up %s", domains_to_load)
 
-        await asyncio.gather(*[
+        await asyncio.gather(*(
             async_setup_component(hass, domain, config)
             for domain in domains_to_load
-        ])
+        ))
 
         last_load = domains_to_load
         stage_2_domains -= domains_to_load
@@ -412,10 +373,10 @@ async def _async_set_up_integrations(
     if stage_2_domains:
         _LOGGER.debug("Final set up: %s", stage_2_domains)
 
-        await asyncio.gather(*[
+        await asyncio.gather(*(
             async_setup_component(hass, domain, config)
             for domain in stage_2_domains
-        ])
+        ))
 
     # Wrap up startup
     await hass.async_block_till_done()

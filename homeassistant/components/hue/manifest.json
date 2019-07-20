@@ -11,6 +11,11 @@
       "Royal Philips Electronics"
     ]
   },
+  "homekit": {
+    "models": [
+      "BSB002"
+    ]
+  },
   "dependencies": [],
   "codeowners": [
     "@balloob"

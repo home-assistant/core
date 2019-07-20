@@ -620,7 +620,7 @@ def test_states_function(hass):
 def test_now(mock_is_safe, hass):
     """Test now method."""
     now = dt_util.now()
-    with patch.dict(template.ENV.globals, {'now': lambda: now}):
+    with patch('homeassistant.util.dt.now', return_value=now):
         assert now.isoformat() == \
             template.Template('{{ now().isoformat() }}',
                               hass).async_render()
@@ -631,7 +631,7 @@ def test_now(mock_is_safe, hass):
 def test_utcnow(mock_is_safe, hass):
     """Test utcnow method."""
     now = dt_util.utcnow()
-    with patch.dict(template.ENV.globals, {'utcnow': lambda: now}):
+    with patch('homeassistant.util.dt.utcnow', return_value=now):
         assert now.isoformat() == \
             template.Template('{{ utcnow().isoformat() }}',
                               hass).async_render()
@@ -882,6 +882,9 @@ def test_closest_function_home_vs_domain(hass):
     assert template.Template('{{ closest(states.test_domain).entity_id }}',
                              hass).async_render() == 'test_domain.object'
 
+    assert template.Template('{{ (states.test_domain | closest).entity_id }}',
+                             hass).async_render() == 'test_domain.object'
+
 
 def test_closest_function_home_vs_all_states(hass):
     """Test closest function home vs all states."""
@@ -896,6 +899,9 @@ def test_closest_function_home_vs_all_states(hass):
     })
 
     assert template.Template('{{ closest(states).entity_id }}',
+                             hass).async_render() == 'test_domain_2.and_closer'
+
+    assert template.Template('{{ (states | closest).entity_id }}',
                              hass).async_render() == 'test_domain_2.and_closer'
 
 
@@ -948,6 +954,74 @@ async def test_closest_function_home_vs_group_state(hass):
         ['test_domain.object', 'group.location_group'])
 
 
+async def test_expand(hass):
+    """Test expand function."""
+    info = render_to_info(
+        hass, "{{ expand('test.object') }}")
+    assert_result_info(
+        info, '[]',
+        ['test.object'])
+
+    info = render_to_info(
+        hass, "{{ expand(56) }}")
+    assert_result_info(
+        info, '[]')
+
+    hass.states.async_set('test.object', 'happy')
+
+    info = render_to_info(
+        hass, "{{ expand('test.object') | map(attribute='entity_id')"
+        " | join(', ') }}")
+    assert_result_info(
+        info, 'test.object',
+        [])
+
+    info = render_to_info(
+        hass, "{{ expand('group.new_group') | map(attribute='entity_id')"
+        " | join(', ') }}")
+    assert_result_info(
+        info, '',
+        ['group.new_group'])
+
+    info = render_to_info(
+        hass, "{{ expand(states.group) | map(attribute='entity_id')"
+        " | join(', ') }}")
+    assert_result_info(
+        info, '',
+        [], ['group'])
+
+    await group.Group.async_create_group(
+        hass, 'new group', ['test.object'])
+
+    info = render_to_info(
+        hass, "{{ expand('group.new_group') | map(attribute='entity_id')"
+        " | join(', ') }}")
+    assert_result_info(
+        info, 'test.object',
+        ['group.new_group'])
+
+    info = render_to_info(
+        hass, "{{ expand(states.group) | map(attribute='entity_id')"
+        " | join(', ') }}")
+    assert_result_info(
+        info, 'test.object',
+        ['group.new_group'], ['group'])
+
+    info = render_to_info(
+        hass, "{{ expand('group.new_group', 'test.object')"
+        " | map(attribute='entity_id') | join(', ') }}")
+    assert_result_info(
+        info, 'test.object',
+        ['group.new_group'])
+
+    info = render_to_info(
+        hass, "{{ ['group.new_group', 'test.object'] | expand"
+        " | map(attribute='entity_id') | join(', ') }}")
+    assert_result_info(
+        info, 'test.object',
+        ['group.new_group'])
+
+
 def test_closest_function_to_coord(hass):
     """Test closest function to coord."""
     hass.states.async_set('test_domain.closest_home', 'happy', {
@@ -967,6 +1041,13 @@ def test_closest_function_to_coord(hass):
 
     tpl = template.Template(
         '{{ closest("%s", %s, states.test_domain).entity_id }}'
+        % (hass.config.latitude + 0.3,
+           hass.config.longitude + 0.3), hass)
+
+    assert tpl.async_render() == 'test_domain.closest_zone'
+
+    tpl = template.Template(
+        '{{ (states.test_domain | closest("%s", %s)).entity_id }}'
         % (hass.config.latitude + 0.3,
            hass.config.longitude + 0.3), hass)
 
@@ -993,6 +1074,20 @@ def test_closest_function_to_entity_id(hass):
     info = render_to_info(
         hass,
         '{{ closest(zone, states.test_domain).entity_id }}',
+        {
+            'zone': 'zone.far_away'
+        })
+
+    assert_result_info(
+        info, 'test_domain.closest_zone',
+        ['test_domain.closest_home', 'test_domain.closest_zone',
+         'zone.far_away'],
+        ["test_domain"])
+
+    info = render_to_info(
+        hass,
+        "{{ ([states.test_domain, 'test_domain.closest_zone'] "
+        "| closest(zone)).entity_id }}",
         {
             'zone': 'zone.far_away'
         })
@@ -1059,6 +1154,8 @@ def test_closest_function_invalid_coordinates(hass):
     })
 
     assert template.Template('{{ closest("invalid", "coord", states) }}',
+                             hass).async_render() == 'None'
+    assert template.Template('{{ states | closest("invalid", "coord") }}',
                              hass).async_render() == 'None'
 
 

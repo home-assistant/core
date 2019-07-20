@@ -1,4 +1,5 @@
 """Connection session."""
+import asyncio
 import voluptuous as vol
 
 from homeassistant.core import callback, Context
@@ -101,6 +102,9 @@ class ActiveConnection:
         elif isinstance(err, vol.Invalid):
             code = const.ERR_INVALID_FORMAT
             err_message = vol.humanize.humanize_error(msg, err)
+        elif isinstance(err, asyncio.TimeoutError):
+            code = const.ERR_TIMEOUT
+            err_message = 'Timeout'
         else:
             code = const.ERR_UNKNOWN_ERROR
             err_message = 'Unknown error'

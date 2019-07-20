@@ -10,21 +10,25 @@ import homeassistant.components.sleepiq as sleepiq
 from tests.common import load_fixture, get_test_home_assistant
 
 
-def mock_responses(mock):
+def mock_responses(mock, single=False):
     """Mock responses for SleepIQ."""
-    base_url = 'https://api.sleepiq.sleepnumber.com/rest/'
+    base_url = 'https://prod-api.sleepiq.sleepnumber.com/rest/'
+    if single:
+        suffix = '-single'
+    else:
+        suffix = ''
     mock.put(
         base_url + 'login',
         text=load_fixture('sleepiq-login.json'))
     mock.get(
         base_url + 'bed?_k=0987',
-        text=load_fixture('sleepiq-bed.json'))
+        text=load_fixture('sleepiq-bed{}.json'.format(suffix)))
     mock.get(
         base_url + 'sleeper?_k=0987',
         text=load_fixture('sleepiq-sleeper.json'))
     mock.get(
         base_url + 'bed/familyStatus?_k=0987',
-        text=load_fixture('sleepiq-familystatus.json'))
+        text=load_fixture('sleepiq-familystatus{}.json'.format(suffix)))
 
 
 class TestSleepIQ(unittest.TestCase):
@@ -61,7 +65,7 @@ class TestSleepIQ(unittest.TestCase):
     @requests_mock.Mocker()
     def test_setup_login_failed(self, mock):
         """Test the setup if a bad username or password is given."""
-        mock.put('https://api.sleepiq.sleepnumber.com/rest/login',
+        mock.put('https://prod-api.sleepiq.sleepnumber.com/rest/login',
                  status_code=401,
                  json=load_fixture('sleepiq-login-failed.json'))
 

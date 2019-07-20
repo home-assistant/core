@@ -9,7 +9,6 @@ import async_timeout
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.util import dt
-from .const import DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,7 +96,7 @@ class Auth:
 
         try:
             session = aiohttp_client.async_get_clientsession(self.hass)
-            with async_timeout.timeout(DEFAULT_TIMEOUT):
+            with async_timeout.timeout(10):
                 response = await session.post(LWA_TOKEN_URI,
                                               headers=LWA_HEADERS,
                                               data=lwa_params,

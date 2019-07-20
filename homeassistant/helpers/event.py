@@ -1,15 +1,18 @@
 """Helpers for listening to events."""
 from datetime import timedelta
 import functools as ft
+from typing import Callable
+
+import attr
 
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.sun import get_astral_event_next
-from ..core import HomeAssistant, callback
-from ..const import (
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import (
     ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL,
-    SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
-from ..util import dt as dt_util
-from ..util.async_ import run_callback_threadsafe
+    SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET, EVENT_CORE_CONFIG_UPDATE)
+from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import run_callback_threadsafe
 
 # PyLint does not like the use of threaded_listener_factory
 # pylint: disable=invalid-name
@@ -263,30 +266,71 @@ def async_track_time_interval(hass, action, interval):
 track_time_interval = threaded_listener_factory(async_track_time_interval)
 
 
+@attr.s
+class SunListener:
+    """Helper class to help listen to sun events."""
+
+    hass = attr.ib(type=HomeAssistant)
+    action = attr.ib(type=Callable)
+    event = attr.ib(type=str)
+    offset = attr.ib(type=timedelta)
+    _unsub_sun = attr.ib(default=None)
+    _unsub_config = attr.ib(default=None)
+
+    @callback
+    def async_attach(self):
+        """Attach a sun listener."""
+        assert self._unsub_config is None
+
+        self._unsub_config = self.hass.bus.async_listen(
+            EVENT_CORE_CONFIG_UPDATE, self._handle_config_event)
+
+        self._listen_next_sun_event()
+
+    @callback
+    def async_detach(self):
+        """Detach the sun listener."""
+        assert self._unsub_sun is not None
+        assert self._unsub_config is not None
+
+        self._unsub_sun()
+        self._unsub_sun = None
+        self._unsub_config()
+        self._unsub_config = None
+
+    @callback
+    def _listen_next_sun_event(self):
+        """Set up the sun event listener."""
+        assert self._unsub_sun is None
+
+        self._unsub_sun = async_track_point_in_utc_time(
+            self.hass, self._handle_sun_event,
+            get_astral_event_next(self.hass, self.event, offset=self.offset)
+        )
+
+    @callback
+    def _handle_sun_event(self, _now):
+        """Handle solar event."""
+        self._unsub_sun = None
+        self._listen_next_sun_event()
+        self.hass.async_run_job(self.action)
+
+    @callback
+    def _handle_config_event(self, _event):
+        """Handle core config update."""
+        assert self._unsub_sun is not None
+        self._unsub_sun()
+        self._unsub_sun = None
+        self._listen_next_sun_event()
+
+
 @callback
 @bind_hass
 def async_track_sunrise(hass, action, offset=None):
     """Add a listener that will fire a specified offset from sunrise daily."""
-    remove = None
-
-    @callback
-    def sunrise_automation_listener(now):
-        """Handle points in time to execute actions."""
-        nonlocal remove
-        remove = async_track_point_in_utc_time(
-            hass, sunrise_automation_listener, get_astral_event_next(
-                hass, SUN_EVENT_SUNRISE, offset=offset))
-        hass.async_run_job(action)
-
-    remove = async_track_point_in_utc_time(
-        hass, sunrise_automation_listener, get_astral_event_next(
-            hass, SUN_EVENT_SUNRISE, offset=offset))
-
-    def remove_listener():
-        """Remove sunset listener."""
-        remove()
-
-    return remove_listener
+    listener = SunListener(hass, action, SUN_EVENT_SUNRISE, offset)
+    listener.async_attach()
+    return listener.async_detach
 
 
 track_sunrise = threaded_listener_factory(async_track_sunrise)
@@ -296,26 +340,9 @@ track_sunrise = threaded_listener_factory(async_track_sunrise)
 @bind_hass
 def async_track_sunset(hass, action, offset=None):
     """Add a listener that will fire a specified offset from sunset daily."""
-    remove = None
-
-    @callback
-    def sunset_automation_listener(now):
-        """Handle points in time to execute actions."""
-        nonlocal remove
-        remove = async_track_point_in_utc_time(
-            hass, sunset_automation_listener, get_astral_event_next(
-                hass, SUN_EVENT_SUNSET, offset=offset))
-        hass.async_run_job(action)
-
-    remove = async_track_point_in_utc_time(
-        hass, sunset_automation_listener, get_astral_event_next(
-            hass, SUN_EVENT_SUNSET, offset=offset))
-
-    def remove_listener():
-        """Remove sunset listener."""
-        remove()
-
-    return remove_listener
+    listener = SunListener(hass, action, SUN_EVENT_SUNSET, offset)
+    listener.async_attach()
+    return listener.async_detach
 
 
 track_sunset = threaded_listener_factory(async_track_sunset)

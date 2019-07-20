@@ -100,7 +100,7 @@ class DeconzSensor(DeconzDevice):
                 self._device.dark is not None:
             attr[ATTR_DARK] = self._device.dark
 
-        if self.unit_of_measurement == 'Watts':
+        if self.unit_of_measurement == 'W':
             attr[ATTR_CURRENT] = self._device.current
             attr[ATTR_VOLTAGE] = self._device.voltage
 

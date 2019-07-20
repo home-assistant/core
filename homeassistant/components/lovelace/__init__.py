@@ -53,7 +53,7 @@ async def async_setup(hass, config):
     # Pass in default to `get` because defaults not set if loaded as dep
     mode = config.get(DOMAIN, {}).get(CONF_MODE, MODE_STORAGE)
 
-    await hass.components.frontend.async_register_built_in_panel(
+    hass.components.frontend.async_register_built_in_panel(
         DOMAIN, config={
             'mode': mode
         })

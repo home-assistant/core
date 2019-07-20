@@ -11,19 +11,21 @@ from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY, \
 from homeassistant.helpers import config_entry_flow
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    ATTR_ALTITUDE,
+    ATTR_ACCURACY,
+    ATTR_ACTIVITY,
+    ATTR_DEVICE,
+    ATTR_DIRECTION,
+    ATTR_PROVIDER,
+    ATTR_SPEED,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 TRACKER_UPDATE = '{}_tracker_update'.format(DOMAIN)
 
-ATTR_ALTITUDE = 'altitude'
-ATTR_ACCURACY = 'accuracy'
-ATTR_ACTIVITY = 'activity'
-ATTR_DEVICE = 'device'
-ATTR_DIRECTION = 'direction'
-ATTR_PROVIDER = 'provider'
-ATTR_SPEED = 'speed'
 
 DEFAULT_ACCURACY = 200
 DEFAULT_BATTERY = -1

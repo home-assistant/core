@@ -36,6 +36,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 tariff,
                 data['values']['LVR'][tariff]['unit']))
 
+    if not meters:
+        hass.components.persistent_notification.create(
+            'Couldn\'t find any meter readings. '
+            'Please ensure Verbruiks Manager is enabled in Mijn Essent '
+            'and at least one reading has been logged to Meterstanden.',
+            title='Essent', notification_id='essent_notification')
+        return
+
     add_devices(meters, True)
 
 
@@ -46,14 +54,13 @@ class EssentBase():
         """Initialize the Essent API."""
         self._username = username
         self._password = password
-        self._meters = []
         self._meter_data = {}
 
         self.update()
 
     def retrieve_meters(self):
         """Retrieve the list of meters."""
-        return self._meters
+        return self._meter_data.keys()
 
     def retrieve_meter_data(self, meter):
         """Retrieve the data for this meter."""
@@ -63,10 +70,12 @@ class EssentBase():
     def update(self):
         """Retrieve the latest meter data from Essent."""
         essent = PyEssent(self._username, self._password)
-        self._meters = essent.get_EANs()
-        for meter in self._meters:
-            self._meter_data[meter] = essent.read_meter(
-                meter, only_last_meter_reading=True)
+        eans = essent.get_EANs()
+        for possible_meter in eans:
+            meter_data = essent.read_meter(
+                possible_meter, only_last_meter_reading=True)
+            if meter_data:
+                self._meter_data[possible_meter] = meter_data
 
 
 class EssentMeter(Entity):

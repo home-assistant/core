@@ -65,3 +65,43 @@ def is_address(value):
         conn_id = matcher.group('conn_id')
         return addr, conn_id
     raise vol.error.Invalid('Not a valid address string.')
+
+
+def is_relays_states_string(states_string):
+    """Validate the given states string and return states list."""
+    if len(states_string) == 8:
+        states = []
+        for state_string in states_string:
+            if state_string == '1':
+                state = 'ON'
+            elif state_string == '0':
+                state = 'OFF'
+            elif state_string == 'T':
+                state = 'TOGGLE'
+            elif state_string == '-':
+                state = 'NOCHANGE'
+            else:
+                raise vol.error.Invalid('Not a valid relay state string.')
+            states.append(state)
+        return states
+    raise vol.error.Invalid('Wrong length of relay state string.')
+
+
+def is_key_lock_states_string(states_string):
+    """Validate the given states string and returns states list."""
+    if len(states_string) == 8:
+        states = []
+        for state_string in states_string:
+            if state_string == '1':
+                state = 'ON'
+            elif state_string == '0':
+                state = 'OFF'
+            elif state_string == 'T':
+                state = 'TOGGLE'
+            elif state_string == '-':
+                state = 'NOCHANGE'
+            else:
+                raise vol.error.Invalid('Not a valid key lock state string.')
+            states.append(state)
+        return states
+    raise vol.error.Invalid('Wrong length of key lock state string.')

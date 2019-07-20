@@ -189,9 +189,9 @@ async def async_get_all_descriptions(hass):
     loaded = {}
 
     if missing:
-        contents = await asyncio.gather(*[
+        contents = await asyncio.gather(*(
             _load_services_file(hass, domain) for domain in missing
-        ])
+        ))
 
         for domain, content in zip(missing, contents):
             loaded[domain] = content

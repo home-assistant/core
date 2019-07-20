@@ -1,24 +1,22 @@
 """Tests for the cloud component."""
 from unittest.mock import patch
+
 from homeassistant.setup import async_setup_component
 from homeassistant.components import cloud
 from homeassistant.components.cloud import const
 
-from jose import jwt
-
 from tests.common import mock_coro
 
 
-def mock_cloud(hass, config={}):
+async def mock_cloud(hass, config=None):
     """Mock cloud."""
-    with patch('hass_nabucasa.Cloud.start', return_value=mock_coro()):
-        assert hass.loop.run_until_complete(async_setup_component(
-            hass, cloud.DOMAIN, {
-                'cloud': config
-            }))
-
-    hass.data[cloud.DOMAIN]._decode_claims = \
-        lambda token: jwt.get_unverified_claims(token)
+    assert await async_setup_component(
+        hass, cloud.DOMAIN, {
+            'cloud': config or {}
+        })
+    cloud_inst = hass.data['cloud']
+    with patch('hass_nabucasa.Cloud.run_executor', return_value=mock_coro()):
+        await cloud_inst.start()
 
 
 def mock_cloud_prefs(hass, prefs={}):

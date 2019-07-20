@@ -17,6 +17,9 @@ MANIFEST_SCHEMA = vol.Schema({
         vol.Optional('manufacturer'): [str],
         vol.Optional('device_type'): [str],
     }),
+    vol.Optional('homekit'): vol.Schema({
+        vol.Optional('models'): [str],
+    }),
     vol.Required('documentation'): str,
     vol.Required('requirements'): [str],
     vol.Required('dependencies'): [str],

@@ -322,6 +322,8 @@ class BroadlinkMP1Switch:
 
     def get_outlet_status(self, slot):
         """Get status of outlet from cached status list."""
+        if self._states is None:
+            return None
         return self._states['s{}'.format(slot)]
 
     @Throttle(TIME_BETWEEN_UPDATES)

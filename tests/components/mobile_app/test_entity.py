@@ -2,9 +2,6 @@
 # pylint: disable=redefined-outer-name,unused-import
 import logging
 
-from . import (authed_api_client, create_registrations,  # noqa: F401
-               webhook_client)  # noqa: F401
-
 _LOGGER = logging.getLogger(__name__)
 
 

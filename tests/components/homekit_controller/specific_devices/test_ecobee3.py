@@ -11,9 +11,7 @@ import pytest
 
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.components.climate.const import (
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_HUMIDITY_HIGH, SUPPORT_TARGET_HUMIDITY_LOW,
-    SUPPORT_OPERATION_MODE)
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY)
 
 
 from tests.components.homekit_controller.common import (
@@ -36,16 +34,14 @@ async def test_ecobee3_setup(hass):
     climate_state = await climate_helper.poll_and_get_state()
     assert climate_state.attributes['friendly_name'] == 'HomeW'
     assert climate_state.attributes['supported_features'] == (
-        SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_HUMIDITY |
-        SUPPORT_TARGET_HUMIDITY_HIGH | SUPPORT_TARGET_HUMIDITY_LOW |
-        SUPPORT_OPERATION_MODE
+        SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_HUMIDITY
     )
 
-    assert climate_state.attributes['operation_list'] == [
+    assert climate_state.attributes['hvac_modes'] == [
         'off',
         'heat',
         'cool',
-        'auto',
+        'heat_cool',
     ]
 
     assert climate_state.attributes['min_temp'] == 7.2
@@ -74,7 +70,7 @@ async def test_ecobee3_setup(hass):
     assert climate_device.name == 'HomeW'
     assert climate_device.model == 'ecobee3'
     assert climate_device.sw_version == '4.2.394'
-    assert climate_device.hub_device_id is None
+    assert climate_device.via_device_id is None
 
     # Check that an attached sensor has its own device entity that
     # is linked to the bridge
@@ -83,7 +79,7 @@ async def test_ecobee3_setup(hass):
     assert sensor_device.name == 'Kitchen'
     assert sensor_device.model == 'REMOTE SENSOR'
     assert sensor_device.sw_version == '1.0.0'
-    assert sensor_device.hub_device_id == climate_device.id
+    assert sensor_device.via_device_id == climate_device.id
 
 
 async def test_ecobee3_setup_from_cache(hass, hass_storage):
