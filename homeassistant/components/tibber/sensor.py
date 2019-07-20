@@ -131,7 +131,7 @@ class TibberSensorElPrice(Entity):
         min_price = 10000
         sum_price = 0
         off_peak_1 = 0
-        off_peak = 0
+        peak = 0
         off_peak_2 = 0
         num1 = 0
         num0 = 0
@@ -153,13 +153,13 @@ class TibberSensorElPrice(Entity):
                 max_price = max(max_price, price_total)
                 min_price = min(min_price, price_total)
                 if price_time.hour < 8:
-                    off_peak_1 = max(off_peak_1, price_total)
+                    off_peak_1 += price_total
                     num1 += 1
                 elif price_time.hour < 20:
-                    off_peak = max(off_peak, price_total)
+                    peak += price_total
                     num0 += 1
                 else:
-                    off_peak_2 = max(off_peak_2, price_total)
+                    off_peak_2 += price_total
                     num2 += 1
                 num += 1
                 sum_price += price_total
@@ -168,9 +168,9 @@ class TibberSensorElPrice(Entity):
         self._device_state_attributes['avg_price'] = round(sum_price / num, 3)
         self._device_state_attributes['min_price'] = min_price
         self._device_state_attributes['price_level'] = level
-        self._device_state_attributes['off_peak_1'] = off_peak_1 / num1
-        self._device_state_attributes['off_peak'] = off_peak / num0
-        self._device_state_attributes['off_peak_2'] = off_peak_2 / num2
+        self._device_state_attributes['off_peak_1'] = off_peak_1 / num1 if num1 > 0 else 0
+        self._device_state_attributes['peak'] = peak / num0 if num0 > 0 else 0
+        self._device_state_attributes['off_peak_2'] = off_peak_2 / num2 if num2 > 0 else 0
         return state is not None
 
 
