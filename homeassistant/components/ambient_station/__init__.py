@@ -183,7 +183,7 @@ SENSOR_TYPES = {
     TYPE_SOILTEMP7F: ('Soil Temp 7', '°F', TYPE_SENSOR, 'temperature'),
     TYPE_SOILTEMP8F: ('Soil Temp 8', '°F', TYPE_SENSOR, 'temperature'),
     TYPE_SOILTEMP9F: ('Soil Temp 9', '°F', TYPE_SENSOR, 'temperature'),
-    TYPE_SOLARRADIATION: ('Solar Rad', 'W/m^2', TYPE_SENSOR, 'illuminance'),
+    TYPE_SOLARRADIATION: ('Solar Rad', 'W/m^2', TYPE_SENSOR, None),
     TYPE_SOLARRADIATION_LX: (
         'Solar Rad (lx)', 'lx', TYPE_SENSOR, 'illuminance'),
     TYPE_TEMP10F: ('Temp 10', '°F', TYPE_SENSOR, 'temperature'),
@@ -356,7 +356,7 @@ class AmbientStation:
                 _LOGGER.debug('New station subscription: %s', data)
 
                 self.monitored_conditions = [
-                    k for k in station['lastData'].keys()
+                    k for k in station['lastData']
                     if k in SENSOR_TYPES
                 ]
 
