@@ -74,14 +74,16 @@ async def async_setup_entry(
 
     async def hold_time_service(service) -> None:
         """Set the time to hold until."""
-        entity_id = service.data[ATTR_ENTITY_ID]
+        entity_ids = service.data[ATTR_ENTITY_ID]
         time = service.data[ATTR_TIME]
 
-        _LOGGER.debug('hold_time_service: %s; %s', entity_id, time)
+        _LOGGER.debug('hold_time_service: %s; %s', entity_ids, time)
 
-        if entity_id:
+        if entity_ids == 'all':
+            target_thermostats = devices
+        elif entity_ids:
             target_thermostats = [device for device in devices
-                                  if device.entity_id in entity_id]
+                                  if device.entity_id in entity_ids]
         else:
             target_thermostats = devices
 
