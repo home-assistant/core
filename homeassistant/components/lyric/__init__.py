@@ -1,9 +1,4 @@
-"""
-Support for Honeywell Lyric devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/lyric
-"""
+"""Support for Honeywell Lyric devices."""
 import logging
 from typing import Any, Dict
 
