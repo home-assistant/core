@@ -227,12 +227,18 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_remove_entry(hass, entry):
-    """Cleanup caches before removing config entry."""
+async def async_unload_entry(hass, entry):
+    """Disconnect from HomeKit devices before unloading entry."""
     hkid = entry.data['AccessoryPairingID']
 
     if hkid in hass.data[KNOWN_DEVICES]:
         connection = hass.data[KNOWN_DEVICES][hkid]
         await connection.async_unload()
 
+    return True
+
+
+async def async_remove_entry(hass, entry):
+    """Cleanup caches before removing config entry."""
+    hkid = entry.data['AccessoryPairingID']
     hass.data[ENTITY_MAP].async_delete_map(hkid)
