@@ -1,6 +1,7 @@
 """Support for Homekit device discovery."""
 import logging
 
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -123,7 +124,8 @@ class HomeKitEntity(Entity):
         # pylint: disable=not-callable
         setup_fn(char)
 
-    async def async_state_changed(self):
+    @callback
+    def async_state_changed(self):
         """Collect new data from bridge and update the entity state in hass."""
         accessory_state = self._accessory.current_state.get(self._aid, {})
         for iid, result in accessory_state.items():
