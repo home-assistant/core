@@ -300,7 +300,10 @@ class EvoController(EvoClimateDevice):
         return TCS_PRESET_TO_HA.get(self._evo_tcs.systemModeStatus['mode'])
 
     def set_temperature(self, **kwargs) -> None:
-        """The evohome Controller doesn't have a targert temperature."""
+        """Do nothing.
+
+        The evohome Controller doesn't have a target temperature.
+        """
         return
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
