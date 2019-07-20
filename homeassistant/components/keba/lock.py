@@ -12,8 +12,10 @@ async def async_setup_platform(hass, config,
                                async_add_entities, discovery_info=None):
     """Set up the KEBA charging station platform."""
     _LOGGER.debug("Initializing KEBA charging station lock")
-    sensors = []
-    sensors.append(KebaLock('Authentication', hass))
+
+    sensors = [
+        KebaLock('Authentication', hass)
+    ]
     async_add_entities(sensors)
 
 
@@ -26,8 +28,12 @@ class KebaLock(LockDevice):
         self._key = key
         self._state = None
         self._hass = hass
-        self._attributes = {}
-        self._attributes['RFID tag'] = self._keba.rfid
+        self._attributes = {
+            'RFID tag': self._keba.rfid
+        }
+
+    def open(self, **kwargs):
+        return False
 
     @property
     def should_poll(self):
@@ -37,12 +43,12 @@ class KebaLock(LockDevice):
     @property
     def unique_id(self):
         """Return the unique ID of the binary sensor."""
-        return "keba_" + self._key
+        return self._keba.device_name + self._key
 
     @property
     def name(self):
         """Return the name of the device."""
-        return "keba_" + self._key
+        return self._key
 
     @property
     def device_state_attributes(self):

@@ -8,35 +8,33 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSORS = {
-    'Curr user': ['Max current', 'mdi:flash', 'A'],
-    'Setenergy': ['Energy target', 'mdi:gauge', ENERGY_KILO_WATT_HOUR],
-    'P': ['Charging power', 'mdi:flash', 'kW'],
-    'E pres': ['Session energy', 'mdi:gauge', ENERGY_KILO_WATT_HOUR],
-    'E total': ['Total Energy', 'mdi:gauge', ENERGY_KILO_WATT_HOUR],
-}
-
 
 async def async_setup_platform(hass, config,
                                async_add_entities, discovery_info=None):
     """Set up the KEBA charging station platform."""
     _LOGGER.debug("Initializing KEBA charging station sensors")
-    sensors = []
     keba = hass.data[DOMAIN]
 
-    for key, _ in sorted(SENSORS.items()):
-        sensors.append(KebaSensor(key, keba))
-
+    sensors = [
+        KebaSensor('Curr user', keba, 'Max current', 'mdi:flash', 'A'),
+        KebaSensor('Setenergy', keba, 'Energy target', 'mdi:gauge', ENERGY_KILO_WATT_HOUR),
+        KebaSensor('P', keba, 'Charging power', 'mdi:flash', 'kW'),
+        KebaSensor('E pres', keba, 'Session energy', 'mdi:gauge', ENERGY_KILO_WATT_HOUR),
+        KebaSensor('E total', keba, 'Total Energy', 'mdi:gauge', ENERGY_KILO_WATT_HOUR)
+    ]
     async_add_entities(sensors)
 
 
 class KebaSensor(Entity):
     """The entity class for KEBA charging stations sensors."""
 
-    def __init__(self, key, keba):
+    def __init__(self, key, keba, name, icon, unit):
         """Initialize the KEBA Sensor."""
         self._key = key
         self._keba = keba
+        self._name = name
+        self._icon = icon
+        self._unit = unit
         self._state = None
         self._attributes = {}
 
@@ -48,20 +46,17 @@ class KebaSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of the binary sensor."""
-        name, _, _ = SENSORS.get(self._key, [None, None, None])
-        return "keba_" + name
+        return self._keba.device_name + self._name
 
     @property
     def name(self):
         """Return the name of the device."""
-        name, _, _ = SENSORS.get(self._key, [None, None, None])
-        return "keba_" + name
+        return self._name
 
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        _, icon, _ = SENSORS.get(self._key, [None, None, None])
-        return icon
+        return self._icon
 
     @property
     def state(self):
@@ -71,8 +66,7 @@ class KebaSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Get the unit of measurement."""
-        _, _, unit = SENSORS.get(self._key, [None, None, None])
-        return unit
+        return self._unit
 
     @property
     def device_state_attributes(self):
@@ -86,19 +80,19 @@ class KebaSensor(Entity):
         if self._key == 'P':
             self._attributes['Power Factor cos(phi)'] = \
                 self._keba.get_value('PF')
-            self._attributes['Voltage U1'] = \
-                str(self._keba.get_value('U1')) + " V"
-            self._attributes['Voltage U2'] = \
-                str(self._keba.get_value('U2')) + " V"
-            self._attributes['Voltage U3'] = \
-                str(self._keba.get_value('U3')) + " V"
-            self._attributes['Current I1'] = \
-                str(self._keba.get_value('I1')) + " A"
-            self._attributes['Current I2'] = \
-                str(self._keba.get_value('I2')) + " A"
-            self._attributes['Current I3'] = \
-                str(self._keba.get_value('I3')) + " A"
-        elif self._key == 'Curr userr':
+            self._attributes['Voltage U1 (V)'] = \
+                str(self._keba.get_value('U1'))
+            self._attributes['Voltage U2 (V)'] = \
+                str(self._keba.get_value('U2'))
+            self._attributes['Voltage U3 (V)'] = \
+                str(self._keba.get_value('U3'))
+            self._attributes['Current I1 (A)'] = \
+                str(self._keba.get_value('I1'))
+            self._attributes['Current I2 (A)'] = \
+                str(self._keba.get_value('I2'))
+            self._attributes['Current I3 (A)'] = \
+                str(self._keba.get_value('I3'))
+        elif self._key == 'Curr user':
             self._attributes['Maximum current allowed'] = \
                 self._keba.get_value('Curr HW')
 

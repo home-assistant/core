@@ -68,6 +68,9 @@ async def async_setup(hass, config):
     except ValueError as e:
         _LOGGER.warning("Could not set failsafe mode %s", e)
 
+    # Request initial values from charging station
+    hass.loop.create_task(keba.request_data())
+
     # Register services
     for service in _SERVICE_MAP:
         hass.services.async_register(DOMAIN, service, async_execute_service)
@@ -89,6 +92,7 @@ class KebaHandler(KebaKeContact):
         self._update_listeners = []
         self._hass = hass
         self.rfid = rfid
+        self.device_name = "keba_wallbox_" + host
 
         # Ensure at least 5 seconds delay
         self._refresh_interval = max(5, refresh_interval)
