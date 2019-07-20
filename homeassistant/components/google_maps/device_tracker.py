@@ -2,13 +2,15 @@
 from datetime import timedelta
 import logging
 
+from locationsharinglib import Service
+from locationsharinglib.locationsharinglibexceptions import InvalidCookies
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA, SOURCE_TYPE_GPS)
 from homeassistant.const import (
-    ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL, ATTR_ID,
-    CONF_SCAN_INTERVAL, CONF_USERNAME)
+    ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL, ATTR_ID, CONF_SCAN_INTERVAL,
+    CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -28,7 +30,6 @@ CREDENTIALS_FILE = '.google_maps_location_sharing.cookies'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Optional(CONF_MAX_GPS_ACCURACY, default=100000): vol.Coerce(float),
-    vol.Optional(CONF_SCAN_INTERVAL, default=60): vol.Coerce(float),
 })
 
 
@@ -43,14 +44,11 @@ class GoogleMapsScanner:
 
     def __init__(self, hass, config: ConfigType, see) -> None:
         """Initialize the scanner."""
-        from locationsharinglib import Service
-        from locationsharinglib.locationsharinglibexceptions import \
-            InvalidCookies
-
         self.see = see
         self.username = config[CONF_USERNAME]
         self.max_gps_accuracy = config[CONF_MAX_GPS_ACCURACY]
-        self.scan_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
+        self.scan_interval = \
+            timedelta(seconds=config.get(CONF_SCAN_INTERVAL, 60))
 
         credfile = "{}.{}".format(hass.config.path(CREDENTIALS_FILE),
                                   slugify(self.username))
