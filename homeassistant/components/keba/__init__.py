@@ -45,6 +45,7 @@ async def async_setup(hass, config):
     refresh_interval = config[DOMAIN]['refresh_interval']
 
     keba = KebaHandler(hass, host, rfid, refresh_interval)
+    await keba.setup()  # Wait for KebaHandler setup complete
     hass.data[DOMAIN] = keba
 
     # Register services to hass
@@ -115,6 +116,10 @@ class KebaHandler(KebaKeContact):
         _LOGGER.debug("Updated data: %s, notifying %d listeners",
                       self.data, len(self._update_listeners))
 
+    def add_update_listener(self, listener):
+        """Add a listener for update notifications."""
+        self._update_listeners.append(listener)
+
     async def async_set_energy(self, param):
         """Set energy target in async way."""
         try:
@@ -158,7 +163,3 @@ class KebaHandler(KebaKeContact):
             )
         except (KeyError, ValueError) as e:
             _LOGGER.warning("Energy value is not correct %s", e)
-
-    def add_update_listener(self, listener):
-        """Add a listener for update notifications."""
-        self._update_listeners.append(listener)

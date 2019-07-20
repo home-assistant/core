@@ -93,7 +93,7 @@ class KebaSensor(Entity):
             self._attributes['Current I3 (A)'] = \
                 str(self._keba.get_value('I3'))
         elif self._key == 'Curr user':
-            self._attributes['Maximum current allowed'] = \
+            self._attributes['Maximum current allowed (A)'] = \
                 self._keba.get_value('Curr HW')
 
     def update_callback(self):
