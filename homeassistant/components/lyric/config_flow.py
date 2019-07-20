@@ -24,6 +24,7 @@ class LyricFlowHandler(ConfigFlow):
 
     def __init__(self):
         """Initialize Lyric flow."""
+        self.lyric = None
         self.client_id = None
         self.client_secret = None
         self.code = None
@@ -58,14 +59,14 @@ class LyricFlowHandler(ConfigFlow):
                 token_cache_file = self.hass.config.path(
                     CONF_LYRIC_CONFIG_FILE)
 
-                lyric = Lyric(app_name='Home Assistant', client_id=client_id,
-                              client_secret=client_secret,
-                              redirect_uri=redirect_uri,
-                              token_cache_file=token_cache_file)
+                self.lyric = Lyric(app_name='Home Assistant', client_id=client_id,
+                                   client_secret=client_secret,
+                                   redirect_uri=redirect_uri,
+                                   token_cache_file=token_cache_file)
 
                 self.hass.http.register_view(LyricAuthCallbackView())
 
-                url = lyric.getauthorize_url
+                url = self.lyric.getauthorize_url
 
                 return self.async_external_step(
                     step_id='auth',
@@ -80,26 +81,14 @@ class LyricFlowHandler(ConfigFlow):
 
     async def async_step_creation(self, user_input=None):
         """Create Lyric api and entries."""
-        client_id = self.client_id
-        client_secret = self.client_secret
-        redirect_uri = '{}{}'.format(
-            self.hass.config.api.base_url, AUTH_CALLBACK_PATH)
-        token_cache_file = self.hass.config.path(CONF_LYRIC_CONFIG_FILE)
-
-        lyric = Lyric(app_name='Home Assistant', client_id=client_id,
-                      client_secret=client_secret, redirect_uri=redirect_uri,
-                      token_cache_file=token_cache_file)
-
-        # pylint: disable=pointless-statement
-        lyric.getauthorize_url
-        lyric.authorization_code(self.code, self.flow_id)
+        self.lyric.authorization_code(self.code, self.flow_id)
 
         return self.async_create_entry(
             title='Lyric',
             data={
-                'client_id': client_id,
-                'client_secret': client_secret,
-                'token': lyric.token
+                'client_id': self.client_id,
+                'client_secret': self.client_secret,
+                'token': self.lyric.token
             }
         )
 
@@ -118,7 +107,7 @@ class LyricAuthCallbackView(HomeAssistantView):
 
         if 'code' not in request.query or 'state' not in request.query:
             return web_response.Response(
-                text="Missing code or state parameter in %s".format(
+                text="Missing code or state parameter in {}".format(
                     request.url)
             )
 
