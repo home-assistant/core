@@ -1,14 +1,17 @@
 """Tests for the PS4 Integration."""
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ps4
+from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_TITLE, MEDIA_TYPE_GAME)
 from homeassistant.components.ps4.const import (
-    COMMANDS, CONFIG_ENTRY_VERSION as VERSION,
+    ATTR_MEDIA_IMAGE_URL, COMMANDS, CONFIG_ENTRY_VERSION as VERSION,
     DEFAULT_REGION, DOMAIN, PS4_DATA)
 from homeassistant.const import (
-    ATTR_COMMAND, ATTR_ENTITY_ID, CONF_HOST,
+    ATTR_COMMAND, ATTR_ENTITY_ID, ATTR_LOCKED, CONF_HOST,
     CONF_NAME, CONF_REGION, CONF_TOKEN)
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import location
 from homeassistant.setup import async_setup_component
 from tests.common import (MockConfigEntry, mock_coro, mock_registry)
@@ -62,6 +65,29 @@ MOCK_ENTRY_VERSION_1 = MockConfigEntry(
     domain=DOMAIN, data=MOCK_DATA_VERSION_1, entry_id=MOCK_ENTRY_ID, version=1)
 
 MOCK_UNIQUE_ID = 'someuniqueid'
+
+MOCK_ID = 'CUSA00123'
+MOCK_URL = 'http://someurl.jpeg'
+MOCK_TITLE = 'Some Title'
+MOCK_TYPE = MEDIA_TYPE_GAME
+
+MOCK_GAMES_DATA_OLD_STR_FORMAT = {'mock_id': 'mock_title',
+                                  'mock_id2': 'mock_title2'}
+
+MOCK_GAMES_DATA = {
+    ATTR_LOCKED: False,
+    ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_GAME,
+    ATTR_MEDIA_IMAGE_URL: MOCK_URL,
+    ATTR_MEDIA_TITLE: MOCK_TITLE}
+
+MOCK_GAMES_DATA_LOCKED = {
+    ATTR_LOCKED: True,
+    ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_GAME,
+    ATTR_MEDIA_IMAGE_URL: MOCK_URL,
+    ATTR_MEDIA_TITLE: MOCK_TITLE}
+
+MOCK_GAMES = {MOCK_ID: MOCK_GAMES_DATA}
+MOCK_GAMES_LOCKED = {MOCK_ID: MOCK_GAMES_DATA_LOCKED}
 
 
 async def test_ps4_integration_setup(hass):
@@ -145,6 +171,80 @@ async def setup_mock_component(hass):
     entry.add_to_manager(hass.config_entries)
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
+
+
+def test_games_reformat_to_dict(hass):
+    """Test old data format is converted to new format."""
+    with patch('homeassistant.components.ps4.load_json',
+               return_value=MOCK_GAMES_DATA_OLD_STR_FORMAT),\
+            patch('homeassistant.components.ps4.save_json',
+                  side_effect=MagicMock()),\
+            patch('os.path.isfile', return_value=True):
+        mock_games = ps4.load_games(hass)
+
+    # New format is a nested dict.
+    assert isinstance(mock_games, dict)
+    assert mock_games['mock_id'][ATTR_MEDIA_TITLE] == 'mock_title'
+    assert mock_games['mock_id2'][ATTR_MEDIA_TITLE] == 'mock_title2'
+    for mock_game in mock_games:
+        mock_data = mock_games[mock_game]
+        assert isinstance(mock_data, dict)
+        assert mock_data
+        assert mock_data[ATTR_MEDIA_IMAGE_URL] is None
+        assert mock_data[ATTR_LOCKED] is False
+        assert mock_data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_GAME
+
+
+def test_load_games(hass):
+    """Test that games are loaded correctly."""
+    with patch('homeassistant.components.ps4.load_json',
+               return_value=MOCK_GAMES),\
+            patch('homeassistant.components.ps4.save_json',
+                  side_effect=MagicMock()),\
+            patch('os.path.isfile', return_value=True):
+        mock_games = ps4.load_games(hass)
+
+    assert isinstance(mock_games, dict)
+
+    mock_data = mock_games[MOCK_ID]
+    assert isinstance(mock_data, dict)
+    assert mock_data[ATTR_MEDIA_TITLE] == MOCK_TITLE
+    assert mock_data[ATTR_MEDIA_IMAGE_URL] == MOCK_URL
+    assert mock_data[ATTR_LOCKED] is False
+    assert mock_data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_GAME
+
+
+def test_loading_games_returns_dict(hass):
+    """Test that loading games always returns a dict."""
+    with patch('homeassistant.components.ps4.load_json',
+               side_effect=HomeAssistantError),\
+            patch('homeassistant.components.ps4.save_json',
+                  side_effect=MagicMock()),\
+            patch('os.path.isfile', return_value=True):
+        mock_games = ps4.load_games(hass)
+
+    assert isinstance(mock_games, dict)
+    assert not mock_games
+
+    with patch('homeassistant.components.ps4.load_json',
+               return_value='Some String'),\
+            patch('homeassistant.components.ps4.save_json',
+                  side_effect=MagicMock()),\
+            patch('os.path.isfile', return_value=True):
+        mock_games = ps4.load_games(hass)
+
+    assert isinstance(mock_games, dict)
+    assert not mock_games
+
+    with patch('homeassistant.components.ps4.load_json',
+               return_value=[]),\
+            patch('homeassistant.components.ps4.save_json',
+                  side_effect=MagicMock()),\
+            patch('os.path.isfile', return_value=True):
+        mock_games = ps4.load_games(hass)
+
+    assert isinstance(mock_games, dict)
+    assert not mock_games
 
 
 async def test_send_command(hass):
