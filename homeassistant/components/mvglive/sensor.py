@@ -23,7 +23,8 @@ CONF_PRODUCTS = 'products'
 CONF_TIMEOFFSET = 'timeoffset'
 CONF_NUMBER = 'number'
 
-DEFAULT_PRODUCT = ['U-Bahn', 'Tram', 'Bus', 'ExpressBus', 'S-Bahn']
+DEFAULT_PRODUCT = ['U-Bahn', 'Tram', 'Bus', 'ExpressBus', 'S-Bahn',
+                   'Nachteule']
 
 ICONS = {
     'U-Bahn': 'mdi:subway',
@@ -31,6 +32,7 @@ ICONS = {
     'Bus': 'mdi:bus',
     'ExpressBus': 'mdi:bus',
     'S-Bahn': 'mdi:train',
+    'Nachteule': 'mdi:owl',
     'SEV': 'mdi:checkbox-blank-circle-outline',
     '-': 'mdi:clock'
 }
