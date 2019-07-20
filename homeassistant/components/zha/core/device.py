@@ -23,7 +23,7 @@ from .const import (
     MANUFACTURER_CODE, MODEL, NAME, NWK, OUT, POWER_CONFIGURATION_CHANNEL,
     POWER_SOURCE, QUIRK_APPLIED, QUIRK_CLASS, SERVER, SERVER_COMMANDS,
     SIGNAL_AVAILABLE, UNKNOWN_MANUFACTURER, UNKNOWN_MODEL, ZDO_CHANNEL,
-    LQI, RSSI, LAST_SEEN)
+    LQI, RSSI, LAST_SEEN, ATTR_AVAILABLE)
 
 _LOGGER = logging.getLogger(__name__)
 _KEEP_ALIVE_INTERVAL = 7200
@@ -213,7 +213,8 @@ class ZHADevice:
             POWER_SOURCE: self.power_source,
             LQI: self.lqi,
             RSSI: self.rssi,
-            LAST_SEEN: update_time
+            LAST_SEEN: update_time,
+            ATTR_AVAILABLE: self.available
         }
 
     def add_cluster_channel(self, cluster_channel):
