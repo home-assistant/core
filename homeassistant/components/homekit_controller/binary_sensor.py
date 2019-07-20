@@ -20,17 +20,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     def async_add_service(aid, service):
-        if service['stype'] != 'motion':
-            return False
+        devtype = service['stype']
         info = {'aid': aid, 'iid': service['iid']}
-        async_add_entities([HomeKitMotionSensor(conn, info)], True)
-        return True
+        if devtype == 'motion':
+            async_add_entities([HomeKitMotionSensor(conn, info)], True)
+            return True
+
+        if devtype == 'contact':
+            async_add_entities([HomeKitContactSensor(conn, info)], True)
+            return True
+
+        return False
 
     conn.add_listener(async_add_service)
 
 
 class HomeKitMotionSensor(HomeKitEntity, BinarySensorDevice):
-    """Representation of a Homekit sensor."""
+    """Representation of a Homekit motion sensor."""
 
     def __init__(self, *args):
         """Initialise the entity."""
@@ -58,3 +64,28 @@ class HomeKitMotionSensor(HomeKitEntity, BinarySensorDevice):
     def is_on(self):
         """Has motion been detected."""
         return self._on
+
+class HomeKitContactSensor(HomeKitEntity, BinarySensorDevice):
+    """Representation of a Homekit contact sensor."""
+
+    def __init__(self, *args):
+        """Initialise the entity."""
+        super().__init__(*args)
+        self._state = None
+
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity is tracking."""
+        # pylint: disable=import-error
+        from homekit.model.characteristics import CharacteristicsTypes
+
+        return [
+            CharacteristicsTypes.CONTACT_STATE,
+        ]
+
+    def _update_contact_state(self, value):
+        self._state = value
+
+    @property
+    def is_on(self):
+        """Return true if the binary sensor is on/open."""
+        return self._state
