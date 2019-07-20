@@ -7,28 +7,23 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSORS = {
-    'Online': ['Wallbox', 'connectifity'],
-    'Plug': ['Plug', 'plug'],
-    'State': ['Charging state', 'power'],
-    'Tmo FS': ['Failsafe Mode', 'safety'],
-}
-
 
 async def async_setup_platform(hass, config,
                                async_add_entities, discovery_info=None):
     """Set up the KEBA charging station platform."""
     _LOGGER.debug("Initializing KEBA charging station binary sensors")
-    sensors = []
     keba = hass.data[DOMAIN]
 
-    for key, value in sorted(SENSORS.items()):
-        sensors.append(KebaBinarrySensor(key, keba, value[0], value[1]))
+    sensors = []
+    sensors.append(KebaBinarySensor('Online', keba, 'Wallbox', 'connectifity'))
+    sensors.append(KebaBinarySensor('Plug', keba, 'Plug', 'plug'))
+    sensors.append(KebaBinarySensor('State', keba, 'Charging state', 'power'))
+    sensors.append(KebaBinarySensor('Tmo FS', keba, 'Failsafe Mode', 'safety'))
 
     async_add_entities(sensors)
 
 
-class KebaBinarrySensor(BinarySensorDevice):
+class KebaBinarySensor(BinarySensorDevice):
     """Representation of a binary sensor of a KEBA charging station."""
 
     def __init__(self, key, keba, sensor_name, device_class):
@@ -37,15 +32,12 @@ class KebaBinarrySensor(BinarySensorDevice):
         self._keba = keba
         self._name = sensor_name
         self._device_class = device_class
-        self._state = None
+        self._is_on = None
         self._attributes = {}
 
     @property
     def should_poll(self):
-        """Return False.
-
-        Data update is triggered from Keba entitiy.
-        """
+        """Data updated by KebaHandler."""
         return False
 
     @property
@@ -66,7 +58,7 @@ class KebaBinarrySensor(BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if sensor is on."""
-        return self._state
+        return self._is_on
 
     @property
     def device_state_attributes(self):
@@ -76,7 +68,7 @@ class KebaBinarrySensor(BinarySensorDevice):
     async def async_update(self):
         """Get latest cached states from the device."""
         if self._key == 'Online':
-            self._state = self._keba.get_value(self._key)
+            self._is_on = self._keba.get_value(self._key)
             self._attributes['Product'] = self._keba.get_value('Product')
             self._attributes['Serial'] = self._keba.get_value('Serial')
             self._attributes['Firmware'] = self._keba.get_value('Firmware')
@@ -101,7 +93,7 @@ class KebaBinarrySensor(BinarySensorDevice):
         elif self._key == 'Plug':
             plug_state = self._keba.get_value(self._key)
             if plug_state is not None:
-                self._state = plug_state > 3
+                self._is_on = plug_state > 3
                 self._attributes["Plugged on wallbox"] = plug_state > 0
                 self._attributes["Plug locked"] = \
                     plug_state == 3 | plug_state == 7
@@ -118,7 +110,7 @@ class KebaBinarrySensor(BinarySensorDevice):
                     4: "error",
                     5: "authorization rejected"
                 }
-                self._state = plug_state == 3
+                self._is_on = plug_state == 3
                 self._attributes['status'] = switcher.get(
                     plug_state, "State undefined")
                 self._attributes['max charging rate'] = \
@@ -127,13 +119,13 @@ class KebaBinarrySensor(BinarySensorDevice):
         elif self._key == 'Tmo FS':
             plug_state = self._keba.get_value(self._key)
             if plug_state is not None:
-                self._state = plug_state == 0
+                self._is_on = plug_state == 0
                 self._attributes['Timeout'] = \
                     str(self._keba.get_value("Tmo FS")) + " s"
                 self._attributes['Current in case of failure'] = \
                     str(self._keba.get_value("Curr FS")) + " A"
         elif self._key == 'Authreq':
-            self._state = self._keba.get_value(self._key) == 0
+            self._is_on = self._keba.get_value(self._key) == 0
 
     def update_callback(self):
         """Schedule a state update."""

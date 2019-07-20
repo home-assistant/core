@@ -58,7 +58,7 @@ async def async_setup(hass, config):
         function_call = getattr(keba, function_name)
         hass.async_create_task(function_call(call.data))
 
-    # activate failsafe mode if enabled
+    # Set failsafe mode at start up of home assistant
     failsafe = config[DOMAIN]['failsafe']
     timeout = config[DOMAIN]['failsafe_timeout'] if failsafe else 0
     fallback = config[DOMAIN]['failsafe_fallback'] if failsafe else 0
@@ -66,7 +66,7 @@ async def async_setup(hass, config):
     try:
         hass.loop.create_task(keba.set_failsafe(timeout, fallback, persist))
     except ValueError as e:
-        _LOGGER.warning("Could not set failsafe mode " + str(e))
+        _LOGGER.warning("Could not set failsafe mode %s", e)
 
     # Register services
     for service in _SERVICE_MAP:
@@ -117,7 +117,7 @@ class KebaHandler(KebaKeContact):
             energy = param['energy']
             self._hass.loop.create_task(self.set_energy(energy))
         except (KeyError, ValueError) as e:
-            _LOGGER.warning("Energy value is not correct " + str(e))
+            _LOGGER.warning("Energy value is not correct %s", e)
 
     async def async_set_current(self, param):
         """Set current maximum in async way."""
@@ -125,7 +125,7 @@ class KebaHandler(KebaKeContact):
             current = param['current']
             self._hass.loop.create_task(self.set_current(current))
         except (KeyError, ValueError) as e:
-            _LOGGER.warning("Energy value is not correct " + str(e))
+            _LOGGER.warning("Energy value is not correct %s", e)
 
     async def async_start(self, param=None):
         """Authorize EV in async way."""
@@ -153,7 +153,7 @@ class KebaHandler(KebaKeContact):
                 self.set_failsafe(timout, fallback, persist)
             )
         except (KeyError, ValueError) as e:
-            _LOGGER.warning("Energy value is not correct" + str(e))
+            _LOGGER.warning("Energy value is not correct %s", e)
 
     def add_update_listener(self, listener):
         """Add a listener for update notifications."""

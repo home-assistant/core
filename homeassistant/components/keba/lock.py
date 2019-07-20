@@ -31,10 +31,7 @@ class KebaLock(LockDevice):
 
     @property
     def should_poll(self):
-        """Return False.
-
-        Data update is triggered from Keba entitiy.
-        """
+        """"Data updated by KebaHandler."""
         return False
 
     @property
