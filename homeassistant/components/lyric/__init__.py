@@ -6,7 +6,6 @@ import voluptuous as vol
 from lyric import Lyric
 
 from homeassistant.const import CONF_TOKEN
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import config_validation as cv
