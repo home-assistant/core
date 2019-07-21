@@ -14,6 +14,9 @@ from homeassistant.helpers.check_config import async_check_ha_config_file
 import homeassistant.util.yaml.loader as yaml_loader
 from homeassistant.exceptions import HomeAssistantError
 
+
+# mypy: allow-untyped-calls, allow-untyped-defs
+
 REQUIREMENTS = ('colorlog==4.0.2',)
 
 _LOGGER = logging.getLogger(__name__)

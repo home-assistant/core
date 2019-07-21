@@ -14,6 +14,8 @@ from homeassistant.util.package import (
     install_package, is_virtual_env, is_installed)
 
 
+# mypy: allow-untyped-defs, allow-incomplete-defs, no-warn-return-any
+
 def run(args: List) -> int:
     """Run a script."""
     scripts = []
