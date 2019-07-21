@@ -68,7 +68,6 @@ class VeSyncSwitchHA(VeSyncDevice, SwitchDevice):
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         attr = {}
-        attr['active_time'] = self.smartplug.active_time
         if hasattr(self.smartplug, 'weekly_energy_total'):
             attr['voltage'] = self.smartplug.voltage
             attr['weekly_energy_total'] = self.smartplug.weekly_energy_total
