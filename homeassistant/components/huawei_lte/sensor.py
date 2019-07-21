@@ -1,6 +1,7 @@
 """Support for Huawei LTE sensors."""
 import logging
 import re
+from typing import Optional
 
 import attr
 import voluptuous as vol
@@ -168,6 +169,11 @@ class HuaweiLteSensor(Entity):
     def state(self):
         """Return sensor state."""
         return self._state
+
+    @property
+    def device_class(self) -> Optional[str]:
+        """Return sensor device class."""
+        return self.meta.get("device_class")
 
     @property
     def unit_of_measurement(self):
