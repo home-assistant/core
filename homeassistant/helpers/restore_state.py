@@ -186,8 +186,8 @@ class RestoreStateData():
         # we're going to serialize it to JSON and then re-load it.
         if state is not None:
             state = State.from_dict(_encode_complex(state.as_dict()))
-
-        self.last_states[entity_id] = StoredState(state, dt_util.utcnow())
+        if state is not None:
+            self.last_states[entity_id] = StoredState(state, dt_util.utcnow())
 
         self.entity_ids.remove(entity_id)
 
