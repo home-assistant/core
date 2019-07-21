@@ -279,7 +279,7 @@ class EvoDevice(Entity):
             self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
-    def setpoints(self) -> Optional[Dict[str, Any]]:
+    def setpoints(self) -> Dict[str, Any]:
         """Return the current/next setpoints from the schedule.
 
         Only Zones & DHW controllers (but not the TCS) can have schedules.
