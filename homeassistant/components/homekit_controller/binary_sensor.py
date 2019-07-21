@@ -1,8 +1,9 @@
 """Support for Homekit motion sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
 from homekit.model.characteristics import CharacteristicsTypes
+
+from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -57,7 +58,7 @@ class HomeKitContactSensor(HomeKitEntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if the binary sensor is on/open."""
-        return True if self._state == 1 else False
+        return self._state == 1
 
 
 ENTITY_TYPES = {
