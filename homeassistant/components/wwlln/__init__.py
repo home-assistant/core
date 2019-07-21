@@ -43,8 +43,8 @@ async def async_setup(hass, config):
 
     if conf[CONF_WINDOW] < DEFAULT_WINDOW:
         _LOGGER.warning(
-            'Setting a window smaller than {0} seconds may cause Home Assistant \
-            to miss events'.format(DEFAULT_WINDOW.total_seconds()))
+            'Setting a window smaller than %s seconds may cause Home Assistant \
+            to miss events', DEFAULT_WINDOW.total_seconds())
 
     if hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
         unit_system = CONF_UNIT_SYSTEM_IMPERIAL
