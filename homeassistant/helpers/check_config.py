@@ -137,8 +137,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> \
         for p_name, p_config in config_per_platform(config, domain):
             # Validate component specific platform schema
             try:
-                p_validated = component_platform_schema(  # type: ignore
-                    p_config)
+                p_validated = component_platform_schema(p_config)
             except vol.Invalid as ex:
                 _comp_error(ex, domain, config)
                 continue
