@@ -8,7 +8,7 @@ from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_PRESET_MODE, CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF,
-    PRESET_AWAY, SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE)
+    PRESET_AWAY, SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE, PRESET_NONE)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_NAME, EVENT_HOMEASSISTANT_START,
     PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE, SERVICE_TURN_OFF,
@@ -251,7 +251,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
     def preset_modes(self):
         """Return a list of available preset modes."""
         if self._away_temp:
-            return [PRESET_AWAY]
+            return [PRESET_NONE, PRESET_AWAY]
         return None
 
     async def async_set_hvac_mode(self, hvac_mode):
@@ -404,7 +404,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
             self._saved_target_temp = self._target_temp
             self._target_temp = self._away_temp
             await self._async_control_heating(force=True)
-        elif not preset_mode and self._is_away:
+        elif preset_mode == PRESET_NONE and self._is_away:
             self._is_away = False
             self._target_temp = self._saved_target_temp
             await self._async_control_heating(force=True)

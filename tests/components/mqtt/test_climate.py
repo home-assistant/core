@@ -16,7 +16,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_AUTO,
     HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY,
-    SUPPORT_TARGET_TEMPERATURE_RANGE)
+    SUPPORT_TARGET_TEMPERATURE_RANGE, PRESET_NONE)
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 
@@ -425,7 +425,7 @@ async def test_set_away_mode(hass, mqtt_mock):
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get('preset_mode') == 'away'
 
-    await common.async_set_preset_mode(hass, None, ENTITY_CLIMATE)
+    await common.async_set_preset_mode(hass, PRESET_NONE, ENTITY_CLIMATE)
     mqtt_mock.async_publish.assert_called_once_with(
         'away-mode-topic', 'AUS', 0, False)
     state = hass.states.get(ENTITY_CLIMATE)
@@ -467,7 +467,7 @@ async def test_set_hold(hass, mqtt_mock):
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get('preset_mode') == 'hold-on'
 
-    await common.async_set_preset_mode(hass, None, ENTITY_CLIMATE)
+    await common.async_set_preset_mode(hass, PRESET_NONE, ENTITY_CLIMATE)
     mqtt_mock.async_publish.assert_called_once_with(
         'hold-topic', 'off', 0, False)
     state = hass.states.get(ENTITY_CLIMATE)
