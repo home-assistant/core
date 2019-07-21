@@ -25,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PRESET_FROST_GUARD = 'Frost Guard'
 PRESET_SCHEDULE = 'Schedule'
+PRESET_MANUAL = 'Manual'
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE)
 SUPPORT_HVAC = [HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF]
@@ -32,7 +33,7 @@ SUPPORT_PRESET = [
     PRESET_AWAY, PRESET_BOOST, PRESET_FROST_GUARD, PRESET_SCHEDULE,
 ]
 
-STATE_NETATMO_SCHEDULE = PRESET_SCHEDULE
+STATE_NETATMO_SCHEDULE = 'schedule'
 STATE_NETATMO_HG = 'hg'
 STATE_NETATMO_MAX = 'max'
 STATE_NETATMO_AWAY = PRESET_AWAY
@@ -42,7 +43,6 @@ STATE_NETATMO_MANUAL = 'manual'
 PRESET_MAP_NETATMO = {
     PRESET_FROST_GUARD: STATE_NETATMO_HG,
     PRESET_BOOST: STATE_NETATMO_MAX,
-    STATE_NETATMO_MAX: STATE_NETATMO_MAX,
     PRESET_SCHEDULE: STATE_NETATMO_SCHEDULE,
     PRESET_AWAY: STATE_NETATMO_AWAY,
     STATE_NETATMO_OFF: STATE_NETATMO_OFF
@@ -54,16 +54,17 @@ NETATMO_MAP_PRESET = {
     STATE_NETATMO_SCHEDULE: PRESET_SCHEDULE,
     STATE_NETATMO_AWAY: PRESET_AWAY,
     STATE_NETATMO_OFF: STATE_NETATMO_OFF,
-    STATE_NETATMO_MANUAL: 'Manual',
+    STATE_NETATMO_MANUAL: STATE_NETATMO_MANUAL,
 }
 
 HVAC_MAP_NETATMO = {
-    STATE_NETATMO_SCHEDULE: HVAC_MODE_AUTO,
+    PRESET_SCHEDULE: HVAC_MODE_AUTO,
     STATE_NETATMO_HG: HVAC_MODE_AUTO,
     PRESET_FROST_GUARD: HVAC_MODE_AUTO,
-    STATE_NETATMO_MAX: HVAC_MODE_HEAT,
+    PRESET_BOOST: HVAC_MODE_HEAT,
     STATE_NETATMO_OFF: HVAC_MODE_OFF,
     STATE_NETATMO_MANUAL: HVAC_MODE_AUTO,
+    PRESET_MANUAL: HVAC_MODE_AUTO,
     STATE_NETATMO_AWAY: HVAC_MODE_AUTO
 }
 
@@ -218,9 +219,9 @@ class NetatmoThermostat(ClimateDevice):
         if hvac_mode == HVAC_MODE_OFF:
             mode = STATE_NETATMO_OFF
         elif hvac_mode == HVAC_MODE_AUTO:
-            mode = STATE_NETATMO_SCHEDULE
+            mode = PRESET_SCHEDULE
         elif hvac_mode == HVAC_MODE_HEAT:
-            mode = STATE_NETATMO_MAX
+            mode = PRESET_BOOST
 
         self.set_preset_mode(mode)
 
@@ -259,6 +260,8 @@ class NetatmoThermostat(ClimateDevice):
             self._data.homestatus.setThermmode(
                 self._data.home_id, PRESET_MAP_NETATMO[preset_mode]
             )
+        else:
+            _LOGGER.error("Preset mode '%s' not available", preset_mode)
         self.update_without_throttle = True
         self.schedule_update_ha_state()
 
@@ -308,10 +311,12 @@ class NetatmoThermostat(ClimateDevice):
                 self._data.room_status[self._room_id]["setpoint_mode"]
             ]
             self._hvac_mode = HVAC_MAP_NETATMO[self._preset]
-        except KeyError:
+            self._battery_level = \
+                self._data.room_status[self._room_id].get('battery_level')
+        except KeyError as err:
             _LOGGER.error(
-                "The thermostat in room %s seems to be out of reach.",
-                self._room_id
+                "The thermostat in room %s seems to be out of reach. (%s)",
+                self._room_id, err
             )
         self._away = self._hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
 
