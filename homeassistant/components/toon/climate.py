@@ -130,9 +130,8 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if preset_mode is not None:
-            self._client.thermostat_state = self._preset = preset_mode
-            self.schedule_update_ha_state()
+        self._client.thermostat_state = self._preset = preset_mode
+        self.schedule_update_ha_state()
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""

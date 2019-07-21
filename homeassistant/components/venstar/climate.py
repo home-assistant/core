@@ -8,7 +8,7 @@ from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, SUPPORT_FAN_MODE,
     SUPPORT_TARGET_HUMIDITY, SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE, PRESET_AWAY,
+    SUPPORT_TARGET_TEMPERATURE, PRESET_AWAY, PRESET_NONE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
     HVAC_MODE_OFF)
 from homeassistant.const import (
@@ -213,6 +213,7 @@ class VenstarThermostat(ClimateDevice):
     def preset_modes(self):
         """Return valid preset modes."""
         return [
+            PRESET_NONE,
             PRESET_AWAY,
             HOLD_MODE_TEMPERATURE,
         ]
@@ -286,7 +287,7 @@ class VenstarThermostat(ClimateDevice):
             success = self._client.set_away(self._client.AWAY_AWAY)
         elif preset_mode == HOLD_MODE_TEMPERATURE:
             success = self._client.set_schedule(0)
-        elif preset_mode is None:
+        elif preset_mode == PRESET_NONE:
             success = False
             if self._client.away:
                 success = self._client.set_away(self._client.AWAY_HOME)
