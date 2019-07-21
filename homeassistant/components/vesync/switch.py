@@ -2,7 +2,6 @@
 import logging
 from homeassistant.core import callback
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.light import Light
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import VS_DISCOVERY, VS_DISPATCHERS, VS_SWITCHES, DOMAIN
 from .common import VeSyncDevice
@@ -93,7 +92,7 @@ class VeSyncSwitchHA(VeSyncDevice, SwitchDevice):
         self.smartplug.update_energy()
 
 
-class VeSyncLightSwitch(VeSyncDevice, Light):
+class VeSyncLightSwitch(VeSyncDevice, SwitchDevice):
     """Handle representation of VeSync Light Switch."""
 
     def __init__(self, switch):
