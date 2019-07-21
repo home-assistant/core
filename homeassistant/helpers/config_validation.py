@@ -611,13 +611,15 @@ def deprecated(key: str,
                 config.pop(key)
         else:
             value = default
-        if (replacement_key
-                and (replacement_key not in config
-                     or default == config.get(replacement_key))
-                and value is not None):
-            config[replacement_key] = value
+        keys = [key]
+        if replacement_key:
+            keys.append(replacement_key)
+            if value is not None and (
+                    replacement_key not in config or
+                    default == config.get(replacement_key)):
+                config[replacement_key] = value
 
-        return has_at_most_one_key(key, replacement_key)(config)
+        return has_at_most_one_key(*keys)(config)
 
     return validator
 
