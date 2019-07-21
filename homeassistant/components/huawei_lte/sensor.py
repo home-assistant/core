@@ -9,7 +9,8 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_URL, CONF_MONITORED_CONDITIONS, STATE_UNKNOWN,
 )
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA, DEVICE_CLASS_SIGNAL_STRENGTH)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -62,6 +63,7 @@ SENSOR_META = {
     ),
     "device_signal.rsrq": dict(
         name="RSRQ",
+        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         # http://www.lte-anbieter.info/technik/rsrq.php
         icon=lambda x:
         (x is None or x < -11) and "mdi:signal-cellular-outline"
@@ -71,6 +73,7 @@ SENSOR_META = {
     ),
     "device_signal.rsrp": dict(
         name="RSRP",
+        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         # http://www.lte-anbieter.info/technik/rsrp.php
         icon=lambda x:
         (x is None or x < -110) and "mdi:signal-cellular-outline"
@@ -80,6 +83,7 @@ SENSOR_META = {
     ),
     "device_signal.rssi": dict(
         name="RSSI",
+        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         # https://eyesaas.com/wi-fi-signal-strength/
         icon=lambda x:
         (x is None or x < -80) and "mdi:signal-cellular-outline"
@@ -89,6 +93,7 @@ SENSOR_META = {
     ),
     "device_signal.sinr": dict(
         name="SINR",
+        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         # http://www.lte-anbieter.info/technik/sinr.php
         icon=lambda x:
         (x is None or x < 0) and "mdi:signal-cellular-outline"
