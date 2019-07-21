@@ -44,7 +44,7 @@ class KebaLock(LockDevice):
     @property
     def unique_id(self):
         """Return the unique ID of the binary sensor."""
-        return self._keba.device_name + self._key
+        return self._keba.device_name + '_' + self._key
 
     @property
     def name(self):

@@ -16,15 +16,15 @@ async def async_setup_platform(hass, config,
     keba = hass.data[DOMAIN]
 
     sensors = [
-        KebaSensor('Curr user', keba, 'Max current', 'mdi:flash',
+        KebaSensor(keba, 'Curr user', 'Max current', 'mdi:flash',
                    'A'),
-        KebaSensor('Setenergy', keba, 'Energy target', 'mdi:gauge',
+        KebaSensor(keba, 'Setenergy', 'Energy target', 'mdi:gauge',
                    ENERGY_KILO_WATT_HOUR),
-        KebaSensor('P', keba, 'Charging power', 'mdi:flash',
+        KebaSensor(keba, 'P', 'Charging power', 'mdi:flash',
                    'kW'),
-        KebaSensor('E pres', keba, 'Session energy', 'mdi:gauge',
+        KebaSensor(keba, 'E pres', 'Session energy', 'mdi:gauge',
                    ENERGY_KILO_WATT_HOUR),
-        KebaSensor('E total', keba, 'Total Energy', 'mdi:gauge',
+        KebaSensor(keba, 'E total', 'Total Energy', 'mdi:gauge',
                    ENERGY_KILO_WATT_HOUR)
     ]
     async_add_entities(sensors)
@@ -33,7 +33,7 @@ async def async_setup_platform(hass, config,
 class KebaSensor(Entity):
     """The entity class for KEBA charging stations sensors."""
 
-    def __init__(self, key, keba, name, icon, unit):
+    def __init__(self, keba, key, name, icon, unit):
         """Initialize the KEBA Sensor."""
         self._key = key
         self._keba = keba
@@ -51,7 +51,7 @@ class KebaSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of the binary sensor."""
-        return self._keba.device_name + self._name
+        return self._keba.device_name + '_' + self._name
 
     @property
     def name(self):

@@ -15,10 +15,10 @@ async def async_setup_platform(hass, config,
     keba = hass.data[DOMAIN]
 
     sensors = [
-        KebaBinarySensor('Online', keba, 'Wallbox', 'connectifity'),
-        KebaBinarySensor('Plug', keba, 'Plug', 'plug'),
-        KebaBinarySensor('State', keba, 'Charging state', 'power'),
-        KebaBinarySensor('Tmo FS', keba, 'Failsafe Mode', 'safety')
+        KebaBinarySensor(keba, 'Online', 'Wallbox', 'connectifity'),
+        KebaBinarySensor(keba, 'Plug', 'Plug', 'plug'),
+        KebaBinarySensor(keba, 'State', 'Charging state', 'power'),
+        KebaBinarySensor(keba, 'Tmo FS', 'Failsafe Mode', 'safety')
     ]
     async_add_entities(sensors)
 
@@ -26,7 +26,7 @@ async def async_setup_platform(hass, config,
 class KebaBinarySensor(BinarySensorDevice):
     """Representation of a binary sensor of a KEBA charging station."""
 
-    def __init__(self, key, keba, sensor_name, device_class):
+    def __init__(self, keba, key, sensor_name, device_class):
         """Initialize the KEBA Sensor."""
         self._key = key
         self._keba = keba
@@ -43,7 +43,7 @@ class KebaBinarySensor(BinarySensorDevice):
     @property
     def unique_id(self):
         """Return the unique ID of the binary sensor."""
-        return self._keba.device_name + self._name
+        return self._keba.device_name + '_' + self._name
 
     @property
     def name(self):
