@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF, PRESET_AWAY, PRESET_BOOST,
-    SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE)
+    SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE, PRESET_NONE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_DEVICES, CONF_MAC, PRECISION_HALVES, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
@@ -181,7 +181,7 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
     def set_preset_mode(self, preset_mode):
         """Set new preset mode."""
-        if not preset_mode:
+        if preset_mode == PRESET_NONE:
             self.set_hvac_mode(HVAC_MODE_HEAT)
         self._thermostat.mode = HA_TO_EQ_PRESET[preset_mode]
 

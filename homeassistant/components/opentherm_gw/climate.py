@@ -170,7 +170,7 @@ class OpenThermClimate(ClimateDevice):
     @property
     def preset_modes(self):
         """Available preset modes to set."""
-        return [PRESET_AWAY]
+        return []
 
     def set_preset_mode(self, preset_mode):
         """Set the preset mode."""
