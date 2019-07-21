@@ -190,6 +190,13 @@ class ZHAGateway:
             if entity_id == entity_reference.reference_id:
                 return entity_reference
 
+    def remove_entity_reference(self, entity):
+        """Remove entity reference for given entity_id if found."""
+        if entity.zha_device.ieee in self.device_registry:
+            entity_refs = self.device_registry.get(entity.zha_device.ieee)
+            self.device_registry[entity.zha_device.ieee] = [
+                e for e in entity_refs if e.reference_id != entity.entity_id]
+
     @property
     def devices(self):
         """Return devices."""
