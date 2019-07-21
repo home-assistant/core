@@ -7,13 +7,16 @@ import attr
 
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.sun import get_astral_event_next
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback, CALLBACK_TYPE
 from homeassistant.const import (
     ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL,
     SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET, EVENT_CORE_CONFIG_UPDATE)
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 
+
+# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: no-check-untyped-defs, no-warn-return-any
 # PyLint does not like the use of threaded_listener_factory
 # pylint: disable=invalid-name
 
@@ -172,7 +175,7 @@ track_same_state = threaded_listener_factory(async_track_same_state)
 
 @callback
 @bind_hass
-def async_track_point_in_time(hass, action, point_in_time):
+def async_track_point_in_time(hass, action, point_in_time) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in time."""
     utc_point_in_time = dt_util.as_utc(point_in_time)
 
@@ -190,7 +193,8 @@ track_point_in_time = threaded_listener_factory(async_track_point_in_time)
 
 @callback
 @bind_hass
-def async_track_point_in_utc_time(hass, action, point_in_time):
+def async_track_point_in_utc_time(
+        hass, action, point_in_time) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in UTC time."""
     # Ensure point_in_time is UTC
     point_in_time = dt_util.as_utc(point_in_time)

@@ -9,6 +9,9 @@ from homeassistant.util.async_ import (
 
 from .event import async_track_time_interval, async_call_later
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 SLOW_SETUP_WARNING = 10
 SLOW_SETUP_MAX_WAIT = 60
 PLATFORM_NOT_READY_RETRIES = 10

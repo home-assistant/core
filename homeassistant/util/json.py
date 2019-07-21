@@ -1,6 +1,6 @@
 """JSON utility functions."""
 import logging
-from typing import Union, List, Dict, Optional
+from typing import Union, List, Dict, Optional, Type
 
 import json
 import os
@@ -42,7 +42,7 @@ def load_json(filename: str, default: Union[List, Dict, None] = None) \
 
 def save_json(filename: str, data: Union[List, Dict],
               private: bool = False, *,
-              encoder: Optional[json.JSONEncoder] = None) -> None:
+              encoder: Optional[Type[json.JSONEncoder]] = None) -> None:
     """Save JSON data to a file.
 
     Returns True on success.
