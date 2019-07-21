@@ -17,6 +17,7 @@ from . import DATA_KEY, RouterData
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME_TEMPLATE = 'Huawei {} {}'
+DEFAULT_DEVICE_NAME = 'LTE'
 
 DEFAULT_SENSORS = [
     "device_information.WanIPAddress",
@@ -155,9 +156,13 @@ class HuaweiLteSensor(Entity):
     @property
     def name(self) -> str:
         """Return sensor name."""
-        dname = self.data["device_information.DeviceName"]
+        try:
+            dname = self.data["device_information.DeviceName"]
+        except KeyError:
+            dname = None
         vname = self.meta.get("name", self.path)
-        return DEFAULT_NAME_TEMPLATE.format(dname, vname)
+        return DEFAULT_NAME_TEMPLATE.format(
+            dname or DEFAULT_DEVICE_NAME, vname)
 
     @property
     def state(self):
