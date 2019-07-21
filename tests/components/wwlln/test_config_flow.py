@@ -1,6 +1,5 @@
 """Define tests for the WWLLN config flow."""
 from datetime import timedelta
-import logging
 
 from asynctest import patch
 
