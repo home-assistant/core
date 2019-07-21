@@ -3,7 +3,7 @@ import asyncio
 from json import JSONEncoder
 import logging
 import os
-from typing import Dict, List, Optional, Callable, Union
+from typing import Dict, List, Optional, Callable, Union, Any
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
@@ -58,11 +58,11 @@ class Store:
         self.key = key
         self.hass = hass
         self._private = private
-        self._data = None
+        self._data = None  # type: Optional[Dict[str, Any]]
         self._unsub_delay_listener = None
         self._unsub_stop_listener = None
         self._write_lock = asyncio.Lock()
-        self._load_task = None
+        self._load_task = None  # type: Optional[asyncio.Future]
         self._encoder = encoder
 
     @property

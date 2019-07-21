@@ -10,8 +10,9 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
     STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES, ATTR_DEVICE_CLASS)
-from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_registry import (
+    EVENT_ENTITY_REGISTRY_UPDATED, RegistryEntry)
+from homeassistant.core import HomeAssistant, callback, CALLBACK_TYPE
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
@@ -84,10 +85,10 @@ class Entity:
     parallel_updates = None
 
     # Entry in the entity registry
-    registry_entry = None
+    registry_entry = None  # type: Optional[RegistryEntry]
 
     # Hold list for functions to call on remove.
-    _on_remove = None
+    _on_remove = None  # type: Optional[List[CALLBACK_TYPE]]
 
     # Context
     _context = None
@@ -390,7 +391,7 @@ class Entity:
                 self.parallel_updates.release()
 
     @callback
-    def async_on_remove(self, func):
+    def async_on_remove(self, func: CALLBACK_TYPE) -> None:
         """Add a function to call when entity removed."""
         if self._on_remove is None:
             self._on_remove = []

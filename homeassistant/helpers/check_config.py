@@ -1,6 +1,6 @@
 """Helper to check the configuration file."""
 from collections import OrderedDict, namedtuple
-# from typing import Dict, List, Sequence
+from typing import List
 
 import attr
 import voluptuous as vol
@@ -28,7 +28,8 @@ CheckConfigError = namedtuple(
 class HomeAssistantConfig(OrderedDict):
     """Configuration result with errors attribute."""
 
-    errors = attr.ib(default=attr.Factory(list))
+    errors = attr.ib(
+        default=attr.Factory(list))  # type: List[CheckConfigError]
 
     def add_error(self, message, domain=None, config=None):
         """Add a single error."""

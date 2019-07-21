@@ -2,12 +2,13 @@
 
 import logging
 from contextlib import suppress
+from datetime import datetime
 from itertools import islice
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Callable, Dict, List, Set, Tuple
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, Context, callback
+from homeassistant.core import HomeAssistant, Context, callback, CALLBACK_TYPE
 from homeassistant.const import CONF_CONDITION, CONF_TIMEOUT
 from homeassistant import exceptions
 from homeassistant.helpers import (
@@ -89,13 +90,13 @@ class Script():
         self.name = name
         self._change_listener = change_listener
         self._cur = -1
-        self._exception_step = None
+        self._exception_step = None  # type: Optional[int]
         self.last_action = None
-        self.last_triggered = None
+        self.last_triggered = None  # type: Optional[datetime]
         self.can_cancel = any(CONF_DELAY in action or CONF_WAIT_TEMPLATE
                               in action for action in self.sequence)
-        self._async_listener = []
-        self._config_cache = {}
+        self._async_listener = []  # type: List[CALLBACK_TYPE]
+        self._config_cache = {}  # type: Dict[Set[Tuple], Callable[..., bool]]
         self._actions = {
             ACTION_DELAY: self._async_delay,
             ACTION_WAIT_TEMPLATE: self._async_wait_template,
