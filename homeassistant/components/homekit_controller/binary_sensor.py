@@ -8,33 +8,6 @@ from . import KNOWN_DEVICES, HomeKitEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
-    """Legacy set up platform."""
-    pass
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up Homekit lighting."""
-    hkid = config_entry.data['AccessoryPairingID']
-    conn = hass.data[KNOWN_DEVICES][hkid]
-
-    def async_add_service(aid, service):
-        devtype = service['stype']
-        info = {'aid': aid, 'iid': service['iid']}
-        if devtype == 'motion':
-            async_add_entities([HomeKitMotionSensor(conn, info)], True)
-            return True
-
-        if devtype == 'contact':
-            async_add_entities([HomeKitContactSensor(conn, info)], True)
-            return True
-
-        return False
-
-    conn.add_listener(async_add_service)
-
-
 class HomeKitMotionSensor(HomeKitEntity, BinarySensorDevice):
     """Representation of a Homekit motion sensor."""
 
@@ -89,4 +62,32 @@ class HomeKitContactSensor(HomeKitEntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if the binary sensor is on/open."""
-        return self._state
+        return True if self._state == 1 else False
+
+
+ENTITY_TYPES = {
+    'motion': HomeKitMotionSensor,
+    'contact': HomeKitContactSensor,
+}
+
+
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Legacy set up platform."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Homekit lighting."""
+    hkid = config_entry.data['AccessoryPairingID']
+    conn = hass.data[KNOWN_DEVICES][hkid]
+
+    def async_add_service(aid, service):
+        entity_class = ENTITY_TYPES.get(service['stype'])
+        if not entity_class:
+            return False
+        info = {'aid': aid, 'iid': service['iid']}
+        async_add_entities([entity_class(conn, info)], True)
+        return True
+
+    conn.add_listener(async_add_service)
