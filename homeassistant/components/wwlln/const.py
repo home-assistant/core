@@ -8,4 +8,4 @@ CONF_WINDOW = 'window'
 DATA_CLIENT = 'client'
 
 DEFAULT_RADIUS = 25
-DEFAULT_WINDOW = timedelta(minutes=10)
+DEFAULT_WINDOW = timedelta(hours=1)

@@ -25,7 +25,7 @@ def configured_instances(hass):
 class WWLLNFlowHandler(config_entries.ConfigFlow):
     """Handle a WWLLN config flow."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def _show_form(self, errors=None):
