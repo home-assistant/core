@@ -65,6 +65,7 @@ class HomeKitMotionSensor(HomeKitEntity, BinarySensorDevice):
         """Has motion been detected."""
         return self._on
 
+
 class HomeKitContactSensor(HomeKitEntity, BinarySensorDevice):
     """Representation of a Homekit contact sensor."""
 
