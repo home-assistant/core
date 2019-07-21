@@ -42,6 +42,10 @@ ICON = 'mdi:bus'
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
+BUS_TYPES = ['BUS', 'EXB', 'TB']
+TRAIN_TYPES = ['LET', 'S', 'REG', 'IC', 'LYN', 'TOG']
+METRO_TYPES = ['M']
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STOP_ID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -51,23 +55,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_DEPARTURE_TYPE, default=[]):
         vol.All(cv.ensure_list,
-                [vol.In([
-                    'BUS',
-                    'EXB',
-                    'TB',
-                    'LET',
-                    'M',
-                    'S',
-                    'REG',
-                    'IC',
-                    'LYN',
-                    'TOG'
-                ])])
+                [vol.In([*BUS_TYPES, *TRAIN_TYPES, *METRO_TYPES])])
 })
-
-BUS_TYPES = ['BUS', 'EXB', 'TB']
-TRAIN_TYPES = ['LET', 'S', 'REG', 'IC', 'LYN', 'TOG']
-METRO_TYPES = ['M']
 
 
 def due_in_minutes(timestamp):
