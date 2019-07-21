@@ -9,6 +9,7 @@ import evohomeclient2
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, CURRENT_HVAC_OFF,
+    HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF,
     PRESET_AWAY, PRESET_ECO, PRESET_HOME, PRESET_NONE,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE)
 from homeassistant.const import PRECISION_TENTHS
