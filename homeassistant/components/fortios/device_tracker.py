@@ -2,9 +2,6 @@
 Support to use FortiOS device like FortiGate as device tracker.
 
 This component is part of the device_tracker platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/fortiosapi/
 """
 import logging
 import voluptuous as vol
@@ -14,8 +11,7 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.const import CONF_VERIFY_SSL
-
-REQUIREMENTS = ['fortiosapi==0.10.8']
+from fortiosapi import FortiOSAPI
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_VERIFY_SSL = False
@@ -30,7 +26,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_scanner(hass, config):
     """Validate the configuration and return a FortiOSDeviceScanner."""
-    from fortiosapi import FortiOSAPI
 
     host = config[DOMAIN].get(CONF_HOST)
     verify_ssl = config[DOMAIN].get(CONF_VERIFY_SSL)
@@ -38,22 +33,20 @@ def get_scanner(hass, config):
 
     _LOGGER.debug("host : %s", host)
     _LOGGER.debug("verify_ssl : %s", verify_ssl)
-    _LOGGER.debug("token : %s", token)
-
-    _LOGGER.debug('fortios, get_scanner')
 
     fgt = FortiOSAPI()
 
     try:
         fgt.tokenlogin(host, token, verify_ssl)
     except Exception as ex:  # pylint: disable=broad-except
-        _LOGGER.error("Unable login to fgt Exception : %s", ex)
+        _LOGGER.error("Failed to login to FortiOS API")
+        return None
 
     try:
         scanner = FortiOSDeviceScanner(fgt)
     except Exception as ex:  # pylint: disable=broad-except
         _LOGGER.error("FortiOS get_scanner Initialize failed: %s", ex)
-        return False
+        return None
 
     return scanner
 
@@ -66,9 +59,8 @@ class FortiOSDeviceScanner(DeviceScanner):
         self._clients = {}
         self._clients_json = {}
         self._fgt = fgt
-        self._update()
 
-    def _update(self):
+    def update(self):
         """Update clients from the device."""
         clients_json = (self._fgt.monitor('user/device/select',
                                           ''))  # pylint: disable=W0105
@@ -83,26 +75,26 @@ class FortiOSDeviceScanner(DeviceScanner):
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
-        self._update()
+        self.update()
         return self._clients
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        _LOGGER.debug("get_device_name device=%s", device)
+        _LOGGER.debug("Getting name of device %s", device)
 
         device = device.lower()
 
         data = self._clients_json
 
         if data == 0:
-            _LOGGER.error('get_device_name no json results')
+            _LOGGER.error('No json results to get device names')
             return None
 
         for client in data['results']:
             if client['mac'] == device:
                 try:
                     name = client['host']['name']
-                    _LOGGER.debug("get_device_name name=%s", name)
+                    _LOGGER.debug("Getting device name=%s", name)
                     return name
                 except Exception as ex:  # pylint: disable=broad-except
                     _LOGGER.error("No name found in clients_json: %s", ex)
