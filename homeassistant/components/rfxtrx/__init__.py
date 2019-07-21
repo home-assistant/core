@@ -28,6 +28,7 @@ CONF_DATA_TYPE = 'data_type'
 CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_FIRE_EVENT = 'fire_event'
 CONF_DUMMY = 'dummy'
+CONF_NETWORK = 'network'
 CONF_DEBUG = 'debug'
 CONF_OFF_DELAY = 'off_delay'
 EVENT_BUTTON_PRESSED = 'button_pressed'
@@ -73,6 +74,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_DEVICE): cv.string,
         vol.Optional(CONF_DEBUG, default=False): cv.boolean,
         vol.Optional(CONF_DUMMY, default=False): cv.boolean,
+        vol.Optional(CONF_NETWORK, default=False): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -102,11 +104,16 @@ def setup(hass, config):
     device = config[DOMAIN][ATTR_DEVICE]
     debug = config[DOMAIN][ATTR_DEBUG]
     dummy_connection = config[DOMAIN][ATTR_DUMMY]
+    network_connection = config[DOMAIN][ATTR_NETWORK]
 
     if dummy_connection:
         rfx_object = rfxtrxmod.Connect(
             device, None, debug=debug,
             transport_protocol=rfxtrxmod.DummyTransport2)
+    elif network_connection:
+        rfx_object = rfxtrxmod.Connect(
+            device, None, debug=debug,
+            transport_protocol=rfxtrxmod.PyNetworkTransport)
     else:
         rfx_object = rfxtrxmod.Connect(device, None, debug=debug)
 
