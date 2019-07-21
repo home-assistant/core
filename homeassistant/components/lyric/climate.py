@@ -101,6 +101,8 @@ class LyricThermostat(LyricDeviceEntity, ClimateDevice):
     def __init__(self, device, location, temp_unit) -> None:
         """Initialize the thermostat."""
         unique_id = '{}_climate'.format(device.macID)
+        name = '{}'.format(device.name)
+
         self._unit = temp_unit
 
         # Setup supported hvac modes
@@ -131,7 +133,7 @@ class LyricThermostat(LyricDeviceEntity, ClimateDevice):
         self._schedule_type = None
         self._schedule_sub_type = None
 
-        super().__init__(device, location, unique_id, None, None, None)
+        super().__init__(device, location, unique_id, name, None, None)
 
     @property
     def supported_features(self) -> int:
