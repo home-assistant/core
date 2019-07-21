@@ -103,7 +103,7 @@ class Entity:
         return True
 
     @property
-    def unique_id(self) -> str:
+    def unique_id(self) -> Optional[str]:
         """Return a unique ID."""
         return None
 
@@ -142,7 +142,7 @@ class Entity:
         return None
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> Optional[str]:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return None
 
@@ -186,7 +186,7 @@ class Entity:
         return False
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> Optional[int]:
         """Flag supported features."""
         return None
 

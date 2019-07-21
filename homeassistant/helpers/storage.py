@@ -3,7 +3,7 @@ import asyncio
 from json import JSONEncoder
 import logging
 import os
-from typing import Dict, List, Optional, Callable, Union, Any
+from typing import Dict, List, Optional, Callable, Union, Any, Type
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
@@ -52,7 +52,7 @@ class Store:
     """Class to help storing data."""
 
     def __init__(self, hass, version: int, key: str, private: bool = False, *,
-                 encoder: JSONEncoder = None):
+                 encoder: Optional[Type[JSONEncoder]] = None):
         """Initialize storage class."""
         self.version = version
         self.key = key

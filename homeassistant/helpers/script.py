@@ -81,7 +81,8 @@ class _SuspendScript(Exception):
 class Script():
     """Representation of a script."""
 
-    def __init__(self, hass: HomeAssistant, sequence, name: str = None,
+    def __init__(self, hass: HomeAssistant, sequence,
+                 name: Optional[str] = None,
                  change_listener=None) -> None:
         """Initialize the script."""
         self.hass = hass
