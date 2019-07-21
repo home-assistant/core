@@ -12,7 +12,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from .const import (DATA_LYRIC_CLIENT, DOMAIN,
                     CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_LYRIC_CONFIG_FILE,
-                    DATA_LYRIC_CONFIG)
+                    DATA_LYRIC_CONFIG, SERVICE_HOLD_TIME)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,6 +73,9 @@ async def async_unload_entry(
     """Unload Lyric config entry."""
     for component in 'climate', 'sensor':
         await hass.config_entries.async_forward_entry_unload(entry, component)
+
+    # Remove the climate service
+    await hass.services.async_remove(DOMAIN, SERVICE_HOLD_TIME)
 
     del hass.data[DOMAIN]
 

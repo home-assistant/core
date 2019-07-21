@@ -12,3 +12,5 @@ DATA_LYRIC_CONFIG = 'lyric_config'
 CONF_CLIENT_ID = 'client_id'
 CONF_CLIENT_SECRET = 'client_secret'
 CONF_LYRIC_CONFIG_FILE = 'lyric.conf'
+
+SERVICE_HOLD_TIME = 'set_hold_time'

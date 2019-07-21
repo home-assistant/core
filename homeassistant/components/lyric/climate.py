@@ -21,11 +21,11 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
 from . import LyricDeviceEntity
-from .const import DATA_LYRIC_CLIENT, DATA_LYRIC_DEVICES, DOMAIN
+from .const import (DATA_LYRIC_CLIENT, DATA_LYRIC_DEVICES, DOMAIN,
+                    SERVICE_HOLD_TIME)
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_HOLD_TIME = 'set_hold_time'
 PRESET_NO_HOLD = 'NoHold'
 PRESET_TEMPORARY_HOLD = 'TemporaryHold'
 PRESET_PERMANENT_HOLD = 'PermanentHold'
@@ -93,13 +93,6 @@ async def async_setup_entry(
     hass.services.async_register(
         DOMAIN, SERVICE_HOLD_TIME, hold_time_service,
         schema=HOLD_PERIOD_SCHEMA)
-
-
-async def async_unload_entry(
-        hass: HomeAssistantType, entry: ConfigType
-) -> bool:
-    """Unload Lyric thermostat config entry."""
-    hass.services.async_remove(DOMAIN, SERVICE_HOLD_TIME)
 
 
 class LyricThermostat(LyricDeviceEntity, ClimateDevice):
