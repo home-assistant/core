@@ -318,6 +318,18 @@ class SensiboClimate(ClimateDevice):
             await self._client.async_set_ac_state_property(
                 self._id, 'swing', swing_mode, self._ac_states)
 
+    async def async_turn_on(self):
+        """Turn Sensibo unit on."""
+        with async_timeout.timeout(TIMEOUT):
+            await self._client.async_set_ac_state_property(
+                self._id, 'on', True, self._ac_states)
+
+    async def async_turn_off(self):
+        """Turn Sensibo unit on."""
+        with async_timeout.timeout(TIMEOUT):
+            await self._client.async_set_ac_state_property(
+                self._id, 'on', False, self._ac_states)
+
     async def async_assume_state(self, state):
         """Set external state."""
         change_needed = \

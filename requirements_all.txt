@@ -505,7 +505,7 @@ gearbest_parser==1.0.7
 geizhals==0.0.9
 
 # homeassistant.components.geniushub
-geniushub-client==0.4.12
+geniushub-client==0.4.15
 
 # homeassistant.components.geo_json_events
 # homeassistant.components.nsw_rural_fire_service_feed
@@ -610,7 +610,7 @@ hole==0.3.0
 holidays==0.9.10
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190719.0
+home-assistant-frontend==20190721.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.4
@@ -1939,7 +1939,7 @@ zengge==0.2
 zeroconf==0.23.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.18
+zha-quirks==0.0.19
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9

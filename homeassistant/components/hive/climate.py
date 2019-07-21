@@ -2,7 +2,7 @@
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF, PRESET_BOOST,
-    SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE)
+    SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE, PRESET_NONE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import DATA_HIVE, DOMAIN
@@ -21,7 +21,7 @@ HASS_TO_HIVE_STATE = {
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 SUPPORT_HVAC = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
-SUPPORT_PRESET = [PRESET_BOOST]
+SUPPORT_PRESET = [PRESET_NONE, PRESET_BOOST]
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -168,7 +168,7 @@ class HiveClimateEntity(ClimateDevice):
 
     def set_preset_mode(self, preset_mode) -> None:
         """Set new preset mode."""
-        if preset_mode is None and self.preset_mode == PRESET_BOOST:
+        if preset_mode == PRESET_NONE and self.preset_mode == PRESET_BOOST:
             self.session.heating.turn_boost_off(self.node_id)
 
         elif preset_mode == PRESET_BOOST:
