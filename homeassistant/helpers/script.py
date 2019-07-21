@@ -95,7 +95,6 @@ class Script():
         self.can_cancel = any(CONF_DELAY in action or CONF_WAIT_TEMPLATE
                               in action for action in self.sequence)
         self._async_listener = []
-        self._template_cache = {}
         self._config_cache = {}
         self._actions = {
             ACTION_DELAY: self._async_delay,
