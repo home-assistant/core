@@ -49,10 +49,10 @@ HVAC_STATE_MAPPINGS = {
 HVAC_CURRENT_MAPPINGS = {
     "Idle": CURRENT_HVAC_IDLE,
     "Heat": CURRENT_HVAC_HEAT,
-    "Pending Heat": CURRENT_HVAC_HEAT,
+    "Pending Heat": CURRENT_HVAC_IDLE,
     "Heating": CURRENT_HVAC_HEAT,
     "Cool": CURRENT_HVAC_COOL,
-    "Pending Cool": CURRENT_HVAC_COOL,
+    "Pending Cool": CURRENT_HVAC_IDLE,
     "Cooling": CURRENT_HVAC_COOL,
     "Fan Only": CURRENT_HVAC_FAN,
     "Vent / Economiser":  CURRENT_HVAC_FAN,
