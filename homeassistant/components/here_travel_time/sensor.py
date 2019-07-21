@@ -54,6 +54,12 @@ ATTR_DURATION = 'duration'
 ATTR_DISTANCE = 'distance'
 ATTR_ROUTE = 'route'
 
+ATTR_DURATION_WITHOUT_TRAFFIC = 'duration_without_traffic'
+ATTR_ORIGIN_NAME = 'origin_name'
+ATTR_DESTINATION_NAME = 'destination_name'
+
+UNIT_OF_MEASUREMENT = 'min'
+
 SCAN_INTERVAL = timedelta(minutes=5)
 
 TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone', 'person']
@@ -132,7 +138,7 @@ class HERETravelTimeSensor(Entity):
         self._hass = hass
         self._name = name
         self._here_data = here_data
-        self._unit_of_measurement = 'min'
+        self._unit_of_measurement = UNIT_OF_MEASUREMENT
         self._origin_entity_id = None
         self._destination_entity_id = None
 
@@ -172,9 +178,9 @@ class HERETravelTimeSensor(Entity):
         res[ATTR_DISTANCE] = self._here_data.distance
         res[ATTR_ROUTE] = self._here_data.route
         res[CONF_UNIT_SYSTEM] = self._here_data.units
-        res['duration_without_traffic'] = self._here_data.base_time / 60
-        res['origin_name'] = self._here_data.origin_name
-        res['destination_name'] = self._here_data.destination_name
+        res[ATTR_DURATION_WITHOUT_TRAFFIC] = self._here_data.base_time / 60
+        res[ATTR_ORIGIN_NAME] = self._here_data.origin_name
+        res[ATTR_DESTINATION_NAME] = self._here_data.destination_name
         res[CONF_MODE] = self._here_data.travel_mode
         res[CONF_TRAFFIC_MODE] = self._here_data.traffic_mode
         return res
@@ -328,11 +334,7 @@ class HERETravelTimeData():
 
             self.attribution = None
             self.base_time = summary['baseTime']
-            # Check if trafficTime is in response
-            if self.travel_mode in [TRAVEL_MODE_CAR, TRAVEL_MODE_TRUCK]:
-                self.duration = summary['trafficTime']
-            else:
-                self.duration = self.base_time
+            self.duration = summary['travelTime']
             distance = summary['distance']
             if self.units == CONF_UNIT_SYSTEM_IMPERIAL:
                 # Convert to miles.
