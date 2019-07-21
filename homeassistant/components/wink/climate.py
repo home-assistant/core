@@ -10,7 +10,7 @@ from homeassistant.components.climate.const import (
     FAN_LOW, FAN_MEDIUM, FAN_ON, HVAC_MODE_AUTO, HVAC_MODE_COOL,
     HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, HVAC_MODE_OFF, PRESET_AWAY, PRESET_ECO,
     SUPPORT_AUX_HEAT, SUPPORT_FAN_MODE, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE)
+    SUPPORT_TARGET_TEMPERATURE_RANGE, PRESET_NONE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS)
 from homeassistant.helpers.temperature import display_temp as show_temp
