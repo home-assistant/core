@@ -50,7 +50,7 @@ class ZhaEntity(RestoreEntity, entity.Entity):
         self._available = False
         self._component = kwargs['component']
         self._unsubs = []
-        self.remove_future = asyncio.Future()
+        self.remove_future = None
         for channel in channels:
             self.cluster_channels[channel.name] = channel
 
@@ -123,6 +123,7 @@ class ZhaEntity(RestoreEntity, entity.Entity):
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
+        self.remove_future = asyncio.Future()
         await self.async_check_recently_seen()
         await self.async_accept_signal(
             None, "{}_{}".format(self.zha_device.available_signal, 'entity'),
@@ -151,8 +152,10 @@ class ZhaEntity(RestoreEntity, entity.Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
-        for unsub in self._unsubs:
+        for unsub in self._unsubs[:]:
             unsub()
+            self._unsubs.remove(unsub)
+        self.zha_device.gateway.remove_entity_reference(self)
         self.remove_future.set_result(True)
 
     @callback
