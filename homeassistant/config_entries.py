@@ -14,6 +14,9 @@ from homeassistant.exceptions import HomeAssistantError, ConfigEntryNotReady
 from homeassistant.setup import async_setup_component, async_process_deps_reqs
 from homeassistant.util.decorator import Registry
 
+
+# mypy: allow-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 _UNDEF = object()
 
