@@ -40,7 +40,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Environment Canada camera."""
-    from env_canada import ECRadar
+
+    try:
+        from env_canada import ECRadar
+    except ImportError:
+        raise ImportError('Missing prerequsites. Run: sudo apt-get install '
+                          'libatlas-base-dev libopenjp2-7')
 
     if config.get(CONF_STATION):
         radar_object = ECRadar(station_id=config[CONF_STATION],
