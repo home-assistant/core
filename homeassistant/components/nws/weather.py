@@ -244,7 +244,7 @@ class NWSWeather(WeatherEntity):
         """Return the current wind bearing (degrees)."""
         wind_bearing = None
         if self.observation:
-            wind_bearing = self.observation.get('windBearing')
+            wind_bearing = self.observation.get('windDirection')
         return wind_bearing
 
     @property

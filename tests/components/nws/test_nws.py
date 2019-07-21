@@ -29,7 +29,7 @@ from tests.common import get_test_home_assistant, MockDependency
 OBS = {
     'temperature': 7,
     'relativeHumidity': 10,
-    'windBearing': 180,
+    'windDirection': 180,
     'visibility': 10000,
     'windSpeed': 10,
     'seaLevelPressure': 30000,
