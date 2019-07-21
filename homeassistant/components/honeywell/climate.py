@@ -15,7 +15,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_TEMPERATURE_RANGE,
     CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, CURRENT_HVAC_OFF,
     HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_HEAT_COOL,
-    PRESET_AWAY,
+    PRESET_AWAY, PRESET_NONE,
 )
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
@@ -229,7 +229,7 @@ class HoneywellUSThermostat(ClimateDevice):
     @property
     def preset_modes(self) -> Optional[List[str]]:
         """Return a list of available preset modes."""
-        return [PRESET_AWAY]
+        return [PRESET_NONE, PRESET_AWAY]
 
     @property
     def is_aux_heat(self) -> Optional[str]:
