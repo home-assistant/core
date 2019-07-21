@@ -70,7 +70,7 @@ class Store:
         """Return the config path."""
         return self.hass.config.path(STORAGE_DIR, self.key)
 
-    async def async_load(self) -> Optional[Union[Dict, List]]:
+    async def async_load(self) -> Union[Dict, List, None]:
         """Load data.
 
         If the expected version does not match the given version, the migrate
