@@ -4,6 +4,8 @@ from functools import partial
 from homeassistant import config_entries
 
 
+# mypy: allow-incomplete-defs, allow-untyped-defs
+
 def register_discovery_flow(domain, title, discovery_function,
                             connection_class):
     """Register flow for discovered integrations that not require auth."""

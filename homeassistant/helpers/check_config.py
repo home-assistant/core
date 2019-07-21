@@ -1,6 +1,6 @@
 """Helper to check the configuration file."""
 from collections import OrderedDict, namedtuple
-# from typing import Dict, List, Sequence
+from typing import List
 
 import attr
 import voluptuous as vol
@@ -17,6 +17,9 @@ import homeassistant.util.yaml.loader as yaml_loader
 from homeassistant.exceptions import HomeAssistantError
 
 
+# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: no-warn-return-any
+
 CheckConfigError = namedtuple(
     'CheckConfigError', "message domain config")
 
@@ -25,7 +28,8 @@ CheckConfigError = namedtuple(
 class HomeAssistantConfig(OrderedDict):
     """Configuration result with errors attribute."""
 
-    errors = attr.ib(default=attr.Factory(list))
+    errors = attr.ib(
+        default=attr.Factory(list))  # type: List[CheckConfigError]
 
     def add_error(self, message, domain=None, config=None):
         """Add a single error."""
@@ -114,9 +118,10 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> \
             result.add_error("Component not found: {}".format(domain))
             continue
 
-        if hasattr(component, 'CONFIG_SCHEMA'):
+        config_schema = getattr(component, 'CONFIG_SCHEMA', None)
+        if config_schema is not None:
             try:
-                config = component.CONFIG_SCHEMA(config)
+                config = config_schema(config)
                 result[domain] = config[domain]
             except vol.Invalid as ex:
                 _comp_error(ex, domain, config)
@@ -133,8 +138,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> \
         for p_name, p_config in config_per_platform(config, domain):
             # Validate component specific platform schema
             try:
-                p_validated = component_platform_schema(  # type: ignore
-                    p_config)
+                p_validated = component_platform_schema(p_config)
             except vol.Invalid as ex:
                 _comp_error(ex, domain, config)
                 continue
@@ -163,9 +167,10 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> \
                 continue
 
             # Validate platform specific schema
-            if hasattr(platform, 'PLATFORM_SCHEMA'):
+            platform_schema = getattr(platform, 'PLATFORM_SCHEMA', None)
+            if platform_schema is not None:
                 try:
-                    p_validated = platform.PLATFORM_SCHEMA(p_validated)
+                    p_validated = platform_schema(p_validated)
                 except vol.Invalid as ex:
                     _comp_error(
                         ex, '{}.{}'.format(domain, p_name), p_validated)

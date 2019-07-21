@@ -12,6 +12,10 @@ from homeassistant.loader import bind_hass
 
 from .typing import HomeAssistantType
 
+
+# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: no-check-untyped-defs, no-warn-return-any
+
 _LOGGER = logging.getLogger(__name__)
 _UNDEF = object()
 
