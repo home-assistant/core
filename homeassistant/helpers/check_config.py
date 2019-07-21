@@ -118,9 +118,10 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> \
             result.add_error("Component not found: {}".format(domain))
             continue
 
-        if hasattr(component, 'CONFIG_SCHEMA'):
+        config_schema = getattr(component, 'CONFIG_SCHEMA', None)
+        if config_schema is not None:
             try:
-                config = component.CONFIG_SCHEMA(config)
+                config = config_schema(config)
                 result[domain] = config[domain]
             except vol.Invalid as ex:
                 _comp_error(ex, domain, config)
@@ -166,9 +167,10 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> \
                 continue
 
             # Validate platform specific schema
-            if hasattr(platform, 'PLATFORM_SCHEMA'):
+            platform_schema = getattr(platform, 'PLATFORM_SCHEMA', None)
+            if platform_schema is not None:
                 try:
-                    p_validated = platform.PLATFORM_SCHEMA(p_validated)
+                    p_validated = platform_schema(p_validated)
                 except vol.Invalid as ex:
                     _comp_error(
                         ex, '{}.{}'.format(domain, p_name), p_validated)

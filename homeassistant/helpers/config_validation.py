@@ -95,7 +95,8 @@ def boolean(value: Any) -> bool:
         if value in ('0', 'false', 'no', 'off', 'disable'):
             return False
     elif isinstance(value, Number):
-        return value != 0
+        # type ignore: https://github.com/python/mypy/issues/3186
+        return value != 0  # type: ignore
     raise vol.Invalid('invalid boolean value {}'.format(value))
 
 
@@ -559,7 +560,8 @@ def deprecated(key: str,
     else:
         # Unclear when it is None, but it happens, so let's guard.
         # https://github.com/home-assistant/home-assistant/issues/24982
-        module_name = __name__
+        # type ignore/unreachable: https://github.com/python/typeshed/pull/3137
+        module_name = __name__  # type: ignore
 
     if replacement_key and invalidation_version:
         warning = ("The '{key}' option (with value '{value}') is"

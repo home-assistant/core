@@ -223,6 +223,7 @@ class RestoreEntity(Entity):
 
     async def async_internal_added_to_hass(self) -> None:
         """Register this entity as a restorable entity."""
+        assert self.hass is not None
         _, data = await asyncio.gather(
             super().async_internal_added_to_hass(),
             RestoreStateData.async_get_instance(self.hass),
@@ -231,6 +232,7 @@ class RestoreEntity(Entity):
 
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
+        assert self.hass is not None
         _, data = await asyncio.gather(
             super().async_internal_will_remove_from_hass(),
             RestoreStateData.async_get_instance(self.hass),

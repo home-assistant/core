@@ -426,6 +426,7 @@ class Entity:
         Not to be extended by integrations.
         """
         if self.registry_entry is not None:
+            assert self.hass is not None
             self.async_on_remove(self.hass.bus.async_listen(
                 EVENT_ENTITY_REGISTRY_UPDATED, self._async_registry_updated))
 
