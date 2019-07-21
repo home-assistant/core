@@ -10,7 +10,7 @@ from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF,
     CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, CURRENT_HVAC_OFF,
-    PRESET_AWAY, PRESET_ECO, PRESET_HOME,
+    PRESET_AWAY, PRESET_ECO, PRESET_HOME, PRESET_NONE,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE)
 from homeassistant.const import PRECISION_TENTHS
 from homeassistant.util.dt import parse_datetime
@@ -40,12 +40,11 @@ HA_PRESET_TO_TCS = {
 TCS_PRESET_TO_HA = {v: k for k, v in HA_PRESET_TO_TCS.items()}
 
 EVO_PRESET_TO_HA = {
-    EVO_FOLLOW: None,
+    EVO_FOLLOW: PRESET_NONE,
     EVO_TEMPOVER: 'temporary',
     EVO_PERMOVER: 'permanent',
 }
-HA_PRESET_TO_EVO = {v: k for k, v in EVO_PRESET_TO_HA.items()
-                    if v is not None}
+HA_PRESET_TO_EVO = {v: k for k, v in EVO_PRESET_TO_HA.items()}
 
 
 def setup_platform(hass, hass_config, add_entities,
