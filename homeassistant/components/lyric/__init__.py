@@ -75,7 +75,7 @@ async def async_unload_entry(
         await hass.config_entries.async_forward_entry_unload(entry, component)
 
     # Remove the climate service
-    await hass.services.async_remove(DOMAIN, SERVICE_HOLD_TIME)
+    hass.services.async_remove(DOMAIN, SERVICE_HOLD_TIME)
 
     del hass.data[DOMAIN]
 
