@@ -102,8 +102,7 @@ class KebaHandler(KebaKeContact):
         self._polling_task = None
 
     def start_periodic_request(self):
-
-        # Add periodic polling task
+        """Start periodic data polling."""
         self._polling_task = self._hass.loop.create_task(
             self._periodic_request()
         )
@@ -127,7 +126,7 @@ class KebaHandler(KebaKeContact):
             self._periodic_request()
         )
 
-    async def setup(self, loop=None, *_):
+    async def setup(self, loop=None):
         await super().setup(loop)
 
         # Request initial values and extract serial number
