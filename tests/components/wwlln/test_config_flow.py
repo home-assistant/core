@@ -83,7 +83,7 @@ async def test_step_user(hass):
         CONF_LONGITUDE: -104.9812612,
         CONF_RADIUS: 25,
         CONF_UNIT_SYSTEM: 'metric',
-        CONF_WINDOW: 600.0,
+        CONF_WINDOW: 3600.0,
     }
 
 
@@ -93,7 +93,7 @@ async def test_custom_window(hass):
         CONF_LATITUDE: 39.128712,
         CONF_LONGITUDE: -104.9812612,
         CONF_RADIUS: 25,
-        CONF_WINDOW: timedelta(hours=1)
+        CONF_WINDOW: timedelta(hours=2)
     }
 
     flow = config_flow.WWLLNFlowHandler()
@@ -107,7 +107,7 @@ async def test_custom_window(hass):
         CONF_LONGITUDE: -104.9812612,
         CONF_RADIUS: 25,
         CONF_UNIT_SYSTEM: 'metric',
-        CONF_WINDOW: 3600,
+        CONF_WINDOW: 7200,
     }
 
 
