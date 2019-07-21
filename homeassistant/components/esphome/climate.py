@@ -77,6 +77,11 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
         ]
 
     @property
+    def preset_modes(self):
+        """Return preset modes."""
+        return [PRESET_AWAY] if self._static_info.supports_away else []
+
+    @property
     def target_temperature_step(self) -> float:
         """Return the supported step of target temperature."""
         # Round to one digit because of floating point math
@@ -97,7 +102,7 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
         """Return the list of supported features."""
         features = 0
         if self._static_info.supports_two_point_target_temperature:
-            features |= (SUPPORT_TARGET_TEMPERATURE_RANGE)
+            features |= SUPPORT_TARGET_TEMPERATURE_RANGE
         else:
             features |= SUPPORT_TARGET_TEMPERATURE
         if self._static_info.supports_away:
@@ -108,6 +113,11 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
     def hvac_mode(self) -> Optional[str]:
         """Return current operation ie. heat, cool, idle."""
         return _climate_modes.from_esphome(self._state.mode)
+
+    @esphome_state_property
+    def preset_mode(self):
+        """Return current preset mode."""
+        return PRESET_AWAY if self._state.away else None
 
     @esphome_state_property
     def current_temperature(self) -> Optional[float]:
@@ -143,28 +153,12 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
             data['target_temperature_high'] = kwargs[ATTR_TARGET_TEMP_HIGH]
         await self._client.climate_command(**data)
 
-    async def async_set_operation_mode(self, operation_mode) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target operation mode."""
         await self._client.climate_command(
             key=self._static_info.key,
-            mode=_climate_modes.from_hass(operation_mode),
+            mode=_climate_modes.from_hass(hvac_mode),
         )
-
-    @property
-    def preset_mode(self):
-        """Return current preset mode."""
-        if self._state and self._state.away:
-            return PRESET_AWAY
-
-        return None
-
-    @property
-    def preset_modes(self):
-        """Return preset modes."""
-        if self._static_info.supports_away:
-            return [PRESET_AWAY]
-
-        return []
 
     async def async_set_preset_mode(self, preset_mode):
         """Set preset mode."""
