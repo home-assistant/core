@@ -12,7 +12,7 @@ from typing import Iterable
 import jinja2
 from jinja2 import contextfilter, contextfunction
 from jinja2.sandbox import ImmutableSandboxedEnvironment
-from jinja2.utils import Namespace
+from jinja2.utils import Namespace  # type: ignore
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_UNIT_OF_MEASUREMENT,
@@ -25,6 +25,10 @@ from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
 from homeassistant.util.async_ import run_callback_threadsafe
+
+
+# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: no-check-untyped-defs, no-warn-return-any
 
 _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
@@ -192,14 +196,13 @@ class Template:
 
         This method must be run in the event loop.
         """
-        if self._compiled is None:
-            self._ensure_compiled()
+        compiled = self._compiled or self._ensure_compiled()
 
         if variables is not None:
             kwargs.update(variables)
 
         try:
-            return self._compiled.render(kwargs).strip()
+            return compiled.render(kwargs).strip()
         except jinja2.TemplateError as err:
             raise TemplateError(err)
 
