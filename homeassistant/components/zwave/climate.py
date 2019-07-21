@@ -244,7 +244,9 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
 
         Need to be a subset of HVAC_MODES.
         """
-        return self._hvac_list
+        if self.values.mode:
+            return self._hvac_list
+        return []
 
     @property
     def hvac_action(self):
