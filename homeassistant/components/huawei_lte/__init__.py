@@ -40,7 +40,7 @@ class RouterData:
     client = attr.ib()
     device_information = attr.ib(init=False, factory=dict)
     device_signal = attr.ib(init=False, factory=dict)
-    traffic_statistics = attr.ib(init=False, factory=dict)
+    monitoring_traffic_statistics = attr.ib(init=False, factory=dict)
     wlan_host_list = attr.ib(init=False, factory=dict)
 
     _subscriptions = attr.ib(init=False, factory=set)
@@ -87,10 +87,11 @@ class RouterData:
         if debugging or "device_signal" in self._subscriptions:
             self.device_signal = self.client.device.signal()
             _LOGGER.debug("device_signal=%s", self.device_signal)
-        if debugging or "traffic_statistics" in self._subscriptions:
-            self.traffic_statistics = \
+        if debugging or "monitoring_traffic_statistics" in self._subscriptions:
+            self.monitoring_traffic_statistics = \
                 self.client.monitoring.traffic_statistics()
-            _LOGGER.debug("traffic_statistics=%s", self.traffic_statistics)
+            _LOGGER.debug("monitoring_traffic_statistics=%s",
+                          self.monitoring_traffic_statistics)
         if debugging or "wlan_host_list" in self._subscriptions:
             self.wlan_host_list = self.client.wlan.host_list()
             _LOGGER.debug("wlan_host_list=%s", self.wlan_host_list)

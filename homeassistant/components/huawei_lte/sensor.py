@@ -109,6 +109,8 @@ def setup_platform(
     data = hass.data[DATA_KEY].get_data(config)
     sensors = []
     for path in config.get(CONF_MONITORED_CONDITIONS):
+        if path == "traffic_statistics":  # backwards compatibility
+            path = "monitoring_traffic_statistics"
         data.subscribe(path)
         sensors.append(HuaweiLteSensor(data, path, SENSOR_META.get(path, {})))
 
