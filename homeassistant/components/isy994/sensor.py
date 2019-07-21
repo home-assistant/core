@@ -45,12 +45,10 @@ class ISYSensorDevice(ISYDevice):
         if isinstance(uom, list):
             uom = uom[0]
 
-        if uom in UOM_FRIENDLY_NAME:
-            friendly_name = UOM_FRIENDLY_NAME.get(uom)
-            if friendly_name in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
-                friendly_name = self.hass.config.units.temperature_unit
-            return friendly_name
-        return uom
+        friendly_name = UOM_FRIENDLY_NAME.get(uom, uom)
+        if friendly_name in [TEMP_CELSIUS, TEMP_FAHRENHEIT]:
+            friendly_name = self.hass.config.units.temperature_unit
+        return friendly_name
 
     @property
     def state(self) -> str:
@@ -150,9 +148,9 @@ class ISYWeatherDevice(ISYDevice):
     @property
     def raw_units(self) -> str:
         """Return the raw unit of measurement."""
-        if self._node.uom == 'F':
+        if self._node.uom in ['F', '17']:
             return TEMP_FAHRENHEIT
-        if self._node.uom == 'C':
+        if self._node.uom in ['C', '4']:
             return TEMP_CELSIUS
         return self._node.uom
 
@@ -161,17 +159,14 @@ class ISYWeatherDevice(ISYDevice):
         """Return the value of the node."""
         # pylint: disable=protected-access
         val = self._node.status._val
-        raw_units = self._node.uom
 
-        if raw_units in [TEMP_CELSIUS, TEMP_FAHRENHEIT]:
-            return self.hass.config.units.temperature(val, raw_units)
+        if self.raw_units in [TEMP_CELSIUS, TEMP_FAHRENHEIT]:
+            return self.hass.config.units.temperature(val, self.raw_units)
         return val
 
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement for the node."""
-        raw_units = self.raw_units
-
-        if raw_units in [TEMP_CELSIUS, TEMP_FAHRENHEIT]:
+        if self.raw_units in [TEMP_CELSIUS, TEMP_FAHRENHEIT]:
             return self.hass.config.units.temperature_unit
-        return raw_units
+        return self.raw_units
