@@ -236,7 +236,7 @@ async def async_get_integration(hass: 'HomeAssistant', domain: str)\
         cache = hass.data[DATA_INTEGRATIONS] = {}
 
     int_or_evt = cache.get(
-        domain, _UNDEF)  # type: Optional[Union[Integration, asyncio.Event]]
+        domain, _UNDEF)  # type: Union[Integration, asyncio.Event, None]
 
     if isinstance(int_or_evt, asyncio.Event):
         await int_or_evt.wait()

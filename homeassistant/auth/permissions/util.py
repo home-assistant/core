@@ -1,7 +1,7 @@
 """Helpers to deal with permissions."""
 from functools import wraps
 
-from typing import Callable, Dict, List, Optional, Union, cast  # noqa: F401
+from typing import Callable, Dict, List, Optional, cast  # noqa: F401
 
 from .const import SUBCAT_ALL
 from .models import PermissionLookup
@@ -44,7 +44,7 @@ def compile_policy(
 
     assert isinstance(policy, dict)
 
-    funcs = []  # type: List[Callable[[str, str], Union[None, bool]]]
+    funcs = []  # type: List[Callable[[str, str], Optional[bool]]]
 
     for key, lookup_func in subcategories.items():
         lookup_value = policy.get(key)
