@@ -119,7 +119,7 @@ class RejseplanenTransportSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self._times is not []:
+        if isinstance(self._times, list) and bool(self._times):
             next_up = []
             if len(self._times) > 1:
                 next_up = self._times[1:]
