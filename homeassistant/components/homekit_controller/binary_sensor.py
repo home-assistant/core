@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homekit.model.characteristics import CharacteristicsTypes
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -18,9 +19,6 @@ class HomeKitMotionSensor(HomeKitEntity, BinarySensorDevice):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
-
         return [
             CharacteristicsTypes.MOTION_DETECTED,
         ]
@@ -49,9 +47,6 @@ class HomeKitContactSensor(HomeKitEntity, BinarySensorDevice):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
-
         return [
             CharacteristicsTypes.CONTACT_STATE,
         ]
