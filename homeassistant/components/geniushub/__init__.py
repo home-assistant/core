@@ -54,6 +54,9 @@ async def async_setup(hass, hass_config):
             exc_info=True)
         return False
 
+    _LOGGER.debug("zones_raw = %s", data._client.hub._zones_raw)  # noqa; pylint: disable=protected-access
+    _LOGGER.debug("devices_raw = %s", data._client.hub._devices_raw)  # noqa; pylint: disable=protected-access
+
     async_track_time_interval(hass, data.async_update, SCAN_INTERVAL)
 
     for platform in ['climate', 'water_heater']:
@@ -84,4 +87,8 @@ class GeniusData:
         except AssertionError:  # assert response.status == HTTP_OK
             _LOGGER.warning("Update failed.", exc_info=True)
             return
+
+        _LOGGER.debug("zones_raw = %s", self._client.hub._zones_raw)  # noqa; pylint: disable=protected-access
+        _LOGGER.debug("devices_raw = %s", self._client.hub._devices_raw)  # noqa; pylint: disable=protected-access
+
         async_dispatcher_send(self._hass, DOMAIN)
