@@ -8,7 +8,7 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, FAN_AUTO, FAN_ON,
     HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF,
     SUPPORT_PRESET_MODE, SUPPORT_FAN_MODE, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE, PRESET_AWAY, PRESET_ECO)
+    SUPPORT_TARGET_TEMPERATURE_RANGE, PRESET_AWAY, PRESET_ECO, PRESET_NONE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -28,7 +28,7 @@ NEST_MODE_HEAT = 'heat'
 NEST_MODE_COOL = 'cool'
 NEST_MODE_OFF = 'off'
 
-PRESET_MODES = [PRESET_AWAY, PRESET_ECO]
+PRESET_MODES = [PRESET_NONE, PRESET_AWAY, PRESET_ECO]
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
