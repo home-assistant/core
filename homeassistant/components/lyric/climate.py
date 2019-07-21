@@ -18,7 +18,7 @@ from homeassistant.const import (ATTR_ENTITY_ID, ATTR_TEMPERATURE, ATTR_TIME,
                                  TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.helpers.config_validation as cv
 from . import LyricDeviceEntity
 from .const import (DATA_LYRIC_CLIENT, DATA_LYRIC_DEVICES, DOMAIN,
