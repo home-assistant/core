@@ -51,7 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_DEPARTURE_TYPE, default=[]):
         vol.All(cv.ensure_list,
-                [vol.In(list([
+                [vol.In([
                     'BUS',
                     'EXB',
                     'TB',
@@ -62,7 +62,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                     'IC',
                     'LYN',
                     'TOG'
-                ]))])
+                ])])
 })
 
 BUS_TYPES = ['BUS', 'EXB', 'TB']
