@@ -21,14 +21,14 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_STOP_ID = 'Stop ID'
-ATTR_STOP_NAME = 'Stop'
-ATTR_ROUTE = 'Route'
-ATTR_TYPE = 'Type'
-ATTR_DIRECTION = "Direction"
-ATTR_DUE_IN = 'Due in'
-ATTR_DUE_AT = 'Due at'
-ATTR_NEXT_UP = 'Later departure'
+ATTR_STOP_ID = 'stop_id'
+ATTR_STOP_NAME = 'stop'
+ATTR_ROUTE = 'route'
+ATTR_TYPE = 'type'
+ATTR_DIRECTION = "direction"
+ATTR_DUE_IN = 'due_in'
+ATTR_DUE_AT = 'due_at'
+ATTR_NEXT_UP = 'next_departures'
 
 ATTRIBUTION = "Data provided by rejseplanen.dk"
 
@@ -51,8 +51,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_DEPARTURE_TYPE, default=[]):
         vol.All(cv.ensure_list,
-                [vol.In(list(['BUS', 'EXB', 'M', 'S', 'REG']))])
+                [vol.In(list([
+                    'BUS',
+                    'EXB',
+                    'TB',
+                    'LET',
+                    'M',
+                    'S',
+                    'REG',
+                    'IC',
+                    'LYN',
+                    'TOG'
+                ]))])
 })
+
+BUS_TYPES = ['BUS', 'EXB', 'TB']
+TRAIN_TYPES = ['LET', 'S', 'REG', 'IC', 'LYN', 'TOG']
+METRO_TYPES = ['M']
 
 
 def due_in_minutes(timestamp):
@@ -104,14 +119,10 @@ class RejseplanenTransportSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self._times is not None:
-            next_up = None
+        if self._times is not []:
+            next_up = []
             if len(self._times) > 1:
-                next_up = ('{} towards {} in {} from {}'.format(
-                    self._times[1][ATTR_ROUTE],
-                    self._times[1][ATTR_DIRECTION],
-                    str(self._times[1][ATTR_DUE_IN]),
-                    self._times[1][ATTR_STOP_NAME]))
+                next_up = self._times[1:]
             params = {
                 ATTR_DUE_IN: str(self._times[0][ATTR_DUE_IN]),
                 ATTR_DUE_AT: self._times[0][ATTR_DUE_AT],
@@ -170,8 +181,26 @@ class PublicTransportData():
         import rjpl
         self.info = []
 
+        def intersection(lst1, lst2):
+            return list(set(lst1) & set(lst2))
+
+        # Limit search to selected types, to get more results
+        all_types = not bool(self.departure_type)
+        use_train = all_types or bool(
+            intersection(TRAIN_TYPES, self.departure_type))
+        use_bus = all_types or bool(
+            intersection(BUS_TYPES, self.departure_type))
+        use_metro = all_types or bool(
+            intersection(METRO_TYPES, self.departure_type))
+
         try:
-            results = rjpl.departureBoard(int(self.stop_id), timeout=5)
+            results = rjpl.departureBoard(
+                int(self.stop_id),
+                timeout=5,
+                useTrain=use_train,
+                useBus=use_bus,
+                useMetro=use_metro
+            )
         except rjpl.rjplAPIError as error:
             _LOGGER.debug("API returned error: %s", error)
             self.info = self.empty_result()
