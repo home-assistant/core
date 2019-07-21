@@ -28,7 +28,6 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
         """Instantiate config flow."""
         self._username = None
         self._password = None
-        self._time_zone = None
         self.data_schema = OrderedDict()
         self.data_schema[vol.Required(CONF_USERNAME)] = str
         self.data_schema[vol.Required(CONF_PASSWORD)] = str

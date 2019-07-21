@@ -14,7 +14,7 @@
       "invalid_login": "Invalid username or password"
     },
     "abort": {
-      "already_setup": "Only one Vesync instance is allow"
+      "already_setup": "Only one Vesync instance is allowed"
     }
   }
 }
