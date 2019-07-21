@@ -32,6 +32,8 @@ HVAC_MODES = [
     HVAC_MODE_FAN_ONLY,
 ]
 
+# No preset is active
+PRESET_NONE = 'none'
 
 # Device is running an energy-saving mode
 PRESET_ECO = 'eco'
