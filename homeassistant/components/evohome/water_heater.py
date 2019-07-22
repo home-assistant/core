@@ -75,10 +75,10 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         state = '' if op_mode == EVO_FOLLOW else HA_STATE_TO_EVO[STATE_OFF]
         until = None  # EVO_FOLLOW, EVO_PERMOVER
 
-        if op_mode == EVO_TEMPOVER:
-            self._setpoints = self.get_setpoints()
-            if self._setpoints:
-                until = parse_datetime(self._setpoints['next']['from'])
+        if op_mode == EVO_TEMPOVER and self._schedule['DailySchedules']:
+            self._update_schedule()
+            if self._schedule['DailySchedules']:
+                until = parse_datetime(self.setpoints['next']['from'])
                 until = until.strftime(EVO_STRFTIME)
 
         data = {'Mode': op_mode, 'State': state, 'UntilTime': until}

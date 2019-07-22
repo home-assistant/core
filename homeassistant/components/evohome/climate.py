@@ -8,16 +8,17 @@ import evohomeclient2
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF,
     CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, CURRENT_HVAC_OFF,
+    HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF,
     PRESET_AWAY, PRESET_ECO, PRESET_HOME, PRESET_NONE,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE)
 from homeassistant.const import PRECISION_TENTHS
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.dt import parse_datetime
 
 from . import CONF_LOCATION_IDX, _handle_exception, EvoDevice
 from .const import (
-    DOMAIN, EVO_RESET, EVO_AUTO, EVO_AUTOECO, EVO_AWAY, EVO_DAYOFF, EVO_CUSTOM,
+    DOMAIN, EVO_RESET, EVO_AUTO, EVO_AUTOECO, EVO_AWAY, EVO_CUSTOM, EVO_DAYOFF,
     EVO_HEATOFF, EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER)
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,14 +31,15 @@ HA_HVAC_TO_TCS = {
     HVAC_MODE_HEAT: EVO_AUTO,
 }
 
-HA_PRESET_TO_TCS = {
-    PRESET_AWAY: EVO_AWAY,
-    PRESET_CUSTOM: EVO_CUSTOM,
-    PRESET_ECO: EVO_AUTOECO,
-    PRESET_HOME: EVO_DAYOFF,
-    PRESET_RESET: EVO_RESET,
-}
-TCS_PRESET_TO_HA = {v: k for k, v in HA_PRESET_TO_TCS.items()}
+TCS_PRESET_TO_HA = {
+    EVO_AWAY: PRESET_AWAY,
+    EVO_CUSTOM: PRESET_CUSTOM,
+    EVO_AUTOECO: PRESET_ECO,
+    EVO_DAYOFF: PRESET_HOME,
+    EVO_RESET: PRESET_RESET,
+}  # EVO_AUTO: None,
+
+HA_PRESET_TO_TCS = {v: k for k, v in TCS_PRESET_TO_HA.items()}
 
 EVO_PRESET_TO_HA = {
     EVO_FOLLOW: PRESET_NONE,
@@ -47,8 +49,8 @@ EVO_PRESET_TO_HA = {
 HA_PRESET_TO_EVO = {v: k for k, v in EVO_PRESET_TO_HA.items()}
 
 
-def setup_platform(hass, hass_config, add_entities,
-                   discovery_info=None) -> None:
+def setup_platform(hass: HomeAssistantType, hass_config: ConfigType,
+                   add_entities, discovery_info=None) -> None:
     """Create the evohome Controller, and its Zones, if any."""
     broker = hass.data[DOMAIN]['broker']
     loc_idx = broker.params[CONF_LOCATION_IDX]
@@ -102,21 +104,22 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
             _handle_exception(err)
 
     def _set_zone_mode(self, op_mode: str) -> None:
-        """Set the Zone to one of its native EVO_* operating modes.
+        """Set a Zone to one of its native EVO_* operating modes.
 
-        NB: evohome Zones 'inherit' their operating mode from the Controller.
+        Zones inherit their _effective_ operating mode from the Controller.
 
         Usually, Zones are in 'FollowSchedule' mode, where their setpoints are
-        a function of their schedule, and the Controller's operating_mode, e.g.
-        Economy mode is their scheduled setpoint less (usually) 3C.
+        a function of their own schedule and the Controller's operating mode,
+        e.g. 'AutoWithEco' mode means their setpoint is (by default) 3C less
+        than scheduled.
 
-        However, Zones can override these setpoints, either for a specified
-        period of time, 'TemporaryOverride', after which they will revert back
-        to 'FollowSchedule' mode, or indefinitely, 'PermanentOverride'.
+        However, Zones can _override_ these setpoints, either indefinitely,
+        'PermanentOverride' mode, or for a period of time, 'TemporaryOverride',
+        after which they will revert back to 'FollowSchedule'.
 
-        Some of the Controller's operating_mode are 'forced' upon the Zone,
-        regardless of its override state, e.g. 'HeatingOff' (Zones to min_temp)
-        and 'Away' (Zones to 12C).
+        Finally, some of the Controller's operating modes are _forced_ upon the
+        Zones, regardless of any override mode, e.g. 'HeatingOff', Zones to
+        (by default) 5C, and 'Away', Zones to (by default) 12C.
         """
         if op_mode == EVO_FOLLOW:
             try:
@@ -129,10 +132,10 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
         temperature = self._evo_device.setpointStatus['targetHeatTemperature']
         until = None  # EVO_PERMOVER
 
-        if op_mode == EVO_TEMPOVER:
-            self._setpoints = self.get_setpoints()
-            if self._setpoints:
-                until = parse_datetime(self._setpoints['next']['from'])
+        if op_mode == EVO_TEMPOVER and self._schedule['DailySchedules']:
+            self._update_schedule()
+            if self._schedule['DailySchedules']:
+                until = parse_datetime(self.setpoints['next']['from'])
 
         self._set_temperature(temperature, until=until)
 
@@ -147,7 +150,7 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
     @property
     def hvac_modes(self) -> List[str]:
         """Return the list of available hvac operation modes."""
-        return [HVAC_MODE_OFF, HVAC_MODE_HEAT]
+        return list(HA_HVAC_TO_TCS)
 
     @property
     def preset_modes(self) -> Optional[List[str]]:
