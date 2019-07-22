@@ -42,7 +42,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                        client,
                        hass.data[DOMAIN]['state_proxy'])
 
-    async_add_entities([device], update_before_add=True)
+    async_add_entities([device], update_before_add=False)
 
 
 class ValloxFan(FanEntity):

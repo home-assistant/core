@@ -7,6 +7,7 @@ import logging
 from vallox_websocket_api import PROFILE as VALLOX_PROFILE, Vallox
 from vallox_websocket_api.constants import vlxDevConstants
 import voluptuous as vol
+from websockets.exceptions import InvalidMessage
 
 from homeassistant.const import CONF_HOST, CONF_NAME
 import homeassistant.helpers.config_validation as cv
@@ -110,9 +111,6 @@ async def async_setup(hass, config):
                                      service_handler.async_handle,
                                      schema=schema)
 
-    # Fetch initial state once before bringing up the platforms.
-    await state_proxy.async_update(None)
-
     hass.async_create_task(
         async_load_platform(hass, 'sensor', DOMAIN, {}, config))
     hass.async_create_task(
@@ -164,7 +162,7 @@ class ValloxStateProxy:
             self._profile = await self._client.get_profile()
             self._valid = True
 
-        except OSError as err:
+        except (OSError, InvalidMessage) as err:
             _LOGGER.error("Error during state cache update: %s", err)
             self._valid = False
 
