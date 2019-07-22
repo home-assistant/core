@@ -277,11 +277,8 @@ class DaikinClimate(ClimateDevice):
         return self.get(ATTR_PRESET_MODE)
 
     async def async_set_preset_mode(self, preset_mode):
-        """Set preset mode."""
-        if preset_mode == PRESET_AWAY:
-            await self._api.device.set_holiday(ATTR_STATE_ON)
-        else:
-            await self._api.device.set_holiday(ATTR_STATE_OFF)
+        """Set new preset mode."""
+        await self._set({ATTR_PRESET_MODE: preset_mode})
 
     @property
     def preset_modes(self):
