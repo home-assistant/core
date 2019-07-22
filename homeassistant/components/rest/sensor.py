@@ -187,7 +187,7 @@ class RestData:
 
     def update(self):
         """Get the latest data from REST service with provided method."""
-        _LOGGER.debug("Updating from %s with body: ", self._request.url, self._request.body)
+        _LOGGER.debug("Updating from %s", self._request.url)
         if self._payload is not None: 
             self._request.prepare_body(self._payload.async_render(), None, None)
         try:
