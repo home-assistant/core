@@ -1,0 +1,10 @@
+{
+  "domain": "volkswagencarnet",
+  "name": "Volkswagencarnet",
+  "documentation": "https://www.home-assistant.io/components/volkswagencarnet",
+  "requirements": [
+    "volkswagencarnet==4.0.20"
+  ],
+  "dependencies": [],
+  "codeowners": ["@robinostlund"]
+}
