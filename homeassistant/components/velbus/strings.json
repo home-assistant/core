@@ -12,5 +12,8 @@
     },
     "error": {
       "port_exists": "This port is already configured"
+    },
+    "abort": {
+      "already_imported": "The configuration is already imported from the config file"
     }
 }

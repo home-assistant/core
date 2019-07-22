@@ -69,5 +69,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
         if self._prt_in_configuration_exists(prt):
             # if the velbus import is already in the config
             # we should not proceed the import
-            return None
+            return self.async_abort(
+                reason='already_imported'
+                )
         return await self._create_device(name, prt)
