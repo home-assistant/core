@@ -110,7 +110,7 @@ def setup(hass, config):
     dummy_connection = config[DOMAIN].get(CONF_DUMMY, False)
 
     if dummy_connection:
-        rfx_object = rfxtrxmod.Connect(device, None, debug=debug,
+        rfx_object = rfxtrxmod.Connect('dummy', None, debug=debug,
                                        transport_protocol=rfxtrxmod.DummyTransport2)
     elif device != NO_DEVICE:
         rfx_object = rfxtrxmod.Connect(device, None, debug=debug,
