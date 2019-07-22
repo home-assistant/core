@@ -42,8 +42,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Pioneer platform."""
     pioneer = PioneerDevice(
-        config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT),
-        config.get(CONF_TIMEOUT), config.get(CONF_SOURCES))
+        config[CONF_NAME], config[CONF_HOST], config[CONF_PORT],
+        config[CONF_TIMEOUT], config[CONF_SOURCES])
 
     if pioneer.update():
         add_entities([pioneer])
