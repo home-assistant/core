@@ -348,7 +348,7 @@ class HERETravelTimeData():
             elif self.travel_mode == TRAVEL_MODE_PUBLIC:
                 # Get Route for Public Transport
                 public_transport_line = route[0]['publicTransportLine']
-                self.route = self._get_route_from_publicTransportLine(
+                self.route = self._get_route_from_public_transport_line(
                     public_transport_line)
             elif self.travel_mode == TRAVEL_MODE_PEDESTRIAN:
                 # Get Route for Pedestrian
