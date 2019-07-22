@@ -1,10 +1,14 @@
 """Helpers for managing a pairing with a HomeKit accessory or bridge."""
 import asyncio
+import datetime
 import logging
 
-from .const import HOMEKIT_ACCESSORY_DISPATCH, ENTITY_MAP
+from homeassistant.helpers.event import async_track_time_interval
+
+from .const import DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, ENTITY_MAP
 
 
+DEFAULT_SCAN_INTERVAL = datetime.timedelta(seconds=60)
 RETRY_INTERVAL = 60  # seconds
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,11 +85,54 @@ class HKDevice():
         # allow one entity to use pairing at once.
         self.pairing_lock = asyncio.Lock()
 
+        self.available = True
+
+        self.signal_state_updated = '_'.join((
+            DOMAIN,
+            self.unique_id,
+            'state_updated',
+        ))
+
+        # Current values of all characteristics homekit_controller is tracking.
+        # Key is a (accessory_id, characteristic_id) tuple.
+        self.current_state = {}
+
+        self.pollable_characteristics = []
+
+        # If this is set polling is active and can be disabled by calling
+        # this method.
+        self._polling_interval_remover = None
+
+    def add_pollable_characteristics(self, characteristics):
+        """Add (aid, iid) pairs that we need to poll."""
+        self.pollable_characteristics.extend(characteristics)
+
+    def remove_pollable_characteristics(self, accessory_id):
+        """Remove all pollable characteristics by accessory id."""
+        self.pollable_characteristics = [
+            char for char in self.pollable_characteristics
+            if char[0] != accessory_id
+        ]
+
+    def async_set_unavailable(self):
+        """Mark state of all entities on this connection as unavailable."""
+        self.available = False
+        self.hass.helpers.dispatcher.async_dispatcher_send(
+            self.signal_state_updated,
+        )
+
     async def async_setup(self):
         """Prepare to use a paired HomeKit device in homeassistant."""
         cache = self.hass.data[ENTITY_MAP].get_map(self.unique_id)
         if not cache:
-            return await self.async_refresh_entity_map(self.config_num)
+            if await self.async_refresh_entity_map(self.config_num):
+                self._polling_interval_remover = async_track_time_interval(
+                    self.hass,
+                    self.async_update,
+                    DEFAULT_SCAN_INTERVAL
+                )
+                return True
+            return False
 
         self.accessories = cache['accessories']
         self.config_num = cache['config_num']
@@ -98,7 +145,33 @@ class HKDevice():
 
         self.add_entities()
 
+        await self.async_update()
+
+        self._polling_interval_remover = async_track_time_interval(
+            self.hass,
+            self.async_update,
+            DEFAULT_SCAN_INTERVAL
+        )
+
         return True
+
+    async def async_unload(self):
+        """Stop interacting with device and prepare for removal from hass."""
+        if self._polling_interval_remover:
+            self._polling_interval_remover()
+
+        unloads = []
+        for platform in self.platforms:
+            unloads.append(
+                self.hass.config_entries.async_forward_entry_unload(
+                    self.config_entry,
+                    platform
+                )
+            )
+
+        results = await asyncio.gather(*unloads)
+
+        return False not in results
 
     async def async_refresh_entity_map(self, config_num):
         """Handle setup of a HomeKit accessory."""
@@ -131,6 +204,8 @@ class HKDevice():
 
         # Register and add new entities that are available
         self.add_entities()
+
+        await self.async_update()
 
         return True
 
@@ -183,6 +258,47 @@ class HKDevice():
                     )
                 )
                 self.platforms.add(platform)
+
+    async def async_update(self, now=None):
+        """Poll state of all entities attached to this bridge/accessory."""
+        # pylint: disable=import-error
+        from homekit.exceptions import (
+            AccessoryDisconnectedError, AccessoryNotFoundError,
+            EncryptionError)
+
+        if not self.pollable_characteristics:
+            _LOGGER.debug(
+                "HomeKit connection not polling any characteristics."
+            )
+            return
+
+        _LOGGER.debug("Starting HomeKit controller update")
+
+        try:
+            new_values_dict = await self.get_characteristics(
+                self.pollable_characteristics,
+            )
+        except AccessoryNotFoundError:
+            # Not only did the connection fail, but also the accessory is not
+            # visible on the network.
+            self.async_set_unavailable()
+            return
+        except (AccessoryDisconnectedError, EncryptionError):
+            # Temporary connection failure. Device is still available but our
+            # connection was dropped.
+            return
+
+        self.available = True
+
+        for (aid, cid), value in new_values_dict.items():
+            accessory = self.current_state.setdefault(aid, {})
+            accessory[cid] = value
+
+        self.hass.helpers.dispatcher.async_dispatcher_send(
+            self.signal_state_updated,
+        )
+
+        _LOGGER.debug("Finished HomeKit controller update")
 
     async def get_characteristics(self, *args, **kwargs):
         """Read latest state from homekit accessory."""

@@ -14,7 +14,7 @@ async def test_aqara_gateway_setup(hass):
     """Test that a Aqara Gateway can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(
         hass, 'aqara_gateway.json')
-    pairing = await setup_test_accessories(hass, accessories)
+    config_entry, pairing = await setup_test_accessories(hass, accessories)
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
@@ -24,7 +24,9 @@ async def test_aqara_gateway_setup(hass):
     assert alarm.unique_id == 'homekit-0000000123456789-66304'
 
     alarm_helper = Helper(
-        hass, 'alarm_control_panel.aqara_hub_1563', pairing, accessories[0])
+        hass, 'alarm_control_panel.aqara_hub_1563', pairing, accessories[0],
+        config_entry
+    )
     alarm_state = await alarm_helper.poll_and_get_state()
     assert alarm_state.attributes['friendly_name'] == 'Aqara Hub-1563'
 
@@ -33,7 +35,7 @@ async def test_aqara_gateway_setup(hass):
     assert light.unique_id == 'homekit-0000000123456789-65792'
 
     light_helper = Helper(
-        hass, 'light.aqara_hub_1563', pairing, accessories[0])
+        hass, 'light.aqara_hub_1563', pairing, accessories[0], config_entry)
     light_state = await light_helper.poll_and_get_state()
     assert light_state.attributes['friendly_name'] == 'Aqara Hub-1563'
     assert light_state.attributes['supported_features'] == (

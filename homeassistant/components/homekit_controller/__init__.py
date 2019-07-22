@@ -1,6 +1,7 @@
 """Support for Homekit device discovery."""
 import logging
 
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -27,13 +28,45 @@ class HomeKitEntity(Entity):
 
     def __init__(self, accessory, devinfo):
         """Initialise a generic HomeKit device."""
-        self._available = True
         self._accessory = accessory
         self._aid = devinfo['aid']
         self._iid = devinfo['iid']
         self._features = 0
         self._chars = {}
         self.setup()
+
+        self._signals = []
+
+    async def async_added_to_hass(self):
+        """Entity added to hass."""
+        self._signals.append(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                self._accessory.signal_state_updated,
+                self.async_state_changed,
+            )
+        )
+
+        self._accessory.add_pollable_characteristics(
+            self.pollable_characteristics,
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Prepare to be removed from hass."""
+        self._accessory.remove_pollable_characteristics(
+            self._aid,
+        )
+
+        for signal_remove in self._signals:
+            signal_remove()
+        self._signals.clear()
+
+    @property
+    def should_poll(self) -> bool:
+        """Return False.
+
+        Data update is triggered from HKDevice.
+        """
+        return False
 
     def setup(self):
         """Configure an entity baed on its HomeKit characterstics metadata."""
@@ -47,7 +80,7 @@ class HomeKitEntity(Entity):
             get_uuid(c) for c in self.get_characteristic_types()
         ]
 
-        self._chars_to_poll = []
+        self.pollable_characteristics = []
         self._chars = {}
         self._char_names = {}
 
@@ -75,7 +108,7 @@ class HomeKitEntity(Entity):
         from homekit.model.characteristics import CharacteristicsTypes
 
         # Build up a list of (aid, iid) tuples to poll on update()
-        self._chars_to_poll.append((self._aid, char['iid']))
+        self.pollable_characteristics.append((self._aid, char['iid']))
 
         # Build a map of ctype -> iid
         short_name = CharacteristicsTypes.get_short(char['type'])
@@ -91,30 +124,11 @@ class HomeKitEntity(Entity):
         # pylint: disable=not-callable
         setup_fn(char)
 
-    async def async_update(self):
-        """Obtain a HomeKit device's state."""
-        # pylint: disable=import-error
-        from homekit.exceptions import (
-            AccessoryDisconnectedError, AccessoryNotFoundError,
-            EncryptionError)
-
-        try:
-            new_values_dict = await self._accessory.get_characteristics(
-                self._chars_to_poll
-            )
-        except AccessoryNotFoundError:
-            # Not only did the connection fail, but also the accessory is not
-            # visible on the network.
-            self._available = False
-            return
-        except (AccessoryDisconnectedError, EncryptionError):
-            # Temporary connection failure. Device is still available but our
-            # connection was dropped.
-            return
-
-        self._available = True
-
-        for (_, iid), result in new_values_dict.items():
+    @callback
+    def async_state_changed(self):
+        """Collect new data from bridge and update the entity state in hass."""
+        accessory_state = self._accessory.current_state.get(self._aid, {})
+        for iid, result in accessory_state.items():
             if 'value' not in result:
                 continue
             # Callback to update the entity with this characteristic value
@@ -124,6 +138,8 @@ class HomeKitEntity(Entity):
                 continue
             # pylint: disable=not-callable
             update_fn(result['value'])
+
+        self.async_write_ha_state()
 
     @property
     def unique_id(self):
@@ -139,7 +155,7 @@ class HomeKitEntity(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._available
+        return self._accessory.available
 
     @property
     def device_info(self):
@@ -207,6 +223,17 @@ async def async_setup(hass, config):
 
     hass.data[CONTROLLER] = homekit.Controller()
     hass.data[KNOWN_DEVICES] = {}
+
+    return True
+
+
+async def async_unload_entry(hass, entry):
+    """Disconnect from HomeKit devices before unloading entry."""
+    hkid = entry.data['AccessoryPairingID']
+
+    if hkid in hass.data[KNOWN_DEVICES]:
+        connection = hass.data[KNOWN_DEVICES][hkid]
+        await connection.async_unload()
 
     return True
 
