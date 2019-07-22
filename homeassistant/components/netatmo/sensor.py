@@ -121,6 +121,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     area[CONF_MODE]
                 ))
     else:
+        def find_devices(data, module_names=None):
+            """Find all devices."""
+            dev = []
+            if module_names is None:
+                module_names = data.get_module_names()
+            for module_name in module_names:
+                for condition in \
+                        data.station_data.monitoredConditions(module_name):
+                    dev.append(NetatmoSensor(
+                        data, module_name, condition.lower(), data.station))
+            return dev
+
         def _retry(_data):
             try:
                 _dev = find_devices(_data)
@@ -145,17 +157,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 module_items = config[CONF_MODULES]
                 for module_name in module_items:
                     if module_name not in data.get_module_names():
+                        _LOGGER.info("Module %s not found", module_name)
                         continue
-                    for condition in data.station_data.monitoredConditions(
-                            module_name):
-                        dev.append(
-                            NetatmoSensor(
-                                data,
-                                module_name,
-                                condition.lower(),
-                                data.station
-                            )
-                        )
+                    dev.extend(find_devices(data))
                 continue
 
             # otherwise add all modules and conditions
@@ -167,17 +171,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if dev:
         add_entities(dev, True)
-
-
-def find_devices(data):
-    """Find all devices."""
-    dev = []
-    module_names = data.get_module_names()
-    for module_name in module_names:
-        for condition in data.station_data.monitoredConditions(module_name):
-            dev.append(NetatmoSensor(
-                data, module_name, condition.lower(), data.station))
-    return dev
 
 
 class NetatmoSensor(Entity):
