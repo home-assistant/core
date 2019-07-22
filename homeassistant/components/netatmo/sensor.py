@@ -159,7 +159,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     if module_name not in data.get_module_names():
                         _LOGGER.info("Module %s not found", module_name)
                         continue
-                    dev.extend(find_devices(data, module_name))
+                    dev.extend(find_devices(data, [module_name]))
                 continue
 
             # otherwise add all modules and conditions
