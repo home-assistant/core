@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_NAME, ATTR_STATE, CONF_DEVICE, CONF_DEVICES,
+    CONF_HOST, CONF_PORT,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS,
     POWER_WATT)
 import homeassistant.helpers.config_validation as cv
@@ -15,24 +16,23 @@ from homeassistant.util import slugify
 DOMAIN = 'rfxtrx'
 
 DEFAULT_SIGNAL_REPETITIONS = 1
+DEFAULT_PORT = 10001
+NO_DEVICE = ''
 
 ATTR_AUTOMATIC_ADD = 'automatic_add'
-ATTR_DEVICE = 'device'
 ATTR_DEBUG = 'debug'
 ATTR_FIRE_EVENT = 'fire_event'
 ATTR_DATA_TYPE = 'data_type'
-ATTR_DUMMY = 'dummy'
-ATTR_NETWORKPORT = 'networkport'
 CONF_DATA_BITS = 'data_bits'
 CONF_AUTOMATIC_ADD = 'automatic_add'
 CONF_DATA_TYPE = 'data_type'
 CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_FIRE_EVENT = 'fire_event'
 CONF_DUMMY = 'dummy'
-CONF_NETWORKPORT = 'networkport'
 CONF_DEBUG = 'debug'
 CONF_OFF_DELAY = 'off_delay'
 EVENT_BUTTON_PRESSED = 'button_pressed'
+CONNECTION_GROUP = 'connection'
 
 DATA_TYPES = OrderedDict([
     ('Temperature', TEMP_CELSIUS),
@@ -72,10 +72,11 @@ DATA_RFXOBJECT = 'rfxobject'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_DEVICE): cv.string,
+        vol.Exclusive(CONF_DEVICE, CONNECTION_GROUP): cv.string,
+        vol.Exclusive(CONF_HOST, CONNECTION_GROUP): cv.string,
+        vol.Exclusive(CONF_DUMMY, CONNECTION_GROUP): cv.boolean,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.positive_int,
         vol.Optional(CONF_DEBUG, default=False): cv.boolean,
-        vol.Optional(CONF_DUMMY, default=False): cv.boolean,
-        vol.Optional(CONF_NETWORKPORT, default=0): cv.positive_int,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -102,21 +103,21 @@ def setup(hass, config):
     # Try to load the RFXtrx module.
     import RFXtrx as rfxtrxmod
 
-    device = config[DOMAIN][ATTR_DEVICE]
-    debug = config[DOMAIN][ATTR_DEBUG]
-    dummy_connection = config[DOMAIN][ATTR_DUMMY]
-    networkport = config[DOMAIN][ATTR_NETWORKPORT]
+    device = config[DOMAIN].get(CONF_DEVICE, NO_DEVICE)
+    host = config[DOMAIN].get(CONF_HOST, '')
+    port = config[DOMAIN][CONF_PORT]
+    debug = config[DOMAIN][CONF_DEBUG]
+    dummy_connection = config[DOMAIN].get(CONF_DUMMY, False)
 
     if dummy_connection:
-        rfx_object = rfxtrxmod.Connect(
-            device, None, debug=debug,
-            transport_protocol=rfxtrxmod.DummyTransport2)
-    elif networkport > 0:
-        rfx_object = rfxtrxmod.Connect(
-            (device, networkport), None, debug=debug,
-            transport_protocol=rfxtrxmod.PyNetworkTransport)
+        rfx_object = rfxtrxmod.Connect(device, None, debug=debug,
+                                       transport_protocol=rfxtrxmod.DummyTransport2)
+    elif device != NO_DEVICE:
+        rfx_object = rfxtrxmod.Connect(device, None, debug=debug,
+                                       transport_protocol=rfxtrxmod.PySerialTransport)
     else:
-        rfx_object = rfxtrxmod.Connect(device, None, debug=debug)
+        rfx_object = rfxtrxmod.Connect((host, port), None, debug=debug,
+                                       transport_protocol=rfxtrxmod.PyNetworkTransport)
 
     def _start_rfxtrx(event):
         rfx_object.event_callback = handle_receive
