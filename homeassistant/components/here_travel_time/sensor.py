@@ -383,7 +383,6 @@ class HERETravelTimeData():
         """Extract Waze-like route info from the public transport lines."""
         lines = []
         for line_info in public_transport_line_segment:
-            print(line_info)
             lines.append(
                 line_info['lineName'] + " - " + line_info['destination'])
 
