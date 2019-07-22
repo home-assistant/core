@@ -21,12 +21,13 @@ async def async_setup_platform(
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Velbus binary sensor based on config_entry."""
     cntrl = hass.data[DOMAIN][entry.entry_id]['cntrl']
-    items = []
-    for item in hass.data[DOMAIN][entry.entry_id]['climate']:
-        module = cntrl.get_module(item[0])
-        channel = item[1]
-        items.append(VelbusClimate(module, channel))
-    async_add_entities(items)
+    modules_data = hass.data[DOMAIN][entry.entry_id]['climate']
+    entities = []
+    for address, channel in modules_data:
+        module = cntrl.get_module(address)
+        entities.append(
+            VelbusClimate(module, channel))
+    async_add_entities(entities)
 
 
 class VelbusClimate(VelbusEntity, ClimateDevice):

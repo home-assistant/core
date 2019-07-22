@@ -16,12 +16,13 @@ async def async_setup_platform(
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Velbus sensor based on config_entry."""
     cntrl = hass.data[DOMAIN][entry.entry_id]['cntrl']
-    items = []
-    for item in hass.data[DOMAIN][entry.entry_id]['sensor']:
-        module = cntrl.get_module(item[0])
-        channel = item[1]
-        items.append(VelbusSensor(module, channel))
-    async_add_entities(items)
+    modules_data = hass.data[DOMAIN][entry.entry_id]['sensor']
+    entities = []
+    for address, channel in modules_data:
+        module = cntrl.get_module(address)
+        entities.append(
+            VelbusSensor(module, channel))
+    async_add_entities(entities)
 
 
 class VelbusSensor(VelbusEntity):

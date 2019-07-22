@@ -50,7 +50,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
             prt = user_input[CONF_PORT]
             # name must be unique
             if not self._prt_in_configuration_exists(prt):
-                return await self._create_device(name, prt)
+                return self._create_device(name, prt)
             self._errors[CONF_PORT] = 'port_exists'
 
         return self.async_show_form(
@@ -72,4 +72,4 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
             return self.async_abort(
                 reason='already_imported'
                 )
-        return await self._create_device(name, prt)
+        return self._create_device(name, prt)

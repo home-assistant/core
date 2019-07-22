@@ -18,12 +18,13 @@ async def async_setup_platform(
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Velbus switch based on config_entry."""
     cntrl = hass.data[DOMAIN][entry.entry_id]['cntrl']
-    items = []
-    for item in hass.data[DOMAIN][entry.entry_id]['switch']:
-        module = cntrl.get_module(item[0])
-        channel = item[1]
-        items.append(VelbusSwitch(module, channel))
-    async_add_entities(items)
+    modules_data = hass.data[DOMAIN][entry.entry_id]['switch']
+    entities = []
+    for address, channel in modules_data:
+        module = cntrl.get_module(address)
+        entities.append(
+            VelbusSwitch(module, channel))
+    async_add_entities(entities)
 
 
 class VelbusSwitch(VelbusEntity, SwitchDevice):
