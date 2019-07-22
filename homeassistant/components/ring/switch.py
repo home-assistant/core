@@ -13,6 +13,7 @@ SCAN_INTERVAL = timedelta(seconds=10)
 SIREN_ICON = 'mdi:alarm-bell'
 LIGHT_ICON = 'mdi:track-light'
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a sensor for a Ring device."""
     ring = hass.data[DATA_RING]
@@ -26,6 +27,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             switches.append(LightSwitch(hass, device))
 
     add_entities(switches, True)
+
 
 class BaseRingSwitch(SwitchDevice):
     """Represents a switch for controlling an aspect of a ring device"""
@@ -47,6 +49,7 @@ class BaseRingSwitch(SwitchDevice):
     def update(self):
         """Get the siren status from ring"""
         self._device.update()
+
 
 class SirenSwitch(BaseRingSwitch):
     """Used to turn the ring cameras siren on and off"""
@@ -78,6 +81,7 @@ class SirenSwitch(BaseRingSwitch):
     def icon(self):
         """Return the icon."""
         return SIREN_ICON
+
 
 class LightSwitch(BaseRingSwitch):
     """Used to turn the ring cameras light on and off"""
