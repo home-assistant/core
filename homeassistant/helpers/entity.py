@@ -433,7 +433,7 @@ class Entity:
     async def _async_registry_updated(self, event):
         """Handle entity registry update."""
         data = event.data
-        if data['action'] != 'update' and data.get(
+        if data['action'] != 'update' or data.get(
                 'old_entity_id', data['entity_id']) != self.entity_id:
             return
 

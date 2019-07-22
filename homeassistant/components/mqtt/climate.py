@@ -12,7 +12,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, HVAC_MODE_OFF,
     SUPPORT_AUX_HEAT, SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE,
     SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE, PRESET_AWAY,
-    SUPPORT_TARGET_TEMPERATURE_RANGE)
+    SUPPORT_TARGET_TEMPERATURE_RANGE, PRESET_NONE)
 from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_DEVICE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_ON)
@@ -537,6 +537,9 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             presets.append(PRESET_AWAY)
 
         presets.extend(self._config[CONF_HOLD_LIST])
+
+        if presets:
+            presets.insert(0, PRESET_NONE)
 
         return presets
 
