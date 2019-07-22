@@ -5,7 +5,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID, SERVICE_ALARM_TRIGGER,
+    ATTR_CODE, ATTR_CODE_FORMAT, ENTITY_SERVICE_SCHEMA, SERVICE_ALARM_TRIGGER,
     SERVICE_ALARM_DISARM, SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_NIGHT, SERVICE_ALARM_ARM_CUSTOM_BYPASS)
 from homeassistant.helpers.config_validation import (  # noqa
@@ -23,8 +23,7 @@ ATTR_CODE_ARM_REQUIRED = 'code_arm_required'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-ALARM_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
+ALARM_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_CODE): cv.string,
 })
 
