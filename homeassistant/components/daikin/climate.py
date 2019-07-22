@@ -273,16 +273,16 @@ class DaikinClimate(ClimateDevice):
 
     @property
     def preset_mode(self):
-        """Return the fan setting."""
+        """Return the preset_mode."""
         return self.get(ATTR_PRESET_MODE)
 
     async def async_set_preset_mode(self, preset_mode):
-        """Set new target temperature."""
+        """Set new preset mode."""
         await self._set({ATTR_PRESET_MODE: preset_mode})
 
     @property
     def preset_modes(self):
-        """List of available swing modes."""
+        """List of available preset modes."""
         return list(HA_PRESET_TO_DAIKIN)
 
     async def async_update(self):
