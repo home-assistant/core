@@ -518,6 +518,7 @@ omit =
     homeassistant/components/rest/switch.py
     homeassistant/components/rfxtrx/*
     homeassistant/components/ring/camera.py
+    homeassistant/components/ring/switch.py
     homeassistant/components/ripple/sensor.py
     homeassistant/components/rocketchat/notify.py
     homeassistant/components/roku/*
