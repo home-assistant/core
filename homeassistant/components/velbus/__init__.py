@@ -1,6 +1,7 @@
 """Support for Velbus devices."""
 import asyncio
 import logging
+import velbus
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -31,29 +32,28 @@ async def async_setup(hass, config):
         return True
 
     port = config[DOMAIN].get(CONF_PORT)
+    data = {}
 
-    if not port:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={'source': SOURCE_IMPORT}))
-    else:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={'source': SOURCE_IMPORT},
-                data={
-                    CONF_PORT: port,
-                    CONF_NAME: 'Velbus import'
-                }))
+    if port:
+        data = {
+            CONF_PORT: port,
+            CONF_NAME: 'Velbus import'
+            }
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={'source': SOURCE_IMPORT},
+            data=data
+            ))
+
     return True
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Establish connection with velbus."""
-    import velbus
 
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
 
     controller = velbus.Controller(entry.data[CONF_PORT])
 

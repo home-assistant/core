@@ -24,9 +24,11 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self) -> None:
+        """ Initialize the velbus config flow."""
         self._errors = {}
 
-    async def _create_device(self, name: str, prt: str):
+    def _create_device(self, name: str, prt: str):
+        """ The call to create the device itself."""
         return self.async_create_entry(
             title=name,
             data={
@@ -45,11 +47,11 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
         self._errors = {}
         if user_input is not None:
             name = slugify(user_input[CONF_NAME])
-            prt = user_input.get(CONF_PORT)
+            prt = user_input[CONF_PORT]
             # name must be unique
             if not self._prt_in_configuration_exists(prt):
                 return await self._create_device(name, prt)
-            self._errors[CONF_NAME] = 'port_exists'
+            self._errors[CONF_PORT] = 'port_exists'
 
         return self.async_show_form(
             step_id='user',

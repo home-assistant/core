@@ -6,7 +6,7 @@
         "title": "Define the velbus connection type",
         "data": {
             "name": "The name for this velbus connection",
-            "device": "Connection string"
+            "port": "Connection string"
         }
       }
     },
