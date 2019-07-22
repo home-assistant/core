@@ -7,13 +7,14 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_NAME, CONF_ID, CONF_PLATFORM, ENTITY_SERVIVCE_SCHEMA,
+    ATTR_ENTITY_ID, ATTR_NAME, CONF_ID, CONF_PLATFORM,
     EVENT_AUTOMATION_TRIGGERED, EVENT_HOMEASSISTANT_START, SERVICE_RELOAD,
     SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON)
 from homeassistant.core import Context, CoreState
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, extract_domain_configs, script
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import ENTITY_SERVIVCE_SCHEMA
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
