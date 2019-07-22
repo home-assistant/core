@@ -10,7 +10,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import (  # noqa
     PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.components import group
 from homeassistant.helpers import intent
@@ -19,7 +18,7 @@ from homeassistant.const import (
     SERVICE_STOP_COVER, SERVICE_TOGGLE, SERVICE_OPEN_COVER_TILT,
     SERVICE_CLOSE_COVER_TILT, SERVICE_STOP_COVER_TILT,
     SERVICE_SET_COVER_TILT_POSITION, SERVICE_TOGGLE_COVER_TILT,
-    STATE_OPEN, STATE_CLOSED, STATE_OPENING, STATE_CLOSING, ATTR_ENTITY_ID)
+    STATE_OPEN, STATE_CLOSED, STATE_OPENING, STATE_CLOSING)
 
 _LOGGER = logging.getLogger(__name__)
 
