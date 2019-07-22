@@ -19,7 +19,7 @@ LIGHT_ON = ('lightbulb', 'on')
 async def test_koogeek_ls1_setup(hass):
     """Test that a Koogeek LS1 can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, 'koogeek_ls1.json')
-    pairing = await setup_test_accessories(hass, accessories)
+    config_entry, pairing = await setup_test_accessories(hass, accessories)
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
@@ -27,7 +27,13 @@ async def test_koogeek_ls1_setup(hass):
     entry = entity_registry.async_get('light.koogeek_ls1_20833f')
     assert entry.unique_id == 'homekit-AAAA011111111111-7'
 
-    helper = Helper(hass, 'light.koogeek_ls1_20833f', pairing, accessories[0])
+    helper = Helper(
+        hass,
+        'light.koogeek_ls1_20833f',
+        pairing,
+        accessories[0],
+        config_entry
+    )
     state = await helper.poll_and_get_state()
 
     # Assert that the friendly name is detected correctly
@@ -58,9 +64,11 @@ async def test_recover_from_failure(hass, utcnow, failure_cls):
     See https://github.com/home-assistant/home-assistant/issues/18949
     """
     accessories = await setup_accessories_from_file(hass, 'koogeek_ls1.json')
-    pairing = await setup_test_accessories(hass, accessories)
+    config_entry, pairing = await setup_test_accessories(hass, accessories)
 
-    helper = Helper(hass, 'light.koogeek_ls1_20833f', pairing, accessories[0])
+    helper = Helper(
+        hass, 'light.koogeek_ls1_20833f', pairing, accessories[0], config_entry
+    )
 
     # Set light state on fake device to off
     helper.characteristics[LIGHT_ON].set_value(False)
@@ -80,7 +88,8 @@ async def test_recover_from_failure(hass, utcnow, failure_cls):
         state = await helper.poll_and_get_state()
         assert state.state == 'off'
 
-        get_char.assert_called_with([(1, 8), (1, 9), (1, 10), (1, 11)])
+        chars = get_char.call_args[0][0]
+        assert set(chars) == {(1, 8), (1, 9), (1, 10), (1, 11)}
 
     # Test that entity changes state when network error goes away
     next_update += timedelta(seconds=60)
