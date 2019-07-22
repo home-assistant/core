@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components import input_boolean, switch
 from homeassistant.components.climate.const import (
     ATTR_PRESET_MODE, DOMAIN, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF,
-    PRESET_AWAY)
+    PRESET_AWAY, PRESET_NONE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON,
     TEMP_CELSIUS, TEMP_FAHRENHEIT)
@@ -202,7 +202,7 @@ async def test_set_away_mode_and_restore_prev_temp(hass, setup_comp_2):
     await common.async_set_preset_mode(hass, PRESET_AWAY)
     state = hass.states.get(ENTITY)
     assert 16 == state.attributes.get('temperature')
-    await common.async_set_preset_mode(hass, None)
+    await common.async_set_preset_mode(hass, PRESET_NONE)
     state = hass.states.get(ENTITY)
     assert 23 == state.attributes.get('temperature')
 
@@ -217,7 +217,7 @@ async def test_set_away_mode_twice_and_restore_prev_temp(hass, setup_comp_2):
     await common.async_set_preset_mode(hass, PRESET_AWAY)
     state = hass.states.get(ENTITY)
     assert 16 == state.attributes.get('temperature')
-    await common.async_set_preset_mode(hass, None)
+    await common.async_set_preset_mode(hass, PRESET_NONE)
     state = hass.states.get(ENTITY)
     assert 23 == state.attributes.get('temperature')
 

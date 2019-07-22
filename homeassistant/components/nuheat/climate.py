@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE)
+    SUPPORT_TARGET_TEMPERATURE, PRESET_NONE)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
@@ -157,6 +157,7 @@ class NuHeatThermostat(ClimateDevice):
     def preset_modes(self):
         """Return available preset modes."""
         return [
+            PRESET_NONE,
             MODE_HOLD_TEMPERATURE,
             MODE_TEMPORARY_HOLD
         ]
@@ -173,7 +174,7 @@ class NuHeatThermostat(ClimateDevice):
 
     def set_preset_mode(self, preset_mode):
         """Update the hold mode of the thermostat."""
-        if preset_mode is None:
+        if preset_mode == PRESET_NONE:
             schedule_mode = SCHEDULE_RUN
 
         elif preset_mode == MODE_HOLD_TEMPERATURE:

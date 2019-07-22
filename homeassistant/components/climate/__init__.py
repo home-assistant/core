@@ -74,7 +74,7 @@ SET_FAN_MODE_SCHEMA = vol.Schema({
 })
 SET_PRESET_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-    vol.Required(ATTR_PRESET_MODE): vol.Maybe(cv.string),
+    vol.Required(ATTR_PRESET_MODE): cv.string,
 })
 SET_HVAC_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
