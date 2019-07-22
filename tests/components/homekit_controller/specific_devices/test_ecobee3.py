@@ -7,30 +7,31 @@ https://github.com/home-assistant/home-assistant/issues/15336
 from unittest import mock
 
 from homekit import AccessoryDisconnectedError
-import pytest
 
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
 from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY)
 
 
 from tests.components.homekit_controller.common import (
     FakePairing, device_config_changed, setup_accessories_from_file,
-    setup_test_accessories, Helper
+    setup_test_accessories, Helper, time_changed
 )
 
 
 async def test_ecobee3_setup(hass):
     """Test that a Ecbobee 3 can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, 'ecobee3.json')
-    pairing = await setup_test_accessories(hass, accessories)
+    config_entry, pairing = await setup_test_accessories(hass, accessories)
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
     climate = entity_registry.async_get('climate.homew')
     assert climate.unique_id == 'homekit-123456789012-16'
 
-    climate_helper = Helper(hass, 'climate.homew', pairing, accessories[0])
+    climate_helper = Helper(
+        hass, 'climate.homew', pairing, accessories[0], config_entry
+    )
     climate_state = await climate_helper.poll_and_get_state()
     assert climate_state.attributes['friendly_name'] == 'HomeW'
     assert climate_state.attributes['supported_features'] == (
@@ -53,7 +54,7 @@ async def test_ecobee3_setup(hass):
     assert occ1.unique_id == 'homekit-AB1C-56'
 
     occ1_helper = Helper(
-        hass, 'binary_sensor.kitchen', pairing, accessories[0])
+        hass, 'binary_sensor.kitchen', pairing, accessories[0], config_entry)
     occ1_state = await occ1_helper.poll_and_get_state()
     assert occ1_state.attributes['friendly_name'] == 'Kitchen'
 
@@ -131,8 +132,8 @@ async def test_ecobee3_setup_connection_failure(hass):
 
         # If there is no cached entity map and the accessory connection is
         # failing then we have to fail the config entry setup.
-        with pytest.raises(ConfigEntryNotReady):
-            await setup_test_accessories(hass, accessories)
+        config_entry, pairing = await setup_test_accessories(hass, accessories)
+        assert config_entry.state == ENTRY_STATE_SETUP_RETRY
 
     climate = entity_registry.async_get('climate.homew')
     assert climate is None
@@ -140,7 +141,16 @@ async def test_ecobee3_setup_connection_failure(hass):
     # When accessory raises ConfigEntryNoteReady HA will retry - lets make
     # sure there is no cruft causing conflicts left behind by now doing
     # a successful setup.
-    await setup_test_accessories(hass, accessories)
+
+    # We just advance time by 5 minutes so that the retry happens, rather
+    # than manually invoking async_setup_entry - this means we need to
+    # make sure the IpPairing mock is in place or we'll try to connect to
+    # a real device. Normally this mocking is done by the helper in
+    # setup_test_accessories.
+    pairing_cls_loc = 'homekit.controller.ip_implementation.IpPairing'
+    with mock.patch(pairing_cls_loc) as pairing_cls:
+        pairing_cls.return_value = pairing
+        await time_changed(hass, 5 * 60)
 
     climate = entity_registry.async_get('climate.homew')
     assert climate.unique_id == 'homekit-123456789012-16'
