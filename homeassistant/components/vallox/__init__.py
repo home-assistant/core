@@ -7,7 +7,6 @@ import logging
 from vallox_websocket_api import PROFILE as VALLOX_PROFILE, Vallox
 from vallox_websocket_api.constants import vlxDevConstants
 import voluptuous as vol
-from websockets.exceptions import InvalidMessage
 
 from homeassistant.const import CONF_HOST, CONF_NAME
 import homeassistant.helpers.config_validation as cv
@@ -162,7 +161,7 @@ class ValloxStateProxy:
             self._profile = await self._client.get_profile()
             self._valid = True
 
-        except (OSError, InvalidMessage) as err:
+        except OSError as err:
             _LOGGER.error("Error during state cache update: %s", err)
             self._valid = False
 
