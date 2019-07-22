@@ -8,12 +8,12 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, ENTITY_ID_FORMAT
 from homeassistant.const import (
     CONF_NAME, CONF_MODE,
     TEMP_CELSIUS, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_BATTERY)
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.event import call_later
 from homeassistant.util import Throttle
 from .const import DATA_NETATMO_AUTH
@@ -130,6 +130,28 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             if _dev:
                 add_entities(_dev, True)
 
+        def find_devices(data, module_names=None):
+            """Find all devices."""
+            dev = []
+            if module_names is None:
+                module_names = data.get_module_names()
+            for module_name in module_names:
+                for condition in \
+                        data.station_data.monitoredConditions(module_name):
+                    name = 'Netatmo {} {}'.format(
+                        module_name,
+                        SENSOR_TYPES[condition.lower()][0])
+                    entity_id = generate_entity_id(
+                        ENTITY_ID_FORMAT, name, hass=hass)
+
+                    dev.append(
+                        NetatmoSensor(
+                            name, entity_id, data, module_name,
+                            condition.lower(), data.station
+                        )
+                    )
+            return dev
+
         import pyatmo
         for data_class in [pyatmo.WeatherStationData, pyatmo.HomeCoachData]:
             try:
@@ -145,17 +167,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 module_items = config[CONF_MODULES]
                 for module_name in module_items:
                     if module_name not in data.get_module_names():
-                        continue
-                    for condition in data.station_data.monitoredConditions(
-                            module_name):
-                        dev.append(
-                            NetatmoSensor(
-                                data,
-                                module_name,
-                                condition.lower(),
-                                data.station
-                            )
+                        _LOGGER.info(
+                            "Module %s not found",
+                            module_name
                         )
+                        continue
+                    dev.extend(find_devices(data, [module_name]))
                 continue
 
             # otherwise add all modules and conditions
@@ -169,24 +186,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities(dev, True)
 
 
-def find_devices(data):
-    """Find all devices."""
-    dev = []
-    module_names = data.get_module_names()
-    for module_name in module_names:
-        for condition in data.station_data.monitoredConditions(module_name):
-            dev.append(NetatmoSensor(
-                data, module_name, condition.lower(), data.station))
-    return dev
-
-
 class NetatmoSensor(Entity):
     """Implementation of a Netatmo sensor."""
 
-    def __init__(self, netatmo_data, module_name, sensor_type, station):
+    def __init__(
+            self, name, entity_id, netatmo_data, module_name, sensor_type,
+            station
+    ):
         """Initialize the sensor."""
-        self._name = 'Netatmo {} {}'.format(module_name,
-                                            SENSOR_TYPES[sensor_type][0])
+        self._name = name
+        self.entity_id = entity_id
         self.netatmo_data = netatmo_data
         self.module_name = module_name
         self.type = sensor_type
