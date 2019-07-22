@@ -7,7 +7,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_NAME, CONF_ID, CONF_PLATFORM,
+    ATTR_NAME, CONF_ID, CONF_PLATFORM, ENTITY_SERVIVCE_SCHEMA,
     EVENT_AUTOMATION_TRIGGERED, EVENT_HOMEASSISTANT_START, SERVICE_RELOAD,
     SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON)
 from homeassistant.core import Context, CoreState
@@ -85,12 +85,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
 })
 
-SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-})
-
-TRIGGER_SERVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
+TRIGGER_SERVICE_SCHEMA = ENTITY_SERVIVCE_SCHEMA.extend({
     vol.Optional(ATTR_VARIABLES, default={}): dict,
 })
 
@@ -165,12 +160,12 @@ async def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_TOGGLE, toggle_service_handler,
-        schema=SERVICE_SCHEMA)
+        schema=ENTITY_SERVIVCE_SCHEMA)
 
     for service in (SERVICE_TURN_ON, SERVICE_TURN_OFF):
         hass.services.async_register(
             DOMAIN, service, turn_onoff_service_handler,
-            schema=SERVICE_SCHEMA)
+            schema=ENTITY_SERVIVCE_SCHEMA)
 
     return True
 
