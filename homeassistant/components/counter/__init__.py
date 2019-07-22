@@ -7,6 +7,7 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME,\
     CONF_MAXIMUM, CONF_MINIMUM
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -32,11 +33,11 @@ SERVICE_INCREMENT = 'increment'
 SERVICE_RESET = 'reset'
 SERVICE_CONFIGURE = 'configure'
 
-SERVICE_SCHEMA_SIMPLE = vol.Schema({
+SERVICE_SCHEMA_SIMPLE = ENTITY_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
 
-SERVICE_SCHEMA_CONFIGURE = vol.Schema({
+SERVICE_SCHEMA_CONFIGURE = ENTITY_SERVICE_SCHEMA.extend({
     ATTR_ENTITY_ID: cv.comp_entity_ids,
     vol.Optional(ATTR_MINIMUM): vol.Any(None, vol.Coerce(int)),
     vol.Optional(ATTR_MAXIMUM): vol.Any(None, vol.Coerce(int)),
