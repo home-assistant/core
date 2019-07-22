@@ -27,9 +27,11 @@ PLATFORM = 'here_travel_time'
 APP_ID = 'test'
 APP_CODE = 'test'
 
+
 def _build_mock_url(origin, destination, modes, app_id, app_code, departure):
-    """Construct a url for HERE"""
-    base_url = "https://route.cit.api.here.com/routing/7.2/calculateroute.json?"
+    """Construct a url for HERE."""
+    base_url = (
+        "https://route.cit.api.here.com/routing/7.2/calculateroute.json?")
     parameters = {
         'waypoint0': origin,
         'waypoint1': destination,
@@ -40,6 +42,7 @@ def _build_mock_url(origin, destination, modes, app_id, app_code, departure):
     }
     url = base_url + urllib.parse.urlencode(parameters)
     return url
+
 
 class TestHereTravelTimeSensor(unittest.TestCase):
     """Test the here_travel_time sensor."""
@@ -403,7 +406,10 @@ class TestHereTravelTimeSensor(unittest.TestCase):
         assert sensor.attributes.get(ATTR_ATTRIBUTION) is None
         assert sensor.attributes.get(ATTR_DURATION) == 89.16666666666667
         assert sensor.attributes.get(ATTR_DISTANCE) == 22.325
-        assert sensor.attributes.get(ATTR_ROUTE) == ("")
+        assert sensor.attributes.get(ATTR_ROUTE) == (
+            "332 - Palmer/Schiller; 332 - Cargo Rd./Delta Cargo; "
+            "332 - Palmer/Schiller"
+            )
         assert sensor.attributes.get(CONF_UNIT_SYSTEM) == 'metric'
         assert sensor.attributes.get(
             ATTR_DURATION_WITHOUT_TRAFFIC
@@ -458,7 +464,10 @@ class TestHereTravelTimeSensor(unittest.TestCase):
         assert sensor.attributes.get(ATTR_ATTRIBUTION) is None
         assert sensor.attributes.get(ATTR_DURATION) == 210.51666666666668
         assert sensor.attributes.get(ATTR_DISTANCE) == 12.533
-        assert sensor.attributes.get(ATTR_ROUTE) == ("")
+        assert sensor.attributes.get(ATTR_ROUTE) == (
+            "Mannheim Rd; W Belmont Ave; Cullerton St; E Fullerton Ave; "
+            "La Porte Ave; E Palmer Ave; N Railroad Ave; W North Ave; "
+            "E North Ave; E Third St")
         assert sensor.attributes.get(CONF_UNIT_SYSTEM) == 'metric'
         assert sensor.attributes.get(
             ATTR_DURATION_WITHOUT_TRAFFIC
