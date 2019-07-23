@@ -1,5 +1,5 @@
 """Support for HERE travel time sensors."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 import re
 from typing import Callable, Dict, Optional, Union
@@ -15,7 +15,6 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import location
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,16 +87,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIT_SYSTEM): vol.In(UNITS),
     }
 )
-
-
-def convert_time_to_utc(timestr):
-    """Take a string like 08:00:00 and convert it to a unix timestamp."""
-    combined = datetime.combine(
-        dt_util.start_of_local_day(), dt_util.parse_time(timestr)
-    )
-    if combined < datetime.now():
-        combined = combined + timedelta(days=1)
-    return dt_util.as_timestamp(combined)
 
 
 async def async_setup_platform(
@@ -260,9 +249,6 @@ class HERETravelTimeSensor(Entity):
         # If zone was not found in state then use the state as the location
         if entity_id.startswith("sensor."):
             return entity.state
-
-        # When everything fails just return nothing
-        return None
 
     @staticmethod
     def _get_location_from_attributes(entity: State) -> str:

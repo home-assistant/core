@@ -766,3 +766,74 @@ async def test_route_not_found(hass, requests_mock):
     ) as mock_error:
         assert await async_setup_component(hass, DOMAIN, config)
         assert mock_error.call_count == 1
+
+
+async def test_pattern_origin(hass):
+    """Test that pattern matching the origin works."""
+    config = {DOMAIN: {
+        'platform': PLATFORM,
+        'name': 'test',
+        'origin': "138.90,-77.04833",
+        'destination': CAR_DISABLED_DESTINATION,
+        'app_id': APP_ID,
+        'app_code': APP_CODE
+    }}
+    with patch(
+        'homeassistant.components.here_travel_time.sensor._LOGGER.error'
+    ) as mock_error:
+        assert await async_setup_component(hass, DOMAIN, config)
+        assert mock_error.call_count == 1
+
+
+async def test_pattern_destination(hass):
+    """Test that pattern matching the destination works."""
+    config = {DOMAIN: {
+        'platform': PLATFORM,
+        'name': 'test',
+        'origin': CAR_DISABLED_ORIGIN,
+        'destination': "139.0,-77.1",
+        'app_id': APP_ID,
+        'app_code': APP_CODE
+    }}
+    with patch(
+        'homeassistant.components.here_travel_time.sensor._LOGGER.error'
+    ) as mock_error:
+        assert await async_setup_component(hass, DOMAIN, config)
+        assert mock_error.call_count == 1
+
+
+async def test_invalid_credentials(hass, requests_mock):
+    """Test that invalid credentials error is correctly handled."""
+    origin = "52.5160,13.3779"
+    destination = "47.013399,-10.171986"
+    modes = ";".join(
+        [TRAVEL_MODE_CAR, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED]
+        )
+    response_url = _build_mock_url(
+        origin,
+        destination,
+        modes,
+        'invalid',
+        'invalid',
+        "now"
+        )
+    requests_mock.get(
+        response_url,
+        text=load_fixture(
+            'here_travel_time/routing_error_invalid_credentials.json'
+        )
+    )
+
+    config = {DOMAIN: {
+        'platform': PLATFORM,
+        'name': 'test',
+        'origin': origin,
+        'destination': destination,
+        'app_id': 'invalid',
+        'app_code': 'invalid'
+    }}
+    with patch(
+        'homeassistant.components.here_travel_time.sensor._LOGGER.error'
+    ) as mock_error:
+        assert await async_setup_component(hass, DOMAIN, config)
+        assert mock_error.call_count == 1
