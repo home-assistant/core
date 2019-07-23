@@ -1,4 +1,4 @@
-"""Support for switch sensor using I2C PCF8574 chip.""" 
+"""Support for switch sensor using I2C PCF8574 chip."""
 # https://github.com/oweidner/i2crelay/blob/master/i2crelay/i2crelay.py
 # https://github.com/flyte/pcf8574
 import logging
@@ -71,7 +71,7 @@ class PCF8574Switch(ToggleEntity):
 
     def __init__(self, pin_name, pin_num, pcf, invert_logic):
         """Initialize the pin."""
-        import digitalio
+        #import digitalio
         self._pin_name = pin_name or DEVICE_DEFAULT_NAME
         self._pin_num = pin_num
         self._pcf = pcf
