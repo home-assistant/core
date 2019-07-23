@@ -121,27 +121,27 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     area[CONF_MODE]
                 ))
     else:
-        def find_devices(data, module_names=data.get_module_names()):
+        def find_devices(data):
             """Find all devices."""
-            dev = []
-            if module_names is None:
-                module_names = data.get_module_names()
+            all_module_names = data.get_module_names()
+            module_names = config.get(CONF_MODULES, all_module_names)
+            _dev = []
             for module_name in module_names:
-                if module_name not in data.get_module_names():
+                if module_name not in all_module_names:
                     _LOGGER.info("Module %s not found", module_name)
                     continue
                 for condition in \
                         data.station_data.monitoredConditions(module_name):
                     _LOGGER.debug(
                         "Adding %s %s",
-                        module_name, 
+                        module_name,
                         data.station_data.moduleByName(
                             station=data.station, module=module_name
                         )
                     )
-                    dev.append(NetatmoSensor(
+                    _dev.append(NetatmoSensor(
                         data, module_name, condition.lower(), data.station))
-            return dev
+            return _dev
 
         def _retry(_data):
             try:
@@ -162,13 +162,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     NETATMO_DEVICE_TYPES[data_class.__name__]
                 )
                 continue
-            # Test if manually configured
-            if CONF_MODULES in config:
-                module_items = config[CONF_MODULES]
-                dev.extend(find_devices(data, module_items))
-                continue
 
-            # otherwise add all modules and conditions
             try:
                 dev.extend(find_devices(data))
             except requests.exceptions.Timeout:
