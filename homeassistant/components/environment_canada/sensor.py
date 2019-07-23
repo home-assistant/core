@@ -12,10 +12,9 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE, CONF_SCAN_INTERVAL,
-    ATTR_ATTRIBUTION, ATTR_LOCATION)
+    TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE, ATTR_ATTRIBUTION,
+    ATTR_LOCATION)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,7 +41,6 @@ def validate_station(station):
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_LANGUAGE, default='english'):
         vol.In(['english', 'french']),
-    vol.Required(CONF_SCAN_INTERVAL, default=10): int,
     vol.Optional(CONF_STATION): validate_station,
     vol.Inclusive(CONF_LATITUDE, 'latlon'): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'latlon'): cv.longitude,
@@ -52,8 +50,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Environment Canada sensor."""
     from env_canada import ECData
-
-    scan_interval = timedelta(minutes=config[CONF_SCAN_INTERVAL])
 
     if config.get(CONF_STATION):
         ec_data = ECData(station_id=config[CONF_STATION],
@@ -67,7 +63,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensor_list = list(ec_data.conditions.keys()) + list(ec_data.alerts.keys())
     sensor_list.remove('icon_code')
     add_entities([ECSensor(sensor_type,
-                           scan_interval,
                            ec_data)
                   for sensor_type in sensor_list],
                  True)
@@ -76,7 +71,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ECSensor(Entity):
     """Implementation of an Environment Canada sensor."""
 
-    def __init__(self, sensor_type, scan_interval, ec_data):
+    SCAN_INTERVAL = timedelta(minutes=10)
+
+    def __init__(self, sensor_type, ec_data):
         """Initialize the sensor."""
         self.sensor_type = sensor_type
         self.ec_data = ec_data
@@ -86,8 +83,6 @@ class ECSensor(Entity):
         self._state = None
         self._attr = None
         self._unit = None
-
-        self.update = Throttle(scan_interval)(self._update)
 
     @property
     def unique_id(self) -> str:
@@ -114,7 +109,7 @@ class ECSensor(Entity):
         """Return the units of measurement."""
         return self._unit
 
-    def _update(self):
+    def update(self):
         """Update current conditions."""
         self.ec_data.update()
         self.ec_data.conditions.update(self.ec_data.alerts)
