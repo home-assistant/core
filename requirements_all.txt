@@ -1855,7 +1855,7 @@ uscisstatus==0.1.1
 uvcclient==0.11.0
 
 # homeassistant.components.vallox
-vallox-websocket-api==2.0.0
+vallox-websocket-api==2.2.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.7
