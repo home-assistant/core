@@ -198,7 +198,6 @@ async def test_as_number_states(hass):
         assert state.state_as_number(ha.State('domain.test', _state, {})) == 1
 
 
-
 async def test_as_number_coercion(hass):
     """Test state_as_number with number."""
     for _state in ('0', '0.0', 0, 0.0):
