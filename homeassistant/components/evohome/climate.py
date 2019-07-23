@@ -193,9 +193,9 @@ class EvoZone(EvoClimateDevice):
             return CURRENT_HVAC_OFF
         if self.target_temperature <= self.min_temp:
             return CURRENT_HVAC_OFF
-        if self.target_temperature <= self.current_temperature:
-            return CURRENT_HVAC_HEAT
-        return CURRENT_HVAC_IDLE
+        if self.target_temperature < self.current_temperature:
+            return CURRENT_HVAC_IDLE
+        return CURRENT_HVAC_HEAT
 
     @property
     def current_temperature(self) -> Optional[float]:
