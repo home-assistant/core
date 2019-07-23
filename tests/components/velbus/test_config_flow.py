@@ -49,12 +49,16 @@ async def test_import(hass):
 async def test_abort_if_already_setup(hass):
     """Test we abort if Daikin is already setup."""
     flow = init_config_flow(hass)
-    MockConfigEntry(domain='velbus', data={CONF_PORT: PORT_TCP, CONF_NAME: 'velbus home'}).add_to_hass(hass)
+    MockConfigEntry(domain='velbus',
+                    data={CONF_PORT: PORT_TCP,
+                          CONF_NAME: 'velbus home'}).add_to_hass(hass)
 
-    result = await flow.async_step_import({CONF_PORT: PORT_TCP, CONF_NAME: 'velbus import test'})
+    result = await flow.async_step_import(
+        {CONF_PORT: PORT_TCP, CONF_NAME: 'velbus import test'})
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
     assert result['reason'] == 'already_imported'
 
-    result = await flow.async_step_user({CONF_PORT: PORT_TCP, CONF_NAME: 'velbus import test'})
+    result = await flow.async_step_user(
+        {CONF_PORT: PORT_TCP, CONF_NAME: 'velbus import test'})
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['errors'] == {'port': 'port_exists'}
