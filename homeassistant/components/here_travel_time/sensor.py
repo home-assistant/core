@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 import logging
 import re
+from typing import Callable, Dict, Optional, Union
 
 import herepy
 import voluptuous as vol
@@ -10,6 +11,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_MODE, CONF_NAME,
     CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import location
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -98,8 +100,11 @@ def convert_time_to_utc(timestr):
     return dt_util.as_timestamp(combined)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass: HomeAssistant,
+        config: Dict[str, Union[str, bool]],
+        async_add_entities: Callable,
+        discovery_info: None = None) -> None:
     """Set up the HERE travel time platform."""
     hass.data.setdefault(DATA_KEY, [])
 
@@ -137,7 +142,13 @@ async def async_setup_platform(hass, config, async_add_entities,
 class HERETravelTimeSensor(Entity):
     """Representation of a HERE travel time sensor."""
 
-    def __init__(self, hass, name, origin, destination, here_data):
+    def __init__(
+            self,
+            hass: HomeAssistant,
+            name: str,
+            origin: str,
+            destination: str,
+            here_data: 'HERETravelTimeData') -> None:
         """Initialize the sensor."""
         self._hass = hass
         self._name = name
@@ -158,7 +169,7 @@ class HERETravelTimeSensor(Entity):
             self._here_data.destination = destination
 
     @property
-    def state(self):
+    def state(self) -> Optional[int]:
         """Return the state of the sensor."""
         if self._here_data.duration is not None:
             return round(self._here_data.duration / 60)
@@ -166,12 +177,13 @@ class HERETravelTimeSensor(Entity):
         return None
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Get the name of the sensor."""
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(
+            self) -> Optional[Dict[str, Union[None, float, str, bool]]]:
         """Return the state attributes."""
         if self._here_data.duration is None:
             return None
@@ -190,12 +202,12 @@ class HERETravelTimeSensor(Entity):
         return res
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Icon to use in the frontend depending on travel_mode."""
         if self._here_data.travel_mode == TRAVEL_MODE_PEDESTRIAN:
             return ICON_PEDESTRIAN
@@ -205,7 +217,7 @@ class HERETravelTimeSensor(Entity):
             return ICON_TRUCK
         return ICON_CAR
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update Sensor Information."""
         # Convert device_trackers to HERE friendly location
         if self._origin_entity_id is not None:
@@ -218,7 +230,7 @@ class HERETravelTimeSensor(Entity):
 
         await self._hass.async_add_executor_job(self._here_data.update)
 
-    async def _get_location_from_entity(self, entity_id):
+    async def _get_location_from_entity(self, entity_id: str) -> Optional[str]:
         """Get the location from the entity state or attributes."""
         entity = self._hass.states.get(entity_id)
 
@@ -248,7 +260,7 @@ class HERETravelTimeSensor(Entity):
         return None
 
     @staticmethod
-    def _get_location_from_attributes(entity):
+    def _get_location_from_attributes(entity: State) -> str:
         """Get the lat/long string from an entities attributes."""
         attr = entity.attributes
         return "{},{}".format(
@@ -259,8 +271,16 @@ class HERETravelTimeSensor(Entity):
 class HERETravelTimeData():
     """HERETravelTime data object."""
 
-    def __init__(self, origin, destination, app_id, app_code, travel_mode,
-                 traffic_mode, route_mode, units):
+    def __init__(
+            self,
+            origin: None,
+            destination: None,
+            app_id: str,
+            app_code: str,
+            travel_mode: str,
+            traffic_mode: bool,
+            route_mode: str,
+            units: str) -> None:
         """Initialize herepy."""
         self.origin = origin
         self.destination = destination
