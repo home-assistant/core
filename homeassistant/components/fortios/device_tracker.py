@@ -4,9 +4,10 @@ Support to use FortiOS device like FortiGate as device tracker.
 This component is part of the device_tracker platform.
 """
 import logging
-import voluptuous as vol
 
+import voluptuous as vol
 from fortiosapi import FortiOSAPI
+
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
@@ -30,9 +31,6 @@ def get_scanner(hass, config):
     host = config[DOMAIN][CONF_HOST]
     verify_ssl = config[DOMAIN][CONF_VERIFY_SSL]
     token = config[DOMAIN][CONF_TOKEN]
-
-    _LOGGER.debug("host : %s", host)
-    _LOGGER.debug("verify_ssl : %s", verify_ssl)
 
     fgt = FortiOSAPI()
 
