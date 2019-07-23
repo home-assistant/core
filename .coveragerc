@@ -673,6 +673,9 @@ omit =
     homeassistant/components/venstar/climate.py
     homeassistant/components/vera/*
     homeassistant/components/verisure/*
+    homeassistant/components/vesync/__init__.py
+    homeassistant/components/vesync/common.py
+    homeassistant/components/vesync/const.py
     homeassistant/components/vesync/switch.py
     homeassistant/components/viaggiatreno/sensor.py
     homeassistant/components/vizio/media_player.py
