@@ -25,8 +25,6 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'honeywell'
-
 ATTR_FAN_ACTION = 'fan_action'
 
 CONF_COOL_AWAY_TEMPERATURE = 'away_cool_temperature'
@@ -130,8 +128,6 @@ class HoneywellUSThermostat(ClimateDevice):
         self._password = password
 
         _LOGGER.debug("latestData = %s ", device._data)  # noqa; pylint: disable=protected-access
-
-        self.entity_id = "{}.{}_{}".format('climate', DOMAIN, device.deviceid)
 
         # not all honeywell HVACs support all modes
         mappings = [v for k, v in HVAC_MODE_TO_HW_MODE.items()
