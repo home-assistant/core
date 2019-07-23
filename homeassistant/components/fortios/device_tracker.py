@@ -7,7 +7,6 @@ import logging
 import voluptuous as vol
 
 from fortiosapi import FortiOSAPI
-from requests.exceptions import ConnectionError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
