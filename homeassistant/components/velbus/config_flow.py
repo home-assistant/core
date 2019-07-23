@@ -48,7 +48,6 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
         if user_input is not None:
             name = slugify(user_input[CONF_NAME])
             prt = user_input[CONF_PORT]
-            # name must be unique
             if not self._prt_in_configuration_exists(prt):
                 return self._create_device(name, prt)
             self._errors[CONF_PORT] = 'port_exists'
@@ -64,12 +63,12 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
 
     async def async_step_import(self, user_input=None):
         """Import a config entry."""
+        user_input[CONF_NAME] = 'Velbus Import'
         prt = user_input.get(CONF_PORT)
-        name = user_input.get(CONF_NAME)
         if self._prt_in_configuration_exists(prt):
             # if the velbus import is already in the config
             # we should not proceed the import
             return self.async_abort(
                 reason='already_imported'
                 )
-        return self._create_device(name, prt)
+        return await self.async_step_user(user_input)

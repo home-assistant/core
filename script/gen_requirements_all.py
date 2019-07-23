@@ -129,6 +129,7 @@ TEST_REQUIREMENTS = (
     'python-forecastio',
     'python-nest',
     'python_awair',
+    'python-velbus',
     'pytradfri[async]',
     'pyunifi',
     'pyupnp-async',
