@@ -35,6 +35,7 @@ homeassistant/components/aurora_abb_powerone/* @davet2001
 homeassistant/components/auth/* @home-assistant/core
 homeassistant/components/automatic/* @armills
 homeassistant/components/automation/* @home-assistant/core
+homeassistant/components/avea/* @pattyland
 homeassistant/components/awair/* @danielsjf
 homeassistant/components/aws/* @awarecan @robbiet480
 homeassistant/components/axis/* @kane610
