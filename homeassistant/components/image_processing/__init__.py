@@ -10,6 +10,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -55,10 +56,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
 })
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
 
-SERVICE_SCAN_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-})
-
 
 async def async_setup(hass, config):
     """Set up the image processing."""
@@ -81,7 +78,7 @@ async def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SCAN, async_scan_service,
-        schema=SERVICE_SCAN_SCHEMA)
+        schema=ENTITY_SERVICE_SCHEMA)
 
     return True
 
