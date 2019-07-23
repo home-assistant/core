@@ -21,6 +21,7 @@ import homeassistant.util.dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_RELEASE_NOTES = 'release_notes'
+ATTR_NEWEST_VERSION = 'newest_version'
 
 CONF_REPORTING = 'reporting'
 CONF_COMPONENT_REPORTING = 'include_used_components'
@@ -95,15 +96,24 @@ async def async_setup(hass, config):
             newest = hass.components.hassio.get_homeassistant_version()
 
         # Validate version
+        update_available = False
         if StrictVersion(newest) > StrictVersion(current_version):
             _LOGGER.info("The latest available version is %s", newest)
-            hass.states.async_set(
-                ENTITY_ID, newest, {ATTR_FRIENDLY_NAME: 'Update Available',
-                                    ATTR_RELEASE_NOTES: releasenotes}
-            )
+            update_available = True
         elif StrictVersion(newest) == StrictVersion(current_version):
             _LOGGER.info(
                 "You are on the latest version (%s) of Home Assistant", newest)
+        elif StrictVersion(newest) < StrictVersion(current_version):
+            _LOGGER.warning(
+                "You are before the latest version (%s) of Home Assistant",
+                newest)
+
+        hass.states.async_set(
+            ENTITY_ID, 'on' if update_available else 'off', {
+                ATTR_FRIENDLY_NAME: 'Update Available',
+                ATTR_RELEASE_NOTES: releasenotes,
+                ATTR_NEWEST_VERSION: newest}
+        )
 
     # Update daily, start 1 hour after startup
     _dt = dt_util.utcnow() + timedelta(hours=1)

@@ -46,7 +46,7 @@ def mock_get_uuid():
 
 
 @asyncio.coroutine
-def test_new_version_shows_entity_after_hour(
+def test_new_version_shows_entity_true(
         hass, mock_get_uuid, mock_get_newest_version):
     """Test if new entity is created if new version is available."""
     mock_get_uuid.return_value = MOCK_HUUID
@@ -61,11 +61,13 @@ def test_new_version_shows_entity_after_hour(
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
         yield from hass.async_block_till_done()
 
-    assert hass.states.is_state(updater.ENTITY_ID, NEW_VERSION)
+    assert hass.states.is_state(updater.ENTITY_ID, 'on')
+    assert hass.states.get(updater.ENTITY_ID).attributes['newest_version'] is \
+        NEW_VERSION
 
 
 @asyncio.coroutine
-def test_same_version_not_show_entity(
+def test_same_version_shows_entity_false(
         hass, mock_get_uuid, mock_get_newest_version):
     """Test if new entity is created if new version is available."""
     mock_get_uuid.return_value = MOCK_HUUID
@@ -80,7 +82,9 @@ def test_same_version_not_show_entity(
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
         yield from hass.async_block_till_done()
 
-    assert hass.states.get(updater.ENTITY_ID) is None
+    assert hass.states.is_state(updater.ENTITY_ID, 'off')
+    assert hass.states.get(updater.ENTITY_ID).attributes['newest_version'] is \
+        MOCK_VERSION
 
 
 @asyncio.coroutine
@@ -100,7 +104,7 @@ def test_disable_reporting(hass, mock_get_uuid, mock_get_newest_version):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
         yield from hass.async_block_till_done()
 
-    assert hass.states.get(updater.ENTITY_ID) is None
+    assert hass.states.is_state(updater.ENTITY_ID, 'off')
     res = yield from updater.get_newest_version(hass, MOCK_HUUID, MOCK_CONFIG)
     call = mock_get_newest_version.mock_calls[0][1]
     assert call[0] is hass
@@ -184,4 +188,6 @@ def test_new_version_shows_entity_after_hour_hassio(
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
         yield from hass.async_block_till_done()
 
-    assert hass.states.is_state(updater.ENTITY_ID, "999.0")
+    assert hass.states.is_state(updater.ENTITY_ID, 'on')
+    assert hass.states.get(updater.ENTITY_ID).attributes['newest_version'] is \
+        "999.0"
