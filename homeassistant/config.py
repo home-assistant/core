@@ -706,11 +706,15 @@ async def async_process_component_config(
         if (not hass.config.skip_pip and p_integration.requirements and
                 not await async_process_requirements(
                     hass, p_integration.domain, p_integration.requirements)):
+            _LOGGER.error(
+                domain, p_name, config,
+                "Unable to install all requirements for %s.%s", domain, p_name)
             continue
 
         try:
             platform = p_integration.get_platform(domain)
-        except ImportError:
+        except ImportError as ex:
+            _LOGGER.exception("Failed to get platform %s.%s", domain, p_name)
             continue
 
         # Validate platform specific schema
