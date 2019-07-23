@@ -4,6 +4,7 @@ import logging
 from homeassistant.core import callback
 from homeassistant import setup
 from homeassistant.components import lock
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.const import STATE_ON, STATE_OFF
 
 from tests.common import (get_test_home_assistant,
@@ -269,7 +270,7 @@ class TestTemplateLock:
         assert state.state == lock.STATE_UNLOCKED
 
         self.hass.services.call(lock.DOMAIN, lock.SERVICE_LOCK, {
-            lock.ATTR_ENTITY_ID: 'lock.template_lock'
+            ATTR_ENTITY_ID: 'lock.template_lock'
         })
         self.hass.block_till_done()
 
@@ -302,7 +303,7 @@ class TestTemplateLock:
         assert state.state == lock.STATE_LOCKED
 
         self.hass.services.call(lock.DOMAIN, lock.SERVICE_UNLOCK, {
-            lock.ATTR_ENTITY_ID: 'lock.template_lock'
+            ATTR_ENTITY_ID: 'lock.template_lock'
         })
         self.hass.block_till_done()
 
