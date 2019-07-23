@@ -94,6 +94,7 @@ homeassistant/components/fixer/* @fabaff
 homeassistant/components/flock/* @fabaff
 homeassistant/components/flunearyou/* @bachya
 homeassistant/components/fortigate/* @kifeo
+homeassistant/components/fortios/* @kimfrellsen
 homeassistant/components/foursquare/* @robbiet480
 homeassistant/components/freebox/* @snoof85
 homeassistant/components/fronius/* @nielstron
