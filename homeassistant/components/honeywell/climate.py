@@ -131,7 +131,7 @@ class HoneywellUSThermostat(ClimateDevice):
 
         # not all honeywell HVACs support all modes
         mappings = [v for k, v in HVAC_MODE_TO_HW_MODE.items()
-                    if k in device.raw_ui_data]
+                    if device.raw_ui_data[k]]
         self._hvac_mode_map = {k: v for d in mappings for k, v in d.items()}
 
         self._supported_features = \
@@ -150,7 +150,7 @@ class HoneywellUSThermostat(ClimateDevice):
 
         # not all honeywell fans support all modes
         mappings = [v for k, v in FAN_MODE_TO_HW.items()
-                    if k in device.raw_fan_data]
+                    if device.raw_fan_data[k]]
         self._fan_mode_map = {k: v for d in mappings for k, v in d.items()}
 
         self._supported_features |= SUPPORT_FAN_MODE
