@@ -707,7 +707,6 @@ async def async_process_component_config(
                 not await async_process_requirements(
                     hass, p_integration.domain, p_integration.requirements)):
             _LOGGER.error(
-                domain, p_name, config,
                 "Unable to install all requirements for %s.%s", domain, p_name)
             continue
 
