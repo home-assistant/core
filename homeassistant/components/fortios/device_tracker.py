@@ -45,14 +45,7 @@ def get_scanner(hass, config):
         _LOGGER.error("Failed to login to FortiOS API: %s", ex)
         return None
 
-    try:
-        scanner = FortiOSDeviceScanner(fgt)
-    except Exception as ex:  # pylint: disable=broad-except
-        _LOGGER.error("FortiOS get_scanner Initialize failed: %s", ex)
-        return None
-
-    return scanner
-
+    return FortiOSDeviceScanner(fgt)
 
 class FortiOSDeviceScanner(DeviceScanner):
     """This class queries a FortiOS unit for connected devices."""
