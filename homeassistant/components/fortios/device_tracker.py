@@ -39,7 +39,7 @@ def get_scanner(hass, config):
     try:
         fgt.tokenlogin(host, token, verify_ssl)
     except Exception as ex:  # pylint: disable=broad-except
-        _LOGGER.error("Failed to login to FortiOS API")
+        _LOGGER.error("Failed to login to FortiOS API: %s", ex)
         return None
 
     try:
