@@ -56,7 +56,7 @@ SET_AUX_HEAT_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
 SET_TEMPERATURE_SCHEMA = vol.Schema(vol.All(
     cv.has_at_least_one_key(
         ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW),
-    ENTITY_SERVICE_SCHEMA.exten({
+    ENTITY_SERVICE_SCHEMA.extend({
         vol.Exclusive(ATTR_TEMPERATURE, 'temperature'): vol.Coerce(float),
         vol.Inclusive(ATTR_TARGET_TEMP_HIGH, 'temperature'): vol.Coerce(float),
         vol.Inclusive(ATTR_TARGET_TEMP_LOW, 'temperature'): vol.Coerce(float),
