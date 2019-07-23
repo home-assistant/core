@@ -228,6 +228,11 @@ class HERETravelTimeSensor(Entity):
             self._here_data.destination = await self._get_location_from_entity(
                 self._destination_entity_id)
 
+        self._here_data.destination = await self._resolve_zone(
+            self._here_data.destination)
+        self._here_data.origin = await self._resolve_zone(
+            self._here_data.origin)
+
         await self._hass.async_add_executor_job(self._here_data.update)
 
     async def _get_location_from_entity(self, entity_id: str) -> Optional[str]:
@@ -266,6 +271,15 @@ class HERETravelTimeSensor(Entity):
         return "{},{}".format(
             attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE)
         )
+
+    async def _resolve_zone(self, friendly_name: str) -> str:
+        """Get the lat/long string of a zone given its friendly_name."""
+        entities = self._hass.states.async_all()
+        for entity in entities:
+            if entity.domain == 'zone' and entity.name == friendly_name:
+                return self._get_location_from_attributes(entity)
+
+        return friendly_name
 
 
 class HERETravelTimeData():
