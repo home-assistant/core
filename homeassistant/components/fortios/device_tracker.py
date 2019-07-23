@@ -47,6 +47,7 @@ def get_scanner(hass, config):
 
     return FortiOSDeviceScanner(fgt)
 
+
 class FortiOSDeviceScanner(DeviceScanner):
     """This class queries a FortiOS unit for connected devices."""
 
