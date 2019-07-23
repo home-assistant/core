@@ -3,10 +3,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME,\
-    CONF_MAXIMUM, CONF_MINIMUM
+from homeassistant.const import (
+    CONF_ICON, CONF_NAME, CONF_MAXIMUM, CONF_MINIMUM)
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -32,12 +33,7 @@ SERVICE_INCREMENT = 'increment'
 SERVICE_RESET = 'reset'
 SERVICE_CONFIGURE = 'configure'
 
-SERVICE_SCHEMA_SIMPLE = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-})
-
-SERVICE_SCHEMA_CONFIGURE = vol.Schema({
-    ATTR_ENTITY_ID: cv.comp_entity_ids,
+SERVICE_SCHEMA_CONFIGURE = ENTITY_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_MINIMUM): vol.Any(None, vol.Coerce(int)),
     vol.Optional(ATTR_MAXIMUM): vol.Any(None, vol.Coerce(int)),
     vol.Optional(ATTR_STEP): cv.positive_int,
@@ -86,13 +82,13 @@ async def async_setup(hass, config):
         return False
 
     component.async_register_entity_service(
-        SERVICE_INCREMENT, SERVICE_SCHEMA_SIMPLE,
+        SERVICE_INCREMENT, ENTITY_SERVICE_SCHEMA,
         'async_increment')
     component.async_register_entity_service(
-        SERVICE_DECREMENT, SERVICE_SCHEMA_SIMPLE,
+        SERVICE_DECREMENT, ENTITY_SERVICE_SCHEMA,
         'async_decrement')
     component.async_register_entity_service(
-        SERVICE_RESET, SERVICE_SCHEMA_SIMPLE,
+        SERVICE_RESET, ENTITY_SERVICE_SCHEMA,
         'async_reset')
     component.async_register_entity_service(
         SERVICE_CONFIGURE, SERVICE_SCHEMA_CONFIGURE,
