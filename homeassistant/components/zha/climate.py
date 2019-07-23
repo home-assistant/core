@@ -8,11 +8,9 @@ from datetime import timedelta
 import enum
 import functools
 import logging
-from random import randint
 import time
 from typing import List, Optional
 
-from zigpy.zcl.foundation import Status
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -31,18 +29,13 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     PRESET_AWAY,
+    PRESET_NONE,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    PRECISION_HALVES,
-    STATE_OFF,
-    TEMP_CELSIUS,
-)
-from homeassistant.core import callback
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.temperature import convert_temperature
 
@@ -188,7 +181,7 @@ class Thermostat(ZhaEntity, ClimateDevice):
         """Initialize ZHA Thermostat instance."""
         super().__init__(**kwargs)
         self._thrm = self.cluster_channels.get(CHANNEL_THERMOSTAT)
-        self._preset = None
+        self._preset = PRESET_NONE
         self._presets = None
         self._supported_flags = SUPPORT_TARGET_TEMPERATURE
         if CHANNEL_FAN in self.cluster_channels:
@@ -401,17 +394,17 @@ class Thermostat(ZhaEntity, ClimateDevice):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if preset_mode and preset_mode not in self.preset_modes:
+        if preset_mode not in self.preset_modes:
             self.debug("preset mode '%s' is not supported", preset_mode)
             return
 
-        if self.preset_mode and self.preset_mode != preset_mode:
-            if not await self.preset_handler(self.preset_mode, enable=False):
+        if self.preset_mode not in (preset_mode, PRESET_NONE):
+            if not await self.async_preset_handler(self.preset_mode, enable=False):
                 self.debug("Couldn't turn off '%s' preset", self.preset_mode)
                 return
 
-        if preset_mode is not None:
-            if not await self.preset_handler(preset_mode, enable=True):
+        if preset_mode != PRESET_NONE:
+            if not await self.async_preset_handler(preset_mode, enable=True):
                 self.debug("Couldn't turn on '%s' preset", preset_mode)
                 return
         self._preset = preset_mode
@@ -483,12 +476,10 @@ class Thermostat(ZhaEntity, ClimateDevice):
         """Update outdoor temperature display."""
         pass
 
-    async def preset_handler(self, preset: str, enable: bool = False) -> bool:
-        handler = getattr(self, f"async_preset_handler_{preset}", None)
-        if handler is None:
-            self.warn("No '%s' preset handler", preset)
-            return
-
+    async def async_preset_handler(self, preset: str, enable: bool = False) -> bool:
+        """Set the preset mode via handler."""
+        
+        handler = getattr(self, f"async_preset_handler_{preset}")
         return await handler(enable)
 
 
@@ -502,7 +493,7 @@ class SinopeTechnologiesThermostat(Thermostat):
     def __init__(self, **kwargs):
         """Initialize ZHA Thermostat instance."""
         super().__init__(**kwargs)
-        self._presets = [PRESET_AWAY]
+        self._presets = [PRESET_AWAY, PRESET_NONE]
         self._supported_flags |= SUPPORT_PRESET_MODE
 
     async def _async_update_time(self, timestamp=None):
@@ -532,16 +523,6 @@ class SinopeTechnologiesThermostat(Thermostat):
 
         self.debug("set occupancy to %s. Status: %s", 0 if is_away else 1, res)
         return res
-
-    async def async_turn_away_mode_on(self) -> None:
-        """Turn away mode on."""
-        if await self.async_set_occupancy(is_away=True):
-            self.async_schedule_update_ha_state()
-
-    async def async_turn_away_mode_off(self) -> None:
-        """Turn away mode off."""
-        if await self.async_set_occupancy(is_away=False):
-            self.async_schedule_update_ha_state()
 
     async def async_update_outdoor_temperature(self, temperature):
         """Update Outdoor temperature display service call."""
