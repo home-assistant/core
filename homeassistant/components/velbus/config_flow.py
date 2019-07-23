@@ -1,4 +1,5 @@
 """Config flow for the Velbus platform."""
+import velbus
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -36,6 +37,17 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
             }
         )
 
+    def _test_connection(self, prt):
+        """ This call will load the velbus controller with the port"""
+        try:
+            controller = velbus.Controller(prt)
+        except Exception:  # pylint: disable=broad-except
+            self._errors[CONF_PORT] = 'connection_failed'
+            return False
+        else:
+            controller.stop()
+            return True
+
     def _prt_in_configuration_exists(self, prt: str) -> bool:
         """Return True if port exists in configuration."""
         if prt in velbus_entries(self.hass):
@@ -49,14 +61,22 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
             name = slugify(user_input[CONF_NAME])
             prt = user_input[CONF_PORT]
             if not self._prt_in_configuration_exists(prt):
-                return self._create_device(name, prt)
-            self._errors[CONF_PORT] = 'port_exists'
+                if self._test_connection(prt):
+                    return self._create_device(name, prt)
+            else:
+                self._errors[CONF_PORT] = 'port_exists'
+        else:
+            user_input = {}
+            user_input[CONF_NAME] = ''
+            user_input[CONF_PORT] = ''
 
         return self.async_show_form(
             step_id='user',
             data_schema=vol.Schema({
-                vol.Required(CONF_NAME): str,
-                vol.Required(CONF_PORT): str
+                vol.Required(CONF_NAME,
+                             default=user_input[CONF_NAME]): str,
+                vol.Required(CONF_PORT,
+                             default=user_input[CONF_PORT]): str
             }),
             errors=self._errors
         )

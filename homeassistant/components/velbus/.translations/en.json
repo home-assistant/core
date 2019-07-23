@@ -11,7 +11,8 @@
           }
         },
         "error": {
-          "port_exists": "This port is already configured"
+          "port_exists": "This port is already configured",
+          "connection_failed": "The velbus connection failed"
         },
         "abort": {
           "already_imported": "The configuration is already imported from the config file"

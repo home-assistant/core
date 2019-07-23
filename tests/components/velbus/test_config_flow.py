@@ -26,15 +26,13 @@ async def test_user(hass):
 
     result = await flow.async_step_user({
         CONF_NAME: 'Velbus Test Serial', CONF_PORT: PORT_SERIAL})
-    assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result['title'] == 'velbus_test_serial'
-    assert result['data'][CONF_PORT] == PORT_SERIAL
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['errors'] == {'port': 'connection_failed'}
 
     result = await flow.async_step_user({
         CONF_NAME: 'Velbus Test TCP', CONF_PORT: PORT_TCP})
-    assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result['title'] == 'velbus_test_tcp'
-    assert result['data'][CONF_PORT] == PORT_TCP
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['errors'] == {'port': 'connection_failed'}
 
 
 async def test_import(hass):
@@ -42,8 +40,8 @@ async def test_import(hass):
     flow = init_config_flow(hass)
 
     result = await flow.async_step_import({CONF_PORT: PORT_TCP})
-    assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result['data'][CONF_PORT] == PORT_TCP
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['errors'] == {'port': 'connection_failed'}
 
 
 async def test_abort_if_already_setup(hass):
