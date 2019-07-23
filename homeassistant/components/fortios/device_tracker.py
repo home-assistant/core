@@ -6,12 +6,13 @@ This component is part of the device_tracker platform.
 import logging
 import voluptuous as vol
 
+from fortiosapi import FortiOSAPI
+from requests.exceptions import ConnectionError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.const import CONF_VERIFY_SSL
-from fortiosapi import FortiOSAPI
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_VERIFY_SSL = False
@@ -27,9 +28,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def get_scanner(hass, config):
     """Validate the configuration and return a FortiOSDeviceScanner."""
 
-    host = config[DOMAIN].get(CONF_HOST)
-    verify_ssl = config[DOMAIN].get(CONF_VERIFY_SSL)
-    token = config[DOMAIN].get(CONF_TOKEN)
+    host = config[DOMAIN][CONF_HOST]
+    verify_ssl = config[DOMAIN][CONF_VERIFY_SSL]
+    token = config[DOMAIN][CONF_TOKEN]
 
     _LOGGER.debug("host : %s", host)
     _LOGGER.debug("verify_ssl : %s", verify_ssl)
@@ -38,8 +39,8 @@ def get_scanner(hass, config):
 
     try:
         fgt.tokenlogin(host, token, verify_ssl)
-    except Exception as ex:  # pylint: disable=broad-except
-        _LOGGER.error("Failed to login to FortiOS API: %s", ex)
+    except ConnectionError as ex:
+        _LOGGER.error("ConnectionError to FortiOS API: %s", ex)
         return None
 
     try:
@@ -62,8 +63,7 @@ class FortiOSDeviceScanner(DeviceScanner):
 
     def update(self):
         """Update clients from the device."""
-        clients_json = (self._fgt.monitor('user/device/select',
-                                          ''))  # pylint: disable=W0105
+        clients_json = self._fgt.monitor('user/device/select', '')
         self._clients_json = clients_json
 
         self._clients = []
