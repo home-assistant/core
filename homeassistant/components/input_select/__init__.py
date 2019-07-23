@@ -3,8 +3,9 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
+from homeassistant.const import CONF_ICON, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -21,28 +22,17 @@ ATTR_OPTIONS = 'options'
 
 SERVICE_SELECT_OPTION = 'select_option'
 
-SERVICE_SELECT_OPTION_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+SERVICE_SELECT_OPTION_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_OPTION): cv.string,
 })
 
 SERVICE_SELECT_NEXT = 'select_next'
 
-SERVICE_SELECT_NEXT_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-})
-
 SERVICE_SELECT_PREVIOUS = 'select_previous'
-
-SERVICE_SELECT_PREVIOUS_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-})
-
 
 SERVICE_SET_OPTIONS = 'set_options'
 
-SERVICE_SET_OPTIONS_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+SERVICE_SET_OPTIONS_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_OPTIONS):
         vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
 })
@@ -93,12 +83,12 @@ async def async_setup(hass, config):
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_NEXT, SERVICE_SELECT_NEXT_SCHEMA,
+        SERVICE_SELECT_NEXT, ENTITY_SERVICE_SCHEMA,
         lambda entity, call: entity.async_offset_index(1)
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_PREVIOUS, SERVICE_SELECT_PREVIOUS_SCHEMA,
+        SERVICE_SELECT_PREVIOUS, ENTITY_SERVICE_SCHEMA,
         lambda entity, call: entity.async_offset_index(-1)
     )
 
