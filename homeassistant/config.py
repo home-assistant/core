@@ -713,7 +713,7 @@ async def async_process_component_config(
 
         try:
             platform = p_integration.get_platform(domain)
-        except ImportError as ex:
+        except ImportError:
             _LOGGER.exception("Failed to get platform %s.%s", domain, p_name)
             continue
 
