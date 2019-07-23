@@ -96,8 +96,8 @@ class FortiOSDeviceScanner(DeviceScanner):
                     name = client['host']['name']
                     _LOGGER.debug("Getting device name=%s", name)
                     return name
-                except Exception as ex:  # pylint: disable=broad-except
-                    _LOGGER.error("No name found in clients_json: %s", ex)
+                except KeyError as kex:
+                    _LOGGER.error("Name not found in client data: %s", kex)
                     return None
 
         return None
