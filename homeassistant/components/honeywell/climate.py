@@ -14,7 +14,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_AUX_HEAT, SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
-    CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, CURRENT_HVAC_OFF,
+    CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, CURRENT_HVAC_FAN,
     HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_HEAT_COOL,
     PRESET_AWAY, PRESET_NONE,
 )
@@ -59,8 +59,8 @@ HW_MODE_TO_HVAC_MODE = {
     'auto': HVAC_MODE_HEAT_COOL,
 }
 HW_MODE_TO_HA_HVAC_ACTION = {
-    'off': CURRENT_HVAC_OFF,
-    'fan': CURRENT_HVAC_IDLE,
+    'off': CURRENT_HVAC_IDLE,
+    'fan': CURRENT_HVAC_FAN,
     'heat': CURRENT_HVAC_HEAT,
     'cool': CURRENT_HVAC_COOL,
 }
@@ -217,6 +217,8 @@ class HoneywellUSThermostat(ClimateDevice):
     @property
     def hvac_action(self) -> Optional[str]:
         """Return the current running hvac operation if supported."""
+        if self.hvac_mode == HVAC_MODE_OFF:
+            return None if else None
         return HW_MODE_TO_HA_HVAC_ACTION[self._device.equipment_output_status]
 
     @property
