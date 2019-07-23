@@ -28,7 +28,7 @@ GROUP_NAME_ALL_LOCKS = 'all locks'
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-LOCK_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA({
+LOCK_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_CODE): cv.string,
 })
 
