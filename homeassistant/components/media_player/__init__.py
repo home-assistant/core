@@ -79,8 +79,8 @@ DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 # Service call validation schemas
 
-# Keep this in place so that integrations can point to this, rather than all
-# knowing about ENTITY_SERVICE_SCHEMA:
+# Make MEDIA_PLAYER_SCHEMA a reference to ENTITY_SERVICE_SCHEMA so that
+# platforms don't have to know about ENTITY_SERVICE_SCHEMA:
 MEDIA_PLAYER_SCHEMA = ENTITY_SERVICE_SCHEMA
 
 MEDIA_PLAYER_SET_VOLUME_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
