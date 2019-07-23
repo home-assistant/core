@@ -121,7 +121,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     area[CONF_MODE]
                 ))
     else:
-        def find_devices(data, module_names=None):
+        def find_devices(data, module_names=data.get_module_names()):
             """Find all devices."""
             dev = []
             if module_names is None:
@@ -165,8 +165,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             # Test if manually configured
             if CONF_MODULES in config:
                 module_items = config[CONF_MODULES]
-                for module_name in module_items:
-                    dev.extend(find_devices(data, [module_name]))
+                dev.extend(find_devices(data, module_items))
                 continue
 
             # otherwise add all modules and conditions
