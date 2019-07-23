@@ -39,11 +39,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if not client.check_credentials():
             _LOGGER.warning("Wrong username and/or password")
             return
-        add_entities([SuezSensor(client)], True)
 
     except PySuezError:
         _LOGGER.warning("Unable to create Suez Client")
         return
+
+    add_entities([SuezSensor(client)], True)
 
 
 class SuezSensor(Entity):
@@ -119,7 +120,6 @@ class SuezSensor(Entity):
         except PySuezError:
             self._available = False
             _LOGGER.warning("Unable to fetch data")
-            return
 
     def update(self):
         """Return the latest collected data from Linky."""
