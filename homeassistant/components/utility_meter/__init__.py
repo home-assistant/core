@@ -4,19 +4,20 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import (ATTR_ENTITY_ID, CONF_NAME)
+from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
+from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from .const import (
-    DOMAIN, SIGNAL_RESET_METER, METER_TYPES, CONF_SOURCE_SENSOR,
-    CONF_METER_TYPE, CONF_METER_OFFSET, CONF_METER_NET_CONSUMPTION,
-    CONF_TARIFF_ENTITY, CONF_TARIFF, CONF_TARIFFS, CONF_METER, DATA_UTILITY,
-    SERVICE_RESET, SERVICE_SELECT_TARIFF, SERVICE_SELECT_NEXT_TARIFF,
-    ATTR_TARIFF)
+    DOMAIN, SIGNAL_RESET_METER, METER_TYPES, CONF_METER_TYPE,
+    CONF_METER_OFFSET, CONF_METER_NET_CONSUMPTION, CONF_SOURCE_SENSOR,
+    CONF_TARIFF_ENTITY, CONF_TARIFF, CONF_TARIFFS, CONF_METER,
+    DATA_UTILITY, SERVICE_RESET, SERVICE_SELECT_TARIFF,
+    SERVICE_SELECT_NEXT_TARIFF, ATTR_TARIFF)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,15 +27,11 @@ ATTR_TARIFFS = 'tariffs'
 
 DEFAULT_OFFSET = timedelta(hours=0)
 
-SERVICE_METER_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-})
-
-SERVICE_SELECT_TARIFF_SCHEMA = SERVICE_METER_SCHEMA.extend({
+SERVICE_SELECT_TARIFF_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_TARIFF): cv.string
 })
 
-METER_CONFIG_SCHEMA = vol.Schema({
+METER_CONFIG_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_METER_TYPE): vol.In(METER_TYPES),
@@ -90,7 +87,7 @@ async def async_setup(hass, config):
 
     if register_services:
         component.async_register_entity_service(
-            SERVICE_RESET, SERVICE_METER_SCHEMA,
+            SERVICE_RESET, ENTITY_SERVICE_SCHEMA,
             'async_reset_meters'
         )
 
@@ -100,7 +97,7 @@ async def async_setup(hass, config):
         )
 
         component.async_register_entity_service(
-            SERVICE_SELECT_NEXT_TARIFF, SERVICE_METER_SCHEMA,
+            SERVICE_SELECT_NEXT_TARIFF, ENTITY_SERVICE_SCHEMA,
             'async_next_tariff'
         )
 
