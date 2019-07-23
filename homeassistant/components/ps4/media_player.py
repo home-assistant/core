@@ -348,6 +348,7 @@ class PS4Device(MediaPlayerDevice):
         # Close TCP Transport.
         if self._ps4.connected:
             await self._ps4.close()
+        self.unsubscribe_to_protocol()
         self.hass.data[PS4_DATA].devices.remove(self)
 
     @property
