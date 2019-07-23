@@ -162,8 +162,9 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> \
             if (not hass.config.skip_pip and p_integration.requirements and
                     not await requirements.async_process_requirements(
                         hass, p_integration.domain, p_integration.requirements)):
-                result.add_error("Unable to install all requirements: {}".format(
-                    ', '.join(integration.requirements)))
+                result.add_error(
+                    "Unable to install all requirements: {}".format(
+                        ', '.join(integration.requirements)))
                 continue
 
             try:
