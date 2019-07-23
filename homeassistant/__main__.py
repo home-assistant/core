@@ -7,8 +7,9 @@ import platform
 import subprocess
 import sys
 import threading
-from typing import List, Dict, Any  # noqa pylint: disable=unused-import
-
+from typing import (  # noqa pylint: disable=unused-import
+    List, Dict, Any, TYPE_CHECKING
+)
 
 from homeassistant import monkey_patch
 from homeassistant.const import (
@@ -17,6 +18,9 @@ from homeassistant.const import (
     REQUIRED_PYTHON_VER,
     RESTART_EXIT_CODE,
 )
+
+if TYPE_CHECKING:
+    from homeassistant import core
 
 
 def set_loop() -> None:
@@ -86,10 +90,12 @@ def ensure_config_path(config_dir: str) -> None:
             sys.exit(1)
 
 
-def ensure_config_file(config_dir: str) -> str:
+async def ensure_config_file(hass: 'core.HomeAssistant', config_dir: str) \
+        -> str:
     """Ensure configuration file exists."""
     import homeassistant.config as config_util
-    config_path = config_util.ensure_config_exists(config_dir)
+    config_path = await config_util.async_ensure_config_exists(
+        hass, config_dir)
 
     if config_path is None:
         print('Error getting configuration path')
@@ -261,6 +267,7 @@ def cmdline() -> List[str]:
 async def setup_and_run_hass(config_dir: str,
                              args: argparse.Namespace) -> int:
     """Set up HASS and run."""
+    # pylint: disable=redefined-outer-name
     from homeassistant import bootstrap, core
 
     hass = core.HomeAssistant()
@@ -275,7 +282,7 @@ async def setup_and_run_hass(config_dir: str,
             skip_pip=args.skip_pip, log_rotate_days=args.log_rotate_days,
             log_file=args.log_file, log_no_color=args.log_no_color)
     else:
-        config_file = ensure_config_file(config_dir)
+        config_file = await ensure_config_file(hass, config_dir)
         print('Config directory:', config_dir)
         await bootstrap.async_from_config_file(
             config_file, hass, verbose=args.verbose, skip_pip=args.skip_pip,
@@ -390,7 +397,7 @@ def main() -> int:
     if exit_code == RESTART_EXIT_CODE and not args.runner:
         try_to_restart()
 
-    return exit_code  # type: ignore # mypy cannot yet infer it
+    return exit_code  # type: ignore
 
 
 if __name__ == "__main__":

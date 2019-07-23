@@ -1,7 +1,7 @@
 """Support for Tesla charger switches."""
 import logging
 
-from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
+from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import STATE_OFF, STATE_ON
 
 from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
@@ -28,7 +28,6 @@ class ChargerSwitch(TeslaDevice, SwitchDevice):
         """Initialise of the switch."""
         self._state = None
         super().__init__(tesla_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.tesla_id)
 
     def turn_on(self, **kwargs):
         """Send the on command."""
@@ -60,7 +59,6 @@ class RangeSwitch(TeslaDevice, SwitchDevice):
         """Initialise of the switch."""
         self._state = None
         super().__init__(tesla_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.tesla_id)
 
     def turn_on(self, **kwargs):
         """Send the on command."""

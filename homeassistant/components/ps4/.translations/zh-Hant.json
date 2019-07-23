@@ -8,6 +8,7 @@
             "port_997_bind_error": "\u7121\u6cd5\u7d81\u5b9a\u901a\u8a0a\u57e0 997\u3002"
         },
         "error": {
+            "credential_timeout": "\u6191\u8b49\u670d\u52d9\u903e\u6642\uff0c\u9ede\u9078\u300c\u50b3\u9001\u300d\u4ee5\u91cd\u555f\u3002",
             "login_failed": "PlayStation 4 \u914d\u5c0d\u5931\u6557\uff0c\u8acb\u78ba\u8a8d PIN \u78bc\u3002",
             "no_ipaddress": "\u8f38\u5165\u6240\u8981\u8a2d\u5b9a\u7684 PlayStation 4 \u4e4b IP \u4f4d\u5740\u3002",
             "not_ready": "PlayStation 4 \u4e26\u672a\u958b\u555f\u6216\u672a\u9023\u7dda\u81f3\u7db2\u8def\u3002"

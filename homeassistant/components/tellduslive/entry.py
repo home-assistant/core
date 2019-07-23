@@ -128,5 +128,5 @@ class TelldusLiveEntity(Entity):
             device_info['manufacturer'] = protocol.title()
         client = device.get('client')
         if client is not None:
-            device_info['via_hub'] = ('tellduslive', client)
+            device_info['via_device'] = ('tellduslive', client)
         return device_info

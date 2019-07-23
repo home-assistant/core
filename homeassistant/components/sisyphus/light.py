@@ -1,8 +1,11 @@
 """Support for the light on the Sisyphus Kinetic Art Table."""
 import logging
 
+import aiohttp
+
 from homeassistant.components.light import SUPPORT_BRIGHTNESS, Light
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_HOST
+from homeassistant.exceptions import PlatformNotReady
 
 from . import DATA_SISYPHUS
 
@@ -11,11 +14,18 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORTED_FEATURES = SUPPORT_BRIGHTNESS
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities,
+                               discovery_info=None):
     """Set up a single Sisyphus table."""
-    name = discovery_info[CONF_NAME]
+    host = discovery_info[CONF_HOST]
+    try:
+        table_holder = hass.data[DATA_SISYPHUS][host]
+        table = await table_holder.get_table()
+    except aiohttp.ClientError:
+        raise PlatformNotReady()
+
     add_entities(
-        [SisyphusLight(name, hass.data[DATA_SISYPHUS][name])],
+        [SisyphusLight(table_holder.name, table)],
         update_before_add=True)
 
 
@@ -31,6 +41,16 @@ class SisyphusLight(Light):
         """Add listeners after this object has been initialized."""
         self._table.add_listener(
             lambda: self.async_schedule_update_ha_state(False))
+
+    @property
+    def available(self):
+        """Return true if the table is responding to heartbeats."""
+        return self._table.is_connected
+
+    @property
+    def unique_id(self):
+        """Return the UUID of the table."""
+        return self._table.id
 
     @property
     def name(self):

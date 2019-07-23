@@ -112,7 +112,7 @@ class MjpegCamera(Camera):
             verify_ssl=self._verify_ssl
         )
         try:
-            with async_timeout.timeout(10, loop=self.hass.loop):
+            with async_timeout.timeout(10):
                 response = await websession.get(
                     self._still_image_url, auth=self._auth)
 

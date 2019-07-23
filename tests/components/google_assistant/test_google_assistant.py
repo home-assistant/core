@@ -136,8 +136,6 @@ def test_sync_request(hass_fixture, assistant_client, auth_header):
         assert dev['name'] == demo['name']
         assert set(dev['traits']) == set(demo['traits'])
         assert dev['type'] == demo['type']
-        if 'attributes' in demo:
-            assert dev['attributes'] == demo['attributes']
 
 
 @asyncio.coroutine
@@ -319,9 +317,9 @@ def test_execute_request(hass_fixture, assistant_client, auth_header):
                     }],
                     "execution": [{
                         "command":
-                        "action.devices.commands.BrightnessAbsolute",
+                        "action.devices.commands.setVolume",
                         "params": {
-                            "brightness": 70
+                            "volumeLevel": 70
                         }
                     }]
                 }, {

@@ -7,7 +7,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.setup import async_setup_component
-from homeassistant.components import device_tracker
+from homeassistant.components.device_tracker.legacy import YAML_DEVICES
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME, CONF_TRACK_NEW, CONF_AWAY_HIDE,
     CONF_NEW_DEVICE_DEFAULTS)
@@ -27,7 +27,7 @@ scanner_path = 'homeassistant.components.unifi_direct.device_tracker.' + \
 def setup_comp(hass):
     """Initialize components."""
     mock_component(hass, 'zone')
-    yaml_devices = hass.config.path(device_tracker.YAML_DEVICES)
+    yaml_devices = hass.config.path(YAML_DEVICES)
     yield
     if os.path.isfile(yaml_devices):
         os.remove(yaml_devices)

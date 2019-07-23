@@ -15,9 +15,8 @@ from .core.channels.registry import populate_channel_registry
 from .core.const import (
     COMPONENTS, CONF_BAUDRATE, CONF_DATABASE, CONF_DEVICE_CONFIG,
     CONF_RADIO_TYPE, CONF_USB_PATH, DATA_ZHA, DATA_ZHA_CONFIG,
-    DATA_ZHA_CORE_COMPONENT, DATA_ZHA_DISPATCHERS, DATA_ZHA_GATEWAY,
-    DEFAULT_BAUDRATE, DEFAULT_RADIO_TYPE, DOMAIN, ENABLE_QUIRKS, RadioType)
-from .core.patches import apply_cluster_listener_patch
+    DATA_ZHA_DISPATCHERS, DATA_ZHA_GATEWAY, DEFAULT_BAUDRATE,
+    DEFAULT_RADIO_TYPE, DOMAIN, ENABLE_QUIRKS, RadioType)
 from .core.registries import establish_device_mappings
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
@@ -91,12 +90,8 @@ async def async_setup_entry(hass, config_entry):
         # pylint: disable=W0611, W0612
         import zhaquirks  # noqa
 
-    # patch zigpy listener to prevent flooding logs with warnings due to
-    # how zigpy implemented its listeners
-    apply_cluster_listener_patch()
-
-    zha_gateway = ZHAGateway(hass, config)
-    await zha_gateway.async_initialize(config_entry)
+    zha_gateway = ZHAGateway(hass, config, config_entry)
+    await zha_gateway.async_initialize()
 
     device_registry = await \
         hass.helpers.device_registry.async_get_registry()
@@ -151,12 +146,6 @@ async def async_unload_entry(hass, config_entry):
     for component in COMPONENTS:
         await hass.config_entries.async_forward_entry_unload(
             config_entry, component)
-
-    # clean up device entities
-    component = hass.data[DATA_ZHA][DATA_ZHA_CORE_COMPONENT]
-    entity_ids = [entity.entity_id for entity in component.entities]
-    for entity_id in entity_ids:
-        await component.async_remove_entity(entity_id)
 
     del hass.data[DATA_ZHA]
     return True

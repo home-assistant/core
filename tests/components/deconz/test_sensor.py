@@ -1,14 +1,14 @@
 """deCONZ sensor platform tests."""
 from unittest.mock import Mock, patch
 
+from tests.common import mock_coro
+
 from homeassistant import config_entries
 from homeassistant.components import deconz
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
 import homeassistant.components.sensor as sensor
-
-from tests.common import mock_coro
 
 
 SENSOR = {
@@ -142,6 +142,7 @@ async def test_add_new_sensor(hass):
     sensor = Mock()
     sensor.name = 'name'
     sensor.type = 'ZHATemperature'
+    sensor.BINARY = False
     sensor.register_async_callback = Mock()
     async_dispatcher_send(
         hass, gateway.async_event_new_device('sensor'), [sensor])

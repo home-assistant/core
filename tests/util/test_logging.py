@@ -21,7 +21,7 @@ def test_sensitive_data_filter():
 
 @asyncio.coroutine
 def test_async_handler_loop_log(loop):
-    """Test the logging sensitive data filter."""
+    """Test logging data inside from inside the event loop."""
     loop._thread_ident = threading.get_ident()
 
     queue = asyncio.Queue(loop=loop)
@@ -40,13 +40,13 @@ def test_async_handler_loop_log(loop):
     log_record = logging.makeLogRecord({'msg': "Test Log Record"})
     handler.emit(log_record)
     yield from handler.async_close(True)
-    assert queue.get_nowait() == log_record
+    assert queue.get_nowait().msg == "Test Log Record"
     assert queue.empty()
 
 
 @asyncio.coroutine
 def test_async_handler_thread_log(loop):
-    """Test the logging sensitive data filter."""
+    """Test logging data from a thread."""
     loop._thread_ident = threading.get_ident()
 
     queue = asyncio.Queue(loop=loop)
@@ -63,5 +63,18 @@ def test_async_handler_thread_log(loop):
     yield from loop.run_in_executor(None, add_log)
     yield from handler.async_close(True)
 
-    assert queue.get_nowait() == log_record
+    assert queue.get_nowait().msg == "Test Log Record"
     assert queue.empty()
+
+
+async def test_async_create_catching_coro(hass, caplog):
+    """Test exception logging of wrapped coroutine."""
+    async def job():
+        raise Exception('This is a bad coroutine')
+        pass
+
+    hass.async_create_task(logging_util.async_create_catching_coro(job()))
+    await hass.async_block_till_done()
+    assert 'This is a bad coroutine' in caplog.text
+    assert ('hass.async_create_task('
+            'logging_util.async_create_catching_coro(job()))' in caplog.text)

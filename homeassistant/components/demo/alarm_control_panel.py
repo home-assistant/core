@@ -12,7 +12,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Demo alarm control panel platform."""
     async_add_entities([
-        ManualAlarm(hass, 'Alarm', '1234', None, False, {
+        ManualAlarm(hass, 'Alarm', '1234', None, True, False, {
             STATE_ALARM_ARMED_AWAY: {
                 CONF_DELAY_TIME: datetime.timedelta(seconds=0),
                 CONF_PENDING_TIME: datetime.timedelta(seconds=5),

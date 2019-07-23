@@ -164,6 +164,7 @@ async def async_unload_entry(hass, config_entry):
     if not hass.data[DOMAIN]:
         hass.services.async_remove(DOMAIN, SERVICE_DECONZ)
         hass.services.async_remove(DOMAIN, SERVICE_DEVICE_REFRESH)
+
     elif gateway.master:
         await async_populate_options(hass, config_entry)
         new_master_gateway = next(iter(hass.data[DOMAIN].values()))

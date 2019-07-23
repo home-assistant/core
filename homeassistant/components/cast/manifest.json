@@ -1,10 +1,12 @@
 {
   "domain": "cast",
   "name": "Cast",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/cast",
   "requirements": [
-    "pychromecast==3.2.0"
+    "pychromecast==3.2.2"
   ],
   "dependencies": [],
+  "zeroconf": ["_googlecast._tcp.local."],
   "codeowners": []
 }

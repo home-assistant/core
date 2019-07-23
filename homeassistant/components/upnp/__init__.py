@@ -1,12 +1,12 @@
 """Open ports in your router for Home Assistant and provide statistics."""
 from ipaddress import ip_address
+from operator import itemgetter
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.helpers import config_entry_flow
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import dispatcher
@@ -88,6 +88,8 @@ async def async_discover_and_construct(hass, udn=None) -> Device:
             _LOGGER.warning('Wanted UPnP/IGD device with UDN "%s" not found, '
                             'aborting', udn)
             return None
+        # ensure we're always taking the latest
+        filtered = sorted(filtered, key=itemgetter('st'), reverse=True)
         discovery_info = filtered[0]
     else:
         # get the first/any
@@ -201,10 +203,3 @@ async def async_unload_entry(hass: HomeAssistantType,
     dispatcher.async_dispatcher_send(hass, SIGNAL_REMOVE_SENSOR, device)
 
     return True
-
-
-config_entry_flow.register_discovery_flow(
-    DOMAIN,
-    'UPnP/IGD',
-    Device.async_discover,
-    config_entries.CONN_CLASS_LOCAL_POLL)

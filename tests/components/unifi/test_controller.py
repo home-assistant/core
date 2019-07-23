@@ -4,33 +4,45 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.components import unifi
+from homeassistant.components.unifi.const import (
+    CONF_CONTROLLER, CONF_SITE_ID, UNIFI_CONFIG)
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL)
 from homeassistant.components.unifi import controller, errors
 
 from tests.common import mock_coro
 
+CONTROLLER_SITES = {
+    'site1': {
+        'desc': 'nice name',
+        'name': 'site',
+        'role': 'admin'
+    }
+}
+
 CONTROLLER_DATA = {
-    unifi.CONF_HOST: '1.2.3.4',
-    unifi.CONF_USERNAME: 'username',
-    unifi.CONF_PASSWORD: 'password',
-    unifi.CONF_PORT: 1234,
-    unifi.CONF_SITE_ID: 'site',
-    unifi.CONF_VERIFY_SSL: True
+    CONF_HOST: '1.2.3.4',
+    CONF_USERNAME: 'username',
+    CONF_PASSWORD: 'password',
+    CONF_PORT: 1234,
+    CONF_SITE_ID: 'site',
+    CONF_VERIFY_SSL: True
 }
 
 ENTRY_CONFIG = {
-    unifi.CONF_CONTROLLER: CONTROLLER_DATA,
-    unifi.CONF_POE_CONTROL: True
-    }
+    CONF_CONTROLLER: CONTROLLER_DATA
+}
 
 
 async def test_controller_setup():
     """Successful setup."""
     hass = Mock()
+    hass.data = {UNIFI_CONFIG: {}}
     entry = Mock()
     entry.data = ENTRY_CONFIG
     api = Mock()
     api.initialize.return_value = mock_coro(True)
+    api.sites.return_value = mock_coro(CONTROLLER_SITES)
 
     unifi_controller = controller.UniFiController(hass, entry)
 
@@ -39,8 +51,10 @@ async def test_controller_setup():
         assert await unifi_controller.async_setup() is True
 
     assert unifi_controller.api is api
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 1
+    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 2
     assert hass.config_entries.async_forward_entry_setup.mock_calls[0][1] == \
+        (entry, 'device_tracker')
+    assert hass.config_entries.async_forward_entry_setup.mock_calls[1][1] == \
         (entry, 'switch')
 
 
@@ -52,12 +66,24 @@ async def test_controller_host():
 
     unifi_controller = controller.UniFiController(hass, entry)
 
-    assert unifi_controller.host == '1.2.3.4'
+    assert unifi_controller.host == CONTROLLER_DATA[CONF_HOST]
+
+
+async def test_controller_site():
+    """Config entry site and controller site are the same."""
+    hass = Mock()
+    entry = Mock()
+    entry.data = ENTRY_CONFIG
+
+    unifi_controller = controller.UniFiController(hass, entry)
+
+    assert unifi_controller.site == CONTROLLER_DATA[CONF_SITE_ID]
 
 
 async def test_controller_mac():
     """Test that it is possible to identify controller mac."""
     hass = Mock()
+    hass.data = {UNIFI_CONFIG: {}}
     entry = Mock()
     entry.data = ENTRY_CONFIG
     client = Mock()
@@ -66,6 +92,7 @@ async def test_controller_mac():
     api = Mock()
     api.initialize.return_value = mock_coro(True)
     api.clients = {'client1': client}
+    api.sites.return_value = mock_coro(CONTROLLER_SITES)
 
     unifi_controller = controller.UniFiController(hass, entry)
 
@@ -79,6 +106,7 @@ async def test_controller_mac():
 async def test_controller_no_mac():
     """Test that it works to not find the controllers mac."""
     hass = Mock()
+    hass.data = {UNIFI_CONFIG: {}}
     entry = Mock()
     entry.data = ENTRY_CONFIG
     client = Mock()
@@ -86,6 +114,7 @@ async def test_controller_no_mac():
     api = Mock()
     api.initialize.return_value = mock_coro(True)
     api.clients = {'client1': client}
+    api.sites.return_value = mock_coro(CONTROLLER_SITES)
 
     unifi_controller = controller.UniFiController(hass, entry)
 
@@ -148,10 +177,12 @@ async def test_reset_if_entry_had_wrong_auth():
 async def test_reset_unloads_entry_if_setup():
     """Calling reset when the entry has been setup."""
     hass = Mock()
+    hass.data = {UNIFI_CONFIG: {}}
     entry = Mock()
     entry.data = ENTRY_CONFIG
     api = Mock()
     api.initialize.return_value = mock_coro(True)
+    api.sites.return_value = mock_coro(CONTROLLER_SITES)
 
     unifi_controller = controller.UniFiController(hass, entry)
 
@@ -159,37 +190,13 @@ async def test_reset_unloads_entry_if_setup():
                       return_value=mock_coro(api)):
         assert await unifi_controller.async_setup() is True
 
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 1
+    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 2
 
     hass.config_entries.async_forward_entry_unload.return_value = \
         mock_coro(True)
     assert await unifi_controller.async_reset()
 
-    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 1
-
-
-async def test_reset_unloads_entry_without_poe_control():
-    """Calling reset while the entry has been setup."""
-    hass = Mock()
-    entry = Mock()
-    entry.data = dict(ENTRY_CONFIG)
-    entry.data[unifi.CONF_POE_CONTROL] = False
-    api = Mock()
-    api.initialize.return_value = mock_coro(True)
-
-    unifi_controller = controller.UniFiController(hass, entry)
-
-    with patch.object(controller, 'get_controller',
-                      return_value=mock_coro(api)):
-        assert await unifi_controller.async_setup() is True
-
-    assert not hass.config_entries.async_forward_entry_setup.mock_calls
-
-    hass.config_entries.async_forward_entry_unload.return_value = \
-        mock_coro(True)
-    assert await unifi_controller.async_reset()
-
-    assert not hass.config_entries.async_forward_entry_unload.mock_calls
+    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 2
 
 
 async def test_get_controller(hass):
@@ -201,7 +208,7 @@ async def test_get_controller(hass):
 async def test_get_controller_verify_ssl_false(hass):
     """Successful call with verify ssl set to false."""
     controller_data = dict(CONTROLLER_DATA)
-    controller_data[unifi.CONF_VERIFY_SSL] = False
+    controller_data[CONF_VERIFY_SSL] = False
     with patch('aiounifi.Controller.login', return_value=mock_coro()):
         assert await controller.get_controller(hass, **controller_data)
 

@@ -3,7 +3,7 @@
   "name": "Venstar",
   "documentation": "https://www.home-assistant.io/components/venstar",
   "requirements": [
-    "venstarcolortouch==0.6"
+    "venstarcolortouch==0.7"
   ],
   "dependencies": [],
   "codeowners": []

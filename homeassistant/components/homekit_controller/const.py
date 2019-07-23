@@ -3,6 +3,7 @@ DOMAIN = 'homekit_controller'
 
 KNOWN_DEVICES = "{}-devices".format(DOMAIN)
 CONTROLLER = "{}-controller".format(DOMAIN)
+ENTITY_MAP = '{}-entity-map'.format(DOMAIN)
 
 HOMEKIT_DIR = '.homekit'
 PAIRING_FILE = 'pairing.json'
@@ -18,6 +19,7 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     'window': 'cover',
     'window-covering': 'cover',
     'lock-mechanism': 'lock',
+    'contact': 'binary_sensor',
     'motion': 'binary_sensor',
     'humidity': 'sensor',
     'light': 'sensor',

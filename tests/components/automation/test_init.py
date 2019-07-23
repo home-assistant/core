@@ -1,5 +1,4 @@
 """The tests for the automation component."""
-import asyncio
 from datetime import timedelta
 from unittest.mock import patch, Mock
 
@@ -616,8 +615,7 @@ async def test_reload_config_handles_load_fails(hass, calls):
     assert len(calls) == 2
 
 
-@asyncio.coroutine
-def test_automation_restore_state(hass):
+async def test_automation_restore_state(hass):
     """Ensure states are restored on startup."""
     time = dt_util.utcnow()
 
@@ -642,39 +640,39 @@ def test_automation_restore_state(hass):
         'action': {'service': 'test.automation'}
     }]}
 
-    assert (yield from async_setup_component(hass, automation.DOMAIN, config))
+    assert await async_setup_component(hass, automation.DOMAIN, config)
 
     state = hass.states.get('automation.hello')
     assert state
     assert state.state == STATE_ON
+    assert state.attributes['last_triggered'] is None
 
     state = hass.states.get('automation.bye')
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes.get('last_triggered') == time
+    assert state.attributes['last_triggered'] == time
 
     calls = async_mock_service(hass, 'test', 'automation')
 
     assert automation.is_on(hass, 'automation.bye') is False
 
     hass.bus.async_fire('test_event_bye')
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert len(calls) == 0
 
     assert automation.is_on(hass, 'automation.hello')
 
     hass.bus.async_fire('test_event_hello')
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert len(calls) == 1
 
 
-@asyncio.coroutine
-def test_initial_value_off(hass):
+async def test_initial_value_off(hass):
     """Test initial value off."""
     calls = async_mock_service(hass, 'test', 'automation')
 
-    res = yield from async_setup_component(hass, automation.DOMAIN, {
+    assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'alias': 'hello',
             'initial_state': 'off',
@@ -688,20 +686,19 @@ def test_initial_value_off(hass):
             }
         }
     })
-    assert res
     assert not automation.is_on(hass, 'automation.hello')
 
     hass.bus.async_fire('test_event')
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert len(calls) == 0
 
 
-@asyncio.coroutine
-def test_initial_value_on(hass):
+async def test_initial_value_on(hass):
     """Test initial value on."""
+    hass.state = CoreState.not_running
     calls = async_mock_service(hass, 'test', 'automation')
 
-    res = yield from async_setup_component(hass, automation.DOMAIN, {
+    assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'alias': 'hello',
             'initial_state': 'on',
@@ -715,23 +712,23 @@ def test_initial_value_on(hass):
             }
         }
     })
-    assert res
     assert automation.is_on(hass, 'automation.hello')
 
+    await hass.async_start()
     hass.bus.async_fire('test_event')
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert len(calls) == 1
 
 
-@asyncio.coroutine
-def test_initial_value_off_but_restore_on(hass):
+async def test_initial_value_off_but_restore_on(hass):
     """Test initial value off and restored state is turned on."""
+    hass.state = CoreState.not_running
     calls = async_mock_service(hass, 'test', 'automation')
     mock_restore_cache(hass, (
         State('automation.hello', STATE_ON),
     ))
 
-    res = yield from async_setup_component(hass, automation.DOMAIN, {
+    await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'alias': 'hello',
             'initial_state': 'off',
@@ -745,23 +742,22 @@ def test_initial_value_off_but_restore_on(hass):
             }
         }
     })
-    assert res
     assert not automation.is_on(hass, 'automation.hello')
 
+    await hass.async_start()
     hass.bus.async_fire('test_event')
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert len(calls) == 0
 
 
-@asyncio.coroutine
-def test_initial_value_on_but_restore_off(hass):
+async def test_initial_value_on_but_restore_off(hass):
     """Test initial value on and restored state is turned off."""
     calls = async_mock_service(hass, 'test', 'automation')
     mock_restore_cache(hass, (
         State('automation.hello', STATE_OFF),
     ))
 
-    res = yield from async_setup_component(hass, automation.DOMAIN, {
+    assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'alias': 'hello',
             'initial_state': 'on',
@@ -775,23 +771,21 @@ def test_initial_value_on_but_restore_off(hass):
             }
         }
     })
-    assert res
     assert automation.is_on(hass, 'automation.hello')
 
     hass.bus.async_fire('test_event')
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert len(calls) == 1
 
 
-@asyncio.coroutine
-def test_no_initial_value_and_restore_off(hass):
+async def test_no_initial_value_and_restore_off(hass):
     """Test initial value off and restored state is turned on."""
     calls = async_mock_service(hass, 'test', 'automation')
     mock_restore_cache(hass, (
         State('automation.hello', STATE_OFF),
     ))
 
-    res = yield from async_setup_component(hass, automation.DOMAIN, {
+    assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'alias': 'hello',
             'trigger': {
@@ -804,20 +798,18 @@ def test_no_initial_value_and_restore_off(hass):
             }
         }
     })
-    assert res
     assert not automation.is_on(hass, 'automation.hello')
 
     hass.bus.async_fire('test_event')
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert len(calls) == 0
 
 
-@asyncio.coroutine
-def test_automation_is_on_if_no_initial_state_or_restore(hass):
+async def test_automation_is_on_if_no_initial_state_or_restore(hass):
     """Test initial value is on when no initial state or restored state."""
     calls = async_mock_service(hass, 'test', 'automation')
 
-    res = yield from async_setup_component(hass, automation.DOMAIN, {
+    assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'alias': 'hello',
             'trigger': {
@@ -830,21 +822,19 @@ def test_automation_is_on_if_no_initial_state_or_restore(hass):
             }
         }
     })
-    assert res
     assert automation.is_on(hass, 'automation.hello')
 
     hass.bus.async_fire('test_event')
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert len(calls) == 1
 
 
-@asyncio.coroutine
-def test_automation_not_trigger_on_bootstrap(hass):
+async def test_automation_not_trigger_on_bootstrap(hass):
     """Test if automation is not trigger on bootstrap."""
     hass.state = CoreState.not_running
     calls = async_mock_service(hass, 'test', 'automation')
 
-    res = yield from async_setup_component(hass, automation.DOMAIN, {
+    assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'alias': 'hello',
             'trigger': {
@@ -857,19 +847,18 @@ def test_automation_not_trigger_on_bootstrap(hass):
             }
         }
     })
-    assert res
-    assert not automation.is_on(hass, 'automation.hello')
-
-    hass.bus.async_fire('test_event')
-    yield from hass.async_block_till_done()
-    assert len(calls) == 0
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-    yield from hass.async_block_till_done()
     assert automation.is_on(hass, 'automation.hello')
 
     hass.bus.async_fire('test_event')
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    assert automation.is_on(hass, 'automation.hello')
+
+    hass.bus.async_fire('test_event')
+    await hass.async_block_till_done()
 
     assert len(calls) == 1
     assert ['hello.world'] == calls[0].data.get(ATTR_ENTITY_ID)
@@ -893,4 +882,58 @@ async def test_automation_with_error_in_script(hass, caplog):
 
     hass.bus.async_fire('test_event')
     await hass.async_block_till_done()
-    assert 'Service test.automation not found' in caplog.text
+    assert 'Service not found' in caplog.text
+
+
+async def test_automation_restore_last_triggered_with_initial_state(hass):
+    """Ensure last_triggered is restored, even when initial state is set."""
+    time = dt_util.utcnow()
+
+    mock_restore_cache(hass, (
+        State('automation.hello', STATE_ON),
+        State('automation.bye', STATE_ON, {'last_triggered': time}),
+        State('automation.solong', STATE_OFF, {'last_triggered': time}),
+    ))
+
+    config = {automation.DOMAIN: [{
+        'alias': 'hello',
+        'initial_state': 'off',
+        'trigger': {
+            'platform': 'event',
+            'event_type': 'test_event',
+        },
+        'action': {'service': 'test.automation'}
+    }, {
+        'alias': 'bye',
+        'initial_state': 'off',
+        'trigger': {
+            'platform': 'event',
+            'event_type': 'test_event',
+        },
+        'action': {'service': 'test.automation'}
+    }, {
+        'alias': 'solong',
+        'initial_state': 'on',
+        'trigger': {
+            'platform': 'event',
+            'event_type': 'test_event',
+        },
+        'action': {'service': 'test.automation'}
+    }]}
+
+    await async_setup_component(hass, automation.DOMAIN, config)
+
+    state = hass.states.get('automation.hello')
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes['last_triggered'] is None
+
+    state = hass.states.get('automation.bye')
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes['last_triggered'] == time
+
+    state = hass.states.get('automation.solong')
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes['last_triggered'] == time

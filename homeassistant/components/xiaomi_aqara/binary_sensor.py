@@ -374,7 +374,7 @@ class XiaomiVibration(XiaomiBinarySensor):
         if value is None:
             return False
 
-        if value not in ('vibrate', 'tilt', 'free_fall'):
+        if value not in ('vibrate', 'tilt', 'free_fall', 'actively'):
             _LOGGER.warning("Unsupported movement_type detected: %s",
                             value)
             return False

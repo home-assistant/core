@@ -1,19 +1,16 @@
 """Support for Tesla HVAC system."""
 import logging
 
-from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateDevice
+from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
-from homeassistant.const import (
-    ATTR_TEMPERATURE, STATE_OFF, STATE_ON, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-OPERATION_LIST = [STATE_ON, STATE_OFF]
-
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+SUPPORT_HVAC = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -29,27 +26,31 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
     def __init__(self, tesla_device, controller):
         """Initialize the Tesla device."""
         super().__init__(tesla_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.tesla_id)
         self._target_temperature = None
         self._temperature = None
 
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_FLAGS
+        return SUPPORT_TARGET_TEMPERATURE
 
     @property
-    def current_operation(self):
-        """Return current operation ie. On or Off."""
-        mode = self.tesla_device.is_hvac_enabled()
-        if mode:
-            return OPERATION_LIST[0]  # On
-        return OPERATION_LIST[1]  # Off
+    def hvac_mode(self):
+        """Return hvac operation ie. heat, cool mode.
+
+        Need to be one of HVAC_MODE_*.
+        """
+        if self.tesla_device.is_hvac_enabled():
+            return HVAC_MODE_HEAT
+        return HVAC_MODE_OFF
 
     @property
-    def operation_list(self):
-        """List of available operation modes."""
-        return OPERATION_LIST
+    def hvac_modes(self):
+        """Return the list of available hvac operation modes.
+
+        Need to be a subset of HVAC_MODES.
+        """
+        return SUPPORT_HVAC
 
     def update(self):
         """Call by the Tesla device callback to update state."""
@@ -84,10 +85,10 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
         if temperature:
             self.tesla_device.set_temperature(temperature)
 
-    def set_operation_mode(self, operation_mode):
-        """Set HVAC mode (auto, cool, heat, off)."""
+    def set_hvac_mode(self, hvac_mode):
+        """Set new target hvac mode."""
         _LOGGER.debug("Setting mode for: %s", self._name)
-        if operation_mode == OPERATION_LIST[1]:  # off
+        if hvac_mode == HVAC_MODE_OFF:
             self.tesla_device.set_status(False)
-        elif operation_mode == OPERATION_LIST[0]:  # heat
+        elif hvac_mode == HVAC_MODE_HEAT:
             self.tesla_device.set_status(True)

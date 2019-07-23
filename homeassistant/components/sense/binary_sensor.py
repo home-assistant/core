@@ -2,8 +2,10 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.core import callback
 
-from . import SENSE_DATA
+from . import SENSE_DATA, SENSE_DEVICE_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,12 +77,12 @@ class SenseDevice(BinarySensorDevice):
         self._id = device['id']
         self._icon = sense_to_mdi(device['icon'])
         self._data = data
-        self._state = False
+        self._undo_dispatch_subscription = None
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self._state
+        return self._name in self._data.active_devices
 
     @property
     def name(self):
@@ -102,12 +104,22 @@ class SenseDevice(BinarySensorDevice):
         """Return the device class of the binary sensor."""
         return BIN_SENSOR_CLASS
 
-    async def async_update(self):
-        """Retrieve latest state."""
-        from sense_energy.sense_api import SenseAPITimeoutException
-        try:
-            await self._data.update_realtime()
-        except SenseAPITimeoutException:
-            _LOGGER.error("Timeout retrieving data")
-            return
-        self._state = self._name in self._data.active_devices
+    @property
+    def should_poll(self):
+        """Return the deviceshould not poll for updates."""
+        return False
+
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        @callback
+        def update():
+            """Update the state."""
+            self.async_schedule_update_ha_state(True)
+
+        self._undo_dispatch_subscription = async_dispatcher_connect(
+            self.hass, SENSE_DEVICE_UPDATE, update)
+
+    async def async_will_remove_from_hass(self):
+        """Undo subscription."""
+        if self._undo_dispatch_subscription:
+            self._undo_dispatch_subscription()

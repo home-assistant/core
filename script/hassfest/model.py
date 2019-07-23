@@ -2,6 +2,7 @@
 import json
 from typing import List, Dict, Any
 import pathlib
+import importlib
 
 import attr
 
@@ -46,6 +47,13 @@ class Integration:
             if fil.is_file() or fil.name == '__pycache__':
                 continue
 
+            init = fil / '__init__.py'
+            if not init.exists():
+                print("Warning: {} missing, skipping directory. "
+                      "If this is your development environment, "
+                      "you can safely delete this folder.".format(init))
+                continue
+
             integration = cls(fil)
             integration.load_manifest()
             integrations[integration.domain] = integration
@@ -61,26 +69,22 @@ class Integration:
         """Integration domain."""
         return self.path.name
 
-    @property
-    def manifest_path(self) -> pathlib.Path:
-        """Integration manifest path."""
-        return self.path / 'manifest.json'
-
     def add_error(self, *args, **kwargs):
         """Add an error."""
         self.errors.append(Error(*args, **kwargs))
 
     def load_manifest(self) -> None:
         """Load manifest."""
-        if not self.manifest_path.is_file():
+        manifest_path = self.path / 'manifest.json'
+        if not manifest_path.is_file():
             self.add_error(
                 'model',
-                "Manifest file {} not found".format(self.manifest_path)
+                "Manifest file {} not found".format(manifest_path)
             )
             return
 
         try:
-            manifest = json.loads(self.manifest_path.read_text())
+            manifest = json.loads(manifest_path.read_text())
         except ValueError as err:
             self.add_error(
                 'model',
@@ -89,3 +93,10 @@ class Integration:
             return
 
         self.manifest = manifest
+
+    def import_pkg(self, platform=None):
+        """Import the Python file."""
+        pkg = "homeassistant.components.{}".format(self.domain)
+        if platform is not None:
+            pkg += ".{}".format(platform)
+        return importlib.import_module(pkg)

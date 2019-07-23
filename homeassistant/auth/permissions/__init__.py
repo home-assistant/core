@@ -11,6 +11,7 @@ from .models import PermissionLookup
 from .types import PolicyType
 from .entities import ENTITY_POLICY_SCHEMA, compile_entities
 from .merge import merge_policies  # noqa
+from .util import test_all
 
 
 POLICY_SCHEMA = vol.Schema({
@@ -27,6 +28,10 @@ class AbstractPermissions:
 
     def _entity_func(self) -> Callable[[str, str], bool]:
         """Return a function that can test entity access."""
+        raise NotImplementedError
+
+    def access_all_entities(self, key: str) -> bool:
+        """Check if we have a certain access to all entities."""
         raise NotImplementedError
 
     def check_entity(self, entity_id: str, key: str) -> bool:
@@ -48,6 +53,10 @@ class PolicyPermissions(AbstractPermissions):
         self._policy = policy
         self._perm_lookup = perm_lookup
 
+    def access_all_entities(self, key: str) -> bool:
+        """Check if we have a certain access to all entities."""
+        return test_all(self._policy.get(CAT_ENTITIES), key)
+
     def _entity_func(self) -> Callable[[str, str], bool]:
         """Return a function that can test entity access."""
         return compile_entities(self._policy.get(CAT_ENTITIES),
@@ -64,6 +73,10 @@ class _OwnerPermissions(AbstractPermissions):
     """Owner permissions."""
 
     # pylint: disable=no-self-use
+
+    def access_all_entities(self, key: str) -> bool:
+        """Check if we have a certain access to all entities."""
+        return True
 
     def _entity_func(self) -> Callable[[str, str], bool]:
         """Return a function that can test entity access."""

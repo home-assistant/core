@@ -167,7 +167,7 @@ async def async_setup(hass, config):
 
     tasks = [_setup_atv(hass, config, conf) for conf in config.get(DOMAIN, [])]
     if tasks:
-        await asyncio.wait(tasks, loop=hass.loop)
+        await asyncio.wait(tasks)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SCAN, async_service_handler,

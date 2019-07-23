@@ -2,8 +2,8 @@
 import logging
 from typing import Any, Dict, Iterable, Optional
 
-from homeassistant import config_entries
-from homeassistant.loader import async_get_integration, bind_hass
+from homeassistant.loader import (
+    async_get_integration, bind_hass, async_get_config_flows)
 from homeassistant.util.json import load_json
 from .typing import HomeAssistantType
 
@@ -52,11 +52,9 @@ async def component_translation_file(hass: HomeAssistantType, component: str,
         filename = "{}.{}.json".format(parts[0], language)
         return str(integration.file_path / '.translations' / filename)
 
-    module = integration.get_component()
-
     # If it's a component that is just one file, we don't support translations
     # Example custom_components/my_component.py
-    if module.__name__ != module.__package__:
+    if integration.file_path.name != domain:
         return None
 
     filename = '{}.json'.format(language)
@@ -108,7 +106,8 @@ async def async_get_component_resources(hass: HomeAssistantType,
     translation_cache = hass.data[TRANSLATION_STRING_CACHE][language]
 
     # Get the set of components
-    components = hass.config.components | set(config_entries.FLOWS)
+    components = (hass.config.components |
+                  await async_get_config_flows(hass))
 
     # Calculate the missing components
     missing_components = components - set(translation_cache)

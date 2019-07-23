@@ -81,7 +81,7 @@ class UPCDeviceScanner(DeviceScanner):
         """Get first token."""
         try:
             # get first token
-            with async_timeout.timeout(10, loop=self.hass.loop):
+            with async_timeout.timeout(10):
                 response = await self.websession.get(
                     "http://{}/common_page/login.html".format(self.host),
                     headers=self.headers)
@@ -99,7 +99,7 @@ class UPCDeviceScanner(DeviceScanner):
     async def _async_ws_function(self, function):
         """Execute a command on UPC firmware webservice."""
         try:
-            with async_timeout.timeout(10, loop=self.hass.loop):
+            with async_timeout.timeout(10):
                 # The 'token' parameter has to be first, and 'fun' second
                 # or the UPC firmware will return an error
                 response = await self.websession.post(

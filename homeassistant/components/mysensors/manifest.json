@@ -6,5 +6,8 @@
     "pymysensors==0.18.0"
   ],
   "dependencies": [],
+  "after_dependencies": [
+    "mqtt"
+  ],
   "codeowners": []
 }

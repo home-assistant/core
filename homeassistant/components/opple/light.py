@@ -1,5 +1,4 @@
 """Support for the Opple light."""
-
 import logging
 
 import voluptuous as vol
@@ -9,10 +8,9 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP, Light)
 from homeassistant.const import CONF_HOST, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.color import \
-    color_temperature_kelvin_to_mired as kelvin_to_mired
-from homeassistant.util.color import \
-    color_temperature_mired_to_kelvin as mired_to_kelvin
+from homeassistant.util.color import (
+    color_temperature_kelvin_to_mired as kelvin_to_mired,
+    color_temperature_mired_to_kelvin as mired_to_kelvin)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,15 +18,16 @@ DEFAULT_NAME = "opple light"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up Opple light platform."""
+    """Set up the Opple light platform."""
     name = config[CONF_NAME]
     host = config[CONF_HOST]
     entity = OppleLight(name, host)
+
     add_entities([entity])
 
     _LOGGER.debug("Init light %s %s", host, entity.unique_id)

@@ -166,14 +166,14 @@ async def _validate_aws_credentials(hass, credential):
     profile = aws_config.get(CONF_PROFILE_NAME)
 
     if profile is not None:
-        session = aiobotocore.AioSession(profile=profile, loop=hass.loop)
+        session = aiobotocore.AioSession(profile=profile)
         del aws_config[CONF_PROFILE_NAME]
         if CONF_ACCESS_KEY_ID in aws_config:
             del aws_config[CONF_ACCESS_KEY_ID]
         if CONF_SECRET_ACCESS_KEY in aws_config:
             del aws_config[CONF_SECRET_ACCESS_KEY]
     else:
-        session = aiobotocore.AioSession(loop=hass.loop)
+        session = aiobotocore.AioSession()
 
     if credential[CONF_VALIDATE]:
         async with session.create_client("iam", **aws_config) as client:

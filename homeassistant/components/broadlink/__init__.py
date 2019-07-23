@@ -2,7 +2,6 @@
 import asyncio
 from base64 import b64decode, b64encode
 import logging
-import re
 import socket
 
 from datetime import timedelta
@@ -19,26 +18,22 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_RETRY = 3
 
 
-def ipv4_address(value):
-    """Validate an ipv4 address."""
-    regex = re.compile(r'^\d+\.\d+\.\d+\.\d+$')
-    if not regex.match(value):
-        raise vol.Invalid('Invalid Ipv4 address, expected a.b.c.d')
-    return value
-
-
 def data_packet(value):
     """Decode a data packet given for broadlink."""
-    return b64decode(cv.string(value))
+    value = cv.string(value)
+    extra = len(value) % 4
+    if extra > 0:
+        value = value + ('=' * (4 - extra))
+    return b64decode(value)
 
 
 SERVICE_SEND_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOST): ipv4_address,
+    vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PACKET): vol.All(cv.ensure_list, [data_packet])
 })
 
 SERVICE_LEARN_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOST): ipv4_address,
+    vol.Required(CONF_HOST): cv.string,
 })
 
 

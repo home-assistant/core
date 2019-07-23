@@ -14,6 +14,8 @@ from .const import CONF_MODEL, DOMAIN
 from .device import get_device
 from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
 
+AXIS_OUI = {'00408C', 'ACCC8E', 'B8A44F'}
+
 CONFIG_FILE = 'axis.conf'
 
 EVENT_TYPES = ['motion', 'vmd3', 'pir', 'sound',
@@ -66,7 +68,6 @@ class AxisFlowHandler(config_entries.ConfigFlow):
 
         Manage device specific parameters.
         """
-        from axis.vapix import VAPIX_MODEL_ID, VAPIX_SERIAL_NUMBER
         errors = {}
 
         if user_input is not None:
@@ -79,13 +80,12 @@ class AxisFlowHandler(config_entries.ConfigFlow):
                 }
                 device = await get_device(self.hass, self.device_config)
 
-                self.serial_number = device.vapix.get_param(
-                    VAPIX_SERIAL_NUMBER)
+                self.serial_number = device.vapix.params.system_serialnumber
 
                 if self.serial_number in configured_devices(self.hass):
                     raise AlreadyConfigured
 
-                self.model = device.vapix.get_param(VAPIX_MODEL_ID)
+                self.model = device.vapix.params.prodnbr
 
                 return await self._create_entry()
 
@@ -148,15 +148,26 @@ class AxisFlowHandler(config_entries.ConfigFlow):
         entry.data[CONF_DEVICE][CONF_HOST] = host
         self.hass.config_entries.async_update_entry(entry)
 
-    async def async_step_discovery(self, discovery_info):
+    async def async_step_zeroconf(self, discovery_info):
         """Prepare configuration for a discovered Axis device.
 
         This flow is triggered by the discovery component.
         """
+        serialnumber = discovery_info['properties']['macaddress']
+
+        if serialnumber[:6] not in AXIS_OUI:
+            return self.async_abort(reason='not_axis_device')
+
         if discovery_info[CONF_HOST].startswith('169.254'):
             return self.async_abort(reason='link_local_address')
 
-        serialnumber = discovery_info['properties']['macaddress']
+        # pylint: disable=unsupported-assignment-operation
+        self.context['macaddress'] = serialnumber
+
+        if any(serialnumber == flow['context']['macaddress']
+               for flow in self._async_in_progress()):
+            return self.async_abort(reason='already_in_progress')
+
         device_entries = configured_devices(self.hass)
 
         if serialnumber in device_entries:

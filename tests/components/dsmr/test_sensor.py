@@ -78,7 +78,7 @@ def test_default_setup(hass, mock_connection_factory):
     telegram_callback(telegram)
 
     # after receiving telegram entities need to have the chance to update
-    yield from asyncio.sleep(0, loop=hass.loop)
+    yield from asyncio.sleep(0)
 
     # ensure entities have new state value after incoming telegram
     power_consumption = hass.states.get('sensor.power_consumption')
@@ -183,9 +183,9 @@ def test_reconnect(hass, monkeypatch, mock_connection_factory):
     }
 
     # mock waiting coroutine while connection lasts
-    closed = asyncio.Event(loop=hass.loop)
+    closed = asyncio.Event()
     # Handshake so that `hass.async_block_till_done()` doesn't cycle forever
-    closed2 = asyncio.Event(loop=hass.loop)
+    closed2 = asyncio.Event()
 
     @asyncio.coroutine
     def wait_closed():

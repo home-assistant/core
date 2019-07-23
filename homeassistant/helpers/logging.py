@@ -3,6 +3,8 @@ import inspect
 import logging
 
 
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 class KeywordMessage:
     """
     Represents a logging message with keyword arguments.

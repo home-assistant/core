@@ -3,7 +3,6 @@
   "name": "Google",
   "documentation": "https://www.home-assistant.io/components/google",
   "requirements": [
-    "gTTS-token==1.1.3",
     "google-api-python-client==1.6.4",
     "httplib2==0.10.3",
     "oauth2client==4.0.0"

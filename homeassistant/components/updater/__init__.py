@@ -136,7 +136,7 @@ async def get_newest_version(hass, huuid, include_components):
 
     session = async_get_clientsession(hass)
     try:
-        with async_timeout.timeout(5, loop=hass.loop):
+        with async_timeout.timeout(5):
             req = await session.post(UPDATER_URL, json=info_object)
         _LOGGER.info(("Submitted analytics to Home Assistant servers. "
                       "Information submitted includes %s"), info_object)

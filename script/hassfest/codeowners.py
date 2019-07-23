@@ -27,7 +27,6 @@ homeassistant/scripts/check_config.py @kellerza
 
 INDIVIDUAL_FILES = """
 # Individual files
-homeassistant/components/group/cover @cdce8p
 homeassistant/components/demo/weather @fabaff
 """
 

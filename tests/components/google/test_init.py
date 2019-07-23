@@ -1,95 +1,73 @@
 """The tests for the Google Calendar component."""
-import logging
-import unittest
 from unittest.mock import patch
 
+import pytest
+
 import homeassistant.components.google as google
-from homeassistant.setup import setup_component
-from tests.common import get_test_home_assistant
-
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.setup import async_setup_component
 
 
-class TestGoogle(unittest.TestCase):
-    """Test the Google component."""
+@pytest.fixture(name='google_setup')
+def mock_google_setup(hass):
+    """Mock the google set up functions."""
+    p_auth = patch(
+        'homeassistant.components.google.do_authentication',
+        side_effect=google.do_setup)
+    p_service = patch(
+        'homeassistant.components.google.GoogleCalendarService.get')
+    p_discovery = patch(
+        'homeassistant.components.google.discovery.load_platform')
+    p_load = patch(
+        'homeassistant.components.google.load_config',
+        return_value={})
+    p_save = patch(
+        'homeassistant.components.google.update_config')
 
-    def setUp(self):  # pylint: disable=invalid-name
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
+    with p_auth, p_load, p_service, p_discovery, p_save:
+        yield
 
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop everything that was started."""
-        self.hass.stop()
 
-    @patch('homeassistant.components.google.do_authentication')
-    def test_setup_component(self, mock_do_auth):
-        """Test setup component."""
-        config = {
-            'google': {
-                'client_id': 'id',
-                'client_secret': 'secret',
-            }
+async def test_setup_component(hass, google_setup):
+    """Test setup component."""
+    config = {
+        'google': {
+            'client_id': 'id',
+            'client_secret': 'secret',
         }
+    }
 
-        assert setup_component(self.hass, 'google', config)
+    assert await async_setup_component(hass, 'google', config)
 
-    def test_get_calendar_info(self):
-        """Test getting the calendar info."""
-        calendar = {
-            'id': 'qwertyuiopasdfghjklzxcvbnm@import.calendar.google.com',
-            'etag': '"3584134138943410"',
-            'timeZone': 'UTC',
-            'accessRole': 'reader',
-            'foregroundColor': '#000000',
-            'selected': True,
-            'kind': 'calendar#calendarListEntry',
-            'backgroundColor': '#16a765',
-            'description': 'Test Calendar',
-            'summary': 'We are, we are, a... Test Calendar',
-            'colorId': '8',
-            'defaultReminders': [],
-            'track': True
+
+async def test_get_calendar_info(hass, test_calendar):
+    """Test getting the calendar info."""
+    calendar_info = await hass.async_add_executor_job(
+        google.get_calendar_info, hass, test_calendar)
+    assert calendar_info == {
+        'cal_id': 'qwertyuiopasdfghjklzxcvbnm@import.calendar.google.com',
+        'entities': [{
+            'device_id': 'we_are_we_are_a_test_calendar',
+            'name': 'We are, we are, a... Test Calendar',
+            'track': True,
+            'ignore_availability': True,
+        }]
+    }
+
+
+async def test_found_calendar(
+        hass, google_setup, mock_next_event, test_calendar):
+    """Test when a calendar is found."""
+    config = {
+        'google': {
+            'client_id': 'id',
+            'client_secret': 'secret',
+            'track_new_calendar': True,
         }
+    }
+    assert await async_setup_component(hass, 'google', config)
+    assert hass.data[google.DATA_INDEX] == {}
 
-        calendar_info = google.get_calendar_info(self.hass, calendar)
-        assert calendar_info == {
-            'cal_id': 'qwertyuiopasdfghjklzxcvbnm@import.calendar.google.com',
-            'entities': [{
-                'device_id': 'we_are_we_are_a_test_calendar',
-                'name': 'We are, we are, a... Test Calendar',
-                'track': True,
-                'ignore_availability': True,
-            }]
-        }
+    await hass.services.async_call(
+        'google', google.SERVICE_FOUND_CALENDARS, test_calendar, blocking=True)
 
-    def test_found_calendar(self):
-        """Test when a calendar is found."""
-        # calendar = {
-        #     'id': 'qwertyuiopasdfghjklzxcvbnm@import.calendar.google.com',
-        #     'etag': '"3584134138943410"',
-        #     'timeZone': 'UTC',
-        #     'accessRole': 'reader',
-        #     'foregroundColor': '#000000',
-        #     'selected': True,
-        #     'kind': 'calendar#calendarListEntry',
-        #     'backgroundColor': '#16a765',
-        #     'description': 'Test Calendar',
-        #     'summary': 'We are, we are, a... Test Calendar',
-        #     'colorId': '8',
-        #     'defaultReminders': [],
-        #     'track': True
-        # }
-
-        # self.assertIsInstance(self.hass.data[google.DATA_INDEX], dict)
-        # self.assertEqual(self.hass.data[google.DATA_INDEX], {})
-
-        calendar_service = google.GoogleCalendarService(
-            self.hass.config.path(google.TOKEN_FILE))
-        assert google.setup_services(
-            self.hass, {'google': {}}, True, calendar_service)
-        # self.hass.services.call('google', 'found_calendar', calendar,
-        #                         blocking=True)
-
-        # TODO: Fix this
-        # self.assertTrue(self.hass.data[google.DATA_INDEX]
-        #   # .get(calendar['id'], None) is not None)
+    assert hass.data[google.DATA_INDEX].get(test_calendar['id']) is not None

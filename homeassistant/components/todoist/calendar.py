@@ -6,7 +6,6 @@ import voluptuous as vol
 
 from homeassistant.components.calendar import (
     DOMAIN, PLATFORM_SCHEMA, CalendarEventDevice)
-from homeassistant.components.google import CONF_DEVICE_ID
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template import DATE_STR_FORMAT
@@ -148,17 +147,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         label_id_lookup[label[NAME].lower()] = label[ID]
 
     # Check config for more projects.
-    extra_projects = config.get(CONF_EXTRA_PROJECTS)
+    extra_projects = config[CONF_EXTRA_PROJECTS]
     for project in extra_projects:
         # Special filter: By date
         project_due_date = project.get(CONF_PROJECT_DUE_DATE)
 
         # Special filter: By label
-        project_label_filter = project.get(CONF_PROJECT_LABEL_WHITELIST)
+        project_label_filter = project[CONF_PROJECT_LABEL_WHITELIST]
 
         # Special filter: By name
         # Names must be converted into IDs.
-        project_name_filter = project.get(CONF_PROJECT_WHITELIST)
+        project_name_filter = project[CONF_PROJECT_WHITELIST]
         project_id_filter = [
             project_id_lookup[project_name.lower()]
             for project_name in project_name_filter]
@@ -226,29 +225,25 @@ class TodoistProjectDevice(CalendarEventDevice):
             data, labels, token, latest_task_due_date,
             whitelisted_labels, whitelisted_projects
         )
+        self._cal_data = {}
+        self._name = data[CONF_NAME]
 
-        # Set up the calendar side of things
-        calendar_format = {
-            CONF_NAME: data[CONF_NAME],
-            # Set Entity ID to use the name so we can identify calendars
-            CONF_DEVICE_ID: data[CONF_NAME]
-        }
+    @property
+    def event(self):
+        """Return the next upcoming event."""
+        return self.data.event
 
-        super().__init__(hass, calendar_format)
+    @property
+    def name(self):
+        """Return the name of the entity."""
+        return self._name
 
     def update(self):
         """Update all Todoist Calendars."""
-        # Set basic calendar data
-        super().update()
-
+        self.data.update()
         # Set Todoist-specific data that can't easily be grabbed
         self._cal_data[ALL_TASKS] = [
             task[SUMMARY] for task in self.data.all_project_tasks]
-
-    def cleanup(self):
-        """Clean up all calendar data."""
-        super().cleanup()
-        self._cal_data[ALL_TASKS] = []
 
     async def async_get_events(self, hass, start_date, end_date):
         """Get all events in a specific time frame."""
@@ -259,11 +254,9 @@ class TodoistProjectDevice(CalendarEventDevice):
         """Return the device state attributes."""
         if self.data.event is None:
             # No tasks, we don't REALLY need to show anything.
-            return {}
+            return None
 
-        attributes = super().device_state_attributes
-
-        # Add additional attributes.
+        attributes = {}
         attributes[DUE_TODAY] = self.data.event[DUE_TODAY]
         attributes[OVERDUE] = self.data.event[OVERDUE]
         attributes[ALL_TASKS] = self._cal_data[ALL_TASKS]
@@ -314,7 +307,7 @@ class TodoistProjectData:
         self.event = None
 
         self._api = api
-        self._name = project_data.get(CONF_NAME)
+        self._name = project_data[CONF_NAME]
         # If no ID is defined, fetch all tasks.
         self._id = project_data.get(CONF_ID)
 
@@ -487,10 +480,12 @@ class TodoistProjectData:
         if self._id is None:
             project_task_data = [
                 task for task in self._api.state[TASKS]
-                if not self._project_id_whitelist or
-                task[PROJECT_ID] in self._project_id_whitelist]
+                if not self._project_id_whitelist
+                or task[PROJECT_ID] in self._project_id_whitelist]
         else:
-            project_task_data = self._api.projects.get_data(self._id)[TASKS]
+            project_data = await hass.async_add_executor_job(
+                self._api.projects.get_data, self._id)
+            project_task_data = project_data[TASKS]
 
         events = []
         time_format = '%a %d %b %Y %H:%M:%S %z'
@@ -515,8 +510,8 @@ class TodoistProjectData:
             self._api.sync()
             project_task_data = [
                 task for task in self._api.state[TASKS]
-                if not self._project_id_whitelist or
-                task[PROJECT_ID] in self._project_id_whitelist]
+                if not self._project_id_whitelist
+                or task[PROJECT_ID] in self._project_id_whitelist]
         else:
             project_task_data = self._api.projects.get_data(self._id)[TASKS]
 
@@ -524,7 +519,7 @@ class TodoistProjectData:
         if not project_task_data:
             _LOGGER.debug("No data for %s", self._name)
             self.event = None
-            return True
+            return
 
         # Keep an updated list of all tasks in this project.
         project_tasks = []
@@ -539,7 +534,7 @@ class TodoistProjectData:
             # We had no valid tasks
             _LOGGER.debug("No valid tasks for %s", self._name)
             self.event = None
-            return True
+            return
 
         # Make sure the task collection is reset to prevent an
         # infinite collection repeating the same tasks
@@ -574,4 +569,3 @@ class TodoistProjectData:
                     ).strftime(DATE_STR_FORMAT)
                 }
         _LOGGER.debug("Updated %s", self._name)
-        return True

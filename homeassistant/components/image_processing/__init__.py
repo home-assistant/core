@@ -77,7 +77,7 @@ async def async_setup(hass, config):
                 entity.async_update_ha_state(True))
 
         if update_tasks:
-            await asyncio.wait(update_tasks, loop=hass.loop)
+            await asyncio.wait(update_tasks)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SCAN, async_scan_service,

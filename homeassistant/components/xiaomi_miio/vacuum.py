@@ -165,7 +165,7 @@ async def async_setup_platform(hass, config, async_add_entities,
             update_tasks.append(update_coro)
 
         if update_tasks:
-            await asyncio.wait(update_tasks, loop=hass.loop)
+            await asyncio.wait(update_tasks)
 
     for vacuum_service in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[vacuum_service].get(

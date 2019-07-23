@@ -24,6 +24,8 @@ ATTR_DEVICE = 'device'
 ATTR_NUM_REPEATS = 'num_repeats'
 ATTR_DELAY_SECS = 'delay_secs'
 ATTR_HOLD_SECS = 'hold_secs'
+ATTR_ALTERNATIVE = 'alternative'
+ATTR_TIMEOUT = 'timeout'
 
 DOMAIN = 'remote'
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -36,11 +38,14 @@ GROUP_NAME_ALL_REMOTES = 'all remotes'
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 SERVICE_SEND_COMMAND = 'send_command'
+SERVICE_LEARN_COMMAND = 'learn_command'
 SERVICE_SYNC = 'sync'
 
 DEFAULT_NUM_REPEATS = 1
 DEFAULT_DELAY_SECS = 0.4
 DEFAULT_HOLD_SECS = 0
+
+SUPPORT_LEARN_COMMAND = 1
 
 REMOTE_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
@@ -57,6 +62,13 @@ REMOTE_SERVICE_SEND_COMMAND_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
         ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS): cv.positive_int,
     vol.Optional(ATTR_DELAY_SECS): vol.Coerce(float),
     vol.Optional(ATTR_HOLD_SECS, default=DEFAULT_HOLD_SECS): vol.Coerce(float),
+})
+
+REMOTE_SERVICE_LEARN_COMMAND_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
+    vol.Optional(ATTR_DEVICE): cv.string,
+    vol.Optional(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ATTR_ALTERNATIVE): cv.boolean,
+    vol.Optional(ATTR_TIMEOUT): cv.positive_int
 })
 
 
@@ -93,11 +105,21 @@ async def async_setup(hass, config):
         'async_send_command'
     )
 
+    component.async_register_entity_service(
+        SERVICE_LEARN_COMMAND, REMOTE_SERVICE_LEARN_COMMAND_SCHEMA,
+        'async_learn_command'
+    )
+
     return True
 
 
 class RemoteDevice(ToggleEntity):
     """Representation of a remote."""
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return 0
 
     def send_command(self, command, **kwargs):
         """Send a command to a device."""
@@ -108,5 +130,17 @@ class RemoteDevice(ToggleEntity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(ft.partial(
-            self.send_command, command, **kwargs))
+        return self.hass.async_add_executor_job(
+            ft.partial(self.send_command, command, **kwargs))
+
+    def learn_command(self, **kwargs):
+        """Learn a command from a device."""
+        raise NotImplementedError()
+
+    def async_learn_command(self, **kwargs):
+        """Learn a command from a device.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_executor_job(
+            ft.partial(self.learn_command, **kwargs))

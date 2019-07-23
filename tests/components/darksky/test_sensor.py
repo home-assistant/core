@@ -21,7 +21,8 @@ VALID_CONFIG_MINIMAL = {
         'api_key': 'foo',
         'forecast': [1, 2],
         'hourly_forecast': [1, 2],
-        'monitored_conditions': ['summary', 'icon', 'temperature_high'],
+        'monitored_conditions': ['summary', 'icon', 'temperature_high',
+                                 'alerts'],
         'scan_interval': timedelta(seconds=120),
     }
 }
@@ -47,7 +48,7 @@ VALID_CONFIG_LANG_DE = {
         'language': 'de',
         'monitored_conditions': ['summary', 'icon', 'temperature_high',
                                  'minutely_summary', 'hourly_summary',
-                                 'daily_summary', 'humidity', ],
+                                 'daily_summary', 'humidity', 'alerts'],
         'scan_interval': timedelta(seconds=120),
     }
 }
@@ -60,6 +61,18 @@ INVALID_CONFIG_LANG = {
         'hourly_forecast': [1, 2],
         'language': 'yz',
         'monitored_conditions': ['summary', 'icon', 'temperature_high'],
+        'scan_interval': timedelta(seconds=120),
+    }
+}
+
+VALID_CONFIG_ALERTS = {
+    'sensor': {
+        'platform': 'darksky',
+        'api_key': 'foo',
+        'forecast': [1, 2],
+        'hourly_forecast': [1, 2],
+        'monitored_conditions': ['summary', 'icon', 'temperature_high',
+                                 'alerts'],
         'scan_interval': timedelta(seconds=120),
     }
 }
@@ -149,6 +162,15 @@ class TestDarkSkySetup(unittest.TestCase):
         )
         assert not response
 
+    @MockDependency('forecastio')
+    @patch('forecastio.load_forecast', new=load_forecastMock)
+    def test_setup_with_alerts_config(self, mock_forecastio):
+        """Test the platform setup with alert configuration."""
+        setup_component(self.hass, 'sensor', VALID_CONFIG_ALERTS)
+
+        state = self.hass.states.get('sensor.dark_sky_alerts')
+        assert state.state == '0'
+
     @requests_mock.Mocker()
     @patch('forecastio.api.get_forecast', wraps=forecastio.api.get_forecast)
     def test_setup(self, mock_req, mock_get_forecast):
@@ -161,10 +183,12 @@ class TestDarkSkySetup(unittest.TestCase):
 
         assert mock_get_forecast.called
         assert mock_get_forecast.call_count == 1
-        assert len(self.hass.states.entity_ids()) == 12
+        assert len(self.hass.states.entity_ids()) == 13
 
         state = self.hass.states.get('sensor.dark_sky_summary')
         assert state is not None
         assert state.state == 'Clear'
         assert state.attributes.get('friendly_name') == \
             'Dark Sky Summary'
+        state = self.hass.states.get('sensor.dark_sky_alerts')
+        assert state.state == '2'

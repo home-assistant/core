@@ -1,9 +1,8 @@
 """Test Home Assistant color util methods."""
-import unittest
-import homeassistant.util.color as color_util
-
 import pytest
 import voluptuous as vol
+
+import homeassistant.util.color as color_util
 
 GAMUT = color_util.GamutType(color_util.XYPoint(0.704, 0.296),
                              color_util.XYPoint(0.2151, 0.7106),
@@ -22,408 +21,340 @@ GAMUT_INVALID_4 = color_util.GamutType(color_util.XYPoint(0.1, 0.1),
                                        color_util.XYPoint(0.7, 0.7))
 
 
-class TestColorUtil(unittest.TestCase):
-    """Test color util methods."""
+# pylint: disable=invalid-name
+def test_color_RGB_to_xy_brightness():
+    """Test color_RGB_to_xy_brightness."""
+    assert color_util.color_RGB_to_xy_brightness(0, 0, 0) == (0, 0, 0)
+    assert color_util.color_RGB_to_xy_brightness(255, 255, 255) == \
+        (0.323, 0.329, 255)
 
-    # pylint: disable=invalid-name
-    def test_color_RGB_to_xy_brightness(self):
-        """Test color_RGB_to_xy_brightness."""
-        assert (0, 0, 0) == \
-            color_util.color_RGB_to_xy_brightness(0, 0, 0)
-        assert (0.323, 0.329, 255) == \
-            color_util.color_RGB_to_xy_brightness(255, 255, 255)
+    assert color_util.color_RGB_to_xy_brightness(0, 0, 255) == \
+        (0.136, 0.04, 12)
 
-        assert (0.136, 0.04, 12) == \
-            color_util.color_RGB_to_xy_brightness(0, 0, 255)
+    assert color_util.color_RGB_to_xy_brightness(0, 255, 0) == \
+        (0.172, 0.747, 170)
 
-        assert (0.172, 0.747, 170) == \
-            color_util.color_RGB_to_xy_brightness(0, 255, 0)
+    assert color_util.color_RGB_to_xy_brightness(255, 0, 0) == \
+        (0.701, 0.299, 72)
 
-        assert (0.701, 0.299, 72) == \
-            color_util.color_RGB_to_xy_brightness(255, 0, 0)
+    assert color_util.color_RGB_to_xy_brightness(128, 0, 0) == \
+        (0.701, 0.299, 16)
 
-        assert (0.701, 0.299, 16) == \
-            color_util.color_RGB_to_xy_brightness(128, 0, 0)
+    assert color_util.color_RGB_to_xy_brightness(255, 0, 0, GAMUT) == \
+        (0.7, 0.299, 72)
 
-        assert (0.7, 0.299, 72) == \
-            color_util.color_RGB_to_xy_brightness(255, 0, 0, GAMUT)
+    assert color_util.color_RGB_to_xy_brightness(0, 255, 0, GAMUT) == \
+        (0.215, 0.711, 170)
 
-        assert (0.215, 0.711, 170) == \
-            color_util.color_RGB_to_xy_brightness(0, 255, 0, GAMUT)
+    assert color_util.color_RGB_to_xy_brightness(0, 0, 255, GAMUT) == \
+        (0.138, 0.08, 12)
 
-        assert (0.138, 0.08, 12) == \
-            color_util.color_RGB_to_xy_brightness(0, 0, 255, GAMUT)
 
-    def test_color_RGB_to_xy(self):
-        """Test color_RGB_to_xy."""
-        assert (0, 0) == \
-            color_util.color_RGB_to_xy(0, 0, 0)
-        assert (0.323, 0.329) == \
-            color_util.color_RGB_to_xy(255, 255, 255)
+def test_color_RGB_to_xy():
+    """Test color_RGB_to_xy."""
+    assert color_util.color_RGB_to_xy(0, 0, 0) == (0, 0)
+    assert color_util.color_RGB_to_xy(255, 255, 255) == (0.323, 0.329)
 
-        assert (0.136, 0.04) == \
-            color_util.color_RGB_to_xy(0, 0, 255)
+    assert color_util.color_RGB_to_xy(0, 0, 255) == (0.136, 0.04)
 
-        assert (0.172, 0.747) == \
-            color_util.color_RGB_to_xy(0, 255, 0)
+    assert color_util.color_RGB_to_xy(0, 255, 0) == (0.172, 0.747)
 
-        assert (0.701, 0.299) == \
-            color_util.color_RGB_to_xy(255, 0, 0)
+    assert color_util.color_RGB_to_xy(255, 0, 0) == (0.701, 0.299)
 
-        assert (0.701, 0.299) == \
-            color_util.color_RGB_to_xy(128, 0, 0)
+    assert color_util.color_RGB_to_xy(128, 0, 0) == (0.701, 0.299)
 
-        assert (0.138, 0.08) == \
-            color_util.color_RGB_to_xy(0, 0, 255, GAMUT)
+    assert color_util.color_RGB_to_xy(0, 0, 255, GAMUT) == (0.138, 0.08)
 
-        assert (0.215, 0.711) == \
-            color_util.color_RGB_to_xy(0, 255, 0, GAMUT)
+    assert color_util.color_RGB_to_xy(0, 255, 0, GAMUT) == (0.215, 0.711)
 
-        assert (0.7, 0.299) == \
-            color_util.color_RGB_to_xy(255, 0, 0, GAMUT)
+    assert color_util.color_RGB_to_xy(255, 0, 0, GAMUT) == (0.7, 0.299)
 
-    def test_color_xy_brightness_to_RGB(self):
-        """Test color_xy_brightness_to_RGB."""
-        assert (0, 0, 0) == \
-            color_util.color_xy_brightness_to_RGB(1, 1, 0)
 
-        assert (194, 186, 169) == \
-            color_util.color_xy_brightness_to_RGB(.35, .35, 128)
+def test_color_xy_brightness_to_RGB():
+    """Test color_xy_brightness_to_RGB."""
+    assert color_util.color_xy_brightness_to_RGB(1, 1, 0) == (0, 0, 0)
 
-        assert (255, 243, 222) == \
-            color_util.color_xy_brightness_to_RGB(.35, .35, 255)
+    assert color_util.color_xy_brightness_to_RGB(.35, .35, 128) == \
+        (194, 186, 169)
 
-        assert (255, 0, 60) == \
-            color_util.color_xy_brightness_to_RGB(1, 0, 255)
+    assert color_util.color_xy_brightness_to_RGB(.35, .35, 255) == \
+        (255, 243, 222)
 
-        assert (0, 255, 0) == \
-            color_util.color_xy_brightness_to_RGB(0, 1, 255)
+    assert color_util.color_xy_brightness_to_RGB(1, 0, 255) == (255, 0, 60)
 
-        assert (0, 63, 255) == \
-            color_util.color_xy_brightness_to_RGB(0, 0, 255)
+    assert color_util.color_xy_brightness_to_RGB(0, 1, 255) == (0, 255, 0)
 
-        assert (255, 0, 3) == \
-            color_util.color_xy_brightness_to_RGB(1, 0, 255, GAMUT)
+    assert color_util.color_xy_brightness_to_RGB(0, 0, 255) == (0, 63, 255)
 
-        assert (82, 255, 0) == \
-            color_util.color_xy_brightness_to_RGB(0, 1, 255, GAMUT)
+    assert color_util.color_xy_brightness_to_RGB(1, 0, 255, GAMUT) == \
+        (255, 0, 3)
 
-        assert (9, 85, 255) == \
-            color_util.color_xy_brightness_to_RGB(0, 0, 255, GAMUT)
+    assert color_util.color_xy_brightness_to_RGB(0, 1, 255, GAMUT) == \
+        (82, 255, 0)
 
-    def test_color_xy_to_RGB(self):
-        """Test color_xy_to_RGB."""
-        assert (255, 243, 222) == \
-            color_util.color_xy_to_RGB(.35, .35)
+    assert color_util.color_xy_brightness_to_RGB(0, 0, 255, GAMUT) == \
+        (9, 85, 255)
 
-        assert (255, 0, 60) == \
-            color_util.color_xy_to_RGB(1, 0)
 
-        assert (0, 255, 0) == \
-            color_util.color_xy_to_RGB(0, 1)
+def test_color_xy_to_RGB():
+    """Test color_xy_to_RGB."""
+    assert color_util.color_xy_to_RGB(.35, .35) == (255, 243, 222)
 
-        assert (0, 63, 255) == \
-            color_util.color_xy_to_RGB(0, 0)
+    assert color_util.color_xy_to_RGB(1, 0) == (255, 0, 60)
 
-        assert (255, 0, 3) == \
-            color_util.color_xy_to_RGB(1, 0, GAMUT)
+    assert color_util.color_xy_to_RGB(0, 1) == (0, 255, 0)
 
-        assert (82, 255, 0) == \
-            color_util.color_xy_to_RGB(0, 1, GAMUT)
+    assert color_util.color_xy_to_RGB(0, 0) == (0, 63, 255)
 
-        assert (9, 85, 255) == \
-            color_util.color_xy_to_RGB(0, 0, GAMUT)
+    assert color_util.color_xy_to_RGB(1, 0, GAMUT) == (255, 0, 3)
 
-    def test_color_RGB_to_hsv(self):
-        """Test color_RGB_to_hsv."""
-        assert (0, 0, 0) == \
-            color_util.color_RGB_to_hsv(0, 0, 0)
+    assert color_util.color_xy_to_RGB(0, 1, GAMUT) == (82, 255, 0)
 
-        assert (0, 0, 100) == \
-            color_util.color_RGB_to_hsv(255, 255, 255)
+    assert color_util.color_xy_to_RGB(0, 0, GAMUT) == (9, 85, 255)
 
-        assert (240, 100, 100) == \
-            color_util.color_RGB_to_hsv(0, 0, 255)
 
-        assert (120, 100, 100) == \
-            color_util.color_RGB_to_hsv(0, 255, 0)
+def test_color_RGB_to_hsv():
+    """Test color_RGB_to_hsv."""
+    assert color_util.color_RGB_to_hsv(0, 0, 0) == (0, 0, 0)
 
-        assert (0, 100, 100) == \
-            color_util.color_RGB_to_hsv(255, 0, 0)
+    assert color_util.color_RGB_to_hsv(255, 255, 255) == (0, 0, 100)
 
-    def test_color_hsv_to_RGB(self):
-        """Test color_hsv_to_RGB."""
-        assert (0, 0, 0) == \
-            color_util.color_hsv_to_RGB(0, 0, 0)
+    assert color_util.color_RGB_to_hsv(0, 0, 255) == (240, 100, 100)
 
-        assert (255, 255, 255) == \
-            color_util.color_hsv_to_RGB(0, 0, 100)
+    assert color_util.color_RGB_to_hsv(0, 255, 0) == (120, 100, 100)
 
-        assert (0, 0, 255) == \
-            color_util.color_hsv_to_RGB(240, 100, 100)
+    assert color_util.color_RGB_to_hsv(255, 0, 0) == (0, 100, 100)
 
-        assert (0, 255, 0) == \
-            color_util.color_hsv_to_RGB(120, 100, 100)
 
-        assert (255, 0, 0) == \
-            color_util.color_hsv_to_RGB(0, 100, 100)
+def test_color_hsv_to_RGB():
+    """Test color_hsv_to_RGB."""
+    assert color_util.color_hsv_to_RGB(0, 0, 0) == (0, 0, 0)
 
-    def test_color_hsb_to_RGB(self):
-        """Test color_hsb_to_RGB."""
-        assert (0, 0, 0) == \
-            color_util.color_hsb_to_RGB(0, 0, 0)
+    assert color_util.color_hsv_to_RGB(0, 0, 100) == (255, 255, 255)
 
-        assert (255, 255, 255) == \
-            color_util.color_hsb_to_RGB(0, 0, 1.0)
+    assert color_util.color_hsv_to_RGB(240, 100, 100) == (0, 0, 255)
 
-        assert (0, 0, 255) == \
-            color_util.color_hsb_to_RGB(240, 1.0, 1.0)
+    assert color_util.color_hsv_to_RGB(120, 100, 100) == (0, 255, 0)
 
-        assert (0, 255, 0) == \
-            color_util.color_hsb_to_RGB(120, 1.0, 1.0)
+    assert color_util.color_hsv_to_RGB(0, 100, 100) == (255, 0, 0)
 
-        assert (255, 0, 0) == \
-            color_util.color_hsb_to_RGB(0, 1.0, 1.0)
 
-    def test_color_xy_to_hs(self):
-        """Test color_xy_to_hs."""
-        assert (47.294, 100) == \
-            color_util.color_xy_to_hs(1, 1)
+def test_color_hsb_to_RGB():
+    """Test color_hsb_to_RGB."""
+    assert color_util.color_hsb_to_RGB(0, 0, 0) == (0, 0, 0)
 
-        assert (38.182, 12.941) == \
-            color_util.color_xy_to_hs(.35, .35)
+    assert color_util.color_hsb_to_RGB(0, 0, 1.0) == (255, 255, 255)
 
-        assert (345.882, 100) == \
-            color_util.color_xy_to_hs(1, 0)
+    assert color_util.color_hsb_to_RGB(240, 1.0, 1.0) == (0, 0, 255)
 
-        assert (120, 100) == \
-            color_util.color_xy_to_hs(0, 1)
+    assert color_util.color_hsb_to_RGB(120, 1.0, 1.0) == (0, 255, 0)
 
-        assert (225.176, 100) == \
-            color_util.color_xy_to_hs(0, 0)
+    assert color_util.color_hsb_to_RGB(0, 1.0, 1.0) == (255, 0, 0)
 
-        assert (359.294, 100) == \
-            color_util.color_xy_to_hs(1, 0, GAMUT)
 
-        assert (100.706, 100) == \
-            color_util.color_xy_to_hs(0, 1, GAMUT)
+def test_color_xy_to_hs():
+    """Test color_xy_to_hs."""
+    assert color_util.color_xy_to_hs(1, 1) == (47.294, 100)
 
-        assert (221.463, 96.471) == \
-            color_util.color_xy_to_hs(0, 0, GAMUT)
+    assert color_util.color_xy_to_hs(.35, .35) == (38.182, 12.941)
 
-    def test_color_hs_to_xy(self):
-        """Test color_hs_to_xy."""
-        assert (0.151, 0.343) == \
-            color_util.color_hs_to_xy(180, 100)
+    assert color_util.color_xy_to_hs(1, 0) == (345.882, 100)
 
-        assert (0.356, 0.321) == \
-            color_util.color_hs_to_xy(350, 12.5)
+    assert color_util.color_xy_to_hs(0, 1) == (120, 100)
 
-        assert (0.229, 0.474) == \
-            color_util.color_hs_to_xy(140, 50)
+    assert color_util.color_xy_to_hs(0, 0) == (225.176, 100)
 
-        assert (0.474, 0.317) == \
-            color_util.color_hs_to_xy(0, 40)
+    assert color_util.color_xy_to_hs(1, 0, GAMUT) == (359.294, 100)
 
-        assert (0.323, 0.329) == \
-            color_util.color_hs_to_xy(360, 0)
+    assert color_util.color_xy_to_hs(0, 1, GAMUT) == (100.706, 100)
 
-        assert (0.7, 0.299) == \
-            color_util.color_hs_to_xy(0, 100, GAMUT)
+    assert color_util.color_xy_to_hs(0, 0, GAMUT) == (221.463, 96.471)
 
-        assert (0.215, 0.711) == \
-            color_util.color_hs_to_xy(120, 100, GAMUT)
 
-        assert (0.17, 0.34) == \
-            color_util.color_hs_to_xy(180, 100, GAMUT)
+def test_color_hs_to_xy():
+    """Test color_hs_to_xy."""
+    assert color_util.color_hs_to_xy(180, 100) == (0.151, 0.343)
 
-        assert (0.138, 0.08) == \
-            color_util.color_hs_to_xy(240, 100, GAMUT)
+    assert color_util.color_hs_to_xy(350, 12.5) == (0.356, 0.321)
 
-        assert (0.7, 0.299) == \
-            color_util.color_hs_to_xy(360, 100, GAMUT)
+    assert color_util.color_hs_to_xy(140, 50) == (0.229, 0.474)
 
-    def test_rgb_hex_to_rgb_list(self):
-        """Test rgb_hex_to_rgb_list."""
-        assert [255, 255, 255] == \
-            color_util.rgb_hex_to_rgb_list('ffffff')
+    assert color_util.color_hs_to_xy(0, 40) == (0.474, 0.317)
 
-        assert [0, 0, 0] == \
-            color_util.rgb_hex_to_rgb_list('000000')
+    assert color_util.color_hs_to_xy(360, 0) == (0.323, 0.329)
 
-        assert [255, 255, 255, 255] == \
-            color_util.rgb_hex_to_rgb_list('ffffffff')
+    assert color_util.color_hs_to_xy(0, 100, GAMUT) == (0.7, 0.299)
 
-        assert [0, 0, 0, 0] == \
-            color_util.rgb_hex_to_rgb_list('00000000')
+    assert color_util.color_hs_to_xy(120, 100, GAMUT) == (0.215, 0.711)
 
-        assert [51, 153, 255] == \
-            color_util.rgb_hex_to_rgb_list('3399ff')
+    assert color_util.color_hs_to_xy(180, 100, GAMUT) == (0.17, 0.34)
 
-        assert [51, 153, 255, 0] == \
-            color_util.rgb_hex_to_rgb_list('3399ff00')
+    assert color_util.color_hs_to_xy(240, 100, GAMUT) == (0.138, 0.08)
 
-    def test_color_name_to_rgb_valid_name(self):
-        """Test color_name_to_rgb."""
-        assert (255, 0, 0) == \
-            color_util.color_name_to_rgb('red')
+    assert color_util.color_hs_to_xy(360, 100, GAMUT) == (0.7, 0.299)
 
-        assert (0, 0, 255) == \
-            color_util.color_name_to_rgb('blue')
 
-        assert (0, 128, 0) == \
-            color_util.color_name_to_rgb('green')
+def test_rgb_hex_to_rgb_list():
+    """Test rgb_hex_to_rgb_list."""
+    assert [255, 255, 255] == \
+        color_util.rgb_hex_to_rgb_list('ffffff')
 
-        # spaces in the name
-        assert (72, 61, 139) == \
-            color_util.color_name_to_rgb('dark slate blue')
+    assert [0, 0, 0] == \
+        color_util.rgb_hex_to_rgb_list('000000')
 
-        # spaces removed from name
-        assert (72, 61, 139) == \
-            color_util.color_name_to_rgb('darkslateblue')
-        assert (72, 61, 139) == \
-            color_util.color_name_to_rgb('dark slateblue')
-        assert (72, 61, 139) == \
-            color_util.color_name_to_rgb('darkslate blue')
+    assert [255, 255, 255, 255] == \
+        color_util.rgb_hex_to_rgb_list('ffffffff')
 
-    def test_color_name_to_rgb_unknown_name_raises_value_error(self):
-        """Test color_name_to_rgb."""
-        with pytest.raises(ValueError):
-            color_util.color_name_to_rgb('not a color')
+    assert [0, 0, 0, 0] == \
+        color_util.rgb_hex_to_rgb_list('00000000')
 
-    def test_color_rgb_to_rgbw(self):
-        """Test color_rgb_to_rgbw."""
-        assert (0, 0, 0, 0) == \
-            color_util.color_rgb_to_rgbw(0, 0, 0)
+    assert [51, 153, 255] == \
+        color_util.rgb_hex_to_rgb_list('3399ff')
 
-        assert (0, 0, 0, 255) == \
-            color_util.color_rgb_to_rgbw(255, 255, 255)
+    assert [51, 153, 255, 0] == \
+        color_util.rgb_hex_to_rgb_list('3399ff00')
 
-        assert (255, 0, 0, 0) == \
-            color_util.color_rgb_to_rgbw(255, 0, 0)
 
-        assert (0, 255, 0, 0) == \
-            color_util.color_rgb_to_rgbw(0, 255, 0)
+def test_color_name_to_rgb_valid_name():
+    """Test color_name_to_rgb."""
+    assert color_util.color_name_to_rgb('red') == (255, 0, 0)
 
-        assert (0, 0, 255, 0) == \
-            color_util.color_rgb_to_rgbw(0, 0, 255)
+    assert color_util.color_name_to_rgb('blue') == (0, 0, 255)
 
-        assert (255, 127, 0, 0) == \
-            color_util.color_rgb_to_rgbw(255, 127, 0)
+    assert color_util.color_name_to_rgb('green') == (0, 128, 0)
 
-        assert (255, 0, 0, 253) == \
-            color_util.color_rgb_to_rgbw(255, 127, 127)
+    # spaces in the name
+    assert color_util.color_name_to_rgb('dark slate blue') == (72, 61, 139)
 
-        assert (0, 0, 0, 127) == \
-            color_util.color_rgb_to_rgbw(127, 127, 127)
+    # spaces removed from name
+    assert color_util.color_name_to_rgb('darkslateblue') == (72, 61, 139)
+    assert color_util.color_name_to_rgb('dark slateblue') == (72, 61, 139)
+    assert color_util.color_name_to_rgb('darkslate blue') == (72, 61, 139)
 
-    def test_color_rgbw_to_rgb(self):
-        """Test color_rgbw_to_rgb."""
-        assert (0, 0, 0) == \
-            color_util.color_rgbw_to_rgb(0, 0, 0, 0)
 
-        assert (255, 255, 255) == \
-            color_util.color_rgbw_to_rgb(0, 0, 0, 255)
+def test_color_name_to_rgb_unknown_name_raises_value_error():
+    """Test color_name_to_rgb."""
+    with pytest.raises(ValueError):
+        color_util.color_name_to_rgb('not a color')
 
-        assert (255, 0, 0) == \
-            color_util.color_rgbw_to_rgb(255, 0, 0, 0)
 
-        assert (0, 255, 0) == \
-            color_util.color_rgbw_to_rgb(0, 255, 0, 0)
+def test_color_rgb_to_rgbw():
+    """Test color_rgb_to_rgbw."""
+    assert color_util.color_rgb_to_rgbw(0, 0, 0) == (0, 0, 0, 0)
 
-        assert (0, 0, 255) == \
-            color_util.color_rgbw_to_rgb(0, 0, 255, 0)
+    assert color_util.color_rgb_to_rgbw(255, 255, 255) == (0, 0, 0, 255)
 
-        assert (255, 127, 0) == \
-            color_util.color_rgbw_to_rgb(255, 127, 0, 0)
+    assert color_util.color_rgb_to_rgbw(255, 0, 0) == (255, 0, 0, 0)
 
-        assert (255, 127, 127) == \
-            color_util.color_rgbw_to_rgb(255, 0, 0, 253)
+    assert color_util.color_rgb_to_rgbw(0, 255, 0) == (0, 255, 0, 0)
 
-        assert (127, 127, 127) == \
-            color_util.color_rgbw_to_rgb(0, 0, 0, 127)
+    assert color_util.color_rgb_to_rgbw(0, 0, 255) == (0, 0, 255, 0)
 
-    def test_color_rgb_to_hex(self):
-        """Test color_rgb_to_hex."""
-        assert color_util.color_rgb_to_hex(255, 255, 255) == 'ffffff'
-        assert color_util.color_rgb_to_hex(0, 0, 0) == '000000'
-        assert color_util.color_rgb_to_hex(51, 153, 255) == '3399ff'
-        assert color_util.color_rgb_to_hex(255, 67.9204190, 0) == 'ff4400'
+    assert color_util.color_rgb_to_rgbw(255, 127, 0) == (255, 127, 0, 0)
 
-    def test_gamut(self):
-        """Test gamut functions."""
-        assert color_util.check_valid_gamut(GAMUT)
-        assert not color_util.check_valid_gamut(GAMUT_INVALID_1)
-        assert not color_util.check_valid_gamut(GAMUT_INVALID_2)
-        assert not color_util.check_valid_gamut(GAMUT_INVALID_3)
-        assert not color_util.check_valid_gamut(GAMUT_INVALID_4)
+    assert color_util.color_rgb_to_rgbw(255, 127, 127) == (255, 0, 0, 253)
 
+    assert color_util.color_rgb_to_rgbw(127, 127, 127) == (0, 0, 0, 127)
 
-class ColorTemperatureMiredToKelvinTests(unittest.TestCase):
-    """Test color_temperature_mired_to_kelvin."""
 
-    def test_should_return_25000_kelvin_when_input_is_40_mired(self):
-        """Function should return 25000K if given 40 mired."""
-        kelvin = color_util.color_temperature_mired_to_kelvin(40)
-        assert 25000 == kelvin
+def test_color_rgbw_to_rgb():
+    """Test color_rgbw_to_rgb."""
+    assert color_util.color_rgbw_to_rgb(0, 0, 0, 0) == (0, 0, 0)
 
-    def test_should_return_5000_kelvin_when_input_is_200_mired(self):
-        """Function should return 5000K if given 200 mired."""
-        kelvin = color_util.color_temperature_mired_to_kelvin(200)
-        assert 5000 == kelvin
+    assert color_util.color_rgbw_to_rgb(0, 0, 0, 255) == (255, 255, 255)
 
+    assert color_util.color_rgbw_to_rgb(255, 0, 0, 0) == (255, 0, 0)
 
-class ColorTemperatureKelvinToMiredTests(unittest.TestCase):
-    """Test color_temperature_kelvin_to_mired."""
+    assert color_util.color_rgbw_to_rgb(0, 255, 0, 0) == (0, 255, 0)
 
-    def test_should_return_40_mired_when_input_is_25000_kelvin(self):
-        """Function should return 40 mired when given 25000 Kelvin."""
-        mired = color_util.color_temperature_kelvin_to_mired(25000)
-        assert 40 == mired
+    assert color_util.color_rgbw_to_rgb(0, 0, 255, 0) == (0, 0, 255)
 
-    def test_should_return_200_mired_when_input_is_5000_kelvin(self):
-        """Function should return 200 mired when given 5000 Kelvin."""
-        mired = color_util.color_temperature_kelvin_to_mired(5000)
-        assert 200 == mired
+    assert color_util.color_rgbw_to_rgb(255, 127, 0, 0) == (255, 127, 0)
 
+    assert color_util.color_rgbw_to_rgb(255, 0, 0, 253) == (255, 127, 127)
 
-class ColorTemperatureToRGB(unittest.TestCase):
-    """Test color_temperature_to_rgb."""
+    assert color_util.color_rgbw_to_rgb(0, 0, 0, 127) == (127, 127, 127)
 
-    def test_returns_same_value_for_any_two_temperatures_below_1000(self):
-        """Function should return same value for 999 Kelvin and 0 Kelvin."""
-        rgb_1 = color_util.color_temperature_to_rgb(999)
-        rgb_2 = color_util.color_temperature_to_rgb(0)
-        assert rgb_1 == rgb_2
 
-    def test_returns_same_value_for_any_two_temperatures_above_40000(self):
-        """Function should return same value for 40001K and 999999K."""
-        rgb_1 = color_util.color_temperature_to_rgb(40001)
-        rgb_2 = color_util.color_temperature_to_rgb(999999)
-        assert rgb_1 == rgb_2
+def test_color_rgb_to_hex():
+    """Test color_rgb_to_hex."""
+    assert color_util.color_rgb_to_hex(255, 255, 255) == 'ffffff'
+    assert color_util.color_rgb_to_hex(0, 0, 0) == '000000'
+    assert color_util.color_rgb_to_hex(51, 153, 255) == '3399ff'
+    assert color_util.color_rgb_to_hex(255, 67.9204190, 0) == 'ff4400'
 
-    def test_should_return_pure_white_at_6600(self):
-        """
-        Function should return red=255, blue=255, green=255 when given 6600K.
 
-        6600K is considered "pure white" light.
-        This is just a rough estimate because the formula itself is a "best
-        guess" approach.
-        """
-        rgb = color_util.color_temperature_to_rgb(6600)
-        assert (255, 255, 255) == rgb
+def test_gamut():
+    """Test gamut functions."""
+    assert color_util.check_valid_gamut(GAMUT)
+    assert not color_util.check_valid_gamut(GAMUT_INVALID_1)
+    assert not color_util.check_valid_gamut(GAMUT_INVALID_2)
+    assert not color_util.check_valid_gamut(GAMUT_INVALID_3)
+    assert not color_util.check_valid_gamut(GAMUT_INVALID_4)
 
-    def test_color_above_6600_should_have_more_blue_than_red_or_green(self):
-        """Function should return a higher blue value for blue-ish light."""
-        rgb = color_util.color_temperature_to_rgb(6700)
-        assert rgb[2] > rgb[1]
-        assert rgb[2] > rgb[0]
 
-    def test_color_below_6600_should_have_more_red_than_blue_or_green(self):
-        """Function should return a higher red value for red-ish light."""
-        rgb = color_util.color_temperature_to_rgb(6500)
-        assert rgb[0] > rgb[1]
-        assert rgb[0] > rgb[2]
+def test_should_return_25000_kelvin_when_input_is_40_mired():
+    """Function should return 25000K if given 40 mired."""
+    kelvin = color_util.color_temperature_mired_to_kelvin(40)
+    assert kelvin == 25000
+
+
+def test_should_return_5000_kelvin_when_input_is_200_mired():
+    """Function should return 5000K if given 200 mired."""
+    kelvin = color_util.color_temperature_mired_to_kelvin(200)
+    assert kelvin == 5000
+
+
+def test_should_return_40_mired_when_input_is_25000_kelvin():
+    """Function should return 40 mired when given 25000 Kelvin."""
+    mired = color_util.color_temperature_kelvin_to_mired(25000)
+    assert mired == 40
+
+
+def test_should_return_200_mired_when_input_is_5000_kelvin():
+    """Function should return 200 mired when given 5000 Kelvin."""
+    mired = color_util.color_temperature_kelvin_to_mired(5000)
+    assert mired == 200
+
+
+def test_returns_same_value_for_any_two_temperatures_below_1000():
+    """Function should return same value for 999 Kelvin and 0 Kelvin."""
+    rgb_1 = color_util.color_temperature_to_rgb(999)
+    rgb_2 = color_util.color_temperature_to_rgb(0)
+    assert rgb_1 == rgb_2
+
+
+def test_returns_same_value_for_any_two_temperatures_above_40000():
+    """Function should return same value for 40001K and 999999K."""
+    rgb_1 = color_util.color_temperature_to_rgb(40001)
+    rgb_2 = color_util.color_temperature_to_rgb(999999)
+    assert rgb_1 == rgb_2
+
+
+def test_should_return_pure_white_at_6600():
+    """
+    Function should return red=255, blue=255, green=255 when given 6600K.
+
+    6600K is considered "pure white" light.
+    This is just a rough estimate because the formula itself is a "best
+    guess" approach.
+    """
+    rgb = color_util.color_temperature_to_rgb(6600)
+    assert (255, 255, 255) == rgb
+
+
+def test_color_above_6600_should_have_more_blue_than_red_or_green():
+    """Function should return a higher blue value for blue-ish light."""
+    rgb = color_util.color_temperature_to_rgb(6700)
+    assert rgb[2] > rgb[1]
+    assert rgb[2] > rgb[0]
+
+
+def test_color_below_6600_should_have_more_red_than_blue_or_green():
+    """Function should return a higher red value for red-ish light."""
+    rgb = color_util.color_temperature_to_rgb(6500)
+    assert rgb[0] > rgb[1]
+    assert rgb[0] > rgb[2]
 
 
 def test_get_color_in_voluptuous():

@@ -2,6 +2,7 @@
 from datetime import timedelta
 from io import BytesIO
 from unittest.mock import patch
+import pytest
 
 from homeassistant.setup import async_setup_component
 from homeassistant.components.stream.core import Segment
@@ -13,6 +14,7 @@ from tests.components.stream.common import (
     generate_h264_video, preload_stream)
 
 
+@pytest.mark.skip("Flaky in CI")
 async def test_record_stream(hass, hass_client):
     """
     Test record stream.
@@ -44,6 +46,7 @@ async def test_record_stream(hass, hass_client):
         assert segments > 1
 
 
+@pytest.mark.skip("Flaky in CI")
 async def test_recorder_timeout(hass, hass_client):
     """Test recorder timeout."""
     await async_setup_component(hass, 'stream', {
@@ -69,6 +72,7 @@ async def test_recorder_timeout(hass, hass_client):
         assert mock_cleanup.called
 
 
+@pytest.mark.skip("Flaky in CI")
 async def test_recorder_save():
     """Test recorder save."""
     # Setup

@@ -231,7 +231,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                 update_tasks.append(update_coro)
 
         if update_tasks:
-            await asyncio.wait(update_tasks, loop=hass.loop)
+            await asyncio.wait(update_tasks)
 
     if hass.services.has_service(DOMAIN, SERVICE_ADD_MEDIA):
         return

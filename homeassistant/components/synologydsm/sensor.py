@@ -7,7 +7,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_SSL,
+    CONF_NAME, CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_SSL,
     ATTR_ATTRIBUTION, TEMP_CELSIUS, CONF_MONITORED_CONDITIONS,
     EVENT_HOMEASSISTANT_START, CONF_DISKS)
 from homeassistant.helpers.entity import Entity
@@ -68,6 +68,7 @@ _MONITORED_CONDITIONS = list(_UTILISATION_MON_COND.keys()) + \
     list(_STORAGE_DSK_MON_COND.keys())
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_SSL, default=True): cv.boolean,
@@ -88,6 +89,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         Delay the setup until Home Assistant is fully initialized.
         This allows any entities to be created already
         """
+        name = config.get(CONF_NAME)
         host = config.get(CONF_HOST)
         port = config.get(CONF_PORT)
         username = config.get(CONF_USERNAME)
@@ -99,21 +101,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         api = SynoApi(host, port, username, password, unit, use_ssl)
 
         sensors = [SynoNasUtilSensor(
-            api, variable, _UTILISATION_MON_COND[variable])
+            api, name, variable, _UTILISATION_MON_COND[variable])
                    for variable in monitored_conditions
                    if variable in _UTILISATION_MON_COND]
 
         # Handle all volumes
         for volume in config.get(CONF_VOLUMES, api.storage.volumes):
             sensors += [SynoNasStorageSensor(
-                api, variable, _STORAGE_VOL_MON_COND[variable], volume)
+                api, name, variable, _STORAGE_VOL_MON_COND[variable], volume)
                         for variable in monitored_conditions
                         if variable in _STORAGE_VOL_MON_COND]
 
         # Handle all disks
         for disk in config.get(CONF_DISKS, api.storage.disks):
             sensors += [SynoNasStorageSensor(
-                api, variable, _STORAGE_DSK_MON_COND[variable], disk)
+                api, name, variable, _STORAGE_DSK_MON_COND[variable], disk)
                         for variable in monitored_conditions
                         if variable in _STORAGE_DSK_MON_COND]
 
@@ -150,10 +152,11 @@ class SynoApi:
 class SynoNasSensor(Entity):
     """Representation of a Synology NAS Sensor."""
 
-    def __init__(self, api, variable, variable_info, monitor_device=None):
+    def __init__(self, api, name, variable, variable_info,
+                 monitor_device=None):
         """Initialize the sensor."""
         self.var_id = variable
-        self.var_name = variable_info[0]
+        self.var_name = "{} {}".format(name, variable_info[0])
         self.var_units = variable_info[1]
         self.var_icon = variable_info[2]
         self.monitor_device = monitor_device

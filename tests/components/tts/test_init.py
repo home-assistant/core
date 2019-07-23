@@ -607,6 +607,10 @@ async def test_setup_component_and_web_get_url(hass, hass_client):
         ("{}/api/tts_proxy/265944c108cbb00b2a62"
          "1be5930513e03a0bb2cd_en_-_demo.mp3".format(hass.config.api.base_url))
 
+    tts_cache = hass.config.path(tts.DEFAULT_CACHE_DIR)
+    if os.path.isdir(tts_cache):
+        shutil.rmtree(tts_cache)
+
 
 async def test_setup_component_and_web_get_url_bad_config(hass, hass_client):
     """Set up the demo platform and receive wrong file from web."""
