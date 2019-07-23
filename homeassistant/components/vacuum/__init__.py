@@ -7,12 +7,12 @@ import voluptuous as vol
 
 from homeassistant.components import group
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_COMMAND, ATTR_ENTITY_ID, SERVICE_TOGGLE,
-    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON, STATE_PAUSED, STATE_IDLE)
+    ATTR_BATTERY_LEVEL, ATTR_COMMAND, SERVICE_TOGGLE, SERVICE_TURN_OFF,
+    SERVICE_TURN_ON, STATE_ON, STATE_PAUSED, STATE_IDLE)
 from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa
-    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
+    ENTITY_SERVICE_SCHEMA, PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import (ToggleEntity, Entity)
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -42,9 +42,9 @@ SERVICE_START = 'start'
 SERVICE_PAUSE = 'pause'
 SERVICE_STOP = 'stop'
 
-VACUUM_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-})
+# Keep this reference in place so platforms don't have to understand
+# ENTITY_SERVICE_SCHEMA:
+VACUUM_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA
 
 VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_FAN_SPEED): cv.string,
