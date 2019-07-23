@@ -247,6 +247,7 @@ homeassistant/components/sql/* @dgomes
 homeassistant/components/statistics/* @fabaff
 homeassistant/components/stiebel_eltron/* @fucm
 homeassistant/components/stream/* @hunterjm
+homeassistant/components/suez_water/* @ooii
 homeassistant/components/sun/* @Swamp-Ig
 homeassistant/components/supla/* @mwegrzynek
 homeassistant/components/swiss_hydrological_data/* @fabaff
