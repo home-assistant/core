@@ -8,7 +8,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.const import CONF_API_KEY, STATE_OFFLINE, STATE_ONLINE)
+from homeassistant.const import (CONF_API_KEY, STATE_OFFLINE, STATE_ONLINE)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,6 +50,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # Only one sensor update once every 60 seconds to avoid
     # flooding steam and getting disconnected.
     entity_next = 0
+
     @callback
     def do_update(time):
         nonlocal entity_next

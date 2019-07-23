@@ -220,8 +220,6 @@ STATE_PROBLEM = 'problem'
 STATE_ONLINE = 'online'
 STATE_OFFLINE = 'offline'
 
-
-
 # #### STATE AND EVENT ATTRIBUTES ####
 # Attribution
 ATTR_ATTRIBUTION = 'attribution'

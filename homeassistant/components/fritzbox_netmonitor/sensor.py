@@ -6,7 +6,9 @@ from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_HOST, STATE_UNAVAILABLE, STATE_ONLINE, STATE_OFFLINE)
+from homeassistant.const import (
+    CONF_NAME, CONF_HOST, STATE_UNAVAILABLE,
+    STATE_ONLINE, STATE_OFFLINE)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
