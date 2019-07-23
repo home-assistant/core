@@ -78,11 +78,6 @@ DEVICE_CLASSES = [
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 # Service call validation schemas
-
-# Make MEDIA_PLAYER_SCHEMA a reference to ENTITY_SERVICE_SCHEMA so that
-# platforms don't have to know about ENTITY_SERVICE_SCHEMA:
-MEDIA_PLAYER_SCHEMA = ENTITY_SERVICE_SCHEMA
-
 MEDIA_PLAYER_SET_VOLUME_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float,
 })
@@ -175,51 +170,51 @@ async def async_setup(hass, config):
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_TURN_ON, MEDIA_PLAYER_SCHEMA,
+        SERVICE_TURN_ON, ENTITY_SERVICE_SCHEMA,
         'async_turn_on', [SUPPORT_TURN_ON]
     )
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, MEDIA_PLAYER_SCHEMA,
+        SERVICE_TURN_OFF, ENTITY_SERVICE_SCHEMA,
         'async_turn_off', [SUPPORT_TURN_OFF]
     )
     component.async_register_entity_service(
-        SERVICE_TOGGLE, MEDIA_PLAYER_SCHEMA,
+        SERVICE_TOGGLE, ENTITY_SERVICE_SCHEMA,
         'async_toggle', [SUPPORT_TURN_OFF | SUPPORT_TURN_ON]
     )
     component.async_register_entity_service(
-        SERVICE_VOLUME_UP, MEDIA_PLAYER_SCHEMA,
+        SERVICE_VOLUME_UP, ENTITY_SERVICE_SCHEMA,
         'async_volume_up', [SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP]
     )
     component.async_register_entity_service(
-        SERVICE_VOLUME_DOWN, MEDIA_PLAYER_SCHEMA,
+        SERVICE_VOLUME_DOWN, ENTITY_SERVICE_SCHEMA,
         'async_volume_down', [SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP]
     )
     component.async_register_entity_service(
-        SERVICE_MEDIA_PLAY_PAUSE, MEDIA_PLAYER_SCHEMA,
+        SERVICE_MEDIA_PLAY_PAUSE, ENTITY_SERVICE_SCHEMA,
         'async_media_play_pause', [SUPPORT_PLAY | SUPPORT_PAUSE]
     )
     component.async_register_entity_service(
-        SERVICE_MEDIA_PLAY, MEDIA_PLAYER_SCHEMA,
+        SERVICE_MEDIA_PLAY, ENTITY_SERVICE_SCHEMA,
         'async_media_play', [SUPPORT_PLAY]
     )
     component.async_register_entity_service(
-        SERVICE_MEDIA_PAUSE, MEDIA_PLAYER_SCHEMA,
+        SERVICE_MEDIA_PAUSE, ENTITY_SERVICE_SCHEMA,
         'async_media_pause', [SUPPORT_PAUSE]
     )
     component.async_register_entity_service(
-        SERVICE_MEDIA_STOP, MEDIA_PLAYER_SCHEMA,
+        SERVICE_MEDIA_STOP, ENTITY_SERVICE_SCHEMA,
         'async_media_stop', [SUPPORT_STOP]
     )
     component.async_register_entity_service(
-        SERVICE_MEDIA_NEXT_TRACK, MEDIA_PLAYER_SCHEMA,
+        SERVICE_MEDIA_NEXT_TRACK, ENTITY_SERVICE_SCHEMA,
         'async_media_next_track', [SUPPORT_NEXT_TRACK]
     )
     component.async_register_entity_service(
-        SERVICE_MEDIA_PREVIOUS_TRACK, MEDIA_PLAYER_SCHEMA,
+        SERVICE_MEDIA_PREVIOUS_TRACK, ENTITY_SERVICE_SCHEMA,
         'async_media_previous_track', [SUPPORT_PREVIOUS_TRACK]
     )
     component.async_register_entity_service(
-        SERVICE_CLEAR_PLAYLIST, MEDIA_PLAYER_SCHEMA,
+        SERVICE_CLEAR_PLAYLIST, ENTITY_SERVICE_SCHEMA,
         'async_clear_playlist', [SUPPORT_CLEAR_PLAYLIST]
     )
     component.async_register_entity_service(

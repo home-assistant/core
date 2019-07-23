@@ -5,7 +5,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, MEDIA_PLAYER_SCHEMA, PLATFORM_SCHEMA)
+    MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.components.media_player.const import (
     DOMAIN, MEDIA_TYPE_MUSIC,
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
@@ -30,6 +30,10 @@ CONF_ZONE_NAMES = 'zone_names'
 
 DATA_YAMAHA = 'yamaha_known_receivers'
 DEFAULT_NAME = "Yamaha Receiver"
+
+MEDIA_PLAYER_SCHEMA = vol.Schema({
+    ATTR_ENTITY_ID: cv.comp_entity_ids,
+})
 
 ENABLE_OUTPUT_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_ENABLED): cv.boolean,
